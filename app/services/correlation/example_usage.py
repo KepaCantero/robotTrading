@@ -6,7 +6,10 @@ to calculate real correlation from historical prices.
 """
 
 import asyncio
+import logging
 from decimal import Decimal
+
+logger = logging.getLogger(__name__)
 
 from app.models.portfolio import AssetClass, Portfolio, Position
 from app.services.correlation.analyzer import CorrelationAnalyzer, CorrelationConfig

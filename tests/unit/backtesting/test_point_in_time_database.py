@@ -6,6 +6,7 @@ as described in Ernest Chan's "Algorithmic Trading" (Chapter 3).
 """
 
 from datetime import datetime, timedelta
+from decimal import Decimal
 
 import pandas as pd
 import pytest

@@ -17,6 +17,7 @@ from decimal import Decimal
 from uuid import uuid4
 
 import pytest
+from sqlalchemy import select
 
 from app.core.database import get_db_transaction
 from app.services.fifo.fifo_integrator import FIFOIntegrator, Position, Trade

@@ -42,9 +42,11 @@ async def analyze_trade_costs(
             entry_time=datetime.fromisoformat(trade_data["entry_time"]),
             exit_time=datetime.fromisoformat(trade_data.get("exit_time", trade_data["entry_time"])),
             pnl=Decimal(str(trade_data.get("pnl", 0))),
+            pnl_percentage=Decimal(str(trade_data.get("pnl_percentage", 0))),
             status=TradeStatus(trade_data.get("status", "closed")),
             commission=Decimal(str(trade_data.get("commission", 0))),
             slippage=Decimal(str(trade_data.get("slippage", 0))),
+            reason=trade_data.get("reason"),
         )
 
         market_data = trade_data.get("market_data", {})
@@ -102,9 +104,11 @@ async def analyze_strategy_costs(
                     trade_data.get("exit_time", trade_data["entry_time"])
                 ),
                 pnl=Decimal(str(trade_data.get("pnl", 0))),
+                pnl_percentage=Decimal(str(trade_data.get("pnl_percentage", 0))),
                 status=TradeStatus(trade_data.get("status", "closed")),
                 commission=Decimal(str(trade_data.get("commission", 0))),
                 slippage=Decimal(str(trade_data.get("slippage", 0))),
+                reason=trade_data.get("reason"),
             )
             trades.append(trade)
 

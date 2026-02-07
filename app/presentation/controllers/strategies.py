@@ -62,9 +62,9 @@ def get_execution_engine() -> ExecutionEngine:
 
     if _execution_engine is None:
         registry = get_strategy_registry()
-        logger = get_strategy_logger()
-        _execution_engine = ExecutionEngine(registry, logger)
-        logger.info("ExecutionEngine singleton initialized")
+        strategy_logger = get_strategy_logger()
+        _execution_engine = ExecutionEngine(registry, strategy_logger)
+        logging.getLogger(__name__).info("ExecutionEngine singleton initialized")
 
     return _execution_engine
 

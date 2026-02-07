@@ -215,19 +215,19 @@ from pydantic import ValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 # HTTP Exceptions (4xx, 5xx)
-app.add_exception_handler(HTTPException, http_exception_handler)
-app.add_exception_handler(StarletteHTTPException, starlette_http_exception_handler)
+app.add_exception_handler(HTTPException, http_exception_handler)  # type: ignore[arg-type]
+app.add_exception_handler(StarletteHTTPException, starlette_http_exception_handler)  # type: ignore[arg-type]
 
 # Validation Errors
-app.add_exception_handler(RequestValidationError, validation_exception_handler)
-app.add_exception_handler(ValidationError, pydantic_validation_exception_handler)
+app.add_exception_handler(RequestValidationError, validation_exception_handler)  # type: ignore[arg-type]
+app.add_exception_handler(ValidationError, pydantic_validation_exception_handler)  # type: ignore[arg-type]
 
 # Common Python Exceptions with specific handlers
-app.add_exception_handler(ValueError, value_error_handler)
-app.add_exception_handler(KeyError, key_error_handler)
-app.add_exception_handler(TypeError, type_error_handler)
-app.add_exception_handler(AttributeError, attribute_error_handler)
-app.add_exception_handler(IndexError, index_error_handler)
+app.add_exception_handler(ValueError, value_error_handler)  # type: ignore[arg-type]
+app.add_exception_handler(KeyError, key_error_handler)  # type: ignore[arg-type]
+app.add_exception_handler(TypeError, type_error_handler)  # type: ignore[arg-type]
+app.add_exception_handler(AttributeError, attribute_error_handler)  # type: ignore[arg-type]
+app.add_exception_handler(IndexError, index_error_handler)  # type: ignore[arg-type]
 
 # Generic catch-all for unhandled exceptions
 app.add_exception_handler(Exception, generic_exception_handler)

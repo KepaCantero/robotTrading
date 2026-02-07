@@ -510,7 +510,7 @@ class BacktestEngine:
         # Max drawdown duration
         drawdown_end = np.argmin(drawdowns)
         drawdown_start = np.argmax(equity_values[:drawdown_end]) if drawdown_end > 0 else 0
-        max_drawdown_duration = drawdown_end - drawdown_start
+        max_drawdown_duration = int(drawdown_end - drawdown_start)
 
         # Calmar ratio
         calmar_ratio = annualized_return / abs(max_drawdown) if max_drawdown != 0 else 0.0

@@ -148,7 +148,7 @@ class RiskConfigurator:
 
     def compare_configs(
         self, tolerance1: RiskTolerance, tolerance2: RiskTolerance
-    ) -> dict[str, dict[str, Decimal | bool]]:
+    ) -> dict[str, dict[str, Decimal | bool | str]]:
         """
         Compare risk configurations between two tolerance levels.
 

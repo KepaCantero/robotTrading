@@ -40,8 +40,8 @@ import logging
 
 from .dashboard import OncallDashboard, OncallMetrics, OncallStatus
 from .escalation import EscalationLevel, EscalationManager, EscalationPath, EscalationPolicy
-from .handoff import HandoffChecklist, HandoffManager, HandoffSession
-from .rotation import OncallRotation, RotationConfig, RotationSchedule
+from .handoff import HandoffManager, HandoffSession
+from .rotation import OncallRotation, RotationConfig
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,6 @@ __all__ = [
     # Rotation
     "OncallRotation",
     "RotationConfig",
-    "RotationSchedule",
     # Escalation
     "EscalationPolicy",
     "EscalationPath",
@@ -57,7 +56,6 @@ __all__ = [
     "EscalationManager",
     # Handoff
     "HandoffManager",
-    "HandoffChecklist",
     "HandoffSession",
     # Dashboard
     "OncallDashboard",

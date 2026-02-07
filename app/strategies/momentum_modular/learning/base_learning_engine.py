@@ -133,7 +133,7 @@ class BaseLearningEngine(ABC):
 
     @abstractmethod
     def train(
-        self, training_data: Dict[str, Any], validation_data: Optional[Dict[str, Any]] = None
+        self, training_data: Optional[Dict[str, Any]] = None, validation_data: Optional[Dict[str, Any]] = None
     ) -> Dict[str, float]:
         """
         Entrenar el modelo.

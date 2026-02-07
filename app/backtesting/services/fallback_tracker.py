@@ -41,6 +41,28 @@ class FallbackTracker:
         self._config_key_mismatch_count = 0
         self._fallback_lock = threading.Lock()
 
+    def __getstate__(self) -> Dict:
+        """
+        Get state for pickling (excludes unpicklable thread lock).
+
+        Thread locks cannot be pickled, so we exclude them and recreate
+        them in __setstate__. This is required for multiprocessing support.
+        """
+        state = self.__dict__.copy()
+        # Remove unpicklable lock - will be recreated in __setstate__
+        state.pop('_fallback_lock', None)
+        return state
+
+    def __setstate__(self, state: Dict) -> None:
+        """
+        Restore state from pickling (recreates lock).
+
+        Thread lock is recreated here after unpickling.
+        """
+        self.__dict__.update(state)
+        # Recreate the unpicklable lock
+        self._fallback_lock = threading.Lock()
+
     def increment_fallback_counter(self, fallback_type: str) -> None:
         """
         Thread-safe increment of fallback counter.

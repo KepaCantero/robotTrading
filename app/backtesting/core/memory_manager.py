@@ -101,6 +101,29 @@ class AggressiveMemoryManager:
         self._cleanup_count = 0
         self._emergency_cleanup_count = 0
 
+    def __getstate__(self) -> dict:
+        """
+        Get state for pickling (excludes unpicklable thread lock).
+
+        Thread locks cannot be pickled, so we exclude them and recreate
+        them in __setstate__. This is required for multiprocessing support.
+        """
+        state = self.__dict__.copy()
+        # Remove unpicklable lock - will be recreated in __setstate__
+        state.pop('_lock', None)
+        return state
+
+    def __setstate__(self, state: dict) -> None:
+        """
+        Restore state from pickling (recreates lock).
+
+        Thread lock is recreated here after unpickling.
+        """
+        self.__dict__.update(state)
+        # Recreate the unpicklable lock
+        import threading
+        self._lock = threading.RLock()
+
     def add_result(self, result: BacktestResultDict) -> None:
         """
         Add a lightweight result dictionary.

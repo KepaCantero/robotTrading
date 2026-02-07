@@ -45,11 +45,13 @@ from app.market_making.avellaneda_stoikov.inventory_manager import (
     InventoryManager,
     InventoryState,
 )
+from app.market_making.avellaneda_stoikov.models import ASQuoteParams
 from app.market_making.avellaneda_stoikov.quote_generator import ASQuoteGenerator
 
 __all__ = [
     "ASConfig",
     "ASQuote",
+    "ASQuoteParams",
     "AvellanedaStoikovModel",
     "ASQuoteGenerator",
     "InventoryConfig",

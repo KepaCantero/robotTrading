@@ -204,11 +204,11 @@ async def calculate_performance_metrics(
             end_date=request.end_date,
         )
 
-        return PerformanceMetricsResponse(success=True, data=metrics)
+        return PerformanceMetricsResponse(success=True, data=metrics, error=None)
 
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         return PerformanceMetricsResponse(
-            success=False, error=f"Failed to calculate performance metrics: {str(e)}"
+            success=False, data=None, error=f"Failed to calculate performance metrics: {str(e)}"
         )
 
 
@@ -230,11 +230,11 @@ async def get_performance_metrics(
             portfolio=portfolio, period=period, start_date=start_date, end_date=end_date
         )
 
-        return PerformanceMetricsResponse(success=True, data=metrics)
+        return PerformanceMetricsResponse(success=True, data=metrics, error=None)
 
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         return PerformanceMetricsResponse(
-            success=False, error=f"Failed to get performance metrics: {str(e)}"
+            success=False, data=None, error=f"Failed to get performance metrics: {str(e)}"
         )
 
 
@@ -251,10 +251,10 @@ async def get_risk_metrics(
         # Calculate risk metrics
         metrics = await analytics_service.calculate_risk_metrics(portfolio)
 
-        return RiskMetricsResponse(success=True, data=metrics)
+        return RiskMetricsResponse(success=True, data=metrics, error=None)
 
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
-        return RiskMetricsResponse(success=False, error=f"Failed to get risk metrics: {str(e)}")
+        return RiskMetricsResponse(success=False, data=None, error=f"Failed to get risk metrics: {str(e)}")
 
 
 @router.get("/analytics/{portfolio_id}", response_model=PortfolioAnalyticsResponse)
@@ -270,11 +270,11 @@ async def get_portfolio_analytics(
         # Generate analytics
         analytics = await analytics_service.generate_portfolio_analytics(portfolio)
 
-        return PortfolioAnalyticsResponse(success=True, data=analytics)
+        return PortfolioAnalyticsResponse(success=True, data=analytics, error=None)
 
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         return PortfolioAnalyticsResponse(
-            success=False, error=f"Failed to get portfolio analytics: {str(e)}"
+            success=False, data=None, error=f"Failed to get portfolio analytics: {str(e)}"
         )
 
 
@@ -291,11 +291,11 @@ async def get_portfolio_allocation(
         # Analyze allocation
         allocation = await analytics_service.analyze_portfolio_allocation(portfolio)
 
-        return PortfolioAllocationResponse(success=True, data=allocation)
+        return PortfolioAllocationResponse(success=True, data=allocation, error=None)
 
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         return PortfolioAllocationResponse(
-            success=False, error=f"Failed to get portfolio allocation: {str(e)}"
+            success=False, data=None, error=f"Failed to get portfolio allocation: {str(e)}"
         )
 
 
@@ -328,6 +328,8 @@ async def get_rebalance_recommendation(
                 alternative_allocation=Decimal("0"),
                 domestic_allocation=Decimal("100"),
                 international_allocation=Decimal("0"),
+                target_allocation={"equity": equity_allocation, "cash": cash_allocation},
+                allocation_deviation={},
             )
 
         # Generate rebalance recommendation
@@ -335,11 +337,11 @@ async def get_rebalance_recommendation(
             portfolio=portfolio, target_allocation=target_allocation
         )
 
-        return RebalanceResponse(success=True, data=rebalance)
+        return RebalanceResponse(success=True, data=rebalance, error=None)
 
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         return RebalanceResponse(
-            success=False, error=f"Failed to get rebalance recommendation: {str(e)}"
+            success=False, data=None, error=f"Failed to get rebalance recommendation: {str(e)}"
         )
 
 
@@ -353,11 +355,11 @@ async def compare_portfolios(
         # Generate comparison
         comparison = await analytics_service.compare_portfolios(request.portfolio_ids)
 
-        return PortfolioComparisonResponse(success=True, data=comparison)
+        return PortfolioComparisonResponse(success=True, data=comparison, error=None)
 
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         return PortfolioComparisonResponse(
-            success=False, error=f"Failed to compare portfolios: {str(e)}"
+            success=False, data=None, error=f"Failed to compare portfolios: {str(e)}"
         )
 
 
@@ -395,11 +397,11 @@ async def get_analytics_summary(
             "analysis_date": analytics.analysis_date.isoformat(),
         }
 
-        return AnalyticsSummaryResponse(success=True, data=summary)
+        return AnalyticsSummaryResponse(success=True, data=summary, error=None)
 
     except (ValueError, TypeError, KeyError, AttributeError) as e:
         return AnalyticsSummaryResponse(
-            success=False, error=f"Failed to get analytics summary: {str(e)}"
+            success=False, data=None, error=f"Failed to get analytics summary: {str(e)}"
         )
 
 

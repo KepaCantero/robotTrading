@@ -145,9 +145,12 @@ class DataLoader:
             # Handle 'date' or 'timestamp' column
             date_col = 'date' if 'date' in df.columns else 'timestamp'
             df[date_col] = pd.to_datetime(df[date_col])
+            
+            # CRITICAL: Set date column as index for proper timestamp extraction
+            df.set_index(date_col, inplace=True)
 
-            # Filter by date range
-            df = df[(df[date_col] >= start_date) & (df[date_col] <= end_date)]
+            # Filter by date range (now using index)
+            df = df[(df.index >= start_date) & (df.index <= end_date)]
 
             # VECTORIZED: Convert DataFrame to Quotes using vectorized operations
             quotes = self._convert_dataframe_to_quotes(df, symbol)
@@ -327,6 +330,7 @@ class DataLoader:
                     quotes.append(
                         Quote(
                             symbol=symbol,
+                            timestamp=date,  # CRITICAL: Include timestamp
                             bid=Decimal(str(close)),
                             ask=Decimal(str(close)),
                             last=Decimal(str(close)),

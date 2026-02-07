@@ -952,6 +952,7 @@ class StrategySelector:
         from app.models.signal import (  # pylint: disable=import-error
             Signal,
             SignalSource,
+            SignalStrength,
             SignalType,
         )
 
@@ -1004,9 +1005,14 @@ class StrategySelector:
                 signal = Signal(
                     symbol=symbol,
                     signal_type=signal_type,
-                    source=SignalSource.STRATEGY,
+                    strength=SignalStrength.MODERATE,
+                    source=SignalSource.TECHNICAL,  # Use valid enum value
                     timestamp=timestamp,
-                    confidence=confidence,
+                    confidence=confidence * 100,  # Convert to 0-100 scale
+                    liquidity_score=50.0,  # Default value
+                    priority_score=50.0,  # Default value
+                    price=Decimal("100.00"),  # Default placeholder price
+                    volume=Decimal("1000"),  # Default placeholder volume
                     metadata={"strategy": strategy_name, "params": {}},
                 )
 

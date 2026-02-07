@@ -83,6 +83,11 @@ class AbstractUnitOfWork(ABC):
     Reference: Percival & Gregory, "Architecture Patterns with Python", Chapter 7
     """
 
+    # Repository attributes - to be defined by concrete implementations
+    orders: AbstractRepository
+    portfolios: AbstractRepository
+    positions: AbstractRepository
+
     def __enter__(self) -> AbstractUnitOfWork:
         """Enter Unit of Work context."""
         return self

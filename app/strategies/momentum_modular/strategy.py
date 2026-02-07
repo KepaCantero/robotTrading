@@ -197,9 +197,15 @@ class ModularMomentumStrategy(BaseStrategy):
                 self.learning_engine = None  # NO crear - evitar cualquier import de PyTorch
                 # NO desactivar _learning_engine_type - mantenerlo para saber qué tipo es
             elif engine_type == "reinforcement":
-                from .learning.reinforcement_learning_engine import ReinforcementLearningEngine
-
-                self.learning_engine = ReinforcementLearningEngine(self._learning_config)
+                # CRÍTICO: NO crear ReinforcementLearningEngine en proceso principal - causa mutex.cc blocking
+                # gymnasium/stable-baselines3 usan múltiples threads que causan deadlocks
+                logger.info(
+                    "⚠️ Reinforcement Learning configurado pero NO se inicializará en proceso principal (previene mutex.cc blocking)"
+                )
+                logger.info(
+                    "⚠️ El entrenamiento se hará en subprocess. No habrá predicciones del modelo durante el backtest."
+                )
+                self.learning_engine = None  # NO crear - evitar import de stable-baselines3 en proceso principal
             elif engine_type == "transformer":
                 # CRÍTICO: NO crear TransformerEngine en proceso principal - causa mutex.cc blocking
                 logger.info(
@@ -218,20 +224,23 @@ class ModularMomentumStrategy(BaseStrategy):
                     f"⚠️ Learning engine {engine_type} está deshabilitado (dependencias faltantes)"
                 )
                 self.learning_engine = None
+            else:
+                logger.warning(f"⚠️ Learning engine {engine_type} no se creó correctamente")
         except (ImportError, RuntimeError) as e:
             logger.error(f"❌ Error al inicializar learning engine {engine_type}: {e}")
             logger.error(
                 "⚠️ Asegúrate de instalar todas las dependencias: pip install -r requirements.txt"
             )
             self.learning_engine = None
-        except (ValueError, TypeError, KeyError, AttributeError) as e:
+        except (ValueError, TypeError, KeyError, AttributeError, OSError) as e:
             error_msg = str(e).lower()
             if 'mutex' in error_msg or 'lock' in error_msg or 'blocking' in error_msg:
                 logger.error(f"❌ Bloqueo de mutex al inicializar {engine_type}: {e}")
                 logger.error("💡 El learning engine se intentará inicializar más tarde o se omitirá")
                 self.learning_engine = None
             else:
-                raise
+                logger.error(f"❌ Error al inicializar learning engine {engine_type}: {type(e).__name__}: {e}")
+                self.learning_engine = None
 
     def _is_market_regime_safe(self, market_context: Dict[str, Any]) -> bool:
         """

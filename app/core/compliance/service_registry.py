@@ -98,6 +98,35 @@ class ComplianceServiceRegistry:
             cls._instance = None
 
     # =========================================================================
+    # PICKLE SUPPORT (for multiprocessing)
+    # =========================================================================
+
+    def __getstate__(self) -> Dict[str, Any]:
+        """
+        Get state for pickling (excludes unpicklable locks).
+
+        Thread locks cannot be pickled, so we exclude them and recreate
+        them in __setstate__. This is required for multiprocessing support.
+        """
+        state = self.__dict__.copy()
+        # Remove unpicklable locks - they will be recreated in __setstate__
+        state.pop('_service_lock', None)
+        # Clear cached services as they won't be valid in the new process
+        state['_services'] = {}
+        state['_availability'] = {}
+        return state
+
+    def __setstate__(self, state: Dict[str, Any]) -> None:
+        """
+        Restore state from pickling (recreates locks).
+
+        Thread locks are recreated here after unpickling.
+        """
+        self.__dict__.update(state)
+        # Recreate the unpicklable lock
+        self._service_lock = threading.RLock()
+
+    # =========================================================================
     # REGISTRATION
     # =========================================================================
 

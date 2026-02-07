@@ -513,3 +513,10 @@ class BudgetAlertManager:
             },
             "recent_alerts": [a.to_dict() for a in self._alert_history[-5:]],
         }
+
+    async def shutdown(self) -> None:
+        """Shutdown the alert manager and close resources."""
+        if self._session:
+            await self._session.close()
+            self._session = None
+        self.logger.info(f"BudgetAlertManager shutdown for {self.service_name}")

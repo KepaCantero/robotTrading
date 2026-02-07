@@ -34,6 +34,9 @@ from app.models.signal import Signal
 from app.services.dynamic_capital_reallocation import DynamicCapitalReallocationEngine
 from app.services.risk_envelope_validator import RiskEnvelopeValidator
 
+# COMPLIANCE: Import compliance_engine - "THE ONLY ENGINE" that must be used
+from app.core.compliance_engine import ComplianceEngine, ComplianceConfig
+
 logger = logging.getLogger(__name__)
 
 
@@ -149,7 +152,91 @@ class BacktestEngine:
             partial_fill_pct=Decimal("0.05"),  # Fill up to 5% of volume for partial fills
         )
 
-        logger.info(f"BacktestEngine initialized for {strategy_name}")
+        # COMPLIANCE: Initialize compliance_engine - "THE ONLY ENGINE" per documentation
+        # This engine integrates ALL 17 systems (8 main + 12 compliance rules)
+        # All trades MUST be validated through analyze_pre_trade() and analyze_post_trade()
+        self.compliance_engine = ComplianceEngine(
+            enable_logging=False,  # Reduce logging noise during backtesting
+        )
+        # Set starting capital for kill switch calculations (Hull Rule 13.1)
+        self.compliance_engine.set_starting_capital(float(config.initial_capital))
+
+        logger.info(f"BacktestEngine initialized for {strategy_name} with COMPLIANCE ENGINE")
+
+    # ==========================================================================
+    # PICKLE SUPPORT (for multiprocessing)
+    # ==========================================================================
+
+    def __getstate__(self) -> Dict[str, Any]:
+        """
+        Get state for pickling (excludes unpicklable objects).
+
+        The BacktestEngine contains unpicklable objects (thread locks in
+        compliance_engine, diagnostic_logger, strategy). For multiprocessing,
+        we extract the essential configuration and let each worker create
+        a fresh engine instance.
+        """
+        state = {
+            'config': self.config,
+            'strategy_name': self.strategy_name,
+            'total_portfolio_capital': self.total_portfolio_capital,
+            # Reset runtime state for worker processes
+            'capital': self.config.initial_capital,
+            'last_known_prices': {},
+            'trades': [],
+        }
+        return state
+
+    def __setstate__(self, state: Dict[str, Any]) -> None:
+        """
+        Restore state from pickling (reinitializes engine in worker process).
+
+        Creates a fresh BacktestEngine instance in the worker process with
+        the same configuration but independent state.
+        """
+        self.__dict__.update(state)
+        # Recreate all service objects
+        self.position_manager = PositionManager()
+        self.equity_tracker = EquityCurveTracker(
+            position_manager=self.position_manager,
+            initial_capital=self.config.initial_capital,
+        )
+        self.pnl_calculator = ProfitAndLossCalculator(self.config)
+        self.signal_processor = SignalProcessor(
+            config=self.config,
+            strategy=None,  # Strategy is not picklable, set to None
+            risk_envelope_validator=None,
+            enable_risk_envelope=False,
+            diagnostic_logger=None,
+            total_portfolio_capital=self.total_portfolio_capital,
+            strategy_name=self.strategy_name,
+        )
+        self.trade_executor = TradeExecutor(
+            config=self.config,
+            position_manager=self.position_manager,
+            pnl_calculator=self.pnl_calculator,
+            diagnostic_logger=None,
+            strategy=None,
+        )
+        self.exit_monitor = ExitConditionMonitor(
+            config=self.config,
+            position_manager=self.position_manager,
+            apply_slippage_func=self._apply_slippage,
+        )
+        self.performance_calculator = PerformanceMetricsCalculator(self.config)
+        self.trading_validator = TradingValidator()
+        self.liquidity_validator = LiquidityValidator(
+            enable_partial_fills=True,
+            max_order_pct_of_volume=Decimal("0.10"),
+            warning_order_pct_of_volume=Decimal("0.05"),
+            partial_fill_pct=Decimal("0.05"),
+        )
+        # Recreate compliance engine (it has its own pickle support)
+        self.compliance_engine = ComplianceEngine(enable_logging=False)
+        self.compliance_engine.set_starting_capital(float(self.config.initial_capital))
+        self.diagnostic_logger = None
+        self.strategy = None
+        self.reallocation_engine = None
 
     def run_backtest(
         self,
@@ -365,11 +452,24 @@ class BacktestEngine:
         """
         Process all signals at the current timestamp.
 
+        CRITICAL: Only process signals that match the current market_data symbol.
+        Signals from other symbols are skipped (but signal_index is NOT advanced,
+        so they can be processed when their corresponding market_data is encountered).
+
         Returns:
             Tuple of (signal_index, signals_processed, signals_matched, signals_skipped, strategy_stats)
         """
         while signal_index < len(signals):
             signal = signals[signal_index]
+
+            # CRITICAL: Check if signal matches current market_data symbol FIRST
+            # If signal.symbol != market_data.symbol, we need to skip this signal
+            # for NOW (do NOT advance signal_index) - it will be processed when
+            # we encounter market_data for that symbol.
+            if signal.symbol != market_data.symbol:
+                # Signal is for a different symbol, stop processing current market_data
+                # The signal will be processed when we reach its corresponding market_data
+                break
             strategy_name = (
                 signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
             )
@@ -443,10 +543,34 @@ class BacktestEngine:
         """
         Process a trading signal using the SignalProcessor and TradeExecutor services.
 
+        COMPLIANCE: All trades MUST be validated through compliance_engine:
+        - analyze_pre_trade() before executing any trade
+        - analyze_post_trade() after executing any trade
+        - check_kill_switch() checked before processing
+
         Args:
             signal: Trading signal to process
             market_data: Current market data
         """
+        strategy_name = signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
+
+        # COMPLIANCE: Check kill switch FIRST (Hull Rule 13.1)
+        # If kill switch is active, block all trading immediately
+        if self.compliance_engine.check_kill_switch():
+            logger.warning(
+                f"COMPLIANCE BLOCK: {signal.symbol} {signal.signal_type} (strategy={strategy_name}): "
+                f"Kill switch active - trade rejected"
+            )
+            if self.diagnostic_logger:
+                self.diagnostic_logger.log_signal_rejected(
+                    strategy_name,
+                    signal.symbol,
+                    "kill_switch_active",
+                    "Kill switch triggered - trading halted",
+                    signal.metadata if hasattr(signal, 'metadata') else {},
+                )
+            return  # Do NOT process this signal
+
         # Use SignalProcessor to validate and determine action
         action = self.signal_processor.process_signal(
             signal=signal,
@@ -459,6 +583,35 @@ class BacktestEngine:
         )
 
         if action == "BUY":
+            # COMPLIANCE: Pre-trade analysis - validate trade before execution
+            current_price = get_price(market_data)
+            pre_trade_analysis = self.compliance_engine.analyze_pre_trade(
+                symbol=signal.symbol,
+                side="BUY",
+                quantity=Decimal("0"),  # Will be calculated by executor
+                price=current_price,
+                price_history=None,  # Could pass historical data if available
+                urgency=0.5,
+                signal_time=signal.timestamp,
+            )
+
+            # COMPLIANCE: Check if trade is approved by compliance engine
+            if not pre_trade_analysis.can_execute:
+                logger.warning(
+                    f"COMPLIANCE BLOCK: {signal.symbol} BUY (strategy={strategy_name}): "
+                    f"Pre-trade analysis rejected - {pre_trade_analysis.reasons}"
+                )
+                if self.diagnostic_logger:
+                    self.diagnostic_logger.log_signal_rejected(
+                        strategy_name,
+                        signal.symbol,
+                        "pre_trade_compliance",
+                        f"Pre-trade analysis rejected: {pre_trade_analysis.reasons}",
+                        signal.metadata if hasattr(signal, 'metadata') else {},
+                    )
+                return  # Do NOT execute this trade
+
+            # Execute buy trade
             trade, new_capital = self.trade_executor.execute_buy_signal(
                 signal=signal,
                 market_data=market_data,
@@ -470,10 +623,60 @@ class BacktestEngine:
                 self.trades.append(trade)
                 self.capital = new_capital
 
+                # COMPLIANCE: Post-trade analysis - validate execution quality
+                post_trade_analysis = self.compliance_engine.analyze_post_trade(
+                    order_id=trade.trade_id,
+                    symbol=trade.symbol,
+                    side="buy",
+                    quantity=trade.quantity,
+                    execution_price=trade.entry_price,
+                    signal_price=current_price,
+                    signal_time=signal.timestamp,
+                    submission_time=trade.entry_time,
+                    execution_time=trade.entry_time,
+                    nbbo=None,  # NBBO not available in backtesting
+                )
+
+                # Log post-trade analysis if SLO not met
+                if not post_trade_analysis.slo_met:
+                    logger.warning(
+                        f"COMPLIANCE WARNING: {signal.symbol} BUY (strategy={strategy_name}): "
+                        f"SLO not met - latency={post_trade_analysis.latency_ms:.2f}ms"
+                    )
+
                 # Register trade for learning engine
                 self._register_buy_trade_for_learning(trade, signal, market_data)
 
         elif action == "SELL":
+            # COMPLIANCE: Pre-trade analysis - validate sell trade before execution
+            current_price = get_price(market_data)
+            pre_trade_analysis = self.compliance_engine.analyze_pre_trade(
+                symbol=signal.symbol,
+                side="SELL",
+                quantity=Decimal("0"),  # Will be calculated by executor
+                price=current_price,
+                price_history=None,  # Could pass historical data if available
+                urgency=0.5,
+                signal_time=signal.timestamp,
+            )
+
+            # COMPLIANCE: Check if trade is approved by compliance engine
+            if not pre_trade_analysis.can_execute:
+                logger.warning(
+                    f"COMPLIANCE BLOCK: {signal.symbol} SELL (strategy={strategy_name}): "
+                    f"Pre-trade analysis rejected - {pre_trade_analysis.reasons}"
+                )
+                if self.diagnostic_logger:
+                    self.diagnostic_logger.log_signal_rejected(
+                        strategy_name,
+                        signal.symbol,
+                        "pre_trade_compliance",
+                        f"Pre-trade analysis rejected: {pre_trade_analysis.reasons}",
+                        signal.metadata if hasattr(signal, 'metadata') else {},
+                    )
+                return  # Do NOT execute this trade
+
+            # Execute sell trade
             trade, new_capital = self.trade_executor.execute_sell_signal(
                 signal=signal,
                 market_data=market_data,
@@ -483,6 +686,40 @@ class BacktestEngine:
             if trade:
                 self.trades.append(trade)
                 self.capital = new_capital
+
+                # COMPLIANCE: Post-trade analysis - validate execution quality
+                post_trade_analysis = self.compliance_engine.analyze_post_trade(
+                    order_id=trade.trade_id,
+                    symbol=trade.symbol,
+                    side="sell",
+                    quantity=trade.quantity,
+                    execution_price=trade.exit_price or current_price,
+                    signal_price=current_price,
+                    signal_time=signal.timestamp,
+                    submission_time=trade.exit_time if trade.exit_time else trade.entry_time,
+                    execution_time=trade.exit_time if trade.exit_time else trade.entry_time,
+                    nbbo=None,  # NBBO not available in backtesting
+                )
+
+                # Log post-trade analysis if SLO not met
+                if not post_trade_analysis.slo_met:
+                    logger.warning(
+                        f"COMPLIANCE WARNING: {signal.symbol} SELL (strategy={strategy_name}): "
+                        f"SLO not met - latency={post_trade_analysis.latency_ms:.2f}ms"
+                    )
+
+                # COMPLIANCE: Track daily P&L for kill switch monitoring (Hull Rule 13.1)
+                # Calculate realized P&L from the trade
+                if trade.exit_price and trade.entry_price:
+                    realized_pnl = float((trade.exit_price - trade.entry_price) * trade.quantity) - float(trade.commission)
+                    self.compliance_engine.track_daily_pnl(
+                        symbol=trade.symbol,
+                        side="SELL",
+                        quantity=trade.quantity,
+                        entry_price=trade.entry_price,
+                        exit_price=trade.exit_price,
+                        realized_pnl=realized_pnl,
+                    )
 
                 # Register trade result for learning engine
                 self._register_sell_trade_for_learning(trade, signal, market_data)

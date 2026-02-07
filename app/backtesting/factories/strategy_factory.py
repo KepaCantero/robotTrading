@@ -129,11 +129,25 @@ class StrategyFactory:
         """
         strategy_type = base_config.get('strategy', {}).get('type', 'modular_momentum')
 
-        return {
+        config = {
             'type': strategy_type,
             'parameters': base_config.get('strategy', {}).get('parameters', {}),
             'thresholds': cls.extract_thresholds(base_config.get('strategy', {})),
         }
+
+        # Add default filters for modular_momentum to ensure signals are generated
+        if strategy_type == 'modular_momentum':
+            config['modules'] = {
+                'ema_filter': {'enabled': True},
+                'rsi_filter': {'enabled': True},
+                'stoch_rsi_filter': {'enabled': True},
+                'momentum_filter': {'enabled': True},
+                'volume_filter': {'enabled': True},
+                'atr_filter': {'enabled': True},
+            }
+            config['preset'] = 'balanced'
+
+        return config
 
     @classmethod
     def create_multi_strategy_configs(cls, base_config: Dict[str, Any]) -> List[Dict[str, Any]]:

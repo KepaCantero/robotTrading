@@ -38,7 +38,7 @@ from typing import Any, Dict, List, Optional
 import aiosqlite
 
 from .blast_radius import BlastRadiusController
-from .hypothesis import ChaosHypothesis, HypothesisValidator, ValidationResult
+from .hypothesis import ChaosHypothesis, HypothesisStatus, HypothesisValidator, ValidationResult
 
 logger = logging.getLogger(__name__)
 
@@ -574,7 +574,7 @@ class ChaosOrchestrator:
             self.logger.error(f"Error validating hypothesis: {e}")
             return ValidationResult(
                 hypothesis_name=experiment.name,
-                status="failed",
+                status=HypothesisStatus.FAILED,
                 confidence=Decimal("0"),
                 details={"error": str(e)},
             )
