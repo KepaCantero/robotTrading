@@ -3,17 +3,18 @@ Tests for app/security/secrets_manager.py
 """
 
 import os
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
+
 from app.security.secrets_manager import (
     Secret,
-    SecretValidationError,
     SecretsManager,
-    get_secrets_manager,
-    validate_secrets,
+    SecretValidationError,
     get_secret,
-    set_secret,
+    get_secrets_manager,
     rotate_secret,
+    set_secret,
 )
 
 
@@ -85,11 +86,11 @@ class TestSecretsManager:
     def test_validate_environment_missing(self):
         """Test environment validation with missing secrets."""
         manager = SecretsManager(encryption_key="test_encryption_key_32_bytes_long!!")
-        
+
         # Clear environment
         os.environ.pop("SECRET_KEY", None)
         os.environ.pop("DATABASE_URL", None)
-        
+
         with pytest.raises(SecretValidationError):
             manager.validate_environment()
 
@@ -118,7 +119,7 @@ class TestSecretsManager:
         """Test getting a secret."""
         manager = SecretsManager(encryption_key="test_encryption_key_32_bytes_long!!")
         manager.set_secret(name="test_secret", value="test_value_12345")
-        
+
         value = manager.get_secret("test_secret")
         assert value == "test_value_12345"
 
@@ -131,7 +132,7 @@ class TestSecretsManager:
     def test_get_secret_not_found(self):
         """Test getting non-existent secret."""
         manager = SecretsManager(encryption_key="test_encryption_key_32_bytes_long!!")
-        
+
         with pytest.raises(SecretValidationError):
             manager.get_secret("nonexistent")
 
@@ -139,7 +140,7 @@ class TestSecretsManager:
         """Test secret rotation."""
         manager = SecretsManager(encryption_key="test_encryption_key_32_bytes_long!!")
         manager.set_secret(name="test_secret", value="old_value_12345")
-        
+
         new_secret = manager.rotate_secret("test_secret")
         assert new_secret.version == 2
         assert new_secret.value != "old_value_12345"
@@ -148,10 +149,10 @@ class TestSecretsManager:
         """Test deleting a secret."""
         manager = SecretsManager(encryption_key="test_encryption_key_32_bytes_long!!")
         manager.set_secret(name="test_secret", value="test_value_12345")
-        
+
         result = manager.delete_secret("test_secret")
         assert result is True
-        
+
         # Secret should no longer exist
         with pytest.raises(SecretValidationError):
             manager.get_secret("test_secret")
@@ -167,7 +168,7 @@ class TestSecretsManager:
         manager = SecretsManager(encryption_key="test_encryption_key_32_bytes_long!!")
         manager.set_secret(name="secret1", value="value1_12345")
         manager.set_secret(name="secret2", value="value2_12345")
-        
+
         secrets = manager.list_secrets()
         assert len(secrets) == 2
         assert all("value" not in s for s in secrets)  # Values not included
@@ -176,7 +177,7 @@ class TestSecretsManager:
         """Test exporting secrets."""
         manager = SecretsManager(encryption_key="test_encryption_key_32_bytes_long!!")
         manager.set_secret(name="test_secret", value="test_value_12345")
-        
+
         export = manager.export_secrets(include_values=False)
         assert "secrets" in export
         assert len(export["secrets"]) == 1
@@ -184,7 +185,7 @@ class TestSecretsManager:
     def test_import_secrets(self):
         """Test importing secrets."""
         manager = SecretsManager(encryption_key="test_encryption_key_32_bytes_long!!")
-        
+
         data = {
             "secrets": [
                 {
@@ -194,7 +195,7 @@ class TestSecretsManager:
                 }
             ]
         }
-        
+
         count = manager.import_secrets(data)
         assert count == 1
 
@@ -202,7 +203,7 @@ class TestSecretsManager:
         """Test getting audit log."""
         manager = SecretsManager(encryption_key="test_encryption_key_32_bytes_long!!")
         manager.set_secret(name="test_secret", value="test_value_12345")
-        
+
         log = manager.get_audit_log(limit=10)
         assert len(log) > 0
         assert log[0]["action"] == "secret_created"
@@ -212,7 +213,7 @@ class TestSecretsManager:
         manager = SecretsManager(encryption_key="test_encryption_key_32_bytes_long!!")
         manager.set_secret(name="test_secret", value="test_value_12345")
         manager.clear_audit_log(older_than_days=0)
-        
+
         log = manager.get_audit_log()
         assert len(log) == 0
 

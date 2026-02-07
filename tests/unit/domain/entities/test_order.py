@@ -3,18 +3,19 @@ Unit tests for Order entity.
 
 Tests the Order entity with comprehensive state machine following Tomasini's methodology.
 """
-import pytest
+from datetime import datetime
 from decimal import Decimal
-from datetime import datetime, timedelta
 from unittest.mock import Mock
+
+import pytest
 
 from app.domain.entities.order import (
     Order,
-    OrderSide,
-    OrderType,
-    OrderStatus,
     OrderEvent,
     OrderFill,
+    OrderSide,
+    OrderStatus,
+    OrderType,
 )
 
 

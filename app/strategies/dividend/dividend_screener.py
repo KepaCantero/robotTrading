@@ -18,7 +18,7 @@ SOLID Principles:
 import logging
 import time
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Set
+from typing import Dict, List
 
 from .models import (
     DividendProfile,

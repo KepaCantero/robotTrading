@@ -10,17 +10,16 @@ Tests for the comprehensive Financial ML pipeline that integrates:
 - Feature importance
 """
 
-import pytest
+from unittest.mock import MagicMock, patch
+
 import numpy as np
 import pandas as pd
-from unittest.mock import patch, MagicMock, Mock
-from datetime import datetime
-from typing import Dict, List
+import pytest
 
 from app.backtesting.financial_ml import (
     FinancialMLConfig,
-    FinancialMLResult,
     FinancialMLPipeline,
+    FinancialMLResult,
     apply_financial_ml,
     calculate_lopez_de_prado_features,
 )
@@ -457,7 +456,6 @@ class TestFinancialMLIntegration:
 
     def test_bet_sizing_integration(self):
         """Test integration with bet sizing component."""
-        from app.backtesting.labeling import BetSizingConfig
 
         config = FinancialMLConfig(
             bet_sizing_method="kelly",

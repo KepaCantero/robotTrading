@@ -8,21 +8,17 @@ This test suite validates real-world usage patterns:
 - Dead letter queue handling
 """
 import asyncio
-import os
-import tempfile
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 import pytest_asyncio
 
 from app.services.task_queue import (
+    PersistentTaskQueue,
     Task,
     TaskPriority,
     TaskStatus,
-    PersistentTaskQueue,
-    exponential_backoff,
     create_task,
 )
 

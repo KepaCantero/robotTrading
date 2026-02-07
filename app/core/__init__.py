@@ -49,7 +49,7 @@ try:
     )
 
     _compliance_engine_available = True
-except ImportError as e:
+except ImportError:
     # Import error - likely due to NumPy/matplotlib compatibility issues
     # Set these to None to prevent import errors when only using other core modules
     logger.error("Failed to import ComplianceEngine", exc_info=True)
@@ -73,7 +73,7 @@ try:
     )
 
     _compliance_integration_available = True
-except ImportError as e:
+except ImportError:
     # Import error - likely due to NumPy/matplotlib compatibility issues
     logger.error("Failed to import ComplianceIntegrationEngine (legacy)", exc_info=True)
     ComplianceIntegrationEngineDeprecated = None  # type: ignore

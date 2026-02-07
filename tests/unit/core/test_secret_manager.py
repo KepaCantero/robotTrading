@@ -15,22 +15,23 @@ Test Coverage:
 """
 
 import os
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 from app.core.secret_manager import (
+    SecretCategory,
+    SecretDefinition,
     SecretManager,
+    SecretNotConfiguredError,
+    SecretValidationError,
+    SecretValidationReport,
+    get_connection_string,
     get_secret,
+    is_production,
+    mask_secret,
     require_secret,
     validate_secrets_configured,
-    get_connection_string,
-    mask_secret,
-    is_production,
-    SecretDefinition,
-    SecretCategory,
-    SecretValidationError,
-    SecretNotConfiguredError,
-    SecretValidationReport,
 )
 
 

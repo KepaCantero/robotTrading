@@ -7,8 +7,9 @@ Tests the critical safety filter that prevents trading during adverse market con
 - Extreme volatility crises
 """
 
+from unittest.mock import Mock
+
 import pytest
-from unittest.mock import Mock, MagicMock
 
 from app.strategies.momentum_modular.strategy import ModularMomentumStrategy
 

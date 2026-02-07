@@ -3,13 +3,13 @@ Unit tests for Historical VaR Calculator.
 
 Tests for historical simulation VaR calculation with Numba optimization.
 """
-import pytest
+
 import numpy as np
-from unittest.mock import patch, Mock
+import pytest
 
 from app.engines.risk_engine.var_calculators.var_calculators import (
-    HistoricalVaRCalculator,
     BaseVaRCalculator,
+    HistoricalVaRCalculator,
     calculate_percentile_numba,
 )
 

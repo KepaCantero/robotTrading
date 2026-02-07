@@ -8,8 +8,6 @@ and related implementations.
 
 from datetime import date, timedelta
 from decimal import Decimal
-from typing import Any
-from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -21,10 +19,7 @@ from app.strategies.fx_carry_trade.fx_rates_provider import (
     InMemoryFXRateProvider,
     MockFXDataSource,
 )
-from app.strategies.fx_carry_trade.models import (
-    FXPair,
-    InterestRateQuote,
-)
+from app.strategies.fx_carry_trade.models import FXPair, InterestRateQuote
 
 
 class TestInMemoryFXRateProvider:
@@ -71,43 +66,59 @@ class TestInMemoryFXRateProvider:
 
         assert provider._interest_rates[("USD", sample_date, 3)] == Decimal("0.0525")
 
-    def test_add_spot_rate_invalid_pair(self, provider: InMemoryFXRateProvider, sample_date: date) -> None:
+    def test_add_spot_rate_invalid_pair(
+        self, provider: InMemoryFXRateProvider, sample_date: date
+    ) -> None:
         """Test validation rejects invalid pair format."""
         with pytest.raises(ValueError, match="Invalid pair format"):
             provider.add_spot_rate("USDJPY", Decimal("110.50"), sample_date)
 
-    def test_add_spot_rate_negative_rate(self, provider: InMemoryFXRateProvider, sample_date: date) -> None:
+    def test_add_spot_rate_negative_rate(
+        self, provider: InMemoryFXRateProvider, sample_date: date
+    ) -> None:
         """Test validation rejects negative rate."""
         with pytest.raises(ValueError, match="Rate must be positive"):
             provider.add_spot_rate("USD/JPY", Decimal("-110.50"), sample_date)
 
-    def test_add_spot_rate_zero_rate(self, provider: InMemoryFXRateProvider, sample_date: date) -> None:
+    def test_add_spot_rate_zero_rate(
+        self, provider: InMemoryFXRateProvider, sample_date: date
+    ) -> None:
         """Test validation rejects zero rate."""
         with pytest.raises(ValueError, match="Rate must be positive"):
             provider.add_spot_rate("USD/JPY", Decimal("0"), sample_date)
 
-    def test_add_forward_rate_invalid_months(self, provider: InMemoryFXRateProvider, sample_date: date) -> None:
+    def test_add_forward_rate_invalid_months(
+        self, provider: InMemoryFXRateProvider, sample_date: date
+    ) -> None:
         """Test validation rejects invalid months."""
         with pytest.raises(ValueError, match="months must be 1, 3, 6, or 12"):
             provider.add_forward_rate("USD/JPY", Decimal("110.20"), sample_date, 2)
 
-    def test_add_forward_rate_all_valid_months(self, provider: InMemoryFXRateProvider, sample_date: date) -> None:
+    def test_add_forward_rate_all_valid_months(
+        self, provider: InMemoryFXRateProvider, sample_date: date
+    ) -> None:
         """Test all valid month values for forward rate."""
         for months in [1, 3, 6, 12]:
             provider.add_forward_rate("EUR/USD", Decimal("1.09"), sample_date, months)
             assert ("EUR", "USD", sample_date, months) in provider._forward_rates
 
-    def test_add_interest_rate_invalid_currency(self, provider: InMemoryFXRateProvider, sample_date: date) -> None:
+    def test_add_interest_rate_invalid_currency(
+        self, provider: InMemoryFXRateProvider, sample_date: date
+    ) -> None:
         """Test validation rejects invalid currency code."""
         with pytest.raises(ValueError, match="Invalid currency code"):
             provider.add_interest_rate("US", Decimal("0.05"), sample_date, 3)
 
-    def test_add_interest_rate_empty_currency(self, provider: InMemoryFXRateProvider, sample_date: date) -> None:
+    def test_add_interest_rate_empty_currency(
+        self, provider: InMemoryFXRateProvider, sample_date: date
+    ) -> None:
         """Test validation rejects empty currency code."""
         with pytest.raises(ValueError, match="Invalid currency code"):
             provider.add_interest_rate("", Decimal("0.05"), sample_date, 3)
 
-    def test_add_interest_rate_invalid_months(self, provider: InMemoryFXRateProvider, sample_date: date) -> None:
+    def test_add_interest_rate_invalid_months(
+        self, provider: InMemoryFXRateProvider, sample_date: date
+    ) -> None:
         """Test validation rejects invalid months for interest rate."""
         with pytest.raises(ValueError, match="months must be 1, 3, 6, or 12"):
             provider.add_interest_rate("USD", Decimal("0.05"), sample_date, 2)
@@ -121,7 +132,9 @@ class TestInMemoryFXRateProvider:
 
         assert rate == Decimal("110.50")
 
-    def test_get_spot_rate_not_found(self, provider: InMemoryFXRateProvider, sample_date: date) -> None:
+    def test_get_spot_rate_not_found(
+        self, provider: InMemoryFXRateProvider, sample_date: date
+    ) -> None:
         """Test retrieving non-existent spot rate."""
         pair = FXPair(base_currency="USD", quote_currency="JPY")
 
@@ -137,7 +150,9 @@ class TestInMemoryFXRateProvider:
 
         assert rate == Decimal("110.20")
 
-    def test_get_forward_rate_not_found(self, provider: InMemoryFXRateProvider, sample_date: date) -> None:
+    def test_get_forward_rate_not_found(
+        self, provider: InMemoryFXRateProvider, sample_date: date
+    ) -> None:
         """Test retrieving non-existent forward rate."""
         pair = FXPair(base_currency="USD", quote_currency="JPY")
 
@@ -152,12 +167,16 @@ class TestInMemoryFXRateProvider:
 
         assert rate == Decimal("0.0525")
 
-    def test_get_interest_rate_not_found(self, provider: InMemoryFXRateProvider, sample_date: date) -> None:
+    def test_get_interest_rate_not_found(
+        self, provider: InMemoryFXRateProvider, sample_date: date
+    ) -> None:
         """Test retrieving non-existent interest rate."""
         with pytest.raises(ValueError, match="Interest rate not found"):
             provider.get_interest_rate("USD", sample_date, 3)
 
-    def test_multiple_rates_same_pair(self, provider: InMemoryFXRateProvider, sample_date: date) -> None:
+    def test_multiple_rates_same_pair(
+        self, provider: InMemoryFXRateProvider, sample_date: date
+    ) -> None:
         """Test storing multiple rates for same pair at different dates."""
         date1 = sample_date
         date2 = sample_date + timedelta(days=1)
@@ -169,7 +188,9 @@ class TestInMemoryFXRateProvider:
         assert provider.get_spot_rate(pair, date1) == Decimal("110.50")
         assert provider.get_spot_rate(pair, date2) == Decimal("110.60")
 
-    def test_multiple_forward_periods(self, provider: InMemoryFXRateProvider, sample_date: date) -> None:
+    def test_multiple_forward_periods(
+        self, provider: InMemoryFXRateProvider, sample_date: date
+    ) -> None:
         """Test storing forward rates for multiple periods."""
         provider.add_forward_rate("EUR/USD", Decimal("1.087"), sample_date, 1)
         provider.add_forward_rate("EUR/USD", Decimal("1.090"), sample_date, 3)
@@ -196,7 +217,9 @@ class TestInMemoryFXRateProvider:
         with pytest.raises(ValueError, match="Invalid pair format"):
             provider._parse_pair_string("USD/JPY/GBP")
 
-    def test_parse_pair_string_invalid_currency_length(self, provider: InMemoryFXRateProvider) -> None:
+    def test_parse_pair_string_invalid_currency_length(
+        self, provider: InMemoryFXRateProvider
+    ) -> None:
         """Test parsing pair string with invalid currency length."""
         with pytest.raises(ValueError, match="Invalid currency codes in pair"):
             provider._parse_pair_string("US/JPY")
@@ -225,7 +248,9 @@ class TestCachedFXRateProvider:
         """Provide a test date."""
         return date(2024, 1, 15)
 
-    def test_cached_provider_initialization(self, underlying_provider: InMemoryFXRateProvider) -> None:
+    def test_cached_provider_initialization(
+        self, underlying_provider: InMemoryFXRateProvider
+    ) -> None:
         """Test cached provider initialization."""
         cached = CachedFXRateProvider(underlying_provider, cache_ttl=100)
 
@@ -285,6 +310,7 @@ class TestCachedFXRateProvider:
 
         # Wait a moment and call again - should re-fetch
         import time
+
         time.sleep(0.01)
         rate2 = cached.get_spot_rate(pair, test_date)
 
@@ -474,7 +500,9 @@ class TestFXRateProviderImpl:
         """Provide a test date."""
         return date(2024, 1, 15)
 
-    def test_provider_initialization(self, provider: FXRateProviderImpl, mock_source: MockFXDataSource) -> None:
+    def test_provider_initialization(
+        self, provider: FXRateProviderImpl, mock_source: MockFXDataSource
+    ) -> None:
         """Test provider initialization."""
         assert provider._data_source == mock_source
 
@@ -514,9 +542,7 @@ class TestFXRateProviderImpl:
         assert isinstance(rate, Decimal)
         assert rate >= 0
 
-    def test_different_forward_periods(
-        self, provider: FXRateProviderImpl, test_date: date
-    ) -> None:
+    def test_different_forward_periods(self, provider: FXRateProviderImpl, test_date: date) -> None:
         """Test getting forward rates for different periods."""
         pair = FXPair("EUR", "USD")
 
@@ -545,7 +571,9 @@ class TestFXInterestRateProvider:
         """Provide a test date."""
         return date(2024, 1, 15)
 
-    def test_provider_initialization(self, provider: FXInterestRateProvider, mock_source: MockFXDataSource) -> None:
+    def test_provider_initialization(
+        self, provider: FXInterestRateProvider, mock_source: MockFXDataSource
+    ) -> None:
         """Test provider initialization."""
         assert provider._data_source == mock_source
 
@@ -561,7 +589,9 @@ class TestFXInterestRateProvider:
         assert quote.rate_6m is not None
         assert quote.rate_12m is not None
 
-    def test_get_quote_values_valid(self, provider: FXInterestRateProvider, test_date: date) -> None:
+    def test_get_quote_values_valid(
+        self, provider: FXInterestRateProvider, test_date: date
+    ) -> None:
         """Test that quote values are valid."""
         quote = provider.get_quote("EUR", test_date)
 
@@ -582,7 +612,9 @@ class TestFXInterestRateProvider:
         assert jpy_quote.currency == "JPY"
         assert eur_quote.currency == "EUR"
 
-    def test_get_quote_term_structure(self, provider: FXInterestRateProvider, test_date: date) -> None:
+    def test_get_quote_term_structure(
+        self, provider: FXInterestRateProvider, test_date: date
+    ) -> None:
         """Test that quote represents term structure."""
         quote = provider.get_quote("USD", test_date)
 
@@ -608,7 +640,8 @@ class TestFXDataSourceProtocol:
 
     def test_protocol_is_protocol(self) -> None:
         """Test that FXDataSource is a Protocol."""
-        from typing import get_type_hints
 
         # Protocols have specific attributes
-        assert hasattr(FXDataSource, "__protocol_attrs__") or FXDataSource.__name__ == "FXDataSource"
+        assert (
+            hasattr(FXDataSource, "__protocol_attrs__") or FXDataSource.__name__ == "FXDataSource"
+        )

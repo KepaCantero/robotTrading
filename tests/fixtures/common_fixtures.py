@@ -5,30 +5,21 @@ This module provides common fixtures used across multiple test modules.
 """
 
 import asyncio
-import pytest
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
+from unittest.mock import MagicMock
 from uuid import uuid4
-from unittest.mock import AsyncMock, MagicMock
 
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
+import pytest
 
+from app.services.emergency_handler.emergency_closer import EmergencyCloser
+from app.services.fifo.fifo_integrator import FIFOIntegrator, Trade
 from app.services.position_monitor import (
     MonitoredPosition,
     PositionMonitor,
     PositionMonitorConfig,
     PositionStatus,
-)
-from app.services.emergency_handler.emergency_closer import (
-    EmergencyCloser,
-    EmergencyTrigger,
-)
-from app.services.fifo.fifo_integrator import (
-    FIFOIntegrator,
-    Trade,
-    Position,
 )
 
 
@@ -407,8 +398,9 @@ def memory_monitor():
 
     Useful for detecting memory leaks in load tests.
     """
-    import psutil
     import os
+
+    import psutil
 
     class MemoryMonitor:
         def __init__(self):
@@ -454,7 +446,6 @@ def test_data_dir():
     """
     Directory for test data files.
     """
-    import os
     from pathlib import Path
 
     base_dir = Path(__file__).parent.parent.parent
@@ -470,8 +461,6 @@ def temp_db_path(test_data_dir):
     """
     Path for temporary database file.
     """
-    import tempfile
-    from pathlib import Path
 
     db_path = test_data_dir / f"test_{uuid4()}.db"
 

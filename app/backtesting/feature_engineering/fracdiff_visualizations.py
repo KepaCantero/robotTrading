@@ -5,8 +5,6 @@ This module provides plotting functions to visualize the effects of fractional
 differentiation on time series data, including memory preservation and stationarity.
 """
 
-import logging
-
 import warnings
 from typing import List, Optional, Tuple
 
@@ -295,7 +293,7 @@ def plot_stationarity_test(
             adf_result = adfuller(clean_series, maxlag=1)
             p_values.append(adf_result[1])
             adf_stats.append(adf_result[0])
-        except:
+        except (ImportError, ValueError, TypeError):
             p_values.append(1.0)
             adf_stats.append(0)
 

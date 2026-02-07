@@ -14,12 +14,11 @@ References:
 
 import logging
 from collections import deque
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
 
 import numpy as np
-from scipy import signal as scipy_signal
 
 from app.market_microstructure.ofi.models import (
     CumulativeOFI,
@@ -33,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 class InvalidPriceError(ValueError):
     """Raised when an invalid price is provided."""
-    pass
+
 
 
 @dataclass
@@ -205,7 +204,7 @@ class OFICalculator:
 
         # Check if price is zero
         if price == 0:
-            raise InvalidPriceError(f"Price cannot be zero")
+            raise InvalidPriceError("Price cannot be zero")
 
         # Check if price is NaN (using comparison with itself)
         if price != price:  # NaN != NaN is True

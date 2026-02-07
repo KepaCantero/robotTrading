@@ -29,12 +29,8 @@ Examples:
     >>> strategy = FXIntermarketStrategy(config=config)
 """
 
-from app.strategies.fx_intermarket.correlation_analyzer import (
-    CorrelationAnalyzer,
-)
-from app.strategies.fx_intermarket.fx_intermarket_strategy import (
-    FXIntermarketStrategy,
-)
+from app.strategies.fx_intermarket.correlation_analyzer import CorrelationAnalyzer
+from app.strategies.fx_intermarket.fx_intermarket_strategy import FXIntermarketStrategy
 from app.strategies.fx_intermarket.models import (
     AssetClass,
     FXCorrelationPair,

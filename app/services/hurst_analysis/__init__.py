@@ -28,13 +28,9 @@ Version: 3.0.0 - SOLID Refactored
 Compliance: SOLID Principles, Type Hints (Strict), Clean Architecture
 """
 
-from app.services.hurst_analysis import utils
 from app.services.hurst_analysis.change_detector import RegimeChangeDetector
 from app.services.hurst_analysis.confidence_calculator import ConfidenceCalculator
-from app.services.hurst_analysis.factory import (
-    create_custom_analyzer,
-    create_default_analyzer,
-)
+from app.services.hurst_analysis.factory import create_custom_analyzer, create_default_analyzer
 from app.services.hurst_analysis.historian import HistoricalDataTracker
 from app.services.hurst_analysis.models import (
     HurstResult,

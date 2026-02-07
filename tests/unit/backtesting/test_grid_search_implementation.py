@@ -5,10 +5,10 @@ Verifies that the grid search backtest method is correctly implemented
 and follows all the required rules.
 """
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock
 from datetime import datetime
-from decimal import Decimal
+from unittest.mock import Mock, patch
+
+import pytest
 
 from app.backtesting.comprehensive_backtest_runner import ComprehensiveBacktestRunner
 
@@ -100,7 +100,7 @@ class TestGridSearchImplementation:
             runner._run_backtest_with_quotes.return_value = mock_backtest_result
 
             # Run grid search (should return empty due to mock complexity)
-            result = runner.run_grid_search_backtest()
+            runner.run_grid_search_backtest()
 
             # Verify that splitter was called with correct parameters
             mock_splitter.assert_called_once()
@@ -117,7 +117,7 @@ class TestGridSearchImplementation:
         """Test that _evaluate_param_set_static is a static method."""
         import inspect
 
-        method = getattr(ComprehensiveBacktestRunner, '_evaluate_param_set_static')
+        getattr(ComprehensiveBacktestRunner, '_evaluate_param_set_static')
         assert isinstance(
             inspect.getattr_static(ComprehensiveBacktestRunner, '_evaluate_param_set_static'),
             staticmethod,

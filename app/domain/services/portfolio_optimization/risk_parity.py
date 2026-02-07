@@ -17,12 +17,11 @@ import numpy as np
 from scipy.optimize import minimize
 
 from app.domain.services.portfolio_optimization._validation import (
-    validate_covariance_matrix,
-    sanitize_covariance_matrix,
-    log_optimization_failure,
     MIN_VARIANCE_THRESHOLD,
+    log_optimization_failure,
+    sanitize_covariance_matrix,
+    validate_covariance_matrix,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -504,8 +503,7 @@ def cluster_based_risk_parity(
 
     if len(cluster_labels) != n_assets:
         raise ValueError(
-            f"Cluster labels length {len(cluster_labels)} "
-            f"must match n_assets {n_assets}"
+            f"Cluster labels length {len(cluster_labels)} " f"must match n_assets {n_assets}"
         )
 
     symbols = symbols or [f"Asset_{i}" for i in range(n_assets)]

@@ -10,14 +10,12 @@ Tests cover:
 - Edge cases (empty universe, single asset)
 """
 
-from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import numpy as np
 import pytest
 
 from app.engines.portfolio_engine.optimizers import (
-    BaseOptimizer,
     BlackLittermanOptimizer,
     KellyCriterionOptimizer,
     MarkowitzOptimizer,
@@ -39,7 +37,6 @@ class TestMarkowitzOptimizer:
     def sample_data(self):
         """Create sample returns and covariance matrix."""
         np.random.seed(42)
-        n = 5
 
         # Expected returns
         expected_returns = np.array([0.08, 0.10, 0.06, 0.12, 0.09])
@@ -366,7 +363,7 @@ class TestRiskParityOptimizer:
         result = optimizer.optimize(expected_returns, cov_matrix)
 
         # Manually verify risk contributions
-        weights = np.array(list(result["weights"].values()))
+        np.array(list(result["weights"].values()))
         risk_contribs = np.array(list(result["risk_contributions"].values()))
 
         # Risk contributions should sum to 1
@@ -794,10 +791,10 @@ class TestOptimizerEdgeCases:
 
     def test_empty_universe(self):
         """Test handling of empty universe (no assets)."""
-        expected_returns = np.array([])
-        cov_matrix = np.array([[]]).reshape(0, 0)
+        np.array([])
+        np.array([[]]).reshape(0, 0)
 
-        optimizer = MarkowitzOptimizer({})
+        MarkowitzOptimizer({})
         # This should handle gracefully
         # Note: current implementation might error, which is acceptable
         # for an edge case like this

@@ -133,9 +133,7 @@ def _create_calculator(method: str) -> HurstCalculator:
 
         return VarianceMethodCalculator()
     elif method == "agg_var":
-        from app.services.hurst_analysis.variance_calculator import (
-            AggregatedVarianceCalculator,
-        )
+        from app.services.hurst_analysis.variance_calculator import AggregatedVarianceCalculator
 
         return AggregatedVarianceCalculator()
     else:

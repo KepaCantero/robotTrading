@@ -1,0 +1,114 @@
+# Ralph Orchestrator Configuration for GAP Audit
+# Sistema de auditoría automatizada con GLM-4.7
+
+orchestrator:
+  model: glm-4.7
+  max_concurrent: 3
+  timeout_minutes: 30
+  retry_attempts: 2
+  retry_delay_seconds: 30
+
+execution:
+  working_directory: /Users/kepa.cantero/Projects/algoTrading
+  batch_file: .ralph/batches.json
+  checkpoint_file: .ralph/checkpoint_progress.json
+  reports_directory: .gap_reports
+  backups_directory: .gap_backups
+
+phases:
+  - name: analyze
+    description: "Analyze files for GAP violations"
+    agent: gap-analyzer
+    input_template: .claude/templates/gap/GAP_ANALYSIS_OUTPUT.md
+    output_format: json
+
+  - name: fix
+    description: "Fix identified violations"
+    agent: code-fixer
+    input_from: analyze
+    output_format: diff
+
+  - name: validate
+    description: "Validate fixes with comprehensive checks"
+    agent: code-validator
+    script: scripts/validate_file_comprehensive.sh
+    continue_on_error: false
+
+  - name: review
+    description: "Final code review"
+    agent: code-reviewer
+    input_template: .claude/templates/refactor/CODE_REVIEWER_DATA.md
+    output_format: report
+
+audit_criteria:
+  base_rules: .requirements/BASE_RULES.md
+  check_last_modified: true
+  check_dependencies: true
+  check_type_hints: true
+  check_docstrings: true
+  check_error_handling: true
+
+batch_strategy:
+  group_by: layer
+  size_categories:
+    small:
+      max_files: 20
+      max_lines: 100
+      max_time_minutes: 5
+    medium:
+      max_files: 10
+      max_lines: 300
+      max_time_minutes: 10
+    large:
+      max_files: 5
+      max_lines: 600
+      max_time_minutes: 20
+    xlarge:
+      max_files: 2
+      max_lines: 0  # unlimited
+      max_time_minutes: 30
+
+validation:
+  tools:
+    - name: mypy
+      command: mypy --ignore-missing-imports
+    - name: ruff
+      command: ruff check
+    - name: pytest
+      command: pytest -v --tb=short
+    - name: bandit
+      command: bandit -r
+    - name: radon
+      command: radon cc .
+
+  thresholds:
+    max_complexity: 10
+    max_maintainability_index: 20
+    max_type_errors: 0
+    max_lint_errors: 5
+
+checkpointing:
+  enabled: true
+  save_interval: 5  # Save after every 5 files
+  auto_resume: true
+  rollback_on_failure: true
+
+reporting:
+  format:
+    - markdown
+    - json
+  include_metrics: true
+  include_violations: true
+  include_fixes: true
+  generate_summary: true
+
+monitoring:
+  dashboard_port: 8080
+  update_frequency_seconds: 2
+  log_file: .ralph/audit.log
+  log_level: INFO
+
+blocked_files:
+  handler: scripts/handle_blocked_files.py
+  max_retries: 3
+  notify: true

@@ -162,9 +162,7 @@ class ChanSharpeRatioCalculator:
                 return self._empty_sharpe_result()
 
             daily_mean, daily_std = self._calculate_daily_statistics(returns_array)
-            daily_sharpe, annualized_sharpe = self._calculate_sharpe_values(
-                daily_mean, daily_std
-            )
+            daily_sharpe, annualized_sharpe = self._calculate_sharpe_values(daily_mean, daily_std)
 
             skewness = float(self._calculate_skewness(returns_array))
             excess_kurtosis = float(self._calculate_excess_kurtosis(returns_array))
@@ -350,7 +348,6 @@ class ChanDrawdownAnalyzer:
 
     def __init__(self):
         """Initialize drawdown analyzer."""
-        pass
 
     def analyze_drawdown(
         self,
@@ -389,13 +386,9 @@ class ChanDrawdownAnalyzer:
             max_dd, max_dd_pct, max_dd_idx, peak_idx = self._find_max_drawdown(
                 drawdown, equity_array
             )
-            duration_days = self._calculate_drawdown_duration(
-                dates, max_dd_idx, peak_idx
-            )
+            duration_days = self._calculate_drawdown_duration(dates, max_dd_idx, peak_idx)
             avg_drawdown = self._calculate_average_drawdown(drawdown)
-            recovery_factor = self._calculate_recovery_factor(
-                equity_array, running_peak, max_dd
-            )
+            recovery_factor = self._calculate_recovery_factor(equity_array, running_peak, max_dd)
 
             dd_distribution = self._calculate_drawdown_distribution(drawdown)
             drawdown_periods = self._identify_drawdown_periods(drawdown, dates)
@@ -747,9 +740,7 @@ class ChanReturnDistributionAnalyzer:
                 logger.warning("Insufficient data for distribution analysis")
                 return self._empty_distribution_result()
 
-            mean_return, median_return, std_return = self._calculate_basic_statistics(
-                returns_array
-            )
+            mean_return, median_return, std_return = self._calculate_basic_statistics(returns_array)
             positive_pct, negative_pct = self._calculate_win_loss_ratios(returns_array)
             best_day, worst_day = self._calculate_extreme_returns(returns_array)
 
@@ -804,12 +795,8 @@ class ChanReturnDistributionAnalyzer:
         positive_returns = returns_array[returns_array > 0]
         negative_returns = returns_array[returns_array < 0]
 
-        positive_pct = (
-            len(positive_returns) / len(returns_array) if len(returns_array) > 0 else 0
-        )
-        negative_pct = (
-            len(negative_returns) / len(returns_array) if len(returns_array) > 0 else 0
-        )
+        positive_pct = len(positive_returns) / len(returns_array) if len(returns_array) > 0 else 0
+        negative_pct = len(negative_returns) / len(returns_array) if len(returns_array) > 0 else 0
         return positive_pct, negative_pct
 
     def _calculate_extreme_returns(
@@ -862,9 +849,7 @@ class ChanReturnDistributionAnalyzer:
         up_mask = bench_aligned > 0
         if up_mask.sum() > 0:
             if bench_aligned[up_mask].mean() != 0:
-                return float(
-                    returns_aligned[up_mask].mean() / bench_aligned[up_mask].mean()
-                )
+                return float(returns_aligned[up_mask].mean() / bench_aligned[up_mask].mean())
         return 0.0
 
     def _calculate_down_capture(
@@ -876,9 +861,7 @@ class ChanReturnDistributionAnalyzer:
         down_mask = bench_aligned < 0
         if down_mask.sum() > 0:
             if bench_aligned[down_mask].mean() != 0:
-                return float(
-                    returns_aligned[down_mask].mean() / bench_aligned[down_mask].mean()
-                )
+                return float(returns_aligned[down_mask].mean() / bench_aligned[down_mask].mean())
         return 0.0
 
     def _calculate_tail_ratio(self, returns_array: np.ndarray) -> float:
@@ -935,15 +918,11 @@ class ChanStrategyComparator:
             sharpe1, sharpe2 = self._calculate_strategy_sharpe(returns1, returns2)
             sharpe_diff = sharpe1 - sharpe2
 
-            is_significant = self._test_sharpe_difference(
-                returns1, returns2, confidence_level
-            )
+            is_significant = self._test_sharpe_difference(returns1, returns2, confidence_level)
             tracking_error = self._calculate_tracking_error(returns1, returns2)
             info_ratio = self._calculate_information_ratio(returns1, returns2)
 
-            recommended = self._determine_recommended_strategy(
-                sharpe1, sharpe2, is_significant
-            )
+            recommended = self._determine_recommended_strategy(sharpe1, sharpe2, is_significant)
 
             return StrategyComparisonResult(
                 strategy1_sharpe=float(sharpe1),

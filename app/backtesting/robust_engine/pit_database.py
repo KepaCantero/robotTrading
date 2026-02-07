@@ -29,11 +29,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 
-from ..point_in_time_database import (
-    CorporateAction,
-    PITDataSnapshot,
-    PointInTimeDatabase,
-)
+from ..point_in_time_database import CorporateAction, PITDataSnapshot, PointInTimeDatabase
 
 logger = logging.getLogger(__name__)
 

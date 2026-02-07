@@ -25,16 +25,14 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Callable, Dict, List, Optional, Type, TypeVar
+from typing import Any, Dict, List, Optional, TypeVar
 
 from ..entities.order import Order, OrderSide, OrderStatus, OrderType
 from ..entities.portfolio import Portfolio, PortfolioStatus, Position
 from ..entities.position import PositionSide
 from ..value_objects.capital import Capital
-from ..value_objects.money import Money
 from ..value_objects.risk_parameters import RiskParameters
 
 logger = logging.getLogger(__name__)
@@ -69,17 +67,14 @@ class AbstractEntityFactory(ABC):
     @abstractmethod
     def create_order(self, **kwargs) -> Order:
         """Create an Order entity."""
-        pass
 
     @abstractmethod
     def create_portfolio(self, **kwargs) -> Portfolio:
         """Create a Portfolio entity."""
-        pass
 
     @abstractmethod
     def create_position(self, **kwargs) -> Position:
         """Create a Position entity."""
-        pass
 
 
 # ============================================================================

@@ -17,7 +17,6 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Optional
 
 import pytest
 
@@ -518,8 +517,8 @@ class TestAvellanedaStoikovModel:
             time_remaining=Decimal("1800"),
         )
         # Ask should be closer to mid than bid when long
-        bid_distance = sample_mid_price - Decimal(str(quote.optimal_bid))
-        ask_distance = Decimal(str(quote.optimal_ask)) - sample_mid_price
+        sample_mid_price - Decimal(str(quote.optimal_bid))
+        Decimal(str(quote.optimal_ask)) - sample_mid_price
         # When long, both shift down, but ask more so to encourage selling
         assert quote.reservation_price < sample_mid_price
 
@@ -1264,7 +1263,7 @@ class TestASIntegration:
     ) -> None:
         """Test inventory impacts subsequent quotes."""
         generator = ASQuoteGenerator(default_as_config)
-        manager = InventoryManager(default_inventory_config, default_as_config)
+        InventoryManager(default_inventory_config, default_as_config)
 
         # Start with neutral position
         quote_1 = generator.generate_quotes(

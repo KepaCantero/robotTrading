@@ -12,15 +12,12 @@ Properties tested:
 - Greeks sensitivity properties
 """
 
-from typing import Dict, Any
 
 import numpy as np
 import pytest
-from hypothesis import given, settings, assume
-from hypothesis import strategies as st
+from hypothesis import assume, given, settings, strategies as st
 
 from app.engines.risk_engine.greeks_calculator import GreeksCalculator
-
 
 # ============================================================================
 # Test Strategies

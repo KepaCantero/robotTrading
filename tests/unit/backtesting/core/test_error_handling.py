@@ -12,7 +12,6 @@ from __future__ import annotations
 from unittest.mock import Mock, patch
 
 import pytest
-from tenacity import RetryError
 
 from app.backtesting.core.error_handling import (
     MutexError,

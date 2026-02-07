@@ -24,10 +24,7 @@ Examples:
     >>> strategy = FXCarryTradeStrategy(config=config, rate_provider=provider)
 """
 
-from app.strategies.fx_carry_trade.carry_calculator import (
-    CarryCalculator,
-    CarryTradeOpportunity,
-)
+from app.strategies.fx_carry_trade.carry_calculator import CarryCalculator, CarryTradeOpportunity
 from app.strategies.fx_carry_trade.fx_carry_trade_strategy import (
     FXCarryTradeState,
     FXCarryTradeStrategy,

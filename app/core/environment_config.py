@@ -64,8 +64,7 @@ class DatabaseConfig(BaseSettings):
     def validate_port(cls, v):
         if not 1 <= v <= 65535:
             logger.error(
-                "Invalid database port configuration",
-                extra={"port": v, "min": 1, "max": 65535}
+                "Invalid database port configuration", extra={"port": v, "min": 1, "max": 65535}
             )
             raise ValueError("Port must be between 1 and 65535")
         return v
@@ -75,8 +74,7 @@ class DatabaseConfig(BaseSettings):
     def validate_pool_size(cls, v):
         if v < 1:
             logger.error(
-                "Invalid database pool size configuration",
-                extra={"pool_size": v, "minimum": 1}
+                "Invalid database pool size configuration", extra={"pool_size": v, "minimum": 1}
             )
             raise ValueError("Pool size must be at least 1")
         return v
@@ -84,16 +82,13 @@ class DatabaseConfig(BaseSettings):
     @property
     def connection_string(self) -> str:
         """Get database connection string.
-        
+
         SECURITY: Password is included in return value but NOT in logs.
         The logger.info() above only logs host, port, database, ssl_mode - never password.
         This is verified by reviewing the extra dict - no password field is present.
         """
         if self.db_url:
-            logger.info(
-                "Using explicit database URL",
-                extra={"has_custom_url": True}
-            )
+            logger.info("Using explicit database URL", extra={"has_custom_url": True})
             return self.db_url
 
         # SECURITY VERIFIED: Log output does not include password
@@ -103,8 +98,8 @@ class DatabaseConfig(BaseSettings):
                 "host": self.db_host,
                 "port": self.db_port,
                 "database": self.db_name,
-                "ssl_mode": self.db_ssl_mode
-            }
+                "ssl_mode": self.db_ssl_mode,
+            },
         )
         # Password is in connection string but not logged (verified above)
         return (
@@ -137,8 +132,7 @@ class RedisConfig(BaseSettings):
     def validate_port(cls, v):
         if not 1 <= v <= 65535:
             logger.error(
-                "Invalid Redis port configuration",
-                extra={"port": v, "min": 1, "max": 65535}
+                "Invalid Redis port configuration", extra={"port": v, "min": 1, "max": 65535}
             )
             raise ValueError("Port must be between 1 and 65535")
         return v
@@ -147,10 +141,7 @@ class RedisConfig(BaseSettings):
     def connection_string(self) -> str:
         """Get Redis connection string."""
         if self.redis_url:
-            logger.info(
-                "Using explicit Redis URL",
-                extra={"has_custom_url": True}
-            )
+            logger.info("Using explicit Redis URL", extra={"has_custom_url": True})
             return self.redis_url
 
         auth = f":{self.redis_password}@" if self.redis_password else ""
@@ -162,8 +153,8 @@ class RedisConfig(BaseSettings):
                 "host": self.redis_host,
                 "port": self.redis_port,
                 "db": self.redis_db,
-                "ssl": self.redis_ssl
-            }
+                "ssl": self.redis_ssl,
+            },
         )
         return f"{protocol}://{auth}{self.redis_host}:{self.redis_port}/{self.redis_db}"
 
@@ -177,7 +168,9 @@ class APIConfig(BaseSettings):
     api_workers: int = Field(default=1, env="API_WORKERS")
 
     # Security
-    secret_key: str = Field(default="", env="SECRET_KEY")  # SECURITY: No default - must be set from environment
+    secret_key: str = Field(
+        default="", env="SECRET_KEY"
+    )  # SECURITY: No default - must be set from environment
     access_token_expire_minutes: int = Field(default=30, env="ACCESS_TOKEN_EXPIRE_MINUTES")
     refresh_token_expire_days: int = Field(default=7, env="REFRESH_TOKEN_EXPIRE_DAYS")
 
@@ -195,8 +188,7 @@ class APIConfig(BaseSettings):
     def validate_port(cls, v):
         if not 1 <= v <= 65535:
             logger.error(
-                "Invalid API port configuration",
-                extra={"port": v, "min": 1, "max": 65535}
+                "Invalid API port configuration", extra={"port": v, "min": 1, "max": 65535}
             )
             raise ValueError("Port must be between 1 and 65535")
         return v
@@ -205,24 +197,23 @@ class APIConfig(BaseSettings):
     @classmethod
     def validate_secret_key(cls, v):
         if not v:
-            logger.critical(
-                "Security risk: Secret key not set",
-                extra={"configured": False}
+            logger.critical("Security risk: Secret key not set", extra={"configured": False})
+            raise ValueError(
+                'SECRET_KEY must be set from environment variable (generate with: python -c "import secrets; print(secrets.token_urlsafe(32))")'
             )
-            raise ValueError('SECRET_KEY must be set from environment variable (generate with: python -c "import secrets; print(secrets.token_urlsafe(32))")')
         if len(v) < 32:
             logger.error(
-                "Invalid API secret key configuration",
-                extra={"key_length": len(v), "minimum": 32}
+                "Invalid API secret key configuration", extra={"key_length": len(v), "minimum": 32}
             )
             raise ValueError("Secret key must be at least 32 characters")
         # Reject default weak key
         if v == "12345678901234567890123456789012":
             logger.critical(
-                "Security risk: Default secret key detected",
-                extra={"using_default": True}
+                "Security risk: Default secret key detected", extra={"using_default": True}
             )
-            raise ValueError('Default secret key is not allowed. Generate with: python -c "import secrets; print(secrets.token_urlsafe(32))"')
+            raise ValueError(
+                'Default secret key is not allowed. Generate with: python -c "import secrets; print(secrets.token_urlsafe(32))"'
+            )
         return v
 
 
@@ -257,7 +248,7 @@ class TradingConfig(BaseSettings):
         if not 0 < v <= 1:
             logger.error(
                 "Invalid trading position size configuration",
-                extra={"position_size": v, "min": 0, "max": 1}
+                extra={"position_size": v, "min": 0, "max": 1},
             )
             raise ValueError("Position size must be between 0 and 1")
         return v
@@ -268,7 +259,7 @@ class TradingConfig(BaseSettings):
         if not 0 < v <= 1:
             logger.error(
                 "Invalid daily loss limit configuration",
-                extra={"daily_loss": v, "min": 0, "max": 1}
+                extra={"daily_loss": v, "min": 0, "max": 1},
             )
             raise ValueError("Daily loss limit must be between 0 and 1")
         return v
@@ -279,7 +270,7 @@ class TradingConfig(BaseSettings):
         if not 0 < v <= 1:
             logger.error(
                 "Invalid stop loss percentage configuration",
-                extra={"stop_loss": v, "min": 0, "max": 1}
+                extra={"stop_loss": v, "min": 0, "max": 1},
             )
             raise ValueError("Stop loss must be between 0 and 1")
         return v
@@ -315,8 +306,7 @@ class LoggingConfig(BaseSettings):
     def validate_file_size(cls, v):
         if v < 1024:  # At least 1KB
             logger.error(
-                "Invalid log file size configuration",
-                extra={"file_size": v, "minimum": 1024}
+                "Invalid log file size configuration", extra={"file_size": v, "minimum": 1024}
             )
             raise ValueError("Log file max size must be at least 1KB")
         return v
@@ -344,8 +334,7 @@ class MonitoringConfig(BaseSettings):
     def validate_port(cls, v):
         if not 1 <= v <= 65535:
             logger.error(
-                "Invalid Prometheus port configuration",
-                extra={"port": v, "min": 1, "max": 65535}
+                "Invalid Prometheus port configuration", extra={"port": v, "min": 1, "max": 65535}
             )
             raise ValueError("Port must be between 1 and 65535")
         return v
@@ -382,29 +371,31 @@ class CentralizedConfig(BaseSettings):
             extra={
                 "environment": self.environment.value,
                 "app_name": self.app_name,
-                "debug": self.debug
-            }
+                "debug": self.debug,
+            },
         )
         self._validate_configuration()
 
     def _validate_configuration(self) -> None:
         """Validate the entire configuration."""
         try:
-            logger.debug("Starting configuration validation", extra={"environment": self.environment.value})
+            logger.debug(
+                "Starting configuration validation", extra={"environment": self.environment.value}
+            )
 
             # Validate environment-specific settings
             if self.environment == Environment.PRODUCTION:
                 if self.debug:
                     logger.critical(
                         "Security risk: Debug mode enabled in production",
-                        extra={"environment": self.environment.value, "debug": True}
+                        extra={"environment": self.environment.value, "debug": True},
                     )
                     raise_configuration_error("Debug mode cannot be enabled in production", "debug")
 
                 if self.api.secret_key == "12345678901234567890123456789012":
                     logger.critical(
                         "Security risk: Default secret key in production",
-                        extra={"environment": self.environment.value}
+                        extra={"environment": self.environment.value},
                     )
                     raise_configuration_error(
                         "Default secret key cannot be used in production", "secret_key"
@@ -414,7 +405,7 @@ class CentralizedConfig(BaseSettings):
             if self.trading.broker_name != "paper" and not self.trading.broker_api_key:
                 logger.warning(
                     "Missing broker API key for live trading",
-                    extra={"broker": self.trading.broker_name}
+                    extra={"broker": self.trading.broker_name},
                 )
                 raise_configuration_error(
                     "Broker API key is required for live trading", "broker_api_key"
@@ -424,7 +415,7 @@ class CentralizedConfig(BaseSettings):
             if not self.database.db_password and self.environment == Environment.PRODUCTION:
                 logger.critical(
                     "Security risk: No database password in production",
-                    extra={"environment": self.environment.value}
+                    extra={"environment": self.environment.value},
                 )
                 raise_configuration_error(
                     "Database password is required in production", "db_password"
@@ -432,7 +423,7 @@ class CentralizedConfig(BaseSettings):
 
             logger.info(
                 "Configuration validation completed successfully",
-                extra={"environment": self.environment.value}
+                extra={"environment": self.environment.value},
             )
 
         except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
@@ -441,7 +432,7 @@ class CentralizedConfig(BaseSettings):
             else:
                 logger.error(
                     "Configuration validation failed with unexpected error",
-                    extra={"error_type": type(e).__name__, "error_message": str(e)}
+                    extra={"error_type": type(e).__name__, "error_message": str(e)},
                 )
                 raise_configuration_error(
                     f"Configuration validation failed: {str(e)}", "validation"
@@ -502,8 +493,7 @@ def reload_config() -> CentralizedConfig:
 def set_config(config: CentralizedConfig) -> None:
     """Set the global configuration instance."""
     logger.info(
-        "Setting new configuration instance",
-        extra={"environment": config.environment.value}
+        "Setting new configuration instance", extra={"environment": config.environment.value}
     )
     # global _config  # F824 removed
 
@@ -511,16 +501,10 @@ def set_config(config: CentralizedConfig) -> None:
 # Environment-specific configuration loading
 def load_config_from_file(file_path: str) -> CentralizedConfig:
     """Load configuration from a specific file."""
-    logger.info(
-        "Loading configuration from file",
-        extra={"file_path": file_path}
-    )
+    logger.info("Loading configuration from file", extra={"file_path": file_path})
 
     if not Path(file_path).exists():
-        logger.error(
-            "Configuration file not found",
-            extra={"file_path": file_path}
-        )
+        logger.error("Configuration file not found", extra={"file_path": file_path})
         raise_configuration_error(f"Configuration file not found: {file_path}", "file_path")
 
     # Set environment variable to load from specific file
@@ -529,7 +513,7 @@ def load_config_from_file(file_path: str) -> CentralizedConfig:
 
     logger.info(
         "Successfully loaded configuration from file",
-        extra={"file_path": file_path, "environment": config.environment.value}
+        extra={"file_path": file_path, "environment": config.environment.value},
     )
     return config
 
@@ -541,10 +525,7 @@ def get_settings() -> CentralizedConfig:
 
 def create_config_for_environment(env: Environment) -> CentralizedConfig:
     """Create configuration for a specific environment."""
-    logger.info(
-        "Creating configuration for environment",
-        extra={"target_environment": env.value}
-    )
+    logger.info("Creating configuration for environment", extra={"target_environment": env.value})
 
     env_vars = {
         "ENVIRONMENT": env.value,
@@ -561,7 +542,7 @@ def create_config_for_environment(env: Environment) -> CentralizedConfig:
         config = CentralizedConfig()
         logger.info(
             "Successfully created environment-specific configuration",
-            extra={"environment": env.value}
+            extra={"environment": env.value},
         )
         return config
     finally:

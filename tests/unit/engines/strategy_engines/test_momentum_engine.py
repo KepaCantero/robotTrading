@@ -10,18 +10,16 @@ Tests cover:
 - Edge cases (insufficient data, NaN handling, ATR filtering)
 """
 
-import pytest
-from decimal import Decimal
 from datetime import datetime
-from collections import deque
-from typing import Dict, Any, List
-from unittest.mock import Mock, patch, MagicMock
+from decimal import Decimal
+from unittest.mock import Mock, patch
+
+import pytest
 
 from app.engines.strategy_engines.momentum_engine import MomentumStrategyEngine
 from app.models.market_data import Quote
-from app.models.signal import Signal, SignalType, SignalStrength, SignalSource
 from app.models.portfolio import Portfolio, Position
-
+from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 # ===== Initialization Tests =====
 
@@ -309,7 +307,7 @@ class TestMomentumSignalGeneration:
                 volume=Decimal("2000000"),
             )
 
-            signals = engine._generate_signals_impl(quote)
+            engine._generate_signals_impl(quote)
 
             # May generate signal if conditions are met
             # (depends on actual indicator calculations)
@@ -670,7 +668,7 @@ class TestATRFilter:
                 volume=Decimal("2000000"),
             )
 
-            signals = engine._generate_signals_impl(quote)
+            engine._generate_signals_impl(quote)
 
             # Should not be filtered (filter is disabled)
             # May generate signal if other conditions met

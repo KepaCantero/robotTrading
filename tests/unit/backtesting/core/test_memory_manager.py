@@ -9,11 +9,9 @@ Tests memory management functionality including:
 """
 from __future__ import annotations
 
-import gc
 import threading
 from unittest.mock import Mock, patch
 
-import pytest
 
 from app.backtesting.core.memory_manager import AggressiveMemoryManager
 from app.backtesting.models import BacktestResult

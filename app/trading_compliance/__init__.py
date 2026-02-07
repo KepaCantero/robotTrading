@@ -37,30 +37,22 @@ from __future__ import annotations
 
 import logging
 import uuid
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
-import numpy as np
 import pandas as pd
 
 # USE THE NEW COMPLIANCE ENGINE
 from app.core.compliance_engine import (
-    ComplianceEngine,
-    PortfolioOptimization,
     PostTradeAnalysis,
     PreTradeAnalysis,
     get_compliance_engine,
-    get_execution_plan,
-    quick_check,
 )
 
 # Avoid circular imports
 if TYPE_CHECKING:
-    from app.backtesting.engine import SimpleBacktester
-    from app.backtesting.models import BacktestResult
-    from app.services.live_trading.broker_connector import BrokerConnector
+    pass
 
 logger = logging.getLogger(__name__)
 

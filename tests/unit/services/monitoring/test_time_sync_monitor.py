@@ -5,19 +5,18 @@ Phase 2.7: Time Sync Monitor Tests
 """
 
 import asyncio
-from datetime import datetime, timezone, timedelta
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
-from typing import Optional
+from datetime import datetime, timedelta, timezone
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
 from app.services.monitoring.time_sync_monitor import (
+    NTP_SERVERS,
     TimeSyncConfig,
     TimeSyncMonitor,
     TimeSyncStatus,
     get_time_sync_monitor,
     reset_time_sync_monitor,
-    NTP_SERVERS,
 )
 
 

@@ -10,23 +10,18 @@ Tests:
 - Rate limiting
 """
 
+from decimal import Decimal
+
 import pytest
-from decimal import Decimal, InvalidOperation
 
 from app.security.input_validation import (
-    InputSanitizer,
-    NumericValidator,
-    TradingValidator,
-    RateLimiter,
-    ListValidator,
     DictValidator,
+    InputSanitizer,
+    ListValidator,
+    NumericValidator,
+    RateLimiter,
+    TradingValidator,
     ValidationError,
-    SQL_INJECTION_PATTERNS,
-    XSS_PATTERNS,
-    COMMAND_INJECTION_PATTERNS,
-    PATH_TRAVERSAL_PATTERNS,
-    validate_and_sanitize_input,
-    rate_limiter,
 )
 
 

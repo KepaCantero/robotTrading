@@ -67,7 +67,6 @@ class BreadthCalculator:
 
     def __init__(self):
         """Initialize the Breadth Calculator."""
-        pass
 
     def calculate_breadth(
         self,

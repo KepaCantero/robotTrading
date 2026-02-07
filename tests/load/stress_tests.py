@@ -10,24 +10,18 @@ These tests validate system performance under high load conditions:
 """
 
 import asyncio
-import pytest
-import time
-import psutil
 import os
+import time
 from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any, Dict, List
 from unittest.mock import MagicMock
 
-from app.services.position_monitor import (
-    MonitoredPosition,
-    PositionMonitor,
-    PositionMonitorConfig,
-)
-from app.services.emergency_handler.emergency_closer import (
-    EmergencyCloser,
-    EmergencyTrigger,
-)
+import psutil
+import pytest
+
+from app.services.emergency_handler.emergency_closer import EmergencyCloser, EmergencyTrigger
+from app.services.position_monitor import MonitoredPosition, PositionMonitor, PositionMonitorConfig
 
 
 class MockBroker:
@@ -159,7 +153,7 @@ class TestPositionMonitorLoad:
         memory_increase = end_memory - start_memory
 
         # Log performance metrics
-        print(f"\n=== 1000 Position Load Test Results ===")
+        print("\n=== 1000 Position Load Test Results ===")
         print(f"Execution time: {execution_time:.2f} seconds")
         print(f"Memory increase: {memory_increase:.2f} MB")
         print(f"Average check time: {stats['total_checks'] / execution_time:.2f} checks/second")
@@ -231,7 +225,7 @@ class TestPositionMonitorLoad:
         execution_time = end_time - start_time
         memory_increase = end_memory - start_memory
 
-        print(f"\n=== Stability Test Results ===")
+        print("\n=== Stability Test Results ===")
         print(f"Execution time: {execution_time:.2f} seconds")
         print(f"Total checks: {stats['total_checks']}")
         print(f"Checks per second: {stats['total_checks'] / execution_time:.2f}")
@@ -294,7 +288,7 @@ class TestPositionMonitorLoad:
 
         execution_time = end_time - start_time
 
-        print(f"\n=== High-Frequency Update Test Results ===")
+        print("\n=== High-Frequency Update Test Results ===")
         print(f"Execution time: {execution_time:.2f} seconds")
         print(f"Total checks: {stats['total_checks']}")
         print(f"Checks per second: {stats['total_checks'] / execution_time:.2f}")
@@ -331,7 +325,7 @@ class TestEmergencyCloseLoad:
 
         execution_time = end_time - start_time
 
-        print(f"\n=== Emergency Close 1000 Positions ===")
+        print("\n=== Emergency Close 1000 Positions ===")
         print(f"Execution time: {execution_time:.2f} seconds")
         print(f"Closed positions: {result.closed_positions}")
         print(f"Time per position: {execution_time / result.closed_positions * 1000:.2f} ms")
@@ -366,7 +360,7 @@ class TestEmergencyCloseLoad:
         successful = sum(1 for r in results if isinstance(r, EmergencyCloseResult) and r.success)
         failed = sum(1 for r in results if isinstance(r, EmergencyCloseResult) and not r.success)
 
-        print(f"\n=== Concurrent Emergency Close ===")
+        print("\n=== Concurrent Emergency Close ===")
         print(f"Successful: {successful}")
         print(f"Failed (expected): {failed}")
 
@@ -434,7 +428,7 @@ class TestSystemMemoryStability:
         max_memory = max(memory_samples)
         memory_increase = final_memory - initial_memory
 
-        print(f"\n=== Memory Stability Test Results ===")
+        print("\n=== Memory Stability Test Results ===")
         print(f"Initial memory: {initial_memory:.2f} MB")
         print(f"Final memory: {final_memory:.2f} MB")
         print(f"Max memory: {max_memory:.2f} MB")
@@ -491,7 +485,7 @@ class TestSystemMemoryStability:
         end_memory = get_memory_usage()
         memory_increase = end_memory - start_memory
 
-        print(f"\n=== Add/Remove Memory Test Results ===")
+        print("\n=== Add/Remove Memory Test Results ===")
         print(f"Start memory: {start_memory:.2f} MB")
         print(f"End memory: {end_memory:.2f} MB")
         print(f"Memory increase: {memory_increase:.2f} MB")
@@ -565,7 +559,7 @@ class TestConcurrencyPerformance:
         execution_time = end_time - start_time
         avg_check_time = execution_time / stats["total_checks"]
 
-        print(f"\n=== Concurrent Price Fetch Performance ===")
+        print("\n=== Concurrent Price Fetch Performance ===")
         print(f"Total checks: {stats['total_checks']}")
         print(f"Execution time: {execution_time:.2f} seconds")
         print(f"Average check time: {avg_check_time * 1000:.2f} ms")

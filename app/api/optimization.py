@@ -31,7 +31,7 @@ from sqlalchemy.exc import (
 )
 
 from . import audit_logger, get_correlation_id
-from .security import rate_limit, require_auth, audit_log
+from .security import audit_log, rate_limit, require_auth
 
 logger = logging.getLogger(__name__)
 

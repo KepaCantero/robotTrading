@@ -11,10 +11,10 @@ import pytest
 from sklearn.ensemble import RandomForestClassifier
 
 from app.backtesting.validation.cross_validation import (
-    PurgedKFold,
-    PurgedTimeSeriesSplit,
     PurgedCVConfig,
+    PurgedKFold,
     PurgedSplitResult,
+    PurgedTimeSeriesSplit,
     cv_score,
 )
 

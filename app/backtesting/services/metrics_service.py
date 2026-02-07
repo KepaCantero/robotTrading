@@ -135,9 +135,7 @@ class MetricsCalculationService:
         # For drawdown, lower absolute value is better, so invert the calculation
         baseline_dd = abs(baseline.get("max_drawdown", 0))
         optimized_dd = abs(optimized.get("max_drawdown", 0))
-        dd_imp = -self._pct_improvement(
-            baseline_dd, optimized_dd
-        )  # Invert because lower is better
+        dd_imp = -self._pct_improvement(baseline_dd, optimized_dd)  # Invert because lower is better
 
         wr_imp = self._pct_improvement(baseline.get("win_rate", 0), optimized.get("win_rate", 0))
 

@@ -13,7 +13,6 @@ import logging
 from typing import Dict, List, Optional
 
 from app.models.momentum import MomentumAnalysis, MomentumStrategy
-from app.services.momentum.protocols import StorageBackend as StorageBackendProtocol
 
 logger = logging.getLogger(__name__)
 

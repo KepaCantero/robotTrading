@@ -8,7 +8,7 @@ portfolios, including construction, rebalancing, and risk management.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
@@ -17,9 +17,8 @@ import numpy as np
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from .asset_class import AssetClass, AssetClassConfig, AssetClassMetrics, AssetClassType
+from .asset_class import AssetClass, AssetClassConfig, AssetClassType
 from .models import (
-    AllocationStrategy,
     MultiAssetAllocation,
     MultiAssetPortfolio,
     PortfolioMetrics,

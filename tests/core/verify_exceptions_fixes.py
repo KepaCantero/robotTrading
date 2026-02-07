@@ -12,8 +12,7 @@ import sys
 
 # Load exceptions module directly
 spec = importlib.util.spec_from_file_location(
-    "app.core.exceptions",
-    "/Users/kepa.cantero/Projects/algoTrading/app/core/exceptions.py"
+    "app.core.exceptions", "/Users/kepa.cantero/Projects/algoTrading/app/core/exceptions.py"
 )
 exceptions = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(exceptions)
@@ -26,7 +25,9 @@ print("=" * 70)
 print("\n[P0] Test 1: DatabaseError → AlgoTradingDatabaseError")
 print("-" * 70)
 assert hasattr(exceptions, 'AlgoTradingDatabaseError'), "❌ AlgoTradingDatabaseError not found"
-assert not hasattr(exceptions, 'DatabaseError') or 'DatabaseError' not in dir(exceptions), "❌ Old DatabaseError still exists"
+assert not hasattr(exceptions, 'DatabaseError') or 'DatabaseError' not in dir(
+    exceptions
+), "❌ Old DatabaseError still exists"
 error = exceptions.AlgoTradingDatabaseError("test")
 assert error.__class__.__name__ == "AlgoTradingDatabaseError", "❌ Class name is incorrect"
 print("✅ AlgoTradingDatabaseError exists and is properly named")

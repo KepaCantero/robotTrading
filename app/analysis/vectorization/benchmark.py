@@ -6,12 +6,9 @@ of vectorized and non-vectorized implementations of common numerical operations
 found in algorithmic trading systems.
 """
 
-import logging
-
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass, field
 from typing import Any, Callable
 
 import numpy as np

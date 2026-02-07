@@ -18,20 +18,9 @@ Estructura del módulo:
 - DividendPortfolioConstructor: Construcción de portafolio optimizado
 """
 
-from .dividend_analyzer import (
-    DividendAnalyzer,
-    DividendQualityScore,
-    DividendSustainabilityMetrics,
-)
-from .dividend_portfolio_constructor import (
-    DividendPortfolioConfig,
-    DividendPortfolioConstructor,
-)
-from .dividend_screener import (
-    DividendScreener,
-    DividendScreeningCriteria,
-    ScreeningResult,
-)
+from .dividend_analyzer import DividendAnalyzer, DividendQualityScore, DividendSustainabilityMetrics
+from .dividend_portfolio_constructor import DividendPortfolioConfig, DividendPortfolioConstructor
+from .dividend_screener import DividendScreener, DividendScreeningCriteria, ScreeningResult
 from .dividend_strategy import DividendStrategy
 from .models import (
     DividendData,

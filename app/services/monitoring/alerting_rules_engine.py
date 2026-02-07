@@ -14,8 +14,8 @@ from typing import Dict, List, Optional
 import aiohttp
 from requests.exceptions import HTTPError, RequestException
 from sqlalchemy.exc import (
-    DataError,
     DatabaseError,
+    DataError,
     IntegrityError,
     OperationalError,
     ProgrammingError,

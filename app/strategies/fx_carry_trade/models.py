@@ -22,13 +22,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Optional
 
-from pydantic import (
-    BaseModel,
-    ConfigDict,
-    Field,
-    field_validator,
-)
-
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 # ISO 4217 currency codes for major currencies
 G10_CURRENCIES = {
@@ -101,8 +95,7 @@ class CurrencyCode(str, Enum):
             return cls[value.upper()]
         except KeyError:
             raise ValueError(
-                f"Invalid currency code: {value}. "
-                f"Must be one of {list(cls.__members__.keys())}"
+                f"Invalid currency code: {value}. " f"Must be one of {list(cls.__members__.keys())}"
             )
 
 
@@ -136,19 +129,13 @@ class FXPair:
         quote = self.quote_currency.upper()
 
         if base == quote:
-            raise ValueError(
-                f"Base and quote currency cannot be the same: {base}"
-            )
+            raise ValueError(f"Base and quote currency cannot be the same: {base}")
 
         if len(base) != 3 or not base.isalpha():
-            raise ValueError(
-                f"Invalid base currency code: {base}"
-            )
+            raise ValueError(f"Invalid base currency code: {base}")
 
         if len(quote) != 3 or not quote.isalpha():
-            raise ValueError(
-                f"Invalid quote currency code: {quote}"
-            )
+            raise ValueError(f"Invalid quote currency code: {quote}")
 
         # Update with normalized values
         object.__setattr__(self, "base_currency", base)
@@ -165,10 +152,7 @@ class FXPair:
     @property
     def is_g10(self) -> bool:
         """Check if both currencies are G10 currencies."""
-        return (
-            self.base_currency in G10_CURRENCIES
-            and self.quote_currency in G10_CURRENCIES
-        )
+        return self.base_currency in G10_CURRENCIES and self.quote_currency in G10_CURRENCIES
 
     @property
     def inverse(self) -> "FXPair":
@@ -183,10 +167,7 @@ class FXPair:
             >>> pair.inverse
             FXPair(base='USD', quote='EUR')
         """
-        return FXPair(
-            base_currency=self.quote_currency,
-            quote_currency=self.base_currency
-        )
+        return FXPair(base_currency=self.quote_currency, quote_currency=self.base_currency)
 
 
 @dataclass(frozen=True)
@@ -230,9 +211,7 @@ class FXRateQuote:
     def __post_init__(self) -> None:
         """Validate rate values."""
         if self.spot_rate <= 0:
-            raise ValueError(
-                f"Spot rate must be positive, got {self.spot_rate}"
-            )
+            raise ValueError(f"Spot rate must be positive, got {self.spot_rate}")
 
         for name, value in [
             ("forward_1m", self.forward_1m),
@@ -241,9 +220,7 @@ class FXRateQuote:
             ("forward_12m", self.forward_12m),
         ]:
             if value is not None and value <= 0:
-                raise ValueError(
-                    f"{name} must be positive, got {value}"
-                )
+                raise ValueError(f"{name} must be positive, got {value}")
 
     def get_forward_rate(self, months: int) -> Decimal | None:
         """
@@ -275,9 +252,7 @@ class FXRateQuote:
         }
 
         if months not in forward_map:
-            raise ValueError(
-                f"Invalid forward period: {months}. Must be 1, 3, 6, or 12"
-            )
+            raise ValueError(f"Invalid forward period: {months}. Must be 1, 3, 6, or 12")
 
         return forward_map[months]
 
@@ -322,8 +297,7 @@ class InterestRateQuote:
 
         if len(currency) != 3 or not currency.isalpha():
             raise ValueError(
-                f"Currency code must be 3 alphabetic characters (ISO 4217): "
-                f"got {currency}"
+                f"Currency code must be 3 alphabetic characters (ISO 4217): " f"got {currency}"
             )
 
         # Validate all rates are non-negative
@@ -334,9 +308,7 @@ class InterestRateQuote:
             ("rate_12m", self.rate_12m),
         ]:
             if value is not None and value < 0:
-                raise ValueError(
-                    f"{name} cannot be negative, got {value}"
-                )
+                raise ValueError(f"{name} cannot be negative, got {value}")
 
         # Normalize currency code
         object.__setattr__(self, "currency", currency)
@@ -370,9 +342,7 @@ class InterestRateQuote:
         }
 
         if months not in rate_map:
-            raise ValueError(
-                f"Invalid period: {months}. Must be 1, 3, 6, or 12"
-            )
+            raise ValueError(f"Invalid period: {months}. Must be 1, 3, 6, or 12")
 
         return rate_map[months]
 
@@ -427,19 +397,13 @@ class FXCarrySignal:
     def __post_init__(self) -> None:
         """Validate signal values."""
         if self.spot_rate <= 0:
-            raise ValueError(
-                f"Spot rate must be positive, got {self.spot_rate}"
-            )
+            raise ValueError(f"Spot rate must be positive, got {self.spot_rate}")
 
         if self.forward_rate <= 0:
-            raise ValueError(
-                f"Forward rate must be positive, got {self.forward_rate}"
-            )
+            raise ValueError(f"Forward rate must be positive, got {self.forward_rate}")
 
         if not (-1 <= self.signal <= 1):
-            raise ValueError(
-                f"Signal must be between -1 and 1, got {self.signal}"
-            )
+            raise ValueError(f"Signal must be between -1 and 1, got {self.signal}")
 
     @property
     def is_long(self) -> bool:
@@ -543,14 +507,10 @@ class FXCarryPosition:
     def __post_init__(self) -> None:
         """Validate position values."""
         if self.entry_price <= 0:
-            raise ValueError(
-                f"Entry price must be positive, got {self.entry_price}"
-            )
+            raise ValueError(f"Entry price must be positive, got {self.entry_price}")
 
         if self.current_price <= 0:
-            raise ValueError(
-                f"Current price must be positive, got {self.current_price}"
-            )
+            raise ValueError(f"Current price must be positive, got {self.current_price}")
 
         if self.entry_date > self.current_date:
             raise ValueError(
@@ -762,9 +722,7 @@ class FXCarryTradeConfig(BaseModel):
         """Validate base currency code."""
         v = v.upper()
         if len(v) != 3 or not v.isalpha():
-            raise ValueError(
-                f"Base currency must be 3 alphabetic characters (ISO 4217): {v}"
-            )
+            raise ValueError(f"Base currency must be 3 alphabetic characters (ISO 4217): {v}")
         return v
 
     def get_trading_pairs(self, currencies: list[str] | None = None) -> list[FXPair]:
@@ -831,18 +789,10 @@ class CarryTradeMetrics(BaseModel):
 
     total_trades: int = Field(default=0, ge=0, description="Total number of trades")
     winning_trades: int = Field(default=0, ge=0, description="Number of winners")
-    total_return: Decimal = Field(
-        default=Decimal("0"), description="Total portfolio return"
-    )
-    sharpe_ratio: Optional[Decimal] = Field(
-        None, description="Sharpe ratio of returns"
-    )
-    max_drawdown: Optional[Decimal] = Field(
-        None, description="Maximum drawdown"
-    )
-    avg_carry_per_trade: Decimal = Field(
-        default=Decimal("0"), description="Average carry return"
-    )
+    total_return: Decimal = Field(default=Decimal("0"), description="Total portfolio return")
+    sharpe_ratio: Optional[Decimal] = Field(None, description="Sharpe ratio of returns")
+    max_drawdown: Optional[Decimal] = Field(None, description="Maximum drawdown")
+    avg_carry_per_trade: Decimal = Field(default=Decimal("0"), description="Average carry return")
     avg_price_return_per_trade: Decimal = Field(
         default=Decimal("0"), description="Average price return"
     )

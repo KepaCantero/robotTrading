@@ -12,14 +12,14 @@ Tests cover:
 
 from __future__ import annotations
 
-import pytest
 import numpy as np
+import pytest
 
 from app.domain.portfolio_optimization.nested_clustered_optimization import (
-    NestedClusteredOptimization,
+    ClusteringMethod,
     NCOConfig,
     NCOResult,
-    ClusteringMethod,
+    NestedClusteredOptimization,
     compute_nco_weights,
 )
 

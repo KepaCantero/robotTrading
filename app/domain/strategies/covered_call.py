@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional, Tuple
 
@@ -198,13 +197,15 @@ class CoveredCallStrategy:
         valid_calls = []
         for opt in available_calls:
             # Validate option data
-            if not all([
-                np.isfinite(opt.strike) and opt.strike > 0,
-                np.isfinite(opt.days_to_expiration) and opt.days_to_expiration >= 0,
-                np.isfinite(opt.mid_price) and opt.mid_price >= 0,
-                np.isfinite(opt.delta) and opt.delta >= 0 and opt.delta <= 1,
-                np.isfinite(opt.implied_volatility) and opt.implied_volatility >= 0,
-            ]):
+            if not all(
+                [
+                    np.isfinite(opt.strike) and opt.strike > 0,
+                    np.isfinite(opt.days_to_expiration) and opt.days_to_expiration >= 0,
+                    np.isfinite(opt.mid_price) and opt.mid_price >= 0,
+                    np.isfinite(opt.delta) and opt.delta >= 0 and opt.delta <= 1,
+                    np.isfinite(opt.implied_volatility) and opt.implied_volatility >= 0,
+                ]
+            ):
                 logger.warning(f"Invalid option data for {opt.symbol}, skipping")
                 continue
 
@@ -414,11 +415,17 @@ class CoveredCallStrategy:
             Annualized return (0-1)
         """
         # Input validation
-        if not np.isfinite(covered_position.call_premium_received) or covered_position.call_premium_received < 0:
+        if (
+            not np.isfinite(covered_position.call_premium_received)
+            or covered_position.call_premium_received < 0
+        ):
             logger.warning("Invalid premium received")
             return 0.0
 
-        if not np.isfinite(covered_position.stock_cost_basis) or covered_position.stock_cost_basis <= 0:
+        if (
+            not np.isfinite(covered_position.stock_cost_basis)
+            or covered_position.stock_cost_basis <= 0
+        ):
             logger.warning("Invalid stock cost basis")
             return 0.0
 

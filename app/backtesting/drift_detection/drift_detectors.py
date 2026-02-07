@@ -104,7 +104,7 @@ class KSDriftDetector:
                 "current_size": len(current),
                 "reference_mean": float(np.mean(reference)),
                 "current_mean": float(np.mean(current)),
-            }
+            },
         )
 
         if drift_detected:
@@ -116,8 +116,12 @@ class KSDriftDetector:
                     "p_value": float(p_value),
                     "statistic": float(statistic),
                     "threshold": self.significance_level,
-                    "severity": "high" if p_value < 0.01 else "moderate" if p_value < 0.05 else "low",
-                }
+                    "severity": "high"
+                    if p_value < 0.01
+                    else "moderate"
+                    if p_value < 0.05
+                    else "low",
+                },
             )
 
         return result
@@ -175,8 +179,12 @@ class PSIDriftDetector:
                 "n_bins": self.n_bins,
                 "reference_size": len(reference),
                 "current_size": len(current),
-                "severity": "high" if psi_value > 0.5 else "moderate" if psi_value > 0.25 else "low",
-            }
+                "severity": "high"
+                if psi_value > 0.5
+                else "moderate"
+                if psi_value > 0.25
+                else "low",
+            },
         )
 
         if drift_detected:
@@ -188,8 +196,12 @@ class PSIDriftDetector:
                     "psi_value": float(psi_value),
                     "threshold": self.threshold,
                     "n_bins": self.n_bins,
-                    "severity": "high" if psi_value > 0.5 else "moderate" if psi_value > 0.25 else "low",
-                }
+                    "severity": "high"
+                    if psi_value > 0.5
+                    else "moderate"
+                    if psi_value > 0.25
+                    else "low",
+                },
             )
 
         return result
@@ -265,7 +277,7 @@ class ADWINDriftDetector:
                     "detector": "ADWINDriftDetector",
                     "current_window_size": len(self.window),
                     "required_size": self.max_window_size // 2,
-                }
+                },
             )
             return None
 
@@ -293,7 +305,7 @@ class ADWINDriftDetector:
                     "window_size": len(self.window),
                     "delta": self.delta,
                     "new_value": float(new_value),
-                }
+                },
             )
 
             return result
@@ -308,7 +320,7 @@ class ADWINDriftDetector:
                     "delta": self.delta,
                     "window_mean": float(np.mean(list(self.window))),
                     "window_std": float(np.std(list(self.window))),
-                }
+                },
             )
 
         return None
@@ -394,7 +406,7 @@ class MMDDriftDetector:
                 "current_size": len(current),
                 "reference_mean": float(np.mean(reference)),
                 "current_mean": float(np.mean(current)),
-            }
+            },
         )
 
         if drift_detected:
@@ -406,7 +418,7 @@ class MMDDriftDetector:
                     "mmd_value": float(mmd_value),
                     "threshold": self.threshold,
                     "gamma": self.gamma,
-                }
+                },
             )
 
         return result

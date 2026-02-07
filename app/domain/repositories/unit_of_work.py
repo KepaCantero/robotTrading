@@ -105,7 +105,6 @@ class AbstractUnitOfWork(ABC):
         Raises:
             UnitOfWorkError: If commit fails
         """
-        pass
 
     @abstractmethod
     def rollback(self) -> None:
@@ -119,7 +118,6 @@ class AbstractUnitOfWork(ABC):
             This does NOT revert changes to entity objects themselves.
             Entities remain in their modified state.
         """
-        pass
 
     @abstractmethod
     def collect_new_events(self) -> List[Any]:
@@ -140,7 +138,6 @@ class AbstractUnitOfWork(ABC):
                 await event_handler.handle(event)
             ```
         """
-        pass
 
 
 class GenericUnitOfWork(AbstractUnitOfWork):

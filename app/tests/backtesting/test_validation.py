@@ -10,11 +10,9 @@ Tests for:
 
 from __future__ import annotations
 
-import datetime
 from datetime import date, timedelta
 from decimal import Decimal
 from typing import Any, Dict, List
-from unittest.mock import MagicMock, Mock, patch
 
 import numpy as np
 import pandas as pd
@@ -39,7 +37,6 @@ from app.backtesting.validation.models import (
 from app.backtesting.validation.overfitting_detector import (
     OverfittingDetector,
     analyze_parameter_stability,
-    calculate_overfitting_metrics,
     calculate_stability_score,
     classify_stability,
     detect_parameter_drift,
@@ -63,7 +60,6 @@ from app.backtesting.validation.walk_forward import (
     calculate_consistency_score,
     calculate_degradation,
 )
-
 
 # =============================================================================
 # FIXTURES

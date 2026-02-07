@@ -7,14 +7,15 @@ can lead to uncontrolled losses and account liquidation.
 Audit Finding: ZERO tests for stop-loss logic - this is a CRITICAL gap.
 """
 
-import pytest
-from decimal import Decimal
 from datetime import datetime, timedelta
+from decimal import Decimal
+
+import pytest
 
 from app.backtesting.engine import SimpleBacktester
-from app.backtesting.models import BacktestConfig, Trade, TradeStatus
-from app.models.signal import Signal, SignalType, SignalStrength, SignalSource
+from app.backtesting.models import BacktestConfig, TradeStatus
 from app.models.market_data import Quote
+from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 
 # Helper function to create timestamps in the past
@@ -80,7 +81,7 @@ class TestStopLossCritical:
         # Verify position opened
         assert "AAPL" in backtester.positions
         assert backtester.positions["AAPL"] > 0
-        initial_capital = backtester.capital
+        backtester.capital
 
         # Simulate price dropping to $94 (6% decline - below 5% stop-loss)
         quote_decline = Quote(

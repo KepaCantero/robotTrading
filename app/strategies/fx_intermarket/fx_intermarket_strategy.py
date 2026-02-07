@@ -32,11 +32,9 @@ from typing import Any
 
 import pandas as pd
 
-from app.models.signal import Signal, SignalSource, SignalType, SignalStrength
+from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.strategies.base import BaseStrategy
-from app.strategies.fx_intermarket.correlation_analyzer import (
-    CorrelationAnalyzer,
-)
+from app.strategies.fx_intermarket.correlation_analyzer import CorrelationAnalyzer
 from app.strategies.fx_intermarket.models import (
     AssetClass,
     FXIntermarketConfig,
@@ -61,9 +59,7 @@ class FXIntermarketState:
         total_trades: Total number of trades executed
     """
 
-    active_relationships: dict[str, IntermarketRelationship] = field(
-        default_factory=dict
-    )
+    active_relationships: dict[str, IntermarketRelationship] = field(default_factory=dict)
     historical_correlations: dict[str, list[Decimal]] = field(default_factory=dict)
     current_signals: list[IntermarketSignal] = field(default_factory=list)
     last_correlation_update: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
@@ -131,20 +127,22 @@ class FXIntermarketStrategy(BaseStrategy):
         else:
             strategy_config = config
             # Convert to dict for BaseStrategy
-            super().__init__({
-                "name": "FXIntermarket",
-                "description": "FX Intermarket strategy based on cross-asset relationships",
-                "version": "1.0.0",
-                "correlation_lookback": strategy_config.correlation_lookback,
-                "min_correlation": str(strategy_config.min_correlation),
-                "min_significance": str(strategy_config.min_significance),
-                "signal_threshold": str(strategy_config.signal_threshold),
-                "min_signal_strength": str(strategy_config.min_signal_strength),
-                "max_positions": strategy_config.max_positions,
-                "stop_loss": str(strategy_config.stop_loss),
-                "take_profit": str(strategy_config.take_profit),
-                "position_size": str(strategy_config.position_size),
-            })
+            super().__init__(
+                {
+                    "name": "FXIntermarket",
+                    "description": "FX Intermarket strategy based on cross-asset relationships",
+                    "version": "1.0.0",
+                    "correlation_lookback": strategy_config.correlation_lookback,
+                    "min_correlation": str(strategy_config.min_correlation),
+                    "min_significance": str(strategy_config.min_significance),
+                    "signal_threshold": str(strategy_config.signal_threshold),
+                    "min_signal_strength": str(strategy_config.min_signal_strength),
+                    "max_positions": strategy_config.max_positions,
+                    "stop_loss": str(strategy_config.stop_loss),
+                    "take_profit": str(strategy_config.take_profit),
+                    "position_size": str(strategy_config.position_size),
+                }
+            )
 
         self.config = strategy_config
 
@@ -213,9 +211,7 @@ class FXIntermarketStrategy(BaseStrategy):
             ... })
         """
         if not isinstance(market_data, dict):
-            raise ValueError(
-                f"market_data must be a dict, got {type(market_data)}"
-            )
+            raise ValueError(f"market_data must be a dict, got {type(market_data)}")
 
         signals = []
         as_of = datetime.now(timezone.utc)
@@ -228,9 +224,7 @@ class FXIntermarketStrategy(BaseStrategy):
             relationships = self.analyze_intermarket_relationships(as_of)
 
             # Detect significant moves in external assets
-            significant_moves = self.detect_significant_moves(
-                market_data, threshold_std=2.0
-            )
+            significant_moves = self.detect_significant_moves(market_data, threshold_std=2.0)
 
             # Generate signals for each significant move
             for asset, move_info in significant_moves.items():
@@ -270,9 +264,7 @@ class FXIntermarketStrategy(BaseStrategy):
 
         return signals
 
-    def analyze_intermarket_relationships(
-        self, as_of: datetime
-    ) -> list[IntermarketRelationship]:
+    def analyze_intermarket_relationships(self, as_of: datetime) -> list[IntermarketRelationship]:
         """
         Analyze current intermarket relationships.
 
@@ -341,7 +333,9 @@ class FXIntermarketStrategy(BaseStrategy):
                     continue
 
                 # Calculate z-score
-                z_score = float((latest_return - Decimal(str(mean_return))) / Decimal(str(std_return)))
+                z_score = float(
+                    (latest_return - Decimal(str(mean_return))) / Decimal(str(std_return))
+                )
 
                 # Check if exceeds threshold
                 if abs(z_score) >= threshold_std:
@@ -408,9 +402,7 @@ class FXIntermarketStrategy(BaseStrategy):
             )
 
             # Determine signal type
-            signal_type = self._determine_signal_type(
-                expected_move, relationship.relationship_type
-            )
+            signal_type = self._determine_signal_type(expected_move, relationship.relationship_type)
 
             # Check if signal meets threshold
             if strength < self.config.min_signal_strength:
@@ -555,9 +547,7 @@ class FXIntermarketStrategy(BaseStrategy):
 
         return min(confidence, Decimal("100"))
 
-    def _get_relationship_stability(
-        self, relationship: IntermarketRelationship
-    ) -> Decimal:
+    def _get_relationship_stability(self, relationship: IntermarketRelationship) -> Decimal:
         """
         Get relationship stability score.
 

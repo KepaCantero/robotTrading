@@ -13,7 +13,6 @@ from typing import Optional, Tuple
 
 import numpy as np
 
-
 # Trading convention constants
 TRADING_DAYS = 252  # Trading days per year
 
@@ -264,7 +263,9 @@ def log_optimization_failure(
     )
 
     # Also log the stack trace separately
-    stack_trace = "".join(traceback.format_exception(type(exception), exception, exception.__traceback__))
+    stack_trace = "".join(
+        traceback.format_exception(type(exception), exception, exception.__traceback__)
+    )
     logger.debug(f"Stack trace for {method_name} failure:\n{stack_trace}")
 
 
@@ -293,8 +294,7 @@ def sanitize_covariance_matrix(
 
     if len(valid_indices) < cov_matrix.shape[0]:
         logger.warning(
-            f"Removed {cov_matrix.shape[0] - len(valid_indices)} "
-            "assets with zero variance"
+            f"Removed {cov_matrix.shape[0] - len(valid_indices)} " "assets with zero variance"
         )
 
     # Extract submatrix

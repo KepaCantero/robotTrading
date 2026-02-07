@@ -36,10 +36,7 @@ from .portfolio_constructor import (
     LowVolatilityPortfolioConfig,
     LowVolatilityPortfolioConstructor,
 )
-from .volatility_calculator import (
-    VolatilityCalculator,
-    VolatilityMetrics as VolMetrics,
-)
+from .volatility_calculator import VolatilityCalculator, VolatilityMetrics as VolMetrics
 
 __all__ = [
     # Main strategy

@@ -9,13 +9,13 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Optional
 from uuid import uuid4
 
 from app.backtesting.models import BacktestConfig, Trade, TradeStatus
 from app.backtesting.services.pnl_calculator import ProfitAndLossCalculator
 from app.backtesting.services.position_manager import PositionManager
-from app.models.signal import Signal, SignalType
+from app.models.signal import Signal
 
 logger = logging.getLogger(__name__)
 
@@ -98,9 +98,7 @@ class TradeExecutor:
         """
         from app.backtesting.engine import get_price
 
-        strategy_name = (
-            signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
-        )
+        strategy_name = signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
 
         # Close existing position before opening new one
         current_position = self.position_manager.get_position(signal.symbol)
@@ -126,8 +124,7 @@ class TradeExecutor:
 
         if position_size <= 0:
             logger.warning(
-                f"BUY {signal.symbol} (strategy={strategy_name}): "
-                f"position_size <= 0, skipping"
+                f"BUY {signal.symbol} (strategy={strategy_name}): " f"position_size <= 0, skipping"
             )
             return None, capital
 
@@ -295,9 +292,7 @@ class TradeExecutor:
         """
         from app.backtesting.engine import get_price
 
-        strategy_name = (
-            signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
-        )
+        strategy_name = signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
 
         current_position = self.position_manager.get_position(signal.symbol)
 
@@ -449,9 +444,7 @@ class TradeExecutor:
         position_value = max_position_value * confidence_factor
 
         # Adjust for commission ratio
-        strategy_name = (
-            signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
-        )
+        strategy_name = signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
         commission_pct = self._get_strategy_commission(signal, strategy_name)
 
         if commission_pct is None:

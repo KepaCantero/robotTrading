@@ -2,14 +2,11 @@
 Tests for expectancy calculation functionality.
 """
 
-import pytest
 from datetime import datetime
 from decimal import Decimal
 
-from app.backtesting.metrics import (
-    calculate_expectancy,
-    calculate_expectancy_with_confidence,
-)
+
+from app.backtesting.metrics import calculate_expectancy, calculate_expectancy_with_confidence
 from app.backtesting.models import Trade, TradeStatus
 
 

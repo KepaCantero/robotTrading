@@ -11,12 +11,13 @@ This test suite verifies that the binary-safe serialization system correctly han
 7. Tamper detection
 """
 
-import pytest
-import numpy as np
-import pandas as pd
 from decimal import Decimal
 
-from app.core.secure_serialization import sign_and_dump, verify_and_load, HAS_MSGPACK
+import numpy as np
+import pandas as pd
+import pytest
+
+from app.core.secure_serialization import HAS_MSGPACK, sign_and_dump, verify_and_load
 
 
 class TestJSONSerialization:

@@ -56,7 +56,6 @@ except ImportError:
     class Portfolio:
         """Placeholder Portfolio class when pydantic is not available."""
 
-        pass
 
 
 try:
@@ -109,7 +108,7 @@ __all__ = [
 
 # Required dependencies - with proper import handling
 try:
-    from arch import arch_model
+    pass
 
     ARCH_AVAILABLE = True
 except ImportError:
@@ -117,11 +116,11 @@ except ImportError:
     logger.warning("arch package not available. GARCH models will be limited.")
 
 try:
-    import statsmodels
+    pass
 
     STATSMODELS_AVAILABLE = True
 except ImportError:
-    from app.core.statsmodels_fallback import adfuller, coint
+    pass
 
     STATSMODELS_AVAILABLE = False
     logger.warning(

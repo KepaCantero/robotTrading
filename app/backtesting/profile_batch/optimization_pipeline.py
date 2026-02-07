@@ -23,11 +23,7 @@ from app.core.config.profile_config_loader import ProfileConfigLoader
 from app.core.models.input_profile import InputProfile
 
 from .bayesian_optimizer import BayesianOptimizer
-from .optimization_validators import (
-    MonteCarloSimulator,
-    OutOfSampleValidator,
-    WalkForwardValidator,
-)
+from .optimization_validators import MonteCarloSimulator, OutOfSampleValidator, WalkForwardValidator
 
 logger = logging.getLogger(__name__)
 

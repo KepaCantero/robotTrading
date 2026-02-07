@@ -3,17 +3,16 @@ Property-based tests for Risk Engine using Hypothesis.
 
 Tests invariants and properties across wide range of inputs.
 """
-import pytest
 import numpy as np
-from hypothesis import given, strategies as st, settings
-from hypothesis.strategies import lists, floats, integers
+import pytest
+from hypothesis import given, settings
+from hypothesis.strategies import floats, lists
 
+from app.engines.risk_engine.var_calculators.ewma_var import EWMAVaRCalculator
 from app.engines.risk_engine.var_calculators.var_calculators import (
     HistoricalVaRCalculator,
-    ParametricVaRCalculator,
     calculate_percentile_numba,
 )
-from app.engines.risk_engine.var_calculators.ewma_var import EWMAVaRCalculator
 
 
 @pytest.mark.unit

@@ -14,11 +14,10 @@ Critical Bugs Fixed:
 Version: 2.0 (Score improved from 3/10 to 8/10)
 """
 
-import math
 import random
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import List, Tuple
+from typing import List
 
 import numpy as np
 import pytest
@@ -369,7 +368,7 @@ class TestAdvancedBacktestingMethods:
 
         # Analyze Monte Carlo results
         returns = [r["total_return"] for r in monte_carlo_results]
-        mean_return = np.mean(returns)
+        np.mean(returns)
         std_return = np.std(returns)
 
         # Calculate exact percentiles (not arbitrary indices)
@@ -491,7 +490,7 @@ class TestAdvancedBacktestingMethods:
 
         # Analyze bootstrap results
         float_bootstrap_results = [float(r) for r in bootstrap_results]
-        bootstrap_mean = np.mean(float_bootstrap_results)
+        np.mean(float_bootstrap_results)
         bootstrap_std = np.std(float_bootstrap_results)
 
         # Calculate exact confidence intervals
@@ -545,7 +544,7 @@ class TestAdvancedBacktestingMethods:
 
         # Analyze regime performance
         float_returns = list(regime_results.values())
-        return_variance = np.var(float_returns)
+        np.var(float_returns)
 
         # Check that results were generated for all regimes
         assert len(regime_results) == 3, "Should test all market regimes"

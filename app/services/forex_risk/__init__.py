@@ -39,11 +39,7 @@ from app.services.forex_risk.hedging_engine import (
     HedgeRecommendation,
     HedgingEngine,
 )
-from app.services.forex_risk.tracker import (
-    CurrencyExposure,
-    ForexExposureReport,
-    ForexRiskTracker,
-)
+from app.services.forex_risk.tracker import CurrencyExposure, ForexExposureReport, ForexRiskTracker
 
 __all__ = [
     # Tracker

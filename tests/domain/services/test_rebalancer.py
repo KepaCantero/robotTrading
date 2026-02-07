@@ -11,10 +11,9 @@ sys.path.insert(0, str(project_root))
 from decimal import Decimal
 
 from app.domain.services.rebalancer import (
+    RebalancePlan,
     Rebalancer,
     RebalanceTrade,
-    RebalancePlan,
-    RebalanceConfig,
 )
 
 

@@ -2,25 +2,25 @@
 Unit tests for Chan Metrics (Ernest Chan performance metrics)
 """
 
-import pytest
+
 import numpy as np
 import pandas as pd
-from datetime import datetime
+import pytest
 
 from app.backtesting.chan_metrics import (
-    ChanSharpeRatioCalculator,
-    ChanDrawdownAnalyzer,
-    ChanCalmarRatioCalculator,
-    ChanReturnDistributionAnalyzer,
-    ChanStrategyComparator,
-    SharpeRatioResult,
-    DrawdownResult,
     CalmarRatioResult,
+    ChanCalmarRatioCalculator,
+    ChanDrawdownAnalyzer,
+    ChanReturnDistributionAnalyzer,
+    ChanSharpeRatioCalculator,
+    ChanStrategyComparator,
+    DrawdownResult,
     ReturnDistributionMetrics,
+    SharpeRatioResult,
     StrategyComparisonResult,
-    calculate_sharpe_ratio,
-    calculate_max_drawdown,
     calculate_calmar_ratio,
+    calculate_max_drawdown,
+    calculate_sharpe_ratio,
 )
 
 

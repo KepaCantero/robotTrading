@@ -9,18 +9,17 @@ Tests cover:
 5. Edge cases and error handling
 """
 
-import pytest
 import numpy as np
 import pandas as pd
-from scipy import stats
+import pytest
 
 from app.backtesting.feature_engineering import (
     FractionalDifferentiation,
     FractionalDiffTransformer,
-    get_weights,
-    fractional_diff,
-    find_optimal_d,
     apply_frac_diff_to_dataframe,
+    find_optimal_d,
+    fractional_diff,
+    get_weights,
 )
 
 
@@ -387,7 +386,7 @@ class TestStatisticalProperties:
 
     def test_variance_reduction(self, fractional_diff_instance, sample_series):
         """Test that fractional differentiation reduces variance."""
-        original_var = sample_series.var()
+        sample_series.var()
         diff_series = fractional_diff_instance.fractional_diff(sample_series, d=0.5)
         diff_var = diff_series.dropna().var()
 

@@ -7,8 +7,6 @@ Following SOLID principles:
 - Open/Closed: Extensible through protocol implementations
 """
 
-from abc import abstractmethod
-from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Protocol, Tuple
 
@@ -17,7 +15,6 @@ from app.models.momentum import (
     MomentumFilter,
     MomentumSignal,
     MomentumStrategy,
-    MomentumType,
     TechnicalIndicators,
     Timeframe,
 )

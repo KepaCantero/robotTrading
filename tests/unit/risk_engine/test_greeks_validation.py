@@ -8,7 +8,6 @@ Tests the new validation methods for Greeks calculations:
 """
 
 import pytest
-import numpy as np
 
 from app.engines.risk_engine.greeks_calculator import GreeksCalculator
 

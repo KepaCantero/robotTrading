@@ -21,14 +21,11 @@ References:
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
-from scipy import stats
 
 try:
     from typing import ParamSpec
@@ -36,8 +33,6 @@ except ImportError:
     from typing_extensions import ParamSpec
 
 from .models import (
-    OverfittingLevel,
-    OverfittingMetrics,
     PeriodResult,
     WalkForwardConfig,
     WalkForwardResult,
@@ -260,7 +255,7 @@ class WalkForwardValidator:
             PeriodResult with performance metrics
         """
         # Create and run strategy
-        strategy = strategy_factory(params)
+        strategy_factory(params)
 
         # Run backtest (this would call the actual backtesting engine)
         # For now, we'll create a placeholder result
@@ -366,8 +361,8 @@ class WalkForwardValidator:
             metrics["win_rate"] = Decimal("0")
 
         # Calculate profit factor
-        gross_profit = Decimal("0")
-        gross_loss = Decimal("0")
+        Decimal("0")
+        Decimal("0")
         for r in results:
             if r.profit_factor:
                 # Approximate from profit factor

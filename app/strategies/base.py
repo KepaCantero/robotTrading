@@ -44,7 +44,7 @@ class BaseStrategy(ABC):
                 "strategy_class": self.__class__.__name__,
                 "version": self.version,
                 "is_active": self.is_active,
-            }
+            },
         )
 
     @abstractmethod
@@ -98,7 +98,7 @@ class BaseStrategy(ABC):
                 "updated_params": list(params.keys()),
                 "old_config": old_config,
                 "new_config": self.config,
-            }
+            },
         )
 
     def validate_config(self) -> bool:
@@ -120,7 +120,7 @@ class BaseStrategy(ABC):
                     "missing_params": missing_params,
                     "required_params": required_params,
                     "is_valid": is_valid,
-                }
+                },
             )
         else:
             logger.debug(
@@ -128,7 +128,7 @@ class BaseStrategy(ABC):
                 extra={
                     "strategy_name": self.name,
                     "is_valid": is_valid,
-                }
+                },
             )
 
         return is_valid

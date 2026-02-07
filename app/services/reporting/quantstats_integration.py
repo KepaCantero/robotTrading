@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 # Check if QuantStats is available
 try:
-    import quantstats
+    pass
 
     QUANTSTATS_AVAILABLE = True
 except ImportError:

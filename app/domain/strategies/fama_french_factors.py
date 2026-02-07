@@ -14,8 +14,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Dict
 
 import numpy as np
 import pandas as pd
@@ -159,10 +158,14 @@ class FamaFrenchModel:
         """
         # Input validation - check array length
         if len(asset_returns) < 2:
-            logger.warning("Insufficient observations for factor model estimation (need at least 2)")
+            logger.warning(
+                "Insufficient observations for factor model estimation (need at least 2)"
+            )
             # Return default result
             n_params = 4 if self._model_type == "3factor" else 5
-            factor_names = ["alpha", "market", "smb", "hml"] + (["umd"] if self._model_type == "4factor" else [])
+            factor_names = ["alpha", "market", "smb", "hml"] + (
+                ["umd"] if self._model_type == "4factor" else []
+            )
             return FactorModelResult(
                 loadings=FactorLoadings(
                     market_beta=1.0,
@@ -185,7 +188,9 @@ class FamaFrenchModel:
         if len(asset_returns_clean) < 2:
             logger.warning("Insufficient valid observations after filtering NaN/inf")
             n_params = 4 if self._model_type == "3factor" else 5
-            factor_names = ["alpha", "market", "smb", "hml"] + (["umd"] if self._model_type == "4factor" else [])
+            factor_names = ["alpha", "market", "smb", "hml"] + (
+                ["umd"] if self._model_type == "4factor" else []
+            )
             return FactorModelResult(
                 loadings=FactorLoadings(
                     market_beta=1.0,
@@ -207,12 +212,16 @@ class FamaFrenchModel:
             logger.warning(f"Filtered out {n_filtered} NaN/inf values from asset_returns")
 
         # Validate factor returns
-        if not all(np.isfinite([
-            factor_returns.market_return,
-            factor_returns.smb_return,
-            factor_returns.hml_return,
-            factor_returns.umd_return,
-        ])):
+        if not all(
+            np.isfinite(
+                [
+                    factor_returns.market_return,
+                    factor_returns.smb_return,
+                    factor_returns.hml_return,
+                    factor_returns.umd_return,
+                ]
+            )
+        ):
             logger.warning("Factor returns contain NaN or inf values")
             # Replace with zeros
             factor_returns = FactorReturns(
@@ -346,12 +355,12 @@ class FamaFrenchModel:
         if long_leg:
             # Long top 20% of assets by factor loading
             n_selected = max(1, n_assets // 5)
-            weight = 1.0 / n_selected
+            1.0 / n_selected
             # In practice, select assets based on actual factor loadings
         else:
             # Short top 20% (or long bottom 20%)
             n_selected = max(1, n_assets // 5)
-            weight = -1.0 / n_selected
+            -1.0 / n_selected
 
         return weights
 

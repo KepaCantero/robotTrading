@@ -2,9 +2,9 @@
 Tests for universe manager with survivorship bias adjustment.
 """
 
-import pytest
 from datetime import datetime
 from decimal import Decimal
+
 
 from app.backtesting.universe_manager import BACKTEST_UNIVERSE, UniverseManager
 

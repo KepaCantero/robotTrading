@@ -11,19 +11,16 @@ Tests cover:
 - Confidence calculation
 """
 
-import pytest
-import numpy as np
-from decimal import Decimal
 from datetime import datetime
-from collections import deque
-from typing import Dict, Any, List
-from unittest.mock import Mock, patch, MagicMock
+from decimal import Decimal
+from unittest.mock import Mock, patch
+
+import pytest
 
 from app.engines.strategy_engines.pairs_engine import PairsTradingStrategyEngine
 from app.models.market_data import Quote
-from app.models.signal import Signal, SignalType, SignalStrength, SignalSource
 from app.models.portfolio import Portfolio, Position
-
+from app.models.signal import SignalSource, SignalType
 
 # ===== Initialization Tests =====
 
@@ -349,7 +346,7 @@ class TestPairsTradingSignalGeneration:
                 volume=Decimal("1000"),
             )
 
-            signals = engine._generate_signals_impl(quote)
+            engine._generate_signals_impl(quote)
 
             # Should generate SELL for AAPL (overvalued relative to MSFT)
             # Note: Actual signal generation depends on cointegration check
@@ -378,7 +375,7 @@ class TestPairsTradingSignalGeneration:
                 volume=Decimal("1000"),
             )
 
-            signals = engine._generate_signals_impl(quote)
+            engine._generate_signals_impl(quote)
 
             # If not cointegrated, should not generate signals
             # (This depends on cointegration test implementation)

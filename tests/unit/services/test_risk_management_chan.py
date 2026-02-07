@@ -2,20 +2,20 @@
 Unit tests for Risk Management - Ernest Chan methodologies
 """
 
-import pytest
+
 import numpy as np
-from datetime import datetime
+import pytest
 
 from app.services.risk_management_chan import (
-    ChanStopLossCalculator,
-    ChanPositionSizer,
     ChanDrawdownController,
+    ChanPositionSizer,
     ChanRiskMetrics,
-    StopLossResult,
+    ChanStopLossCalculator,
     PositionSizeResult,
     RiskMetrics,
-    calculate_optimal_stop_loss,
+    StopLossResult,
     calculate_optimal_position_size,
+    calculate_optimal_stop_loss,
 )
 
 

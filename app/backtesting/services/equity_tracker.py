@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 from app.backtesting.services.position_manager import PositionManager
 

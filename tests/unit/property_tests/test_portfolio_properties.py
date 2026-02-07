@@ -13,16 +13,13 @@ Properties tested:
 """
 
 from decimal import Decimal
-from typing import List, Dict, Any, Optional
 
 import numpy as np
 import pytest
-from hypothesis import given, settings, assume, HealthCheck
-from hypothesis import strategies as st
+from hypothesis import assume, given, settings, strategies as st
 from hypothesis.extra import numpy as np_strategies
 
 from app.engines.portfolio_engine.optimizers import MarkowitzOptimizer
-
 
 # ============================================================================
 # Test Strategies

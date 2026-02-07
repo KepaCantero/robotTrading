@@ -13,12 +13,10 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
-from scipy import stats
 
 logger = logging.getLogger(__name__)
 
@@ -123,11 +121,15 @@ class TimeSeriesMomentum:
 
         if len(prices_clean) < len(prices):
             n_filtered = len(prices) - len(prices_clean)
-            logger.warning(f"Filtered out {n_filtered} NaN/inf/non-positive values from prices for {symbol}")
+            logger.warning(
+                f"Filtered out {n_filtered} NaN/inf/non-positive values from prices for {symbol}"
+            )
 
         if len(prices_clean) < self._slow_period + 1:
             # Not enough data
-            logger.warning(f"Insufficient data points for {symbol}: {len(prices_clean)} < {self._slow_period + 1}")
+            logger.warning(
+                f"Insufficient data points for {symbol}: {len(prices_clean)} < {self._slow_period + 1}"
+            )
             return TimeSeriesSignal(
                 symbol=symbol,
                 state=TrendState.NEUTRAL,
@@ -141,7 +143,9 @@ class TimeSeriesMomentum:
 
         # Validate MA values
         if not (np.isfinite(fast_ma) and np.isfinite(slow_ma) and fast_ma > 0 and slow_ma > 0):
-            logger.warning(f"Invalid moving averages for {symbol}: fast_ma={fast_ma}, slow_ma={slow_ma}")
+            logger.warning(
+                f"Invalid moving averages for {symbol}: fast_ma={fast_ma}, slow_ma={slow_ma}"
+            )
             return TimeSeriesSignal(
                 symbol=symbol,
                 state=TrendState.NEUTRAL,

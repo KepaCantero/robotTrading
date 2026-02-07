@@ -15,10 +15,6 @@ from requests.exceptions import HTTPError, RequestException
 
 from app.exceptions.trading_exceptions import ErrorCategory
 from app.services.trading_error_handler import (
-
-# Constants
-DEFAULT_VALUE_14 = 14
-
     ErrorAction,
     ErrorContext,
     get_error_statistics,

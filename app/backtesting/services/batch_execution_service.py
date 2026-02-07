@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List
 
 if TYPE_CHECKING:
-    from app.backtesting.profile_batch_backtester import ProfileBatchBacktester
+    pass
 
 from app.backtesting.services.models import ProfileResult
 
@@ -115,9 +115,7 @@ class BatchExecutionService:
 
         return results
 
-    def _run_sequential(
-        self, profiles: List, backtester_class: type
-    ) -> Dict[str, ProfileResult]:
+    def _run_sequential(self, profiles: List, backtester_class: type) -> Dict[str, ProfileResult]:
         """
         Run profiles sequentially.
 

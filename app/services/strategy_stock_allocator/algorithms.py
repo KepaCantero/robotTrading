@@ -13,9 +13,7 @@ from typing import List, Optional, Tuple
 
 import numpy as np
 
-from .domain_models import (
-    StockCategory,
-)
+from .domain_models import StockCategory
 
 logger = logging.getLogger(__name__)
 

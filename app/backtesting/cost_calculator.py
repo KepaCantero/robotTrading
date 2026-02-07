@@ -19,7 +19,6 @@ logger = logging.getLogger(__name__)
 class CostCalculatorError(ValueError):
     """Raised when cost calculation parameters are invalid."""
 
-    pass
 
 
 class AssetType(str, Enum):

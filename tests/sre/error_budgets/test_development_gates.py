@@ -2,31 +2,28 @@
 Tests for Development Gates - Auto-Halt Functionality
 """
 
-import pytest
+import os
 from datetime import datetime
 from decimal import Decimal
 from tempfile import TemporaryDirectory
-import os
+
+import pytest
 
 from app.sre.error_budgets.development_gates import (
     DevelopmentGate,
     DevelopmentGateConfig,
     GateStatus,
     GateType,
-    DeploymentBlocker,
 )
 from app.sre.error_budgets.error_budget_manager import (
-    ErrorBudgetManager,
-    ErrorBudgetConfig,
     BudgetPeriod,
-    BudgetStatus,
+    ErrorBudgetConfig,
+    ErrorBudgetManager,
 )
 from app.sre.error_budgets.slo_tracker import (
-    SLOTracker,
-    SLOConfig,
     SLIMetric,
     SLIMetricType,
-    SLOComplianceStatus,
+    SLOTracker,
 )
 
 

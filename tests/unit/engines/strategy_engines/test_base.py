@@ -12,17 +12,16 @@ Tests cover:
 - Signal generation wrapper
 """
 
-import pytest
-from decimal import Decimal
 from datetime import datetime
-from typing import Dict, Any, List
-from unittest.mock import Mock, MagicMock, patch, call
+from decimal import Decimal
+from typing import Any, Dict, List
+from unittest.mock import Mock
+
+import pytest
 
 from app.engines.strategy_engines.base import BaseStrategyEngine
 from app.models.market_data import Quote
-from app.models.signal import Signal, SignalType, SignalStrength, SignalSource
-from app.models.portfolio import Portfolio
-
+from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 # ===== Concrete Implementation for Testing =====
 
@@ -592,7 +591,7 @@ class TestSignalGeneration:
             volume=Decimal("1000"),
         )
 
-        signals = engine.generate_signals(quote_with_high_price)
+        engine.generate_signals(quote_with_high_price)
 
         assert engine.metrics["last_update"] is not None
         assert engine.metrics["signals_generated"] == 1

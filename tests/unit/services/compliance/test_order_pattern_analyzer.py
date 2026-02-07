@@ -2,9 +2,10 @@
 Unit tests for Order Pattern Analyzer.
 """
 
-import pytest
-from decimal import Decimal
 from datetime import datetime, timedelta
+from decimal import Decimal
+
+import pytest
 
 from app.services.compliance.order_pattern_analyzer import (
     OrderPatternAnalyzer,

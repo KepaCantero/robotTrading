@@ -92,7 +92,7 @@ def run_migrations_offline() -> None:
         logger.error(
             "Offline migration failed",
             exc_info=True,
-            extra={"error_type": type(e).__name__, "error_message": str(e)}
+            extra={"error_type": type(e).__name__, "error_message": str(e)},
         )
         raise
 
@@ -118,20 +118,14 @@ def do_run_migrations(connection):
         logger.error(
             "Database migration failed with SQLAlchemy error",
             exc_info=True,
-            extra={
-                "error_type": type(e).__name__,
-                "error_message": str(e)
-            }
+            extra={"error_type": type(e).__name__, "error_message": str(e)},
         )
         raise
     except Exception as e:
         logger.error(
             "Unexpected error during migration execution",
             exc_info=True,
-            extra={
-                "error_type": type(e).__name__,
-                "error_message": str(e)
-            }
+            extra={"error_type": type(e).__name__, "error_message": str(e)},
         )
         raise
 
@@ -165,27 +159,17 @@ async def run_async_migrations():
         logger.error(
             "Async migration failed with database error",
             exc_info=True,
-            extra={
-                "error_type": type(e).__name__,
-                "error_message": str(e)
-            }
+            extra={"error_type": type(e).__name__, "error_message": str(e)},
         )
         raise
     except asyncio.TimeoutError as e:
-        logger.error(
-            "Async migration timed out",
-            exc_info=True,
-            extra={"error_message": str(e)}
-        )
+        logger.error("Async migration timed out", exc_info=True, extra={"error_message": str(e)})
         raise
     except Exception as e:
         logger.error(
             "Unexpected error during async migration",
             exc_info=True,
-            extra={
-                "error_type": type(e).__name__,
-                "error_message": str(e)
-            }
+            extra={"error_type": type(e).__name__, "error_message": str(e)},
         )
         raise
     finally:
@@ -195,9 +179,7 @@ async def run_async_migrations():
                 await connection.close()
             except Exception as e:
                 logger.error(
-                    "Error closing async connection",
-                    exc_info=True,
-                    extra={"error_message": str(e)}
+                    "Error closing async connection", exc_info=True, extra={"error_message": str(e)}
                 )
         if connectable is not None:
             try:
@@ -205,9 +187,7 @@ async def run_async_migrations():
                 await connectable.dispose()
             except Exception as e:
                 logger.error(
-                    "Error disposing async engine",
-                    exc_info=True,
-                    extra={"error_message": str(e)}
+                    "Error disposing async engine", exc_info=True, extra={"error_message": str(e)}
                 )
 
 
@@ -255,20 +235,14 @@ def run_migrations_online() -> None:
         logger.error(
             "Online migration failed with database error",
             exc_info=True,
-            extra={
-                "error_type": type(e).__name__,
-                "error_message": str(e)
-            }
+            extra={"error_type": type(e).__name__, "error_message": str(e)},
         )
         raise
     except Exception as e:
         logger.error(
             "Unexpected error during online migration",
             exc_info=True,
-            extra={
-                "error_type": type(e).__name__,
-                "error_message": str(e)
-            }
+            extra={"error_type": type(e).__name__, "error_message": str(e)},
         )
         raise
 

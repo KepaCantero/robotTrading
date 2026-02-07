@@ -20,9 +20,8 @@ SOLID Principles:
 
 import logging
 from collections import deque
-from datetime import date, datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -36,12 +35,9 @@ from .crypto_indicators import CryptoIndicators
 from .crypto_portfolio import CryptoPortfolioConstructor
 from .crypto_screener import CryptoAsset, CryptoScreener
 from .models import (
-    CryptoAssetType,
-    CryptoExchange,
     CryptoMomentumConfig,
     CryptoMomentumScore,
     CryptoPortfolio,
-    CryptoPosition,
 )
 
 logger = logging.getLogger(__name__)

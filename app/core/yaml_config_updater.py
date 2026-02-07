@@ -8,7 +8,7 @@ import logging
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Optional
 
 import yaml
 
@@ -68,9 +68,7 @@ class YAMLConfigUpdater:
         """
         # Input validation
         if not isinstance(params, dict):
-            raise TypeError(
-                f"optimized_params must be a dict, got {type(params).__name__}"
-            )
+            raise TypeError(f"optimized_params must be a dict, got {type(params).__name__}")
 
         if not params:
             logger.warning("Empty optimized_params dict provided")
@@ -144,15 +142,11 @@ class YAMLConfigUpdater:
                                 f"Parameter '{key}'={value} is below minimum {min_val}"
                             )
                         if max_val is not None and value > max_val:
-                            raise ValueError(
-                                f"Parameter '{key}'={value} exceeds maximum {max_val}"
-                            )
+                            raise ValueError(f"Parameter '{key}'={value} exceeds maximum {max_val}")
 
             # Warn about unexpected types
             if not isinstance(value, (int, float, bool, str, list, dict, type(None))):
-                logger.warning(
-                    f"Parameter '{key}' has unexpected type: {type(value).__name__}"
-                )
+                logger.warning(f"Parameter '{key}' has unexpected type: {type(value).__name__}")
 
         return True
 

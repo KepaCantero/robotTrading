@@ -78,12 +78,10 @@ class FailureInjector(ABC):
     @abstractmethod
     async def inject(self) -> None:
         """Start failure injection."""
-        pass
 
     @abstractmethod
     async def rollback(self) -> None:
         """Stop failure injection and cleanup."""
-        pass
 
     def is_active(self) -> bool:
         """Check if injection is active."""
@@ -361,7 +359,6 @@ class ErrorInjector(FailureInjector):
         # 1. Monkey-patch critical functions
         # 2. Add decorators that randomly raise errors
         # 3. Inject faults in API handlers
-        pass
 
     async def rollback(self) -> None:
         """Remove error injection."""
@@ -406,7 +403,6 @@ class LatencyInjector(FailureInjector):
         # 1. Wrap critical functions with delays
         # 2. Add sleep() in API handlers
         # 3. Delay database queries
-        pass
 
     async def rollback(self) -> None:
         """Remove latency injection."""

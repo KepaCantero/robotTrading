@@ -143,9 +143,7 @@ class InMemoryRateLimiter:
         # Read operations
         return self.config.read_rate
 
-    async def check_rate_limit(
-        self, request: Request
-    ) -> Tuple[bool, Optional[TokenBucket]]:
+    async def check_rate_limit(self, request: Request) -> Tuple[bool, Optional[TokenBucket]]:
         """
         Check if request is within rate limit.
 
@@ -338,6 +336,7 @@ def rate_limit(requests_per_minute: int = 60, burst_size: int = 10):
     Note: This is a simplified version. For production use,
     consider using the middleware approach with Redis backing.
     """
+
     def decorator(func):
         async def wrapper(*args, **kwargs):
             # Get request from kwargs (if available) or skip

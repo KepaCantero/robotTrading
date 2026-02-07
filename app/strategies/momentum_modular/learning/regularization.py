@@ -29,13 +29,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import (
-    ElasticNet,
-    Lasso,
-    LassoCV,
-    Ridge,
-    RidgeCV,
-)
+from sklearn.linear_model import ElasticNet, Lasso, LassoCV, Ridge, RidgeCV
 from sklearn.utils.validation import check_array, check_is_fitted
 
 logger = logging.getLogger(__name__)

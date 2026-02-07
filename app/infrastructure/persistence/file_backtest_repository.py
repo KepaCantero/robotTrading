@@ -14,11 +14,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from ...domain.entities.backtest import (
-    Backtest,
-    BacktestStatus,
-    BacktestType,
-)
+from ...domain.entities.backtest import Backtest, BacktestStatus, BacktestType
 from ...domain.repositories.backtest_repository import BacktestRepository
 from ...domain.value_objects.backtest_config import BacktestConfigValue
 from ...domain.value_objects.backtest_result import BacktestResultValue

@@ -4,10 +4,11 @@ Unit tests for Modelo721Generator service.
 Tests Modelo 721 report generation for Spain tax compliance.
 """
 
-import pytest
 from datetime import date, datetime, timezone
 from decimal import Decimal
 from uuid import uuid4
+
+import pytest
 
 from app.services.fifo.modelo_721_generator import (
     CapitalGainLoss,

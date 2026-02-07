@@ -11,29 +11,24 @@ Tests cover:
 7. Statistics and tracking
 """
 
-import asyncio
-import json
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 import pytest_asyncio
-import aiosqlite
 
+from app.core.interfaces.broker_base import Order, OrderSide, OrderType, Ticker
 from app.core.shadow_mode import (
+    ShadowExecutionResult,
     ShadowModeAwareBroker,
     ShadowModeConfig,
     ShadowModeExecutor,
-    ShadowExecutionResult,
-    ShadowRealComparison,
     ShadowModeType,
     detect_shadow_mode_from_env,
 )
-from app.core.interfaces.broker_base import Order, OrderSide, OrderStatus, OrderType, Ticker
-from app.sre.state_machine.wal_persistence import OrderLog, OrderState
+from app.sre.state_machine.wal_persistence import OrderState
 
 # Python 3.9 compatibility
 UTC = timezone.utc

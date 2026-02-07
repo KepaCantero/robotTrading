@@ -3,9 +3,9 @@ Unit tests for Monte Carlo VaR Calculator.
 
 Tests for Monte Carlo simulation VaR calculation with Numba optimization.
 """
-import pytest
+
 import numpy as np
-from unittest.mock import patch, Mock
+import pytest
 
 from app.engines.risk_engine.var_calculators.var_calculators import (
     MonteCarloVaRCalculator,

@@ -15,7 +15,6 @@ Tests cover all Markowitz rules (66-80) from the paper:
 - Rule 15: Input sanitization
 """
 
-from datetime import datetime
 
 import numpy as np
 import pytest
@@ -26,7 +25,6 @@ from app.domain.portfolio_optimization import (
     EfficientFrontierPoint,
     InputValidationError,
     MeanVarianceOptimizer,
-    OptimizationError,
     OptimizationMethod,
     OptimizationResult,
     ShrinkageMethod,
@@ -548,7 +546,7 @@ class TestRiskParityFallback:
 
         # Calculate expected inverse volatility weights
         inv_vols = 1.0 / vols
-        expected_weights = inv_vols / inv_vols.sum()
+        inv_vols / inv_vols.sum()
 
         result = optimizer.risk_parity_fallback(expected_returns, cov_matrix)
 
@@ -715,7 +713,7 @@ class TestEdgeCases:
     def test_empty_weights_for_rebalance(self, optimizer) -> None:
         """Test rebalance check with empty weights."""
         current = np.array([])
-        target = np.array([])
+        np.array([])
 
         # Should handle gracefully
         assert optimizer.validate_sum_constraint(current) is False

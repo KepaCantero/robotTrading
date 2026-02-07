@@ -108,10 +108,9 @@ class ProcessInputRequest(BaseModel):
     )
     objetivo_inversion: str = Field(..., description="Investment objective")
     risk_tolerance: str = Field(..., description="Risk tolerance level")
-    investment_horizon: int = Field(...,
-        ge=1,
-        le=DEFAULT_VALUE_600,
-        description="Investment horizon in months")
+    investment_horizon: int = Field(
+        ..., ge=1, le=DEFAULT_VALUE_600, description="Investment horizon in months"
+    )
     constraints: Optional[Dict[str, Any]] = Field(None, description="Optional constraints")
 
 
@@ -289,7 +288,9 @@ async def generate_profile(request: GenerateProfileRequest):
     try:
         # This would require storing the input profile somewhere
         # For now, create a minimal profile for demonstration
-        profile_id = f"profile_{uuid.uuid4().hex[:DEFAULT_VALUE_8]}_{int(datetime.now().timestamp())}"
+        profile_id = (
+            f"profile_{uuid.uuid4().hex[:DEFAULT_VALUE_8]}_{int(datetime.now().timestamp())}"
+        )
 
         logger.info(f"✅ Generated profile: {profile_id}")
 
@@ -322,7 +323,9 @@ async def parametrize_modules(request: ParametrizeModulesRequest):
     Returns complete parameter set with all thresholds.
     """
     try:
-        parameter_set_id = f"params_{uuid.uuid4().hex[:DEFAULT_VALUE_8]}_{int(datetime.now().timestamp())}"
+        parameter_set_id = (
+            f"params_{uuid.uuid4().hex[:DEFAULT_VALUE_8]}_{int(datetime.now().timestamp())}"
+        )
 
         logger.info(f"✅ Parametrized modules: {parameter_set_id}")
 
@@ -471,7 +474,9 @@ async def complete_workflow(request: CompleteWorkflowRequest, background_tasks: 
     Returns immediate response with workflow_id. Use websocket or polling for results.
     """
     try:
-        workflow_id = f"workflow_{uuid.uuid4().hex[:DEFAULT_VALUE_8]}_{int(datetime.now().timestamp())}"
+        workflow_id = (
+            f"workflow_{uuid.uuid4().hex[:DEFAULT_VALUE_8]}_{int(datetime.now().timestamp())}"
+        )
 
         # Create workflow record
         _jobs[workflow_id] = {
@@ -658,8 +663,9 @@ async def workflow_status(workflow_id: str):
     """
     try:
         if workflow_id not in _jobs:
-            raise HTTPException(status_code=DEFAULT_VALUE_404,
-                detail=f"Workflow {workflow_id} not found")
+            raise HTTPException(
+                status_code=DEFAULT_VALUE_404, detail=f"Workflow {workflow_id} not found"
+            )
 
         job = _jobs[workflow_id]
 

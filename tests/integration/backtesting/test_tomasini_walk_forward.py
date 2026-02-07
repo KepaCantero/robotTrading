@@ -22,13 +22,11 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 
 import numpy as np
-import numpy.typing as npt
 import pytest
 
 from app.backtesting.models import BacktestConfig
 from app.backtesting.walk_forward_validator_enhanced import (
     ParameterHistory,
-    ParameterStabilityMetrics,
     TomasiniWalkForwardResult,
     TomasiniWalkForwardValidator,
     TomasiniWindowResult,

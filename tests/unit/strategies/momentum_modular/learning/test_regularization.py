@@ -9,11 +9,9 @@ Tests follow ESL methodologies and cover:
 5. Model Comparison
 """
 
-import pytest
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import Lasso as SklearnLasso
-from sklearn.linear_model import Ridge as SklearnRidge
+import pytest
 
 from app.strategies.momentum_modular.learning.regularization import (
     AdaptiveLasso,

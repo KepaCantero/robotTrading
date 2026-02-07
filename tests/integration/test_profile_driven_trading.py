@@ -27,11 +27,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from app.core.models.input_profile import (
-    InputProfile,
-    ObjectivoInversion,
-    RiskTolerance,
-)
+from app.core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
 from app.services.live_trading.trading_bridge_orchestrator import TradingBridgeOrchestrator
 from app.services.market_universe_orchestrator import MarketUniverseOrchestrator
 from app.services.profile_generator.models import (

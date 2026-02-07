@@ -26,7 +26,7 @@ Markers:
 """
 
 try:
-    from hypothesis import settings, Phase
+    from hypothesis import Phase, settings
 
     # Configure Hypothesis settings for property tests
     default_settings = settings(

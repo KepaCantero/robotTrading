@@ -29,7 +29,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING
 
 import numpy as np
 from numpy.typing import NDArray

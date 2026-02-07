@@ -711,7 +711,6 @@ class RollSpreadEstimator:
 
     def __init__(self):
         """Initialize Roll estimator"""
-        pass
 
     def estimate_spread(
         self,
@@ -777,7 +776,6 @@ class StollSpreadDecomposer:
 
     def __init__(self):
         """Initialize Stoll decomposer"""
-        pass
 
     def decompose_spread(
         self,

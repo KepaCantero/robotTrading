@@ -4,20 +4,18 @@ Test configuration and fixtures for strategy engines unit tests.
 This module provides common fixtures and utilities for testing all strategy engines.
 """
 
-import pytest
 from collections import deque
-from decimal import Decimal
 from datetime import datetime, timedelta
-from typing import Dict, Any, List
-from unittest.mock import Mock, MagicMock, patch
+from decimal import Decimal
+from typing import Any, Dict, List
+from unittest.mock import Mock, patch
 
 import numpy as np
-import pandas as pd
+import pytest
 
 from app.models.market_data import Quote
-from app.models.signal import Signal, SignalType, SignalStrength, SignalSource
 from app.models.portfolio import Portfolio, Position
-
+from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 # ===== Market Data Fixtures =====
 

@@ -512,7 +512,7 @@ class MultiAssetPortfolio:
 
         # Calculate metrics
         total_return = Decimal(str(portfolio_returns.sum()))
-        n_periods = len(portfolio_returns)
+        len(portfolio_returns)
 
         # Annualized return (assuming daily returns)
         annualized_return = Decimal(str((1 + portfolio_returns.mean()) ** 252 - 1))

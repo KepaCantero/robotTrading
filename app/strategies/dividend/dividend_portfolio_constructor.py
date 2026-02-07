@@ -17,16 +17,10 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
-import numpy as np
-from scipy.optimize import minimize
 
-from .models import (
-    DividendProfile,
-    DividendStock,
-    DividendStrategyConfig,
-)
+from .models import DividendStock, DividendStrategyConfig
 
 logger = logging.getLogger(__name__)
 

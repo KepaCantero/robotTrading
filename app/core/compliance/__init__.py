@@ -22,6 +22,9 @@ Author: Compliance Integration System
 Date: 2026-02-03
 """
 
+from app.core.compliance.portfolio_optimizer import PortfolioComplianceOptimizer
+from app.core.compliance.post_trade_checker import PostTradeComplianceChecker
+from app.core.compliance.pre_trade_checker import PreTradeComplianceChecker
 from app.core.compliance.protocols import (
     AlphaGeneratable,
     ComplianceService,
@@ -36,7 +39,6 @@ from app.core.compliance.protocols import (
     RiskCalculable,
     TransactionCostModel,
 )
-
 from app.core.compliance.results import (
     CheckResult,
     ComprehensivePostTradeAnalysis,
@@ -46,18 +48,11 @@ from app.core.compliance.results import (
     PostTradeCheckResult,
     PreTradeCheckResult,
 )
-
 from app.core.compliance.service_registry import (
     ComplianceServiceRegistry,
     get_service,
     get_service_registry,
 )
-
-from app.core.compliance.pre_trade_checker import PreTradeComplianceChecker
-
-from app.core.compliance.post_trade_checker import PostTradeComplianceChecker
-
-from app.core.compliance.portfolio_optimizer import PortfolioComplianceOptimizer
 
 __all__ = [
     # Protocols

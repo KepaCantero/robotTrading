@@ -2,12 +2,13 @@
 Tests for Ernest Chan Factor Models Implementation
 """
 
-import pytest
 import numpy as np
 import pandas as pd
+import pytest
+
 from app.services.factor_models import (
-    FamaFrenchFactorModel,
     APTModel,
+    FamaFrenchFactorModel,
     StatisticalArbitrage,
     calculate_factor_exposure,
     create_factor_portfolio,

@@ -11,19 +11,18 @@ Tests the implementation of Google SRE's golden signals:
 """
 
 import asyncio
-import pytest
-from datetime import datetime
 from decimal import Decimal
-from unittest.mock import Mock, patch, AsyncMock
+
+import pytest
 
 from app.sre.monitoring import (
-    GoldenSignalsMonitor,
     GoldenSignalsConfig,
+    GoldenSignalsMonitor,
     HealthStatus,
-    SLOTarget,
-    SignalType,
     LatencyCollector,
     RequestTracker,
+    SignalType,
+    SLOTarget,
     get_golden_signals_monitor,
 )
 
@@ -108,7 +107,7 @@ class TestLatencyCollector:
         for i in range(200):
             collector.record_latency(float(i))
 
-        metrics = asyncio.run(collector.get_metrics())
+        asyncio.run(collector.get_metrics())
 
         # Should only keep last 100 samples
         assert len(collector._latencies) == 100

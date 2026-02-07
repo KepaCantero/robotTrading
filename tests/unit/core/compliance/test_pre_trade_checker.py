@@ -5,11 +5,11 @@ Unit tests for pre_trade_checker.py
 Tests for pre-trade compliance checker.
 """
 
-import pytest
-import pandas as pd
-from decimal import Decimal
 from datetime import datetime
-from unittest.mock import Mock, patch
+from decimal import Decimal
+
+import pandas as pd
+import pytest
 
 from app.core.compliance.pre_trade_checker import PreTradeComplianceChecker
 from app.core.compliance.results import PreTradeCheckResult
@@ -19,10 +19,13 @@ from app.core.compliance.results import PreTradeCheckResult
 def sample_price_history():
     """Create sample price history DataFrame."""
     dates = pd.date_range("2024-01-01", periods=100, freq="D")
-    return pd.DataFrame({
-        "close": [150.0 + i * 0.5 for i in range(100)],
-        "volume": [1000000 for _ in range(100)],
-    }, index=dates)
+    return pd.DataFrame(
+        {
+            "close": [150.0 + i * 0.5 for i in range(100)],
+            "volume": [1000000 for _ in range(100)],
+        },
+        index=dates,
+    )
 
 
 @pytest.fixture
@@ -47,7 +50,7 @@ class TestPreTradeComplianceChecker:
             quantity=Decimal("100"),
             current_price=Decimal("150.00"),
         )
-        
+
         assert isinstance(result, PreTradeCheckResult)
         assert isinstance(result.can_execute, bool)
         assert isinstance(result.confidence, float)
@@ -62,7 +65,7 @@ class TestPreTradeComplianceChecker:
             current_price=Decimal("150.00"),
             price_history=sample_price_history,
         )
-        
+
         assert result.passed is not None
         assert result.reasons is not None
 
@@ -75,7 +78,7 @@ class TestPreTradeComplianceChecker:
             current_price=Decimal("150.00"),
             urgency=0.8,
         )
-        
+
         assert isinstance(result, PreTradeCheckResult)
 
     def test_check_signal_all_fields_populated(self, checker, sample_price_history):
@@ -89,7 +92,7 @@ class TestPreTradeComplianceChecker:
             urgency=0.5,
             signal_time=datetime.now(),
         )
-        
+
         # Check all expected fields exist
         assert hasattr(result, "passed")
         assert hasattr(result, "can_execute")
@@ -101,14 +104,14 @@ class TestPreTradeComplianceChecker:
     def test_get_available_checks(self, checker):
         """Test getting list of available checks."""
         checks = checker.get_available_checks()
-        
+
         assert isinstance(checks, list)
         # May contain various checks depending on registered services
 
     def test_estimate_adv(self, checker, sample_price_history):
         """Test ADV estimation from price history."""
         adv = checker._estimate_adv(sample_price_history)
-        
+
         assert isinstance(adv, Decimal)
         # Should be around 1,000,000 based on sample data
         assert adv > 0
@@ -116,7 +119,7 @@ class TestPreTradeComplianceChecker:
     def test_estimate_adv_no_history(self, checker):
         """Test ADV estimation with no price history."""
         adv = checker._estimate_adv(None)
-        
+
         # Should return default value
         assert adv == Decimal("1000000")
 

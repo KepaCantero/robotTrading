@@ -34,13 +34,11 @@ logger = logging.getLogger(__name__)
 class SecretValidationError(Exception):
     """Raised when secret validation fails."""
 
-    pass
 
 
 class SecretRotationError(Exception):
     """Raised when secret rotation fails."""
 
-    pass
 
 
 class Secret:

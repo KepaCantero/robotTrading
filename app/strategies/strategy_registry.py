@@ -28,14 +28,7 @@ import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import (
-    Any,
-    Dict,
-    List,
-    Optional,
-    Type,
-    TypeVar,
-)
+from typing import Any, Dict, List, Optional, Type, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +92,6 @@ class BaseStrategy(ABC):
         Returns:
             Strategy execution result
         """
-        pass
 
     def validate_config(self) -> bool:
         """
@@ -384,7 +376,12 @@ class StrategyRegistry:
             temp_instance = strategy_class(temp_config)
             required_params = temp_instance.get_required_parameters()
         except Exception as e:
-            logger.warning("Could not instantiate for metadata", class_name=strategy_class.__name__, error=str(e), exc_info=True)
+            logger.warning(
+                "Could not instantiate for metadata",
+                class_name=strategy_class.__name__,
+                error=str(e),
+                exc_info=True,
+            )
             required_params = []
 
         # Create metadata

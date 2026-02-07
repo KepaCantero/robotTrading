@@ -36,7 +36,7 @@ import numpy as np
 import pytest
 
 from app.backtesting.engine import SimpleBacktester
-from app.backtesting.models import BacktestConfig, BacktestResult
+from app.backtesting.models import BacktestConfig
 from app.core.decimal_utils import round_price
 from app.models.market_data import Quote
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
@@ -435,8 +435,9 @@ class TestBacktestingConcurrencyReal:
     async def test_concurrent_memory_pressure(self):
         """Test concurrent execution under memory pressure."""
         try:
-            import psutil
             import os
+
+            import psutil
 
             process = psutil.Process(os.getpid())
             initial_memory = process.memory_info().rss / 1024 / 1024  # MB

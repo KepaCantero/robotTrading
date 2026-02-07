@@ -2,14 +2,11 @@
 Tests for app/presentation/dto/responses.py
 """
 
-import pytest
 from decimal import Decimal
 
-from app.presentation.dto.responses import (
-    PortfolioResponse,
-    StrategyResponse,
-    HealthResponse,
-)
+import pytest
+
+from app.presentation.dto.responses import HealthResponse, PortfolioResponse, StrategyResponse
 
 
 class TestPortfolioResponse:
@@ -27,7 +24,7 @@ class TestPortfolioResponse:
             ],
         }
         response = PortfolioResponse(**data)
-        
+
         assert response.portfolio_id == "test_portfolio"
         assert response.total_value == Decimal("15000.50")
         assert response.currency == "USD"
@@ -41,7 +38,7 @@ class TestPortfolioResponse:
             "currency": "USD",
         }
         response = PortfolioResponse(**data)
-        
+
         assert response.positions == []
 
     def test_empty_positions_list(self):
@@ -53,7 +50,7 @@ class TestPortfolioResponse:
             "positions": [],
         }
         response = PortfolioResponse(**data)
-        
+
         assert response.positions == []
 
     def test_many_positions(self):
@@ -66,7 +63,7 @@ class TestPortfolioResponse:
             "positions": positions,
         }
         response = PortfolioResponse(**data)
-        
+
         assert len(response.positions) == 100
 
     def test_json_serialization(self):
@@ -78,7 +75,7 @@ class TestPortfolioResponse:
             "positions": [{"symbol": "AAPL", "quantity": 10}],
         }
         response = PortfolioResponse(**data)
-        
+
         json_data = response.model_dump_json()
         assert "test_portfolio" in json_data
         assert "12345.67" in json_data
@@ -89,7 +86,7 @@ class TestPortfolioResponse:
             "total_value": Decimal("10000.00"),
             "currency": "USD",
         }
-        
+
         with pytest.raises(Exception):
             PortfolioResponse(**data)
 
@@ -109,7 +106,7 @@ class TestStrategyResponse:
             ],
         }
         response = StrategyResponse(**data)
-        
+
         assert response.strategy_id == "strategy_123"
         assert response.strategy_type == "momentum"
         assert response.status == "active"
@@ -123,13 +120,13 @@ class TestStrategyResponse:
             "status": "inactive",
         }
         response = StrategyResponse(**data)
-        
+
         assert response.signals == []
 
     def test_different_status_values(self):
         """Test with different status values."""
         statuses = ["active", "inactive", "completed", "error"]
-        
+
         for status in statuses:
             data = {
                 "strategy_id": "strategy_123",
@@ -148,7 +145,7 @@ class TestStrategyResponse:
             "signals": [{"symbol": "EUR/USD", "action": "sell"}],
         }
         response = StrategyResponse(**data)
-        
+
         json_data = response.model_dump_json()
         assert "strategy_123" in json_data
         assert "pairs_trading" in json_data
@@ -164,7 +161,7 @@ class TestHealthResponse:
             "version": "1.0.0",
         }
         response = HealthResponse(**data)
-        
+
         assert response.status == "healthy"
         assert response.version == "1.0.0"
 
@@ -174,13 +171,13 @@ class TestHealthResponse:
             "status": "healthy",
         }
         response = HealthResponse(**data)
-        
+
         assert response.version == "1.0.0"
 
     def test_different_status_values(self):
         """Test with different status values."""
         statuses = ["healthy", "degraded", "unhealthy"]
-        
+
         for status in statuses:
             data = {"status": status}
             response = HealthResponse(**data)
@@ -193,12 +190,12 @@ class TestHealthResponse:
             "version": "2.1.3",
         }
         response = HealthResponse(**data)
-        
+
         assert response.version == "2.1.3"
 
     def test_missing_status_fails(self):
         """Test that missing status fails validation."""
         data = {}
-        
+
         with pytest.raises(Exception):
             HealthResponse(**data)

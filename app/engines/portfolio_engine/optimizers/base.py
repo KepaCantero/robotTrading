@@ -49,7 +49,6 @@ class BaseOptimizer(ABC):
         Returns:
             Optimal weights (N,)
         """
-        pass
 
     def validate_weights(self, weights: np.ndarray) -> bool:
         """

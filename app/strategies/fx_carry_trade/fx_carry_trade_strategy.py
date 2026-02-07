@@ -23,14 +23,8 @@ from decimal import Decimal
 from typing import Any
 
 from app.strategies.base import BaseStrategy
-from app.strategies.fx_carry_trade.carry_calculator import (
-    CarryCalculator,
-    CarryTradeOpportunity,
-)
-from app.strategies.fx_carry_trade.fx_rates_provider import (
-    FXRateProvider,
-    InMemoryFXRateProvider,
-)
+from app.strategies.fx_carry_trade.carry_calculator import CarryCalculator, CarryTradeOpportunity
+from app.strategies.fx_carry_trade.fx_rates_provider import FXRateProvider, InMemoryFXRateProvider
 from app.strategies.fx_carry_trade.models import (
     FXCarryPosition,
     FXCarrySignal,
@@ -54,9 +48,7 @@ class FXCarryTradeState:
         last_update: Last state update timestamp
     """
 
-    current_positions: dict[FXPair, FXCarryPosition] = field(
-        default_factory=dict
-    )
+    current_positions: dict[FXPair, FXCarryPosition] = field(default_factory=dict)
     pending_signals: list[FXCarrySignal] = field(default_factory=list)
     total_exposure: Decimal = field(default=Decimal("0"))
     available_capital: Decimal = field(default=Decimal("100000"))
@@ -134,19 +126,21 @@ class FXCarryTradeStrategy(BaseStrategy):
         else:
             strategy_config = config
             # Convert to dict for BaseStrategy
-            super().__init__({
-                "name": "FXCarryTrade",
-                "description": "FX Carry Trade strategy based on Ilmanen's methodology",
-                "version": "1.0.0",
-                "min_carry_threshold": str(strategy_config.min_carry_threshold),
-                "max_positions": strategy_config.max_positions,
-                "position_size": str(strategy_config.position_size),
-                "forward_months": strategy_config.forward_months,
-                "stop_loss": str(strategy_config.stop_loss),
-                "take_profit": str(strategy_config.take_profit),
-                "max_leverage": str(strategy_config.max_leverage),
-                "min_liquidity": str(strategy_config.min_liquidity),
-            })
+            super().__init__(
+                {
+                    "name": "FXCarryTrade",
+                    "description": "FX Carry Trade strategy based on Ilmanen's methodology",
+                    "version": "1.0.0",
+                    "min_carry_threshold": str(strategy_config.min_carry_threshold),
+                    "max_positions": strategy_config.max_positions,
+                    "position_size": str(strategy_config.position_size),
+                    "forward_months": strategy_config.forward_months,
+                    "stop_loss": str(strategy_config.stop_loss),
+                    "take_profit": str(strategy_config.take_profit),
+                    "max_leverage": str(strategy_config.max_leverage),
+                    "min_liquidity": str(strategy_config.min_liquidity),
+                }
+            )
 
         self.config = strategy_config
         self.calculator = calculator or CarryCalculator(
@@ -222,9 +216,7 @@ class FXCarryTradeStrategy(BaseStrategy):
 
         return signals
 
-    def analyze_opportunities(
-        self, as_of: date | None = None
-    ) -> list[CarryTradeOpportunity]:
+    def analyze_opportunities(self, as_of: date | None = None) -> list[CarryTradeOpportunity]:
         """
         Analyze current carry trade opportunities.
 
@@ -290,9 +282,7 @@ class FXCarryTradeStrategy(BaseStrategy):
 
         return base_confidence + carry_boost
 
-    def execute_signal(
-        self, signal: FXCarrySignal, capital: Decimal
-    ) -> FXCarryPosition | None:
+    def execute_signal(self, signal: FXCarrySignal, capital: Decimal) -> FXCarryPosition | None:
         """
         Execute a carry trade signal.
 
@@ -403,9 +393,7 @@ class FXCarryTradeStrategy(BaseStrategy):
 
         return position_size.quantize(Decimal("0.01"))
 
-    def _calculate_signal_volatility(
-        self, signal: FXCarrySignal
-    ) -> Decimal:
+    def _calculate_signal_volatility(self, signal: FXCarrySignal) -> Decimal:
         """
         Calculate volatility for a signal using ATR-based estimation.
 
@@ -533,16 +521,11 @@ class FXCarryTradeStrategy(BaseStrategy):
         del self.state.current_positions[pair]
         self.state.total_exposure -= abs(position.quantity * exit_price)
 
-        logger.info(
-            f"Closed {pair} position: "
-            f"total_return={closed_position.total_return:.2%}"
-        )
+        logger.info(f"Closed {pair} position: " f"total_return={closed_position.total_return:.2%}")
 
         return closed_position
 
-    def check_exit_conditions(
-        self, pair: FXPair, current_price: Decimal
-    ) -> tuple[bool, str]:
+    def check_exit_conditions(self, pair: FXPair, current_price: Decimal) -> tuple[bool, str]:
         """
         Check if a position should be closed.
 
@@ -590,9 +573,9 @@ class FXCarryTradeStrategy(BaseStrategy):
             if pair in signal:
                 current_signal = signal[pair].signal
                 # If signal flipped and crosses threshold
-                if (position.is_long and current_signal < -float(self.config.min_carry_threshold)):
+                if position.is_long and current_signal < -float(self.config.min_carry_threshold):
                     return True, f"Signal reversal to short: {current_signal}"
-                if (position.is_short and current_signal > float(self.config.min_carry_threshold)):
+                if position.is_short and current_signal > float(self.config.min_carry_threshold):
                     return True, f"Signal reversal to long: {current_signal}"
 
         except Exception as e:

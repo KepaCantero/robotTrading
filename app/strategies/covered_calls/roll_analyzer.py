@@ -437,7 +437,7 @@ class RollAnalyzer:
         Returns:
             Dict con métricas
         """
-        current_price = position.current_price or Decimal("100")
+        position.current_price or Decimal("100")
 
         # Métricas actuales
         current_return_if_called = position.return_if_called or Decimal("0")

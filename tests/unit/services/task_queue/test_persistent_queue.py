@@ -11,19 +11,19 @@ This test suite ensures that the task queue:
 """
 
 import asyncio
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
 import pytest
 import pytest_asyncio
 
 from app.services.task_queue import (
+    PersistentTaskQueue,
     Task,
     TaskPriority,
     TaskStatus,
-    PersistentTaskQueue,
-    exponential_backoff,
     create_task,
+    exponential_backoff,
 )
 
 

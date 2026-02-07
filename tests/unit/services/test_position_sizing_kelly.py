@@ -9,8 +9,9 @@ Tests cover Ernest Chan Rule 1.9 requirements:
 - Edge cases and boundary conditions
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
 
 from app.services.position_sizing_engine import PositionSizingEngine
 

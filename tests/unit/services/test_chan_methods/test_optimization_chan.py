@@ -9,12 +9,13 @@ cvxpy = pytest.importorskip("cvxpy", reason="cvxpy not installed, skipping optim
 
 import numpy as np
 import pandas as pd
+
 from app.services.optimization_chan import (
-    MeanVarianceOptimizer,
-    RiskParityOptimizer,
+    CVaROptimizer,
     HierarchicalRiskParityOptimizer,
     MaximumDiversificationOptimizer,
-    CVaROptimizer,
+    MeanVarianceOptimizer,
+    RiskParityOptimizer,
     optimize_portfolio,
 )
 

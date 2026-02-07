@@ -5,25 +5,18 @@ This module tests the FXCarryTradeStrategy class which implements
 the carry trade strategy based on Ilmanen's methodology from "Expected Returns".
 """
 
-from datetime import date, timedelta
+from datetime import date
 from decimal import Decimal
-from typing import Any
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
-from app.strategies.fx_carry_trade.carry_calculator import (
-    CarryCalculator,
-    CarryTradeOpportunity,
-)
+from app.strategies.fx_carry_trade.carry_calculator import CarryCalculator, CarryTradeOpportunity
 from app.strategies.fx_carry_trade.fx_carry_trade_strategy import (
     FXCarryTradeState,
     FXCarryTradeStrategy,
 )
-from app.strategies.fx_carry_trade.fx_rates_provider import (
-    FXRateProvider,
-    InMemoryFXRateProvider,
-)
+from app.strategies.fx_carry_trade.fx_rates_provider import InMemoryFXRateProvider
 from app.strategies.fx_carry_trade.models import (
     FXCarryPosition,
     FXCarrySignal,
@@ -168,7 +161,9 @@ class TestFXCarryTradeStrategyInitialization:
 
         assert strategy.calculator == custom_calculator
 
-    def test_default_pairs_generated(self, basic_config: FXCarryTradeConfig, mock_provider: InMemoryFXRateProvider) -> None:
+    def test_default_pairs_generated(
+        self, basic_config: FXCarryTradeConfig, mock_provider: InMemoryFXRateProvider
+    ) -> None:
         """Test that default G10 pairs are generated."""
         strategy = FXCarryTradeStrategy(config=basic_config, rate_provider=mock_provider)
 
@@ -180,7 +175,9 @@ class TestFXCarryTradeStrategyInitialization:
         assert FXPair("USD", "EUR") in strategy.pairs
         assert FXPair("USD", "GBP") in strategy.pairs
 
-    def test_string_representation(self, basic_config: FXCarryTradeConfig, mock_provider: InMemoryFXRateProvider) -> None:
+    def test_string_representation(
+        self, basic_config: FXCarryTradeConfig, mock_provider: InMemoryFXRateProvider
+    ) -> None:
         """Test string representation of strategy."""
         strategy = FXCarryTradeStrategy(config=basic_config, rate_provider=mock_provider)
 
@@ -188,7 +185,9 @@ class TestFXCarryTradeStrategyInitialization:
         assert "FXCarryTradeStrategy" in str_repr
         assert "pairs=28" in str_repr
 
-    def test_repr(self, basic_config: FXCarryTradeConfig, mock_provider: InMemoryFXRateProvider) -> None:
+    def test_repr(
+        self, basic_config: FXCarryTradeConfig, mock_provider: InMemoryFXRateProvider
+    ) -> None:
         """Test detailed representation of strategy."""
         strategy = FXCarryTradeStrategy(config=basic_config, rate_provider=mock_provider)
 
@@ -241,7 +240,9 @@ class TestFXCarryTradeStrategyGenerateSignals:
             assert isinstance(signal, FXCarrySignal)
             assert -1 <= signal.signal <= 1
 
-    def test_generate_signals_filters_by_threshold(self, strategy_with_data: FXCarryTradeStrategy) -> None:
+    def test_generate_signals_filters_by_threshold(
+        self, strategy_with_data: FXCarryTradeStrategy
+    ) -> None:
         """Test that signals are filtered by threshold."""
         # Set high threshold (within valid range)
         strategy_with_data.config.min_carry_threshold = Decimal("0.15")
@@ -250,7 +251,9 @@ class TestFXCarryTradeStrategyGenerateSignals:
         # Should have fewer signals with higher threshold
         assert len(signals) >= 0
 
-    def test_generate_signals_limits_positions(self, strategy_with_data: FXCarryTradeStrategy) -> None:
+    def test_generate_signals_limits_positions(
+        self, strategy_with_data: FXCarryTradeStrategy
+    ) -> None:
         """Test that signal count is limited by max_positions."""
         strategy_with_data.config.max_positions = 2
         signals = strategy_with_data.generate_signals({})
@@ -281,13 +284,17 @@ class TestFXCarryTradeStrategyAnalyzeOpportunities:
         config = FXCarryTradeConfig(min_carry_threshold=Decimal("0.001"))
         return FXCarryTradeStrategy(config=config, rate_provider=provider)
 
-    def test_analyze_opportunities_returns_list(self, strategy_for_analysis: FXCarryTradeStrategy) -> None:
+    def test_analyze_opportunities_returns_list(
+        self, strategy_for_analysis: FXCarryTradeStrategy
+    ) -> None:
         """Test that analyze_opportunities returns a list."""
         opportunities = strategy_for_analysis.analyze_opportunities()
 
         assert isinstance(opportunities, list)
 
-    def test_analyze_opportunities_content(self, strategy_for_analysis: FXCarryTradeStrategy) -> None:
+    def test_analyze_opportunities_content(
+        self, strategy_for_analysis: FXCarryTradeStrategy
+    ) -> None:
         """Test that opportunities contain expected data."""
         opportunities = strategy_for_analysis.analyze_opportunities()
 
@@ -297,16 +304,22 @@ class TestFXCarryTradeStrategyAnalyzeOpportunities:
             assert isinstance(opp.expected_carry, Decimal)
             assert 0 <= opp.confidence <= 100
 
-    def test_analyze_opportunities_sorted(self, strategy_for_analysis: FXCarryTradeStrategy) -> None:
+    def test_analyze_opportunities_sorted(
+        self, strategy_for_analysis: FXCarryTradeStrategy
+    ) -> None:
         """Test that opportunities are sorted by expected carry."""
         opportunities = strategy_for_analysis.analyze_opportunities()
 
         if len(opportunities) > 1:
             # Should be sorted by absolute carry descending
             for i in range(len(opportunities) - 1):
-                assert abs(opportunities[i].expected_carry) >= abs(opportunities[i + 1].expected_carry)
+                assert abs(opportunities[i].expected_carry) >= abs(
+                    opportunities[i + 1].expected_carry
+                )
 
-    def test_analyze_opportunities_custom_date(self, strategy_for_analysis: FXCarryTradeStrategy) -> None:
+    def test_analyze_opportunities_custom_date(
+        self, strategy_for_analysis: FXCarryTradeStrategy
+    ) -> None:
         """Test analyzing opportunities for a specific date."""
         custom_date = date(2024, 1, 20)
         opportunities = strategy_for_analysis.analyze_opportunities(as_of=custom_date)
@@ -469,7 +482,9 @@ class TestFXCarryTradeStrategyPositionManagement:
         """Test position size calculation with volatility adjustment."""
         capital = Decimal("100000")
         volatility = Decimal("0.05")  # 5% annual volatility
-        position_size = strategy_for_positions._calculate_position_size(capital, sample_signal, volatility)
+        position_size = strategy_for_positions._calculate_position_size(
+            capital, sample_signal, volatility
+        )
 
         # Position should be positive
         assert position_size > 0
@@ -478,7 +493,9 @@ class TestFXCarryTradeStrategyPositionManagement:
         # Base position: 100000 * 0.1 / 110.50 = 90.50
         # With 5% vol: adjustment = 0.01/0.05 = 0.2 (20% of base)
         # Expected: 90.50 * 0.2 = 18.10
-        expected_base = (capital * strategy_for_positions.config.position_size) / sample_signal.spot_rate
+        expected_base = (
+            capital * strategy_for_positions.config.position_size
+        ) / sample_signal.spot_rate
 
         # Position should be less than base due to higher volatility
         assert position_size < expected_base
@@ -497,7 +514,9 @@ class TestFXCarryTradeStrategyPositionManagement:
 
         capital = Decimal("100000")
         volatility = Decimal("0.01")  # Low volatility for max position
-        position_size = strategy_for_positions._calculate_position_size(capital, sample_signal, volatility)
+        position_size = strategy_for_positions._calculate_position_size(
+            capital, sample_signal, volatility
+        )
 
         # Should be capped by leverage
         max_size = (capital * strategy_for_positions.config.max_leverage) / sample_signal.spot_rate
@@ -512,12 +531,16 @@ class TestFXCarryTradeStrategyPositionManagement:
         # Low volatility (at baseline) - should get base position
         # At 1% baseline, adjustment = 0.01/0.01 = 1.0 (base position)
         low_vol = Decimal("0.01")
-        low_vol_position = strategy_for_positions._calculate_position_size(capital, sample_signal, low_vol)
+        low_vol_position = strategy_for_positions._calculate_position_size(
+            capital, sample_signal, low_vol
+        )
 
         # High volatility (above baseline) - should get smaller position
         # At 4% volatility, adjustment = 0.01/0.04 = 0.25 (quarter position)
         high_vol = Decimal("0.04")
-        high_vol_position = strategy_for_positions._calculate_position_size(capital, sample_signal, high_vol)
+        high_vol_position = strategy_for_positions._calculate_position_size(
+            capital, sample_signal, high_vol
+        )
 
         # High vol position should be smaller than low vol position
         assert high_vol_position < low_vol_position
@@ -558,10 +581,14 @@ class TestFXCarryTradeStrategyPositionManagement:
     ) -> None:
         """Test that invalid capital raises ValueError."""
         with pytest.raises(ValueError, match="Capital must be positive"):
-            strategy_for_positions._calculate_position_size(Decimal("0"), sample_signal, Decimal("0.05"))
+            strategy_for_positions._calculate_position_size(
+                Decimal("0"), sample_signal, Decimal("0.05")
+            )
 
         with pytest.raises(ValueError, match="Capital must be positive"):
-            strategy_for_positions._calculate_position_size(Decimal("-1000"), sample_signal, Decimal("0.05"))
+            strategy_for_positions._calculate_position_size(
+                Decimal("-1000"), sample_signal, Decimal("0.05")
+            )
 
     def test_update_positions(self, strategy_for_positions: FXCarryTradeStrategy) -> None:
         """Test updating positions with current rates."""
@@ -740,7 +767,9 @@ class TestFXCarryTradeStrategyRiskCheck:
         result = strategy_for_risk.risk_check(None, None)
         assert result is True
 
-    def test_risk_check_max_positions_reached(self, strategy_for_risk: FXCarryTradeStrategy) -> None:
+    def test_risk_check_max_positions_reached(
+        self, strategy_for_risk: FXCarryTradeStrategy
+    ) -> None:
         """Test risk check fails when max positions reached."""
         strategy_for_risk.config.max_positions = 1
 
@@ -790,7 +819,9 @@ class TestFXCarryTradeStrategyPortfolioSummary:
         assert summary["best_position"] is None
         assert summary["worst_position"] is None
 
-    def test_get_portfolio_summary_with_positions(self, strategy_for_summary: FXCarryTradeStrategy) -> None:
+    def test_get_portfolio_summary_with_positions(
+        self, strategy_for_summary: FXCarryTradeStrategy
+    ) -> None:
         """Test portfolio summary with positions."""
         test_date = date(2024, 1, 15)
 

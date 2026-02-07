@@ -3,8 +3,8 @@ Unit tests for VaR Calculator convenience functions.
 
 Tests for the calculate_var convenience function.
 """
-import pytest
 import numpy as np
+import pytest
 
 from app.engines.risk_engine.var_calculators.var_calculators import (
     calculate_var,

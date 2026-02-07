@@ -8,7 +8,7 @@ the intermarket strategy based on cross-asset relationships.
 from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock
 
 import numpy as np
 import pandas as pd
@@ -169,18 +169,24 @@ class TestFXIntermarketStrategyGenerateSignals:
             "GOLD": Series(np.random.randn(100) * 0.015, index=dates),
         }
 
-    def test_generate_signals_returns_list(self, strategy: FXIntermarketStrategy, sample_market_data: dict[str, Series]) -> None:
+    def test_generate_signals_returns_list(
+        self, strategy: FXIntermarketStrategy, sample_market_data: dict[str, Series]
+    ) -> None:
         """Test that generate_signals returns a list."""
         signals = strategy.generate_signals(sample_market_data)
 
         assert isinstance(signals, list)
 
-    def test_generate_signals_with_invalid_market_data_type(self, strategy: FXIntermarketStrategy) -> None:
+    def test_generate_signals_with_invalid_market_data_type(
+        self, strategy: FXIntermarketStrategy
+    ) -> None:
         """Test generate_signals rejects non-dict market_data."""
         with pytest.raises(ValueError, match="market_data must be a dict"):
             strategy.generate_signals("not_a_dict")
 
-    def test_generate_signals_content(self, strategy: FXIntermarketStrategy, sample_market_data: dict[str, Series]) -> None:
+    def test_generate_signals_content(
+        self, strategy: FXIntermarketStrategy, sample_market_data: dict[str, Series]
+    ) -> None:
         """Test that generated signals contain expected data."""
         # Add a relationship to state for testing
         relationship = IntermarketRelationship(
@@ -202,7 +208,9 @@ class TestFXIntermarketStrategyGenerateSignals:
             assert isinstance(signal.symbol, str)
             assert signal.source == SignalSource.FUNDAMENTAL
 
-    def test_generate_signals_limits_positions(self, strategy: FXIntermarketStrategy, sample_market_data: dict[str, Series]) -> None:
+    def test_generate_signals_limits_positions(
+        self, strategy: FXIntermarketStrategy, sample_market_data: dict[str, Series]
+    ) -> None:
         """Test that signal count is limited by max_positions."""
         strategy.config.max_positions = 2
 
@@ -234,7 +242,9 @@ class TestFXIntermarketStrategyAnalyzeRelationships:
         config = FXIntermarketConfig()
         return FXIntermarketStrategy(config=config)
 
-    def test_analyze_intermarket_relationships_returns_list(self, strategy: FXIntermarketStrategy) -> None:
+    def test_analyze_intermarket_relationships_returns_list(
+        self, strategy: FXIntermarketStrategy
+    ) -> None:
         """Test that analyze_intermarket_relationships returns a list."""
         # Add a relationship to state
         relationship = IntermarketRelationship(
@@ -255,7 +265,9 @@ class TestFXIntermarketStrategyAnalyzeRelationships:
         assert len(relationships) == 1
         assert relationships[0] == relationship
 
-    def test_analyze_intermarket_relationships_empty_state(self, strategy: FXIntermarketStrategy) -> None:
+    def test_analyze_intermarket_relationships_empty_state(
+        self, strategy: FXIntermarketStrategy
+    ) -> None:
         """Test analyze with empty state."""
         relationships = strategy.analyze_intermarket_relationships(datetime.utcnow())
 
@@ -293,13 +305,17 @@ class TestFXIntermarketStrategyDetectSignificantMoves:
             "EUR/USD": Series(normal_returns + [0.005], index=dates),
         }
 
-    def test_detect_significant_moves_returns_dict(self, strategy: FXIntermarketStrategy, returns_data: dict[str, Series]) -> None:
+    def test_detect_significant_moves_returns_dict(
+        self, strategy: FXIntermarketStrategy, returns_data: dict[str, Series]
+    ) -> None:
         """Test that detect_significant_moves returns a dict."""
         moves = strategy.detect_significant_moves(returns_data, threshold_std=2.0)
 
         assert isinstance(moves, dict)
 
-    def test_detect_significant_moves_detects_moves(self, strategy: FXIntermarketStrategy, returns_data: dict[str, Series]) -> None:
+    def test_detect_significant_moves_detects_moves(
+        self, strategy: FXIntermarketStrategy, returns_data: dict[str, Series]
+    ) -> None:
         """Test that significant moves are detected."""
         moves = strategy.detect_significant_moves(returns_data, threshold_std=2.0)
 
@@ -307,7 +323,9 @@ class TestFXIntermarketStrategyDetectSignificantMoves:
         # but not EUR/USD (FX pair, not external asset)
         assert "SPX" in moves or "GOLD" in moves
 
-    def test_detect_significant_move_structure(self, strategy: FXIntermarketStrategy, returns_data: dict[str, Series]) -> None:
+    def test_detect_significant_move_structure(
+        self, strategy: FXIntermarketStrategy, returns_data: dict[str, Series]
+    ) -> None:
         """Test structure of detected move."""
         moves = strategy.detect_significant_moves(returns_data, threshold_std=1.5)
 
@@ -321,7 +339,9 @@ class TestFXIntermarketStrategyDetectSignificantMoves:
                 assert isinstance(move_info["return"], Decimal)
                 assert isinstance(move_info["z_score"], Decimal)
 
-    def test_detect_significant_moves_direction(self, strategy: FXIntermarketStrategy, returns_data: dict[str, Series]) -> None:
+    def test_detect_significant_moves_direction(
+        self, strategy: FXIntermarketStrategy, returns_data: dict[str, Series]
+    ) -> None:
         """Test direction detection."""
         moves = strategy.detect_significant_moves(returns_data, threshold_std=1.5)
 
@@ -331,7 +351,9 @@ class TestFXIntermarketStrategyDetectSignificantMoves:
         if "GOLD" in moves:
             assert moves["GOLD"]["direction"] == "down"
 
-    def test_detect_significant_moves_insufficient_data(self, strategy: FXIntermarketStrategy) -> None:
+    def test_detect_significant_moves_insufficient_data(
+        self, strategy: FXIntermarketStrategy
+    ) -> None:
         """Test handling of insufficient data."""
         returns_data = {
             "SPX": Series([0.01]),  # Only one data point
@@ -379,7 +401,12 @@ class TestFXIntermarketStrategyGenerateIntermarketSignal:
             "direction": "down",
         }
 
-    def test_generate_intermarket_signal(self, strategy: FXIntermarketStrategy, sample_relationship: IntermarketRelationship, sample_asset_move: dict[str, Any]) -> None:
+    def test_generate_intermarket_signal(
+        self,
+        strategy: FXIntermarketStrategy,
+        sample_relationship: IntermarketRelationship,
+        sample_asset_move: dict[str, Any],
+    ) -> None:
         """Test intermarket signal generation."""
         signal = strategy.generate_intermarket_signal(
             fx_pair="USD/JPY",
@@ -392,7 +419,9 @@ class TestFXIntermarketStrategyGenerateIntermarketSignal:
         # Test the generation process works
         assert signal is None or isinstance(signal, IntermarketSignal)
 
-    def test_generate_intermarket_signal_safe_haven_buy(self, strategy: FXIntermarketStrategy, sample_relationship: IntermarketRelationship) -> None:
+    def test_generate_intermarket_signal_safe_haven_buy(
+        self, strategy: FXIntermarketStrategy, sample_relationship: IntermarketRelationship
+    ) -> None:
         """Test signal generation for safe haven relationship with larger move."""
         # Use a larger asset move to ensure signal is generated
         asset_move = {
@@ -415,7 +444,9 @@ class TestFXIntermarketStrategyGenerateIntermarketSignal:
         if signal is not None:
             assert signal.is_buy is True
 
-    def test_generate_intermarket_signal_below_threshold(self, strategy: FXIntermarketStrategy, sample_relationship: IntermarketRelationship) -> None:
+    def test_generate_intermarket_signal_below_threshold(
+        self, strategy: FXIntermarketStrategy, sample_relationship: IntermarketRelationship
+    ) -> None:
         """Test that weak signals return None."""
         strategy.config.min_signal_strength = Decimal("90")
 
@@ -458,7 +489,9 @@ class TestFXIntermarketStrategyCalculateExpectedMove:
         # 0.02 * 0.8 * 0.5 = 0.008
         assert expected == Decimal("0.008")
 
-    def test_calculate_expected_move_negative_correlation(self, strategy: FXIntermarketStrategy) -> None:
+    def test_calculate_expected_move_negative_correlation(
+        self, strategy: FXIntermarketStrategy
+    ) -> None:
         """Test expected move with negative correlation."""
         expected = strategy.calculate_expected_move(
             asset_move=Decimal("0.02"),
@@ -469,7 +502,9 @@ class TestFXIntermarketStrategyCalculateExpectedMove:
         # 0.02 * -0.75 * -0.5 = 0.0075
         assert expected == Decimal("0.0075")
 
-    def test_calculate_expected_move_negative_asset_move(self, strategy: FXIntermarketStrategy) -> None:
+    def test_calculate_expected_move_negative_asset_move(
+        self, strategy: FXIntermarketStrategy
+    ) -> None:
         """Test expected move with negative asset move."""
         expected = strategy.calculate_expected_move(
             asset_move=Decimal("-0.02"),
@@ -576,7 +611,9 @@ class TestFXIntermarketStrategyDetermineSignalType:
         config = FXIntermarketConfig()
         return FXIntermarketStrategy(config=config)
 
-    def test_determine_signal_type_safe_haven_positive_move(self, strategy: FXIntermarketStrategy) -> None:
+    def test_determine_signal_type_safe_haven_positive_move(
+        self, strategy: FXIntermarketStrategy
+    ) -> None:
         """Test signal type for safe haven with positive expected move."""
         signal_type = strategy._determine_signal_type(
             expected_move=Decimal("0.01"),
@@ -586,7 +623,9 @@ class TestFXIntermarketStrategyDetermineSignalType:
         # Positive expected move for safe haven -> sell
         assert signal_type == "sell"
 
-    def test_determine_signal_type_safe_haven_negative_move(self, strategy: FXIntermarketStrategy) -> None:
+    def test_determine_signal_type_safe_haven_negative_move(
+        self, strategy: FXIntermarketStrategy
+    ) -> None:
         """Test signal type for safe haven with negative expected move."""
         signal_type = strategy._determine_signal_type(
             expected_move=Decimal("-0.01"),
@@ -596,7 +635,9 @@ class TestFXIntermarketStrategyDetermineSignalType:
         # Negative expected move for safe haven -> buy
         assert signal_type == "buy"
 
-    def test_determine_signal_type_commodity_link_positive(self, strategy: FXIntermarketStrategy) -> None:
+    def test_determine_signal_type_commodity_link_positive(
+        self, strategy: FXIntermarketStrategy
+    ) -> None:
         """Test signal type for commodity link with positive expected move."""
         signal_type = strategy._determine_signal_type(
             expected_move=Decimal("0.01"),
@@ -605,7 +646,9 @@ class TestFXIntermarketStrategyDetermineSignalType:
 
         assert signal_type == "buy"
 
-    def test_determine_signal_type_commodity_link_negative(self, strategy: FXIntermarketStrategy) -> None:
+    def test_determine_signal_type_commodity_link_negative(
+        self, strategy: FXIntermarketStrategy
+    ) -> None:
         """Test signal type for commodity link with negative expected move."""
         signal_type = strategy._determine_signal_type(
             expected_move=Decimal("-0.01"),
@@ -669,7 +712,9 @@ class TestFXIntermarketStrategyFindRelatedPairs:
             ),
         ]
 
-    def test_find_related_pairs(self, strategy: FXIntermarketStrategy, sample_relationships: list[IntermarketRelationship]) -> None:
+    def test_find_related_pairs(
+        self, strategy: FXIntermarketStrategy, sample_relationships: list[IntermarketRelationship]
+    ) -> None:
         """Test finding pairs related to an asset."""
         related = strategy._find_related_pairs("SPX", sample_relationships)
 
@@ -678,7 +723,9 @@ class TestFXIntermarketStrategyFindRelatedPairs:
         assert related[0][0] == "USD/JPY"
         assert related[1][0] == "EUR/USD"
 
-    def test_find_related_pairs_no_matches(self, strategy: FXIntermarketStrategy, sample_relationships: list[IntermarketRelationship]) -> None:
+    def test_find_related_pairs_no_matches(
+        self, strategy: FXIntermarketStrategy, sample_relationships: list[IntermarketRelationship]
+    ) -> None:
         """Test finding pairs when no matches."""
         related = strategy._find_related_pairs("OIL", sample_relationships)
 
@@ -708,7 +755,9 @@ class TestFXIntermarketStrategyConvertToBaseSignal:
             rationale="Test signal",
         )
 
-    def test_convert_to_base_signal(self, strategy: FXIntermarketStrategy, intermarket_signal: IntermarketSignal) -> None:
+    def test_convert_to_base_signal(
+        self, strategy: FXIntermarketStrategy, intermarket_signal: IntermarketSignal
+    ) -> None:
         """Test conversion to base Signal."""
         base_signal = strategy._convert_to_base_signal(intermarket_signal)
 
@@ -718,28 +767,36 @@ class TestFXIntermarketStrategyConvertToBaseSignal:
         assert base_signal.source == SignalSource.FUNDAMENTAL
         assert base_signal.confidence == 85.0
 
-    def test_convert_signal_very_strong(self, strategy: FXIntermarketStrategy, intermarket_signal: IntermarketSignal) -> None:
+    def test_convert_signal_very_strong(
+        self, strategy: FXIntermarketStrategy, intermarket_signal: IntermarketSignal
+    ) -> None:
         """Test strength mapping for very strong."""
         intermarket_signal.strength = Decimal("90")
         base_signal = strategy._convert_to_base_signal(intermarket_signal)
 
         assert base_signal.strength == SignalStrength.VERY_STRONG
 
-    def test_convert_signal_strong(self, strategy: FXIntermarketStrategy, intermarket_signal: IntermarketSignal) -> None:
+    def test_convert_signal_strong(
+        self, strategy: FXIntermarketStrategy, intermarket_signal: IntermarketSignal
+    ) -> None:
         """Test strength mapping for strong."""
         intermarket_signal.strength = Decimal("70")
         base_signal = strategy._convert_to_base_signal(intermarket_signal)
 
         assert base_signal.strength == SignalStrength.STRONG
 
-    def test_convert_signal_moderate(self, strategy: FXIntermarketStrategy, intermarket_signal: IntermarketSignal) -> None:
+    def test_convert_signal_moderate(
+        self, strategy: FXIntermarketStrategy, intermarket_signal: IntermarketSignal
+    ) -> None:
         """Test strength mapping for moderate."""
         intermarket_signal.strength = Decimal("55")
         base_signal = strategy._convert_to_base_signal(intermarket_signal)
 
         assert base_signal.strength == SignalStrength.MODERATE
 
-    def test_convert_signal_weak(self, strategy: FXIntermarketStrategy, intermarket_signal: IntermarketSignal) -> None:
+    def test_convert_signal_weak(
+        self, strategy: FXIntermarketStrategy, intermarket_signal: IntermarketSignal
+    ) -> None:
         """Test strength mapping for weak."""
         intermarket_signal.strength = Decimal("40")
         base_signal = strategy._convert_to_base_signal(intermarket_signal)
@@ -931,7 +988,9 @@ class TestFXIntermarketStrategyIntegration:
             "GOLD": Series(np.random.randn(100) * 0.015, index=dates),
         }
 
-    def test_full_workflow(self, full_strategy: FXIntermarketStrategy, sample_market_data: dict[str, Series]) -> None:
+    def test_full_workflow(
+        self, full_strategy: FXIntermarketStrategy, sample_market_data: dict[str, Series]
+    ) -> None:
         """Test complete workflow."""
         # 1. Generate signals
         signals = full_strategy.generate_signals(sample_market_data)

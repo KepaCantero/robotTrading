@@ -4,19 +4,10 @@ Data models for parameter optimization.
 Defines the core data structures used across all optimization algorithms.
 """
 
-import logging
-
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Union,
-)
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, field_validator
 

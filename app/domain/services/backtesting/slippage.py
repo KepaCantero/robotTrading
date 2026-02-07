@@ -92,7 +92,6 @@ class SlippageModel(ABC):
         Returns:
             SlippageResult with execution details
         """
-        pass
 
 
 class LinearSlippageModel(SlippageModel):

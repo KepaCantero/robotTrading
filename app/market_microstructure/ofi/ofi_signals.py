@@ -12,12 +12,11 @@ References:
 
 import logging
 from datetime import datetime
-from decimal import Decimal
+
 import numpy as np
 
 from app.market_microstructure.ofi.models import (
     CumulativeOFI,
-    OFIHorizon,
     OFIPrediction,
     OFISignal,
     OFISignalConfig,
@@ -31,12 +30,12 @@ logger = logging.getLogger(__name__)
 
 class SignalGenerationError(RuntimeError):
     """Raised when signal generation fails unexpectedly."""
-    pass
+
 
 
 class InvalidOFIError(ValueError):
     """Raised when OFI value is invalid."""
-    pass
+
 
 
 class OFISignalGenerator:
@@ -126,7 +125,7 @@ class OFISignalGenerator:
             )
             return None
 
-        ofi = ofi_result.ofi
+        ofi_result.ofi
 
         # Check for mean reversion signal first (highest priority)
         if self.config.enable_mean_reversion and cofi_tracker is not None:

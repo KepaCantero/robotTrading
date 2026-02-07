@@ -6,7 +6,6 @@ ensuring correct strategy selection, risk configuration, and tax optimization.
 
 from decimal import Decimal
 
-import pytest
 
 from app.application.routers.input_profile_router import InputProfileRouter
 from app.core.models.input_profile import (

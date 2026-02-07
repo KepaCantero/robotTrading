@@ -8,8 +8,9 @@ This test ensures consistency between:
 Purpose: Prevent configuration drift when ProfileConfigLoader is unavailable.
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 
 @pytest.fixture

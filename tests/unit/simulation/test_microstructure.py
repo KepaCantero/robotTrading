@@ -5,29 +5,23 @@ Tests for order flow analysis, market depth, and liquidity provision
 following Harris's microstructure theories.
 """
 
-import pytest
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
+
+import pytest
 
 from app.simulation.microstructure import (
+    LiquidityProvider,
+    LiquidityRegime,
+    MarketDepthAnalyzer,
+    MarketMicrostructureAnalyzer,
+    MarketMicrostructureMetrics,
     OrderFlowAnalyzer,
     OrderFlowDirection,
     OrderImbalance,
-    MarketDepthAnalyzer,
-    LiquidityRegime,
-    LiquidityProvider,
-    PriceImpactFunction,
-    MarketMicrostructureMetrics,
-    MarketMicrostructureAnalyzer,
     create_market_microstructure_analyzer,
 )
-from app.simulation.order_book import (
-    LimitOrderBook,
-    Order,
-    OrderSide,
-    OrderType,
-    Trade,
-)
+from app.simulation.order_book import LimitOrderBook, Order, OrderSide, OrderType, Trade
 
 
 class TestOrderImbalance:

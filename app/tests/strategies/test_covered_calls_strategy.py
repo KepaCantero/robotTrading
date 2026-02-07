@@ -2,16 +2,13 @@
 Comprehensive Tests for Covered Calls Strategy
 """
 
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
 
 from app.strategies.covered_calls.covered_call_strategy import CoveredCallStrategy
-from app.strategies.covered_calls.greeks_calculator import (
-    BlackScholesGreeks,
-    GreeksCalculator,
-)
+from app.strategies.covered_calls.greeks_calculator import BlackScholesGreeks, GreeksCalculator
 from app.strategies.covered_calls.models import (
     AssignmentProbability,
     CallOption,
@@ -19,14 +16,11 @@ from app.strategies.covered_calls.models import (
     CoveredCallPosition,
     Moneyness,
     OptionGreeks,
-    OptionScreenerResult,
     OptionScreeningCriteria,
     OptionType,
-    RollType,
 )
 from app.strategies.covered_calls.option_screener import OptionScreener
 from app.strategies.covered_calls.position_manager import PositionManager
-from app.strategies.covered_calls.roll_analyzer import RollAnalyzer
 
 # ============================================================================
 # FIXTURES
@@ -171,7 +165,7 @@ class TestCallOption:
     def test_days_to_expiry(self, sample_call_option, base_date):
         """Test days to expiry."""
         # Calculate expected days from base_date
-        expected = (sample_call_option.expiry_date - base_date).days
+        (sample_call_option.expiry_date - base_date).days
         # The actual days_to_expiry uses date.today()
         # So we just check it's positive
         assert sample_call_option.days_to_expiry > 0

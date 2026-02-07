@@ -19,15 +19,12 @@ SOLID Principles:
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 import numpy as np
-from scipy import stats
 
-from .factor_calculator import FactorCalculator, get_default_factor_premiums
-from .models import FactorProfile, FactorScores, FactorType
+from .factor_calculator import FactorCalculator
+from .models import FactorScores
 
 logger = logging.getLogger(__name__)
 

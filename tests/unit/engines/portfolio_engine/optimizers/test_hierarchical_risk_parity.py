@@ -122,7 +122,6 @@ class TestHierarchicalRiskParity:
 
     def test_uncorrelated_assets(self):
         """Test HRP with uncorrelated assets."""
-        n = 4
         # Diagonal covariance (no correlation)
         cov = np.diag([0.01, 0.02, 0.03, 0.04])
 
@@ -253,7 +252,7 @@ class TestHierarchicalRiskParity:
     def test_cluster_tree(self, sample_covariance):
         """Test cluster tree generation."""
         hrp = HierarchicalRiskParity(linkage_method="single")
-        weights = hrp.get_weights(sample_covariance)
+        hrp.get_weights(sample_covariance)
         tree = hrp.get_cluster_tree()
 
         assert tree is not None
@@ -264,7 +263,7 @@ class TestHierarchicalRiskParity:
     def test_dendrogram_data(self, sample_covariance):
         """Test dendrogram data generation."""
         hrp = HierarchicalRiskParity(linkage_method="single")
-        weights = hrp.get_weights(sample_covariance)
+        hrp.get_weights(sample_covariance)
         dendro_data = hrp.get_dendrogram_data()
 
         assert dendro_data is not None
@@ -515,7 +514,7 @@ class TestHRPProperties:
 
         for method in ["single", "average", "complete", "ward"]:
             hrp = HierarchicalRiskParity(linkage_method=method)
-            weights = hrp.get_weights(cov_matrix)
+            hrp.get_weights(cov_matrix)
 
             # Cophenetic correlation measures how well the dendrogram preserves distances
             # Higher is generally better, but varies by linkage method

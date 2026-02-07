@@ -5,38 +5,19 @@ This module contains domain services for trading strategies
 following academic research and best practices.
 """
 
+from .covered_call import (
+    CallSignal,
+    CoveredCallPortfolio,
+    CoveredCallPosition,
+    CoveredCallStrategy,
+    OptionData,
+)
 from .cross_sectional_momentum import (
     CrossSectionalMomentum,
     MomentumAsset,
+    MomentumMetrics,
     MomentumPortfolio,
     MomentumSignal,
-    MomentumMetrics,
-)
-from .time_series_momentum import (
-    TimeSeriesMomentum,
-    TimeSeriesSignal,
-    TrendState,
-)
-from .fama_french_factors import (
-    FamaFrenchModel,
-    FactorReturns,
-    FactorLoadings,
-    FactorModelResult,
-    FactorTiming,
-)
-from .statistical_arbitrage import (
-    StatisticalArbitrage,
-    ZScoreSignal,
-    BollingerBandSignal,
-    MeanReversionMetrics,
-    ReversionState,
-)
-from .pairs_trading import (
-    PairsTrading,
-    TradingPair,
-    PairPosition,
-    CointegrationResult,
-    PairSignal,
 )
 from .dividend_investing import (
     DividendInvesting,
@@ -44,25 +25,29 @@ from .dividend_investing import (
     DividendPortfolio,
     DividendSignal,
 )
-from .quality_screen import (
-    QualityInvesting,
-    QualityMetrics,
-    QualityPortfolio,
-    QualitySignal,
+from .fama_french_factors import (
+    FactorLoadings,
+    FactorModelResult,
+    FactorReturns,
+    FactorTiming,
+    FamaFrenchModel,
 )
 from .low_volatility_anomaly import (
     LowVolatilityAnomaly,
-    VolatilityMetrics,
     LowVolatilityPortfolio,
     VolatilityCategory,
+    VolatilityMetrics,
 )
-from .covered_call import (
-    CoveredCallStrategy,
-    CoveredCallPosition,
-    CoveredCallPortfolio,
-    OptionData,
-    CallSignal,
+from .pairs_trading import CointegrationResult, PairPosition, PairSignal, PairsTrading, TradingPair
+from .quality_screen import QualityInvesting, QualityMetrics, QualityPortfolio, QualitySignal
+from .statistical_arbitrage import (
+    BollingerBandSignal,
+    MeanReversionMetrics,
+    ReversionState,
+    StatisticalArbitrage,
+    ZScoreSignal,
 )
+from .time_series_momentum import TimeSeriesMomentum, TimeSeriesSignal, TrendState
 
 __all__ = [
     # Cross-sectional momentum

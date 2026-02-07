@@ -293,7 +293,6 @@ class BaseOptimizer(ABC):
         Returns:
             OptimizationResult with best parameters and all trials
         """
-        pass
 
     def _evaluate_params(
         self,

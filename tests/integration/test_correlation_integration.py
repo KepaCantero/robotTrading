@@ -4,19 +4,18 @@ Integration tests for CorrelationAnalyzer with PortfolioRiskManager - Phase 2.4
 Tests the real-time correlation matrix integration with portfolio risk management.
 """
 
-import asyncio
-import pytest
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import AsyncMock, Mock
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+import pytest
 
+from app.models.market_data import DataFeedType, DataFrequency, HistoricalData
+from app.models.portfolio import AssetClass, Portfolio, Position
 from app.services.correlation.analyzer import CorrelationAnalyzer, CorrelationConfig
-from app.services.portfolio_risk_manager import PortfolioRiskManager, RiskLevel
-from app.models.portfolio import Portfolio, Position, AssetClass
-from app.models.market_data import HistoricalData, DataFeedType, DataFrequency
+from app.services.portfolio_risk_manager import PortfolioRiskManager
 
 
 @pytest.fixture
@@ -313,7 +312,7 @@ async def test_correlation_with_new_position(
     )
 
     # Verify correlations include new position
-    correlations = risk_assessment["risk_metrics"]["correlations"]
+    risk_assessment["risk_metrics"]["correlations"]
 
     # Should have correlation pairs with TSLA
     # Note: Actual pairs depend on implementation

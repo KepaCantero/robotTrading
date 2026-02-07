@@ -13,10 +13,9 @@ Run with: pytest app/tests/strategies/test_multi_factor_strategy.py -v
 """
 
 import asyncio
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import List
-from unittest.mock import MagicMock, Mock, patch
 
 import numpy as np
 import pytest
@@ -936,7 +935,7 @@ class TestMultiFactorStrategy:
         """Test rebalancing portfolio."""
         initialized_strategy.construct_initial_portfolio(Decimal("100000"))
 
-        old_position_count = len(initialized_strategy.current_portfolio.positions)
+        len(initialized_strategy.current_portfolio.positions)
 
         new_portfolio = initialized_strategy.rebalance_portfolio()
 

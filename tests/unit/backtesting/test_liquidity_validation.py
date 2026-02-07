@@ -11,11 +11,12 @@ Audit Finding: Backtesting executes orders without validating available liquidit
 leading to unrealistic fill assumptions and inflated backtest results.
 """
 
-import pytest
-from decimal import Decimal
 from datetime import datetime, timedelta
+from decimal import Decimal
 
-from app.backtesting.liquidity_validator import LiquidityValidator, FillResult
+import pytest
+
+from app.backtesting.liquidity_validator import FillResult, LiquidityValidator
 from app.models.market_data import Quote
 
 

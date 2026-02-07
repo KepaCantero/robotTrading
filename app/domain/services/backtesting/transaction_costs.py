@@ -85,7 +85,6 @@ class TransactionCostModel(ABC):
         Returns:
             CostBreakdown with all cost components
         """
-        pass
 
     @abstractmethod
     def estimate_total_cost(
@@ -101,7 +100,6 @@ class TransactionCostModel(ABC):
         Returns:
             Total estimated cost
         """
-        pass
 
 
 class LinearCostModel(TransactionCostModel):
@@ -298,7 +296,6 @@ class MarketImpactModel(ABC):
         Returns:
             Market impact cost (per share)
         """
-        pass
 
 
 class AlmgrenChristModel(MarketImpactModel):

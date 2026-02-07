@@ -9,7 +9,7 @@ Reference: API-004 - Test coverage for API endpoints.
 from datetime import datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 from fastapi import status
@@ -90,7 +90,9 @@ class TestDeploymentAPIEndpoints:
         return decision
 
     @pytest.mark.asyncio
-    async def test_validate_strategy_success(self, client, mock_deployment_input, mock_deployment_decision):
+    async def test_validate_strategy_success(
+        self, client, mock_deployment_input, mock_deployment_decision
+    ):
         """Test validate_strategy returns valid deployment decision."""
         with patch("app.api.deployment.get_deploy_orchestrator") as mock_orchestrator:
             mock_orch = MagicMock()
@@ -321,7 +323,11 @@ class TestDeploymentAPIEndpoints:
 
         with patch("app.api.deployment.get_deploy_orchestrator") as mock_orchestrator:
             mock_orch = MagicMock()
-            mock_orch.decision_history = [approved_decision, rejected_decision, conditional_decision]
+            mock_orch.decision_history = [
+                approved_decision,
+                rejected_decision,
+                conditional_decision,
+            ]
             mock_orchestrator.return_value = mock_orch
 
             with patch("app.api.deployment.get_health_check_manager") as mock_health_manager:
@@ -385,7 +391,10 @@ class TestErrorHandling:
             mock_orchestrator.return_value = mock_orch
 
             response = client.get(f"/deployment/decision/{uuid4()}")
-            assert response.status_code in [status.HTTP_404_NOT_FOUND, status.HTTP_500_INTERNAL_SERVER_ERROR]
+            assert response.status_code in [
+                status.HTTP_404_NOT_FOUND,
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            ]
 
     @pytest.mark.asyncio
     async def test_list_deployment_decisions_invalid_limit(self, client):

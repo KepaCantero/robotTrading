@@ -11,23 +11,13 @@ Tests cover:
 - Performance optimizations
 """
 
+
 import pytest
-import numpy as np
-import pandas as pd
-from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, MagicMock
 
 # Try importing the module
 try:
     from app.backtesting.labeling.triple_barrier import (
         TripleBarrierConfig,
-        get_barrier_labels,
-        TripleBarrierLabeler,
-        generate_triple_barrier_labels,
-        calculate_volatility,
-        add_vertical_barrier,
-        get_barrier_events,
-        plot_triple_barrier,
     )
 
     MODULE_AVAILABLE = True

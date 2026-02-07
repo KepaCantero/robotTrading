@@ -5,11 +5,11 @@ Tests the HMMRegimeDetector class which uses Hidden Markov Models
 to detect market regimes (bull, bear, sideways).
 """
 
-import pytest
-from unittest.mock import patch, MagicMock, Mock
+from typing import List
+from unittest.mock import MagicMock, patch
+
 import numpy as np
-import pandas as pd
-from typing import List, Dict, Any
+import pytest
 
 
 @pytest.fixture

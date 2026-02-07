@@ -9,10 +9,10 @@ from pydantic import BaseModel
 
 from app.api.logging_utils import (
     get_correlation_id_from_request,
+    log_debug,
+    log_error,
     log_info,
     log_warning,
-    log_error,
-    log_debug,
     log_with_context,
 )
 

@@ -10,21 +10,19 @@ Following TDD best practices from Kent Beck:
 6. Property-based testing with Hypothesis
 """
 
-from decimal import Decimal
 from datetime import datetime, timedelta
+from decimal import Decimal
 from typing import List
+
 import pytest
-from hypothesis import given, strategies as st, settings, HealthCheck
-from unittest.mock import patch, MagicMock
+from hypothesis import HealthCheck, given, settings, strategies as st
 
 from app.backtesting.metrics import (
     MetricsCalculator,
-    calculate_profit_factor,
     calculate_expectancy,
-    calculate_expectancy_with_confidence,
+    calculate_profit_factor,
 )
 from app.backtesting.models import Trade, TradeStatus
-
 
 # =============================================================================
 # Test Fixtures

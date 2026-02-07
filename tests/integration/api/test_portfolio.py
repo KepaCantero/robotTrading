@@ -72,9 +72,7 @@ class TestPortfolioAPIEndpoints:
     @pytest.mark.asyncio
     async def test_get_position_not_found(self, client):
         """Test get_position returns 404 for non-existent symbol."""
-        with patch.object(
-            PortfolioService, "get_position", new=AsyncMock(return_value=None)
-        ):
+        with patch.object(PortfolioService, "get_position", new=AsyncMock(return_value=None)):
             response = client.get("/portfolio/positions/NONEXISTENT")
             assert response.status_code == status.HTTP_404_NOT_FOUND
 
@@ -92,18 +90,14 @@ class TestPortfolioAPIEndpoints:
     @pytest.mark.asyncio
     async def test_get_market_regime_not_available(self, client):
         """Test get_market_regime returns 404 when unavailable."""
-        with patch.object(
-            PortfolioService, "get_market_regime", new=AsyncMock(return_value=None)
-        ):
+        with patch.object(PortfolioService, "get_market_regime", new=AsyncMock(return_value=None)):
             response = client.get("/portfolio/market-regime/NONEXISTENT")
             assert response.status_code == status.HTTP_404_NOT_FOUND
 
     @pytest.mark.asyncio
     async def test_simulate_trade_success(self, client):
         """Test simulate_trade returns success correctly."""
-        with patch.object(
-            PortfolioService, "simulate_trade", new=AsyncMock(return_value=True)
-        ):
+        with patch.object(PortfolioService, "simulate_trade", new=AsyncMock(return_value=True)):
             response = client.post(
                 "/portfolio/simulate-trade",
                 json={"symbol": "AAPL", "quantity": 100, "price": 150.0},
@@ -116,9 +110,7 @@ class TestPortfolioAPIEndpoints:
     @pytest.mark.asyncio
     async def test_simulate_trade_failure(self, client):
         """Test simulate_trade returns failure correctly."""
-        with patch.object(
-            PortfolioService, "simulate_trade", new=AsyncMock(return_value=False)
-        ):
+        with patch.object(PortfolioService, "simulate_trade", new=AsyncMock(return_value=False)):
             response = client.post(
                 "/portfolio/simulate-trade",
                 json={"symbol": "AAPL", "quantity": 100, "price": 150.0},
@@ -141,9 +133,7 @@ class TestPortfolioAPIEndpoints:
     @pytest.mark.asyncio
     async def test_reset_circuit_breaker(self, client):
         """Test reset_circuit_breaker resets breaker state."""
-        with patch.object(
-            PortfolioService, "reset_circuit_breaker", return_value=None
-        ):
+        with patch.object(PortfolioService, "reset_circuit_breaker", return_value=None):
             response = client.post("/portfolio/circuit-breakers/test_breaker/reset")
             assert response.status_code == status.HTTP_200_OK
 
@@ -263,9 +253,7 @@ class TestErrorHandling:
     @pytest.mark.asyncio
     async def test_get_portfolio_circuit_breaker_open(self, client):
         """Test get_portfolio returns 503 when circuit breaker is open."""
-        with patch.object(
-            PortfolioService, "get_portfolio", new=AsyncMock(return_value=None)
-        ):
+        with patch.object(PortfolioService, "get_portfolio", new=AsyncMock(return_value=None)):
             response = client.get("/portfolio/")
             assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
             assert "circuit breaker" in response.json()["detail"].lower()

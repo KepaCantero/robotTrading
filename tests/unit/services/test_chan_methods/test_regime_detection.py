@@ -2,15 +2,16 @@
 Tests for Ernest Chan Regime Detection Implementation
 """
 
-import pytest
 import numpy as np
 import pandas as pd
+import pytest
+
 from app.services.regime_detection_chan import (
     MarketRegimeDetector,
+    RegimeType,
     VolatilityRegimeDetector,
     detect_market_regimes,
     get_regime_statistics,
-    RegimeType,
 )
 
 

@@ -4,18 +4,20 @@ Unit Tests for Decimal Utilities
 Tests for the decimal utility functions that ensure precision in financial calculations.
 """
 
+from decimal import Decimal
+
 import pytest
-from decimal import Decimal, InvalidOperation
+
 from app.core.decimal_utils import (
+    calculate_percentage,
+    format_currency,
+    round_decimal,
+    round_to_currency_precision,
+    safe_decimal_divide,
     to_decimal,
     to_decimal_required,
-    safe_decimal_divide,
     validate_price,
     validate_quantity,
-    round_decimal,
-    format_currency,
-    calculate_percentage,
-    round_to_currency_precision,
 )
 
 

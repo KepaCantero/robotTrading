@@ -2,18 +2,19 @@
 Tests for app/security/security_headers.py
 """
 
-import pytest
-from fastapi import Request, Response
 from unittest.mock import Mock
+
+import pytest
+
 from app.security.security_headers import (
-    SecurityHeadersMiddleware,
     ContentSecurityPolicy,
     HSTSHeader,
-    XFrameOptions,
-    ReferrerPolicy,
     PermissionsPolicy,
-    get_security_headers,
+    ReferrerPolicy,
+    SecurityHeadersMiddleware,
+    XFrameOptions,
     add_security_headers,
+    get_security_headers,
 )
 
 
@@ -32,15 +33,15 @@ class TestSecurityHeadersMiddleware:
         """Test adding security headers to response."""
         app = Mock()
         middleware = SecurityHeadersMiddleware(app)
-        
+
         request = Mock()
         request.url.scheme = "https"
-        
+
         response = Mock()
         response.headers = {}
-        
+
         middleware._add_security_headers(request, response)
-        
+
         # Check headers were added
         assert "X-Content-Type-Options" in response.headers
         assert response.headers["X-Content-Type-Options"] == "nosniff"
@@ -51,7 +52,7 @@ class TestSecurityHeadersMiddleware:
         """Test HSTS only added for HTTPS."""
         app = Mock()
         middleware = SecurityHeadersMiddleware(app, enable_hsts=True)
-        
+
         # HTTP request - no HSTS
         request_http = Mock()
         request_http.url.scheme = "http"
@@ -59,7 +60,7 @@ class TestSecurityHeadersMiddleware:
         response_http.headers = {}
         middleware._add_security_headers(request_http, response_http)
         assert "Strict-Transport-Security" not in response_http.headers
-        
+
         # HTTPS request - HSTS added
         request_https = Mock()
         request_https.url.scheme = "https"
@@ -72,12 +73,12 @@ class TestSecurityHeadersMiddleware:
         """Test disabling CSP."""
         app = Mock()
         middleware = SecurityHeadersMiddleware(app, enable_csp=False)
-        
+
         request = Mock()
         request.url.scheme = "https"
         response = Mock()
         response.headers = {}
-        
+
         middleware._add_security_headers(request, response)
         assert "Content-Security-Policy" not in response.headers
 
@@ -264,9 +265,9 @@ class TestConvenienceFunctions:
         response.headers = {}
         response.request = Mock()
         response.request.url.scheme = "https"
-        
+
         add_security_headers(response)
-        
+
         # Check headers were added
         assert "X-Content-Type-Options" in response.headers
         assert "X-Frame-Options" in response.headers

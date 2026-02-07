@@ -2,23 +2,22 @@
 Tests for Portfolio Construction - Narang "Inside the Black Box" Chapter 6
 """
 
-import pytest
-import pandas as pd
-import numpy as np
-from datetime import datetime
 from decimal import Decimal
 
+import numpy as np
+import pandas as pd
+import pytest
+
 from app.services.portfolio_construction_narang import (
-    OptimizationMethod,
-    RebalanceTrigger,
     AlphaView,
+    OptimizationMethod,
     PortfolioConstraints,
+    PortfolioConstructor,
     PortfolioWeights,
     RebalanceRecommendation,
-    PortfolioConstructor,
+    RebalanceTrigger,
     get_portfolio_constructor,
 )
-from app.strategies.alpha_models import AlphaType
 
 
 @pytest.fixture

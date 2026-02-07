@@ -8,7 +8,7 @@ to monitor positions and execute stop-loss/take-profit orders.
 import asyncio
 from datetime import datetime, timezone
 from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -16,7 +16,6 @@ from app.services.position_monitor import (
     MonitoredPosition,
     PositionMonitor,
     PositionMonitorConfig,
-    PositionStatus,
 )
 
 

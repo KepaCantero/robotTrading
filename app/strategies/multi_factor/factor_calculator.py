@@ -23,12 +23,12 @@ SOLID Principles:
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 from scipy import stats
 
-from .models import FactorProfile, FactorScores, FactorType
+from .models import FactorProfile, FactorScores
 
 logger = logging.getLogger(__name__)
 

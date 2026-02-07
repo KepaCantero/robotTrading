@@ -10,14 +10,13 @@ Tests:
 """
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
 
-from app.services.news_processor import NewsEvent, NewsEventHandler, NewsEventType, SentimentUpdate
 from app.core.timezone_utils import utc_now
+from app.services.news_processor import NewsEvent, NewsEventHandler, NewsEventType, SentimentUpdate
 
 
 class MockMarketauxClient:

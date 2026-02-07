@@ -3,15 +3,12 @@ Unit tests for Alert System.
 
 Tests for threshold-based alerting and notification system.
 """
-import pytest
-from unittest.mock import patch, MagicMock, Mock
 from datetime import datetime, timedelta
-import requests
+from unittest.mock import Mock, patch
 
-from app.engines.risk_engine.alert_system import (
-    AlertSystem,
-    BaseAlertSystem,
-)
+import pytest
+
+from app.engines.risk_engine.alert_system import AlertSystem, BaseAlertSystem
 from app.models.portfolio import Portfolio
 
 

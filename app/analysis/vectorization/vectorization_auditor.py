@@ -11,15 +11,10 @@ from __future__ import annotations
 
 import ast
 import time
-from dataclasses import dataclass, field
 from decimal import Decimal
 from pathlib import Path
-from typing import Any
 
-from app.analysis.vectorization.models import (
-    VectorizationIssue,
-    VectorizationReport,
-)
+from app.analysis.vectorization.models import VectorizationIssue, VectorizationReport
 from app.analysis.vectorization.patterns import VectorizationPatterns
 
 

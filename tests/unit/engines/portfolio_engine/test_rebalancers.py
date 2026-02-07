@@ -11,13 +11,11 @@ Tests cover:
 
 from datetime import datetime, timedelta
 from decimal import Decimal
-from unittest.mock import patch
 
 import numpy as np
 import pytest
 
 from app.engines.portfolio_engine.rebalancers.rebalancers import (
-    BaseRebalancer,
     HybridRebalancer,
     ThresholdRebalancer,
     TimeBasedRebalancer,

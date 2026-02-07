@@ -8,21 +8,20 @@ Tests verify that the Factory pattern correctly implements:
 - Prototype pattern
 - Factory Registry
 """
-import pytest
-from datetime import datetime, timedelta
 from decimal import Decimal
+
+import pytest
 
 from app.domain.factories import (
     AbstractEntityFactory,
-    TradingEntityFactory,
-    OrderBuilder,
-    OrderPrototype,
-    OrderFactory,
     FactoryRegistry,
+    OrderBuilder,
+    OrderFactory,
+    OrderPrototype,
+    TradingEntityFactory,
     get_factory,
     register_factory,
 )
-
 
 # ============================================================================
 # TEST ABSTRACT FACTORY
@@ -219,7 +218,10 @@ class TestTradingEntityFactory:
 
         with pytest.raises(ValueError, match="Side must be"):
             factory.create_position(
-                symbol="AAPL", quantity=Decimal("100"), entry_price=Decimal("150.00"), side="invalid"
+                symbol="AAPL",
+                quantity=Decimal("100"),
+                entry_price=Decimal("150.00"),
+                side="invalid",
             )
 
 

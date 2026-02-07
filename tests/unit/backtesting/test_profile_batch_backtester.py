@@ -12,25 +12,19 @@ Tests:
 """
 
 import json
-import pytest
 from decimal import Decimal
-from pathlib import Path
 from unittest.mock import MagicMock, patch
+
 import numpy as np
+import pytest
 
 from app.backtesting.profile_batch_backtester import (
     BaselineOptimizationComparison,
-    OptimizedStrategy,
     ProfileBatchBacktester,
     ProfileResult,
     ProfileResultDB,
 )
-from app.core.models.input_profile import (
-    InputProfile,
-    ObjectivoInversion,
-    RiskTolerance,
-)
-
+from app.core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
 
 # ============================================================================
 # Fixtures

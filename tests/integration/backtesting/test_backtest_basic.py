@@ -30,8 +30,6 @@ import numpy as np
 import pytest
 
 from app.backtesting.engine import SimpleBacktester
-from app.backtesting.test_summary import TestSummaryReporter
-from app.core.decimal_utils import round_price
 from app.backtesting.models import (
     BacktestConfig,
     BacktestResult,
@@ -39,6 +37,8 @@ from app.backtesting.models import (
     Trade,
     TradeStatus,
 )
+from app.backtesting.test_summary import TestSummaryReporter
+from app.core.decimal_utils import round_price
 from app.models.market_data import Quote
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
@@ -190,7 +190,7 @@ def generate_sma_crossover_signals(
 
         # Calculate slopes
         fast_slope = (fast_now - fast_prev) / fast_prev if fast_prev > 0 else 0
-        slow_slope = (slow_now - slow_prev) / slow_prev if slow_prev > 0 else 0
+        (slow_now - slow_prev) / slow_prev if slow_prev > 0 else 0
 
         # Crossover detection
         was_below = fast_sma[i - 1] < slow_sma[i - 1]

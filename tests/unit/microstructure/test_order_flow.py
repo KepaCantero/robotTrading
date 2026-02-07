@@ -4,20 +4,21 @@ Unit tests for Order Flow module
 Tests for order flow analysis and information asymmetry measurement
 """
 
-import pytest
-from decimal import Decimal
 from datetime import datetime, timedelta
-import pandas as pd
+from decimal import Decimal
+
 import numpy as np
+import pandas as pd
+import pytest
 
 from app.microstructure.order_flow import (
-    OrderType,
-    OrderSide,
-    TraderType,
     Order,
-    OrderFlowSnapshot,
     OrderFlowAnalyzer,
     OrderFlowSimulator,
+    OrderFlowSnapshot,
+    OrderSide,
+    OrderType,
+    TraderType,
     get_order_flow_analyzer,
     get_order_flow_simulator,
 )

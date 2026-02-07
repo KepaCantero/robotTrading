@@ -19,33 +19,30 @@ The predictor implements multiple approaches:
 import logging
 from datetime import datetime, timezone
 from decimal import Decimal
+
 import numpy as np
 from numpy.linalg import LinAlgError
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.preprocessing import StandardScaler
 
-from app.market_microstructure.ofi.models import (
-    OFIConfig,
-    OFIHorizon,
-    OFIPrediction,
-)
+from app.market_microstructure.ofi.models import OFIConfig, OFIHorizon, OFIPrediction
 
 logger = logging.getLogger(__name__)
 
 
 class ModelNotTrainedError(RuntimeError):
     """Raised when prediction is attempted but model is not trained."""
-    pass
+
 
 
 class InvalidDataError(ValueError):
     """Raised when input data is invalid for training or prediction."""
-    pass
+
 
 
 class PredictionError(RuntimeError):
     """Raised when prediction fails unexpectedly."""
-    pass
+
 
 
 class OFIPredictor:

@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, time
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 try:
     from pydantic import BaseModel, Field, field_validator, model_validator

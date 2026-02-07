@@ -3,13 +3,12 @@ Unit tests for GARCH VaR Calculator.
 
 Tests for GARCH-based VaR calculation with volatility clustering.
 """
-import pytest
-import numpy as np
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 
-from app.engines.risk_engine.var_calculators.var_calculators import (
-    GARCHVaRCalculator,
-)
+import numpy as np
+import pytest
+
+from app.engines.risk_engine.var_calculators.var_calculators import GARCHVaRCalculator
 
 
 @pytest.fixture

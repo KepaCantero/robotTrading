@@ -8,15 +8,21 @@ Reference: API-004 - Test coverage for API endpoints.
 
 from datetime import datetime, timedelta
 from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock, patch
-from uuid import UUID, uuid4
+from unittest.mock import AsyncMock, patch
+from uuid import uuid4
 
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
 from app.api.market_data import router
-from app.models.market_data import DataFeedConfig, DataFeedType, DataFrequency, HistoricalData, Quote
+from app.models.market_data import (
+    DataFeedConfig,
+    DataFeedType,
+    DataFrequency,
+    HistoricalData,
+    Quote,
+)
 
 
 class TestMarketDataAPIEndpoints:
@@ -321,7 +327,10 @@ class TestMarketDataAPIEndpoints:
         """Test get_service_status returns service status."""
         with patch("app.api.market_data.get_market_data_service") as mock_get_service:
             mock_service = AsyncMock()
-            mock_service.get_service_status.return_value = {"status": "operational", "feeds_active": 3}
+            mock_service.get_service_status.return_value = {
+                "status": "operational",
+                "feeds_active": 3,
+            }
             mock_get_service.return_value = mock_service
 
             response = client.get("/market-data/status")

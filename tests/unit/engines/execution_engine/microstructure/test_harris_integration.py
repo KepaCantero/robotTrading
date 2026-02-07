@@ -10,24 +10,22 @@ Tests cover:
 
 from __future__ import annotations
 
-import pytest
-from decimal import Decimal
 from datetime import datetime, timedelta
-from typing import List
+from decimal import Decimal
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+import pytest
 
 from app.engines.execution_engine.microstructure.harris_integration import (
     HarrisMicrostructureIntegrator,
-    get_harris_integrator,
-    PreTradeCheckResult,
     PostTradeAnalysis,
+    PreTradeCheckResult,
+    get_harris_integrator,
 )
-
 from app.engines.execution_engine.microstructure.order_book_analyzer import (
-    OrderBookSnapshot,
     OrderBookLevel,
+    OrderBookSnapshot,
 )
 
 

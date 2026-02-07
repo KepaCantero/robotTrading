@@ -5,26 +5,21 @@ Tests for auction mechanisms, continuous trading, and trading session
 management as described by Harris.
 """
 
-import pytest
+from datetime import time
 from decimal import Decimal
-from datetime import datetime, time
+
+import pytest
 
 from app.simulation.market_mechanics import (
     AuctionMechanism,
     AuctionType,
-    AuctionResult,
     ContinuousTrading,
     MarketMechanicsEngine,
     MarketPhase,
     TradingSession,
     create_market_mechanics_engine,
 )
-from app.simulation.order_book import (
-    LimitOrderBook,
-    Order,
-    OrderSide,
-    OrderType,
-)
+from app.simulation.order_book import LimitOrderBook, Order, OrderSide, OrderType
 
 
 class TestAuctionMechanism:

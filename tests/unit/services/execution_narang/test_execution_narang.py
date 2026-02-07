@@ -2,30 +2,27 @@
 Tests for Execution Algorithms - Narang "Inside the Black Box" Chapter 7
 """
 
-import pytest
 from datetime import datetime, timedelta
 from decimal import Decimal
 
+import pytest
+
 from app.services.execution_narang import (
-    OrderStatus,
-    OrderType,
-    TimeInForce,
-    OrderSide,
     ChildOrder,
+    ExecutionEngine,
     ExecutionReport,
     IntradayVolumeProfile,
-    VWAPExecution,
-    TWAPExecution,
-    POVExecution,
     MarketExecution,
-    ExecutionEngine,
+    OrderSide,
+    OrderStatus,
+    OrderType,
+    POVExecution,
+    TimeInForce,
+    TWAPExecution,
+    VWAPExecution,
     get_execution_engine,
 )
-from app.services.transaction_costs import (
-    ExecutionAlgorithm,
-    MarketData,
-    OrderSpecification,
-)
+from app.services.transaction_costs import ExecutionAlgorithm, MarketData, OrderSpecification
 
 
 @pytest.fixture
@@ -160,7 +157,7 @@ class TestVWAPExecution:
         """Test that VWAP doesn't update child orders."""
         algorithm = VWAPExecution({})
 
-        start_time = datetime.now()
+        datetime.now()
         child_orders = [
             ChildOrder(
                 order_id="child_001",

@@ -24,14 +24,7 @@ from enum import Enum
 from typing import Callable, Dict, List, Optional, Tuple
 
 from .market_mechanics import MarketMechanicsEngine
-from .order_book import (
-    LimitOrderBook,
-    Order,
-    OrderSide,
-    OrderStatus,
-    OrderType,
-    Trade,
-)
+from .order_book import LimitOrderBook, Order, OrderSide, OrderStatus, OrderType, Trade
 
 logger = logging.getLogger(__name__)
 

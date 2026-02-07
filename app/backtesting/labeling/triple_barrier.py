@@ -810,6 +810,7 @@ def calculate_sample_weights_uniqueness(
 
 # ========== Helper Functions (ARCH-004: Extract helper methods) ==========
 
+
 def _build_label_end_indices(
     events: pd.Series, labels: pd.DataFrame, price_series: pd.Series, n_samples: int
 ) -> np.ndarray:
@@ -861,7 +862,9 @@ def _calculate_uniqueness_from_overlaps(
         t1_end = label_ends[i]
 
         # Find concurrent samples (ARCH-004: Extract to helper function)
-        concurrent_count = _count_concurrent_samples(i, t1_start, t1_end, event_indices, label_ends, n_samples)
+        concurrent_count = _count_concurrent_samples(
+            i, t1_start, t1_end, event_indices, label_ends, n_samples
+        )
 
         # Calculate uniqueness
         # If a sample has c concurrent samples, and the overlap covers

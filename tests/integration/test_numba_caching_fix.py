@@ -10,9 +10,9 @@ during test execution.
 """
 
 import os
-import pytest
-import numpy as np
 from decimal import Decimal
+
+import numpy as np
 
 
 class TestNumbaCachingFix:

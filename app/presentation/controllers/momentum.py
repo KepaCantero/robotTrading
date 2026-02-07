@@ -65,8 +65,9 @@ async def get_momentum_overview(
         }
 
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-        raise HTTPException(status_code=DEFAULT_VALUE_500,
-            detail=f"Error getting momentum overview: {str(e)}")
+        raise HTTPException(
+            status_code=DEFAULT_VALUE_500, detail=f"Error getting momentum overview: {str(e)}"
+        )
 
 
 @router.post("/analyze", response_model=Dict[str, Any])
@@ -96,15 +97,17 @@ async def analyze_asset_momentum_post(
 
         timeframe = timeframe_mapping.get(timeframe_str.lower())
         if not timeframe:
-            raise HTTPException(status_code=DEFAULT_VALUE_400,
-                detail=f"Invalid timeframe: {timeframe_str}")
+            raise HTTPException(
+                status_code=DEFAULT_VALUE_400, detail=f"Invalid timeframe: {timeframe_str}"
+            )
 
         # Analyze asset momentum
         analysis = await service.analyze_asset_momentum(symbol, timeframe)
 
         if not analysis:
-            raise HTTPException(status_code=DEFAULT_VALUE_404,
-                detail=f"No analysis found for {symbol}")
+            raise HTTPException(
+                status_code=DEFAULT_VALUE_404, detail=f"No analysis found for {symbol}"
+            )
 
         return {
             "success": True,
@@ -345,8 +348,9 @@ async def get_momentum_signals(
         }
 
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-        raise HTTPException(status_code=DEFAULT_VALUE_500,
-            detail=f"Error getting momentum signals: {str(e)}")
+        raise HTTPException(
+            status_code=DEFAULT_VALUE_500, detail=f"Error getting momentum signals: {str(e)}"
+        )
 
 
 @router.get("/signals/top", response_model=Dict[str, Any])
@@ -367,8 +371,9 @@ async def get_top_momentum_signals(
         }
 
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-        raise HTTPException(status_code=DEFAULT_VALUE_500,
-            detail=f"Error getting top momentum signals: {str(e)}")
+        raise HTTPException(
+            status_code=DEFAULT_VALUE_500, detail=f"Error getting top momentum signals: {str(e)}"
+        )
 
 
 @router.post("/strategies", response_model=Dict[str, Any])
@@ -390,8 +395,9 @@ async def create_momentum_strategy(
 
         for field in required_fields:
             if field not in strategy_data:
-                raise HTTPException(status_code=DEFAULT_VALUE_422,
-                    detail=f"Missing required field: {field}")
+                raise HTTPException(
+                    status_code=DEFAULT_VALUE_422, detail=f"Missing required field: {field}"
+                )
 
         # Convert momentum_type string to enum
         momentum_type_str = strategy_data.get("momentum_type", "price_momentum")
@@ -429,8 +435,9 @@ async def create_momentum_strategy(
         }
         timeframe = timeframe_mapping.get(timeframe_str.lower())
         if not timeframe:
-            raise HTTPException(status_code=DEFAULT_VALUE_422,
-                detail=f"Invalid timeframe: {timeframe_str}")
+            raise HTTPException(
+                status_code=DEFAULT_VALUE_422, detail=f"Invalid timeframe: {timeframe_str}"
+            )
 
         # Create strategy object
         strategy = MomentumStrategy(
@@ -485,8 +492,9 @@ async def create_momentum_strategy(
     except HTTPException:
         raise
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-        raise HTTPException(status_code=DEFAULT_VALUE_500,
-            detail=f"Error creating momentum strategy: {str(e)}")
+        raise HTTPException(
+            status_code=DEFAULT_VALUE_500, detail=f"Error creating momentum strategy: {str(e)}"
+        )
 
 
 @router.get("/strategies/{strategy_name}", response_model=Dict[str, Any])
@@ -499,8 +507,9 @@ async def get_momentum_strategy(
         strategy = await service.get_strategy(strategy_name)
 
         if not strategy:
-            raise HTTPException(status_code=DEFAULT_VALUE_404,
-                detail=f"Strategy {strategy_name} not found")
+            raise HTTPException(
+                status_code=DEFAULT_VALUE_404, detail=f"Strategy {strategy_name} not found"
+            )
 
         return {
             "success": True,
@@ -531,8 +540,9 @@ async def get_momentum_strategy(
     except HTTPException:
         raise
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-        raise HTTPException(status_code=DEFAULT_VALUE_500,
-            detail=f"Error getting momentum strategy: {str(e)}")
+        raise HTTPException(
+            status_code=DEFAULT_VALUE_500, detail=f"Error getting momentum strategy: {str(e)}"
+        )
 
 
 @router.put("/strategies/{strategy_name}", response_model=Dict[str, Any])
@@ -546,8 +556,9 @@ async def update_momentum_strategy(
         # Get existing strategy
         existing_strategy = await service.get_strategy(strategy_name)
         if not existing_strategy:
-            raise HTTPException(status_code=DEFAULT_VALUE_404,
-                detail=f"Strategy {strategy_name} not found")
+            raise HTTPException(
+                status_code=DEFAULT_VALUE_404, detail=f"Strategy {strategy_name} not found"
+            )
 
         # Update fields if provided
         updated_fields = {}
@@ -602,8 +613,9 @@ async def update_momentum_strategy(
     except HTTPException:
         raise
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-        raise HTTPException(status_code=DEFAULT_VALUE_500,
-            detail=f"Error updating momentum strategy: {str(e)}")
+        raise HTTPException(
+            status_code=DEFAULT_VALUE_500, detail=f"Error updating momentum strategy: {str(e)}"
+        )
 
 
 @router.delete("/strategies/{strategy_name}", response_model=Dict[str, Any])
@@ -616,8 +628,9 @@ async def delete_momentum_strategy(
         # Check if strategy exists
         existing_strategy = await service.get_strategy(strategy_name)
         if not existing_strategy:
-            raise HTTPException(status_code=DEFAULT_VALUE_404,
-                detail=f"Strategy {strategy_name} not found")
+            raise HTTPException(
+                status_code=DEFAULT_VALUE_404, detail=f"Strategy {strategy_name} not found"
+            )
 
         # Delete strategy via service
         success = await service.delete_strategy(strategy_name)
@@ -636,8 +649,9 @@ async def delete_momentum_strategy(
     except HTTPException:
         raise
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-        raise HTTPException(status_code=DEFAULT_VALUE_500,
-            detail=f"Error deleting momentum strategy: {str(e)}")
+        raise HTTPException(
+            status_code=DEFAULT_VALUE_500, detail=f"Error deleting momentum strategy: {str(e)}"
+        )
 
 
 @router.get("/strategies", response_model=Dict[str, Any])
@@ -681,8 +695,9 @@ async def get_momentum_strategies(
         }
 
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-        raise HTTPException(status_code=DEFAULT_VALUE_500,
-            detail=f"Error getting momentum strategies: {str(e)}")
+        raise HTTPException(
+            status_code=DEFAULT_VALUE_500, detail=f"Error getting momentum strategies: {str(e)}"
+        )
 
 
 @router.get("/strategies/{strategy_name}/signals", response_model=Dict[str, Any])
@@ -779,8 +794,9 @@ async def analyze_multiple_assets(
         }
 
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-        raise HTTPException(status_code=DEFAULT_VALUE_500,
-            detail=f"Error analyzing multiple assets: {str(e)}")
+        raise HTTPException(
+            status_code=DEFAULT_VALUE_500, detail=f"Error analyzing multiple assets: {str(e)}"
+        )
 
 
 @router.get("/indicators/{symbol}", response_model=Dict[str, Any])
@@ -799,8 +815,9 @@ async def get_technical_indicators(
         )
 
     if not analysis:
-        raise HTTPException(status_code=DEFAULT_VALUE_404,
-            detail=f"Analysis not found for {symbol.upper()}")
+        raise HTTPException(
+            status_code=DEFAULT_VALUE_404, detail=f"Analysis not found for {symbol.upper()}"
+        )
 
     indicators = analysis.indicators
 
@@ -842,8 +859,9 @@ async def momentum_health_check():
         }
 
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-        raise HTTPException(status_code=DEFAULT_VALUE_500,
-            detail=f"Momentum health check failed: {str(e)}")
+        raise HTTPException(
+            status_code=DEFAULT_VALUE_500, detail=f"Momentum health check failed: {str(e)}"
+        )
 
 
 @router.get("/stats", response_model=Dict[str, Any])
@@ -904,8 +922,9 @@ async def get_momentum_stats(
         }
 
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-        raise HTTPException(status_code=DEFAULT_VALUE_500,
-            detail=f"Error getting momentum stats: {str(e)}")
+        raise HTTPException(
+            status_code=DEFAULT_VALUE_500, detail=f"Error getting momentum stats: {str(e)}"
+        )
 
 
 @router.get("/analyses", response_model=Dict[str, Any])
@@ -970,8 +989,9 @@ async def get_momentum_analyses(
         }
 
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-        raise HTTPException(status_code=DEFAULT_VALUE_500,
-            detail=f"Error getting momentum analyses: {str(e)}")
+        raise HTTPException(
+            status_code=DEFAULT_VALUE_500, detail=f"Error getting momentum analyses: {str(e)}"
+        )
 
 
 @router.get("/analyses/{analysis_id}", response_model=Dict[str, Any])
@@ -984,8 +1004,9 @@ async def get_momentum_analysis(
         analysis = await service.get_analysis(analysis_id)
 
         if not analysis:
-            raise HTTPException(status_code=DEFAULT_VALUE_404,
-                detail=f"Analysis {analysis_id} not found")
+            raise HTTPException(
+                status_code=DEFAULT_VALUE_404, detail=f"Analysis {analysis_id} not found"
+            )
 
         return {
             "success": True,
@@ -1036,8 +1057,9 @@ async def get_momentum_analysis(
     except HTTPException:
         raise
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-        raise HTTPException(status_code=DEFAULT_VALUE_500,
-            detail=f"Error getting momentum analysis: {str(e)}")
+        raise HTTPException(
+            status_code=DEFAULT_VALUE_500, detail=f"Error getting momentum analysis: {str(e)}"
+        )
 
 
 @router.delete("/analyses/{analysis_id}", response_model=Dict[str, Any])
@@ -1050,15 +1072,17 @@ async def delete_momentum_analysis(
         # Check if analysis exists
         existing_analysis = await service.get_analysis(analysis_id)
         if not existing_analysis:
-            raise HTTPException(status_code=DEFAULT_VALUE_404,
-                detail=f"Analysis {analysis_id} not found")
+            raise HTTPException(
+                status_code=DEFAULT_VALUE_404, detail=f"Analysis {analysis_id} not found"
+            )
 
         # Delete analysis via service
         success = await service.delete_analysis(analysis_id)
 
         if not success:
-            raise HTTPException(status_code=DEFAULT_VALUE_500,
-                detail=f"Failed to delete analysis {analysis_id}")
+            raise HTTPException(
+                status_code=DEFAULT_VALUE_500, detail=f"Failed to delete analysis {analysis_id}"
+            )
 
         return {
             "success": True,
@@ -1069,5 +1093,6 @@ async def delete_momentum_analysis(
     except HTTPException:
         raise
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-        raise HTTPException(status_code=DEFAULT_VALUE_500,
-            detail=f"Error deleting momentum analysis: {str(e)}")
+        raise HTTPException(
+            status_code=DEFAULT_VALUE_500, detail=f"Error deleting momentum analysis: {str(e)}"
+        )

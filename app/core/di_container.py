@@ -288,6 +288,7 @@ def get_strategy_registry() -> "StrategyRegistry":
     global _strategy_registry_instance
     if _strategy_registry_instance is None:
         from app.strategies import StrategyRegistry
+
         _strategy_registry_instance = StrategyRegistry()
     return _strategy_registry_instance
 
@@ -315,6 +316,7 @@ def get_strategy_config_loader() -> "StrategyConfigLoader":
     global _strategy_config_loader_instance
     if _strategy_config_loader_instance is None:
         from app.strategies import StrategyConfigLoader
+
         _strategy_config_loader_instance = StrategyConfigLoader()
     return _strategy_config_loader_instance
 
@@ -342,6 +344,7 @@ def get_strategy_logger() -> "StrategyLogger":
     global _strategy_logger_instance
     if _strategy_logger_instance is None:
         from app.strategies import StrategyLogger
+
         _strategy_logger_instance = StrategyLogger()
     return _strategy_logger_instance
 
@@ -372,6 +375,7 @@ def get_execution_engine() -> "ExecutionEngine":
     global _execution_engine_instance
     if _execution_engine_instance is None:
         from app.strategies import ExecutionEngine
+
         registry = get_strategy_registry()
         logger = get_strategy_logger()
         _execution_engine_instance = ExecutionEngine(registry, logger)

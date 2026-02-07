@@ -33,7 +33,7 @@ NUMBA_VERSION = numba.__version__
 
 # Check for ARCH package
 try:
-    from arch import arch_model
+    pass
 
     ARCH_AVAILABLE = True
 except ImportError:

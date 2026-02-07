@@ -8,11 +8,10 @@ to enable request tracking throughout the application.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from fastapi import Request
 
-from . import get_correlation_id
 
 logger = logging.getLogger(__name__)
 
@@ -119,10 +118,12 @@ def log_error(
     log_data = kwargs.copy()
 
     if exception:
-        log_data.update({
-            "error_type": type(exception).__name__,
-            "error_message": str(exception),
-        })
+        log_data.update(
+            {
+                "error_type": type(exception).__name__,
+                "error_message": str(exception),
+            }
+        )
 
     log_with_context(request, message, "error", **log_data)
 

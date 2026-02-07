@@ -58,25 +58,21 @@ class MappingStatus(str, Enum):
 class SymbolMappingError(Exception):
     """Base exception for symbol mapping errors"""
 
-    pass
 
 
 class AmbiguousSymbolError(SymbolMappingError):
     """Raised when a symbol could map to multiple internal symbols"""
 
-    pass
 
 
 class UnknownSymbolError(SymbolMappingError):
     """Raised when a broker symbol cannot be mapped"""
 
-    pass
 
 
 class ValidationError(SymbolMappingError):
     """Raised when symbol validation fails"""
 
-    pass
 
 
 @dataclass

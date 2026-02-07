@@ -28,10 +28,7 @@ import numpy as np
 import pytest
 
 from app.backtesting.models import BacktestConfig
-from app.backtesting.walk_forward_validator import (
-    ValidationWindow,
-    WalkForwardValidator,
-)
+from app.backtesting.walk_forward_validator import ValidationWindow, WalkForwardValidator
 from app.core.decimal_utils import round_price
 from app.models.market_data import Quote
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType

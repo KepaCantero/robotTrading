@@ -18,23 +18,20 @@ import logging
 from datetime import datetime
 from typing import List, Optional
 
-from app.backtesting.models import BacktestResult
-# Import models for backward compatibility (they're now in acceptance/models.py)
-from app.backtesting.acceptance.models import (
-    VerdictStatus,
-    CriterionResult,
-    AcceptanceReport,
-)
 from app.backtesting.acceptance import (
-    SharpeValidator,
-    DrawdownValidator,
-    ProfitFactorValidator,
-    MonteCarloValidator,
     BenchmarkComparisonValidator,
+    DrawdownValidator,
+    MonteCarloValidator,
+    ProfitFactorValidator,
     RejectionCriteriaChecker,
     ScoringService,
+    SharpeValidator,
     VerdictDeterminer,
 )
+
+# Import models for backward compatibility (they're now in acceptance/models.py)
+from app.backtesting.acceptance.models import AcceptanceReport, CriterionResult, VerdictStatus
+from app.backtesting.models import BacktestResult
 
 logger = logging.getLogger(__name__)
 
@@ -141,7 +138,7 @@ class AcceptanceCriteria:
         if not perf:
             logger.error(
                 "Cannot validate strategy: performance data is None",
-                extra={"strategy": strategy_name}
+                extra={"strategy": strategy_name},
             )
             return self._create_invalid_report(strategy_name)
 
@@ -149,8 +146,12 @@ class AcceptanceCriteria:
         metrics = self._extract_metrics(backtest_result, perf)
         # Validate all criteria
         validation = self._perform_validation(
-            metrics, benchmark_return, monte_carlo_p5_return,
-            commission_impact, failed_regimes, equity_curve_last_years
+            metrics,
+            benchmark_return,
+            monte_carlo_p5_return,
+            commission_impact,
+            failed_regimes,
+            equity_curve_last_years,
         )
         # Log and return report
         self._log_validation(strategy_name, validation)
@@ -165,15 +166,23 @@ class AcceptanceCriteria:
             "strategy_return": float(backtest_result.total_return),
         }
 
-    def _perform_validation(self, metrics: dict, benchmark_return: float,
-                           monte_carlo_p5_return: Optional[float],
-                           commission_impact: Optional[float],
-                           failed_regimes: Optional[int],
-                           equity_curve_last_years: Optional[List[float]]) -> dict:
+    def _perform_validation(
+        self,
+        metrics: dict,
+        benchmark_return: float,
+        monte_carlo_p5_return: Optional[float],
+        commission_impact: Optional[float],
+        failed_regimes: Optional[int],
+        equity_curve_last_years: Optional[List[float]],
+    ) -> dict:
         """Perform all validation steps."""
         criteria_results = self._validate_basic_criteria(
-            metrics["sharpe"], metrics["max_dd"], metrics["profit_factor"],
-            monte_carlo_p5_return, metrics["strategy_return"], benchmark_return
+            metrics["sharpe"],
+            metrics["max_dd"],
+            metrics["profit_factor"],
+            monte_carlo_p5_return,
+            metrics["strategy_return"],
+            benchmark_return,
         )
         rejection_results = self._rejection_checker.check_all(
             commission_impact=commission_impact,
@@ -205,7 +214,7 @@ class AcceptanceCriteria:
                 "strategy": strategy_name,
                 "verdict": validation["verdict"].value,
                 "score": validation["score"],
-            }
+            },
         )
 
     def _create_report(self, backtest_result: BacktestResult, validation: dict) -> AcceptanceReport:

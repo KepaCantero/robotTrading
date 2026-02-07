@@ -2,16 +2,17 @@
 Unit tests for Compliance Manager.
 """
 
-import pytest
-from decimal import Decimal
 from datetime import date, datetime, timedelta
+from decimal import Decimal
+
+import pytest
 
 from app.services.compliance.manager import (
     ComplianceManager,
+    ComplianceReport,
+    ComplianceViolation,
     Country,
     TradeRecord,
-    ComplianceViolation,
-    ComplianceReport,
 )
 
 

@@ -4,17 +4,18 @@ Test suite for app.backtesting.reports.baseline_optimization_reporter
 Addresses TST-005: Test coverage for BaselineOptimizationReporter
 """
 
-import pytest
 import tempfile
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
+import pytest
 
 from app.backtesting.reports.baseline_optimization_reporter import (
     BaselineOptimizationReporter,
     ComparisonMetrics,
     ParameterChange,
-    StatisticalTest,
     Recommendation,
+    StatisticalTest,
 )
 
 
@@ -23,7 +24,10 @@ class TestBaselineOptimizationReporterImport:
 
     def test_import_baseline_optimization_reporter(self):
         """Test that BaselineOptimizationReporter can be imported."""
-        from app.backtesting.reports.baseline_optimization_reporter import BaselineOptimizationReporter
+        from app.backtesting.reports.baseline_optimization_reporter import (
+            BaselineOptimizationReporter,
+        )
+
         assert BaselineOptimizationReporter is not None
 
     def test_import_dataclasses(self):
@@ -31,9 +35,10 @@ class TestBaselineOptimizationReporterImport:
         from app.backtesting.reports.baseline_optimization_reporter import (
             ComparisonMetrics,
             ParameterChange,
-            StatisticalTest,
             Recommendation,
+            StatisticalTest,
         )
+
         assert ComparisonMetrics is not None
         assert ParameterChange is not None
         assert StatisticalTest is not None
@@ -170,7 +175,7 @@ class TestMetricExtraction:
             "equity_curve": [
                 (datetime(2024, 1, 1), 100000),
                 (datetime(2024, 12, 31), 150000),
-            ]
+            ],
         }
 
         metrics = reporter._extract_metrics(results)
@@ -192,8 +197,18 @@ class TestComparisonCalculation:
         """Test comparison calculation."""
         reporter = BaselineOptimizationReporter(template_path=self._create_test_template())
 
-        baseline = {"sharpe_ratio": 1.5, "total_return": 50.0, "max_drawdown": 15.0, "win_rate": 0.6}
-        optimized = {"sharpe_ratio": 2.0, "total_return": 60.0, "max_drawdown": 10.0, "win_rate": 0.65}
+        baseline = {
+            "sharpe_ratio": 1.5,
+            "total_return": 50.0,
+            "max_drawdown": 15.0,
+            "win_rate": 0.6,
+        }
+        optimized = {
+            "sharpe_ratio": 2.0,
+            "total_return": 60.0,
+            "max_drawdown": 10.0,
+            "win_rate": 0.65,
+        }
 
         comparison = reporter._calculate_comparison(baseline, optimized)
 

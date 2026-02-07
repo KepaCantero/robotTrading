@@ -21,7 +21,6 @@ from app.models.momentum import (
     TechnicalIndicators,
     Timeframe,
 )
-from app.services.momentum.protocols import SignalGenerator as SignalGeneratorProtocol
 
 logger = logging.getLogger(__name__)
 

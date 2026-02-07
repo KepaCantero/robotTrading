@@ -5,11 +5,10 @@ Tests the GARCHAnalyzer class which uses GARCH models
 to detect volatility clustering and predict future volatility.
 """
 
-import pytest
-from unittest.mock import patch, MagicMock, Mock
+from unittest.mock import MagicMock, Mock, patch
+
 import numpy as np
-import pandas as pd
-from typing import List, Dict, Any
+import pytest
 
 
 @pytest.fixture

@@ -12,23 +12,19 @@ Author: Backend Developer
 Date: 2026-01-25
 """
 
-import pytest
-from decimal import Decimal
-from unittest.mock import Mock, AsyncMock, patch
 
+import pytest
+
+from app.core.interfaces.broker_base import BrokerType
 from app.core.symbol_mapper import (
+    BrokerMappingTables,
     SymbolMapper,
+    SymbolMapperMixin,
     SymbolMapping,
     SymbolValidator,
-    BrokerMappingTables,
-    SymbolMapperMixin,
-    MappingStatus,
-    ValidationError,
     UnknownSymbolError,
-    AmbiguousSymbolError,
+    ValidationError,
 )
-from app.core.interfaces.broker_base import BrokerType
-
 
 # ============================================================================
 # FIXTURES

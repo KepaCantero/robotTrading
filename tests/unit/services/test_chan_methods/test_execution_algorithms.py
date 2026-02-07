@@ -2,17 +2,18 @@
 Tests for Ernest Chan Execution Algorithms Implementation
 """
 
-import pytest
-import numpy as np
 from datetime import datetime, timedelta
+
+import numpy as np
+import pytest
+
 from app.services.execution_algorithms import (
-    VWAPExecutor,
-    TWAPExecutor,
+    ExecutionPlan,
     ImplementationShortfallExecutor,
     POVExecutor,
+    TWAPExecutor,
+    VWAPExecutor,
     create_execution_plan,
-    ExecutionPlan,
-    ExecutionSlice,
 )
 
 

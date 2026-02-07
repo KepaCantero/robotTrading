@@ -3,20 +3,17 @@ Unit tests for Configuration Validator Module
 Phase 4.2: Production Config Management
 """
 
-import os
-import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-import yaml
 
 from app.core.config_validator import (
+    CircuitBreakerValidator,
     ConfigValidator,
-    ValidationResult,
     DatabaseConfigValidator,
     RiskConfigValidator,
-    CircuitBreakerValidator,
+    ValidationResult,
 )
 
 
@@ -319,7 +316,7 @@ class TestConfigValidator:
         }
 
         validator = ConfigValidator()
-        result = validator.validate_placeholders(config)
+        validator.validate_placeholders(config)
         # Should return False but only add warning
         assert len(validator.result.warnings) > 0
 

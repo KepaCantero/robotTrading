@@ -17,11 +17,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.backtesting.cost_calculator import (
-    AssetType,
-    CostCalculator,
-    CostCalculatorError,
-)
+from app.backtesting.cost_calculator import AssetType, CostCalculator, CostCalculatorError
 
 
 class TestAssetTypeDetection:
@@ -189,9 +185,7 @@ class TestSpreadCalculation:
         calculator = CostCalculator(use_dynamic_costs=True)
 
         base_spread = calculator.calculate_spread(AssetType.EQUITY, volatility=None)
-        high_vol_spread = calculator.calculate_spread(
-            AssetType.EQUITY, volatility=Decimal("0.5")
-        )
+        high_vol_spread = calculator.calculate_spread(AssetType.EQUITY, volatility=Decimal("0.5"))
 
         # Higher volatility should increase spread
         assert high_vol_spread >= base_spread
@@ -205,9 +199,7 @@ class TestCommissionCalculation:
         calculator = CostCalculator()
 
         # Small trade - should hit minimum
-        commission = calculator.calculate_commission(
-            AssetType.EQUITY, Decimal("100")
-        )
+        commission = calculator.calculate_commission(AssetType.EQUITY, Decimal("100"))
         assert commission == Decimal("1.00")
 
     def test_commission_percentage(self):
@@ -215,9 +207,7 @@ class TestCommissionCalculation:
         calculator = CostCalculator()
 
         # Large trade - percentage should exceed minimum
-        commission = calculator.calculate_commission(
-            AssetType.EQUITY, Decimal("100000")
-        )
+        commission = calculator.calculate_commission(AssetType.EQUITY, Decimal("100000"))
         # 0.01% of $100K = $10
         assert commission > Decimal("1.00")
 
@@ -226,12 +216,8 @@ class TestCommissionCalculation:
         calculator = CostCalculator()
         trade_value = Decimal("10000")
 
-        equity_commission = calculator.calculate_commission(
-            AssetType.EQUITY, trade_value
-        )
-        crypto_commission = calculator.calculate_commission(
-            AssetType.CRYPTO, trade_value
-        )
+        equity_commission = calculator.calculate_commission(AssetType.EQUITY, trade_value)
+        crypto_commission = calculator.calculate_commission(AssetType.CRYPTO, trade_value)
 
         # Crypto should have higher commission (0.1% vs 0.01%)
         assert crypto_commission > equity_commission

@@ -5,11 +5,10 @@ Tests the CorrelationRegimeDetector class which uses correlation analysis
 to detect market regimes based on asset correlations.
 """
 
-import pytest
-from unittest.mock import patch, MagicMock
+from typing import Dict, List
+
 import numpy as np
-import pandas as pd
-from typing import List, Dict, Any
+import pytest
 
 
 @pytest.fixture
@@ -300,7 +299,7 @@ class TestSetBaseline:
         """Test baseline comparison in detection."""
         # Set baseline
         detector.set_baseline(sample_price_data)
-        baseline = detector.baseline_correlation
+        detector.baseline_correlation
 
         # Detect with baseline set
         result = detector.detect(sample_price_data)

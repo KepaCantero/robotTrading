@@ -271,6 +271,7 @@ class ComplianceServiceRegistry:
     def _create_regime_detector(self) -> Optional[Any]:
         try:
             from app.services.regime_detection_chan import get_regime_detector
+
             return get_regime_detector(method="hmm", n_regimes=4)
         except ImportError:
             return None
@@ -278,6 +279,7 @@ class ComplianceServiceRegistry:
     def _create_vwap_executor(self) -> Optional[Any]:
         try:
             from app.services.execution_algorithms import get_execution_algorithm
+
             return get_execution_algorithm("vwap")
         except ImportError:
             return None
@@ -285,6 +287,7 @@ class ComplianceServiceRegistry:
     def _create_twap_executor(self) -> Optional[Any]:
         try:
             from app.services.execution_algorithms import get_execution_algorithm
+
             return get_execution_algorithm("twap")
         except ImportError:
             return None
@@ -292,6 +295,7 @@ class ComplianceServiceRegistry:
     def _create_is_executor(self) -> Optional[Any]:
         try:
             from app.services.execution_algorithms import get_execution_algorithm
+
             return get_execution_algorithm("implementation_shortfall")
         except ImportError:
             return None
@@ -299,6 +303,7 @@ class ComplianceServiceRegistry:
     def _create_pov_executor(self) -> Optional[Any]:
         try:
             from app.services.execution_algorithms import get_execution_algorithm
+
             return get_execution_algorithm("pov")
         except ImportError:
             return None
@@ -306,6 +311,7 @@ class ComplianceServiceRegistry:
     def _create_portfolio_optimizer(self) -> Optional[Any]:
         try:
             from app.services.optimization_chan import get_portfolio_optimizer
+
             return get_portfolio_optimizer(method="mean_variance")
         except ImportError:
             return None
@@ -317,26 +323,33 @@ class ComplianceServiceRegistry:
     def _create_alpha_model(self) -> Optional[Any]:
         try:
             from app.strategies.alpha_models import get_alpha_model
-            return get_alpha_model({
-                "model_type": "multifactor",
-                "factors": ["momentum", "mean_reversion"],
-            })
+
+            return get_alpha_model(
+                {
+                    "model_type": "multifactor",
+                    "factors": ["momentum", "mean_reversion"],
+                }
+            )
         except ImportError:
             return None
 
     def _create_risk_model(self) -> Optional[Any]:
         try:
             from app.services.risk_models_narang import get_risk_model
-            return get_risk_model({
-                "model_type": "factor",
-                "max_factor_exposure": 0.15,
-            })
+
+            return get_risk_model(
+                {
+                    "model_type": "factor",
+                    "max_factor_exposure": 0.15,
+                }
+            )
         except ImportError:
             return None
 
     def _create_cost_model(self) -> Optional[Any]:
         try:
             from app.services.transaction_costs import get_transaction_cost_model
+
             return get_transaction_cost_model({"model_type": "almgren_chriss"})
         except ImportError:
             return None
@@ -344,15 +357,19 @@ class ComplianceServiceRegistry:
     def _create_portfolio_constructor(self) -> Optional[Any]:
         try:
             from app.services.portfolio_construction_narang import get_portfolio_constructor
-            return get_portfolio_constructor({
-                "optimization_method": "mean_variance",
-            })
+
+            return get_portfolio_constructor(
+                {
+                    "optimization_method": "mean_variance",
+                }
+            )
         except ImportError:
             return None
 
     def _create_execution_engine_narang(self) -> Optional[Any]:
         try:
             from app.services.execution_narang import get_execution_engine
+
             return get_execution_engine({})
         except ImportError:
             return None
@@ -364,6 +381,7 @@ class ComplianceServiceRegistry:
     def _create_meta_labeling(self) -> Optional[Any]:
         try:
             from app.backtesting.labeling.meta_labeling import get_meta_labeling
+
             return get_meta_labeling()
         except ImportError:
             return None
@@ -371,6 +389,7 @@ class ComplianceServiceRegistry:
     def _create_purged_cv(self) -> Optional[Any]:
         try:
             from app.backtesting.validation.cross_validation import PurgedKFold
+
             return PurgedKFold(n_splits=5, embargo_pct=0.01)
         except ImportError:
             return None
@@ -384,6 +403,7 @@ class ComplianceServiceRegistry:
             from app.engines.execution_engine.microstructure.harris_integration import (
                 get_harris_integrator,
             )
+
             return get_harris_integrator(
                 asset_class="equity",
                 enable_all_rules=True,
@@ -396,6 +416,7 @@ class ComplianceServiceRegistry:
             from app.engines.execution_engine.microstructure.order_book_analyzer import (
                 get_order_book_analyzer,
             )
+
             return get_order_book_analyzer()
         except ImportError:
             return None
@@ -405,6 +426,7 @@ class ComplianceServiceRegistry:
             from app.engines.execution_engine.microstructure.dark_pool_router import (
                 get_dark_pool_router,
             )
+
             return get_dark_pool_router()
         except ImportError:
             return None
@@ -416,6 +438,7 @@ class ComplianceServiceRegistry:
     def _create_order_flow_analyzer(self) -> Optional[Any]:
         try:
             from app.microstructure.order_flow import get_order_flow_analyzer
+
             return get_order_flow_analyzer()
         except ImportError:
             return None
@@ -423,6 +446,7 @@ class ComplianceServiceRegistry:
     def _create_liquidity_analyzer(self) -> Optional[Any]:
         try:
             from app.microstructure.liquidity import get_liquidity_analyzer
+
             return get_liquidity_analyzer()
         except ImportError:
             return None
@@ -430,6 +454,7 @@ class ComplianceServiceRegistry:
     def _create_price_discovery_analyzer(self) -> Optional[Any]:
         try:
             from app.microstructure.price_discovery import get_price_discovery_analyzer
+
             return get_price_discovery_analyzer()
         except ImportError:
             return None
@@ -437,6 +462,7 @@ class ComplianceServiceRegistry:
     def _create_call_auction(self) -> Optional[Any]:
         try:
             from app.microstructure.trading_mechanisms import get_call_auction
+
             return get_call_auction()
         except ImportError:
             return None
@@ -450,6 +476,7 @@ class ComplianceServiceRegistry:
             from app.engines.risk_engine.var_calculators.var_calculators import (
                 HistoricalVaRCalculator,
             )
+
             config = {'confidence_level': 0.95, 'time_horizon': 1}
             return HistoricalVaRCalculator(config)
         except ImportError:
@@ -458,6 +485,7 @@ class ComplianceServiceRegistry:
     def _create_greeks_calculator(self) -> Optional[Any]:
         try:
             from app.engines.risk_engine.greeks_calculator import get_greeks_calculator
+
             return get_greeks_calculator()
         except ImportError:
             return None
@@ -467,6 +495,7 @@ class ComplianceServiceRegistry:
             from app.engines.risk_engine.stress_testers.advanced_stress_scenarios import (
                 get_advanced_stress_tester,
             )
+
             return get_advanced_stress_tester()
         except ImportError:
             return None
@@ -478,6 +507,7 @@ class ComplianceServiceRegistry:
     def _create_golden_signals(self) -> Optional[Any]:
         try:
             from app.sre.monitoring.golden_signals import get_golden_signals_monitor
+
             return get_golden_signals_monitor()
         except ImportError:
             return None
@@ -485,6 +515,7 @@ class ComplianceServiceRegistry:
     def _create_trading_metrics(self) -> Optional[Any]:
         try:
             from app.sre.monitoring.trading_metrics import get_trading_metrics_monitor
+
             return get_trading_metrics_monitor()
         except ImportError:
             return None
@@ -492,6 +523,7 @@ class ComplianceServiceRegistry:
     def _create_toil_tracker(self) -> Optional[Any]:
         try:
             from app.sre.automation.toil_tracker import get_toil_tracker
+
             return get_toil_tracker()
         except ImportError:
             return None

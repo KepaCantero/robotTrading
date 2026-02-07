@@ -57,9 +57,7 @@ class EnsembleVoting:
             self.strategy_weights = config.strategy_weights or self._initialize_weights()
 
             # Track historical performance for weighted voting
-            self.performance_history: Dict[str, List[float]] = {
-                s: [] for s in self.strategies
-            }
+            self.performance_history: Dict[str, List[float]] = {s: [] for s in self.strategies}
 
         except (TypeError, AttributeError) as e:
             logger.error("Invalid ensemble configuration", exc_info=True)
@@ -239,9 +237,7 @@ class EnsembleVoting:
 
             return EnsembleSignal(
                 symbol=symbol,
-                signal_type=(
-                    winning_type if isinstance(winning_type, str) else winning_type.value
-                ),
+                signal_type=(winning_type if isinstance(winning_type, str) else winning_type.value),
                 confidence=weighted_confidence,
                 agreement=agreement,
                 strategy_votes=strategy_votes,
@@ -295,9 +291,7 @@ class EnsembleVoting:
 
             return EnsembleSignal(
                 symbol=symbol,
-                signal_type=(
-                    winning_type if isinstance(winning_type, str) else winning_type.value
-                ),
+                signal_type=(winning_type if isinstance(winning_type, str) else winning_type.value),
                 confidence=max_confidence,
                 agreement=agreement,
                 strategy_votes=strategy_votes,
@@ -356,9 +350,7 @@ class EnsembleVoting:
 
             return EnsembleSignal(
                 symbol=symbol,
-                signal_type=(
-                    winning_type if isinstance(winning_type, str) else winning_type.value
-                ),
+                signal_type=(winning_type if isinstance(winning_type, str) else winning_type.value),
                 confidence=confidence,
                 agreement=agreement,
                 strategy_votes=strategy_votes,
@@ -414,9 +406,7 @@ class EnsembleVoting:
 
             return EnsembleSignal(
                 symbol=symbol,
-                signal_type=(
-                    winning_type if isinstance(winning_type, str) else winning_type.value
-                ),
+                signal_type=(winning_type if isinstance(winning_type, str) else winning_type.value),
                 confidence=weighted_confidence,
                 agreement=agreement,
                 strategy_votes=strategy_votes,
@@ -474,9 +464,7 @@ class EnsembleVoting:
 
             return EnsembleSignal(
                 symbol=symbol,
-                signal_type=(
-                    winning_type if isinstance(winning_type, str) else winning_type.value
-                ),
+                signal_type=(winning_type if isinstance(winning_type, str) else winning_type.value),
                 confidence=weighted_confidence,
                 agreement=agreement,
                 strategy_votes=strategy_votes,
@@ -663,9 +651,7 @@ class EnsembleVoting:
         Returns:
             Weighted confidence score
         """
-        return sum(
-            s.confidence * (s.confidence / total_confidence) for s in signals
-        )
+        return sum(s.confidence * (s.confidence / total_confidence) for s in signals)
 
     def calculate_disagreement(self, signals: List[Signal]) -> float:
         """Calculate disagreement level among signals.

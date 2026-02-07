@@ -2,15 +2,17 @@
 Tests for app/security/input_validation.py
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
+
 from app.security.input_validation import (
-    ValidationError,
     InputSanitizer,
-    NumericValidator,
     ListValidator,
-    TradingValidator,
+    NumericValidator,
     RateLimiter,
+    TradingValidator,
+    ValidationError,
     validate_and_sanitize_input,
 )
 
@@ -169,11 +171,7 @@ class TestTradingValidator:
     def test_validate_order_params(self):
         """Test order parameter validation."""
         result = TradingValidator.validate_order_params(
-            symbol="AAPL",
-            side="buy",
-            quantity="100",
-            price="150.00",
-            order_type="limit"
+            symbol="AAPL", side="buy", quantity="100", price="150.00", order_type="limit"
         )
         assert result["symbol"] == "AAPL"
         assert result["side"] == "buy"
@@ -182,11 +180,7 @@ class TestTradingValidator:
     def test_validate_order_params_invalid_side(self):
         """Test invalid order side."""
         with pytest.raises(ValidationError):
-            TradingValidator.validate_order_params(
-                symbol="AAPL",
-                side="invalid",
-                quantity="100"
-            )
+            TradingValidator.validate_order_params(symbol="AAPL", side="invalid", quantity="100")
 
 
 class TestListValidator:
@@ -224,7 +218,7 @@ class TestRateLimiter:
         # Make 5 requests (limit is 5)
         for _ in range(5):
             limiter.check_rate_limit("test_user2", limit=5, window=60)
-        
+
         # 6th request should fail
         with pytest.raises(ValidationError):
             limiter.check_rate_limit("test_user2", limit=5, window=60)
@@ -234,7 +228,7 @@ class TestRateLimiter:
         limiter = RateLimiter()
         limiter.check_rate_limit("test_user3", limit=5, window=60)
         limiter.reset_limit("test_user3")
-        
+
         # Should be able to make requests again
         allowed, _ = limiter.check_rate_limit("test_user3", limit=5, window=60)
         assert allowed is True

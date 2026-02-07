@@ -12,12 +12,10 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
-from scipy import stats
 
 logger = logging.getLogger(__name__)
 
@@ -155,11 +153,15 @@ class StatisticalArbitrage:
 
         if len(prices_clean) < len(prices):
             n_filtered = len(prices) - len(prices_clean)
-            logger.warning(f"Filtered out {n_filtered} NaN/inf/non-positive values from prices for {symbol}")
+            logger.warning(
+                f"Filtered out {n_filtered} NaN/inf/non-positive values from prices for {symbol}"
+            )
 
         if len(prices_clean) < self._lookback + 1:
             # Not enough data
-            logger.warning(f"Insufficient data points for {symbol}: {len(prices_clean)} < {self._lookback + 1}")
+            logger.warning(
+                f"Insufficient data points for {symbol}: {len(prices_clean)} < {self._lookback + 1}"
+            )
             return ZScoreSignal(
                 symbol=symbol,
                 z_score=0.0,
@@ -169,7 +171,7 @@ class StatisticalArbitrage:
             )
 
         # Calculate rolling statistics
-        window_prices = prices_clean[-self._lookback:]
+        window_prices = prices_clean[-self._lookback :]
 
         # Validate window prices
         if len(window_prices) == 0:
@@ -188,7 +190,9 @@ class StatisticalArbitrage:
 
         # Validate calculated values
         if not np.isfinite(mean) or not np.isfinite(std) or not np.isfinite(current_price):
-            logger.warning(f"Non-finite values for {symbol}: mean={mean}, std={std}, price={current_price}")
+            logger.warning(
+                f"Non-finite values for {symbol}: mean={mean}, std={std}, price={current_price}"
+            )
             return ZScoreSignal(
                 symbol=symbol,
                 z_score=0.0,
@@ -286,7 +290,7 @@ class StatisticalArbitrage:
                 strength=0.0,
             )
 
-        window_prices = prices[-self._lookback:]
+        window_prices = prices[-self._lookback :]
         middle_band = float(np.mean(window_prices))
         std = float(np.std(window_prices))
 
@@ -402,7 +406,7 @@ class StatisticalArbitrage:
             test_statistic = result[0]
 
             # p-value
-            p_value = result[1]
+            result[1]
 
             # Critical values at 5% level
             critical_value = result[4]['5%']

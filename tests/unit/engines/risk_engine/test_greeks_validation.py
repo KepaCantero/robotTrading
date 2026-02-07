@@ -5,8 +5,9 @@ Tests for put-call parity validation, implied volatility calculation,
 and Greeks consistency checks.
 """
 
-import pytest
 import numpy as np
+import pytest
+
 from app.engines.risk_engine.greeks_calculator import GreeksCalculator
 
 
@@ -383,7 +384,7 @@ class TestGreeksConsistencyValidation(TestGreeksCalculator):
             risk_free_rate=0.05,
         )
 
-        result = calculator.validate_greeks_consistency(greeks)
+        calculator.validate_greeks_consistency(greeks)
         vega = greeks['primary_greeks']['vega']
 
         assert vega > 0, f"Vega should be positive: {vega}"

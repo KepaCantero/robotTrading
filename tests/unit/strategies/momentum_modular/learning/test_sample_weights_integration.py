@@ -7,10 +7,11 @@ This test verifies that:
 3. All supported algorithms accept and use sample weights
 """
 
+from unittest.mock import patch
+
 import numpy as np
 import pandas as pd
 import pytest
-from unittest.mock import Mock, patch, MagicMock
 
 # Skip all tests if lightgbm is not available
 pytest.importorskip("lightgbm")
@@ -77,7 +78,7 @@ class TestSampleWeightsIntegration:
             mock_calc.return_value = mock_weights
 
             # Train the model
-            metrics = engine.train(sample_training_data)
+            engine.train(sample_training_data)
 
             # Verify that calculate_sample_weights_uniqueness was called
             mock_calc.assert_called_once()

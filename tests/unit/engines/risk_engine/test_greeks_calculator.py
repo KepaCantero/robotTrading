@@ -3,11 +3,9 @@ Unit tests for Greeks Calculator.
 
 Tests for options Greeks calculations using Black-Scholes-Merton model.
 """
-import pytest
-from unittest.mock import patch, MagicMock
-from datetime import datetime
+
 import numpy as np
-from scipy.stats import norm
+import pytest
 
 from app.engines.risk_engine.greeks_calculator import GreeksCalculator
 

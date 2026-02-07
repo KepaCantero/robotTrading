@@ -4,20 +4,14 @@ Test suite for app.backtesting.awesome_quant_integrator
 Addresses TST-005: Test coverage for AwesomeQuantIntegrator
 """
 
-import pytest
 import numpy as np
 import pandas as pd
+import pytest
 
 from app.backtesting.awesome_quant_integrator import (
-    AwesomeQuantIntegrator,
-    QuantstatsMetrics,
-    EmpyricalMetrics,
-    PyfolioMetrics,
-    FallbackMetrics,
-    TRADING_DAYS,
-    QUANTSTATS_AVAILABLE,
     EMPYRICAL_AVAILABLE,
-    PYFOLIO_AVAILABLE,
+    QUANTSTATS_AVAILABLE,
+    AwesomeQuantIntegrator,
 )
 
 
@@ -27,15 +21,17 @@ class TestAwesomeQuantIntegratorImport:
     def test_import_awesome_quant_integrator(self):
         """Test that AwesomeQuantIntegrator can be imported."""
         from app.backtesting.awesome_quant_integrator import AwesomeQuantIntegrator
+
         assert AwesomeQuantIntegrator is not None
 
     def test_import_typed_dicts(self):
         """Test that TypedDict classes can be imported."""
         from app.backtesting.awesome_quant_integrator import (
-            QuantstatsMetrics,
             EmpyricalMetrics,
             PyfolioMetrics,
+            QuantstatsMetrics,
         )
+
         assert QuantstatsMetrics is not None
         assert EmpyricalMetrics is not None
         assert PyfolioMetrics is not None
@@ -43,6 +39,7 @@ class TestAwesomeQuantIntegratorImport:
     def test_import_constants(self):
         """Test that constants are available."""
         from app.backtesting.awesome_quant_integrator import TRADING_DAYS
+
         assert TRADING_DAYS == 252
 
 
@@ -72,16 +69,19 @@ class TestLibraryAvailability:
     def test_quantstats_availability_flag(self):
         """Test QUANTSTATS_AVAILABLE flag exists."""
         from app.backtesting.awesome_quant_integrator import QUANTSTATS_AVAILABLE
+
         assert isinstance(QUANTSTATS_AVAILABLE, bool)
 
     def test_empyrical_availability_flag(self):
         """Test EMPYRICAL_AVAILABLE flag exists."""
         from app.backtesting.awesome_quant_integrator import EMPYRICAL_AVAILABLE
+
         assert isinstance(EMPYRICAL_AVAILABLE, bool)
 
     def test_pyfolio_availability_flag(self):
         """Test PYFOLIO_AVAILABLE flag exists."""
         from app.backtesting.awesome_quant_integrator import PYFOLIO_AVAILABLE
+
         assert isinstance(PYFOLIO_AVAILABLE, bool)
 
 
@@ -219,9 +219,9 @@ class TestPyfolioMetrics:
         """Test pyfolio metrics with positions."""
         integrator = AwesomeQuantIntegrator()
         returns = self._generate_test_returns()
-        positions = pd.DataFrame({
-            "AAPL": np.random.randn(252) * 1000
-        }, index=pd.date_range("2024-01-01", periods=252))
+        positions = pd.DataFrame(
+            {"AAPL": np.random.randn(252) * 1000}, index=pd.date_range("2024-01-01", periods=252)
+        )
 
         metrics = integrator.calculate_pyfolio_metrics(returns, positions)
 

@@ -11,9 +11,8 @@ Paper: Novy-Marx, R. (2013). "The Other Side of Value: Gross Profitability Premi
 from __future__ import annotations
 
 from dataclasses import dataclass
-from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 

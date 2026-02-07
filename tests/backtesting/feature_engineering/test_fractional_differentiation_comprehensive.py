@@ -12,22 +12,20 @@ Tests cover:
 - Memory efficiency
 """
 
-import pytest
+
 import numpy as np
 import pandas as pd
-from unittest.mock import Mock, patch, MagicMock
-from datetime import datetime, timedelta
+import pytest
 
 # Try importing the module
 try:
     from app.backtesting.feature_engineering.fractional_differentiation import (
+        FractionalDifferentiationResult,
         calculate_weights_numba,
+        find_optimal_d,
+        fractional_diff_expanding_window,
         fractional_diff_fast_numba,
         fractional_diff_fixed_window,
-        fractional_diff_expanding_window,
-        find_optimal_d,
-        FractionalDifferentiationResult,
-        MIN_WEIGHT_THRESHOLD,
     )
 
     MODULE_AVAILABLE = True

@@ -28,8 +28,6 @@ from app.portfolio.multi_asset import (
     AllocationStrategy,
     AssetClass,
     AssetClassConfig,
-    AssetClassMetrics,
-    AssetClassReturns,
     AssetClassType,
     CostEstimate,
     MarketRegime,
@@ -40,9 +38,7 @@ from app.portfolio.multi_asset import (
     MultiAssetPortfolioManager,
     MultiAssetRebalancer,
     PortfolioMetrics,
-    RebalanceFrequency,
     RebalancePlan,
-    RebalancePriority,
     RebalanceTrade,
     RiskParityAllocationParams,
     RiskTolerance,
@@ -1024,7 +1020,7 @@ class TestMultiAssetIntegration:
             risk_tolerance=RiskTolerance.MODERATE,
             time_horizon=10,
         )
-        alloc_result = allocator.strategic_allocation(strategic_params)
+        allocator.strategic_allocation(strategic_params)
 
         # Step 4: Rebalance portfolio
         rebalancer = MultiAssetRebalancer()

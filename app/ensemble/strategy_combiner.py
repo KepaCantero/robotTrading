@@ -11,11 +11,7 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 
-from app.ensemble.models import (
-    AllocationMethod,
-    CombinedPortfolio,
-    StrategyAllocation,
-)
+from app.ensemble.models import AllocationMethod, CombinedPortfolio, StrategyAllocation
 from app.models.portfolio import MarketRegime
 
 logger = logging.getLogger(__name__)

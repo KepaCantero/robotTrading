@@ -6,19 +6,16 @@ Tests the SensitiveDataFilter which prevents sensitive data from being logged.
 
 import json
 import logging
-from io import StringIO
-from logging.handlers import RotatingFileHandler
-from pathlib import Path
 
 import pytest
 
 from app.core.logging_config import (
+    JSONFormatter,
     SensitiveDataFilter,
-    setup_file_logging,
+    TimedFormatter,
     get_correlation_id,
     set_correlation_id,
-    JSONFormatter,
-    TimedFormatter,
+    setup_file_logging,
 )
 
 
@@ -143,7 +140,9 @@ class TestSensitiveDataFilter:
             record = caplog.records[-1]
             # Check that password was redacted in record dict
             if hasattr(record, "password"):
-                assert record.password == "***REDACTED***" or "my_secret_password" not in str(record.password)
+                assert record.password == "***REDACTED***" or "my_secret_password" not in str(
+                    record.password
+                )
 
     def test_multiple_sensitive_fields(self, caplog):
         """Test that multiple sensitive fields in one message are all redacted."""
@@ -156,11 +155,7 @@ class TestSensitiveDataFilter:
             # Use the 'extra' parameter to add custom fields
             logger.info(
                 "Config loaded",
-                extra={
-                    "password": "secret123",
-                    "api_key": "key_abc",
-                    "token": "token_xyz"
-                }
+                extra={"password": "secret123", "api_key": "key_abc", "token": "token_xyz"},
             )
 
             assert len(caplog.records) >= 1
@@ -201,10 +196,7 @@ class TestSensitiveDataFilter:
             "password": "secret123",
             "email": "john@example.com",
             "api_key": "key_abc",
-            "nested": {
-                "secret": "nested_secret",
-                "normal_value": "keep_this"
-            }
+            "nested": {"secret": "nested_secret", "normal_value": "keep_this"},
         }
 
         redacted = filter_obj._redact_dict(test_dict)
@@ -287,6 +279,7 @@ class TestCorrelationId:
         """Test that get_correlation_id generates a new ID if none exists."""
         # Clear the context variable
         from app.core.logging_config import _correlation_id
+
         _correlation_id.set(None)
 
         cid = get_correlation_id()
@@ -397,7 +390,7 @@ class TestTimedFormatter:
             exc_info=None,
         )
 
-        formatted = formatter.format(record)
+        formatter.format(record)
 
         # After formatting, record should have timing attributes
         assert hasattr(record, "elapsed_ms")

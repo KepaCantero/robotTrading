@@ -2,16 +2,17 @@
 Unit tests for Hedging Engine.
 """
 
-import pytest
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from datetime import datetime, timezone, timedelta
+
+import pytest
 
 from app.services.forex_risk.hedging_engine import (
+    HedgeDirection,
+    HedgeEffectiveness,
     HedgeInstrument,
     HedgeInstrumentType,
-    HedgeDirection,
     HedgeRecommendation,
-    HedgeEffectiveness,
     HedgingEngine,
 )
 

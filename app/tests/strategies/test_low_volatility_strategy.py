@@ -11,7 +11,7 @@ Cubre:
 Target: 50+ tests with 80%+ coverage
 """
 
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from decimal import Decimal
 
 import numpy as np
@@ -25,7 +25,6 @@ from app.strategies.low_volatility.models import (
     LowVolatilityProfile,
     LowVolatilityStock,
     LowVolatilityStrategyConfig,
-    ScreeningResult,
     SectorDefensiveLevel,
     VolatilityMetrics,
     VolatilityRegime,
@@ -1105,7 +1104,7 @@ class TestLowVolatilityStrategyIntegration:
         # El peso de Utilities no debería exceder el máximo sectorial
         # Nota: Con equal-weight y 30 acciones (20 Utils, 10 Healthcare),
         # Utils tendría ~67% sin límites. Con límite de 35%, debería reducirse.
-        util_weight = portfolio.sector_weights.get("Utilities", Decimal("0"))
+        portfolio.sector_weights.get("Utilities", Decimal("0"))
 
         # Verificar que se respetó el límite o que el portafolio está construido
         # Nota: La implementación actual de sector limit enforcement tiene limitaciones

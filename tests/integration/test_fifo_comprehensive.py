@@ -12,33 +12,19 @@ This module tests the FIFO (First-In, First-Out) tax lot tracking system includi
 - Integrity verification
 """
 
-import asyncio
-import pytest
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
-from uuid import UUID, uuid4
+from uuid import uuid4
 
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
+import pytest
 
 from app.core.database import get_db_transaction
+from app.services.fifo.fifo_integrator import FIFOIntegrator, Position, Trade
 from app.tax.database.fifo_schema import (
-    Account,
     AssetType,
-    ExchangeType,
-    FIFOCalculation,
-    FIFOProcessor,
     Lot,
     LotStatus,
     Transaction,
-    TransactionType,
-)
-from app.services.fifo.fifo_integrator import (
-    FIFOIntegrator,
-    Trade,
-    Position,
-    LotInfo,
 )
 
 

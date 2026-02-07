@@ -25,20 +25,17 @@ Changes:
 """
 
 import asyncio
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import List, Optional
-from unittest.mock import AsyncMock
 
 import numpy as np
 import pytest
 
 from app.dashboard.production_dashboard import (
-    ProductionDashboard,
     DashboardMetrics,
-    PositionMetric,
-    AlertHistoryItem,
     HistoricalDataPoint,
+    ProductionDashboard,
     get_production_dashboard,
 )
 from app.models.portfolio import AssetClass, Portfolio, Position
@@ -132,7 +129,7 @@ def create_realistic_portfolio(
         )
 
     # Calculate total positions value
-    positions_value = sum(p.market_price * p.quantity for p in positions)
+    sum(p.market_price * p.quantity for p in positions)
 
     return Portfolio(
         portfolio_id="test_portfolio",

@@ -25,20 +25,15 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
-from numpy.typing import NDArray
 
-from .models import (
-    DelistedReturnData,
-    DelistedStock,
-    DelistingReason,
-)
+from .models import DelistedStock, DelistingReason
 
 logger = logging.getLogger(__name__)
 

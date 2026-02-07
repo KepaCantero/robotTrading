@@ -11,21 +11,19 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
-from scipy.optimize import minimize, OptimizeResult
+from scipy.optimize import minimize
 
-from app.domain.services.portfolio_optimization.covariance_calculator import (
-    CovarianceCalculator,
-    CovarianceResult,
-)
 from app.domain.services.portfolio_optimization._validation import (
     TRADING_DAYS,
-    validate_covariance_matrix,
     log_optimization_failure,
+    validate_covariance_matrix,
 )
-
+from app.domain.services.portfolio_optimization.covariance_calculator import (
+    CovarianceResult,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -470,7 +468,6 @@ class MeanVarianceOptimizer:
             except Exception as e:
                 # Skip infeasible targets
                 logger.debug(f"Skipping target return {target}: {e}")
-                pass
 
         return EfficientFrontier(
             returns=np.array(returns),

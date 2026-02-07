@@ -22,8 +22,8 @@ from typing import Any, Dict, List, Optional
 
 import pandas as pd
 
-from app.core.compliance.service_registry import get_service_registry
 from app.core.compliance.results import OptimizeResult
+from app.core.compliance.service_registry import get_service_registry
 
 logger = logging.getLogger(__name__)
 
@@ -209,17 +209,13 @@ class PortfolioComplianceOptimizer:
                 if current_regime == "BEAR":
                     # Reduce exposure in bear market
                     adjustment_factor = 0.8
-                    result.weights = {
-                        k: v * adjustment_factor for k, v in result.weights.items()
-                    }
+                    result.weights = {k: v * adjustment_factor for k, v in result.weights.items()}
                     result.reasons.append("Weights reduced for bear regime")
 
                 elif current_regime == "BULL":
                     # Increase exposure in bull market
                     adjustment_factor = 1.1
-                    result.weights = {
-                        k: v * adjustment_factor for k, v in result.weights.items()
-                    }
+                    result.weights = {k: v * adjustment_factor for k, v in result.weights.items()}
                     result.reasons.append("Weights increased for bull regime")
 
         except Exception as e:
@@ -247,9 +243,7 @@ class PortfolioComplianceOptimizer:
         # Re-normalize weights
         total_weight = sum(result.weights.values())
         if total_weight > 0:
-            result.weights = {
-                k: v / total_weight for k, v in result.weights.items()
-            }
+            result.weights = {k: v / total_weight for k, v in result.weights.items()}
 
     # =========================================================================
     # UTILITY METHODS

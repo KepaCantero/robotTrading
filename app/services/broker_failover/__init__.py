@@ -50,14 +50,8 @@ Example:
     )
 """
 
-import logging
 
-from .manager import (
-    BrokerConfig,
-    BrokerFailoverManager,
-    BrokerHealth,
-    BrokerState,
-)
+from .manager import BrokerConfig, BrokerFailoverManager, BrokerHealth, BrokerState
 
 __all__ = [
     "BrokerConfig",

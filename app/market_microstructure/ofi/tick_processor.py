@@ -23,19 +23,18 @@ from decimal import Decimal
 import numpy as np
 
 from app.market_microstructure.ofi.models import (
-    CumulativeOFI,
     OrderBookSnapshot,
     OrderSide,
     TickData,
 )
-from app.market_microstructure.ofi.ofi_calculator import OFICalculator, OFIResult
+from app.market_microstructure.ofi.ofi_calculator import OFICalculator
 
 logger = logging.getLogger(__name__)
 
 
 class InvalidPriceError(ValueError):
     """Raised when an invalid price is provided."""
-    pass
+
 
 
 @dataclass
@@ -137,7 +136,7 @@ class OrderBookState:
 
         # Check if price is zero
         if price == 0:
-            raise InvalidPriceError(f"Price cannot be zero")
+            raise InvalidPriceError("Price cannot be zero")
 
         # Check if price is NaN (using comparison with itself)
         if price != price:  # NaN != NaN is True

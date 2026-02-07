@@ -123,7 +123,7 @@ class ReportGenerator:
                 "avg_sharpe_improvement": float(avg_sharpe_imp),
                 "avg_return_improvement": float(avg_return_imp),
                 "optimization_recommendation_pct": float(optimization_rec_pct),
-            }
+            },
         )
 
         return html
@@ -217,7 +217,7 @@ class ReportGenerator:
                 "rejected": summary["rejected"],
                 "avg_sharpe_improvement": summary["average_improvements"]["sharpe"],
                 "avg_return_improvement": summary["average_improvements"]["return"],
-            }
+            },
         )
 
     def export_results(self, results: Dict[str, Any], format: str = "json") -> Path:
@@ -246,7 +246,7 @@ class ReportGenerator:
                     "operation": "export_results",
                     "requested_format": format,
                     "supported_formats": ["json", "csv", "excel"],
-                }
+                },
             )
             raise ValueError(f"Unsupported format: {format}")
 
@@ -266,7 +266,7 @@ class ReportGenerator:
                 "output_path": str(output_path),
                 "format": "json",
                 "results_count": len(results),
-            }
+            },
         )
         return output_path
 
@@ -301,7 +301,7 @@ class ReportGenerator:
                 "format": "csv",
                 "results_count": len(results),
                 "rows_exported": len(rows),
-            }
+            },
         )
         return output_path
 
@@ -346,8 +346,15 @@ class ReportGenerator:
                 "output_path": str(output_path),
                 "format": "excel",
                 "results_count": len(results),
-                "sheets_created": 1 + len([o for o in ObjectivoInversion if any(r.profile.objetivo_inversion == o for r in results.values())]),
-            }
+                "sheets_created": 1
+                + len(
+                    [
+                        o
+                        for o in ObjectivoInversion
+                        if any(r.profile.objetivo_inversion == o for r in results.values())
+                    ]
+                ),
+            },
         )
         return output_path
 

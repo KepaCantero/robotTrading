@@ -5,10 +5,10 @@ Tests point-in-time data handling to prevent look-ahead bias
 as described in Ernest Chan's "Algorithmic Trading" (Chapter 3).
 """
 
-import pytest
 from datetime import datetime, timedelta
 
 import pandas as pd
+import pytest
 
 from app.backtesting.point_in_time_database import (
     CorporateAction,

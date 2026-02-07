@@ -10,11 +10,7 @@ from datetime import date, time
 
 import pytest
 
-from app.services.scheduling import (
-    MarketScheduler,
-    MarketType,
-    MarketStatus,
-)
+from app.services.scheduling import MarketScheduler, MarketStatus, MarketType
 
 
 class TestMarketSchedulerIntegration:
@@ -219,7 +215,7 @@ class TestMarketSchedulerIntegration:
         )
 
         # Add a future weekday as a holiday
-        from datetime import datetime, timedelta
+        from datetime import timedelta
 
         # Get next weekday (Monday-Friday)
         today = date.today()

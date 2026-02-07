@@ -4,22 +4,21 @@ Test suite for app.backtesting.ensemble_methods
 Addresses TST-005: Test coverage for ensemble methods
 """
 
-import pytest
 import numpy as np
-from sklearn.tree import DecisionTreeRegressor
 from sklearn.linear_model import LinearRegression, Ridge
+from sklearn.tree import DecisionTreeRegressor
 
 from app.backtesting.ensemble_methods import (
-    EnsembleMethod,
     BaggingConfig,
-    BoostingConfig,
-    StackingConfig,
     BaggingEnsemble,
+    BoostingConfig,
     BoostingEnsemble,
-    StackingEnsemble,
-    RandomForestEnsemble,
     EnsembleAnalyzer,
+    EnsembleMethod,
     EnsembleResult,
+    RandomForestEnsemble,
+    StackingConfig,
+    StackingEnsemble,
     bagging_ensemble,
 )
 
@@ -30,6 +29,7 @@ class TestEnsembleMethodsImport:
     def test_import_ensemble_method(self):
         """Test that EnsembleMethod enum can be imported."""
         from app.backtesting.ensemble_methods import EnsembleMethod
+
         assert EnsembleMethod.BAGGING == "bagging"
         assert EnsembleMethod.BOOSTING == "boosting"
         assert EnsembleMethod.STACKING == "stacking"
@@ -38,26 +38,31 @@ class TestEnsembleMethodsImport:
     def test_import_bagging_ensemble(self):
         """Test that BaggingEnsemble can be imported."""
         from app.backtesting.ensemble_methods import BaggingEnsemble
+
         assert BaggingEnsemble is not None
 
     def test_import_boosting_ensemble(self):
         """Test that BoostingEnsemble can be imported."""
         from app.backtesting.ensemble_methods import BoostingEnsemble
+
         assert BoostingEnsemble is not None
 
     def test_import_stacking_ensemble(self):
         """Test that StackingEnsemble can be imported."""
         from app.backtesting.ensemble_methods import StackingEnsemble
+
         assert StackingEnsemble is not None
 
     def test_import_random_forest_ensemble(self):
         """Test that RandomForestEnsemble can be imported."""
         from app.backtesting.ensemble_methods import RandomForestEnsemble
+
         assert RandomForestEnsemble is not None
 
     def test_import_ensemble_analyzer(self):
         """Test that EnsembleAnalyzer can be imported."""
         from app.backtesting.ensemble_methods import EnsembleAnalyzer
+
         assert EnsembleAnalyzer is not None
 
 
@@ -86,10 +91,7 @@ class TestConfigurationClasses:
         """Test StackingConfig initialization."""
         base_estimators = [("lr", LinearRegression())]
         meta_estimator = Ridge()
-        config = StackingConfig(
-            base_estimators=base_estimators,
-            meta_estimator=meta_estimator
-        )
+        config = StackingConfig(base_estimators=base_estimators, meta_estimator=meta_estimator)
         assert config.base_estimators == base_estimators
         assert config.meta_estimator == meta_estimator
 
@@ -203,19 +205,13 @@ class TestStackingEnsemble:
         """Test initialization with meta estimator."""
         base_estimators = [("lr", LinearRegression())]
         meta_estimator = Ridge(alpha=1.0)
-        ensemble = StackingEnsemble(
-            base_estimators=base_estimators,
-            meta_estimator=meta_estimator
-        )
+        ensemble = StackingEnsemble(base_estimators=base_estimators, meta_estimator=meta_estimator)
         assert ensemble.meta_estimator == meta_estimator
 
     def test_fit_and_predict(self):
         """Test fitting and prediction."""
         X, y = self._generate_test_data()
-        base_estimators = [
-            ("lr", LinearRegression()),
-            ("dt", DecisionTreeRegressor(max_depth=3))
-        ]
+        base_estimators = [("lr", LinearRegression()), ("dt", DecisionTreeRegressor(max_depth=3))]
         ensemble = StackingEnsemble(base_estimators=base_estimators, cv=2)
         ensemble.fit(X, y)
         predictions = ensemble.predict(X)
@@ -224,10 +220,7 @@ class TestStackingEnsemble:
     def test_get_base_model_scores(self):
         """Test getting base model scores."""
         X, y = self._generate_test_data()
-        base_estimators = [
-            ("lr", LinearRegression()),
-            ("dt", DecisionTreeRegressor(max_depth=3))
-        ]
+        base_estimators = [("lr", LinearRegression()), ("dt", DecisionTreeRegressor(max_depth=3))]
         ensemble = StackingEnsemble(base_estimators=base_estimators, cv=2)
         ensemble.fit(X, y)
         scores = ensemble.get_base_model_scores(X, y)
@@ -253,11 +246,7 @@ class TestRandomForestEnsemble:
 
     def test_initialization_custom_params(self):
         """Test initialization with custom parameters."""
-        ensemble = RandomForestEnsemble(
-            n_estimators=50,
-            max_depth=5,
-            bootstrap=False
-        )
+        ensemble = RandomForestEnsemble(n_estimators=50, max_depth=5, bootstrap=False)
         assert ensemble.n_estimators == 50
         assert ensemble.max_depth == 5
         assert ensemble.bootstrap is False
@@ -323,10 +312,7 @@ class TestEnsembleAnalyzer:
     def test_analyze_stacking(self):
         """Test stacking analysis."""
         X, y = self._generate_test_data()
-        base_estimators = [
-            ("lr", LinearRegression()),
-            ("dt", DecisionTreeRegressor(max_depth=3))
-        ]
+        base_estimators = [("lr", LinearRegression()), ("dt", DecisionTreeRegressor(max_depth=3))]
         analyzer = EnsembleAnalyzer()
         result = analyzer.analyze_stacking(base_estimators, X, y)
         assert isinstance(result, EnsembleResult)
@@ -364,6 +350,7 @@ class TestEnsembleResult:
     def test_ensemble_result_to_dict(self):
         """Test EnsembleResult.to_dict method."""
         from datetime import datetime
+
         result = EnsembleResult(
             timestamp=datetime.now(),
             method=EnsembleMethod.BAGGING,
@@ -373,7 +360,7 @@ class TestEnsembleResult:
             estimator_scores=[0.8, 0.85, 0.9],
             ensemble_improvement=0.05,
             diversity=0.3,
-            model_name="DecisionTreeRegressor"
+            model_name="DecisionTreeRegressor",
         )
         result_dict = result.to_dict()
         assert "method" in result_dict

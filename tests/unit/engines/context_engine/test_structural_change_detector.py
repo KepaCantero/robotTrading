@@ -5,11 +5,10 @@ Tests the StructuralChangeDetector class which implements CUSUM and Chow test
 to detect structural changes in time series.
 """
 
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
+
 import numpy as np
-import pandas as pd
-from typing import List, Dict, Any, Optional
+import pytest
 
 
 @pytest.fixture

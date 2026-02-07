@@ -313,9 +313,9 @@ async def validate_optimization_config(
         )
 
     except ValueError as e:
-        return JSONResponse(status_code=DEFAULT_VALUE_400,
-            content={"message": str(e),
-            "valid": False})
+        return JSONResponse(
+            status_code=DEFAULT_VALUE_400, content={"message": str(e), "valid": False}
+        )
     except (ValueError, TypeError, KeyError, AttributeError) as e:
         return JSONResponse(
             status_code=DEFAULT_VALUE_500,

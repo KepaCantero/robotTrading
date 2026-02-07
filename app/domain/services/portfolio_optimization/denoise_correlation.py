@@ -14,15 +14,12 @@ from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
 import numpy as np
-from scipy.optimize import minimize
-from scipy.spatial.distance import squareform
 
 from app.domain.services.portfolio_optimization._validation import (
     is_square_matrix,
     is_symmetric,
     log_optimization_failure,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -104,9 +101,7 @@ class CorrelationDenoiser:
         """
         valid_methods = ["spectral", "shrinkage", "constant_corr"]
         if method not in valid_methods:
-            raise ValueError(
-                f"method must be one of {valid_methods}, got {method}"
-            )
+            raise ValueError(f"method must be one of {valid_methods}, got {method}")
 
         if min_observation_ratio < 2.0:
             raise ValueError(
@@ -139,9 +134,7 @@ class CorrelationDenoiser:
         """
         # Validate input matrix
         if not is_square_matrix(corr_matrix):
-            raise ValueError(
-                f"Correlation matrix must be square, got shape {corr_matrix.shape}"
-            )
+            raise ValueError(f"Correlation matrix must be square, got shape {corr_matrix.shape}")
 
         if not is_symmetric(corr_matrix):
             logger.warning("Correlation matrix is not symmetric, symmetrizing...")
@@ -184,7 +177,7 @@ class CorrelationDenoiser:
         max_random_eigenvalue = self._calculate_max_random_eigenvalue(q, n_assets)
 
         # Separate signal and noise eigenvalues
-        signal_eigenvalues = eigenvalues[eigenvalues > max_random_eigenvalue]
+        eigenvalues[eigenvalues > max_random_eigenvalue]
         noise_eigenvalues = eigenvalues[eigenvalues <= max_random_eigenvalue]
 
         # Replace noise eigenvalues with their average
@@ -240,9 +233,7 @@ class CorrelationDenoiser:
         """
         # Validate covariance matrix
         if not is_square_matrix(cov_matrix):
-            raise ValueError(
-                f"Covariance matrix must be square, got shape {cov_matrix.shape}"
-            )
+            raise ValueError(f"Covariance matrix must be square, got shape {cov_matrix.shape}")
 
         # Extract standard deviations
         std_devs = np.sqrt(np.diag(cov_matrix))

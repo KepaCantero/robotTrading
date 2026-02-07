@@ -16,18 +16,18 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID, uuid4
 
 try:
-    from pydantic import BaseModel, Field, field_validator, model_validator
+    pass
 
     PYDANTIC_AVAILABLE = True
 except ImportError:
     # Fallback to standard library
     PYDANTIC_AVAILABLE = False
 
-    from dataclasses import Field, dataclass as BaseModel, field
+    from dataclasses import field
 
 
 class OverfittingLevel(str, Enum):

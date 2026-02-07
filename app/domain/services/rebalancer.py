@@ -15,7 +15,6 @@ from decimal import Decimal
 from typing import Dict, List, Optional
 
 from app.domain.entities.portfolio import Portfolio
-from app.domain.entities.position import Position
 from app.domain.value_objects.percentage import Percentage
 
 logger = logging.getLogger(__name__)
@@ -119,7 +118,7 @@ class Rebalancer:
                 "portfolio_id": str(id(portfolio)),
                 "total_value": str(total_value),
                 "num_symbols": len(drift),
-            }
+            },
         )
 
         return drift
@@ -150,11 +149,9 @@ class Rebalancer:
                 extra={
                     "weights_sum": str(weights_sum),
                     "num_targets": len(target_weights),
-                }
+                },
             )
-            raise ValueError(
-                f"Target weights must sum to 1.0 (got {weights_sum:.4f})"
-            )
+            raise ValueError(f"Target weights must sum to 1.0 (got {weights_sum:.4f})")
 
         total_value = portfolio.get_total_value().amount
         cash = portfolio.get_cash()
@@ -189,7 +186,7 @@ class Rebalancer:
                     extra={
                         "symbol": symbol,
                         "target_value": str(target_value),
-                    }
+                    },
                 )
                 # Still calculate drift (which will be 100% underweight)
                 current_value = Decimal("0")
@@ -226,7 +223,7 @@ class Rebalancer:
                             "symbol": symbol,
                             "trade_value": str(trade_value),
                             "min_trade_size": str(self._config.min_trade_size),
-                        }
+                        },
                     )
                     continue
 
@@ -261,7 +258,7 @@ class Rebalancer:
                 "num_trades": len(trades),
                 "total_drift": str(total_drift),
                 "estimated_cost": str(estimated_cost),
-            }
+            },
         )
 
         return RebalancePlan(
@@ -307,7 +304,7 @@ class Rebalancer:
                 "num_sells": len(sells),
                 "num_buys": len(buys),
                 "total_trades": len(trades),
-            }
+            },
         )
 
         return optimized
@@ -370,7 +367,7 @@ class Rebalancer:
                     "portfolio_id": str(id(portfolio)),
                     "num_issues": len(issues),
                     "issues": issues,
-                }
+                },
             )
         else:
             logger.debug(
@@ -378,7 +375,7 @@ class Rebalancer:
                 extra={
                     "portfolio_id": str(id(portfolio)),
                     "num_trades": len(plan.trades),
-                }
+                },
             )
 
         return is_valid, issues

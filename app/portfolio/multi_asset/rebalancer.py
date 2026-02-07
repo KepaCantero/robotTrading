@@ -8,13 +8,12 @@ portfolios, including trade calculation, prioritization, and cost estimation.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
-import numpy as np
 
 from .asset_class import AssetClass, AssetClassType
 from .models import MultiAssetAllocation, MultiAssetPortfolio, Trade
@@ -474,7 +473,7 @@ class MultiAssetRebalancer:
         # Calculate target value for this class
         target_value = portfolio_value * target_weight
         current_value = portfolio_value * current_weight
-        value_diff = target_value - current_value
+        target_value - current_value
 
         # Create trades for each asset in the class
         for symbol, within_weight in current_alloc.assets.items():

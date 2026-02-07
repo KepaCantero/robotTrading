@@ -8,15 +8,16 @@ Tests cover:
 - Edge cases and error handling
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
 
 from app.core.tier_mapper import (
     TierMapper,
     TierSystem,
     get_tier,
-    normalize_tier,
     map_profile_tier_to_config,
+    normalize_tier,
     validate_tier_mapping,
 )
 

@@ -88,7 +88,11 @@ class ExecutionEngine:
             strategy_signals = active_strategy.generate_signals(market_data)
             self.total_signals_generated += len(strategy_signals)
 
-            logger.debug("Strategy generated signals", strategy=active_strategy.name, count=len(strategy_signals))
+            logger.debug(
+                "Strategy generated signals",
+                strategy=active_strategy.name,
+                count=len(strategy_signals),
+            )
 
             # Validar señales con risk check
             for signal in strategy_signals:
@@ -96,7 +100,11 @@ class ExecutionEngine:
                     if active_strategy.risk_check(signal, portfolio):
                         signals.append(signal)
                         self.logger.log_signal_generated(active_strategy.name, signal)
-                        logger.debug("Signal validated", symbol=signal.symbol, signal_type=str(signal.signal_type))
+                        logger.debug(
+                            "Signal validated",
+                            symbol=signal.symbol,
+                            signal_type=str(signal.signal_type),
+                        )
                     else:
                         self.logger.log_signal_rejected(
                             active_strategy.name, signal, "Risk check failed"
@@ -105,11 +113,18 @@ class ExecutionEngine:
 
                 except (ValueError, TypeError, KeyError, AttributeError) as e:
                     self.logger.log_strategy_error(active_strategy.name, str(e), "risk_check")
-                    logger.error("Risk check error", symbol=signal.symbol, error=str(e), exc_info=True)
+                    logger.error(
+                        "Risk check error", symbol=signal.symbol, error=str(e), exc_info=True
+                    )
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.log_strategy_error(active_strategy.name, str(e), "generate_signals")
-            logger.error("Error generating signals", strategy=active_strategy.name, error=str(e), exc_info=True)
+            logger.error(
+                "Error generating signals",
+                strategy=active_strategy.name,
+                error=str(e),
+                exc_info=True,
+            )
 
         logger.debug(f"Cycle {self.cycle_count} completed: {len(signals)} signals validated")
         return signals
@@ -137,7 +152,12 @@ class ExecutionEngine:
             self.logger.log_signal_executed(strategy_name, signal, execution_price)
             self.total_signals_executed += 1
 
-            logger.info("Signal executed", symbol=signal.symbol, signal_type=str(signal.signal_type), price=str(execution_price or signal.price))
+            logger.info(
+                "Signal executed",
+                symbol=signal.symbol,
+                signal_type=str(signal.signal_type),
+                price=str(execution_price or signal.price),
+            )
             return True
 
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:

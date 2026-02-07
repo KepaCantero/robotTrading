@@ -13,12 +13,12 @@ This module tests the critical position monitoring system including:
 """
 
 import asyncio
-import pytest
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock, patch
-import logging
+from typing import Any, Dict, List
+from unittest.mock import MagicMock
+
+import pytest
 
 from app.services.position_monitor import (
     MonitoredPosition,

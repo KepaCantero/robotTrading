@@ -1,0 +1,144 @@
+# Ralph Orchestrator - Fix 634 files with broken requirements
+# Por cada archivo: regenerar requirements + auditar
+
+event_loop:
+  prompt_file: ".ralph/gap_audit_task.md"
+  completion_promise: "GAP_AUDIT_COMPLETE"
+  max_iterations: 150
+  max_runtime_seconds: 172800
+  checkpoint_interval: 3
+  starting_event: "fix.start"
+
+cli:
+  backend: "claude"
+
+core:
+  specs_dir: "./specs/"
+
+hats:
+  requirements_fixer:
+    name: "Requirements Fixer"
+    description: "Regenera requirements y audita archivos con placeholders"
+    triggers: ["fix.start", "fix.next_batch"]
+    publishes: ["fix.next_batch", "fix.complete", "fix.blocked"]
+    default_publishes: "fix.next_batch"
+    instructions: |
+      ## REQS FIXER - Regenerar requirements + Auditar
+
+      Total archivos: **634** (todos tienen placeholders `[Document...]`)
+      Total batches: **116**
+
+      ### Por cada batch:
+      1. Leer `.ralph/batches.json`
+      2. Leer checkpoint `.ralph/checkpoint_progress.json`
+      3. Tomar siguiente batch pendiente
+      4. Para cada archivo en el batch:
+
+      ### PASO 1: Regenerar Requirements
+      Leer el archivo Python y generar requirements COMPLETO:
+
+      ```markdown
+      # Requirements: app/path/to/file.py
+
+      ## Source File Analysis
+      - **File Path**: `app/path/to/file.py`
+      - **Lines of Code`: <numero real de lineas>
+      - **Status**: Analysis Complete
+
+      ## Purpose
+      <Descripción REAL basada en el código del archivo>
+
+      ## Dependencies
+      ### Internal
+      - `from app.xxx import yyy`
+      ### External
+      - `import pandas as pd`
+
+      ## Classes/Functions
+      ### class NombreClase
+      **Purpose**: <descripción>
+      **Methods**:
+      - `def metodo(self, param: type) -> return`: <descripción>
+
+      ### def funcion(param: type) -> return
+      **Purpose**: <descripción>
+
+      ## Business Logic
+      <Descripción de la lógica implementada>
+
+      ## Critical Rules (de BASE_RULES.md)
+      - TYP-001: Type hints → [✅/❌]
+      - LOG-001: Structured logging → [✅/❌]
+      - ERR-001: Error handling → [✅/❌]
+      <otras reglas aplicables>
+
+      ## Audit Status
+      | **Last Audit Date** | 2026-02-07T... |
+      | **Audit Status** | NEEDS_AUDIT |
+      ```
+
+      ### PASO 2: Auditar
+      1. Ejecutar: `./scripts/validate_file_comprehensive.sh <archivo>`
+      2. Revisar cada Critical Rule del requirements
+      3. Si hay violación ❌ → fixear el código
+      4. Cuando todas estén ✅ → marcar `Audit Status: PASSED`
+
+      ### PASO 3: Actualizar Checkpoint
+      ```json
+      {
+        "files": {
+          "app/path/file.py": {
+            "status": "PASSED",
+            "verified": true,
+            "timestamp": "2026-02-07T..."
+          }
+        }
+      }
+      ```
+
+      ### NO
+      - No proceses más de 2 batches por iteración
+      - No dejes placeholders sin rellenar
+      - No marques PASSED si hay violaciones
+
+      ### Event Format
+      Batch terminado:
+      ```
+      ralph emit "fix.next_batch" "batch=<id>, files_processed=<n>"
+      ```
+
+      Todo completo (634 archivos):
+      ```
+      ralph emit "fix.complete" "total=634, passed=<n>"
+      ```
+
+  final_reviewer:
+    name: "Final Reviewer"
+    description: "Valida completion"
+    triggers: ["fix.complete"]
+    publishes: ["fix.final_summary"]
+    instructions: |
+      ## FINAL REVIEWER
+
+      Verificar:
+      ```bash
+      # No placeholders
+      grep -r "\[Document" .requirements | wc -l
+      # Debe ser 0
+
+      # Todos procesados
+      cat .ralph/checkpoint_progress.json | jq '.files | length'
+      # Debe ser 634
+      ```
+
+      Output: **GAP_AUDIT_COMPLETE**
+
+# Task configuration
+tasks:
+  enabled: true
+
+# Memory configuration
+memories:
+  enabled: true
+  inject: auto
+  budget: 2000

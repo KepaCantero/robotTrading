@@ -527,7 +527,6 @@ class ParetoFrontOptimizer:
 
         except Exception:
             logger.error("Metrics calculation failed", exc_info=True)
-            pass
 
         return metrics
 

@@ -25,14 +25,15 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Protocol, TypeVar, Union
+from typing import Any, Protocol, TypeVar, Union
 
 from pandas import DataFrame
+from typing_extensions import TypeAlias
 
 # Type alias for market data - accepts DataFrame or dict with OHLCV data
-MarketDataFrame = DataFrame
-MarketDict = dict[str, Union[list[float], list[int], list[str]]]
-MarketData = Union[MarketDataFrame, MarketDict]
+MarketDataFrame: TypeAlias = DataFrame
+MarketDict: TypeAlias = dict[str, Union[list[float], list[int], list[str]]]
+MarketData: TypeAlias = Union[MarketDataFrame, MarketDict]
 
 
 class StrategyProtocol(Protocol):
@@ -128,13 +129,16 @@ class WalkForwardResultProtocol(Protocol):
     consistency_score: Decimal
     num_periods: int
 
-    def get_degradation_summary(self) -> dict[str, object]: ...
+    def get_degradation_summary(self) -> dict[str, object]:
+        ...
 
     @property
-    def os_performance(self) -> dict[str, object]: ...
+    def os_performance(self) -> dict[str, object]:
+        ...
 
     @property
-    def is_performance(self) -> dict[str, object]: ...
+    def is_performance(self) -> dict[str, object]:
+        ...
 
 
 # Type variable for generic strategy operations
@@ -692,14 +696,16 @@ class StrategySelector:
             """
             try:
                 # Import backtesting components
+                from decimal import Decimal
+
                 from ....backtesting.engine import SimpleBacktester
                 from ....backtesting.models import BacktestConfig
                 from ....strategies.registry import StrategyRegistry
-                from decimal import Decimal
 
                 # Convert market_data to DataFrame if needed
                 if isinstance(market_data, dict):
                     import pandas as pd
+
                     market_df = pd.DataFrame(market_data)
                 elif isinstance(market_data, DataFrame):
                     market_df = market_data
@@ -929,9 +935,7 @@ class StrategySelector:
 
         return max(0.0, min(2.0, score))
 
-    def _convert_df_to_signals(
-        self, signals_df: MarketDataFrame, strategy_name: str
-    ) -> list:
+    def _convert_df_to_signals(self, signals_df: MarketDataFrame, strategy_name: str) -> list[Any]:
         """
         Convert signals DataFrame to Signal objects for backtesting.
 
@@ -942,9 +946,10 @@ class StrategySelector:
         Returns:
             List of Signal objects
         """
-        from ....models.signal import Signal, SignalType, SignalSource
         from datetime import datetime
         from decimal import Decimal
+
+        from ....models.signal import Signal, SignalSource, SignalType
 
         signals = []
 
@@ -1005,7 +1010,7 @@ class StrategySelector:
 
         return signals
 
-    def _convert_df_to_market_data(self, market_df: MarketDataFrame) -> list:
+    def _convert_df_to_market_data(self, market_df: MarketDataFrame) -> list[Any]:
         """
         Convert market DataFrame to MarketData objects for backtesting.
 
@@ -1015,9 +1020,10 @@ class StrategySelector:
         Returns:
             List of MarketData or Quote objects
         """
-        from ....models.market_data import MarketData
         from datetime import datetime
         from decimal import Decimal
+
+        from ....models.market_data import MarketData
 
         market_data_list = []
 
@@ -1118,14 +1124,16 @@ class StrategySelector:
             """
             try:
                 # Import backtesting components
+                from decimal import Decimal
+
                 from ....backtesting.engine import SimpleBacktester
                 from ....backtesting.models import BacktestConfig
                 from ....strategies.registry import StrategyRegistry
-                from decimal import Decimal
 
                 # Convert market_data to DataFrame if needed
                 if isinstance(market_data, dict):
                     import pandas as pd
+
                     market_df = pd.DataFrame(market_data)
                 elif isinstance(market_data, DataFrame):
                     market_df = market_data
@@ -1692,6 +1700,10 @@ class StrategySelector:
             try:
                 # Load strategy with parameters
                 strategy = registry.load_strategy(strategy_name, dict(params))
+                # Type assertion: StrategyRegistry.load_strategy returns StrategyProtocol
+                assert isinstance(
+                    strategy, StrategyProtocol
+                ), f"Expected StrategyProtocol, got {type(strategy)}"
                 return strategy
             except (ValueError, KeyError, TypeError) as e:
                 logger.error(f"Failed to create strategy {strategy_name}: {e}")
@@ -1703,6 +1715,7 @@ class StrategySelector:
         # Convert market_data to DataFrame if needed for validator
         if isinstance(market_data, dict):
             import pandas as pd
+
             market_df = pd.DataFrame(market_data)
         elif isinstance(market_data, DataFrame):
             market_df = market_data
@@ -1761,9 +1774,7 @@ class StrategySelector:
         # Adjust for OS Sharpe
         os_sharpe_raw = result.os_performance.get("sharpe_ratio", Decimal("0"))
         os_sharpe = (
-            os_sharpe_raw
-            if isinstance(os_sharpe_raw, Decimal)
-            else Decimal(str(os_sharpe_raw))
+            os_sharpe_raw if isinstance(os_sharpe_raw, Decimal) else Decimal(str(os_sharpe_raw))
         )
         score += self._score_os_sharpe(os_sharpe)
 
@@ -1773,9 +1784,7 @@ class StrategySelector:
         # Build details
         is_sharpe_raw = result.is_performance.get("sharpe_ratio", Decimal("0"))
         is_sharpe = (
-            is_sharpe_raw
-            if isinstance(is_sharpe_raw, Decimal)
-            else Decimal(str(is_sharpe_raw))
+            is_sharpe_raw if isinstance(is_sharpe_raw, Decimal) else Decimal(str(is_sharpe_raw))
         )
 
         details: dict[str, object] = {

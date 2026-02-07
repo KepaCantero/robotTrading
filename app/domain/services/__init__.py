@@ -5,15 +5,9 @@ Domain services contain business logic that doesn't naturally fit
 within entities or value objects.
 """
 
-from .rebalancer import RebalanceConfig, RebalancePlan, RebalanceTrade, Rebalancer
+from .rebalancer import RebalanceConfig, RebalancePlan, Rebalancer, RebalanceTrade
 from .risk_calculator import RiskCalculator, RiskMetrics
-from .signal_generator import (
-    IndicatorValues,
-    Signal,
-    SignalGenerator,
-    SignalStrength,
-    SignalType,
-)
+from .signal_generator import IndicatorValues, Signal, SignalGenerator, SignalStrength, SignalType
 from .tax_calculator import TaxCalculator, TaxLiability, TaxLot
 
 __all__ = [

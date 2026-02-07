@@ -8,32 +8,24 @@ Tests verify that the Service Layer pattern correctly implements:
 - Query handlers
 - Service orchestration
 """
-import pytest
 from decimal import Decimal
-from typing import Optional, List
+from typing import List, Optional
+
+import pytest
 
 from app.application.services import (
-    Command,
-    Query,
-    CommandHandler,
-    ApplicationService,
-    CreateOrderCommand,
-    SubmitOrderCommand,
     CancelOrderCommand,
+    CreateOrderCommand,
     GetOrderQuery,
-    GetPortfolioOrdersQuery,
     OrderApplicationService,
     PortfolioApplicationService,
     ServiceOrchestrator,
-    ValidationError,
-    BusinessRuleError,
-    NotFoundError,
+    SubmitOrderCommand,
 )
-from app.domain.entities.order import Order, OrderSide, OrderType, OrderStatus
-from app.domain.entities.portfolio import Portfolio, PortfolioStatus
-from app.domain.repositories.unit_of_work import AbstractUnitOfWork
+from app.domain.entities.order import Order, OrderSide, OrderStatus, OrderType
+from app.domain.entities.portfolio import Portfolio
 from app.domain.repositories.base_repository import AbstractRepository
-
+from app.domain.repositories.unit_of_work import AbstractUnitOfWork
 
 # ============================================================================
 # MOCK REPOSITORIES

@@ -8,26 +8,26 @@ Phase 0.3: Timezone Awareness Tests
 - Verify database compatibility functions
 """
 
+from datetime import datetime, timedelta, timezone
+
 import pytest
-from datetime import datetime, timezone, timedelta
-from zoneinfo import ZoneInfo
 
 from app.core.timezone_utils import (
-    utc_now,
-    to_utc,
-    to_market_time,
-    format_utc,
-    format_market_time,
-    get_market_timezone,
-    is_market_open,
-    get_market_open_close_time,
-    validate_timezone_aware,
     ensure_timezone_aware,
-    parse_iso_datetime,
+    format_for_display,
+    format_market_time,
+    format_utc,
     get_db_timestamp_default,
     get_db_timestamp_onupdate,
+    get_market_open_close_time,
+    get_market_timezone,
+    is_market_open,
+    parse_iso_datetime,
     to_local_timezone,
-    format_for_display,
+    to_market_time,
+    to_utc,
+    utc_now,
+    validate_timezone_aware,
 )
 
 

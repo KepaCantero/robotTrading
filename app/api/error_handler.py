@@ -19,10 +19,9 @@ GAP Fix: API-008
 from __future__ import annotations
 
 import logging
-import traceback
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional
 
-from fastapi import HTTPException, Request, Response
+from fastapi import HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from pydantic import ValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -117,7 +116,9 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
     )
 
 
-async def starlette_http_exception_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
+async def starlette_http_exception_handler(
+    request: Request, exc: StarletteHTTPException
+) -> JSONResponse:
     """
     Log Starlette HTTP exceptions with full context.
 
@@ -149,7 +150,9 @@ async def starlette_http_exception_handler(request: Request, exc: StarletteHTTPE
     )
 
 
-async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+async def validation_exception_handler(
+    request: Request, exc: RequestValidationError
+) -> JSONResponse:
     """
     Log validation errors with full context.
 
@@ -166,12 +169,14 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     # Format validation errors for logging
     validation_errors = []
     for error in exc.errors():
-        validation_errors.append({
-            "loc": " -> ".join(str(loc) for loc in error["loc"]),
-            "type": error["type"],
-            "msg": error["msg"],
-            "input": error.get("input"),
-        })
+        validation_errors.append(
+            {
+                "loc": " -> ".join(str(loc) for loc in error["loc"]),
+                "type": error["type"],
+                "msg": error["msg"],
+                "input": error.get("input"),
+            }
+        )
 
     log_exception_context(
         error_type="RequestValidationError",
@@ -197,7 +202,9 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
-async def pydantic_validation_exception_handler(request: Request, exc: ValidationError) -> JSONResponse:
+async def pydantic_validation_exception_handler(
+    request: Request, exc: ValidationError
+) -> JSONResponse:
     """
     Log Pydantic validation errors with full context.
 
@@ -210,12 +217,14 @@ async def pydantic_validation_exception_handler(request: Request, exc: Validatio
     """
     validation_errors = []
     for error in exc.errors():
-        validation_errors.append({
-            "loc": " -> ".join(str(loc) for loc in error["loc"]),
-            "type": error["type"],
-            "msg": error["msg"],
-            "input": error.get("input"),
-        })
+        validation_errors.append(
+            {
+                "loc": " -> ".join(str(loc) for loc in error["loc"]),
+                "type": error["type"],
+                "msg": error["msg"],
+                "input": error.get("input"),
+            }
+        )
 
     log_exception_context(
         error_type="PydanticValidationError",
@@ -433,7 +442,6 @@ async def index_error_handler(request: Request, exc: IndexError) -> JSONResponse
 
 # Import JSONResponse
 from fastapi.responses import JSONResponse
-
 
 __all__ = [
     "http_exception_handler",

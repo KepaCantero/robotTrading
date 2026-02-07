@@ -4,8 +4,9 @@ Unit tests for VaR Backtesting - Hull Chapter 18
 Tests for Kupiec test, Christoffersen test, and exception tracking.
 """
 
-import pytest
 import numpy as np
+import pytest
+
 from app.engines.risk_engine.var_calculators.var_calculators import VaRBacktester, run_var_backtest
 
 

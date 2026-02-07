@@ -20,7 +20,7 @@ SOLID Principles:
 
 import logging
 from collections import deque
-from datetime import date, datetime, timedelta
+from datetime import date
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -34,14 +34,10 @@ from .models import (
     LowVolatilityProfile,
     LowVolatilityStock,
     LowVolatilityStrategyConfig,
-    SectorDefensiveLevel,
     VolatilityMetrics,
     VolatilityRegime,
 )
-from .portfolio_constructor import (
-    LowVolatilityPortfolio,
-    LowVolatilityPortfolioConstructor,
-)
+from .portfolio_constructor import LowVolatilityPortfolio, LowVolatilityPortfolioConstructor
 from .volatility_calculator import VolatilityCalculator
 
 logger = logging.getLogger(__name__)

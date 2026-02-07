@@ -8,10 +8,9 @@ historical data simulation, trade execution, and performance metrics calculation
 from __future__ import annotations
 
 import logging
-import math
 from datetime import datetime
-from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from decimal import Decimal, InvalidOperation
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 from app.backtesting.liquidity_validator import LiquidityValidator
@@ -31,7 +30,7 @@ from app.backtesting.services.signal_processor import SignalProcessor
 from app.backtesting.services.trade_executor import TradeExecutor
 from app.core.trading_validators import TradingValidator
 from app.models.portfolio import AssetClass, Portfolio, Position
-from app.models.signal import Signal, SignalType
+from app.models.signal import Signal
 from app.services.dynamic_capital_reallocation import DynamicCapitalReallocationEngine
 from app.services.risk_envelope_validator import RiskEnvelopeValidator
 
@@ -215,22 +214,28 @@ class BacktestEngine:
             self.last_known_prices[md.symbol] = current_md_price
 
             # Update equity curve
-            self.equity_tracker.update_equity_curve(md.timestamp, self.capital, self.last_known_prices)
+            self.equity_tracker.update_equity_curve(
+                md.timestamp, self.capital, self.last_known_prices
+            )
 
             # Execute learning engine retraining if needed
             self._execute_learning_retraining(md, market_data)
 
             # Process signals for this timestamp
-            signal_index, signals_processed, signals_matched, signals_skipped, strategy_stats = (
-                self._process_signals_at_timestamp(
-                    md,
-                    signals,
-                    signal_index,
-                    signals_processed,
-                    signals_matched,
-                    signals_skipped,
-                    strategy_stats,
-                )
+            (
+                signal_index,
+                signals_processed,
+                signals_matched,
+                signals_skipped,
+                strategy_stats,
+            ) = self._process_signals_at_timestamp(
+                md,
+                signals,
+                signal_index,
+                signals_processed,
+                signals_matched,
+                signals_skipped,
+                strategy_stats,
             )
 
             # Check for stop loss / take profit
@@ -310,7 +315,11 @@ class BacktestEngine:
             market_data: Current market data point
             all_market_data: All market data for learning context
         """
-        if not (self.strategy and hasattr(self.strategy, 'learning_engine') and self.strategy.learning_engine):
+        if not (
+            self.strategy
+            and hasattr(self.strategy, 'learning_engine')
+            and self.strategy.learning_engine
+        ):
             return
 
         from app.strategies.momentum_modular.learning.learning_updater import LearningEngineUpdater
@@ -800,7 +809,10 @@ class BacktestEngine:
             pnl=pnl_info["pnl"],
             pnl_percentage=pnl_info["pnl_percentage"],
             commission=pnl_info["total_commission"],
-            slippage=abs(current_position * (exit_price_with_slippage - (current_price or recent_trades[-1].entry_price))),
+            slippage=abs(
+                current_position
+                * (exit_price_with_slippage - (current_price or recent_trades[-1].entry_price))
+            ),
         )
 
         # Close all matching buy trades
@@ -837,12 +849,18 @@ class BacktestEngine:
                 recent_trades_for_symbol = [t for t in reversed(self.trades) if t.symbol == symbol]
                 if recent_trades_for_symbol:
                     closing_price = recent_trades_for_symbol[0].entry_price
-                    logger.warning(f"No price_map entry for {symbol}, using last trade price: {closing_price:.2f}")
+                    logger.warning(
+                        f"No price_map entry for {symbol}, using last trade price: {closing_price:.2f}"
+                    )
                 else:
                     closing_price = get_price(final_market_data)
-                    logger.warning(f"Using final_market_data price for {symbol}: {closing_price:.2f}")
+                    logger.warning(
+                        f"Using final_market_data price for {symbol}: {closing_price:.2f}"
+                    )
 
-            self._close_position(symbol, final_market_data.timestamp, "end_of_backtest", closing_price)
+            self._close_position(
+                symbol, final_market_data.timestamp, "end_of_backtest", closing_price
+            )
 
     def _build_price_map(self, market_data: List) -> Dict[str, Decimal]:
         """
@@ -860,9 +878,15 @@ class BacktestEngine:
                 price_map[md.symbol] = get_price(md)
         return price_map
 
-    def _register_buy_trade_for_learning(self, trade: Trade, signal: Signal, market_data: Any) -> None:
+    def _register_buy_trade_for_learning(
+        self, trade: Trade, signal: Signal, market_data: Any
+    ) -> None:
         """Register a buy trade for the learning engine."""
-        if not (self.strategy and hasattr(self.strategy, 'learning_engine') and self.strategy.learning_engine):
+        if not (
+            self.strategy
+            and hasattr(self.strategy, 'learning_engine')
+            and self.strategy.learning_engine
+        ):
             return
 
         if hasattr(self.strategy, '_learning_updater'):
@@ -886,9 +910,15 @@ class BacktestEngine:
                     }
                 )
 
-    def _register_sell_trade_for_learning(self, trade: Trade, signal: Signal, market_data: Any) -> None:
+    def _register_sell_trade_for_learning(
+        self, trade: Trade, signal: Signal, market_data: Any
+    ) -> None:
         """Register a sell trade result for the learning engine."""
-        if not (self.strategy and hasattr(self.strategy, 'learning_engine') and self.strategy.learning_engine):
+        if not (
+            self.strategy
+            and hasattr(self.strategy, 'learning_engine')
+            and self.strategy.learning_engine
+        ):
             return
 
         if hasattr(self.strategy, '_learning_updater'):

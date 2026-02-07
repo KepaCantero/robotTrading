@@ -14,9 +14,8 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 
@@ -245,7 +244,12 @@ class LowVolatilityAnomaly:
             market_aligned = market_returns_clean[:min_len]
 
             # Filter NaN from aligned arrays
-            valid_aligned = ~np.isnan(returns_aligned) & ~np.isnan(market_aligned) & ~np.isinf(returns_aligned) & ~np.isinf(market_aligned)
+            valid_aligned = (
+                ~np.isnan(returns_aligned)
+                & ~np.isnan(market_aligned)
+                & ~np.isinf(returns_aligned)
+                & ~np.isinf(market_aligned)
+            )
             if np.any(valid_aligned):
                 residual = returns_aligned[valid_aligned] - beta * market_aligned[valid_aligned]
                 idiosyncratic_vol = float(np.std(residual)) if len(residual) > 0 else annual_vol
@@ -273,7 +277,9 @@ class LowVolatilityAnomaly:
 
         # Sortino ratio
         annualized_downside = downside_dev * np.sqrt(252)
-        sortino = float(excess_returns / annualized_downside) if annualized_downside > 1e-10 else 0.0
+        sortino = (
+            float(excess_returns / annualized_downside) if annualized_downside > 1e-10 else 0.0
+        )
 
         return VolatilityMetrics(
             symbol="",  # Will be set by caller

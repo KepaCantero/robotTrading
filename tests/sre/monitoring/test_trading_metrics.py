@@ -12,23 +12,16 @@ Tests the implementation of trading-specific SRE metrics:
 """
 
 import asyncio
-import pytest
 from datetime import datetime, timedelta
-from decimal import Decimal
-from unittest.mock import Mock, patch, AsyncMock
+
+import pytest
 
 from app.sre.monitoring.trading_metrics import (
-    TradingMetricsMonitor,
-    TradingMetricsConfig,
-    TradingHealthStatus,
     OrderRecord,
+    TradingHealthStatus,
     TradingMetrics,
-    OrderExecutionMetrics,
-    SlippageMetrics,
-    PositionSyncMetrics,
-    MarketDataMetrics,
-    StrategyHealthMetrics,
-    RiskLimitMetrics,
+    TradingMetricsConfig,
+    TradingMetricsMonitor,
     get_trading_metrics_monitor,
 )
 

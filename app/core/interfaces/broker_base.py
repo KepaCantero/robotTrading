@@ -15,8 +15,6 @@ Author: SRE Feedback Integration
 Date: 2025-01-25
 """
 
-import logging
-
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime

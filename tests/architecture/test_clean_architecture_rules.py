@@ -8,9 +8,10 @@ These tests enforce Robert C. Martin's Clean Architecture principles:
 - Domain Independence: Domain has no external dependencies
 """
 
-import pytest
-from pathlib import Path
 import re
+from pathlib import Path
+
+import pytest
 
 
 class TestDependencyRules:

@@ -259,7 +259,7 @@ class FeatureExplosionValidator:
         # Calculate condition number
         try:
             condition_number = np.linalg.cond(X.values)
-        except Exception:
+        except (ValueError, TypeError, np.linalg.LinAlgError):
             condition_number = float('inf')
 
         # Determine if multicollinearity exists
@@ -389,7 +389,7 @@ class FeatureExplosionValidator:
         try:
             vif_dict = self._calculate_all_vif(X)
             return max(vif_dict.values()) if vif_dict else 0.0
-        except Exception as e:
+        except (ValueError, TypeError, ZeroDivisionError) as e:
             logger.warning(f"VIF calculation failed: {e}")
             return 0.0
 
@@ -430,7 +430,7 @@ class FeatureExplosionValidator:
                 vif = 1 / (1 - r_squared) if r_squared < 1 else float('inf')
                 vif_dict[feature] = vif
 
-        except Exception as e:
+        except (ValueError, TypeError, ZeroDivisionError) as e:
             logger.warning(f"VIF calculation error: {e}")
 
         return vif_dict
@@ -446,7 +446,7 @@ class FeatureExplosionValidator:
             )
 
             return upper_triangle.abs().max().max()
-        except Exception as e:
+        except (ValueError, TypeError) as e:
             logger.warning(f"Correlation calculation failed: {e}")
             return 0.0
 

@@ -143,9 +143,7 @@ async def evaluate_signal(
 
         # Evaluate signal with timeout
         signal = await asyncio.wait_for(
-            service.evaluate_signal(
-                request.symbol, signal_type, market_data, request.metadata
-            ),
+            service.evaluate_signal(request.symbol, signal_type, market_data, request.metadata),
             timeout=10.0,  # API-010: Add timeout configuration
         )
 

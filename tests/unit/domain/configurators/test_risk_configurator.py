@@ -11,6 +11,7 @@ Test Coverage:
 """
 
 from decimal import Decimal
+
 import pytest
 
 from app.core.models.input_profile import RiskTolerance

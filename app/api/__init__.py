@@ -10,7 +10,7 @@ import logging
 import time
 import uuid
 from contextvars import ContextVar
-from typing import Callable, Dict, Optional, Any
+from typing import Any, Callable, Dict, Optional
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -251,9 +251,7 @@ class AuditMiddleware(BaseHTTPMiddleware):
         request.state.correlation_id = correlation_id
 
         # Extract client ID if available (from JWT or API key)
-        client_id = getattr(request.state, "user_id", None) or request.headers.get(
-            "X-Client-ID"
-        )
+        client_id = getattr(request.state, "user_id", None) or request.headers.get("X-Client-ID")
 
         # Log request
         self.audit_logger.log_request(

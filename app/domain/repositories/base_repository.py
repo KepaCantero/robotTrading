@@ -17,17 +17,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generic,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    TypeVar,
-)
+from typing import Any, Callable, Dict, Generic, Iterable, Iterator, List, Optional, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +73,6 @@ class AbstractRepository(ABC, Generic[T, K]):
         Raises:
             RepositoryError: If entity cannot be added
         """
-        pass
 
     @abstractmethod
     async def get(self, entity_id: K) -> Optional[T]:
@@ -99,7 +88,6 @@ class AbstractRepository(ABC, Generic[T, K]):
         Raises:
             RepositoryError: If retrieval fails
         """
-        pass
 
     @abstractmethod
     async def update(self, entity: T) -> None:
@@ -113,7 +101,6 @@ class AbstractRepository(ABC, Generic[T, K]):
             NotFoundError: If entity doesn't exist
             RepositoryError: If update fails
         """
-        pass
 
     @abstractmethod
     async def delete(self, entity_id: K) -> None:
@@ -127,7 +114,6 @@ class AbstractRepository(ABC, Generic[T, K]):
             NotFoundError: If entity doesn't exist
             RepositoryError: If deletion fails
         """
-        pass
 
     @abstractmethod
     async def list_all(self) -> List[T]:
@@ -140,7 +126,6 @@ class AbstractRepository(ABC, Generic[T, K]):
         Raises:
             RepositoryError: If listing fails
         """
-        pass
 
     async def get_or_create(self, entity_id: K, factory: Callable[[], T]) -> tuple[T, bool]:
         """
@@ -272,7 +257,6 @@ class QueryableRepository(AbstractRepository[T, K]):
             )
             ```
         """
-        pass
 
     @abstractmethod
     async def find_first(self, **criteria: Any) -> Optional[T]:
@@ -285,7 +269,6 @@ class QueryableRepository(AbstractRepository[T, K]):
         Returns:
             First matching entity or None
         """
-        pass
 
     @abstractmethod
     async def find_by_specification(self, specification: Callable[[T], bool]) -> List[T]:
@@ -312,7 +295,6 @@ class QueryableRepository(AbstractRepository[T, K]):
             )
             ```
         """
-        pass
 
 
 class StreamableRepository(AbstractRepository[T, K]):
@@ -343,7 +325,6 @@ class StreamableRepository(AbstractRepository[T, K]):
                 await process(order)
             ```
         """
-        pass
 
     @abstractmethod
     async def stream_by_criteria(self, **criteria: Any) -> Iterator[T]:
@@ -356,7 +337,6 @@ class StreamableRepository(AbstractRepository[T, K]):
         Yields:
             Matching entities one at a time
         """
-        pass
 
 
 class CachedRepository(AbstractRepository[T, K]):

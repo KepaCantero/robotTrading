@@ -15,9 +15,8 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 
@@ -68,11 +67,25 @@ class DividendMetrics:
         score = 0.0
 
         # Validate inputs and handle NaN/inf
-        payout_ratio = self.payout_ratio if np.isfinite(self.payout_ratio) and self.payout_ratio >= 0 else 1.0
-        fcf_payout = self.free_cash_payout_ratio if np.isfinite(self.free_cash_payout_ratio) and self.free_cash_payout_ratio >= 0 else 1.0
-        growth_years = self.dividend_growth_years if np.isfinite(self.dividend_growth_years) and self.dividend_growth_years >= 0 else 0
+        payout_ratio = (
+            self.payout_ratio if np.isfinite(self.payout_ratio) and self.payout_ratio >= 0 else 1.0
+        )
+        fcf_payout = (
+            self.free_cash_payout_ratio
+            if np.isfinite(self.free_cash_payout_ratio) and self.free_cash_payout_ratio >= 0
+            else 1.0
+        )
+        growth_years = (
+            self.dividend_growth_years
+            if np.isfinite(self.dividend_growth_years) and self.dividend_growth_years >= 0
+            else 0
+        )
         roe = self.return_on_equity if np.isfinite(self.return_on_equity) else 0.0
-        debt_to_equity = self.debt_to_equity if np.isfinite(self.debt_to_equity) and self.debt_to_equity >= 0 else 2.0
+        debt_to_equity = (
+            self.debt_to_equity
+            if np.isfinite(self.debt_to_equity) and self.debt_to_equity >= 0
+            else 2.0
+        )
 
         # Payout ratio (ideal: 40-60%)
         if 0.4 <= payout_ratio <= 0.6:
@@ -122,7 +135,11 @@ class DividendMetrics:
         score = 0.0
 
         # Validate inputs and handle NaN/inf
-        dividend_yield = self.dividend_yield if np.isfinite(self.dividend_yield) and self.dividend_yield >= 0 else 0.0
+        dividend_yield = (
+            self.dividend_yield
+            if np.isfinite(self.dividend_yield) and self.dividend_yield >= 0
+            else 0.0
+        )
         growth_rate = self.dividend_growth_rate if np.isfinite(self.dividend_growth_rate) else 0.0
 
         # Dividend yield (2-6% ideal)
@@ -234,13 +251,16 @@ class DividendInvesting:
     def _passes_screen(self, metrics: DividendMetrics) -> bool:
         """Check if stock passes dividend screen."""
         # Validate metrics first
-        if not all([
-            np.isfinite(metrics.dividend_yield) and metrics.dividend_yield >= 0,
-            np.isfinite(metrics.payout_ratio) and metrics.payout_ratio >= 0,
-            np.isfinite(metrics.dividend_years) and metrics.dividend_years >= 0,
-            np.isfinite(metrics.dividend_sustainability_score) and 0 <= metrics.dividend_sustainability_score <= 1,
-            np.isfinite(metrics.dividend_growth_rate),
-        ]):
+        if not all(
+            [
+                np.isfinite(metrics.dividend_yield) and metrics.dividend_yield >= 0,
+                np.isfinite(metrics.payout_ratio) and metrics.payout_ratio >= 0,
+                np.isfinite(metrics.dividend_years) and metrics.dividend_years >= 0,
+                np.isfinite(metrics.dividend_sustainability_score)
+                and 0 <= metrics.dividend_sustainability_score <= 1,
+                np.isfinite(metrics.dividend_growth_rate),
+            ]
+        ):
             logger.warning(f"Invalid dividend metrics for {metrics.symbol}")
             return False
 
@@ -492,7 +512,9 @@ class DividendInvesting:
 
         # Valuation check
         if fair_value > 0:
-            valuation_ratio = current_price / fair_value if np.isfinite(current_price / fair_value) else 1.0
+            valuation_ratio = (
+                current_price / fair_value if np.isfinite(current_price / fair_value) else 1.0
+            )
         else:
             valuation_ratio = 1.0
 

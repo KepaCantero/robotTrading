@@ -61,7 +61,6 @@ class DataEngine:
         )
 
         # Obtener configuración de entorno si está disponible
-        import asyncio
         import os
 
         env_redis_url = os.getenv('REDIS_URL') or os.getenv('DATA_ENGINE_CACHE_REDIS_URL')

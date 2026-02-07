@@ -6,22 +6,15 @@ Tests for signal management API endpoints with DI container pattern.
 Reference: Rule DP-004 - Use dependency injection instead of direct instantiation.
 """
 
-from datetime import datetime
 from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
 from app.api.signals import get_signal_scorer_service, router
-from app.models.signal import (
-    MarketData,
-    Signal,
-    SignalSource,
-    SignalStrength,
-    SignalType,
-)
+from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.services.signal_scorer import SignalScorerService
 
 
@@ -102,9 +95,7 @@ class TestSignalsAPIEndpoints:
     @pytest.mark.asyncio
     async def test_evaluate_signal_below_thresholds(self, client):
         """Test evaluate_signal returns rejection when below thresholds."""
-        with patch.object(
-            SignalScorerService, "evaluate_signal", new=AsyncMock(return_value=None)
-        ):
+        with patch.object(SignalScorerService, "evaluate_signal", new=AsyncMock(return_value=None)):
             response = client.post(
                 "/signals/evaluate",
                 json={
@@ -129,7 +120,9 @@ class TestSignalsAPIEndpoints:
     async def test_get_next_actionable_signal_has_signal(self, client, mock_signal):
         """Test get_next_actionable_signal returns signal when available."""
         with patch.object(
-            SignalScorerService, "get_next_actionable_signal", new=AsyncMock(return_value=mock_signal)
+            SignalScorerService,
+            "get_next_actionable_signal",
+            new=AsyncMock(return_value=mock_signal),
         ):
             response = client.get("/signals/next")
             assert response.status_code == status.HTTP_200_OK
@@ -214,9 +207,7 @@ class TestSignalsAPIEndpoints:
     @pytest.mark.asyncio
     async def test_clear_expired_signals(self, client):
         """Test clear_expired_signals removes old signals."""
-        with patch.object(
-            SignalScorerService, "clear_expired_signals", new=AsyncMock()
-        ):
+        with patch.object(SignalScorerService, "clear_expired_signals", new=AsyncMock()):
             response = client.post("/signals/clear-expired?max_age_minutes=60")
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
@@ -292,7 +283,6 @@ class TestDIContainerPattern:
     def test_get_signal_scorer_service_from_di_container(self):
         """Test that get_signal_scorer_service uses DI container."""
         from app.core.di_container import (
-            get_portfolio_service,
             get_signal_scorer_service as di_get_signal_scorer_service,
         )
 
@@ -355,7 +345,9 @@ class TestSymbolUppercaseConversion:
         with patch.object(
             SignalScorerService, "get_signals_by_symbol", new=AsyncMock(return_value=[mock_signal])
         ) as mock_get:
-            with patch.object(SignalScorerService, "execute_signal", new=AsyncMock(return_value=True)):
+            with patch.object(
+                SignalScorerService, "execute_signal", new=AsyncMock(return_value=True)
+            ):
                 client.post("/signals/execute/aapl")
                 # Should call with uppercase symbol
                 mock_get.assert_called_once_with("AAPL")
@@ -378,7 +370,9 @@ class TestErrorHandling:
     async def test_evaluate_signal_error_handling(self, client):
         """Test evaluate_signal handles errors correctly."""
         with patch.object(
-            SignalScorerService, "evaluate_signal", new=AsyncMock(side_effect=ValueError("Test error"))
+            SignalScorerService,
+            "evaluate_signal",
+            new=AsyncMock(side_effect=ValueError("Test error")),
         ):
             response = client.post(
                 "/signals/evaluate",
@@ -401,7 +395,9 @@ class TestErrorHandling:
     async def test_get_next_actionable_signal_error_handling(self, client):
         """Test get_next_actionable_signal handles errors correctly."""
         with patch.object(
-            SignalScorerService, "get_next_actionable_signal", new=AsyncMock(side_effect=ValueError("Test error"))
+            SignalScorerService,
+            "get_next_actionable_signal",
+            new=AsyncMock(side_effect=ValueError("Test error")),
         ):
             response = client.get("/signals/next")
             assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -412,7 +408,9 @@ class TestErrorHandling:
         import asyncio
 
         with patch.object(
-            SignalScorerService, "get_signal_statistics", new=AsyncMock(side_effect=asyncio.TimeoutError())
+            SignalScorerService,
+            "get_signal_statistics",
+            new=AsyncMock(side_effect=asyncio.TimeoutError()),
         ):
             response = client.get("/signals/statistics")
             assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
