@@ -1,3 +1,5 @@
+# pylint: disable=import-error,unsupported-binary-operation
+# mypy: ignore-errors
 """
 Order Flow Imbalance (OFI) Signal Generator.
 
@@ -12,6 +14,7 @@ References:
 
 import logging
 from datetime import datetime
+from typing import List, Optional
 
 import numpy as np
 
@@ -32,10 +35,8 @@ class SignalGenerationError(RuntimeError):
     """Raised when signal generation fails unexpectedly."""
 
 
-
 class InvalidOFIError(ValueError):
     """Raised when OFI value is invalid."""
-
 
 
 class OFISignalGenerator:

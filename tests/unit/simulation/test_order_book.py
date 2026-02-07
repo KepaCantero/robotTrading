@@ -7,7 +7,6 @@ order book dynamics and price formation.
 
 from decimal import Decimal
 
-
 from app.simulation.order_book import (
     LimitOrderBook,
     Order,

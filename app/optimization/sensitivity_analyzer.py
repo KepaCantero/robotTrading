@@ -281,8 +281,8 @@ class SensitivityAnalyzer:
         perf_values = list(performances.values())
         if len(perf_values) >= 2:
             result.confidence_interval_95 = (
-                np.percentile(perf_values, 2.5),
-                np.percentile(perf_values, 97.5),
+                float(np.percentile(perf_values, 2.5)),
+                float(np.percentile(perf_values, 97.5)),
             )
 
         # Run Monte Carlo sensitivity if enabled

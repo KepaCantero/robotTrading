@@ -66,7 +66,14 @@ class KnowledgeGraphBuilder:
             logger.info("✅ Connected to Neo4j knowledge graph database")
             return True
 
-        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
+        except (
+            ConnectionError,
+            TimeoutError,
+            HTTPError,
+            RequestException,
+            ValueError,
+            OSError,
+        ) as e:
             logger.error(f"❌ Failed to connect to Neo4j: {str(e)}")
             self.connected = False
             return False
@@ -103,7 +110,14 @@ class KnowledgeGraphBuilder:
             logger.info(f"✅ Created {count} asset nodes")
             return count
 
-        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
+        except (
+            ConnectionError,
+            TimeoutError,
+            HTTPError,
+            RequestException,
+            ValueError,
+            OSError,
+        ) as e:
             logger.error(f"❌ Failed to create asset nodes: {str(e)}")
             return 0
 
@@ -250,7 +264,14 @@ class KnowledgeGraphBuilder:
             logger.info(f"✅ Created {count} performance nodes")
             return count
 
-        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
+        except (
+            ConnectionError,
+            TimeoutError,
+            HTTPError,
+            RequestException,
+            ValueError,
+            OSError,
+        ) as e:
             logger.error(f"❌ Failed to create performance nodes: {str(e)}")
             return 0
 

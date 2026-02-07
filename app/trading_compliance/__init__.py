@@ -44,11 +44,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 import pandas as pd
 
 # USE THE NEW COMPLIANCE ENGINE
-from app.core.compliance_engine import (
-    PostTradeAnalysis,
-    PreTradeAnalysis,
-    get_compliance_engine,
-)
+from app.core.compliance_engine import PostTradeAnalysis, PreTradeAnalysis, get_compliance_engine
 
 # Avoid circular imports
 if TYPE_CHECKING:

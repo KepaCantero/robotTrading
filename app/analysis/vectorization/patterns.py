@@ -9,7 +9,6 @@ reference and a suggestion generator for the vectorization auditor.
 from __future__ import annotations
 
 
-
 class VectorizationPatterns:
     """
     Common vectorization patterns and solutions.

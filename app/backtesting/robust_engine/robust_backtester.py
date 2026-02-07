@@ -20,8 +20,8 @@ Reference:
 
 from __future__ import annotations
 
+import json
 import logging
-import pickle
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
@@ -34,17 +34,26 @@ from ..point_in_time_database import PointInTimeDatabase
 from .corporate_actions import CorporateActionHandler
 from .dividend_handler import DividendHandler, DripConfig
 from .look_ahead_validator import LookAheadValidator, ValidationResult
-from .models import (
-    BacktestCheckpoint,
-    CorporateAction,
-    ProgressUpdate,
-    StockSplit,
-)
+from .models import BacktestCheckpoint, CorporateAction, ProgressUpdate, StockSplit
 from .performance_tracker import PerformanceMetrics, PerformanceTracker
 from .pit_database import PITDatabaseClient
 from .survivorship_adjuster import SurvivorshipAdjuster, SurvivorshipFreeResult
 
 logger = logging.getLogger(__name__)
+
+
+class DecimalEncoder(json.JSONEncoder):
+    """JSON encoder for Decimal and datetime objects."""
+
+    def default(self, obj):
+        """Convert Decimal and datetime to JSON-serializable types."""
+        if isinstance(obj, Decimal):
+            return float(obj)
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        if isinstance(obj, date):
+            return obj.isoformat()
+        return super().default(obj)
 
 
 @dataclass
@@ -857,13 +866,14 @@ class RobustBacktester:
         )
 
         checkpoint_path = self.config.checkpoint_dir / (
-            "checkpoint_final.pkl"
+            "checkpoint_final.json"
             if is_final
-            else f"checkpoint_{checkpoint.current_date.strftime('%Y%m%d')}.pkl"
+            else f"checkpoint_{checkpoint.current_date.strftime('%Y%m%d')}.json"
         )
 
-        with open(checkpoint_path, 'wb') as f:
-            pickle.dump(checkpoint.to_dict(), f)
+        # Use DecimalEncoder for JSON serialization
+        with open(checkpoint_path, 'w') as f:
+            json.dump(checkpoint.to_dict(), f, cls=DecimalEncoder, indent=2)
 
         self._latest_checkpoint = checkpoint
         self._checkpoint_count += 1
@@ -880,7 +890,7 @@ class RobustBacktester:
         if self.config.checkpoint_dir is None:
             return False
 
-        checkpoint_files = list(self.config.checkpoint_dir.glob("checkpoint_*.pkl"))
+        checkpoint_files = list(self.config.checkpoint_dir.glob("checkpoint_*.json"))
 
         if not checkpoint_files:
             return False
@@ -889,8 +899,8 @@ class RobustBacktester:
         latest_file = max(checkpoint_files, key=lambda p: p.stat().st_mtime)
 
         try:
-            with open(latest_file, 'rb') as f:
-                data = pickle.load(f)
+            with open(latest_file, 'r') as f:
+                data = json.load(f)
 
             checkpoint = BacktestCheckpoint.from_dict(data)
 

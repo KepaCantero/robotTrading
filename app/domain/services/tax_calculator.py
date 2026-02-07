@@ -13,6 +13,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
+from typing import List
 
 from app.domain.entities.position import Position
 from app.domain.entities.trade import Trade

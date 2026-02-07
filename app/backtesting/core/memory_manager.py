@@ -48,7 +48,6 @@ class MemoryPressureError(Exception):
     """Raised when memory pressure exceeds threshold."""
 
 
-
 class AggressiveMemoryManager:
     """
     Aggressive memory management for backtesting operations.

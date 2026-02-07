@@ -322,14 +322,14 @@ class StationarityTester:
 
             # ADF Test (null hypothesis: non-stationary)
             adf_result = adfuller(clean_series, autolag='AIC')
-            _adf_statistic, adf_pvalue = adf_result[0], adf_result[1]
+            adf_pvalue = adf_result[1]
             result["adf_pvalue"] = float(adf_pvalue)
             result["adf_stationary"] = adf_pvalue < self.config.ADF_P_VALUE_THRESHOLD
 
             # KPSS Test (null hypothesis: stationary)
             try:
                 kpss_result = kpss(clean_series, regression='ct', nlags='auto')
-                _kpss_statistic, kpss_pvalue = kpss_result[0], kpss_result[1]
+                kpss_pvalue = kpss_result[1]
                 result["kpss_pvalue"] = float(kpss_pvalue)
                 result["kpss_stationary"] = kpss_pvalue > self.config.KPSS_P_VALUE_THRESHOLD
             except (ValueError, TypeError, KeyError, AttributeError) as e:

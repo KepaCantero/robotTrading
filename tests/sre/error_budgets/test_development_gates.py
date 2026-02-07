@@ -20,11 +20,7 @@ from app.sre.error_budgets.error_budget_manager import (
     ErrorBudgetConfig,
     ErrorBudgetManager,
 )
-from app.sre.error_budgets.slo_tracker import (
-    SLIMetric,
-    SLIMetricType,
-    SLOTracker,
-)
+from app.sre.error_budgets.slo_tracker import SLIMetric, SLIMetricType, SLOTracker
 
 
 @pytest.fixture

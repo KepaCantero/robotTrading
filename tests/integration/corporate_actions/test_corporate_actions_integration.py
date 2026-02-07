@@ -14,11 +14,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
 
-from app.core.interfaces.broker_base import (
-    BrokerType,
-    OrderSide,
-    OrderStatus,
-)
+from app.core.interfaces.broker_base import BrokerType, OrderSide, OrderStatus
 from app.services.corporate_actions.handler import CorporateActionsHandler, CorporateActionType
 
 # =============================================================================

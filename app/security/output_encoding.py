@@ -507,9 +507,9 @@ class OutputEncoder:
 
             # Encode value
             if isinstance(value, dict):
-                encoded[encoded_key] = self.encode_dict(value, context)
+                encoded[encoded_key] = self.encode_dict(value, context)  # type: ignore
             elif isinstance(value, list):
-                encoded[encoded_key] = self.encode_list(value, context)
+                encoded[encoded_key] = self.encode_list(value, context)  # type: ignore
             else:
                 encoded[encoded_key] = self._encode_value(value, context)
 
@@ -530,9 +530,9 @@ class OutputEncoder:
 
         for item in data:
             if isinstance(item, dict):
-                encoded.append(self.encode_dict(item, context))
+                encoded.append(self.encode_dict(item, context))  # type: ignore
             elif isinstance(item, list):
-                encoded.append(self.encode_list(item, context))
+                encoded.append(self.encode_list(item, context))  # type: ignore
             else:
                 encoded.append(self._encode_value(item, context))
 

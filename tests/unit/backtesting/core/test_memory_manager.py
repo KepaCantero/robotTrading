@@ -12,7 +12,6 @@ from __future__ import annotations
 import threading
 from unittest.mock import Mock, patch
 
-
 from app.backtesting.core.memory_manager import AggressiveMemoryManager
 from app.backtesting.models import BacktestResult
 

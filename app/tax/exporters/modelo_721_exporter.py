@@ -267,9 +267,7 @@ class Modelo721Exporter:
                     currency = row[2]
 
                     # Get current price in EUR
-                    price_eur = await self._get_official_exchange_rate(
-                        symbol, currency, "EUR", dec31
-                    )
+                    price_eur = await self._get_official_exchange_rate(currency, "EUR", dec31)
 
                     total_value_eur = quantity * price_eur
 

@@ -23,11 +23,19 @@ try:
 
     enforce_numba_available()  # Will raise RuntimeError if Numba not available
 except RuntimeError as e:
-    # Log the error and exit immediately
-    logger.debug(str(e), file=sys.stderr)
+    # Print the error and exit immediately (logger not available yet)
+    print(str(e), file=sys.stderr)
     sys.exit(1)
 
 import asyncio
+
+from sqlalchemy.exc import (
+    DatabaseError,
+    DataError,
+    IntegrityError,
+    OperationalError,
+    ProgrammingError,
+)
 
 from app.api.assets import router as assets_router
 from app.api.capa2_endpoints import router as capa2_router

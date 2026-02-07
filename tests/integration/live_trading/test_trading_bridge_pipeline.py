@@ -19,6 +19,7 @@ from app.services.live_trading.alert_to_trade_mapper import AlertToTradeRule, Tr
 from app.services.live_trading.broker_connector import (
     BrokerAccount,
     BrokerConnector,
+    BrokerType,
     OrderSide,
     OrderStatus,
 )
@@ -30,18 +31,26 @@ from app.services.live_trading.trading_bridge_orchestrator import TradingBridgeO
 class TestAlertToTradePipeline:
     """Test complete alert-to-trade pipeline."""
 
+    def _create_mock_account(
+        self,
+        cash: str = "100000",
+        portfolio: str = "500000",
+    ) -> BrokerAccount:
+        """Helper to create properly configured mock BrokerAccount."""
+        return BrokerAccount(
+            account_id="acc_001",
+            broker_type=BrokerType.PAPER,
+            cash_available=Decimal(cash),
+            portfolio_value=Decimal(portfolio),
+            buying_power=Decimal("200000"),
+            equity=Decimal(portfolio),
+        )
+
     async def test_complete_alert_to_trade_flow(self):
         """Test complete flow: alert → signal → risk check → trade."""
         # Create mock broker
         mock_broker = MagicMock(spec=BrokerConnector)
-        mock_broker.get_account_info = AsyncMock(
-            return_value=BrokerAccount(
-                account_id="acc_001",
-                broker_type=None,
-                cash_available=Decimal("100000"),
-                portfolio_value=Decimal("500000"),
-            )
-        )
+        mock_broker.get_account_info = AsyncMock(return_value=self._create_mock_account())
         mock_broker.calculate_portfolio_value = AsyncMock(return_value=Decimal("500000"))
         mock_broker.place_order = AsyncMock(
             return_value=MagicMock(
@@ -91,14 +100,7 @@ class TestAlertToTradePipeline:
     async def test_multiple_alerts_separate_signals(self):
         """Test that different alerts generate separate trade signals."""
         mock_broker = MagicMock(spec=BrokerConnector)
-        mock_broker.get_account_info = AsyncMock(
-            return_value=BrokerAccount(
-                account_id="acc_001",
-                broker_type=None,
-                cash_available=Decimal("100000"),
-                portfolio_value=Decimal("500000"),
-            )
-        )
+        mock_broker.get_account_info = AsyncMock(return_value=self._create_mock_account())
         mock_broker.calculate_portfolio_value = AsyncMock(return_value=Decimal("500000"))
         mock_broker.place_order = AsyncMock(
             return_value=MagicMock(
@@ -146,14 +148,7 @@ class TestAlertToTradePipeline:
     async def test_alert_severity_driven_position_sizing(self):
         """Test that alert severity determines position size."""
         mock_broker = MagicMock(spec=BrokerConnector)
-        mock_broker.get_account_info = AsyncMock(
-            return_value=BrokerAccount(
-                account_id="acc_001",
-                broker_type=None,
-                cash_available=Decimal("100000"),
-                portfolio_value=Decimal("500000"),
-            )
-        )
+        mock_broker.get_account_info = AsyncMock(return_value=self._create_mock_account())
         mock_broker.calculate_portfolio_value = AsyncMock(return_value=Decimal("500000"))
         mock_broker.place_order = AsyncMock(
             return_value=MagicMock(
@@ -197,14 +192,7 @@ class TestAlertToTradePipeline:
     async def test_cooldown_prevents_alert_spam(self):
         """Test that cooldown period prevents alert spam trading."""
         mock_broker = MagicMock(spec=BrokerConnector)
-        mock_broker.get_account_info = AsyncMock(
-            return_value=BrokerAccount(
-                account_id="acc_001",
-                broker_type=None,
-                cash_available=Decimal("100000"),
-                portfolio_value=Decimal("500000"),
-            )
-        )
+        mock_broker.get_account_info = AsyncMock(return_value=self._create_mock_account())
         mock_broker.calculate_portfolio_value = AsyncMock(return_value=Decimal("500000"))
         mock_broker.place_order = AsyncMock(
             return_value=MagicMock(
@@ -255,17 +243,25 @@ class TestAlertToTradePipeline:
 class TestAuditTrailIntegration:
     """Test audit trail integration with trading bridge."""
 
+    def _create_mock_account(
+        self,
+        cash: str = "100000",
+        portfolio: str = "500000",
+    ) -> BrokerAccount:
+        """Helper to create properly configured mock BrokerAccount."""
+        return BrokerAccount(
+            account_id="acc_001",
+            broker_type=BrokerType.PAPER,
+            cash_available=Decimal(cash),
+            portfolio_value=Decimal(portfolio),
+            buying_power=Decimal("200000"),
+            equity=Decimal(portfolio),
+        )
+
     async def test_audit_trail_records_all_events(self):
         """Test that audit trail records all trading bridge events."""
         mock_broker = MagicMock(spec=BrokerConnector)
-        mock_broker.get_account_info = AsyncMock(
-            return_value=BrokerAccount(
-                account_id="acc_001",
-                broker_type=None,
-                cash_available=Decimal("100000"),
-                portfolio_value=Decimal("500000"),
-            )
-        )
+        mock_broker.get_account_info = AsyncMock(return_value=self._create_mock_account())
         mock_broker.calculate_portfolio_value = AsyncMock(return_value=Decimal("500000"))
         mock_broker.place_order = AsyncMock(
             return_value=MagicMock(
@@ -321,14 +317,7 @@ class TestAuditTrailIntegration:
     async def test_compliance_report_from_trading_session(self):
         """Test generating compliance report from trading session."""
         mock_broker = MagicMock(spec=BrokerConnector)
-        mock_broker.get_account_info = AsyncMock(
-            return_value=BrokerAccount(
-                account_id="acc_001",
-                broker_type=None,
-                cash_available=Decimal("100000"),
-                portfolio_value=Decimal("500000"),
-            )
-        )
+        mock_broker.get_account_info = AsyncMock(return_value=self._create_mock_account())
         mock_broker.calculate_portfolio_value = AsyncMock(return_value=Decimal("500000"))
         mock_broker.place_order = AsyncMock(
             return_value=MagicMock(
@@ -392,19 +381,30 @@ class TestAuditTrailIntegration:
 class TestErrorRecovery:
     """Test error handling and recovery in pipeline."""
 
+    def _create_mock_account(
+        self,
+        cash: str = "100000",
+        portfolio: str = "500000",
+    ) -> BrokerAccount:
+        """Helper to create properly configured mock BrokerAccount."""
+        return BrokerAccount(
+            account_id="acc_001",
+            broker_type=BrokerType.PAPER,
+            cash_available=Decimal(cash),
+            portfolio_value=Decimal(portfolio),
+            buying_power=Decimal("200000"),
+            equity=Decimal(portfolio),
+        )
+
     async def test_partial_broker_failure_recovery(self):
         """Test graceful handling of broker connection failures."""
         mock_broker = MagicMock(spec=BrokerConnector)
 
-        # First call succeeds, second fails
+        # First two calls succeed (main flow + risk validation), third fails
         mock_broker.get_account_info = AsyncMock(
             side_effect=[
-                BrokerAccount(
-                    account_id="acc_001",
-                    broker_type=None,
-                    cash_available=Decimal("100000"),
-                    portfolio_value=Decimal("500000"),
-                ),
+                self._create_mock_account(),
+                self._create_mock_account(),  # Risk validation also calls get_account_info
                 Exception("Connection lost"),
             ]
         )

@@ -104,8 +104,6 @@ async def get_deployment_decision(decision_id: str) -> Dict:
 
         raise HTTPException(status_code=404, detail=f"Decision {decision_id} not found")
 
-    except HTTPException:
-        raise
     except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"Error retrieving decision: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Retrieval failed: {str(e)}")

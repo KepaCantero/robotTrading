@@ -40,8 +40,6 @@ from app.database.models import (
 # incorrectly reports inconsistent return statements. This is intentional.
 
 
-
-
 T = TypeVar("T")
 logger = get_logger(__name__)
 

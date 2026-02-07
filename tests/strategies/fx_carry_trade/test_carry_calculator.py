@@ -459,7 +459,6 @@ class TestCarryCalculatorProvider:
         """Create a mock FX rate provider for testing."""
         from typing import Protocol, runtime_checkable
 
-
         @runtime_checkable
         class MockProvider(Protocol):
             def get_spot_rate(self, pair: FXPair, as_of: date) -> Decimal:

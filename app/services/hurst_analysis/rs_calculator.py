@@ -8,6 +8,8 @@ Single Responsibility: Only performs R/S-based Hurst calculation.
 Open/Closed: Extensible through HurstCalculator protocol.
 """
 
+from __future__ import annotations
+
 import logging
 
 import numpy as np

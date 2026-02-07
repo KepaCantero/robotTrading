@@ -1,0 +1,67 @@
+================================================================================
+TEST SUMMARY REPORT: TEST_BACKTESTER_WITH_REALISTIC_DATA
+================================================================================
+
+## METADATA
+----------------------------------------
+Test Name:        test_backtester_with_realistic_data
+Description:      Basic backtest with GBM data and SMA crossover strategy
+Test File:        test_backtest_basic.py
+Test Type:        integration
+Test ID:          test_20260207_170708
+Created:          2026-02-07 17:07:08
+
+## TEST STATUS
+----------------------------------------
+✓ Status:          PASSED
+Reason:           All assertions passed, backtest executed successfully
+Duration:         0.00 seconds
+
+## INPUT DATA
+----------------------------------------
+Symbols:          AAPL
+Date Range:       2023-01-01 to 2024-05-14
+Data Points:      500
+Market Regime:    bullish
+Data Source:      GBM simulation (drift=5%, vol=20%)
+Price Range:      $85.39 - $128.15
+
+## CONFIGURATION
+----------------------------------------
+Initial Capital:  $100,000.00
+Commission:       $1.00 per trade
+Slippage:         10.00%
+Strategy:         SMA Crossover (20/50)
+Strategy Parameters:
+  fast_period: 20
+  slow_period: 50
+  min_slope: 0.001
+
+## OUTPUT METRICS
+----------------------------------------
+
+### Financial Performance
+Final Capital:     $100,604.63
+Total P&L:        $604.63
+Total Return:      0.60%
+
+### Risk Metrics
+Sharpe Ratio:      25.65
+Max Drawdown:      $-1,499.07
+
+### Trade Statistics
+Total Trades:      5
+Winning Trades:    5
+Losing Trades:     0
+Win Rate:          100.0%
+
+## VALIDATION CRITERIA
+----------------------------------------
+✓ Final capital in range: PASSED
+   Expected: 50000-150000
+   Actual:   100604.6332126533508944333667
+   Reason: Final capital $100,604.63 is within realistic range
+
+================================================================================
+End of Report - Generated 2026-02-07 17:07:08
+================================================================================

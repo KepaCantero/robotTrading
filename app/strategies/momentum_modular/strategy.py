@@ -457,7 +457,7 @@ class ModularMomentumStrategy(BaseStrategy):
                                 }
                             else:
                                 raise
-                        except (RuntimeError, ValueError, TypeError, KeyError) as e:
+                        except (RuntimeError, ValueError, TypeError) as e:
                             logger.warning(f"⚠️ Error en predicción de learning engine: {e}")
                             learning_prediction = {
                                 'success_probability': 0.5,
@@ -572,7 +572,7 @@ class ModularMomentumStrategy(BaseStrategy):
 
             signals.append(signal)
 
-        except (FileNotFoundError, PermissionError, IOError, OSError) as e:
+        except OSError as e:
             logger.error(f"Error generando señal: {e}", exc_info=True)
 
         return signals
@@ -853,7 +853,7 @@ class ModularMomentumStrategy(BaseStrategy):
                     "⚠️ Auto-entrenamiento requiere quotes completos - será entrenado en el backtest"
                 )
 
-        except (FileNotFoundError, PermissionError, IOError, OSError) as e:
+        except OSError as e:
             logger.debug(f"Error en auto-entrenamiento: {e}")
 
     def _prepare_sequence_features_for_learning(

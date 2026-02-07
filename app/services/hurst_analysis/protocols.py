@@ -1,5 +1,5 @@
-"""
-Protocol interfaces for Hurst Analysis components.
+# pylint: disable=unsupported-binary-operation
+"""Protocol interfaces for Hurst Analysis components.
 
 This module defines all Protocol interfaces used throughout the hurst_analysis module.
 Following the Interface Segregation Principle (ISP), each protocol is focused and minimal.
@@ -9,6 +9,8 @@ abstractions rather than concrete implementations.
 All protocols use structural subtyping (duck typing) - any class implementing
 the required methods automatically satisfies the protocol.
 """
+
+from __future__ import annotations
 
 from datetime import datetime
 from typing import TYPE_CHECKING, Protocol

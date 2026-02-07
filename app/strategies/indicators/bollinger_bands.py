@@ -343,7 +343,7 @@ class BollingerBandsIndicator:
                 return False
 
             # Check if current bandwidth is below recent minimum
-            bb_data["bandwidth"].iloc[-lookback:].dropna()
+            recent_bandwidth = bb_data["bandwidth"].iloc[-lookback:].dropna()
             min_bandwidth = recent_bandwidth.min()
 
             # Squeeze if current bandwidth is at or near recent lows

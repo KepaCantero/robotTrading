@@ -41,7 +41,7 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.core.exceptions import DatabaseError
+from app.core.exceptions import AlgoTradingDatabaseError as DatabaseError
 from app.database import Base
 from app.database.models import (
     Asset,

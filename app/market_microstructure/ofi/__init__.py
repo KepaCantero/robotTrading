@@ -24,6 +24,7 @@ Example Usage:
     >>> prediction = predictor.predict_direction(ofi, historical_ofi, historical_returns)
 """
 
+# pylint: disable=import-error
 from app.market_microstructure.ofi.models import (
     CumulativeOFI,
     OFIConfig,

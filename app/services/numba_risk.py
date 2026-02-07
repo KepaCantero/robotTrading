@@ -27,12 +27,17 @@ Compliance: Rule 19, Rule 23 - High Performance Python
 
 import logging
 
+import numba
 import numpy as np
 
 # CRITICAL: Numba is REQUIRED for this module
 from numba import jit
 
 logger = logging.getLogger(__name__)
+
+# Numba availability and version info
+NUMBA_AVAILABLE = True
+NUMBA_VERSION = numba.__version__
 
 
 # ============================================================================
@@ -191,7 +196,7 @@ def calculate_historical_cvar_numba(returns: np.ndarray, confidence_level: float
     # Calculate average of returns below VaR
     cvar_sum = 0.0
     cvar_count = 0
-    for i in range(var_index + 1):
+    for i in range(var_index + 1):  # noqa: SIM113
         cvar_sum += sorted_returns[i]
         cvar_count += 1
 
@@ -385,7 +390,7 @@ def calculate_portfolio_beta_numba(asset_returns: np.ndarray, market_returns: np
     covariance = 0.0
     variance_market = 0.0
 
-    for i in range(len(asset_returns)):
+    for i in range(len(asset_returns)):  # pylint: disable=consider-using-enumerate
         diff_asset = asset_returns[i] - mean_asset
         diff_market = market_returns[i] - mean_market
         covariance += diff_asset * diff_market

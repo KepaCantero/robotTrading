@@ -59,20 +59,16 @@ class SymbolMappingError(Exception):
     """Base exception for symbol mapping errors"""
 
 
-
 class AmbiguousSymbolError(SymbolMappingError):
     """Raised when a symbol could map to multiple internal symbols"""
-
 
 
 class UnknownSymbolError(SymbolMappingError):
     """Raised when a broker symbol cannot be mapped"""
 
 
-
 class ValidationError(SymbolMappingError):
     """Raised when symbol validation fails"""
-
 
 
 @dataclass
@@ -649,10 +645,10 @@ class SymbolMapper:
             )
             return broker_symbol
 
-        except ValidationError:
+        except ValidationError:  # pylint: disable=try-except-raise
             # Re-raise ValidationError as-is for test validation
             raise
-        except (ConnectionError, TimeoutError, ValueError) as e:
+        except (ConnectionError, TimeoutError, ValueError) as e:  # pylint: disable=try-except-raise
             logger.error(f"Error mapping {internal_symbol} to {broker_name}: {e}", exc_info=True)
             raise
 
@@ -726,10 +722,10 @@ class SymbolMapper:
             logger.info(f"Mapped {broker_symbol} -> {internal_symbol} ({broker_name})")
             return internal_symbol
 
-        except (UnknownSymbolError, ValidationError):
+        except (UnknownSymbolError, ValidationError):  # pylint: disable=try-except-raise
             # Re-raise UnknownSymbolError and ValidationError as-is
             raise
-        except (ConnectionError, TimeoutError, ValueError) as e:
+        except (ConnectionError, TimeoutError, ValueError) as e:  # pylint: disable=try-except-raise
             logger.error(f"Error mapping {broker_symbol} from {broker_name}: {e}", exc_info=True)
             raise
 
@@ -819,7 +815,7 @@ class SymbolMapper:
 
             return mapping
 
-        except (ValidationError, SymbolMappingError):
+        except (ValidationError, SymbolMappingError):  # pylint: disable=try-except-raise
             # Re-raise validation and mapping errors as-is
             raise
         except (ConnectionError, TimeoutError, ValueError) as e:
@@ -870,7 +866,7 @@ class SymbolMapper:
             logger.info(f"Found {len(broker_symbols)} broker mappings for {internal_symbol}")
             return broker_symbols
 
-        except ValidationError:
+        except ValidationError:  # pylint: disable=try-except-raise
             # Re-raise validation errors
             raise
         except (ConnectionError, TimeoutError, ValueError) as e:

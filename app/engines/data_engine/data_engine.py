@@ -13,6 +13,7 @@ Proporciona API unificada para:
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -107,6 +108,7 @@ class DataEngine:
         ohlcv_sources = sources_config.get('ohlcv', {})
 
         if 'ibkr' in ohlcv_sources:
+            # pylint: disable=abstract-class-instantiated
             self.sources['ibkr'] = IBKRSource(ohlcv_sources['ibkr'])
 
         if 'binance' in ohlcv_sources:

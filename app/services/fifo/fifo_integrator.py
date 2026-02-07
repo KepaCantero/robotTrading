@@ -19,6 +19,7 @@ Author: Claude (FIFO Database Integration - Phase 2.1)
 Date: 2026-01-25
 """
 
+import asyncio
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -151,7 +152,7 @@ class FIFOIntegrator:
 
             self.logger.info("FIFO integrator initialized successfully")
 
-        except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
+        except (ConnectionError, TimeoutError, OSError, ValueError) as e:
             self.logger.error(f"Error initializing FIFO integrator: {e}")
             raise
 

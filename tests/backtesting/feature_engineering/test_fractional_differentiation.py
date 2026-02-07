@@ -410,7 +410,7 @@ class TestStatisticalProperties:
         try:
             adf_orig = adfuller(sample_series.dropna(), maxlag=1)
             p_orig = adf_orig[1]
-        except:
+        except Exception:
             p_orig = 1.0
 
         # Test fractionally differenced series
@@ -418,7 +418,7 @@ class TestStatisticalProperties:
         try:
             adf_diff = adfuller(diff_series.dropna(), maxlag=1)
             p_diff = adf_diff[1]
-        except:
+        except Exception:
             p_diff = 1.0
 
         # Fractional diff should generally improve stationarity (lower p-value)

@@ -14,13 +14,7 @@ from decimal import Decimal
 import pytest
 import pytest_asyncio
 
-from app.services.task_queue import (
-    PersistentTaskQueue,
-    Task,
-    TaskPriority,
-    TaskStatus,
-    create_task,
-)
+from app.services.task_queue import PersistentTaskQueue, Task, TaskPriority, TaskStatus, create_task
 
 
 @pytest.fixture

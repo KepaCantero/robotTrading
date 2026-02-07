@@ -20,7 +20,7 @@ Modules:
 from .crypto_indicators import CryptoIndicators
 from .crypto_momentum_strategy import CryptoMomentumStrategy
 from .crypto_portfolio import CryptoPortfolioConstructor
-from .crypto_screener import CryptoAsset, CryptoScreener
+from .crypto_screener import CryptoScreener
 from .models import (
     CryptoAsset,
     CryptoMomentumConfig,

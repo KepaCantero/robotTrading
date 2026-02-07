@@ -15,6 +15,7 @@ Detectores implementados:
 - MMD (Maximum Mean Discrepancy): Compara en RKHS
 """
 
+import logging
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -25,6 +26,8 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 import yaml
 from scipy.stats import ks_2samp
+
+logger = logging.getLogger(__name__)
 
 # ============================================================================
 # Configuration Loading

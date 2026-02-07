@@ -1,0 +1,166 @@
+# Ralph Orchestrator - TRADING CRITICAL GAPS AUDIT
+# Sistema: Auditoría y corrección de GAPs P0/P1 en trading & risk management
+
+event_loop:
+  prompt_file: ".ralph/trading_critical_gaps_task.md"
+  completion_promise: "TRADING_CRITICAL_GAPS_COMPLETE"
+  max_iterations: 100
+  max_runtime_seconds: 86400  # 24 horas
+  checkpoint_interval: 3
+  starting_event: "gap_audit.start"
+
+cli:
+  backend: "claude"
+
+core:
+  specs_dir: "./specs/"
+
+hats:
+  critical_auditor:
+    name: "Critical GAPs Auditor"
+    description: "Auditoría y corrección de GAPs P0/P1 en archivos críticos de trading"
+    triggers: ["gap_audit.start", "gap_audit.next_file"]
+    publishes: ["gap_audit.next_file", "gap_audit.complete", "gap_audit.blocked"]
+    default_publishes: "gap_audit.next_file"
+    instructions: |
+      ## CRITICAL GAPS AUDITOR - Trading & Risk Management
+
+      Archivos objetivo (CRÍTICOS para producción):
+      1. app/services/live_trading/order_manager.py (408 líneas)
+      2. app/strategies/execution_engine.py (309 líneas)
+      3. app/services/live_trading/trading_bridge_orchestrator.py (408 líneas)
+
+      ### Por cada archivo:
+
+      1. **Leer requirements.md actual:**
+      ```bash
+      cat .requirements/app/path/to/file.py.requirements.md
+      ```
+
+      2. **Ejecutar validación COMPLETA:**
+      ```bash
+      scripts/validate_file_complete.sh <archivo>
+      # Devuelve JSON con success: true/false
+      ```
+
+      3. **Si hay errores** (failed > 0):
+      a. Intentar auto-fix (formateo):
+      ```bash
+      black <archivo>
+      isort <archivo>
+      ruff check <archivo> --fix
+      ```
+      b. Re-validar
+      c. Si aún hay errores → ARREGLAR MANUALMENTE según GAPs listados en prompt
+
+      4. **SOLO cuando success: true** (TODOS los checks pasan):
+      - Actualizar `.requirements.md` con GAPs encontrados y estado
+      - Marcar en checkpoint como FIXED
+      - NO marcar nunca FIXED si hay cualquier error
+
+      ### GAPs P0/P1 a buscar (de BASE_RULES.md):
+
+      **TRADING-SPECIFIC (P0):**
+      - TRD-002: Risk validation - Validate orders BEFORE execution
+      - TRD-003: Position limits - Enforce max position size
+      - TRD-004: Audit trail - Log all trade decisions
+      - EXE-001: Order validation - Validate order parameters
+
+      **ASYNC PATTERNS (P0):**
+      - ASYNC-004: No blocking in async - No `time.sleep()` in async functions
+
+      **SOLID & PATTERNS (P0):**
+      - SOL-005: Dependency Inversion - Depend on abstractions (Protocol/ABC)
+      - DP-004: Dependency injection - All services
+
+      **SECURITY (P0):**
+      - SEC-005: Audit logging - Log all trading operations
+
+      ### Formato de checkpoint:
+      ```json
+      {
+        "files": {
+          "app/path/file.py": {
+            "status": "FIXED",
+            "validated_at": "2026-02-07T...",
+            "checks": {
+              "black": "passed",
+              "isort": "passed",
+              "ruff": "passed",
+              "flake8": "passed",
+              "pylint": "passed",
+              "mypy": "passed",
+              "bandit": "passed",
+              "radon": "passed"
+            },
+            "gaps_fixed": ["TRD-002", "ASYNC-004", "SEC-005"]
+          }
+        }
+      }
+      ```
+
+      ### REGLAS DE ORO:
+      - ❌ NO marques FIXED si hay cualquier error en CUALQUIER herramienta
+      - ❌ NO confíes en tu "juicio" - solo confía en las herramientas
+      - ❌ NO inventes información del código
+      - ✅ SOLO marca FIXED si validate_file_complete.sh devuelve success: true
+      - ✅ ACTUALIZA el requirements.md con GAPs encontrados
+
+      ### Event Format
+      Archivo completado:
+      ```
+      ralph emit "gap_audit.next_file" "file=<path>, gaps_fixed=<n>"
+      ```
+
+      Todos archivos completados (3 archivos con success: true):
+      ```
+      ralph emit "gap_audit.complete" "total=3, fixed=<n>"
+      ```
+
+      Archivo bloqueado (errores que no se pueden arreglar):
+      ```
+      ralph emit "gap_audit.blocked" "file=<path>, errors=<cantidad>"
+      ```
+
+  code_reviewer:
+    name: "Code Reviewer"
+    description: "Revisión final de cambios"
+    triggers: ["gap_audit.complete"]
+    publishes: ["gap_audit.final_summary"]
+    instructions: |
+      ## CODE REVIEWER - Verificación final
+
+      Ejecutar revisión FINAL de los 3 archivos:
+
+      ```bash
+      # 1. Verificar que TODOS los archivos validan
+      for file in app/services/live_trading/order_manager.py app/strategies/execution_engine.py app/services/live_trading/trading_bridge_orchestrator.py; do
+          scripts/validate_file_complete.sh "$file" | jq '.summary.success'
+      done
+      # Debe retornar "true" para TODOS
+
+      # 2. Verificar que requirements.md están actualizados
+      grep -l "GAPs Fixed" .requirements/app/services/live_trading/order_manager.py.requirements.md
+      grep -l "GAPs Fixed" .requirements/app/strategies/execution_engine.py.requirements.md
+      grep -l "GAPs Fixed" .requirements/app/services/live_trading/trading_bridge_orchestrator.py.requirements.md
+
+      Si TODO está limpio:
+      ```
+      ralph emit "gap_audit.final_summary" "all_fixed"
+      Output: **TRADING_CRITICAL_GAPS_COMPLETE**
+      ```
+
+      Si hay errores:
+      ```
+      ralph emit "gap_audit.failed" "found_errors=<cantidad>"
+      ```
+
+# Task configuration
+tasks:
+  enabled: true
+
+# Memory configuration
+memories:
+  enabled: true
+  inject: auto
+  budget: 3000

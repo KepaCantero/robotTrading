@@ -1,0 +1,53 @@
+acceptance_criteria:
+  max_drawdown: -0.3
+  min_return: 0.01
+  min_sharpe: 0.5
+backtest_period:
+  end_date: '2023-03-31'
+  start_date: '2023-01-01'
+capital_tiers:
+  alto: 500000
+  bajo: 50000
+  medio: 150000
+database:
+  url: sqlite:///results/quick_profile_test.db
+investment_horizons:
+- 12
+objective_parameters:
+  balanced_growth:
+    primary_metric: sharpe_ratio
+  capital_preservation:
+    primary_metric: max_drawdown
+  maximizar_capital:
+    primary_metric: sharpe_ratio
+optimization:
+  compare_baseline_vs_opt: false
+  enable_baseline: true
+  enable_optimization: false
+  n_trials: 10
+  timeout: null
+output_dir: results/quick_profile_comparison
+risk_parameters:
+  alto:
+    max_position_pct: 0.2
+    stop_loss_pct: 0.05
+    take_profit_pct: 0.2
+  bajo:
+    max_position_pct: 0.05
+    stop_loss_pct: 0.02
+    take_profit_pct: 0.08
+  medio:
+    max_position_pct: 0.1
+    stop_loss_pct: 0.03
+    take_profit_pct: 0.12
+symbols:
+- AAPL
+- MSFT
+- GOOGL
+validation:
+  monte_carlo:
+    enabled: false
+  out_of_sample:
+    enabled: false
+  walk_forward:
+    enabled: false

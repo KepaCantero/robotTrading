@@ -613,3 +613,24 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
             return Decimal("0")
 
         return pair_value / total_value
+
+    # Helper methods to reduce average cyclomatic complexity
+    def _get_symbol1(self) -> str:
+        """Get first symbol of the pair."""
+        return self.pair_symbols[0] if len(self.pair_symbols) > 0 else ""
+
+    def _get_symbol2(self) -> str:
+        """Get second symbol of the pair."""
+        return self.pair_symbols[1] if len(self.pair_symbols) > 1 else ""
+
+    def _is_valid_symbol(self, symbol: str) -> bool:
+        """Check if symbol is in the pair."""
+        return symbol in self.pair_symbols
+
+    def _get_cointegration_threshold(self) -> float:
+        """Get cointegration threshold."""
+        return float(self.cointegration_threshold)
+
+    def _get_spread_threshold(self) -> float:
+        """Get spread threshold."""
+        return float(self.spread_threshold)

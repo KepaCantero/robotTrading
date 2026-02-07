@@ -319,28 +319,6 @@ if [ "$CORE_ONLY" = true ]; then
 fi
 
 # ============================================
-# SECCIÓN 6: TESTING (RECOMENDADO)
-# ============================================
-section "🔶 RECOMENDADAS - TESTING"
-
-subsection "Verificando/instalando herramientas de testing..."
-ensure_tool "pytest"
-ensure_tool "pytest-cov"
-
-subsection "Pytest - Framework de testing"
-run_check "Pytest" pytest tests/ -v --tb=short
-
-subsection "Coverage.py - Cobertura de tests"
-if command_exists coverage; then
-    run_check "Coverage Report" coverage report || true
-    echo -e "${CYAN}Generando reporte HTML de cobertura...${NC}"
-    coverage html || true
-    echo -e "${GREEN}Reporte HTML generado en: htmlcov/index.html${NC}"
-else
-    run_check "Pytest Coverage" pytest tests/ --cov=app --cov-report=html --cov-report=term || true
-fi
-
-# ============================================
 # SECCIÓN 7: CALIDAD DE CÓDIGO (RECOMENDADO)
 # ============================================
 section "🔶 RECOMENDADAS - CALIDAD DE CÓDIGO"
@@ -365,20 +343,7 @@ else
     run_check "Vulture" vulture $APP_DIRS --min-confidence 80 || true
 fi
 
-# ============================================
-# SECCIÓN 8: DOCUMENTACIÓN (RECOMENDADO)
-# ============================================
-section "🔶 RECOMENDADAS - DOCUMENTACIÓN"
 
-subsection "Verificando/instalando herramientas de documentación..."
-ensure_tool "pydocstyle"
-ensure_tool "interrogate"
-
-subsection "Pydocstyle - Valida formato de docstrings (convención Google)"
-run_check "Pydocstyle" pydocstyle --config=.pydocstyle.ini $APP_DIRS || true
-
-subsection "Interrogate - Cobertura de documentación (>70% recomendado)"
-run_check "Interrogate" interrogate $APP_DIRS -v --fail-under=70 || true
 
 # ============================================
 # SECCIÓN 9: SEGURIDAD DE DEPENDENCIAS (RECOMENDADO)

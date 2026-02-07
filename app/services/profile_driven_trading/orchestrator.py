@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+# pylint: disable=unsupported-binary-operation  # For Python 3.10+ union syntax
 """
 Profile-Driven Trading Orchestrator - Main implementation.
 
@@ -9,7 +11,7 @@ import asyncio
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple  # noqa: F401
 
 import pandas as pd
 

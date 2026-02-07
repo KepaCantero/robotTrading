@@ -12,12 +12,8 @@ SOLID Principles:
 import logging
 from typing import List
 
-
 from app.models.momentum import MomentumAnalysis, MomentumSignal, TechnicalIndicators, Timeframe
-from app.services.momentum.protocols import (
-    IndicatorCalculator,
-    PriceDataProvider,
-)
+from app.services.momentum.protocols import IndicatorCalculator, PriceDataProvider
 
 logger = logging.getLogger(__name__)
 

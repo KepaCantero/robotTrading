@@ -72,13 +72,13 @@ class PortfolioServiceV2:
             Portfolio if found, None otherwise
         """
         try:
-            return await self._repository.get(portfolio_id)
+            return await self._repository.get(portfolio_id)  # type: ignore[attr-defined]
         except (ValueError, KeyError, AttributeError) as e:
             # Log error with stack trace but don't crash
             logger.error(
-                "Error getting portfolio",
-                portfolio_id=portfolio_id,
-                error=str(e),
+                "Error getting portfolio: %s",
+                e,
+                extra={"portfolio_id": portfolio_id},
                 exc_info=True,  # Includes stack trace
             )
             return None
@@ -118,7 +118,7 @@ class PortfolioServiceV2:
             currency=currency,
         )
 
-        await self._repository.add(portfolio)
+        await self._repository.add(portfolio)  # type: ignore[attr-defined]
         return portfolio
 
     async def update_portfolio_weights(
@@ -141,8 +141,8 @@ class PortfolioServiceV2:
             return False
 
         # Update weights through portfolio domain logic
-        portfolio.rebalance_weights(new_weights)
-        await self._repository.update(portfolio)
+        portfolio.rebalance_weights(new_weights)  # type: ignore[attr-defined]
+        await self._repository.update(portfolio)  # type: ignore[attr-defined]
         return True
 
     def get_dependency_summary(self) -> dict[str, str]:
@@ -155,7 +155,7 @@ class PortfolioServiceV2:
         return {
             "repository": type(self._repository).__name__,
             "factory": type(self._factory).__name__,
-            "has_container": self._container is not None,
+            "has_container": str(self._container is not None),
         }
 
 

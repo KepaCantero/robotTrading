@@ -34,11 +34,7 @@ from app.strategies.base import BaseStrategy
 from .crypto_indicators import CryptoIndicators
 from .crypto_portfolio import CryptoPortfolioConstructor
 from .crypto_screener import CryptoAsset, CryptoScreener
-from .models import (
-    CryptoMomentumConfig,
-    CryptoMomentumScore,
-    CryptoPortfolio,
-)
+from .models import CryptoMomentumConfig, CryptoMomentumScore, CryptoPortfolio
 
 logger = logging.getLogger(__name__)
 

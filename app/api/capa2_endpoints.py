@@ -465,8 +465,6 @@ async def backtest_status(job_id: str):
             timestamp=datetime.now().isoformat(),
         )
 
-    except HTTPException:
-        raise
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"❌ Error checking backtest status: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -697,8 +695,6 @@ async def workflow_status(workflow_id: str):
             "timestamp": datetime.now().isoformat(),
         }
 
-    except HTTPException:
-        raise
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"❌ Error checking workflow status: {e}")
         raise HTTPException(status_code=500, detail=str(e))

@@ -32,11 +32,7 @@ try:
 except ImportError:
     from typing_extensions import ParamSpec
 
-from .models import (
-    PeriodResult,
-    WalkForwardConfig,
-    WalkForwardResult,
-)
+from .models import PeriodResult, WalkForwardConfig, WalkForwardResult
 
 logger = logging.getLogger(__name__)
 

@@ -3,6 +3,7 @@ Error Handling Middleware for FastAPI
 TASK-4: Sistema de manejo de errores unificado
 """
 
+# pylint: disable=import-error
 import logging
 import time
 import uuid

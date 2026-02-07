@@ -7,14 +7,17 @@ transaction costs, slippage analysis, infrastructure costs, and profitability va
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
 from enum import Enum
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from app.backtesting.models import Trade, TradeStatus
 from app.models.order import OrderType
+
+logger = logging.getLogger(__name__)
 
 
 class CostType(str, Enum):

@@ -34,11 +34,7 @@ from app.backtesting.acceptance_criteria import AcceptanceCriteria, AcceptanceRe
 from app.backtesting.capital_scale_analyzer import CapitalScaleAnalysisReport, CapitalScaleAnalyzer
 from app.backtesting.cost_calculator import CostCalculator
 from app.backtesting.execution_engine import ExecutionType, PessimisticExecutionEngine, Position
-from app.backtesting.models import (
-    BacktestConfig,
-    BacktestResult,
-    TradeStatus,
-)
+from app.backtesting.models import BacktestConfig, BacktestResult, TradeStatus
 from app.backtesting.professional_reporter import ProfessionalReport, ProfessionalReporter
 from app.backtesting.robustness_tester import ParameterSensitivityResult, RobustnessTester
 from app.backtesting.walk_forward_validator import WalkForwardValidator

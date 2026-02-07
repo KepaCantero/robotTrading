@@ -420,9 +420,6 @@ class CovarianceCalculator:
         """
         n_assets = corr_matrix.shape[0]
 
-        # Calculate average correlation
-        mean_corr = np.mean(corr_matrix[np.triu_indices(n_assets, k=1)])
-
         # Simplified shrinkage formula
         # Shrinkage decreases with more observations and more assets
         pi_term = n_assets / n_obs

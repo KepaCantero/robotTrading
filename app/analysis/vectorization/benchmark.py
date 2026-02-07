@@ -8,8 +8,11 @@ found in algorithmic trading systems.
 
 from __future__ import annotations
 
+import logging
 import time
 from typing import Any, Callable
+
+logger = logging.getLogger(__name__)
 
 import numpy as np
 import pandas as pd
@@ -81,7 +84,7 @@ class VectorizationBenchmark:
             times.append(end - start)
 
         # Return average time
-        return np.mean(times)
+        return float(np.mean(times))
 
     def benchmark_sum(
         self,
@@ -106,8 +109,8 @@ class VectorizationBenchmark:
         # Non-vectorized implementation
         def sum_non_vectorized() -> float:
             total = 0.0
-            for i in range(len(data)):
-                total += data[i]
+            for _, value in enumerate(data):
+                total += value
             return total
 
         # Vectorized implementation
@@ -345,7 +348,7 @@ class VectorizationBenchmark:
         # Non-vectorized implementation
         def elementwise_non_vectorized() -> np.ndarray:
             result = np.zeros_like(arr1)
-            for i in range(len(arr1)):
+            for i, _ in enumerate(arr1):
                 result[i] = arr1[i] * 2 + arr2[i]
             return result
 

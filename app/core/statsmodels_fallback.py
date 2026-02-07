@@ -118,15 +118,16 @@ def adfuller(
     # Simple OLS regression
     X = np.column_stack([y_lag, np.ones(len(y_lag))])
 
-    try:
-        # Add lagged differences for augmented part
+    # Add lagged differences for augmented part
+    # Suppress exceptions during lag calculation
+    import contextlib
+
+    with contextlib.suppress(Exception):
         for lag in range(1, min(maxlag + 1, len(y) // 3)):
             if len(y) > lag + 1:
                 lag_diff = np.diff(x, lag)[:-1]
                 if len(lag_diff) == len(y):
                     X = np.column_stack([X, lag_diff])
-    except Exception:
-        pass
 
     # OLS regression: y = X * beta + epsilon
     try:
@@ -983,11 +984,11 @@ def grangercausalitytests(x, maxlag, addconst=True, verbose=True):
         for i in range(lag, len(x)):
             row = []
             # Lags of dependent variable
-            for l in range(1, lag + 1):
-                row.append(y[i - l])
+            for lag_idx in range(1, lag + 1):
+                row.append(y[i - lag_idx])
             # Lags of independent variable
-            for l in range(lag):
-                row.append(x_var[i - l - 1])
+            for lag_idx in range(lag):
+                row.append(x_var[i - lag_idx - 1])
             data.append(row)
             target.append(y[i])
 

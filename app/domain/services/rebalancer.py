@@ -94,7 +94,7 @@ class Rebalancer:
         Returns:
             Dictionary of symbol -> drift (positive = overweight, negative = underweight)
         """
-        drift = {}
+        drift: dict[str, Decimal] = {}
         total_value = portfolio.get_total_value().amount
 
         if total_value == 0:

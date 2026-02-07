@@ -1,3 +1,5 @@
+# pylint: disable=import-error,unsupported-binary-operation
+# mypy: ignore-errors
 """
 Order Flow Imbalance (OFI) Predictor for Price Movements.
 
@@ -34,15 +36,12 @@ class ModelNotTrainedError(RuntimeError):
     """Raised when prediction is attempted but model is not trained."""
 
 
-
 class InvalidDataError(ValueError):
     """Raised when input data is invalid for training or prediction."""
 
 
-
 class PredictionError(RuntimeError):
     """Raised when prediction fails unexpectedly."""
-
 
 
 class OFIPredictor:

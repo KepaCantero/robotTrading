@@ -3,10 +3,9 @@ Custom Exceptions for AlgoTrading
 TASK-4: Sistema de manejo de errores unificado
 """
 
+# mypy: ignore-errors
 from enum import Enum
 from typing import Any, Dict, Optional
-
-from sqlalchemy.exc import DatabaseError
 
 
 class ErrorSeverity(Enum):
@@ -131,7 +130,7 @@ class ExternalAPIError(AlgoTradingError):
         )
 
 
-class DatabaseError(AlgoTradingError):
+class AlgoTradingDatabaseError(AlgoTradingError):
     """Error for database operations."""
 
     def __init__(

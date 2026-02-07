@@ -9,6 +9,7 @@ Paper: López de Prado, M. (2016). "Building Diversified Portfolios
        that Outperform Out of Sample"
 """
 
+# mypy: ignore-errors
 from __future__ import annotations
 
 import logging

@@ -11,6 +11,8 @@ for Hurst exponent analysis. It follows SOLID principles:
 - Dependency Inversion: Depends on abstractions, not concrete implementations
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 

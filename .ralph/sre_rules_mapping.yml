@@ -1,0 +1,62 @@
+# SRE Rules Mapping - Smart Classification
+# Site Reliability Engineering rules for production code
+
+# Universal SRE rules - Apply to ALL production files
+sre_universal:
+  - "20-sre-site-reliability-engineering" # Core SRE principles
+
+# SRE rules by file type/category
+# Note: Currently only have universal SRE rules
+# Categories are defined for pattern matching and future expansion
+sre_rule_categories:
+  # API / Web services
+  api: []
+
+  # Background workers / tasks
+  workers: []
+
+  # Database operations
+  database: []
+
+  # External integrations
+  external: []
+
+  # Critical paths (execution, trading)
+  critical: []
+
+# File pattern mappings
+pattern_mappings:
+  # API endpoints
+  api:
+    - "api"
+    - "endpoint"
+    - "router"
+    - "handler"
+
+  # Workers
+  workers:
+    - "worker"
+    - "task"
+    - "job"
+    - "cron"
+
+  # Database
+  database:
+    - "database"
+    - "db"
+    - "repository"
+    - "dao"
+
+  # External services
+  external:
+    - "client"
+    - "http"
+    - "websocket"
+    - "integration"
+
+  # Critical trading paths
+  critical:
+    - "execution"
+    - "trading"
+    - "order"
+    - "portfolio"

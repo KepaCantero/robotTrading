@@ -76,7 +76,7 @@ class MetricsCalculator:
         self.risk_free_rate = risk_free_rate
 
         # Initialize López de Prado metrics components
-        self._sharpe_combiner: Optional[SharpeRatioCombiner] = None
+        self._sharpe_combiner: Optional[SharpeRatioCombinator] = None
         self._stability_validator: Optional[PortfolioStabilityValidator] = None
         self._turnover_calculator: Optional[TurnoverAdjustedCalculator] = None
         self._concentration_analyzer: Optional[ConcentrationAnalyzer] = None

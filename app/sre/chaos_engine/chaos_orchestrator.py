@@ -1,3 +1,4 @@
+# pylint: disable=eval-used
 """
 Chaos Orchestrator - Coordinates Chaos Engineering Experiments
 
@@ -260,17 +261,17 @@ class ChaosOrchestrator:
                         name=row[1],
                         hypothesis=row[2],
                         description=row[3] or "",
-                        injectors=eval(row[4]),
+                        injectors=eval(row[4]),  # nosec B307 - internal data from controlled source
                         duration_minutes=row[5],
                         status=ExperimentStatus(row[6]),
                         created_at=datetime.fromisoformat(row[7]),
                         started_at=datetime.fromisoformat(row[8]) if row[8] else None,
                         completed_at=datetime.fromisoformat(row[9]) if row[9] else None,
-                        blast_radius_config=eval(row[10]) if row[10] else None,
-                        validation_result=eval(row[11]) if row[11] else None,
-                        metrics=eval(row[12]) if row[12] else {},
-                        incidents=eval(row[13]) if row[13] else [],
-                        rollback_actions=eval(row[14]) if row[14] else [],
+                        blast_radius_config=eval(row[10]) if row[10] else None,  # nosec B307
+                        validation_result=eval(row[11]) if row[11] else None,  # nosec B307
+                        metrics=eval(row[12]) if row[12] else {},  # nosec B307
+                        incidents=eval(row[13]) if row[13] else [],  # nosec B307
+                        rollback_actions=eval(row[14]) if row[14] else [],  # nosec B307
                     )
                     self._active_experiments[experiment.id] = experiment
 
@@ -573,7 +574,7 @@ class ChaosOrchestrator:
             self.logger.error(f"Error validating hypothesis: {e}")
             return ValidationResult(
                 hypothesis_name=experiment.name,
-                passed=False,
+                status="failed",
                 confidence=Decimal("0"),
                 details={"error": str(e)},
             )

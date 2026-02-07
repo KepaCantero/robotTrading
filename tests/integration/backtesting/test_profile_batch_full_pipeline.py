@@ -33,20 +33,16 @@ import yaml
 from sqlalchemy import inspect
 
 from app.backtesting.profile_batch_backtester import (
-    BaselineOptimizationComparison,
     ProfileBatchBacktester,
-    ProfileResult,
-    ProfileResultDB,
     create_profile_batch_backtester,
 )
-from app.core.models.input_profile import (
-    InputProfile,
-    ObjectivoInversion,
-    RiskTolerance,
+from app.backtesting.services.models import (
+    BaselineOptimizationComparison,
+    ProfileResult,
+    ProfileResultDB,
 )
-from app.services.profile_driven_trading.profile_strategy_mapper import (
-    StrategyMapping,
-)
+from app.core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
+from app.services.profile_driven_trading.profile_strategy_mapper import StrategyMapping
 
 # Configure logging
 logging.basicConfig(

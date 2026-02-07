@@ -15,10 +15,7 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from app.infrastructure.health import (
-    DatabaseHealthCheckerFactory,
-    DatabaseHealthCheckerProtocol,
-)
+from app.infrastructure.health import DatabaseHealthCheckerFactory, DatabaseHealthCheckerProtocol
 
 logger = logging.getLogger(__name__)
 

@@ -11,6 +11,7 @@ SEC-004: Rate limiting to prevent abuse
 SEC-005: Per-IP and per-user rate limiting
 """
 
+# pylint: disable=import-error
 import asyncio
 import time
 from collections import defaultdict

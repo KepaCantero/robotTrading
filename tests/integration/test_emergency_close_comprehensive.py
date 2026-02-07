@@ -19,10 +19,7 @@ from typing import Any, Dict, List
 
 import pytest
 
-from app.services.emergency_handler.emergency_closer import (
-    EmergencyCloser,
-    EmergencyTrigger,
-)
+from app.services.emergency_handler.emergency_closer import EmergencyCloser, EmergencyTrigger
 
 
 class MockBroker:

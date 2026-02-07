@@ -314,10 +314,10 @@ class BaseLearningEngine(ABC):
             # SECURITY: One-time migration from pickle to joblib
             # This is the only place where we still use pickle.load, and it's
             # only for migrating existing trusted model files to the secure format
-            import pickle  # noqa: S403 - Only for migration of trusted files
+            import pickle  # nosec - B403: Only for migration of trusted files
 
             with open(pkl_path, 'rb') as f:
-                saved_data = pickle.load(f)  # noqa: S301 - Trusted migration only
+                saved_data = pickle.load(f)  # nosec - B301: Trusted migration only
 
             # Save in new secure format
             joblib_path = pkl_path.replace('.pkl', '.joblib')

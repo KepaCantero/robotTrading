@@ -474,7 +474,6 @@ class NestedClusteredOptimization:
         cluster_returns = []
 
         for cluster_id in unique_clusters:
-            cluster_mask = cluster_labels == cluster_id
             cluster_assets_mask = cluster_labels == cluster_id
 
             if not np.any(cluster_assets_mask):

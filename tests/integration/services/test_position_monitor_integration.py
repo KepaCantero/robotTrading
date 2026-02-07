@@ -12,11 +12,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.services.position_monitor import (
-    MonitoredPosition,
-    PositionMonitor,
-    PositionMonitorConfig,
-)
+from app.services.position_monitor import MonitoredPosition, PositionMonitor, PositionMonitorConfig
 
 
 class MockBroker:

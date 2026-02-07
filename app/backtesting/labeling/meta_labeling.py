@@ -37,20 +37,16 @@ class MetaLabelingError(Exception):
     """Base exception for meta-labeling errors."""
 
 
-
 class ModelNotFittedError(MetaLabelingError):
     """Raised when attempting to predict before fitting the model."""
-
 
 
 class DataValidationError(MetaLabelingError):
     """Raised when input data validation fails."""
 
 
-
 class BetSizingValidationError(MetaLabelingError):
     """Raised when bet sizing validation fails (TRD-001)."""
-
 
 
 @dataclass

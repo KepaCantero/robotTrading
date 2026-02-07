@@ -77,7 +77,6 @@ class MutexError(Exception):
     """
 
 
-
 class TrainingError(Exception):
     """
     Error raised when training fails.
@@ -89,12 +88,10 @@ class TrainingError(Exception):
     """
 
 
-
 class SubprocessTimeoutError(TrainingError):
     """
     Error raised when subprocess training times out.
     """
-
 
 
 class BacktestResultError(Exception):
@@ -383,8 +380,15 @@ def _train_in_subprocess(
             )
             return False
 
-    except SubprocessTimeoutError:
-        # Re-raise timeout errors
+    except SubprocessTimeoutError as e:
+        # Log timeout before re-raising
+        logger.warning(
+            "Subprocess training timed out",
+            extra={
+                'engine_type': engine_type,
+                'timeout_seconds': e.timeout if hasattr(e, 'timeout') else 'unknown',
+            },
+        )
         raise
     except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
         logger.error(

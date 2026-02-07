@@ -128,7 +128,7 @@ class DividendData(BaseModel):
             if self.dividend_coverage_ratio >= 2.0:
                 return DividendSafety.VERY_SAFE
             elif self.dividend_coverage_ratio >= 1.5:
-                return DividendSafe.SAFE
+                return DividendSafety.SAFE
             elif self.dividend_coverage_ratio >= 1.0:
                 return DividendSafety.MODERATE
             else:
@@ -205,7 +205,6 @@ class ExDividendDate(BaseModel):
         DividendFrequency.QUARTERLY, description="Frecuencia del dividendo"
     )
 
-    @property
     def days_until_ex_dividend(self, today: Optional[date] = None) -> int:
         """
         Calcular días hasta la fecha ex-dividendo.

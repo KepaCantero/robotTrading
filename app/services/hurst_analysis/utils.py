@@ -1,10 +1,12 @@
-"""
-Utility functions for Hurst Analysis module.
+# pylint: disable=unsupported-binary-operation
+"""Utility functions for Hurst Analysis module.
 
 This module contains helper functions used across the hurst_analysis package.
 Following the Single Responsibility Principle, these utilities are focused
 on specific tasks like data conversion and preparation.
 """
+
+from __future__ import annotations
 
 import logging
 

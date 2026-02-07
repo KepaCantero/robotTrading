@@ -295,7 +295,7 @@ class WebSocketFirstStrategy:
             # Task para procesar mensajes
             asyncio.create_task(self._process_messages())
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"WebSocket connection failed: {e}")
             self._is_connected = False
 
@@ -306,14 +306,16 @@ class WebSocketFirstStrategy:
 
         try:
             async for msg in self._websocket:
-                if msg.type == aiohttp.WSMsgType.TEXT:
+                # aiohttp.WSMsgType.TEXT == 1, aiohttp.WSMsgType.ERROR == 4
+                # Using literal values to avoid TYPE_CHECKING import issues
+                if msg.type == 1:  # WSMsgType.TEXT
                     data = msg.json()
                     await self._handle_message(data)
-                elif msg.type == aiohttp.WSMsgType.ERROR:
+                elif msg.type == 4:  # WSMsgType.ERROR
                     logger.error(f"WebSocket error: {self._websocket.exception()}")
                     break
 
-        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        except OSError as e:
             logger.error(f"Error processing WebSocket messages: {e}")
         finally:
             self._is_connected = False
@@ -337,7 +339,7 @@ class WebSocketFirstStrategy:
                             await callback(symbol, price)
                         else:
                             callback(symbol, price)
-                    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+                    except (asyncio.TimeoutError, OSError) as e:
                         logger.error(f"Error in ticker callback: {e}")
 
     async def stop_websocket(self):
@@ -397,17 +399,14 @@ class AdaptiveRateLimiter:
 
     async def _consider_increase(self):
         """Considerar aumentar rate limit después de período exitoso"""
-        if time.time() - self._last_adjustment > 300:  # 5 minutos
-            if self._success_count > 100:
-                old_rate = self.current_rate
-                self.current_rate = min(self.initial_rate, int(self.current_rate * 1.1))
+        if time.time() - self._last_adjustment > 300 and self._success_count > 100:  # 5 minutos
+            old_rate = self.current_rate
+            self.current_rate = min(self.initial_rate, int(self.current_rate * 1.1))
 
-                logger.info(
-                    f"Stable period. Increasing rate: {old_rate} → {self.current_rate} req/s"
-                )
+            logger.info(f"Stable period. Increasing rate: {old_rate} → {self.current_rate} req/s")
 
-                self._success_count = 0
-                self._last_adjustment = time.time()
+            self._success_count = 0
+            self._last_adjustment = time.time()
 
 
 class RateLimitGovernor:

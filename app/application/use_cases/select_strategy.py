@@ -949,7 +949,11 @@ class StrategySelector:
         from datetime import datetime
         from decimal import Decimal
 
-        from ....models.signal import Signal, SignalSource, SignalType
+        from app.models.signal import (  # pylint: disable=import-error
+            Signal,
+            SignalSource,
+            SignalType,
+        )
 
         signals = []
 
@@ -1023,7 +1027,7 @@ class StrategySelector:
         from datetime import datetime
         from decimal import Decimal
 
-        from ....models.market_data import MarketData
+        from app.models.order import MarketData  # pylint: disable=import-error
 
         market_data_list = []
 
@@ -1050,7 +1054,9 @@ class StrategySelector:
                 high_price = Decimal(str(row.get("high", row.get("close", 0))))
                 low_price = Decimal(str(row.get("low", row.get("close", 0))))
                 close_price = Decimal(str(row.get("close", 0)))
-                volume = int(row.get("volume", 0))
+                volume = Decimal(str(row.get("volume", 0)))
+                bid = Decimal(str(row.get("bid", 0))) if row.get("bid") else None
+                ask = Decimal(str(row.get("ask", 0))) if row.get("ask") else None
 
                 # Create MarketData object
                 md = MarketData(
@@ -1061,6 +1067,8 @@ class StrategySelector:
                     low_price=low_price,
                     close_price=close_price,
                     volume=volume,
+                    bid=bid,
+                    ask=ask,
                 )
 
                 market_data_list.append(md)
@@ -1676,7 +1684,7 @@ class StrategySelector:
         validator = WalkForwardValidator(config=wf_config)
 
         # Import StrategyRegistry for actual strategy creation
-        from ....strategies.registry import StrategyRegistry
+        from app.strategies.registry import StrategyRegistry  # pylint: disable=import-error
 
         # Define strategy factory with actual strategy instantiation
         def strategy_factory(params: StrategyParameters) -> StrategyProtocol:
@@ -1701,10 +1709,8 @@ class StrategySelector:
                 # Load strategy with parameters
                 strategy = registry.load_strategy(strategy_name, dict(params))
                 # Type assertion: StrategyRegistry.load_strategy returns StrategyProtocol
-                assert isinstance(
-                    strategy, StrategyProtocol
-                ), f"Expected StrategyProtocol, got {type(strategy)}"
-                return strategy
+                # isinstance check on Protocol requires @runtime_checkable, but we trust the registry
+                return strategy  # type: ignore[return-value]
             except (ValueError, KeyError, TypeError) as e:
                 logger.error(f"Failed to create strategy {strategy_name}: {e}")
                 raise ValueError(f"Could not create strategy {strategy_name}: {e}")

@@ -44,6 +44,7 @@ Exposes the complete CAPA 2 parametrization pipeline:
 9. ReportingGenerator (T9.1)
 10. DeployDecisionOrchestrator (T10.1)
 """
+# mypy: ignore-errors
 
 # Import all CAPA 2 services
 logger = logging.getLogger(__name__)
@@ -442,8 +443,6 @@ async def backtest_status(job_id: str):
             timestamp=datetime.now().isoformat(),
         )
 
-    except HTTPException:
-        raise
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"❌ Error checking backtest status: {e}")
         raise HTTPException(status_code=DEFAULT_VALUE_500, detail=str(e))
@@ -678,8 +677,6 @@ async def workflow_status(workflow_id: str):
             "timestamp": datetime.now().isoformat(),
         }
 
-    except HTTPException:
-        raise
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"❌ Error checking workflow status: {e}")
         raise HTTPException(status_code=DEFAULT_VALUE_500, detail=str(e))

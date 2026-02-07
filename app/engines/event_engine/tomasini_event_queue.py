@@ -84,7 +84,7 @@ class Event:
     """
 
     priority: int
-    event_id: str = field(compare=False)
+    event_id: str = field(compare=False, default="")
     event_type: EventType = field(compare=False)
     timestamp: datetime = field(compare=False, default_factory=datetime.utcnow)
     order_id: Optional[str] = field(compare=False, default=None)

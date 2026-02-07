@@ -219,15 +219,21 @@ class AwesomeQuantIntegrator:
             return self._calculate_fallback_metrics(returns, benchmark_returns)
 
         try:
+            # Calculate drawdown series for avg_drawdown and underwater metrics
+            dd_series = quantstats.stats.to_drawdown_series(returns)
+            avg_drawdown = float(dd_series[dd_series < 0].mean()) if (dd_series < 0).any() else 0.0
+
             metrics = {
-                "return_pct": float(quantstats.stats.total_return(returns)),
+                "return_pct": float(
+                    quantstats.stats.comp(returns)
+                ),  # Compound return (total return)
                 "cagr": float(quantstats.stats.cagr(returns)),
                 "sharpe": float(quantstats.stats.sharpe(returns)),
                 "sortino": float(quantstats.stats.sortino(returns)),
                 "calmar": float(quantstats.stats.calmar(returns)),
                 "max_drawdown": float(quantstats.stats.max_drawdown(returns)),
-                "avg_drawdown": float(quantstats.stats.avg_drawdown(returns)),
-                "underwater": float(quantstats.stats.underwater(returns).min()),
+                "avg_drawdown": avg_drawdown,
+                "underwater": float(dd_series.min()),
                 "volatility": float(quantstats.stats.volatility(returns)),
                 "var_95": float(quantstats.stats.value_at_risk(returns, 0.95)),
                 "cvar_95": float(quantstats.stats.conditional_value_at_risk(returns, 0.95)),
@@ -243,11 +249,28 @@ class AwesomeQuantIntegrator:
 
             # Benchmark comparison (if provided)
             if benchmark_returns is not None:
-                metrics["beta"] = float(quantstats.stats.beta(returns, benchmark_returns))
-                metrics["alpha"] = float(quantstats.stats.alpha(returns, benchmark_returns))
-                metrics["correlation"] = float(
-                    quantstats.stats.correlation(returns, benchmark_returns)
-                )
+                # Calculate beta and alpha manually (quantstats doesn't have these directly)
+                # Align the series
+                aligned_data = pd.DataFrame(
+                    {"returns": returns, "benchmark": benchmark_returns}
+                ).dropna()
+                if len(aligned_data) > 1:
+                    covariance = aligned_data["returns"].cov(aligned_data["benchmark"])
+                    benchmark_var = aligned_data["benchmark"].var()
+                    metrics["beta"] = (
+                        float(covariance / benchmark_var) if benchmark_var > 0 else 1.0
+                    )
+                    # Alpha = returns - beta * benchmark_returns (annualized)
+                    metrics["alpha"] = float(
+                        (
+                            aligned_data["returns"].mean()
+                            - metrics["beta"] * aligned_data["benchmark"].mean()
+                        )
+                        * TRADING_DAYS
+                    )
+                    metrics["correlation"] = float(
+                        aligned_data["returns"].corr(aligned_data["benchmark"])
+                    )
 
             logger.info(f"Calculated {len(metrics)} quantstats metrics")
             return metrics
@@ -278,29 +301,45 @@ class AwesomeQuantIntegrator:
             return self._calculate_fallback_metrics(returns, benchmark_returns)
 
         try:
+            # Handle empty returns
+            if len(returns) == 0:
+                return self._calculate_fallback_metrics(returns, benchmark_returns)
+
             metrics = {
-                "total_return": float(empyrical.total_return(returns)),
+                "total_return": float(
+                    empyrical.cum_returns_final(returns)
+                ),  # Use cum_returns_final for total return
                 "annual_return": float(empyrical.annual_return(returns)),
                 "cumulative_returns": float(empyrical.cum_returns(returns).iloc[-1]),
                 "volatility": float(empyrical.annual_volatility(returns)),
-                "downside_volatility": float(empyrical.downside_volatility(returns)),
+                "downside_volatility": float(empyrical.downside_risk(returns)),
                 "max_drawdown": float(empyrical.max_drawdown(returns)),
                 "sharpe_ratio": float(empyrical.sharpe_ratio(returns)),
                 "sortino_ratio": float(empyrical.sortino_ratio(returns)),
                 "calmar_ratio": float(empyrical.calmar_ratio(returns)),
                 "omega_ratio": float(empyrical.omega_ratio(returns)),
                 "win_rate": float((returns > 0).sum() / len(returns) if len(returns) > 0 else 0),
-                "var_95": float(np.percentile(returns.astype(float), 5)),
-                "cvar_95": float(
-                    returns[returns <= np.percentile(returns.astype(float), 5)].astype(float).mean()
-                ),
-                "skewness": float(empyrical.skewness(returns)),
-                "kurtosis": float(empyrical.kurtosis(returns)),
+                "var_95": float(empyrical.value_at_risk(returns, 0.95)),
+                "cvar_95": float(empyrical.conditional_value_at_risk(returns, 0.95)),
             }
 
-            # Drawdown analysis
-            drawdowns = empyrical.drawdown(returns)
-            metrics["avg_drawdown"] = float(drawdowns[drawdowns < 0].mean())
+            # Add skew and kurtosis using scipy if available
+            try:
+                from scipy.stats import kurtosis, skew
+
+                metrics["skewness"] = float(skew(returns.dropna()))
+                metrics["kurtosis"] = float(kurtosis(returns.dropna()))
+            except ImportError:
+                metrics["skewness"] = 0.0
+                metrics["kurtosis"] = 0.0
+
+            # Drawdown analysis (calculate manually)
+            cumulative = empyrical.cum_returns(returns)
+            running_max = cumulative.expanding().max()
+            drawdowns = (cumulative - running_max) / running_max
+            metrics["avg_drawdown"] = (
+                float(drawdowns[drawdowns < 0].mean()) if (drawdowns < 0).any() else 0.0
+            )
 
             # Benchmark metrics (if provided)
             if benchmark_returns is not None and len(benchmark_returns) == len(returns):
@@ -511,6 +550,22 @@ class AwesomeQuantIntegrator:
         """
         try:
             metrics = {}
+
+            # Handle empty returns
+            if len(returns) == 0:
+                return {
+                    "total_return": 0.0,
+                    "annual_return": 0.0,
+                    "cumulative_returns": 0.0,
+                    "volatility": 0.0,
+                    "downside_volatility": 0.0,
+                    "max_drawdown": 0.0,
+                    "avg_drawdown": 0.0,
+                    "sharpe_ratio": 0.0,
+                    "sortino_ratio": 0.0,
+                    "calmar_ratio": 0.0,
+                    "omega_ratio": 0.0,
+                }
 
             # Basic return metrics
             metrics["total_return"] = float((1 + returns).prod() - 1)

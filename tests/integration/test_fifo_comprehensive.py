@@ -20,12 +20,7 @@ import pytest
 
 from app.core.database import get_db_transaction
 from app.services.fifo.fifo_integrator import FIFOIntegrator, Position, Trade
-from app.tax.database.fifo_schema import (
-    AssetType,
-    Lot,
-    LotStatus,
-    Transaction,
-)
+from app.tax.database.fifo_schema import AssetType, Lot, LotStatus, Transaction
 
 
 @pytest.mark.asyncio

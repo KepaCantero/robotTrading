@@ -20,13 +20,7 @@ from decimal import Decimal
 from typing import Dict, List, Optional
 
 from .market_impact import ImpactConfig, MarketImpactModel
-from .models import (
-    FillReason,
-    FillResult,
-    MarketSnapshot,
-    Order,
-    OrderSide,
-)
+from .models import FillReason, FillResult, MarketSnapshot, Order, OrderSide
 from .slippage_model import SlippageConfig, SlippageModel
 from .transaction_cost import CostConfig, TransactionCost, TransactionCostCalculator
 

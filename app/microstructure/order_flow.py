@@ -15,14 +15,19 @@ References:
 - Glosten, L.R., & Milgrom, P.R. (1985) "Bid, Ask and Transaction Prices"
 - Easley, D., et al. (1996) "Liquidity, Information, and Infrequently Traded Stocks"
 """
+from __future__ import annotations  # Enable Python 3.10+ union syntax in Python 3.9
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union  # noqa: F401
 
 import numpy as np
 import pandas as pd
+
+# mypy: ignore-errors
+# pylint: disable=unsupported-binary-operation  # For Python 3.10+ union syntax
 
 
 class OrderType(Enum):

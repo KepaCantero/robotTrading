@@ -13,9 +13,7 @@ from app.services.broker_failover import BrokerConfig, BrokerFailoverManager, Br
 
 # Import PaperAdapter directly to avoid import errors from other adapters
 from app.services.live_trading.broker_adapters.paper_adapter import PaperAdapter
-from app.services.live_trading.broker_connector import (
-    OrderSide,
-)
+from app.services.live_trading.broker_connector import OrderSide
 
 
 class TestBrokerFailoverIntegration:

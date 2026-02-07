@@ -16,7 +16,6 @@ from datetime import date, timedelta
 from decimal import Decimal
 from enum import Enum
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -148,7 +147,7 @@ class TaxOptimizer:
         if not country or not isinstance(country, str):
             raise ValueError("country must be a non-empty string")
 
-        logger.info("Configuring tax residence", country=country)
+        logger.info("Configuring tax residence: country=%s", country)
         try:
             jurisdiction = TaxJurisdiction(country.lower())
         except ValueError:
@@ -209,10 +208,10 @@ class TaxOptimizer:
             raise ValueError("tax_lots cannot be empty")
 
         logger.info(
-            "Calculating tax liability",
-            jurisdiction=jurisdiction.value,
-            method=method.value,
-            quantity=str(sold_quantity),
+            "Calculating tax liability: jurisdiction=%s, method=%s, quantity=%s",
+            jurisdiction.value,
+            method.value,
+            str(sold_quantity),
         )
         # Select lots to sell based on method
         lots_to_sell, remaining_lots = self._select_lots(tax_lots, sold_quantity, method)
@@ -282,29 +281,29 @@ class TaxOptimizer:
 
         if method == TaxMethod.FIFO:
             # Sort by acquisition date (oldest first)
-            sorted_lots = sorted(tax_lots, key=lambda l: l.acquisition_date)
+            sorted_lots = sorted(tax_lots, key=lambda lot: lot.acquisition_date)
         elif method == TaxMethod.LIFO:
             # Sort by acquisition date (newest first)
-            sorted_lots = sorted(tax_lots, key=lambda l: l.acquisition_date, reverse=True)
+            sorted_lots = sorted(tax_lots, key=lambda lot: lot.acquisition_date, reverse=True)
         elif method == TaxMethod.HIFO:
             # Sort by acquisition price (highest first - minimize gains)
-            sorted_lots = sorted(tax_lots, key=lambda l: l.acquisition_price, reverse=True)
+            sorted_lots = sorted(tax_lots, key=lambda lot: lot.acquisition_price, reverse=True)
         elif method == TaxMethod.MIN_TAX:
             # Sort by tax impact (long-term losses first)
             sorted_lots = sorted(
                 tax_lots,
-                key=lambda l: (
-                    not l.is_long_term,  # Long-term first
-                    l.realized_pnl,  # Losses first
+                key=lambda lot: (
+                    not lot.is_long_term,  # Long-term first
+                    lot.realized_pnl,  # Losses first
                 ),
             )
         else:  # MAX_TAX
             # Sort to maximize taxes (harvest gains)
             sorted_lots = sorted(
                 tax_lots,
-                key=lambda l: (
-                    l.is_long_term,  # Short-term first
-                    -l.realized_pnl,  # Gains first
+                key=lambda lot: (
+                    lot.is_long_term,  # Short-term first
+                    -lot.realized_pnl,  # Gains first
                 ),
             )
 
@@ -355,7 +354,9 @@ class TaxOptimizer:
                     remaining_lots.append(lot)
         else:
             for lot in sorted_lots:
-                if lot not in lots_to_sell and lot.lot_id not in [l.lot_id for l in lots_to_sell]:
+                if lot not in lots_to_sell and lot.lot_id not in [
+                    sold_lot.lot_id for sold_lot in lots_to_sell
+                ]:
                     remaining_lots.append(lot)
 
         return lots_to_sell, remaining_lots
@@ -364,7 +365,7 @@ class TaxOptimizer:
         self,
         tax_lots: list[TaxLot],
         jurisdiction: TaxJurisdiction = TaxJurisdiction.DEFAULT,
-        min_loss: Decimal = Decimal("1000"),
+        min_loss: Decimal | None = None,
     ) -> list[tuple[TaxLot, Decimal]]:
         """
         Find tax loss harvesting opportunities.
@@ -377,6 +378,9 @@ class TaxOptimizer:
         Returns:
             List of (lot, potential_tax_savings)
         """
+        if min_loss is None:
+            min_loss = Decimal("1000")
+
         opportunities = []
 
         rates = self._tax_rates.get(jurisdiction, self._tax_rates[TaxJurisdiction.DEFAULT])

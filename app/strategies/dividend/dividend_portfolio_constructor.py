@@ -19,7 +19,6 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any, Dict, List
 
-
 from .models import DividendStock, DividendStrategyConfig
 
 logger = logging.getLogger(__name__)
@@ -313,34 +312,6 @@ class DividendPortfolioConstructor:
                 for symbol in adjusted:
                     if symbol_to_sector.get(symbol) == sector:
                         adjusted[symbol] *= reduction_factor
-
-        return adjusted
-
-    def _enforce_position_limits(self, weights: Dict[str, Decimal]) -> Dict[str, Decimal]:
-        """
-        Aplicar límites de peso por posición.
-
-        Args:
-            weights: Pesos actuales
-
-        Returns:
-            Pesos ajustados
-        """
-        max_pos = self.portfolio_config.max_single_weight
-        min_pos = self.portfolio_config.min_single_weight
-
-        adjusted = {}
-        for symbol, weight in weights.items():
-            # Limitar peso máximo - esta es la parte clave
-            if weight > max_pos:
-                adjusted[symbol] = max_pos
-            # Limitar peso mínimo (si es significativo)
-            elif weight < min_pos and weight > 0:
-                # Si está por encima de min_pos, mantener
-                # Si está por debajo, posiblemente eliminar
-                adjusted[symbol] = weight if weight >= min_pos * Decimal("0.5") else Decimal("0")
-            else:
-                adjusted[symbol] = weight
 
         return adjusted
 

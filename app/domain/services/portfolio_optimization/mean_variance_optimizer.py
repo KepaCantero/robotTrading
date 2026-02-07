@@ -21,9 +21,7 @@ from app.domain.services.portfolio_optimization._validation import (
     log_optimization_failure,
     validate_covariance_matrix,
 )
-from app.domain.services.portfolio_optimization.covariance_calculator import (
-    CovarianceResult,
-)
+from app.domain.services.portfolio_optimization.covariance_calculator import CovarianceResult
 
 logger = logging.getLogger(__name__)
 

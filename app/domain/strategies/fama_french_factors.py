@@ -271,8 +271,8 @@ class FamaFrenchModel:
         n_params = len(betas)
 
         # R-squared
-        ss_tot = np.sum((y - np.mean(y)) ** 2)
-        ss_res = np.sum(residuals**2)
+        ss_tot: float = float(np.sum((y - np.mean(y)) ** 2))
+        ss_res: float = float(np.sum(residuals**2))
         r_squared = 1 - (ss_res / ss_tot) if ss_tot > 1e-10 else 0
 
         # Standard errors (simplified)
@@ -350,7 +350,7 @@ class FamaFrenchModel:
 
         # Placeholder: equal weight to top quintile of factor exposure
         n_assets = 50  # Assuming 50 assets
-        weights = {}
+        weights: Dict[str, float] = {}
 
         if long_leg:
             # Long top 20% of assets by factor loading

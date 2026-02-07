@@ -12,7 +12,6 @@ According to Ernest Chan (Algorithmic Trading, Rule 2.2):
 
 import logging
 
-
 from app.services.hurst_analysis.models import MarketRegime
 
 logger = logging.getLogger(__name__)

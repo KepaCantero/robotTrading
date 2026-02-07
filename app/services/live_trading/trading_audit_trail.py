@@ -222,7 +222,13 @@ class AuditPersistence:
             )
             conn.commit()
             return True
-        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
+        except (
+            sqlite3.IntegrityError,
+            sqlite3.OperationalError,
+            sqlite3.DatabaseError,
+            sqlite3.Error,
+            OSError,
+        ) as e:
             logger.error(f"Failed to persist audit event: {e}")
             return False
 
@@ -267,7 +273,13 @@ class AuditPersistence:
 
             cursor = conn.execute(query, params)
             return [dict(row) for row in cursor.fetchall()]
-        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
+        except (
+            sqlite3.IntegrityError,
+            sqlite3.OperationalError,
+            sqlite3.DatabaseError,
+            sqlite3.Error,
+            OSError,
+        ) as e:
             logger.error(f"Failed to get audit events: {e}")
             return []
 
@@ -291,7 +303,13 @@ class AuditPersistence:
 
             cursor = conn.execute(query, params)
             return cursor.fetchone()[0]
-        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
+        except (
+            sqlite3.IntegrityError,
+            sqlite3.OperationalError,
+            sqlite3.DatabaseError,
+            sqlite3.Error,
+            OSError,
+        ) as e:
             logger.error(f"Failed to count audit events: {e}")
             return 0
 
@@ -304,7 +322,13 @@ class AuditPersistence:
                 (limit,),
             )
             return [dict(row) for row in cursor.fetchall()]
-        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
+        except (
+            sqlite3.IntegrityError,
+            sqlite3.OperationalError,
+            sqlite3.DatabaseError,
+            sqlite3.Error,
+            OSError,
+        ) as e:
             logger.error(f"Failed to get non-compliant events: {e}")
             return []
 
@@ -315,7 +339,13 @@ class AuditPersistence:
                 self._local.connection.close()
                 self._local.connection = None
                 logger.debug("AuditPersistence connection closed")
-        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
+        except (
+            sqlite3.IntegrityError,
+            sqlite3.OperationalError,
+            sqlite3.DatabaseError,
+            sqlite3.Error,
+            OSError,
+        ) as e:
             logger.warning(f"Error closing AuditPersistence connection: {e}")
 
 

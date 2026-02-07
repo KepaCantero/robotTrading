@@ -666,8 +666,7 @@ class DeepLearningEngine(BaseLearningEngine):
                 result = result_queue.get()
                 if result['success']:
                     # Cargar modelo desde archivo temporal
-                    if not _ensure_pytorch_imported():
-                        raise ImportError("PyTorch requerido para cargar modelo")
+                    # PyTorch is imported at module level (lines 40-42)
 
                     # Recrear modelo con la misma arquitectura
                     # (necesitamos recrear la estructura del modelo)

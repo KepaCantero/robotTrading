@@ -1,10 +1,12 @@
-"""
-Data models for Hurst Exponent analysis.
+# pylint: disable=unsupported-binary-operation
+"""Data models for Hurst Exponent analysis.
 
 This module contains all data classes and enums used throughout
 the hurst_analysis module. All models are immutable value objects
 following the Single Responsibility Principle.
 """
+
+from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime

@@ -156,10 +156,8 @@ class PairsTrading:
         pairs = []
 
         # Test all possible pairs
-        for i in range(len(symbols)):
-            for j in range(i + 1, len(symbols)):
-                symbol_a = symbols[i]
-                symbol_b = symbols[j]
+        for i, symbol_a in enumerate(symbols):
+            for symbol_b in symbols[i + 1 :]:
                 prices_a = price_data[symbol_a]
                 prices_b = price_data[symbol_b]
 
@@ -452,7 +450,7 @@ class PairsTrading:
             test_statistic=correlation if np.isfinite(correlation) else 0.0,
             p_value=1.0 - correlation if np.isfinite(correlation) else 1.0,  # Rough approximation
             critical_value=0.7,
-            hedge_ratio=hedge_ratio,
+            hedge_ratio=float(hedge_ratio),
             half_life=half_life,
             confidence=max(0.0, correlation) if np.isfinite(correlation) else 0.0,
         )
@@ -664,8 +662,8 @@ class PairsTrading:
             spread=spread,
             z_score=z_score,
             entry_spread=entry_spread,
-            stop_loss_spread=stop_loss,
-            take_profit_spread=take_profit,
+            stop_loss_spread=float(stop_loss),
+            take_profit_spread=float(take_profit),
         )
 
     def update_pair_position(

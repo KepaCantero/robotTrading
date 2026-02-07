@@ -1,13 +1,24 @@
-"""
-CorrelationRegimeDetector - Detección de régimen basada en correlaciones dinámicas.
+"""CorrelationRegimeDetector - Detección de régimen basada en correlaciones dinámicas.
 
 Usa análisis de correlaciones para detectar cambios de régimen.
 """
 
+import logging
 from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
+
+logger = logging.getLogger(__name__)
+
+# Optional sklearn import
+try:
+    from sklearn.decomposition import PCA
+
+    SKLEARN_AVAILABLE = True
+except ImportError:
+    SKLEARN_AVAILABLE = False
+    PCA = None  # type: ignore
 
 
 class CorrelationRegimeDetector:

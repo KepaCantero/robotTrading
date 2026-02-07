@@ -11,10 +11,10 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from app.backtesting.profile_batch_backtester import (
+from app.backtesting.profile_batch_backtester import ProfileBatchBacktester
+from app.backtesting.services.models import (
     BaselineOptimizationComparison,
     OptimizedStrategy,
-    ProfileBatchBacktester,
     ProfileResult,
     ProfileResultDB,
 )
@@ -32,7 +32,7 @@ class TestProfileBatchBacktesterImport:
 
     def test_import_dataclasses(self):
         """Test that dataclasses can be imported."""
-        from app.backtesting.profile_batch_backtester import (
+        from app.backtesting.services.models import (
             BaselineOptimizationComparison,
             OptimizedStrategy,
             ProfileResult,

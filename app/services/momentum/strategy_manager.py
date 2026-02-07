@@ -21,9 +21,7 @@ from app.models.momentum import (
     MomentumType,
     Timeframe,
 )
-from app.services.momentum.protocols import (
-    StorageBackend,
-)
+from app.services.momentum.protocols import StorageBackend
 
 logger = logging.getLogger(__name__)
 

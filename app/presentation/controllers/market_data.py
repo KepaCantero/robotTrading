@@ -4,6 +4,7 @@ Market Data API Endpoints
 This module provides FastAPI endpoints for market data management,
 including quotes, historical data, and feed configuration.
 """
+# mypy: ignore-errors
 
 from __future__ import annotations
 
@@ -202,8 +203,6 @@ async def get_historical_data(
             count=len(historical_data),
             timestamp=datetime.utcnow(),
         )
-    except HTTPException:
-        raise
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(
             status_code=500,
@@ -271,8 +270,6 @@ async def get_feed_config(
             raise HTTPException(
                 status_code=404, detail=f"Feed configuration not found: {config_id}"
             )
-    except HTTPException:
-        raise
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error getting feed configuration: {str(e)}")
 
@@ -290,8 +287,6 @@ async def connect_feed(
             return {"success": True, "message": f"Connected to feed {config_id}"}
         else:
             raise HTTPException(status_code=500, detail=f"Failed to connect to feed {config_id}")
-    except HTTPException:
-        raise
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error connecting to feed: {str(e)}")
 
@@ -311,8 +306,6 @@ async def disconnect_feed(
             raise HTTPException(
                 status_code=500, detail=f"Failed to disconnect from feed {config_id}"
             )
-    except HTTPException:
-        raise
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error disconnecting from feed: {str(e)}")
 
@@ -338,8 +331,6 @@ async def subscribe_to_symbols(
                 status_code=500,
                 detail=f"Failed to subscribe to symbols: {request.symbols}",
             )
-    except HTTPException:
-        raise
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error subscribing to symbols: {str(e)}")
 

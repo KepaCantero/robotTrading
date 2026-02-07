@@ -801,7 +801,6 @@ class TestGlobalConfigFunctions:
         """Test that get_config_loader returns singleton instance."""
         # Reset singleton
 
-
         loader1 = get_config_loader()
         loader2 = get_config_loader()
 

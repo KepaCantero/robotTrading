@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Toil Tracking System for SRE (Google SRE Chapter 1).
 

@@ -1,3 +1,4 @@
+# pylint: disable=import-error
 """
 Alert Fatigue Prevention - Smart Alerting (SRE Rule 20.11)
 

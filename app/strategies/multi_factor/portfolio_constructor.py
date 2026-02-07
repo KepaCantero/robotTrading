@@ -396,13 +396,13 @@ class FactorPortfolioConstructor:
             adjusted = False
 
             # Check position size constraints
-            for i in range(len(weights)):
-                if weights[i] > max_single_pos:
+            for i, weight in enumerate(weights):
+                if weight > max_single_pos:
                     violation = weights[i] - max_single_pos
                     max_violation = max(max_violation, violation)
 
                     # Cap this position
-                    excess = weights[i] - max_single_pos
+                    excess = weight - max_single_pos
                     weights[i] = max_single_pos
 
                     # Redistribute excess to other stocks
@@ -439,8 +439,8 @@ class FactorPortfolioConstructor:
                 f"Could not satisfy both position and sector constraints. "
                 f"Applying hard cap on positions: max_weight={max_weight:.4f} > {max_single_pos}"
             )
-            for i in range(len(weights)):
-                if weights[i] > max_single_pos:
+            for i, weight in enumerate(weights):
+                if weight > max_single_pos:
                     weights[i] = max_single_pos
 
             # Do NOT renormalize - accept that weights may sum to less than 1.0

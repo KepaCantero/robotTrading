@@ -1,180 +1,129 @@
-# TAREA: Auditoría GAP Automatizada con Ralph Orchestrator
+# TAREA: Auditoría GAP Real con Ralph Orchestrator
 
 ## OBJETIVO
 
-Ejecutar auditoría completa de 772 archivos Python con `Audit Status: NEEDS_AUDIT`, procesarlos en batches optimizados, y marcar como `PASSED` tras verificar cumplimiento de BASE_RULES.md.
+Ejecutar auditoría REAL de **812 archivos Python** en `app/` usando **TODAS** las herramientas de validación de `check_all.sh`, procesar en 147 batches, y marcar como `PASSED` SOLO cuando **TODAS** las validaciones pasan.
+
+## REGLAS DE ORO
+
+1. ❌ **NO** marcar PASSED si hay cualquier error en CUALQUIER herramienta
+2. ❌ **NO** confiar en tu "juicio" - solo confía en las herramientas
+3. ❌ **NO** inventar resultados de validación
+4. ✅ **SOLO** marcar PASSED si `validate_file_complete.sh` devuelve `success: true`
+5. ✅ **EJECUTAR** las herramientas, no solo verificar sus resultados
 
 ---
 
-## FASE 0: PREREQUISITOS ✅ COMPLETADO
+## POR CADA ARCHIVO:
 
-- [x] Verificar templates existentes en `.claude/templates/gap/`
-- [x] Verificar BASE_RULES.md (443 lines, 35 sections)
-- [x] Instalar herramientas: mypy, ruff, pytest, bandit, radon, rich
-- [x] Confirmar git clean state
-- [x] Crear directorios: .gap_reports, .gap_backups, .ralph
-
----
-
-## FASE 1: PREPARAR BATCHES ✅ COMPLETADO
-
-### Ejecutar: `python scripts/prepare_batches_optimized.py`
-
-**Output generado:**
-- Total archivos: 772
-- Total batches: 166 (sin duplicados)
-- Archivo: `.ralph/batches.json` (ya creado)
-
-**Distribución por capa:**
-| Capa | Archivos |
-|------|----------|
-| 1_Core | 27 |
-| 2_Database | 2 |
-| 3_Domain_Entities | 8 |
-| 4_Domain_Services | 4 |
-| 5_Domain_Strategies | 9 |
-| 6_Application | 10 |
-| 7_Backtesting | 114 |
-| 8_Strategies | 64 |
-| 9_Analysis | 5 |
-| 10_Microstructure | 15 |
-| 11_API | 15 |
-| 12_Middleware | 3 |
-| 13_Presentation | 22 |
-| 14_Others | 489 |
-
----
-
-## FASE 2: CONFIGURAR RALPH ORCHESTRATOR ✅ COMPLETADO
-
-### Archivo: `.ralph/config.yaml`
-
-Configuración cargada:
-- Model: glm-4.7 (200K context, 128K max output)
-- Max concurrent: 3
-- Timeout: 30 min por batch
-- Checkpointing habilitado
-- Dashboard en puerto 8080
-- Tiempo estimado: 2824 minutos (~47 horas)
-
----
-
-## FASE 3: SCRIPTS DE APOYO ✅ COMPLETADO
-
-### Scripts creados:
-
-1. **`scripts/validate_file_comprehensive.sh`**
-   - Ejecuta: mypy, ruff, bandit, radon, syntax check
-   - Genera reporte markdown en `.gap_reports/`
-
-2. **`scripts/live_dashboard.py`**
-   - Monitoreo en tiempo real
-   - Ejecutar: `python scripts/live_dashboard.py`
-
-3. **`scripts/handle_blocked_files.py`**
-   - Analiza archivos bloqueados
-   - Detecta circular dependencies
-   - Intenta auto-fix cuando posible
-
----
-
-## FASE 4: EJECUTAR AUDITORÍA
-
-### Instrucciones para Ralph Orchestrator:
-
-Para cada batch en `.ralph/batches.json` (ya creado):
-
-```
-PARA CADA ARCHIVO EN BATCH:
-  1. LEER: .requirements/app/path/file.py.requirements.md
-  2. LEER: app/path/file.py
-  3. LEER: .requirements/BASE_RULES.md
-
-  4. ENCONTRAR: sección "Critical Rules" en .requirements.md
-  5. PARA CADA REGLA en Critical Rules:
-      - Leer qué exige la regla
-      - Buscar en código si se cumple
-      - Si hay violación (❌ GAP):
-          a. Documentar violación
-          b. Fixear código (cambio mínimo)
-          c. Verificar que no rompe nada
-
-  6. CUANDO TODAS LAS REGLAS OK:
-      - Actualizar: "Audit Status: NEEDS_AUDIT" → "PASSED"
-      - Actualizar timestamp: 2026-02-07T{hora}Z
-      - Guardar .requirements.md
-
-  7. VALIDAR con: scripts/validate_file_comprehensive.sh
-
-  8. SI FALLA VALIDACIÓN:
-      - Revertir cambios
-      - Marcar como BLOCKED
-      - Documentar razón
+### Paso 1: Clasificar reglas aplicables
+```bash
+python scripts/smart_rule_classifier.py <archivo>
 ```
 
-### Formato Audit Status en .requirements.md:
-
-```markdown
-## Audit Status
-
-| Field | Value |
-|-------|-------|
-| **Last Audit Date** | 2026-02-07T10:30:00Z |
-| **Audit Status** | PASSED |
+### Paso 2: Ejecutar validación COMPLETA (OBLIGATORIO)
+```bash
+scripts/validate_file_complete.sh <archivo>
 ```
 
+**Esto EJECUTA las siguientes herramientas:**
+- ✅ **Black** - Formateador PEP8
+- ✅ **Isort** - Organizador de imports
+- ✅ **Ruff** - Linter ultra-rápido
+- ✅ **Flake8** - Linter clásico
+- ✅ **Pylint** - Análisis profundo
+- ✅ **Mypy** - Type checker (SOLO el archivo, no imports)
+- ✅ **Bandit** - Security scanner
+- ✅ **Radon** - Complejidad ciclomática (CC < 10)
+
+**Devuelve JSON:**
+```json
+{
+  "file": "app/path/file.py",
+  "checks": {
+    "black": {"status": "passed"},
+    "isort": {"status": "passed"},
+    "ruff": {"status": "passed"},
+    "flake8": {"status": "passed"},
+    "pylint": {"status": "passed"},
+    "mypy": {"status": "passed"},
+    "bandit": {"status": "passed"},
+    "radon": {"status": "passed", "cc": 3}
+  },
+  "summary": {
+    "total_checks": 8,
+    "passed": 8,
+    "failed": 0,
+    "success": true
+  }
+}
+```
+
+### Paso 3: Si hay errores
+```bash
+# a. Intentar auto-fix (formateo)
+.venv/bin/black <archivo>
+.venv/bin/isort <archivo>
+.venv/bin/ruff check <archivo> --fix
+
+# b. Re-validar
+scripts/validate_file_complete.sh <archivo>
+
+# c. Si aún hay errores → ARREGLAR MANUALMENTE el código
+# d. Re-validar hasta success: true
+```
+
+### Paso 4: SOLO cuando success: true
+- Marcar en checkpoint como PASSED
+- Actualizar `.requirements/<archivo>.requirements.md`
+
 ---
 
-## FASE 5: POST-PROCESAMIENTO
+## FINAL REVIEWER - INCLUYE TESTS
 
-### Al finalizar todos los batches:
+Al completar todos los batches, ejecutar:
 
-1. **Generar reporte final:**
-   ```bash
-   python scripts/generate_final_report.py
-   ```
+```bash
+# 1. Verificar muestra de 50 archivos
+cat .ralph/batches.json | jq -r '.batches[].files[]' | \
+  shuf -n 50 | while read f; do
+    scripts/validate_file_complete.sh "$f" | jq -r '.summary.success'
+  done | grep -c false
+# Debe retornar 0
 
-2. **Verificar checkpoint:**
-   ```bash
-   python scripts/checkpoint_tracker.py status all
-   ```
+# 2. EJECUTAR TESTS OBLIGATORIAMENTE
+.venv/bin/pytest tests/ -v --tb=short
+# TODOS los tests deben PASAR
+```
 
-3. **Commitear cambios:**
-   ```bash
-   git add -A
-   git commit -m "feat: complete GAP audit - 772 files PASSED"
-   ```
+Si TODO está limpio:
+```
+ralph emit "audit.final_summary" "all_validated"
+Output: **GAP_AUDIT_COMPLETE**
+```
 
----
-
-## ORDEN DE EJECUCIÓN
-
-Procesar batches en orden numérico (batch_0001 → batch_0166):
-
-1. **batch_0001 - batch_0010**: 1_Core (small/medium)
-2. **batch_0011 - batch_0040**: 3_Domain_Entities, 4_Domain_Services
-3. **batch_0041 - batch_0080**: 7_Backtesting
-4. **batch_0081 - batch_0120**: 8_Strategies
-5. **batch_0121 - batch_0166**: Resto de capas
+Si hay errores:
+```
+ralph emit "audit.failed" "found_errors=<cantidad>"
+```
 
 ---
 
 ## MÉTRICAS DE ÉXITO
 
-- [ ] 772 archivos procesados
-- [ ] 100% Audit Status: PASSED
-- [ ] 0 archivos BLOCKED
-- [ ] 0 violaciones GAP pendientes
-- [ ] Todos los tests pasan
-- [ ] mypy clean (0 errores)
-- [ ] bandit clean (0 issues HIGH)
+### Por archivo (8 checks obligatorios):
+- [ ] **Black**: passed
+- [ ] **Isort**: passed (0 cambios pendientes)
+- [ ] **Ruff**: passed (0 errores)
+- [ ] **Flake8**: passed (0 errores)
+- [ ] **Pylint**: passed (0 errores)
+- [ ] **Mypy**: passed (0 errores)
+- [ ] **Bandit**: passed (0 issues HIGH/MEDIUM)
+- [ ] **Radon**: passed (CC < 10)
+
+### Tests:
+- [ ] **Pytest**: TODOS los tests pasan
 
 ---
 
-## NOTAS
-
-- Cada batch debe procesarse secuencialmente dentro del batch
-- Batches pueden procesarse en paralelo (max 3 concurrentes)
-- Guardar checkpoint después de cada 5 archivos
-- Dashboard muestra progreso en tiempo real
-- Archivos bloqueados se manejan con `handle_blocked_files.py`
+## Output final: **GAP_AUDIT_COMPLETE**

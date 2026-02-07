@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Random Search Optimizer - FASE 6.1
 

@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Real Market Data Fetcher - Alpha Vantage Integration
 

@@ -28,6 +28,11 @@ from sklearn.metrics import silhouette_score
 
 from app.backtesting.meta_analyzer import BacktestMetaAnalyzer
 
+# Availability flags (all REQUIRED - no fallbacks)
+STREAMLIT_AVAILABLE = True
+PLOTLY_AVAILABLE = True
+SKLEARN_AVAILABLE = True
+
 logger = logging.getLogger(__name__)
 
 

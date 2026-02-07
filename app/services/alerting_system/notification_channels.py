@@ -72,9 +72,6 @@ class WebhookChannel(NotificationChannel):
                     )
                     return False
 
-        except asyncio.TimeoutError:
-            logger.error(f"Webhook timeout: {target.endpoint}")
-            return False
         except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Webhook error: {target.endpoint} - {e}")
             return False
@@ -109,7 +106,7 @@ class EmailChannel(NotificationChannel):
         from email.mime.multipart import MIMEMultipart
         from email.mime.text import MIMEText
 
-        import aiosmtplib
+        import aiosmtplib  # type: ignore # pylint: disable=import-error
 
         try:
             # Extract SMTP configuration from target headers
@@ -214,9 +211,6 @@ This is an automated alert from the AlgoTrading system.
             logger.info(f"✅ Email sent to: {target.endpoint}")
             return True
 
-        except asyncio.TimeoutError:
-            logger.error(f"Email timeout: {target.endpoint}")
-            return False
         except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Email error: {target.endpoint} - {e}")
             return False
@@ -291,7 +285,7 @@ class SlackChannel(NotificationChannel):
                     logger.warning(f"Slack send failed (status: {response.status_code})")
                     return False
 
-        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        except (ConnectionError, TimeoutError, OSError) as e:
             logger.error(f"Slack error: {e}")
             return False
 
@@ -364,7 +358,7 @@ class DiscordChannel(NotificationChannel):
                     logger.warning(f"Discord send failed (status: {response.status_code})")
                     return False
 
-        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        except (ConnectionError, TimeoutError, OSError) as e:
             logger.error(f"Discord error: {e}")
             return False
 

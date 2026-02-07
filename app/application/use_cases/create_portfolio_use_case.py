@@ -21,6 +21,32 @@ class CreatePortfolioUseCase:
         """Initialize use case with optional factory."""
         self._factory = factory or TradingEntityFactory()
 
+    def _validate_portfolio_id(self, portfolio_id: str) -> None:
+        """Validate portfolio_id."""
+        if not portfolio_id or not isinstance(portfolio_id, str) or not portfolio_id.strip():
+            raise ValueError("portfolio_id must be a non-empty string")
+
+    def _validate_initial_capital(self, initial_capital: Decimal) -> None:
+        """Validate initial_capital."""
+        if not isinstance(initial_capital, Decimal):
+            raise ValueError("initial_capital must be a Decimal")
+        if initial_capital <= 0:
+            raise ValueError("initial_capital must be positive (> 0)")
+
+    def _validate_currency(self, currency: str) -> None:
+        """Validate currency (ISO 4217: 3-letter uppercase code)."""
+        if not currency or not isinstance(currency, str):
+            raise ValueError("currency must be a string")
+        if len(currency) != 3 or not currency.isupper() or not currency.isalpha():
+            raise ValueError("currency must be a valid ISO 4217 code (3 uppercase letters)")
+
+    def _validate_percentage(self, value: Decimal, name: str) -> None:
+        """Validate a percentage value is in range (0, 1]."""
+        if not isinstance(value, Decimal):
+            raise ValueError(f"{name} must be a Decimal")
+        if value <= 0 or value > 1:
+            raise ValueError(f"{name} must be in range (0, 1]")
+
     def execute(
         self,
         portfolio_id: str,
@@ -45,33 +71,12 @@ class CreatePortfolioUseCase:
         Raises:
             ValueError: If any input validation fails
         """
-        # Validate portfolio_id
-        if not portfolio_id or not isinstance(portfolio_id, str) or not portfolio_id.strip():
-            raise ValueError("portfolio_id must be a non-empty string")
-
-        # Validate initial_capital
-        if not isinstance(initial_capital, Decimal):
-            raise ValueError("initial_capital must be a Decimal")
-        if initial_capital <= 0:
-            raise ValueError("initial_capital must be positive (> 0)")
-
-        # Validate currency (ISO 4217: 3-letter uppercase code)
-        if not currency or not isinstance(currency, str):
-            raise ValueError("currency must be a string")
-        if len(currency) != 3 or not currency.isupper() or not currency.isalpha():
-            raise ValueError("currency must be a valid ISO 4217 code (3 uppercase letters)")
-
-        # Validate max_position_size_pct
-        if not isinstance(max_position_size_pct, Decimal):
-            raise ValueError("max_position_size_pct must be a Decimal")
-        if max_position_size_pct <= 0 or max_position_size_pct > 1:
-            raise ValueError("max_position_size_pct must be in range (0, 1]")
-
-        # Validate max_portfolio_exposure_pct
-        if not isinstance(max_portfolio_exposure_pct, Decimal):
-            raise ValueError("max_portfolio_exposure_pct must be a Decimal")
-        if max_portfolio_exposure_pct <= 0 or max_portfolio_exposure_pct > 1:
-            raise ValueError("max_portfolio_exposure_pct must be in range (0, 1]")
+        # Validate all inputs
+        self._validate_portfolio_id(portfolio_id)
+        self._validate_initial_capital(initial_capital)
+        self._validate_currency(currency)
+        self._validate_percentage(max_position_size_pct, "max_position_size_pct")
+        self._validate_percentage(max_portfolio_exposure_pct, "max_portfolio_exposure_pct")
 
         return self._factory.create_portfolio(
             portfolio_id=portfolio_id,

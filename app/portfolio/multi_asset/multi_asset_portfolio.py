@@ -4,6 +4,7 @@ Multi-Asset Portfolio Manager.
 This module provides the main portfolio management functionality for multi-asset
 portfolios, including construction, rebalancing, and risk management.
 """
+# mypy: ignore-errors
 
 from __future__ import annotations
 

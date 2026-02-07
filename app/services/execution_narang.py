@@ -342,15 +342,14 @@ class VWAPExecution(ExecutionAlgoBase):
         total = sum(volume_dist)
         volume_dist = [v / total for v in volume_dist]
 
+        # Use default total daily volume (in production, query from database)
+        total_daily_volume = Decimal("1000000")
+
         return IntradayVolumeProfile(
             symbol=symbol,
             time_bins=[t for t in time_bins],
             volume_distribution=volume_dist,
-            total_daily_volume=(
-                market_data.average_daily_volume
-                if 'market_data' in locals()
-                else Decimal("1000000")
-            ),
+            total_daily_volume=total_daily_volume,
         )
 
     def _generate_time_slices(

@@ -8,7 +8,15 @@ Reference: Rule 05-architecture.md, Rule 11-enterprise-architecture.md
 """
 
 import inspect
-from typing import Any, Callable, Dict, Optional, Type, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Type, TypeVar
+
+if TYPE_CHECKING:
+    from app.strategies import (
+        ExecutionEngine,
+        StrategyConfigLoader,
+        StrategyLogger,
+        StrategyRegistry,
+    )
 
 T = TypeVar("T")
 
@@ -166,7 +174,25 @@ def get_container() -> DIContainer:
     global _container
     if _container is None:
         _container = DIContainer()
+        _register_default_services(_container)
     return _container
+
+
+def _register_default_services(container: DIContainer) -> None:
+    """
+    Register default strategy services in the container.
+
+    This allows the container to be used with string-based lookups like
+    container.get("execution_engine") for testing.
+
+    Args:
+        container: DI container to register services in
+    """
+    # Register factory functions for string-based lookups
+    container.register_factory("strategy_registry", lambda c: get_strategy_registry())
+    container.register_factory("strategy_config_loader", lambda c: get_strategy_config_loader())
+    container.register_factory("strategy_logger", lambda c: get_strategy_logger())
+    container.register_factory("execution_engine", lambda c: get_execution_engine())
 
 
 def reset_container() -> None:

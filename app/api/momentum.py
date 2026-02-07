@@ -138,8 +138,6 @@ async def analyze_asset_momentum_post(
             "timestamp": datetime.utcnow(),
         }
 
-    except HTTPException:
-        raise
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(
             status_code=500, detail=f"Error analyzing momentum for {symbol}: {str(e)}"
@@ -464,8 +462,6 @@ async def create_momentum_strategy(
             "timestamp": datetime.utcnow(),
         }
 
-    except HTTPException:
-        raise
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error creating momentum strategy: {str(e)}")
 
@@ -508,8 +504,6 @@ async def get_momentum_strategy(
             "timestamp": datetime.utcnow(),
         }
 
-    except HTTPException:
-        raise
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error getting momentum strategy: {str(e)}")
 
@@ -577,8 +571,6 @@ async def update_momentum_strategy(
             "timestamp": datetime.utcnow(),
         }
 
-    except HTTPException:
-        raise
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error updating momentum strategy: {str(e)}")
 
@@ -609,8 +601,6 @@ async def delete_momentum_strategy(
             "timestamp": datetime.utcnow(),
         }
 
-    except HTTPException:
-        raise
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error deleting momentum strategy: {str(e)}")
 
@@ -1001,8 +991,6 @@ async def get_momentum_analysis(
             "timestamp": datetime.utcnow(),
         }
 
-    except HTTPException:
-        raise
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error getting momentum analysis: {str(e)}")
 
@@ -1031,7 +1019,5 @@ async def delete_momentum_analysis(
             "timestamp": datetime.utcnow(),
         }
 
-    except HTTPException:
-        raise
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error deleting momentum analysis: {str(e)}")

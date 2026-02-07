@@ -1,3 +1,4 @@
+# pylint: disable=non-ascii-name
 """Black-Litterman Portfolio Optimization Implementation.
 
 This module implements the Black-Litterman model for portfolio optimization,

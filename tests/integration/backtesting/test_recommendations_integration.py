@@ -8,7 +8,6 @@ critical improvements integrated together.
 from datetime import datetime
 from decimal import Decimal
 
-
 from app.backtesting.data_split import (
     MultipleTestingCorrector,
     TrainValTestSplitter,

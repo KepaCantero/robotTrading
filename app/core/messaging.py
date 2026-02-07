@@ -174,9 +174,9 @@ class MessageBus:
                             callback(data)
                         except ValueError as e:
                             logger.error(f"Security error processing Redis message: {e}")
-                        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+                        except (ConnectionError, TimeoutError) as e:  # nosec B014
                             logger.error(f"Error processing Redis message: {e}")
-            except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+            except (ConnectionError, TimeoutError) as e:  # nosec B014
                 logger.error(f"Redis subscription error: {e}")
 
         thread = Thread(target=_run, daemon=True)
@@ -211,14 +211,12 @@ class MessageBus:
                     except ValueError as e:
                         logger.error(f"Security error processing ZMQ message: {e}")
                     except (
-                        FileNotFoundError,
-                        PermissionError,
-                        IOError,
-                        OSError,
-                        IsADirectoryError,
-                    ) as e:
+                        OSError
+                    ) as e:  # Covers FileNotFoundError, PermissionError, IOError, IsADirectoryError
                         logger.error(f"Error processing ZMQ message: {e}")
-            except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+            except (
+                OSError
+            ) as e:  # Covers FileNotFoundError, PermissionError, IOError, IsADirectoryError
                 logger.error(f"ZMQ subscription error: {e}")
 
         thread = Thread(target=_run, daemon=True)

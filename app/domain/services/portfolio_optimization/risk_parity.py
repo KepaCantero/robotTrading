@@ -7,6 +7,7 @@ risk contribution across assets.
 Reference: Rule 48-papers-markowitz (Related methods)
 """
 
+# mypy: ignore-errors
 from __future__ import annotations
 
 import logging

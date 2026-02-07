@@ -378,7 +378,7 @@ class MarketScheduler:
                             await task.handler()
                             task.last_run = utc_now()
                             task.run_count += 1
-                        except asyncio.CancelledError:
+                        except asyncio.CancelledError:  # pylint: disable=try-except-raise
                             raise
                         except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                             task.error_count += 1

@@ -11,12 +11,14 @@ SOLID Principles:
 
 import logging
 from decimal import Decimal
-from typing import List, Optional, Tuple
+from typing import TYPE_CHECKING, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 import pandas_ta_classic as ta
 
+if TYPE_CHECKING:
+    from app.models.momentum import TechnicalIndicators
 
 logger = logging.getLogger(__name__)
 
@@ -427,7 +429,9 @@ class TechnicalIndicatorCalculator:
             raise
 
     @staticmethod
-    def calculate_volume_sma(self, volumes: List[Decimal], period: int = 20) -> Optional[Decimal]:
+    def calculate_volume_sma(
+        volumes: List[Decimal], period: int = 20
+    ) -> Optional[Decimal]:  # pylint: disable=bad-staticmethod-argument
         """
         Calculate Volume Simple Moving Average using pandas.rolling() library.
 
@@ -498,8 +502,8 @@ class TechnicalIndicatorCalculator:
 
     @staticmethod
     def calculate_zscore(
-        self, prices: List[float], period: int = 30, std: float = 1.0
-    ) -> Optional[float]:
+        prices: List[float], period: int = 30, std: float = 1.0
+    ) -> Optional[float]:  # pylint: disable=bad-staticmethod-argument
         """
         Calculate Z-score using pandas-ta-classic.zscore() library.
 
@@ -535,8 +539,8 @@ class TechnicalIndicatorCalculator:
 
     @staticmethod
     def calculate_volatility(
-        self, prices: List[float], tf: str = "days", returns: bool = False, log: bool = False
-    ) -> Optional[float]:
+        prices: List[float], tf: str = "days", returns: bool = False, log: bool = False
+    ) -> Optional[float]:  # pylint: disable=bad-staticmethod-argument
         """
         Calculate volatility using pandas-ta-classic.volatility() library.
 
@@ -572,12 +576,11 @@ class TechnicalIndicatorCalculator:
 
     @staticmethod
     def calculate_expectancy(
-        self,
         winning_trades: int,
         losing_trades: int,
         avg_win_amount: float,
         avg_loss_amount: float,
-    ) -> Optional[float]:
+    ) -> Optional[float]:  # pylint: disable=bad-staticmethod-argument
         """
         Calculate Expectancy metric for system consistency.
 
@@ -602,8 +605,8 @@ class TechnicalIndicatorCalculator:
 
     @staticmethod
     def detect_macd_divergence(
-        self, prices: List[float], macd_histograms: List[float], lookback: int = 5
-    ) -> Optional[str]:
+        prices: List[float], macd_histograms: List[float], lookback: int = 5
+    ) -> Optional[str]:  # pylint: disable=bad-staticmethod-argument
         """
         Detect MACD histogram divergence patterns using numpy.
 
@@ -625,23 +628,25 @@ class TechnicalIndicatorCalculator:
         price_trend_down = prices_array[-1] < prices_array[0]
         histogram_trend_up = histograms_array[-1] > histograms_array[0]
 
-        if price_trend_down and histogram_trend_up:
-            if (
-                prices_array[-1] < np.min(prices_array[:-1])
-                and histograms_array[-1] > histograms_array[-2]
-            ):
-                return "bullish"
+        if (
+            price_trend_down
+            and histogram_trend_up
+            and prices_array[-1] < np.min(prices_array[:-1])
+            and histograms_array[-1] > histograms_array[-2]
+        ):
+            return "bullish"
 
         # Bearish divergence: price up, histogram down
         price_trend_up = prices_array[-1] > prices_array[0]
         histogram_trend_down = histograms_array[-1] < histograms_array[0]
 
-        if price_trend_up and histogram_trend_down:
-            if (
-                prices_array[-1] > np.max(prices_array[:-1])
-                and histograms_array[-1] < histograms_array[-2]
-            ):
-                return "bearish"
+        if (
+            price_trend_up
+            and histogram_trend_down
+            and prices_array[-1] > np.max(prices_array[:-1])
+            and histograms_array[-1] < histograms_array[-2]
+        ):
+            return "bearish"
 
         return None
 

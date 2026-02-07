@@ -3,6 +3,7 @@ FastAPI Logging Integration
 TASK-3: Configuración de logging centralizado
 """
 
+# pylint: disable=import-error
 import time
 import uuid
 from typing import Callable

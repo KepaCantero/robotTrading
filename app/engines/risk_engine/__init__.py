@@ -45,17 +45,19 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, List
 
 # Lazy imports to avoid circular dependencies with models that require pydantic
-if TYPE_CHECKING:
-    from app.models.portfolio import Portfolio
-
+# Import Portfolio with fallback placeholder
 try:
     from app.models.portfolio import Portfolio
 except ImportError:
     # Create a minimal Portfolio placeholder if the real one can't be imported
     # This allows the risk_engine to be imported even when pydantic is missing
-    class Portfolio:
+    class Portfolio:  # type: ignore
         """Placeholder Portfolio class when pydantic is not available."""
 
+
+# Type alias for TYPE_CHECKING
+if TYPE_CHECKING:
+    PortfolioType = Portfolio
 
 
 try:

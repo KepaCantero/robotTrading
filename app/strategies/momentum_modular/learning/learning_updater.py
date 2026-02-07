@@ -655,13 +655,6 @@ class LearningEngineUpdater:
                 )
 
             return True
-
-            # Dependencias faltantes - no es crítico, solo registramos y continuamos
-            logger.debug(
-                f"⚠️ Reentrenamiento omitido: dependencias faltantes ({e}). "
-                "El backtest continúa sin reentrenamiento."
-            )
-            return False
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             # Cualquier otro error - no es crítico, registramos y continuamos
             logger.warning(

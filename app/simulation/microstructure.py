@@ -15,6 +15,7 @@ Key concepts implemented:
 Reference:
     Harris, L. (2003). Trading and Exchanges, Chapters 10-11.
 """
+# mypy: ignore-errors
 
 import logging
 from collections import deque

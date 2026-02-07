@@ -54,25 +54,20 @@ class UserDict(TypedDict):
     """Typed dictionary for user storage mapping."""
 
 
-
 class APIKeyDict(TypedDict):
     """Typed dictionary for API key to username mapping."""
-
 
 
 class FailedAttemptsDict(TypedDict):
     """Typed dictionary for failed attempts tracking."""
 
 
-
 class LockoutsDict(TypedDict):
     """Typed dictionary for lockout expiry tracking."""
 
 
-
 class RateLimitsDict(TypedDict):
     """Typed dictionary for rate limit tracking."""
-
 
 
 class User:
@@ -207,7 +202,7 @@ class UserStore:
             if key.startswith(api_key_prefix) and not key.endswith("_USER"):
                 parts = key.split("_")
                 if len(parts) >= 4:
-                    key_name = "_".join(parts[3:])  # Handle multi-part key names
+                    # Key name extraction not needed, just create user_key
                     user_key = f"{key}_USER"
 
                     if user_key in os.environ:

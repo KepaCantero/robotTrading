@@ -20,12 +20,16 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
 from scipy import stats
 
 from app.core.decimal_utils import to_decimal
+
+if TYPE_CHECKING:
+    from app.analysis.fundamental_law.models import ICMetrics
 
 logger = logging.getLogger(__name__)
 
@@ -125,7 +129,7 @@ class ICCalculator:
 
         # Check for constant series (zero variance)
         if forecasts_clean.std() == 0 or returns_clean.std() == 0:
-            logger.warning("One or both series have zero variance, " "returning IC of 0")
+            logger.warning("One or both series have zero variance, returning IC of 0")
             return self._get_zero_ic_metrics()
 
         # Calculate Pearson IC
@@ -175,7 +179,7 @@ class ICCalculator:
         self,
         forecasts: pd.Series,
         returns: pd.Series,
-        periods: list[int] = [1, 5, 10, 20],
+        periods: list[int] | None = None,
     ) -> list[Decimal]:
         """
         Calculate IC over different forward return horizons.
@@ -207,6 +211,8 @@ class ICCalculator:
             >>> len(decay)
             2
         """
+        if periods is None:
+            periods = [1, 5, 10, 20]
         ic_values = []
 
         for period in periods:
@@ -293,8 +299,8 @@ class ICCalculator:
         # Calculate two-tailed p-value from t-distribution
         p_value = 2 * (1 - stats.t.cdf(abs(t_statistic), df=n_observations - 2))
 
-        # Convert to Python bool
-        return float(p_value), bool(p_value < 0.05)
+        # Return p-value and significance
+        return float(p_value), p_value < 0.05
 
     def calculate_confidence_interval(
         self,

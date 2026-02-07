@@ -20,11 +20,13 @@ logger = logging.getLogger(__name__)
 try:
     import torch
     import torch.nn as nn
+    import torch.optim as optim
 
     PYTORCH_AVAILABLE = True
-except (ImportError, ModuleNotFoundError):
+except ImportError:  # B014: ModuleNotFoundError is a subclass of ImportError
     torch = None  # type: ignore
     nn = None  # type: ignore
+    optim = None  # type: ignore
     PYTORCH_AVAILABLE = False
 
 

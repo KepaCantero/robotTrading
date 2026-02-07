@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+# pylint: disable=unsupported-binary-operation  # For Python 3.10+ union syntax
 """
 Comprehensive Input Validation Module
 

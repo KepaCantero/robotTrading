@@ -288,22 +288,7 @@ class SensitiveDataFilter(logging.Filter):
                 "exc_info",
                 "exc_text",
                 "stack_info",
-                "levelname",
                 "levelno",
-                "pathname",
-                "filename",
-                "module",
-                "lineno",
-                "funcName",
-                "created",
-                "msecs",
-                "relativeCreated",
-                "thread",
-                "threadName",
-                "processName",
-                "process",
-                "message",
-                "asctime",
                 "correlation_id",
                 "elapsed_ms",
                 "delta_ms",
@@ -558,45 +543,6 @@ def setup_file_logging(
         f"Logging configured: warnings->{warning_log}, errors->{error_log}, all->{all_log}",
         extra={"correlation_id": get_correlation_id()},
     )
-
-
-def setup_module_loggers() -> None:
-    """
-    Configure specific loggers for important modules.
-    Ensures warnings/errors from these modules are always captured.
-    """
-    log_path = Path("logs")
-    log_path.mkdir(parents=True, exist_ok=True)
-
-    # Modules that should always log to files
-    important_modules = [
-        "app.strategies",
-        "app.backtesting",
-        "app.services",
-        "app.api",
-        "app.core",
-    ]
-
-    # LOG-005: Create sensitive data filter for module handlers
-    sensitive_filter = SensitiveDataFilter()
-
-    for module_name in important_modules:
-        logger = logging.getLogger(module_name)
-
-        # Create module-specific error log
-        module_log_file = log_path / f"{module_name.replace('.', '_')}_errors.log"
-        handler = RotatingFileHandler(
-            module_log_file, maxBytes=10 * 1024 * 1024, backupCount=5, encoding='utf-8'
-        )
-        handler.setLevel(logging.WARNING)  # WARNING and above
-        formatter = logging.Formatter(
-            '%(asctime)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S',
-        )
-        handler.setFormatter(formatter)
-        handler.addFilter(sensitive_filter)  # LOG-005: Add sensitive data filter
-        logger.addHandler(handler)
-        logger.setLevel(logging.WARNING)  # Only warnings and above for these
 
 
 def setup_module_loggers(use_json: bool = False) -> None:

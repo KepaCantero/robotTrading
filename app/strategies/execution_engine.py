@@ -3,6 +3,8 @@ ExecutionEngine - Motor de ejecución centralizado.
 
 Coordina la ejecución de estrategias activas, generación de señales,
 validación de riesgo y ejecución de órdenes.
+
+SOL-005/DP-004: Uses Protocol-based dependency injection for testability.
 """
 
 from __future__ import annotations
@@ -16,22 +18,31 @@ from app.models.market_data import Quote
 from app.models.portfolio import Portfolio
 from app.models.signal import Signal
 
-from .registry import StrategyRegistry
-from .strategy_logger import StrategyLogger
+from .protocols import StrategyLoggerProto, StrategyRegistryProto
 
 logger = logging.getLogger(__name__)
 
 
 class ExecutionEngine:
-    """Motor de ejecución centralizado."""
+    """
+    Motor de ejecución centralizado.
 
-    def __init__(self, registry: StrategyRegistry, logger: StrategyLogger):
+    SOL-005/DP-004: Uses Protocol-based dependency injection for testability.
+    Depends on abstractions (StrategyRegistryProto, StrategyLoggerProto)
+    rather than concrete classes.
+    """
+
+    def __init__(
+        self,
+        registry: StrategyRegistryProto,
+        logger: StrategyLoggerProto,
+    ):
         """
         Inicializar motor de ejecución.
 
         Args:
-            registry: Registry de estrategias
-            logger: Logger de estrategias
+            registry: Registry de estrategias (Protocol-based for testability)
+            logger: Logger de estrategias (Protocol-based for testability)
         """
         self.registry = registry
         self.logger = logger

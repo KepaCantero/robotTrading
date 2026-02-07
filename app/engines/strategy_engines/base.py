@@ -10,6 +10,8 @@ Extiende BaseStrategy con funcionalidades adicionales para:
 - Integración con DataEngine y ContextEngine (Módulos 1 y 2)
 """
 
+import asyncio
+import logging
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from datetime import datetime
@@ -19,6 +21,41 @@ from typing import Any, Callable, Dict, List, Optional
 from app.models.market_data import Quote
 from app.models.signal import Signal
 from app.strategies.base import BaseStrategy
+
+logger = logging.getLogger(__name__)
+
+# Optional imports for engine integration
+try:
+    from app.engines.data_engine.data_engine import DataEngine
+
+    DATA_ENGINE_AVAILABLE = True
+except ImportError:
+    DATA_ENGINE_AVAILABLE = False
+    DataEngine = None  # type: ignore
+
+try:
+    from app.engines.context_engine.context_engine import ContextEngine
+
+    CONTEXT_ENGINE_AVAILABLE = True
+except ImportError:
+    CONTEXT_ENGINE_AVAILABLE = False
+    ContextEngine = None  # type: ignore
+
+try:
+    from app.engines.portfolio_engine.portfolio_engine import PortfolioEngine
+
+    PORTFOLIO_ENGINE_AVAILABLE = True
+except ImportError:
+    PORTFOLIO_ENGINE_AVAILABLE = False
+    PortfolioEngine = None  # type: ignore
+
+try:
+    from app.engines.risk_engine.risk_engine import RiskEngine
+
+    RISK_ENGINE_AVAILABLE = True
+except ImportError:
+    RISK_ENGINE_AVAILABLE = False
+    RiskEngine = None  # type: ignore
 
 
 class BaseStrategyEngine(BaseStrategy, ABC):

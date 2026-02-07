@@ -13,7 +13,6 @@ from collections import defaultdict
 from datetime import datetime
 from typing import Final
 
-
 logger = logging.getLogger(__name__)
 
 

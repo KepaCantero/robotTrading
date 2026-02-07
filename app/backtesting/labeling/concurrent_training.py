@@ -68,15 +68,12 @@ class ConcurrentTrainingError(Exception):
     """Base exception for concurrent training errors."""
 
 
-
 class ModelTrainingError(ConcurrentTrainingError):
     """Raised when a model fails to train."""
 
 
-
 class EnsembleError(ConcurrentTrainingError):
     """Raised when ensemble creation fails."""
-
 
 
 @dataclass

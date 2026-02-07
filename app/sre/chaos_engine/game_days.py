@@ -405,7 +405,7 @@ class GameDay:
             try:
                 if injector:
                     await injector.rollback()
-            except:
+            except Exception:
                 pass
 
             scenario.status = ScenarioStatus.FAILED

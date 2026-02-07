@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Trial tracking for parameter optimization.
 

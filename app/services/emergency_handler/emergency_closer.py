@@ -460,11 +460,6 @@ class EmergencyCloser:
                     "error": f"Broker returned no order for {position.symbol}",
                 }
 
-        except asyncio.TimeoutError:
-            return {
-                "success": False,
-                "error": f"Timeout closing {position.symbol}",
-            }
         except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             return {
                 "success": False,

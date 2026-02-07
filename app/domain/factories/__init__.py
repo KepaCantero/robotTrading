@@ -1,3 +1,4 @@
+# pylint: disable=arguments-differ
 """
 Factory Pattern - Domain entity factories following Percival's Architecture Patterns with Python
 

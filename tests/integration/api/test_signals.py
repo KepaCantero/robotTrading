@@ -282,9 +282,7 @@ class TestDIContainerPattern:
 
     def test_get_signal_scorer_service_from_di_container(self):
         """Test that get_signal_scorer_service uses DI container."""
-        from app.core.di_container import (
-            get_signal_scorer_service as di_get_signal_scorer_service,
-        )
+        from app.core.di_container import get_signal_scorer_service as di_get_signal_scorer_service
 
         # Get service from DI container module
         service_from_di = di_get_signal_scorer_service()
