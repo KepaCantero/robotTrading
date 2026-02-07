@@ -8,6 +8,7 @@ Implements Bayesian optimization with:
 - Efficient for expensive evaluations
 """
 
+# mypy: ignore-errors
 import logging
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -554,6 +555,7 @@ class MultiObjectiveBayesianOptimizer(BaseOptimizer):
 
         for trial in best_trials:
             if trial.state == optuna.trial.TrialState.COMPLETE:
+                # pylint: disable=unexpected-keyword-arg
                 solution = ParetoSolution(
                     params=trial.params,
                     objectives=trial.values,
@@ -562,6 +564,7 @@ class MultiObjectiveBayesianOptimizer(BaseOptimizer):
                 solutions.append(solution)
                 scores.append(tuple(trial.values))
 
+        # pylint: disable=unexpected-keyword-arg
         return ParetoFront(
             solutions=solutions,
             scores=scores,

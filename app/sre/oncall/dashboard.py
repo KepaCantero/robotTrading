@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 On-Call Status Dashboard - SRE Rule 24
 

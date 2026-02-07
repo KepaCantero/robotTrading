@@ -28,6 +28,13 @@ except ImportError:
     logging.warning("redis package not installed. Using in-memory cache fallback only.")
 
 from sqlalchemy import Column, DateTime, Index, LargeBinary, String, Text, create_engine
+from sqlalchemy.exc import (
+    DatabaseError,
+    DataError,
+    IntegrityError,
+    OperationalError,
+    ProgrammingError,
+)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 

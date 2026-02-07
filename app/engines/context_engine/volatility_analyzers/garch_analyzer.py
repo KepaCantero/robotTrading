@@ -1,3 +1,4 @@
+# pylint: disable=used-before-assignment
 """
 GARCHAnalyzer - Analizador de volatilidad usando modelos GARCH.
 

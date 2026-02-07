@@ -4,6 +4,7 @@ T18.1: Real-Time Metrics Database Models
 Data models for time-series metrics storage and querying.
 """
 
+import asyncio
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -317,7 +318,7 @@ class CollectorSource:
         """Execute collection."""
         try:
             return await self.collector_fn()
-        except (asyncio.TimeoutError, ConnectionError, OSError):
+        except (asyncio.TimeoutError, OSError):
             # Log error but don't raise to allow other sources to continue
             return []
 

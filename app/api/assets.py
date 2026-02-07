@@ -45,7 +45,7 @@ except ImportError:
     _limiter = None
     _rate_limit_enabled = False
     logger.warning(
-        "slowapi not installed - rate limiting disabled. " "Install with: pip install slowapi"
+        "slowapi not installed - rate limiting disabled. Install with: pip install slowapi"
     )
 
 
@@ -354,8 +354,6 @@ async def get_asset_details(
             stack_trace=traceback.format_exc(),
         )
         raise HTTPException(status_code=504, detail=f"Timeout getting asset details: {str(e)}")
-    except HTTPException:
-        raise
     except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(
             "Error fetching asset details",
@@ -443,8 +441,6 @@ async def get_liquidity_metrics(
             stack_trace=traceback.format_exc(),
         )
         raise HTTPException(status_code=504, detail=f"Timeout getting liquidity metrics: {str(e)}")
-    except HTTPException:
-        raise
     except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(
             "Error fetching liquidity metrics",

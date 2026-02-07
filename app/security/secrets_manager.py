@@ -26,7 +26,7 @@ from typing import Any, Dict, List, Optional, Set
 
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -35,10 +35,8 @@ class SecretValidationError(Exception):
     """Raised when secret validation fails."""
 
 
-
 class SecretRotationError(Exception):
     """Raised when secret rotation fails."""
-
 
 
 class Secret:
@@ -163,7 +161,7 @@ class SecretsManager:
                         "ENCRYPTION_KEY or SECRET_KEY environment variable required"
                     )
                 # Derive encryption key from SECRET_KEY
-                kdf = PBKDF2(
+                kdf = PBKDF2HMAC(
                     algorithm=hashes.SHA256(),
                     length=32,
                     salt=b"algotrading_secrets",

@@ -396,6 +396,7 @@ class PydanticParameterRange(BaseModel):
     log_base: float = 10.0
 
     @field_validator("parameter_type", "scale", mode="before")
+    @classmethod
     def parse_enum(cls, v):
         """Parse string to enum if needed."""
         if isinstance(v, str):

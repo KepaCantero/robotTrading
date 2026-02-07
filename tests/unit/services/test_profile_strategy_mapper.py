@@ -10,11 +10,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from app.core.models.input_profile import (
-    InputProfile,
-    ObjectivoInversion,
-    RiskTolerance,
-)
+from app.core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
 from app.services.profile_driven_trading.profile_strategy_mapper import (
     ProfileStrategyMapper,
     StrategyMapping,

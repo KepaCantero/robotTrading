@@ -18,9 +18,9 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
-from app.backtesting.profile_batch_backtester import (
+from app.backtesting.profile_batch_backtester import ProfileBatchBacktester
+from app.backtesting.services.models import (
     BaselineOptimizationComparison,
-    ProfileBatchBacktester,
     ProfileResult,
     ProfileResultDB,
 )

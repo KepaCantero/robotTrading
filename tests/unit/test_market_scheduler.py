@@ -10,12 +10,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from app.services.scheduling import (
-    MarketSchedule,
-    MarketScheduler,
-    MarketStatus,
-    MarketType,
-)
+from app.services.scheduling import MarketSchedule, MarketScheduler, MarketStatus, MarketType
 
 
 class TestMarketType:

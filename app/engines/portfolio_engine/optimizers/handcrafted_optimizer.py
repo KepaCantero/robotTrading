@@ -1,3 +1,4 @@
+# pylint: disable=arguments-differ
 """
 Handcrafted Weights Optimizer - Robert Carver's methodology.
 

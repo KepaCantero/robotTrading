@@ -85,10 +85,8 @@ class SecretValidationError(Exception):
     """Raised when secret validation fails."""
 
 
-
 class SecretNotConfiguredError(Exception):
     """Raised when a required secret is not configured."""
-
 
 
 # Secret definitions following Rule 28
@@ -273,7 +271,7 @@ class SecretManager:
         """Load secret metadata from environment or file."""
         # Initialize metadata for known secrets
         for definition in SECRET_DEFINITIONS:
-            value = os.getenv(definition.name)
+            value = os.getenv(definition.name)  # pylint: disable=invalid-envvar-value
             if value:
                 secret_hash = self._hash_secret(value)
                 now = time.time()
@@ -563,7 +561,7 @@ class SecretManager:
                         total_valid += 1
 
                     # Calculate strength score
-                    value = os.getenv(definition.name)
+                    value = os.getenv(definition.name)  # pylint: disable=invalid-envvar-value
                     if value:
                         strength = self.calculate_strength_score(value, definition)
                         report.strength_scores[definition.name] = strength

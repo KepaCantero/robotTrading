@@ -9,6 +9,8 @@ Single Responsibility: Each class performs one specific calculation method.
 Open/Closed: Extensible through HurstCalculator protocol.
 """
 
+from __future__ import annotations
+
 import logging
 
 import numpy as np

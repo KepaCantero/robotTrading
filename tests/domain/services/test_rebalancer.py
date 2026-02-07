@@ -10,11 +10,7 @@ sys.path.insert(0, str(project_root))
 
 from decimal import Decimal
 
-from app.domain.services.rebalancer import (
-    RebalancePlan,
-    Rebalancer,
-    RebalanceTrade,
-)
+from app.domain.services.rebalancer import RebalancePlan, Rebalancer, RebalanceTrade
 
 
 def test_rebalance_trade_with_zero_current_quantity_no_zero_division():

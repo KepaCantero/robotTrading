@@ -123,9 +123,10 @@ class TestFallbackMetrics:
         assert isinstance(metrics, dict)
 
     def _generate_test_returns(self, mean=0.0005, std=0.01, n=252):
-        """Generate test returns series."""
+        """Generate test returns series with DatetimeIndex for quantstats compatibility."""
         np.random.seed(42)
-        return pd.Series(np.random.normal(mean, std, n))
+        dates = pd.date_range(start="2024-01-01", periods=n, freq="B")
+        return pd.Series(np.random.normal(mean, std, n), index=dates)
 
 
 class TestQuantstatsMetrics:
@@ -165,9 +166,10 @@ class TestQuantstatsMetrics:
             assert isinstance(metrics, dict)
 
     def _generate_test_returns(self, mean=0.0005, std=0.01, n=252):
-        """Generate test returns series."""
+        """Generate test returns series with DatetimeIndex for quantstats compatibility."""
         np.random.seed(42)
-        return pd.Series(np.random.normal(mean, std, n))
+        dates = pd.date_range(start="2024-01-01", periods=n, freq="B")
+        return pd.Series(np.random.normal(mean, std, n), index=dates)
 
 
 class TestEmpyricalMetrics:
@@ -196,9 +198,10 @@ class TestEmpyricalMetrics:
             assert isinstance(metrics, dict)
 
     def _generate_test_returns(self, mean=0.0005, std=0.01, n=252):
-        """Generate test returns series."""
+        """Generate test returns series with DatetimeIndex for quantstats compatibility."""
         np.random.seed(42)
-        return pd.Series(np.random.normal(mean, std, n))
+        dates = pd.date_range(start="2024-01-01", periods=n, freq="B")
+        return pd.Series(np.random.normal(mean, std, n), index=dates)
 
 
 class TestPyfolioMetrics:
@@ -228,9 +231,10 @@ class TestPyfolioMetrics:
         assert isinstance(metrics, dict)
 
     def _generate_test_returns(self, mean=0.0005, std=0.01, n=252):
-        """Generate test returns series."""
+        """Generate test returns series with DatetimeIndex for quantstats compatibility."""
         np.random.seed(42)
-        return pd.Series(np.random.normal(mean, std, n))
+        dates = pd.date_range(start="2024-01-01", periods=n, freq="B")
+        return pd.Series(np.random.normal(mean, std, n), index=dates)
 
 
 class TestUnifiedMetrics:
@@ -258,9 +262,10 @@ class TestUnifiedMetrics:
         assert len(metrics) > 0
 
     def _generate_test_returns(self, mean=0.0005, std=0.01, n=252):
-        """Generate test returns series."""
+        """Generate test returns series with DatetimeIndex for quantstats compatibility."""
         np.random.seed(42)
-        return pd.Series(np.random.normal(mean, std, n))
+        dates = pd.date_range(start="2024-01-01", periods=n, freq="B")
+        return pd.Series(np.random.normal(mean, std, n), index=dates)
 
 
 class TestIsAvailable:
@@ -330,6 +335,7 @@ class TestCalculateAllMetrics:
         assert isinstance(all_metrics, dict)
 
     def _generate_test_returns(self, mean=0.0005, std=0.01, n=252):
-        """Generate test returns series."""
+        """Generate test returns series with DatetimeIndex for quantstats compatibility."""
         np.random.seed(42)
-        return pd.Series(np.random.normal(mean, std, n))
+        dates = pd.date_range(start="2024-01-01", periods=n, freq="B")
+        return pd.Series(np.random.normal(mean, std, n), index=dates)

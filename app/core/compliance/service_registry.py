@@ -508,7 +508,7 @@ class ComplianceServiceRegistry:
         try:
             from app.sre.monitoring.golden_signals import get_golden_signals_monitor
 
-            return get_golden_signals_monitor()
+            return get_golden_signals_monitor(service_name="compliance_registry")
         except ImportError:
             return None
 
@@ -524,7 +524,7 @@ class ComplianceServiceRegistry:
         try:
             from app.sre.automation.toil_tracker import get_toil_tracker
 
-            return get_toil_tracker()
+            return get_toil_tracker(service_name="compliance_registry")
         except ImportError:
             return None
 

@@ -39,12 +39,7 @@ References:
 - Guéant, O., Lehalle, C.A. & Fernandez-Tapia, J. (2013) "Dealing with inventory risk"
 """
 
-from app.market_making.avellaneda_stoikov.as_model import (
-    ASConfig,
-    ASQuote,
-    ASQuoteParams,
-    AvellanedaStoikovModel,
-)
+from app.market_making.avellaneda_stoikov.as_model import ASConfig, ASQuote, AvellanedaStoikovModel
 from app.market_making.avellaneda_stoikov.inventory_manager import (
     InventoryConfig,
     InventoryManager,
@@ -54,7 +49,6 @@ from app.market_making.avellaneda_stoikov.quote_generator import ASQuoteGenerato
 
 __all__ = [
     "ASConfig",
-    "ASQuoteParams",
     "ASQuote",
     "AvellanedaStoikovModel",
     "ASQuoteGenerator",

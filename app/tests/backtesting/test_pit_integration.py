@@ -23,10 +23,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from app.backtesting.point_in_time_database import (
-    PITDataSnapshot,
-    PointInTimeDatabase,
-)
+from app.backtesting.point_in_time_database import PITDataSnapshot, PointInTimeDatabase
 from app.backtesting.robust_engine.look_ahead_validator import (
     DataGapInfo,
     LookAheadValidator,

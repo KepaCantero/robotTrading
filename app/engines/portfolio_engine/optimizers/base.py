@@ -1,3 +1,4 @@
+# pylint: disable=useless-parent-delegation
 """
 Base Optimizer Module
 

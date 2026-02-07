@@ -1,0 +1,277 @@
+# Ralph Orchestrator - CODE QUALITY AUDIT
+# Sistema: Auditoría de Código Muerto, Ensamblaje y Flujo de Datos
+
+event_loop:
+  prompt_file: ".ralph/code_quality_audit_task.md"
+  completion_promise: "CODE_QUALITY_AUDIT_COMPLETE"
+  max_iterations: 200
+  max_runtime_seconds: 144000  # 40 horas
+  checkpoint_interval: 3
+  starting_event: "code_quality.start"
+
+cli:
+  backend: "claude"
+
+core:
+  specs_dir: "./specs/"
+
+hats:
+  code_quality_auditor:
+    name: "Code Quality Auditor"
+    description: "Audita y corrige código muerto, inyección de dependencias y correlation IDs"
+    triggers: ["code_quality.start", "code_quality.next_phase"]
+    publishes: ["code_quality.next_phase", "code_quality.complete", "code_quality.blocked"]
+    default_publishes: "code_quality.next_phase"
+    instructions: |
+      ## CODE QUALITY AUDITOR - Dead Code, Assembly & Data Flow
+
+      ### FASE 1: Código Muerto (vulture)
+
+      Ejecutar vulture y arreglar todos los items encontrados:
+
+      ```bash
+      # Ejecutar vulture
+      .venv/bin/vulture app/ --min-confidence 90 > vulture_results.txt
+
+      # Contar items
+      grep -c "unused" vulture_results.txt
+      ```
+
+      **Por cada item de código muerto:**
+
+      1. **Imports no utilizados** - Eliminar la línea de import
+      2. **Variables no utilizadas** - Eliminar o usar la variable
+      3. **Código inalcanzable** - Reestructurar la lógica
+
+      **Ejemplo de fix:**
+      ```python
+      # ❌ ANTES:
+      def some_function():
+          unused_var = calculate()
+          return result
+
+      # ✅ DESPUÉS:
+      def some_function():
+          return result
+      ```
+
+      **Validar después de cada fix:**
+      ```bash
+      scripts/validate_file_complete.sh <archivo>
+      ```
+
+      **Archivos prioritarios (con más código muerto):**
+      - `app/backtesting/walk_forward_validator.py` - 6 variables
+      - `app/core/statsmodels_fallback.py` - 6 variables
+      - `app/database/__init__.py` - 5 variables
+      - `app/backtesting/execution_engine.py` - 2 variables
+      - `app/main.py` - 1 variable
+
+      ### FASE 2: Inyección de Dependencias
+
+      Buscar constructores sin DI apropiada:
+
+      ```bash
+      # 1. Buscar constructores con instanciación directa
+      grep -rn "def __init__.*:" app/ | while read line; do
+          file=$(echo "$line" | cut -d: -f1)
+          # Verificar si hay ClassName() dentro
+      done
+
+      # 2. Buscar type hints con clases concretas (no Protocol)
+      grep -rn "def __init__.*: StrategyRegistry" app/
+      grep -rn "def __init__.*: BrokerConnector" app/
+      grep -rn "def __init__.*: Logger" app/
+      grep -rn "def __init__.*: RiskGates" app/
+      ```
+
+      **Patrones a corregir:**
+
+      1. **Instanciación directa → Dependency Injection**
+      ```python
+      # ❌ ANTES:
+      class TradingEngine:
+          def __init__(self):
+              self.broker = BrokerConnector()
+
+      # ✅ DESPUÉS:
+      class TradingEngine:
+          def __init__(self, broker: BrokerConnectorProto):
+              self.broker = broker
+      ```
+
+      2. **Clases concretas → Protocol**
+      ```python
+      # ❌ ANTES:
+      from .broker import BrokerConnector
+
+      class OrderManager:
+          def __init__(self, broker: BrokerConnector):
+
+      # ✅ DESPUÉS:
+      from .protocols import BrokerConnectorProto
+
+      class OrderManager:
+          def __init__(self, broker: BrokerConnectorProto):
+      ```
+
+      ### FASE 3: Correlation IDs
+
+      Verificar y añadir correlation_id en módulos críticos:
+
+      ```bash
+      # Verificar qué módulos YA tienen correlation_id
+      grep -l "correlation_id" app/services/live_trading/*.py
+
+      # Buscar logger.info sin correlation_id
+      grep -rn "logger.info.*order" app/services/live_trading/ | grep -v correlation_id
+      ```
+
+      **Añadir correlation_id a módulos críticos:**
+
+      1. **Generar en punto de entrada:**
+      ```python
+      import uuid
+      correlation_id = str(uuid.uuid4())
+      ```
+
+      2. **Incluir en todos los logs:**
+      ```python
+      logger.info(
+          "Action description",
+          correlation_id=correlation_id,
+          entity_id=entity_id,
+          status="started",
+      )
+      ```
+
+      3. **Propagar a través de la cadena:**
+      ```python
+      # Pasar como parámetro a funciones/métodos
+      result = await some_method(..., correlation_id=correlation_id)
+      ```
+
+      **Módulos que DEBEN tener correlation_id:**
+      - `app/services/live_trading/order_manager.py`
+      - `app/services/live_trading/broker_connector.py`
+      - `app/services/live_trading/trading_bridge_orchestrator.py`
+      - `app/strategies/execution_engine.py`
+
+      ### Por cada fase:
+
+      1. **Leer el archivo actual**
+      2. **Aplicar los fixes según la fase**
+      3. **Validar:**
+      ```bash
+      scripts/validate_file_complete.sh <archivo>
+      ```
+      4. **Solo cuando success: true**:
+         - Marcar fase como COMPLETED
+         - Continuar con siguiente fase
+
+      ### Formato de checkpoint:
+      ```json
+      {
+        "phases": {
+          "phase_1_dead_code": {
+            "status": "COMPLETED",
+            "vulture_items_before": 74,
+            "vulture_items_after": 0
+          },
+          "phase_2_dependency_injection": {
+            "status": "COMPLETED",
+            "constructors_fixed": 10
+          },
+          "phase_3_correlation_id": {
+            "status": "COMPLETED",
+            "modules_with_tracing": 4
+          }
+        }
+      }
+      ```
+
+      ### REGLAS DE ORO:
+      - ❌ NO marcar fase como COMPLETED si validate_file_complete.sh falla
+      - ❌ NO eliminar código que pueda ser usado en tests
+      - ✅ Usar Protocol en lugar de ABC para DI
+      - ✅ Generar correlation_id con uuid.uuid4()
+      - ✅ Validar después de CADA cambio
+
+      ### Event Format
+      Fase completada:
+      ```
+      ralph emit "code_quality.next_phase" "phase=<n>, status=COMPLETED, items_fixed=<n>"
+      ```
+
+      Todas fases completadas:
+      ```
+      ralph emit "code_quality.complete" "phases=3, all_passed=true"
+      ```
+
+      Fase bloqueada:
+      ```
+      ralph emit "code_quality.blocked" "phase=<n>, file=<path>, errors=<cantidad>"
+      ```
+
+  code_reviewer:
+    name: "Final Code Quality Reviewer"
+    description: "Revisión final de auditoría de calidad de código"
+    triggers: ["code_quality.complete"]
+    publishes: ["code_quality.final_summary"]
+    instructions: |
+      ## FINAL CODE QUALITY REVIEWER - Verificación final
+
+      Ejecutar verificación FINAL:
+
+      ```bash
+      # 1. Verificar que vulture no encuentra código muerto
+      .venv/bin/vulture app/ --min-confidence 90
+      # Debe retornar: No dead code found
+
+      # 2. Ejecutar pydeps
+      .venv/bin/pydeps app/ --max-bacon=3 -o pydeps_final.png
+      # Revisar que no haya módulos aislados
+
+      # 3. Verificar inyección de dependencias
+      # NO debe haber clases concretas en type hints de __init__
+      grep -rn "def __init__.*: StrategyRegistry" app/
+      grep -rn "def __init__.*: BrokerConnector" app/
+      # Debe retornar vacío (todos usan Protocol)
+
+      # 4. Verificar correlation_id en módulos críticos
+      for file in \
+        app/services/live_trading/order_manager.py \
+        app/services/live_trading/broker_connector.py \
+        app/services/live_trading/trading_bridge_orchestrator.py \
+        app/strategies/execution_engine.py
+      do
+        echo "Checking $file:"
+        grep -c "correlation_id" "$file"
+      done
+      # Todos deben tener > 0 occurrences
+
+      # 5. Ejecutar tests
+      .venv/bin/pytest tests/ -v --tb=short -x
+      # TODOS los tests deben PASAR
+      ```
+
+      Si TODO está limpio:
+      ```
+      ralph emit "code_quality.final_summary" "all_passed"
+      Output: **CODE_QUALITY_AUDIT_COMPLETE**
+      ```
+
+      Si hay errores:
+      ```
+      ralph emit "code_quality.failed" "found_errors=<cantidad>"
+      ```
+
+# Task configuration
+tasks:
+  enabled: true
+
+# Memory configuration
+memories:
+  enabled: true
+  inject: auto
+  budget: 3000

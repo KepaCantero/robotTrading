@@ -15,14 +15,19 @@ References:
 - Stoll, H.R. (2000) "Friction"
 - Kyle, A.S. (1985) "Continuous Auctions and Insider Trading"
 """
+from __future__ import annotations  # Enable Python 3.10+ union syntax in Python 3.9
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
+from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
+
+# mypy: ignore-errors
+# pylint: disable=unsupported-binary-operation  # For Python 3.10+ union syntax
 
 
 class LiquidityDimension(Enum):

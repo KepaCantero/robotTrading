@@ -243,7 +243,7 @@ class MultiAssetAllocation:
 
         This should equal the asset class weight if properly normalized.
         """
-        return sum(self.assets.values()) if self.assets else Decimal("0")
+        return Decimal(sum(self.assets.values())) if self.assets else Decimal("0")
 
     @property
     def asset_symbols(self) -> List[str]:
@@ -396,7 +396,7 @@ class MultiAssetPortfolio:
         Returns:
             Sum of weights (should be approximately 1.0)
         """
-        return sum(alloc.weight for alloc in self.allocations.values())
+        return Decimal(sum(alloc.weight for alloc in self.allocations.values()))
 
     def validate(self) -> bool:
         """

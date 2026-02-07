@@ -17,11 +17,7 @@ from typing import List
 import pytest
 from hypothesis import HealthCheck, given, settings, strategies as st
 
-from app.backtesting.metrics import (
-    MetricsCalculator,
-    calculate_expectancy,
-    calculate_profit_factor,
-)
+from app.backtesting.metrics import MetricsCalculator, calculate_expectancy, calculate_profit_factor
 from app.backtesting.models import Trade, TradeStatus
 
 # =============================================================================

@@ -28,7 +28,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, Generic, List, Optional, TypeVar
+from typing import Any, Callable, Dict, Generic, List, Optional, TypeVar
 
 from app.domain.entities.order import Order
 from app.domain.entities.portfolio import Portfolio, Position
@@ -173,7 +173,7 @@ class CommandHandler(ABC):
 # ============================================================================
 
 
-class ApplicationService(ABC):
+class ApplicationService:  # Concrete base class with shared functionality
     """
     Base class for application services.
 
@@ -210,7 +210,7 @@ class ApplicationService(ABC):
         self.uow_factory = uow_factory
 
     async def _execute_in_transaction(
-        self, operation: callable, uow: Optional[AbstractUnitOfWork] = None
+        self, operation: Callable, uow: Optional[AbstractUnitOfWork] = None
     ) -> Any:
         """
         Execute an operation within a transaction.
@@ -515,10 +515,12 @@ class PortfolioApplicationService(ApplicationService):
         """
 
         async def _create(uow: AbstractUnitOfWork) -> str:
-            from ..domain.value_objects.capital import Capital
-            from ..domain.value_objects.risk_parameters import RiskParameters
+            # pylint: disable=import-outside-toplevel
+            from app.domain.value_objects.capital import Capital
+            from app.domain.value_objects.risk_parameters import RiskParameters
 
             # Create portfolio entity
+            # pylint: disable=no-value-for-parameter
             portfolio = Portfolio(
                 portfolio_id=portfolio_id,
                 capital=Capital(amount=initial_capital, currency=currency),
@@ -527,6 +529,7 @@ class PortfolioApplicationService(ApplicationService):
                     max_portfolio_exposure=initial_capital * Decimal('0.8'),
                 ),
             )
+            # pylint: enable=no-value-for-parameter
 
             # Save portfolio
             await uow.portfolios.add(portfolio)
@@ -666,10 +669,10 @@ class ServiceOrchestrator:
             raise ValueError("Order service not registered")
 
         # Create order
-        order_id = await order_service.create_order(order_command)
+        order_id = await order_service.create_order(order_command)  # type: ignore[attr-defined]
 
         # Submit order (in same transaction if needed, or separate)
-        await order_service.submit_order(SubmitOrderCommand(order_id))
+        await order_service.submit_order(SubmitOrderCommand(order_id))  # type: ignore[attr-defined]
 
         return order_id
 
@@ -683,22 +686,20 @@ class ValidationError(Exception):
     """Raised when command validation fails."""
 
 
-
 class BusinessRuleError(Exception):
     """Raised when business rule is violated."""
-
 
 
 class NotFoundError(Exception):
     """Raised when entity is not found."""
 
 
-
 # ============================================================================
 # INPUT PROFILE ROUTING & CONFIGURATION SERVICES
 # ============================================================================
 
-from .input_profile_router import (
+# pylint: disable=wrong-import-position  # Intentional: avoid circular imports
+from .input_profile_router import (  # noqa: E402
     InputProfileRouter,
     OptimizationConfig,
     OptimizationType,
@@ -708,7 +709,7 @@ from .input_profile_router import (
     SystemConfiguration,
     TaxConfig,
 )
-from .risk_configurator import (
+from .risk_configurator import (  # noqa: E402
     DrawdownMetrics,
     RiskBudget,
     RiskConfigurator,
@@ -717,7 +718,15 @@ from .risk_configurator import (
     StressTestScenario,
     VaRResult,
 )
-from .tax_optimizer import TaxCalculation, TaxJurisdiction, TaxLot, TaxMethod, TaxOptimizer
+from .tax_optimizer import (  # noqa: E402
+    TaxCalculation,
+    TaxJurisdiction,
+    TaxLot,
+    TaxMethod,
+    TaxOptimizer,
+)
+
+# pylint: enable=wrong-import-position
 
 __all__ = [
     # CQRS

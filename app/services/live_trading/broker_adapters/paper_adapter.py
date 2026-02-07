@@ -98,8 +98,13 @@ class PaperAdapter:
         order_type: OrderType = OrderType.MARKET,
         price: Optional[Decimal] = None,
         stop_price: Optional[Decimal] = None,
+        client_order_id: Optional[str] = None,
     ) -> str:
         """Place an order in paper trading (simulated).
+
+        SEC-005: Supports client_order_id for idempotency. If an order with
+        the same client_order_id already exists, returns the existing order_id
+        instead of creating a duplicate.
 
         Args:
             symbol: Stock symbol
@@ -108,6 +113,7 @@ class PaperAdapter:
             order_type: Order type
             price: Limit price if applicable
             stop_price: Stop price if applicable
+            client_order_id: Optional client order ID for idempotency
 
         Returns:
             str: Order ID
@@ -119,6 +125,19 @@ class PaperAdapter:
             raise Exception("Not connected to paper trading")
 
         try:
+            # SEC-005: Check for duplicate client_order_id
+            if client_order_id:
+                for existing_order_id, existing_order in self.orders.items():
+                    if existing_order.client_order_id == client_order_id:
+                        logger.info(
+                            "Duplicate order detected - returning existing order",
+                            extra={
+                                "existing_order_id": existing_order_id,
+                                "client_order_id": client_order_id,
+                            },
+                        )
+                        return existing_order_id
+
             order_id = str(uuid4())
 
             # Create order
@@ -132,6 +151,7 @@ class PaperAdapter:
                 stop_price=stop_price,
                 status=OrderStatus.SUBMITTED,
                 created_at=datetime.utcnow(),
+                client_order_id=client_order_id,  # SEC-005: Store client_order_id
             )
 
             # Cache order

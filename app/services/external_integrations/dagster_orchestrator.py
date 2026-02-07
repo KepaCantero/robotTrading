@@ -206,13 +206,7 @@ class DagsterOrchestrator:
                         logger.warning(
                             f"⚠️ Dagster execution failed (HTTP {resp.status}), using local tracking"
                         )
-            except (
-                IntegrityError,
-                OperationalError,
-                DatabaseError,
-                DataError,
-                ProgrammingError,
-            ) as e:
+            except (ConnectionError, OSError, Exception) as e:
                 logger.warning(f"⚠️ Failed to execute on Dagster: {str(e)}, using local tracking")
 
         # Always update local state
@@ -378,13 +372,7 @@ class DagsterOrchestrator:
                         return True
                     else:
                         logger.warning(f"⚠️ Dagster pipeline execution failed (HTTP {resp.status})")
-            except (
-                IntegrityError,
-                OperationalError,
-                DatabaseError,
-                DataError,
-                ProgrammingError,
-            ) as e:
+            except (ConnectionError, OSError, Exception) as e:
                 logger.warning(f"⚠️ Failed to execute pipeline on Dagster: {str(e)}")
 
         # Local execution with dependency resolution
@@ -502,13 +490,7 @@ class DagsterOrchestrator:
                         logger.info(f"✅ Job retry initiated on Dagster: {job_id}")
                         job.run_count += 1
                         return True
-            except (
-                IntegrityError,
-                OperationalError,
-                DatabaseError,
-                DataError,
-                ProgrammingError,
-            ) as e:
+            except (ConnectionError, OSError, Exception) as e:
                 logger.warning(f"⚠️ Failed to retry on Dagster: {str(e)}")
 
         # Retry locally

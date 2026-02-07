@@ -16,12 +16,17 @@ References:
 - Madhavan, A. (1992) "Trading Mechanisms in Securities Markets"
 - Domowitz, I. (1990) "The Structure of Trading Discrete Markets"
 """
+from __future__ import annotations  # Enable Python 3.10+ union syntax in Python 3.9
 
 import heapq
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
+from typing import Dict, List, Optional, Tuple  # noqa: F401
+
+# mypy: ignore-errors
+# pylint: disable=unsupported-binary-operation  # For Python 3.10+ union syntax
 
 
 class MarketMechanism(Enum):
@@ -270,8 +275,8 @@ class CallAuction:
 
         # Add midpoints
         for i in range(len(buy_prices) - 1):
-            for j in range(len(sell_prices)):
-                midpoint = (buy_prices[i] + sell_prices[j]) / 2
+            for sell_price in sell_prices:
+                midpoint = (buy_prices[i] + sell_price) / 2
                 test_prices.add(midpoint)
 
         for test_price in sorted(test_prices):

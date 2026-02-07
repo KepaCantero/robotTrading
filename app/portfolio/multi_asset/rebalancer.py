@@ -14,7 +14,6 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List
 
-
 from .asset_class import AssetClass, AssetClassType
 from .models import MultiAssetAllocation, MultiAssetPortfolio, Trade
 
@@ -152,7 +151,7 @@ class RebalancePlan:
     @property
     def total_value_to_trade(self) -> Decimal:
         """Total value of all trades."""
-        return sum(abs(t.quantity * t.current_price) for t in self.trades)
+        return Decimal(sum(abs(t.quantity * t.current_price) for t in self.trades))
 
     @property
     def buys(self) -> List[RebalanceTrade]:
@@ -167,8 +166,8 @@ class RebalancePlan:
     @property
     def net_cash_flow(self) -> Decimal:
         """Net cash flow from all trades (positive = inflow)."""
-        buy_value = sum(t.quantity * t.current_price for t in self.buys)
-        sell_value = sum(abs(t.quantity * t.current_price) for t in self.sells)
+        buy_value = Decimal(sum(t.quantity * t.current_price for t in self.buys))
+        sell_value = Decimal(sum(abs(t.quantity * t.current_price) for t in self.sells))
         return sell_value - buy_value
 
 

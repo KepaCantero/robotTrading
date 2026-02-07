@@ -270,6 +270,106 @@ class StrategyStockAllocator:
 
         return result
 
+    def _assign_pairs_trading(
+        self, strategy_assignments: dict[str, str], asset_pair_count: defaultdict
+    ) -> int:
+        """Assign pairs trading strategy to highest-scoring pairs."""
+        sorted_pairs = sorted(
+            self.pair_metrics,
+            key=lambda p: p.cointegration_score if p.cointegration_score is not None else 0.0,
+            reverse=True,
+        )
+
+        pairs_assigned = 0
+        for pair_metrics_obj in sorted_pairs:
+            ticker1, ticker2 = pair_metrics_obj.ticker1, pair_metrics_obj.ticker2
+            if (
+                asset_pair_count[ticker1] < self.config.MAX_ASSETS_PER_PAIR
+                and asset_pair_count[ticker2] < self.config.MAX_ASSETS_PER_PAIR
+            ):
+                strategy_assignments[ticker1] = "pairs_trading"
+                strategy_assignments[ticker2] = "pairs_trading"
+                asset_pair_count[ticker1] += 1
+                asset_pair_count[ticker2] += 1
+                pairs_assigned += 1
+
+        return pairs_assigned
+
+    def _assign_single_ticker_strategy(self, ticker: str, scores: dict[str, float]) -> str:
+        """Assign a single ticker to momentum or mean_reversion based on scores."""
+        momentum_score = scores.get("momentum", 0.0)
+        mean_rev_score = scores.get("mean_reversion", 0.0)
+
+        if momentum_score > mean_rev_score or (momentum_score == mean_rev_score == 0.0):
+            return "momentum"
+        elif mean_rev_score > 0:
+            return "mean_reversion"
+        else:
+            return "momentum"
+
+    def _ensure_minimum_tickers_per_strategy(
+        self,
+        strategy_assignments: dict[str, str],
+        momentum_tickers: list,
+        mean_reversion_tickers: list,
+    ) -> None:
+        """Ensure each strategy has at least 1 ticker."""
+        if len(momentum_tickers) == 0 and len(mean_reversion_tickers) > 1:
+            moved_ticker = mean_reversion_tickers.pop(0)
+            strategy_assignments[moved_ticker] = "momentum"
+            momentum_tickers.append(moved_ticker)
+        elif len(mean_reversion_tickers) == 0 and len(momentum_tickers) > 1:
+            moved_ticker = momentum_tickers.pop(0)
+            strategy_assignments[moved_ticker] = "mean_reversion"
+            mean_reversion_tickers.append(moved_ticker)
+
+    def _assign_remaining_tickers(
+        self,
+        all_scores: dict[str, dict[str, float]],
+        strategy_assignments: dict[str, str],
+        momentum_tickers: list,
+        mean_reversion_tickers: list,
+    ) -> None:
+        """Assign remaining unassigned tickers to reach minimum target."""
+        total_assigned = len(strategy_assignments)
+        min_target_tickers = 15
+
+        if total_assigned >= min_target_tickers:
+            return
+
+        unassigned_tickers = [
+            ticker for ticker in all_scores.keys() if ticker not in strategy_assignments
+        ]
+
+        if len(unassigned_tickers) == 0:
+            return
+
+        momentum_count = len(momentum_tickers)
+        mean_rev_count = len(mean_reversion_tickers)
+
+        for ticker in unassigned_tickers:
+            scores = all_scores.get(ticker, {})
+            momentum_score = scores.get("momentum", 0.0)
+            mean_rev_score = scores.get("mean_reversion", 0.0)
+
+            if momentum_count < mean_rev_count:
+                strategy_assignments[ticker] = "momentum"
+                momentum_tickers.append(ticker)
+                momentum_count += 1
+            elif mean_rev_count < momentum_count:
+                strategy_assignments[ticker] = "mean_reversion"
+                mean_reversion_tickers.append(ticker)
+                mean_rev_count += 1
+            else:
+                if momentum_score >= mean_rev_score:
+                    strategy_assignments[ticker] = "momentum"
+                    momentum_tickers.append(ticker)
+                    momentum_count += 1
+                else:
+                    strategy_assignments[ticker] = "mean_reversion"
+                    mean_reversion_tickers.append(ticker)
+                    mean_rev_count += 1
+
     def _assign_strategies(self, all_scores: dict[str, dict[str, float]]) -> dict[str, str]:
         """
         Resolve conflicts and assign strategies to tickers.
@@ -281,34 +381,14 @@ class StrategyStockAllocator:
             Dictionary mapping ticker to assigned strategy
         """
         strategy_assignments = {}
-
-        # Prioritize Pairs Trading first
-        sorted_pairs = sorted(
-            self.pair_metrics,
-            key=lambda p: p.cointegration_score if p.cointegration_score is not None else 0.0,
-            reverse=True,
-        )
-
         asset_pair_count = defaultdict(int)
-        pairs_assigned = 0
 
-        for pair_metrics_obj in sorted_pairs:
-            ticker1, ticker2 = pair_metrics_obj.ticker1, pair_metrics_obj.ticker2
-
-            if (
-                asset_pair_count[ticker1] < self.config.MAX_ASSETS_PER_PAIR
-                and asset_pair_count[ticker2] < self.config.MAX_ASSETS_PER_PAIR
-            ):
-                strategy_assignments[ticker1] = "pairs_trading"
-                strategy_assignments[ticker2] = "pairs_trading"
-                asset_pair_count[ticker1] += 1
-                asset_pair_count[ticker2] += 1
-                pairs_assigned += 1
-
+        # Step 1: Prioritize Pairs Trading first
+        pairs_assigned = self._assign_pairs_trading(strategy_assignments, asset_pair_count)
         if pairs_assigned > 0:
             logger.info(f"✅ Assigned {pairs_assigned} pairs to pairs_trading strategy")
 
-        # Assign remaining assets to Momentum or Mean Reversion
+        # Step 2: Assign remaining assets to Momentum or Mean Reversion
         momentum_tickers = []
         mean_reversion_tickers = []
 
@@ -316,69 +396,23 @@ class StrategyStockAllocator:
             if ticker in strategy_assignments:
                 continue
 
-            momentum_score = scores.get("momentum", 0.0)
-            mean_rev_score = scores.get("mean_reversion", 0.0)
+            assigned_strategy = self._assign_single_ticker_strategy(ticker, scores)
+            strategy_assignments[ticker] = assigned_strategy
 
-            if momentum_score > mean_rev_score or (momentum_score == mean_rev_score == 0.0):
-                strategy_assignments[ticker] = "momentum"
+            if assigned_strategy == "momentum":
                 momentum_tickers.append(ticker)
-            elif mean_rev_score > 0:
-                strategy_assignments[ticker] = "mean_reversion"
-                mean_reversion_tickers.append(ticker)
             else:
-                strategy_assignments[ticker] = "momentum"
-                momentum_tickers.append(ticker)
+                mean_reversion_tickers.append(ticker)
 
-        # Ensure each strategy has at least 1 ticker
-        if len(momentum_tickers) == 0 and len(mean_reversion_tickers) > 1:
-            moved_ticker = mean_reversion_tickers.pop(0)
-            strategy_assignments[moved_ticker] = "momentum"
-            momentum_tickers.append(moved_ticker)
-        elif len(mean_reversion_tickers) == 0 and len(momentum_tickers) > 1:
-            moved_ticker = momentum_tickers.pop(0)
-            strategy_assignments[moved_ticker] = "mean_reversion"
-            mean_reversion_tickers.append(moved_ticker)
+        # Step 3: Ensure each strategy has at least 1 ticker
+        self._ensure_minimum_tickers_per_strategy(
+            strategy_assignments, momentum_tickers, mean_reversion_tickers
+        )
 
-        # Ensure minimum tickers for capital utilization
-        total_assigned = len(strategy_assignments)
-        min_target_tickers = 15
-
-        if total_assigned < min_target_tickers:
-            unassigned_tickers = [
-                ticker for ticker in all_scores.keys() if ticker not in strategy_assignments
-            ]
-
-            if len(unassigned_tickers) > 0:
-                logger.info(
-                    f"⚠️ Only {total_assigned} tickers assigned, "
-                    f"assigning ALL {len(unassigned_tickers)} remaining tickers"
-                )
-
-                momentum_count = len(momentum_tickers)
-                mean_rev_count = len(mean_reversion_tickers)
-
-                for ticker in unassigned_tickers:
-                    scores = all_scores.get(ticker, {})
-                    momentum_score = scores.get("momentum", 0.0)
-                    mean_rev_score = scores.get("mean_reversion", 0.0)
-
-                    if momentum_count < mean_rev_count:
-                        strategy_assignments[ticker] = "momentum"
-                        momentum_tickers.append(ticker)
-                        momentum_count += 1
-                    elif mean_rev_count < momentum_count:
-                        strategy_assignments[ticker] = "mean_reversion"
-                        mean_reversion_tickers.append(ticker)
-                        mean_rev_count += 1
-                    else:
-                        if momentum_score >= mean_rev_score:
-                            strategy_assignments[ticker] = "momentum"
-                            momentum_tickers.append(ticker)
-                            momentum_count += 1
-                        else:
-                            strategy_assignments[ticker] = "mean_reversion"
-                            mean_reversion_tickers.append(ticker)
-                            mean_rev_count += 1
+        # Step 4: Ensure minimum tickers for capital utilization
+        self._assign_remaining_tickers(
+            all_scores, strategy_assignments, momentum_tickers, mean_reversion_tickers
+        )
 
         return strategy_assignments
 

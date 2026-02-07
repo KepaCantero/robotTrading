@@ -337,8 +337,10 @@ class MeanReversionStrategy(BaseStrategy):
         prices_with_current = prices_list + [current_price]
 
         # Calculate z-score using pandas-ta-classic (rolling z-score with lookback_period)
-        z_score_raw = self.indicator_calculator.calculate_zscore(
-            prices_with_current, period=self.lookback_period, std=1.0
+        z_score_raw = (
+            self.indicator_calculator.calculate_zscore(  # pylint: disable=no-value-for-parameter
+                prices_with_current, period=self.lookback_period, std=1.0
+            )
         )
 
         if z_score_raw is None:
@@ -381,7 +383,7 @@ class MeanReversionStrategy(BaseStrategy):
         prices_with_current = prices_list + [current_price]
 
         # Calculate volatility using pandas-ta-classic (daily volatility)
-        volatility_raw = self.indicator_calculator.calculate_volatility(
+        volatility_raw = self.indicator_calculator.calculate_volatility(  # pylint: disable=no-value-for-parameter
             prices_with_current, tf='days', returns=False, log=False
         )
 
@@ -423,9 +425,7 @@ class MeanReversionStrategy(BaseStrategy):
         z_score_buy = -self.z_score_threshold * Decimal("0.7")  # 70% of threshold (was 0.8)
         is_undervalued = z_score < z_score_buy
 
-        # Make price drop optional - if z-score is very negative, don't require price drop
-        price_drop_min = Decimal("0.001")  # Reduced from 0.002 to 0.1% drop (more permissive)
-        (market_data.open - market_data.close) / market_data.open > price_drop_min
+        # Price drop/rise checks removed - optional for more opportunities
         very_oversold = z_score < -self.z_score_threshold * Decimal(
             "1.2"
         )  # Reduced from 1.5 to 1.2
@@ -464,9 +464,7 @@ class MeanReversionStrategy(BaseStrategy):
         z_score_sell = self.z_score_threshold * Decimal("0.7")  # 70% of threshold (was 0.8)
         is_overvalued = z_score > z_score_sell
 
-        # Make price rise optional - if z-score is very positive, don't require price rise
-        price_rise_min = Decimal("0.001")  # Reduced from 0.002 to 0.1% rise (more permissive)
-        (market_data.close - market_data.open) / market_data.open > price_rise_min
+        # Price drop/rise checks removed - optional for more opportunities
         very_overbought = z_score > self.z_score_threshold * Decimal(
             "1.2"
         )  # Reduced from 1.5 to 1.2

@@ -8,6 +8,7 @@ Fuentes soportadas:
 - Polygon
 """
 
+import asyncio
 import logging
 from datetime import datetime
 from decimal import Decimal
@@ -15,6 +16,7 @@ from typing import Any, Dict, List, Optional
 
 # REQUIRED: No fallbacks - aiohttp is required for async HTTP requests
 import aiohttp  # noqa: F401
+from aiohttp import ClientError
 
 from .base_source import BaseDataSource
 
@@ -88,7 +90,11 @@ class IBKRSource(BaseDataSource):
 
         try:
             from ib_insync import Stock
+        except ImportError:
+            logger.error("ib_insync no disponible")
+            return []
 
+        try:
             # Crear contrato
             contract = Stock(symbol, 'SMART', 'USD')
 
@@ -117,9 +123,6 @@ class IBKRSource(BaseDataSource):
                 )
 
             return ohlcv_data
-
-            logger.error("ib_insync no disponible")
-            return []
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error obteniendo OHLCV de IBKR para {symbol}: {e}")
             return []
@@ -172,7 +175,7 @@ class BinanceSource(BaseDataSource):
             self.is_connected = False
             logger.info("Desconectado de Binance")
             return True
-        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
+        except (asyncio.TimeoutError, ClientError, OSError) as e:
             logger.error(f"Error desconectando de Binance: {e}")
             return False
 
@@ -184,7 +187,7 @@ class BinanceSource(BaseDataSource):
             # Ping a la API
             async with self.session.get(f"{self.base_url}/api/v3/ping") as response:
                 return response.status == 200
-        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError):
+        except (asyncio.TimeoutError, ClientError, OSError):
             return False
 
     async def get_ohlcv(
@@ -254,7 +257,7 @@ class BinanceSource(BaseDataSource):
 
             return ohlcv_data
 
-        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        except (asyncio.TimeoutError, ClientError, OSError) as e:
             logger.error(f"Error obteniendo OHLCV de Binance para {symbol}: {e}")
             return []
 
@@ -310,7 +313,7 @@ class AlpacaSource(BaseDataSource):
             self.is_connected = False
             logger.info("Desconectado de Alpaca")
             return True
-        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
+        except (asyncio.TimeoutError, ClientError, OSError) as e:
             logger.error(f"Error desconectando de Alpaca: {e}")
             return False
 
@@ -322,7 +325,7 @@ class AlpacaSource(BaseDataSource):
             # Verificar cuenta
             async with self.session.get(f"{self.base_url}/v2/account") as response:
                 return response.status == 200
-        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError):
+        except (asyncio.TimeoutError, ClientError, OSError):
             return False
 
     async def get_ohlcv(
@@ -429,7 +432,7 @@ class PolygonSource(BaseDataSource):
             self.is_connected = False
             logger.info("Desconectado de Polygon")
             return True
-        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
+        except (asyncio.TimeoutError, ClientError, OSError) as e:
             logger.error(f"Error desconectando de Polygon: {e}")
             return False
 
@@ -443,7 +446,7 @@ class PolygonSource(BaseDataSource):
                 f"{self.base_url}/v2/reference/status", params={'apiKey': self.api_key}
             ) as response:
                 return response.status == 200
-        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError):
+        except (asyncio.TimeoutError, ClientError, OSError):
             return False
 
     async def get_ohlcv(

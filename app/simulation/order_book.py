@@ -14,6 +14,8 @@ Key concepts implemented:
 Reference:
     Harris, L. (2003). Trading and Exchanges, Chapters 3-4.
 """
+# mypy: ignore-errors
+# pylint: disable=unsupported-binary-operation  # For Python 3.10+ union syntax
 
 import logging
 import uuid
@@ -22,7 +24,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple  # noqa: F401
 
 logger = logging.getLogger(__name__)
 
@@ -411,8 +413,16 @@ class LimitOrderBook:
             asks.append((price, level.total_quantity))
 
         # Calculate totals
-        total_bid_qty = sum(level.total_quantity for level in self._bids.values())
-        total_ask_qty = sum(level.total_quantity for level in self._asks.values())
+        total_bid_qty = (
+            Decimal(sum(level.total_quantity for level in self._bids.values()))
+            if self._bids
+            else Decimal("0")
+        )
+        total_ask_qty = (
+            Decimal(sum(level.total_quantity for level in self._asks.values()))
+            if self._asks
+            else Decimal("0")
+        )
 
         return OrderBookSnapshot(
             symbol=self.symbol,

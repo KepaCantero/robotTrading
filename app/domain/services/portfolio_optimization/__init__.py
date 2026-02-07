@@ -17,7 +17,7 @@ from .denoise_correlation import CorrelationDenoiser, DenoisedResult
 from .hrp import HierarchicalRiskParity, HRPResult, inverse_variance_weights
 from .mean_variance_optimizer import EfficientFrontier, MeanVarianceOptimizer, OptimizationResult
 from .nco import NCOResult, NestedClusteredOptimizer, get_nco_with_multiple_n
-from .risk_parity import ClusterBasedRiskParity, RiskParityOptimizer, RiskParityResult
+from .risk_parity import RiskParityOptimizer, RiskParityResult
 
 __all__ = [
     # Covariance
@@ -41,7 +41,6 @@ __all__ = [
     # Risk Parity
     "RiskParityOptimizer",
     "RiskParityResult",
-    "ClusterBasedRiskParity",
     # Black-Litterman
     "BlackLittermanOptimizer",
     "BlackLittermanResult",

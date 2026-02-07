@@ -989,7 +989,7 @@ class CentralizedConfig(BaseSettings):
             self.trading.model_validate(self.trading.model_dump())
 
             # Validate strategy configurations
-            for strategy_name, strategy_config in self.strategies.items():
+            for _strategy_name, strategy_config in self.strategies.items():
                 strategy_config.model_validate(strategy_config.model_dump())
 
             return True
@@ -1299,7 +1299,7 @@ def validate_dates(backtest_config: Dict[str, str]) -> bool:
         return False
 
 
-def validate_config(config: 'Configuration') -> bool:
+def validate_config_object(config: 'Configuration') -> bool:
     """
     Validate complete configuration object.
 
@@ -1311,7 +1311,7 @@ def validate_config(config: 'Configuration') -> bool:
 
     Examples:
         >>> config = Configuration({'risk_management': {...}})
-        >>> validate_config(config)
+        >>> validate_config_object(config)
         True
     """
     if not config or not hasattr(config, '_config'):
@@ -1323,26 +1323,22 @@ def validate_config(config: 'Configuration') -> bool:
     if 'risk_management' in config_dict:
         rm = config_dict['risk_management']
 
-        if 'atr_multipliers' in rm:
-            if not validate_atr_multipliers(rm['atr_multipliers']):
-                return False
+        if 'atr_multipliers' in rm and not validate_atr_multipliers(rm['atr_multipliers']):
+            return False
 
-        if 'position_sizing' in rm:
-            if not validate_risk_percentages(rm['position_sizing']):
-                return False
+        if 'position_sizing' in rm and not validate_risk_percentages(rm['position_sizing']):
+            return False
 
     # Validate trading section
     if 'trading' in config_dict:
         trading = config_dict['trading']
 
-        if 'symbols' in trading:
-            if not validate_trading_symbols(trading['symbols']):
-                return False
+        if 'symbols' in trading and not validate_trading_symbols(trading['symbols']):
+            return False
 
     # Validate backtesting section
-    if 'backtesting' in config_dict:
-        if not validate_dates(config_dict['backtesting']):
-            return False
+    if 'backtesting' in config_dict and not validate_dates(config_dict['backtesting']):
+        return False
 
     return True
 
@@ -1863,7 +1859,7 @@ def full_config_workflow(config_path: Path) -> Dict[str, Any]:
     dates = config.get_backtest_dates()
 
     # Validate
-    is_valid = validate_config(config)
+    is_valid = validate_config_object(config)
 
     return {
         'success': is_valid,
@@ -1890,6 +1886,6 @@ def config_with_validation(config_dict: Dict[str, Any]) -> tuple:
         True
     """
     config = Configuration(config_dict)
-    is_valid = validate_config(config)
+    is_valid = validate_config_object(config)
 
     return config, is_valid

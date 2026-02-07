@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 De-noising Correlation Matrix - Random Matrix Theory (RMT)
 

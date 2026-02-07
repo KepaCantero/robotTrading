@@ -122,8 +122,6 @@ async def get_portfolio_summary(
             stack_trace=traceback.format_exc(),
         )
         raise HTTPException(status_code=504, detail=f"Timeout getting portfolio: {str(e)}")
-    except HTTPException:
-        raise
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         logger.error(
             "Error getting portfolio summary",
@@ -211,8 +209,6 @@ async def get_positions(
             stack_trace=traceback.format_exc(),
         )
         raise HTTPException(status_code=504, detail=f"Timeout getting positions: {str(e)}")
-    except HTTPException:
-        raise
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         logger.error(
             "Error getting positions",
@@ -300,8 +296,6 @@ async def get_position(
             stack_trace=traceback.format_exc(),
         )
         raise HTTPException(status_code=504, detail=f"Timeout getting position: {str(e)}")
-    except HTTPException:
-        raise
     except (ConnectionError, OSError) as e:
         logger.error(
             "Error getting position",
@@ -466,8 +460,6 @@ async def get_market_regime(
             stack_trace=traceback.format_exc(),
         )
         raise HTTPException(status_code=504, detail=f"Timeout getting market regime: {str(e)}")
-    except HTTPException:
-        raise
     except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
         logger.error(
             "Error getting market regime data",

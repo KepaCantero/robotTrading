@@ -13,6 +13,7 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 import aiohttp
+from aiohttp import ClientError
 
 from app.models.market_data import (
     DataFeedConfig,
@@ -92,7 +93,7 @@ class DataFeedInterface(ABC):
                             status=response.status,
                             message=f"HTTP {response.status}",
                         )
-            except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+            except (ConnectionError, TimeoutError, ClientError) as e:
                 self.config.error_count += 1
                 logger.error(f"Request failed for {url}: {e}")
                 raise
@@ -111,7 +112,7 @@ class AlphaVantageFeed(DataFeedInterface):
             self.session = aiohttp.ClientSession()
             logger.info("Connected to Alpha Vantage API")
             return True
-        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        except (ConnectionError, TimeoutError, ClientError) as e:
             logger.error(f"Failed to connect to Alpha Vantage: {e}")
             return False
 
@@ -225,7 +226,7 @@ class AlphaVantageFeed(DataFeedInterface):
                     )
 
             return sorted(historical_data, key=lambda x: x.timestamp)
-        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        except (ConnectionError, TimeoutError, ClientError) as e:
             logger.error(f"Failed to get historical data for {symbol}: {e}")
             return []
 
@@ -248,7 +249,7 @@ class YahooFinanceFeed(DataFeedInterface):
             self.session = aiohttp.ClientSession()
             logger.info("Connected to Yahoo Finance API")
             return True
-        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        except (ConnectionError, TimeoutError, ClientError) as e:
             logger.error(f"Failed to connect to Yahoo Finance: {e}")
             return False
 
@@ -372,7 +373,7 @@ class YahooFinanceFeed(DataFeedInterface):
                     )
 
             return historical_data
-        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        except (ConnectionError, TimeoutError, ClientError) as e:
             logger.error(f"Failed to get historical data for {symbol}: {e}")
             return []
 
@@ -395,7 +396,7 @@ class PolygonFeed(DataFeedInterface):
             self.session = aiohttp.ClientSession()
             logger.info("Connected to Massive.com (Polygon.io) API")
             return True
-        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        except (ConnectionError, TimeoutError, ClientError) as e:
             logger.error(f"Failed to connect to Massive.com: {e}")
             return False
 
@@ -536,7 +537,7 @@ class PolygonFeed(DataFeedInterface):
                     )
 
             return historical_data
-        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        except (ConnectionError, TimeoutError, ClientError) as e:
             logger.error(f"Failed to get historical data for {symbol}: {e}")
             return []
 

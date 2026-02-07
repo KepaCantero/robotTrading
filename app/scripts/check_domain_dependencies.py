@@ -8,10 +8,14 @@ It's part of FASE 1.5 - Separar domain de infrastructure.
 Run: python app/scripts/check_domain_dependencies.py
 """
 
+# mypy: ignore-errors
 import ast
+import logging
 import sys
 from pathlib import Path
 from typing import List, Tuple
+
+logger = logging.getLogger(__name__)
 
 # Infrastructure modules that domain should NOT depend on
 INFRASTRUCTURE_MODULES = {

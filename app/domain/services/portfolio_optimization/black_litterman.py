@@ -22,10 +22,7 @@ from app.domain.services.portfolio_optimization._validation import (
     log_optimization_failure,
     validate_covariance_matrix,
 )
-from app.domain.services.portfolio_optimization.mean_variance_optimizer import (
-    MeanVarianceOptimizer,
-    OptimizationResult,
-)
+from app.domain.services.portfolio_optimization.mean_variance_optimizer import OptimizationResult
 
 logger = logging.getLogger(__name__)
 
@@ -383,14 +380,6 @@ class BlackLittermanOptimizer:
             OptimizationResult
         """
         n_assets = len(symbols)
-
-        # Use MVO to maximize Sharpe
-        mvo = MeanVarianceOptimizer(
-            risk_free_rate=self._risk_free_rate,
-            min_weight=0.0,
-            max_weight=1.0,
-            allow_short=False,
-        )
 
         # Convert daily returns to annual for MVO
         annual_returns = expected_returns * TRADING_DAYS

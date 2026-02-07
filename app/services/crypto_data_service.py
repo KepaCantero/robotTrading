@@ -227,9 +227,9 @@ class CryptoDataFetcher:
             # Try to fetch from API with reconnection manager
             try:
 
-                async def _fetch_price() -> Optional[Decimal]:
+                async def _fetch_price(trading_pair: str = pair) -> Optional[Decimal]:
                     """Internal fetch function."""
-                    return self._fetch_price_from_api(pair)
+                    return self._fetch_price_from_api(trading_pair)
 
                 price = asyncio.run(self.reconnection_manager.connect_with_backoff(_fetch_price))
                 if price:

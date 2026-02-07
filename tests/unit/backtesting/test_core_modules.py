@@ -7,10 +7,7 @@ from decimal import Decimal
 import pytest
 
 from app.backtesting.core.config_loader import BacktestConfigLoader
-from app.backtesting.core.executor import (
-    BacktestExecutorFactory,
-    SimpleBacktestExecutor,
-)
+from app.backtesting.core.executor import BacktestExecutorFactory, SimpleBacktestExecutor
 from app.backtesting.core.facade import BacktestRunnerFacade, create_backtest_runner
 from app.backtesting.core.orchestrator import (
     BacktestDefaults,

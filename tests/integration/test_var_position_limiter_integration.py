@@ -11,10 +11,7 @@ import pandas as pd
 import pytest
 
 from app.models.portfolio import AssetClass, Portfolio, Position
-from app.services.var_position_limiter import (
-    VaRConfig,
-    VaRPositionLimiter,
-)
+from app.services.var_position_limiter import VaRConfig, VaRPositionLimiter
 
 
 @pytest.fixture

@@ -214,10 +214,6 @@ class BrokerFailoverManager:
                     logger.info(f"Order executed via {broker_config.name}")
                     return execution
 
-            except asyncio.TimeoutError:
-                logger.warning(f"Broker {broker_config.name} timed out")
-                await self._mark_broker_unhealthy(broker_config.name, "Timeout")
-                continue
             except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.warning(f"Broker {broker_config.name} failed: {e}")
                 await self._mark_broker_unhealthy(broker_config.name, str(e))
@@ -280,7 +276,7 @@ class BrokerFailoverManager:
                 if account:
                     logger.info(f"Got account info from backup broker {broker_config.name}")
                     return account
-            except (ConnectionError, TimeoutError, HTTPError, ValueError):
+            except (ConnectionError, TimeoutError, OSError, ValueError):
                 continue
 
         return None
@@ -395,7 +391,7 @@ class BrokerFailoverManager:
                 if self.on_failover:
                     try:
                         self.on_failover(old_broker.name, broker.name)
-                    except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
+                    except (ConnectionError, TimeoutError, OSError, ValueError) as e:
                         logger.error(f"Error in failover callback: {e}")
 
                 return
@@ -494,7 +490,7 @@ class BrokerFailoverManager:
         if self.on_failover and old_broker:
             try:
                 self.on_failover(old_broker.name, target_broker.name)
-            except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
+            except (ConnectionError, TimeoutError, OSError, ValueError) as e:
                 logger.error(f"Error in failover callback: {e}")
 
         return True

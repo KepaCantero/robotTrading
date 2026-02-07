@@ -70,7 +70,7 @@ async def optimize_parameters(
     request: ParameterOptimizationRequest,
     background_tasks: BackgroundTasks,
     http_request: Request,
-    service: ParameterOptimizationService = Depends(get_optimization_service),
+    service: ParameterOptimizationService = Depends(get_optimization_service),  # noqa: B008
 ):
     """
     Optimize parameters for a trading strategy.
@@ -181,7 +181,7 @@ async def optimize_parameters(
             stack_trace=traceback.format_exc(),
         )
         raise HTTPException(status_code=500, detail=str(e))
-    except (ValueError, TypeError, KeyError, AttributeError) as e:
+    except (TypeError, KeyError, AttributeError) as e:
         logger.error(
             "Unexpected error during optimization",
             extra={
@@ -205,7 +205,7 @@ async def optimize_parameters(
 @router.post("/out-of-sample-test", response_model=OutOfSampleResult)
 async def perform_out_of_sample_test(
     request: OutOfSampleTestRequest,
-    service: ParameterOptimizationService = Depends(get_optimization_service),
+    service: ParameterOptimizationService = Depends(get_optimization_service),  # noqa: B008
 ):
     """
     Perform out-of-sample testing for a strategy.
@@ -231,14 +231,14 @@ async def perform_out_of_sample_test(
         raise HTTPException(status_code=400, detail=str(e))
     except RuntimeError as e:
         raise HTTPException(status_code=500, detail=str(e))
-    except (ValueError, TypeError, KeyError, AttributeError) as e:
+    except (TypeError, KeyError, AttributeError) as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
 
 @router.get("/artifacts", response_model=List[OptimizationArtifact])
 async def get_optimization_artifacts(
     strategy_name: Optional[str] = None,
-    service: ParameterOptimizationService = Depends(get_optimization_service),
+    service: ParameterOptimizationService = Depends(get_optimization_service),  # noqa: B008
 ):
     """
     Get optimization artifacts.
@@ -254,14 +254,14 @@ async def get_optimization_artifacts(
         artifacts = await service.get_optimization_artifacts(strategy_name)
         return artifacts
 
-    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+    except (asyncio.TimeoutError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
 
 @router.get("/artifacts/{artifact_id}", response_model=OptimizationArtifact)
 async def get_optimization_artifact(
     artifact_id: str,
-    service: ParameterOptimizationService = Depends(get_optimization_service),
+    service: ParameterOptimizationService = Depends(get_optimization_service),  # noqa: B008
 ):
     """
     Get a specific optimization artifact.
@@ -285,15 +285,13 @@ async def get_optimization_artifact(
 
         return artifact
 
-    except HTTPException:
-        raise
-    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+    except (asyncio.TimeoutError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
 
 @router.get("/summary", response_model=OptimizationSummary)
 async def get_optimization_summary(
-    service: ParameterOptimizationService = Depends(get_optimization_service),
+    service: ParameterOptimizationService = Depends(get_optimization_service),  # noqa: B008
 ):
     """
     Get optimization summary.
@@ -308,14 +306,14 @@ async def get_optimization_summary(
         summary = await service.get_optimization_summary()
         return summary
 
-    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+    except (asyncio.TimeoutError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
 
 @router.get("/artifacts/{artifact_id}/metrics", response_model=OptimizationMetrics)
 async def get_optimization_metrics(
     artifact_id: str,
-    service: ParameterOptimizationService = Depends(get_optimization_service),
+    service: ParameterOptimizationService = Depends(get_optimization_service),  # noqa: B008
 ):
     """
     Get optimization metrics for an artifact.
@@ -340,9 +338,7 @@ async def get_optimization_metrics(
         metrics = await service.calculate_optimization_metrics(artifact)
         return metrics
 
-    except HTTPException:
-        raise
-    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+    except (asyncio.TimeoutError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
 
@@ -371,7 +367,7 @@ async def get_parameter_types():
 @router.post("/validate-config")
 async def validate_optimization_config(
     config: OptimizationConfig,
-    service: ParameterOptimizationService = Depends(get_optimization_service),
+    service: ParameterOptimizationService = Depends(get_optimization_service),  # noqa: B008
 ):
     """
     Validate optimization configuration.
@@ -412,7 +408,7 @@ async def validate_optimization_config(
 
     except ValueError as e:
         return JSONResponse(status_code=400, content={"message": str(e), "valid": False})
-    except (ValueError, TypeError, KeyError, AttributeError) as e:
+    except (TypeError, KeyError, AttributeError) as e:
         return JSONResponse(
             status_code=500,
             content={"message": f"Unexpected error: {str(e)}", "valid": False},
@@ -422,7 +418,7 @@ async def validate_optimization_config(
 @router.get("/strategies/{strategy_name}/best-parameters")
 async def get_best_parameters(
     strategy_name: str,
-    service: ParameterOptimizationService = Depends(get_optimization_service),
+    service: ParameterOptimizationService = Depends(get_optimization_service),  # noqa: B008
 ):
     """
     Get best parameters for a strategy.
@@ -457,9 +453,7 @@ async def get_best_parameters(
             "method_used": latest_artifact.optimization_result.method_used,
         }
 
-    except HTTPException:
-        raise
-    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+    except (asyncio.TimeoutError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
 
@@ -469,7 +463,7 @@ async def get_best_parameters(
 @audit_log("optimization_artifact_deleted", log_args=True)
 async def delete_optimization_artifact(
     artifact_id: str,
-    service: ParameterOptimizationService = Depends(get_optimization_service),
+    service: ParameterOptimizationService = Depends(get_optimization_service),  # noqa: B008
 ):
     """
     Delete an optimization artifact.
@@ -496,8 +490,6 @@ async def delete_optimization_artifact(
         else:
             raise HTTPException(status_code=404, detail="Artifact not found")
 
-    except HTTPException:
-        raise
     except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 

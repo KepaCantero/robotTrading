@@ -12,7 +12,6 @@ from typing import Any, Optional
 
 from fastapi import Request
 
-
 logger = logging.getLogger(__name__)
 
 

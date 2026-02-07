@@ -236,9 +236,6 @@ class StatisticalArbitrage:
         if not np.isfinite(target) or target <= 0:
             target = mean
 
-        # Calculate risk levels
-        atr = self._calculate_atr(prices_clean[-20:]) if len(prices_clean) >= 20 else std * 2
-
         if state == ReversionState.OVERBOUGHT:
             stop_loss = current_price * (1 + 0.02)  # 2% above
             take_profit = mean
@@ -431,9 +428,9 @@ class StatisticalArbitrage:
             variance_ratio = long_var / short_var
 
             # Rough approximation
-            is_stationary = variance_ratio < 1.0
+            is_stationary_vr: bool = bool(variance_ratio < 1.0)
 
-            return is_stationary, float(variance_ratio)
+            return is_stationary_vr, float(variance_ratio)
 
     def calculate_mean_reversion_metrics(
         self,

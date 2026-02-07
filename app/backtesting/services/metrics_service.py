@@ -17,7 +17,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, List
 
-import numpy as pd
+import pandas as pd
 
 from app.backtesting.services.models import BaselineOptimizationComparison, OptimizedStrategy
 from app.core.models.input_profile import InputProfile

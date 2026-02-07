@@ -407,7 +407,6 @@ class TestDecimalPrecisionAcceptanceCriteria:
         # This is verified by the model definitions
         # All price fields in Quote and HistoricalData are typed as Decimal
 
-
         from app.models.market_data import Quote
 
         # Check that price fields are annotated as Decimal

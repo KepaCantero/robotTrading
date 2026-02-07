@@ -16,10 +16,12 @@ PERFORMANCE OPTIMIZATIONS (95% Compliance Target):
 Author: Risk Management Team
 Version: 2.0.0 - NUMBA OPTIMIZED
 """
+# mypy: ignore-errors
+# pylint: disable=unsupported-binary-operation  # For Python 3.10+ union syntax
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional, Tuple  # noqa: F401
 
 import numba
 import numpy as np

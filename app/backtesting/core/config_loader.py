@@ -21,7 +21,6 @@ class ConfigValidationError(ValueError):
     """Raised when configuration validation fails."""
 
 
-
 class BacktestConfigLoader:
     """
     Load and manage backtesting configuration from YAML files.

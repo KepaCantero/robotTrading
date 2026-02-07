@@ -673,9 +673,8 @@ class InMemoryFXRateProvider:
         return FXRateQuote(
             pair=pair,
             spot_rate=spot_rate,
-            forward_rate=forward_rate,
+            forward_3m=forward_rate,
             timestamp=as_of,
-            source="InMemory",
         )
 
     def get_fx_summary(self, as_of: date) -> dict[str, dict[str, Decimal]]:

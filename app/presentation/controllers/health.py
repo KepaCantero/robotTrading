@@ -122,7 +122,7 @@ class HealthChecker:
 
         except asyncio.TimeoutError:
             return {"status": "unhealthy", "message": "Broker connection timeout"}
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (ConnectionError, OSError) as e:
             return {"status": "unhealthy", "message": f"Broker error: {str(e)}"}
 
     def check_memory(self) -> Dict[str, Any]:

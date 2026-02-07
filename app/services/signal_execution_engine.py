@@ -5,6 +5,7 @@ Este módulo implementa el motor de ejecución de señales, separando la lógica
 de ejecución de la evaluación y gestión de señales.
 """
 
+import asyncio
 import logging
 from datetime import datetime
 from decimal import Decimal
@@ -200,7 +201,7 @@ class SignalExecutionEngine:
 
             return result
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Error executing order for {order.symbol}: {e}")
             return {
                 "success": False,

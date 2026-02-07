@@ -16,7 +16,13 @@ import pytest
 
 from app.services.alerting_system import AlertEvent, AlertSeverity
 from app.services.live_trading.alert_to_trade_mapper import AlertToTradeRule, TradeSignalType
-from app.services.live_trading.broker_connector import BrokerConnector, OrderSide, OrderStatus
+from app.services.live_trading.broker_connector import (
+    BrokerAccount,
+    BrokerConnector,
+    BrokerType,
+    OrderSide,
+    OrderStatus,
+)
 from app.services.live_trading.trading_bridge_orchestrator import (
     BridgeStatus,
     TradingBridgeOrchestrator,
@@ -61,6 +67,21 @@ class TestBridgeLifecycle:
 class TestAlertProcessing:
     """Test alert processing and trade signal generation."""
 
+    def _create_mock_account(
+        self,
+        cash: str = "100000",
+        portfolio: str = "500000",
+    ) -> BrokerAccount:
+        """Helper to create properly configured mock BrokerAccount."""
+        return BrokerAccount(
+            account_id="acc_001",
+            broker_type=BrokerType.PAPER,
+            cash_available=Decimal(cash),
+            portfolio_value=Decimal(portfolio),
+            buying_power=Decimal("200000"),
+            equity=Decimal(portfolio),
+        )
+
     @pytest.mark.asyncio
     async def test_process_alert_inactive_bridge(self):
         """Test processing alert when bridge is inactive."""
@@ -96,12 +117,7 @@ class TestAlertProcessing:
         """Test processing alert with matching trade rule."""
         # Create mock broker
         mock_broker = MagicMock(spec=BrokerConnector)
-        mock_broker.get_account_info = AsyncMock(
-            return_value=MagicMock(
-                cash_available=Decimal("50000"),
-                portfolio_value=Decimal("100000"),
-            )
-        )
+        mock_broker.get_account_info = AsyncMock(return_value=self._create_mock_account("50000", "100000"))
         mock_broker.calculate_portfolio_value = AsyncMock(return_value=Decimal("100000"))
         mock_broker.place_order = AsyncMock(
             return_value=MagicMock(
@@ -140,11 +156,7 @@ class TestAlertProcessing:
     async def test_alert_severity_affects_quantity(self):
         """Test that alert severity affects trade quantity."""
         mock_broker = MagicMock(spec=BrokerConnector)
-        mock_broker.get_account_info = AsyncMock(
-            return_value=MagicMock(
-                cash_available=Decimal("50000"),
-            )
-        )
+        mock_broker.get_account_info = AsyncMock(return_value=self._create_mock_account())
         mock_broker.calculate_portfolio_value = AsyncMock(return_value=Decimal("100000"))
         mock_broker.place_order = AsyncMock(
             return_value=MagicMock(
@@ -224,11 +236,17 @@ class TestRiskValidation:
     async def test_insufficient_cash_blocks_trade(self):
         """Test that insufficient cash blocks trade execution."""
         mock_broker = MagicMock(spec=BrokerConnector)
-        mock_account = MagicMock()
-        mock_account.cash_available = Decimal("1000")  # Not enough for trade
-        mock_account.portfolio_value = Decimal("50000")
-
-        mock_broker.get_account_info = AsyncMock(return_value=mock_account)
+        # Use proper BrokerAccount with limited buying power
+        mock_broker.get_account_info = AsyncMock(
+            return_value=BrokerAccount(
+                account_id="acc_001",
+                broker_type=BrokerType.PAPER,
+                cash_available=Decimal("1000"),  # Not enough for trade
+                portfolio_value=Decimal("50000"),
+                buying_power=Decimal("1000"),  # Limited buying power
+                equity=Decimal("50000"),
+            )
+        )
         mock_broker.calculate_portfolio_value = AsyncMock(return_value=Decimal("50000"))
 
         bridge = TradingBridgeOrchestrator(broker=mock_broker)
@@ -251,7 +269,7 @@ class TestRiskValidation:
         )
 
         result = await bridge.process_alert(alert)
-        # Should fail due to insufficient cash for 200 * 150 = 30000
+        # Should fail due to insufficient buying power for 200 * 150 = 30000
         assert result is None
 
 
@@ -345,11 +363,27 @@ class TestExecutionRecords:
 class TestErrorHandling:
     """Test error handling and recovery."""
 
+    def _create_mock_account(
+        self,
+        cash: str = "100000",
+        portfolio: str = "500000",
+    ) -> BrokerAccount:
+        """Helper to create properly configured mock BrokerAccount."""
+        return BrokerAccount(
+            account_id="acc_001",
+            broker_type=BrokerType.PAPER,
+            cash_available=Decimal(cash),
+            portfolio_value=Decimal(portfolio),
+            buying_power=Decimal(cash),
+            equity=Decimal(portfolio),
+        )
+
     @pytest.mark.asyncio
     async def test_alert_processing_error(self):
         """Test graceful handling of alert processing errors."""
         mock_broker = MagicMock(spec=BrokerConnector)
-        mock_broker.get_account_info = AsyncMock(side_effect=Exception("Connection error"))
+        # Use ConnectionError which is a caught exception type
+        mock_broker.get_account_info = AsyncMock(side_effect=ConnectionError("Connection error"))
 
         bridge = TradingBridgeOrchestrator(broker=mock_broker)
         await bridge.start()
@@ -368,7 +402,8 @@ class TestErrorHandling:
     async def test_error_recorded(self):
         """Test that errors are recorded for audit."""
         mock_broker = MagicMock(spec=BrokerConnector)
-        mock_broker.get_account_info = AsyncMock(side_effect=Exception("Broker connection failed"))
+        # Use ConnectionError which is a caught exception type
+        mock_broker.get_account_info = AsyncMock(side_effect=ConnectionError("Broker connection failed"))
 
         bridge = TradingBridgeOrchestrator(broker=mock_broker)
         await bridge.start()

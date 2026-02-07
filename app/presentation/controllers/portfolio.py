@@ -95,8 +95,6 @@ async def get_portfolio_summary(
             )
         summary = service.get_portfolio_summary(portfolio)
         return summary
-    except HTTPException:
-        raise
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         raise HTTPException(
             status_code=DEFAULT_VALUE_500, detail=f"Error getting portfolio: {str(e)}"
@@ -126,8 +124,6 @@ async def get_positions(
                 status_code=DEFAULT_VALUE_503, detail="Portfolio unavailable due to circuit breaker"
             )
         return portfolio.positions
-    except HTTPException:
-        raise
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         raise HTTPException(
             status_code=DEFAULT_VALUE_500, detail=f"Error getting positions: {str(e)}"
@@ -159,8 +155,6 @@ async def get_position(
                 status_code=DEFAULT_VALUE_404, detail=f"Position {symbol} not found"
             )
         return position
-    except HTTPException:
-        raise
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         raise HTTPException(
             status_code=DEFAULT_VALUE_500, detail=f"Error getting position: {str(e)}"
@@ -218,8 +212,6 @@ async def get_market_regime(
                 detail=f"Market regime data for {symbol} not available",
             )
         return regime_data
-    except HTTPException:
-        raise
     except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
         raise HTTPException(
             status_code=DEFAULT_VALUE_500, detail=f"Error getting market regime: {str(e)}"

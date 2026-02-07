@@ -18,7 +18,11 @@ from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
+from app.core.models.input_profile import (  # pylint: disable=import-self,import-error
+    InputProfile,
+    ObjectivoInversion,
+    RiskTolerance,
+)
 
 logger = logging.getLogger(__name__)
 

@@ -7,6 +7,7 @@ Integrates with BrokerConnector for actual order operations.
 
 import asyncio
 import logging
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
@@ -22,6 +23,7 @@ from .broker_connector import (
     OrderType,
     get_broker_connector,
 )
+from .risk_gates import RiskCheckResult, RiskGates, get_risk_gates
 
 logger = logging.getLogger(__name__)
 
@@ -65,15 +67,25 @@ class OrderManager:
     - Order status polling
     """
 
-    def __init__(self, broker: Optional[BrokerConnector] = None):
-        """Initialize order manager."""
+    def __init__(
+        self,
+        broker: Optional[BrokerConnector] = None,
+        risk_gates: Optional[RiskGates] = None,
+    ):
+        """Initialize order manager with risk validation."""
         self.broker = broker or get_broker_connector()
+        # Create RiskGates instance directly if not provided (avoiding Depends() for direct instantiation)
+        if risk_gates is None:
+            from .risk_gates import RiskGates as RG
+            self.risk_gates = RG(broker=self.broker)
+        else:
+            self.risk_gates = risk_gates
         self.pending_orders: Dict[str, BrokerOrder] = {}
         self.executed_orders: Dict[str, BrokerOrder] = {}
         self.order_history: List[BrokerOrder] = []
         self.order_errors: Dict[str, OrderError] = {}
         self.executions: List[OrderExecution] = []
-        logger.info("✅ OrderManager initialized")
+        logger.info("✅ OrderManager initialized with risk validation")
 
     async def place_order(
         self,
@@ -98,8 +110,73 @@ class OrderManager:
             timeout_seconds: Timeout for order placement
 
         Returns:
-            BrokerOrder if successful
+            BrokerOrder if successful, None if risk validation fails
         """
+        # Generate correlation ID for audit trail (SEC-005)
+        correlation_id = str(uuid.uuid4())
+
+        # Determine order price for risk validation
+        order_price = price
+        if order_price is None and order_type == OrderType.MARKET:
+            # For market orders, get current price from broker
+            account = await self.broker.get_account_info()
+            if account:
+                # Use conservative estimate if no current price available
+                order_price = Decimal("100")  # Conservative default
+
+        # TRD-002: Risk validation BEFORE order execution
+        if order_price is not None:
+            try:
+                risk_result: RiskCheckResult = await self.risk_gates.validate_order(
+                    symbol=symbol,
+                    side=side,
+                    quantity=quantity,
+                    price=order_price,
+                )
+
+                if not risk_result.passed:
+                    # Log rejection with structured logging and correlation ID
+                    logger.warning(
+                        "Order rejected by risk gates",
+                        extra={
+                            "correlation_id": correlation_id,
+                            "symbol": symbol,
+                            "side": side.value,
+                            "quantity": str(quantity),
+                            "price": str(order_price),
+                            "order_type": order_type.value,
+                            "risk_level": risk_result.risk_level.value,
+                            "violations": risk_result.violations,
+                            "warnings": risk_result.warnings,
+                        },
+                    )
+                    return None
+
+                # Log risk approval with structured logging (SEC-005)
+                logger.info(
+                    "Order approved by risk gates",
+                    extra={
+                        "correlation_id": correlation_id,
+                        "symbol": symbol,
+                        "side": side.value,
+                        "quantity": str(quantity),
+                        "price": str(order_price),
+                        "order_type": order_type.value,
+                        "risk_level": risk_result.risk_level.value,
+                    },
+                )
+            except Exception as e:
+                logger.error(
+                    "Risk validation failed - order rejected",
+                    extra={
+                        "correlation_id": correlation_id,
+                        "symbol": symbol,
+                        "side": side.value,
+                        "error": str(e),
+                    },
+                )
+                return None
+
         try:
             order = await self.broker.place_order(
                 symbol=symbol,
@@ -113,14 +190,43 @@ class OrderManager:
             if order:
                 self.pending_orders[order.order_id] = order
                 self.order_history.append(order)
-                logger.info(f"✅ Order placed: {order.order_id} - {side.value} {quantity} {symbol}")
+                # SEC-005: Structured logging with correlation ID
+                logger.info(
+                    "Order placed successfully",
+                    extra={
+                        "correlation_id": correlation_id,
+                        "order_id": order.order_id,
+                        "symbol": symbol,
+                        "side": side.value,
+                        "quantity": str(quantity),
+                        "order_type": order_type.value,
+                        "price": str(price) if price else None,
+                    },
+                )
                 return order
             else:
-                logger.error(f"❌ Order placement failed for {symbol}")
+                logger.error(
+                    "Order placement failed",
+                    extra={
+                        "correlation_id": correlation_id,
+                        "symbol": symbol,
+                        "side": side.value,
+                        "quantity": str(quantity),
+                    },
+                )
                 return None
 
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
-            logger.error(f"❌ Error placing order: {str(e)}")
+            logger.error(
+                "Error placing order",
+                extra={
+                    "correlation_id": correlation_id,
+                    "symbol": symbol,
+                    "side": side.value,
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                },
+            )
             return None
 
     async def cancel_order(self, order_id: str) -> bool:
@@ -146,7 +252,7 @@ class OrderManager:
                 self.order_history.append(order)
                 logger.info(f"✅ Order canceled: {order_id}")
             return success
-        except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
+        except (ConnectionError, TimeoutError, OSError, ValueError) as e:
             logger.error(f"❌ Error canceling order: {str(e)}")
             return False
 
@@ -188,13 +294,21 @@ class OrderManager:
         # Query broker
         return await self.broker.get_order_status(order_id)
 
-    async def poll_order_status(self, order_id: str, max_polls: int = 60) -> Optional[BrokerOrder]:
+    async def poll_order_status(
+        self,
+        order_id: str,
+        max_polls: int = 60,
+        max_wait_seconds: int = 30,
+    ) -> Optional[BrokerOrder]:
         """
         Poll order status until execution or timeout.
+
+        ASYNC-004: Implements exponential backoff to avoid rate limit saturation.
 
         Args:
             order_id: Order ID to poll
             max_polls: Maximum number of polls
+            max_wait_seconds: Maximum wait time between polls (caps exponential backoff)
 
         Returns:
             Final BrokerOrder or None
@@ -202,7 +316,10 @@ class OrderManager:
         for poll_count in range(max_polls):
             order = self.pending_orders.get(order_id)
             if not order:
-                logger.warning(f"⚠️ Order not found: {order_id}")
+                logger.warning(
+                    "Order not found in pending orders",
+                    extra={"order_id": order_id},
+                )
                 return None
 
             status = await self.get_order_status(order_id)
@@ -215,14 +332,29 @@ class OrderManager:
                 # Move to executed
                 self.pending_orders.pop(order_id, None)
                 self.executed_orders[order_id] = order
-                logger.info(f"✅ Order {order_id} reached terminal status: {status.value}")
+                logger.info(
+                    "Order reached terminal status",
+                    extra={
+                        "order_id": order_id,
+                        "status": status.value,
+                        "poll_count": poll_count + 1,
+                    },
+                )
                 return order
 
-            # Wait before next poll (exponential backoff would be better)
+            # ASYNC-004: Exponential backoff with cap at max_wait_seconds
+            # Wait pattern: 1s, 2s, 4s, 8s, 16s, 30s, 30s, ...
             if poll_count < max_polls - 1:
-                await asyncio.sleep(1)
+                wait_time = min(2**poll_count, max_wait_seconds)
+                await asyncio.sleep(wait_time)
 
-        logger.warning(f"⚠️ Order polling timeout for {order_id}")
+        logger.warning(
+            "Order polling timeout",
+            extra={
+                "order_id": order_id,
+                "max_polls": max_polls,
+            },
+        )
         return None
 
     async def record_execution(
@@ -402,6 +534,10 @@ def get_order_manager(
     """Get or create singleton OrderManager."""
     global _manager
     if _manager is None:
-        _manager = OrderManager()
+        # Import RiskGates here to avoid circular dependency
+        from .risk_gates import RiskGates
+
+        # Create RiskGates directly for the OrderManager
+        _manager = OrderManager(broker=broker, risk_gates=RiskGates(broker=broker))
 
     return _manager

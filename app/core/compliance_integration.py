@@ -362,7 +362,6 @@ class ComplianceIntegrationEngine(ComplianceIntegrationFacade):
     """
 
 
-
 # =============================================================================
 # GLOBAL SINGLETON (Backward Compatible)
 # =============================================================================

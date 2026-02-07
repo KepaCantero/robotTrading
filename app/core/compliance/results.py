@@ -233,7 +233,6 @@ class ComprehensivePreTradeAnalysis(PreTradeCheckResult):
     """
 
 
-
 @dataclass(frozen=True)
 class ComprehensivePostTradeAnalysis(PostTradeCheckResult):
     """
@@ -241,7 +240,6 @@ class ComprehensivePostTradeAnalysis(PostTradeCheckResult):
 
     Maintains backward compatibility with ComprehensivePostTradeAnalysis.
     """
-
 
 
 @dataclass(frozen=True)

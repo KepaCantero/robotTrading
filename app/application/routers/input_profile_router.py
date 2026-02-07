@@ -331,7 +331,7 @@ class InputProfileRouter:
             and profile.risk_tolerance == RiskTolerance.ALTO
         ):
             warnings.append(
-                "CAPITAL_PRESERVATION objective with ALTO risk tolerance " "may be contradictory"
+                "CAPITAL_PRESERVATION objective with ALTO risk tolerance may be contradictory"
             )
 
         # Check leverage vs objective
@@ -340,7 +340,7 @@ class InputProfileRouter:
             and config.risk_config.leverage_allowed
         ):
             warnings.append(
-                "CAPITAL_PRESERVATION objective with leverage allowed " "may not be optimal"
+                "CAPITAL_PRESERVATION objective with leverage allowed may not be optimal"
             )
 
         # Check horizon vs rebalancing
@@ -352,9 +352,7 @@ class InputProfileRouter:
 
         # Check capital vs diversification
         if profile.capital_initial < Decimal("50000") and config.risk_config.min_positions > 20:
-            warnings.append(
-                "Small capital with high position minimum may cause " "over-fragmentation"
-            )
+            warnings.append("Small capital with high position minimum may cause over-fragmentation")
 
         is_valid = len(warnings) == 0
 

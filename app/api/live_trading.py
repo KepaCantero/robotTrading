@@ -174,8 +174,6 @@ async def get_order_status(
             "status": status,
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except HTTPException:
-        raise
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to get order status: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -198,8 +196,6 @@ async def cancel_order(
             "message": "Order cancelled successfully",
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except HTTPException:
-        raise
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to cancel order: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -335,8 +331,6 @@ async def get_position(
             "unrealized_pl_pct": position.unrealized_pl_pct,
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except HTTPException:
-        raise
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to get position: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -506,8 +500,6 @@ async def get_execution(
             "execution": execution,
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except HTTPException:
-        raise
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to get execution: {e}")
         raise HTTPException(status_code=500, detail=str(e))

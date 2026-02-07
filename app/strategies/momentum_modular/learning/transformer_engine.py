@@ -176,7 +176,7 @@ class TransformerEngine(BaseLearningEngine):
 
         return sequences, labels
 
-    def train(
+    def train(  # noqa: C901 - Complex training loop (PyTorch patterns require complexity)
         self, training_data: Dict[str, Any], validation_data: Optional[Dict[str, Any]] = None
     ) -> Dict[str, float]:
         """
@@ -328,10 +328,7 @@ class TransformerEngine(BaseLearningEngine):
                         ) from e
                     raise
 
-            # Asegurar que PyTorch está importado
-            if not _ensure_pytorch_imported():
-                raise ImportError("PyTorch requerido")
-
+            # PyTorch is imported at module level (lines 37-39)
             # Import Dataset and DataLoader from torch.utils.data
             from torch.utils.data import DataLoader as _DataLoader, Dataset as _Dataset
 

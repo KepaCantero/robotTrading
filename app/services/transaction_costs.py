@@ -575,7 +575,7 @@ class TransactionCostModel:
 
         if cost_breakdown.spread_cost > cost_breakdown.market_impact:
             recommendations.append(
-                "Spread cost is high relative to market impact. " "Consider using limit orders."
+                "Spread cost is high relative to market impact. Consider using limit orders."
             )
 
         return {

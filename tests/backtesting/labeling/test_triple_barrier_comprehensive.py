@@ -16,9 +16,7 @@ import pytest
 
 # Try importing the module
 try:
-    from app.backtesting.labeling.triple_barrier import (
-        TripleBarrierConfig,
-    )
+    from app.backtesting.labeling.triple_barrier import TripleBarrierConfig
 
     MODULE_AVAILABLE = True
 except ImportError as e:

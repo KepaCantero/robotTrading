@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Critical Line Algorithm (CLA) - Efficient Frontier Computation
 

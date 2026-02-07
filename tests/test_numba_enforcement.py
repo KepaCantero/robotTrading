@@ -461,9 +461,7 @@ def test_numba_integration_with_metrics_calculator():
 
 def test_numba_integration_with_risk_calculator():
     """Test that Numba functions integrate properly with risk calculator."""
-    from app.services.numba_risk import (
-        calculate_portfolio_var_numba,
-    )
+    from app.services.numba_risk import calculate_portfolio_var_numba
 
     # Create test data
     np.random.seed(42)

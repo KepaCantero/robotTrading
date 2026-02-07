@@ -209,6 +209,50 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
 
         return features
 
+    def _get_signal_strength(self, confidence: float) -> SignalStrength:
+        """Convert confidence to signal strength."""
+        if confidence >= 80.0:
+            return SignalStrength.VERY_STRONG
+        elif confidence >= 70.0:
+            return SignalStrength.STRONG
+        elif confidence >= 50.0:
+            return SignalStrength.MODERATE
+        return SignalStrength.WEAK
+
+    def _create_signal(
+        self,
+        market_data: Quote,
+        signal_type: SignalType,
+        confidence: float,
+        current_price: float,
+        z_score: float,
+        mean: float,
+        std: float,
+        volatility: float,
+    ) -> Signal:
+        """Create a signal with metadata."""
+        strength = self._get_signal_strength(confidence)
+        return Signal(
+            symbol=market_data.symbol,
+            signal_type=signal_type,
+            strength=strength,
+            price=Decimal(str(current_price)),
+            timestamp=market_data.timestamp if hasattr(market_data, 'timestamp') else None,
+            confidence=confidence,
+            liquidity_score=70.0,
+            priority_score=confidence * 0.8,
+            source=SignalSource.MEAN_REVERSION,
+            volume=Decimal("1"),
+            metadata={
+                'strategy': self.name,
+                'z_score': float(z_score),
+                'mean': float(mean),
+                'std': float(std),
+                'volatility': volatility,
+                'price_mean_distance': (float((current_price - mean) / mean) if mean > 0 else 0.0),
+            },
+        )
+
     def _generate_signals_impl(self, market_data: Quote) -> List[Signal]:
         """
         Implementación específica de generación de señales para mean reversion.
@@ -226,18 +270,14 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
             if current_price <= 0:
                 return []
 
-            # Actualizar histórico
             self.price_history.append(current_price)
 
-            # Necesitamos suficiente histórico
             if len(self.price_history) < self.lookback_period:
                 return []
 
-            # Calcular Z-score usando pandas-ta
-            prices = list(self.price_history)
             import pandas as pd
 
-            df = pd.DataFrame({'close': prices})
+            df = pd.DataFrame({'close': list(self.price_history)})
             mean = df['close'].rolling(window=self.lookback_period).mean().iloc[-1]
             std = df['close'].rolling(window=self.lookback_period).std().iloc[-1]
 
@@ -246,102 +286,47 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
 
             z_score = (current_price - mean) / std
             z_score_decimal = Decimal(str(z_score))
-
-            # Calcular volatilidad
             volatility = float(std / mean) if mean > 0 else 0.0
 
-            # Condiciones para señal BUY (precio muy bajo, esperar reversión hacia arriba)
             buy_condition = (
                 z_score_decimal <= -self.z_score_threshold
-                and z_score_decimal <= -self.min_z_score  # Z-score negativo fuerte
-                and volatility  # Mínimo Z-score
-                <= float(self.volatility_threshold)  # Volatilidad controlada
+                and z_score_decimal <= -self.min_z_score
+                and volatility <= float(self.volatility_threshold)
             )
 
-            # Condiciones para señal SELL (precio muy alto, esperar reversión hacia abajo)
-            sell_condition = (
-                z_score_decimal >= self.z_score_threshold
-                and volatility  # Z-score positivo fuerte
-                <= float(self.volatility_threshold)  # Volatilidad controlada
+            sell_condition = z_score_decimal >= self.z_score_threshold and volatility <= float(
+                self.volatility_threshold
             )
 
             if buy_condition:
                 confidence = self._calculate_confidence(
                     abs(float(z_score_decimal)), volatility, is_oversold=True
                 )
-
-                # Calcular strength
-                if confidence >= 80.0:
-                    strength = SignalStrength.VERY_STRONG
-                elif confidence >= 70.0:
-                    strength = SignalStrength.STRONG
-                elif confidence >= 50.0:
-                    strength = SignalStrength.MODERATE
-                else:
-                    strength = SignalStrength.WEAK
-
-                signal = Signal(
-                    symbol=market_data.symbol,
-                    signal_type=SignalType.BUY,
-                    strength=strength,
-                    price=Decimal(str(current_price)),
-                    timestamp=market_data.timestamp if hasattr(market_data, 'timestamp') else None,
-                    confidence=confidence,
-                    liquidity_score=70.0,  # Mean reversion normalmente en rangos
-                    priority_score=confidence * 0.8,
-                    source=SignalSource.MEAN_REVERSION,
-                    volume=Decimal("1"),
-                    metadata={
-                        'strategy': self.name,
-                        'z_score': float(z_score),
-                        'mean': float(mean),
-                        'std': float(std),
-                        'volatility': volatility,
-                        'price_mean_distance': (
-                            float((current_price - mean) / mean) if mean > 0 else 0.0
-                        ),
-                    },
+                signal = self._create_signal(
+                    market_data,
+                    SignalType.BUY,
+                    confidence,
+                    current_price,
+                    z_score,
+                    mean,
+                    std,
+                    volatility,
                 )
-
                 signals.append(signal)
             elif sell_condition:
                 confidence = self._calculate_confidence(
                     abs(float(z_score_decimal)), volatility, is_oversold=False
                 )
-
-                # Calcular strength
-                if confidence >= 80.0:
-                    strength = SignalStrength.VERY_STRONG
-                elif confidence >= 70.0:
-                    strength = SignalStrength.STRONG
-                elif confidence >= 50.0:
-                    strength = SignalStrength.MODERATE
-                else:
-                    strength = SignalStrength.WEAK
-
-                signal = Signal(
-                    symbol=market_data.symbol,
-                    signal_type=SignalType.SELL,
-                    strength=strength,
-                    price=Decimal(str(current_price)),
-                    timestamp=market_data.timestamp if hasattr(market_data, 'timestamp') else None,
-                    confidence=confidence,
-                    liquidity_score=70.0,
-                    priority_score=confidence * 0.8,
-                    source=SignalSource.MEAN_REVERSION,
-                    volume=Decimal("1"),
-                    metadata={
-                        'strategy': self.name,
-                        'z_score': float(z_score),
-                        'mean': float(mean),
-                        'std': float(std),
-                        'volatility': volatility,
-                        'price_mean_distance': (
-                            float((current_price - mean) / mean) if mean > 0 else 0.0
-                        ),
-                    },
+                signal = self._create_signal(
+                    market_data,
+                    SignalType.SELL,
+                    confidence,
+                    current_price,
+                    z_score,
+                    mean,
+                    std,
+                    volatility,
                 )
-
                 signals.append(signal)
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
@@ -365,10 +350,8 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
         Returns:
             Confidence entre 0 y 100
         """
-        # Base confidence
         confidence = 50.0
 
-        # Z-score contribution (más extremo = más confidence)
         if abs_z_score >= 3.0:
             confidence += 30.0
         elif abs_z_score >= 2.5:
@@ -378,7 +361,6 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
         elif abs_z_score >= 1.5:
             confidence += 15.0
 
-        # Volatilidad contribution (volatilidad baja = mejor para mean reversion)
         if volatility < 0.01:
             confidence += 10.0
         elif volatility < 0.02:

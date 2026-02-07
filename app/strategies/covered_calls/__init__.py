@@ -19,7 +19,7 @@ Estructura del módulo:
 - RollAnalyzer: Análisis de oportunidades de rolling
 """
 
-from .covered_call_strategy import CoveredCallStrategy, RollDecision, RollType
+from .covered_call_strategy import CoveredCallStrategy, RollDecision
 from .greeks_calculator import BlackScholesGreeks, GreeksCalculator, OptionGreeks
 from .models import (
     CallOption,
@@ -29,6 +29,7 @@ from .models import (
     OptionScreeningCriteria,
     OptionType,
     RollOpportunity,
+    RollType,
 )
 from .option_screener import OptionScreener
 from .position_manager import PositionManager

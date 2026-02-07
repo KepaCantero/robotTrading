@@ -71,7 +71,7 @@ class AssetClassType(str, Enum):
             cls.REAL_ESTATE: {"open": "14:30", "close": "21:00"},  # REITs trade like stocks
             cls.CASH: {"open": "00:00", "close": "23:59"},  # Always available
         }
-        return hours_map.get(asset_type, {"open": "00:00", "close": "23:59"})
+        return hours_map.get(asset_type, {"open": "00:00", "close": "23:59"})  # type: ignore
 
     @classmethod
     def get_settlement_period(cls, asset_type: str) -> timedelta:
@@ -93,7 +93,7 @@ class AssetClassType(str, Enum):
             cls.REAL_ESTATE: timedelta(days=2),  # T+2 like equities
             cls.CASH: timedelta(seconds=0),  # Instant
         }
-        return settlement_map.get(asset_type, timedelta(days=2))
+        return settlement_map.get(asset_type, timedelta(days=2))  # type: ignore
 
     @classmethod
     def get_typical_volatility(cls, asset_type: str) -> Tuple[Decimal, Decimal]:
@@ -115,7 +115,7 @@ class AssetClassType(str, Enum):
             cls.REAL_ESTATE: (Decimal("0.10"), Decimal("0.25")),  # 10-25%
             cls.CASH: (Decimal("0.00"), Decimal("0.02")),  # 0-2%
         }
-        return volatility_map.get(asset_type, (Decimal("0.05"), Decimal("0.20")))
+        return volatility_map.get(asset_type, (Decimal("0.05"), Decimal("0.20")))  # type: ignore
 
     @classmethod
     def get_typical_return(cls, asset_type: str) -> Tuple[Decimal, Decimal]:
@@ -137,7 +137,7 @@ class AssetClassType(str, Enum):
             cls.REAL_ESTATE: (Decimal("0.03"), Decimal("0.10")),  # 3-10%
             cls.CASH: (Decimal("0.00"), Decimal("0.03")),  # 0-3%
         }
-        return return_map.get(asset_type, (Decimal("0.00"), Decimal("0.10")))
+        return return_map.get(asset_type, (Decimal("0.00"), Decimal("0.10")))  # type: ignore
 
 
 @dataclass
@@ -199,9 +199,16 @@ class AssetClassReturns:
         annualized = vol * np.sqrt(n_periods)
         return Decimal(str(annualized))
 
-    @property
     def sharpe_ratio(self, risk_free_rate: float = 0.02) -> float:
-        """Calculate Sharpe ratio."""
+        """
+        Calculate Sharpe ratio.
+
+        Args:
+            risk_free_rate: Risk-free rate for Sharpe ratio calculation
+
+        Returns:
+            Sharpe ratio value
+        """
         excess_return = self.annualized_return - Decimal(str(risk_free_rate))
         vol = self.annualized_volatility
 
@@ -695,7 +702,7 @@ class AssetClass:
             "symbols": self.symbols,
             "max_positions": self.max_positions,
             "enabled": self.enabled,
-            "sharpe_ratio": self.sharpe_ratio(),
+            "sharpe_ratio": self.sharpe_ratio,
             "risk_return_ratio": float(self.risk_return_ratio),
             "metadata": self.metadata,
         }

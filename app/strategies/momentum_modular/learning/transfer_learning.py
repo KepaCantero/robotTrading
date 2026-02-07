@@ -404,10 +404,10 @@ class ModelRegistry:
         try:
             # SECURITY: One-time migration from pickle to secure format
             # This is only for migrating existing trusted model files
-            import pickle  # noqa: S403 - Only for migration
+            import pickle  # nosec B403 - Only for migration
 
             with open(pkl_path, 'rb') as f:
-                model = pickle.load(f)  # noqa: S301 - Trusted migration only
+                model = pickle.load(f)  # nosec B301 - Trusted migration only
 
             # Re-save in secure format
             model_id = entry['model_id']
@@ -551,8 +551,8 @@ class FineTuner:
 
             # Optimizer con learning rate reducido
             lr = 0.001 * self.learning_rate_multiplier
-            optimizer = optim.Adam(fine_tuned_model.parameters(), lr=lr)
-            criterion = nn.MSELoss() if labels_t.dtype == torch.float32 else nn.BCELoss()
+            optimizer = torch.optim.Adam(fine_tuned_model.parameters(), lr=lr)  # type: ignore[attr-defined]
+            criterion = torch.nn.MSELoss() if labels_t.dtype == torch.float32 else torch.nn.BCELoss()  # type: ignore[attr-defined]
 
             # Training loop
             fine_tuned_model.train()
@@ -788,19 +788,19 @@ class KnowledgeDistiller:
             student.train()
 
             # Optimizer
-            optimizer = optim.Adam(student.parameters(), lr=0.001)
+            optimizer = torch.optim.Adam(student.parameters(), lr=0.001)  # type: ignore[attr-defined]
 
             # Loss function combinado
             def distillation_loss(student_logits, teacher_logits, true_labels, temperature, alpha):
                 # Soft targets (teacher)
-                soft_targets = nn.functional.softmax(teacher_logits / temperature, dim=1)
-                soft_prob = nn.functional.log_softmax(student_logits / temperature, dim=1)
-                soft_loss = nn.functional.kl_div(soft_prob, soft_targets, reduction='batchmean') * (
+                soft_targets = torch.nn.functional.softmax(teacher_logits / temperature, dim=1)  # type: ignore[attr-defined]
+                soft_prob = torch.nn.functional.log_softmax(student_logits / temperature, dim=1)  # type: ignore[attr-defined]
+                soft_loss = torch.nn.functional.kl_div(soft_prob, soft_targets, reduction='batchmean') * (  # type: ignore[attr-defined]
                     temperature**2
                 )
 
                 # Hard targets (true labels)
-                hard_loss = nn.functional.cross_entropy(student_logits, true_labels.long())
+                hard_loss = torch.nn.functional.cross_entropy(student_logits, true_labels.long())  # type: ignore[attr-defined]
 
                 # Combinar
                 return alpha * soft_loss + (1 - alpha) * hard_loss
@@ -845,7 +845,7 @@ class KnowledgeDistiller:
                             else torch.FloatTensor(val_labels)
                         )
                         val_outputs = student(val_sequences_t)
-                        val_loss = nn.functional.mse_loss(val_outputs, val_labels_t)
+                        val_loss = torch.nn.functional.mse_loss(val_outputs, val_labels_t)  # type: ignore[attr-defined]
                         metrics['val_loss'] = float(val_loss.item())
 
             return student, metrics

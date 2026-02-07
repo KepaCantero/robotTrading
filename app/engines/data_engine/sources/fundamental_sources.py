@@ -45,11 +45,6 @@ class FinancialModelingPrepSource(BaseDataSource):
 
     async def connect(self) -> bool:
         """Conectar a FMP API."""
-        if not AIOHTTP_AVAILABLE:
-            logger.error("aiohttp no disponible. FMPSource no puede conectarse.")
-            self.last_error = "aiohttp no disponible"
-            return False
-
         if not self.api_key:
             logger.error("FMP API key requerido")
             self.last_error = "API key missing"
@@ -74,7 +69,7 @@ class FinancialModelingPrepSource(BaseDataSource):
             self.is_connected = False
             logger.info("Desconectado de FMP")
             return True
-        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(f"Error desconectando de FMP: {e}")
             return False
 
@@ -87,7 +82,7 @@ class FinancialModelingPrepSource(BaseDataSource):
             url = f"{self.base_url}/profile/AAPL"
             async with self.session.get(url, params={'apikey': self.api_key}) as response:
                 return response.status == 200
-        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError):
+        except (asyncio.TimeoutError, ConnectionError, OSError):
             return False
 
     async def get_company_profile(self, symbol: str) -> Optional[Dict[str, Any]]:

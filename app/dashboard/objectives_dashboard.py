@@ -44,7 +44,7 @@ except (ValueError, TypeError, KeyError, AttributeError) as e:
 
 try:
     import pandas as pd
-except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError):
+except OSError:
     pd = None
     st.error("❌ pandas no disponible")
 
@@ -52,7 +52,7 @@ try:
     import plotly.express as px
 
     plotly_available = True
-except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError):
+except OSError:
     plotly_available = False
 
 import logging  # noqa: E402
@@ -288,7 +288,7 @@ def show_objectives_summary(df: pd.DataFrame):
         return
 
     # Tabs por tipo de test
-    test_types = list(set([r['test_type'] for r in results_summary]))
+    test_types = list({r['test_type'] for r in results_summary})
 
     if len(test_types) > 1:
         tabs = st.tabs([f"📋 {t.replace('_', ' ').title()}" for t in test_types])
@@ -311,12 +311,10 @@ def show_test_type_results(results: List[Dict]):
             # Mostrar métricas en grid
             cols = st.columns(3)
 
-            metric_idx = 0
-            for metric_name, metric_data in result['metrics'].items():
+            for metric_idx, (metric_name, metric_data) in enumerate(result['metrics'].items()):
                 col = cols[metric_idx % 3]
                 with col:
                     render_objective_card(metric_name, metric_data['value'], result['test_name'])
-                metric_idx += 1
 
 
 def show_best_strategies(df: pd.DataFrame):
@@ -365,12 +363,10 @@ def show_best_strategies(df: pd.DataFrame):
         for strategy in perfect_strategies:
             with st.expander(f"✅ {strategy['test_name']}", expanded=False):
                 cols = st.columns(3)
-                metric_idx = 0
-                for metric_name, value in strategy['metrics'].items():
+                for metric_idx, (metric_name, value) in enumerate(strategy['metrics'].items()):
                     col = cols[metric_idx % 3]
                     with col:
                         render_objective_card(metric_name, value, strategy['test_name'])
-                    metric_idx += 1
 
 
 def show_objective_comparison(df: pd.DataFrame):
@@ -389,10 +385,10 @@ def show_objective_comparison(df: pd.DataFrame):
 
             # Obtener valores para este objetivo
             # VECTORIZED: Usar list comprehension con enumerate en lugar de iterrows
-            def evaluate_row(row, idx):
-                value = get_metric_value(row, metric_name)
+            def evaluate_row(row, idx, current_metric_name):
+                value = get_metric_value(row, current_metric_name)
                 if value is not None:
-                    passes, _ = evaluate_objective(metric_name, value)
+                    passes, _ = evaluate_objective(current_metric_name, value)
                     return {
                         'Test': row.get('test_name', f'Test {idx}'),
                         'Tipo': row.get('test_type', 'unknown'),
@@ -404,7 +400,7 @@ def show_objective_comparison(df: pd.DataFrame):
 
             # Convertir a lista de dicts para procesamiento más rápido
             df_records = df.to_dict('records')
-            data = [evaluate_row(row, idx) for idx, row in enumerate(df_records)]
+            data = [evaluate_row(row, idx, metric_name) for idx, row in enumerate(df_records)]
 
             if not data:
                 st.warning(f"⚠️ No hay datos para {metric_name}")

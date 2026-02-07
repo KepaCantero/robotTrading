@@ -20,10 +20,7 @@ from unittest.mock import patch
 
 import pytest
 
-from app.optimization.parameter.base_optimizer import (
-    OptimizationConfig,
-    OptimizationResult,
-)
+from app.optimization.parameter.base_optimizer import OptimizationConfig, OptimizationResult
 from app.optimization.parameter.bayesian_optimizer import OPTUNA_AVAILABLE, BayesianOptimizer
 from app.optimization.parameter.grid_search import GridSearchOptimizer, GridSearchOptimizerCV
 
@@ -36,12 +33,7 @@ from app.optimization.parameter.models import (
     ParameterType,
 )
 from app.optimization.parameter.random_search import RandomSearchOptimizer, RandomSearchOptimizerCV
-from app.optimization.parameter.trial import (
-    TrialContext,
-    TrialHistory,
-    TrialResult,
-    TrialStatus,
-)
+from app.optimization.parameter.trial import TrialContext, TrialHistory, TrialResult, TrialStatus
 
 # =============================================================================
 # Fixtures

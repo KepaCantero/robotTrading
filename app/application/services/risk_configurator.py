@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
+from typing import Dict, Optional, Tuple
 
 import numpy as np
 
@@ -140,9 +140,9 @@ class RiskConfigurator:
             )
 
         logger.info(
-            "Configuring risk limits",
-            risk_tolerance=risk_tolerance,
-            capital=str(capital),
+            "Configuring risk limits: risk_tolerance=%s, capital=%s",
+            risk_tolerance,
+            str(capital),
         )
 
         if risk_tolerance == "BAJO":
@@ -184,7 +184,7 @@ class RiskConfigurator:
         self,
         returns: np.ndarray,
         capital: Decimal,
-        confidence_levels: list[float] = [0.95, 0.99],
+        confidence_levels: list[float] | None = None,
     ) -> VaRResult:
         """
         Calculate Value at Risk using historical simulation.
@@ -197,6 +197,9 @@ class RiskConfigurator:
         Returns:
             VaRResult with VaR and Expected Shortfall
         """
+        if confidence_levels is None:
+            confidence_levels = [0.95, 0.99]
+
         if len(returns) < 2:
             # Not enough data
             return VaRResult(
@@ -493,7 +496,7 @@ class RiskConfigurator:
         # Apply shocks
         total_loss = Decimal("0")
 
-        for symbol, weight in portfolio_positions.items():
+        for _symbol, weight in portfolio_positions.items():
             # Simplified - assume all positions are equities
             equity_shock = Decimal(str(scenario_params.get("equity_shock", 0.0)))
 

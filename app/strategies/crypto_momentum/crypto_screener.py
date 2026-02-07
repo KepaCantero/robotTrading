@@ -16,12 +16,7 @@ import time
 from decimal import Decimal
 from typing import Dict, List, Optional
 
-from .models import (
-    CryptoAsset,
-    CryptoAssetType,
-    CryptoExchange,
-    CryptoScreeningResult,
-)
+from .models import CryptoAsset, CryptoAssetType, CryptoExchange, CryptoScreeningResult
 
 logger = logging.getLogger(__name__)
 

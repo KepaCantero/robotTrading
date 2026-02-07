@@ -20,7 +20,6 @@ class CostCalculatorError(ValueError):
     """Raised when cost calculation parameters are invalid."""
 
 
-
 class AssetType(str, Enum):
     """Asset type for cost calculation."""
 
@@ -149,15 +148,46 @@ class CostCalculator:
         """
         symbol_upper = symbol.upper()
 
-        # Crypto detection (common pairs)
-        crypto_pairs = ["BTC", "ETH", "USDT", "USDC", "BNB", "ADA", "DOGE", "XRP"]
-        if any(crypto in symbol_upper for crypto in crypto_pairs):
-            return AssetType.CRYPTO
+        # Forex detection (currency pairs) - check first for pure forex pairs
+        # Forex pairs are exactly 6 characters with two 3-letter currency codes (e.g., USDCHF, EURUSD)
+        if len(symbol_upper) == 6:
+            forex_patterns = ["USD", "EUR", "GBP", "JPY", "CHF", "AUD", "CAD", "NZD"]
+            # Check if it contains at least 2 different forex currency codes
+            currencies_found = sum(
+                1
+                for currency in forex_patterns
+                if symbol_upper.startswith(currency) or symbol_upper.endswith(currency)
+            )
+            if currencies_found >= 2:
+                return AssetType.FOREX
 
-        # Forex detection (currency pairs)
-        forex_patterns = ["USD", "EUR", "GBP", "JPY", "CHF", "AUD", "CAD", "NZD"]
-        if len(symbol) <= 6 and any(currency in symbol_upper for currency in forex_patterns):
-            return AssetType.FOREX
+        # Crypto detection (common pairs)
+        # Crypto pairs can be exact match (e.g., "BTC"), or longer symbols starting with crypto (e.g., "BTCUSD", "ETHUSDT")
+        # But NOT pure 6-character forex pairs
+        crypto_pairs = ["BTC", "ETH", "USDT", "USDC", "BNB", "ADA", "DOGE", "XRP"]
+        for crypto in crypto_pairs:
+            # Exact match (e.g., "BTC")
+            if symbol_upper == crypto:
+                return AssetType.CRYPTO
+            # Starts with crypto symbol and is longer than 6 chars (e.g., "BTCUSDT" - 7 chars)
+            # or is 6+ chars but clearly not a forex pair (e.g., "BTCUSD" - starts with BTC which isn't a forex base)
+            if symbol_upper.startswith(crypto) and len(symbol_upper) > len(crypto):
+                # Don't match if it's a 6-char symbol that could be forex
+                if len(symbol_upper) == 6 and crypto in [
+                    "USD",
+                    "EUR",
+                    "GBP",
+                    "JPY",
+                    "CHF",
+                    "AUD",
+                    "CAD",
+                    "NZD",
+                ]:
+                    continue  # Skip, might be forex
+                return AssetType.CRYPTO
+            # Format with slash (e.g., "BTC/USD")
+            if symbol_upper.startswith(crypto + "/") or symbol_upper.endswith("/" + crypto):
+                return AssetType.CRYPTO
 
         # Commodity detection
         commodities = ["GLD", "SLV", "OIL", "CL", "GC", "SI", "NG"]

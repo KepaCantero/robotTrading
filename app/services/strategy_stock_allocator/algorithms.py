@@ -13,6 +13,7 @@ from typing import List, Optional, Tuple
 
 import numpy as np
 
+# pylint: disable=relative-beyond-top-level
 from .domain_models import StockCategory
 
 logger = logging.getLogger(__name__)

@@ -232,7 +232,6 @@ class VectorizationAuditor:
         Returns:
             List of VectorizationIssue objects.
         """
-        issues: list[VectorizationIssue] = []
 
         class ForLoopVisitor(ast.NodeVisitor):
             """Visitor to detect problematic for loops."""

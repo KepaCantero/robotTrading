@@ -8,6 +8,7 @@ Handles:
 - Error handling and retry logic
 - Rate limit compliance
 """
+# pylint: disable=import-error
 
 import asyncio
 import json
@@ -74,7 +75,11 @@ class AlpacaClient:
         try:
             # Import here to avoid hard dependency
             from alpaca_trade_api import REST
+        except ImportError:
+            logger.error("alpaca-trade-api not installed. Run: pip install alpaca-trade-api")
+            raise AlpacaClientError("alpaca-trade-api library not available")
 
+        try:
             self.base_url = base_url
             self.api = REST(
                 api_key=api_key,
@@ -92,9 +97,6 @@ class AlpacaClient:
             logger.info(f"✅ Authenticated with Alpaca (Account: {account.account_number})")
 
             return True
-
-            logger.error("alpaca-trade-api not installed. Run: pip install alpaca-trade-api")
-            raise AlpacaClientError("alpaca-trade-api library not available")
         except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
             logger.error(f"❌ Alpaca authentication failed: {str(e)}")
             raise AlpacaClientError(f"Authentication failed: {str(e)}")
@@ -145,8 +147,12 @@ class AlpacaClient:
         stop_price: Optional[Decimal] = None,
         time_in_force: str = "day",
         trail_percent: Optional[float] = None,
+        client_order_id: Optional[str] = None,
     ) -> str:
         """Submit an order to Alpaca.
+
+        SEC-005: Supports client_order_id for idempotency. Alpaca supports
+        client_order_id natively to prevent duplicate orders.
 
         Args:
             symbol: Stock symbol (e.g., 'AAPL')
@@ -157,6 +163,7 @@ class AlpacaClient:
             stop_price: Price for stop orders
             time_in_force: Order duration ('day', 'gtc', 'opg', 'cls')
             trail_percent: Trail percent for trailing stop orders
+            client_order_id: Optional client order ID for idempotency
 
         Returns:
             str: Order ID
@@ -188,6 +195,10 @@ class AlpacaClient:
             # Add trail_percent for trailing stop orders
             if trail_percent is not None and order_type.lower() == "trailing_stop":
                 order_params["trail_percent"] = trail_percent
+
+            # SEC-005: Add client_order_id for idempotency
+            if client_order_id is not None:
+                order_params["client_order_id"] = client_order_id
 
             # Submit order
             order = self.api.submit_order(**order_params)

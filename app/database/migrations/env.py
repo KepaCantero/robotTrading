@@ -20,9 +20,11 @@ from alembic import context
 # Add parent directory to path to import app modules
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
+# pylint: disable=import-error  # Migration environment runs independently
 from app.core.config import get_settings
 
 # Import Base and metadata from app.database
+# pylint: disable=import-error  # Migration environment runs independently
 from app.database import Base
 
 # Configure logger for migration operations

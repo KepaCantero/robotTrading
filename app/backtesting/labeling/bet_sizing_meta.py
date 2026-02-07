@@ -61,20 +61,16 @@ class BetSizingError(Exception):
     """Base exception for bet sizing errors."""
 
 
-
 class InvalidConfigurationError(BetSizingError):
     """Raised when bet sizing configuration is invalid."""
-
 
 
 class ModelPredictionError(BetSizingError):
     """Raised when model prediction fails."""
 
 
-
 class ExposureLimitError(BetSizingError):
     """Raised when exposure limits are violated."""
-
 
 
 @dataclass

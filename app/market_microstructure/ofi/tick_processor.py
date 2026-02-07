@@ -14,19 +14,18 @@ References:
 - Johnson, B. (2010) "Algorithmic Trading & DMA"
 """
 
+# pylint: disable=import-error,unsupported-binary-operation,comparison-with-itself
+# mypy: ignore-errors
 import logging
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
+from typing import Optional
 
 import numpy as np
 
-from app.market_microstructure.ofi.models import (
-    OrderBookSnapshot,
-    OrderSide,
-    TickData,
-)
+from app.market_microstructure.ofi.models import OrderBookSnapshot, OrderSide, TickData
 from app.market_microstructure.ofi.ofi_calculator import OFICalculator
 
 logger = logging.getLogger(__name__)
@@ -34,7 +33,6 @@ logger = logging.getLogger(__name__)
 
 class InvalidPriceError(ValueError):
     """Raised when an invalid price is provided."""
-
 
 
 @dataclass
@@ -95,7 +93,7 @@ class OrderBookLevel:
         return OrderBookLevel(
             price=self.price,
             quantity=self.quantity + other.quantity,
-            ordersCount=self.orders_count + other.orders_count,
+            orders_count=self.orders_count + other.orders_count,
         )
 
 

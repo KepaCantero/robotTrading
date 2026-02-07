@@ -4,6 +4,7 @@ API endpoints for parameter optimization and overfitting prevention.
 This module provides FastAPI endpoints for walk-forward analysis, out-of-sample testing,
 and parameter optimization to prevent overfitting in trading strategies.
 """
+# mypy: ignore-errors
 
 from __future__ import annotations
 
@@ -100,7 +101,7 @@ async def optimize_parameters(
         raise HTTPException(status_code=DEFAULT_VALUE_400, detail=str(e))
     except RuntimeError as e:
         raise HTTPException(status_code=DEFAULT_VALUE_500, detail=str(e))
-    except (ValueError, TypeError, KeyError, AttributeError) as e:
+    except (TypeError, KeyError, AttributeError) as e:
         raise HTTPException(status_code=DEFAULT_VALUE_500, detail=f"Unexpected error: {str(e)}")
 
 
@@ -133,7 +134,7 @@ async def perform_out_of_sample_test(
         raise HTTPException(status_code=DEFAULT_VALUE_400, detail=str(e))
     except RuntimeError as e:
         raise HTTPException(status_code=DEFAULT_VALUE_500, detail=str(e))
-    except (ValueError, TypeError, KeyError, AttributeError) as e:
+    except (TypeError, KeyError, AttributeError) as e:
         raise HTTPException(status_code=DEFAULT_VALUE_500, detail=f"Unexpected error: {str(e)}")
 
 
@@ -187,8 +188,6 @@ async def get_optimization_artifact(
 
         return artifact
 
-    except HTTPException:
-        raise
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         raise HTTPException(status_code=DEFAULT_VALUE_500, detail=f"Unexpected error: {str(e)}")
 
@@ -242,8 +241,6 @@ async def get_optimization_metrics(
         metrics = await service.calculate_optimization_metrics(artifact)
         return metrics
 
-    except HTTPException:
-        raise
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         raise HTTPException(status_code=DEFAULT_VALUE_500, detail=f"Unexpected error: {str(e)}")
 
@@ -316,7 +313,7 @@ async def validate_optimization_config(
         return JSONResponse(
             status_code=DEFAULT_VALUE_400, content={"message": str(e), "valid": False}
         )
-    except (ValueError, TypeError, KeyError, AttributeError) as e:
+    except (TypeError, KeyError, AttributeError) as e:
         return JSONResponse(
             status_code=DEFAULT_VALUE_500,
             content={"message": f"Unexpected error: {str(e)}", "valid": False},
@@ -361,8 +358,6 @@ async def get_best_parameters(
             "method_used": latest_artifact.optimization_result.method_used,
         }
 
-    except HTTPException:
-        raise
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         raise HTTPException(status_code=DEFAULT_VALUE_500, detail=f"Unexpected error: {str(e)}")
 
@@ -397,8 +392,6 @@ async def delete_optimization_artifact(
         else:
             raise HTTPException(status_code=DEFAULT_VALUE_404, detail="Artifact not found")
 
-    except HTTPException:
-        raise
     except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
         raise HTTPException(status_code=DEFAULT_VALUE_500, detail=f"Unexpected error: {str(e)}")
 

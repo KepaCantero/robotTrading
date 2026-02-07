@@ -355,7 +355,7 @@ class ValueSignalEnhancer:
     def calculate_time_series_value_momentum(
         self,
         historical_values: pd.Series,
-        lookback_periods: List[int] = [1, 3, 6, 12],
+        lookback_periods: Optional[List[int]] = None,
     ) -> Dict[str, float]:
         """
         Calculate time-series momentum for value signals.
@@ -371,6 +371,9 @@ class ValueSignalEnhancer:
             Dict with momentum metrics
         """
         logger.debug("Calculating value momentum...")
+
+        if lookback_periods is None:
+            lookback_periods = [1, 3, 6, 12]
 
         momentum_metrics = {}
 

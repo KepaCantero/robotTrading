@@ -11,10 +11,7 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from app.services.emergency_handler.emergency_closer import (
-    EmergencyCloser,
-    EmergencyTrigger,
-)
+from app.services.emergency_handler.emergency_closer import EmergencyCloser, EmergencyTrigger
 
 
 @pytest.fixture

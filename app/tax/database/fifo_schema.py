@@ -1,3 +1,4 @@
+# mypy: disable-error-code="valid-type,misc,assignment,attr-defined"
 """
 FIFO Trading Database Schema - Spain Tax Compliance (Modelo 721)
 
@@ -29,7 +30,7 @@ from typing import Dict, List, Optional
 from uuid import UUID, uuid4
 
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.hybrid import hybrid_property
 
@@ -89,7 +90,7 @@ class LotStatus(str, Enum):
 # ============================================================================
 
 
-class Account(Base):
+class Account(Base):  # type: ignore[valid-type]
     """
     Cuenta de trading/broker.
 
@@ -105,10 +106,10 @@ class Account(Base):
     __tablename__ = "accounts"
 
     # Primary key
-    id: UUID = sa.Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    id: UUID = sa.Column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
 
     # Identification
-    user_id: UUID = sa.Column(UUID(as_uuid=True), nullable=False, index=True)
+    user_id: UUID = sa.Column(PGUUID(as_uuid=True), nullable=False, index=True)
     account_name: str = sa.Column(sa.String(100), nullable=False)
     exchange_type: ExchangeType = sa.Column(sa.Enum(ExchangeType), nullable=False)
     exchange_name: str = sa.Column(sa.String(100), nullable=False)  # "Binance", "Coinbase", "IBKR"
@@ -154,7 +155,7 @@ class Account(Base):
     )
 
 
-class Transaction(Base):
+class Transaction(Base):  # type: ignore[valid-type]
     """
     Transacción individual con tracking FIFO.
 
@@ -164,7 +165,7 @@ class Transaction(Base):
     __tablename__ = "transactions"
 
     # Primary key
-    id: UUID = sa.Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    id: UUID = sa.Column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
 
     # External ID (from exchange) - PREVENTS DUPLICATES
     external_id: str = sa.Column(sa.String(255), nullable=False, index=True)
@@ -173,7 +174,7 @@ class Transaction(Base):
     )  # Raw TX hash for crypto
 
     # Account
-    account_id: UUID = sa.Column(UUID(as_uuid=True), sa.ForeignKey('accounts.id'), nullable=False)
+    account_id: UUID = sa.Column(PGUUID(as_uuid=True), sa.ForeignKey('accounts.id'), nullable=False)
     account = sa.orm.relationship(
         "Account", back_populates="transactions", foreign_keys=[account_id]
     )
@@ -212,7 +213,9 @@ class Transaction(Base):
     settlement_date: Optional[datetime] = sa.Column(sa.DATE, nullable=True)
 
     # FIFO linking
-    lot_id: Optional[UUID] = sa.Column(UUID(as_uuid=True), sa.ForeignKey('lots.id'), nullable=True)
+    lot_id: Optional[UUID] = sa.Column(
+        PGUUID(as_uuid=True), sa.ForeignKey('lots.id'), nullable=True
+    )
     lot = sa.orm.relationship("Lot", back_populates="transactions", foreign_keys=[lot_id])
 
     # Tax-related fields
@@ -223,10 +226,10 @@ class Transaction(Base):
 
     # Counterparty (for transfers)
     from_account_id: Optional[UUID] = sa.Column(
-        UUID(as_uuid=True), sa.ForeignKey('accounts.id'), nullable=True
+        PGUUID(as_uuid=True), sa.ForeignKey('accounts.id'), nullable=True
     )
     to_account_id: Optional[UUID] = sa.Column(
-        UUID(as_uuid=True), sa.ForeignKey('accounts.id'), nullable=True
+        PGUUID(as_uuid=True), sa.ForeignKey('accounts.id'), nullable=True
     )
     from_address: Optional[str] = sa.Column(sa.String(255), nullable=True)  # Crypto address
     to_address: Optional[str] = sa.Column(sa.String(255), nullable=True)  # Crypto address
@@ -271,7 +274,7 @@ class Transaction(Base):
             return Decimal("0")
 
 
-class Lot(Base):
+class Lot(Base):  # type: ignore[valid-type]
     """
     Lote FIFO para tracking de cost basis.
 
@@ -282,10 +285,10 @@ class Lot(Base):
     __tablename__ = "lots"
 
     # Primary key
-    id: UUID = sa.Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    id: UUID = sa.Column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
 
     # Account
-    account_id: UUID = sa.Column(UUID(as_uuid=True), sa.ForeignKey('accounts.id'), nullable=False)
+    account_id: UUID = sa.Column(PGUUID(as_uuid=True), sa.ForeignKey('accounts.id'), nullable=False)
     account = sa.orm.relationship("Account", back_populates="lots")
 
     # Asset
@@ -294,7 +297,7 @@ class Lot(Base):
 
     # Original purchase (cost basis)
     opening_transaction_id: UUID = sa.Column(
-        UUID(as_uuid=True), sa.ForeignKey('transactions.id'), nullable=False
+        PGUUID(as_uuid=True), sa.ForeignKey('transactions.id'), nullable=False
     )
     quantity_opened: Decimal = sa.Column(sa.Numeric(36, 18), nullable=False)
     cost_basis_open: Decimal = sa.Column(
@@ -344,7 +347,7 @@ class Lot(Base):
         return (self.closed_at - self.opened_at).days >= 365
 
 
-class BalanceSnapshot(Base):
+class BalanceSnapshot(Base):  # type: ignore[valid-type]
     """
     Snapshot de balance para tracking histórico.
 
@@ -354,10 +357,10 @@ class BalanceSnapshot(Base):
     __tablename__ = "balance_snapshots"
 
     # Primary key
-    id: UUID = sa.Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    id: UUID = sa.Column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
 
     # Account
-    account_id: UUID = sa.Column(UUID(as_uuid=True), sa.ForeignKey('accounts.id'), nullable=False)
+    account_id: UUID = sa.Column(PGUUID(as_uuid=True), sa.ForeignKey('accounts.id'), nullable=False)
     account = sa.orm.relationship("Account", back_populates="balances")
 
     # Snapshot details
@@ -380,7 +383,7 @@ class BalanceSnapshot(Base):
     )
 
 
-class TaxReport(Base):
+class TaxReport(Base):  # type: ignore[valid-type]
     """
     Reporte fiscal generado (Modelo 721/720).
 
@@ -390,10 +393,10 @@ class TaxReport(Base):
     __tablename__ = "tax_reports"
 
     # Primary key
-    id: UUID = sa.Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    id: UUID = sa.Column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
 
     # User
-    user_id: UUID = sa.Column(UUID(as_uuid=True), nullable=False, index=True)
+    user_id: UUID = sa.Column(PGUUID(as_uuid=True), nullable=False, index=True)
 
     # Report type
     report_type: str = sa.Column(sa.String(20), nullable=False)  # "modelo_720", "modelo_721"
@@ -410,7 +413,7 @@ class TaxReport(Base):
     # Status
     status: str = sa.Column(sa.String(20), default="draft")  # "draft", "final", "filed"
     is_amended: bool = sa.Column(sa.Boolean, default=False)
-    amended_from_id: Optional[UUID] = sa.Column(UUID(as_uuid=True), nullable=True)
+    amended_from_id: Optional[UUID] = sa.Column(PGUUID(as_uuid=True), nullable=True)
 
     # Dates
     report_date: datetime = sa.Column(sa.TIMESTAMP(timezone=True), nullable=False)  # As of date
@@ -557,7 +560,7 @@ class FIFOProcessor:
         if quantity_to_close > 0 and strict_fifo:
             raise ValueError(
                 f"Insufficient lots to sell {transaction.quantity} {transaction.symbol}. "
-                f"Missing {quantity_to_close}. Available: {sum([l.quantity_remaining for l in open_lots])}"
+                f"Missing {quantity_to_close}. Available: {sum([lot.quantity_remaining for lot in open_lots])}"
             )
 
         # Calculate gain/loss

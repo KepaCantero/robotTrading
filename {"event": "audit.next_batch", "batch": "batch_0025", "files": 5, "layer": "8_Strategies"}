@@ -1,0 +1,6 @@
+{"payload":"{\"batch\":\"batch_0026\",\"layer\":\"8_Strategies\",\"files\":5}","topic":"audit.next_batch","ts":"2026-02-07T09:32:33.914690+00:00"}
+{"payload":{"batch":"batch_0027","files":5,"layer":"8_Strategies"},"topic":"audit.next_batch","ts":"2026-02-07T09:34:13.769332+00:00"}
+{"payload":{"batch":"batch_0035","files":2,"layer":"8_Strategies"},"topic":"audit.next_batch","ts":"2026-02-07T09:51:05.661353+00:00"}
+{"payload":{"batch":"batch_0035","files":2,"layer":"8_Strategies"},"topic":"audit.next_batch","ts":"2026-02-07T09:51:50.111162+00:00"}
+{"payload":{"batch":"batch_0071","files":10,"layer":"14_Others"},"topic":"audit.next_batch","ts":"2026-02-07T11:47:31.822987+00:00"}
+{"payload":"{\"batch\": \"batch_0074\", \"files\": 10, \"layer\": \"14_Others\"}","topic":"audit.next_batch","ts":"2026-02-07T11:58:31.393271+00:00"}

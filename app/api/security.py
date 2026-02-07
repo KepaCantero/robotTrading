@@ -406,9 +406,9 @@ def get_user_from_request(request: Request) -> Optional[Dict[str, Any]]:
     # Placeholder: Check for JWT token
     auth_header = request.headers.get("Authorization")
     if auth_header and auth_header.startswith("Bearer "):
-        token = auth_header[7:]  # Remove "Bearer " prefix
         # TODO: Validate and decode JWT token
         # For now, return None to indicate no valid auth
+        pass
 
     # Check request state for user set by middleware
     if hasattr(request.state, "user"):

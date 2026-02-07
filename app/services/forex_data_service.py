@@ -204,11 +204,9 @@ class ForexDataFetcher:
             # Try to fetch from API with reconnection manager
             try:
 
-                async def _fetch_rate() -> Optional[Decimal]:
+                async def _fetch_rate(p: str = pair) -> Optional[Decimal]:
                     """Internal fetch function."""
-                    return self._fetch_rate_from_api(
-                        pair
-                    )  # pylint: disable=assignment-from-no-return
+                    return self._fetch_rate_from_api(p)  # pylint: disable=assignment-from-no-return
 
                 rate = asyncio.run(self.reconnection_manager.connect_with_backoff(_fetch_rate))
                 if rate:

@@ -165,14 +165,14 @@ class TimeSeriesMomentum:
         # Normalize volatility
         price_mean = np.mean(prices_clean[-self._volatility_period :])
         if price_mean > 0 and np.isfinite(price_mean):
-            normalized_vol = volatility / price_mean
+            normalized_vol: float = float(volatility) / float(price_mean)
         else:
-            normalized_vol = 0
+            normalized_vol = 0.0
             logger.warning(f"Invalid price mean for {symbol}, using normalized_vol=0")
 
         # Validate normalized_vol
         if not np.isfinite(normalized_vol):
-            normalized_vol = 0
+            normalized_vol = 0.0
 
         # Determine trend
         current_price = float(prices_clean[-1])

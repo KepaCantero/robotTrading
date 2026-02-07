@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from .market_mechanics import MarketMechanicsEngine
 from .order_book import LimitOrderBook, Order, OrderSide, OrderStatus, OrderType, Trade
@@ -691,7 +691,7 @@ class Exchange:
 
         return quotes
 
-    def get_execution_statistics(self) -> Dict[str, any]:
+    def get_execution_statistics(self) -> Dict[str, Any]:
         """Get execution statistics."""
         if not self._trades:
             return {

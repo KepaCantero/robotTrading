@@ -8,12 +8,12 @@ Compares current Hurst values with historical values to detect
 significant changes in market regime that may require strategy adjustments.
 """
 
+from __future__ import annotations
+
 import logging
 
 from app.services.hurst_analysis.models import RegimeChange
-from app.services.hurst_analysis.protocols import (
-    RegimeClassifierProtocol,
-)
+from app.services.hurst_analysis.protocols import RegimeClassifierProtocol
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +66,7 @@ class RegimeChangeDetector:
         symbol: str,
         get_history_func: callable,
         lookback_periods: int = 10,
-    ) -> RegimeChange | None:
+    ) -> RegimeChange | None:  # pylint: disable=unsupported-binary-operation
         """
         Detect if there has been a regime change for a symbol.
 

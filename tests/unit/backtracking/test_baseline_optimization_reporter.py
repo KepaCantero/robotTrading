@@ -11,9 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from app.backtesting.reports.baseline_optimization_reporter import (
-    BaselineOptimizationReporter,
-)
+from app.backtesting.reports.baseline_optimization_reporter import BaselineOptimizationReporter
 from app.core.models.input_profile import InputProfile
 
 

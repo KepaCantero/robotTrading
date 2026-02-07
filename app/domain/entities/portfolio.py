@@ -580,6 +580,8 @@ class Portfolio:
         risk_params = RiskParameters(
             max_position_size=max_position_size,
             max_portfolio_exposure=max_portfolio_exposure,
+            stop_loss_pct=Decimal('0.05'),
+            take_profit_pct=Decimal('0.10'),
         )
 
         return cls(

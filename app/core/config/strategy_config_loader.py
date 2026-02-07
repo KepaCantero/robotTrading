@@ -100,7 +100,7 @@ class StrategyConfigLoader:
             self._cache[filename] = config
             return config
 
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             logger.error(f"Error loading config from {config_path}: {e}")
             return {}
 
@@ -502,6 +502,5 @@ def get_strategy_config(config_dir: Optional[Path] = None) -> StrategyConfigLoad
 
 def reload_strategy_config():
     """Reload the global configuration loader."""
-    global _config_loader
     if _config_loader is not None:
         _config_loader.reload_config()

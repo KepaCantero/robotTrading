@@ -1,0 +1,227 @@
+# Ralph Orchestrator - CRITICAL FIXES IMPLEMENTATION
+# Sistema: Implementación de 4 fixes P0 críticos para producción
+
+event_loop:
+  prompt_file: ".ralph/critical_fixes_task.md"
+  completion_promise: "CRITICAL_FIXES_COMPLETE"
+  max_iterations: 150
+  max_runtime_seconds: 144000  # 40 horas
+  checkpoint_interval: 2
+  starting_event: "fixes.start"
+
+cli:
+  backend: "claude"
+
+core:
+  specs_dir: "./specs/"
+
+hats:
+  fix_implementer:
+    name: "Critical Fixes Implementer"
+    description: "Implementa 4 fixes P0 críticos para producción de trading"
+    triggers: ["fixes.start", "fixes.next_fix"]
+    publishes: ["fixes.next_fix", "fixes.complete", "fixes.blocked"]
+    default_publishes: "fixes.next_fix"
+    instructions: |
+      ## CRITICAL FIXES IMPLEMENTER - Trading System Production Readiness
+
+      Fixes a implementar (en orden recomendado):
+      1. FIX #3: Protocol-based DI (execution_engine.py)
+      2. FIX #1: Risk Centralization (trading_bridge_orchestrator.py)
+      3. FIX #2: Exponential Backoff (order_manager.py)
+      4. FIX #4: Client Order ID (broker_connector.py)
+
+      ### Por cada fix:
+
+      1. **Leer el archivo actual:**
+      ```bash
+      # Leer el archivo completo para entender el contexto
+      cat <archivo>
+      ```
+
+      2. **Aplicar el fix según critical_fixes_task.md:**
+      - Sigue EXACTAMENTE el código mostrado en la sección "Solución"
+      - NO te desvíes del patrón mostrado
+      - Mantén el estilo existente del archivo
+
+      3. **Validar después del fix:**
+      ```bash
+      scripts/validate_file_complete.sh <archivo>
+      # Debe retornar success: true
+      ```
+
+      4. **Si hay errores:**
+      - Analizar el error
+      - Corregir el código
+      - Re-validar hasta success: true
+
+      5. **Solo cuando success: true:**
+      - Marcar el fix como COMPLETED en checkpoint
+      - Continuar con el siguiente fix
+
+      ### FIX #1: Risk Centralization (TRD-002)
+      Archivo: app/services/live_trading/trading_bridge_orchestrator.py
+      Líneas: 270-314 (_validate_risk_gates)
+      **Acción:**
+      - Eliminar lógica manual de validación (líneas 287-314)
+      - Reemplazar con llamada a self.risk_gates.validate_order()
+      - Agregar logging estructurado
+
+      **Validación:**
+      ```bash
+      grep -n "validate_order" app/services/live_trading/trading_bridge_orchestrator.py
+      # Debe mostrar la nueva llamada a validate_order
+      ```
+
+      ### FIX #2: Exponential Backoff (ASYNC-004)
+      Archivo: app/services/live_trading/order_manager.py
+      Líneas: 191-226 (poll_order_status)
+      **Acción:**
+      - Añadir parámetro max_wait_seconds=30
+      - Reemplazar asyncio.sleep(1) con min(2 ** poll_count, max_wait_seconds)
+      - Agregar logging del wait_time
+
+      **Validación:**
+      ```bash
+      grep -n "2 \*\* poll_count\|2 \*\*" app/services/live_trading/order_manager.py
+      # Debe mostrar el cálculo de backoff exponencial
+      ```
+
+      ### FIX #3: Protocol-based DI (SOL-005)
+      Archivo nuevo: app/strategies/protocols.py
+      Archivo a modificar: app/strategies/execution_engine.py
+      **Acción:**
+      1. Crear protocols.py con StrategyRegistryProto y StrategyLoggerProto
+      2. Modificar execution_engine.py:
+         - Cambiar imports de clases concretas a Protocol
+         - Actualizar type hints en __init__
+
+      **Validación:**
+      ```bash
+      ls app/strategies/protocols.py
+      grep "Proto" app/strategies/execution_engine.py
+      # Ambos deben existir
+      ```
+
+      ### FIX #4: Client Order ID (Idempotency)
+      Archivo: app/services/live_trading/broker_connector.py o similar
+      **Acción:**
+      - Añadir parámetro client_order_id a place_order()
+      - Generar UUID si no se proporciona
+      - Manejar error de "Duplicate Order ID"
+      - Buscar orden existente si es duplicado
+
+      **Validación:**
+      ```bash
+      grep -n "client_order_id" app/services/live_trading/broker_connector.py
+      grep -n "uuid.uuid4" app/services/live_trading/broker_connector.py
+      grep -i "duplicate" app/services/live_trading/broker_connector.py
+      # Todos deben existir
+      ```
+
+      ### Formato de checkpoint:
+      ```json
+      {
+        "fixes": {
+          "fix_1_risk_centralization": {
+            "status": "COMPLETED",
+            "file": "app/services/live_trading/trading_bridge_orchestrator.py",
+            "validated_at": "2026-02-07T..."
+          },
+          "fix_2_backoff": {
+            "status": "PENDING",
+            "file": "app/services/live_trading/order_manager.py"
+          },
+          "fix_3_protocol": {
+            "status": "PENDING",
+            "file": "app/strategies/execution_engine.py"
+          },
+          "fix_4_idempotency": {
+            "status": "PENDING",
+            "file": "app/services/live_trading/broker_connector.py"
+          }
+        }
+      }
+      ```
+
+      ### REGLAS DE ORO:
+      - ❌ NO marcar fix como COMPLETED si validate_file_complete.sh falla
+      - ✅ Seguir EXACTAMENTE el código mostrado en critical_fixes_task.md
+      - ✅ Validar después de CADA fix
+      - ✅ Mantener logging estructurado en todos los fixes
+
+      ### Event Format
+      Fix completado:
+      ```
+      ralph emit "fixes.next_fix" "fix=<#>, file=<path>, status=COMPLETED"
+      ```
+
+      Todos fixes completados (4 fixes con success: true):
+      ```
+      ralph emit "fixes.complete" "total=4, completed=4"
+      ```
+
+      Fix bloqueado:
+      ```
+      ralph emit "fixes.blocked" "fix=<#>, file=<path>, errors=<cantidad>"
+      ```
+
+  code_reviewer:
+    name: "Final Code Reviewer"
+    description: "Revisión final de los 4 fixes críticos"
+    triggers: ["fixes.complete"]
+    publishes: ["fixes.final_summary"]
+    instructions: |
+      ## FINAL CODE REVIEWER - Verificación de los 4 fixes críticos
+
+      Ejecutar verificación FINAL:
+
+      ```bash
+      # 1. Verificar que TODOS los archivos modificados validan
+      for file in \
+        app/services/live_trading/trading_bridge_orchestrator.py \
+        app/services/live_trading/order_manager.py \
+        app/strategies/execution_engine.py \
+        app/strategies/protocols.py \
+        app/services/live_trading/broker_connector.py
+      do
+        scripts/validate_file_complete.sh "$file" | jq '.summary.success'
+      done
+      # Debe retornar "true" para TODOS
+
+      # 2. Verificar los fixes específicos
+      # Fix #1: Centralización de riesgo
+      grep -n "validate_order" app/services/live_trading/trading_bridge_orchestrator.py
+
+      # Fix #2: Exponential backoff
+      grep -n "2 \*\* poll_count\|2 \*\*" app/services/live_trading/order_manager.py
+
+      # Fix #3: Protocol-based DI
+      grep -n "Proto" app/strategies/execution_engine.py
+      ls app/strategies/protocols.py
+
+      # Fix #4: Client Order ID
+      grep -n "client_order_id" app/services/live_trading/broker_connector.py
+      grep -n "uuid.uuid4" app/services/live_trading/broker_connector.py
+      grep -i "duplicate" app/services/live_trading/broker_connector.py
+
+      Si TODO está limpio:
+      ```
+      ralph emit "fixes.final_summary" "all_fixed"
+      Output: **CRITICAL_FIXES_COMPLETE**
+      ```
+
+      Si hay errores:
+      ```
+      ralph emit "fixes.failed" "found_errors=<cantidad>"
+      ```
+
+# Task configuration
+tasks:
+  enabled: true
+
+# Memory configuration
+memories:
+  enabled: true
+  inject: auto
+  budget: 3000

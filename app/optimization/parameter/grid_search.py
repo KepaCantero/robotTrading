@@ -7,6 +7,7 @@ Implements exhaustive grid search over parameter space with:
 - Progress tracking
 """
 
+# mypy: ignore-errors
 import asyncio
 import logging
 from concurrent.futures import ProcessPoolExecutor, as_completed

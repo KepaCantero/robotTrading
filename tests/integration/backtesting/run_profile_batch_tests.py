@@ -29,9 +29,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 # Configure logging
 import logging
 
-from app.backtesting.profile_batch_backtester import (
+from app.backtesting.profile_batch_backtester import ProfileBatchBacktester
+from app.backtesting.services.models import (
     BaselineOptimizationComparison,
-    ProfileBatchBacktester,
     ProfileResult,
     ProfileResultDB,
 )

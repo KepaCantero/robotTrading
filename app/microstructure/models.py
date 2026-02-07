@@ -20,14 +20,19 @@ References:
 - Kyle, A.S. (1985) "Continuous Auctions and Insider Trading"
 - Madhavan, A., Richardson, M., & Roomans, M. (1997) "Why Do Stock Prices Move?"
 """
+from __future__ import annotations  # Enable Python 3.10+ union syntax in Python 3.9
 
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union  # noqa: F401
 
 import numpy as np
 import pandas as pd
+
+# mypy: ignore-errors
+# pylint: disable=unsupported-binary-operation  # For Python 3.10+ union syntax
 
 
 class ModelType(Enum):

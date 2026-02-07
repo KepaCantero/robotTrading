@@ -260,7 +260,7 @@ class TradingBridgeOrchestrator:
                     logger.error("❌ Trade execution failed")
                     return None
 
-            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError, ConnectionError, OSError) as e:
                 self.status = BridgeStatus.ERROR
                 logger.error(f"❌ Error processing alert: {str(e)}")
                 if hasattr(alert_event, 'event_id'):
@@ -275,6 +275,10 @@ class TradingBridgeOrchestrator:
         """
         Validate trade signal against risk gates.
 
+        TRD-002: Delegates to RiskGates.validate_order() for complete validation
+        including all 7 risk checks (position size, buying power, concentration,
+        leverage, daily loss limit, drawdown limit, cash reserve).
+
         Args:
             signal: Trade signal to validate
             account: Broker account info
@@ -282,36 +286,72 @@ class TradingBridgeOrchestrator:
         Returns:
             RiskCheckResult with pass/fail status
         """
-        # This would call the RiskGates validation
-        # For now, simplified implementation
-        violations = []
-        warnings = []
+        # TRD-002: Use centralized risk validation via RiskGates.validate_order()
+        # This ensures ALL 7 risk checks are performed, not just the 3 manual ones
+        # that were previously implemented here.
 
-        # Check position size
-        position_value = (
-            signal.quantity * signal.price if signal.price else signal.quantity * Decimal("100")
-        )
-        if position_value > self.risk_gates.max_position_size:
-            violations.append(f"Position size ${position_value} exceeds limit")
+        # Determine order price for validation
+        order_price = signal.price
+        if order_price is None:
+            # For market orders, use a conservative estimate
+            order_price = Decimal("100")
 
-        # Check cash available
-        if account.cash_available < position_value:
-            violations.append(f"Insufficient cash: ${account.cash_available} < ${position_value}")
+        try:
+            # Delegate to RiskGates for complete risk validation
+            # This performs: position size, buying power, concentration, leverage,
+            # daily loss limit, drawdown limit, and cash reserve checks
+            result = await self.risk_gates.validate_order(
+                symbol=signal.symbol,
+                side=signal.order_side,
+                quantity=signal.quantity,
+                price=order_price,
+            )
 
-        # Check leverage
-        if position_value > account.cash_available * self.risk_gates.max_leverage:
-            warnings.append("Trade would exceed leverage limit")
+            if not result.passed:
+                logger.warning(
+                    "Risk validation failed - trade rejected",
+                    extra={
+                        "signal_id": signal.signal_id,
+                        "symbol": signal.symbol,
+                        "side": signal.order_side.value,
+                        "quantity": str(signal.quantity),
+                        "price": str(order_price),
+                        "risk_level": result.risk_level.value,
+                        "violations": result.violations,
+                        "warnings": result.warnings,
+                    },
+                )
+            else:
+                logger.info(
+                    "Risk validation passed - trade approved",
+                    extra={
+                        "signal_id": signal.signal_id,
+                        "symbol": signal.symbol,
+                        "side": signal.order_side.value,
+                        "quantity": str(signal.quantity),
+                        "price": str(order_price),
+                        "risk_level": result.risk_level.value,
+                    },
+                )
 
-        risk_level = (
-            RiskLevel.CRITICAL if violations else (RiskLevel.HIGH if warnings else RiskLevel.LOW)
-        )
+            return result
 
-        return RiskCheckResult(
-            passed=len(violations) == 0,
-            risk_level=risk_level,
-            violations=violations,
-            warnings=warnings,
-        )
+        except Exception as e:
+            logger.error(
+                "Risk validation error - failing closed",
+                extra={
+                    "signal_id": signal.signal_id,
+                    "symbol": signal.symbol,
+                    "error": str(e),
+                },
+                exc_info=True,
+            )
+            # Fail closed on any error during risk validation
+            return RiskCheckResult(
+                passed=False,
+                risk_level=RiskLevel.CRITICAL,
+                violations=[f"Risk validation error: {str(e)}"],
+            )
 
     async def _execute_trade(
         self,

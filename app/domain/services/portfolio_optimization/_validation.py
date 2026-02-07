@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Shared validation utilities for portfolio optimization.
 

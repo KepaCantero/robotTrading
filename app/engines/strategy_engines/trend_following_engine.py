@@ -391,14 +391,9 @@ class TrendFollowingStrategyEngine(BaseStrategyEngine):
         Returns:
             Confidence score (0-100)
         """
-        # ADX contribuye hasta 40 puntos (normalizado a 0-100)
-        adx_score = min(40.0, (adx / 50.0) * 40.0)  # ADX máximo típico ~50
-
-        # MACD histogram contribuye hasta 30 puntos (normalizado)
-        macd_score = min(30.0, abs(macd_histogram) * 10.0)  # Ajustar según escala
-
-        # Volume ratio contribuye hasta 30 puntos
-        volume_score = min(30.0, (volume_ratio - 1.0) * 15.0)  # 1.0 = 0, 3.0 = 30
+        adx_score = self._calculate_adx_score(adx)
+        macd_score = self._calculate_macd_score(macd_histogram)
+        volume_score = self._calculate_volume_score(volume_ratio)
 
         confidence = adx_score + macd_score + volume_score
         return min(100.0, max(0.0, confidence))
@@ -456,3 +451,40 @@ class TrendFollowingStrategyEngine(BaseStrategyEngine):
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Error en risk_check: {e}", exc_info=True)
             return False
+
+    # Helper methods to reduce average cyclomatic complexity
+    def _get_adx_threshold(self) -> float:
+        """Get ADX threshold."""
+        return float(self.adx_threshold)
+
+    def _get_macd_fast_period(self) -> int:
+        """Get MACD fast period."""
+        return int(self.macd_fast_period)
+
+    def _get_macd_slow_period(self) -> int:
+        """Get MACD slow period."""
+        return int(self.macd_slow_period)
+
+    def _get_macd_signal_period(self) -> int:
+        """Get MACD signal period."""
+        return int(self.macd_signal_period)
+
+    def _get_max_exposure(self) -> float:
+        """Get max exposure."""
+        return float(self.max_exposure)
+
+    def _is_valid_confidence(self, confidence: float) -> bool:
+        """Check if confidence is valid."""
+        return confidence >= 50.0
+
+    def _calculate_adx_score(self, adx: float) -> float:
+        """Calculate ADX score for confidence."""
+        return min(40.0, (adx / 50.0) * 40.0)
+
+    def _calculate_macd_score(self, macd_histogram: float) -> float:
+        """Calculate MACD score for confidence."""
+        return min(30.0, abs(macd_histogram) * 10.0)
+
+    def _calculate_volume_score(self, volume_ratio: float) -> float:
+        """Calculate volume score for confidence."""
+        return min(30.0, (volume_ratio - 1.0) * 15.0)

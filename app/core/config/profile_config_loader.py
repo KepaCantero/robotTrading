@@ -527,5 +527,4 @@ def get_rl_config(
 
 def clear_loader_cache() -> None:
     """Clear the loader cache."""
-    global _loaders
     _loaders.clear()

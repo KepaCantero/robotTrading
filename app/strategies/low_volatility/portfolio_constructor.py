@@ -22,10 +22,7 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 from scipy.optimize import minimize
 
-from .models import (
-    LowVolatilityStock,
-    LowVolatilityStrategyConfig,
-)
+from .models import LowVolatilityStock, LowVolatilityStrategyConfig
 
 logger = logging.getLogger(__name__)
 
