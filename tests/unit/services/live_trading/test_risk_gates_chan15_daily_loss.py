@@ -6,21 +6,12 @@ as specified in Ernest Chan's Algorithmic Trading (Rule #15) and
 John Hull's Risk Management (Rule #65 - Kill switches).
 """
 
-import asyncio
-import logging
 from decimal import Decimal
-from datetime import datetime, timezone
-from typing import Optional
-from unittest.mock import AsyncMock, MagicMock, Mock
+from unittest.mock import Mock
 
 import pytest
 
-from app.services.live_trading.risk_gates import (
-    RiskGates,
-    RiskLevel,
-    RiskCheckResult,
-)
-
+from app.services.live_trading.risk_gates import RiskGates
 
 # ============================================================================
 # FIXTURES

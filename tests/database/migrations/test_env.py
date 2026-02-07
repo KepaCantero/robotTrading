@@ -15,11 +15,11 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
-from sqlalchemy import pool
-from sqlalchemy.exc import SQLAlchemyError
 
 # Import the env module AFTER conftest has mocked alembic.context
 from database.migrations import env
+from sqlalchemy import pool
+from sqlalchemy.exc import SQLAlchemyError
 
 
 class TestRunMigrationsOffline:
@@ -98,9 +98,7 @@ class TestRunMigrationsOffline:
 
     @patch("database.migrations.env.logger")
     @patch("database.migrations.env.context")
-    def test_run_migrations_offline_logs_partial_url_for_security(
-        self, mock_context, mock_logger
-    ):
+    def test_run_migrations_offline_logs_partial_url_for_security(self, mock_context, mock_logger):
         """Test that only partial URL is logged for security."""
         # Arrange
         long_url = "postgresql://user:password@localhost:5432/mydatabase"
@@ -124,8 +122,7 @@ class TestRunMigrationsOffline:
                     url_log_found = True
                     # Should only log first ~20 chars (truncated)
                     assert (
-                        "postgresql://user:pa" in call_str
-                        or "postgresql://user:passwo" in call_str
+                        "postgresql://user:pa" in call_str or "postgresql://user:passwo" in call_str
                     )
                     # Should not contain full password or full URL
                     assert "password" not in call_str
@@ -136,9 +133,7 @@ class TestRunMigrationsOffline:
 
     @patch("database.migrations.env.logger")
     @patch("database.migrations.env.context")
-    def test_run_migrations_offline_handles_exception(
-        self, mock_context, mock_logger
-    ):
+    def test_run_migrations_offline_handles_exception(self, mock_context, mock_logger):
         """Test that exceptions are properly logged and re-raised."""
         # Arrange
         mock_context.configure = Mock(side_effect=RuntimeError("Test error"))
@@ -185,9 +180,7 @@ class TestDoRunMigrations:
 
     @patch("database.migrations.env.logger")
     @patch("database.migrations.env.context")
-    def test_do_run_migrations_handles_sqlalchemy_error(
-        self, mock_context, mock_logger
-    ):
+    def test_do_run_migrations_handles_sqlalchemy_error(self, mock_context, mock_logger):
         """Test SQLAlchemyError handling in do_run_migrations."""
         # Arrange
         mock_context.configure = Mock(side_effect=SQLAlchemyError("DB Error"))
@@ -202,9 +195,7 @@ class TestDoRunMigrations:
 
     @patch("database.migrations.env.logger")
     @patch("database.migrations.env.context")
-    def test_do_run_migrations_handles_generic_exception(
-        self, mock_context, mock_logger
-    ):
+    def test_do_run_migrations_handles_generic_exception(self, mock_context, mock_logger):
         """Test generic exception handling in do_run_migrations."""
         # Arrange
         mock_context.configure = Mock(side_effect=ValueError("Generic Error"))
@@ -231,7 +222,9 @@ class TestRunAsyncMigrations:
         """Test P0: Successful async migration execution."""
         # Arrange
         mock_config = MagicMock()
-        mock_config.get_section = Mock(return_value={"sqlalchemy.url": "sqlite+aiosqlite:///test.db"})
+        mock_config.get_section = Mock(
+            return_value={"sqlalchemy.url": "sqlite+aiosqlite:///test.db"}
+        )
         mock_config.get_main_option = Mock(return_value="sqlite+aiosqlite:///test.db")
         mock_config.config_ini_section = "alembic"
 
@@ -277,7 +270,9 @@ class TestRunAsyncMigrations:
         """Test P0: Connection is closed even when migration fails."""
         # Arrange
         mock_config = MagicMock()
-        mock_config.get_section = Mock(return_value={"sqlalchemy.url": "sqlite+aiosqlite:///test.db"})
+        mock_config.get_section = Mock(
+            return_value={"sqlalchemy.url": "sqlite+aiosqlite:///test.db"}
+        )
         mock_config.get_main_option = Mock(return_value="sqlite+aiosqlite:///test.db")
         mock_config.config_ini_section = "alembic"
 
@@ -313,7 +308,9 @@ class TestRunAsyncMigrations:
         """Test that errors during connection close are logged but don't prevent engine disposal."""
         # Arrange
         mock_config = MagicMock()
-        mock_config.get_section = Mock(return_value={"sqlalchemy.url": "sqlite+aiosqlite:///test.db"})
+        mock_config.get_section = Mock(
+            return_value={"sqlalchemy.url": "sqlite+aiosqlite:///test.db"}
+        )
         mock_config.get_main_option = Mock(return_value="sqlite+aiosqlite:///test.db")
         mock_config.config_ini_section = "alembic"
 
@@ -348,7 +345,9 @@ class TestRunAsyncMigrations:
         """Test that errors during engine dispose are logged."""
         # Arrange
         mock_config = MagicMock()
-        mock_config.get_section = Mock(return_value={"sqlalchemy.url": "sqlite+aiosqlite:///test.db"})
+        mock_config.get_section = Mock(
+            return_value={"sqlalchemy.url": "sqlite+aiosqlite:///test.db"}
+        )
         mock_config.get_main_option = Mock(return_value="sqlite+aiosqlite:///test.db")
         mock_config.config_ini_section = "alembic"
 
@@ -373,13 +372,13 @@ class TestRunAsyncMigrations:
     @patch("database.migrations.env.async_engine_from_config")
     @patch("database.migrations.env.logger")
     @pytest.mark.asyncio
-    async def test_run_async_migrations_handles_timeout_error(
-        self, mock_logger, mock_async_engine
-    ):
+    async def test_run_async_migrations_handles_timeout_error(self, mock_logger, mock_async_engine):
         """Test asyncio.TimeoutError handling in async migrations."""
         # Arrange
         mock_config = MagicMock()
-        mock_config.get_section = Mock(return_value={"sqlalchemy.url": "sqlite+aiosqlite:///test.db"})
+        mock_config.get_section = Mock(
+            return_value={"sqlalchemy.url": "sqlite+aiosqlite:///test.db"}
+        )
         mock_config.get_main_option = Mock(return_value="sqlite+aiosqlite:///test.db")
         mock_config.config_ini_section = "alembic"
 
@@ -413,7 +412,9 @@ class TestRunAsyncMigrations:
         """Test that NullPool is used for async migrations."""
         # Arrange
         mock_config = MagicMock()
-        mock_config.get_section = Mock(return_value={"sqlalchemy.url": "sqlite+aiosqlite:///test.db"})
+        mock_config.get_section = Mock(
+            return_value={"sqlalchemy.url": "sqlite+aiosqlite:///test.db"}
+        )
         mock_config.get_main_option = Mock(return_value="sqlite+aiosqlite:///test.db")
         mock_config.config_ini_section = "alembic"
 
@@ -495,9 +496,7 @@ class TestRunMigrationsOnline:
             assert mock_asyncio.run.called
 
     @patch("database.migrations.env.logger")
-    def test_run_migrations_online_raises_value_error_when_db_url_is_none(
-        self, mock_logger
-    ):
+    def test_run_migrations_online_raises_value_error_when_db_url_is_none(self, mock_logger):
         """Test P0: ValueError is raised when db_url is None."""
         # Arrange
         mock_config = MagicMock()
@@ -620,7 +619,9 @@ class TestRunMigrationsOnline:
         # Arrange
         mock_config = MagicMock()
         mock_config.get_main_option = Mock(return_value="postgresql://localhost/test")
-        mock_config.get_section = Mock(return_value={"sqlalchemy.url": "postgresql://localhost/test"})
+        mock_config.get_section = Mock(
+            return_value={"sqlalchemy.url": "postgresql://localhost/test"}
+        )
         mock_config.config_ini_section = "alembic"
 
         with patch.object(env, "config", mock_config):
@@ -677,7 +678,9 @@ class TestErrorHandlingAndLogging:
         """Test that async migration SQLAlchemy errors include detailed context."""
         # Arrange
         mock_config = MagicMock()
-        mock_config.get_section = Mock(return_value={"sqlalchemy.url": "sqlite+aiosqlite:///test.db"})
+        mock_config.get_section = Mock(
+            return_value={"sqlalchemy.url": "sqlite+aiosqlite:///test.db"}
+        )
         mock_config.get_main_option = Mock(return_value="sqlite+aiosqlite:///test.db")
         mock_config.config_ini_section = "alembic"
 
@@ -711,9 +714,7 @@ class TestErrorHandlingAndLogging:
 
     @patch("database.migrations.env.logger")
     @patch("database.migrations.env.context")
-    def test_do_run_migrations_logs_start_and_completion(
-        self, mock_context, mock_logger
-    ):
+    def test_do_run_migrations_logs_start_and_completion(self, mock_context, mock_logger):
         """Test that migration start and completion are logged."""
         # Arrange
         mock_connection = MagicMock()

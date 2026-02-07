@@ -15,14 +15,13 @@ Score improvement: 2/10 -> 8/10
 import unittest
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import List, Tuple
+from typing import List
 
 import numpy as np
 
 from app.backtesting.test_summary import TestSummaryReporter
 from app.core.decimal_utils import round_price
 from app.models.market_data import Quote
-from app.models.portfolio import Portfolio
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.services.momentum_analysis import TechnicalIndicatorCalculator
 from app.strategies.mean_reversion import MeanReversionStrategy
@@ -263,7 +262,7 @@ class TestDatasetIntegrity(unittest.TestCase):
         price_mean = np.mean(prices)
         range_ratio = price_range / price_mean
 
-        range_ok = 0.1 < range_ratio < 2.0
+        0.1 < range_ratio < 2.0
 
         # Add validation criteria
         reporter.add_validation_criteria(
@@ -1000,7 +999,7 @@ class TestExpectedResults(unittest.TestCase):
         losing_trades = [t for t in trades if t < 0]
 
         win_count = len(winning_trades)
-        loss_count = len(losing_trades)
+        len(losing_trades)
         total_trades = len(trades)
 
         win_rate = (win_count / total_trades * 100) if total_trades > 0 else 0
@@ -1017,8 +1016,8 @@ class TestExpectedResults(unittest.TestCase):
         self.assertAlmostEqual(win_rate, expected_win_rate, places=2)
 
         # Calculate average win/loss
-        avg_win = np.mean(winning_trades) if winning_trades else 0
-        avg_loss = np.mean([abs(t) for t in losing_trades]) if losing_trades else 0
+        np.mean(winning_trades) if winning_trades else 0
+        np.mean([abs(t) for t in losing_trades]) if losing_trades else 0
 
         # Verify profit factor
         total_wins = sum(winning_trades)

@@ -24,11 +24,7 @@ from .dead_mans_switch import (
     IncidentRecord,
     SwitchStatus,
 )
-from .external_monitor import (
-    AlertChannel,
-    ExternalMonitor,
-    MonitorConfig,
-)
+from .external_monitor import AlertChannel, ExternalMonitor, MonitorConfig
 
 __all__ = [
     "DeadMansSwitch",

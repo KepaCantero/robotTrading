@@ -22,31 +22,27 @@ from __future__ import annotations
 
 import logging
 import pickle
-import time
 from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-import numpy as np
 import pandas as pd
-from numpy.typing import NDArray
 
-from .corporate_actions import CorporateActionHandler, PositionAdjustment
+from ..point_in_time_database import PointInTimeDatabase
+from .corporate_actions import CorporateActionHandler
 from .dividend_handler import DividendHandler, DripConfig
 from .look_ahead_validator import LookAheadValidator, ValidationResult
 from .models import (
     BacktestCheckpoint,
     CorporateAction,
-    DelistedReturnData,
     ProgressUpdate,
     StockSplit,
 )
 from .performance_tracker import PerformanceMetrics, PerformanceTracker
 from .pit_database import PITDatabaseClient
 from .survivorship_adjuster import SurvivorshipAdjuster, SurvivorshipFreeResult
-from ..point_in_time_database import PointInTimeDatabase
 
 logger = logging.getLogger(__name__)
 
@@ -348,8 +344,7 @@ class RobustBacktester:
 
         if not self._validation_result.is_valid:
             error_msg = (
-                f"Look-ahead bias validation failed. "
-                f"Issues: {self._validation_result.issues}"
+                f"Look-ahead bias validation failed. " f"Issues: {self._validation_result.issues}"
             )
             logger.error(error_msg)
             if self.config.validation_strict_mode:
@@ -378,9 +373,7 @@ class RobustBacktester:
             dividend_tracker=self.dividend_handler,
             checkpoints_used=self._checkpoint_count,
             total_duration_seconds=(
-                (datetime.utcnow() - self._start_time).total_seconds()
-                if self._start_time
-                else 0.0
+                (datetime.utcnow() - self._start_time).total_seconds() if self._start_time else 0.0
             ),
         )
 
@@ -491,8 +484,7 @@ class RobustBacktester:
         # Calculate days completed to determine if checkpoint is needed
         days_completed = chunk_idx * self.config.chunk_size_days
         should_checkpoint = (
-            days_completed % self.config.checkpoint_frequency == 0
-            or chunk_idx == total_chunks
+            days_completed % self.config.checkpoint_frequency == 0 or chunk_idx == total_chunks
         )
 
         if should_checkpoint:
@@ -715,7 +707,6 @@ class RobustBacktester:
         """
         # Check for splits, mergers, spin-offs
         # This would interact with CorporateActionHandler
-        pass
 
     def _split_data_into_chunks(
         self,
@@ -866,7 +857,7 @@ class RobustBacktester:
         )
 
         checkpoint_path = self.config.checkpoint_dir / (
-            f"checkpoint_final.pkl"
+            "checkpoint_final.pkl"
             if is_final
             else f"checkpoint_{checkpoint.current_date.strftime('%Y%m%d')}.pkl"
         )

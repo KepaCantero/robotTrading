@@ -16,27 +16,26 @@ Date: 2026-01-28
 
 from __future__ import annotations
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock, AsyncMock
-from decimal import Decimal
-from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional
 import logging
-import pandas as pd
+from datetime import datetime, timedelta
+from decimal import Decimal
+from unittest.mock import Mock, patch
+
 import numpy as np
+import pandas as pd
+import pytest
 
 from app.core.compliance_engine import (
     ComplianceEngine,
+    PortfolioOptimization,
+    PostTradeAnalysis,
+    PreTradeAnalysis,
     SystemAvailability,
     SystemBus,
-    PreTradeAnalysis,
-    PostTradeAnalysis,
-    PortfolioOptimization,
     get_compliance_engine,
-    quick_check,
     get_execution_plan,
+    quick_check,
 )
-
 
 # =============================================================================
 # FIXTURES
@@ -147,7 +146,7 @@ def mock_portfolio_constructor():
 @pytest.fixture
 def mock_var_calculator():
     """Mock VaR calculator for testing."""
-    mock = Mock()
+    Mock()
 
     def calculate_var(returns, method='historical', confidence_level=0.95):
         var_value = np.percentile(returns, (1 - confidence_level) * 100)

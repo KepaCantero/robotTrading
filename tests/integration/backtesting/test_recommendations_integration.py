@@ -5,9 +5,9 @@ This test demonstrates the complete workflow for robust backtesting with all thr
 critical improvements integrated together.
 """
 
-import pytest
 from datetime import datetime
 from decimal import Decimal
+
 
 from app.backtesting.data_split import (
     MultipleTestingCorrector,
@@ -155,7 +155,7 @@ class TestRecommendationsIntegration:
         assert expectancy > 0  # Positive expectancy
 
         # The complete workflow provides a robust evaluation
-        print(f"\n=== Integration Test Results ===")
+        print("\n=== Integration Test Results ===")
         print(f"Universe size (with survivorship adjustment): {len(universe_symbols)}")
         print(f"Adjusted confidence (Bonferroni): {adjusted_confidence:.4f}")
         print(f"Best params: {best_result['params']}")
@@ -166,7 +166,7 @@ class TestRecommendationsIntegration:
         )
         print(f"OOS validation: {'PASSED' if oos_valid else 'FAILED'}")
         print(f"Expectancy: ${expectancy:.2f} per trade")
-        print(f"================================\n")
+        print("================================\n")
 
     def test_survivorship_bias_impact_on_returns(self):
         """Test that survivorship bias inflates returns."""

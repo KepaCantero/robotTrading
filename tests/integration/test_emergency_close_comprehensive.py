@@ -13,17 +13,15 @@ This module tests the emergency close system including:
 """
 
 import asyncio
-import pytest
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock, patch
-import signal
+from typing import Any, Dict, List
+
+import pytest
 
 from app.services.emergency_handler.emergency_closer import (
     EmergencyCloser,
     EmergencyTrigger,
-    EmergencyCloseResult,
 )
 
 

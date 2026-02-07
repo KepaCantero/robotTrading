@@ -10,7 +10,6 @@ Open/Closed: Extensible through HurstCalculator protocol.
 """
 
 import logging
-from typing_extensions import override
 
 import numpy as np
 from numba import jit
@@ -38,7 +37,6 @@ class VarianceMethodCalculator:
 
     def __init__(self) -> None:
         """Initialize variance method calculator."""
-        pass
 
     def calculate(self, series: np.ndarray) -> tuple[float, list[float] | None, list[int] | None]:
         """

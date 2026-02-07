@@ -6,31 +6,32 @@ expected performance improvements.
 """
 
 import time
+from typing import List
+
 import numpy as np
 import pytest
-from typing import List
 
 # Test imports
 try:
     from app.core.numba_accelerators import (
-        calculate_rsi_numba,
-        calculate_ema_numba,
-        calculate_macd_numba,
+        NUMBA_AVAILABLE,
+        calculate_atr,
         calculate_atr_numba,
         calculate_bollinger_bands_numba,
-        calculate_stochastic_numba,
-        calculate_skewness_numba,
-        calculate_kurtosis_numba,
-        calculate_var_numba,
         calculate_cvar_numba,
+        calculate_ema,
+        calculate_ema_numba,
+        calculate_kurtosis_numba,
+        calculate_macd,
+        calculate_macd_numba,
+        calculate_rsi,
+        calculate_rsi_numba,
+        calculate_skewness_numba,
+        calculate_stochastic_numba,
+        calculate_var_numba,
+        get_numba_info,
         rolling_mean_numba,
         rolling_std_numba,
-        calculate_rsi,
-        calculate_ema,
-        calculate_macd,
-        calculate_atr,
-        get_numba_info,
-        NUMBA_AVAILABLE,
     )
 
     NUMBA_ENABLED = NUMBA_AVAILABLE

@@ -9,7 +9,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.backtesting.models import BacktestConfig, PerformanceMetrics, Trade, TradeStatus
+from app.backtesting.models import BacktestConfig, Trade, TradeStatus
 from app.backtesting.services.performance_calculator import PerformanceMetricsCalculator
 
 

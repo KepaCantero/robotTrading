@@ -20,7 +20,7 @@ from typing import Any, Dict, Optional
 
 from fastapi import Request
 
-from app.core.logging_config import get_logger, get_correlation_id
+from app.core.logging_config import get_correlation_id, get_logger
 
 logger = get_logger(__name__)
 
@@ -111,8 +111,7 @@ class AuditLogger:
 
         # Use a simple, parseable format for audit logs
         formatter = logging.Formatter(
-            '%(asctime)s | %(levelname)s | %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
+            '%(asctime)s | %(levelname)s | %(message)s', datefmt='%Y-%m-%d %H:%M:%S'
         )
         handler.setFormatter(formatter)
 
@@ -167,7 +166,7 @@ class AuditLogger:
 
             if files_removed > 0:
                 logger.info(
-                    f"Audit log cleanup completed",
+                    "Audit log cleanup completed",
                     files_removed=files_removed,
                     retention_days=retention_days,
                 )
@@ -258,8 +257,7 @@ class AuditLogger:
 
         if not isinstance(value, str):
             raise ValueError(
-                f"Parameter '{param_name}' must be a string or None, "
-                f"got {type(value).__name__}"
+                f"Parameter '{param_name}' must be a string or None, " f"got {type(value).__name__}"
             )
 
         if not allow_empty and not value.strip():
@@ -297,8 +295,7 @@ class AuditLogger:
         # Validate action is not None
         if not isinstance(action, AuditAction):
             raise TypeError(
-                f"Parameter 'action' must be an AuditAction enum, "
-                f"got {type(action).__name__}"
+                f"Parameter 'action' must be an AuditAction enum, " f"got {type(action).__name__}"
             )
 
         # Validate optional string parameters
@@ -407,6 +404,7 @@ class AuditLogger:
         # Add details as JSON if present
         if details:
             import json
+
             log_message += f" | details={json.dumps(details)}"
 
         # Log at appropriate level

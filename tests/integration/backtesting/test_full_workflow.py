@@ -30,39 +30,21 @@ import numpy as np
 import pytest
 from bs4 import BeautifulSoup
 
-from app.core.decimal_utils import round_price
-
-from app.backtesting.acceptance_criteria import (
-    AcceptanceCriteria,
-    AcceptanceReport,
-    VerdictStatus,
-)
-from app.backtesting.capital_scale_analyzer import (
-    CapitalScaleAnalysisReport,
-    CapitalScaleAnalyzer,
-)
+from app.backtesting.acceptance_criteria import AcceptanceCriteria, AcceptanceReport, VerdictStatus
+from app.backtesting.capital_scale_analyzer import CapitalScaleAnalysisReport, CapitalScaleAnalyzer
 from app.backtesting.cost_calculator import CostCalculator
-from app.backtesting.execution_engine import (
-    ExecutionType,
-    PessimisticExecutionEngine,
-    Position,
-)
+from app.backtesting.execution_engine import ExecutionType, PessimisticExecutionEngine, Position
 from app.backtesting.models import (
     BacktestConfig,
     BacktestResult,
-    PerformanceMetrics,
-    Trade,
     TradeStatus,
 )
 from app.backtesting.professional_reporter import ProfessionalReport, ProfessionalReporter
-from app.backtesting.robustness_tester import (
-    ParameterSensitivityResult,
-    RobustnessTester,
-)
+from app.backtesting.robustness_tester import ParameterSensitivityResult, RobustnessTester
 from app.backtesting.walk_forward_validator import WalkForwardValidator
+from app.core.decimal_utils import round_price
 from app.models.market_data import Quote
-from app.models.signal import Signal, SignalType, SignalSource, SignalStrength
-
+from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 # ============================================================================
 # Fixtures: Realistic Data Generation (No Synthetic Unrealistic Data)
@@ -195,7 +177,7 @@ def simple_sma_crossover_strategy(
 
         # Calculate slopes
         fast_slope = (fast_now - fast_prev) / fast_prev if fast_prev > 0 else 0
-        slow_slope = (slow_now - slow_prev) / slow_prev if slow_prev > 0 else 0
+        (slow_now - slow_prev) / slow_prev if slow_prev > 0 else 0
 
         # Crossover detection
         was_below = fast_sma[i - 1] < slow_sma[i - 1]
@@ -509,7 +491,7 @@ class TestEndToEndProfessionalBacktesting:
                 # Capital scale analysis failed (known compatibility issue)
                 # We still verify the analyzer was created
                 assert capital_analyzer is not None, "Capital analyzer should exist"
-        except TypeError as e:
+        except TypeError:
             # Known issue: run_backtest signature mismatch
             # This is acceptable - we're testing that the system handles errors gracefully
             assert capital_analyzer is not None, "Capital analyzer should exist"

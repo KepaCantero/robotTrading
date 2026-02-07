@@ -40,17 +40,9 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import List, Optional, Tuple
 
-from app.services.compliance.order_pattern_analyzer import (
-    OrderPatternAnalyzer,
-)
-from app.services.compliance.pdt_tracker import (
-    Country,
-    PDTStatus,
-    PDTTracker,
-)
-from app.services.compliance.wash_sale_tracker import (
-    WashSaleTracker,
-)
+from app.services.compliance.order_pattern_analyzer import OrderPatternAnalyzer
+from app.services.compliance.pdt_tracker import Country, PDTStatus, PDTTracker
+from app.services.compliance.wash_sale_tracker import WashSaleTracker
 
 logger = logging.getLogger(__name__)
 

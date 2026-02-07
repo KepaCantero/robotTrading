@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Optional, Tuple
 
@@ -26,13 +25,10 @@ from .models import (
     CostBreakdown,
     ExecutionResult,
     ExecutionSummary,
-    FillResult,
     MarketSnapshot,
     Order,
-    OrderSide,
-    OrderType,
 )
-from .order_fill_simulator import FillConstraints, OrderFillSimulator, SimulatorConfig
+from .order_fill_simulator import OrderFillSimulator, SimulatorConfig
 from .slippage_model import SlippageConfig, SlippageModel
 from .transaction_cost import CostConfig, TransactionCostCalculator
 
@@ -214,7 +210,7 @@ class RealisticExecutionModel:
             avg_price = fill_result.fill_price
 
             # Build cost breakdown
-            order_value = Decimal(str(total_filled)) * avg_price
+            Decimal(str(total_filled)) * avg_price
 
             # Get detailed cost breakdown
             cost_details = self.fill_simulator.get_cost_breakdown(order, market_snapshot)

@@ -4,20 +4,19 @@ Tests for Feature Importance with Uniqueness Module
 Tests the uniqueness-weighted feature importance implementation.
 """
 
-import pytest
 import numpy as np
 import pandas as pd
+import pytest
 from sklearn.ensemble import RandomForestClassifier
 
 from app.backtesting.feature_engineering.feature_importance_uniqueness import (
-    UniquenessCalculator,
-    MDIWithUniqueness,
-    MDAWithUniqueness,
     FeatureClusterer,
     FinancialMLFeatureImportanceWithUniqueness,
-    calculate_feature_importance_with_uniqueness,
+    MDAWithUniqueness,
+    MDIWithUniqueness,
+    UniquenessCalculator,
     UniquenessConfig,
-    UniquenessResult,
+    calculate_feature_importance_with_uniqueness,
 )
 
 
@@ -560,10 +559,8 @@ class TestIntegration:
 
         # Check that correlated features are in same cluster
         # (feature_0 and feature_1 should be clustered)
-        cluster_found = False
         for cluster_rep, members in result.feature_clusters.items():
             if "feature_0" in members and "feature_1" in members:
-                cluster_found = True
                 break
 
         # May or may not be clustered depending on threshold

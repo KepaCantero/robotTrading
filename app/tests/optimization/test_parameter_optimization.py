@@ -11,31 +11,21 @@ Tests for:
 - Edge cases and error handling
 """
 
-import asyncio
 import json
 import tempfile
 import time
-from datetime import datetime
-from decimal import Decimal
 from pathlib import Path
 from typing import Any, Dict
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import patch
 
 import pytest
 
 from app.optimization.parameter.base_optimizer import (
-    BaseOptimizer,
     OptimizationConfig,
     OptimizationResult,
 )
-from app.optimization.parameter.bayesian_optimizer import (
-    OPTUNA_AVAILABLE,
-    BayesianOptimizer,
-)
-from app.optimization.parameter.grid_search import (
-    GridSearchOptimizer,
-    GridSearchOptimizerCV,
-)
+from app.optimization.parameter.bayesian_optimizer import OPTUNA_AVAILABLE, BayesianOptimizer
+from app.optimization.parameter.grid_search import GridSearchOptimizer, GridSearchOptimizerCV
 
 # Import modules to test
 from app.optimization.parameter.models import (
@@ -44,19 +34,13 @@ from app.optimization.parameter.models import (
     ParameterRange,
     ParameterScale,
     ParameterType,
-    PydanticParameterGrid,
-    PydanticParameterRange,
 )
-from app.optimization.parameter.random_search import (
-    RandomSearchOptimizer,
-    RandomSearchOptimizerCV,
-)
+from app.optimization.parameter.random_search import RandomSearchOptimizer, RandomSearchOptimizerCV
 from app.optimization.parameter.trial import (
     TrialContext,
     TrialHistory,
     TrialResult,
     TrialStatus,
-    create_trial_id,
 )
 
 # =============================================================================
@@ -860,7 +844,7 @@ class TestGridSearchOptimizer:
             early_stopping_min_improvement=0.001,
         )
         optimizer = GridSearchOptimizer(config)
-        result = await optimizer.optimize(mock_objective, param_grid_mixed)
+        await optimizer.optimize(mock_objective, param_grid_mixed)
 
         # Should stop before max_iterations if converged
         # (This depends on the objective function behavior)
@@ -1274,13 +1258,13 @@ class TestPerformance:
         # Sequential
         start = time.time()
         optimizer_seq = GridSearchOptimizer(OptimizationConfig(n_jobs=1, verbose=0))
-        result_seq = await optimizer_seq.optimize(slow_objective, grid)
+        await optimizer_seq.optimize(slow_objective, grid)
         time_seq = time.time() - start
 
         # Parallel
         start = time.time()
         optimizer_par = GridSearchOptimizer(OptimizationConfig(n_jobs=2, verbose=0))
-        result_par = await optimizer_par.optimize(slow_objective, grid)
+        await optimizer_par.optimize(slow_objective, grid)
         time_par = time.time() - start
 
         # Parallel should be faster (with tolerance)

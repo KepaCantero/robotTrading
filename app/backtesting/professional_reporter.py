@@ -10,7 +10,7 @@ Generates professional reports including:
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional, TypedDict, Union
+from typing import Dict, List, Optional, TypedDict, Union
 
 from app.backtesting.acceptance_criteria import AcceptanceReport
 from app.backtesting.capital_scale_analyzer import CapitalScaleAnalysisReport
@@ -24,8 +24,10 @@ logger = logging.getLogger(__name__)
 # TYPED DICT DEFINITIONS
 # ============================================================================
 
+
 class ChartDataDict(TypedDict, total=False):
     """TypedDict for chart data."""
+
     dates: List[str]
     strategy: List[float]
     benchmark: List[float]
@@ -33,6 +35,7 @@ class ChartDataDict(TypedDict, total=False):
 
 class ChartDict(TypedDict, total=False):
     """TypedDict for chart information."""
+
     type: str
     title: str
     data: ChartDataDict
@@ -40,6 +43,7 @@ class ChartDict(TypedDict, total=False):
 
 class ReportSectionCharts(TypedDict):
     """TypedDict for report section charts."""
+
     type: str
     title: str
     data: ChartDataDict
@@ -138,7 +142,7 @@ class ProfessionalReporter:
         if not perf:
             logger.error(
                 "Cannot generate executive summary: performance data is None",
-                extra={"strategy": backtest_result.strategy_name}
+                extra={"strategy": backtest_result.strategy_name},
             )
             raise ValueError("Performance data is required for executive summary generation")
 
@@ -189,7 +193,7 @@ class ProfessionalReporter:
         except (KeyError, TypeError, ValueError) as e:
             logger.warning(
                 "Failed to prepare equity chart data",
-                extra={"strategy": backtest_result.strategy_name, "error": str(e)}
+                extra={"strategy": backtest_result.strategy_name, "error": str(e)},
             )
             chart_data = ChartDataDict(dates=[], strategy=[], benchmark=[])
 

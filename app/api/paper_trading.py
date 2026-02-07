@@ -44,7 +44,7 @@ from app.models.paper_trading import (
 from app.services.paper_trading_service import PaperTradingService, get_paper_trading_service
 
 from . import audit_logger, get_correlation_id
-from .security import rate_limit, require_auth, audit_log
+from .security import audit_log, rate_limit, require_auth
 
 router = APIRouter(prefix="/paper-trading", tags=["Paper Trading"])
 logger = logging.getLogger(__name__)

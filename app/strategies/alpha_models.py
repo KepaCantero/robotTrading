@@ -174,7 +174,6 @@ class AlphaModel(ABC):
         Returns:
             AlphaSignal or None if no alpha detected
         """
-        pass
 
     def generate_multi_alpha(
         self, symbols: List[str], market_data: Dict[str, pd.DataFrame], timestamp: datetime
@@ -188,7 +187,9 @@ class AlphaModel(ABC):
                     if signal and signal.confidence >= self.min_confidence:
                         signals.append(signal)
                 except (ValueError, TypeError, KeyError) as e:
-                    logger.error("Error generating alpha", symbol=symbol, error=str(e), exc_info=True)
+                    logger.error(
+                        "Error generating alpha", symbol=symbol, error=str(e), exc_info=True
+                    )
         return signals
 
     def analyze_alpha_decay(
@@ -619,7 +620,9 @@ class MultiFactorAlphaModel(AlphaModel):
                 if signal:
                     signals.append(signal)
             except (ValueError, TypeError, KeyError, IndexError, AttributeError) as e:
-                logger.error("Error in sub-model", model_name=model.name, error=str(e), exc_info=True)
+                logger.error(
+                    "Error in sub-model", model_name=model.name, error=str(e), exc_info=True
+                )
 
         if not signals:
             return None

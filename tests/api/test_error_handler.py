@@ -8,25 +8,22 @@ Tests the comprehensive error logging handlers that provide:
 - Proper error responses to clients
 """
 
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
 from fastapi import HTTPException, Request
 from fastapi.exceptions import RequestValidationError
-from pydantic import ValidationError
-from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.error_handler import (
-    http_exception_handler,
-    starlette_http_exception_handler,
-    validation_exception_handler,
-    pydantic_validation_exception_handler,
-    generic_exception_handler,
-    value_error_handler,
-    key_error_handler,
-    type_error_handler,
     attribute_error_handler,
+    generic_exception_handler,
+    http_exception_handler,
     index_error_handler,
+    key_error_handler,
     log_exception_context,
+    type_error_handler,
+    validation_exception_handler,
+    value_error_handler,
 )
 
 

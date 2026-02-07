@@ -1,0 +1,1918 @@
+{
+  "created_at": "2026-02-07T05:04:53.444642Z",
+  "total_files": 634,
+  "total_batches": 116,
+  "estimated_total_time_minutes": 1737,
+  "batches": [
+    {
+      "batch_id": "batch_0001",
+      "layer": "1_Core",
+      "files": [
+        "app/core/compliance/__init__.py"
+      ],
+      "file_count": 1,
+      "total_lines": 77,
+      "size_category": "small",
+      "estimated_time_minutes": 2,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0002",
+      "layer": "2_Database",
+      "files": [
+        "app/database/models/__init__.py",
+        "app/database/__init__.py"
+      ],
+      "file_count": 2,
+      "total_lines": 326,
+      "size_category": "medium",
+      "estimated_time_minutes": 3,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0003",
+      "layer": "3_Domain_Entities",
+      "files": [
+        "app/domain/entities/__init__.py"
+      ],
+      "file_count": 1,
+      "total_lines": 53,
+      "size_category": "small",
+      "estimated_time_minutes": 2,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0004",
+      "layer": "4_Domain_Services",
+      "files": [
+        "app/domain/services/__init__.py",
+        "app/domain/services/backtesting/__init__.py",
+        "app/domain/services/portfolio_optimization/__init__.py"
+      ],
+      "file_count": 3,
+      "total_lines": 148,
+      "size_category": "small",
+      "estimated_time_minutes": 2,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0005",
+      "layer": "4_Domain_Services",
+      "files": [
+        "app/domain/services/backtesting/backtest_engine.py",
+        "app/domain/services/backtesting/dividend_handler.py",
+        "app/domain/services/backtesting/market_impact.py",
+        "app/domain/services/backtesting/slippage.py",
+        "app/domain/services/backtesting/survivorship_bias.py"
+      ],
+      "file_count": 5,
+      "total_lines": 1872,
+      "size_category": "large",
+      "estimated_time_minutes": 18,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0006",
+      "layer": "4_Domain_Services",
+      "files": [
+        "app/domain/services/backtesting/transaction_costs.py"
+      ],
+      "file_count": 1,
+      "total_lines": 370,
+      "size_category": "large",
+      "estimated_time_minutes": 3,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0007",
+      "layer": "5_Domain_Strategies",
+      "files": [
+        "app/domain/strategies/__init__.py",
+        "app/domain/strategies/quality_screen.py"
+      ],
+      "file_count": 2,
+      "total_lines": 508,
+      "size_category": "large",
+      "estimated_time_minutes": 5,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0008",
+      "layer": "6_Application",
+      "files": [
+        "app/application/__init__.py",
+        "app/application/interfaces/__init__.py",
+        "app/application/routers/__init__.py",
+        "app/application/use_cases/__init__.py"
+      ],
+      "file_count": 4,
+      "total_lines": 54,
+      "size_category": "small",
+      "estimated_time_minutes": 2,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0009",
+      "layer": "6_Application",
+      "files": [
+        "app/application/services/__init__.py"
+      ],
+      "file_count": 1,
+      "total_lines": 550,
+      "size_category": "large",
+      "estimated_time_minutes": 5,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0010",
+      "layer": "7_Backtesting",
+      "files": [
+        "app/backtesting/__init__.py",
+        "app/backtesting/factories/__init__.py",
+        "app/backtesting/feature_engineering/__init__.py",
+        "app/backtesting/meta_analyzer/__init__.py",
+        "app/backtesting/profile_batch/__init__.py",
+        "app/backtesting/services/__init__.py"
+      ],
+      "file_count": 6,
+      "total_lines": 246,
+      "size_category": "small",
+      "estimated_time_minutes": 2,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0011",
+      "layer": "7_Backtesting",
+      "files": [
+        "app/backtesting/execution/__init__.py",
+        "app/backtesting/labeling/__init__.py",
+        "app/backtesting/profile_batch/bayesian_optimizer.py",
+        "app/backtesting/profile_batch/optimization_pipeline.py",
+        "app/backtesting/regime_analyzer.py",
+        "app/backtesting/robust_engine/__init__.py",
+        "app/backtesting/signal_diagnostic_logger.py",
+        "app/backtesting/successful_configs.py",
+        "app/backtesting/validation/__init__.py"
+      ],
+      "file_count": 9,
+      "total_lines": 1626,
+      "size_category": "medium",
+      "estimated_time_minutes": 16,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0012",
+      "layer": "7_Backtesting",
+      "files": [
+        "app/backtesting/advanced_visualizations.py",
+        "app/backtesting/feature_engineering/feature_importance.py",
+        "app/backtesting/feature_engineering/feature_importance_uniqueness.py",
+        "app/backtesting/feature_engineering/fracdiff_visualizations.py",
+        "app/backtesting/financial_ml.py"
+      ],
+      "file_count": 5,
+      "total_lines": 2632,
+      "size_category": "large",
+      "estimated_time_minutes": 26,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0013",
+      "layer": "7_Backtesting",
+      "files": [
+        "app/backtesting/insight_generator.py",
+        "app/backtesting/liquidity_validator.py",
+        "app/backtesting/professional_reporter.py",
+        "app/backtesting/profile_batch/result_aggregator.py",
+        "app/backtesting/realistic_data_generator.py"
+      ],
+      "file_count": 5,
+      "total_lines": 1858,
+      "size_category": "large",
+      "estimated_time_minutes": 18,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0014",
+      "layer": "7_Backtesting",
+      "files": [
+        "app/backtesting/robust_engine/models.py",
+        "app/backtesting/robust_engine/performance_tracker.py",
+        "app/backtesting/robust_engine/pit_database.py",
+        "app/backtesting/robustness_tester.py",
+        "app/backtesting/seasonality_analyzer.py"
+      ],
+      "file_count": 5,
+      "total_lines": 1995,
+      "size_category": "large",
+      "estimated_time_minutes": 19,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0015",
+      "layer": "7_Backtesting",
+      "files": [
+        "app/backtesting/validation/bonferroni_correction.py",
+        "app/backtesting/validation/cross_sectional_consistency.py",
+        "app/backtesting/validation/cross_validation.py",
+        "app/backtesting/validation/feature_explosion_validator.py",
+        "app/backtesting/validation/overfitting_detector.py"
+      ],
+      "file_count": 5,
+      "total_lines": 2251,
+      "size_category": "large",
+      "estimated_time_minutes": 22,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0016",
+      "layer": "7_Backtesting",
+      "files": [
+        "app/backtesting/validation/purged_kfold.py",
+        "app/backtesting/validation/walk_forward.py"
+      ],
+      "file_count": 2,
+      "total_lines": 1045,
+      "size_category": "large",
+      "estimated_time_minutes": 10,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0017",
+      "layer": "7_Backtesting",
+      "files": [
+        "app/backtesting/comprehensive_backtest_runner.py",
+        "app/backtesting/feature_engineering/fractional_differentiation.py"
+      ],
+      "file_count": 2,
+      "total_lines": 3709,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 37,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0018",
+      "layer": "7_Backtesting",
+      "files": [
+        "app/backtesting/lopez_de_prado_metrics.py",
+        "app/backtesting/metrics.py"
+      ],
+      "file_count": 2,
+      "total_lines": 1743,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 17,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0019",
+      "layer": "7_Backtesting",
+      "files": [
+        "app/backtesting/test_summary.py",
+        "app/backtesting/validation/bias_variance_analysis.py"
+      ],
+      "file_count": 2,
+      "total_lines": 1327,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 13,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0020",
+      "layer": "7_Backtesting",
+      "files": [
+        "app/backtesting/validation/cross_validation_methods.py",
+        "app/backtesting/walk_forward_validator.py"
+      ],
+      "file_count": 2,
+      "total_lines": 1996,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 19,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0021",
+      "layer": "8_Strategies",
+      "files": [
+        "app/strategies/__init__.py",
+        "app/strategies/covered_calls/__init__.py",
+        "app/strategies/crypto_momentum/__init__.py",
+        "app/strategies/dividend/__init__.py",
+        "app/strategies/fx_carry_trade/__init__.py",
+        "app/strategies/fx_intermarket/__init__.py",
+        "app/strategies/indicators/__init__.py",
+        "app/strategies/low_volatility/__init__.py",
+        "app/strategies/momentum_modular/__init__.py",
+        "app/strategies/momentum_modular/modules/__init__.py",
+        "app/strategies/momentum_modular/modules/filters/__init__.py",
+        "app/strategies/momentum_modular/modules/market_detectors/__init__.py",
+        "app/strategies/momentum_modular/optimization/__init__.py",
+        "app/strategies/multi_factor/__init__.py"
+      ],
+      "file_count": 14,
+      "total_lines": 526,
+      "size_category": "small",
+      "estimated_time_minutes": 5,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0022",
+      "layer": "8_Strategies",
+      "files": [
+        "app/strategies/momentum_modular/learning/__init__.py"
+      ],
+      "file_count": 1,
+      "total_lines": 117,
+      "size_category": "medium",
+      "estimated_time_minutes": 2,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0023",
+      "layer": "9_Analysis",
+      "files": [
+        "app/analysis/__init__.py",
+        "app/analysis/fundamental_law/__init__.py",
+        "app/analysis/vectorization/__init__.py"
+      ],
+      "file_count": 3,
+      "total_lines": 140,
+      "size_category": "small",
+      "estimated_time_minutes": 2,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0024",
+      "layer": "10_Microstructure",
+      "files": [
+        "app/market_microstructure/ofi/__init__.py"
+      ],
+      "file_count": 1,
+      "total_lines": 47,
+      "size_category": "small",
+      "estimated_time_minutes": 2,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0025",
+      "layer": "11_API",
+      "files": [
+        "app/api/__init__.py"
+      ],
+      "file_count": 1,
+      "total_lines": 282,
+      "size_category": "medium",
+      "estimated_time_minutes": 2,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0026",
+      "layer": "12_Middleware",
+      "files": [
+        "app/middleware/logging_middleware.py",
+        "app/middleware/rate_limit.py"
+      ],
+      "file_count": 2,
+      "total_lines": 513,
+      "size_category": "medium",
+      "estimated_time_minutes": 5,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0027",
+      "layer": "13_Presentation",
+      "files": [
+        "app/presentation/__init__.py",
+        "app/presentation/controllers/__init__.py",
+        "app/presentation/controllers/portfolio_controller.py",
+        "app/presentation/controllers/strategy_controller.py",
+        "app/presentation/dto/__init__.py",
+        "app/presentation/views/__init__.py",
+        "app/presentation/views/dashboard_views.py"
+      ],
+      "file_count": 7,
+      "total_lines": 93,
+      "size_category": "small",
+      "estimated_time_minutes": 2,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0028",
+      "layer": "13_Presentation",
+      "files": [
+        "app/presentation/controllers/portfolio.py",
+        "app/presentation/controllers/trading_error_handler.py"
+      ],
+      "file_count": 2,
+      "total_lines": 528,
+      "size_category": "medium",
+      "estimated_time_minutes": 5,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0029",
+      "layer": "13_Presentation",
+      "files": [
+        "app/presentation/controllers/capa2_endpoints.py",
+        "app/presentation/controllers/optimization.py",
+        "app/presentation/controllers/paper_trading.py",
+        "app/presentation/controllers/portfolio_analytics.py",
+        "app/presentation/controllers/profitability_validation.py"
+      ],
+      "file_count": 5,
+      "total_lines": 1814,
+      "size_category": "large",
+      "estimated_time_minutes": 18,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0030",
+      "layer": "13_Presentation",
+      "files": [
+        "app/presentation/controllers/signals.py",
+        "app/presentation/controllers/strategies.py"
+      ],
+      "file_count": 2,
+      "total_lines": 720,
+      "size_category": "large",
+      "estimated_time_minutes": 7,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0031",
+      "layer": "13_Presentation",
+      "files": [
+        "app/presentation/controllers/momentum.py"
+      ],
+      "file_count": 1,
+      "total_lines": 927,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 9,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0032",
+      "layer": "14_Others",
+      "files": [
+        "app/__init__.py",
+        "app/dashboard/__init__.py",
+        "app/dashboard/data_loader.py",
+        "app/dashboard/main_advanced.py",
+        "app/dashboard/meta_dashboard_page.py",
+        "app/data/__init__.py",
+        "app/domain/__init__.py",
+        "app/domain/configurators/__init__.py",
+        "app/domain/models/strategy_type.py",
+        "app/domain/portfolio_optimization/__init__.py",
+        "app/domain/repositories/__init__.py",
+        "app/domain/repositories/backtest_repository.py",
+        "app/domain/repositories/order_repository.py",
+        "app/domain/repositories/portfolio_repository.py",
+        "app/domain/repositories/position_repository.py",
+        "app/domain/value_objects/__init__.py",
+        "app/domain/value_objects/backtest_type.py",
+        "app/domain/value_objects/capital.py",
+        "app/domain/value_objects/investment_horizon.py",
+        "app/engines/__init__.py"
+      ],
+      "file_count": 20,
+      "total_lines": 888,
+      "size_category": "small",
+      "estimated_time_minutes": 8,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0033",
+      "layer": "14_Others",
+      "files": [
+        "app/engines/context_engine/__init__.py",
+        "app/engines/context_engine/correlation_analyzers/__init__.py",
+        "app/engines/context_engine/macro_indicators/__init__.py",
+        "app/engines/context_engine/regime_detectors/__init__.py",
+        "app/engines/context_engine/volatility_analyzers/__init__.py",
+        "app/engines/data_engine/__init__.py",
+        "app/engines/data_engine/cache/__init__.py",
+        "app/engines/data_engine/normalizers/__init__.py",
+        "app/engines/data_engine/sources/__init__.py",
+        "app/engines/data_engine/streaming/__init__.py",
+        "app/engines/data_engine/validators/__init__.py",
+        "app/engines/data_engine/versioning/__init__.py",
+        "app/engines/event_engine/__init__.py",
+        "app/engines/execution_engine/__init__.py",
+        "app/engines/portfolio_engine/meta_learners/__init__.py",
+        "app/engines/portfolio_engine/portfolio_engine.py",
+        "app/engines/portfolio_engine/rebalancers/__init__.py",
+        "app/engines/risk_engine/correlation_analyzers/__init__.py",
+        "app/engines/risk_engine/drawdown_controllers/__init__.py",
+        "app/engines/risk_engine/exposure_managers/__init__.py"
+      ],
+      "file_count": 20,
+      "total_lines": 251,
+      "size_category": "small",
+      "estimated_time_minutes": 2,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0034",
+      "layer": "14_Others",
+      "files": [
+        "app/engines/risk_engine/risk_attribution/__init__.py",
+        "app/engines/risk_engine/stress_testers/__init__.py",
+        "app/engines/risk_engine/var_calculators/__init__.py",
+        "app/engines/strategy_engines/__init__.py",
+        "app/ensemble/__init__.py",
+        "app/exceptions/__init__.py",
+        "app/infrastructure/__init__.py",
+        "app/infrastructure/external/__init__.py",
+        "app/infrastructure/health/__init__.py",
+        "app/infrastructure/persistence/__init__.py",
+        "app/maestro/phase_1/__init__.py",
+        "app/market_making/__init__.py",
+        "app/market_making/avellaneda_stoikov/__init__.py",
+        "app/models/__init__.py",
+        "app/optimization/__init__.py",
+        "app/optimization/parameter/__init__.py",
+        "app/providers/__init__.py",
+        "app/scripts/__init__.py",
+        "app/services/__init__.py",
+        "app/services/awesome_quant/__init__.py"
+      ],
+      "file_count": 20,
+      "total_lines": 571,
+      "size_category": "small",
+      "estimated_time_minutes": 5,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0035",
+      "layer": "14_Others",
+      "files": [
+        "app/services/backtest_orchestration/__init__.py",
+        "app/services/backtesting_orchestration/__init__.py",
+        "app/services/backup/__init__.py",
+        "app/services/broker_failover/__init__.py",
+        "app/services/capacity_fade_validation/__init__.py",
+        "app/services/capacity_fade_validation/models.py",
+        "app/services/circuit_breaker/__init__.py",
+        "app/services/compliance/__init__.py",
+        "app/services/configuration_persistence/__init__.py",
+        "app/services/configuration_persistence/models.py",
+        "app/services/corporate_actions/__init__.py",
+        "app/services/correlation/__init__.py",
+        "app/services/deploy_decision_orchestrator/__init__.py",
+        "app/services/deploy_decision_orchestrator/models.py",
+        "app/services/deployment/__init__.py",
+        "app/services/deployment_decision/__init__.py",
+        "app/services/emergency_handler/__init__.py",
+        "app/services/error_handling/__init__.py",
+        "app/services/external_integrations/__init__.py",
+        "app/services/fifo/__init__.py"
+      ],
+      "file_count": 20,
+      "total_lines": 665,
+      "size_category": "small",
+      "estimated_time_minutes": 6,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0036",
+      "layer": "14_Others",
+      "files": [
+        "app/services/forex_risk/__init__.py",
+        "app/services/hurst_analysis/__init__.py",
+        "app/services/hurst_analysis/confidence_calculator.py",
+        "app/services/hurst_analysis/models.py",
+        "app/services/hurst_analysis/protocols.py",
+        "app/services/hurst_analysis/regime_classifier.py",
+        "app/services/hurst_analysis/strategy_recommender.py",
+        "app/services/hurst_analysis/utils.py",
+        "app/services/knowledge_graph/__init__.py",
+        "app/services/live_trading/__init__.py",
+        "app/services/live_trading/broker_adapters/__init__.py",
+        "app/services/metrics_database/__init__.py",
+        "app/services/module_parametrizer/__init__.py",
+        "app/services/module_parametrizer/models.py",
+        "app/services/momentum/__init__.py",
+        "app/services/momentum/data_provider.py",
+        "app/services/momentum/indicators/__init__.py",
+        "app/services/momentum/storage.py",
+        "app/services/monitoring/__init__.py",
+        "app/services/news_processor/__init__.py"
+      ],
+      "file_count": 20,
+      "total_lines": 1048,
+      "size_category": "small",
+      "estimated_time_minutes": 10,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0037",
+      "layer": "14_Others",
+      "files": [
+        "app/services/parametrization/__init__.py",
+        "app/services/portfolio_construction/__init__.py",
+        "app/services/portfolio_constructor/__init__.py",
+        "app/services/portfolio_constructor/models.py",
+        "app/services/position_builder/__init__.py",
+        "app/services/position_monitor/__init__.py",
+        "app/services/profile_driven_trading/__init__.py",
+        "app/services/profile_generator/__init__.py",
+        "app/services/rate_limiting/__init__.py",
+        "app/services/reporting/__init__.py",
+        "app/services/reporting_generator/__init__.py",
+        "app/services/reporting_generator/models.py",
+        "app/services/risk_scaling/__init__.py",
+        "app/services/risk_scaling_application/__init__.py",
+        "app/services/scheduling/__init__.py",
+        "app/services/smart_order_routing/__init__.py",
+        "app/services/strategy_recommendation/__init__.py",
+        "app/services/strategy_recommender/__init__.py",
+        "app/services/strategy_recommender/models.py",
+        "app/services/strategy_stock_allocation/__init__.py"
+      ],
+      "file_count": 20,
+      "total_lines": 771,
+      "size_category": "small",
+      "estimated_time_minutes": 7,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0038",
+      "layer": "14_Others",
+      "files": [
+        "app/services/strategy_stock_allocation/classifiers.py",
+        "app/services/strategy_stock_allocation/output.py",
+        "app/services/synthetic_data/__init__.py",
+        "app/services/task_queue/__init__.py",
+        "app/services/tax_efficiency/__init__.py",
+        "app/services/tax_efficiency/engines/__init__.py",
+        "app/services/tax_efficiency/engines/base.py",
+        "app/services/validation_engine/__init__.py",
+        "app/services/validation_engine/models.py",
+        "app/services/validation_orchestration/__init__.py",
+        "app/services/xai/__init__.py",
+        "app/simulation/__init__.py",
+        "app/sre/alert_fatigue_prevention/__init__.py",
+        "app/sre/automation/__init__.py",
+        "app/sre/canary_deployment/__init__.py",
+        "app/sre/chaos_engine/__init__.py",
+        "app/sre/dead_mans_switch/__init__.py",
+        "app/sre/error_budgets/__init__.py",
+        "app/sre/oncall/__init__.py",
+        "app/system/__init__.py"
+      ],
+      "file_count": 20,
+      "total_lines": 931,
+      "size_category": "small",
+      "estimated_time_minutes": 9,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0039",
+      "layer": "14_Others",
+      "files": [
+        "app/tests/__init__.py",
+        "app/tests/analysis/__init__.py",
+        "app/tests/backtesting/__init__.py",
+        "app/tests/conftest.py",
+        "app/tests/ensemble/__init__.py",
+        "app/tests/market_making/__init__.py",
+        "app/tests/market_microstructure/__init__.py",
+        "app/tests/optimization/__init__.py",
+        "app/tests/portfolio/__init__.py",
+        "app/tests/portfolio_optimization/__init__.py",
+        "app/tests/strategies/__init__.py"
+      ],
+      "file_count": 11,
+      "total_lines": 135,
+      "size_category": "small",
+      "estimated_time_minutes": 2,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0040",
+      "layer": "14_Others",
+      "files": [
+        "app/dashboard/api_router.py",
+        "app/dashboard/multi_strategy_utils.py",
+        "app/domain/configurators/risk_config.py",
+        "app/domain/models/risk_config.py",
+        "app/domain/models/system_configuration.py",
+        "app/domain/models/tax_config.py",
+        "app/domain/value_objects/backtest_config.py",
+        "app/domain/value_objects/backtest_result.py",
+        "app/domain/value_objects/percentage.py",
+        "app/domain/value_objects/risk_parameters.py"
+      ],
+      "file_count": 10,
+      "total_lines": 1448,
+      "size_category": "medium",
+      "estimated_time_minutes": 14,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0041",
+      "layer": "14_Others",
+      "files": [
+        "app/domain/value_objects/symbol.py",
+        "app/domain/value_objects/tax_residence.py",
+        "app/engines/context_engine/context_engine.py",
+        "app/engines/data_engine/sources/options_sources.py",
+        "app/engines/data_engine/validators/data_cleaning_pipeline.py",
+        "app/engines/data_engine/validators/gap_interpolator.py",
+        "app/engines/data_engine/validators/outlier_detector.py",
+        "app/engines/data_engine/validators/quality_validator.py",
+        "app/engines/data_engine/versioning/data_lineage.py",
+        "app/engines/data_engine/versioning/schema_versioner.py"
+      ],
+      "file_count": 10,
+      "total_lines": 1662,
+      "size_category": "medium",
+      "estimated_time_minutes": 16,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0042",
+      "layer": "14_Others",
+      "files": [
+        "app/engines/data_engine/versioning/version_manager.py",
+        "app/engines/execution_engine/microstructure/__init__.py",
+        "app/engines/execution_engine/microstructure/bid_ask_bounce_removal.py",
+        "app/engines/portfolio_engine/__init__.py",
+        "app/engines/portfolio_engine/optimizers/base.py",
+        "app/engines/portfolio_engine/optimizers/handcrafted_optimizer.py",
+        "app/engines/risk_engine/__init__.py",
+        "app/engines/risk_engine/correlation_analyzers/correlation_analyzers.py",
+        "app/engines/risk_engine/risk_attribution/risk_attribution.py",
+        "app/engines/risk_engine/stress_testers/stress_testers.py"
+      ],
+      "file_count": 10,
+      "total_lines": 2239,
+      "size_category": "medium",
+      "estimated_time_minutes": 22,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0043",
+      "layer": "14_Others",
+      "files": [
+        "app/engines/risk_engine/var_calculators/component_var.py",
+        "app/engines/risk_engine/var_calculators/ewma_var.py",
+        "app/engines/strategy_engines/momentum_engine.py",
+        "app/exceptions/error_handler.py",
+        "app/infrastructure/external/backtest_presenter_impl.py",
+        "app/infrastructure/persistence/file_backtest_repository.py",
+        "app/infrastructure/persistence/in_memory_backtest_repository.py",
+        "app/maestro/phase_1/absolute_return_optimizer.py",
+        "app/maestro/phase_1/capital_tier_selector.py",
+        "app/maestro/phase_1/models.py"
+      ],
+      "file_count": 10,
+      "total_lines": 2209,
+      "size_category": "medium",
+      "estimated_time_minutes": 22,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0044",
+      "layer": "14_Others",
+      "files": [
+        "app/main.py",
+        "app/market_making/avellaneda_stoikov/as_model.py",
+        "app/market_making/avellaneda_stoikov/models.py",
+        "app/market_making/avellaneda_stoikov/quote_generator.py",
+        "app/microstructure/__init__.py",
+        "app/models/assets.py",
+        "app/models/deployment.py",
+        "app/models/market_data.py",
+        "app/models/optimization.py",
+        "app/models/order.py"
+      ],
+      "file_count": 10,
+      "total_lines": 2462,
+      "size_category": "medium",
+      "estimated_time_minutes": 24,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0045",
+      "layer": "14_Others",
+      "files": [
+        "app/models/profitability_validation.py",
+        "app/models/slippage_analysis.py",
+        "app/portfolio/multi_asset/__init__.py",
+        "app/providers/paper_trading.py",
+        "app/scripts/check_domain_dependencies.py",
+        "app/scripts/demo_time_sync_monitor.py",
+        "app/scripts/start_paper_trading.py",
+        "app/security/__init__.py",
+        "app/services/account_configuration.py",
+        "app/services/alerting_system/__init__.py"
+      ],
+      "file_count": 10,
+      "total_lines": 1673,
+      "size_category": "medium",
+      "estimated_time_minutes": 16,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0046",
+      "layer": "14_Others",
+      "files": [
+        "app/services/alerting_system/alert_manager.py",
+        "app/services/alerting_system/alert_rule_engine.py",
+        "app/services/alerting_system/models.py",
+        "app/services/awesome_quant/alphalens_analyzer.py",
+        "app/services/awesome_quant/finrl_integrator.py",
+        "app/services/awesome_quant/qlib_connector.py",
+        "app/services/backtest_orchestration/backtest_orchestrator.py",
+        "app/services/backtest_orchestration/models.py",
+        "app/services/capacity_fade_validation/analyzers.py",
+        "app/services/capital_viability_gate.py"
+      ],
+      "file_count": 10,
+      "total_lines": 2357,
+      "size_category": "medium",
+      "estimated_time_minutes": 23,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0047",
+      "layer": "14_Others",
+      "files": [
+        "app/services/centralized_logging.py",
+        "app/services/circuit_breaker/daily_circuit_breaker.py",
+        "app/services/circuit_breaker_manager.py",
+        "app/services/compliance/pdt_tracker.py",
+        "app/services/compliance/wash_sale_tracker.py",
+        "app/services/configuration_persistence/configuration_persistence.py",
+        "app/services/configuration_persistence/configuration_repository.py",
+        "app/services/correlation/example_usage.py",
+        "app/services/country_diversification_validator.py",
+        "app/services/currency_hedging_engine.py"
+      ],
+      "file_count": 10,
+      "total_lines": 2284,
+      "size_category": "medium",
+      "estimated_time_minutes": 22,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0048",
+      "layer": "14_Others",
+      "files": [
+        "app/services/data_validation_service.py",
+        "app/services/deployment/deploy_decision_orchestrator.py",
+        "app/services/deployment_validator.py",
+        "app/services/dynamic_capital_reallocation.py",
+        "app/services/error_handling/error_handler.py",
+        "app/services/execution_cost_analyzer.py",
+        "app/services/external_integrations/health_check_manager.py",
+        "app/services/external_integrations/retry_manager.py",
+        "app/services/external_integrations/zipline_integrator.py",
+        "app/services/fill_ratio_tracker.py"
+      ],
+      "file_count": 10,
+      "total_lines": 2315,
+      "size_category": "medium",
+      "estimated_time_minutes": 23,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0049",
+      "layer": "14_Others",
+      "files": [
+        "app/services/forex_data_service.py",
+        "app/services/hurst_analysis/change_detector.py",
+        "app/services/hurst_analysis/factory.py",
+        "app/services/hurst_analysis/historian.py",
+        "app/services/hurst_analysis/orchestrator.py",
+        "app/services/hurst_analysis/rs_calculator.py",
+        "app/services/hurst_analysis/variance_calculator.py",
+        "app/services/learning_capital_gate.py",
+        "app/services/live_trading/account_synchronizer.py",
+        "app/services/live_trading/alert_to_trade_mapper.py"
+      ],
+      "file_count": 10,
+      "total_lines": 1963,
+      "size_category": "medium",
+      "estimated_time_minutes": 19,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0050",
+      "layer": "14_Others",
+      "files": [
+        "app/services/live_trading/broker_adapters/paper_adapter.py",
+        "app/services/metrics_database/metrics_collector.py",
+        "app/services/momentum/analyzer.py",
+        "app/services/momentum/orchestrator.py",
+        "app/services/momentum/protocols.py",
+        "app/services/momentum/signal_generator.py",
+        "app/services/momentum/strategy_manager.py",
+        "app/services/momentum_analysis.py",
+        "app/services/monitoring/memory_monitor.py",
+        "app/services/monitoring/metrics_exporter.py"
+      ],
+      "file_count": 10,
+      "total_lines": 2260,
+      "size_category": "medium",
+      "estimated_time_minutes": 22,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0051",
+      "layer": "14_Others",
+      "files": [
+        "app/services/multi_timeframe_service.py",
+        "app/services/opportunity_cost_validator.py",
+        "app/services/parameter_preset_manager.py",
+        "app/services/parametrization/module_parametrizer.py",
+        "app/services/performance_tracker.py",
+        "app/services/portfolio_builder.py",
+        "app/services/portfolio_config_manager.py",
+        "app/services/portfolio_construction/allocation_manager.py",
+        "app/services/portfolio_construction/portfolio_constructor.py",
+        "app/services/portfolio_construction/rebalancing_engine.py"
+      ],
+      "file_count": 10,
+      "total_lines": 1934,
+      "size_category": "medium",
+      "estimated_time_minutes": 19,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0052",
+      "layer": "14_Others",
+      "files": [
+        "app/services/portfolio_rebalancer.py",
+        "app/services/profile_driven_trading/models.py",
+        "app/services/profile_driven_trading/signal_integrator.py",
+        "app/services/profile_driven_trading/workflow_manager.py",
+        "app/services/profile_generator/models.py",
+        "app/services/reporting/quantstats_integration.py",
+        "app/services/reporting/reporting_generator.py",
+        "app/services/reporting/reporting_orchestrator.py",
+        "app/services/risk_envelope_validator.py",
+        "app/services/risk_scaling/drawdown_monitor.py"
+      ],
+      "file_count": 10,
+      "total_lines": 2052,
+      "size_category": "medium",
+      "estimated_time_minutes": 20,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0053",
+      "layer": "14_Others",
+      "files": [
+        "app/services/risk_scaling/loss_monitor.py",
+        "app/services/risk_scaling/risk_adjustment_calculator.py",
+        "app/services/risk_scaling/risk_scaling_application.py",
+        "app/services/risk_scaling/sharpe_ratio_monitor.py",
+        "app/services/risk_scaling/volatility_monitor.py",
+        "app/services/scheduling/examples.py",
+        "app/services/sector_diversification_validator.py",
+        "app/services/signal_evaluation_engine.py",
+        "app/services/signal_execution_engine.py",
+        "app/services/signal_scorer.py"
+      ],
+      "file_count": 10,
+      "total_lines": 2258,
+      "size_category": "medium",
+      "estimated_time_minutes": 22,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0054",
+      "layer": "14_Others",
+      "files": [
+        "app/services/smart_order_routing/broker_negotiation_engine.py",
+        "app/services/smart_order_routing/market_impact_estimator.py",
+        "app/services/smart_order_routing/models.py",
+        "app/services/smart_order_routing/order_splitting_optimizer.py",
+        "app/services/smart_order_routing/smart_order_router.py",
+        "app/services/strategy_recommendation/strategy_ranker.py",
+        "app/services/strategy_recommendation/strategy_recommender.py",
+        "app/services/strategy_recommendation/strategy_scorer.py",
+        "app/services/strategy_stock_allocation/allocators.py",
+        "app/services/strategy_stock_allocation/calculators.py"
+      ],
+      "file_count": 10,
+      "total_lines": 2067,
+      "size_category": "medium",
+      "estimated_time_minutes": 20,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0055",
+      "layer": "14_Others",
+      "files": [
+        "app/services/strategy_stock_allocation/filters.py",
+        "app/services/strategy_stock_allocation/protocols.py",
+        "app/services/strategy_stock_allocation/validators.py",
+        "app/services/strategy_stock_allocator/algorithms.py",
+        "app/services/strategy_stock_allocator/domain_models.py",
+        "app/services/tax_efficiency/capital_gain_tracker.py",
+        "app/services/tax_efficiency/engines/factory.py",
+        "app/services/tax_efficiency/tax_loss_harvester.py",
+        "app/services/tax_efficiency/tax_optimized_builder.py",
+        "app/services/tax_efficiency/wash_sale_detector.py"
+      ],
+      "file_count": 10,
+      "total_lines": 1815,
+      "size_category": "medium",
+      "estimated_time_minutes": 18,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0056",
+      "layer": "14_Others",
+      "files": [
+        "app/services/trailing_stop_manager.py",
+        "app/services/xai/models.py",
+        "app/sre/canary_deployment/traffic_splitter.py",
+        "app/sre/monitoring/__init__.py"
+      ],
+      "file_count": 4,
+      "total_lines": 656,
+      "size_category": "medium",
+      "estimated_time_minutes": 6,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0057",
+      "layer": "14_Others",
+      "files": [
+        "app/dashboard/meta_dashboard.py",
+        "app/dashboard/objectives_dashboard.py",
+        "app/data/feeds.py",
+        "app/domain/models/input_profile.py",
+        "app/domain/repositories/base_repository.py"
+      ],
+      "file_count": 5,
+      "total_lines": 1990,
+      "size_category": "large",
+      "estimated_time_minutes": 19,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0058",
+      "layer": "14_Others",
+      "files": [
+        "app/domain/repositories/unit_of_work.py",
+        "app/engines/data_engine/data_engine.py",
+        "app/engines/data_engine/sources/sentiment_sources.py",
+        "app/engines/data_engine/streaming/websocket_streaming.py",
+        "app/engines/event_engine/tomasini_event_queue.py"
+      ],
+      "file_count": 5,
+      "total_lines": 2090,
+      "size_category": "large",
+      "estimated_time_minutes": 20,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0059",
+      "layer": "14_Others",
+      "files": [
+        "app/engines/execution_engine/microstructure/adverse_selection_detector.py",
+        "app/engines/execution_engine/microstructure/almgren_chriss_model.py",
+        "app/engines/execution_engine/microstructure/dark_pool_router.py",
+        "app/engines/execution_engine/microstructure/harris_integration.py",
+        "app/engines/execution_engine/microstructure/market_quality_metrics.py"
+      ],
+      "file_count": 5,
+      "total_lines": 2033,
+      "size_category": "large",
+      "estimated_time_minutes": 20,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0060",
+      "layer": "14_Others",
+      "files": [
+        "app/engines/execution_engine/microstructure/microstructure_engine.py",
+        "app/engines/execution_engine/microstructure/order_book_analyzer.py",
+        "app/engines/execution_engine/microstructure/tick_size_constraints.py",
+        "app/engines/portfolio_engine/meta_learners/meta_learners.py",
+        "app/engines/portfolio_engine/optimizers/hierarchical_risk_parity.py"
+      ],
+      "file_count": 5,
+      "total_lines": 1986,
+      "size_category": "large",
+      "estimated_time_minutes": 19,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0061",
+      "layer": "14_Others",
+      "files": [
+        "app/engines/portfolio_engine/rebalancers/rebalancers.py",
+        "app/engines/portfolio_engine/stability_validator.py",
+        "app/engines/risk_engine/alert_system.py",
+        "app/engines/risk_engine/exposure_managers/exposure_managers.py",
+        "app/engines/risk_engine/risk_limits_enforcer.py"
+      ],
+      "file_count": 5,
+      "total_lines": 1994,
+      "size_category": "large",
+      "estimated_time_minutes": 19,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0062",
+      "layer": "14_Others",
+      "files": [
+        "app/engines/risk_engine/stress_testers/comprehensive_scenarios.py",
+        "app/engines/risk_engine/stress_testers/correlation_stress.py",
+        "app/engines/risk_engine/stress_testers/portfolio_variance_stress.py",
+        "app/engines/strategy_engines/base.py",
+        "app/engines/strategy_engines/breakout_engine.py"
+      ],
+      "file_count": 5,
+      "total_lines": 2221,
+      "size_category": "large",
+      "estimated_time_minutes": 22,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0063",
+      "layer": "14_Others",
+      "files": [
+        "app/engines/strategy_engines/ensemble.py",
+        "app/engines/strategy_engines/mean_reversion_engine.py",
+        "app/engines/strategy_engines/modular_momentum_engine.py",
+        "app/engines/strategy_engines/pairs_engine.py",
+        "app/engines/strategy_engines/trend_following_engine.py"
+      ],
+      "file_count": 5,
+      "total_lines": 2183,
+      "size_category": "large",
+      "estimated_time_minutes": 21,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0064",
+      "layer": "14_Others",
+      "files": [
+        "app/exceptions/trading_exceptions.py",
+        "app/market_making/avellaneda_stoikov/inventory_manager.py",
+        "app/mocks/__init__.py",
+        "app/models/cost_analysis.py",
+        "app/models/momentum.py"
+      ],
+      "file_count": 5,
+      "total_lines": 1874,
+      "size_category": "large",
+      "estimated_time_minutes": 18,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0065",
+      "layer": "14_Others",
+      "files": [
+        "app/models/paper_trading.py",
+        "app/models/portfolio.py",
+        "app/models/portfolio_analytics.py",
+        "app/portfolio/multi_asset/allocation.py",
+        "app/portfolio/multi_asset/asset_class.py"
+      ],
+      "file_count": 5,
+      "total_lines": 2083,
+      "size_category": "large",
+      "estimated_time_minutes": 20,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0066",
+      "layer": "14_Others",
+      "files": [
+        "app/portfolio/multi_asset/models.py",
+        "app/portfolio/multi_asset/rebalancer.py",
+        "app/services/advanced_risk_manager.py",
+        "app/services/alerting_system/alerting_orchestrator.py",
+        "app/services/alerting_system/metrics_driven_alerter.py"
+      ],
+      "file_count": 5,
+      "total_lines": 2097,
+      "size_category": "large",
+      "estimated_time_minutes": 20,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0067",
+      "layer": "14_Others",
+      "files": [
+        "app/services/alerting_system/notification_channels.py",
+        "app/services/alerting_system/rule_templates.py",
+        "app/services/asset_identification.py",
+        "app/services/awesome_quant/talib_wrapper.py",
+        "app/services/backup/database_backup.py"
+      ],
+      "file_count": 5,
+      "total_lines": 1951,
+      "size_category": "large",
+      "estimated_time_minutes": 19,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0068",
+      "layer": "14_Others",
+      "files": [
+        "app/services/broker_failover/manager.py",
+        "app/services/capacity_fade_validation/capacity_fade_validator.py",
+        "app/services/capital_tier_strategy_selector.py",
+        "app/services/circuit_breaker_manager_v2.py",
+        "app/services/compliance/manager.py"
+      ],
+      "file_count": 5,
+      "total_lines": 1947,
+      "size_category": "large",
+      "estimated_time_minutes": 19,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0069",
+      "layer": "14_Others",
+      "files": [
+        "app/services/compliance/order_pattern_analyzer.py",
+        "app/services/correlation/analyzer.py",
+        "app/services/cost_analysis_service.py",
+        "app/services/crypto_data_service.py",
+        "app/services/deployment_decision/deployment_decision_orchestrator.py"
+      ],
+      "file_count": 5,
+      "total_lines": 2097,
+      "size_category": "large",
+      "estimated_time_minutes": 20,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0070",
+      "layer": "14_Others",
+      "files": [
+        "app/services/emergency_handler/emergency_closer.py",
+        "app/services/expensive_module_gate.py",
+        "app/services/external_integrations/dagster_orchestrator.py",
+        "app/services/external_integrations/mlflow_tracker.py",
+        "app/services/external_integrations/questdb_connector.py"
+      ],
+      "file_count": 5,
+      "total_lines": 1902,
+      "size_category": "large",
+      "estimated_time_minutes": 19,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0071",
+      "layer": "14_Others",
+      "files": [
+        "app/services/factor_models.py",
+        "app/services/fifo/fifo_integrator.py",
+        "app/services/forex_risk/tracker.py",
+        "app/services/half_life_calculator.py",
+        "app/services/knowledge_graph/graph_builder.py"
+      ],
+      "file_count": 5,
+      "total_lines": 2278,
+      "size_category": "large",
+      "estimated_time_minutes": 22,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0072",
+      "layer": "14_Others",
+      "files": [
+        "app/services/live_trading/broker_adapters/alpaca_client.py",
+        "app/services/live_trading/broker_adapters/alpaca_error_handler.py",
+        "app/services/live_trading/broker_connector.py",
+        "app/services/live_trading/order_manager.py",
+        "app/services/live_trading/order_persistence.py"
+      ],
+      "file_count": 5,
+      "total_lines": 2004,
+      "size_category": "large",
+      "estimated_time_minutes": 20,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0073",
+      "layer": "14_Others",
+      "files": [
+        "app/services/live_trading/risk_gates.py",
+        "app/services/live_trading/trade_persistence.py",
+        "app/services/live_trading/trading_audit_trail.py",
+        "app/services/live_trading/trading_bridge_orchestrator.py",
+        "app/services/market_data_service.py"
+      ],
+      "file_count": 5,
+      "total_lines": 2061,
+      "size_category": "large",
+      "estimated_time_minutes": 20,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0074",
+      "layer": "14_Others",
+      "files": [
+        "app/services/market_universe_loader.py",
+        "app/services/market_universe_orchestrator.py",
+        "app/services/metrics_database/metrics_query_engine.py",
+        "app/services/metrics_database/models.py",
+        "app/services/metrics_database/questdb_connector.py"
+      ],
+      "file_count": 5,
+      "total_lines": 1873,
+      "size_category": "large",
+      "estimated_time_minutes": 18,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0075",
+      "layer": "14_Others",
+      "files": [
+        "app/services/module_parametrizer/module_parametrizer.py",
+        "app/services/momentum_analysis_optimized.py",
+        "app/services/monitoring/alerting_rules_engine.py",
+        "app/services/monitoring/prometheus_collector.py",
+        "app/services/monitoring/time_sync_monitor.py"
+      ],
+      "file_count": 5,
+      "total_lines": 1770,
+      "size_category": "large",
+      "estimated_time_minutes": 17,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0076",
+      "layer": "14_Others",
+      "files": [
+        "app/services/multi_market_orchestrator.py",
+        "app/services/multi_strategy_allocation.py",
+        "app/services/news_processor/event_handler.py",
+        "app/services/numba_risk.py",
+        "app/services/paper_trading_service.py"
+      ],
+      "file_count": 5,
+      "total_lines": 1833,
+      "size_category": "large",
+      "estimated_time_minutes": 18,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0077",
+      "layer": "14_Others",
+      "files": [
+        "app/services/parameter_optimization_service.py",
+        "app/services/portfolio_construction/allocation_recommender.py",
+        "app/services/portfolio_construction_narang.py",
+        "app/services/portfolio_constructor/portfolio_constructor.py",
+        "app/services/portfolio_risk_manager.py"
+      ],
+      "file_count": 5,
+      "total_lines": 2274,
+      "size_category": "large",
+      "estimated_time_minutes": 22,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0078",
+      "layer": "14_Others",
+      "files": [
+        "app/services/portfolio_service.py",
+        "app/services/position_builder/large_position_builder.py",
+        "app/services/position_monitor/stop_executor.py",
+        "app/services/profile_driven_trading/profile_strategy_mapper.py",
+        "app/services/profile_generator/profile_generator.py"
+      ],
+      "file_count": 5,
+      "total_lines": 2092,
+      "size_category": "large",
+      "estimated_time_minutes": 20,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0079",
+      "layer": "14_Others",
+      "files": [
+        "app/services/profitability_validation_service.py",
+        "app/services/rate_limiting/token_bucket.py",
+        "app/services/reporting/report_templates.py",
+        "app/services/reporting_generator/delivery_manager.py",
+        "app/services/reporting_generator/html_template_engine.py"
+      ],
+      "file_count": 5,
+      "total_lines": 2377,
+      "size_category": "large",
+      "estimated_time_minutes": 23,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0080",
+      "layer": "14_Others",
+      "files": [
+        "app/services/reporting_generator/pyfolio_integrator.py",
+        "app/services/reporting_generator/quantstats_integrator.py",
+        "app/services/reporting_generator/reporting_generator.py",
+        "app/services/reporting_generator/visualization_generator.py",
+        "app/services/risk_models_narang.py"
+      ],
+      "file_count": 5,
+      "total_lines": 2357,
+      "size_category": "large",
+      "estimated_time_minutes": 23,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0081",
+      "layer": "14_Others",
+      "files": [
+        "app/services/risk_scaling/limit_adjuster.py",
+        "app/services/risk_scaling/models.py",
+        "app/services/risk_scaling/risk_scaling_monitor.py",
+        "app/services/risk_scaling/risk_scaling_orchestrator.py",
+        "app/services/scheduling/market_scheduler.py"
+      ],
+      "file_count": 5,
+      "total_lines": 2056,
+      "size_category": "large",
+      "estimated_time_minutes": 20,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0082",
+      "layer": "14_Others",
+      "files": [
+        "app/services/signal_scoring_engine.py",
+        "app/services/slippage_analysis_service.py",
+        "app/services/smart_order_routing/execution_cost_monitor.py",
+        "app/services/strategy_recommender/strategy_recommender.py",
+        "app/services/strategy_stock_allocation/orchestrator.py"
+      ],
+      "file_count": 5,
+      "total_lines": 1737,
+      "size_category": "large",
+      "estimated_time_minutes": 17,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0083",
+      "layer": "14_Others",
+      "files": [
+        "app/services/synthetic_data/gan_generator.py",
+        "app/services/tax_efficiency/engines/spain_tax_engine.py",
+        "app/services/trading_error_handler.py",
+        "app/services/transaction_costs.py",
+        "app/services/validation_engine/validation_engine.py"
+      ],
+      "file_count": 5,
+      "total_lines": 2034,
+      "size_category": "large",
+      "estimated_time_minutes": 20,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0084",
+      "layer": "14_Others",
+      "files": [
+        "app/services/validation_orchestration/validation_engine.py",
+        "app/services/value_signal_enhancer.py",
+        "app/services/var_position_limiter.py",
+        "app/services/xai/explainer.py",
+        "app/simulation/exchange.py"
+      ],
+      "file_count": 5,
+      "total_lines": 2147,
+      "size_category": "large",
+      "estimated_time_minutes": 21,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0085",
+      "layer": "14_Others",
+      "files": [
+        "app/simulation/trading_costs.py",
+        "app/sre/canary_deployment/canary_analyzer.py",
+        "app/sre/canary_deployment/canary_deployment.py",
+        "app/sre/chaos_engine/blast_radius.py",
+        "app/sre/chaos_engine/chaos_orchestrator.py"
+      ],
+      "file_count": 5,
+      "total_lines": 2430,
+      "size_category": "large",
+      "estimated_time_minutes": 24,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0086",
+      "layer": "14_Others",
+      "files": [
+        "app/sre/chaos_engine/failure_injectors.py",
+        "app/sre/chaos_engine/game_days.py",
+        "app/sre/chaos_engine/hypothesis.py",
+        "app/sre/chaos_engine/stress_tester.py",
+        "app/sre/data_integrity/sanity_layer.py"
+      ],
+      "file_count": 5,
+      "total_lines": 2196,
+      "size_category": "large",
+      "estimated_time_minutes": 21,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0087",
+      "layer": "14_Others",
+      "files": [
+        "app/sre/dead_mans_switch/dead_mans_switch.py",
+        "app/sre/dead_mans_switch/external_monitor.py",
+        "app/sre/error_budgets/budget_alerts.py",
+        "app/sre/error_budgets/development_gates.py",
+        "app/sre/error_budgets/integration.py"
+      ],
+      "file_count": 5,
+      "total_lines": 2238,
+      "size_category": "large",
+      "estimated_time_minutes": 22,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0088",
+      "layer": "14_Others",
+      "files": [
+        "app/sre/oncall/dashboard.py",
+        "app/sre/reconciliation/boot_reconciler.py",
+        "app/sre/state_machine/wal_persistence.py",
+        "app/system/verify_system_integrity.py",
+        "app/tax/database/fifo_schema.py"
+      ],
+      "file_count": 5,
+      "total_lines": 2368,
+      "size_category": "large",
+      "estimated_time_minutes": 23,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0089",
+      "layer": "14_Others",
+      "files": [
+        "app/tax/exporters/modelo_721_exporter.py",
+        "app/trading_compliance/__init__.py"
+      ],
+      "file_count": 2,
+      "total_lines": 1009,
+      "size_category": "large",
+      "estimated_time_minutes": 10,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0090",
+      "layer": "14_Others",
+      "files": [
+        "app/dashboard/advanced_dashboard.py",
+        "app/engines/portfolio_engine/optimizers/__init__.py"
+      ],
+      "file_count": 2,
+      "total_lines": 2836,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 28,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0091",
+      "layer": "14_Others",
+      "files": [
+        "app/engines/risk_engine/drawdown_controllers/drawdown_controllers.py",
+        "app/engines/risk_engine/greeks_calculator.py"
+      ],
+      "file_count": 2,
+      "total_lines": 1596,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 15,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0092",
+      "layer": "14_Others",
+      "files": [
+        "app/engines/risk_engine/stress_testers/advanced_stress_scenarios.py",
+        "app/engines/risk_engine/var_calculators/var_calculators.py"
+      ],
+      "file_count": 2,
+      "total_lines": 1604,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 16,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0093",
+      "layer": "14_Others",
+      "files": [
+        "app/engines/strategy_engines/arbitrage_engine.py",
+        "app/microstructure/liquidity.py"
+      ],
+      "file_count": 2,
+      "total_lines": 1462,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 14,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0094",
+      "layer": "14_Others",
+      "files": [
+        "app/microstructure/models.py",
+        "app/microstructure/order_flow.py"
+      ],
+      "file_count": 2,
+      "total_lines": 1453,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 14,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0095",
+      "layer": "14_Others",
+      "files": [
+        "app/microstructure/price_discovery.py",
+        "app/microstructure/trading_mechanisms.py"
+      ],
+      "file_count": 2,
+      "total_lines": 1508,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 15,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0096",
+      "layer": "14_Others",
+      "files": [
+        "app/models/signal.py",
+        "app/portfolio/multi_asset/multi_asset_portfolio.py"
+      ],
+      "file_count": 2,
+      "total_lines": 1256,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 12,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0097",
+      "layer": "14_Others",
+      "files": [
+        "app/services/absolute_return_optimizer.py",
+        "app/services/corporate_actions/handler.py"
+      ],
+      "file_count": 2,
+      "total_lines": 1395,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 13,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0098",
+      "layer": "14_Others",
+      "files": [
+        "app/services/deploy_decision_orchestrator/deploy_decision_orchestrator.py",
+        "app/services/execution_algorithms.py"
+      ],
+      "file_count": 2,
+      "total_lines": 1302,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 13,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0099",
+      "layer": "14_Others",
+      "files": [
+        "app/services/execution_narang.py",
+        "app/services/fifo/modelo_721_generator.py"
+      ],
+      "file_count": 2,
+      "total_lines": 1267,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 12,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0100",
+      "layer": "14_Others",
+      "files": [
+        "app/services/forex_risk/hedging_engine.py",
+        "app/services/hurst_exponent_analyzer.py"
+      ],
+      "file_count": 2,
+      "total_lines": 1598,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 15,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0101",
+      "layer": "14_Others",
+      "files": [
+        "app/services/live_trading/broker_adapters/alpaca_adapter.py",
+        "app/services/live_trading/broker_adapters/ib_adapter.py"
+      ],
+      "file_count": 2,
+      "total_lines": 1368,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 13,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0102",
+      "layer": "14_Others",
+      "files": [
+        "app/services/optimization_chan.py",
+        "app/services/portfolio_analytics_service.py"
+      ],
+      "file_count": 2,
+      "total_lines": 1402,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 14,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0103",
+      "layer": "14_Others",
+      "files": [
+        "app/services/position_monitor/position_monitor.py",
+        "app/services/position_sizing_engine.py"
+      ],
+      "file_count": 2,
+      "total_lines": 1427,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 14,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0104",
+      "layer": "14_Others",
+      "files": [
+        "app/services/profile_driven_trading/orchestrator.py",
+        "app/services/regime_detection_chan.py"
+      ],
+      "file_count": 2,
+      "total_lines": 1414,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 14,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0105",
+      "layer": "14_Others",
+      "files": [
+        "app/services/risk_management_chan.py",
+        "app/services/stationarity_analyzer.py"
+      ],
+      "file_count": 2,
+      "total_lines": 1454,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 14,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0106",
+      "layer": "14_Others",
+      "files": [
+        "app/services/strategy_stock_allocation/scorers.py",
+        "app/services/strategy_stock_allocator.py"
+      ],
+      "file_count": 2,
+      "total_lines": 2160,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 21,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0107",
+      "layer": "14_Others",
+      "files": [
+        "app/services/task_queue/persistent_queue.py",
+        "app/simulation/market_mechanics.py"
+      ],
+      "file_count": 2,
+      "total_lines": 1583,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 15,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0108",
+      "layer": "14_Others",
+      "files": [
+        "app/simulation/microstructure.py",
+        "app/simulation/order_book.py"
+      ],
+      "file_count": 2,
+      "total_lines": 1308,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 13,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0109",
+      "layer": "14_Others",
+      "files": [
+        "app/sre/alert_fatigue_prevention/alert_fatigue_preventer.py",
+        "app/sre/automation/toil_tracker.py"
+      ],
+      "file_count": 2,
+      "total_lines": 1549,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 15,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0110",
+      "layer": "14_Others",
+      "files": [
+        "app/sre/error_budgets/error_budget_manager.py",
+        "app/sre/error_budgets/slo_tracker.py"
+      ],
+      "file_count": 2,
+      "total_lines": 1323,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 13,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0111",
+      "layer": "14_Others",
+      "files": [
+        "app/sre/monitoring/golden_signals.py",
+        "app/sre/monitoring/trading_metrics.py"
+      ],
+      "file_count": 2,
+      "total_lines": 1857,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 18,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0112",
+      "layer": "14_Others",
+      "files": [
+        "app/sre/oncall/escalation.py",
+        "app/sre/oncall/handoff.py"
+      ],
+      "file_count": 2,
+      "total_lines": 1458,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 14,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0113",
+      "layer": "14_Others",
+      "files": [
+        "app/sre/oncall/rotation.py",
+        "app/tests/analysis/test_fundamental_law.py"
+      ],
+      "file_count": 2,
+      "total_lines": 1554,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 15,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0114",
+      "layer": "14_Others",
+      "files": [
+        "app/tests/analysis/test_vectorization.py",
+        "app/tests/ensemble/test_ensemble.py"
+      ],
+      "file_count": 2,
+      "total_lines": 1661,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 16,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0115",
+      "layer": "14_Others",
+      "files": [
+        "app/tests/market_making/test_avellaneda_stoikov.py",
+        "app/tests/market_microstructure/test_ofi.py"
+      ],
+      "file_count": 2,
+      "total_lines": 1921,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 19,
+      "status": "pending"
+    },
+    {
+      "batch_id": "batch_0116",
+      "layer": "14_Others",
+      "files": [
+        "app/tests/portfolio/test_multi_asset.py"
+      ],
+      "file_count": 1,
+      "total_lines": 914,
+      "size_category": "xlarge",
+      "estimated_time_minutes": 9,
+      "status": "pending"
+    }
+  ]
+}

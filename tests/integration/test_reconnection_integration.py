@@ -5,15 +5,14 @@ Tests the reconnection manager integration with broker connectors
 and data services for 24/7 market operation.
 """
 
-import asyncio
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 from decimal import Decimal
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from app.services.live_trading.broker_connector import BrokerConnector, BrokerType
+import pytest
+
 from app.services.crypto_data_service import CryptoDataFetcher
 from app.services.forex_data_service import ForexDataFetcher
-from app.core.reconnection_manager import ReconnectionConfig
+from app.services.live_trading.broker_connector import BrokerConnector, BrokerType
 
 
 class TestBrokerConnectorReconnection:

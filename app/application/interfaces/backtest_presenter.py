@@ -32,7 +32,6 @@ class BacktestPresenter(ABC):
         Returns:
             Presentation-ready dictionary or None
         """
-        pass
 
     @abstractmethod
     def present_backtest_list(
@@ -53,7 +52,6 @@ class BacktestPresenter(ABC):
         Raises:
             ValueError: If limit or offset are invalid
         """
-        pass
 
     @abstractmethod
     def present_performance_summary(self, backtest_id: str) -> dict[str, Any] | None:
@@ -66,7 +64,6 @@ class BacktestPresenter(ABC):
         Returns:
             Presentation-ready summary or None
         """
-        pass
 
     @abstractmethod
     def present_comparison(self, backtest_ids: list[str]) -> dict[str, Any] | None:
@@ -79,7 +76,6 @@ class BacktestPresenter(ABC):
         Returns:
             Presentation-ready comparison or None
         """
-        pass
 
     @abstractmethod
     def present_error(self, error_message: str) -> dict[str, Any]:
@@ -92,4 +88,3 @@ class BacktestPresenter(ABC):
         Returns:
             Presentation-ready error dictionary
         """
-        pass

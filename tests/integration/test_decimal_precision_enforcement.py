@@ -5,14 +5,15 @@ Tests to verify that all data services properly use Decimal types
 and enforce precision at service boundaries.
 """
 
-import pytest
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
 
-from app.services.market_data_service import MarketDataService
-from app.services.crypto_data_service import CryptoDataFetcher, get_crypto_fetcher
-from app.services.forex_data_service import ForexDataFetcher, get_forex_fetcher
+import pytest
+
 from app.core.decimal_utils import to_decimal, validate_price, validate_quantity
+from app.services.crypto_data_service import get_crypto_fetcher
+from app.services.forex_data_service import get_forex_fetcher
+from app.services.market_data_service import MarketDataService
 
 
 class TestMarketDataServiceDecimalPrecision:
@@ -21,7 +22,7 @@ class TestMarketDataServiceDecimalPrecision:
     def test_quote_prices_are_decimal(self):
         """Test that Quote objects have Decimal price fields."""
         # Create a sample quote using Decimal
-        from app.models.market_data import Quote, DataFeedType
+        from app.models.market_data import DataFeedType, Quote
 
         quote = Quote(
             symbol="AAPL",
@@ -44,8 +45,8 @@ class TestMarketDataServiceDecimalPrecision:
 
     def test_quote_from_float_conversion(self):
         """Test that float inputs must be converted to Decimal before use."""
-        from app.models.market_data import Quote, DataFeedType
         from app.core.decimal_utils import to_decimal
+        from app.models.market_data import DataFeedType, Quote
 
         # Create quote with converted float inputs
         quote = Quote(
@@ -258,9 +259,10 @@ class TestServiceBoundaryValidation:
 
     def test_rejects_invalid_price_types(self):
         """Test that non-Decimal types are rejected at model boundaries."""
-        from app.models.market_data import Quote, DataFeedType
-        from app.core.decimal_utils import to_decimal
         import pytest
+
+        from app.core.decimal_utils import to_decimal
+        from app.models.market_data import DataFeedType, Quote
 
         # Valid: Decimal price created with to_decimal utility
         quote1 = Quote(
@@ -323,7 +325,7 @@ class TestHistoricalDataDecimalPrecision:
 
     def test_historical_data_ohlcv_are_decimal(self):
         """Test that HistoricalData OHLCV fields are Decimal."""
-        from app.models.market_data import HistoricalData, DataFeedType, DataFrequency
+        from app.models.market_data import DataFeedType, DataFrequency, HistoricalData
 
         data = HistoricalData(
             symbol="AAPL",
@@ -346,8 +348,8 @@ class TestHistoricalDataDecimalPrecision:
 
     def test_historical_data_from_dict_conversion(self):
         """Test that historical data from dict converts to Decimal."""
-        from app.models.market_data import HistoricalData, DataFeedType, DataFrequency
         from app.core.decimal_utils import to_decimal
+        from app.models.market_data import DataFeedType, DataFrequency, HistoricalData
 
         # Create from dict with converted values
         data_dict = {
@@ -378,8 +380,8 @@ class TestDecimalPrecisionAcceptanceCriteria:
     def test_no_float_arithmetic_for_financial_calculations(self):
         """AC: No float arithmetic for financial calculations."""
         # Verify that all price/quantity fields use Decimal
-        from app.models.market_data import Quote, DataFeedType
         from app.core.decimal_utils import to_decimal
+        from app.models.market_data import DataFeedType, Quote
 
         # Convert inputs to Decimal before creating model
         quote = Quote(
@@ -405,8 +407,8 @@ class TestDecimalPrecisionAcceptanceCriteria:
         # This is verified by the model definitions
         # All price fields in Quote and HistoricalData are typed as Decimal
 
+
         from app.models.market_data import Quote
-        import inspect
 
         # Check that price fields are annotated as Decimal
         hints = Quote.model_fields
@@ -420,7 +422,7 @@ class TestDecimalPrecisionAcceptanceCriteria:
 
     def test_all_quantities_use_decimal_type_hints(self):
         """AC: All quantities use Decimal type hints."""
-        from app.models.market_data import Quote, HistoricalData
+        from app.models.market_data import HistoricalData, Quote
 
         # Check volume fields
         assert Quote.model_fields["volume"].annotation == Decimal
@@ -429,8 +431,8 @@ class TestDecimalPrecisionAcceptanceCriteria:
     def test_to_decimal_utility_added_to_each_service(self):
         """AC: to_decimal() utility function added to each service file."""
         # Verify imports work
-        from app.services.market_data_service import to_decimal as mds_to_decimal
         from app.core.decimal_utils import to_decimal as shared_to_decimal
+        from app.services.market_data_service import to_decimal as mds_to_decimal
 
         # Both should reference the same function (from shared module)
         assert mds_to_decimal is shared_to_decimal

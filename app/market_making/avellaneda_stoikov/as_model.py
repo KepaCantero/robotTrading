@@ -36,7 +36,7 @@ import logging
 import math
 from decimal import Decimal
 
-from app.market_making.avellaneda_stoikov.models import ASConfig, ASQuote, ASQuoteParams
+from app.market_making.avellaneda_stoikov.models import ASConfig, ASQuote
 
 logger = logging.getLogger(__name__)
 

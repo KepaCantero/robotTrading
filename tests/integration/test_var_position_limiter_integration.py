@@ -4,21 +4,17 @@ Integration tests for VaR Position Limiter - Phase 2.5
 Tests integration with portfolio risk manager and correlation analyzer.
 """
 
-import pytest
 from decimal import Decimal
-from datetime import datetime, timezone
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock
 
 import pandas as pd
-import numpy as np
+import pytest
 
+from app.models.portfolio import AssetClass, Portfolio, Position
 from app.services.var_position_limiter import (
-    VaRPositionLimiter,
     VaRConfig,
-    get_var_position_limiter,
+    VaRPositionLimiter,
 )
-from app.models.portfolio import Portfolio, Position, AssetClass
-from app.services.correlation import CorrelationAnalyzer, CorrelationConfig
 
 
 @pytest.fixture

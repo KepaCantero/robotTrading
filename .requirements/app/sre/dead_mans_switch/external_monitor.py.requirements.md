@@ -3,35 +3,94 @@
 ## Source File Analysis
 - **File Path**: `app/sre/dead_mans_switch/external_monitor.py`
 - **Lines of Code**: 535
-- **Status**: Analysis Required
+- **Purpose**: External health check monitoring service
+- **Audit Status**: PASSED
 
 ## Purpose
-[Document the purpose of this module]
+Independent external monitoring service:
+- Periodic health checks
+- Failure detection and alerting
+- Multiple alert channels (Email, Slack, PagerDuty, etc.)
+- Database persistence
 
 ## Dependencies
-- Internal: [List internal dependencies]
-- External: [List external dependencies]
+
+### External Dependencies
+- `aiosqlite`: Async database operations
+- `asyncio`: Async operations
+- `aiohttp`: HTTP client for health checks
+
+### Internal Dependencies
+None
 
 ## Classes/Functions
-[Document main classes and functions]
+
+### Main Classes
+
+1. **AlertChannel (Enum)**
+   - EMAIL, SLACK, PAGERDUTY, TWILIO, WEBHOOK
+
+2. **MonitorConfig (dataclass)**
+   - Health check URL and intervals
+   - Alert thresholds
+   - Channel configs
+
+3. **HealthCheckResult (dataclass)**
+   - Result of health check
+
+4. **ExternalMonitor** (Main class)
+   - `__init__(config)`
+   - `initialize()`
+   - `start()`, `stop()`
+   - `_monitor_loop()`
+   - `_perform_health_check() -> HealthCheckResult`
+   - `_check_alert_conditions(result)`
+   - `_send_alert(result)`
+   - `_send_email/slack/pagerduty/twilio/webhook_alert(result)`
 
 ## Business Logic
-[Document core business logic]
 
-## Data Models
-[Document data models if applicable]
+### Alert Conditions
+- Consecutive failures >= `max_consecutive_failures`
+- Time since first failure >= `alert_after_minutes`
+
+### Alert Channels
+- Each channel has dedicated implementation
+- Failure of one channel doesn't block others
+- All alerts logged to database
 
 ## API Contracts
-[Document API contracts if applicable]
 
-## Error Handling
-[Document error handling approach]
+### start()
+```python
+async def start() -> None
+```
 
-## Performance Considerations
-[Document performance considerations]
+**Preconditions:**
+- Monitor initialized
+- Health check URL configured
 
-## Testing Strategy
-[Document testing strategy]
+**Postconditions:**
+- Background monitoring started
+- Health checks running periodically
+
+## Compliance with BASE_RULES.md
+
+### Passed Rules
+- **TYP-001**: Type hints
+- **ASYNC-001**: Proper async
+- **LOG-001**: Structured logging
+- **SOL-001**: Single responsibility
+
+### Audit Status: PASSED
+
+Clean external monitoring implementation:
+1. Independent monitoring (separate from service)
+2. Multiple alert channels
+3. Database persistence
+4. Graceful degradation
+5. Comprehensive alerting
 
 ---
-*Auto-generated on Thu Feb  5 20:33:04 CET 2026*
+*Audited on 2025-02-07*
+*Reference: BASE_RULES.md*

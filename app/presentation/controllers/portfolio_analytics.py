@@ -317,15 +317,8 @@ async def get_rebalance_recommendation(
         ):
             from app.models.portfolio_analytics import PortfolioAllocation
 
-# Constants
-DEFAULT_VALUE_25 = 25
-DEFAULT_VALUE_40 = 40
-DEFAULT_VALUE_50 = 50
-DEFAULT_VALUE_60 = 60
-
-
-            equity_allocation = request.target_equity_allocation or Decimal("DEFAULT_VALUE_60")
-            cash_allocation = request.target_cash_allocation or Decimal("DEFAULT_VALUE_40")
+            equity_allocation = request.target_equity_allocation or Decimal("60")
+            cash_allocation = request.target_cash_allocation or Decimal("40")
 
             target_allocation = PortfolioAllocation(
                 portfolio_id=request.portfolio_id,

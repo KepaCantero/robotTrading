@@ -7,13 +7,14 @@ Demonstrates how Kelly Criterion position sizing integrates with:
 - Risk management workflows
 """
 
-import pytest
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
 
-from app.services.position_sizing_engine import PositionSizingEngine
+import pytest
+
 from app.backtesting.metrics import MetricsCalculator
 from app.backtesting.models import Trade, TradeStatus
+from app.services.position_sizing_engine import PositionSizingEngine
 
 
 class TestKellyBacktestIntegration:

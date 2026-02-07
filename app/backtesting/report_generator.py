@@ -14,7 +14,7 @@ import logging
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional, TypedDict
+from typing import Dict, Optional, TypedDict
 
 from app.backtesting.models import BacktestConfig, BacktestResult, PerformanceMetrics
 
@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 class PeriodInfoDict(TypedDict, total=False):
     """TypedDict for period information."""
+
     start: str
     end: str
     days: int
@@ -30,6 +31,7 @@ class PeriodInfoDict(TypedDict, total=False):
 
 class ConfigInfoDict(TypedDict, total=False):
     """TypedDict for configuration information."""
+
     initial_capital: float
     commission: float
     slippage: float
@@ -39,6 +41,7 @@ class ConfigInfoDict(TypedDict, total=False):
 
 class ReturnsDict(TypedDict, total=False):
     """TypedDict for return metrics."""
+
     total: float
     annualized: Optional[float]
     final_capital: float
@@ -46,6 +49,7 @@ class ReturnsDict(TypedDict, total=False):
 
 class PerformanceDict(TypedDict, total=False):
     """TypedDict for performance metrics."""
+
     total_trades: int
     winning_trades: int
     losing_trades: int
@@ -56,6 +60,7 @@ class PerformanceDict(TypedDict, total=False):
 
 class RiskDict(TypedDict, total=False):
     """TypedDict for risk metrics."""
+
     sharpe: Optional[float]
     sortino: Optional[float]
     calmar: Optional[float]
@@ -107,10 +112,7 @@ class BacktestReportGenerator:
             self.output_dir.mkdir(parents=True, exist_ok=True)
             logger.info(f"Report generator initialized with output dir: {self.output_dir}")
         except OSError:
-            logger.error(
-                f"Failed to create output directory: {self.output_dir}",
-                exc_info=True
-            )
+            logger.error(f"Failed to create output directory: {self.output_dir}", exc_info=True)
             raise
 
     def generate_comprehensive_report(
@@ -157,15 +159,15 @@ class BacktestReportGenerator:
                 extra={
                     "operation": "executive_summary_generation",
                     "duration_seconds": elapsed,
-                    "backtest_id": backtest_id
-                }
+                    "backtest_id": backtest_id,
+                },
             )
         except (IOError, OSError) as e:
             errors.append(f"Executive summary: {e}")
             logger.error(
                 f"Failed to write executive summary: {e}",
                 extra={"operation": "executive_summary_generation", "backtest_id": backtest_id},
-                exc_info=True
+                exc_info=True,
             )
 
         # 2. Technical Analysis
@@ -182,15 +184,15 @@ class BacktestReportGenerator:
                 extra={
                     "operation": "technical_analysis_generation",
                     "duration_seconds": elapsed,
-                    "backtest_id": backtest_id
-                }
+                    "backtest_id": backtest_id,
+                },
             )
         except (IOError, OSError) as e:
             errors.append(f"Technical analysis: {e}")
             logger.error(
                 f"Failed to write technical analysis: {e}",
                 extra={"operation": "technical_analysis_generation", "backtest_id": backtest_id},
-                exc_info=True
+                exc_info=True,
             )
 
         # 3. Risk Analysis
@@ -207,15 +209,15 @@ class BacktestReportGenerator:
                 extra={
                     "operation": "risk_analysis_generation",
                     "duration_seconds": elapsed,
-                    "backtest_id": backtest_id
-                }
+                    "backtest_id": backtest_id,
+                },
             )
         except (IOError, OSError) as e:
             errors.append(f"Risk analysis: {e}")
             logger.error(
                 f"Failed to write risk analysis: {e}",
                 extra={"operation": "risk_analysis_generation", "backtest_id": backtest_id},
-                exc_info=True
+                exc_info=True,
             )
 
         # 4. Performance Metrics (JSON)
@@ -232,15 +234,15 @@ class BacktestReportGenerator:
                 extra={
                     "operation": "metrics_json_generation",
                     "duration_seconds": elapsed,
-                    "backtest_id": backtest_id
-                }
+                    "backtest_id": backtest_id,
+                },
             )
         except (IOError, OSError, TypeError) as e:
             errors.append(f"Metrics: {e}")
             logger.error(
                 f"Failed to write metrics file: {e}",
                 extra={"operation": "metrics_json_generation", "backtest_id": backtest_id},
-                exc_info=True
+                exc_info=True,
             )
 
         # 5. Recommendations
@@ -257,21 +259,21 @@ class BacktestReportGenerator:
                 extra={
                     "operation": "recommendations_generation",
                     "duration_seconds": elapsed,
-                    "backtest_id": backtest_id
-                }
+                    "backtest_id": backtest_id,
+                },
             )
         except (IOError, OSError) as e:
             errors.append(f"Recommendations: {e}")
             logger.error(
                 f"Failed to write recommendations: {e}",
                 extra={"operation": "recommendations_generation", "backtest_id": backtest_id},
-                exc_info=True
+                exc_info=True,
             )
 
         if errors:
             logger.warning(
                 f"Report generation completed with {len(errors)} errors",
-                extra={"backtest_id": backtest_id, "errors": errors}
+                extra={"backtest_id": backtest_id, "errors": errors},
             )
 
         total_elapsed = time.time() - report_start_time
@@ -282,8 +284,8 @@ class BacktestReportGenerator:
                 "duration_seconds": total_elapsed,
                 "backtest_id": backtest_id,
                 "files_generated": len(files),
-                "timestamp": timestamp
-            }
+                "timestamp": timestamp,
+            },
         )
         return files
 

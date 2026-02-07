@@ -13,40 +13,29 @@ Usage:
 import os
 import sys
 import tempfile
-import uuid
-from concurrent.futures import ProcessPoolExecutor
 from datetime import datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List
-from unittest.mock import MagicMock, patch
+from typing import List
+from unittest.mock import patch
 
 import numpy as np
-import pandas as pd
-import pytest
 import yaml
-from sqlalchemy import create_engine, inspect
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import inspect
 
 # Add parent directories to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
+# Configure logging
+import logging
+
 from app.backtesting.profile_batch_backtester import (
+    BaselineOptimizationComparison,
     ProfileBatchBacktester,
     ProfileResult,
     ProfileResultDB,
-    OptimizedStrategy,
-    BaselineOptimizationComparison,
-    create_profile_batch_backtester,
 )
-from app.core.models.input_profile import (
-    InputProfile,
-    ObjectivoInversion,
-    RiskTolerance,
-)
-
-# Configure logging
-import logging
+from app.core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
 
 logging.basicConfig(
     level=logging.WARNING,  # Reduce noise

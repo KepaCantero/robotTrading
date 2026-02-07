@@ -34,7 +34,7 @@ from app.models.market_data import (
 from app.services.market_data_service import MarketDataService, get_market_data_service
 
 from . import audit_logger, get_correlation_id
-from .security import rate_limit, require_auth, audit_log
+from .security import audit_log, rate_limit, require_auth
 
 router = APIRouter(prefix="/market-data", tags=["market-data"])
 logger = logging.getLogger(__name__)

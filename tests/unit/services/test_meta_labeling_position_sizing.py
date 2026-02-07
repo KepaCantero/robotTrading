@@ -5,9 +5,10 @@ Tests the integration between López de Prado's meta-labeling framework
 and the position sizing engine for ML-based bet sizing.
 """
 
-import pytest
-import numpy as np
 from decimal import Decimal
+
+import numpy as np
+import pytest
 
 from app.services.position_sizing_engine import (
     MetaLabelingPositionSizer,

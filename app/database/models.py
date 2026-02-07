@@ -218,7 +218,9 @@ class Trade(Base):
     asset_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("assets.id", ondelete="CASCADE"), nullable=False
     )
-    order_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, unique=True, index=True)
+    order_id: Mapped[Optional[str]] = mapped_column(
+        String(100), nullable=True, unique=True, index=True
+    )
     side: Mapped[str] = mapped_column(String(4), nullable=False)  # BUY, SELL
     quantity: Mapped[Decimal] = mapped_column(Numeric(15, 8), nullable=False)
     price: Mapped[Decimal] = mapped_column(Numeric(15, 4), nullable=False)

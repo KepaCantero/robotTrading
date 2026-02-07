@@ -6,13 +6,13 @@ Tests signal validation, rejection logic, and approval workflow.
 
 from datetime import datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock
 
 import pytest
 
 from app.backtesting.models import BacktestConfig
 from app.backtesting.services.signal_processor import SignalProcessor
-from app.models.signal import Signal, SignalType, SignalSource, SignalStrength
+from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 
 class MockMarketData:
@@ -126,9 +126,7 @@ class TestSignalProcessor:
 
     def test_initialization_with_risk_envelope(self, config):
         """Test initialization with risk envelope enabled."""
-        processor = SignalProcessor(
-            config=config, strategy=None, enable_risk_envelope=True
-        )
+        processor = SignalProcessor(config=config, strategy=None, enable_risk_envelope=True)
 
         assert processor.enable_risk_envelope is True
         assert processor.risk_validator is not None
@@ -328,7 +326,7 @@ class TestSignalProcessor:
             config=config,
             strategy=mock_strategy,
             risk_envelope_validator=mock_risk_validator,
-            enable_risk_envelope=True
+            enable_risk_envelope=True,
         )
 
         market_data = MockMarketData("AAPL", 150)
@@ -390,7 +388,10 @@ class TestSignalProcessor:
         mock_strategy.risk_check.return_value = False
 
         processor = SignalProcessor(
-            config=config, strategy=mock_strategy, enable_risk_envelope=False, diagnostic_logger=mock_logger
+            config=config,
+            strategy=mock_strategy,
+            enable_risk_envelope=False,
+            diagnostic_logger=mock_logger,
         )
 
         market_data = MockMarketData("AAPL", 150)
@@ -499,7 +500,7 @@ class TestSignalProcessor:
 
         def create_portfolio(current_price_func):
             # Should use current_price_func to get prices
-            msft_price = current_price_func("MSFT")
+            current_price_func("MSFT")
             return MockPortfolio(cash=capital)
 
         def validate_profitability(signal, price):
@@ -520,7 +521,10 @@ class TestSignalProcessor:
     def test_validate_risk_envelope_no_validator(self, config, mock_strategy, buy_signal):
         """Test risk envelope validation when validator is None."""
         processor = SignalProcessor(
-            config=config, strategy=mock_strategy, enable_risk_envelope=True, risk_envelope_validator=None
+            config=config,
+            strategy=mock_strategy,
+            enable_risk_envelope=True,
+            risk_envelope_validator=None,
         )
 
         # Should create validator automatically

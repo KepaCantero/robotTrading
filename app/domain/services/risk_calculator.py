@@ -276,7 +276,9 @@ class RiskCalculator:
     # ==========================================================================
 
     @staticmethod
-    def _safe_divide(numerator: Decimal, denominator: Decimal, default: Decimal = Decimal("0")) -> Decimal:
+    def _safe_divide(
+        numerator: Decimal, denominator: Decimal, default: Decimal = Decimal("0")
+    ) -> Decimal:
         """
         Perform safe division with zero-division protection.
 
@@ -433,8 +435,7 @@ class RiskCalculator:
 
         # Calculate VaR as percentage of portfolio value (with zero-division protection)
         var_95_percentage = self._safe_divide(
-            metrics.var_95 * Decimal("100"),
-            metrics.portfolio_value
+            metrics.var_95 * Decimal("100"), metrics.portfolio_value
         )
 
         return {

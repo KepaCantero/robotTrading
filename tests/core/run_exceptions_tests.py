@@ -4,19 +4,17 @@ Simple test runner for test_exceptions.py when pytest is not available.
 This script runs the tests manually to verify coverage.
 """
 
-import sys
-import os
-import traceback
-from typing import List, Tuple, Any
 import importlib.util
+import os
+import sys
+import traceback
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 # Direct import of exceptions module bypassing app/__init__.py
 spec = importlib.util.spec_from_file_location(
-    "app.core.exceptions",
-    "/Users/kepa.cantero/Projects/algoTrading/app/core/exceptions.py"
+    "app.core.exceptions", "/Users/kepa.cantero/Projects/algoTrading/app/core/exceptions.py"
 )
 exceptions_module = importlib.util.module_from_spec(spec)
 sys.modules['app.core.exceptions'] = exceptions_module
@@ -73,14 +71,14 @@ class TestRunner:
     def print_summary(self):
         """Print test summary."""
         total = self.passed + self.failed
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print(f"Test Results: {self.passed}/{total} passed")
         if self.failed > 0:
-            print(f"\nFailed tests:")
+            print("\nFailed tests:")
             for name, error in self.errors:
                 print(f"  - {name}")
                 print(f"    {error[:200]}...")
-        print("="*60)
+        print("=" * 60)
         return self.failed == 0
 
 
@@ -394,17 +392,31 @@ def main():
     tests = [
         # P0 Critical Tests
         ("AlgoTradingDatabaseError exists (P0)", test_algo_trading_database_error_exists),
-        ("ConfigurationError validates empty input (P0)", test_configuration_error_validation_empty),
-        ("ConfigurationError validates whitespace (P0)", test_configuration_error_validation_whitespace),
+        (
+            "ConfigurationError validates empty input (P0)",
+            test_configuration_error_validation_empty,
+        ),
+        (
+            "ConfigurationError validates whitespace (P0)",
+            test_configuration_error_validation_whitespace,
+        ),
         ("ValidationError validates empty input (P0)", test_validation_error_validation_empty),
-        ("BusinessLogicError validates empty input (P0)", test_business_logic_error_validation_empty),
+        (
+            "BusinessLogicError validates empty input (P0)",
+            test_business_logic_error_validation_empty,
+        ),
         ("MarketDataError validates empty input (P0)", test_market_data_error_validation_empty),
         ("TradingError validates empty input (P0)", test_trading_error_validation_empty),
         ("DatabaseError validates empty input (P0)", test_database_error_validation_empty),
-        ("DatabaseError raises AlgoTradingDatabaseError (P0)", test_database_error_raises_algo_trading_database_error),
-        ("AuthenticationError validates empty input (P0)", test_authentication_error_validation_empty),
+        (
+            "DatabaseError raises AlgoTradingDatabaseError (P0)",
+            test_database_error_raises_algo_trading_database_error,
+        ),
+        (
+            "AuthenticationError validates empty input (P0)",
+            test_authentication_error_validation_empty,
+        ),
         ("All helper functions validate input (P0)", test_all_helper_functions_validate_input),
-
         # Core Tests
         ("All exception classes exist", test_all_exception_classes_exist),
         ("Exceptions support error codes", test_exceptions_support_error_codes),
@@ -413,16 +425,23 @@ def main():
         ("Exception inheritance", test_exception_inheritance),
         ("Exception attributes", test_exception_attributes),
         ("Exception string representation", test_exception_str_representation),
-
         # Helper Function Tests
-        ("raise_configuration_error with all params", test_raise_configuration_error_with_all_params),
+        (
+            "raise_configuration_error with all params",
+            test_raise_configuration_error_with_all_params,
+        ),
         ("raise_validation_error with all params", test_raise_validation_error_with_all_params),
-        ("raise_business_logic_error with all params", test_raise_business_logic_error_with_all_params),
+        (
+            "raise_business_logic_error with all params",
+            test_raise_business_logic_error_with_all_params,
+        ),
         ("raise_market_data_error with all params", test_raise_market_data_error_with_all_params),
         ("raise_trading_error with all params", test_raise_trading_error_with_all_params),
         ("raise_database_error with all params", test_raise_database_error_with_all_params),
-        ("raise_authentication_error with all params", test_raise_authentication_error_with_all_params),
-
+        (
+            "raise_authentication_error with all params",
+            test_raise_authentication_error_with_all_params,
+        ),
         # Edge Cases
         ("Empty details defaults to empty dict", test_empty_details_defaults_to_empty_dict),
     ]

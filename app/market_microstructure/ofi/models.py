@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
+
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -16,7 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 # Custom exception types for data model validation
 class ModelValidationError(ValueError):
     """Raised when data model validation fails."""
-    pass
+
 
 
 class OFIHorizon(str, Enum):
@@ -377,7 +378,9 @@ class OFISignal(BaseModel):
     )
 
     symbol: str = Field(..., description="Trading symbol")
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), description="Signal time")
+    timestamp: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), description="Signal time"
+    )
     action: str = Field(..., description="Action (BUY/SELL/HOLD)")
     ofi_value: float = Field(..., ge=-1.0, le=1.0, description="OFI value")
     ofi_threshold_used: float = Field(..., description="Threshold used for signal")

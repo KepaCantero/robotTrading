@@ -5,11 +5,11 @@ Tests Bollinger Bands calculation and signal generation
 as recommended in Ernest Chan's "Algorithmic Trading" (Chapter 6).
 """
 
-import pytest
 from decimal import Decimal
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from app.strategies.indicators.bollinger_bands import (
     BollingerBandsConfig,

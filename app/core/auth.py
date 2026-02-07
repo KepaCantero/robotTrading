@@ -31,7 +31,6 @@ from fastapi.security import APIKeyHeader, HTTPAuthorizationCredentials, HTTPBea
 
 from app.core.audit import AuditAction, AuditLogger, get_audit_logger
 from app.core.environment_config import get_config
-from app.core.exceptions import AuthenticationError, ValidationError
 
 # Setup logger
 logger = logging.getLogger(__name__)
@@ -43,6 +42,7 @@ http_bearer = HTTPBearer(auto_error=False)
 
 class UserRoles:
     """Standard user roles for authorization."""
+
     ADMIN = "admin"
     TRADER = "trader"
     VIEWER = "viewer"
@@ -52,27 +52,27 @@ class UserRoles:
 # Type definitions for dictionaries (TYP-001 fix)
 class UserDict(TypedDict):
     """Typed dictionary for user storage mapping."""
-    pass
+
 
 
 class APIKeyDict(TypedDict):
     """Typed dictionary for API key to username mapping."""
-    pass
+
 
 
 class FailedAttemptsDict(TypedDict):
     """Typed dictionary for failed attempts tracking."""
-    pass
+
 
 
 class LockoutsDict(TypedDict):
     """Typed dictionary for lockout expiry tracking."""
-    pass
+
 
 
 class RateLimitsDict(TypedDict):
     """Typed dictionary for rate limit tracking."""
-    pass
+
 
 
 class User:
@@ -103,16 +103,15 @@ class User:
     def can_trade(self) -> bool:
         """Check if user can execute trades."""
         return self.is_active and (
-            self.has_role(UserRoles.TRADER) or
-            self.has_role(UserRoles.ADMIN) or
-            self.has_role(UserRoles.SYSTEM)
+            self.has_role(UserRoles.TRADER)
+            or self.has_role(UserRoles.ADMIN)
+            or self.has_role(UserRoles.SYSTEM)
         )
 
     def can_deploy(self) -> bool:
         """Check if user can deploy strategies."""
         return self.is_active and (
-            self.has_role(UserRoles.ADMIN) or
-            self.has_role(UserRoles.SYSTEM)
+            self.has_role(UserRoles.ADMIN) or self.has_role(UserRoles.SYSTEM)
         )
 
     def __repr__(self) -> str:
@@ -123,6 +122,7 @@ class User:
 # ============================================================================
 # GAP-001 FIX: Database-backed user store abstraction
 # ============================================================================
+
 
 class UserStore:
     """
@@ -189,7 +189,12 @@ class UserStore:
                         if field == "id":
                             user.user_id = value
                         elif field == "role":
-                            if value in [UserRoles.ADMIN, UserRoles.TRADER, UserRoles.VIEWER, UserRoles.SYSTEM]:
+                            if value in [
+                                UserRoles.ADMIN,
+                                UserRoles.TRADER,
+                                UserRoles.VIEWER,
+                                UserRoles.SYSTEM,
+                            ]:
                                 user.role = value
                         elif field == "permissions":
                             user.permissions = [p.strip() for p in value.split(",")]
@@ -215,14 +220,14 @@ class UserStore:
                                 self._api_keys[hashed_key] = username
                                 logger.info(
                                     f"Loaded API key for user: {username}",
-                                    extra={"key_name": "***REDACTED***", "username": username}
+                                    extra={"key_name": "***REDACTED***", "username": username},
                                 )
 
         # Log summary
         with self._users_lock, self._api_keys_lock:
             logger.info(
                 f"User store initialized with {len(self._users)} users and {len(self._api_keys)} API keys",
-                extra={"user_count": len(self._users), "api_key_count": len(self._api_keys)}
+                extra={"user_count": len(self._users), "api_key_count": len(self._api_keys)},
             )
 
     def _hash_api_key(self, api_key: str) -> str:
@@ -309,6 +314,7 @@ def get_user_store() -> UserStore:
 # GAP-002 FIX: JWT Token Validation
 # ============================================================================
 
+
 class JWTTokenManager:
     """
     JWT token management and validation.
@@ -324,7 +330,9 @@ class JWTTokenManager:
         self.algorithm = "HS256"
         self.access_token_expire_minutes = self.config.api.access_token_expire_minutes
 
-    def create_access_token(self, data: Dict[str, str], expires_delta: Optional[timedelta] = None) -> str:
+    def create_access_token(
+        self, data: Dict[str, str], expires_delta: Optional[timedelta] = None
+    ) -> str:
         """
         Create JWT access token.
 
@@ -342,12 +350,9 @@ class JWTTokenManager:
             import jwt
         except ImportError:
             logger.error(
-                "JWT library not available. Install with: pip install pyjwt",
-                exc_info=True
+                "JWT library not available. Install with: pip install pyjwt", exc_info=True
             )
-            raise ImportError(
-                "JWT library not available. Install with: pip install pyjwt"
-            )
+            raise ImportError("JWT library not available. Install with: pip install pyjwt")
 
         to_encode = data.copy()
 
@@ -356,17 +361,13 @@ class JWTTokenManager:
         else:
             expire = datetime.utcnow() + timedelta(minutes=self.access_token_expire_minutes)
 
-        to_encode.update({
-            "exp": expire,
-            "iat": datetime.utcnow(),
-            "type": "access"
-        })
+        to_encode.update({"exp": expire, "iat": datetime.utcnow(), "type": "access"})
 
         encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
 
         logger.info(
             "Created access token",
-            extra={"user_id": data.get("sub"), "expires": expire.isoformat()}
+            extra={"user_id": data.get("sub"), "expires": expire.isoformat()},
         )
 
         return encoded_jwt
@@ -390,26 +391,18 @@ class JWTTokenManager:
             import jwt
         except ImportError:
             logger.error(
-                "JWT library not available. Install with: pip install pyjwt",
-                exc_info=True
+                "JWT library not available. Install with: pip install pyjwt", exc_info=True
             )
-            raise ImportError(
-                "JWT library not available. Install with: pip install pyjwt"
-            )
+            raise ImportError("JWT library not available. Install with: pip install pyjwt")
 
         try:
-            payload = jwt.decode(
-                token,
-                self.secret_key,
-                algorithms=[self.algorithm]
-            )
+            payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
 
             # Check token type
             token_type = payload.get("type")
             if token_type != "access":
                 logger.warning(
-                    f"Invalid token type: {token_type}",
-                    extra={"token_type": token_type}
+                    f"Invalid token type: {token_type}", extra={"token_type": token_type}
                 )
                 return None
 
@@ -426,14 +419,12 @@ class JWTTokenManager:
 
             return payload
 
-        except ImportError as e:
+        except ImportError:
             logger.error("JWT library error during token verification", exc_info=True)
             raise
         except Exception as e:
             logger.warning(
-                f"Token verification failed: {str(e)}",
-                extra={"error": str(e)},
-                exc_info=True
+                f"Token verification failed: {str(e)}", extra={"error": str(e)}, exc_info=True
             )
             return None
 
@@ -488,6 +479,7 @@ def get_token_manager() -> JWTTokenManager:
 # ============================================================================
 # GAP-004 FIX: Rate Limiting & Account Lockout
 # ============================================================================
+
 
 class AuthAttemptTracker:
     """
@@ -553,7 +545,7 @@ class AuthAttemptTracker:
                 "identifier": identifier,
                 "auth_method": auth_method,
                 "attempts": attempts,
-            }
+            },
         )
 
         # Check if should lock out
@@ -564,7 +556,7 @@ class AuthAttemptTracker:
                 extra={
                     "identifier": identifier,
                     "lockout_duration": self.LOCKOUT_DURATION,
-                }
+                },
             )
             return True
 
@@ -595,7 +587,7 @@ class AuthAttemptTracker:
 
         logger.info(
             f"Successful authentication for {username}",
-            extra={"identifier": identifier, "username": username}
+            extra={"identifier": identifier, "username": username},
         )
 
     def is_locked_out(self, identifier: str) -> Tuple[bool, Optional[int]]:
@@ -648,7 +640,7 @@ class AuthAttemptTracker:
                 extra={
                     "identifier": identifier,
                     "request_count": len(self._rate_limits[identifier]),
-                }
+                },
             )
             return False
 
@@ -661,9 +653,7 @@ class AuthAttemptTracker:
         now = time.time()
 
         # Clean expired lockouts
-        expired_lockouts = [
-            k for k, v in self._lockouts.items() if v < now
-        ]
+        expired_lockouts = [k for k, v in self._lockouts.items() if v < now]
         for k in expired_lockouts:
             del self._lockouts[k]
             if k in self._failed_attempts:
@@ -736,7 +726,7 @@ def _handle_failed_attempt(
     if should_lock:
         logger.warning(
             f"Account locked out after failed {auth_method} authentication",
-            extra={"request_id": request_id}
+            extra={"request_id": request_id},
         )
 
     return should_lock
@@ -745,6 +735,7 @@ def _handle_failed_attempt(
 # ============================================================================
 # Authentication Dependencies
 # ============================================================================
+
 
 @contextmanager
 def _audit_auth_context(
@@ -802,10 +793,7 @@ async def get_current_user_optional(
 
     # Check rate limit
     if not attempt_tracker.check_rate_limit(request_id):
-        logger.warning(
-            f"Rate limit exceeded for auth attempt",
-            extra={"request_id": request_id}
-        )
+        logger.warning("Rate limit exceeded for auth attempt", extra={"request_id": request_id})
         audit.log(
             action=AuditAction.AUTH_FAILED,
             user_id=None,
@@ -820,8 +808,8 @@ async def get_current_user_optional(
     is_locked, remaining = attempt_tracker.is_locked_out(request_id)
     if is_locked:
         logger.warning(
-            f"Auth attempt blocked due to lockout",
-            extra={"request_id": request_id, "remaining_seconds": remaining}
+            "Auth attempt blocked due to lockout",
+            extra={"request_id": request_id, "remaining_seconds": remaining},
         )
         audit.log(
             action=AuditAction.AUTH_FAILED,
@@ -845,7 +833,7 @@ async def get_current_user_optional(
                 attempt_tracker.record_successful_attempt(request_id, username)
                 logger.info(
                     f"API key authentication successful for {username}",
-                    extra={"request_id": request_id, "username": username}
+                    extra={"request_id": request_id, "username": username},
                 )
                 return user
             else:
@@ -869,7 +857,7 @@ async def get_current_user_optional(
                         attempt_tracker.record_successful_attempt(request_id, user.username)
                         logger.info(
                             f"JWT authentication successful for {user.username}",
-                            extra={"request_id": request_id, "username": user.username}
+                            extra={"request_id": request_id, "username": user.username},
                         )
                         return user
                     else:
@@ -883,17 +871,14 @@ async def get_current_user_optional(
 
         except ImportError:
             # JWT library not available, log error
-            logger.error(
-                "JWT authentication failed: library not available",
-                exc_info=True
-            )
+            logger.error("JWT authentication failed: library not available", exc_info=True)
             _handle_failed_attempt(request_id, "jwt", attempt_tracker, audit)
             return None
         except Exception as e:
             logger.error(
                 f"JWT authentication error: {str(e)}",
                 extra={"request_id": request_id},
-                exc_info=True
+                exc_info=True,
             )
             _handle_failed_attempt(request_id, "jwt", attempt_tracker, audit)
             return None
@@ -939,7 +924,7 @@ async def get_admin_user(
     if not current_user.has_role(UserRoles.ADMIN):
         logger.warning(
             f"Admin access denied for {current_user.username}",
-            extra={"username": current_user.username, "role": current_user.role}
+            extra={"username": current_user.username, "role": current_user.role},
         )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -961,7 +946,7 @@ async def get_trader_user(
     if not current_user.can_trade():
         logger.warning(
             f"Trading access denied for {current_user.username}",
-            extra={"username": current_user.username, "role": current_user.role}
+            extra={"username": current_user.username, "role": current_user.role},
         )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -983,7 +968,7 @@ async def get_deployer_user(
     if not current_user.can_deploy():
         logger.warning(
             f"Deployment access denied for {current_user.username}",
-            extra={"username": current_user.username, "role": current_user.role}
+            extra={"username": current_user.username, "role": current_user.role},
         )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -1004,6 +989,7 @@ def require_roles(*roles: str):
         ):
             ...
     """
+
     async def role_checker(current_user: User = Depends(get_current_user)) -> User:
         if not any(current_user.has_role(role) for role in roles):
             logger.warning(
@@ -1012,7 +998,7 @@ def require_roles(*roles: str):
                     "username": current_user.username,
                     "user_role": current_user.role,
                     "required_roles": list(roles),
-                }
+                },
             )
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -1034,6 +1020,7 @@ def require_permissions(*permissions: str):
         ):
             ...
     """
+
     async def permission_checker(current_user: User = Depends(get_current_user)) -> User:
         if not any(
             current_user.has_permission(perm) or current_user.has_permission("*")
@@ -1045,7 +1032,7 @@ def require_permissions(*permissions: str):
                     "username": current_user.username,
                     "user_permissions": current_user.permissions,
                     "required_permissions": list(permissions),
-                }
+                },
             )
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -1077,6 +1064,7 @@ def get_username(current_user: User = Depends(get_current_user)) -> str:
 # ============================================================================
 # Utility Functions
 # ============================================================================
+
 
 def create_access_token_for_user(user: User, expires_delta: Optional[timedelta] = None) -> str:
     """

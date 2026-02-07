@@ -10,10 +10,7 @@ import asyncio
 import logging
 from datetime import date
 
-from app.services.scheduling import (
-    MarketScheduler,
-    MarketType,
-)
+from app.services.scheduling import MarketScheduler, MarketType
 
 # Configure logging
 logging.basicConfig(

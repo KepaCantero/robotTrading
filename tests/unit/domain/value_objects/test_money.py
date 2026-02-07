@@ -3,9 +3,9 @@ Unit tests for Money value object.
 
 Tests the immutable Money value object following DDD patterns.
 """
-import pytest
 from decimal import Decimal
-from typing import Any
+
+import pytest
 
 from app.domain.value_objects.money import Money
 
@@ -107,14 +107,14 @@ class TestMoneyArithmetic:
         money2 = Money(amount=Decimal('50'), currency='EUR')
 
         with pytest.raises(ValueError, match="Cannot add different currencies"):
-            result = money1 + money2
+            money1 + money2
 
     def test_add_with_non_money_raises_type_error(self):
         """Test that adding with non-Money raises TypeError."""
         money = Money(amount=Decimal('100'), currency='USD')
 
         with pytest.raises(TypeError):
-            result = money + 50
+            money + 50
 
     def test_subtract_same_currency(self):
         """Test subtracting Money with same currency."""
@@ -132,7 +132,7 @@ class TestMoneyArithmetic:
         money2 = Money(amount=Decimal('100'), currency='USD')
 
         with pytest.raises(ValueError, match="Result cannot be negative"):
-            result = money1 - money2
+            money1 - money2
 
     def test_subtract_different_currency_raises_error(self):
         """Test that subtracting different currencies raises ValueError."""
@@ -140,7 +140,7 @@ class TestMoneyArithmetic:
         money2 = Money(amount=Decimal('50'), currency='EUR')
 
         with pytest.raises(ValueError, match="Cannot subtract different currencies"):
-            result = money1 - money2
+            money1 - money2
 
     def test_multiply_by_int(self):
         """Test multiplying Money by integer."""
@@ -174,14 +174,14 @@ class TestMoneyArithmetic:
         money = Money(amount=Decimal('100'), currency='USD')
 
         with pytest.raises(ValueError, match="Result cannot be negative"):
-            result = money * -1
+            money * -1
 
     def test_multiply_by_invalid_type_raises_type_error(self):
         """Test that multiplying by invalid type raises TypeError."""
         money = Money(amount=Decimal('100'), currency='USD')
 
         with pytest.raises((TypeError, ValueError)):
-            result = money * "invalid"
+            money * "invalid"
 
     def test_divide_by_int(self):
         """Test dividing Money by integer."""
@@ -206,14 +206,14 @@ class TestMoneyArithmetic:
         money = Money(amount=Decimal('100'), currency='USD')
 
         with pytest.raises(ZeroDivisionError, match="Cannot divide by zero"):
-            result = money / 0
+            money / 0
 
     def test_divide_by_invalid_type_raises_type_error(self):
         """Test that dividing by invalid type raises TypeError."""
         money = Money(amount=Decimal('100'), currency='USD')
 
         with pytest.raises((TypeError, ValueError)):
-            result = money / "invalid"
+            money / "invalid"
 
 
 @pytest.mark.unit
@@ -263,7 +263,7 @@ class TestMoneyComparison:
         money2 = Money(amount=Decimal('100'), currency='EUR')
 
         with pytest.raises(ValueError, match="Cannot compare different currencies"):
-            result = money1 < money2
+            money1 < money2
 
     def test_less_than_or_equal(self):
         """Test less than or equal comparison."""

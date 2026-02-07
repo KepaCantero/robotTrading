@@ -45,11 +45,7 @@ Example usage:
     ```
 """
 
-from .base_optimizer import (
-    BaseOptimizer,
-    OptimizationConfig,
-    OptimizationResult,
-)
+from .base_optimizer import BaseOptimizer, OptimizationConfig, OptimizationResult
 from .bayesian_optimizer import BayesianOptimizer
 from .grid_search import GridSearchOptimizer
 from .models import (
@@ -68,11 +64,7 @@ from .multi_objective import (
     find_non_dominated_solutions,
 )
 from .random_search import RandomSearchOptimizer
-from .trial import (
-    TrialHistory,
-    TrialResult,
-    TrialStatus,
-)
+from .trial import TrialHistory, TrialResult, TrialStatus
 
 __all__ = [
     # Base classes

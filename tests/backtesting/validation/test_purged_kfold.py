@@ -6,8 +6,6 @@ to ensure it prevents look-ahead bias and information leakage.
 """
 
 import unittest
-from datetime import datetime, timedelta
-from unittest.mock import Mock, patch
 
 import numpy as np
 import pandas as pd
@@ -17,7 +15,6 @@ from sklearn.linear_model import LinearRegression
 from app.backtesting.validation.purged_kfold import (
     PurgedKFold,
     PurgedKFoldConfig,
-    PurgedSplit,
     PurgedTimeSeriesSplit,
     apply_embargo,
     cross_validate_with_purging,
@@ -242,7 +239,7 @@ class TestPurgedKFold(unittest.TestCase):
     def test_validate_no_leakage(self):
         """Test leakage validation."""
         purged_cv = PurgedKFold(n_splits=5, purge_pct=0.05, embargo_pct=0.02)
-        splits = purged_cv.split(self.X, self.y)
+        purged_cv.split(self.X, self.y)
 
         # Should not have leakage
         self.assertTrue(purged_cv.validate_no_leakage(self.X))
@@ -434,7 +431,7 @@ class TestLeakageDetection(unittest.TestCase):
         X = np.random.randn(n_samples, 10)
 
         purged_cv = PurgedKFold(n_splits=5, purge_pct=0.10)
-        splits = purged_cv.split(X)
+        purged_cv.split(X)
 
         # Check that purge zone exists
         summary = purged_cv.get_split_summary()
@@ -448,7 +445,7 @@ class TestLeakageDetection(unittest.TestCase):
         X = np.random.randn(n_samples, 10)
 
         purged_cv = PurgedKFold(n_splits=5, embargo_pct=0.05, min_train_samples=100)
-        splits = purged_cv.split(X)
+        purged_cv.split(X)
 
         # Check that embargo zone exists
         summary = purged_cv.get_split_summary()

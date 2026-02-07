@@ -550,7 +550,7 @@ class FinancialMLPipeline:
                 try:
                     optimal_d, _, _ = self.fracdiff.find_optimal_d(feature_series)
                     logger.info(f"Feature {i}: optimal d = {optimal_d:.3f}")
-                except:
+                except (ValueError, TypeError, RuntimeError):
                     optimal_d = 0.5  # Default
                     logger.warning(f"Could not find optimal d for feature {i}, using {optimal_d}")
             else:
@@ -560,7 +560,7 @@ class FinancialMLPipeline:
             try:
                 frac_diff = self.fracdiff.fractional_diff(pd.Series(X[:, i]), d=optimal_d)
                 X_transformed[:, i] = frac_diff.fillna(0).values
-            except:
+            except (ValueError, TypeError, RuntimeError):
                 X_transformed[:, i] = X[:, i]  # Fallback to original
 
         return X_transformed
@@ -658,7 +658,7 @@ def calculate_lopez_de_prado_features(
                 optimal_d, _, _ = fracdiff.find_optimal_d(features[col].dropna())
                 fracdiff_series = fracdiff.fractional_diff(features[col], d=optimal_d)
                 fracdiff_features[f"{col}_fracdiff"] = fracdiff_series
-            except:
+            except (ValueError, TypeError, RuntimeError):
                 fracdiff_features[col] = features[col]
 
         X = fracdiff_features.dropna()

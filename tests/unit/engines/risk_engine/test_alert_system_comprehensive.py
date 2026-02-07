@@ -10,15 +10,13 @@ Following TDD best practices:
 """
 
 from decimal import Decimal
-from datetime import datetime, timedelta
-from typing import Dict, Any, List
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
+
 import pytest
-from hypothesis import given, strategies as st, settings
+from hypothesis import given, settings, strategies as st
 
-from app.engines.risk_engine.alert_system import AlertSystem, BaseAlertSystem
+from app.engines.risk_engine.alert_system import AlertSystem
 from app.models.portfolio import Portfolio
-
 
 # =============================================================================
 # Test Fixtures
@@ -314,7 +312,7 @@ class TestExposureThresholdChecking:
 
         alerts = alert_system.check_thresholds(sample_risk_assessment, sample_portfolio)
 
-        leverage_alerts = [a for a in alerts if 'leverage' in a.get('type', '')]
+        [a for a in alerts if 'leverage' in a.get('type', '')]
         # No specific leverage alert type in current implementation
         assert isinstance(alerts, list)
 

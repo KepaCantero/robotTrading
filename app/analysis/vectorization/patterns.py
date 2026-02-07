@@ -8,7 +8,6 @@ reference and a suggestion generator for the vectorization auditor.
 
 from __future__ import annotations
 
-from typing import Any
 
 
 class VectorizationPatterns:

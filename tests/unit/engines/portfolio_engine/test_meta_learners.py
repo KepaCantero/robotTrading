@@ -9,8 +9,7 @@ Tests cover:
 - Feature extraction
 """
 
-from datetime import datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -391,7 +390,6 @@ class TestReinforcementLearningLearner:
         """Test error handling when model not initialized."""
         # This would require mocking _initialize_model
         # For now, we test that the error would be raised
-        pass
 
     def test_optimizer_initialization(self, learner):
         """Test that optimizer is initialized."""

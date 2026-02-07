@@ -2,8 +2,9 @@
 Tests for data splitting and multiple testing correction functionality.
 """
 
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
 
 from app.backtesting.data_split import (
     DataSplit,

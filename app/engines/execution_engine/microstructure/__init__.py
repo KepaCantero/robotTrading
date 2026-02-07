@@ -37,11 +37,7 @@ from .bid_ask_bounce_removal import (
     BounceAnalysisResult,
     get_bid_ask_bounce_remover,
 )
-from .dark_pool_router import (
-    DarkPoolDecision,
-    DarkPoolRouter,
-    get_dark_pool_router,
-)
+from .dark_pool_router import DarkPoolDecision, DarkPoolRouter, get_dark_pool_router
 from .market_quality_metrics import (
     MarketQualityCalculator,
     MarketQualityMetrics,
@@ -60,11 +56,7 @@ from .order_book_analyzer import (
     OrderBookSnapshot,
     get_order_book_analyzer,
 )
-from .tick_size_constraints import (
-    TickSizeAnalysis,
-    TickSizeConstraints,
-    get_tick_size_constraints,
-)
+from .tick_size_constraints import TickSizeAnalysis, TickSizeConstraints, get_tick_size_constraints
 
 __all__ = [
     "OrderBookAnalyzer",

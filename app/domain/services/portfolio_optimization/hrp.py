@@ -16,16 +16,15 @@ from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
-from scipy.cluster.hierarchy import linkage, leaves_list, cophenet
+from scipy.cluster.hierarchy import cophenet, leaves_list, linkage
 from scipy.spatial.distance import squareform
 
 from app.domain.services.portfolio_optimization._validation import (
-    validate_covariance_matrix,
-    sanitize_covariance_matrix,
-    log_optimization_failure,
     MIN_VARIANCE_THRESHOLD,
+    log_optimization_failure,
+    sanitize_covariance_matrix,
+    validate_covariance_matrix,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -114,9 +113,7 @@ class HierarchicalRiskParity:
         """
         valid_linkage = ["ward", "single", "complete", "average"]
         if linkage_method not in valid_linkage:
-            raise ValueError(
-                f"linkage_method must be one of {valid_linkage}, got {linkage_method}"
-            )
+            raise ValueError(f"linkage_method must be one of {valid_linkage}, got {linkage_method}")
 
         valid_distance = ["euclidean", "correlation"]
         if distance_metric not in valid_distance:

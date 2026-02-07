@@ -13,19 +13,19 @@ import logging
 import traceback
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
-from app.strategies import ExecutionEngine, StrategyConfigLoader, StrategyLogger, StrategyRegistry
 from app.core.di_container import (
     get_execution_engine as di_get_execution_engine,
     get_strategy_config_loader as di_get_strategy_config_loader,
     get_strategy_logger as di_get_strategy_logger,
     get_strategy_registry as di_get_strategy_registry,
 )
+from app.strategies import ExecutionEngine, StrategyConfigLoader, StrategyLogger, StrategyRegistry
 
 from . import audit_logger, get_correlation_id
-from .security import rate_limit, require_auth, audit_log
+from .security import audit_log, rate_limit, require_auth
 
 logger = logging.getLogger(__name__)
 
@@ -207,7 +207,11 @@ async def load_strategy(
     except ValueError as e:
         logger.warning(
             "Validation error loading strategy",
-            extra={"correlation_id": correlation_id, "strategy_name": request.name, "error": str(e)},
+            extra={
+                "correlation_id": correlation_id,
+                "strategy_name": request.name,
+                "error": str(e),
+            },
         )
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:

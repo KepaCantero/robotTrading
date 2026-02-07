@@ -20,7 +20,7 @@ SOLID Principles:
 
 import logging
 from collections import deque
-from datetime import date, datetime, timedelta
+from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
@@ -29,18 +29,10 @@ from app.models.portfolio import Portfolio
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.strategies.base import BaseStrategy
 
-from .dividend_analyzer import DividendAnalyzer, DividendQualityScore
-from .dividend_portfolio_constructor import (
-    DividendPortfolio,
-    DividendPortfolioConstructor,
-)
+from .dividend_analyzer import DividendAnalyzer
+from .dividend_portfolio_constructor import DividendPortfolio, DividendPortfolioConstructor
 from .dividend_screener import DividendScreener
-from .models import (
-    DividendProfile,
-    DividendStock,
-    DividendStrategyConfig,
-    ExDividendDate,
-)
+from .models import DividendProfile, DividendStock, DividendStrategyConfig, ExDividendDate
 
 if TYPE_CHECKING:
     pass

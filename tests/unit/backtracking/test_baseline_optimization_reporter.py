@@ -4,23 +4,17 @@ Unit Tests for BaselineOptimizationReporter
 Test suite for the baseline vs optimization comparison reporter.
 """
 
-import json
 import tempfile
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from unittest.mock import Mock, patch
 
-import numpy as np
 import pytest
 
 from app.backtesting.reports.baseline_optimization_reporter import (
     BaselineOptimizationReporter,
-    ParameterChange,
-    Recommendation,
-    StatisticalTest,
 )
-from app.core.models.input_profile import InputProfile, RiskTolerance
+from app.core.models.input_profile import InputProfile
 
 
 @pytest.fixture

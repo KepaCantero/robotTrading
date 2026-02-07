@@ -76,25 +76,46 @@ _SENSITIVE_PATTERNS: Dict[str, Pattern[str]] = {
     "api_key": re.compile(r"api[_-]?key['\"]?\s*[:=]\s*['\"]?[\w\-]+", re.IGNORECASE),
     "api_secret": re.compile(r"api[_-]?secret['\"]?\s*[:=]\s*['\"]?[\w\-]+", re.IGNORECASE),
     "secret": re.compile(r"secret['\"]?\s*[:=]\s*['\"]?[\w\-]+", re.IGNORECASE),
-    "authorization": re.compile(r"authorization['\"]?\s*[:=]\s*['\"]?[Bb]earer\s+[\w\-\.]+", re.IGNORECASE),
+    "authorization": re.compile(
+        r"authorization['\"]?\s*[:=]\s*['\"]?[Bb]earer\s+[\w\-\.]+", re.IGNORECASE
+    ),
     "bearer": re.compile(r"[Bb]earer\s+[\w\-\.]+", re.IGNORECASE),
     "credit_card": re.compile(r"\b(?:\d[ -]*?){13,16}\b"),
     "ssn": re.compile(r"\b\d{3}[-.]?\d{2}[-.]?\d{4}\b"),
 }
 
 # Sensitive field names to redact in structured logging
-_SENSITIVE_FIELDS: frozenset[str] = frozenset({
-    "password", "passwd", "pwd",
-    "token", "access_token", "refresh_token", "auth_token",
-    "api_key", "apikey", "api-key", "api.key",
-    "api_secret", "apisecret", "api-secret",
-    "secret", "secret_key", "secretkey",
-    "authorization", "auth_header",
-    "bearer",
-    "credit_card", "creditcard", "cc_number",
-    "ssn", "social_security",
-    "private_key", "privatekey",
-})
+_SENSITIVE_FIELDS: frozenset[str] = frozenset(
+    {
+        "password",
+        "passwd",
+        "pwd",
+        "token",
+        "access_token",
+        "refresh_token",
+        "auth_token",
+        "api_key",
+        "apikey",
+        "api-key",
+        "api.key",
+        "api_secret",
+        "apisecret",
+        "api-secret",
+        "secret",
+        "secret_key",
+        "secretkey",
+        "authorization",
+        "auth_header",
+        "bearer",
+        "credit_card",
+        "creditcard",
+        "cc_number",
+        "ssn",
+        "social_security",
+        "private_key",
+        "privatekey",
+    }
+)
 
 
 class SensitiveDataFilter(logging.Filter):
@@ -195,14 +216,25 @@ class SensitiveDataFilter(logging.Filter):
             if any(
                 sensitive in key_lower
                 for sensitive in [
-                    "password", "passwd", "pwd",
-                    "token", "access_token", "refresh_token",
-                    "api_key", "apikey", "api_key",
-                    "api_secret", "apisecret",
-                    "secret", "secret_key",
-                    "authorization", "bearer",
-                    "credit_card", "cc_number",
-                    "ssn", "social_security",
+                    "password",
+                    "passwd",
+                    "pwd",
+                    "token",
+                    "access_token",
+                    "refresh_token",
+                    "api_key",
+                    "apikey",
+                    "api_key",
+                    "api_secret",
+                    "apisecret",
+                    "secret",
+                    "secret_key",
+                    "authorization",
+                    "bearer",
+                    "credit_card",
+                    "cc_number",
+                    "ssn",
+                    "social_security",
                     "private_key",
                 ]
             ):
@@ -212,8 +244,7 @@ class SensitiveDataFilter(logging.Filter):
             elif isinstance(value, (list, tuple)):
                 # Handle sequences
                 redacted[key] = type(value)(
-                    self._redact_dict(item) if isinstance(item, dict) else item
-                    for item in value
+                    self._redact_dict(item) if isinstance(item, dict) else item for item in value
                 )
             else:
                 # For string values, also apply pattern redaction
@@ -236,15 +267,46 @@ class SensitiveDataFilter(logging.Filter):
         """
         for key in list(record.__dict__.keys()):
             if key.startswith("_") or key in {
-                "name", "msg", "args", "asctime", "created", "filename",
-                "funcName", "levelname", "lineno", "module", "msecs",
-                "message", "pathname", "process", "processName",
-                "relativeCreated", "thread", "threadName", "exc_info",
-                "exc_text", "stack_info", "levelname", "levelno",
-                "pathname", "filename", "module", "lineno", "funcName",
-                "created", "msecs", "relativeCreated", "thread", "threadName",
-                "processName", "process", "message", "asctime",
-                "correlation_id", "elapsed_ms", "delta_ms",
+                "name",
+                "msg",
+                "args",
+                "asctime",
+                "created",
+                "filename",
+                "funcName",
+                "levelname",
+                "lineno",
+                "module",
+                "msecs",
+                "message",
+                "pathname",
+                "process",
+                "processName",
+                "relativeCreated",
+                "thread",
+                "threadName",
+                "exc_info",
+                "exc_text",
+                "stack_info",
+                "levelname",
+                "levelno",
+                "pathname",
+                "filename",
+                "module",
+                "lineno",
+                "funcName",
+                "created",
+                "msecs",
+                "relativeCreated",
+                "thread",
+                "threadName",
+                "processName",
+                "process",
+                "message",
+                "asctime",
+                "correlation_id",
+                "elapsed_ms",
+                "delta_ms",
             }:
                 continue
 
@@ -255,14 +317,24 @@ class SensitiveDataFilter(logging.Filter):
             if any(
                 sensitive in key_lower
                 for sensitive in [
-                    "password", "passwd", "pwd",
-                    "token", "access_token", "refresh_token",
-                    "api_key", "apikey",
-                    "api_secret", "apisecret",
-                    "secret", "secret_key",
-                    "authorization", "bearer",
-                    "credit_card", "cc_number",
-                    "ssn", "social_security",
+                    "password",
+                    "passwd",
+                    "pwd",
+                    "token",
+                    "access_token",
+                    "refresh_token",
+                    "api_key",
+                    "apikey",
+                    "api_secret",
+                    "apisecret",
+                    "secret",
+                    "secret_key",
+                    "authorization",
+                    "bearer",
+                    "credit_card",
+                    "cc_number",
+                    "ssn",
+                    "social_security",
                     "private_key",
                 ]
             ):
@@ -427,7 +499,7 @@ def setup_file_logging(
         all_formatter = TimedFormatter(
             '%(asctime)s - %(name)s - %(levelname)s - %(correlation_id)s - '
             '[%(elapsed_ms).2fms / %(delta_ms).2fms] - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
+            datefmt='%Y-%m-%d %H:%M:%S',
         )
         warning_formatter = TimedFormatter(
             '%(asctime)s - %(name)s - %(levelname)s - %(correlation_id)s - '
@@ -484,7 +556,7 @@ def setup_file_logging(
     # Log that logging is configured
     root_logger.info(
         f"Logging configured: warnings->{warning_log}, errors->{error_log}, all->{all_log}",
-        extra={"correlation_id": get_correlation_id()}
+        extra={"correlation_id": get_correlation_id()},
     )
 
 

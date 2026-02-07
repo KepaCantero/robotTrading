@@ -10,13 +10,11 @@ Following TDD best practices:
 """
 
 from decimal import Decimal
-from datetime import datetime
+
 import pytest
-from hypothesis import given, strategies as st, settings
-from unittest.mock import patch, MagicMock
+from hypothesis import given, settings, strategies as st
 
 from app.services.position_sizing_engine import PositionSizingEngine
-
 
 # =============================================================================
 # Test Fixtures

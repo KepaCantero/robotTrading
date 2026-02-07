@@ -12,13 +12,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-from app.domain.models.input_profile import (
-    InputProfile,
-    InvestmentObjective,
-    RiskTolerance,
-)
+from app.domain.models.input_profile import InputProfile, InvestmentObjective, RiskTolerance
 from app.domain.value_objects.investment_horizon import InvestmentHorizon
 from app.domain.value_objects.tax_residence import TaxResidence
 

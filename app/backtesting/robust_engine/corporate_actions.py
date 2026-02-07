@@ -20,21 +20,13 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
-import numpy as np
 import pandas as pd
-from numpy.typing import NDArray
 
-from .models import (
-    CorporateAction,
-    CorporateActionType,
-    Merger,
-    SpinOff,
-    StockSplit,
-)
+from .models import CorporateAction, Merger, SpinOff, StockSplit
 
 logger = logging.getLogger(__name__)
 
@@ -597,9 +589,7 @@ class CorporateActionHandler:
                 df["declaration_date"] = df["ex_date"]  # Default to ex_date
 
             # Use generator for memory-efficient processing
-            count = sum(
-                1 for _ in self._generate_and_load_actions(df)
-            )
+            count = sum(1 for _ in self._generate_and_load_actions(df))
 
             logger.info(f"Loaded {count} corporate actions from {filepath}")
             return count

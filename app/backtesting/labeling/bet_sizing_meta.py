@@ -60,25 +60,21 @@ logger = logging.getLogger(__name__)
 class BetSizingError(Exception):
     """Base exception for bet sizing errors."""
 
-    pass
 
 
 class InvalidConfigurationError(BetSizingError):
     """Raised when bet sizing configuration is invalid."""
 
-    pass
 
 
 class ModelPredictionError(BetSizingError):
     """Raised when model prediction fails."""
 
-    pass
 
 
 class ExposureLimitError(BetSizingError):
     """Raised when exposure limits are violated."""
 
-    pass
 
 
 @dataclass
@@ -689,7 +685,9 @@ class MetaLabelingBetSizing:
 
             # Validate after scaling
             new_exposure = bet_sizes.sum()
-            if new_exposure > self.config.max_total_exposure * 1.001:  # Small tolerance for floating point
+            if (
+                new_exposure > self.config.max_total_exposure * 1.001
+            ):  # Small tolerance for floating point
                 raise ExposureLimitError(
                     f"Failed to limit exposure: {new_exposure} > {self.config.max_total_exposure}"
                 )
@@ -710,9 +708,9 @@ class MetaLabelingBetSizing:
         confidence_levels = np.zeros(len(meta_probabilities), dtype=int)
 
         # Medium confidence
-        medium_mask = (
-            meta_probabilities >= self.config.confidence_threshold
-        ) & (meta_probabilities < self.config.high_confidence_threshold)
+        medium_mask = (meta_probabilities >= self.config.confidence_threshold) & (
+            meta_probabilities < self.config.high_confidence_threshold
+        )
         confidence_levels[medium_mask] = 1
 
         # High confidence

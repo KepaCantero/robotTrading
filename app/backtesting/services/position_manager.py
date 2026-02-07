@@ -137,9 +137,7 @@ class PositionManager:
         """
         return len(self.get_symbols_with_positions())
 
-    def get_total_position_value(
-        self, price_func: callable[[str], Optional[Decimal]]
-    ) -> Decimal:
+    def get_total_position_value(self, price_func: callable[[str], Optional[Decimal]]) -> Decimal:
         """
         Calculate total value of all open positions.
 

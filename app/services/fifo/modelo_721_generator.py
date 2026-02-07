@@ -23,6 +23,7 @@ Author: Claude (FIFO Database Integration - Phase 2.1)
 Date: 2026-01-25
 """
 
+import asyncio
 import csv
 import logging
 from dataclasses import dataclass, field
@@ -32,11 +33,10 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-import asyncio
 from sqlalchemy import extract, select
 from sqlalchemy.exc import (
-    DataError,
     DatabaseError,
+    DataError,
     IntegrityError,
     OperationalError,
     ProgrammingError,

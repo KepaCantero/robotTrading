@@ -321,7 +321,9 @@ class TestIntermarketRelationship:
         with pytest.raises(ValueError, match="Input should be less than or equal to 100"):
             IntermarketRelationship(**valid_relationship_data)
 
-    def test_safe_haven_validation_positive_correlation(self, valid_relationship_data: dict) -> None:
+    def test_safe_haven_validation_positive_correlation(
+        self, valid_relationship_data: dict
+    ) -> None:
         """Test safe haven relationship validation rejects positive correlation with equities."""
         valid_relationship_data["relationship_type"] = RelationshipType.SAFE_HAVEN
         valid_relationship_data["asset_class"] = AssetClass.EQUITY
@@ -329,7 +331,7 @@ class TestIntermarketRelationship:
 
         with pytest.raises(
             ValueError,
-            match="Safe haven relationship with equities should have negative correlation"
+            match="Safe haven relationship with equities should have negative correlation",
         ):
             IntermarketRelationship(**valid_relationship_data)
 
@@ -341,32 +343,30 @@ class TestIntermarketRelationship:
 
         with pytest.raises(
             ValueError,
-            match="Safe haven relationship with equities should have negative correlation"
+            match="Safe haven relationship with equities should have negative correlation",
         ):
             IntermarketRelationship(**valid_relationship_data)
 
-    def test_commodity_link_validation_negative_correlation(self, valid_relationship_data: dict) -> None:
+    def test_commodity_link_validation_negative_correlation(
+        self, valid_relationship_data: dict
+    ) -> None:
         """Test commodity link validation rejects negative correlation."""
         valid_relationship_data["relationship_type"] = RelationshipType.COMMODITY_LINK
         valid_relationship_data["asset_class"] = AssetClass.COMMODITY
         valid_relationship_data["correlation"] = Decimal("-0.5")
 
-        with pytest.raises(
-            ValueError,
-            match="Commodity link should have positive correlation"
-        ):
+        with pytest.raises(ValueError, match="Commodity link should have positive correlation"):
             IntermarketRelationship(**valid_relationship_data)
 
-    def test_commodity_link_validation_zero_correlation(self, valid_relationship_data: dict) -> None:
+    def test_commodity_link_validation_zero_correlation(
+        self, valid_relationship_data: dict
+    ) -> None:
         """Test commodity link validation rejects zero correlation."""
         valid_relationship_data["relationship_type"] = RelationshipType.COMMODITY_LINK
         valid_relationship_data["asset_class"] = AssetClass.COMMODITY
         valid_relationship_data["correlation"] = Decimal("0")
 
-        with pytest.raises(
-            ValueError,
-            match="Commodity link should have positive correlation"
-        ):
+        with pytest.raises(ValueError, match="Commodity link should have positive correlation"):
             IntermarketRelationship(**valid_relationship_data)
 
     def test_is_active_property(self, valid_relationship_data: dict) -> None:
@@ -503,37 +503,25 @@ class TestIntermarketSignal:
         valid_signal_data["strength"] = Decimal("80")
         valid_signal_data["confidence"] = Decimal("65")
 
-        with pytest.raises(
-            ValueError,
-            match="Strong signal.*requires confidence >= 70%"
-        ):
+        with pytest.raises(ValueError, match="Strong signal.*requires confidence >= 70%"):
             IntermarketSignal(**valid_signal_data)
 
         valid_signal_data["strength"] = Decimal("90")
         valid_signal_data["confidence"] = Decimal("69")
 
-        with pytest.raises(
-            ValueError,
-            match="Strong signal.*requires confidence >= 70%"
-        ):
+        with pytest.raises(ValueError, match="Strong signal.*requires confidence >= 70%"):
             IntermarketSignal(**valid_signal_data)
 
     def test_expected_move_validation_unrealistic(self, valid_signal_data: dict) -> None:
         """Test that unrealistic expected moves are rejected."""
         valid_signal_data["expected_move"] = Decimal("0.15")
 
-        with pytest.raises(
-            ValueError,
-            match="Expected move seems unrealistic"
-        ):
+        with pytest.raises(ValueError, match="Expected move seems unrealistic"):
             IntermarketSignal(**valid_signal_data)
 
         valid_signal_data["expected_move"] = Decimal("-0.12")
 
-        with pytest.raises(
-            ValueError,
-            match="Expected move seems unrealistic"
-        ):
+        with pytest.raises(ValueError, match="Expected move seems unrealistic"):
             IntermarketSignal(**valid_signal_data)
 
     def test_is_buy_property(self, valid_signal_data: dict) -> None:
@@ -572,7 +560,9 @@ class TestIntermarketSignal:
         """Test is_actionable property."""
         # Actionable signal - need to also adjust strength to avoid validation error
         valid_signal_data["confidence"] = Decimal("80")
-        valid_signal_data["strength"] = Decimal("70")  # Not strong enough to require high confidence
+        valid_signal_data["strength"] = Decimal(
+            "70"
+        )  # Not strong enough to require high confidence
         signal = IntermarketSignal(**valid_signal_data)
         assert signal.is_actionable is True
 
@@ -672,30 +662,15 @@ class TestFXIntermarketConfig:
 
     def test_stop_loss_take_profit_validation(self) -> None:
         """Test that stop loss must be less than take profit."""
-        with pytest.raises(
-            ValueError,
-            match="Stop loss.*must be less than take profit"
-        ):
-            FXIntermarketConfig(
-                stop_loss=Decimal("0.10"),
-                take_profit=Decimal("0.05")
-            )
+        with pytest.raises(ValueError, match="Stop loss.*must be less than take profit"):
+            FXIntermarketConfig(stop_loss=Decimal("0.10"), take_profit=Decimal("0.05"))
 
-        with pytest.raises(
-            ValueError,
-            match="Stop loss.*must be less than take profit"
-        ):
-            FXIntermarketConfig(
-                stop_loss=Decimal("0.05"),
-                take_profit=Decimal("0.05")
-            )
+        with pytest.raises(ValueError, match="Stop loss.*must be less than take profit"):
+            FXIntermarketConfig(stop_loss=Decimal("0.05"), take_profit=Decimal("0.05"))
 
     def test_min_correlation_too_low_validation(self) -> None:
         """Test that min correlation < 0.5 is rejected."""
-        with pytest.raises(
-            ValueError,
-            match="Min correlation too low.*Use at least 0.5"
-        ):
+        with pytest.raises(ValueError, match="Min correlation too low.*Use at least 0.5"):
             FXIntermarketConfig(min_correlation=Decimal("0.4"))
 
     def test_monitored_pairs_default(self) -> None:

@@ -18,8 +18,6 @@ import pytest
 from app.market_microstructure.ofi.models import (
     CumulativeOFI,
     OFIConfig,
-    OFIHorizon,
-    OFIPrediction,
     OFISignal,
     OFISignalConfig,
     OrderBookSnapshot,
@@ -945,7 +943,7 @@ class TestIntegration:
     def test_tick_to_signal_pipeline(self):
         """Test pipeline from tick data to signal."""
         tick_processor = TickLevelOFIProcessor(window_size=50)
-        calculator = OFICalculator()
+        OFICalculator()
 
         # Process ticks
         for i in range(20):

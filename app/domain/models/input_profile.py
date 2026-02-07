@@ -16,11 +16,7 @@ from typing import Any, Dict, Optional
 from uuid import uuid4
 
 from app.domain.value_objects.capital import Capital, CapitalTier
-from app.domain.value_objects.investment_horizon import (
-    HorizonCategory,
-    InvestmentHorizon,
-)
-from app.domain.value_objects.money import Money
+from app.domain.value_objects.investment_horizon import HorizonCategory, InvestmentHorizon
 
 
 class InvestmentObjective(str, Enum):

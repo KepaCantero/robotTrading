@@ -28,12 +28,8 @@ from app.backtesting.services.models import (
     ProfileResult,
     ProfileResultDB,
 )
-from app.backtesting.services.profile_generation_service import (
-    ProfileGenerationService,
-)
-from app.backtesting.services.report_generation_service import (
-    ReportGenerationService,
-)
+from app.backtesting.services.profile_generation_service import ProfileGenerationService
+from app.backtesting.services.report_generation_service import ReportGenerationService
 
 __all__ = [
     "ConfigurationService",

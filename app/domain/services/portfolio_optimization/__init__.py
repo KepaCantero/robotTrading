@@ -11,12 +11,12 @@ from .black_litterman import (
     View,
     create_relative_view,
 )
-from .cla import CriticalLineAlgorithm, CornerPortfolio, EfficientFrontierCLA, compute_turnover
+from .cla import CornerPortfolio, CriticalLineAlgorithm, EfficientFrontierCLA, compute_turnover
 from .covariance_calculator import CovarianceCalculator, CovarianceResult
 from .denoise_correlation import CorrelationDenoiser, DenoisedResult
 from .hrp import HierarchicalRiskParity, HRPResult, inverse_variance_weights
 from .mean_variance_optimizer import EfficientFrontier, MeanVarianceOptimizer, OptimizationResult
-from .nco import NestedClusteredOptimizer, NCOResult, get_nco_with_multiple_n
+from .nco import NCOResult, NestedClusteredOptimizer, get_nco_with_multiple_n
 from .risk_parity import ClusterBasedRiskParity, RiskParityOptimizer, RiskParityResult
 
 __all__ = [

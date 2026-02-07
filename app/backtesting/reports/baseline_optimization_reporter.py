@@ -261,7 +261,7 @@ class BaselineOptimizationReporter:
         except OSError as e:
             logger.error(
                 f"Failed to create output directory: {output_path.parent}",
-                extra={"error": str(e), "path": str(output_path.parent)}
+                extra={"error": str(e), "path": str(output_path.parent)},
             )
             raise
 
@@ -272,7 +272,7 @@ class BaselineOptimizationReporter:
         except (IOError, OSError) as e:
             logger.error(
                 f"Failed to write report to file: {output_path}",
-                extra={"error": str(e), "path": str(output_path)}
+                extra={"error": str(e), "path": str(output_path)},
             )
             raise
 

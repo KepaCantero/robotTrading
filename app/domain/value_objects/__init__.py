@@ -14,28 +14,28 @@ from .symbol import AssetClass, Exchange, Symbol
 from .tax_residence import RegulatoryRegion, TaxResidence
 
 try:
-    from .trading_parameters import TradingParameters
+    pass
 
     _trading_params_available = True
 except ImportError:
     _trading_params_available = False
 
 try:
-    from .backtest_config import BacktestConfigValue
+    pass
 
     _backtest_config_available = True
 except ImportError:
     _backtest_config_available = False
 
 try:
-    from .backtest_result import BacktestResultValue
+    pass
 
     _backtest_result_available = True
 except ImportError:
     _backtest_result_available = False
 
 try:
-    from .backtest_type import BacktestType
+    pass
 
     _backtest_type_available = True
 except ImportError:

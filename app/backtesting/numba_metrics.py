@@ -37,15 +37,13 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 try:
-    from numba import jit, njit, prange
-    from numba import __version__ as numba_version
+    from numba import __version__ as numba_version, jit
 
     NUMBA_AVAILABLE = True
     NUMBA_VERSION = numba_version
 except ImportError as e:
     error_message = (
-        "CRITICAL: numba is REQUIRED for numba_metrics module. "
-        "Install with: pip install numba"
+        "CRITICAL: numba is REQUIRED for numba_metrics module. " "Install with: pip install numba"
     )
     logger.error(error_message)
     raise RuntimeError(error_message) from e

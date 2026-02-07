@@ -5,8 +5,6 @@ This example demonstrates how to use the CorrelationAnalyzer
 to calculate real correlation from historical prices.
 """
 
-import logging
-
 import asyncio
 from decimal import Decimal
 

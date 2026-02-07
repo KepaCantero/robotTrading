@@ -1,17 +1,18 @@
 """Database health checker for infrastructure layer."""
 from __future__ import annotations
 
+import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Protocol
-
-import sqlite3
 
 
 class DatabaseHealthCheckerProtocol(Protocol):
     """Protocol for database health checking."""
 
-    def check_health(self, db_path: str | None = None, timeout: float | None = None) -> Dict[str, Any]:
+    def check_health(
+        self, db_path: str | None = None, timeout: float | None = None
+    ) -> Dict[str, Any]:
         """Check database connectivity and integrity."""
         ...
 
@@ -31,7 +32,9 @@ class SQLiteDatabaseHealthChecker:
         """Initialize with configuration."""
         self.config = config
 
-    def check_health(self, db_path: str | None = None, timeout: float | None = None) -> Dict[str, Any]:
+    def check_health(
+        self, db_path: str | None = None, timeout: float | None = None
+    ) -> Dict[str, Any]:
         """Check database connectivity and integrity."""
         path = db_path or self.config.db_path
         conn_timeout = timeout or self.config.timeout

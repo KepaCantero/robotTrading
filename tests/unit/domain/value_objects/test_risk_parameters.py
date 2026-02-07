@@ -3,8 +3,9 @@ Unit tests for RiskParameters value object.
 
 Tests the immutable RiskParameters value object following DDD patterns.
 """
-import pytest
 from decimal import Decimal
+
+import pytest
 
 from app.domain.value_objects.risk_parameters import RiskParameters
 

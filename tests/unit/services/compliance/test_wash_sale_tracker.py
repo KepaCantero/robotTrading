@@ -2,15 +2,16 @@
 Unit tests for Wash Sale Tracker.
 """
 
-import pytest
-from decimal import Decimal
 from datetime import date, timedelta
+from decimal import Decimal
+
+import pytest
 
 from app.services.compliance.wash_sale_tracker import (
     Country,
-    WashSaleTracker,
-    WashSale,
     PositionRecord,
+    WashSale,
+    WashSaleTracker,
 )
 
 

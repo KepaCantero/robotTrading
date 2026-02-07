@@ -13,10 +13,7 @@ Key Features:
 - Fallback to simulated if data unavailable
 """
 
-from app.services.correlation.analyzer import (
-    CorrelationAnalyzer,
-    CorrelationConfig,
-)
+from app.services.correlation.analyzer import CorrelationAnalyzer, CorrelationConfig
 
 __all__ = [
     "CorrelationAnalyzer",

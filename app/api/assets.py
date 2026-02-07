@@ -37,7 +37,6 @@ _DEFAULT_BACKGROUND_TASKS = BackgroundTasks()
 try:
     from slowapi import Limiter
     from slowapi.util import get_remote_address
-    from slowapi.errors import RateLimitExceeded
 
     _limiter = Limiter(key_func=get_remote_address)
     _rate_limit_enabled = True

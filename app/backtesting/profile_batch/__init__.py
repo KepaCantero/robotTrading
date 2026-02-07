@@ -29,11 +29,7 @@ Usage:
 from .baseline_executor import BaselineBacktestExecutor
 from .bayesian_optimizer import BayesianOptimizer
 from .optimization_pipeline import OptimizationPipeline
-from .optimization_validators import (
-    MonteCarloSimulator,
-    OutOfSampleValidator,
-    WalkForwardValidator,
-)
+from .optimization_validators import MonteCarloSimulator, OutOfSampleValidator, WalkForwardValidator
 from .orchestrator import ProfileBatchBacktester
 from .profile_generator import ProfileGenerator
 from .report_generator import ReportGenerator

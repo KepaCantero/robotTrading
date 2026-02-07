@@ -152,7 +152,9 @@ class TestProfitAndLossCalculator:
         )
 
         # Weighted average = (50*150 + 150*160) / 200 = 157.5
-        expected_avg = (Decimal("50") * Decimal("150") + Decimal("150") * Decimal("160")) / Decimal("200")
+        expected_avg = (Decimal("50") * Decimal("150") + Decimal("150") * Decimal("160")) / Decimal(
+            "200"
+        )
         assert result["avg_buy_price"] == expected_avg
 
     def test_calculate_close_position_pnl_with_trades(self, pnl_calculator, sample_buy_trades):

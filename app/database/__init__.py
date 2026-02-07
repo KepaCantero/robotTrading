@@ -7,7 +7,14 @@ import contextlib
 import logging
 from typing import AsyncGenerator, Optional
 
-from sqlalchemy import MetaData, create_engine, event
+from sqlalchemy import MetaData, create_engine, event, text
+from sqlalchemy.exc import (
+    DatabaseError,
+    DataError,
+    IntegrityError,
+    OperationalError,
+    ProgrammingError,
+)
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, sessionmaker
@@ -286,7 +293,7 @@ def check_database_health() -> bool:
         session = db_manager.get_sync_session()
         try:
             # Simple query to check connection
-            session.execute("SELECT 1")
+            session.execute(text("SELECT 1"))
             return True
         finally:
             session.close()
@@ -301,7 +308,7 @@ async def check_database_health_async() -> bool:
         session = db_manager.get_async_session()
         try:
             # Simple query to check connection
-            await session.execute("SELECT 1")
+            await session.execute(text("SELECT 1"))
             return True
         finally:
             await session.close()

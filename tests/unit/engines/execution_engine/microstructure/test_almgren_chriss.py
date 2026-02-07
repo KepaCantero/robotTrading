@@ -2,12 +2,11 @@
 Unit tests for Almgren-Chriss Market Impact Model.
 """
 
-import pytest
-import pandas as pd
 from decimal import Decimal
 
+import pytest
+
 from app.engines.execution_engine.microstructure.almgren_chriss_model import (
-    AlmgrenChrissModel,
     MarketImpactEstimate,
     OptimalExecutionSchedule,
     get_almgren_chriss_model,

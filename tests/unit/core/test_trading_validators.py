@@ -5,9 +5,10 @@ This module tests the validation logic that prevents catastrophic trading errors
 These tests are essential for ensuring the safety of the trading system.
 """
 
-import pytest
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
+
+import pytest
 
 from app.core.trading_validators import TradingValidator
 

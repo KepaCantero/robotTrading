@@ -43,12 +43,8 @@ Usage:
 from __future__ import annotations
 
 import logging
-from concurrent.futures import ProcessPoolExecutor, as_completed
-from dataclasses import dataclass, field
-from datetime import datetime
-from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Union
 from uuid import uuid4
 
 import numpy as np
@@ -59,7 +55,6 @@ import yaml
 from app.backtesting.comprehensive_backtest_runner import ComprehensiveBacktestRunner
 from app.backtesting.professional_reporter import ProfessionalReporter
 from app.backtesting.services import (
-    BaselineOptimizationComparison,
     BatchExecutionService,
     ConfigurationService,
     DatabaseService,
@@ -68,16 +63,10 @@ from app.backtesting.services import (
     OptimizedStrategy,
     ProfileGenerationService,
     ProfileResult,
-    ProfileResultDB,
     ReportGenerationService,
 )
 from app.core.config.profile_config_loader import ProfileConfigLoader
-from app.core.models.input_profile import (
-    InputProfile,
-    ObjectivoInversion,
-    RiskTolerance,
-)
-from app.core.tier_mapper import map_profile_tier_to_config
+from app.core.models.input_profile import InputProfile
 from app.services.profile_driven_trading.profile_strategy_mapper import (
     StrategyMapping,
     create_profile_mapper,
@@ -149,9 +138,7 @@ class ProfileBatchBacktester:
             self.config_service.get_acceptance_criteria()
         )
         self.report_service = ReportGenerationService(self.config_service.get_output_dir())
-        self.profile_gen_service = ProfileGenerationService(
-            self.config_service.get_capital_tiers()
-        )
+        self.profile_gen_service = ProfileGenerationService(self.config_service.get_capital_tiers())
         self.batch_exec_service = BatchExecutionService(
             str(config_path),
             self.database_service,
@@ -351,9 +338,7 @@ class ProfileBatchBacktester:
     # Public API - Database Queries
     # ========================================================================
 
-    def get_best_strategy(
-        self, objective: str, tier: str, risk: str
-    ) -> ConfigDict:
+    def get_best_strategy(self, objective: str, tier: str, risk: str) -> ConfigDict:
         """
         Get best strategy for specific objective, tier, and risk.
 
@@ -453,9 +438,7 @@ class ProfileBatchBacktester:
         # Get risk parameters
         tier_key = ProfileGenerationService.get_capital_tier_key(profile)
         risk_params = self.config_service.get_risk_parameters(profile.risk_tolerance.value)
-        obj_params = self.config_service.get_objective_parameters(
-            profile.objetivo_inversion.value
-        )
+        obj_params = self.config_service.get_objective_parameters(profile.objetivo_inversion.value)
 
         # Merge risk and objective parameters
         if risk_params:
@@ -651,9 +634,7 @@ class ProfileBatchBacktester:
                 rsi_buy_min = rsi_buy_config.get("min", 20)
                 rsi_buy_max = rsi_buy_config.get("max", 35)
 
-                vol_config = self.profile_config_loader.get_threshold_config(
-                    "volume_ratio", {}
-                )
+                vol_config = self.profile_config_loader.get_threshold_config("volume_ratio", {})
                 vol_min = vol_config.get("min", 1.0)
                 vol_max = vol_config.get("max", 1.5)
 
@@ -709,9 +690,7 @@ class ProfileBatchBacktester:
         best_metrics = self._run_backtest_with_params(profile, config, best_params)
 
         # Optimization history
-        history = [
-            {"trial": t.number, "value": t.value, "params": t.params} for t in study.trials
-        ]
+        history = [{"trial": t.number, "value": t.value, "params": t.params} for t in study.trials]
 
         logger.info(
             f"Optimization complete: Best Sharpe={best_value:.2f} with params={best_params}"
@@ -1039,7 +1018,7 @@ class ProfileBatchBacktester:
 
             # Extract returns (simplified - in real implementation, extract from trades)
             total_return = backtest_results.get("return_pct", 0)
-            sharpe_ratio = backtest_results.get("sharpe_ratio", 0)
+            backtest_results.get("sharpe_ratio", 0)
             max_drawdown = backtest_results.get("max_drawdown", 0)
 
             # Simplified Monte Carlo simulation

@@ -8,20 +8,18 @@ Tests verify that the Repository pattern correctly implements:
 - Cached repository
 - Error handling
 """
-import pytest
-from datetime import datetime
-from decimal import Decimal
 from typing import Optional
+
+import pytest
 
 from app.domain.repositories.base_repository import (
     AbstractRepository,
-    QueryableRepository,
     CachedRepository,
-    RepositoryError,
-    NotFoundError,
     DuplicateError,
+    NotFoundError,
+    QueryableRepository,
+    RepositoryError,
 )
-
 
 # ============================================================================
 # TEST ENTITIES

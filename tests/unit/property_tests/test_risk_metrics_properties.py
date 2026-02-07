@@ -14,18 +14,16 @@ Properties tested:
 """
 
 from decimal import Decimal
-from typing import List, Dict, Any, Optional
+from typing import List
 
 import numpy as np
 import pytest
-from hypothesis import given, settings, assume, HealthCheck
-from hypothesis import strategies as st
+from hypothesis import assume, given, settings, strategies as st
 from hypothesis.extra import numpy as np_strategies
 
-from app.backtesting.metrics import MetricsCalculator
 from app.backtesting.advanced_metrics import AdvancedMetricsCalculator
+from app.backtesting.metrics import MetricsCalculator
 from app.backtesting.models import Trade
-
 
 # ============================================================================
 # Setup
@@ -583,7 +581,7 @@ class TestWinRateProperties:
     def test_win_rate_matches_formula(self, n_trades, win_rate):
         """Calculated win rate should be reasonable."""
         n_wins = int(n_trades * win_rate)
-        n_losses = n_trades - n_wins
+        n_trades - n_wins
 
         calculated_win_rate = n_wins / n_trades if n_trades > 0 else 0
 

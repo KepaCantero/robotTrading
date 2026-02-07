@@ -31,7 +31,7 @@ from numpy.typing import NDArray
 from scipy.optimize import minimize
 
 if TYPE_CHECKING:
-    from sklearn.covariance import LedoitWolf
+    pass
 
 logger = logging.getLogger(__name__)
 

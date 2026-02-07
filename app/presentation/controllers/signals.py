@@ -146,8 +146,9 @@ async def evaluate_signal(
             )
 
     except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
-        raise HTTPException(status_code=DEFAULT_VALUE_500,
-            detail=f"Error evaluating signal: {str(e)}")
+        raise HTTPException(
+            status_code=DEFAULT_VALUE_500, detail=f"Error evaluating signal: {str(e)}"
+        )
 
 
 @router.get("/next", response_model=SignalResponse)
@@ -181,8 +182,9 @@ async def get_next_actionable_signal(
             )
 
     except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
-        raise HTTPException(status_code=DEFAULT_VALUE_500,
-            detail=f"Error getting next signal: {str(e)}")
+        raise HTTPException(
+            status_code=DEFAULT_VALUE_500, detail=f"Error getting next signal: {str(e)}"
+        )
 
 
 @router.post("/execute/{signal_id}")
@@ -273,8 +275,9 @@ async def get_signal_statistics(
         )
 
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
-        raise HTTPException(status_code=DEFAULT_VALUE_500,
-            detail=f"Error getting statistics: {str(e)}")
+        raise HTTPException(
+            status_code=DEFAULT_VALUE_500, detail=f"Error getting statistics: {str(e)}"
+        )
 
 
 @router.get("/symbol/{symbol}", response_model=List[Signal])
@@ -299,8 +302,9 @@ async def get_signals_by_symbol(
         return signals
 
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
-        raise HTTPException(status_code=DEFAULT_VALUE_500,
-            detail=f"Error getting signals for {symbol}: {str(e)}")
+        raise HTTPException(
+            status_code=DEFAULT_VALUE_500, detail=f"Error getting signals for {symbol}: {str(e)}"
+        )
 
 
 @router.post("/clear-expired")
@@ -329,8 +333,9 @@ async def clear_expired_signals(
         }
 
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
-        raise HTTPException(status_code=DEFAULT_VALUE_500,
-            detail=f"Error clearing expired signals: {str(e)}")
+        raise HTTPException(
+            status_code=DEFAULT_VALUE_500, detail=f"Error clearing expired signals: {str(e)}"
+        )
 
 
 @router.post("/thresholds")
@@ -357,26 +362,26 @@ async def update_thresholds(
         if not (0 <= confidence_threshold <= 100):
             raise HTTPException(
                 status_code=DEFAULT_VALUE_400,
-                    detail="Confidence threshold must be between 0 and 100"
+                detail="Confidence threshold must be between 0 and 100",
             )
 
         if not (0 <= liquidity_threshold <= 100):
             raise HTTPException(
                 status_code=DEFAULT_VALUE_400,
-                    detail="Liquidity threshold must be between 0 and 100"
+                detail="Liquidity threshold must be between 0 and 100",
             )
 
         service.update_thresholds(confidence_threshold, liquidity_threshold)
 
         return {
             "success": True,
-            "message": f"Updated thresholds: confidence={confidence_threshold}%,
-                liquidity={liquidity_threshold}%",
+            "message": f"Updated thresholds: confidence={confidence_threshold}%, liquidity={liquidity_threshold}%",
         }
 
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-        raise HTTPException(status_code=DEFAULT_VALUE_500,
-            detail=f"Error updating thresholds: {str(e)}")
+        raise HTTPException(
+            status_code=DEFAULT_VALUE_500, detail=f"Error updating thresholds: {str(e)}"
+        )
 
 
 @router.post("/position-size-limit")
@@ -411,8 +416,9 @@ async def update_position_size_limit(
         }
 
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-        raise HTTPException(status_code=MAX_500,
-            detail=f"Error updating position size limit: {str(e)}")
+        raise HTTPException(
+            status_code=MAX_500, detail=f"Error updating position size limit: {str(e)}"
+        )
 
 
 @router.get("/health")

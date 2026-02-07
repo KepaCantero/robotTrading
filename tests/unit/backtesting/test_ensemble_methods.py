@@ -9,23 +9,21 @@ Tests follow ESL methodologies and cover:
 5. Ensemble Comparison
 """
 
-import pytest
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import LinearRegression, LogisticRegression, Ridge
-from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
+import pytest
+from sklearn.linear_model import LinearRegression, Ridge
+from sklearn.tree import DecisionTreeRegressor
 
 from app.backtesting.ensemble_methods import (
     BaggingConfig,
     BaggingEnsemble,
     BoostingConfig,
     BoostingEnsemble,
-    BoostingEnsemble,
     EnsembleAnalyzer,
     EnsembleMethod,
     EnsembleResult,
     RandomForestEnsemble,
-    StackingConfig,
     StackingEnsemble,
     bagging_ensemble,
     stacking_ensemble,

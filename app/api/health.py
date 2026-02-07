@@ -18,7 +18,6 @@ from pydantic import BaseModel
 from app.infrastructure.health import (
     DatabaseHealthCheckerFactory,
     DatabaseHealthCheckerProtocol,
-    SQLiteDatabaseHealthChecker,
 )
 
 logger = logging.getLogger(__name__)
@@ -158,11 +157,17 @@ class HealthChecker:
 
             # Log based on status
             if status == "unhealthy":
-                logger.error(f"Memory health check: {status} - {result['memory_mb']:.1f}MB used ({result['memory_percent']:.1f}%)")
+                logger.error(
+                    f"Memory health check: {status} - {result['memory_mb']:.1f}MB used ({result['memory_percent']:.1f}%)"
+                )
             elif status == "degraded":
-                logger.warning(f"Memory health check: {status} - {result['memory_mb']:.1f}MB used ({result['memory_percent']:.1f}%)")
+                logger.warning(
+                    f"Memory health check: {status} - {result['memory_mb']:.1f}MB used ({result['memory_percent']:.1f}%)"
+                )
             else:
-                logger.info(f"Memory health check: {status} - {result['memory_mb']:.1f}MB used ({result['memory_percent']:.1f}%)")
+                logger.info(
+                    f"Memory health check: {status} - {result['memory_mb']:.1f}MB used ({result['memory_percent']:.1f}%)"
+                )
 
             return result
 

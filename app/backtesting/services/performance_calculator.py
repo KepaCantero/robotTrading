@@ -169,9 +169,7 @@ class PerformanceMetricsCalculator:
             return None
 
         # Calculate returns from closed trades
-        closed_trades = [
-            t for t in trades if t.pnl is not None and t.exit_time is not None
-        ]
+        closed_trades = [t for t in trades if t.pnl is not None and t.exit_time is not None]
         closed_trades.sort(key=lambda t: t.exit_time)
 
         if len(closed_trades) < 2:
@@ -223,7 +221,7 @@ class PerformanceMetricsCalculator:
         Returns:
             PerformanceMetrics with all zeros
         """
-        capital = initial_capital or self.config.initial_capital
+        initial_capital or self.config.initial_capital
 
         return PerformanceMetrics(
             total_trades=0,
@@ -310,9 +308,7 @@ class PerformanceMetricsCalculator:
         Returns:
             Expectancy per trade
         """
-        closed_trades = [
-            t for t in trades if t.status == TradeStatus.CLOSED and t.pnl is not None
-        ]
+        closed_trades = [t for t in trades if t.status == TradeStatus.CLOSED and t.pnl is not None]
 
         if not closed_trades:
             return Decimal("0")

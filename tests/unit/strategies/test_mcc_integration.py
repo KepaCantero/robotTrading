@@ -5,9 +5,10 @@ This test verifies that MCC is properly calculated and used for model evaluation
 as required by López de Prado's Financial ML methodologies (Chapter 3).
 """
 
+from unittest.mock import Mock, patch
+
 import numpy as np
 import pytest
-from unittest.mock import Mock, patch
 
 
 class TestMCCIntegration:
@@ -92,10 +93,11 @@ class TestMCCIntegration:
     def test_mcc_threshold_warning(self, mock_train_data, mock_model):
         """Test that low MCC triggers warning."""
         try:
+            pass
+
             from app.strategies.momentum_modular.learning.supervised_learning_engine import (
                 SupervisedLearningEngine,
             )
-            import logging
 
             # Create engine with mock configuration
             config = {
@@ -191,12 +193,12 @@ class TestMCCIntegration:
     def test_supervised_learning_engine_mcc_integration(self):
         """Test that SupervisedLearningEngine properly integrates MCC."""
         try:
+            # Verify the import is present
+            import inspect
+
             from app.strategies.momentum_modular.learning.supervised_learning_engine import (
                 SupervisedLearningEngine,
             )
-
-            # Verify the import is present
-            import inspect
 
             source = inspect.getsource(SupervisedLearningEngine._evaluate_model)
 

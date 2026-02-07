@@ -12,19 +12,13 @@ Properties tested:
 """
 
 from decimal import Decimal
-from typing import Dict, Union
 
 import numpy as np
 import pytest
-from hypothesis import given, settings, assume, HealthCheck
-from hypothesis import strategies as st
+from hypothesis import HealthCheck, assume, given, settings, strategies as st
 from hypothesis.extra import numpy as np_strategies
 
-from app.services.position_sizing_engine import (
-    PositionSizingEngine,
-    MetaLabelingPositionSizer,
-)
-
+from app.services.position_sizing_engine import MetaLabelingPositionSizer, PositionSizingEngine
 
 # ============================================================================
 # Test Strategies

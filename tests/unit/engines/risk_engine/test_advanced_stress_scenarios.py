@@ -4,14 +4,15 @@ Unit tests for Advanced Stress Testing Scenarios - Hull Chapter 20
 Tests for liquidity, counterparty, and operational risk stress testing.
 """
 
-import pytest
-import numpy as np
 from unittest.mock import Mock
+
+import pytest
+
 from app.engines.risk_engine.stress_testers.advanced_stress_scenarios import (
-    LiquidityRiskStressTester,
-    CounterpartyRiskStressTester,
-    OperationalRiskStressTester,
     AdvancedStressTestOrchestrator,
+    CounterpartyRiskStressTester,
+    LiquidityRiskStressTester,
+    OperationalRiskStressTester,
 )
 
 

@@ -25,19 +25,9 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 # Core backtesting modules (Fase 1 + Fase 2)
-from app.backtesting.core import (
-    BacktestConfigLoader,
-    BacktestOrchestrator,
-)
-from app.backtesting.core.error_handling import (
-    MutexError,
-    TrainingError,
-    train_with_retry,
-)
-from app.backtesting.core.executor import (
-    ProcessPoolBacktestExecutor,
-    SimpleBacktestExecutor,
-)
+from app.backtesting.core import BacktestConfigLoader, BacktestOrchestrator
+from app.backtesting.core.error_handling import MutexError, TrainingError, train_with_retry
+from app.backtesting.core.executor import ProcessPoolBacktestExecutor, SimpleBacktestExecutor
 from app.backtesting.core.memory_manager import AggressiveMemoryManager
 
 # Data loading

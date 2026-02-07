@@ -14,7 +14,7 @@ Total: 60+ tests
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, time
+from datetime import datetime
 from decimal import Decimal
 
 import pytest
@@ -23,22 +23,15 @@ from app.backtesting.execution import (
     CostConfig,
     ExecutionConfig,
     ImpactConfig,
-    MarketImpact,
     MarketImpactModel,
     OrderFillSimulator,
     RealisticExecutionModel,
     SlippageConfig,
-    SlippageEstimate,
     SlippageModel,
-    TransactionCost,
     TransactionCostCalculator,
 )
 from app.backtesting.execution.models import (
-    CostBreakdown,
-    ExecutionResult,
-    ExecutionSummary,
     FillReason,
-    FillResult,
     MarketSnapshot,
     Order,
     OrderSide,

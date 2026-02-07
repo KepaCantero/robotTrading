@@ -3,9 +3,9 @@ Unit tests for EWMA VaR Calculator.
 
 Tests for Exponentially Weighted Moving Average VaR calculation.
 """
-import pytest
+
 import numpy as np
-from unittest.mock import patch, Mock
+import pytest
 
 from app.engines.risk_engine.var_calculators.ewma_var import EWMAVaRCalculator
 

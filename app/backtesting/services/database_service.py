@@ -14,9 +14,8 @@ from __future__ import annotations
 
 import logging
 import threading
-from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 from uuid import uuid4
 
 from sqlalchemy import create_engine
@@ -76,9 +75,7 @@ class DatabaseService:
             with self._db_lock:
                 # Check if exists
                 existing = (
-                    session.query(ProfileResultDB)
-                    .filter_by(profile_id=result.profile_id)
-                    .first()
+                    session.query(ProfileResultDB).filter_by(profile_id=result.profile_id).first()
                 )
 
                 capital_tier_key = self._get_capital_tier_key(result.profile)
@@ -166,9 +163,15 @@ class DatabaseService:
                             "optimized_return": result.optimization_results.get("return_pct"),
                             "optimized_max_dd": result.optimization_results.get("max_drawdown"),
                             "optimized_win_rate": result.optimization_results.get("win_rate"),
-                            "sharpe_improvement": result.improvement_metrics.get("sharpe_improvement"),
-                            "return_improvement": result.improvement_metrics.get("return_improvement"),
-                            "max_dd_improvement": result.improvement_metrics.get("max_dd_improvement"),
+                            "sharpe_improvement": result.improvement_metrics.get(
+                                "sharpe_improvement"
+                            ),
+                            "return_improvement": result.improvement_metrics.get(
+                                "return_improvement"
+                            ),
+                            "max_dd_improvement": result.improvement_metrics.get(
+                                "max_dd_improvement"
+                            ),
                             "win_rate_improvement": result.improvement_metrics.get(
                                 "win_rate_improvement"
                             ),

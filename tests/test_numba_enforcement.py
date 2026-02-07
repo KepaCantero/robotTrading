@@ -17,10 +17,10 @@ Version: 2.0.0 - MANDATORY NUMBA ENFORCEMENT
 Compliance: Rule 19, Rule 23 - High Performance Python
 """
 
-import pytest
-import numpy as np
 import time
-from typing import List
+
+import numpy as np
+import pytest
 
 # ============================================================================
 # Test Numba Availability
@@ -52,7 +52,7 @@ def test_numba_mandatory_available():
 
 def test_numba_version_requirement():
     """Test that Numba version meets minimum requirement."""
-    import numba
+
     from app.core.numba_enforcer import get_numba_version
 
     version = get_numba_version()
@@ -74,9 +74,9 @@ def test_numba_accelerators_available():
     from app.core.numba_accelerators import (
         NUMBA_AVAILABLE,
         NUMBA_VERSION,
-        calculate_rsi_numba,
         calculate_ema_numba,
         calculate_macd_numba,
+        calculate_rsi_numba,
     )
 
     assert NUMBA_AVAILABLE is True, "Numba must be available"
@@ -124,8 +124,8 @@ def test_numba_risk_available():
     from app.services.numba_risk import (
         NUMBA_AVAILABLE,
         NUMBA_VERSION,
-        calculate_historical_var_numba,
         calculate_correlation_matrix_numba,
+        calculate_historical_var_numba,
         calculate_portfolio_volatility_numba,
     )
 
@@ -343,7 +343,7 @@ def test_rsi_performance_improvement():
     # Adjust for the fact that we ran Python 10x fewer times
     speedup = (python_time * 10) / numba_time
 
-    print(f"\nRSI Performance:")
+    print("\nRSI Performance:")
     print(f"  Numba time (100 iterations): {numba_time:.4f}s")
     print(f"  Python time (10 iterations): {python_time:.4f}s")
     print(f"  Estimated speedup: {speedup:.1f}x")
@@ -375,7 +375,7 @@ def test_correlation_performance_improvement():
     pandas_time = time.time() - start
 
     # Numba should be competitive or faster
-    print(f"\nCorrelation Matrix Performance (5000 periods, 50 assets):")
+    print("\nCorrelation Matrix Performance (5000 periods, 50 assets):")
     print(f"  Numba time: {numba_time:.4f}s")
     print(f"  Pandas time: {pandas_time:.4f}s")
 
@@ -403,8 +403,8 @@ def test_numba_enforcer_startup():
 
 def test_numba_function_verification():
     """Test Numba function verification."""
-    from app.core.numba_enforcer import verify_numba_function
     from app.core.numba_accelerators import calculate_rsi_numba
+    from app.core.numba_enforcer import verify_numba_function
 
     prices = np.array(
         [
@@ -439,9 +439,9 @@ def test_numba_function_verification():
 def test_numba_integration_with_metrics_calculator():
     """Test that Numba functions integrate properly with metrics calculator."""
     from app.backtesting.numba_metrics import (
+        calculate_max_drawdown_numba,
         calculate_returns_numba,
         calculate_sharpe_numba,
-        calculate_max_drawdown_numba,
     )
 
     # Create test data
@@ -463,7 +463,6 @@ def test_numba_integration_with_risk_calculator():
     """Test that Numba functions integrate properly with risk calculator."""
     from app.services.numba_risk import (
         calculate_portfolio_var_numba,
-        calculate_historical_cvar_numba,
     )
 
     # Create test data

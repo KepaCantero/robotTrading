@@ -12,7 +12,6 @@ momentum strategies, with specific considerations for crypto markets:
 """
 
 import logging
-from collections import defaultdict
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Dict, List, Optional
@@ -414,7 +413,7 @@ class CryptoPortfolioConstructor:
         # - Avg altcoin vol = 100%
         # - Correlation matrix (simplified)
 
-        btc_pos = portfolio.btc_position
+        portfolio.btc_position
         btc_vol = Decimal("60")  # 60% annual vol for BTC
         btc_weight = portfolio.btc_weight
 

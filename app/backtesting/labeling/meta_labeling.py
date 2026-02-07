@@ -36,25 +36,21 @@ logger = logging.getLogger(__name__)
 class MetaLabelingError(Exception):
     """Base exception for meta-labeling errors."""
 
-    pass
 
 
 class ModelNotFittedError(MetaLabelingError):
     """Raised when attempting to predict before fitting the model."""
 
-    pass
 
 
 class DataValidationError(MetaLabelingError):
     """Raised when input data validation fails."""
 
-    pass
 
 
 class BetSizingValidationError(MetaLabelingError):
     """Raised when bet sizing validation fails (TRD-001)."""
 
-    pass
 
 
 @dataclass
@@ -202,9 +198,7 @@ class MetaLabeling:
 
         # Validate inputs (CC-006: Specific exception types)
         if len(X) != len(y):
-            raise DataValidationError(
-                f"X and y must have same length: {len(X)} != {len(y)}"
-            )
+            raise DataValidationError(f"X and y must have same length: {len(X)} != {len(y)}")
 
         if len(X) == 0:
             raise DataValidationError("X and y must have at least one sample")
@@ -279,9 +273,7 @@ class MetaLabeling:
             >>> print(f"Bet sizes: {result.bet_sizes}")
         """
         if not self._is_fitted:
-            raise ModelNotFittedError(
-                "Model must be fitted before prediction. Call fit() first."
-            )
+            raise ModelNotFittedError("Model must be fitted before prediction. Call fit() first.")
 
         # Convert to numpy array
         if isinstance(X, pd.DataFrame):
@@ -504,9 +496,7 @@ class MetaLabeling:
 
         else:
             logger.error(f"Unknown bet sizing method: {self.config.bet_sizing_method}")
-            raise DataValidationError(
-                f"Unknown bet sizing method: {self.config.bet_sizing_method}"
-            )
+            raise DataValidationError(f"Unknown bet sizing method: {self.config.bet_sizing_method}")
 
         # Clip to [min_bet_size, max_bet_size]
         bet_size = np.clip(bet_size, self.config.min_bet_size, self.config.max_bet_size)

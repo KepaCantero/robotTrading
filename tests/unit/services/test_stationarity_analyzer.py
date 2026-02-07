@@ -2,17 +2,17 @@
 Unit tests for Stationarity Analyzer (Ernest Chan methodologies)
 """
 
-import pytest
+
 import numpy as np
 import pandas as pd
-from datetime import datetime
+import pytest
 
 from app.services.stationarity_analyzer import (
-    StationarityAnalyzer,
     CointegrationAnalyzer,
-    find_cointegrated_pairs,
-    StationarityTestResult,
     CointegrationTestResult,
+    StationarityAnalyzer,
+    StationarityTestResult,
+    find_cointegrated_pairs,
 )
 
 

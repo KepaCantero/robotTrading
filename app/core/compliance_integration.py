@@ -26,7 +26,6 @@ Date: 2026-02-03
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
@@ -38,24 +37,23 @@ import pandas as pd
 from app.core.compliance import (
     ComprehensivePostTradeAnalysis,
     ComprehensivePreTradeAnalysis,
+    PortfolioComplianceOptimizer,
     PortfolioOptimizationResult,
     PostTradeComplianceChecker,
     PreTradeComplianceChecker,
-    PortfolioComplianceOptimizer,
     get_service_registry,
 )
 
 # Add project root to path for imports
 project_root = Path(__file__).parent.parent.parent
 import sys
+
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
 # Legacy imports for backward compatibility
 try:
-    from app.engines.execution_engine.microstructure.order_book_analyzer import (
-        OrderBookSnapshot,
-    )
+    from app.engines.execution_engine.microstructure.order_book_analyzer import OrderBookSnapshot
 except ImportError:
     OrderBookSnapshot = None
 
@@ -154,30 +152,24 @@ class ComplianceIntegrationFacade:
         availability = self._registry.get_availability_report()
 
         # Map to legacy names
-        self.chan_available = (
-            availability.get("regime_detector", False) or
-            availability.get("portfolio_optimizer", False)
+        self.chan_available = availability.get("regime_detector", False) or availability.get(
+            "portfolio_optimizer", False
         )
-        self.narang_available = (
-            availability.get("alpha_model", False) or
-            availability.get("risk_model", False)
+        self.narang_available = availability.get("alpha_model", False) or availability.get(
+            "risk_model", False
         )
-        self.lopez_de_prado_available = (
-            availability.get("meta_labeling", False) or
-            availability.get("purged_cv", False)
-        )
+        self.lopez_de_prado_available = availability.get(
+            "meta_labeling", False
+        ) or availability.get("purged_cv", False)
         self.harris_available = availability.get("harris_integrator", False)
-        self.ohara_available = (
-            availability.get("liquidity_analyzer", False) or
-            availability.get("order_flow_analyzer", False)
+        self.ohara_available = availability.get("liquidity_analyzer", False) or availability.get(
+            "order_flow_analyzer", False
         )
-        self.hull_available = (
-            availability.get("var_calculator", False) or
-            availability.get("greeks_calculator", False)
+        self.hull_available = availability.get("var_calculator", False) or availability.get(
+            "greeks_calculator", False
         )
-        self.sre_available = (
-            availability.get("golden_signals", False) or
-            availability.get("trading_metrics", False)
+        self.sre_available = availability.get("golden_signals", False) or availability.get(
+            "trading_metrics", False
         )
 
     # =========================================================================
@@ -369,7 +361,6 @@ class ComplianceIntegrationEngine(ComplianceIntegrationFacade):
     Existing code using ComplianceIntegrationEngine will continue to work.
     """
 
-    pass
 
 
 # =============================================================================

@@ -5,14 +5,9 @@ Tests the YAMLConfigLoader which loads YAML configs with validation,
 tier-specific overrides, thread-safe caching, and structured logging with structlog.
 """
 
-import json
-import os
 import tempfile
 import threading
-import time
 from pathlib import Path
-from typing import Any, Dict
-from unittest.mock import Mock, patch
 
 import pytest
 import yaml
@@ -20,14 +15,14 @@ import yaml
 from app.core.config_loader import (
     YAMLConfigLoader,
     get_config_loader,
-    load_strategy_stock_allocator_config,
-    load_momentum_filters_config,
-    load_market_detectors_config,
-    load_strategy_defaults_config,
-    load_learning_parameters_config,
-    get_filter_config,
     get_detector_config,
+    get_filter_config,
     get_strategy_config,
+    load_learning_parameters_config,
+    load_market_detectors_config,
+    load_momentum_filters_config,
+    load_strategy_defaults_config,
+    load_strategy_stock_allocator_config,
 )
 
 
@@ -36,7 +31,6 @@ class TestYAMLConfigLoaderStructlog:
 
     def test_logger_is_structlog_instance(self):
         """Test that YAMLConfigLoader uses structlog for logging."""
-        import structlog
 
         # The logger is a module-level variable using structlog
         from app.core.config_loader import logger
@@ -54,9 +48,7 @@ class TestYAMLConfigLoaderStructlog:
 
         # Configure structlog for testing
         structlog.configure(
-            processors=[
-                structlog.processors.JSONRenderer()
-            ],
+            processors=[structlog.processors.JSONRenderer()],
             wrapper_class=structlog.make_filtering_bound_logger(20),  # INFO level
             context_class=dict,
             logger_factory=structlog.PrintLoggerFactory(),
@@ -84,7 +76,7 @@ class TestYAMLConfigLoaderStructlog:
                 structlog.stdlib.add_log_level,
                 structlog.stdlib.PositionalArgumentsFormatter(),
                 capture_log,
-                structlog.processors.JSONRenderer()
+                structlog.processors.JSONRenderer(),
             ],
             wrapper_class=structlog.make_filtering_bound_logger(20),
             context_class=dict,
@@ -92,11 +84,7 @@ class TestYAMLConfigLoaderStructlog:
         )
 
         # Create test config file
-        config_data = {
-            "test_section": {
-                "test_key": "test_value"
-            }
-        }
+        config_data = {"test_section": {"test_key": "test_value"}}
         config_file = tmp_path / "test_config.yaml"
         with open(config_file, 'w') as f:
             yaml.dump(config_data, f)
@@ -123,13 +111,8 @@ class TestYAMLConfigLoaderStructlog:
         """Test that structlog logs warning for sensitive data keys."""
         # Create config with sensitive keys
         config_data = {
-            "database": {
-                "password": "secret123",
-                "host": "localhost"
-            },
-            "api": {
-                "api_key": "key_abc"
-            }
+            "database": {"password": "secret123", "host": "localhost"},
+            "api": {"api_key": "key_abc"},
         }
         config_file = tmp_path / "sensitive_config.yaml"
         with open(config_file, 'w') as f:
@@ -187,7 +170,7 @@ class TestYAMLConfigLoaderInit:
 
     def test_cache_lock_is_thread_safe(self):
         """Test that cache lock is RLock for thread safety."""
-        import _thread
+
         loader = YAMLConfigLoader()
 
         # Check that the lock has RLock behavior (acquire/release methods)
@@ -219,14 +202,8 @@ class TestYAMLConfigLoaderLoad:
 
             # Create valid config file
             config_data = {
-                "section1": {
-                    "key1": "value1",
-                    "key2": 42
-                },
-                "section2": {
-                    "enabled": True,
-                    "threshold": 0.5
-                }
+                "section1": {"key1": "value1", "key2": 42},
+                "section2": {"enabled": True, "threshold": 0.5},
             }
             config_file = tmp_path / "test_config.yaml"
             with open(config_file, 'w') as f:
@@ -317,11 +294,8 @@ class TestYAMLConfigLoaderLoad:
     def test_load_detects_sensitive_keys(self, temp_config_dir):
         """Test that load detects sensitive data keys."""
         config_data = {
-            "database": {
-                "password": "secret123",
-                "api_token": "token_abc"
-            },
-            "normal_key": "normal_value"
+            "database": {"password": "secret123", "api_token": "token_abc"},
+            "normal_key": "normal_value",
         }
         config_file = temp_config_dir / "sensitive.yaml"
         with open(config_file, 'w') as f:
@@ -452,13 +426,7 @@ class TestYAMLConfigLoaderGetNested:
     def test_get_nested_with_dot_notation(self):
         """Test getting nested value with dot notation."""
         loader = YAMLConfigLoader()
-        config = {
-            "level1": {
-                "level2": {
-                    "level3": "deep_value"
-                }
-            }
-        }
+        config = {"level1": {"level2": {"level3": "deep_value"}}}
 
         result = loader.get_nested(config, "level1.level2.level3")
 
@@ -485,11 +453,7 @@ class TestYAMLConfigLoaderGetNested:
     def test_get_nested_with_custom_separator(self):
         """Test get_nested with custom separator."""
         loader = YAMLConfigLoader()
-        config = {
-            "level1": {
-                "level2": "value"
-            }
-        }
+        config = {"level1": {"level2": "value"}}
 
         result = loader.get_nested(config, "level1/level2", separator="/")
 
@@ -498,11 +462,7 @@ class TestYAMLConfigLoaderGetNested:
     def test_get_nested_partial_path(self):
         """Test get_nested with partial path."""
         loader = YAMLConfigLoader()
-        config = {
-            "level1": {
-                "level2": "value"
-            }
-        }
+        config = {"level1": {"level2": "value"}}
 
         result = loader.get_nested(config, "level1.nonexistent")
 
@@ -511,9 +471,7 @@ class TestYAMLConfigLoaderGetNested:
     def test_get_nested_non_dict_in_path(self):
         """Test get_nested when path contains non-dict value."""
         loader = YAMLConfigLoader()
-        config = {
-            "level1": "string_value"
-        }
+        config = {"level1": "string_value"}
 
         result = loader.get_nested(config, "level1.level2")
 
@@ -549,35 +507,16 @@ class TestYAMLConfigLoaderTierOverrides:
 
             config_data = {
                 "base_param": "base_value",
-                "exposure": {
-                    "max_strategy_exposure": 0.50,
-                    "max_pair_exposure": 0.15
-                },
-                "data_validation": {
-                    "lookback_max_days": 126,
-                    "min_liquidity_usd": 500000
-                },
+                "exposure": {"max_strategy_exposure": 0.50, "max_pair_exposure": 0.15},
+                "data_validation": {"lookback_max_days": 126, "min_liquidity_usd": 500000},
                 "tiers": {
                     "micro": {
-                        "exposure": {
-                            "max_strategy_exposure": 0.30,
-                            "max_pair_exposure": 0.10
-                        },
-                        "data_validation": {
-                            "min_liquidity_usd": 100000
-                        }
+                        "exposure": {"max_strategy_exposure": 0.30, "max_pair_exposure": 0.10},
+                        "data_validation": {"min_liquidity_usd": 100000},
                     },
-                    "small": {
-                        "exposure": {
-                            "max_strategy_exposure": 0.40
-                        }
-                    },
-                    "large": {
-                        "exposure": {
-                            "max_strategy_exposure": 0.60
-                        }
-                    }
-                }
+                    "small": {"exposure": {"max_strategy_exposure": 0.40}},
+                    "large": {"exposure": {"max_strategy_exposure": 0.60}},
+                },
             }
             config_file = tmp_path / "tier_config.yaml"
             with open(config_file, 'w') as f:
@@ -654,22 +593,12 @@ class TestYAMLConfigLoaderTierOverrides:
 
         base = {
             "level1": {
-                "level2": {
-                    "key1": "base_value1",
-                    "key2": "base_value2"
-                },
-                "key3": "base_value3"
+                "level2": {"key1": "base_value1", "key2": "base_value2"},
+                "key3": "base_value3",
             }
         }
 
-        overrides = {
-            "level1": {
-                "level2": {
-                    "key1": "override_value1"
-                },
-                "key3": "override_value3"
-            }
-        }
+        overrides = {"level1": {"level2": {"key1": "override_value1"}, "key3": "override_value3"}}
 
         result = loader._apply_overrides(base, overrides)
 
@@ -713,11 +642,7 @@ class TestYAMLConfigLoaderValidation:
 
     def test_validate_max_strategy_exposure_valid(self, temp_config_dir):
         """Test validation of valid max_strategy_exposure."""
-        config_data = {
-            "exposure": {
-                "max_strategy_exposure": 0.50
-            }
-        }
+        config_data = {"exposure": {"max_strategy_exposure": 0.50}}
         config_file = temp_config_dir / "valid_exposure.yaml"
         with open(config_file, 'w') as f:
             yaml.dump(config_data, f)
@@ -729,11 +654,7 @@ class TestYAMLConfigLoaderValidation:
 
     def test_validate_max_strategy_exposure_invalid(self, temp_config_dir):
         """Test validation of invalid max_strategy_exposure (> 1)."""
-        config_data = {
-            "exposure": {
-                "max_strategy_exposure": 1.5
-            }
-        }
+        config_data = {"exposure": {"max_strategy_exposure": 1.5}}
         config_file = temp_config_dir / "invalid_exposure.yaml"
         with open(config_file, 'w') as f:
             yaml.dump(config_data, f)
@@ -746,11 +667,7 @@ class TestYAMLConfigLoaderValidation:
 
     def test_validate_lookback_max_days_valid(self, temp_config_dir):
         """Test validation of valid lookback_max_days."""
-        config_data = {
-            "data_validation": {
-                "lookback_max_days": 126
-            }
-        }
+        config_data = {"data_validation": {"lookback_max_days": 126}}
         config_file = temp_config_dir / "valid_lookback.yaml"
         with open(config_file, 'w') as f:
             yaml.dump(config_data, f)
@@ -762,11 +679,7 @@ class TestYAMLConfigLoaderValidation:
 
     def test_validate_lookback_max_days_invalid(self, temp_config_dir):
         """Test validation of invalid lookback_max_days (negative)."""
-        config_data = {
-            "data_validation": {
-                "lookback_max_days": -10
-            }
-        }
+        config_data = {"data_validation": {"lookback_max_days": -10}}
         config_file = temp_config_dir / "invalid_lookback.yaml"
         with open(config_file, 'w') as f:
             yaml.dump(config_data, f)
@@ -779,11 +692,7 @@ class TestYAMLConfigLoaderValidation:
 
     def test_validate_enabled_boolean(self, temp_config_dir):
         """Test validation of enabled boolean field."""
-        config_data = {
-            "feature": {
-                "enabled": True
-            }
-        }
+        config_data = {"feature": {"enabled": True}}
         config_file = temp_config_dir / "enabled_config.yaml"
         with open(config_file, 'w') as f:
             yaml.dump(config_data, f)
@@ -823,14 +732,7 @@ class TestYAMLConfigLoaderValidation:
 
     def test_validate_nested_config(self, temp_config_dir):
         """Test validation of nested configuration."""
-        config_data = {
-            "level1": {
-                "level2": {
-                    "enabled": True,
-                    "max_strategy_exposure": 0.75
-                }
-            }
-        }
+        config_data = {"level1": {"level2": {"enabled": True, "max_strategy_exposure": 0.75}}}
         config_file = temp_config_dir / "nested_config.yaml"
         with open(config_file, 'w') as f:
             yaml.dump(config_data, f)
@@ -869,9 +771,7 @@ class TestYAMLConfigLoaderMethods:
 
             config_data = {
                 "test_param": "test_value",
-                "tiers": {
-                    "micro": {"test_param": "micro_value"}
-                }
+                "tiers": {"micro": {"test_param": "micro_value"}},
             }
             config_file = tmp_path / "strategy_stock_allocator.yaml"
             with open(config_file, 'w') as f:
@@ -900,8 +800,7 @@ class TestGlobalConfigFunctions:
     def test_get_config_loader_singleton(self):
         """Test that get_config_loader returns singleton instance."""
         # Reset singleton
-        from app.core.config_loader import _default_loader
-        _default_loader = None
+
 
         loader1 = get_config_loader()
         loader2 = get_config_loader()
@@ -1046,7 +945,7 @@ class TestYAMLConfigLoaderEdgeCases:
         config_data = {
             "key_with_underscore": "value",
             "key-with-dash": "value2",
-            "key.with.dots": "value3"
+            "key.with.dots": "value3",
         }
         config_file = tmp_path / "special_chars.yaml"
         with open(config_file, 'w') as f:
@@ -1080,11 +979,7 @@ class TestYAMLConfigLoaderEdgeCases:
 
     def test_config_with_unicode(self, tmp_path):
         """Test loading config with unicode characters."""
-        config_data = {
-            "spanish": "Hola ñoño",
-            "emoji": "🚀📈",
-            "chinese": "你好"
-        }
+        config_data = {"spanish": "Hola ñoño", "emoji": "🚀📈", "chinese": "你好"}
         config_file = tmp_path / "unicode.yaml"
         with open(config_file, 'w', encoding='utf-8') as f:
             yaml.dump(config_data, f)
@@ -1099,17 +994,7 @@ class TestYAMLConfigLoaderEdgeCases:
     def test_config_with_very_deep_nesting(self, tmp_path):
         """Test loading config with very deep nesting."""
         config_data = {
-            "level1": {
-                "level2": {
-                    "level3": {
-                        "level4": {
-                            "level5": {
-                                "deep_value": "found"
-                            }
-                        }
-                    }
-                }
-            }
+            "level1": {"level2": {"level3": {"level4": {"level5": {"deep_value": "found"}}}}}
         }
         config_file = tmp_path / "deep_nested.yaml"
         with open(config_file, 'w') as f:
@@ -1126,7 +1011,7 @@ class TestYAMLConfigLoaderEdgeCases:
         config_data = {
             "large_int": 999999999999,
             "large_float": 999999.999999,
-            "small_float": 0.000001
+            "small_float": 0.000001,
         }
         config_file = tmp_path / "large_values.yaml"
         with open(config_file, 'w') as f:
@@ -1141,10 +1026,7 @@ class TestYAMLConfigLoaderEdgeCases:
 
     def test_config_with_null_values(self, tmp_path):
         """Test loading config with explicit null values."""
-        config_data = {
-            "null_key": None,
-            "string_key": "value"
-        }
+        config_data = {"null_key": None, "string_key": "value"}
         config_file = tmp_path / "null_values.yaml"
         with open(config_file, 'w') as f:
             yaml.dump(config_data, f)

@@ -21,38 +21,30 @@ import logging
 import os
 import tempfile
 import uuid
-from concurrent.futures import ProcessPoolExecutor
-from dataclasses import asdict
 from datetime import datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List
-from unittest.mock import MagicMock, patch
+from typing import Any, List
+from unittest.mock import patch
 
 import numpy as np
-import pandas as pd
 import pytest
 import yaml
-from sqlalchemy import create_engine, inspect
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import inspect
 
 from app.backtesting.profile_batch_backtester import (
+    BaselineOptimizationComparison,
     ProfileBatchBacktester,
     ProfileResult,
     ProfileResultDB,
-    OptimizedStrategy,
-    BaselineOptimizationComparison,
     create_profile_batch_backtester,
 )
 from app.core.models.input_profile import (
     InputProfile,
     ObjectivoInversion,
     RiskTolerance,
-    TaxResidence,
 )
-from app.core.config.profile_config_loader import ProfileConfigLoader
 from app.services.profile_driven_trading.profile_strategy_mapper import (
-    ProfileStrategyMapper,
     StrategyMapping,
 )
 

@@ -17,12 +17,11 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 
 from app.domain.services.portfolio_optimization._validation import (
-    TRADING_DAYS,
-    is_positive_semidefinite,
-    enforce_positive_semidefinite,
     MIN_VARIANCE_THRESHOLD,
+    TRADING_DAYS,
+    enforce_positive_semidefinite,
+    is_positive_semidefinite,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +66,7 @@ class CovarianceResult:
             idx = self.symbols.index(symbol)
             return Decimal(str(self.std_devs[idx]))
         except ValueError:
-            raise ValueError(f"Symbol not found in result")
+            raise ValueError("Symbol not found in result")
 
 
 class CovarianceCalculator:
@@ -137,9 +136,7 @@ class CovarianceCalculator:
 
         n_obs = returns_array.shape[0]
         if n_obs < self._min_observations:
-            raise ValueError(
-                f"Insufficient observations: {n_obs} < {self._min_observations}"
-            )
+            raise ValueError(f"Insufficient observations: {n_obs} < {self._min_observations}")
 
         # Calculate means
         means = np.mean(returns_array, axis=0)

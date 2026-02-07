@@ -26,7 +26,9 @@ class RejectionCriteriaChecker:
     MAX_FAILED_REGIMES: int = 2
     NEGATIVE_EQUITY_YEARS_THRESHOLD: int = 2
 
-    def check_commission_impact(self, commission_impact: Optional[float]) -> Optional[CriterionResult]:
+    def check_commission_impact(
+        self, commission_impact: Optional[float]
+    ) -> Optional[CriterionResult]:
         """
         Check commission impact criterion.
 
@@ -84,7 +86,10 @@ class RejectionCriteriaChecker:
         Returns:
             CriterionResult if equity_curve has enough data, else None
         """
-        if not equity_curve_last_years or len(equity_curve_last_years) < self.NEGATIVE_EQUITY_YEARS_THRESHOLD:
+        if (
+            not equity_curve_last_years
+            or len(equity_curve_last_years) < self.NEGATIVE_EQUITY_YEARS_THRESHOLD
+        ):
             return None
 
         # Compare end to start

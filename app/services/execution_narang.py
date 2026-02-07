@@ -29,11 +29,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
 from app.services.transaction_costs import ExecutionAlgorithm  # Enum
-from app.services.transaction_costs import (
-    MarketData,
-    OrderSpecification,
-    TransactionCostModel,
-)
+from app.services.transaction_costs import MarketData, OrderSpecification, TransactionCostModel
 
 logger = logging.getLogger(__name__)
 
@@ -170,7 +166,6 @@ class ExecutionAlgoBase(ABC):
         Returns:
             List of child orders to execute
         """
-        pass
 
     @abstractmethod
     def should_update_child_orders(
@@ -185,7 +180,6 @@ class ExecutionAlgoBase(ABC):
         Returns:
             Tuple of (should_update, updated_child_orders)
         """
-        pass
 
     def calculate_implementation_shortfall(
         self,

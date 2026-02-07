@@ -15,8 +15,6 @@ from app.models.momentum import (
     MomentumFilter,
     MomentumSignal,
     MomentumStrategy,
-    MomentumType,
-    TechnicalIndicators,
     Timeframe,
 )
 from app.services.momentum import get_momentum_analysis_service

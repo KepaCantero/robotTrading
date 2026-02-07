@@ -5,14 +5,15 @@ Tests that liquidity validation is properly integrated into the backtesting
 engine and affects trade execution realistically.
 """
 
-import pytest
-from decimal import Decimal
 from datetime import datetime, timedelta
+from decimal import Decimal
+
+import pytest
 
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig
-from app.models.signal import Signal, SignalType, SignalStrength, SignalSource
 from app.models.market_data import Quote
+from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 
 def past_time(hours_ago=1):

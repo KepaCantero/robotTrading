@@ -10,15 +10,16 @@ All values are configurable and documented for easy maintenance.
 
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, TypedDict, Union
-
+from typing import Dict, List, TypedDict, Union
 
 # ============================================================================
 # TYPED DICT DEFINITIONS
 # ============================================================================
 
+
 class FixedCommissionModel(TypedDict):
     """Fixed commission model."""
+
     type: str
     cost: Decimal
     description: str
@@ -26,6 +27,7 @@ class FixedCommissionModel(TypedDict):
 
 class HybridCommissionModel(TypedDict):
     """Hybrid commission model."""
+
     type: str
     min_cost: Decimal
     rate: Decimal
@@ -34,6 +36,7 @@ class HybridCommissionModel(TypedDict):
 
 class TierBracket(TypedDict):
     """Single tier bracket for tiered commission."""
+
     volume_max: Union[int, float]
     rate: Decimal
     min: Decimal
@@ -41,6 +44,7 @@ class TierBracket(TypedDict):
 
 class TieredCommissionModel(TypedDict):
     """Tiered commission model."""
+
     type: str
     brackets: List[TierBracket]
     description: str

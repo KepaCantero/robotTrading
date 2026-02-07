@@ -17,27 +17,13 @@ Main orchestrator: StrategyStockAllocator
 from __future__ import annotations
 
 from .allocators import ERCCapitalAllocator
-from .calculators import (
-    HalfLifeCalculator,
-    HurstCalculator,
-    StationarityTester,
-)
+from .calculators import HalfLifeCalculator, HurstCalculator, StationarityTester
 from .classifiers import RegimeClassifier
 from .filters import StockFilter
 from .orchestrator import StrategyStockAllocator
 from .output import OutputGenerator
-from .protocols import (
-    AllocatorProtocol,
-    CalculatorProtocol,
-    ScorerProtocol,
-    StockFilterProtocol,
-)
-from .scorers import (
-    MeanReversionScorer,
-    MomentumScorer,
-    PairsTradingScorer,
-    WCMScoreCalculator,
-)
+from .protocols import AllocatorProtocol, CalculatorProtocol, ScorerProtocol, StockFilterProtocol
+from .scorers import MeanReversionScorer, MomentumScorer, PairsTradingScorer, WCMScoreCalculator
 from .validators import AllocationValidator
 
 __all__ = [

@@ -17,12 +17,7 @@ Usage:
     )
 """
 
-from .canary_analyzer import (
-    CanaryAnalysisResult,
-    CanaryAnalyzer,
-    MetricComparison,
-    RollbackTrigger,
-)
+from .canary_analyzer import CanaryAnalysisResult, CanaryAnalyzer, MetricComparison, RollbackTrigger
 from .canary_deployment import (
     CanaryConfig,
     CanaryDeployment,
@@ -30,11 +25,7 @@ from .canary_deployment import (
     CanaryRollbackDecision,
     CanaryStatus,
 )
-from .traffic_splitter import (
-    SplitStrategy,
-    TrafficConfig,
-    TrafficSplitter,
-)
+from .traffic_splitter import SplitStrategy, TrafficConfig, TrafficSplitter
 
 __all__ = [
     "CanaryDeployment",

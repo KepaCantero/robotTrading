@@ -14,8 +14,6 @@ Reference:
 
 from __future__ import annotations
 
-import math
-from datetime import datetime, timedelta
 from decimal import Decimal
 
 import numpy as np
@@ -1048,7 +1046,6 @@ class TestEdgeCases:
         """Test independence factor with negative correlations."""
         calculator = BreadthCalculator()
         # Create matrix with some negative correlations
-        n = 3
         corr = np.array([[1.0, -0.3, 0.2], [-0.3, 1.0, 0.1], [0.2, 0.1, 1.0]])
         corr_df = pd.DataFrame(corr)
         factor = calculator.calculate_independence_factor(corr_df)

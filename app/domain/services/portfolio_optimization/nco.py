@@ -14,17 +14,15 @@ from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
-from scipy.cluster.hierarchy import linkage, fcluster
+from scipy.cluster.hierarchy import fcluster, linkage
 from scipy.optimize import minimize
 from scipy.spatial.distance import squareform
 
-from app.domain.services.portfolio_optimization.hrp import HierarchicalRiskParity
 from app.domain.services.portfolio_optimization._validation import (
-    validate_covariance_matrix,
-    sanitize_covariance_matrix,
     log_optimization_failure,
+    sanitize_covariance_matrix,
+    validate_covariance_matrix,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -293,7 +291,7 @@ class NestedClusteredOptimizer:
         - Medium correlation (>0.5): moderate clusters (n/5)
         - Low correlation: more clusters (n/3)
         """
-        max_clusters = n_assets // self._min_cluster_size
+        n_assets // self._min_cluster_size
         min_clusters = 2
 
         # Use correlation-based heuristic
@@ -345,6 +343,7 @@ class NestedClusteredOptimizer:
         risk_free_rate: float,
     ):
         """Setup objective function for Sharpe maximization."""
+
         def objective(weights: np.ndarray) -> float:
             portfolio_return = float(weights @ expected_returns)
             portfolio_var = float(weights @ cov_matrix @ weights)

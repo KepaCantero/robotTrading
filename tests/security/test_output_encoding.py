@@ -2,14 +2,14 @@
 Tests for app/security/output_encoding.py
 """
 
-import pytest
+
 from app.security.output_encoding import (
-    OutputEncoder,
     ContentSecurityPolicy,
+    OutputEncoder,
+    encode_for_css,
     encode_for_html,
     encode_for_html_attribute,
     encode_for_javascript,
-    encode_for_css,
     encode_for_url,
     safe_json_dumps,
     sanitize_output,
@@ -130,12 +130,12 @@ class TestOutputEncoder:
     def test_check_for_xss(self):
         """Test XSS pattern detection."""
         encoder = OutputEncoder()
-        
+
         # Should detect XSS
         assert encoder.check_for_xss("<script>alert(1)</script>") is True
         assert encoder.check_for_xss("javascript:alert(1)") is True
         assert encoder.check_for_xss("onclick=alert(1)") is True
-        
+
         # Should not detect safe content
         assert encoder.check_for_xss("safe content") is False
 
@@ -166,7 +166,9 @@ class TestContentSecurityPolicy:
 
     def test_custom_csp(self):
         """Test custom CSP directives."""
-        csp = ContentSecurityPolicy(directives={"script-src": ["'self'", "https://cdn.example.com"]})
+        csp = ContentSecurityPolicy(
+            directives={"script-src": ["'self'", "https://cdn.example.com"]}
+        )
         header = csp.get_header_value()
         assert "https://cdn.example.com" in header
 

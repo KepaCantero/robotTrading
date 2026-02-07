@@ -9,7 +9,6 @@ Open/Closed: Extensible through HurstCalculator protocol.
 """
 
 import logging
-from typing_extensions import override
 
 import numpy as np
 from numba import jit

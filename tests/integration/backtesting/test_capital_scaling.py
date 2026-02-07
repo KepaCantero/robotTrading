@@ -34,8 +34,8 @@ from app.backtesting.capital_scale_analyzer import (
     CapitalScaleAnalysisReport,
     CapitalScaleAnalyzer,
 )
+from app.backtesting.models import BacktestConfig
 from app.backtesting.test_summary import TestSummaryReporter
-from app.backtesting.models import BacktestConfig, BacktestResult, PerformanceMetrics
 from app.core.decimal_utils import round_price
 from app.models.market_data import Quote
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
@@ -183,7 +183,7 @@ def simple_sma_crossover_strategy(
 
         # Calculate slopes
         fast_slope = (fast_now - fast_prev) / fast_prev if fast_prev > 0 else 0
-        slow_slope = (slow_now - slow_prev) / slow_prev if slow_prev > 0 else 0
+        (slow_now - slow_prev) / slow_prev if slow_prev > 0 else 0
 
         # Crossover detection
         was_below = fast_sma[i - 1] < slow_sma[i - 1]

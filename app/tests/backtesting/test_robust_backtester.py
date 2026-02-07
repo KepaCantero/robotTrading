@@ -17,9 +17,6 @@ from __future__ import annotations
 import pickle
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from pathlib import Path
-from typing import Any, Dict, List
-from unittest.mock import Mock, patch
 
 import numpy as np
 import pandas as pd
@@ -28,25 +25,19 @@ import pytest
 from app.backtesting.robust_engine import (
     CorporateActionHandler,
     CorporateActionType,
-    DividendAction,
     DividendHandler,
-    DividendTracker,
     DripConfig,
     PerformanceMetrics,
     PerformanceTracker,
     RobustBacktestConfig,
     RobustBacktester,
-    RobustBacktestResult,
     SurvivorshipAdjuster,
 )
 from app.backtesting.robust_engine.models import (
     BacktestCheckpoint,
     DelistedStock,
     DelistingReason,
-    Merger,
     ProgressUpdate,
-    SpinOff,
-    StockSplit,
 )
 
 # ============================================================================

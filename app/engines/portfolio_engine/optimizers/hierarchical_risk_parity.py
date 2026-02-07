@@ -20,7 +20,7 @@ Algorithm steps:
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 from scipy.cluster.hierarchy import cophenet, dendrogram, linkage
@@ -287,7 +287,7 @@ class HierarchicalRiskParity:
         clusters = [{i} for i in range(n)]
 
         # Track cluster indices
-        cluster_indices = [i for i in range(n)]
+        [i for i in range(n)]
 
         # Process each merge in the linkage matrix
         for i, row in enumerate(linkage_matrix):
@@ -312,7 +312,7 @@ class HierarchicalRiskParity:
 
         # The final cluster contains all assets
         # We need to sort them by the dendrogram structure
-        final_cluster = clusters[-1]
+        clusters[-1]
 
         # Use scipy's leaves_list to get the optimal ordering
         from scipy.cluster.hierarchy import leaves_list
@@ -578,7 +578,7 @@ class HRPOptimizer:
         constraints = constraints or {}
 
         try:
-            n = len(expected_returns)
+            len(expected_returns)
 
             # Get HRP weights
             weights = self.hrp.get_weights(cov_matrix)

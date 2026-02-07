@@ -4,24 +4,21 @@ Test suite for app.backtesting.profile_batch_backtester
 Addresses TST-004: Ensure external dependencies (ComprehensiveBacktestRunner) are properly mocked
 """
 
-import pytest
-from unittest.mock import Mock, MagicMock, patch
+import tempfile
 from datetime import datetime
 from pathlib import Path
-import tempfile
+from unittest.mock import Mock, patch
+
+import pytest
 
 from app.backtesting.profile_batch_backtester import (
-    ProfileBatchBacktester,
-    ProfileResultDB,
     BaselineOptimizationComparison,
     OptimizedStrategy,
+    ProfileBatchBacktester,
     ProfileResult,
+    ProfileResultDB,
 )
-from app.core.models.input_profile import (
-    InputProfile,
-    ObjectivoInversion,
-    RiskTolerance,
-)
+from app.core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
 
 
 class TestProfileBatchBacktesterImport:
@@ -30,16 +27,18 @@ class TestProfileBatchBacktesterImport:
     def test_import_profile_batch_backtester(self):
         """Test that ProfileBatchBacktester can be imported."""
         from app.backtesting.profile_batch_backtester import ProfileBatchBacktester
+
         assert ProfileBatchBacktester is not None
 
     def test_import_dataclasses(self):
         """Test that dataclasses can be imported."""
         from app.backtesting.profile_batch_backtester import (
-            ProfileResultDB,
             BaselineOptimizationComparison,
             OptimizedStrategy,
             ProfileResult,
+            ProfileResultDB,
         )
+
         assert ProfileResultDB is not None
         assert BaselineOptimizationComparison is not None
         assert OptimizedStrategy is not None
@@ -305,7 +304,9 @@ investment_horizons:
                             "win_rate": 0.6,
                         }
 
-                        with patch.object(backtester, '_run_baseline', return_value=mock_baseline_results):
+                        with patch.object(
+                            backtester, '_run_baseline', return_value=mock_baseline_results
+                        ):
                             # Mock optimization pipeline
                             mock_comparison = BaselineOptimizationComparison(
                                 sharpe_improvement=0.0,
@@ -331,7 +332,11 @@ investment_horizons:
                                 recommendation="Test",
                             )
 
-                            with patch.object(backtester, '_run_optimization_pipeline', return_value=mock_optimized_strategy):
+                            with patch.object(
+                                backtester,
+                                '_run_optimization_pipeline',
+                                return_value=mock_optimized_strategy,
+                            ):
                                 # Mock database storage
                                 with patch.object(backtester, '_store_result'):
                                     result = backtester.run_single_profile(profile)
@@ -363,7 +368,9 @@ class TestComprehensiveBacktestRunnerMock:
 
     def test_comprehensive_backtest_runner_patch(self):
         """Test patching ComprehensiveBacktestRunner in tests."""
-        with patch('app.backtesting.profile_batch_backtester.ComprehensiveBacktestRunner') as MockRunner:
+        with patch(
+            'app.backtesting.profile_batch_backtester.ComprehensiveBacktestRunner'
+        ) as MockRunner:
             # Configure the mock
             mock_instance = MockRunner.return_value
             mock_instance.run.return_value = {
@@ -419,7 +426,9 @@ investment_horizons:
             config_path = f.name
 
         try:
-            with patch('app.backtesting.profile_batch_backtester.create_engine') as mock_create_engine:
+            with patch(
+                'app.backtesting.profile_batch_backtester.create_engine'
+            ) as mock_create_engine:
                 # Simulate database error
                 mock_create_engine.side_effect = Exception("Database connection failed")
 
@@ -458,7 +467,9 @@ investment_horizons:
                         backtester = ProfileBatchBacktester(config_path=config_path)
 
                         # Mock baseline failure
-                        with patch.object(backtester, '_run_baseline', side_effect=RuntimeError("Backtest failed")):
+                        with patch.object(
+                            backtester, '_run_baseline', side_effect=RuntimeError("Backtest failed")
+                        ):
                             with pytest.raises(RuntimeError):
                                 backtester._run_baseline(profile, config={})
         finally:
@@ -470,8 +481,8 @@ class TestTemporaryConfigCleanup:
 
     def test_temp_config_cleanup(self):
         """Test that temporary config files are cleaned up."""
-        import tempfile
         import os
+        import tempfile
 
         # Create a temp file
         fd, temp_path = tempfile.mkstemp(suffix='.yaml')

@@ -4,22 +4,22 @@ Unit tests for ProfileStrategyMapper
 Tests the mapping of InputProfile to strategy configurations.
 """
 
-import pytest
 from decimal import Decimal
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
+
+import pytest
 
 from app.core.models.input_profile import (
     InputProfile,
     ObjectivoInversion,
     RiskTolerance,
-    TaxResidence,
 )
 from app.services.profile_driven_trading.profile_strategy_mapper import (
     ProfileStrategyMapper,
     StrategyMapping,
-    get_capital_tier,
     create_profile_mapper,
+    get_capital_tier,
     map_profile_to_strategies,
 )
 
@@ -634,7 +634,7 @@ class TestConvenienceFunctions:
             mock_mapper_instance.create_strategy_mapping.return_value = mock_mapping
             mock_mapper.return_value = mock_mapper_instance
 
-            result = map_profile_to_strategies(sample_profile)
+            map_profile_to_strategies(sample_profile)
 
             # Should call mapper's create_strategy_mapping
             mock_mapper_instance.create_strategy_mapping.assert_called_once_with(sample_profile)

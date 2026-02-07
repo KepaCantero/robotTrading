@@ -19,10 +19,10 @@ SOLID Principles:
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
 import numpy as np
-from scipy.optimize import Bounds, LinearConstraint, minimize
+from scipy.optimize import Bounds, minimize
 
 from .factor_calculator import get_default_factor_premiums
 from .factor_models import FactorModelManager
@@ -33,7 +33,6 @@ from .models import (
     FactorProfile,
     FactorRebalanceRecommendation,
     FactorStrategyConfig,
-    FactorTilt,
 )
 
 logger = logging.getLogger(__name__)

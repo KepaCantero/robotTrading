@@ -11,7 +11,7 @@ This module defines Pydantic models for covered call options trading including:
 """
 
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional

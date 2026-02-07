@@ -2,24 +2,24 @@
 Tests for Alpha Models - Narang "Inside the Black Box" Chapter 3
 """
 
-import pytest
-import pandas as pd
-import numpy as np
 from datetime import datetime, timedelta
 from decimal import Decimal
 
+import numpy as np
+import pandas as pd
+import pytest
+
+from app.models.signal import SignalStrength, SignalType
 from app.strategies.alpha_models import (
-    AlphaType,
+    AlphaDecayMetrics,
     AlphaDecayRegime,
     AlphaSignal,
-    AlphaDecayMetrics,
-    AlphaModel,
-    MomentumAlphaModel,
+    AlphaType,
     MeanReversionAlphaModel,
+    MomentumAlphaModel,
     MultiFactorAlphaModel,
     get_alpha_model,
 )
-from app.models.signal import SignalType, SignalStrength
 
 
 @pytest.fixture

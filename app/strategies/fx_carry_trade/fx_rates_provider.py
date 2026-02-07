@@ -20,11 +20,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Optional, Protocol
 
-from app.strategies.fx_carry_trade.models import (
-    FXPair,
-    FXRateQuote,
-    InterestRateQuote,
-)
+from app.strategies.fx_carry_trade.models import FXPair, FXRateQuote, InterestRateQuote
 
 logger = logging.getLogger(__name__)
 
@@ -182,9 +178,7 @@ class FXRateProvider(Protocol):
         ...
 
     @abstractmethod
-    def get_forward_rate(
-        self, pair: FXPair, as_of: date, months: int
-    ) -> Decimal:
+    def get_forward_rate(self, pair: FXPair, as_of: date, months: int) -> Decimal:
         """
         Get forward rate for a currency pair.
 
@@ -271,12 +265,8 @@ class InMemoryFXRateProvider:
 
     # Use underscore-prefixed attributes as tests expect
     _spot_rates: dict[tuple[str, str, date], Decimal] = field(default_factory=dict)
-    _forward_rates: dict[tuple[str, str, date, int], Decimal] = field(
-        default_factory=dict
-    )
-    _interest_rates: dict[tuple[str, date, int], Decimal] = field(
-        default_factory=dict
-    )
+    _forward_rates: dict[tuple[str, str, date, int], Decimal] = field(default_factory=dict)
+    _interest_rates: dict[tuple[str, date, int], Decimal] = field(default_factory=dict)
     _auto_load_data: bool = field(default=True)
 
     # Aliases for backward compatibility
@@ -312,9 +302,7 @@ class InMemoryFXRateProvider:
                 f"{len(self.get_available_pairs())} pairs"
             )
 
-    def add_spot_rate(
-        self, pair: FXPair | str, rate: Decimal, as_of: date
-    ) -> None:
+    def add_spot_rate(self, pair: FXPair | str, rate: Decimal, as_of: date) -> None:
         """
         Add a spot rate quote.
 
@@ -337,9 +325,7 @@ class InMemoryFXRateProvider:
         key = (pair.base_currency, pair.quote_currency, as_of)
         self._spot_rates[key] = rate
 
-    def add_forward_rate(
-        self, pair: str, rate: Decimal, as_of: date, months: int
-    ) -> None:
+    def add_forward_rate(self, pair: str, rate: Decimal, as_of: date, months: int) -> None:
         """
         Add a forward rate quote.
 
@@ -363,9 +349,7 @@ class InMemoryFXRateProvider:
         key = (base, quote, as_of, months)
         self._forward_rates[key] = rate
 
-    def add_interest_rate(
-        self, currency: str, rate: Decimal, as_of: date, months: int
-    ) -> None:
+    def add_interest_rate(self, currency: str, rate: Decimal, as_of: date, months: int) -> None:
         """
         Add an interest rate quote.
 
@@ -426,10 +410,14 @@ class InMemoryFXRateProvider:
         base, quote = parts
 
         if len(base) != 3 or len(quote) != 3:
-            raise ValueError(f"Invalid currency codes in pair: {pair_str}. Expected 3-character codes.")
+            raise ValueError(
+                f"Invalid currency codes in pair: {pair_str}. Expected 3-character codes."
+            )
 
         if not base.isalpha() or not quote.isalpha():
-            raise ValueError(f"Invalid currency codes in pair: {pair_str}. Currency codes must be alphabetic.")
+            raise ValueError(
+                f"Invalid currency codes in pair: {pair_str}. Currency codes must be alphabetic."
+            )
 
         return base, quote
 
@@ -468,25 +456,20 @@ class InMemoryFXRateProvider:
         if key not in self._spot_rates:
             # Try to find the most recent rate before as_of
             available_dates = [
-                d for (b, q, d) in self._spot_rates.keys()
+                d
+                for (b, q, d) in self._spot_rates.keys()
                 if b == pair.base_currency and q == pair.quote_currency and d <= as_of
             ]
             if available_dates:
                 most_recent = max(available_dates)
                 key = (pair.base_currency, pair.quote_currency, most_recent)
-                logger.debug(
-                    f"Using spot rate from {most_recent} for {pair} on {as_of}"
-                )
+                logger.debug(f"Using spot rate from {most_recent} for {pair} on {as_of}")
             else:
-                raise ValueError(
-                    f"Spot rate not found for {pair} on {as_of}"
-                )
+                raise ValueError(f"Spot rate not found for {pair} on {as_of}")
 
         return self._spot_rates[key]
 
-    def get_forward_rate(
-        self, pair: FXPair, as_of: date, months: int
-    ) -> Decimal:
+    def get_forward_rate(self, pair: FXPair, as_of: date, months: int) -> Decimal:
         """
         Get forward rate for a currency pair.
 
@@ -511,19 +494,19 @@ class InMemoryFXRateProvider:
             available_dates = [
                 d
                 for (b, q, d, m) in self._forward_rates.keys()
-                if b == pair.base_currency and q == pair.quote_currency and m == months and d <= as_of
+                if b == pair.base_currency
+                and q == pair.quote_currency
+                and m == months
+                and d <= as_of
             ]
             if available_dates:
                 most_recent = max(available_dates)
                 key = (pair.base_currency, pair.quote_currency, most_recent, months)
                 logger.debug(
-                    f"Using forward rate from {most_recent} for {pair} "
-                    f"({months}M) on {as_of}"
+                    f"Using forward rate from {most_recent} for {pair} " f"({months}M) on {as_of}"
                 )
             else:
-                raise ValueError(
-                    f"Forward rate not found for {pair} ({months}M) on {as_of}"
-                )
+                raise ValueError(f"Forward rate not found for {pair} ({months}M) on {as_of}")
 
         return self._forward_rates[key]
 
@@ -564,8 +547,7 @@ class InMemoryFXRateProvider:
                 )
             else:
                 raise ValueError(
-                    f"Interest rate not found for {currency} ({months}M) "
-                    f"on {as_of}"
+                    f"Interest rate not found for {currency} ({months}M) " f"on {as_of}"
                 )
 
         return self._interest_rates[key]
@@ -590,12 +572,12 @@ class InMemoryFXRateProvider:
         currencies_set = set()
 
         # Add currencies from spot rates
-        for (base, quote, _) in self._spot_rates.keys():
+        for base, quote, _ in self._spot_rates.keys():
             currencies_set.add(base)
             currencies_set.add(quote)
 
         # Add currencies from interest rates
-        for (currency, _, _) in self._interest_rates.keys():
+        for currency, _, _ in self._interest_rates.keys():
             currencies_set.add(currency)
 
         return sorted(list(currencies_set))
@@ -763,11 +745,7 @@ class InMemoryFXRateProvider:
         """Return string representation of provider."""
         num_pairs = len(self.get_available_pairs())
         num_currencies = len(self.get_available_currencies())
-        return (
-            f"InMemoryFXRateProvider("
-            f"pairs={num_pairs}, "
-            f"currencies={num_currencies})"
-        )
+        return f"InMemoryFXRateProvider(" f"pairs={num_pairs}, " f"currencies={num_currencies})"
 
     def __repr__(self) -> str:
         """Return detailed representation of provider."""
@@ -819,9 +797,7 @@ class CompositeFXRateProvider(FXRateProvider):
             except ValueError:
                 continue
 
-        raise ValueError(
-            f"No spot rate found for {pair} on {as_of} in any provider"
-        )
+        raise ValueError(f"No spot rate found for {pair} on {as_of} in any provider")
 
     def get_forward_rate(self, pair: FXPair, as_of: date, months: int) -> Decimal:
         """Get forward rate from first provider that has it."""
@@ -831,9 +807,7 @@ class CompositeFXRateProvider(FXRateProvider):
             except ValueError:
                 continue
 
-        raise ValueError(
-            f"No forward rate found for {pair} ({months}M) on {as_of} in any provider"
-        )
+        raise ValueError(f"No forward rate found for {pair} ({months}M) on {as_of} in any provider")
 
     def get_interest_rate(self, currency: str, as_of: date, months: int) -> Decimal:
         """Get interest rate from first provider that has it."""
@@ -896,16 +870,16 @@ class MockFXDataSource:
     # Base rates against USD (as of base_date)
     _base_rates: dict[str, Decimal] = field(
         default_factory=lambda: {
-            "EUR": Decimal("1.0850"),   # EUR/USD
-            "GBP": Decimal("1.2650"),   # GBP/USD
-            "USD": Decimal("1.0"),      # USD/USD
-            "JPY": Decimal("0.006688"), # USD/JPY inverted
-            "CHF": Decimal("1.134"),    # USD/CHF inverted
-            "CAD": Decimal("0.7363"),   # USD/CAD inverted
-            "AUD": Decimal("0.6520"),   # AUD/USD
-            "NZD": Decimal("0.6120"),   # NZD/USD
-            "NOK": Decimal("0.0939"),   # USD/NOK inverted
-            "SEK": Decimal("0.0960"),   # USD/SEK inverted
+            "EUR": Decimal("1.0850"),  # EUR/USD
+            "GBP": Decimal("1.2650"),  # GBP/USD
+            "USD": Decimal("1.0"),  # USD/USD
+            "JPY": Decimal("0.006688"),  # USD/JPY inverted
+            "CHF": Decimal("1.134"),  # USD/CHF inverted
+            "CAD": Decimal("0.7363"),  # USD/CAD inverted
+            "AUD": Decimal("0.6520"),  # AUD/USD
+            "NZD": Decimal("0.6120"),  # NZD/USD
+            "NOK": Decimal("0.0939"),  # USD/NOK inverted
+            "SEK": Decimal("0.0960"),  # USD/SEK inverted
         },
         init=False,
         repr=False,

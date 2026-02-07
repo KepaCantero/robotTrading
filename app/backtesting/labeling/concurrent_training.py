@@ -67,19 +67,16 @@ logger = logging.getLogger(__name__)
 class ConcurrentTrainingError(Exception):
     """Base exception for concurrent training errors."""
 
-    pass
 
 
 class ModelTrainingError(ConcurrentTrainingError):
     """Raised when a model fails to train."""
 
-    pass
 
 
 class EnsembleError(ConcurrentTrainingError):
     """Raised when ensemble creation fails."""
 
-    pass
 
 
 @dataclass
@@ -252,9 +249,7 @@ class ConcurrentModelTrainer:
         from .triple_barrier import calculate_sample_weights_uniqueness
 
         price_series = pd.Series(range(len(X)))
-        return calculate_sample_weights_uniqueness(
-            events, labels, price_series
-        ).values
+        return calculate_sample_weights_uniqueness(events, labels, price_series).values
 
     def _combine_sample_weights(
         self,

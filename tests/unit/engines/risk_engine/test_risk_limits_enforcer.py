@@ -3,10 +3,9 @@ Unit tests for Risk Limits Enforcer.
 
 Tests for automatic risk limit enforcement based on VaR thresholds.
 """
+from unittest.mock import Mock
+
 import pytest
-from unittest.mock import Mock, MagicMock
-from datetime import datetime
-import numpy as np
 
 from app.engines.risk_engine.risk_limits_enforcer import RiskLimitsEnforcer
 from app.models.portfolio import Portfolio

@@ -46,7 +46,7 @@ class BacktestResultsProcessor:
             extra={
                 "total_results": len(self.results),
                 "result_return": str(result.total_return_pct),
-            }
+            },
         )
 
     def add_results(self, results: List[BacktestResultValue]) -> None:
@@ -62,7 +62,7 @@ class BacktestResultsProcessor:
             extra={
                 "results_added": len(results),
                 "total_results": len(self.results),
-            }
+            },
         )
 
     def clear(self) -> None:
@@ -126,7 +126,7 @@ class BacktestResultsProcessor:
             extra={
                 "total_runs": len(self.results),
                 "mean_return": float(summary['returns']['mean']),
-            }
+            },
         )
         return summary
 

@@ -13,7 +13,7 @@ Provides:
 
 import logging
 from pathlib import Path
-from typing import Dict, Optional, TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING, Dict, Optional, Tuple
 
 import numpy as np
 import pandas as pd

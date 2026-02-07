@@ -10,23 +10,19 @@ Following TDD best practices:
 6. Clear test names and structure
 """
 
-from decimal import Decimal
-from datetime import datetime
-from typing import List
-import pytest
-from hypothesis import given, strategies as st, settings
-from unittest.mock import patch, Mock
+
 import numpy as np
 import pandas as pd
+import pytest
+from hypothesis import given, settings, strategies as st
 
 from app.services.hurst_exponent_analyzer import (
     HurstExponentAnalyzer,
-    MarketRegime,
-    StrategyRecommendation,
     HurstResult,
+    MarketRegime,
     RegimeChange,
+    StrategyRecommendation,
 )
-
 
 # =============================================================================
 # Test Fixtures

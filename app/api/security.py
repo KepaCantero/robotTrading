@@ -17,9 +17,9 @@ import logging
 import time
 import traceback
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime
 from functools import wraps
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from fastapi import HTTPException, Request, Response, status
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -324,7 +324,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         key = rate_limiter._get_client_key(request)
 
         # Check rate limit
-        is_allowed, info = await rate_limiter.is_allowed(key, self.max_requests, self.window_seconds)
+        is_allowed, info = await rate_limiter.is_allowed(
+            key, self.max_requests, self.window_seconds
+        )
 
         # Store info in request state for access in endpoints
         request.state.rate_limit_info = info
@@ -407,7 +409,6 @@ def get_user_from_request(request: Request) -> Optional[Dict[str, Any]]:
         token = auth_header[7:]  # Remove "Bearer " prefix
         # TODO: Validate and decode JWT token
         # For now, return None to indicate no valid auth
-        pass
 
     # Check request state for user set by middleware
     if hasattr(request.state, "user"):
@@ -617,7 +618,9 @@ def audit_log(
             if request:
                 audit_data["method"] = request.method
                 audit_data["path"] = request.url.path
-                client_id = getattr(request.state, "user_id", None) or request.headers.get("X-Client-ID")
+                client_id = getattr(request.state, "user_id", None) or request.headers.get(
+                    "X-Client-ID"
+                )
                 if client_id:
                     audit_data["client_id"] = client_id
 
@@ -774,7 +777,12 @@ def get_cors_config() -> Dict[str, Any]:
             "X-Client-ID",
             "X-Correlation-ID",
         ],
-        "expose_headers": ["X-Correlation-ID", "X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"],
+        "expose_headers": [
+            "X-Correlation-ID",
+            "X-RateLimit-Limit",
+            "X-RateLimit-Remaining",
+            "X-RateLimit-Reset",
+        ],
         "max_age": 600,
     }
 

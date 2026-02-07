@@ -220,7 +220,13 @@ def with_rate_limit(
 
             # Apply rate limiting if we have a request
             if request:
-                key = key_func(request) if key_func else request.client.host if request.client else "default"
+                key = (
+                    key_func(request)
+                    if key_func
+                    else request.client.host
+                    if request.client
+                    else "default"
+                )
                 limiter = get_rate_limiter()
 
                 if not limiter.is_allowed(

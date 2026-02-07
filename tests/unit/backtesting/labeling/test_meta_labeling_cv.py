@@ -5,18 +5,18 @@ Tests the purged and embargoed cross-validation implementation
 for meta-labeling applications.
 """
 
-import pytest
 import numpy as np
 import pandas as pd
+import pytest
 from sklearn.ensemble import RandomForestClassifier
 
 from app.backtesting.labeling.meta_labeling_cv import (
-    PurgedKFold,
-    MetaLabelingCV,
-    SequentialBootstrap,
-    cv_score_meta_labeling,
-    calculate_purge_embargo_sizes,
     CVConfig,
+    MetaLabelingCV,
+    PurgedKFold,
+    SequentialBootstrap,
+    calculate_purge_embargo_sizes,
+    cv_score_meta_labeling,
 )
 
 

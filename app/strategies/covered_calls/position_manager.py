@@ -14,10 +14,9 @@ SOLID Principles:
 """
 
 import logging
-from collections import defaultdict
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 from .greeks_calculator import GreeksCalculator
 from .models import (

@@ -5,22 +5,20 @@ Tests for the trading cost analysis framework following Harris's
 cost components and evaluation methods.
 """
 
-import pytest
-import numpy as np
 from decimal import Decimal
 
+import pytest
+
 from app.simulation.trading_costs import (
-    TradingCostAnalyzer,
-    MarketImpactModel,
     BidAskSpreadAnalyzer,
-    TimingRiskCalculator,
-    ImpactModel,
-    CostComponent,
     CostBreakdown,
-    ExecutionQualityMetrics,
+    CostComponent,
+    ImpactModel,
+    MarketImpactModel,
+    TimingRiskCalculator,
+    TradingCostAnalyzer,
     create_trading_cost_analyzer,
 )
-from app.simulation.order_book import Order, OrderSide, OrderType
 
 
 class TestMarketImpactModel:

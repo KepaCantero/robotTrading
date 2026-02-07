@@ -5,7 +5,6 @@ This module tests the CorrelationAnalyzer class which provides
 statistical correlation analysis for FX intermarket relationships.
 """
 
-from datetime import datetime
 from decimal import Decimal
 
 import numpy as np
@@ -13,9 +12,7 @@ import pandas as pd
 import pytest
 from pandas import DataFrame, Series
 
-from app.strategies.fx_intermarket.correlation_analyzer import (
-    CorrelationAnalyzer,
-)
+from app.strategies.fx_intermarket.correlation_analyzer import CorrelationAnalyzer
 from app.strategies.fx_intermarket.models import (
     AssetClass,
     FXCorrelationPair,
@@ -122,7 +119,9 @@ class TestCalculateCorrelation:
         """Provide sample series 2 for testing."""
         return Series([2.0, 4.0, 6.0, 8.0, 10.0])
 
-    def test_calculate_correlation_positive(self, analyzer: CorrelationAnalyzer, sample_series1: Series, sample_series2: Series) -> None:
+    def test_calculate_correlation_positive(
+        self, analyzer: CorrelationAnalyzer, sample_series1: Series, sample_series2: Series
+    ) -> None:
         """Test correlation calculation with positive correlation."""
         correlation, p_value = analyzer.calculate_correlation(sample_series1, sample_series2)
 
@@ -162,7 +161,9 @@ class TestCalculateCorrelation:
 
         assert correlation == Decimal("1")
 
-    def test_calculate_correlation_different_lengths(self, analyzer: CorrelationAnalyzer, sample_series1: Series) -> None:
+    def test_calculate_correlation_different_lengths(
+        self, analyzer: CorrelationAnalyzer, sample_series1: Series
+    ) -> None:
         """Test correlation calculation rejects different length series."""
         series_short = Series([1.0, 2.0, 3.0])
 
@@ -216,7 +217,9 @@ class TestCalculateFXPairCorrelation:
             "USD/JPY": Series(np.random.randn(100) * 0.01, index=dates),
         }
 
-    def test_calculate_fx_pair_correlation(self, analyzer: CorrelationAnalyzer, returns_data: dict[str, Series]) -> None:
+    def test_calculate_fx_pair_correlation(
+        self, analyzer: CorrelationAnalyzer, returns_data: dict[str, Series]
+    ) -> None:
         """Test FX pair correlation calculation."""
         corr_pair = analyzer.calculate_fx_pair_correlation(
             "EUR/USD",
@@ -232,7 +235,9 @@ class TestCalculateFXPairCorrelation:
         # Lookback is limited by analyzer's setting (60)
         assert corr_pair.lookback_days == 60
 
-    def test_calculate_fx_pair_correlation_pair1_not_found(self, analyzer: CorrelationAnalyzer, returns_data: dict[str, Series]) -> None:
+    def test_calculate_fx_pair_correlation_pair1_not_found(
+        self, analyzer: CorrelationAnalyzer, returns_data: dict[str, Series]
+    ) -> None:
         """Test error when pair1 not found."""
         with pytest.raises(ValueError, match="Pair USD/CHF not found in returns_data"):
             analyzer.calculate_fx_pair_correlation(
@@ -241,7 +246,9 @@ class TestCalculateFXPairCorrelation:
                 returns_data,
             )
 
-    def test_calculate_fx_pair_correlation_pair2_not_found(self, analyzer: CorrelationAnalyzer, returns_data: dict[str, Series]) -> None:
+    def test_calculate_fx_pair_correlation_pair2_not_found(
+        self, analyzer: CorrelationAnalyzer, returns_data: dict[str, Series]
+    ) -> None:
         """Test error when pair2 not found."""
         with pytest.raises(ValueError, match="Pair USD/CHF not found in returns_data"):
             analyzer.calculate_fx_pair_correlation(
@@ -250,7 +257,9 @@ class TestCalculateFXPairCorrelation:
                 returns_data,
             )
 
-    def test_calculate_fx_pair_correlation_lookback_limit(self, analyzer: CorrelationAnalyzer) -> None:
+    def test_calculate_fx_pair_correlation_lookback_limit(
+        self, analyzer: CorrelationAnalyzer
+    ) -> None:
         """Test that lookback period is respected."""
         dates = pd.date_range(start="2024-01-01", periods=100, freq="D")
         returns_data = {
@@ -290,7 +299,9 @@ class TestCalculateIntermarketCorrelation:
         np.random.seed(43)
         return Series(np.random.randn(100) * 0.02, index=dates)
 
-    def test_calculate_intermarket_correlation(self, analyzer: CorrelationAnalyzer, fx_returns: Series, asset_returns: Series) -> None:
+    def test_calculate_intermarket_correlation(
+        self, analyzer: CorrelationAnalyzer, fx_returns: Series, asset_returns: Series
+    ) -> None:
         """Test intermarket correlation calculation."""
         relationship = analyzer.calculate_intermarket_correlation(
             fx_pair="USD/JPY",
@@ -310,7 +321,9 @@ class TestCalculateIntermarketCorrelation:
         assert isinstance(relationship.beta, Decimal)
         assert isinstance(relationship.significance, Decimal)
 
-    def test_calculate_intermarket_correlation_empty_fx_pair(self, analyzer: CorrelationAnalyzer, asset_returns: Series) -> None:
+    def test_calculate_intermarket_correlation_empty_fx_pair(
+        self, analyzer: CorrelationAnalyzer, asset_returns: Series
+    ) -> None:
         """Test error when fx_pair is empty."""
         fx_returns = Series([1.0, 2.0, 3.0])
 
@@ -324,7 +337,9 @@ class TestCalculateIntermarketCorrelation:
                 relationship_type=RelationshipType.SAFE_HAVEN,
             )
 
-    def test_calculate_intermarket_correlation_empty_external_asset(self, analyzer: CorrelationAnalyzer, fx_returns: Series) -> None:
+    def test_calculate_intermarket_correlation_empty_external_asset(
+        self, analyzer: CorrelationAnalyzer, fx_returns: Series
+    ) -> None:
         """Test error when external_asset is empty."""
         asset_returns = Series([1.0, 2.0, 3.0])
 
@@ -450,19 +465,25 @@ class TestCalculateRollingCorrelation:
         """Provide sample series 2."""
         return Series([2, 4, 6, 8, 10, 12, 14, 16, 18, 20])
 
-    def test_calculate_rolling_correlation(self, analyzer: CorrelationAnalyzer, series1: Series, series2: Series) -> None:
+    def test_calculate_rolling_correlation(
+        self, analyzer: CorrelationAnalyzer, series1: Series, series2: Series
+    ) -> None:
         """Test rolling correlation calculation."""
         rolling_corr = analyzer.calculate_rolling_correlation(series1, series2, window=5)
 
         assert isinstance(rolling_corr, Series)
         assert len(rolling_corr) == len(series1)
 
-    def test_calculate_rolling_correlation_invalid_window(self, analyzer: CorrelationAnalyzer, series1: Series, series2: Series) -> None:
+    def test_calculate_rolling_correlation_invalid_window(
+        self, analyzer: CorrelationAnalyzer, series1: Series, series2: Series
+    ) -> None:
         """Test rolling correlation with invalid window."""
         with pytest.raises(ValueError, match="Window must be > 1"):
             analyzer.calculate_rolling_correlation(series1, series2, window=1)
 
-    def test_calculate_rolling_correlation_different_lengths(self, analyzer: CorrelationAnalyzer, series1: Series) -> None:
+    def test_calculate_rolling_correlation_different_lengths(
+        self, analyzer: CorrelationAnalyzer, series1: Series
+    ) -> None:
         """Test rolling correlation with different length series."""
         series_short = Series([1, 2, 3])
 
@@ -495,7 +516,9 @@ class TestIdentifySignificantRelationships:
             "GOLD": Series(np.random.randn(100) * 0.015, index=dates),
         }
 
-    def test_identify_significant_relationships(self, analyzer: CorrelationAnalyzer, returns_data: dict[str, Series]) -> None:
+    def test_identify_significant_relationships(
+        self, analyzer: CorrelationAnalyzer, returns_data: dict[str, Series]
+    ) -> None:
         """Test identifying significant relationships."""
         fx_pairs = ["EUR/USD", "USD/JPY"]
         external_assets = {"SPX": AssetClass.EQUITY, "GOLD": AssetClass.COMMODITY}
@@ -510,7 +533,9 @@ class TestIdentifySignificantRelationships:
         for rel in relationships:
             assert isinstance(rel, IntermarketRelationship)
 
-    def test_identify_significant_relationships_with_types(self, analyzer: CorrelationAnalyzer, returns_data: dict[str, Series]) -> None:
+    def test_identify_significant_relationships_with_types(
+        self, analyzer: CorrelationAnalyzer, returns_data: dict[str, Series]
+    ) -> None:
         """Test identifying relationships with specific types."""
         fx_pairs = ["USD/JPY"]
         external_assets = {"SPX": AssetClass.EQUITY}
@@ -525,7 +550,9 @@ class TestIdentifySignificantRelationships:
 
         assert isinstance(relationships, list)
 
-    def test_identify_significant_relationships_missing_fx_pair(self, analyzer: CorrelationAnalyzer, returns_data: dict[str, Series]) -> None:
+    def test_identify_significant_relationships_missing_fx_pair(
+        self, analyzer: CorrelationAnalyzer, returns_data: dict[str, Series]
+    ) -> None:
         """Test handling of missing FX pair."""
         fx_pairs = ["USD/CHF"]  # Not in returns_data
         external_assets = {"SPX": AssetClass.EQUITY}
@@ -539,7 +566,9 @@ class TestIdentifySignificantRelationships:
         # Should return empty list, not raise error
         assert relationships == []
 
-    def test_identify_significant_relationships_missing_asset(self, analyzer: CorrelationAnalyzer, returns_data: dict[str, Series]) -> None:
+    def test_identify_significant_relationships_missing_asset(
+        self, analyzer: CorrelationAnalyzer, returns_data: dict[str, Series]
+    ) -> None:
         """Test handling of missing external asset."""
         fx_pairs = ["EUR/USD"]
         external_assets = {"VIX": AssetClass.EQUITY}  # Not in returns_data
@@ -625,7 +654,9 @@ class TestGetCorrelationMatrix:
             "USD/JPY": Series(np.random.randn(100) * 0.01, index=dates),
         }
 
-    def test_get_correlation_matrix(self, analyzer: CorrelationAnalyzer, returns_data: dict[str, Series]) -> None:
+    def test_get_correlation_matrix(
+        self, analyzer: CorrelationAnalyzer, returns_data: dict[str, Series]
+    ) -> None:
         """Test correlation matrix generation."""
         symbols = ["EUR/USD", "GBP/USD", "USD/JPY"]
         corr_matrix = analyzer.get_correlation_matrix(symbols, returns_data)
@@ -635,7 +666,9 @@ class TestGetCorrelationMatrix:
         assert list(corr_matrix.columns) == symbols
         assert list(corr_matrix.index) == symbols
 
-    def test_get_correlation_matrix_symbol_not_found(self, analyzer: CorrelationAnalyzer, returns_data: dict[str, Series]) -> None:
+    def test_get_correlation_matrix_symbol_not_found(
+        self, analyzer: CorrelationAnalyzer, returns_data: dict[str, Series]
+    ) -> None:
         """Test error when symbol not found."""
         symbols = ["EUR/USD", "USD/CHF"]  # USD/CHF not in returns_data
 

@@ -30,14 +30,8 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
 
-from app.services.risk_models_narang import (
-    RiskModel,
-    get_risk_model,
-)
-from app.services.transaction_costs import (
-    TransactionCostModel,
-    get_transaction_cost_model,
-)
+from app.services.risk_models_narang import RiskModel, get_risk_model
+from app.services.transaction_costs import TransactionCostModel, get_transaction_cost_model
 
 logger = logging.getLogger(__name__)
 

@@ -5,12 +5,12 @@ Tests Ernest Chan's survivorship bias correction methodology from
 "Algorithmic Trading" (Chapter 3).
 """
 
-import pytest
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from app.backtesting.survivorship_bias_corrector import (
     DelistedStockInfo,

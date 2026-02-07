@@ -6,7 +6,7 @@ Tests buy/sell execution, position sizing, and cost calculations.
 
 from datetime import datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -14,7 +14,7 @@ from app.backtesting.models import BacktestConfig, Trade, TradeStatus
 from app.backtesting.services.pnl_calculator import ProfitAndLossCalculator
 from app.backtesting.services.position_manager import PositionManager
 from app.backtesting.services.trade_executor import TradeExecutor
-from app.models.signal import Signal, SignalType, SignalSource, SignalStrength
+from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 
 class MockMarketData:
@@ -215,7 +215,9 @@ class TestTradeExecutor:
 
         # Mock trading validator to raise ValueError
         with patch.object(
-            trade_executor.trading_validator, "validate_position_size", side_effect=ValueError("Position too large")
+            trade_executor.trading_validator,
+            "validate_position_size",
+            side_effect=ValueError("Position too large"),
         ):
             trade, new_capital = trade_executor.execute_buy_signal(
                 buy_signal, market_data, capital, mock_close_position, mock_validate_profitability
@@ -236,7 +238,11 @@ class TestTradeExecutor:
             return True
 
         # Mock stop-loss validator to raise ValueError
-        with patch.object(trade_executor.trading_validator, "validate_stop_loss", side_effect=ValueError("Invalid SL")):
+        with patch.object(
+            trade_executor.trading_validator,
+            "validate_stop_loss",
+            side_effect=ValueError("Invalid SL"),
+        ):
             trade, new_capital = trade_executor.execute_buy_signal(
                 buy_signal, market_data, capital, mock_close_position, mock_validate_profitability
             )
@@ -265,7 +271,9 @@ class TestTradeExecutor:
             # If trade executed, quantity should be reasonable
             assert trade.quantity > 0
 
-    def test_execute_buy_signal_updates_position(self, trade_executor, position_manager, buy_signal):
+    def test_execute_buy_signal_updates_position(
+        self, trade_executor, position_manager, buy_signal
+    ):
         """Test buy execution updates position."""
         market_data = MockMarketData("AAPL", 150)
         capital = Decimal("100000")
@@ -286,7 +294,9 @@ class TestTradeExecutor:
 
         assert final_position > initial_position
 
-    def test_execute_sell_signal_success(self, trade_executor, position_manager, sell_signal, sample_buy_trades):
+    def test_execute_sell_signal_success(
+        self, trade_executor, position_manager, sell_signal, sample_buy_trades
+    ):
         """Test successful sell execution."""
         # Set up position
         position_manager.update_position("AAPL", Decimal("100"))
@@ -311,12 +321,16 @@ class TestTradeExecutor:
         market_data = MockMarketData("AAPL", 160)
         capital = Decimal("100000")
 
-        trade, new_capital = trade_executor.execute_sell_signal(sell_signal, market_data, capital, [])
+        trade, new_capital = trade_executor.execute_sell_signal(
+            sell_signal, market_data, capital, []
+        )
 
         assert trade is None
         assert new_capital == capital  # Capital unchanged
 
-    def test_execute_sell_signal_updates_position(self, trade_executor, position_manager, sell_signal, sample_buy_trades):
+    def test_execute_sell_signal_updates_position(
+        self, trade_executor, position_manager, sell_signal, sample_buy_trades
+    ):
         """Test sell execution updates position."""
         # Set up position
         position_manager.update_position("AAPL", Decimal("100"))
@@ -334,7 +348,9 @@ class TestTradeExecutor:
 
         assert final_position < initial_position
 
-    def test_execute_sell_signal_calculates_pnl(self, trade_executor, position_manager, sell_signal, sample_buy_trades):
+    def test_execute_sell_signal_calculates_pnl(
+        self, trade_executor, position_manager, sell_signal, sample_buy_trades
+    ):
         """Test sell execution calculates P&L correctly."""
         position_manager.update_position("AAPL", Decimal("100"))
 
@@ -430,6 +446,7 @@ class TestTradeExecutor:
 
     def test_get_strategy_commission_from_strategy(self, trade_executor):
         """Test getting commission from strategy object."""
+
         # Use a real object instead of MagicMock to avoid attribute access issues
         class MockStrategy:
             commission_per_trade_pct = Decimal("0.3")
@@ -481,7 +498,9 @@ class TestTradeExecutor:
         price = Decimal("150")
 
         slippage_pct = Decimal("0.1")
-        adjusted_price = trade_executor._apply_slippage(price, is_buy=True, slippage_pct=slippage_pct)
+        adjusted_price = trade_executor._apply_slippage(
+            price, is_buy=True, slippage_pct=slippage_pct
+        )
 
         # Buy price should be higher
         assert adjusted_price > price
@@ -492,7 +511,9 @@ class TestTradeExecutor:
         price = Decimal("150")
 
         slippage_pct = Decimal("0.1")
-        adjusted_price = trade_executor._apply_slippage(price, is_buy=False, slippage_pct=slippage_pct)
+        adjusted_price = trade_executor._apply_slippage(
+            price, is_buy=False, slippage_pct=slippage_pct
+        )
 
         # Sell price should be lower
         assert adjusted_price < price
@@ -551,7 +572,9 @@ class TestTradeExecutor:
         if trade:
             mock_logger.log_signal_executed.assert_called_once()
 
-    def test_execute_sell_with_diagnostic_logger(self, trade_executor, position_manager, sell_signal, sample_buy_trades):
+    def test_execute_sell_with_diagnostic_logger(
+        self, trade_executor, position_manager, sell_signal, sample_buy_trades
+    ):
         """Test sell execution logs to diagnostic logger."""
         mock_logger = MagicMock()
         trade_executor.diagnostic_logger = mock_logger
@@ -568,7 +591,9 @@ class TestTradeExecutor:
         if trade:
             mock_logger.log_signal_executed.assert_called_once()
 
-    def test_execute_buy_signal_insufficient_capital_adjusts_position(self, trade_executor, buy_signal):
+    def test_execute_buy_signal_insufficient_capital_adjusts_position(
+        self, trade_executor, buy_signal
+    ):
         """Test buy execution adjusts position when capital insufficient."""
         market_data = MockMarketData("AAPL", 150)
         capital = Decimal("1000")  # Low capital
@@ -619,6 +644,7 @@ class TestTradeExecutor:
 
     def test_get_strategy_slippage_from_strategy(self, trade_executor):
         """Test getting slippage from strategy object."""
+
         # Use a real object instead of MagicMock to avoid attribute access issues
         class MockStrategy:
             slippage_per_trade_pct = Decimal("0.15")

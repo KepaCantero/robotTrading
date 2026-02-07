@@ -9,16 +9,13 @@ Following TDD best practices:
 5. Clear test names and structure
 """
 
-from decimal import Decimal
+import json
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, Any
-import pytest
-from hypothesis import given, strategies as st, settings
-from unittest.mock import patch, Mock, MagicMock
-import yaml
-import json
 
+import pytest
+import yaml
+from hypothesis import given, settings, strategies as st
 
 # =============================================================================
 # Test Fixtures
@@ -432,7 +429,7 @@ class TestConfigurationCaching:
         """Test that cache is invalidated when config file changes."""
         from app.core.centralized_config import load_config_from_yaml
 
-        config1 = load_config_from_yaml(sample_config_file)
+        load_config_from_yaml(sample_config_file)
 
         # Modify file
         with open(sample_config_file, 'a') as f:
@@ -646,8 +643,9 @@ class TestConfigurationThreadSafety:
 
     def test_concurrent_read_access(self, sample_config_dict):
         """Test concurrent read access to configuration."""
-        from app.core.centralized_config import Configuration
         import threading
+
+        from app.core.centralized_config import Configuration
 
         config = Configuration(sample_config_dict)
         results = []
@@ -678,7 +676,7 @@ class TestConfigurationIntegration:
 
     def test_full_config_workflow(self, sample_config_file):
         """Test complete configuration workflow."""
-        from app.core.centralized_config import load_config_from_yaml, Configuration
+        from app.core.centralized_config import Configuration, load_config_from_yaml
 
         # Load from file
         config_dict = load_config_from_yaml(sample_config_file)

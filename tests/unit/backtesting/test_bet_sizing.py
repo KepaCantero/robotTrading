@@ -4,23 +4,20 @@ Unit tests for Bet Sizing module.
 Tests for bet sizing calculations based on López de Prado's work.
 """
 
-import pytest
+
 import numpy as np
-import pandas as pd
-from unittest.mock import patch, MagicMock
-from datetime import datetime
-import math
+import pytest
 
 from app.backtesting.labeling.bet_sizing import (
+    BetSizing,
     BetSizingConfig,
     BetSizingResult,
-    BetSizing,
     calculate_bet_sizes,
+    calculate_bet_sizes_expected_value,
     calculate_bet_sizes_ml,
     calculate_bet_sizes_with_discrete_allocation,
-    calculate_bet_sizes_with_risk_target,
-    calculate_bet_sizes_expected_value,
     calculate_bet_sizes_with_meta_model,
+    calculate_bet_sizes_with_risk_target,
 )
 
 

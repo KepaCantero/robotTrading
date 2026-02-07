@@ -29,7 +29,6 @@ class PortfolioRepository(ABC):
         Args:
             portfolio: Portfolio to save
         """
-        pass
 
     @abstractmethod
     async def find_by_id(self, portfolio_id: str) -> Optional[Portfolio]:
@@ -42,7 +41,6 @@ class PortfolioRepository(ABC):
         Returns:
             Portfolio if found, None otherwise
         """
-        pass
 
     @abstractmethod
     async def find_all(self) -> List[Portfolio]:
@@ -52,7 +50,6 @@ class PortfolioRepository(ABC):
         Returns:
             List of all portfolios
         """
-        pass
 
     @abstractmethod
     async def delete(self, portfolio_id: str) -> None:
@@ -62,7 +59,6 @@ class PortfolioRepository(ABC):
         Args:
             portfolio_id: Portfolio ID to delete
         """
-        pass
 
     @abstractmethod
     async def exists(self, portfolio_id: str) -> bool:
@@ -75,4 +71,3 @@ class PortfolioRepository(ABC):
         Returns:
             True if portfolio exists
         """
-        pass

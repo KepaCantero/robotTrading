@@ -9,11 +9,9 @@ significant changes in market regime that may require strategy adjustments.
 """
 
 import logging
-from datetime import datetime
 
-from app.services.hurst_analysis.models import MarketRegime, RegimeChange
+from app.services.hurst_analysis.models import RegimeChange
 from app.services.hurst_analysis.protocols import (
-    HistoricalTrackerProtocol,
     RegimeClassifierProtocol,
 )
 

@@ -4,50 +4,42 @@ Unit tests for Numba-accelerated metrics module.
 Tests for performance-critical metrics calculations using Numba JIT compilation.
 """
 
-import pytest
-import numpy as np
-from unittest.mock import patch, Mock
 import time
 
+import numpy as np
+import pytest
+
 try:
-    from numba import jit
+    pass
 
     NUMBA_AVAILABLE = True
 except ImportError:
     NUMBA_AVAILABLE = False
 
-from app.backtesting.numba_metrics import (
-    # Helper functions
-    sample_std_numba,
-    # Return calculations
-    calculate_returns_numba,
-    calculate_cumulative_returns_numba,
+from app.backtesting.numba_metrics import (  # Helper functions; Return calculations; Risk metrics; Drawdown analysis; Trade statistics; Volatility metrics; Advanced metrics; Utility
+    calculate_avg_win_loss_numba,
     calculate_cagr_numba,
+    calculate_calmar_ratio_numba,
+    calculate_cumulative_returns_numba,
+    calculate_cvar_numba,
+    calculate_drawdown_series_numba,
+    calculate_expectancy_numba,
+    calculate_information_ratio_numba,
+    calculate_kurtosis_numba,
     calculate_log_returns_numba,
-    # Risk metrics
+    calculate_max_drawdown_duration_numba,
+    calculate_max_drawdown_numba,
+    calculate_profit_factor_numba,
+    calculate_returns_numba,
+    calculate_rolling_volatility_numba,
     calculate_sharpe_numba,
+    calculate_skewness_numba,
     calculate_sortino_numba,
     calculate_var_numba,
-    calculate_cvar_numba,
-    # Drawdown analysis
-    calculate_drawdown_series_numba,
-    calculate_max_drawdown_numba,
-    calculate_max_drawdown_duration_numba,
-    # Trade statistics
-    calculate_win_rate_numba,
-    calculate_profit_factor_numba,
-    calculate_avg_win_loss_numba,
-    calculate_expectancy_numba,
-    # Volatility metrics
     calculate_volatility_numba,
-    calculate_rolling_volatility_numba,
-    # Advanced metrics
-    calculate_calmar_ratio_numba,
-    calculate_information_ratio_numba,
-    calculate_skewness_numba,
-    calculate_kurtosis_numba,
-    # Utility
+    calculate_win_rate_numba,
     get_numba_metrics_info,
+    sample_std_numba,
 )
 
 

@@ -3,15 +3,15 @@ Unit tests for Parametric VaR Calculator.
 
 Tests for variance-covariance (parametric) VaR calculation with Numba optimization.
 """
-import pytest
+from unittest.mock import patch
+
 import numpy as np
-from unittest.mock import patch, Mock
+import pytest
 
 from app.engines.risk_engine.var_calculators.var_calculators import (
     ParametricVaRCalculator,
-    BaseVaRCalculator,
-    calculate_mean_std_numba,
     calculate_jarque_bera_numba,
+    calculate_mean_std_numba,
 )
 
 

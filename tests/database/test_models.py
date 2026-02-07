@@ -19,12 +19,11 @@ Changes tested:
 
 from datetime import datetime, timedelta
 from decimal import Decimal
-from unittest.mock import patch
 
 import pytest
-from sqlalchemy import create_engine, inspect
+from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session, sessionmaker
 
 from app.database import Base
 from app.database.models import (
@@ -41,7 +40,6 @@ from app.database.models import (
     Trade,
     User,
 )
-
 
 # =============================================================================
 # Fixtures
@@ -69,7 +67,8 @@ def db_session():
             # Remove the PostgreSQL-specific currency constraint
             for table in Base.metadata.sorted_tables:
                 table.constraints = [
-                    c for c in table.constraints
+                    c
+                    for c in table.constraints
                     if not (hasattr(c, 'name') and c.name == 'ck_assets_currency_iso')
                 ]
 
@@ -270,7 +269,10 @@ class TestMutableDefaults:
 class TestCheckConstraints:
     """Test that check constraints work correctly."""
 
-    @pytest.mark.skipif(True, reason="Currency ISO constraint uses PostgreSQL regex (~), not supported in SQLite. Test with PostgreSQL database.")
+    @pytest.mark.skipif(
+        True,
+        reason="Currency ISO constraint uses PostgreSQL regex (~), not supported in SQLite. Test with PostgreSQL database.",
+    )
     def test_asset_currency_iso_format_valid(self, db_session: Session):
         """Test that valid ISO 4217 currency codes are accepted.
 
@@ -295,7 +297,10 @@ class TestCheckConstraints:
         for asset in assets:
             assert asset.currency == currency
 
-    @pytest.mark.skipif(True, reason="Currency ISO constraint uses PostgreSQL regex (~), not supported in SQLite. Test with PostgreSQL database.")
+    @pytest.mark.skipif(
+        True,
+        reason="Currency ISO constraint uses PostgreSQL regex (~), not supported in SQLite. Test with PostgreSQL database.",
+    )
     def test_asset_currency_iso_format_invalid(self, db_session: Session):
         """Test that invalid currency codes are rejected.
 
@@ -320,7 +325,9 @@ class TestCheckConstraints:
                 db_session.commit()
 
             # Verify it's a check constraint violation
-            assert "check constraint" in str(exc_info.value).lower() or "ck_assets_currency_iso" in str(exc_info.value)
+            assert "check constraint" in str(
+                exc_info.value
+            ).lower() or "ck_assets_currency_iso" in str(exc_info.value)
 
     def test_trade_side_constraint_valid(self, db_session: Session, test_portfolio, test_asset):
         """Test that valid trade sides are accepted."""
@@ -697,7 +704,9 @@ class TestCheckConstraints:
 class TestCascadeDeletes:
     """Test that foreign key cascade deletes work correctly."""
 
-    def test_delete_user_cascades_to_portfolios(self, db_session: Session, test_user, test_portfolio):
+    def test_delete_user_cascades_to_portfolios(
+        self, db_session: Session, test_user, test_portfolio
+    ):
         """Test that deleting a user cascades to portfolios."""
         # Arrange
         portfolio_id = test_portfolio.id
@@ -730,7 +739,9 @@ class TestCascadeDeletes:
         deleted_api_key = db_session.query(APIKey).filter_by(id=api_key_id).first()
         assert deleted_api_key is None
 
-    def test_delete_portfolio_cascades_to_positions(self, db_session: Session, test_portfolio, test_position):
+    def test_delete_portfolio_cascades_to_positions(
+        self, db_session: Session, test_portfolio, test_position
+    ):
         """Test that deleting a portfolio cascades to positions."""
         # Arrange
         position_id = test_position.id
@@ -743,7 +754,9 @@ class TestCascadeDeletes:
         deleted_position = db_session.query(Position).filter_by(id=position_id).first()
         assert deleted_position is None
 
-    def test_delete_portfolio_cascades_to_trades(self, db_session: Session, test_portfolio, test_asset):
+    def test_delete_portfolio_cascades_to_trades(
+        self, db_session: Session, test_portfolio, test_asset
+    ):
         """Test that deleting a portfolio cascades to trades."""
         # Arrange
         trade = Trade(
@@ -791,7 +804,9 @@ class TestCascadeDeletes:
         deleted_backtest = db_session.query(Backtest).filter_by(id=backtest_id).first()
         assert deleted_backtest is None
 
-    def test_delete_asset_cascades_to_positions(self, db_session: Session, test_asset, test_position):
+    def test_delete_asset_cascades_to_positions(
+        self, db_session: Session, test_asset, test_position
+    ):
         """Test that deleting an asset cascades to positions.
 
         NOTE: SQLite doesn't enforce ON DELETE CASCADE at the database level like PostgreSQL.
@@ -953,7 +968,9 @@ class TestUniqueConstraints:
 
         assert "unique" in str(exc_info.value).lower() or "order_id" in str(exc_info.value)
 
-    def test_trade_order_id_nullable_allows_null(self, db_session: Session, test_portfolio, test_asset):
+    def test_trade_order_id_nullable_allows_null(
+        self, db_session: Session, test_portfolio, test_asset
+    ):
         """Test that trade order_id can be null."""
         # Arrange
         trade1 = Trade(
@@ -1072,7 +1089,9 @@ class TestUniqueConstraints:
         with pytest.raises(IntegrityError) as exc_info:
             db_session.commit()
 
-        assert "unique" in str(exc_info.value).lower() or "uq_portfolios_user_name" in str(exc_info.value)
+        assert "unique" in str(exc_info.value).lower() or "uq_portfolios_user_name" in str(
+            exc_info.value
+        )
 
     def test_portfolio_same_name_different_user(self, db_session: Session, test_user):
         """Test that portfolio name can be same for different users."""
@@ -1131,7 +1150,9 @@ class TestUniqueConstraints:
         with pytest.raises(IntegrityError) as exc_info:
             db_session.commit()
 
-        assert "unique" in str(exc_info.value).lower() or "uq_positions_portfolio_asset" in str(exc_info.value)
+        assert "unique" in str(exc_info.value).lower() or "uq_positions_portfolio_asset" in str(
+            exc_info.value
+        )
 
     def test_market_data_asset_timestamp_unique(self, db_session: Session, test_asset):
         """Test that market data must be unique per asset-timestamp combination."""
@@ -1162,7 +1183,9 @@ class TestUniqueConstraints:
         with pytest.raises(IntegrityError) as exc_info:
             db_session.commit()
 
-        assert "unique" in str(exc_info.value).lower() or "uq_market_data_asset_timestamp" in str(exc_info.value)
+        assert "unique" in str(exc_info.value).lower() or "uq_market_data_asset_timestamp" in str(
+            exc_info.value
+        )
 
     def test_api_key_hash_unique(self, db_session: Session, test_user):
         """Test that API key hash must be unique."""
@@ -1217,7 +1240,9 @@ class TestModelRelationships:
         assert api_key in test_user.api_keys
         assert api_key.user == test_user
 
-    def test_portfolio_positions_relationship(self, db_session: Session, test_portfolio, test_position):
+    def test_portfolio_positions_relationship(
+        self, db_session: Session, test_portfolio, test_position
+    ):
         """Test Portfolio <-> Position relationship."""
         # Assert
         assert test_position in test_portfolio.positions

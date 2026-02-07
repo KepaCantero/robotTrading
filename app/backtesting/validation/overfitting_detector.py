@@ -22,15 +22,13 @@ References:
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
-from scipy import stats
 
-from .models import (
+from app.backtesting.validation.models import (
     OverfittingLevel,
     OverfittingMetrics,
     ParameterStabilityResult,

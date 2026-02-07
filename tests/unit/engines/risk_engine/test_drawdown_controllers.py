@@ -3,14 +3,13 @@ Unit tests for Drawdown Controllers.
 
 Tests for drawdown calculation and control mechanisms.
 """
-import pytest
+
 import numpy as np
-from unittest.mock import Mock
+import pytest
 
 from app.engines.risk_engine.drawdown_controllers.drawdown_controllers import (
-    DrawdownController,
     CircuitBreakerController,
-    PeakDrawdownController,
+    DrawdownController,
 )
 
 

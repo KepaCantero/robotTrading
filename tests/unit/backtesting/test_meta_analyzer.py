@@ -8,14 +8,14 @@ Tests for the meta-analysis of backtesting results including:
 - Optimal combination suggestions
 """
 
-import pytest
+import json
+import shutil
+import tempfile
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from unittest.mock import patch, MagicMock, Mock
-from pathlib import Path
-import json
-import tempfile
-import shutil
+import pytest
 
 from app.backtesting.meta_analyzer.meta_analyzer import BacktestMetaAnalyzer
 

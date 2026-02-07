@@ -25,15 +25,8 @@ from .alert_fatigue_preventer import (
     AlertStats,
     ProcessedAlert,
 )
-from .alert_grouper import (
-    AlertCluster,
-    AlertGrouper,
-    GroupingStrategy,
-)
-from .alert_prioritizer import (
-    AlertPrioritizer,
-    PriorityScore,
-)
+from .alert_grouper import AlertCluster, AlertGrouper, GroupingStrategy
+from .alert_prioritizer import AlertPrioritizer, PriorityScore
 
 __all__ = [
     "AlertFatiguePreventer",

@@ -121,7 +121,6 @@ class MarketImpactModel(ABC):
         Returns:
             MarketImpactResult
         """
-        pass
 
 
 class AlmgrenChristModel(MarketImpactModel):

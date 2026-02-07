@@ -4,27 +4,25 @@ Tests for Toil Tracker.
 Comprehensive tests for the toil tracking system following Google SRE principles.
 """
 
-import asyncio
 import json
+import sys
 import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest
 
-import sys
-
 sys.path.insert(0, '/Users/kepa.cantero/Projects/algoTrading')
 
 from app.sre.automation.toil_tracker import (
-    ToilEntry,
-    ToilTracker,
-    ToilCategory,
-    AutomationPotential,
-    ToilMetrics,
     AutomationOpportunity,
-    ToilReport,
+    AutomationPotential,
+    ToilCategory,
     ToilConfig,
+    ToilEntry,
+    ToilMetrics,
+    ToilReport,
+    ToilTracker,
     get_toil_tracker,
 )
 

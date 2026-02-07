@@ -15,18 +15,17 @@ Tests the Settings configuration class with focus on:
 import os
 import sys
 from pathlib import Path
-from typing import Generator
-from unittest.mock import patch, MagicMock
-from pydantic import ConfigDict
+from unittest.mock import patch
 
 import pytest
-from pydantic import ValidationError
+from pydantic import ConfigDict, ValidationError
 
 # Import directly from config.py file (not the config directory)
 config_py_path = Path(__file__).parent.parent.parent / "app" / "core" / "config.py"
 
 # Import the module directly using importlib to avoid the config/ directory
 import importlib.util
+
 spec = importlib.util.spec_from_file_location("app.core.config_module", config_py_path)
 config_module = importlib.util.module_from_spec(spec)
 sys.modules["app.core.config_module"] = config_module
@@ -56,20 +55,55 @@ def clean_env():
     original_env = os.environ.copy()
 
     # Clear all environment variables that might interfere
-    env_prefixes = ('ALPACA_', 'IB_', 'REDIS_', 'DB_', 'LOG_', 'API_', 'SECRET_',
-                    'DEBUG', 'TESTING', 'DASHBOARD_', 'CORS_', 'CELERY_', 'ENVIRONMENT',
-                    'SMTP_', 'NOTIFICATION_', 'TELEGRAM_', 'NEO4J_', 'MLFLOW_', 'DAGSTER_',
-                    'POLYGON_', 'ALPHA_', 'YAHOO_', 'FMP_', 'NEWS_', 'MARKETAUX_',
-                    'TWITTER_', 'REDDIT_', 'QUESTDB_', 'BACKTESTING_', 'PAPER_',
-                    'DEFAULT_', 'RISK_', 'MAX_', 'STRATEGY_', 'RATE_LIMIT_',
-                    'PASSWORD_', 'TOKEN_', 'ACCESS_TOKEN_', 'REFRESH_TOKEN_',
-                    'PORT', 'HOST', 'ALLOW_WEAK_')
+    env_prefixes = (
+        'ALPACA_',
+        'IB_',
+        'REDIS_',
+        'DB_',
+        'LOG_',
+        'API_',
+        'SECRET_',
+        'DEBUG',
+        'TESTING',
+        'DASHBOARD_',
+        'CORS_',
+        'CELERY_',
+        'ENVIRONMENT',
+        'SMTP_',
+        'NOTIFICATION_',
+        'TELEGRAM_',
+        'NEO4J_',
+        'MLFLOW_',
+        'DAGSTER_',
+        'POLYGON_',
+        'ALPHA_',
+        'YAHOO_',
+        'FMP_',
+        'NEWS_',
+        'MARKETAUX_',
+        'TWITTER_',
+        'REDDIT_',
+        'QUESTDB_',
+        'BACKTESTING_',
+        'PAPER_',
+        'DEFAULT_',
+        'RISK_',
+        'MAX_',
+        'STRATEGY_',
+        'RATE_LIMIT_',
+        'PASSWORD_',
+        'TOKEN_',
+        'ACCESS_TOKEN_',
+        'REFRESH_TOKEN_',
+        'PORT',
+        'HOST',
+        'ALLOW_WEAK_',
+    )
     env_keys_to_clear = [k for k in os.environ if k.startswith(env_prefixes)]
     for key in env_keys_to_clear:
         os.environ.pop(key, None)
 
     # Temporarily rename .env file to prevent loading
-    import tempfile
     import shutil
     from pathlib import Path as FilePath
 
@@ -101,6 +135,7 @@ def settings_with_no_env_file(clean_env):
     This is needed because .env file may contain extra fields that would
     trigger extra="forbid" validation.
     """
+
     # Create a Settings subclass that doesn't load from .env
     class TestSettings(Settings):
         model_config = ConfigDict(
@@ -254,7 +289,10 @@ class TestSettingsDefaults:
             settings = TestSettings()
 
         # Assert - Database Settings
-        assert settings.database_url == "postgresql://algotrading:algotrading@localhost:5432/algotrading"
+        assert (
+            settings.database_url
+            == "postgresql://algotrading:algotrading@localhost:5432/algotrading"
+        )
         assert settings.database_echo is False
         assert settings.database_pool_size == 10
         assert settings.database_max_overflow == 20
@@ -623,8 +661,7 @@ class TestDatabaseURLConversion:
         # Arrange
         TestSettings = settings_with_no_env_file
         settings = TestSettings(
-            secret_key="a" * 32,
-            database_url="postgresql://user:pass@localhost/db"
+            secret_key="a" * 32, database_url="postgresql://user:pass@localhost/db"
         )
 
         # Act
@@ -640,8 +677,7 @@ class TestDatabaseURLConversion:
         # Arrange
         TestSettings = settings_with_no_env_file
         settings = TestSettings(
-            secret_key="a" * 32,
-            database_url="postgresql://user:pass@localhost:5432/mydb"
+            secret_key="a" * 32, database_url="postgresql://user:pass@localhost:5432/mydb"
         )
 
         # Act
@@ -657,10 +693,7 @@ class TestDatabaseURLConversion:
         """
         # Arrange
         TestSettings = settings_with_no_env_file
-        settings = TestSettings(
-            secret_key="a" * 32,
-            database_url="sqlite:///./data/test.db"
-        )
+        settings = TestSettings(secret_key="a" * 32, database_url="sqlite:///./data/test.db")
 
         # Act
         async_url = settings.get_database_url_async()
@@ -675,10 +708,7 @@ class TestDatabaseURLConversion:
         """
         # Arrange
         TestSettings = settings_with_no_env_file
-        settings = TestSettings(
-            secret_key="a" * 32,
-            database_url="mysql://user:pass@localhost/db"
-        )
+        settings = TestSettings(secret_key="a" * 32, database_url="mysql://user:pass@localhost/db")
 
         # Act
         async_url = settings.get_database_url_async()
@@ -693,8 +723,7 @@ class TestDatabaseURLConversion:
         # Arrange - URL already async
         TestSettings = settings_with_no_env_file
         settings = TestSettings(
-            secret_key="a" * 32,
-            database_url="postgresql+asyncpg://user:pass@localhost/db"
+            secret_key="a" * 32, database_url="postgresql+asyncpg://user:pass@localhost/db"
         )
 
         # Act

@@ -3,14 +3,14 @@ Comprehensive integration tests for VaR calculators.
 
 Tests comparing different VaR calculation methods.
 """
-import pytest
 import numpy as np
+import pytest
 
 from app.engines.risk_engine.var_calculators.var_calculators import (
-    HistoricalVaRCalculator,
-    ParametricVaRCalculator,
-    MonteCarloVaRCalculator,
     GARCHVaRCalculator,
+    HistoricalVaRCalculator,
+    MonteCarloVaRCalculator,
+    ParametricVaRCalculator,
 )
 
 
@@ -84,7 +84,7 @@ class TestVaRMethodSelection:
         param_calc = ParametricVaRCalculator(config)
 
         hist_result = hist_calc.calculate_var(skewed_returns)
-        param_result = param_calc.calculate_var(skewed_returns)
+        param_calc.calculate_var(skewed_returns)
 
         # Historical should handle better
         assert 'error' not in hist_result

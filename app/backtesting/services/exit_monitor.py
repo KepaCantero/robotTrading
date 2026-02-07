@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, List, Optional
 
 from app.backtesting.models import BacktestConfig, Trade, TradeStatus
 from app.backtesting.services.position_manager import PositionManager
@@ -87,9 +87,7 @@ class ExitConditionMonitor:
         recent_trades = [
             t
             for t in trades
-            if t.symbol == market_data.symbol
-            and t.side == "buy"
-            and t.status == TradeStatus.OPEN
+            if t.symbol == market_data.symbol and t.side == "buy" and t.status == TradeStatus.OPEN
         ]
 
         if not recent_trades:
@@ -147,9 +145,7 @@ class ExitConditionMonitor:
                 if hasattr(market_data, "low") and market_data.low is not None
                 else close_price
             )
-            close_position_func(
-                market_data.symbol, market_data.timestamp, "stop_loss", exit_price
-            )
+            close_position_func(market_data.symbol, market_data.timestamp, "stop_loss", exit_price)
             return True
         elif stop_loss_triggered:
             # Only stop-loss hit
@@ -208,9 +204,7 @@ class ExitConditionMonitor:
         if self.config.stop_loss_percentage is None:
             return None
 
-        return entry_price * (
-            Decimal("1") - self.config.stop_loss_percentage / Decimal("100")
-        )
+        return entry_price * (Decimal("1") - self.config.stop_loss_percentage / Decimal("100"))
 
     def calculate_take_profit_price(self, entry_price: Decimal) -> Optional[Decimal]:
         """
@@ -225,9 +219,7 @@ class ExitConditionMonitor:
         if self.config.take_profit_percentage is None:
             return None
 
-        return entry_price * (
-            Decimal("1") + self.config.take_profit_percentage / Decimal("100")
-        )
+        return entry_price * (Decimal("1") + self.config.take_profit_percentage / Decimal("100"))
 
     def is_stop_loss_hit(
         self, market_data: Any, stop_loss_price: Decimal

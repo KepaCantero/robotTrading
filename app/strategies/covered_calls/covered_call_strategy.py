@@ -18,7 +18,7 @@ SOLID Principles:
 """
 
 import logging
-from datetime import date, datetime, timedelta
+from datetime import date
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
@@ -34,7 +34,6 @@ from .models import (
     CoveredCallConfig,
     CoveredCallPosition,
     RollDecision,
-    RollType,
 )
 from .option_screener import OptionScreener, OptionScreeningCriteria
 from .position_manager import PositionManager

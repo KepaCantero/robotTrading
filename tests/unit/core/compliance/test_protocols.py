@@ -5,50 +5,44 @@ Unit tests for protocols.py
 Tests for compliance service protocol interfaces.
 """
 
-import pytest
-import pandas as pd
 from decimal import Decimal
 from typing import Any
 
+import pandas as pd
+import pytest
+
 from app.core.compliance.protocols import (
     ComplianceService,
-    PreTradeCheckable,
     PostTradeCheckable,
-    Optimizable,
-    RegimeDetectable,
-    AlphaGeneratable,
-    RiskCalculable,
-    LiquidityAnalyzable,
-    ExecutionAlgorithm,
-    TransactionCostModel,
+    PreTradeCheckable,
 )
 
 
 class MockComplianceService:
     """Mock implementation of ComplianceService protocol."""
-    
+
     def is_available(self) -> bool:
         return True
-    
+
     def get_service_name(self) -> str:
         return "mock_service"
-    
+
     def initialize(self) -> None:
         pass
 
 
 class MockPreTradeService:
     """Mock implementation of PreTradeCheckable protocol."""
-    
+
     def is_available(self) -> bool:
         return True
-    
+
     def get_service_name(self) -> str:
         return "mock_pre_trade"
-    
+
     def initialize(self) -> None:
         pass
-    
+
     def check_pre_trade(
         self,
         symbol: str,
@@ -68,16 +62,16 @@ class MockPreTradeService:
 
 class MockPostTradeService:
     """Mock implementation of PostTradeCheckable protocol."""
-    
+
     def is_available(self) -> bool:
         return True
-    
+
     def get_service_name(self) -> str:
         return "mock_post_trade"
-    
+
     def initialize(self) -> None:
         pass
-    
+
     def check_post_trade(
         self,
         order_id: str,
@@ -114,7 +108,7 @@ class TestPreTradeCheckable:
         service = MockPreTradeService()
         assert isinstance(service, PreTradeCheckable)
         assert isinstance(service, ComplianceService)
-        
+
         result = service.check_pre_trade(
             symbol="AAPL",
             side="BUY",
@@ -158,7 +152,7 @@ class TestPostTradeCheckable:
         service = MockPostTradeService()
         assert isinstance(service, PostTradeCheckable)
         assert isinstance(service, ComplianceService)
-        
+
         result = service.check_post_trade(
             order_id="order-1",
             symbol="AAPL",
@@ -192,7 +186,10 @@ class TestProtocolExtensionPoints:
 def sample_price_history():
     """Create sample price history DataFrame."""
     dates = pd.date_range("2024-01-01", periods=100, freq="D")
-    return pd.DataFrame({
-        "close": [100 + i * 0.1 for i in range(100)],
-        "volume": [1000000 for _ in range(100)],
-    }, index=dates)
+    return pd.DataFrame(
+        {
+            "close": [100 + i * 0.1 for i in range(100)],
+            "volume": [1000000 for _ in range(100)],
+        },
+        index=dates,
+    )

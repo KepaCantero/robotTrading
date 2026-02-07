@@ -194,7 +194,6 @@ class BayesianOptimizer(BaseOptimizer):
         except Exception as e:
             logger.error(f"Optuna optimization failed: {e}")
             # Return best found so far
-            pass
 
         # Extract results
         self._extract_results_from_study(study)

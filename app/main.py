@@ -47,6 +47,14 @@ from app.api.error_handler import (
 from app.api.health import router as health_router
 from app.api.live_trading import router as live_trading_router
 from app.api.market_data import router as market_data_router
+
+# API-006 FIX: Import authentication and security middleware
+from app.api.middleware import (
+    AuthMiddleware,
+    CorrelationIdMiddleware,
+    RequestLoggingMiddleware,
+    SecurityHeadersMiddleware,
+)
 from app.api.momentum import router as momentum_router
 from app.api.optimization import router as optimization_router
 from app.api.paper_trading import router as paper_trading_router
@@ -56,14 +64,6 @@ from app.api.signals import router as signals_router
 from app.api.trading_error_handler import router as trading_error_handler_router
 from app.core.config import get_settings
 from app.core.database import close_database, init_database
-
-# API-006 FIX: Import authentication and security middleware
-from app.api.middleware import (
-    AuthMiddleware,
-    CorrelationIdMiddleware,
-    RequestLoggingMiddleware,
-    SecurityHeadersMiddleware,
-)
 
 # AlgoTrading MVP - Main FastAPI Application
 #

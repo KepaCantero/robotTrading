@@ -412,8 +412,10 @@ class DividendHandler:
 
     def get_total_reinvested(self) -> Decimal:
         """Get total amount of dividends reinvested."""
-        return sum(r.dividend_amount for r in self._reinvestments)
+        return sum((r.dividend_amount for r in self._reinvestments), Decimal("0"))
 
     def get_total_shares_from_reinvestment(self, symbol: str) -> Decimal:
         """Get total shares acquired from dividend reinvestment."""
-        return sum(r.shares_purchased for r in self._reinvestments if r.symbol == symbol)
+        return sum(
+            (r.shares_purchased for r in self._reinvestments if r.symbol == symbol), Decimal("0")
+        )

@@ -90,7 +90,9 @@ class AuthMiddleware(BaseHTTPMiddleware):
         """
         if self._valid_api_keys is None:
             # In production, load from secure vault or environment
-            api_keys = self.settings.model_extra.get("api_keys", "") if self.settings.model_extra else ""
+            api_keys = (
+                self.settings.model_extra.get("api_keys", "") if self.settings.model_extra else ""
+            )
             if api_keys:
                 self._valid_api_keys = set(api_keys.split(","))
             else:

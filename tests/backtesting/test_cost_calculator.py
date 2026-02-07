@@ -4,14 +4,11 @@ Test suite for app.backtesting.cost_calculator
 Addresses TST-005: Test coverage for CostCalculator
 """
 
-import pytest
 from decimal import Decimal
 
-from app.backtesting.cost_calculator import (
-    AssetType,
-    CostCalculator,
-    CostCalculatorError,
-)
+import pytest
+
+from app.backtesting.cost_calculator import AssetType, CostCalculator, CostCalculatorError
 
 
 class TestCostCalculatorImport:
@@ -20,6 +17,7 @@ class TestCostCalculatorImport:
     def test_import_asset_type(self):
         """Test that AssetType enum can be imported."""
         from app.backtesting.cost_calculator import AssetType
+
         assert AssetType.EQUITY == "equity"
         assert AssetType.CRYPTO == "crypto"
         assert AssetType.FOREX == "forex"
@@ -28,11 +26,13 @@ class TestCostCalculatorImport:
     def test_import_cost_calculator(self):
         """Test that CostCalculator class can be imported."""
         from app.backtesting.cost_calculator import CostCalculator
+
         assert CostCalculator is not None
 
     def test_import_cost_calculator_error(self):
         """Test that CostCalculatorError can be imported."""
         from app.backtesting.cost_calculator import CostCalculatorError
+
         assert issubclass(CostCalculatorError, ValueError)
 
 
@@ -157,7 +157,7 @@ class TestADVBasedSlippage:
         slippage = calculator.calculate_adv_based_slippage_bps(
             order_value=Decimal("100000"),
             adv_value=Decimal("2000000000"),
-            asset_type=AssetType.EQUITY
+            asset_type=AssetType.EQUITY,
         )
         assert slippage > 0
 
@@ -167,7 +167,7 @@ class TestADVBasedSlippage:
         slippage = calculator.calculate_adv_based_slippage_bps(
             order_value=Decimal("100000"),
             adv_value=Decimal("50000000"),
-            asset_type=AssetType.EQUITY
+            asset_type=AssetType.EQUITY,
         )
         assert slippage > 0
 
@@ -175,9 +175,7 @@ class TestADVBasedSlippage:
         """Test ADV slippage with zero ADV (uses default)."""
         calculator = CostCalculator()
         slippage = calculator.calculate_adv_based_slippage_bps(
-            order_value=Decimal("100000"),
-            adv_value=Decimal("0"),
-            asset_type=AssetType.EQUITY
+            order_value=Decimal("100000"), adv_value=Decimal("0"), asset_type=AssetType.EQUITY
         )
         assert slippage > 0
 
@@ -188,13 +186,13 @@ class TestADVBasedSlippage:
             order_value=Decimal("100000"),
             adv_value=Decimal("2000000000"),
             vix=Decimal("20"),
-            asset_type=AssetType.EQUITY
+            asset_type=AssetType.EQUITY,
         )
         slippage_high_vol = calculator.calculate_adv_based_slippage_bps(
             order_value=Decimal("100000"),
             adv_value=Decimal("2000000000"),
             vix=Decimal("35"),
-            asset_type=AssetType.EQUITY
+            asset_type=AssetType.EQUITY,
         )
         assert slippage_high_vol > slippage_normal
 
@@ -213,8 +211,7 @@ class TestValidation:
         calculator = CostCalculator()
         with pytest.raises(CostCalculatorError):
             calculator.calculate_adv_based_slippage_bps(
-                order_value=Decimal("0"),
-                adv_value=Decimal("1000000")
+                order_value=Decimal("0"), adv_value=Decimal("1000000")
             )
 
 
@@ -225,9 +222,7 @@ class TestTotalCostCalculation:
         """Test total cost for buy order."""
         calculator = CostCalculator()
         total_cost, adjustment = calculator.calculate_total_cost(
-            symbol="AAPL",
-            trade_value=Decimal("10000"),
-            is_buy=True
+            symbol="AAPL", trade_value=Decimal("10000"), is_buy=True
         )
         assert total_cost >= 0
         assert adjustment > 0  # Buy: pay ask (higher)
@@ -236,9 +231,7 @@ class TestTotalCostCalculation:
         """Test total cost for sell order."""
         calculator = CostCalculator()
         total_cost, adjustment = calculator.calculate_total_cost(
-            symbol="AAPL",
-            trade_value=Decimal("10000"),
-            is_buy=False
+            symbol="AAPL", trade_value=Decimal("10000"), is_buy=False
         )
         assert total_cost >= 0
         assert adjustment < 0  # Sell: receive bid (lower)
@@ -251,9 +244,7 @@ class TestExecutionPriceAdjustment:
         """Test execution cost for buy order."""
         calculator = CostCalculator()
         adjusted_price = calculator.apply_execution_costs(
-            base_price=Decimal("100"),
-            symbol="AAPL",
-            is_buy=True
+            base_price=Decimal("100"), symbol="AAPL", is_buy=True
         )
         assert adjusted_price > Decimal("100")
 
@@ -261,9 +252,7 @@ class TestExecutionPriceAdjustment:
         """Test execution cost for sell order."""
         calculator = CostCalculator()
         adjusted_price = calculator.apply_execution_costs(
-            base_price=Decimal("100"),
-            symbol="AAPL",
-            is_buy=False
+            base_price=Decimal("100"), symbol="AAPL", is_buy=False
         )
         assert adjusted_price < Decimal("100")
 
@@ -275,8 +264,7 @@ class TestMarketImpactCalculation:
         """Test market impact calculation."""
         calculator = CostCalculator()
         impact = calculator.calculate_market_impact(
-            trade_value=Decimal("100000"),
-            order_size_pct=Decimal("0.01")
+            trade_value=Decimal("100000"), order_size_pct=Decimal("0.01")
         )
         assert impact >= 0
 
@@ -284,7 +272,6 @@ class TestMarketImpactCalculation:
         """Test market impact with no order size percentage."""
         calculator = CostCalculator()
         impact = calculator.calculate_market_impact(
-            trade_value=Decimal("100000"),
-            order_size_pct=None
+            trade_value=Decimal("100000"), order_size_pct=None
         )
         assert impact == 0

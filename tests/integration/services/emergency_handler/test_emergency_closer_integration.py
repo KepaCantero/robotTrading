@@ -13,7 +13,6 @@ import pytest
 
 from app.services.emergency_handler.emergency_closer import (
     EmergencyCloser,
-    EmergencyCloseResult,
     EmergencyTrigger,
 )
 

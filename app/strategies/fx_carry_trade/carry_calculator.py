@@ -29,10 +29,7 @@ from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from app.strategies.fx_carry_trade.models import (
-    FXCarrySignal,
-    FXPair,
-)
+from app.strategies.fx_carry_trade.models import FXCarrySignal, FXPair
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -123,14 +120,10 @@ class CarryCalculator:
             ValueError: If signal_threshold is negative or signal_multiplier is not positive
         """
         if signal_threshold < 0:
-            raise ValueError(
-                f"signal_threshold must be non-negative, got {signal_threshold}"
-            )
+            raise ValueError(f"signal_threshold must be non-negative, got {signal_threshold}")
 
         if signal_multiplier <= 0:
-            raise ValueError(
-                f"signal_multiplier must be positive, got {signal_multiplier}"
-            )
+            raise ValueError(f"signal_multiplier must be positive, got {signal_multiplier}")
 
         self.signal_threshold: Decimal = signal_threshold
         self.signal_multiplier: float = signal_multiplier
@@ -141,9 +134,7 @@ class CarryCalculator:
             f"signal_multiplier={signal_multiplier}"
         )
 
-    def calculate_forward_premium(
-        self, spot_rate: Decimal, forward_rate: Decimal
-    ) -> Decimal:
+    def calculate_forward_premium(self, spot_rate: Decimal, forward_rate: Decimal) -> Decimal:
         """
         Calculate forward premium from spot and forward rates.
 
@@ -343,9 +334,7 @@ class CarryCalculator:
             ... )
         """
         filtered = {
-            pair: signal
-            for pair, signal in signals.items()
-            if abs(signal.signal) >= min_abs_signal
+            pair: signal for pair, signal in signals.items() if abs(signal.signal) >= min_abs_signal
         }
 
         logger.debug(f"Filtered signals: {len(signals)} -> {len(filtered)}")
@@ -418,12 +407,8 @@ class CarryCalculator:
                 forward_rate = provider.get_forward_rate(pair, as_of, months)
 
                 # Get interest rates
-                base_rate = provider.get_interest_rate(
-                    pair.base_currency, as_of, months
-                )
-                quote_rate = provider.get_interest_rate(
-                    pair.quote_currency, as_of, months
-                )
+                base_rate = provider.get_interest_rate(pair.base_currency, as_of, months)
+                quote_rate = provider.get_interest_rate(pair.quote_currency, as_of, months)
 
                 # Calculate interest rate differential
                 interest_rate_diff = base_rate - quote_rate

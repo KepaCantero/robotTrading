@@ -15,7 +15,7 @@ import traceback
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, status, Request
+from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field
 from requests.exceptions import HTTPError, RequestException
 
@@ -30,7 +30,7 @@ from app.services.trading_error_handler import (
 )
 
 from . import audit_logger, get_correlation_id
-from .security import rate_limit, require_auth, audit_log
+from .security import audit_log, rate_limit, require_auth
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

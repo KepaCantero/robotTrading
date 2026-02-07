@@ -11,14 +11,12 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+from datetime import datetime
 from decimal import Decimal
-from datetime import datetime, timedelta
-from typing import Optional
 
-from app.domain.entities.trade import Trade, ExitReason
 from app.domain.entities.position import Position
+from app.domain.entities.trade import Trade
 from app.domain.value_objects.tax_residence import TaxResidence
-
 
 # Structured logging for tax calculations (TRD-004, LOG-001)
 logger = logging.getLogger(__name__)
@@ -102,7 +100,7 @@ class TaxCalculator:
                 "is_long_term": is_long_term,
                 "entry_date": trade.entry_date.isoformat(),
                 "exit_date": trade.exit_date.isoformat() if trade.exit_date else None,
-            }
+            },
         )
 
         # Apply appropriate tax rate
@@ -136,7 +134,7 @@ class TaxCalculator:
                 "short_term_tax": str(short_term_tax),
                 "long_term_tax": str(long_term_tax),
                 "net_profit": str(gross_profit - total_tax),
-            }
+            },
         )
 
         return TaxLiability(
@@ -175,7 +173,7 @@ class TaxCalculator:
                 "start_date": start_date.isoformat(),
                 "end_date": end_date.isoformat(),
                 "total_trades": len(trades),
-            }
+            },
         )
 
         # Filter trades by date
@@ -215,7 +213,7 @@ class TaxCalculator:
                 "short_term_tax": str(short_tax),
                 "long_term_tax": str(long_tax),
                 "net_profit": str(total_net),
-            }
+            },
         )
 
         return TaxLiability(
@@ -256,7 +254,7 @@ class TaxCalculator:
                 "source_region": source_region,
                 "withholding_rate": str(withholding_rate),
                 "tax_amount": str(tax_amount),
-            }
+            },
         )
 
         return tax_amount
@@ -308,7 +306,7 @@ class TaxCalculator:
                 "open_positions_count": len(open_positions),
                 "symbols_with_prices": len(current_prices),
                 "applies_wash_sale_rule": self._tax_residence.applies_wash_sale_rule,
-            }
+            },
         )
 
         harvest_candidates = []
@@ -336,7 +334,7 @@ class TaxCalculator:
                                 "unrealized_loss": str(unrealized_pnl),
                                 "holding_days": holding_days,
                                 "wash_sale_eligible": True,
-                            }
+                            },
                         )
                 else:
                     # No wash sale restriction, recommend harvest
@@ -349,7 +347,7 @@ class TaxCalculator:
                             "symbol": position.symbol,
                             "unrealized_loss": str(unrealized_pnl),
                             "wash_sale_eligible": False,
-                        }
+                        },
                     )
 
         # Log tax-loss harvesting results (TRD-004, LOG-001)
@@ -358,7 +356,7 @@ class TaxCalculator:
             extra={
                 "candidates_count": len(harvest_candidates),
                 "candidates": harvest_candidates,
-            }
+            },
         )
 
         return harvest_candidates
@@ -387,7 +385,7 @@ class TaxCalculator:
                 "year_trades_count": len(year_trades),
                 "open_positions_count": len(open_positions),
                 "symbols_with_prices": len(current_prices),
-            }
+            },
         )
 
         # Realized gains/losses from closed trades
@@ -419,7 +417,7 @@ class TaxCalculator:
                 "unrealized_tax": str(unrealized_tax),
                 "total_estimated_tax": str(total_tax),
                 "conservative_assumption": "short-term_rate_for_unrealized",
-            }
+            },
         )
 
         return TaxLiability(

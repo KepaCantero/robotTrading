@@ -8,8 +8,6 @@ This script demonstrates the key features of the vectorization verification modu
 3. Pattern library with examples
 """
 
-import logging
-
 from __future__ import annotations
 
 import sys

@@ -5,11 +5,10 @@ Unit tests for post_trade_checker.py
 Tests for post-trade compliance checker.
 """
 
-import pytest
-from decimal import Decimal
 from datetime import datetime
-from typing import Tuple
-from unittest.mock import Mock, patch
+from decimal import Decimal
+
+import pytest
 
 from app.core.compliance.post_trade_checker import PostTradeComplianceChecker
 from app.core.compliance.results import PostTradeCheckResult
@@ -38,7 +37,7 @@ class TestPostTradeComplianceChecker:
             quantity=Decimal("100"),
             execution_price=Decimal("150.00"),
         )
-        
+
         assert isinstance(result, PostTradeCheckResult)
         assert result.order_id == "order-1"
         assert result.symbol == "AAPL"
@@ -54,7 +53,7 @@ class TestPostTradeComplianceChecker:
             execution_price=Decimal("200.00"),
             signal_price=Decimal("198.00"),
         )
-        
+
         assert result.symbol == "MSFT"
         # Implementation shortfall would be calculated
 
@@ -63,7 +62,7 @@ class TestPostTradeComplianceChecker:
         signal_time = datetime(2024, 1, 1, 10, 0, 0)
         submission_time = datetime(2024, 1, 1, 10, 0, 5)
         execution_time = datetime(2024, 1, 1, 10, 0, 10)
-        
+
         result = checker.check_trade(
             order_id="order-3",
             symbol="GOOGL",
@@ -75,13 +74,13 @@ class TestPostTradeComplianceChecker:
             submission_time=submission_time,
             execution_time=execution_time,
         )
-        
+
         assert isinstance(result, PostTradeCheckResult)
 
     def test_check_trade_with_nbbo(self, checker):
         """Test trade check with NBBO data."""
         nbbo = (Decimal("149.90"), Decimal("150.10"))
-        
+
         result = checker.check_trade(
             order_id="order-4",
             symbol="AAPL",
@@ -90,7 +89,7 @@ class TestPostTradeComplianceChecker:
             execution_price=Decimal("150.00"),
             nbbo_at_execution=nbbo,
         )
-        
+
         assert isinstance(result, PostTradeCheckResult)
 
     def test_track_slo_compliance_success(self, checker):
@@ -101,7 +100,7 @@ class TestPostTradeComplianceChecker:
             fill_rate=100.0,
             error_occurred=False,
         )
-        
+
         assert result["tracked"] is True
         assert result["slo_status"] == "OK"
         assert result["latency_ok"] is True
@@ -112,17 +111,17 @@ class TestPostTradeComplianceChecker:
         result = checker.track_slo_compliance(
             order_id="order-2",
             latency_ms=150.0,  # > 100ms threshold
-            fill_rate=90.0,    # < 95% threshold
+            fill_rate=90.0,  # < 95% threshold
             error_occurred=True,
         )
-        
+
         assert result["tracked"] is True
         assert result["slo_status"] == "VIOLATED"
 
     def test_get_available_analyses(self, checker):
         """Test getting available post-trade analyses."""
         analyses = checker.get_available_analyses()
-        
+
         assert isinstance(analyses, list)
 
     def test_calculate_implementation_shortfall_buy(self, checker):
@@ -132,7 +131,7 @@ class TestPostTradeComplianceChecker:
             execution_price=Decimal("101.00"),
             side="BUY",
         )
-        
+
         # Buy: (execution - signal) / signal * 10000
         expected = float((101 - 100) / 100 * 10000)
         assert shortfall == expected
@@ -144,7 +143,7 @@ class TestPostTradeComplianceChecker:
             execution_price=Decimal("99.00"),
             side="SELL",
         )
-        
+
         # Sell: (signal - execution) / signal * 10000
         expected = float((100 - 99) / 100 * 10000)
         assert shortfall == expected
@@ -153,8 +152,8 @@ class TestPostTradeComplianceChecker:
         """Test effective spread calculation."""
         execution_price = Decimal("150.05")
         nbbo = (Decimal("150.00"), Decimal("150.10"))  # bid, ask
-        
+
         spread = checker.calculate_effective_spread(execution_price, nbbo)
-        
+
         # Should calculate spread in bps
         assert isinstance(spread, float)

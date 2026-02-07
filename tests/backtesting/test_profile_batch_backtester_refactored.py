@@ -13,28 +13,16 @@ Coverage:
 - Temporary config cleanup
 """
 
-import pytest
-from unittest.mock import Mock, MagicMock, patch, call
-from datetime import datetime
-from pathlib import Path
 import tempfile
 import threading
 from decimal import Decimal
+from pathlib import Path
+from unittest.mock import MagicMock, patch
 
-from app.backtesting.profile_batch_backtester_refactored import (
-    ProfileBatchBacktester,
-)
-from app.backtesting.services import (
-    ProfileResultDB,
-    BaselineOptimizationComparison,
-    OptimizedStrategy,
-    ProfileResult,
-)
-from app.core.models.input_profile import (
-    InputProfile,
-    ObjectivoInversion,
-    RiskTolerance,
-)
+import pytest
+
+from app.backtesting.profile_batch_backtester_refactored import ProfileBatchBacktester
+from app.core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
 
 
 class TestProfileBatchBacktesterRefactoredImport:
@@ -43,16 +31,18 @@ class TestProfileBatchBacktesterRefactoredImport:
     def test_import_profile_batch_backtester_refactored(self):
         """Test that ProfileBatchBacktester (refactored) can be imported."""
         from app.backtesting.profile_batch_backtester_refactored import ProfileBatchBacktester
+
         assert ProfileBatchBacktester is not None
 
     def test_import_service_models(self):
         """Test that service layer models can be imported."""
         from app.backtesting.services import (
-            ProfileResultDB,
             BaselineOptimizationComparison,
             OptimizedStrategy,
             ProfileResult,
+            ProfileResultDB,
         )
+
         assert ProfileResultDB is not None
         assert BaselineOptimizationComparison is not None
         assert OptimizedStrategy is not None
@@ -102,9 +92,11 @@ acceptance_criteria:
         try:
             with patch('app.backtesting.services.database_service.create_engine'):
                 with patch('app.backtesting.services.database_service.sessionmaker'):
-                    with patch('app.backtesting.services.database_service.Base.metadata.create_all'):
+                    with patch(
+                        'app.backtesting.services.database_service.Base.metadata.create_all'
+                    ):
                         backtester = ProfileBatchBacktester(config_path=config_path)
-                        
+
                         # Verify all services are initialized
                         assert backtester.config_service is not None
                         assert backtester.fallback_tracker is not None
@@ -150,15 +142,17 @@ investment_horizons:
         try:
             with patch('app.backtesting.services.database_service.create_engine'):
                 with patch('app.backtesting.services.database_service.sessionmaker'):
-                    with patch('app.backtesting.services.database_service.Base.metadata.create_all'):
+                    with patch(
+                        'app.backtesting.services.database_service.Base.metadata.create_all'
+                    ):
                         backtester = ProfileBatchBacktester(config_path=config_path)
                         profiles = backtester.generate_all_profiles()
-                        
+
                         # Verify profiles generated correctly
                         assert isinstance(profiles, list)
                         assert len(profiles) > 0
                         assert all(isinstance(p, InputProfile) for p in profiles)
-                        
+
                         # Verify calculation: 5 objectives × 3 risks × 3 tiers × 3 horizons = 135
                         # (assuming 3 horizons from config)
                         assert len(profiles) == 135  # 5 × 3 × 3 × 3
@@ -189,10 +183,12 @@ investment_horizons:
         try:
             with patch('app.backtesting.services.database_service.create_engine'):
                 with patch('app.backtesting.services.database_service.sessionmaker'):
-                    with patch('app.backtesting.services.database_service.Base.metadata.create_all'):
+                    with patch(
+                        'app.backtesting.services.database_service.Base.metadata.create_all'
+                    ):
                         backtester = ProfileBatchBacktester(config_path=config_path)
                         horizons = backtester.config_service.load_investment_horizons()
-                        
+
                         # Should load dict values
                         assert horizons == [12, 24, 36, 60]
         finally:
@@ -218,10 +214,12 @@ investment_horizons: [6, 12, 18, 24]
         try:
             with patch('app.backtesting.services.database_service.create_engine'):
                 with patch('app.backtesting.services.database_service.sessionmaker'):
-                    with patch('app.backtesting.services.database_service.Base.metadata.create_all'):
+                    with patch(
+                        'app.backtesting.services.database_service.Base.metadata.create_all'
+                    ):
                         backtester = ProfileBatchBacktester(config_path=config_path)
                         horizons = backtester.config_service.load_investment_horizons()
-                        
+
                         # Should load list directly
                         assert horizons == [6, 12, 18, 24]
         finally:
@@ -252,10 +250,12 @@ investment_horizons:
         try:
             with patch('app.backtesting.services.database_service.create_engine'):
                 with patch('app.backtesting.services.database_service.sessionmaker'):
-                    with patch('app.backtesting.services.database_service.Base.metadata.create_all'):
+                    with patch(
+                        'app.backtesting.services.database_service.Base.metadata.create_all'
+                    ):
                         backtester = ProfileBatchBacktester(config_path=config_path)
                         metrics = backtester.get_fallback_metrics()
-                        
+
                         # Should return dict with zero counts
                         assert isinstance(metrics, dict)
                         assert "profile_config_loader_fallback_count" in metrics
@@ -284,20 +284,24 @@ investment_horizons:
         try:
             with patch('app.backtesting.services.database_service.create_engine'):
                 with patch('app.backtesting.services.database_service.sessionmaker'):
-                    with patch('app.backtesting.services.database_service.Base.metadata.create_all'):
+                    with patch(
+                        'app.backtesting.services.database_service.Base.metadata.create_all'
+                    ):
                         backtester = ProfileBatchBacktester(config_path=config_path)
-                        
+
                         # Simulate parallel fallback tracking
                         def increment_fallback():
                             for _ in range(100):
-                                backtester.fallback_tracker.increment_fallback_counter("test_source")
-                        
+                                backtester.fallback_tracker.increment_fallback_counter(
+                                    "test_source"
+                                )
+
                         threads = [threading.Thread(target=increment_fallback) for _ in range(10)]
                         for t in threads:
                             t.start()
                         for t in threads:
                             t.join()
-                        
+
                         # Should have 10 threads × 100 increments = 1000
                         metrics = backtester.get_fallback_metrics()
                         assert metrics.get("test_source_fallback_count", 0) == 1000
@@ -329,29 +333,43 @@ investment_horizons:
         try:
             with patch('app.backtesting.services.database_service.create_engine'):
                 with patch('app.backtesting.services.database_service.sessionmaker'):
-                    with patch('app.backtesting.services.database_service.Base.metadata.create_all'):
+                    with patch(
+                        'app.backtesting.services.database_service.Base.metadata.create_all'
+                    ):
                         # Mock ProfileStrategyMapper
-                        with patch('app.backtesting.profile_batch_backtester_refactored.create_profile_mapper') as mock_mapper:
+                        with patch(
+                            'app.backtesting.profile_batch_backtester_refactored.create_profile_mapper'
+                        ) as mock_mapper:
                             mock_mapper.return_value = MagicMock()
-                            
+
                             backtester = ProfileBatchBacktester(config_path=config_path)
-                            
+
                             # Create test profile
                             profile = InputProfile(
                                 objetivo_inversion=ObjectivoInversion.MAXIMIZAR_CAPITAL,
                                 risk_tolerance=RiskTolerance.ALTO,
                                 capital_initial=Decimal("100000"),
                             )
-                            
+
                             # Should not raise ValueError
                             try:
                                 # This would normally run full pipeline, but we're just testing validation
                                 # We'll mock the internal methods to avoid actual execution
-                                with patch.object(backtester, '_create_profile_config', return_value={}):
+                                with patch.object(
+                                    backtester, '_create_profile_config', return_value={}
+                                ):
                                     with patch.object(backtester, '_run_baseline', return_value={}):
-                                        with patch.object(backtester, '_run_optimization_pipeline', return_value=MagicMock()):
-                                            with patch.object(backtester.database_service, 'store_result'):
-                                                result = backtester.run_single_profile(profile, multi_strategy=True)
+                                        with patch.object(
+                                            backtester,
+                                            '_run_optimization_pipeline',
+                                            return_value=MagicMock(),
+                                        ):
+                                            with patch.object(
+                                                backtester.database_service, 'store_result'
+                                            ):
+                                                result = backtester.run_single_profile(
+                                                    profile, multi_strategy=True
+                                                )
                                                 # If we get here without ValueError, validation passed
                             except ValueError as e:
                                 if "ProfileStrategyMapper not initialized" in str(e):
@@ -380,22 +398,27 @@ investment_horizons:
         try:
             with patch('app.backtesting.services.database_service.create_engine'):
                 with patch('app.backtesting.services.database_service.sessionmaker'):
-                    with patch('app.backtesting.services.database_service.Base.metadata.create_all'):
+                    with patch(
+                        'app.backtesting.services.database_service.Base.metadata.create_all'
+                    ):
                         # Mock create_profile_mapper to return None
-                        with patch('app.backtesting.profile_batch_backtester_refactored.create_profile_mapper', return_value=None):
+                        with patch(
+                            'app.backtesting.profile_batch_backtester_refactored.create_profile_mapper',
+                            return_value=None,
+                        ):
                             backtester = ProfileBatchBacktester(config_path=config_path)
-                            
+
                             # Create test profile
                             profile = InputProfile(
                                 objetivo_inversion=ObjectivoInversion.MAXIMIZAR_CAPITAL,
                                 risk_tolerance=RiskTolerance.ALTO,
                                 capital_initial=Decimal("100000"),
                             )
-                            
+
                             # Should raise ValueError
                             with pytest.raises(ValueError) as exc_info:
                                 backtester.run_single_profile(profile, multi_strategy=True)
-                            
+
                             assert "ProfileStrategyMapper not initialized" in str(exc_info.value)
         finally:
             Path(config_path).unlink(missing_ok=True)
@@ -425,26 +448,30 @@ investment_horizons:
         try:
             with patch('app.backtesting.services.database_service.create_engine'):
                 with patch('app.backtesting.services.database_service.sessionmaker'):
-                    with patch('app.backtesting.services.database_service.Base.metadata.create_all'):
+                    with patch(
+                        'app.backtesting.services.database_service.Base.metadata.create_all'
+                    ):
                         backtester = ProfileBatchBacktester(config_path=config_path)
-                        
+
                         profile = InputProfile(
                             objetivo_inversion=ObjectivoInversion.MAXIMIZAR_CAPITAL,
                             risk_tolerance=RiskTolerance.ALTO,
                             capital_initial=Decimal("100000"),
                         )
-                        
+
                         # Mock _run_baseline to fail
                         with patch.object(backtester, '_run_baseline') as mock_baseline:
                             mock_baseline.side_effect = RuntimeError("Test error")
-                            
+
                             # Mock logger to capture the error
-                            with patch('app.backtesting.profile_batch_backtester_refactored.logger') as mock_logger:
+                            with patch(
+                                'app.backtesting.profile_batch_backtester_refactored.logger'
+                            ) as mock_logger:
                                 try:
                                     backtester.run_single_profile(profile)
                                 except RuntimeError:
                                     pass
-                                
+
                                 # Verify error was logged with context
                                 error_calls = [call for call in mock_logger.error.call_args_list]
                                 assert len(error_calls) > 0
@@ -476,31 +503,39 @@ investment_horizons:
         try:
             with patch('app.backtesting.services.database_service.create_engine'):
                 with patch('app.backtesting.services.database_service.sessionmaker'):
-                    with patch('app.backtesting.services.database_service.Base.metadata.create_all'):
+                    with patch(
+                        'app.backtesting.services.database_service.Base.metadata.create_all'
+                    ):
                         # Patch ComprehensiveBacktestRunner to avoid actual execution
-                        with patch('app.backtesting.profile_batch_backtester_refactored.ComprehensiveBacktestRunner') as MockRunner:
+                        with patch(
+                            'app.backtesting.profile_batch_backtester_refactored.ComprehensiveBacktestRunner'
+                        ) as MockRunner:
                             mock_instance = MockRunner.return_value
-                            mock_instance.run_baseline_backtest.return_value = [{
-                                "sharpe_ratio": 1.5,
-                                "total_pnl": 10000,
-                            }]
-                            
+                            mock_instance.run_baseline_backtest.return_value = [
+                                {
+                                    "sharpe_ratio": 1.5,
+                                    "total_pnl": 10000,
+                                }
+                            ]
+
                             backtester = ProfileBatchBacktester(config_path=config_path)
-                            
+
                             profile = InputProfile(
                                 objetivo_inversion=ObjectivoInversion.MAXIMIZAR_CAPITAL,
                                 risk_tolerance=RiskTolerance.ALTO,
                                 capital_initial=Decimal("100000"),
                             )
-                            
+
                             # Run baseline to create temp config
                             config = backtester._create_profile_config(profile)
-                            result = backtester._run_baseline(profile, config)
-                            
+                            backtester._run_baseline(profile, config)
+
                             # Check for leftover temp files in output_dir
                             temp_files = list(Path(backtester.output_dir).glob("temp_*.yaml"))
                             # Temp files should be cleaned up
-                            assert len(temp_files) == 0 or all(f.exists() for f in temp_files) is False
+                            assert (
+                                len(temp_files) == 0 or all(f.exists() for f in temp_files) is False
+                            )
         finally:
             Path(config_path).unlink(missing_ok=True)
 
@@ -525,27 +560,33 @@ investment_horizons:
         try:
             with patch('app.backtesting.services.database_service.create_engine'):
                 with patch('app.backtesting.services.database_service.sessionmaker'):
-                    with patch('app.backtesting.services.database_service.Base.metadata.create_all'):
+                    with patch(
+                        'app.backtesting.services.database_service.Base.metadata.create_all'
+                    ):
                         # Patch ComprehensiveBacktestRunner to raise error
-                        with patch('app.backtesting.profile_batch_backtester_refactored.ComprehensiveBacktestRunner') as MockRunner:
+                        with patch(
+                            'app.backtesting.profile_batch_backtester_refactored.ComprehensiveBacktestRunner'
+                        ) as MockRunner:
                             mock_instance = MockRunner.return_value
-                            mock_instance.run_baseline_backtest.side_effect = RuntimeError("Test error")
-                            
+                            mock_instance.run_baseline_backtest.side_effect = RuntimeError(
+                                "Test error"
+                            )
+
                             backtester = ProfileBatchBacktester(config_path=config_path)
-                            
+
                             profile = InputProfile(
                                 objetivo_inversion=ObjectivoInversion.MAXIMIZAR_CAPITAL,
                                 risk_tolerance=RiskTolerance.ALTO,
                                 capital_initial=Decimal("100000"),
                             )
-                            
+
                             # Run baseline to create temp config (will fail)
                             config = backtester._create_profile_config(profile)
                             result = backtester._run_baseline(profile, config)
-                            
+
                             # Should return empty metrics and clean up temp file
                             assert result.get("sharpe_ratio", 0) == 0
-                            
+
                             # Check for leftover temp files
                             temp_files = list(Path(backtester.output_dir).glob("temp_*.yaml"))
                             assert len(temp_files) == 0
@@ -577,14 +618,22 @@ investment_horizons:
         try:
             with patch('app.backtesting.services.database_service.create_engine'):
                 with patch('app.backtesting.services.database_service.sessionmaker'):
-                    with patch('app.backtesting.services.database_service.Base.metadata.create_all'):
+                    with patch(
+                        'app.backtesting.services.database_service.Base.metadata.create_all'
+                    ):
                         backtester = ProfileBatchBacktester(config_path=config_path)
-                        
+
                         # Mock database service
                         mock_best_config = {"sharpe_ratio": 2.0}
-                        with patch.object(backtester.database_service, 'get_best_strategy', return_value=mock_best_config):
-                            result = backtester.get_best_strategy("maximizar_capital", "medio", "alto")
-                            
+                        with patch.object(
+                            backtester.database_service,
+                            'get_best_strategy',
+                            return_value=mock_best_config,
+                        ):
+                            result = backtester.get_best_strategy(
+                                "maximizar_capital", "medio", "alto"
+                            )
+
                             # Verify delegation
                             backtester.database_service.get_best_strategy.assert_called_once_with(
                                 "maximizar_capital", "medio", "alto"
@@ -614,17 +663,23 @@ investment_horizons:
         try:
             with patch('app.backtesting.services.database_service.create_engine'):
                 with patch('app.backtesting.services.database_service.sessionmaker'):
-                    with patch('app.backtesting.services.database_service.Base.metadata.create_all'):
+                    with patch(
+                        'app.backtesting.services.database_service.Base.metadata.create_all'
+                    ):
                         backtester = ProfileBatchBacktester(config_path=config_path)
-                        
+
                         # Mock results
                         backtester.results = {"test_profile": MagicMock()}
-                        
+
                         # Mock report service
                         mock_html = "<html>Report</html>"
-                        with patch.object(backtester.report_service, 'generate_comparison_report', return_value=mock_html):
+                        with patch.object(
+                            backtester.report_service,
+                            'generate_comparison_report',
+                            return_value=mock_html,
+                        ):
                             result = backtester.generate_comparison_report()
-                            
+
                             # Verify delegation
                             backtester.report_service.generate_comparison_report.assert_called_once_with(
                                 backtester.results
@@ -654,17 +709,21 @@ investment_horizons:
         try:
             with patch('app.backtesting.services.database_service.create_engine'):
                 with patch('app.backtesting.services.database_service.sessionmaker'):
-                    with patch('app.backtesting.services.database_service.Base.metadata.create_all'):
+                    with patch(
+                        'app.backtesting.services.database_service.Base.metadata.create_all'
+                    ):
                         backtester = ProfileBatchBacktester(config_path=config_path)
-                        
+
                         # Mock results
                         backtester.results = {"test_profile": MagicMock()}
-                        
+
                         # Mock report service
                         mock_path = Path("test_export.json")
-                        with patch.object(backtester.report_service, 'export_results', return_value=mock_path):
+                        with patch.object(
+                            backtester.report_service, 'export_results', return_value=mock_path
+                        ):
                             result = backtester.export_results(format="json")
-                            
+
                             # Verify delegation
                             backtester.report_service.export_results.assert_called_once_with(
                                 backtester.results, "json"

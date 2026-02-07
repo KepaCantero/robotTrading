@@ -346,9 +346,7 @@ class TestExitConditionMonitor:
 
     def test_check_exit_conditions_no_stop_loss_config(self):
         """Test exit check when stop loss not configured."""
-        config = BacktestConfig(
-            stop_loss_percentage=None, take_profit_percentage=Decimal("20")
-        )
+        config = BacktestConfig(stop_loss_percentage=None, take_profit_percentage=Decimal("20"))
         pm = PositionManager()
         pm.update_position("AAPL", Decimal("100"))
 
@@ -384,9 +382,7 @@ class TestExitConditionMonitor:
 
     def test_check_exit_conditions_no_take_profit_config(self):
         """Test exit check when take profit not configured."""
-        config = BacktestConfig(
-            stop_loss_percentage=Decimal("10"), take_profit_percentage=None
-        )
+        config = BacktestConfig(stop_loss_percentage=Decimal("10"), take_profit_percentage=None)
         pm = PositionManager()
         pm.update_position("AAPL", Decimal("100"))
 

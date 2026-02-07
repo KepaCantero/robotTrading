@@ -3,14 +3,14 @@ Unit tests for Numba-accelerated VaR helper functions.
 
 Tests for low-level Numba JIT functions used in VaR calculations.
 """
-import pytest
 import numpy as np
+import pytest
 
 from app.engines.risk_engine.var_calculators.var_calculators import (
-    calculate_percentile_numba,
-    calculate_mean_std_numba,
     calculate_cvar_numba,
     calculate_jarque_bera_numba,
+    calculate_mean_std_numba,
+    calculate_percentile_numba,
 )
 
 

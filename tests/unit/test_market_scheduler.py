@@ -6,17 +6,15 @@ Tests the market scheduling functionality for multi-market operations.
 
 import asyncio
 from datetime import date, time
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
 from app.services.scheduling import (
-    MarketScheduler,
-    MarketType,
-    MarketStatus,
     MarketSchedule,
-    ScheduledTask,
-    MARKET_SCHEDULES,
+    MarketScheduler,
+    MarketStatus,
+    MarketType,
 )
 
 

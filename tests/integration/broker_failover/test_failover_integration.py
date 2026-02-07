@@ -6,27 +6,16 @@ Tests end-to-end failover scenarios with real broker adapters.
 
 import asyncio
 from decimal import Decimal
-from typing import List, Optional
-from unittest.mock import MagicMock
 
 import pytest
 
-from app.services.broker_failover import (
-    BrokerConfig,
-    BrokerFailoverManager,
-    BrokerHealth,
-)
-from app.services.live_trading.broker_connector import (
-    BrokerAccount,
-    BrokerPosition,
-    BrokerType,
-    OrderSide,
-    OrderStatus,
-    OrderType,
-)
+from app.services.broker_failover import BrokerConfig, BrokerFailoverManager, BrokerHealth
 
 # Import PaperAdapter directly to avoid import errors from other adapters
 from app.services.live_trading.broker_adapters.paper_adapter import PaperAdapter
+from app.services.live_trading.broker_connector import (
+    OrderSide,
+)
 
 
 class TestBrokerFailoverIntegration:

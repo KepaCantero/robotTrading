@@ -11,8 +11,8 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, List
 
-from pydantic import BaseModel, Field, field_validator, ConfigDict
 import yaml
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 logger = logging.getLogger(__name__)
 
@@ -272,16 +272,10 @@ class BacktestConfigLoader:
             logger.error(f"Config file not found: {self.config_path}", exc_info=True)
             return self.DEFAULT_CONFIG.copy()
         except (ValueError, KeyError, TypeError) as e:
-            logger.error(
-                f"Error parsing YAML config from {self.config_path}: {e}",
-                exc_info=True
-            )
+            logger.error(f"Error parsing YAML config from {self.config_path}: {e}", exc_info=True)
             return self.DEFAULT_CONFIG.copy()
         except OSError as e:
-            logger.error(
-                f"OS error reading config file {self.config_path}: {e}",
-                exc_info=True
-            )
+            logger.error(f"OS error reading config file {self.config_path}: {e}", exc_info=True)
             return self.DEFAULT_CONFIG.copy()
 
     def _merge_with_defaults(self, config: Dict[str, Any]) -> Dict[str, Any]:

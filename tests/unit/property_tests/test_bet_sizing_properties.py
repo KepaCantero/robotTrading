@@ -12,22 +12,18 @@ Properties tested:
 - Meta-labeling bet sizing properties
 """
 
-from decimal import Decimal
-from typing import Dict, List, Any, Optional
 
 import numpy as np
 import pytest
-from hypothesis import given, settings, assume
-from hypothesis import strategies as st
+from hypothesis import assume, given, settings, strategies as st
 from hypothesis.extra import numpy as np_strategies
 
 from app.backtesting.labeling.bet_sizing import (
     BetSizing,
     BetSizingConfig,
-    calculate_kelly_criterion,
     calculate_bet_sizes_ml,
+    calculate_kelly_criterion,
 )
-
 
 # ============================================================================
 # Helper Functions
@@ -712,7 +708,7 @@ class TestConcentrationLimits:
             # Before re-normalization, all bets should be at or below the limit
             assert (
                 capped_bets.max() <= concentration_limit
-            ), f"After capping (before re-normalization), max bet should be at or below limit"
+            ), "After capping (before re-normalization), max bet should be at or below limit"
 
             # Then re-normalize (avoid division by zero)
             if capped_bets.sum() > 0:

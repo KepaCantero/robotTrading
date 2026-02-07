@@ -2,14 +2,12 @@
 Tests for app/presentation/dto/requests.py
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
 from pydantic import ValidationError
 
-from app.presentation.dto.requests import (
-    CreatePortfolioRequest,
-    ExecuteStrategyRequest,
-)
+from app.presentation.dto.requests import CreatePortfolioRequest, ExecuteStrategyRequest
 
 
 class TestCreatePortfolioRequest:
@@ -23,7 +21,7 @@ class TestCreatePortfolioRequest:
             "currency": "USD",
         }
         request = CreatePortfolioRequest(**data)
-        
+
         assert request.portfolio_id == "test_portfolio"
         assert request.initial_capital == Decimal("10000.00")
         assert request.currency == "USD"
@@ -35,7 +33,7 @@ class TestCreatePortfolioRequest:
             "initial_capital": Decimal("5000.00"),
         }
         request = CreatePortfolioRequest(**data)
-        
+
         assert request.currency == "USD"
 
     def test_zero_capital_fails(self):
@@ -44,7 +42,7 @@ class TestCreatePortfolioRequest:
             "portfolio_id": "test_portfolio",
             "initial_capital": Decimal("0"),
         }
-        
+
         with pytest.raises(ValidationError):
             CreatePortfolioRequest(**data)
 
@@ -54,7 +52,7 @@ class TestCreatePortfolioRequest:
             "portfolio_id": "test_portfolio",
             "initial_capital": Decimal("-1000.00"),
         }
-        
+
         with pytest.raises(ValidationError):
             CreatePortfolioRequest(**data)
 
@@ -63,7 +61,7 @@ class TestCreatePortfolioRequest:
         data = {
             "initial_capital": Decimal("10000.00"),
         }
-        
+
         with pytest.raises(ValidationError):
             CreatePortfolioRequest(**data)
 
@@ -72,7 +70,7 @@ class TestCreatePortfolioRequest:
         data = {
             "portfolio_id": "test_portfolio",
         }
-        
+
         with pytest.raises(ValidationError):
             CreatePortfolioRequest(**data)
 
@@ -83,7 +81,7 @@ class TestCreatePortfolioRequest:
             "initial_capital": Decimal("999999999999.99"),
         }
         request = CreatePortfolioRequest(**data)
-        
+
         assert request.initial_capital == Decimal("999999999999.99")
 
     def test_small_capital(self):
@@ -93,7 +91,7 @@ class TestCreatePortfolioRequest:
             "initial_capital": Decimal("0.01"),
         }
         request = CreatePortfolioRequest(**data)
-        
+
         assert request.initial_capital == Decimal("0.01")
 
 
@@ -108,7 +106,7 @@ class TestExecuteStrategyRequest:
             "parameters": {"period": 20, "threshold": 0.5},
         }
         request = ExecuteStrategyRequest(**data)
-        
+
         assert request.strategy_type == "momentum"
         assert request.symbol == "AAPL"
         assert request.parameters == {"period": 20, "threshold": 0.5}
@@ -120,7 +118,7 @@ class TestExecuteStrategyRequest:
             "symbol": "BTC-USD",
         }
         request = ExecuteStrategyRequest(**data)
-        
+
         assert request.parameters == {}
 
     def test_missing_strategy_type_fails(self):
@@ -128,7 +126,7 @@ class TestExecuteStrategyRequest:
         data = {
             "symbol": "AAPL",
         }
-        
+
         with pytest.raises(ValidationError):
             ExecuteStrategyRequest(**data)
 
@@ -137,7 +135,7 @@ class TestExecuteStrategyRequest:
         data = {
             "strategy_type": "momentum",
         }
-        
+
         with pytest.raises(ValidationError):
             ExecuteStrategyRequest(**data)
 
@@ -149,5 +147,5 @@ class TestExecuteStrategyRequest:
             "parameters": {},
         }
         request = ExecuteStrategyRequest(**data)
-        
+
         assert request.parameters == {}

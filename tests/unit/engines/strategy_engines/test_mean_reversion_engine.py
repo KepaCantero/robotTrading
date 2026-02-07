@@ -10,20 +10,16 @@ Tests cover:
 - Edge cases (insufficient data, NaN handling, volatility thresholds)
 """
 
-import pytest
-import numpy as np
-from decimal import Decimal
 from datetime import datetime
-from collections import deque
-from typing import Dict, Any, List
-from unittest.mock import Mock, patch, MagicMock
-import pandas as pd
+from decimal import Decimal
+from unittest.mock import Mock, patch
+
+import numpy as np
+import pytest
 
 from app.engines.strategy_engines.mean_reversion_engine import MeanReversionStrategyEngine
 from app.models.market_data import Quote
-from app.models.signal import Signal, SignalType, SignalStrength, SignalSource
-from app.models.portfolio import Portfolio, Position
-
+from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 # ===== Initialization Tests =====
 
@@ -348,7 +344,7 @@ class TestMeanReversionSignalGeneration:
                 volume=Decimal("1000"),
             )
 
-            signals = engine._generate_signals_impl(quote)
+            engine._generate_signals_impl(quote)
 
             # May generate buy signal if z-score is very negative
             # (depends on actual calculation)
@@ -382,7 +378,7 @@ class TestMeanReversionSignalGeneration:
                 volume=Decimal("1000"),
             )
 
-            signals = engine._generate_signals_impl(quote)
+            engine._generate_signals_impl(quote)
 
             # May generate sell signal if z-score is very positive
             # (depends on actual calculation)
@@ -839,7 +835,7 @@ class TestVolatilityRegime:
                 volume=Decimal("1000"),
             )
 
-            features = engine.extract_features(quote)
+            engine.extract_features(quote)
 
             # Volatility should be higher
             # (actual value depends on random data)

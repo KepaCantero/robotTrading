@@ -16,7 +16,6 @@ Reference papers:
 - Kissell: Portfolio Management (42-kissell)
 """
 
-import logging
 from decimal import Decimal
 from typing import Optional
 

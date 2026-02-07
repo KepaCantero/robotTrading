@@ -36,8 +36,8 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, field_validator, ConfigDict
 import yaml
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 logger = logging.getLogger(__name__)
 
@@ -243,9 +243,7 @@ class MetaAnalyzerConfig(BaseModel):
                 errors.append("DPI must be at least 72")
 
             # Validate logging config
-            if self.advanced.logging.level not in {
-                "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"
-            }:
+            if self.advanced.logging.level not in {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}:
                 errors.append(f"Invalid logging level: {self.advanced.logging.level}")
 
         except Exception as e:

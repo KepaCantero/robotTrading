@@ -5,10 +5,9 @@ Tests automatic failover logic, health checks, and position sync.
 """
 
 import asyncio
-from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import Dict, List, Optional
+from unittest.mock import MagicMock
 
 import pytest
 

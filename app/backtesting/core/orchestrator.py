@@ -306,7 +306,7 @@ class BacktestOrchestrator:
                 "commission": float(config.commission),
                 "max_results": max_results,
                 "executor_type": type(executor).__name__ if executor else None,
-            }
+            },
         )
 
     def run_all(self, quotes: List[Any], strategies: List[Any], **kwargs) -> OrchestrationResult:
@@ -331,7 +331,7 @@ class BacktestOrchestrator:
                 "operation": "run_all",
                 "strategies_count": len(strategies),
                 "quotes_count": len(quotes),
-            }
+            },
         )
 
         for strategy in strategies:
@@ -351,7 +351,7 @@ class BacktestOrchestrator:
                         "error_type": type(e).__name__,
                         "error_message": str(e),
                     },
-                    exc_info=True
+                    exc_info=True,
                 )
 
         logger.info(
@@ -361,7 +361,7 @@ class BacktestOrchestrator:
                 "total_strategies": len(strategies),
                 "successful": successful_count,
                 "failed": failed_count,
-            }
+            },
         )
 
         return OrchestrationResult(results=all_results, config=self.config)
@@ -377,7 +377,7 @@ class BacktestOrchestrator:
                 "strategy_name": strategy_name,
                 "strategy_class": type(strategy).__name__,
                 "execution_count": self._execution_count + 1,
-            }
+            },
         )
 
         if self.executor is None:
@@ -396,7 +396,7 @@ class BacktestOrchestrator:
                 "final_capital": float(result.final_capital),
                 "total_return": float(result.total_return),
                 "execution_count": self._execution_count,
-            }
+            },
         )
 
         return result

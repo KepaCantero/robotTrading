@@ -7,7 +7,7 @@ Loads configurations from YAML files with validation and fallback to default val
 import os
 import threading
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional
 
 import structlog
 import yaml

@@ -5,19 +5,17 @@ Tests for the LimitOrderBook implementation following Harris's model of
 order book dynamics and price formation.
 """
 
-import pytest
 from decimal import Decimal
-from datetime import datetime
+
 
 from app.simulation.order_book import (
     LimitOrderBook,
     Order,
     OrderSide,
-    OrderType,
     OrderStatus,
+    OrderType,
     PriceLevel,
     Trade,
-    OrderBookSnapshot,
     create_limit_order_book,
 )
 

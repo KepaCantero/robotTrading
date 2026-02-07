@@ -2,16 +2,13 @@
 Unit tests for Forex Risk Tracker.
 """
 
-import pytest
-from decimal import Decimal
 from datetime import datetime, timezone
+from decimal import Decimal
 
-from app.services.forex_risk.tracker import (
-    CurrencyExposure,
-    ForexExposureReport,
-    ForexRiskTracker,
-)
-from app.models.portfolio import Portfolio, Position, AssetClass, HedgingMetadata
+import pytest
+
+from app.models.portfolio import AssetClass, HedgingMetadata, Portfolio, Position
+from app.services.forex_risk.tracker import CurrencyExposure, ForexExposureReport, ForexRiskTracker
 
 
 # Mock forex service

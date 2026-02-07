@@ -146,7 +146,7 @@ class BacktestExecutor(ABC):
                 "quotes_count": len(quotes),
                 "strategy_class": type(strategy).__name__,
                 "initial_capital": float(self.config.initial_capital),
-            }
+            },
         )
 
     def _pre_execute(
@@ -175,7 +175,7 @@ class BacktestExecutor(ABC):
                 "execution_count": self._execution_count,
                 "final_capital": float(result.final_capital),
                 "total_return": float(result.total_return),
-            }
+            },
         )
 
     @property
@@ -295,7 +295,7 @@ class ParallelBacktestExecutor(BacktestExecutor):
                 "strategies_count": len(strategies),
                 "max_workers": max_workers,
                 "quotes_count": len(quotes),
-            }
+            },
         )
 
         def run_single(strategy: StrategyType) -> Optional[BacktestResult]:
@@ -313,7 +313,7 @@ class ParallelBacktestExecutor(BacktestExecutor):
                         "error_type": type(e).__name__,
                         "error_message": str(e),
                     },
-                    exc_info=True
+                    exc_info=True,
                 )
                 return None
 
@@ -332,7 +332,7 @@ class ParallelBacktestExecutor(BacktestExecutor):
                 "total_strategies": len(strategies),
                 "successful_results": len(results),
                 "failed": len(strategies) - len(results),
-            }
+            },
         )
 
         return results
@@ -411,7 +411,7 @@ class ProcessPoolBacktestExecutor(BacktestExecutor):
                 "strategy_class": type(strategy).__name__,
                 "quotes_count": len(quotes),
                 "timeout_seconds": 300,
-            }
+            },
         )
 
         result = self._execute_in_process(quotes, strategy, **kwargs)
@@ -423,7 +423,7 @@ class ProcessPoolBacktestExecutor(BacktestExecutor):
                 "strategy_name": strategy_name,
                 "final_capital": float(result.final_capital),
                 "total_return": float(result.total_return),
-            }
+            },
         )
 
         return result

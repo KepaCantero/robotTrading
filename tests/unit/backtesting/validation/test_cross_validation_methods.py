@@ -9,21 +9,19 @@ Tests follow ESL methodologies and cover:
 5. Nested CV
 """
 
-import pytest
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+import pytest
 from sklearn.linear_model import LogisticRegression, Ridge
-from sklearn.svm import SVC
 
 from app.backtesting.validation.cross_validation_methods import (
+    CrossValidation,
     CVMethod,
     CVResult,
-    CrossValidation,
     KFoldCV,
     LeaveOneOutCV,
-    NestedCVResult,
     NestedCrossValidation,
+    NestedCVResult,
     StratifiedKFoldCV,
     TimeSeriesSplitCV,
     cross_validate,

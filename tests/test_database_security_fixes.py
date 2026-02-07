@@ -8,19 +8,18 @@ Tests for:
 """
 
 import json
-import pytest
-from datetime import datetime, timezone
 from decimal import Decimal
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
+
+import pytest
 
 from app.core.database import get_database_engine
 from app.database import get_sync_db
 from app.database.models import PositionState
 from app.services.position_monitor.position_monitor import (
+    MonitoredPosition,
     PositionMonitor,
     PositionMonitorConfig,
-    MonitoredPosition,
-    PositionStatus,
 )
 
 
@@ -43,8 +42,8 @@ class TestConnectionStringSanitization:
             ):
                 # Trigger database engine creation
                 try:
-                    engine = get_database_engine()
-                except Exception as e:
+                    get_database_engine()
+                except Exception:
                     # Engine creation might fail due to invalid connection
                     pass
 
@@ -76,8 +75,8 @@ class TestConnectionStringSanitization:
                 settings, 'get_database_url_async', return_value=settings.database_url
             ):
                 try:
-                    engine = get_database_engine()
-                except Exception as e:
+                    get_database_engine()
+                except Exception:
                     pass
 
                 # Check logger was called with SQLite message

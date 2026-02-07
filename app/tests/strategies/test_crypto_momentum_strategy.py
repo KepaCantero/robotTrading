@@ -13,9 +13,8 @@ Test Coverage:
 - Edge cases and error handling
 """
 
-from datetime import date, datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
-from typing import List
 
 import numpy as np
 import pandas as pd
@@ -33,7 +32,6 @@ from app.strategies.crypto_momentum.models import (
     CryptoMomentumScore,
     CryptoPortfolio,
     CryptoPosition,
-    CryptoScreeningResult,
     OnChainMetrics,
 )
 

@@ -21,13 +21,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any
 
-from pydantic import (
-    BaseModel,
-    ConfigDict,
-    Field,
-    field_validator,
-    model_validator,
-)
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class AssetClass(str, Enum):
@@ -124,8 +118,7 @@ class FXCorrelationPair(BaseModel):
     p_value: Decimal = Field(..., ge=0, le=1, description="Statistical p-value")
     lookback_days: int = Field(..., gt=0, description="Lookback period in days")
     last_updated: datetime = Field(
-        default_factory=datetime.utcnow,
-        description="Last update timestamp"
+        default_factory=datetime.utcnow, description="Last update timestamp"
     )
 
     @field_validator("correlation")
@@ -138,9 +131,7 @@ class FXCorrelationPair(BaseModel):
             raise ValueError("Correlation must be a number")
 
         if not Decimal("-1") <= v <= Decimal("1"):
-            raise ValueError(
-                f"Correlation must be between -1 and 1, got {v}"
-            )
+            raise ValueError(f"Correlation must be between -1 and 1, got {v}")
 
         return v
 
@@ -206,14 +197,10 @@ class IntermarketRelationship(BaseModel):
     fx_pair: str = Field(..., description="FX currency pair")
     external_asset: str = Field(..., description="External asset symbol")
     asset_class: AssetClass = Field(..., description="Asset class")
-    relationship_type: RelationshipType = Field(
-        ..., description="Type of relationship"
-    )
+    relationship_type: RelationshipType = Field(..., description="Type of relationship")
     correlation: Decimal = Field(..., description="Correlation coefficient")
     beta: Decimal = Field(..., description="Beta coefficient")
-    significance: Decimal = Field(
-        ..., ge=0, le=100, description="Significance score (0-100)"
-    )
+    significance: Decimal = Field(..., ge=0, le=100, description="Significance score (0-100)")
     lookback_days: int = Field(..., gt=0, description="Lookback period")
     last_tested: datetime = Field(
         default_factory=datetime.utcnow, description="Last test timestamp"
@@ -229,9 +216,7 @@ class IntermarketRelationship(BaseModel):
             raise ValueError("Correlation must be a number")
 
         if not Decimal("-1") <= v <= Decimal("1"):
-            raise ValueError(
-                f"Correlation must be between -1 and 1, got {v}"
-            )
+            raise ValueError(f"Correlation must be between -1 and 1, got {v}")
 
         return v
 
@@ -318,22 +303,12 @@ class IntermarketSignal(BaseModel):
 
     fx_pair: str = Field(..., description="FX currency pair to trade")
     signal_type: str = Field(..., description="Signal type (buy/sell)")
-    strength: Decimal = Field(
-        ..., ge=0, le=100, description="Signal strength (0-100)"
-    )
+    strength: Decimal = Field(..., ge=0, le=100, description="Signal strength (0-100)")
     trigger_asset: str = Field(..., description="Triggering external asset")
-    relationship_type: RelationshipType = Field(
-        ..., description="Relationship type"
-    )
-    expected_move: Decimal = Field(
-        ..., description="Expected price move (decimal)"
-    )
-    confidence: Decimal = Field(
-        ..., ge=0, le=100, description="Confidence (0-100)"
-    )
-    timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Signal timestamp"
-    )
+    relationship_type: RelationshipType = Field(..., description="Relationship type")
+    expected_move: Decimal = Field(..., description="Expected price move (decimal)")
+    confidence: Decimal = Field(..., ge=0, le=100, description="Confidence (0-100)")
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Signal timestamp")
     rationale: str = Field(..., description="Signal rationale")
 
     @model_validator(mode="after")
@@ -349,9 +324,7 @@ class IntermarketSignal(BaseModel):
 
         # Expected move should be reasonable
         if abs(self.expected_move) > Decimal("0.1"):  # 10% daily move is extreme
-            raise ValueError(
-                f"Expected move seems unrealistic: {self.expected_move}"
-            )
+            raise ValueError(f"Expected move seems unrealistic: {self.expected_move}")
 
         return self
 

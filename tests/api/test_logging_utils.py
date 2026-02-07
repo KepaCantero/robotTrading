@@ -5,17 +5,17 @@ Tests the logging_utils module which provides structured logging with correlatio
 """
 
 import logging
-from unittest.mock import MagicMock, Mock
+from unittest.mock import Mock
 
 import pytest
 
 from app.api.logging_utils import (
     get_correlation_id_from_request,
-    log_with_context,
+    log_debug,
+    log_error,
     log_info,
     log_warning,
-    log_error,
-    log_debug,
+    log_with_context,
 )
 
 

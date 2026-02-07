@@ -9,20 +9,18 @@ Tests verify that the Strategy pattern with Registry correctly implements:
 - Strategy lookup and filtering
 - Decorator registration
 """
-import pytest
 from typing import Any, Dict, List
+
+import pytest
 
 from app.strategies.strategy_registry import (
     BaseStrategy,
     StrategyContext,
-    StrategyRegistry,
     StrategyFactory,
-    StrategyMetadata,
-    register_strategy,
+    StrategyRegistry,
     get_default_registry,
-    create_default_strategy,
+    register_strategy,
 )
-
 
 # ============================================================================
 # TEST STRATEGIES

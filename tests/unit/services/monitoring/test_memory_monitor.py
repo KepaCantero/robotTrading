@@ -5,10 +5,9 @@ Tests memory monitoring, auto-restart, and state persistence.
 """
 
 import asyncio
-import gc
 import logging
 from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 

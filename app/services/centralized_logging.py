@@ -190,7 +190,14 @@ class CentralizedLogger:
         exc_info: bool = False,
     ) -> None:
         """Log error message."""
-        self.log(LogLevel.ERROR, service, message, metadata, error_message=error_message, exc_info=exc_info)
+        self.log(
+            LogLevel.ERROR,
+            service,
+            message,
+            metadata,
+            error_message=error_message,
+            exc_info=exc_info,
+        )
 
     def critical(
         self,
@@ -201,7 +208,14 @@ class CentralizedLogger:
         exc_info: bool = False,
     ) -> None:
         """Log critical message."""
-        self.log(LogLevel.CRITICAL, service, message, metadata, error_message=error_message, exc_info=exc_info)
+        self.log(
+            LogLevel.CRITICAL,
+            service,
+            message,
+            metadata,
+            error_message=error_message,
+            exc_info=exc_info,
+        )
 
     def log_performance(
         self,

@@ -4,20 +4,22 @@ Test suite for app.backtesting.data_split
 Addresses TST-005: Test coverage for data splitting utilities
 """
 
-import pytest
 from datetime import datetime, timedelta
 from typing import NamedTuple
 
+import pytest
+
 from app.backtesting.data_split import (
     DataSplit,
-    TrainValTestSplitter,
     MultipleTestingCorrector,
+    TrainValTestSplitter,
     validate_out_of_sample_performance,
 )
 
 
 class MockBar(NamedTuple):
     """Mock market data bar for testing."""
+
     timestamp: datetime
     close: float = 100.0
 
@@ -28,21 +30,25 @@ class TestDataSplitImport:
     def test_import_data_split(self):
         """Test that DataSplit can be imported."""
         from app.backtesting.data_split import DataSplit
+
         assert DataSplit is not None
 
     def test_import_train_val_test_splitter(self):
         """Test that TrainValTestSplitter can be imported."""
         from app.backtesting.data_split import TrainValTestSplitter
+
         assert TrainValTestSplitter is not None
 
     def test_import_multiple_testing_corrector(self):
         """Test that MultipleTestingCorrector can be imported."""
         from app.backtesting.data_split import MultipleTestingCorrector
+
         assert MultipleTestingCorrector is not None
 
     def test_import_validate_oos_performance(self):
         """Test that validate_out_of_sample_performance can be imported."""
         from app.backtesting.data_split import validate_out_of_sample_performance
+
         assert validate_out_of_sample_performance is not None
 
 
@@ -58,11 +64,7 @@ class TestDataSplitInitialization:
 
     def test_custom_initialization(self):
         """Test DataSplit with custom values."""
-        split = DataSplit(
-            train_pct=0.60,
-            val_pct=0.20,
-            test_pct=0.20
-        )
+        split = DataSplit(train_pct=0.60, val_pct=0.20, test_pct=0.20)
         assert split.train_pct == 0.60
         assert split.val_pct == 0.20
         assert split.test_pct == 0.20
@@ -142,10 +144,7 @@ class TestBasicSplit:
     def _generate_bars(self, count: int) -> list:
         """Generate mock bars for testing."""
         start = datetime(2024, 1, 1)
-        return [
-            MockBar(timestamp=start + timedelta(days=i))
-            for i in range(count)
-        ]
+        return [MockBar(timestamp=start + timedelta(days=i)) for i in range(count)]
 
 
 class TestWalkForwardSplit:
@@ -213,10 +212,7 @@ class TestOutOfSampleValidation:
     def test_validate_oos_performance_pass(self):
         """Test OOS validation passes when test is acceptable."""
         result = validate_out_of_sample_performance(
-            train_sharpe=1.5,
-            val_sharpe=1.2,
-            test_sharpe=1.0,
-            min_performance_ratio=0.7
+            train_sharpe=1.5, val_sharpe=1.2, test_sharpe=1.0, min_performance_ratio=0.7
         )
         assert result is True
 
@@ -226,7 +222,7 @@ class TestOutOfSampleValidation:
             train_sharpe=1.5,
             val_sharpe=1.2,
             test_sharpe=0.5,  # Less than 0.7 * 1.2 = 0.84
-            min_performance_ratio=0.7
+            min_performance_ratio=0.7,
         )
         assert result is False
 
@@ -236,14 +232,11 @@ class TestOutOfSampleValidation:
             train_sharpe=1.5,
             val_sharpe=1.2,
             test_sharpe=-0.5,  # Negative while val is positive
-            min_performance_ratio=0.7
+            min_performance_ratio=0.7,
         )
         assert result is False
 
     def _generate_bars(self, count: int) -> list:
         """Generate mock bars for testing."""
         start = datetime(2024, 1, 1)
-        return [
-            MockBar(timestamp=start + timedelta(days=i))
-            for i in range(count)
-        ]
+        return [MockBar(timestamp=start + timedelta(days=i)) for i in range(count)]

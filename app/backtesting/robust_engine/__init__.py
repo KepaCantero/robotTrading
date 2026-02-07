@@ -32,20 +32,9 @@ Example:
     ```
 """
 
-from .corporate_actions import (
-    CorporateActionHandler,
-    CorporateActionType,
-)
-from .dividend_handler import (
-    DividendAction,
-    DividendHandler,
-    DividendTracker,
-    DripConfig,
-)
-from .look_ahead_validator import (
-    LookAheadValidator,
-    ValidationResult,
-)
+from .corporate_actions import CorporateActionHandler, CorporateActionType
+from .dividend_handler import DividendAction, DividendHandler, DividendTracker, DripConfig
+from .look_ahead_validator import LookAheadValidator, ValidationResult
 from .models import (
     BacktestCheckpoint,
     CorporateAction,

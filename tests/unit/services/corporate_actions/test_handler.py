@@ -10,20 +10,17 @@ Tests cover:
 - Symbol change handling
 """
 
-import asyncio
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
 
-from app.core.interfaces.broker_base import Order, OrderSide, OrderStatus, OrderType
 from app.services.corporate_actions.handler import (
     CorporateAction,
-    CorporateActionType,
     CorporateActionsHandler,
+    CorporateActionType,
 )
-
 
 # =============================================================================
 # FIXTURES

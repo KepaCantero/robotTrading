@@ -1,37 +1,48 @@
-# Requirements: mocks/__init__.py
+# Requirements Documentation: mocks/__init__.py
 
-## Source File Analysis
-- **File Path**: `app/mocks/__init__.py`
+## File Information
+- **Path**: `app/mocks/__init__.py`
+- **Purpose**: Mock implementations for external trading APIs (IBKR, Binance)
 - **Lines of Code**: 607
-- **Status**: Analysis Required
 
-## Purpose
-[Document the purpose of this module]
+## Audit Status: PASSED
+
+## Requirements Analysis
+
+### Functional Requirements
+
+#### FR1: IBKR Mock Client
+- **Requirement**: Mock IBKR client for testing
+- **Features**: connection, order management, positions, market data
+- **Status**: SATISFIED
+
+#### FR2: Binance Mock Client
+- **Requirement**: Mock Binance client for testing
+- **Features**: trading, account info, klines, ticker prices
+- **Status**: SATISFIED
+
+#### FR3: Order Execution Simulation
+- **Requirement**: Realistic order execution simulation
+- **Features**: balance checking, order status, fill delays
+- **Status**: SATISFIED
+
+#### FR4: Market Data Simulation
+- **Requirement**: Simulated market data
+- **Features**: bid/ask spreads, OHLCV data
+- **Status**: SATISFIED
+
+#### FR5: Error Handling
+- **Requirement**: Handle connection states and errors
+- **Features**: connection status checking, error raising
+- **Status**: SATISFIED
 
 ## Dependencies
-- Internal: [List internal dependencies]
-- External: [List external dependencies]
+- **Internal**: app.models.momentum.MarketData, app.models.order, app.models.portfolio
+- **External**: asyncio, datetime, decimal, enum, typing
 
-## Classes/Functions
-[Document main classes and functions]
+## GAP Analysis Results
+**Issues Found**: None
+- Comprehensive mock implementations for testing
 
-## Business Logic
-[Document core business logic]
-
-## Data Models
-[Document data models if applicable]
-
-## API Contracts
-[Document API contracts if applicable]
-
-## Error Handling
-[Document error handling approach]
-
-## Performance Considerations
-[Document performance considerations]
-
-## Testing Strategy
-[Document testing strategy]
-
----
-*Auto-generated on Thu Feb  5 20:33:00 CET 2026*
+**Audit Status**: PASSED
+**Last Updated**: 2026-02-07

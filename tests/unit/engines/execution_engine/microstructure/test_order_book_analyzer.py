@@ -2,15 +2,15 @@
 Unit tests for Order Book Analyzer.
 """
 
-import pytest
-import pandas as pd
 from decimal import Decimal
 
+import pandas as pd
+import pytest
+
 from app.engines.execution_engine.microstructure.order_book_analyzer import (
-    OrderBookAnalyzer,
-    OrderBookSnapshot,
-    OrderBookLevel,
     BookAnalysisResult,
+    OrderBookLevel,
+    OrderBookSnapshot,
     get_order_book_analyzer,
 )
 

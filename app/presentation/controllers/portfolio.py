@@ -98,8 +98,9 @@ async def get_portfolio_summary(
     except HTTPException:
         raise
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-        raise HTTPException(status_code=DEFAULT_VALUE_500,
-            detail=f"Error getting portfolio: {str(e)}")
+        raise HTTPException(
+            status_code=DEFAULT_VALUE_500, detail=f"Error getting portfolio: {str(e)}"
+        )
 
 
 @router.get("/positions", response_model=List[Position])
@@ -128,8 +129,9 @@ async def get_positions(
     except HTTPException:
         raise
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-        raise HTTPException(status_code=DEFAULT_VALUE_500,
-            detail=f"Error getting positions: {str(e)}")
+        raise HTTPException(
+            status_code=DEFAULT_VALUE_500, detail=f"Error getting positions: {str(e)}"
+        )
 
 
 @router.get("/positions/{symbol}", response_model=Position)
@@ -153,14 +155,16 @@ async def get_position(
     try:
         position = await service.get_position(symbol.upper())
         if position is None:
-            raise HTTPException(status_code=DEFAULT_VALUE_404,
-                detail=f"Position {symbol} not found")
+            raise HTTPException(
+                status_code=DEFAULT_VALUE_404, detail=f"Position {symbol} not found"
+            )
         return position
     except HTTPException:
         raise
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
-        raise HTTPException(status_code=DEFAULT_VALUE_500,
-            detail=f"Error getting position: {str(e)}")
+        raise HTTPException(
+            status_code=DEFAULT_VALUE_500, detail=f"Error getting position: {str(e)}"
+        )
 
 
 @router.get("/asset-universe", response_model=List[AssetUniverse])
@@ -183,8 +187,9 @@ async def get_asset_universe(
         universe = await service.get_asset_universe()
         return universe
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
-        raise HTTPException(status_code=DEFAULT_VALUE_500,
-            detail=f"Error getting asset universe: {str(e)}")
+        raise HTTPException(
+            status_code=DEFAULT_VALUE_500, detail=f"Error getting asset universe: {str(e)}"
+        )
 
 
 @router.get("/market-regime/{symbol}", response_model=MarketRegimeData)
@@ -210,14 +215,15 @@ async def get_market_regime(
         if regime_data is None:
             raise HTTPException(
                 status_code=DEFAULT_VALUE_404,
-                    detail=f"Market regime data for {symbol} not available"
+                detail=f"Market regime data for {symbol} not available",
             )
         return regime_data
     except HTTPException:
         raise
     except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
-        raise HTTPException(status_code=DEFAULT_VALUE_500,
-            detail=f"Error getting market regime: {str(e)}")
+        raise HTTPException(
+            status_code=DEFAULT_VALUE_500, detail=f"Error getting market regime: {str(e)}"
+        )
 
 
 @router.post("/simulate-trade", response_model=TradeResponse)
@@ -262,8 +268,9 @@ async def simulate_trade(
             )
 
     except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
-        raise HTTPException(status_code=DEFAULT_VALUE_500,
-            detail=f"Error simulating trade: {str(e)}")
+        raise HTTPException(
+            status_code=DEFAULT_VALUE_500, detail=f"Error simulating trade: {str(e)}"
+        )
 
 
 @router.get("/circuit-breakers", response_model=Dict[str, Dict[str, Any]])
@@ -312,8 +319,9 @@ async def reset_circuit_breaker(
         service.reset_circuit_breaker(name)
         return {"message": f"Circuit breaker {name} reset successfully"}
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-        raise HTTPException(status_code=DEFAULT_VALUE_500,
-            detail=f"Error resetting circuit breaker: {str(e)}")
+        raise HTTPException(
+            status_code=DEFAULT_VALUE_500, detail=f"Error resetting circuit breaker: {str(e)}"
+        )
 
 
 @router.get("/health")

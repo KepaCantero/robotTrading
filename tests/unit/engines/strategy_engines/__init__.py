@@ -16,10 +16,10 @@ All tests follow TDD best practices with:
 """
 
 from .test_base import *
-from .test_pairs_engine import *
-from .test_momentum_engine import *
 from .test_mean_reversion_engine import *
 from .test_modular_momentum_engine import *
+from .test_momentum_engine import *
+from .test_pairs_engine import *
 
 __all__ = [
     "TestBaseStrategyEngineInitialization",

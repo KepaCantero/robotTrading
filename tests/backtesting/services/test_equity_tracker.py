@@ -9,7 +9,6 @@ from decimal import Decimal
 
 import pytest
 
-from app.backtesting.models import BacktestConfig
 from app.backtesting.services.equity_tracker import EquityCurveTracker
 from app.backtesting.services.position_manager import PositionManager
 
@@ -79,9 +78,7 @@ class TestEquityCurveTracker:
         equity_tracker.update_equity_curve(timestamp, capital, prices)
 
         expected_value = (
-            Decimal("70000")
-            + Decimal("100") * Decimal("150")
-            + Decimal("50") * Decimal("300")
+            Decimal("70000") + Decimal("100") * Decimal("150") + Decimal("50") * Decimal("300")
         )  # 100000
         assert equity_tracker.equity_curve[0] == (timestamp, expected_value)
 
@@ -177,12 +174,8 @@ class TestEquityCurveTracker:
 
     def test_get_peak_equity(self, equity_tracker):
         """Test getting peak equity."""
-        equity_tracker.update_equity_curve(
-            datetime(2024, 1, 1), Decimal("100000"), {}
-        )
-        equity_tracker.update_equity_curve(
-            datetime(2024, 1, 2), Decimal("105000"), {}
-        )
+        equity_tracker.update_equity_curve(datetime(2024, 1, 1), Decimal("100000"), {})
+        equity_tracker.update_equity_curve(datetime(2024, 1, 2), Decimal("105000"), {})
 
         assert equity_tracker.get_peak_equity() == Decimal("105000")
 
@@ -255,9 +248,7 @@ class TestEquityCurveTracker:
 
     def test_calculate_returns_single_point(self, equity_tracker):
         """Test calculating returns with single data point."""
-        equity_tracker.update_equity_curve(
-            datetime(2024, 1, 1), Decimal("100000"), {}
-        )
+        equity_tracker.update_equity_curve(datetime(2024, 1, 1), Decimal("100000"), {})
 
         returns = equity_tracker.calculate_returns()
 
@@ -265,15 +256,9 @@ class TestEquityCurveTracker:
 
     def test_calculate_returns_multiple_points(self, equity_tracker):
         """Test calculating returns from multiple points."""
-        equity_tracker.update_equity_curve(
-            datetime(2024, 1, 1), Decimal("100000"), {}
-        )
-        equity_tracker.update_equity_curve(
-            datetime(2024, 1, 2), Decimal("101000"), {}
-        )
-        equity_tracker.update_equity_curve(
-            datetime(2024, 1, 3), Decimal("102000"), {}
-        )
+        equity_tracker.update_equity_curve(datetime(2024, 1, 1), Decimal("100000"), {})
+        equity_tracker.update_equity_curve(datetime(2024, 1, 2), Decimal("101000"), {})
+        equity_tracker.update_equity_curve(datetime(2024, 1, 3), Decimal("102000"), {})
 
         returns = equity_tracker.calculate_returns()
 
@@ -285,12 +270,8 @@ class TestEquityCurveTracker:
 
     def test_calculate_returns_with_negative_returns(self, equity_tracker):
         """Test calculating returns with losses."""
-        equity_tracker.update_equity_curve(
-            datetime(2024, 1, 1), Decimal("100000"), {}
-        )
-        equity_tracker.update_equity_curve(
-            datetime(2024, 1, 2), Decimal("95000"), {}
-        )
+        equity_tracker.update_equity_curve(datetime(2024, 1, 1), Decimal("100000"), {})
+        equity_tracker.update_equity_curve(datetime(2024, 1, 2), Decimal("95000"), {})
 
         returns = equity_tracker.calculate_returns()
 
@@ -306,12 +287,8 @@ class TestEquityCurveTracker:
 
     def test_get_total_return_profit(self, equity_tracker):
         """Test total return with profit."""
-        equity_tracker.update_equity_curve(
-            datetime(2024, 1, 1), Decimal("100000"), {}
-        )
-        equity_tracker.update_equity_curve(
-            datetime(2024, 1, 30), Decimal("110000"), {}
-        )
+        equity_tracker.update_equity_curve(datetime(2024, 1, 1), Decimal("100000"), {})
+        equity_tracker.update_equity_curve(datetime(2024, 1, 30), Decimal("110000"), {})
 
         total_return = equity_tracker.get_total_return()
 
@@ -320,12 +297,8 @@ class TestEquityCurveTracker:
 
     def test_get_total_return_loss(self, equity_tracker):
         """Test total return with loss."""
-        equity_tracker.update_equity_curve(
-            datetime(2024, 1, 1), Decimal("100000"), {}
-        )
-        equity_tracker.update_equity_curve(
-            datetime(2024, 1, 30), Decimal("90000"), {}
-        )
+        equity_tracker.update_equity_curve(datetime(2024, 1, 1), Decimal("100000"), {})
+        equity_tracker.update_equity_curve(datetime(2024, 1, 30), Decimal("90000"), {})
 
         total_return = equity_tracker.get_total_return()
 
@@ -335,12 +308,8 @@ class TestEquityCurveTracker:
     def test_get_total_return_zero_start_value(self, equity_tracker):
         """Test total return with zero start value."""
         # This would be an edge case, but should handle gracefully
-        equity_tracker.update_equity_curve(
-            datetime(2024, 1, 1), Decimal("0"), {}
-        )
-        equity_tracker.update_equity_curve(
-            datetime(2024, 1, 2), Decimal("10000"), {}
-        )
+        equity_tracker.update_equity_curve(datetime(2024, 1, 1), Decimal("0"), {})
+        equity_tracker.update_equity_curve(datetime(2024, 1, 2), Decimal("10000"), {})
 
         total_return = equity_tracker.get_total_return()
 
@@ -349,12 +318,8 @@ class TestEquityCurveTracker:
 
     def test_get_equity_curve(self, equity_tracker):
         """Test getting equity curve returns a copy."""
-        equity_tracker.update_equity_curve(
-            datetime(2024, 1, 1), Decimal("100000"), {}
-        )
-        equity_tracker.update_equity_curve(
-            datetime(2024, 1, 2), Decimal("101000"), {}
-        )
+        equity_tracker.update_equity_curve(datetime(2024, 1, 1), Decimal("100000"), {})
+        equity_tracker.update_equity_curve(datetime(2024, 1, 2), Decimal("101000"), {})
 
         curve = equity_tracker.get_equity_curve()
 

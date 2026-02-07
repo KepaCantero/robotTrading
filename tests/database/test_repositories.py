@@ -35,11 +35,10 @@ sys.modules["structlog"] = structlog_mock
 import uuid
 from datetime import datetime, timedelta
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from sqlalchemy import create_engine
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
 from app.core.exceptions import DatabaseError
@@ -56,7 +55,6 @@ from app.database.models import (
     Trade,
     User,
 )
-from app.database import repositories
 from app.database.repositories import (
     AssetRepository,
     BacktestRepository,
@@ -71,10 +69,10 @@ from app.database.repositories import (
     UserRepository,
 )
 
-
 # =============================================================================
 # Test Fixtures
 # =============================================================================
+
 
 @pytest.fixture(scope="function")
 def in_memory_db():
@@ -83,8 +81,9 @@ def in_memory_db():
 
     # Drop PostgreSQL-specific check constraints before creating tables
     for table in Base.metadata.tables.values():
-        table.constraints = [c for c in table.constraints
-                           if not (hasattr(c, 'sqltext') and '~' in str(c.sqltext))]
+        table.constraints = [
+            c for c in table.constraints if not (hasattr(c, 'sqltext') and '~' in str(c.sqltext))
+        ]
 
     Base.metadata.create_all(bind=engine)
     return engine
@@ -208,6 +207,7 @@ def test_signal(db_session, test_asset):
 # =============================================================================
 # BaseRepository Tests
 # =============================================================================
+
 
 class TestBaseRepository:
     """Test cases for BaseRepository CRUD operations."""
@@ -400,6 +400,7 @@ class TestBaseRepository:
 # UserRepository Tests
 # =============================================================================
 
+
 class TestUserRepository:
     """Test cases for UserRepository."""
 
@@ -476,6 +477,7 @@ class TestUserRepository:
 # PortfolioRepository Tests
 # =============================================================================
 
+
 class TestPortfolioRepository:
     """Test cases for PortfolioRepository."""
 
@@ -536,6 +538,7 @@ class TestPortfolioRepository:
 # =============================================================================
 # AssetRepository Tests
 # =============================================================================
+
 
 class TestAssetRepository:
     """Test cases for AssetRepository."""
@@ -622,6 +625,7 @@ class TestAssetRepository:
 # PositionRepository Tests
 # =============================================================================
 
+
 class TestPositionRepository:
     """Test cases for PositionRepository."""
 
@@ -704,6 +708,7 @@ class TestPositionRepository:
 # TradeRepository Tests
 # =============================================================================
 
+
 class TestTradeRepository:
     """Test cases for TradeRepository."""
 
@@ -719,9 +724,7 @@ class TestTradeRepository:
         assert len(result) >= 1
         assert test_trade in result
 
-    def test_get_by_portfolio_with_limit(
-        self, db_session, test_trade, test_portfolio
-    ):
+    def test_get_by_portfolio_with_limit(self, db_session, test_trade, test_portfolio):
         """Arrange-Act-Assert: Test getting trades by portfolio with limit."""
         # Arrange
         repo = TradeRepository(Trade, db_session)
@@ -791,6 +794,7 @@ class TestTradeRepository:
 # =============================================================================
 # MarketDataRepository Tests
 # =============================================================================
+
 
 class TestMarketDataRepository:
     """Test cases for MarketDataRepository."""
@@ -880,6 +884,7 @@ class TestMarketDataRepository:
 # SignalRepository Tests
 # =============================================================================
 
+
 class TestSignalRepository:
     """Test cases for SignalRepository."""
 
@@ -946,6 +951,7 @@ class TestSignalRepository:
 # =============================================================================
 # BacktestRepository Tests
 # =============================================================================
+
 
 class TestBacktestRepository:
     """Test cases for BacktestRepository."""
@@ -1016,6 +1022,7 @@ class TestBacktestRepository:
 # RiskMetricsRepository Tests
 # =============================================================================
 
+
 class TestRiskMetricsRepository:
     """Test cases for RiskMetricsRepository."""
 
@@ -1066,6 +1073,7 @@ class TestRiskMetricsRepository:
 # =============================================================================
 # SystemLogRepository Tests
 # =============================================================================
+
 
 class TestSystemLogRepository:
     """Test cases for SystemLogRepository."""
@@ -1146,6 +1154,7 @@ class TestSystemLogRepository:
 # Type Hints Tests (Modern Python 3.10+ syntax)
 # =============================================================================
 
+
 class TestModernTypeHints:
     """Test cases for modern type hints (T | None instead of Optional[T])."""
 
@@ -1207,9 +1216,7 @@ class TestModernTypeHints:
         # Assert
         assert result is None
 
-    def test_position_repository_get_by_portfolio_and_asset_returns_none(
-        self, db_session
-    ):
+    def test_position_repository_get_by_portfolio_and_asset_returns_none(self, db_session):
         """Test that get_by_portfolio_and_asset can return None."""
         # Arrange
         repo = PositionRepository(Position, db_session)
@@ -1234,9 +1241,7 @@ class TestModernTypeHints:
         # Assert
         assert result is None
 
-    def test_risk_metrics_repository_get_latest_by_portfolio_returns_none(
-        self, db_session
-    ):
+    def test_risk_metrics_repository_get_latest_by_portfolio_returns_none(self, db_session):
         """Test that get_latest_by_portfolio can return None."""
         # Arrange
         repo = RiskMetricsRepository(RiskMetrics, db_session)
@@ -1252,6 +1257,7 @@ class TestModernTypeHints:
 # =============================================================================
 # Error Handling and Transaction Rollback Tests
 # =============================================================================
+
 
 class TestErrorHandlingAndTransactionRollback:
     """Test cases for error handling and transaction rollback."""
@@ -1287,7 +1293,7 @@ class TestErrorHandlingAndTransactionRollback:
         try:
             repo.get_by_id(uuid.uuid4())
             assert False, "Expected an exception when using closed session"
-        except (DatabaseError, Exception) as e:
+        except (DatabaseError, Exception):
             # Either DatabaseError (caught and re-raised) or raw SQLAlchemy error
             assert True
 
@@ -1302,7 +1308,7 @@ class TestErrorHandlingAndTransactionRollback:
         try:
             repo.update(test_user.id, is_active=False)
             assert False, "Expected an exception when using closed session"
-        except (DatabaseError, Exception) as e:
+        except (DatabaseError, Exception):
             # Either DatabaseError (caught and re-raised) or raw SQLAlchemy error
             assert True
 
@@ -1310,6 +1316,7 @@ class TestErrorHandlingAndTransactionRollback:
 # =============================================================================
 # Pagination Tests
 # =============================================================================
+
 
 class TestPagination:
     """Test cases for pagination functionality."""
@@ -1374,9 +1381,7 @@ class TestPagination:
         # Assert
         assert len(result) == 4
 
-    def test_trade_repository_get_by_asset_with_limit(
-        self, db_session, test_trade, test_asset
-    ):
+    def test_trade_repository_get_by_asset_with_limit(self, db_session, test_trade, test_asset):
         """Test TradeRepository.get_by_asset with limit."""
         # Arrange
         repo = TradeRepository(Trade, db_session)
@@ -1400,9 +1405,7 @@ class TestPagination:
         # Assert
         assert len(result) == 3
 
-    def test_signal_repository_get_by_asset_with_limit(
-        self, db_session, test_signal, test_asset
-    ):
+    def test_signal_repository_get_by_asset_with_limit(self, db_session, test_signal, test_asset):
         """Test SignalRepository.get_by_asset with limit."""
         # Arrange
         repo = SignalRepository(Signal, db_session)

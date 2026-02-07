@@ -8,20 +8,18 @@ Tests verify that the Unit of Work pattern correctly implements:
 - Domain event collection
 - Repository management
 """
-import pytest
 from decimal import Decimal
-from typing import Optional, List
+from typing import List, Optional
 
-from app.domain.repositories.unit_of_work import (
-    AbstractUnitOfWork,
-    GenericUnitOfWork,
-    UnitOfWorkError,
-    AlreadyCommittedError,
-    NotActiveError,
-    unit_of_work_context,
-)
+import pytest
+
 from app.domain.repositories.base_repository import AbstractRepository
-
+from app.domain.repositories.unit_of_work import (
+    AlreadyCommittedError,
+    GenericUnitOfWork,
+    NotActiveError,
+    UnitOfWorkError,
+)
 
 # ============================================================================
 # TEST ENTITIES

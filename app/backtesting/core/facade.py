@@ -9,7 +9,7 @@ import logging
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Protocol, TypeVar
+from typing import Any, Callable, Dict, List, Optional, Protocol, TypeVar, Union
 
 import pandas as pd
 
@@ -80,7 +80,7 @@ class BacktestRunnerFacade:
             extra={
                 "operation": "facade_init",
                 "config_path": str(config_path),
-            }
+            },
         )
 
     async def load_data(
@@ -112,7 +112,7 @@ class BacktestRunnerFacade:
                 "quotes_count": len(self.quotes),
                 "start_date": start_date.isoformat() if start_date else None,
                 "end_date": end_date.isoformat() if end_date else None,
-            }
+            },
         )
 
     async def _load_portfolio_market_data(
@@ -131,7 +131,9 @@ class BacktestRunnerFacade:
             start_date=start_date, end_date=end_date
         )
 
-    def run_baseline(self, strategy: StrategyProtocol, strategy_name: Optional[str] = None) -> Dict[str, float | int | str]:
+    def run_baseline(
+        self, strategy: StrategyProtocol, strategy_name: Optional[str] = None
+    ) -> Dict[str, Union[float, int, str]]:
         """
         Run baseline backtest.
 
@@ -181,7 +183,11 @@ class BacktestRunnerFacade:
         )
 
     def _log_backtest_complete(
-        self, execution_time: float, test_type: str, strategy_name: str, result_dict: Dict[str, float | int | str]
+        self,
+        execution_time: float,
+        test_type: str,
+        strategy_name: str,
+        result_dict: Dict[str, Union[float, int, str]],
     ) -> None:
         """Log backtest execution completion with results summary."""
         results_summary = self._get_results_summary(result_dict)
@@ -204,7 +210,9 @@ class BacktestRunnerFacade:
             'commission': float(self.backtest_config.commission_per_trade),
         }
 
-    def _get_results_summary(self, result_dict: Dict[str, float | int | str]) -> Dict[str, float | int]:
+    def _get_results_summary(
+        self, result_dict: Dict[str, Union[float, int, str]]
+    ) -> Dict[str, Union[float, int]]:
         """Get results summary for logging."""
         return {
             'total_pnl': float(result_dict['total_pnl']),
@@ -215,14 +223,18 @@ class BacktestRunnerFacade:
             'max_drawdown': float(result_dict['max_drawdown']),
         }
 
-    def _store_result(self, result_dict: Dict[str, float | int | str], result) -> None:
+    def _store_result(self, result_dict: Dict[str, Union[float, int, str]], result) -> None:
         """Store result in both storage containers."""
         self.results.add(result_dict)
         self.backtest_results_objects.append((result_dict['test_name'], result))
 
     def run_strategy_test(
-        self, strategy: StrategyProtocol, test_name: str, test_type: str = 'custom', **metadata: str | int | float
-    ) -> Dict[str, float | int | str]:
+        self,
+        strategy: StrategyProtocol,
+        test_name: str,
+        test_type: str = 'custom',
+        **metadata: Union[str, int, float],
+    ) -> Dict[str, Union[float, int, str]]:
         """
         Run custom strategy backtest.
 
@@ -240,7 +252,9 @@ class BacktestRunnerFacade:
         strategy_class = strategy.__class__.__name__
         metadata_keys = list(metadata.keys()) if metadata else []
 
-        self._log_custom_backtest_start(timestamp, test_type, test_name, strategy_class, metadata_keys)
+        self._log_custom_backtest_start(
+            timestamp, test_type, test_name, strategy_class, metadata_keys
+        )
 
         executor = BacktestExecutorFactory.create(self.backtest_config)
         result = executor.execute(self.quotes, strategy, strategy_name=test_name)
@@ -256,7 +270,12 @@ class BacktestRunnerFacade:
         return result_dict
 
     def _log_custom_backtest_start(
-        self, timestamp: str, test_type: str, test_name: str, strategy_class: str, metadata_keys: List[str]
+        self,
+        timestamp: str,
+        test_type: str,
+        test_name: str,
+        strategy_class: str,
+        metadata_keys: List[str],
     ) -> None:
         """Log custom backtest execution start with metadata context."""
         logger.info(
@@ -275,9 +294,9 @@ class BacktestRunnerFacade:
     def run_parameter_sweep(
         self,
         strategy_factory: StrategyFactory,
-        parameters: Dict[str, List[str | int | float]],
+        parameters: Dict[str, List[Union[str, int, float]]],
         test_name_prefix: str = 'param_sweep',
-    ) -> List[Dict[str, float | int | str]]:
+    ) -> List[Dict[str, Union[float, int, str]]]:
         """
         Run parameter sweep across multiple parameter combinations.
 
@@ -310,7 +329,11 @@ class BacktestRunnerFacade:
         return results
 
     def _log_parameter_sweep_start(
-        self, timestamp: str, test_name_prefix: str, total_combinations: int, parameters: Dict[str, List[str | int | float]]
+        self,
+        timestamp: str,
+        test_name_prefix: str,
+        total_combinations: int,
+        parameters: Dict[str, List[Union[str, int, float]]],
     ) -> None:
         """Log parameter sweep start with structured context."""
         param_names = list(parameters.keys())
@@ -330,10 +353,10 @@ class BacktestRunnerFacade:
         self,
         strategy_factory: StrategyFactory,
         param_names: List[str],
-        param_values: List[List[str | int | float]],
+        param_values: List[List[Union[str, int, float]]],
         test_name_prefix: str,
         total_combinations: int,
-    ) -> List[Dict[str, float | int | str]]:
+    ) -> List[Dict[str, Union[float, int, str]]]:
         """Execute all parameter combinations and return results."""
         import itertools
 
@@ -361,7 +384,10 @@ class BacktestRunnerFacade:
         return results
 
     def _log_parameter_sweep_complete(
-        self, execution_time: float, test_name_prefix: str, results: List[Dict[str, float | int | str]]
+        self,
+        execution_time: float,
+        test_name_prefix: str,
+        results: List[Dict[str, Union[float, int, str]]],
     ) -> None:
         """Log parameter sweep completion with summary."""
         best_result = max(results, key=lambda r: r.get('sharpe_ratio', 0)) if results else None
@@ -379,7 +405,9 @@ class BacktestRunnerFacade:
             },
         )
 
-    def _get_best_result_summary(self, result: Dict[str, float | int | str]) -> Dict[str, float | int | str | Dict]:
+    def _get_best_result_summary(
+        self, result: Dict[str, Union[float, int, str]]
+    ) -> Dict[str, Union[float, int, str, Dict]]:
         """Get summary of best result for logging."""
         return {
             'test_name': result.get('test_name'),
@@ -441,10 +469,10 @@ class BacktestRunnerFacade:
 
     def _result_to_dict(
         self, result, test_type: str, test_name: str
-    ) -> Dict[str, float | int | str]:
+    ) -> Dict[str, Union[float, int, str]]:
         """Convert BacktestResult to dictionary."""
-        from app.backtesting.models import BacktestResult
         from app.backtesting.core.error_handling import BacktestResultError
+        from app.backtesting.models import BacktestResult
 
         if not isinstance(result, BacktestResult):
             raise BacktestResultError(
@@ -473,7 +501,11 @@ class BacktestRunnerFacade:
 
     def _calculate_return_pct(self, initial_capital: float, final_capital: float) -> float:
         """Calculate return percentage."""
-        return ((final_capital - initial_capital) / initial_capital * 100) if initial_capital > 0 else 0.0
+        return (
+            ((final_capital - initial_capital) / initial_capital * 100)
+            if initial_capital > 0
+            else 0.0
+        )
 
     def _get_total_trades(self, result) -> int:
         """Get total trades from result."""
@@ -499,7 +531,9 @@ class BacktestRunnerFacade:
         """Get max drawdown from result."""
         return float(result.performance.max_drawdown_percentage) if result.performance else 0.0
 
-    def _calculate_avg_trade_pnl(self, initial_capital: float, final_capital: float, result) -> float:
+    def _calculate_avg_trade_pnl(
+        self, initial_capital: float, final_capital: float, result
+    ) -> float:
         """Calculate average trade PnL."""
         if result.performance and result.performance.total_trades > 0:
             return (final_capital - initial_capital) / result.performance.total_trades

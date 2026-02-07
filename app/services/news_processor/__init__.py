@@ -11,12 +11,7 @@ Components:
 - News sentiment cache
 """
 
-from .event_handler import (
-    NewsEvent,
-    NewsEventHandler,
-    NewsEventType,
-    SentimentUpdate,
-)
+from .event_handler import NewsEvent, NewsEventHandler, NewsEventType, SentimentUpdate
 
 __all__ = [
     "NewsEvent",

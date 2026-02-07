@@ -21,6 +21,13 @@ from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
 
 from sqlalchemy import JSON, Boolean, Column, DateTime, Float, Integer, String, create_engine
+from sqlalchemy.exc import (
+    DatabaseError,
+    DataError,
+    IntegrityError,
+    OperationalError,
+    ProgrammingError,
+)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 

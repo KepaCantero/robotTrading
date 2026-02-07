@@ -3,8 +3,8 @@ Comprehensive unit tests for EWMA VaR Calculator.
 
 Tests for all EWMA VaR functionality including correlation and forecasting.
 """
-import pytest
 import numpy as np
+import pytest
 
 from app.engines.risk_engine.var_calculators.ewma_var import EWMAVaRCalculator
 

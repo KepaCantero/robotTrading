@@ -3,14 +3,11 @@ Unit tests for Portfolio and Position entities.
 
 Tests the Portfolio and Position entities following DDD patterns.
 """
-import pytest
 from decimal import Decimal
-from datetime import datetime
 
-from app.domain.entities.portfolio import (
-    Portfolio,
-    PortfolioStatus,
-)
+import pytest
+
+from app.domain.entities.portfolio import Portfolio, PortfolioStatus
 from app.domain.entities.position import Position
 from app.domain.value_objects.capital import Capital, CapitalTier
 from app.domain.value_objects.risk_parameters import RiskParameters

@@ -23,7 +23,6 @@ from app.models.momentum import (
 )
 from app.services.momentum.protocols import (
     StorageBackend,
-    StrategyManager as StrategyManagerProtocol,
 )
 
 logger = logging.getLogger(__name__)

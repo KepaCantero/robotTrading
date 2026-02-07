@@ -12,65 +12,60 @@ Tests cover:
 """
 
 import os
-import sys
 import threading
 import time
-from collections import defaultdict
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock
 
 import pytest
 from fastapi import HTTPException, status
 
-from app.core.auth import (
-    # TypedDict classes
-    UserDict,
+from app.core.audit import AuditLogger
+from app.core.auth import (  # TypedDict classes; Main classes; Singleton getters; Dependencies; Utilities
     APIKeyDict,
+    AuthAttemptTracker,
     FailedAttemptsDict,
     LockoutsDict,
     RateLimitsDict,
-    # Main classes
     User,
+    UserDict,
     UserRoles,
     UserStore,
-    JWTTokenManager,
-    AuthAttemptTracker,
-    # Singleton getters
-    get_user_store,
-    get_token_manager,
-    get_attempt_tracker,
-    # Dependencies
-    get_current_user_optional,
-    get_current_user,
-    get_admin_user,
-    get_trader_user,
-    get_deployer_user,
-    require_roles,
-    require_permissions,
-    get_user_id,
-    get_username,
-    # Utilities
-    create_access_token_for_user,
-    verify_token_and_get_user,
     _handle_failed_attempt,
+    create_access_token_for_user,
+    get_admin_user,
+    get_attempt_tracker,
+    get_current_user,
+    get_current_user_optional,
+    get_deployer_user,
+    get_token_manager,
+    get_trader_user,
+    get_user_id,
+    get_user_store,
+    get_username,
+    require_permissions,
+    require_roles,
+    verify_token_and_get_user,
 )
-from app.core.audit import AuditAction, AuditLogger
 
 # Check if JWT library is available
 try:
-    import jwt
+    pass
+
     JWT_AVAILABLE = True
 except ImportError:
     JWT_AVAILABLE = False
 
 # Check if pyjwt is installed
-jwt_skip = pytest.mark.skipif(not JWT_AVAILABLE, reason="PyJWT library not installed. Install with: pip install pyjwt")
+jwt_skip = pytest.mark.skipif(
+    not JWT_AVAILABLE, reason="PyJWT library not installed. Install with: pip install pyjwt"
+)
 
 
 # ============================================================================
 # Test Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def clean_env():
@@ -79,7 +74,9 @@ def clean_env():
     original_env = os.environ.copy()
 
     # Clear auth-related env vars
-    keys_to_remove = [k for k in os.environ if k.startswith("AUTH_USER_") or k.startswith("AUTH_API_KEY_")]
+    keys_to_remove = [
+        k for k in os.environ if k.startswith("AUTH_USER_") or k.startswith("AUTH_API_KEY_")
+    ]
     for key in keys_to_remove:
         del os.environ[key]
 
@@ -112,6 +109,7 @@ def test_user_config(clean_env):
 
     # Reset singletons
     import app.core.auth as auth_module
+
     auth_module._user_store = None
     auth_module._token_manager = None
     auth_module._attempt_tracker = None
@@ -138,6 +136,7 @@ def mock_audit_logger():
 # P1: TypedDict Tests
 # ============================================================================
 
+
 class TestTypedDictClasses:
     """Test TypedDict classes for type documentation (P1 fix)."""
 
@@ -145,17 +144,21 @@ class TestTypedDictClasses:
         """Test UserDict TypedDict exists for type hinting."""
         # UserDict is a TypedDict for documentation purposes
         assert UserDict is not None
+
         # Can be used for type annotations
         def example(users: UserDict) -> None:
             pass
+
         assert callable(example)
 
     def test_api_key_dict_exists(self):
         """Test APIKeyDict TypedDict exists for type hinting."""
         assert APIKeyDict is not None
+
         # Can be used for type annotations
         def example(api_keys: APIKeyDict) -> None:
             pass
+
         assert callable(example)
 
     def test_failed_attempts_dict_exists(self):
@@ -174,6 +177,7 @@ class TestTypedDictClasses:
 # ============================================================================
 # User Class Tests
 # ============================================================================
+
 
 class TestUser:
     """Test User class and role-based authorization."""
@@ -319,12 +323,14 @@ class TestUser:
 # P0: Thread-Safe UserStore Tests
 # ============================================================================
 
+
 class TestUserStoreThreadSafety:
     """Test thread-safe singleton initialization for UserStore (P0 fix)."""
 
     def test_user_store_singleton_initialization_with_lock(self, test_user_config):
         """Test that UserStore uses thread-safe initialization with locks."""
         import app.core.auth as auth_module
+
         auth_module._user_store = None
 
         # Create multiple threads that all try to get the user store
@@ -351,7 +357,7 @@ class TestUserStoreThreadSafety:
 
     def test_user_store_has_rlocks(self, test_user_config):
         """Test that UserStore has RLocks for thread safety (P0 fix)."""
-        import threading
+
         store = UserStore()
 
         # Check that locks exist
@@ -487,6 +493,7 @@ class TestUserStoreFunctionality:
 # P0: Thread-Safe JWTTokenManager Tests
 # ============================================================================
 
+
 @jwt_skip
 class TestJWTTokenManagerThreadSafety:
     """Test thread-safe singleton initialization for JWTTokenManager (P0 fix)."""
@@ -494,6 +501,7 @@ class TestJWTTokenManagerThreadSafety:
     def test_token_manager_singleton_initialization_with_lock(self, test_user_config):
         """Test that JWTTokenManager uses thread-safe initialization."""
         import app.core.auth as auth_module
+
         auth_module._token_manager = None
 
         results = []
@@ -610,6 +618,7 @@ class TestJWTTokenManagerFunctionality:
         # Create a token with wrong type manually
         try:
             import jwt
+
             payload = {
                 "sub": "user-001",
                 "type": "refresh",  # Wrong type
@@ -628,12 +637,14 @@ class TestJWTTokenManagerFunctionality:
 # P0: Thread-Safe AuthAttemptTracker Tests
 # ============================================================================
 
+
 class TestAuthAttemptTrackerThreadSafety:
     """Test thread-safe singleton initialization for AuthAttemptTracker (P0 fix)."""
 
     def test_attempt_tracker_singleton_initialization_with_lock(self, test_user_config):
         """Test that AuthAttemptTracker uses thread-safe initialization."""
         import app.core.auth as auth_module
+
         auth_module._attempt_tracker = None
 
         results = []
@@ -786,6 +797,7 @@ class TestAuthAttemptTrackerFunctionality:
 # Authentication Dependency Tests
 # ============================================================================
 
+
 class TestGetCurrentUserOptional:
     """Test get_current_user_optional dependency."""
 
@@ -794,12 +806,11 @@ class TestGetCurrentUserOptional:
         """Test that no credentials returns None."""
         # Reset the attempt tracker to ensure clean state
         import app.core.auth as auth_module
+
         auth_module._attempt_tracker = None
 
         user = await get_current_user_optional(
-            request_id="test_request",
-            api_key=None,
-            auth_header=None
+            request_id="test_request", api_key=None, auth_header=None
         )
         assert user is None
 
@@ -808,12 +819,11 @@ class TestGetCurrentUserOptional:
         """Test valid API key returns user."""
         # Reset the attempt tracker to ensure clean state
         import app.core.auth as auth_module
+
         auth_module._attempt_tracker = None
 
         user = await get_current_user_optional(
-            request_id="test_request",
-            api_key="sk_test_test_api_key_12345",
-            auth_header=None
+            request_id="test_request", api_key="sk_test_test_api_key_12345", auth_header=None
         )
 
         assert user is not None
@@ -824,12 +834,11 @@ class TestGetCurrentUserOptional:
         """Test invalid API key returns None."""
         # Reset the attempt tracker to ensure clean state
         import app.core.auth as auth_module
+
         auth_module._attempt_tracker = None
 
         user = await get_current_user_optional(
-            request_id="test_request",
-            api_key="invalid_api_key",
-            auth_header=None
+            request_id="test_request", api_key="invalid_api_key", auth_header=None
         )
 
         assert user is None
@@ -846,6 +855,7 @@ class TestGetCurrentUserOptional:
 
         # Mock HTTPAuthorizationCredentials
         from fastapi.security import HTTPAuthorizationCredentials
+
         auth_creds = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
 
         user = await get_current_user_optional(
@@ -861,6 +871,7 @@ class TestGetCurrentUserOptional:
         """Test rate limiting blocks excessive requests."""
         # Reset the attempt tracker to ensure clean state
         import app.core.auth as auth_module
+
         auth_module._attempt_tracker = None
 
         tracker = get_attempt_tracker()
@@ -871,9 +882,7 @@ class TestGetCurrentUserOptional:
 
         # Next request should be blocked
         user = await get_current_user_optional(
-            request_id="test_request",
-            api_key=None,
-            auth_header=None
+            request_id="test_request", api_key=None, auth_header=None
         )
         assert user is None
 
@@ -882,6 +891,7 @@ class TestGetCurrentUserOptional:
         """Test lockout blocks requests."""
         # Reset the attempt tracker to ensure clean state
         import app.core.auth as auth_module
+
         auth_module._attempt_tracker = None
 
         tracker = get_attempt_tracker()
@@ -893,9 +903,7 @@ class TestGetCurrentUserOptional:
 
         # Request should be blocked due to lockout
         user = await get_current_user_optional(
-            request_id="test_request",
-            api_key=None,
-            auth_header=None
+            request_id="test_request", api_key=None, auth_header=None
         )
         assert user is None
 
@@ -1052,6 +1060,7 @@ class TestGetDeployerUser:
 # Role and Permission Tests
 # ============================================================================
 
+
 class TestRequireRoles:
     """Test require_roles dependency factory."""
 
@@ -1164,6 +1173,7 @@ class TestRequirePermissions:
 # Utility Function Tests
 # ============================================================================
 
+
 class TestUtilityFunctions:
     """Test utility functions."""
 
@@ -1238,6 +1248,7 @@ class TestUtilityFunctions:
 # Helper Function Tests
 # ============================================================================
 
+
 class TestHandleFailedAttempt:
     """Test _handle_failed_attempt helper function."""
 
@@ -1260,7 +1271,9 @@ class TestHandleFailedAttempt:
         # Audit log should be called
         assert mock_audit_logger.log.called
 
-    def test_handle_failed_attempt_locks_after_max_attempts(self, test_user_config, mock_audit_logger):
+    def test_handle_failed_attempt_locks_after_max_attempts(
+        self, test_user_config, mock_audit_logger
+    ):
         """Test that account locks after max failed attempts."""
         tracker = AuthAttemptTracker()
         tracker._audit = mock_audit_logger
@@ -1281,6 +1294,7 @@ class TestHandleFailedAttempt:
 # ============================================================================
 # Integration Tests
 # ============================================================================
+
 
 class TestAuthenticationIntegration:
     """Integration tests for authentication flows."""
@@ -1348,7 +1362,7 @@ class TestAuthenticationIntegration:
 
         # 4. Verify locked out user cannot authenticate
         user_store = get_user_store()
-        username = user_store.verify_api_key("sk_test_test_api_key_12345")
+        user_store.verify_api_key("sk_test_test_api_key_12345")
         # Even with valid key, lockout should prevent access (handled in dependency)
 
         # 5. Successful attempt should clear lockout

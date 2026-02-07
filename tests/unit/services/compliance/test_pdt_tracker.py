@@ -2,16 +2,12 @@
 Unit tests for PDT Tracker.
 """
 
-import pytest
-from decimal import Decimal
 from datetime import date, timedelta
+from decimal import Decimal
 
-from app.services.compliance.pdt_tracker import (
-    Country,
-    PDTTracker,
-    PDTStatus,
-    DayTradeRecord,
-)
+import pytest
+
+from app.services.compliance.pdt_tracker import Country, DayTradeRecord, PDTStatus, PDTTracker
 
 
 @pytest.fixture

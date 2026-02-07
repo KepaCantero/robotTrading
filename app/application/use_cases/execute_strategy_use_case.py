@@ -73,7 +73,9 @@ class ExecuteStrategyUseCase:
             except (TypeError, KeyError, ValueError) as e:
                 log_msg = f"Failed to apply strategy parameters: {e}"
                 if self._correlation_id:
-                    logger.error(log_msg, exc_info=True, extra={"correlation_id": self._correlation_id})
+                    logger.error(
+                        log_msg, exc_info=True, extra={"correlation_id": self._correlation_id}
+                    )
                 else:
                     logger.error(log_msg, exc_info=True)
                 raise ValueError(f"Invalid strategy parameters: {e}") from e
@@ -173,7 +175,9 @@ class ExecuteStrategyUseCase:
             except (ValueError, TypeError, AttributeError) as e:
                 log_msg = f"Failed to convert signal {signal.signal_id} to order: {e}"
                 if self._correlation_id:
-                    logger.error(log_msg, exc_info=True, extra={"correlation_id": self._correlation_id})
+                    logger.error(
+                        log_msg, exc_info=True, extra={"correlation_id": self._correlation_id}
+                    )
                 else:
                     logger.error(log_msg, exc_info=True)
                 continue
@@ -253,7 +257,9 @@ class ExecuteStrategyUseCase:
         order.event_history.append(
             {
                 "event": "generated_from_signal",
-                "timestamp": datetime.now(timezone.utc).isoformat(),  # P1-2 fix: timezone-aware datetime
+                "timestamp": datetime.now(
+                    timezone.utc
+                ).isoformat(),  # P1-2 fix: timezone-aware datetime
                 "signal_id": signal.signal_id,
                 "signal_type": signal.signal_type.value,
                 "signal_confidence": signal.confidence,

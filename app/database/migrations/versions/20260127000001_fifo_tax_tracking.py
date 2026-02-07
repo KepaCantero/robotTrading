@@ -12,8 +12,6 @@ Create Date: 2026-01-27
 
 """
 
-import logging
-
 from typing import Sequence, Union
 
 import sqlalchemy as sa

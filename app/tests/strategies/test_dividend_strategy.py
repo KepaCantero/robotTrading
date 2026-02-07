@@ -11,7 +11,7 @@ Cubre:
 Target: 50+ tests with 80%+ coverage
 """
 
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
@@ -26,7 +26,7 @@ from app.strategies.dividend.dividend_portfolio_constructor import (
     DividendPortfolioConstructor,
     PortfolioPosition,
 )
-from app.strategies.dividend.dividend_screener import DividendScreener, ScreeningResult
+from app.strategies.dividend.dividend_screener import DividendScreener
 from app.strategies.dividend.dividend_strategy import DividendStrategy as DividendStrat
 from app.strategies.dividend.models import (
     DividendAristocratStatus,
@@ -935,7 +935,7 @@ class TestDividendPortfolioConstructor:
 
     def test_portfolio_yield_calculation(self, dividend_config):
         """Test cálculo de yield del portafolio."""
-        constructor = DividendPortfolioConstructor(dividend_config)
+        DividendPortfolioConstructor(dividend_config)
 
         portfolio = DividendPortfolio(
             positions=[

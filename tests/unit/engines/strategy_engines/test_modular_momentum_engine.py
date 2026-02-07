@@ -11,18 +11,15 @@ Tests cover:
 - Edge cases (no filters, insufficient data, callback handling)
 """
 
-import pytest
-from decimal import Decimal
 from datetime import datetime
-from collections import deque
-from typing import Dict, Any, List
-from unittest.mock import Mock, patch, MagicMock
+from decimal import Decimal
+from unittest.mock import Mock, patch
+
+import pytest
 
 from app.engines.strategy_engines.modular_momentum_engine import ModularMomentumStrategyEngine
 from app.models.market_data import Quote
-from app.models.signal import Signal, SignalType, SignalStrength, SignalSource
-from app.models.portfolio import Portfolio, Position
-
+from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 # ===== Initialization Tests =====
 

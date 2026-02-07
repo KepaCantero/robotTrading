@@ -12,10 +12,11 @@ Tests the strategy selection functionality including:
 
 from __future__ import annotations
 
-import pytest
 from datetime import datetime
 from decimal import Decimal
 from unittest.mock import Mock, patch
+
+import pytest
 
 from app.application.use_cases.select_strategy import (
     SelectStrategyUseCase,
@@ -24,11 +25,7 @@ from app.application.use_cases.select_strategy import (
     StrategySelectionResult,
     StrategySelector,
 )
-from app.core.models.input_profile import (
-    InputProfile,
-    ObjectivoInversion,
-    RiskTolerance,
-)
+from app.core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
 
 
 class TestStrategyConfiguration:
@@ -301,8 +298,8 @@ class TestStrategySelector:
         assert len(grid.parameters) >= 3
         param_names = {p.name for p in grid.parameters}
         assert "lookback" in param_names
-        assert "entry_zscore" in param_names
-        assert "exit_zscore" in param_names
+        assert "entry_threshold" in param_names
+        assert "exit_threshold" in param_names
 
     def test_get_parameter_grid_unknown_strategy(self, selector: StrategySelector) -> None:
         """Test parameter grid generation for unknown strategy (uses defaults)."""

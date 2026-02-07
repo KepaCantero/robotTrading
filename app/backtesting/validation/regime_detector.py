@@ -21,14 +21,11 @@ References:
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
-from datetime import date, datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import date, datetime
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
-from scipy import stats
 from scipy.signal import argrelextrema
 
 from .models import (

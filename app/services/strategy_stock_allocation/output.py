@@ -8,7 +8,6 @@ and metrics for reporting and analysis.
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 import pandas as pd
 from pydantic import BaseModel
@@ -54,7 +53,6 @@ class OutputGenerator:
 
     def __init__(self) -> None:
         """Initialize output generator."""
-        pass
 
     def generate(
         self,

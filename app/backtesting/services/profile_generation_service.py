@@ -15,11 +15,7 @@ import logging
 from decimal import Decimal
 from typing import Dict, List
 
-from app.core.models.input_profile import (
-    InputProfile,
-    ObjectivoInversion,
-    RiskTolerance,
-)
+from app.core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
 from app.core.tier_mapper import map_profile_tier_to_config
 
 logger = logging.getLogger(__name__)
@@ -45,9 +41,7 @@ class ProfileGenerationService:
         """
         self.capital_tiers = capital_tiers
 
-    def generate_all_profiles(
-        self, investment_horizons: List[int]
-    ) -> List[InputProfile]:
+    def generate_all_profiles(self, investment_horizons: List[int]) -> List[InputProfile]:
         """
         Generate all profile combinations.
 
@@ -87,10 +81,7 @@ class ProfileGenerationService:
                         profiles.append(profile)
 
         expected_count = (
-            len(objectives)
-            * len(risk_tolerances)
-            * len(capital_tiers)
-            * len(investment_horizons)
+            len(objectives) * len(risk_tolerances) * len(capital_tiers) * len(investment_horizons)
         )
         logger.info(
             f"Generated {len(profiles)} profile combinations "

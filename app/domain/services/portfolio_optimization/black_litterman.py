@@ -17,20 +17,15 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 from scipy.optimize import minimize
 
+from app.domain.services.portfolio_optimization._validation import (
+    TRADING_DAYS,
+    log_optimization_failure,
+    validate_covariance_matrix,
+)
 from app.domain.services.portfolio_optimization.mean_variance_optimizer import (
     MeanVarianceOptimizer,
     OptimizationResult,
 )
-from app.domain.services.portfolio_optimization._validation import (
-    TRADING_DAYS,
-    is_square_matrix,
-    is_symmetric,
-    is_positive_semidefinite,
-    validate_covariance_matrix,
-    log_optimization_failure,
-    enforce_positive_semidefinite,
-)
-
 
 logger = logging.getLogger(__name__)
 
@@ -209,7 +204,9 @@ class BlackLittermanOptimizer:
                     {"n_views": len(views), "symbols": symbols},
                 )
                 # Fall back to equilibrium returns
-                logger.warning("Falling back to equilibrium returns due to view combination failure")
+                logger.warning(
+                    "Falling back to equilibrium returns due to view combination failure"
+                )
                 bl_returns = implied_returns
                 view_adjustment = np.zeros(n_assets)
 

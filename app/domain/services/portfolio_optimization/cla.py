@@ -13,16 +13,14 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 import numpy as np
 
 from app.domain.services.portfolio_optimization._validation import (
-    TRADING_DAYS,
-    validate_covariance_matrix,
     log_optimization_failure,
+    validate_covariance_matrix,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -242,7 +240,6 @@ class CriticalLineAlgorithm:
                 corner_portfolios.append(result)
             except Exception as e:
                 logger.debug(f"Skipping target return {target_return}: {e}")
-                pass
 
         return EfficientFrontierCLA(
             corner_portfolios=corner_portfolios,

@@ -84,13 +84,11 @@ class SecretMetadata:
 class SecretValidationError(Exception):
     """Raised when secret validation fails."""
 
-    pass
 
 
 class SecretNotConfiguredError(Exception):
     """Raised when a required secret is not configured."""
 
-    pass
 
 
 # Secret definitions following Rule 28

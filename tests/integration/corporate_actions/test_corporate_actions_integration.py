@@ -8,8 +8,7 @@ Tests cover:
 - Database persistence
 """
 
-import asyncio
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, Mock
 
@@ -17,17 +16,10 @@ import pytest
 
 from app.core.interfaces.broker_base import (
     BrokerType,
-    Order,
     OrderSide,
     OrderStatus,
-    OrderType,
-    Position,
 )
-from app.services.corporate_actions.handler import (
-    CorporateActionType,
-    CorporateActionsHandler,
-)
-
+from app.services.corporate_actions.handler import CorporateActionsHandler, CorporateActionType
 
 # =============================================================================
 # FIXTURES
@@ -37,7 +29,7 @@ from app.services.corporate_actions.handler import (
 @pytest.fixture
 def mock_portfolio_position():
     """Create a portfolio position matching app.models.portfolio.Position."""
-    from app.models.portfolio import Position as PortfolioPosition, AssetClass
+    from app.models.portfolio import AssetClass, Position as PortfolioPosition
 
     return PortfolioPosition(
         symbol="AAPL",

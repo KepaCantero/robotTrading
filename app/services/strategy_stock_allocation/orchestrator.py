@@ -27,12 +27,7 @@ from .calculators import HalfLifeCalculator, HurstCalculator, StationarityTester
 from .classifiers import RegimeClassifier
 from .filters import StockFilter
 from .output import OutputGenerator
-from .scorers import (
-    MeanReversionScorer,
-    MomentumScorer,
-    PairsTradingScorer,
-    WCMScoreCalculator,
-)
+from .scorers import MeanReversionScorer, MomentumScorer, PairsTradingScorer, WCMScoreCalculator
 from .validators import AllocationValidator
 
 logger = logging.getLogger(__name__)

@@ -4,20 +4,20 @@ Unit tests for CorrelationAnalyzer - Phase 2.4
 Tests the real-time correlation matrix calculation functionality.
 """
 
-import asyncio
-import pytest
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from unittest.mock import Mock, AsyncMock, patch
-import pandas as pd
-import numpy as np
+from unittest.mock import AsyncMock, Mock
 
+import numpy as np
+import pandas as pd
+import pytest
+
+from app.models.market_data import DataFeedType, DataFrequency, HistoricalData
 from app.services.correlation.analyzer import (
     CorrelationAnalyzer,
-    CorrelationConfig,
     CorrelationCache,
+    CorrelationConfig,
 )
-from app.models.market_data import HistoricalData, DataFeedType, DataFrequency
 
 
 @pytest.fixture

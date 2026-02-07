@@ -10,11 +10,12 @@ Tests Spain-specific tax rules:
 - Modelo 720 threshold tracking
 """
 
-import pytest
 from decimal import Decimal
 
-from app.services.tax_efficiency.engines.spain_tax_engine import SpainTaxEngine
+import pytest
+
 from app.services.tax_efficiency.engines.factory import get_tax_engine
+from app.services.tax_efficiency.engines.spain_tax_engine import SpainTaxEngine
 
 
 class TestSpainTaxEngine:

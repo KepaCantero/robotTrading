@@ -8,17 +8,10 @@ methodology from "Expected Returns" - Rule 12.9.
 from datetime import date
 from decimal import Decimal
 
-import numpy as np
 import pytest
 
-from app.strategies.fx_carry_trade.carry_calculator import (
-    CarryCalculator,
-    CarryTradeOpportunity,
-)
-from app.strategies.fx_carry_trade.models import (
-    FXCarrySignal,
-    FXPair,
-)
+from app.strategies.fx_carry_trade.carry_calculator import CarryCalculator, CarryTradeOpportunity
+from app.strategies.fx_carry_trade.models import FXCarrySignal, FXPair
 
 
 class TestCarryCalculator:
@@ -265,7 +258,9 @@ class TestCarryCalculatorSignalFull:
             "months": 3,
         }
 
-    def test_calculate_signal_full_basic(self, calculator: CarryCalculator, valid_signal_params: dict) -> None:
+    def test_calculate_signal_full_basic(
+        self, calculator: CarryCalculator, valid_signal_params: dict
+    ) -> None:
         """Test full signal calculation."""
         signal = calculator.calculate_signal_full(**valid_signal_params)
 
@@ -423,9 +418,7 @@ class TestCarryCalculatorFilterRank:
 
         assert len(filtered) == 0
 
-    def test_rank_signals_basic(
-        self, calculator: CarryCalculator, sample_signals: dict
-    ) -> None:
+    def test_rank_signals_basic(self, calculator: CarryCalculator, sample_signals: dict) -> None:
         """Test basic signal ranking."""
         ranked = calculator.rank_signals(sample_signals)
 
@@ -434,9 +427,7 @@ class TestCarryCalculatorFilterRank:
         assert abs(float(ranked[0][1].signal)) >= abs(float(ranked[1][1].signal))
         assert abs(float(ranked[1][1].signal)) >= abs(float(ranked[2][1].signal))
 
-    def test_rank_signals_order(
-        self, calculator: CarryCalculator, sample_signals: dict
-    ) -> None:
+    def test_rank_signals_order(self, calculator: CarryCalculator, sample_signals: dict) -> None:
         """Test that ranking produces correct order."""
         ranked = calculator.rank_signals(sample_signals)
 
@@ -466,18 +457,19 @@ class TestCarryCalculatorProvider:
     @pytest.fixture
     def mock_provider(self) -> type:
         """Create a mock FX rate provider for testing."""
-        from app.strategies.fx_carry_trade.fx_rates_provider import (
-            FXRateProvider,
-        )
         from typing import Protocol, runtime_checkable
+
 
         @runtime_checkable
         class MockProvider(Protocol):
-            def get_spot_rate(self, pair: FXPair, as_of: date) -> Decimal: ...
+            def get_spot_rate(self, pair: FXPair, as_of: date) -> Decimal:
+                ...
 
-            def get_forward_rate(self, pair: FXPair, as_of: date, months: int) -> Decimal: ...
+            def get_forward_rate(self, pair: FXPair, as_of: date, months: int) -> Decimal:
+                ...
 
-            def get_interest_rate(self, currency: str, as_of: date, months: int) -> Decimal: ...
+            def get_interest_rate(self, currency: str, as_of: date, months: int) -> Decimal:
+                ...
 
         class ConcreteMockProvider:
             def __init__(self) -> None:

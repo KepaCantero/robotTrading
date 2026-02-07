@@ -95,14 +95,13 @@ class ProfitAndLossCalculator:
                 f"total_cost={total_cost:.2f}, pnl={pnl:.2f}"
             )
         else:
-            logger.warning(
-                f"SELL {symbol}: NO buy_trades found! "
-                f"PnL will be 0."
-            )
+            logger.warning(f"SELL {symbol}: NO buy_trades found! " f"PnL will be 0.")
 
         # Calculate P&L percentage (handle zero quantity)
         pnl_percentage = (
-            (pnl / (avg_buy_price * sell_quantity) * 100) if buy_trades and sell_quantity > 0 else Decimal("0")
+            (pnl / (avg_buy_price * sell_quantity) * 100)
+            if buy_trades and sell_quantity > 0
+            else Decimal("0")
         )
 
         return {
@@ -138,7 +137,11 @@ class ProfitAndLossCalculator:
                 - entry_time: Entry time of first buy trade
         """
         # Find OPEN buy trades for this symbol
-        buy_trades = [t for t in trades if t.symbol == symbol and t.side == "buy" and t.status == TradeStatus.OPEN]
+        buy_trades = [
+            t
+            for t in trades
+            if t.symbol == symbol and t.side == "buy" and t.status == TradeStatus.OPEN
+        ]
 
         if not buy_trades:
             return {
@@ -152,7 +155,9 @@ class ProfitAndLossCalculator:
         # Calculate average entry price and cost for the quantity being closed
         total_buy_quantity = sum(t.quantity for t in buy_trades)
         buy_cost = sum(t.quantity * t.entry_price for t in buy_trades)
-        avg_entry_price = buy_cost / total_buy_quantity if total_buy_quantity > 0 else buy_trades[-1].entry_price
+        avg_entry_price = (
+            buy_cost / total_buy_quantity if total_buy_quantity > 0 else buy_trades[-1].entry_price
+        )
 
         # Calculate cost basis for the quantity being closed (not all open trades)
         cost_basis = avg_entry_price * quantity
@@ -180,7 +185,9 @@ class ProfitAndLossCalculator:
             commission_sell = sell_trade_value * commission_rate
 
         # Commission for this position close only (proportional to quantity)
-        proportion_of_trades = quantity / total_buy_quantity if total_buy_quantity > 0 else Decimal("1")
+        proportion_of_trades = (
+            quantity / total_buy_quantity if total_buy_quantity > 0 else Decimal("1")
+        )
         buy_commission = sum(t.commission for t in buy_trades) * proportion_of_trades
         total_commission = buy_commission + commission_sell
 
@@ -200,9 +207,7 @@ class ProfitAndLossCalculator:
             "entry_time": entry_time,
         }
 
-    def calculate_average_entry_price(
-        self, trades: List[Trade], symbol: str
-    ) -> Optional[Decimal]:
+    def calculate_average_entry_price(self, trades: List[Trade], symbol: str) -> Optional[Decimal]:
         """
         Calculate average entry price for a symbol's open positions.
 
@@ -230,9 +235,7 @@ class ProfitAndLossCalculator:
 
         return total_cost / total_quantity
 
-    def calculate_round_trip_commission(
-        self, trades: List[Trade], symbol: str
-    ) -> Decimal:
+    def calculate_round_trip_commission(self, trades: List[Trade], symbol: str) -> Decimal:
         """
         Calculate round-trip commission for a symbol.
 

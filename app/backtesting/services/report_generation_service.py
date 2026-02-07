@@ -164,9 +164,7 @@ class ReportGenerationService:
             json.dump(summary, f, indent=2, default=str)
         logger.info(f"Batch summary saved: {summary_path}")
 
-    def export_results(
-        self, results: Dict[str, ProfileResult], format: str = "json"
-    ) -> Path:
+    def export_results(self, results: Dict[str, ProfileResult], format: str = "json") -> Path:
         """
         Export results to file.
 
@@ -234,9 +232,7 @@ class ReportGenerationService:
                 # Detailed sheets by objective
                 for objective in ObjectivoInversion:
                     obj_results = [
-                        r
-                        for r in results.values()
-                        if r.profile.objetivo_inversion == objective
+                        r for r in results.values() if r.profile.objetivo_inversion == objective
                     ]
                     if obj_results:
                         obj_rows = [self._result_to_dict(r) for r in obj_results]
@@ -281,10 +277,9 @@ class ReportGenerationService:
                         grouped[key] = r
                     else:
                         # Keep best Sharpe
-                        if (
-                            r.optimization_results.get("sharpe_ratio", 0)
-                            > grouped[key].optimization_results.get("sharpe_ratio", 0)
-                        ):
+                        if r.optimization_results.get("sharpe_ratio", 0) > grouped[
+                            key
+                        ].optimization_results.get("sharpe_ratio", 0):
                             grouped[key] = r
 
                 best_by_objective.append(

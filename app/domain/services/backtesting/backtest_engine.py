@@ -22,12 +22,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import (
-    Dict,
-    List,
-    Optional,
-    Tuple,
-)
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -544,11 +539,11 @@ class BacktestEngine:
             profit_factor = (
                 sum(winning_trades) / abs(sum(losing_trades)) if losing_trades else float('inf')
             )
-            avg_trade_return = np.mean(trade_returns)
+            avg_trade_return = float(np.mean(trade_returns))
             best_trade = max(trade_returns)
             worst_trade = min(trade_returns)
-            avg_win = np.mean(winning_trades) if winning_trades else 0.0
-            avg_loss = np.mean(losing_trades) if losing_trades else 0.0
+            avg_win = float(np.mean(winning_trades)) if winning_trades else 0.0
+            avg_loss = float(np.mean(losing_trades)) if losing_trades else 0.0
             expectancy = avg_trade_return
         else:
             win_rate = 0.0

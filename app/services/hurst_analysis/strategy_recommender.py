@@ -34,7 +34,6 @@ class StrategyRecommender:
 
     def __init__(self) -> None:
         """Initialize strategy recommender."""
-        pass
 
     def recommend(self, regime: MarketRegime, hurst_exponent: float) -> StrategyRecommendation:
         """

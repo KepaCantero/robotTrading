@@ -47,10 +47,7 @@ References:
 - Berkin & Swedroe: "The Incredible Shrinking Alpha"
 """
 
-from .factor_calculator import (
-    FactorCalculator,
-    get_default_factor_premiums,
-)
+from .factor_calculator import FactorCalculator, get_default_factor_premiums
 from .factor_models import (
     CAPMModel,
     Carhart4FactorModel,
@@ -73,9 +70,7 @@ from .models import (
     FactorType,
 )
 from .multi_factor_strategy import MultiFactorStrategy
-from .portfolio_constructor import (
-    FactorPortfolioConstructor,
-)
+from .portfolio_constructor import FactorPortfolioConstructor
 
 __all__ = [
     # Main strategy

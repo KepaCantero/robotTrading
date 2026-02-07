@@ -30,7 +30,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, Generic, List, Optional, TypeVar
 
-from app.domain.entities.order import Order, OrderStatus
+from app.domain.entities.order import Order
 from app.domain.entities.portfolio import Portfolio, Position
 from app.domain.repositories.unit_of_work import AbstractUnitOfWork
 
@@ -82,7 +82,6 @@ class Command(ABC):
         Raises:
             ValidationError: If command is invalid
         """
-        pass
 
 
 class Query(ABC, Generic[T]):
@@ -124,7 +123,6 @@ class Query(ABC, Generic[T]):
         Note:
             This method should NOT modify any state
         """
-        pass
 
 
 # ============================================================================
@@ -168,7 +166,6 @@ class CommandHandler(ABC):
             ValidationError: If command is invalid
             BusinessRuleError: If business rule is violated
         """
-        pass
 
 
 # ============================================================================
@@ -685,19 +682,16 @@ class ServiceOrchestrator:
 class ValidationError(Exception):
     """Raised when command validation fails."""
 
-    pass
 
 
 class BusinessRuleError(Exception):
     """Raised when business rule is violated."""
 
-    pass
 
 
 class NotFoundError(Exception):
     """Raised when entity is not found."""
 
-    pass
 
 
 # ============================================================================
@@ -706,30 +700,24 @@ class NotFoundError(Exception):
 
 from .input_profile_router import (
     InputProfileRouter,
-    SystemConfiguration,
-    StrategyType,
+    OptimizationConfig,
     OptimizationType,
     RebalancingFrequency,
     RiskConfig,
-    OptimizationConfig,
+    StrategyType,
+    SystemConfiguration,
     TaxConfig,
 )
 from .risk_configurator import (
+    DrawdownMetrics,
+    RiskBudget,
     RiskConfigurator,
     RiskLimit,
     RiskLimitType,
-    VaRResult,
-    DrawdownMetrics,
-    RiskBudget,
     StressTestScenario,
+    VaRResult,
 )
-from .tax_optimizer import (
-    TaxOptimizer,
-    TaxLot,
-    TaxCalculation,
-    TaxMethod,
-    TaxJurisdiction,
-)
+from .tax_optimizer import TaxCalculation, TaxJurisdiction, TaxLot, TaxMethod, TaxOptimizer
 
 __all__ = [
     # CQRS

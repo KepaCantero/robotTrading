@@ -19,7 +19,7 @@ SOLID Principles:
 import logging
 import time
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Set
+from typing import Dict, List, Optional
 
 from .models import (
     LowVolatilityProfile,
@@ -28,7 +28,6 @@ from .models import (
     LowVolatilityStrategyConfig,
     ScreeningResult,
     SectorDefensiveLevel,
-    VolatilityMetrics,
 )
 
 logger = logging.getLogger(__name__)

@@ -153,7 +153,11 @@ class AnalyzeBacktestResultsUseCase:
             Risk assessment dictionary or None
         """
         logger = structlog.get_logger(__name__)
-        logger.info("assess_acceptable_risk.entry", backtest_id=backtest_id, max_drawdown_threshold=str(max_drawdown_threshold))
+        logger.info(
+            "assess_acceptable_risk.entry",
+            backtest_id=backtest_id,
+            max_drawdown_threshold=str(max_drawdown_threshold),
+        )
 
         backtest = self._backtest_repository.find_by_id(backtest_id)
         if not backtest or not backtest.result:

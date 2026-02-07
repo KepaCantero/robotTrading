@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from app.backtesting.models import BacktestConfig
 from app.models.signal import Signal, SignalType
@@ -106,9 +106,7 @@ class SignalProcessor:
         """
         from app.backtesting.engine import get_price
 
-        strategy_name = (
-            signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
-        )
+        strategy_name = signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
 
         # Step 1: Apply risk_check if strategy is available
         if not self._validate_strategy_risk_check(
@@ -235,25 +233,23 @@ class SignalProcessor:
 
         return True
 
-    def _build_rejection_reason(self, signal: Signal, portfolio: Any, current_price: Decimal) -> str:
+    def _build_rejection_reason(
+        self, signal: Signal, portfolio: Any, current_price: Decimal
+    ) -> str:
         """Build detailed rejection reason for logging."""
         rejection_reason = "Risk check failed"
 
         if signal.signal_type == SignalType.BUY:
             position_size = self.strategy.get_position_size(signal, portfolio)
-            required_cash = (
-                signal.price * position_size if position_size > 0 else Decimal("0")
-            )
+            required_cash = signal.price * position_size if position_size > 0 else Decimal("0")
             rejection_reason += (
                 f" (BUY: cash=${portfolio.cash:.2f}, required=${required_cash:.2f}, "
                 f"position_size={position_size:.6f})"
             )
         elif signal.signal_type == SignalType.SELL:
-            from app.models.portfolio import Position
+            pass
 
-            existing_pos = next(
-                (p for p in portfolio.positions if p.symbol == signal.symbol), None
-            )
+            existing_pos = next((p for p in portfolio.positions if p.symbol == signal.symbol), None)
             if not existing_pos:
                 rejection_reason += " (SELL: no position exists)"
             else:

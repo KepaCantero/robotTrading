@@ -10,18 +10,17 @@ Tests:
 
 import os
 import time
+
 import pytest
-from decimal import Decimal
 
 from app.core.secret_manager import (
-    SecretManager,
-    SecretDefinition,
     SecretCategory,
+    SecretDefinition,
+    SecretManager,
     SecretMetadata,
     SecretValidationError,
     SecretValidationReport,
     generate_secure_secret,
-    validate_secrets_configured,
 )
 
 

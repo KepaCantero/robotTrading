@@ -5,11 +5,10 @@ Tests the CorrelationNetworkAnalyzer class which uses network theory
 to analyze correlations between assets.
 """
 
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 import numpy as np
-import pandas as pd
-from typing import List, Dict, Any
+import pytest
 
 
 @pytest.fixture

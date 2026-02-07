@@ -4,10 +4,11 @@ Unit tests for FIFOIntegrator service.
 Tests the integration between live trading and FIFO tax lot tracking.
 """
 
-import pytest
 from datetime import datetime, timezone
 from decimal import Decimal
 from uuid import UUID, uuid4
+
+import pytest
 
 from app.services.fifo.fifo_integrator import FIFOIntegrator, LotInfo, Trade
 

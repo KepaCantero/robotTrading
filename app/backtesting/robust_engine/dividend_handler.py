@@ -24,18 +24,13 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 
-from .models import (
-    DividendAction,
-    DividendTracker,
-    DripConfig,
-)
+from .models import DividendAction, DividendTracker, DripConfig
 
 logger = logging.getLogger(__name__)
 
@@ -425,9 +420,7 @@ class DividendHandler:
             List of DividendActions processed
         """
         # Use generator for memory-efficient processing
-        actions = list(
-            self._generate_dividend_actions(dividend_data, positions, prices)
-        )
+        actions = list(self._generate_dividend_actions(dividend_data, positions, prices))
 
         logger.info(f"Processed {len(actions)} dividend payments")
         return actions

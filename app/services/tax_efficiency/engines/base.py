@@ -49,7 +49,6 @@ class TaxEngine(ABC):
         Returns:
             Tax amount
         """
-        pass
 
     @abstractmethod
     def calculate_dividend_tax(self, dividend: Decimal) -> Decimal:
@@ -62,7 +61,6 @@ class TaxEngine(ABC):
         Returns:
             Tax amount
         """
-        pass
 
     @abstractmethod
     def applies_wash_sale(self) -> bool:
@@ -72,7 +70,6 @@ class TaxEngine(ABC):
         Returns:
             True if wash sale rule applies
         """
-        pass
 
     def get_tax_summary(self, capital_gains: Decimal, dividends: Decimal) -> Dict:
         """

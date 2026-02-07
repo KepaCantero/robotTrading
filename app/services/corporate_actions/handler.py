@@ -815,7 +815,6 @@ class CorporateActionsHandler:
 
         # TODO: Persist to database
         # This depends on the position storage implementation
-        pass
 
     async def _adjust_dividend_baseline(
         self, symbol: str, amount: Decimal, positions: List[Any]

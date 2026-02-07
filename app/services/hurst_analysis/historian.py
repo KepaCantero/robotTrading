@@ -13,7 +13,6 @@ from collections import defaultdict
 from datetime import datetime
 from typing import Final
 
-from app.services.hurst_analysis.protocols import HistoricalTrackerProtocol
 
 logger = logging.getLogger(__name__)
 

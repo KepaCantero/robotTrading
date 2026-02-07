@@ -8,17 +8,15 @@ Tests follow ESL methodologies and cover:
 4. Model Comparison
 """
 
-import pytest
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import LinearRegression, Ridge, Lasso
-from sklearn.ensemble import RandomForestRegressor
+import pytest
+from sklearn.linear_model import Lasso, LinearRegression, Ridge
 
 from app.backtesting.model_selection import (
-    AICCalculator,
     AdjustedR2Calculator,
+    AICCalculator,
     BICCalculator,
-    CriterionType,
     GCVCalculator,
     MallowCpCalculator,
     ModelComparisonResult,
@@ -167,8 +165,8 @@ class TestBICCalculator:
         n_params = 10
         n_samples = len(y_test)
 
-        aic = AICCalculator.calculate(y_test, y_pred, n_params)
-        bic = BICCalculator.calculate(y_test, y_pred, n_params)
+        AICCalculator.calculate(y_test, y_pred, n_params)
+        BICCalculator.calculate(y_test, y_pred, n_params)
 
         # BIC should have larger penalty term
         # BIC penalty: k * ln(n)

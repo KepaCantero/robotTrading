@@ -4,10 +4,8 @@ Tests for PositionManager service.
 Tests position tracking, updates, queries, and edge cases.
 """
 
-from datetime import datetime
 from decimal import Decimal
 
-import pytest
 
 from app.backtesting.services.position_manager import PositionManager
 

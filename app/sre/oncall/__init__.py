@@ -36,15 +36,9 @@ Usage:
 from __future__ import annotations
 
 import logging
-from pathlib import Path
 
 from .dashboard import OncallDashboard, OncallMetrics, OncallStatus
-from .escalation import (
-    EscalationLevel,
-    EscalationManager,
-    EscalationPath,
-    EscalationPolicy,
-)
+from .escalation import EscalationLevel, EscalationManager, EscalationPath, EscalationPolicy
 from .handoff import HandoffChecklist, HandoffManager, HandoffSession
 from .rotation import OncallRotation, RotationConfig, RotationSchedule
 

@@ -23,8 +23,8 @@ from typing import Any, Callable, Dict, List, Optional
 
 from requests.exceptions import HTTPError
 from sqlalchemy.exc import (
-    DataError,
     DatabaseError,
+    DataError,
     IntegrityError,
     OperationalError,
     ProgrammingError,

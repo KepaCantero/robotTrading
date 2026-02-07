@@ -6,7 +6,7 @@ Tests for strategy management API endpoints with DI container pattern.
 Reference: Rule DP-004 - Use dependency injection instead of direct instantiation.
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi import status
@@ -49,7 +49,9 @@ class TestStrategiesAPIEndpoints:
     async def test_get_available_strategies(self, client):
         """Test get_available_strategies returns list of available strategies."""
         with patch.object(
-            StrategyRegistry, "list_available_strategies", return_value=["momentum", "mean_reversion"]
+            StrategyRegistry,
+            "list_available_strategies",
+            return_value=["momentum", "mean_reversion"],
         ):
             response = client.get("/strategies/available")
             assert response.status_code == status.HTTP_200_OK
@@ -87,7 +89,9 @@ class TestStrategiesAPIEndpoints:
     @pytest.mark.asyncio
     async def test_load_strategy_invalid(self, client):
         """Test load_strategy returns 400 for invalid strategy."""
-        with patch.object(StrategyRegistry, "load_strategy", side_effect=ValueError("Invalid strategy")):
+        with patch.object(
+            StrategyRegistry, "load_strategy", side_effect=ValueError("Invalid strategy")
+        ):
             response = client.post(
                 "/strategies/load",
                 json={"name": "invalid_strategy", "config": {}},
@@ -108,7 +112,9 @@ class TestStrategiesAPIEndpoints:
     @pytest.mark.asyncio
     async def test_activate_strategy_invalid(self, client):
         """Test activate_strategy returns 400 for invalid strategy."""
-        with patch.object(StrategyRegistry, "set_active_strategy", side_effect=ValueError("Strategy not found")):
+        with patch.object(
+            StrategyRegistry, "set_active_strategy", side_effect=ValueError("Strategy not found")
+        ):
             response = client.post(
                 "/strategies/activate",
                 json={"name": "nonexistent"},
@@ -145,7 +151,9 @@ class TestStrategiesAPIEndpoints:
     @pytest.mark.asyncio
     async def test_unload_strategy_not_found(self, client):
         """Test unload_strategy returns 400 for non-existent strategy."""
-        with patch.object(StrategyRegistry, "unload_strategy", side_effect=ValueError("Strategy not found")):
+        with patch.object(
+            StrategyRegistry, "unload_strategy", side_effect=ValueError("Strategy not found")
+        ):
             response = client.delete("/strategies/unload/nonexistent")
             assert response.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -361,7 +369,9 @@ class TestErrorHandling:
     @pytest.mark.asyncio
     async def test_load_strategy_error(self, client):
         """Test load_strategy handles unexpected errors correctly."""
-        with patch.object(StrategyRegistry, "load_strategy", side_effect=RuntimeError("Unexpected error")):
+        with patch.object(
+            StrategyRegistry, "load_strategy", side_effect=RuntimeError("Unexpected error")
+        ):
             response = client.post(
                 "/strategies/load",
                 json={"name": "test_strategy", "config": {}},
@@ -371,6 +381,8 @@ class TestErrorHandling:
     @pytest.mark.asyncio
     async def test_get_execution_stats_error(self, client):
         """Test get_execution_stats handles errors correctly."""
-        with patch.object(ExecutionEngine, "get_execution_stats", side_effect=Exception("Test error")):
+        with patch.object(
+            ExecutionEngine, "get_execution_stats", side_effect=Exception("Test error")
+        ):
             response = client.get("/strategies/execution/stats")
             assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR

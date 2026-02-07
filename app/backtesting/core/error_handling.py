@@ -76,7 +76,6 @@ class MutexError(Exception):
     - OpenBLAS/MKL threading conflicts
     """
 
-    pass
 
 
 class TrainingError(Exception):
@@ -89,7 +88,6 @@ class TrainingError(Exception):
     - Resource exhaustion
     """
 
-    pass
 
 
 class SubprocessTimeoutError(TrainingError):
@@ -97,7 +95,6 @@ class SubprocessTimeoutError(TrainingError):
     Error raised when subprocess training times out.
     """
 
-    pass
 
 
 class BacktestResultError(Exception):

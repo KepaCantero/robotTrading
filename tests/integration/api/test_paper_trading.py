@@ -9,7 +9,7 @@ Reference: API-004 - Test coverage for API endpoints.
 from datetime import datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 from fastapi import status
@@ -232,7 +232,9 @@ class TestPaperTradingAPIEndpoints:
             mock_service.sessions = {mock_session.id: mock_session}
             mock_get_service.return_value = mock_service
 
-            response = client.get(f"/paper-trading/sessions?portfolio_id={mock_portfolio_id}&is_active=true")
+            response = client.get(
+                f"/paper-trading/sessions?portfolio_id={mock_portfolio_id}&is_active=true"
+            )
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert isinstance(data, list)

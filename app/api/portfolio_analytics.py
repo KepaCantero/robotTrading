@@ -21,9 +21,6 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel, Field
 
-from . import audit_logger, get_correlation_id
-from .security import rate_limit, require_auth, audit_log
-
 from app.models.portfolio_analytics import (
     ExtendedPortfolio,
     PerformanceMetrics,
@@ -38,6 +35,9 @@ from app.services.portfolio_analytics_service import (
     PortfolioAnalyticsService,
     get_portfolio_analytics_service,
 )
+
+from . import audit_logger, get_correlation_id
+from .security import audit_log, rate_limit, require_auth
 
 router = APIRouter(prefix="/portfolio-analytics", tags=["Portfolio Analytics"])
 logger = logging.getLogger(__name__)
@@ -295,9 +295,7 @@ async def calculate_performance_metrics(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        return PerformanceMetricsResponse(
-            success=False, error=f"Unexpected error: {str(e)}"
-        )
+        return PerformanceMetricsResponse(success=False, error=f"Unexpected error: {str(e)}")
 
 
 @router.get("/performance-metrics/{portfolio_id}", response_model=PerformanceMetricsResponse)

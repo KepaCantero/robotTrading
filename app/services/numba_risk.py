@@ -26,12 +26,11 @@ Compliance: Rule 19, Rule 23 - High Performance Python
 """
 
 import logging
-from typing import Optional, Tuple
 
 import numpy as np
 
 # CRITICAL: Numba is REQUIRED for this module
-from numba import jit, njit, prange
+from numba import jit
 
 logger = logging.getLogger(__name__)
 
@@ -532,6 +531,6 @@ def get_numba_risk_info() -> dict:
 # Log module initialization
 logger.info("=" * 80)
 logger.info("NUMBA RISK MODULE LOADED")
-logger.info(f"✅ All risk calculations use Numba JIT compilation")
+logger.info("✅ All risk calculations use Numba JIT compilation")
 logger.info("✅ Expected speedup: 10-100x for all risk calculations")
 logger.info("=" * 80)

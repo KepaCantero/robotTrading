@@ -5,16 +5,11 @@ TASK-6: Configuración de base de datos
 
 from __future__ import annotations
 
-# pylint: disable=inconsistent-return-statements
-# The raise_database_error function always raises an exception, so pylint
-# incorrectly reports inconsistent return statements. This is intentional.
-
 import uuid
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any, Generic, TypeVar
 
-from structlog import get_logger
 from sqlalchemy import and_, func
 from sqlalchemy.exc import (
     DatabaseError,
@@ -24,6 +19,7 @@ from sqlalchemy.exc import (
     ProgrammingError,
 )
 from sqlalchemy.orm import Session
+from structlog import get_logger
 
 from app.core.exceptions import raise_database_error
 from app.database.models import (
@@ -38,6 +34,13 @@ from app.database.models import (
     Trade,
     User,
 )
+
+# pylint: disable=inconsistent-return-statements
+# The raise_database_error function always raises an exception, so pylint
+# incorrectly reports inconsistent return statements. This is intentional.
+
+
+
 
 T = TypeVar("T")
 logger = get_logger(__name__)
@@ -450,7 +453,9 @@ class PositionRepository(BaseRepository[Position]):
     def get_by_portfolio(self, portfolio_id: uuid.UUID) -> list[Position]:
         """Get positions by portfolio ID."""
         try:
-            result = self.session.query(Position).filter(Position.portfolio_id == portfolio_id).all()
+            result = (
+                self.session.query(Position).filter(Position.portfolio_id == portfolio_id).all()
+            )
             logger.debug(
                 "queried_positions_by_portfolio",
                 portfolio_id=str(portfolio_id),

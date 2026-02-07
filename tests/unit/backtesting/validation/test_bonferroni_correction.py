@@ -5,9 +5,8 @@ Tests multiple testing correction as described in Ernest Chan's
 "Quantitative Trading" (Chapter 2).
 """
 
-import pytest
 import numpy as np
-from scipy import stats
+import pytest
 
 from app.backtesting.validation.bonferroni_correction import (
     BonferroniCorrector,

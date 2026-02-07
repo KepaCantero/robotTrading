@@ -57,7 +57,6 @@ from app.security.input_validation import (
     InputSanitizer,
     ListValidator,
     NumericValidator,
-    SecureRequestValidator,
     ValidationError,
     validate_and_sanitize_input,
     validator,

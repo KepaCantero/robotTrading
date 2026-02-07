@@ -20,15 +20,9 @@ from typing import Any, Dict, List, Union
 
 import yaml
 
-from app.core.models.input_profile import (
-    InputProfile,
-    ObjectivoInversion,
-    RiskTolerance,
-)
+from app.core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
 from app.core.tier_mapper import map_profile_tier_to_config
-from app.services.profile_driven_trading.profile_strategy_mapper import (
-    create_profile_mapper,
-)
+from app.services.profile_driven_trading.profile_strategy_mapper import create_profile_mapper
 
 logger = logging.getLogger(__name__)
 

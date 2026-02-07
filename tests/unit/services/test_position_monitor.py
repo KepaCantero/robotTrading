@@ -27,22 +27,20 @@ Changes:
 import asyncio
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from typing import Dict, List, Optional
-from unittest.mock import AsyncMock
+from typing import Dict, Optional
 
 import numpy as np
 import pytest
 
+from app.models.market_data import Quote
 from app.services.position_monitor import (
     MonitoredPosition,
     PositionMonitor,
     PositionMonitorConfig,
     PositionStatus,
     StopExecutor,
-    StopExecutionResult,
     StopType,
 )
-from app.models.market_data import Quote
 
 # Set reproducible seed
 np.random.seed(42)

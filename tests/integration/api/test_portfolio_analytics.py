@@ -8,8 +8,8 @@ Reference: API-004 - Test coverage for API endpoints.
 
 from datetime import datetime
 from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock, patch
-from uuid import UUID, uuid4
+from unittest.mock import AsyncMock, patch
+from uuid import uuid4
 
 import pytest
 from fastapi import status
@@ -23,8 +23,8 @@ from app.models.portfolio_analytics import (
     PortfolioAnalytics,
     PortfolioComparison,
     PortfolioRebalance,
-    RiskMetrics,
     RiskLevel,
+    RiskMetrics,
 )
 
 
@@ -94,7 +94,9 @@ class TestPortfolioAnalyticsAPIEndpoints:
         )
 
     @pytest.fixture
-    def mock_portfolio_analytics(self, mock_portfolio_id, mock_performance_metrics, mock_risk_metrics):
+    def mock_portfolio_analytics(
+        self, mock_portfolio_id, mock_performance_metrics, mock_risk_metrics
+    ):
         """Create mock portfolio analytics."""
         return PortfolioAnalytics(
             portfolio_id=mock_portfolio_id,
@@ -110,7 +112,9 @@ class TestPortfolioAnalyticsAPIEndpoints:
         )
 
     @pytest.mark.asyncio
-    async def test_calculate_performance_metrics_success(self, client, mock_portfolio_id, mock_performance_metrics):
+    async def test_calculate_performance_metrics_success(
+        self, client, mock_portfolio_id, mock_performance_metrics
+    ):
         """Test calculate_performance_metrics returns valid metrics."""
         with patch(
             "app.api.portfolio_analytics.get_portfolio_analytics_service"
@@ -132,7 +136,9 @@ class TestPortfolioAnalyticsAPIEndpoints:
             assert data["data"]["total_value"] == 100000.00
 
     @pytest.mark.asyncio
-    async def test_get_performance_metrics_success(self, client, mock_portfolio_id, mock_performance_metrics):
+    async def test_get_performance_metrics_success(
+        self, client, mock_portfolio_id, mock_performance_metrics
+    ):
         """Test get_performance_metrics returns valid metrics."""
         with patch(
             "app.api.portfolio_analytics.get_portfolio_analytics_service"
@@ -164,7 +170,9 @@ class TestPortfolioAnalyticsAPIEndpoints:
             assert data["data"]["var_95"] == -2.5
 
     @pytest.mark.asyncio
-    async def test_get_portfolio_analytics_success(self, client, mock_portfolio_id, mock_portfolio_analytics):
+    async def test_get_portfolio_analytics_success(
+        self, client, mock_portfolio_id, mock_portfolio_analytics
+    ):
         """Test get_portfolio_analytics returns comprehensive analytics."""
         with patch(
             "app.api.portfolio_analytics.get_portfolio_analytics_service"
@@ -262,7 +270,9 @@ class TestPortfolioAnalyticsAPIEndpoints:
             assert "current_allocation" in data["data"]
 
     @pytest.mark.asyncio
-    async def test_compare_portfolios_success(self, client, mock_performance_metrics, mock_risk_metrics):
+    async def test_compare_portfolios_success(
+        self, client, mock_performance_metrics, mock_risk_metrics
+    ):
         """Test compare_portfolios returns comparison data."""
         portfolio_ids = [uuid4(), uuid4()]
 
@@ -316,7 +326,9 @@ class TestPortfolioAnalyticsAPIEndpoints:
             assert data["success"] is True
 
     @pytest.mark.asyncio
-    async def test_get_analytics_summary_success(self, client, mock_portfolio_id, mock_portfolio_analytics):
+    async def test_get_analytics_summary_success(
+        self, client, mock_portfolio_id, mock_portfolio_analytics
+    ):
         """Test get_analytics_summary returns summary data."""
         with patch(
             "app.api.portfolio_analytics.get_portfolio_analytics_service"

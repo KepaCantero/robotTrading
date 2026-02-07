@@ -11,12 +11,11 @@ Date: 2026-02-03
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Protocol
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
+from typing import Any, Dict, List, Optional, Protocol
 
 import pandas as pd
-
 
 # =============================================================================
 # BASE PROTOCOLS

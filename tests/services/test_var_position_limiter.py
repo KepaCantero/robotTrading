@@ -4,18 +4,18 @@ Unit tests for VaR Position Limiter - Phase 2.5
 Tests VaR-based position limits with real correlation matrices.
 """
 
-import pytest
 from decimal import Decimal
-from datetime import datetime, timezone
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 
+import pytest
+
+from app.models.portfolio import AssetClass, Portfolio, Position
 from app.services.var_position_limiter import (
-    VaRPositionLimiter,
-    VaRConfig,
     ValidationResult,
+    VaRConfig,
+    VaRPositionLimiter,
     get_var_position_limiter,
 )
-from app.models.portfolio import Portfolio, Position, AssetClass, HedgingMetadata
 
 
 @pytest.fixture

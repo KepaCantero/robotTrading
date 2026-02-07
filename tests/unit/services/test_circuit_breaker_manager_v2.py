@@ -25,23 +25,21 @@ Changes:
 - Added recovery scenario tests
 """
 
-from decimal import Decimal
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 from typing import Dict, List, Optional
 
 import numpy as np
 import pytest
 
-from app.services.circuit_breaker_manager_v2 import (
-    CircuitBreakerManager,
-    CircuitBreakerLevel,
-    CircuitBreakerConfig,
-    TradingStatus,
-    MarketState,
-    CircuitBreakerEvent,
-)
 from app.models.market_data import Quote
-from app.backtesting.test_summary import TestSummaryReporter
+from app.services.circuit_breaker_manager_v2 import (
+    CircuitBreakerConfig,
+    CircuitBreakerLevel,
+    CircuitBreakerManager,
+    MarketState,
+    TradingStatus,
+)
 
 # Set reproducible seed
 np.random.seed(42)
@@ -733,7 +731,7 @@ class TestCircuitBreakerEdgeCases:
         )
 
         # Should not crash
-        result = await manager._check_market_wide_halt()
+        await manager._check_market_wide_halt()
         assert manager._is_trading_paused is False
 
     @pytest.mark.asyncio

@@ -3,9 +3,9 @@ Unit tests for Component VaR Calculator.
 
 Tests for component VaR and risk contribution calculations.
 """
-import pytest
+
 import numpy as np
-from unittest.mock import Mock
+import pytest
 
 from app.engines.risk_engine.var_calculators.component_var import ComponentVaRCalculator
 

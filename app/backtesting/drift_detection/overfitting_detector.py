@@ -91,17 +91,13 @@ class OverfittingDetector:
             Overfitting detection result
         """
         # Extract and validate results
-        train_return, val_return, gap = self._validate_detection_results(
-            train_result, val_result
-        )
+        train_return, val_return, gap = self._validate_detection_results(train_result, val_result)
 
         # Calculate overfitting metrics
         severity, is_overfitting, confidence = self._calculate_overfitting_metrics(gap)
 
         # Build details dict
-        details = self._build_detection_details(
-            train_return, val_return, gap
-        )
+        details = self._build_detection_details(train_return, val_return, gap)
 
         # Apply OOS degradation if available
         if oos_result:
@@ -258,7 +254,7 @@ class OverfittingDetector:
                 "gap": gap,
                 "gap_threshold": self.max_acceptable_gap,
                 "has_oos_result": has_oos,
-            }
+            },
         )
 
         if result.is_overfitting:
@@ -274,7 +270,7 @@ class OverfittingDetector:
                     "gap": gap,
                     "gap_threshold": self.max_acceptable_gap,
                     "oos_degradation": result.details.get('oos_degradation'),
-                }
+                },
             )
 
     def detect_from_cv_scores(
@@ -297,7 +293,7 @@ class OverfittingDetector:
                     "detector": "OverfittingDetector",
                     "method": "detect_from_cv_scores",
                     "error": "No CV scores provided",
-                }
+                },
             )
             return OverfittingResult(
                 is_overfitting=False,
@@ -368,7 +364,7 @@ class OverfittingDetector:
                 "train_val_gap": gap,
                 "has_train_scores": train_scores is not None,
                 "n_cv_folds": len(cv_scores),
-            }
+            },
         )
 
         if is_overfitting:
@@ -383,7 +379,7 @@ class OverfittingDetector:
                     "cv_threshold": self.cv_threshold,
                     "train_val_gap": gap,
                     "reason": "cv_unstable" if is_unstable else "train_val_gap",
-                }
+                },
             )
 
         return result
@@ -410,7 +406,7 @@ class OverfittingDetector:
                     "method": "calculate_learning_curve_gap",
                     "error": "Insufficient data points for learning curve",
                     "data_points": len(train_sizes),
-                }
+                },
             )
             return {'error': 'Insufficient data points for learning curve'}
 
@@ -456,7 +452,7 @@ class OverfittingDetector:
                 "n_data_points": len(train_sizes),
                 "cv_threshold": self.cv_threshold,
                 "max_acceptable_gap": self.max_acceptable_gap,
-            }
+            },
         )
 
         if result['overfitting_indicated']:
@@ -470,7 +466,7 @@ class OverfittingDetector:
                     "is_converged": is_converged,
                     "is_high_variance": is_high_variance,
                     "reason": "high_gap" if avg_gap > self.max_acceptable_gap else "not_converged",
-                }
+                },
             )
 
         return result

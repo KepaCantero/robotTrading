@@ -5,18 +5,18 @@ Unit tests for results.py
 Tests for compliance check result data classes.
 """
 
-import pytest
 from decimal import Decimal
-from datetime import datetime
+
+import pytest
 
 from app.core.compliance.results import (
     CheckResult,
-    PreTradeCheckResult,
-    PostTradeCheckResult,
-    OptimizeResult,
-    ComprehensivePreTradeAnalysis,
     ComprehensivePostTradeAnalysis,
+    ComprehensivePreTradeAnalysis,
+    OptimizeResult,
     PortfolioOptimizationResult,
+    PostTradeCheckResult,
+    PreTradeCheckResult,
 )
 
 

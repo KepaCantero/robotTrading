@@ -83,19 +83,13 @@ class CorrelationAnalyzer:
             ValueError: If parameters are invalid
         """
         if lookback_days <= 0:
-            raise ValueError(
-                f"lookback_days must be positive, got {lookback_days}"
-            )
+            raise ValueError(f"lookback_days must be positive, got {lookback_days}")
 
         if not Decimal("0") <= min_correlation <= Decimal("1"):
-            raise ValueError(
-                f"min_correlation must be between 0 and 1, got {min_correlation}"
-            )
+            raise ValueError(f"min_correlation must be between 0 and 1, got {min_correlation}")
 
         if not Decimal("0") <= min_significance <= Decimal("100"):
-            raise ValueError(
-                f"min_significance must be between 0 and 100, got {min_significance}"
-            )
+            raise ValueError(f"min_significance must be between 0 and 100, got {min_significance}")
 
         self.lookback_days = lookback_days
         self.min_correlation = min_correlation
@@ -141,14 +135,11 @@ class CorrelationAnalyzer:
         # Validate inputs
         if len(series1) != len(series2):
             raise ValueError(
-                f"Series must have same length: "
-                f"got {len(series1)} and {len(series2)}"
+                f"Series must have same length: " f"got {len(series1)} and {len(series2)}"
             )
 
         if len(series1) < 2:
-            raise ValueError(
-                f"Series must have at least 2 observations, got {len(series1)}"
-            )
+            raise ValueError(f"Series must have at least 2 observations, got {len(series1)}")
 
         # Remove NaN values
         mask = ~(np.isnan(series1) | np.isnan(series2))
@@ -157,8 +148,7 @@ class CorrelationAnalyzer:
 
         if len(clean_series1) < 2:
             raise ValueError(
-                f"Insufficient valid data points after removing NaN: "
-                f"got {len(clean_series1)}"
+                f"Insufficient valid data points after removing NaN: " f"got {len(clean_series1)}"
             )
 
         try:
@@ -167,9 +157,7 @@ class CorrelationAnalyzer:
 
             # Validate correlation is in valid range
             if not -1 <= correlation <= 1:
-                raise ValueError(
-                    f"Invalid correlation value: {correlation}"
-                )
+                raise ValueError(f"Invalid correlation value: {correlation}")
 
             return Decimal(str(correlation)), Decimal(str(p_value))
 
@@ -440,8 +428,7 @@ class CorrelationAnalyzer:
 
         if len(series1) != len(series2):
             raise ValueError(
-                f"Series must have same length: "
-                f"got {len(series1)} and {len(series2)}"
+                f"Series must have same length: " f"got {len(series1)} and {len(series2)}"
             )
 
         # Align series
@@ -534,16 +521,13 @@ class CorrelationAnalyzer:
 
                 except Exception as e:
                     logger.warning(
-                        f"Error calculating correlation for "
-                        f"{fx_pair} - {asset_symbol}: {e}"
+                        f"Error calculating correlation for " f"{fx_pair} - {asset_symbol}: {e}"
                     )
                     continue
 
         return significant_relationships
 
-    def _infer_relationship_type(
-        self, fx_pair: str, asset_class: AssetClass
-    ) -> RelationshipType:
+    def _infer_relationship_type(self, fx_pair: str, asset_class: AssetClass) -> RelationshipType:
         """
         Infer relationship type based on FX pair and asset class.
 

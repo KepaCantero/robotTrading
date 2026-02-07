@@ -12,12 +12,10 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
-from scipy import stats
 
 logger = logging.getLogger(__name__)
 
@@ -290,7 +288,11 @@ class PairsTrading:
                 critical_value = float(adf_result[4]['5%'])
 
                 # Validate results
-                if not (np.isfinite(test_statistic) and np.isfinite(p_value) and np.isfinite(critical_value)):
+                if not (
+                    np.isfinite(test_statistic)
+                    and np.isfinite(p_value)
+                    and np.isfinite(critical_value)
+                ):
                     logger.warning("Non-finite ADF test results")
                     return self._simple_cointegration_test(prices_a_clean, prices_b_clean)
 
@@ -357,8 +359,14 @@ class PairsTrading:
         prices_b = prices_b[-min_len:]
 
         # Handle NaN and inf
-        valid_mask = ~np.isnan(prices_a) & ~np.isinf(prices_a) & (prices_a > 0) & \
-                     ~np.isnan(prices_b) & ~np.isinf(prices_b) & (prices_b > 0)
+        valid_mask = (
+            ~np.isnan(prices_a)
+            & ~np.isinf(prices_a)
+            & (prices_a > 0)
+            & ~np.isnan(prices_b)
+            & ~np.isinf(prices_b)
+            & (prices_b > 0)
+        )
 
         prices_a_clean = prices_a[valid_mask]
         prices_b_clean = prices_b[valid_mask]

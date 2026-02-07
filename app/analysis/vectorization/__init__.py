@@ -17,14 +17,8 @@ Key Rules:
 5. Use numba JIT for critical loops
 """
 
-from app.analysis.vectorization.benchmark import (
-    BenchmarkResult,
-    VectorizationBenchmark,
-)
-from app.analysis.vectorization.models import (
-    VectorizationIssue,
-    VectorizationReport,
-)
+from app.analysis.vectorization.benchmark import BenchmarkResult, VectorizationBenchmark
+from app.analysis.vectorization.models import VectorizationIssue, VectorizationReport
 from app.analysis.vectorization.patterns import VectorizationPatterns
 from app.analysis.vectorization.vectorization_auditor import VectorizationAuditor
 

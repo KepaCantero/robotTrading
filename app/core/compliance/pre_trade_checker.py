@@ -23,8 +23,8 @@ from typing import Any, Dict, List, Optional
 
 import pandas as pd
 
-from app.core.compliance.service_registry import get_service_registry
 from app.core.compliance.results import PreTradeCheckResult
+from app.core.compliance.service_registry import get_service_registry
 
 logger = logging.getLogger(__name__)
 

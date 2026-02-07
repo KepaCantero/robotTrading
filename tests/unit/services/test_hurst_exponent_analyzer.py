@@ -17,16 +17,16 @@ import pytest
 try:
     from app.services.hurst_exponent_analyzer import (
         HurstExponentAnalyzer,
-        MarketRegime,
-        StrategyRecommendation,
         HurstResult,
+        MarketRegime,
         RegimeChange,
+        StrategyRecommendation,
         calculate_hurst_exponent,
-        classify_regime,
-        recommend_strategy_from_hurst,
         calculate_hurst_rs_numba,
         calculate_hurst_variance_numba,
+        classify_regime,
         get_analyzer_info,
+        recommend_strategy_from_hurst,
     )
 
     HURST_AVAILABLE = True
@@ -630,7 +630,7 @@ class TestPerformance:
         start = time.time()
         iterations = 10
         for _ in range(iterations):
-            result = analyzer.analyze(array)
+            analyzer.analyze(array)
         elapsed = time.time() - start
 
         # Should be reasonably fast with Numba
@@ -649,7 +649,7 @@ class TestPerformance:
         start = time.time()
         iterations = 10
         for _ in range(iterations):
-            result = analyzer.analyze(array)
+            analyzer.analyze(array)
         elapsed = time.time() - start
 
         print(f"✅ Hurst Variance Performance: {elapsed:.3f}s for {iterations} iterations")

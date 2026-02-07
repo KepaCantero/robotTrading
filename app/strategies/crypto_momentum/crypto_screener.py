@@ -21,7 +21,6 @@ from .models import (
     CryptoAssetType,
     CryptoExchange,
     CryptoScreeningResult,
-    OnChainMetrics,
 )
 
 logger = logging.getLogger(__name__)

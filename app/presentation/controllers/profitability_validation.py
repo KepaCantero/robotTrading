@@ -80,12 +80,14 @@ async def validate_strategy_profitability(
             )
 
         if request.initial_capital <= 0:
-            raise HTTPException(status_code=DEFAULT_VALUE_400,
-                detail="Initial capital must be positive")
+            raise HTTPException(
+                status_code=DEFAULT_VALUE_400, detail="Initial capital must be positive"
+            )
 
         if request.period_start >= request.period_end:
-            raise HTTPException(status_code=DEFAULT_VALUE_400,
-                detail="Period start must be before period end")
+            raise HTTPException(
+                status_code=DEFAULT_VALUE_400, detail="Period start must be before period end"
+            )
 
         # Ejecutar validación
         result = profitability_service.validate_strategy_profitability(request)
@@ -159,7 +161,7 @@ async def validate_multiple_strategies(
         logger.error(f"Error in batch profitability validation: {str(e)}")
         raise HTTPException(
             status_code=DEFAULT_VALUE_500,
-                detail=f"Internal error during batch validation: {str(e)}"
+            detail=f"Internal error during batch validation: {str(e)}",
         )
 
 
@@ -321,7 +323,7 @@ async def generate_validation_report(
         logger.error(f"Error generating validation report: {str(e)}")
         raise HTTPException(
             status_code=DEFAULT_VALUE_500,
-                detail=f"Internal error during report generation: {str(e)}"
+            detail=f"Internal error during report generation: {str(e)}",
         )
 
 

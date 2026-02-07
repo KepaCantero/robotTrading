@@ -29,7 +29,6 @@ class BacktestRepository(ABC):
         Args:
             backtest: Backtest entity to save
         """
-        pass
 
     @abstractmethod
     def find_by_id(self, backtest_id: str) -> Optional[Backtest]:
@@ -42,7 +41,6 @@ class BacktestRepository(ABC):
         Returns:
             Backtest entity or None if not found
         """
-        pass
 
     @abstractmethod
     def find_by_status(self, status: BacktestStatus) -> List[Backtest]:
@@ -55,7 +53,6 @@ class BacktestRepository(ABC):
         Returns:
             List of backtests with the specified status
         """
-        pass
 
     @abstractmethod
     def find_by_type(self, backtest_type: BacktestType) -> List[Backtest]:
@@ -68,7 +65,6 @@ class BacktestRepository(ABC):
         Returns:
             List of backtests of the specified type
         """
-        pass
 
     @abstractmethod
     def find_all(self, limit: int = 100, offset: int = 0) -> List[Backtest]:
@@ -82,7 +78,6 @@ class BacktestRepository(ABC):
         Returns:
             List of backtests
         """
-        pass
 
     @abstractmethod
     def delete(self, backtest_id: str) -> bool:
@@ -95,7 +90,6 @@ class BacktestRepository(ABC):
         Returns:
             True if deleted, False if not found
         """
-        pass
 
     @abstractmethod
     def count_by_status(self, status: BacktestStatus) -> int:
@@ -108,7 +102,6 @@ class BacktestRepository(ABC):
         Returns:
             Count of backtests with the specified status
         """
-        pass
 
     @abstractmethod
     def get_recent_completed(self, limit: int = 10) -> List[Backtest]:
@@ -121,4 +114,3 @@ class BacktestRepository(ABC):
         Returns:
             List of recently completed backtests
         """
-        pass

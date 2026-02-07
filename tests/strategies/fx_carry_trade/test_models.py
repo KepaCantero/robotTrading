@@ -5,7 +5,7 @@ This module tests the data models used in the FX Carry Trade strategy,
 including currency pairs, signals, positions, rate quotes, and configuration.
 """
 
-from datetime import date, timedelta
+from datetime import date
 from decimal import Decimal
 
 import pytest

@@ -8,18 +8,12 @@ Tests cover:
 - Model validation and data structures
 """
 
-import logging
-
 from __future__ import annotations
 
-import ast
-import time
 from decimal import Decimal
 from pathlib import Path
-from unittest.mock import Mock, patch
 
 import numpy as np
-import pandas as pd
 import pytest
 
 from app.analysis.vectorization import (

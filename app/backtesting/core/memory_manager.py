@@ -47,7 +47,6 @@ class BacktestResultDict(TypedDict, total=False):
 class MemoryPressureError(Exception):
     """Raised when memory pressure exceeds threshold."""
 
-    pass
 
 
 class AggressiveMemoryManager:

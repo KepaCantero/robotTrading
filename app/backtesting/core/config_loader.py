@@ -20,7 +20,6 @@ logger = logging.getLogger(__name__)
 class ConfigValidationError(ValueError):
     """Raised when configuration validation fails."""
 
-    pass
 
 
 class BacktestConfigLoader:

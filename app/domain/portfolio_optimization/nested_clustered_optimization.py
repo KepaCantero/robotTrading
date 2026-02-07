@@ -22,7 +22,7 @@ Key concepts:
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
@@ -396,7 +396,7 @@ class NestedClusteredOptimization:
             return weights
 
         # Extract cluster-specific data
-        cluster_returns = expected_returns[cluster_indices]
+        expected_returns[cluster_indices]
         cluster_cov = cov_matrix[np.ix_(cluster_indices, cluster_indices)]
 
         # Objective function: minimize portfolio variance
@@ -647,9 +647,7 @@ class NestedClusteredOptimization:
             portfolio_risk = np.sqrt(portfolio_variance)
 
             if portfolio_risk > 0:
-                sharpe_ratio = (
-                    (portfolio_return - self.config.risk_free_rate) / portfolio_risk
-                )
+                sharpe_ratio = (portfolio_return - self.config.risk_free_rate) / portfolio_risk
             else:
                 sharpe_ratio = 0.0
                 logger.warning("Portfolio risk is zero. Setting Sharpe ratio to 0.")
@@ -681,7 +679,9 @@ class NestedClusteredOptimization:
                 f"NCO optimization failed: {e}",
                 exc_info=True,
                 extra={
-                    "n_assets": len(expected_returns) if hasattr(expected_returns, "__len__") else None,
+                    "n_assets": len(expected_returns)
+                    if hasattr(expected_returns, "__len__")
+                    else None,
                     "cov_shape": cov_matrix.shape if hasattr(cov_matrix, "shape") else None,
                 },
             )

@@ -97,7 +97,7 @@ class TestConfigManager:
             self._cleanup_temp_directories()
 
             self._test_config = None
-        except Exception as e:
+        except Exception:
             logger.error("Error during test environment cleanup", exc_info=True)
             raise
 

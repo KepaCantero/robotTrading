@@ -124,11 +124,7 @@ from .purged_kfold import (
     get_purge_indices,
     purged_kfold_splits,
 )
-from .regime_detector import (
-    RegimeDetector,
-    classify_market_state,
-    detect_regime_from_data,
-)
+from .regime_detector import RegimeDetector, classify_market_state, detect_regime_from_data
 from .walk_forward import (
     RollingWindowOptimizer,
     WalkForwardValidator,

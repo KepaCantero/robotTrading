@@ -10,20 +10,12 @@ SOLID Principles:
 """
 
 import logging
-from decimal import Decimal
-from typing import List, Optional
+from typing import List
 
-import numpy as np
 
-from app.models.momentum import (
-    MomentumAnalysis,
-    MomentumSignal,
-    TechnicalIndicators,
-    Timeframe,
-)
+from app.models.momentum import MomentumAnalysis, MomentumSignal, TechnicalIndicators, Timeframe
 from app.services.momentum.protocols import (
     IndicatorCalculator,
-    MomentumAnalyzer as MomentumAnalyzerProtocol,
     PriceDataProvider,
 )
 

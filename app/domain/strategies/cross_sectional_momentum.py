@@ -14,9 +14,8 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Dict
 
 import numpy as np
 import pandas as pd
@@ -147,7 +146,9 @@ class CrossSectionalMomentum:
         # Ensure we have enough data
         if returns.shape[1] < lookback_periods:
             lookback_periods = returns.shape[1] - 1
-            logger.warning(f"Adjusting lookback to {lookback_periods} periods due to insufficient data")
+            logger.warning(
+                f"Adjusting lookback to {lookback_periods} periods due to insufficient data"
+            )
 
         if lookback_periods < 1:
             logger.warning("Not enough data for momentum calculation")

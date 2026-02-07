@@ -14,24 +14,23 @@ Tests:
 - XSS pattern detection
 """
 
+
 import pytest
-import json
 
 from app.security.output_encoding import (
-    OutputEncoder,
     ContentSecurityPolicy,
+    encode_for_css,
+    encode_for_csv,
     encode_for_html,
     encode_for_html_attribute,
     encode_for_javascript,
-    encode_for_css,
+    encode_for_log,
+    encode_for_sql_like,
     encode_for_url,
     encode_for_xml,
-    encode_for_csv,
-    encode_for_sql_like,
-    encode_for_log,
+    encoder,
     safe_json_dumps,
     sanitize_output,
-    encoder,
 )
 
 

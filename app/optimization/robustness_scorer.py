@@ -511,7 +511,9 @@ class RobustnessScorer:
             if result.risk_factors:
                 logger.debug("  Risk Factors:")
                 for factor in result.risk_factors:
-                    logger.debug(f"    [{factor.severity.value}] {factor.name}: {factor.description}")
+                    logger.debug(
+                        f"    [{factor.severity.value}] {factor.name}: {factor.description}"
+                    )
 
             if result.recommendations:
                 logger.debug("  Recommendations:")

@@ -14,7 +14,6 @@ from decimal import Decimal
 from typing import Dict, List
 
 from app.models.momentum import Timeframe
-from app.services.momentum.protocols import PriceDataProvider
 
 logger = logging.getLogger(__name__)
 

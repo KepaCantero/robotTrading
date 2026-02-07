@@ -3,16 +3,17 @@ Performance tests for Risk Engine components.
 
 Tests that verify Numba acceleration and performance characteristics.
 """
-import pytest
-import numpy as np
 import time
+
+import numpy as np
+import pytest
 
 from app.engines.risk_engine.var_calculators.var_calculators import (
     HistoricalVaRCalculator,
-    ParametricVaRCalculator,
     MonteCarloVaRCalculator,
-    calculate_percentile_numba,
+    ParametricVaRCalculator,
     calculate_mean_std_numba,
+    calculate_percentile_numba,
 )
 
 
@@ -26,7 +27,7 @@ class TestNumbaAcceleration:
 
         start = time.time()
         for _ in range(100):
-            result = calculate_percentile_numba(data, 5)
+            calculate_percentile_numba(data, 5)
         elapsed = time.time() - start
 
         # Should complete 100 iterations in reasonable time
@@ -56,7 +57,7 @@ class TestVaRCalculationPerformance:
 
         start = time.time()
         for _ in range(10):
-            result = calc.calculate_var(returns)
+            calc.calculate_var(returns)
         elapsed = time.time() - start
 
         # Should complete 10 calculations in reasonable time
@@ -69,7 +70,7 @@ class TestVaRCalculationPerformance:
 
         start = time.time()
         for _ in range(10):
-            result = calc.calculate_var(returns)
+            calc.calculate_var(returns)
         elapsed = time.time() - start
 
         # Should complete 10 calculations in reasonable time

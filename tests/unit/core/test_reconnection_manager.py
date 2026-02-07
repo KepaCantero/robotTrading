@@ -5,16 +5,11 @@ Tests the exponential backoff reconnection strategy for 24/7 markets.
 """
 
 import asyncio
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
-from datetime import datetime, timezone
+from unittest.mock import AsyncMock, MagicMock
 
-from app.core.reconnection_manager import (
-    ReconnectionConfig,
-    ReconnectionManager,
-    ReconnectionStats,
-)
-from app.core.timezone_utils import utc_now
+import pytest
+
+from app.core.reconnection_manager import ReconnectionConfig, ReconnectionManager, ReconnectionStats
 
 
 class TestReconnectionConfig:

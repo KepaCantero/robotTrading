@@ -11,24 +11,24 @@ GAP Coverage:
 import asyncio
 from datetime import datetime
 from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from fastapi import HTTPException
 
 from app.api.assets import (
+    filter_assets,
+    filter_assets_by_class,
+    get_asset_details,
+    get_asset_rankings_by_class,
+    get_asset_stats,
+    get_asset_universe,
     get_assets_overview,
     get_liquid_assets,
-    get_asset_rankings_by_class,
-    get_asset_details,
     get_liquidity_metrics,
-    filter_assets,
-    refresh_liquidity_data,
-    get_asset_universe,
-    identify_liquid_assets,
-    filter_assets_by_class,
     get_universe_summary,
-    get_asset_stats,
+    identify_liquid_assets,
+    refresh_liquidity_data,
 )
 from app.models.assets import AssetClass, AssetFilter, Exchange
 
@@ -127,6 +127,7 @@ class TestAssetsEndpoints:
     @pytest.mark.asyncio
     async def test_get_assets_overview_timeout(self, mock_service, mock_request):
         """Test get_assets_overview handles timeout with 504 status."""
+
         # Setup mock to timeout
         async def timeout_mock(*args, **kwargs):
             await asyncio.sleep(31)
@@ -167,6 +168,7 @@ class TestAssetsEndpoints:
     @pytest.mark.asyncio
     async def test_get_liquid_assets_timeout(self, mock_service, mock_request):
         """Test get_liquid_assets handles timeout."""
+
         async def timeout_mock(*args, **kwargs):
             await asyncio.sleep(31)
             return []
@@ -230,7 +232,9 @@ class TestAssetsEndpoints:
 
     # Tests for get_liquidity_metrics
     @pytest.mark.asyncio
-    async def test_get_liquidity_metrics_found(self, mock_service, mock_liquidity_metrics, mock_request):
+    async def test_get_liquidity_metrics_found(
+        self, mock_service, mock_liquidity_metrics, mock_request
+    ):
         """Test get_liquidity_metrics returns metrics for valid symbol."""
         mock_service.get_liquidity_metrics = AsyncMock(return_value=mock_liquidity_metrics)
 
@@ -261,7 +265,9 @@ class TestAssetsEndpoints:
 
     # Tests for get_asset_rankings_by_class
     @pytest.mark.asyncio
-    async def test_get_asset_rankings_by_class_success(self, mock_service, mock_ranking, mock_request):
+    async def test_get_asset_rankings_by_class_success(
+        self, mock_service, mock_ranking, mock_request
+    ):
         """Test get_asset_rankings_by_class returns rankings."""
         mock_service.get_asset_rankings = AsyncMock(return_value=mock_ranking)
 
@@ -324,6 +330,7 @@ class TestAssetsEndpoints:
     @pytest.mark.asyncio
     async def test_identify_liquid_assets_longer_timeout(self, mock_service, mock_request):
         """Test identify_liquid_assets has longer timeout for expensive operations."""
+
         async def slow_operation(*args, **kwargs):
             await asyncio.sleep(31)  # Less than 60 second timeout but more than 30
             return []
@@ -460,6 +467,7 @@ class TestAssetsEndpoints:
     @pytest.mark.asyncio
     async def test_timeout_on_get_asset_rankings_by_class(self, mock_service, mock_request):
         """Test timeout handling on get_asset_rankings_by_class."""
+
         async def timeout_mock(*args, **kwargs):
             await asyncio.sleep(31)
             return Mock()
@@ -478,6 +486,7 @@ class TestAssetsEndpoints:
     @pytest.mark.asyncio
     async def test_timeout_on_filter_assets(self, mock_service, mock_request):
         """Test timeout handling on filter_assets."""
+
         async def timeout_mock(*args, **kwargs):
             await asyncio.sleep(31)
             return []
@@ -501,6 +510,7 @@ class TestAssetsEndpoints:
     @pytest.mark.asyncio
     async def test_timeout_on_get_asset_universe(self, mock_service, mock_request):
         """Test timeout handling on get_asset_universe."""
+
         async def timeout_mock(*args, **kwargs):
             await asyncio.sleep(31)
             return {}
@@ -519,6 +529,7 @@ class TestAssetsEndpoints:
     @pytest.mark.asyncio
     async def test_timeout_on_filter_assets_by_class(self, mock_service, mock_request):
         """Test timeout handling on filter_assets_by_class."""
+
         async def timeout_mock(*args, **kwargs):
             await asyncio.sleep(31)
             return []
@@ -543,6 +554,7 @@ class TestAssetsEndpoints:
     @pytest.mark.asyncio
     async def test_timeout_on_get_universe_summary(self, mock_service, mock_request):
         """Test timeout handling on get_universe_summary."""
+
         async def timeout_mock(*args, **kwargs):
             await asyncio.sleep(31)
             return {}
@@ -561,6 +573,7 @@ class TestAssetsEndpoints:
     @pytest.mark.asyncio
     async def test_timeout_on_get_asset_stats(self, mock_service, mock_request):
         """Test timeout handling on get_asset_stats."""
+
         async def timeout_mock(*args, **kwargs):
             await asyncio.sleep(31)
             return {}

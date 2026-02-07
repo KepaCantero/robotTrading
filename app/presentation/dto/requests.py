@@ -2,8 +2,9 @@
 Request DTOs for Presentation Layer
 """
 
-from pydantic import BaseModel, Field
 from decimal import Decimal
+
+from pydantic import BaseModel, Field
 
 
 class CreatePortfolioRequest(BaseModel):

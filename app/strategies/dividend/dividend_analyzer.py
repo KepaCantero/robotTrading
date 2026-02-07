@@ -15,16 +15,10 @@ SOLID Principles:
 
 import logging
 from dataclasses import dataclass
-from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
-from .models import (
-    DividendData,
-    DividendProfile,
-    DividendSafety,
-    DividendStock,
-)
+from .models import DividendProfile, DividendSafety
 
 logger = logging.getLogger(__name__)
 
