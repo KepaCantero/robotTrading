@@ -216,6 +216,7 @@ class UserStore:
                                 logger.info(
                                     f"Loaded API key for user: {username}",
                                     extra={"key_name": "***REDACTED***", "username": username}
+                                )
 
         # Log summary
         with self._users_lock, self._api_keys_lock:

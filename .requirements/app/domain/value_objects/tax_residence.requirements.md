@@ -319,4 +319,5 @@ class TaxResidence:
 
 **File Reference:** `app/domain/value_objects/tax_residence.py`
 **Last Audited:** 2026-02-04
-**Audit Status:** ✅ COMPLIANT
+**Audit Status:** PASSED
+**Audit Timestamp:** 2026-02-06T19:41:12.411552
