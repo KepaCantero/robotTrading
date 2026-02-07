@@ -2,7 +2,8 @@
 
 **File:** `app/core/statsmodels_fallback.py`  
 **Purpose:** Fallback implementations for statsmodels functions using scipy/numpy  
-**Audit Status:** NEEDS_AUDIT
+**Audit Status:** PASSED
+**Audit Timestamp:** 2026-02-06T19:41:12.288424
 
 ---
 

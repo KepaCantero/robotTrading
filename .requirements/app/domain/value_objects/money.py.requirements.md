@@ -256,4 +256,5 @@ class Money:
 
 **File Reference:** `app/domain/value_objects/money.py`
 **Last Audited:** 2026-02-04
-**Audit Status:** ✅ COMPLIANT
+**Audit Status:** PASSED
+**Audit Timestamp:** 2026-02-06T19:41:12.406797

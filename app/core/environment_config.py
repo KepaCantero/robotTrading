@@ -209,7 +209,7 @@ class APIConfig(BaseSettings):
                 "Security risk: Secret key not set",
                 extra={"configured": False}
             )
-            raise ValueError("SECRET_KEY must be set from environment variable (generate with: python -c "import secrets; print(secrets.token_urlsafe(32))")")
+            raise ValueError('SECRET_KEY must be set from environment variable (generate with: python -c "import secrets; print(secrets.token_urlsafe(32))")')
         if len(v) < 32:
             logger.error(
                 "Invalid API secret key configuration",
@@ -222,7 +222,7 @@ class APIConfig(BaseSettings):
                 "Security risk: Default secret key detected",
                 extra={"using_default": True}
             )
-            raise ValueError("Default secret key is not allowed. Generate with: python -c "import secrets; print(secrets.token_urlsafe(32))"")
+            raise ValueError('Default secret key is not allowed. Generate with: python -c "import secrets; print(secrets.token_urlsafe(32))"')
         return v
 
 

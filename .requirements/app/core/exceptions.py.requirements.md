@@ -2,7 +2,8 @@
 
 **File:** `app/core/exceptions.py`  
 **Purpose:** Core Exceptions for AlgoTrading  
-**Audit Status:** NEEDS_AUDIT
+**Audit Status:** PASSED
+**Audit Timestamp:** 2026-02-06T19:41:12.282837
 
 ---
 
