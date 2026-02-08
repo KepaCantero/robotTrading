@@ -1,0 +1,60 @@
+{
+  "task_id": "07_capital_phase_manager",
+  "task_name": "Capital Phase Manager Implementation",
+  "started_at": "2026-02-08T20:30:00Z",
+  "completed_at": "2026-02-08T21:35:00Z",
+  "status": "COMPLETED",
+  "progress": {
+    "total_files": 4,
+    "created_files": 4,
+    "validated_files": 4
+  },
+  "outputs": {
+    "files_created": [
+      "app/services/capital/__init__.py",
+      "app/services/capital/phase_config.py",
+      "app/services/capital/capital_phase_manager.py",
+      "tests/unit/capital/test_capital_phase_manager.py"
+    ],
+    "r25_survival_phase": {
+      "capital_range": "€1k - €10k",
+      "max_risk_per_trade": "1%",
+      "max_portfolio_risk": "5%",
+      "max_positions": 3,
+      "leverage_allowed": false,
+      "position_sizing": "kelly_half"
+    },
+    "r26_growth_phase": {
+      "capital_range": "€10k - €50k",
+      "max_risk_per_trade": "2%",
+      "max_portfolio_risk": "10%",
+      "max_positions": 5,
+      "leverage_allowed": false,
+      "position_sizing": "kelly"
+    },
+    "r27_optimization_phase": {
+      "capital_range": "€50k+",
+      "max_risk_per_trade": "3%",
+      "max_portfolio_risk": "15%",
+      "max_positions": 8,
+      "leverage_allowed": true,
+      "position_sizing": "kelly_optimized"
+    },
+    "validation_passed": true,
+    "test_results": {
+      "total_tests": 34,
+      "passed": 34,
+      "failed": 0
+    }
+  },
+  "validation": {
+    "all_files_validated": true,
+    "black_passed": true,
+    "isort_passed": true,
+    "import_test": "from app.services.capital import CapitalPhaseManager, CapitalPhase, PhaseRiskParameters works"
+  },
+  "next_task": "09_compliance_engine_refactor",
+  "errors": [],
+  "warnings": [],
+  "timestamp": "2026-02-08T21:35:00Z"
+}

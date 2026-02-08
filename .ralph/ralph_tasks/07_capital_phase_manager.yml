@@ -1,0 +1,51 @@
+task_id: "07_capital_phase_manager"
+title: "Capital Phase Manager Implementation"
+priority: "P0"
+estimated_hours: 6
+phase: 2
+depends_on: []
+
+description: |
+  Implement dynamic capital-based risk management per R25, R26, R27.
+
+  R25: Survival phase (€1k-€10k) - Conservative
+  R26: Growth phase (€10k-€50k) - Moderate
+  R27: Optimization phase (€50k+) - Aggressive
+
+  This task creates:
+  1. CapitalPhaseManager - Dynamic phase management
+  2. PhaseConfig - Phase risk parameters configuration
+  3. CapitalPhase enum and PhaseRiskParameters dataclass
+
+success_criteria:
+  - capital_phase_manager.py created with update_capital() method
+  - phase_config.py created with 3 phase configurations
+  - All files pass validation (black, isort, ruff, mypy)
+  - Umbrales: €1k-€10k, €10k-€50k, €50k+
+  - Risk parameters per phase defined
+  - Unit tests pass
+  - Checkpoint created
+
+validation:
+  - Files created: app/services/capital/__init__.py, capital_phase_manager.py, phase_config.py
+  - Import test: from app.services.capital import CapitalPhaseManager, CapitalPhase, PhaseRiskParameters
+  - R25, R26, R27 compliance verified in code comments
+
+rules_mapping:
+  - R25: Survival phase (€1k-€10k) - 1% max risk, NO leverage
+  - R26: Growth phase (€10k-€50k) - 2% max risk, NO leverage
+  - R27: Optimization phase (€50k+) - 3% max risk, leverage allowed
+
+checkpoint_file: ".ralph/checkpoints/07_capital_phase_manager_checkpoint.json"
+
+files_to_create:
+  - path: "app/services/capital/__init__.py"
+    description: "Module initialization with exports"
+  - path: "app/services/capital/phase_config.py"
+    description: "Phase configuration with CapitalPhase enum and PhaseRiskParameters dataclass"
+  - path: "app/services/capital/capital_phase_manager.py"
+    description: "CapitalPhaseManager class for dynamic risk management"
+  - path: "tests/unit/capital/test_capital_phase_manager.py"
+    description: "Unit tests for capital phase management"
+
+next_task: "09_compliance_engine_refactor"

@@ -345,3 +345,111 @@ Implemented Position Management for post-trade analysis:
 
 ### Next Task
 06_reconciliation_daily (READY - Phase 2: Infrastructure & Services)
+
+## 2026-02-08 20:30 UTC - Task 06 COMPLETED
+
+### Summary of Work Done
+
+**Task 06_reconciliation_daily - COMPLETED**
+
+Implemented Daily Reconciliation service (R16):
+
+1. **DailyReconciler** (`app/services/reconciliation/daily_reconciler.py`)
+   - R16: Daily reconciliation between broker and internal positions
+   - reconcile_positions() - Main reconciliation method
+   - generate_reconciliation_report() - Markdown report generation
+   - get_position_delta() - Delta calculation between positions
+   - Tolerances: Quantity ±1 share, Price ±0.1%
+
+2. **DiscrepancyDetector** (`app/services/reconciliation/discrepancy_detector.py`)
+   - detect_position_mismatch() - Quantity discrepancies
+   - detect_price_mismatch() - Price discrepancies
+   - detect_value_mismatch() - Market value discrepancies
+   - detect_missing_positions() - Orphaned/phantom positions
+   - detect_all_discrepancies() - Comprehensive detection
+   - Severity levels: CRITICAL, HIGH, MEDIUM
+
+3. **Position** (`app/services/reconciliation/daily_reconciler.py`)
+   - Immutable frozen dataclass for position data
+   - symbol, quantity, avg_price, current_price, market_value, currency
+
+4. **ReconciliationResult** (`app/services/reconciliation/daily_reconciler.py`)
+   - date, total_positions, matched_positions, mismatched_positions, missing_positions
+   - discrepancies list, is_balanced flag, reconciled_at timestamp
+
+### Validation Results
+- ISP compliant: R16 implemented correctly
+- Tolerances verified: Quantity=±1, Price=±0.1%, Value=±0.5%
+- Severity levels: CRITICAL (>10 qty diff), HIGH (>5 qty diff), MEDIUM
+- Tests passed: 27/27 unit tests pass
+- Import test: `from app.services.reconciliation import DailyReconciler, DiscrepancyDetector` works
+- Code quality: black ✓, isort ✓
+
+### Files Modified
+- Created: `daily_reconciler.py`, `discrepancy_detector.py`, `__init__.py`
+- Created: `tests/unit/reconciliation/test_daily_reconciler.py` (27 tests)
+- Created: `.ralph/ralph_tasks/06_reconciliation_daily.yml`
+- Updated: `.ralph/checkpoints/06_reconciliation_daily_checkpoint.json`
+- Updated: `.ralph/checkpoints/00_master_orchestrator_checkpoint.json`
+
+### Notes
+- CRITICAL severity for phantom positions (missing in broker)
+- HIGH severity for orphaned positions (missing in internal)
+- Markdown report format suitable for logging and alerting
+- Complements existing BootReconciler (startup reconciliation)
+
+### Next Task
+07_capital_phase_manager (READY - Phase 2: Infrastructure & Services)
+
+## 2026-02-08 21:35 UTC - Task 07 COMPLETED
+
+### Summary of Work Done
+
+**Task 07_capital_phase_manager - COMPLETED**
+
+Implemented Capital Phase Manager for dynamic risk management (R25, R26, R27):
+
+1. **CapitalPhase** (`app/services/capital/phase_config.py`)
+   - SURVIVAL: €1k-€10k, 1% max risk, NO leverage
+   - GROWTH: €10k-€50k, 2% max risk, NO leverage
+   - OPTIMIZATION: €50k+, 3% max risk, leverage allowed
+
+2. **PhaseRiskParameters** (`app/services/capital/phase_config.py`)
+   - max_risk_per_trade_pct, max_portfolio_risk_pct
+   - max_positions, max_correlation
+   - position_sizing_method, leverage_allowed
+
+3. **CapitalPhaseManager** (`app/services/capital/capital_phase_manager.py`)
+   - update_capital() - Updates capital and detects phase transitions
+   - get_current_phase() - Returns current phase
+   - get_risk_parameters() - Returns risk params for current phase
+   - can_increase_position_size() - Validates position size increases
+   - get_phase_summary() - Returns phase summary dict
+   - get_capital_progress() - Returns progress toward next phase
+   - get_phase_history() - Returns phase transition history
+
+### Validation Results
+- R25 verified: Survival phase (€1k-€10k) → 1% max risk, NO leverage
+- R26 verified: Growth phase (€10k-€50k) → 2% max risk, NO leverage
+- R27 verified: Optimization phase (€50k+) → 3% max risk, leverage allowed
+- Tests passed: 34/34 unit tests pass
+- Import test: `from app.services.capital import CapitalPhaseManager, CapitalPhase, PhaseRiskParameters` works
+- Code quality: black ✓, isort ✓
+
+### Files Modified
+- Created: `__init__.py`, `phase_config.py`, `capital_phase_manager.py`
+- Created: `tests/unit/capital/test_capital_phase_manager.py` (34 tests)
+- Created: `.ralph/ralph_tasks/07_capital_phase_manager.yml`
+- Updated: `.ralph/checkpoints/07_capital_phase_manager_checkpoint.json`
+- Updated: `.ralph/checkpoints/00_master_orchestrator_checkpoint.json`
+
+### Notes
+- Phase thresholds: €1k, €10k, €50k
+- Position sizing methods: kelly_half, kelly, kelly_optimized
+- Max positions per phase: 3, 5, 8
+- Strict inequality (>=) used for risk limit validation
+
+### Next Task
+09_compliance_engine_refactor (READY - Phase 3: Coordinator Layer)
+
+**Phase 2 Infrastructure COMPLETED** (4/4 tasks)
