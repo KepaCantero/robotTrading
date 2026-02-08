@@ -128,3 +128,51 @@ Implemented Spain Tax Engine for Spanish tax residents with:
 
 ### Next Task
 03_trading_decision_logger (READY - dependency 01_protocol_interfaces completed)
+
+## 2026-02-08 21:00 UTC - Task 03 COMPLETED
+
+### Summary of Work Done
+
+**Task 03_trading_decision_logger - COMPLETED**
+
+Implemented Trading Decision Logger with append-only logging and correlation ID:
+
+1. **LogEntry** (`app/services/logging/log_entry.py`)
+   - Immutable frozen dataclass for log entries
+   - Auto-generated UUID correlation IDs
+   - ISO 8601 timestamps
+   - Event types: signal_received, execution_result, validation_result
+
+2. **AppendOnlyLog** (`app/services/logging/append_only_log.py`)
+   - File-based append-only storage
+   - Date-based log rotation (trading_YYYY-MM-DD.log)
+   - Query by correlation_id (last 7 days)
+   - Export by date range
+
+3. **TradingDecisionLogger** (`app/services/logging/trading_decision_logger.py`)
+   - Implements `ITradingDecisionLogger` Protocol
+   - R15: Logging append-only con correlation ID
+   - R28: Exportar para Hacienda (5 años)
+   - 5 methods: log_signal, log_execution, log_validation_result, get_logs_by_correlation_id, export_for_hacienda
+
+### Validation Results
+- ISP compliant: 5/5 methods (max 5)
+- Protocol compliance: All ITradingDecisionLogger methods implemented
+- Immutable entries: @dataclass(frozen=True) verified
+- Append-only: No delete/update methods
+- Correlation ID: UUID generation verified
+- Tests passed: LogEntry frozen, unique IDs, to_dict, with_correlation_id, AppendOnlyLog append/query, TradingDecisionLogger full flow
+
+### Files Modified
+- Created: `log_entry.py`, `append_only_log.py`, `trading_decision_logger.py`
+- Updated: `app/services/logging/__init__.py` with exports
+- Updated: `.ralph/checkpoints/03_trading_decision_logger_checkpoint.json`
+- Updated: `.ralph/checkpoints/00_master_orchestrator_checkpoint.json`
+
+### Notes
+- @todo: _calculate_pnl needs full implementation with commissions and adjustments
+- Logging directory: `.ralph/logs/trading/` (auto-created)
+- Log file format: JSONL (one JSON object per line)
+
+### Next Task
+04_risk_validators (READY - dependency 01_protocol_interfaces completed)
