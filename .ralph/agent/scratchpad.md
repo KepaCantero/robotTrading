@@ -176,3 +176,118 @@ Implemented Trading Decision Logger with append-only logging and correlation ID:
 
 ### Next Task
 04_risk_validators (READY - dependency 01_protocol_interfaces completed)
+
+## 2026-02-08 20:01 UTC - Task 04 COMPLETED
+
+### Summary of Work Done
+
+**Task 04_risk_validators - COMPLETED**
+
+Implemented critical risk validators for pre-trade validation:
+
+1. **KellyCriterionValidator** (`app/services/risk/validators/kelly_criterion_validator.py`)
+   - R1: Kelly Criterion + 2% max position size
+   - MAX_RISK_PCT = 0.02 (2%)
+   - KellyResult dataclass with validation details
+   - Methods: validate(), calculate_kelly_fraction(), update_parameters()
+
+2. **DrawdownValidator** (`app/services/risk/validators/drawdown_validator.py`)
+   - R2: 15% max drawdown with kill switch
+   - MAX_DRAWDOWN_PCT = 0.15 (15%)
+   - Kill switch activation when drawdown exceeds threshold
+   - Methods: validate(), get_current_drawdown(), activate_kill_switch(), deactivate_kill_switch(), is_kill_switch_active()
+
+3. **RiskRewardValidator** (`app/services/risk/validators/risk_reward_validator.py`)
+   - R4: Minimum 2:1 risk:reward ratio
+   - MIN_RR_RATIO = 2.0
+   - RiskRewardResult dataclass with R:R details
+   - Methods: validate(), calculate_minimum_stop()
+
+### Validation Results
+- Kelly tests passed: 200€ < 2% of 10000€ (PASS), 300€ > 2% (FAIL)
+- Drawdown tests passed: 10% drawdown (PASS), 20% drawdown with kill switch (PASS)
+- R:R tests passed: 2:1 ratio (PASS), 1:1 ratio (FAIL)
+- Constants verified: MAX_RISK_PCT=0.02, MAX_DRAWDOWN_PCT=0.15, MIN_RR_RATIO=2.0
+
+### Files Modified
+- Created: `kelly_criterion_validator.py`, `drawdown_validator.py`, `risk_reward_validator.py`
+- Updated: `app/services/risk/__init__.py`, `app/services/risk/validators/__init__.py`
+- Updated: `.ralph/checkpoints/04_risk_validators_checkpoint.json`
+- Updated: `.ralph/checkpoints/00_master_orchestrator_checkpoint.json`
+
+### Notes
+- All validators use Decimal for monetary calculations
+- All validators return Result dataclasses
+- DrawdownValidator tracks peak equity internally
+- Kill switch activates automatically at 15% drawdown
+
+### Next Task
+05_position_management (READY - Phase 2: Infrastructure & Services)
+
+## 2026-02-08 21:10 UTC - Task 08 Planning
+
+### Current Situation Analysis
+- Task 08_broker_adapters YAML file doesn't exist yet
+- Existing `ib_adapter.py` has ~825 lines but doesn't implement the `IBrokerAdapter` Protocol
+- Protocol signature mismatch: existing uses `place_order(symbol, side, quantity, ...)` but Protocol expects `place_order(order: dict) -> str`
+- Need Spain-specific adapter with EUR support and IBEX35 trading
+
+### What Needs to Be Done
+1. Create `08_broker_adapters.yml` task specification
+2. Create `IBKRSpainAdapter` class that implements `IBrokerAdapter` Protocol exactly
+3. Create `CurrencyConverter` for EUR/USD conversions
+4. Support for Spanish markets (IBEX35, EUR stocks)
+
+### Implementation Plan
+1. Create task YAML file
+2. Create new adapter file `ibkr_adapter_spain.py` implementing the Protocol
+3. Add currency converter for EUR/USD
+4. Update `__init__.py` to export the new adapter
+5. Validate Protocol compliance
+6. Create checkpoint
+
+## 2026-02-08 21:15 UTC - Task 08 COMPLETED
+
+### Summary of Work Done
+
+**Task 08_broker_adapters - COMPLETED**
+
+Implemented Interactive Brokers adapter for Spanish traders:
+
+1. **IBKRSpainAdapter** (`app/services/live_trading/broker_adapters/ibkr_adapter_spain.py`)
+   - Implements `IBrokerAdapter` Protocol exactly (5 methods)
+   - Methods: connect(), disconnect(), place_order(order: dict) -> str, cancel_order(order_id: str) -> bool, get_account() -> dict
+   - EUR currency support for Spanish traders
+   - IBEX35 stock trading support
+
+2. **CurrencyConverter** (`app/services/live_trading/broker_adapters/currency_converter.py`)
+   - EUR/USD currency conversion with live rates
+   - Caching to reduce API calls
+   - Fallback rates when IB unavailable
+   - Methods: convert_eur_to_usd(), convert_usd_to_eur(), get_exchange_rate(), update_rates()
+
+3. **IBEX35 Contracts** (`app/services/live_trading/broker_adapters/ibex35_contracts.py`)
+   - IBEX35 stock symbols list
+   - Contract creation helpers for Spanish stocks
+   - Index contract for IBEX35
+   - Methods: create_stock_contract(), create_index_contract(), get_ibex35_symbols(), is_ibex35_symbol()
+
+### Validation Results
+- Protocol compliant: All 5 IBrokerAdapter methods implemented
+- ISP compliant: 5 public methods (plus private helpers)
+- Tests passed: 34/34 unit tests pass
+- Import test: `from app.services.live_trading.broker_adapters import IBKRSpainAdapter` works
+
+### Files Modified
+- Created: `ibkr_adapter_spain.py`, `currency_converter.py`, `ibex35_contracts.py`
+- Created: `tests/unit/live_trading/test_ibkr_adapter_spain.py` (34 tests)
+- Updated: `app/services/live_trading/broker_adapters/__init__.py` with exports
+- Created: `.ralph/ralph_tasks/08_broker_adapters.yml`
+- Updated: `.ralph/checkpoints/08_broker_adapters_checkpoint.json`
+- Updated: `.ralph/checkpoints/00_master_orchestrator_checkpoint.json`
+
+### Notes
+- Protocol signature: place_order() takes order dict (not individual parameters)
+- Order dict includes: symbol, side, quantity, order_type, price/stop_price, currency, exchange
+- Returns order_id as string (per Protocol)
+- IBEX35 constituents tracked with .MC exchange suffix
