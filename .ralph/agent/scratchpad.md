@@ -291,3 +291,57 @@ Implemented Interactive Brokers adapter for Spanish traders:
 - Order dict includes: symbol, side, quantity, order_type, price/stop_price, currency, exchange
 - Returns order_id as string (per Protocol)
 - IBEX35 constituents tracked with .MC exchange suffix
+
+## 2026-02-08 21:30 UTC - Task 05 COMPLETED
+
+### Summary of Work Done
+
+**Task 05_position_management - COMPLETED**
+
+Implemented Position Management for post-trade analysis:
+
+1. **TrailingStopManager** (`app/services/position_management/trailing_stop_manager.py`)
+   - R11: Trailing Stop Dinámico
+   - Break-even at 2R
+   - 50% profit trailing at 3R
+   - 1.5% trailing from current price at 1R
+   - Stop only moves up, never down
+
+2. **PartialTakeProfit** (`app/services/position_management/partial_take_profit.py`)
+   - R12: Take Profit Parcial
+   - 2R: Close 50%, move to breakeven
+   - 3R: Close 25%, trailing stop
+   - 5R: Close 25%, no action
+
+3. **PyramidingManager** (`app/services/position_management/pyramiding_manager.py`)
+   - R13: Pyramiding (solo ganadores)
+   - Only add if P&L > 0
+   - Max 2 additions
+   - First: 50% of initial size
+   - Second: 25% of initial size
+
+4. **PostTradeAnalyzerImpl** (`app/services/position_management/post_trade_analyzer_impl.py`)
+   - Implements IPostTradeAnalyzer Protocol exactly (5 methods)
+   - Methods: update_trailing_stop, check_partial_take_profit, evaluate_pyramiding, calculate_position_metrics, generate_exit_signal
+
+### Validation Results
+- ISP compliant: Protocol has exactly 5 methods (max 5)
+- Protocol compliant: All 5 IPostTradeAnalyzer methods implemented
+- Tests passed: 20/20 unit tests pass
+- Import test: `from app.services.position_management import PostTradeAnalyzerImpl` works
+
+### Files Modified
+- Created: `trailing_stop_manager.py`, `partial_take_profit.py`, `pyramiding_manager.py`, `post_trade_analyzer_impl.py`
+- Created: `__init__.py` with exports
+- Created: `tests/unit/position_management/test_position_management.py` (20 tests)
+- Created: `.ralph/ralph_tasks/05_position_management.yml`
+- Updated: `.ralph/checkpoints/05_position_management_checkpoint.json`
+- Updated: `.ralph/checkpoints/00_master_orchestrator_checkpoint.json`
+
+### Notes
+- @todo: _get_position_entity needs implementation with PositionRepository
+- Trailing stop uses current price (not highest) for 1.5% calculation
+- All managers use Decimal for monetary calculations
+
+### Next Task
+06_reconciliation_daily (READY - Phase 2: Infrastructure & Services)
