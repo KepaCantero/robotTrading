@@ -53,6 +53,7 @@ class NotificationChannelType(str, Enum):
     EMAIL = "email"
     SLACK = "slack"
     DISCORD = "discord"
+    TELEGRAM = "telegram"
 
 
 @dataclass

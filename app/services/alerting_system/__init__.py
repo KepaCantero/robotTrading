@@ -1,7 +1,7 @@
 """
 T18.2: Advanced Alerting System Package
 
-Provides rule-based alerting with webhook/email/Slack/Discord integration:
+Provides rule-based alerting with webhook/email/Slack/Discord/Telegram integration:
 - Alert rule engine for metric evaluation
 - Alert manager for state machine and deduplication
 - Notification dispatcher for multi-channel delivery
@@ -26,7 +26,7 @@ from .models import (
     NotificationTarget,
     ThresholdRule,
 )
-from .notification_channels import NotificationDispatcher
+from .notification_channels import NotificationDispatcher, TelegramChannel
 from .rule_templates import AlertRuleTemplates
 
 # Singleton orchestrator instance
@@ -103,6 +103,7 @@ __all__ = [
     "AlertRuleEngine",
     "AlertManager",
     "NotificationDispatcher",
+    "TelegramChannel",
     "AlertingOrchestrator",
     "MetricsDrivenAlerter",
     "AlertRuleTemplates",

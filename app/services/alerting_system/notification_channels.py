@@ -363,6 +363,75 @@ class DiscordChannel(NotificationChannel):
             return False
 
 
+class TelegramChannel(NotificationChannel):
+    """Telegram notification channel using Bot API."""
+
+    async def send(self, target: NotificationTarget, payload: NotificationPayload) -> bool:
+        """Send notification via Telegram Bot API."""
+        if not target.enabled:
+            logger.debug(f"Telegram channel disabled")
+            return False
+
+        try:
+            import httpx
+
+            # Extract bot token and chat_id from headers
+            bot_token = target.headers.get("telegram_bot_token", "")
+            chat_id = target.headers.get("telegram_chat_id", target.endpoint)
+
+            if not bot_token or not chat_id:
+                logger.error("Telegram bot_token or chat_id missing")
+                return False
+
+            # Build message with Markdown formatting
+            emoji_map = {
+                "info": "ℹ️",
+                "warning": "⚠️",
+                "critical": "🚨",
+            }
+            emoji = emoji_map.get(payload.severity.value, "📊")
+
+            message = f"{emoji} *{payload.rule_name}*\n\n"
+            message += f"*Severity:* {payload.severity.value.upper()}\n"
+            message += f"*Message:* {payload.message}\n"
+            message += f"*Metric:* {payload.metric_name}\n"
+
+            if payload.metric_value:
+                message += f"*Value:* {payload.metric_value}\n"
+
+            if payload.symbol:
+                message += f"*Symbol:* {payload.symbol}\n"
+
+            message += f"\n_:{payload.triggered_at.strftime('%Y-%m-%d %H:%M:%S UTC')}_"
+
+            # Send via Telegram Bot API
+            url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+
+            async with httpx.AsyncClient(timeout=target.timeout_seconds) as client:
+                response = await client.post(
+                    url,
+                    json={
+                        "chat_id": chat_id,
+                        "text": message,
+                        "parse_mode": "Markdown",
+                        "disable_web_page_preview": True,
+                    },
+                )
+
+                if response.status_code == 200:
+                    logger.info(f"Telegram message sent to chat_id: {chat_id}")
+                    return True
+                else:
+                    logger.warning(
+                        f"Telegram send failed (status: {response.status_code}): {response.text}"
+                    )
+                    return False
+
+        except (ConnectionError, TimeoutError, OSError) as e:
+            logger.error(f"Telegram error: {e}")
+            return False
+
+
 class NotificationDispatcher:
     """Dispatch notifications to multiple channels."""
 
@@ -373,6 +442,7 @@ class NotificationDispatcher:
             NotificationChannelType.EMAIL: EmailChannel(),
             NotificationChannelType.SLACK: SlackChannel(),
             NotificationChannelType.DISCORD: DiscordChannel(),
+            NotificationChannelType.TELEGRAM: TelegramChannel(),
         }
         self.notification_stats = {
             "total_sent": 0,

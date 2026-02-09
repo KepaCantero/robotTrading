@@ -1,0 +1,83 @@
+# AlgoTrading User Configuration
+# This file contains user-specific settings for the trading system.
+# Copy this file to ~/.algotrading/user_config.yaml and customize.
+
+# User identification
+user_id: "single_user"
+user_name: "Trader"
+
+# Trading profile
+trading_profile:
+  profile_name: "default"
+  risk_tolerance: "moderate"  # conservative, moderate, aggressive
+  max_positions: 5
+  max_capital_per_trade: 0.2
+  default_stop_loss_pct: 0.05
+  default_take_profit_pct: 0.15
+
+# Broker settings
+broker_settings:
+  broker_type: "paper"  # alpaca, ibkr, paper
+  paper_trading: true
+  alpaca_api_key: null
+  alpaca_api_secret: null
+  alpaca_base_url: "https://paper-api.alpaca.markets"
+  ibkr_host: "127.0.0.1"
+  ibkr_port: 4001
+  ibkr_client_id: 1
+
+# Order preferences
+order_preferences:
+  default_order_type: "limit"  # market, limit, stop_limit
+  limit_price_offset_pct: 0.001
+  allow_amex_orders: true
+  allow_arca_orders: true
+  allow_nyse_orders: true
+  allow_nasdaq_orders: true
+  min_order_size: 1
+  max_order_size: 10000
+
+# Trading hours
+trading_hours:
+  auto_start_market: false
+  auto_stop_market: false
+  pre_market_trading: false
+  after_hours_trading: false
+  timezone: "America/New_York"
+
+# Risk limits
+risk_limits:
+  max_daily_loss: 0.05
+  max_drawdown: 0.15
+  kill_switch_enabled: true
+  max_position_size: 0.2
+  max_total_exposure: 0.8
+
+# Symbol universe
+symbol_universe:
+  allowed_symbols:
+    - "AAPL"
+    - "MSFT"
+    - "GOOGL"
+    - "AMZN"
+    - "TSLA"
+  min_price: 10
+  max_price: 1000
+  min_volume: 100000
+  exclude_otc: true
+
+# Notifications
+notifications:
+  enable_telegram: false
+  telegram_chat_id: null
+  enable_email: false
+  email_address: null
+  alert_on_entry: true
+  alert_on_exit: true
+  alert_on_risk: true
+  daily_summary: true
+
+# System preferences
+log_level: "INFO"
+data_retention_days: 30
+enable_metrics: true

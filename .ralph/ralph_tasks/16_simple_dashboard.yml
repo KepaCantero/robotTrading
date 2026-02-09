@@ -1,0 +1,941 @@
+# ============================================
+# Ralph Task 16: Simple Dashboard
+# ============================================
+# PRIORIDAD: P1
+# FASE: Phase 5 - User Interface Layer
+# OBJETIVO: Create simple dashboard for monitoring P&L and positions
+# TIEMPO: ~12 horas
+#
+# Depends on: 09_compliance_engine_refactor
+# ============================================================================
+
+event_loop:
+  prompt_file: ".ralph/ralph_tasks/prompts/16_simple_dashboard.md"
+  completion_promise: "SIMPLE_DASHBOARD_COMPLETE"
+  max_iterations: 150
+  max_runtime_seconds: 43200  # 12 hours
+  checkpoint_interval: 3
+  starting_event: "dashboard.start"
+
+cli:
+  backend: "claude"
+
+core:
+  specs_dir: "./specs/"
+
+hats:
+  dashboard_implementer:
+    name: "Dashboard Implementer"
+    description: "Creates simple terminal-based dashboard for monitoring"
+    triggers: ["dashboard.start", "dashboard.next_step"]
+    publishes: ["dashboard.next_step", "dashboard.complete", "dashboard.blocked"]
+    default_publishes: "dashboard.next_step"
+    instructions: |
+      ## SIMPLE DASHBOARD IMPLEMENTATION
+
+      **OBJETIVO:** Create a terminal-based dashboard for monitoring trading performance,
+      positions, and system status using the integrated ComplianceEngine.
+
+      ### DEPENDENCIAS SATISFECHAS
+      - Task 09 (Compliance Engine refactor) - COMPLETED
+
+      ### COMPONENTES DISPONIBLES
+      - `ComplianceEngine` at `app/core/compliance_engine.py` - Main coordinator
+      - `TradingBridgeOrchestrator` at `app/services/live_trading/trading_bridge_orchestrator.py`
+      - `OrderManager` at `app/services/live_trading/order_manager.py`
+
+      ### PASO 1: Create Dashboard Data Models
+
+      Archivo: `app/dashboard/__init__.py`
+
+      ```python
+      """
+      Dashboard module for algo trading monitoring.
+
+      Provides data models and services for displaying real-time trading
+      performance, positions, and system status in a terminal-based dashboard.
+      """
+
+      from app.dashboard.dashboard_data import (
+          DashboardSnapshot,
+          PositionSummary,
+          PerformanceMetrics,
+          SystemStatus,
+      )
+      from app.dashboard.dashboard_service import DashboardService, get_dashboard_service
+
+      __all__ = [
+          "DashboardSnapshot",
+          "PositionSummary",
+          "PerformanceMetrics",
+          "SystemStatus",
+          "DashboardService",
+          "get_dashboard_service",
+      ]
+      ```
+
+      Archivo: `app/dashboard/dashboard_data.py`
+
+      ```python
+      """
+      Dashboard data models.
+
+      Defines the data structures used by the dashboard to display
+      trading information.
+      """
+      from dataclasses import dataclass, field
+      from datetime import datetime
+      from decimal import Decimal
+      from typing import List, Optional, Dict, Any
+
+
+      @dataclass
+      class PositionSummary:
+          """Summary of a single position."""
+          symbol: str
+          quantity: int
+          avg_price: Decimal
+          current_price: Decimal
+          market_value: Decimal
+          unrealized_pnl: Decimal
+          unrealized_pnl_pct: float
+          side: str  # "long" or "short"
+
+          def to_display_dict(self) -> Dict[str, Any]:
+              """Convert to dictionary for display."""
+              return {
+                  "symbol": self.symbol,
+                  "quantity": self.quantity,
+                  "avg_price": float(self.avg_price),
+                  "current_price": float(self.current_price),
+                  "market_value": float(self.market_value),
+                  "unrealized_pnl": float(self.unrealized_pnl),
+                  "unrealized_pnl_pct": self.unrealized_pnl_pct,
+                  "side": self.side,
+              }
+
+
+      @dataclass
+      class PerformanceMetrics:
+          """Trading performance metrics."""
+          total_pnl: Decimal
+          daily_pnl: Decimal
+      daily_return_pct: float
+      total_trades: int
+      winning_trades: int
+      losing_trades: int
+      win_rate: float
+      max_drawdown: float
+      current_drawdown: float
+      sharpe_ratio: Optional[float] = None
+      portfolio_value: Decimal = Decimal("0")
+      starting_capital: Decimal = Decimal("0")
+
+      def to_display_dict(self) -> Dict[str, Any]:
+          """Convert to dictionary for display."""
+          return {
+              "total_pnl": float(self.total_pnl),
+              "daily_pnl": float(self.daily_pnl),
+              "daily_return_pct": self.daily_return_pct,
+              "total_trades": self.total_trades,
+              "winning_trades": self.winning_trades,
+              "losing_trades": self.losing_trades,
+              "win_rate": self.win_rate,
+              "max_drawdown": self.max_drawdown,
+              "current_drawdown": self.current_drawdown,
+              "sharpe_ratio": self.sharpe_ratio,
+              "portfolio_value": float(self.portfolio_value),
+              "starting_capital": float(self.starting_capital),
+          }
+
+
+      @dataclass
+      class SystemStatus:
+          """System health status."""
+          kill_switch_active: bool
+          systems_available: int
+          systems_total: int
+      slo_compliance_rate: float
+      last_update: datetime
+      bridge_status: str
+      active_orders: int
+
+      def to_display_dict(self) -> Dict[str, Any]:
+          """Convert to dictionary for display."""
+          return {
+              "kill_switch_active": self.kill_switch_active,
+              "systems_available": self.systems_available,
+              "systems_total": self.systems_total,
+              "slo_compliance_rate": self.slo_compliance_rate,
+              "last_update": self.last_update.isoformat(),
+              "bridge_status": self.bridge_status,
+              "active_orders": self.active_orders,
+          }
+
+
+      @dataclass
+      class DashboardSnapshot:
+          """Complete dashboard snapshot."""
+          timestamp: datetime
+      performance: PerformanceMetrics
+      positions: List[PositionSummary]
+      system_status: SystemStatus
+      recent_alerts: List[Dict[str, Any]] = field(default_factory=list)
+
+      def to_display_dict(self) -> Dict[str, Any]:
+          """Convert to dictionary for display."""
+          return {
+              "timestamp": self.timestamp.isoformat(),
+              "performance": self.performance.to_display_dict(),
+              "positions": [p.to_display_dict() for p in self.positions],
+              "system_status": self.system_status.to_display_dict(),
+              "recent_alerts": self.recent_alerts,
+          }
+      ```
+
+      ### PASO 2: Create Dashboard Service
+
+      Archivo: `app/dashboard/dashboard_service.py`
+
+      ```python
+      """
+      Dashboard service for collecting and aggregating trading data.
+
+      Provides methods to fetch current positions, performance metrics,
+      and system status for dashboard display.
+      """
+      import asyncio
+      from datetime import datetime, timezone
+      from decimal import Decimal
+      from typing import List, Dict, Any, Optional
+
+      from app.dashboard.dashboard_data import (
+          DashboardSnapshot,
+          PositionSummary,
+          PerformanceMetrics,
+          SystemStatus,
+      )
+      from app.core.compliance_engine import get_compliance_engine
+
+
+      class DashboardService:
+          """Service for fetching dashboard data."""
+
+          def __init__(self):
+              self._compliance_engine = get_compliance_engine(enable_logging=False)
+              self._broker = None
+              self._bridge = None
+
+          async def get_snapshot(self) -> DashboardSnapshot:
+              """Get complete dashboard snapshot."""
+              timestamp = datetime.now(timezone.utc)
+
+              # Fetch all data concurrently
+              performance, positions, system_status, recent_alerts = await asyncio.gather(
+                  self._get_performance_metrics(),
+                  self._get_positions(),
+                  self._get_system_status(),
+                  self._get_recent_alerts(),
+                  return_exceptions=True,
+              )
+
+              # Handle any exceptions
+              if isinstance(performance, Exception):
+                  performance = self._empty_performance()
+              if isinstance(positions, Exception):
+                  positions = []
+              if isinstance(system_status, Exception):
+                  system_status = self._empty_system_status()
+              if isinstance(recent_alerts, Exception):
+                  recent_alerts = []
+
+              return DashboardSnapshot(
+                  timestamp=timestamp,
+                  performance=performance,
+                  positions=positions,
+                  system_status=system_status,
+                  recent_alerts=recent_alerts,
+              )
+
+          async def _get_performance_metrics(self) -> PerformanceMetrics:
+              """Get performance metrics from ComplianceEngine."""
+              try:
+                  daily_summary = self._compliance_engine.get_daily_pnl_summary()
+                  slo_metrics = self._compliance_engine.get_slo_metrics()
+
+                  # Get portfolio value
+                  portfolio_value = await self._get_portfolio_value()
+                  starting_capital = Decimal(
+                      str(self._compliance_engine._starting_capital)
+                  )
+
+                  # Calculate drawdown
+                  current_drawdown = self._calculate_drawdown(
+                      portfolio_value, starting_capital
+                  )
+                  max_drawdown = self._compliance_engine._max_drawdown_ratio
+
+                  return PerformanceMetrics(
+                      total_pnl=Decimal(str(daily_summary.get("total_pnl", 0))),
+                      daily_pnl=Decimal(str(daily_summary.get("daily_pnl", 0))),
+                      daily_return_pct=daily_summary.get("daily_return_pct", 0.0),
+                      total_trades=daily_summary.get("total_trades", 0),
+                      winning_trades=daily_summary.get("winning_trades", 0),
+                      losing_trades=daily_summary.get("losing_trades", 0),
+                      win_rate=daily_summary.get("win_rate", 0.0),
+                      max_drawdown=max_drawdown,
+                      current_drawdown=current_drawdown,
+                      sharpe_ratio=slo_metrics.get("sharpe_ratio"),
+                      portfolio_value=portfolio_value,
+                      starting_capital=starting_capital,
+                  )
+              except Exception as e:
+                  # Return empty metrics on error
+                  return self._empty_performance()
+
+          async def _get_positions(self) -> List[PositionSummary]:
+              """Get current positions."""
+              try:
+                  broker = await self._get_broker()
+                  if not broker:
+                      return []
+
+                  positions_data = await broker.get_positions()
+
+                  positions = []
+                  for pos in positions_data:
+                      symbol = pos.get("symbol", "")
+                      quantity = pos.get("quantity", 0)
+                      if quantity == 0:
+                          continue
+
+                      avg_price = Decimal(str(pos.get("avg_price", 0)))
+                      current_price = Decimal(str(pos.get("current_price", avg_price)))
+                      market_value = Decimal(str(pos.get("market_value", quantity * float(current_price))))
+                      unrealized_pnl = Decimal(str(pos.get("unrealized_pnl", 0)))
+
+                      # Calculate P&L percentage
+                      if avg_price > 0:
+                          pnl_pct = float((current_price - avg_price) / avg_price * 100)
+                      else:
+                          pnl_pct = 0.0
+
+                      side = "long" if quantity > 0 else "short"
+
+                      positions.append(
+                          PositionSummary(
+                              symbol=symbol,
+                              quantity=abs(quantity),
+                              avg_price=avg_price,
+                              current_price=current_price,
+                              market_value=market_value,
+                              unrealized_pnl=unrealized_pnl,
+                              unrealized_pnl_pct=pnl_pct,
+                              side=side,
+                          )
+                      )
+
+                  return positions
+              except Exception as e:
+                  return []
+
+          async def _get_system_status(self) -> SystemStatus:
+              """Get system health status."""
+              try:
+                  status_data = self._compliance_engine.get_system_status()
+                  slo_metrics = self._compliance_engine.get_slo_metrics()
+
+                  # Get bridge status
+                  bridge = await self._get_bridge()
+                  bridge_status = "unknown"
+                  if bridge:
+                      bridge_status = bridge.status.value
+
+                  # Get active orders
+                  broker = await self._get_broker()
+                  active_orders = 0
+                  if broker:
+                      open_orders = await broker.get_open_orders()
+                      active_orders = len(open_orders)
+
+                  availability = status_data.get("availability", {})
+                  systems_available = availability.get("available_systems", 0)
+                  systems_total = availability.get("total_systems", 0)
+
+                  return SystemStatus(
+                      kill_switch_active=self._compliance_engine.check_kill_switch(),
+                      systems_available=systems_available,
+                      systems_total=systems_total,
+                      slo_compliance_rate=slo_metrics.get("slo_compliance_rate", 0.0),
+                      last_update=datetime.now(timezone.utc),
+                      bridge_status=bridge_status,
+                      active_orders=active_orders,
+                  )
+              except Exception as e:
+                  return self._empty_system_status()
+
+          async def _get_recent_alerts(self) -> List[Dict[str, Any]]:
+              """Get recent alerts."""
+              try:
+                  # Get recent alerts from alerting system
+                  from app.services.alerting_system import NotificationDispatcher
+
+                  dispatcher = NotificationDispatcher.instance()
+                  # Return recent alerts from dispatcher history
+                  # For now, return empty list as dispatcher doesn't expose history
+                  return []
+              except Exception:
+                  return []
+
+          async def _get_portfolio_value(self) -> Decimal:
+              """Get current portfolio value."""
+              try:
+                  broker = await self._get_broker()
+                  if broker:
+                      value = await broker.calculate_portfolio_value()
+                      return Decimal(str(value))
+              except Exception:
+                  pass
+              return Decimal(str(self._compliance_engine._starting_capital))
+
+          async def _get_broker(self):
+              """Get broker connector instance."""
+              if self._broker is None:
+                  try:
+                      from app.services.live_trading.broker_connector import (
+                          get_broker_connector,
+                      )
+
+                      self._broker = get_broker_connector()
+                  except Exception:
+                      pass
+              return self._broker
+
+          async def _get_bridge(self):
+              """Get trading bridge instance."""
+              if self._bridge is None:
+                  try:
+                      from app.services.live_trading.trading_bridge_orchestrator import (
+                          get_trading_bridge_orchestrator,
+                      )
+
+                      self._bridge = get_trading_bridge_orchestrator()
+                  except Exception:
+                      pass
+              return self._bridge
+
+          def _calculate_drawdown(self, current: Decimal, peak: Decimal) -> float:
+              """Calculate drawdown percentage."""
+              if peak <= 0:
+                  return 0.0
+              return float((peak - current) / peak)
+
+          def _empty_performance(self) -> PerformanceMetrics:
+              """Return empty performance metrics."""
+              return PerformanceMetrics(
+                  total_pnl=Decimal("0"),
+                  daily_pnl=Decimal("0"),
+                  daily_return_pct=0.0,
+                  total_trades=0,
+                  winning_trades=0,
+                  losing_trades=0,
+                  win_rate=0.0,
+                  max_drawdown=0.0,
+                  current_drawdown=0.0,
+                  portfolio_value=Decimal("0"),
+                  starting_capital=Decimal("0"),
+              )
+
+          def _empty_system_status(self) -> SystemStatus:
+              """Return empty system status."""
+              return SystemStatus(
+                  kill_switch_active=False,
+                  systems_available=0,
+                  systems_total=0,
+                  slo_compliance_rate=0.0,
+                  last_update=datetime.now(timezone.utc),
+                  bridge_status="unknown",
+                  active_orders=0,
+              )
+
+
+      # Singleton instance
+      _dashboard_service: Optional[DashboardService] = None
+
+
+      def get_dashboard_service() -> DashboardService:
+          """Get singleton dashboard service instance."""
+          global _dashboard_service
+          if _dashboard_service is None:
+              _dashboard_service = DashboardService()
+          return _dashboard_service
+      ```
+
+      ### PASO 3: Create Terminal Dashboard CLI
+
+      Archivo: `scripts/simple_dashboard.py`
+
+      ```python
+      #!/usr/bin/env python3
+      """
+      Simple Terminal Dashboard for AlgoTrading.
+
+      Displays real-time trading performance, positions, and system status.
+      Refreshes automatically every 5 seconds.
+
+      Usage:
+          python scripts/simple_dashboard.py          # Auto-refresh every 5s
+          python scripts/simple_dashboard.py --once   # Display once and exit
+          python scripts/simple_dashboard.py --json   # Output as JSON
+      """
+      import argparse
+      import asyncio
+      import json
+      import sys
+      from datetime import datetime, timezone
+      from pathlib import Path
+
+      # Add project root to path
+      project_root = Path(__file__).parent.parent
+      sys.path.insert(0, str(project_root))
+
+      from app.dashboard.dashboard_service import get_dashboard_service
+
+
+      def format_currency(value: float) -> str:
+          """Format value as currency."""
+          if value >= 0:
+              return f"${value:,.2f}"
+          return f"-${abs(value):,.2f}"
+
+
+      def format_pct(value: float) -> str:
+          """Format value as percentage."""
+          return f"{value:+.2%}"
+
+
+      def display_snapshot(snapshot, show_full: bool = True):
+          """Display dashboard snapshot to terminal."""
+          # Clear screen
+          print("\033[2J\033[H", end="")
+
+          # Header
+          print("=" * 80)
+          print(f"{'ALGOTRADING DASHBOARD':^80}")
+          print(f"{snapshot.timestamp.strftime('%Y-%m-%d %H:%M:%S UTC'):^80}")
+          print("=" * 80)
+          print()
+
+          # System Status
+          print("SYSTEM STATUS")
+          print("-" * 80)
+          status = snapshot.system_status
+          kill_status = "🔴 ACTIVE" if status.kill_switch_active else "🟢 NORMAL"
+          print(f"  Kill Switch: {kill_status}")
+          print(f"  Bridge Status: {status.bridge_status.upper()}")
+          print(f"  Systems: {status.systems_available}/{status.systems_total} available")
+          print(f"  SLO Compliance: {status.slo_compliance_rate:.1%}")
+          print(f"  Active Orders: {status.active_orders}")
+          print()
+
+          # Performance Metrics
+          print("PERFORMANCE")
+          print("-" * 80)
+          perf = snapshot.performance
+          daily_pnl_color = "\033[92m" if perf.daily_pnl >= 0 else "\033[91m"
+          print(
+              f"  Portfolio Value:     {format_currency(perf.portfolio_value)}"
+          )
+          print(
+              f"  Daily P&L:           {daily_pnl_color}{format_currency(perf.daily_pnl)} ({format_pct(perf.daily_return_pct)})\033[0m"
+          )
+          print(
+              f"  Total P&L:           {format_currency(perf.total_pnl)}"
+          )
+          print(
+              f"  Total Trades:        {perf.total_trades} ({perf.winning_trades}W/{perf.losing_trades}L)"
+          )
+          print(
+              f"  Win Rate:            {perf.win_rate:.1%}"
+          )
+          print(
+              f"  Current Drawdown:    {perf.current_drawdown:.2%} (max: {perf.max_drawdown:.2%})"
+          )
+          if perf.sharpe_ratio is not None:
+              print(
+                  f"  Sharpe Ratio:        {perf.sharpe_ratio:.2f}"
+              )
+          print()
+
+          # Positions
+          print("POSITIONS")
+          print("-" * 80)
+          if snapshot.positions:
+              print(
+                  f"  {'Symbol':<8} {'Side':<6} {'Qty':>6} {'Avg Price':>10} {'Curr Price':>10} {'Market Value':>12} {'P&L':>12}"
+              )
+              print("  " + "-" * 72)
+              for pos in snapshot.positions:
+                  pnl_color = "\033[92m" if pos.unrealized_pnl >= 0 else "\033[91m"
+                  print(
+                      f"  {pos.symbol:<8} {pos.side:<6} {pos.quantity:>6} "
+                      f"${pos.avg_price:>8.2f} ${pos.current_price:>8.2f} "
+                      f"${pos.market_value:>10.2f} "
+                      f"{pnl_color}{format_currency(pos.unrealized_pnl):>12} ({pos.unrealized_pnl_pct:+.1f}%)\033[0m"
+                  )
+              total_market_value = sum(p.market_value for p in snapshot.positions)
+              total_pnl = sum(p.unrealized_pnl for p in snapshot.positions)
+              print("  " + "-" * 72)
+              print(
+                  f"  {'TOTAL':<8} {'':<6} {'':>6} {'':>10} {'':>10} "
+                  f"${total_market_value:>10.2f} "
+                  f"{format_currency(total_pnl):>12}"
+              )
+          else:
+              print("  No open positions")
+          print()
+
+          # Recent Alerts
+          if snapshot.recent_alerts and show_full:
+              print("RECENT ALERTS")
+              print("-" * 80)
+              for alert in snapshot.recent_alerts[:5]:  # Show last 5
+                  severity = alert.get("severity", "INFO")
+                  message = alert.get("message", "")
+                  timestamp = alert.get("timestamp", "")
+                  print(f"  [{timestamp}] {severity}: {message}")
+              print()
+
+          print("=" * 80)
+          print("Press Ctrl+C to exit".center(80))
+          print("=" * 80)
+
+
+      async def main():
+          """Main dashboard entry point."""
+          parser = argparse.ArgumentParser(
+              description="Simple Terminal Dashboard for AlgoTrading"
+          )
+          parser.add_argument(
+              "--once",
+              action="store_true",
+              help="Display once and exit (don't auto-refresh)",
+          )
+          parser.add_argument(
+              "--json",
+              action="store_true",
+              help="Output dashboard data as JSON",
+          )
+          parser.add_argument(
+              "--interval",
+              type=int,
+              default=5,
+              help="Refresh interval in seconds (default: 5)",
+          )
+          args = parser.parse_args()
+
+          dashboard = get_dashboard_service()
+
+          if args.json:
+              # Output as JSON and exit
+              snapshot = await dashboard.get_snapshot()
+              print(json.dumps(snapshot.to_display_dict(), indent=2))
+              return
+
+          if args.once:
+              # Display once and exit
+              snapshot = await dashboard.get_snapshot()
+              display_snapshot(snapshot)
+              return
+
+          # Auto-refresh mode
+          try:
+              while True:
+                  snapshot = await dashboard.get_snapshot()
+                  display_snapshot(snapshot)
+                  await asyncio.sleep(args.interval)
+          except KeyboardInterrupt:
+              print("\n\nDashboard stopped.")
+
+
+      if __name__ == "__main__":
+          asyncio.run(main())
+      ```
+
+      ### PASO 4: Create Tests
+
+      Archivo: `tests/unit/dashboard/test_dashboard_service.py`
+
+      ```python
+      """
+      Tests for dashboard service.
+      """
+      import pytest
+      from unittest.mock import AsyncMock, MagicMock, patch
+      from decimal import Decimal
+      from datetime import datetime, timezone
+
+      from app.dashboard.dashboard_service import DashboardService
+      from app.dashboard.dashboard_data import (
+          DashboardSnapshot,
+          PositionSummary,
+          PerformanceMetrics,
+          SystemStatus,
+      )
+
+
+      @pytest.fixture
+      def mock_compliance_engine():
+          """Mock compliance engine."""
+          engine = MagicMock()
+          engine.get_daily_pnl_summary.return_value = {
+              "total_pnl": 1500.50,
+              "daily_pnl": 250.25,
+              "daily_return_pct": 0.025,
+              "total_trades": 10,
+              "winning_trades": 6,
+              "losing_trades": 4,
+              "win_rate": 0.6,
+          }
+          engine.get_slo_metrics.return_value = {
+              "slo_compliance_rate": 0.95,
+              "sharpe_ratio": 1.5,
+          }
+          engine.get_system_status.return_value = {
+              "availability": {
+                  "available_systems": 5,
+                  "total_systems": 5,
+              }
+          }
+          engine.check_kill_switch.return_value = False
+          engine._starting_capital = 10000
+          engine._max_drawdown_ratio = 0.10
+          return engine
+
+
+      @pytest.fixture
+      def mock_broker():
+          """Mock broker connector."""
+          broker = MagicMock()
+          broker.get_positions = AsyncMock(
+              return_value=[
+                  {
+                      "symbol": "AAPL",
+                      "quantity": 100,
+                      "avg_price": 150.0,
+                      "current_price": 155.0,
+                      "market_value": 15500.0,
+                      "unrealized_pnl": 500.0,
+                  },
+                  {
+                      "symbol": "MSFT",
+                      "quantity": 50,
+                      "avg_price": 300.0,
+                      "current_price": 295.0,
+                      "market_value": 14750.0,
+                      "unrealized_pnl": -250.0,
+                  },
+              ]
+          )
+          broker.calculate_portfolio_value = AsyncMock(return_value=100000.0)
+          broker.get_open_orders = AsyncMock(return_value=[])
+          return broker
+
+
+      @pytest.fixture
+      def dashboard_service(mock_compliance_engine):
+          """Create dashboard service with mocked dependencies."""
+          with patch(
+              "app.dashboard.dashboard_service.get_compliance_engine",
+              return_value=mock_compliance_engine,
+          ):
+              service = DashboardService()
+              return service
+
+
+      @pytest.mark.asyncio
+      async def test_get_snapshot(dashboard_service, mock_broker):
+          """Test getting complete dashboard snapshot."""
+          with patch.object(
+              dashboard_service, "_get_broker", return_value=mock_broker
+          ):
+              snapshot = await dashboard_service.get_snapshot()
+
+              assert isinstance(snapshot, DashboardSnapshot)
+              assert isinstance(snapshot.performance, PerformanceMetrics)
+              assert isinstance(snapshot.system_status, SystemStatus)
+              assert len(snapshot.positions) == 2
+
+
+      @pytest.mark.asyncio
+      async def test_get_performance_metrics(dashboard_service):
+          """Test getting performance metrics."""
+          metrics = await dashboard_service._get_performance_metrics()
+
+          assert metrics.total_pnl == Decimal("1500.50")
+          assert metrics.daily_pnl == Decimal("250.25")
+          assert metrics.daily_return_pct == 0.025
+          assert metrics.total_trades == 10
+          assert metrics.win_rate == 0.6
+          assert metrics.sharpe_ratio == 1.5
+
+
+      @pytest.mark.asyncio
+      async def test_get_positions(dashboard_service, mock_broker):
+          """Test getting positions."""
+          with patch.object(
+              dashboard_service, "_get_broker", return_value=mock_broker
+          ):
+              positions = await dashboard_service._get_positions()
+
+              assert len(positions) == 2
+              assert positions[0].symbol == "AAPL"
+              assert positions[0].quantity == 100
+              assert positions[0].side == "long"
+              assert positions[0].unrealized_pnl == Decimal("500.0")
+
+              assert positions[1].symbol == "MSFT"
+              assert positions[1].side == "long"
+              assert positions[1].unrealized_pnl == Decimal("-250.0")
+
+
+      @pytest.mark.asyncio
+      async def test_get_system_status(dashboard_service):
+          """Test getting system status."""
+          with patch.object(
+              dashboard_service, "_get_broker", return_value=None
+          ):
+              status = await dashboard_service._get_system_status()
+
+              assert status.kill_switch_active is False
+              assert status.systems_available == 5
+              assert status.systems_total == 5
+              assert status.slo_compliance_rate == 0.95
+
+
+      @pytest.mark.asyncio
+      async def test_empty_positions(dashboard_service):
+          """Test with no positions."""
+          mock_broker = MagicMock()
+          mock_broker.get_positions = AsyncMock(return_value=[])
+
+          with patch.object(
+              dashboard_service, "_get_broker", return_value=mock_broker
+          ):
+              positions = await dashboard_service._get_positions()
+              assert positions == []
+
+
+      @pytest.mark.asyncio
+      async def test_broker_error_handling(dashboard_service):
+          """Test handling of broker errors."""
+          with patch.object(
+              dashboard_service, "_get_broker", return_value=None
+          ):
+              positions = await dashboard_service._get_positions()
+              assert positions == []
+      ```
+
+      ### PASO 5: Validate
+
+      ```bash
+      # Make script executable
+      chmod +x scripts/simple_dashboard.py
+
+      # Validate syntax
+      python -m py_compile app/dashboard/__init__.py
+      python -m py_compile app/dashboard/dashboard_data.py
+      python -m py_compile app/dashboard/dashboard_service.py
+      python -m py_compile scripts/simple_dashboard.py
+
+      # Run tests
+      pytest tests/unit/dashboard/test_dashboard_service.py -v
+
+      # Test dashboard help
+      python scripts/simple_dashboard.py --help
+
+      # Test JSON output
+      python scripts/simple_dashboard.py --json
+      ```
+
+      ### PASO 6: Update Checkpoint
+
+      ```bash
+      # Create checkpoint
+      cat > .ralph/checkpoints/16_simple_dashboard_checkpoint.json << 'EOF'
+      {
+        "task": "16_simple_dashboard",
+        "status": "COMPLETED",
+        "completed_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+        "files_created": [
+          "app/dashboard/__init__.py",
+          "app/dashboard/dashboard_data.py",
+          "app/dashboard/dashboard_service.py",
+          "scripts/simple_dashboard.py",
+          "tests/unit/dashboard/test_dashboard_service.py"
+        ],
+        "features": [
+          "DashboardSnapshot - Complete dashboard data model",
+          "PerformanceMetrics - Trading performance display",
+          "PositionSummary - Individual position tracking",
+          "SystemStatus - System health monitoring",
+          "DashboardService - Service to fetch dashboard data",
+          "Terminal dashboard CLI with auto-refresh",
+          "JSON output option for integration",
+          "Integration with ComplianceEngine for data"
+        ]
+      }
+      EOF
+
+      # Update master checkpoint
+      python .ralph/scripts/update_master_checkpoint.py 16_simple_dashboard COMPLETED
+      ```
+
+      ### Event Format:
+      Completado: `ralph emit "dashboard.complete" "task=16_simple_dashboard"`
+      Bloqueado: `ralph emit "dashboard.blocked" "error=..."`
+
+  final_reviewer:
+    name: "Dashboard Reviewer"
+    description: "Verifica dashboard implementation"
+    triggers: ["dashboard.complete"]
+    publishes: ["dashboard.final_summary"]
+    instructions: |
+      ## FINAL REVIEW
+
+      ```bash
+      # 1. Verificar archivos creados
+      ls app/dashboard/__init__.py
+      ls app/dashboard/dashboard_data.py
+      ls app/dashboard/dashboard_service.py
+      ls scripts/simple_dashboard.py
+      ls tests/unit/dashboard/test_dashboard_service.py
+
+      # 2. Validar sintaxis
+      python -m py_compile app/dashboard/__init__.py
+      python -m py_compile app/dashboard/dashboard_data.py
+      python -m py_compile app/dashboard/dashboard_service.py
+      python -m py_compile scripts/simple_dashboard.py
+
+      # 3. Ejecutar tests
+      pytest tests/unit/dashboard/test_dashboard_service.py -v
+
+      # 4. Test dashboard help
+      python scripts/simple_dashboard.py --help
+
+      # 5. Test JSON output
+      python scripts/simple_dashboard.py --json
+      ```
+
+      Si TODO limpio: `ralph emit "dashboard.final_summary" "all_passed"`
+
+tasks:
+  enabled: true
+
+memories:
+  enabled: true
+  inject: auto
+  budget: 2000
+
+checkpoint:
+  file: ".ralph/checkpoints/16_simple_dashboard_checkpoint.json"
