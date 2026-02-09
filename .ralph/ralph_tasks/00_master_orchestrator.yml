@@ -88,7 +88,8 @@ hats:
       │  PHASE 6: VALIDATION Layer                                  │
       ├─────────────────────────────────────────────────────────────┤
       │  17. 17_backtest_fixes            (12h) ← Independiente     │
-      │  18. 20_testing_integration       (16h) ← Depende de 09-12  │
+      │  18. 21_backtesting_folder_audit  (12h) ← Depende de 17    │
+      │  19. 20_testing_integration       (16h) ← Depende de 09-12  │
       └─────────────────────────────────────────────────────────────┘
                                 ↓
       ┌─────────────────────────────────────────────────────────────┐
@@ -151,6 +152,7 @@ hats:
 
       # PHASE 6: VALIDATION
       ralph run .ralph/ralph_tasks/17_backtest_fixes.yml
+      ralph run .ralph/ralph_tasks/21_backtesting_folder_audit.yml
       ralph run .ralph/ralph_tasks/20_testing_integration.yml
 
       # PHASE 7: SECURITY
@@ -173,7 +175,7 @@ hats:
           "started_at": "2026-02-08T...",
           "current_phase": 1,
           "current_task": "01_protocol_interfaces",
-          "total_tasks": 19,
+          "total_tasks": 20,
           "completed_tasks": 0,
           "failed_tasks": 0,
           "blocked_tasks": 0
@@ -216,10 +218,10 @@ hats:
           },
           "phase_6_validation": {
             "name": "Validation Layer",
-            "tasks": ["17_backtest_fixes", "20_testing_integration"],
+            "tasks": ["17_backtest_fixes", "21_backtesting_folder_audit", "20_testing_integration"],
             "status": "pending",
             "completed": 0,
-            "total": 2
+            "total": 3
           },
           "phase_7_security": {
             "name": "Security Layer",

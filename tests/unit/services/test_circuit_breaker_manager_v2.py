@@ -33,7 +33,7 @@ import numpy as np
 import pytest
 
 from app.models.market_data import Quote
-from app.services.circuit_breaker_manager_v2 import (
+from app.services.circuit_breaker_manager import (
     CircuitBreakerConfig,
     CircuitBreakerLevel,
     CircuitBreakerManager,
