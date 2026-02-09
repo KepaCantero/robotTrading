@@ -1,0 +1,46 @@
+# ============================================
+# Ralph Configuration - AlgoTrading System
+# ============================================
+
+# CLI Settings
+cli:
+  backend: claude
+
+# Event Loop Configuration
+event_loop:
+  prompt_file: .ralph/ralph_tasks/prompts/00_master_orchestrator.md
+  completion_promise: "ALGOTRADING_SYSTEM_COMPLETE"
+  max_iterations: 500
+  max_runtime_seconds: 604800  # 7 days
+  checkpoint_interval: 3
+  starting_event: "master.start"
+
+# Core Settings
+core:
+  specs_dir: ./specs/
+
+# Default mode
+default_mode: interactive
+
+# Session settings - VERBOSE para ver más logs
+session:
+  verbose: true
+  idle_timeout: 0  # No timeout para tareas largas
+
+# Preflight checks
+preflight:
+  enabled: false
+
+# Color output
+color: auto
+
+# Habilitar TUI para ver en tiempo real
+tui:
+  enabled: true
+
+# Logging configuration (si ralph lo soporta)
+logging:
+  level: debug
+  file: .ralph/logs/ralph.log
+  max_size: 10MB
+  keep: 5

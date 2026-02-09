@@ -28,14 +28,14 @@ from app.backtesting.services.pnl_calculator import ProfitAndLossCalculator
 from app.backtesting.services.position_manager import PositionManager
 from app.backtesting.services.signal_processor import SignalProcessor
 from app.backtesting.services.trade_executor import TradeExecutor
+
+# COMPLIANCE: Import compliance_engine - "THE ONLY ENGINE" that must be used
+from app.core.compliance_engine import ComplianceEngine
 from app.core.trading_validators import TradingValidator
 from app.models.portfolio import AssetClass, Portfolio, Position
 from app.models.signal import Signal
 from app.services.dynamic_capital_reallocation import DynamicCapitalReallocationEngine
 from app.services.risk_envelope_validator import RiskEnvelopeValidator
-
-# COMPLIANCE: Import compliance_engine - "THE ONLY ENGINE" that must be used
-from app.core.compliance_engine import ComplianceEngine, ComplianceConfig
 
 logger = logging.getLogger(__name__)
 
@@ -711,7 +711,9 @@ class BacktestEngine:
                 # COMPLIANCE: Track daily P&L for kill switch monitoring (Hull Rule 13.1)
                 # Calculate realized P&L from the trade
                 if trade.exit_price and trade.entry_price:
-                    realized_pnl = float((trade.exit_price - trade.entry_price) * trade.quantity) - float(trade.commission)
+                    realized_pnl = float(
+                        (trade.exit_price - trade.entry_price) * trade.quantity
+                    ) - float(trade.commission)
                     self.compliance_engine.track_daily_pnl(
                         symbol=trade.symbol,
                         side="SELL",

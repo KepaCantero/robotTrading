@@ -23,7 +23,7 @@ from .broker_connector import (
     OrderType,
     get_broker_connector,
 )
-from .risk_gates import RiskCheckResult, RiskGates, get_risk_gates
+from .risk_gates import RiskCheckResult, RiskGates
 
 logger = logging.getLogger(__name__)
 
@@ -77,6 +77,7 @@ class OrderManager:
         # Create RiskGates instance directly if not provided (avoiding Depends() for direct instantiation)
         if risk_gates is None:
             from .risk_gates import RiskGates as RG
+
             self.risk_gates = RG(broker=self.broker)
         else:
             self.risk_gates = risk_gates

@@ -20,7 +20,6 @@ os.environ.setdefault('OMP_NUM_THREADS', '1')  # Reducir threads para evitar blo
 # REQUIRED: gymnasium is REQUIRED - migrated from deprecated gym
 import gymnasium as gym
 import gymnasium.spaces
-
 from stable_baselines3 import A2C, DDPG, DQN, PPO, SAC, TD3
 from stable_baselines3.common.callbacks import BaseCallback
 
@@ -176,7 +175,9 @@ class TradingEnv:
 
         # Done condition - separated into terminated and truncated for Gymnasium
         terminated = current_equity < self.cash * 0.5  # Episode ends if we lose 50% of capital
-        truncated = self.current_step >= self.config.get("max_steps", 1000)  # Episode ends at max steps
+        truncated = self.current_step >= self.config.get(
+            "max_steps", 1000
+        )  # Episode ends at max steps
 
         self.current_step += 1
 
@@ -332,7 +333,9 @@ class ReinforcementLearningEngine(BaseLearningEngine):
         self.agent = None
 
     def train(
-        self, training_data: Optional[Dict[str, Any]] = None, validation_data: Optional[Dict[str, Any]] = None
+        self,
+        training_data: Optional[Dict[str, Any]] = None,
+        validation_data: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, float]:
         """
         Entrenar agente RL.

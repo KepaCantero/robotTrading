@@ -1,0 +1,81 @@
+# ============================================
+# Ralph Hat Template: File Validator
+# ============================================
+# Reusable hat for file validation tasks.
+# Copy and customize for your specific task.
+
+hat_template: file_validator
+
+name: "File Validator"
+description: "Validates and fixes files using validate_file_complete.sh"
+
+triggers:
+  - "validation.start"
+  - "validation.next_file"
+
+publishes:
+  - "validation.next_file"
+  - "validation.complete"
+  - "validation.blocked"
+
+default_publishes: "validation.next_file"
+
+instructions: |
+  ## FILE VALIDATOR - Standard validation pattern
+
+  **OBJECTIVE:** Validate and fix {{TOTAL_FILES}} files
+
+  ### For each file:
+
+  1. **Read the file:**
+  ```bash
+  cat <file_path>
+  ```
+
+  2. **Run validation:**
+  ```bash
+  scripts/validate_file_complete.sh <file_path>
+  # Returns JSON with success: true/false
+  ```
+
+  3. **If errors (failed > 0):**
+  a. Auto-fix formatting:
+  ```bash
+  black <file_path>
+  isort <file_path>
+  ruff check <file_path> --fix
+  ```
+  b. Re-validate
+  c. If still failing → FIX MANUALLY
+  d. Re-validate until `success: true`
+
+  4. **ONLY when success: true:**
+  - Mark in checkpoint as PASSED
+  - NEVER mark PASSED if any errors remain
+
+  ### Files to validate:
+  {{FILE_LIST}}
+
+  ### Golden Rules:
+  {{GOLDEN_RULES}}
+
+  ### Event Format:
+  File completed:
+  ```
+  ralph emit "validation.next_file" "file=<path>, status=PASSED"
+  ```
+
+  All completed:
+  ```
+  ralph emit "validation.complete" "total={{TOTAL_FILES}}, passed=<n>"
+  ```
+
+  Blocked:
+  ```
+  ralph emit "validation.blocked" "file=<path>, errors=<n>"
+  ```
+
+# Variables to replace when using this template:
+# {{TOTAL_FILES}} - Number of files to validate
+# {{FILE_LIST}} - List of files or batch source
+# {{GOLDEN_RULES}} - Include from ralph_base.yml

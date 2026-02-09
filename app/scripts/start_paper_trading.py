@@ -110,6 +110,7 @@ async def start_market_data_service() -> MarketDataService:
     if settings.polygon_api_key and settings.polygon_api_key != "your_polygon_api_key_here":
         logger.info("   Configuring Polygon.io for real-time market data")
         from datetime import datetime as dt
+
         polygon_config = DataFeedConfig(
             name="Polygon.io",
             feed_type=DataFeedType.POLYGON,
@@ -130,6 +131,7 @@ async def start_market_data_service() -> MarketDataService:
     ):
         logger.info("   Configuring Alpha Vantage for market data")
         from datetime import datetime as dt
+
         alpha_vantage_config = DataFeedConfig(
             name="Alpha Vantage",
             feed_type=DataFeedType.ALPHA_VANTAGE,

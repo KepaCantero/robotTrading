@@ -366,7 +366,9 @@ class MeanVarianceOptimizer:
             cov_matrix = self._shrink_covariance_matrix(recent_returns, shrinkage_method)
         else:
             # Sample covariance (Rule 1 - fallback)
-            cov_matrix = np.asarray(np.cov(recent_returns, rowvar=False) * 252, dtype=np.float64)  # Annualize
+            cov_matrix = np.asarray(
+                np.cov(recent_returns, rowvar=False) * 252, dtype=np.float64
+            )  # Annualize
 
         # Validate covariance matrix is positive semi-definite
         if not self._is_positive_semi_definite(cov_matrix):

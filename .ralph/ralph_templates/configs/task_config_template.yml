@@ -1,0 +1,165 @@
+# ============================================
+# Ralph Task Configuration Template
+# ============================================
+# Use this template to create new Ralph tasks.
+# Copy this file and customize the values marked with {{ }}.
+
+# ============================================================================
+# TASK METADATA
+# ============================================================================
+task_id: "{{TASK_ID}}"  # e.g., "01_compliance_engine_refactor"
+task_name: "{{TASK_NAME}}"  # e.g., "ComplianceEngine Refactor"
+task_type: "{{TASK_TYPE}}"  # refactor, validation, analysis, implementation
+priority: "{{PRIORITY}}"  # P0, P1, P2
+estimated_hours: "{{ESTIMATED_HOURS}}"
+
+# ============================================================================
+# EVENT LOOP CONFIGURATION
+# ============================================================================
+event_loop:
+  # Prompt file for this task
+  prompt_file: ".ralph/ralph_tasks/prompts/{{TASK_ID}}.md"
+  
+  # Completion promise (output when task is complete)
+  completion_promise: "{{COMPLETION_PROMISE}}"  # e.g., "COMPLIANCE_ENGINE_REFACTOR_COMPLETE"
+  
+  # Event loop settings
+  max_iterations: "{{MAX_ITERATIONS}}"  # Default: 150
+  max_runtime_seconds: "{{MAX_RUNTIME_SECONDS}}"  # Default: 86400 (24 hours)
+  checkpoint_interval: "{{CHECKPOINT_INTERVAL}}"  # Default: 3
+  
+  # Starting event
+  starting_event: "{{TASK_PREFIX}}.start"  # e.g., "refactor.start"
+
+# ============================================================================
+# CLI SETTINGS
+# ============================================================================
+cli:
+  backend: "claude"  # Always claude for this project
+
+# ============================================================================
+# CORE SETTINGS
+# ============================================================================
+core:
+  specs_dir: "./specs/"
+
+# ============================================================================
+# HATS (AGENTS) - Define the agents for this task
+# ============================================================================
+hats:
+  # Primary agent
+  "{{HAT_NAME_1}}":
+    name: "{{AGENT_DISPLAY_NAME}}"
+    description: "{{AGENT_DESCRIPTION}}"
+    
+    # Events that trigger this agent
+    triggers:
+      - "{{EVENT_PREFIX}}.start"
+      - "{{EVENT_PREFIX}}.next_phase"
+    
+    # Events this agent can publish
+    publishes:
+      - "{{EVENT_PREFIX}}.next_phase"
+      - "{{EVENT_PREFIX}}.complete"
+      - "{{EVENT_PREFIX}}.blocked"
+    
+    # Default event to publish
+    default_publishes: "{{EVENT_PREFIX}}.next_phase"
+    
+    # Agent instructions (can reference templates from ralph_base.yml)
+    instructions: |
+      ## {{TASK_NAME}} - Agent Instructions
+      
+      **Objective:** {{OBJECTIVE}}
+      
+      **Requirements:** {{REQUIREMENTS_FILE}}
+      
+      ### Phase 1: {{PHASE_1_NAME}}
+      {{PHASE_1_INSTRUCTIONS}}
+      
+      ### Phase 2: {{PHASE_2_NAME}}
+      {{PHASE_2_INSTRUCTIONS}}
+      
+      ### Validation
+      After each phase, validate:
+      ```bash
+      scripts/validate_file_complete.sh <file_path>
+      ```
+      
+      Only mark as complete when success: true
+      
+      ### Event Format
+      Phase complete: `ralph emit "{{EVENT_PREFIX}}.next_phase" "phase=<n>"`
+      All complete: `ralph emit "{{EVENT_PREFIX}}.complete" "all_passed=true"`
+      Blocked: `ralph emit "{{EVENT_PREFIX}}.blocked" "error=..."`
+
+  # Optional: Secondary agent (e.g., validator)
+  "{{HAT_NAME_2}}":
+    name: "{{VALIDATOR_NAME}}"
+    description: "{{VALIDATOR_DESCRIPTION}}"
+    
+    triggers:
+      - "{{EVENT_PREFIX}}.complete"
+    
+    publishes:
+      - "{{EVENT_PREFIX}}.final_summary"
+    
+    instructions: |
+      ## {{VALIDATOR_NAME}} - Final Verification
+      
+      Verify completion:
+      ```bash
+      # 1. Verify files
+      ls {{FILE_PATH_1}}
+      ls {{FILE_PATH_2}}
+      
+      # 2. Validate all
+      for f in {{FILE_PATTERN}}; do
+        scripts/validate_file_complete.sh "$f" | jq '.summary.success'
+      done
+      
+      # 3. Verify requirements
+      grep -n "{{REQUIREMENT_PATTERN}}" {{FILE_PATH}}
+      ```
+      
+      If ALL clean: `ralph emit "{{EVENT_PREFIX}}.final_summary" "all_passed"`
+      Output: **{{COMPLETION_PROMISE}}**
+
+# ============================================================================
+# TASKS SETTINGS
+# ============================================================================
+tasks:
+  enabled: true
+
+# ============================================================================
+# MEMORIES SETTINGS
+# ============================================================================
+memories:
+  enabled: true
+  inject: auto
+  budget: "{{MEMORY_BUDGET}}"  # Default: 3000
+
+# ============================================================================
+# VARIABLES TO REPLACE
+# ============================================================================
+# When creating a new task, replace these variables:
+#
+# {{TASK_ID}} - Unique task identifier (e.g., "01_compliance_engine_refactor")
+# {{TASK_NAME}} - Human-readable task name
+# {{TASK_TYPE}} - Type: refactor, validation, analysis, implementation
+# {{PRIORITY}} - Priority: P0, P1, P2
+# {{ESTIMATED_HOURS}} - Estimated time to complete
+# {{COMPLETION_PROMISE}} - Promise string (e.g., "TASK_NAME_COMPLETE")
+# {{TASK_PREFIX}} - Event prefix (e.g., "refactor", "validation")
+# {{MAX_ITERATIONS}} - Max iterations (default: 150)
+# {{MAX_RUNTIME_SECONDS}} - Max runtime in seconds (default: 86400)
+# {{CHECKPOINT_INTERVAL}} - Checkpoint frequency (default: 3)
+# {{HAT_NAME_1}}, {{HAT_NAME_2}} - Hat/agent names
+# {{AGENT_DISPLAY_NAME}} - Display name for agent
+# {{AGENT_DESCRIPTION}} - Agent description
+# {{OBJECTIVE}} - Task objective
+# {{REQUIREMENTS_FILE}} - Path to requirements file
+# {{PHASE_N_NAME}} - Phase names
+# {{PHASE_N_INSTRUCTIONS}} - Phase instructions
+# {{VALIDATOR_NAME}} - Validator agent name
+# {{MEMORY_BUDGET}} - Memory budget (default: 3000)

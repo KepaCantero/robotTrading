@@ -117,7 +117,9 @@ class TestAlertProcessing:
         """Test processing alert with matching trade rule."""
         # Create mock broker
         mock_broker = MagicMock(spec=BrokerConnector)
-        mock_broker.get_account_info = AsyncMock(return_value=self._create_mock_account("50000", "100000"))
+        mock_broker.get_account_info = AsyncMock(
+            return_value=self._create_mock_account("50000", "100000")
+        )
         mock_broker.calculate_portfolio_value = AsyncMock(return_value=Decimal("100000"))
         mock_broker.place_order = AsyncMock(
             return_value=MagicMock(
@@ -403,7 +405,9 @@ class TestErrorHandling:
         """Test that errors are recorded for audit."""
         mock_broker = MagicMock(spec=BrokerConnector)
         # Use ConnectionError which is a caught exception type
-        mock_broker.get_account_info = AsyncMock(side_effect=ConnectionError("Broker connection failed"))
+        mock_broker.get_account_info = AsyncMock(
+            side_effect=ConnectionError("Broker connection failed")
+        )
 
         bridge = TradingBridgeOrchestrator(broker=mock_broker)
         await bridge.start()

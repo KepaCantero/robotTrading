@@ -121,8 +121,11 @@ class ComprehensiveBacktestRunner:
         # DISABLE parallelization on macOS due to spawn/serialization issues
         # macOS uses 'spawn' which requires pickling all objects (including thread locks)
         import platform
+
         default_parallel = platform.system() != 'Darwin'  # Disable on macOS
-        self.parallel_enabled = self.raw_config.get('parallelization', {}).get('enabled', default_parallel)
+        self.parallel_enabled = self.raw_config.get('parallelization', {}).get(
+            'enabled', default_parallel
+        )
         self.max_workers = self.raw_config.get('parallelization', {}).get('max_workers', None)
 
         # Integrar meta_analyzer si está habilitado
@@ -178,7 +181,9 @@ class ComprehensiveBacktestRunner:
         end_date = datetime.strptime(self.raw_config['input']['end_date'], "%Y-%m-%d")
 
         all_symbols = self.raw_config['input']['symbols']
-        data_source = self.raw_config['input'].get('source', 'csv')  # Get source from config, default to csv
+        data_source = self.raw_config['input'].get(
+            'source', 'csv'
+        )  # Get source from config, default to csv
 
         logger.info(f"Loading market data from {start_date.date()} to {end_date.date()}")
         logger.info(f"Symbols: {all_symbols}")
@@ -197,24 +202,23 @@ class ComprehensiveBacktestRunner:
 
         return quotes
 
-
     def _get_actual_data_bounds(self):
         '''Get actual start and end dates from loaded quotes.'''
         if not self.quotes:
             return None, None
-        
+
         actual_start = min(q.timestamp for q in self.quotes)
         actual_end = max(q.timestamp for q in self.quotes)
         return actual_start, actual_end
-    
+
     def _get_safe_split_dates(self, config_start, config_end):
         '''Get safe dates for splitting, using actual bounds if config exceeds available data.'''
         actual_start, actual_end = self._get_actual_data_bounds()
-        
+
         if actual_start is None or actual_end is None:
             logger.error("Cannot determine data bounds: no quotes available")
             raise ValueError("No market data loaded")
-        
+
         # Check if config dates exceed available data
         if config_start < actual_start or config_end > actual_end:
             logger.warning(
@@ -223,7 +227,7 @@ class ComprehensiveBacktestRunner:
                 f"Using actual data bounds to prevent empty dataset error."
             )
             return actual_start, actual_end
-        
+
         return config_start, config_end
 
     def run_all_backtests(self) -> List[Dict[str, Any]]:
@@ -482,7 +486,9 @@ class ComprehensiveBacktestRunner:
         logger.info("  - supervised: ✅ ENABLED (scikit-learn - no mutex issues)")
         logger.info("  - deep: ❌ DISABLED (PyTorch causes mutex.cc blocking)")
         logger.info("  - transformer: ❌ DISABLED (PyTorch causes mutex.cc blocking)")
-        logger.info("  - reinforcement: ❌ DISABLED (stable-baselines3/gymnasium causes mutex.cc blocking)")
+        logger.info(
+            "  - reinforcement: ❌ DISABLED (stable-baselines3/gymnasium causes mutex.cc blocking)"
+        )
 
         # Only test supervised learning engine
         engine_types = ['supervised']
@@ -525,14 +531,16 @@ class ComprehensiveBacktestRunner:
 
             # Add default config for supervised learning engine
             if engine_type == 'supervised':
-                adaptive_learning_config.update({
-                    'algorithm': 'random_forest',
-                    'feature_columns': [],
-                    'target_column': 'trade_success',
-                    'model_parameters': {},
-                    'optimize_thresholds': False,
-                    'threshold_parameters': {},
-                })
+                adaptive_learning_config.update(
+                    {
+                        'algorithm': 'random_forest',
+                        'feature_columns': [],
+                        'target_column': 'trade_success',
+                        'model_parameters': {},
+                        'optimize_thresholds': False,
+                        'threshold_parameters': {},
+                    }
+                )
 
             # Add any additional config parameters for the specific engine
             if 'config' in engine_config:
@@ -1079,12 +1087,11 @@ class ComprehensiveBacktestRunner:
             config_start = datetime.strptime(self.raw_config['input']['start_date'], "%Y-%m-%d")
             config_end = datetime.strptime(self.raw_config['input']['end_date'], "%Y-%m-%d")
             split_start, split_end = self._get_safe_split_dates(config_start, config_end)
-            
+
             # Step 2: Split data into train/validation/test (60%/20%/20%)
             from app.backtesting.data_split import DataSplit
-            splitter = TrainValTestSplitter(
-                DataSplit(train_pct=0.6, val_pct=0.2, test_pct=0.2)
-            )
+
+            splitter = TrainValTestSplitter(DataSplit(train_pct=0.6, val_pct=0.2, test_pct=0.2))
 
             train_quotes, val_quotes, test_quotes = splitter.split_data(
                 market_data=self.quotes,
@@ -1649,12 +1656,12 @@ class ComprehensiveBacktestRunner:
             # Step 3: Determine actual data bounds and validate against config
             config_start = datetime.strptime(self.raw_config['input']['start_date'], "%Y-%m-%d")
             config_end = datetime.strptime(self.raw_config['input']['end_date'], "%Y-%m-%d")
-            
+
             # Get actual data bounds from loaded quotes
             if self.quotes:
                 actual_start = min(q.timestamp for q in self.quotes)
                 actual_end = max(q.timestamp for q in self.quotes)
-                
+
                 # Use actual bounds if config exceeds available data
                 if config_start < actual_start or config_end > actual_end:
                     logger.warning(
@@ -1670,12 +1677,11 @@ class ComprehensiveBacktestRunner:
             else:
                 logger.error("Grid Search: No quotes available for splitting")
                 raise ValueError("Cannot run grid search: no market data loaded")
-            
+
             # Step 4: Split data into train/validation/test
             from app.backtesting.data_split import DataSplit
-            splitter = TrainValTestSplitter(
-                DataSplit(train_pct=0.6, val_pct=0.2, test_pct=0.2)
-            )
+
+            splitter = TrainValTestSplitter(DataSplit(train_pct=0.6, val_pct=0.2, test_pct=0.2))
 
             train_quotes, val_quotes, test_quotes = splitter.split_data(
                 market_data=self.quotes,
@@ -3340,15 +3346,14 @@ class ComprehensiveBacktestRunner:
 
         # Initialize data splitter
         from app.backtesting.data_split import DataSplit
-        splitter = TrainValTestSplitter(
-            DataSplit(train_pct=0.6, val_pct=0.2, test_pct=0.2)
-        )
+
+        splitter = TrainValTestSplitter(DataSplit(train_pct=0.6, val_pct=0.2, test_pct=0.2))
 
         # Determine safe date bounds for splitting
         config_start = datetime.strptime(self.raw_config['input']['start_date'], "%Y-%m-%d")
         config_end = datetime.strptime(self.raw_config['input']['end_date'], "%Y-%m-%d")
         split_start, split_end = self._get_safe_split_dates(config_start, config_end)
-        
+
         # Split data
         train_quotes, val_quotes, test_quotes = splitter.split_data(
             market_data=self.quotes,
@@ -3694,8 +3699,9 @@ class ComprehensiveBacktestRunner:
                 json.dump(results, f, indent=2, default=str)
             logger.info(f"Results saved to JSON: {json_path}")
 
-
-    async def _save_weights_async(self, engine_type: str, strategy: Any, result_dict: Dict[str, Any]) -> Optional[str]:
+    async def _save_weights_async(
+        self, engine_type: str, strategy: Any, result_dict: Dict[str, Any]
+    ) -> Optional[str]:
         """
         Save learning engine weights asynchronously for better performance.
 
@@ -3722,8 +3728,8 @@ class ComprehensiveBacktestRunner:
                         'total_pnl': result_dict.get('total_pnl'),
                         'sharpe_ratio': result_dict.get('sharpe_ratio'),
                         'total_trades': result_dict.get('total_trades'),
-                    }
-                }
+                    },
+                },
             )
             logger.info(f"Weights saved asynchronously: {weights_path}")
             return weights_path
@@ -3745,7 +3751,11 @@ class ComprehensiveBacktestRunner:
         Returns:
             Meta-analysis summary dictionary
         """
-        if not self.meta_enabled or not hasattr(self, 'meta_analyzer') or self.meta_analyzer is None:
+        if (
+            not self.meta_enabled
+            or not hasattr(self, 'meta_analyzer')
+            or self.meta_analyzer is None
+        ):
             logger.info("Meta-analysis not enabled, skipping")
             return {}
 
@@ -3780,12 +3790,15 @@ class ComprehensiveBacktestRunner:
                 'outliers': outliers,
                 'suggestions': suggestions,
                 'analysis_timestamp': datetime.now().isoformat(),
-                'output_directory': str(self.output_dir)
+                'output_directory': str(self.output_dir),
             }
 
             # Save analysis to file
             import json
-            analysis_path = self.output_dir / f"meta_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+
+            analysis_path = (
+                self.output_dir / f"meta_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            )
             with open(analysis_path, 'w') as f:
                 json.dump(summary, f, indent=2, default=str)
 

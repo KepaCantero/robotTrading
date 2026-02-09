@@ -1,0 +1,296 @@
+# ============================================
+# Ralph Pipeline Coordinator Template
+# ============================================
+# This template defines how tasks pass data between each other in a pipeline.
+# Ralph is a wrapper that processes results and passes data to the next agent.
+
+pipeline_coordinator:
+  version: "1.0"
+  description: "Coordinates data flow between Ralph tasks in a pipeline"
+
+# ============================================================================
+# PIPELINE DEFINITION
+# ============================================================================
+pipeline:
+  pipeline_id: "{{PIPELINE_ID}}"
+  pipeline_name: "{{PIPELINE_NAME}}"
+  
+  # Tasks in execution order
+  tasks:
+    - task_id: "{{TASK_1_ID}}"
+      name: "{{TASK_1_NAME}}"
+      config: ".ralph/ralph_tasks/{{TASK_1_ID}}.yml"
+      output_template: "task_output_template.yml"
+      
+    - task_id: "{{TASK_2_ID}}"
+      name: "{{TASK_2_NAME}}"
+      config: ".ralph/ralph_tasks/{{TASK_2_ID}}.yml"
+      depends_on: "{{TASK_1_ID}}"
+      input_from: "{{TASK_1_ID}}"  # Uses output from task 1 as input
+      
+    - task_id: "{{TASK_3_ID}}"
+      name: "{{TASK_3_NAME}}"
+      config: ".ralph/ralph_tasks/{{TASK_3_ID}}.yml"
+      depends_on: "{{TASK_2_ID}}"
+      input_from: "{{TASK_2_ID}}"
+
+# ============================================================================
+# DATA PASSING MECHANISM
+# ============================================================================
+data_flow:
+  # How data passes between tasks
+  mechanism: "event_based"  # event_based or file_based
+  
+  # Event-based data passing
+  events:
+    # Task completion event
+    task_complete:
+      event: "task.complete"
+      data:
+        task_id: "{{TASK_ID}}"
+        output_file: ".ralph/outputs/{{TASK_ID}}_output.json"
+        checkpoint: ".ralph/checkpoints/{{TASK_ID}}_checkpoint.json"
+        completion_promise: "{{COMPLETION_PROMISE}}"
+      
+      # Next task triggers on this event
+      triggers_next_task: true
+      next_task_input:
+        - "output_file"
+        - "checkpoint"
+        - "results.files"
+        - "results.metrics"
+    
+    # Task failed event
+    task_failed:
+      event: "task.failed"
+      data:
+        task_id: "{{TASK_ID}}"
+        error: "{{ERROR_MESSAGE}}"
+        retry_able: "{{RETRY_ABLE}}"
+      
+      # Stop pipeline on failure
+      action: "stop_pipeline"
+      notify: true
+    
+    # Task blocked event
+    task_blocked:
+      event: "task.blocked"
+      data:
+        task_id: "{{TASK_ID}}"
+        blocking_issue: "{{BLOCKING_ISSUE}}"
+        required_action: "{{REQUIRED_ACTION}}"
+      
+      # Wait for manual intervention
+      action: "pause_pipeline"
+      notify: true
+
+  # File-based data passing (alternative)
+  files:
+    output_directory: ".ralph/outputs/"
+    checkpoint_directory: ".ralph/checkpoints/"
+    
+    # Output file format
+    output_format: "json"  # json or yaml
+    
+    # Naming convention
+    naming_pattern: "{task_id}_output.{ext}"
+
+# ============================================================================
+# INPUT TEMPLATES - How next task receives data
+# ============================================================================
+input_templates:
+  # Standard input format for tasks
+  previous_task_output:
+    description: "Input from previous task in pipeline"
+    
+    source: "previous_task.output_file"
+    
+    data_mapping:
+      # Map previous task output to current task input
+      files_created: "results.files[path=~{{WORK_DIR}}]"
+      validation_results: "validation.summary"
+      metrics: "results.metrics"
+      custom_data: "results.custom_data"
+    
+    template: |
+      ## Previous Task Results
+      
+      **Task:** {{PREVIOUS_TASK_NAME}}
+      **Status:** {{PREVIOUS_STATUS}}
+      **Completed:** {{PREVIOUS_COMPLETION_TIME}}
+      
+      ### Files Created/Modified:
+      {{#each files_created}}
+      - {{this.path}} ({{this.action}}, {{this.status}})
+      {{/each}}
+      
+      ### Validation Summary:
+      - Total Checks: "{{validation_results.total_checks}}"
+      - Passed: "{{validation_results.passed}}"
+      - Failed: "{{validation_results.failed}}"
+      - Success: "{{validation_results.success}}"
+      
+      ### Metrics:
+      - Total Files: "{{metrics.total_files}}"
+      - Completed: "{{metrics.completed_files}}"
+      - Failed: "{{metrics.failed_files}}"
+      
+      ### Custom Data:
+      {{custom_data}}
+
+  checkpoint_data:
+    description: "Checkpoint data from previous task"
+    
+    source: "previous_task.checkpoint"
+    
+    data_mapping:
+      current_phase: "checkpoint.data.phase"
+      completed_items: "checkpoint.data.completed_items"
+      pending_items: "checkpoint.data.pending_items"
+    
+    template: |
+      ## Checkpoint Status
+      
+      **Current Phase:** {{current_phase}}
+      **Completed Items:** {{completed_items.length}}
+      **Pending Items:** {{pending_items.length}}
+
+# ============================================================================
+# AGENT HANDOFF - How agents pass control
+# ============================================================================
+agent_handoff:
+  mechanism: "event_emission"
+  
+  # Agent 1 completes and emits event
+  from_agent:
+    hat: "{{HAT_NAME_1}}"
+    publishes_event: "{{EVENT_PREFIX}}.complete"
+    output_data: ".ralph/outputs/{{TASK_ID}}_output.json"
+  
+  # Agent 2 starts on receiving event
+  to_agent:
+    hat: "{{HAT_NAME_2}}"
+    triggers_on: "{{EVENT_PREFIX}}.complete"
+    input_data: ".ralph/outputs/{{TASK_ID}}_output.json"
+    
+    # How to inject data into agent's context
+    injection_method: "prompt_template"  # prompt_template or memory_injection
+    
+    prompt_template: |
+      {{previous_task_output}}
+      
+      Your task is to continue from where the previous task left off.
+      Use the files and results above as your starting point.
+
+# ============================================================================
+# ERROR HANDLING
+# ============================================================================
+error_handling:
+  # On task failure
+  on_failure:
+    action: "stop_pipeline"  # stop_pipeline, retry, skip, continue
+    max_retries: "{{MAX_RETRIES}}"  # Default: 0
+    retry_delay_seconds: "{{RETRY_DELAY}}"  # Default: 60
+    
+    # Log failure
+    log:
+      file: ".ralph/logs/pipeline_errors.log"
+      format: "json"
+    
+    # Notification
+    notify: true
+  
+  # On task blocked
+  on_blocked:
+    action: "pause_pipeline"  # pause_pipeline, skip, continue
+    
+    # Wait for manual intervention
+    wait_for_manual: true
+    
+    # Resume on event
+    resume_on: "pipeline.resume"
+  
+  # On validation failure
+  on_validation_failure:
+    action: "retry_with_fix"  # retry_with_fix, fail, continue
+    auto_fix: true
+    max_auto_fix_attempts: "{{MAX_AUTO_FIX}}"  # Default: 3
+
+# ============================================================================
+# PIPELINE COMPLETION
+# ============================================================================
+completion:
+  # When is pipeline complete?
+  condition: "all_tasks_complete"  # all_tasks_complete, specific_task_complete
+  
+  # Completion event
+  emit_event: "pipeline.complete"
+  
+  # Final output
+  final_output:
+    file: ".ralph/outputs/{{PIPELINE_ID}}_final_output.json"
+    format: "json"
+    
+    include:
+      - all_task_outputs
+      - pipeline_metrics
+      - completion_summary
+  
+  # Cleanup
+  cleanup:
+    remove_temp_files: true
+    archive_logs: true
+    archive_directory: ".ralph/archives/{{PIPELINE_ID}}/"
+
+# ============================================================================
+# MONITORING
+# ============================================================================
+monitoring:
+  # Track pipeline progress
+  progress_tracking:
+    enabled: true
+    checkpoint_interval: "{{PROGRESS_CHECKPOINT}}"  # Default: every task
+    
+    # Progress file
+    progress_file: ".ralph/progress/{{PIPELINE_ID}}_progress.json"
+    
+    # Metrics to track
+    metrics:
+      - tasks_completed
+      - tasks_failed
+      - tasks_blocked
+      - total_duration
+      - average_task_duration
+  
+  # Logging
+  logging:
+    enabled: true
+    log_file: ".ralph/logs/{{PIPELINE_ID}}.log"
+    log_level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+    
+    # What to log
+    log_events:
+      - task_started
+      - task_completed
+      - task_failed
+      - task_blocked
+      - pipeline_started
+      - pipeline_completed
+
+# ============================================================================
+# VARIABLES TO REPLACE
+# ============================================================================
+# When creating a new pipeline, replace these variables:
+#
+# {{PIPELINE_ID}} - Unique pipeline identifier
+# {{PIPELINE_NAME}} - Human-readable pipeline name
+# {{TASK_N_ID}} - Task identifiers in order
+# {{TASK_N_NAME}} - Task names
+# {{HAT_NAME_N}} - Hat/agent names
+# {{EVENT_PREFIX}} - Event prefix for tasks
+# {{COMPLETION_PROMISE}} - Promise string
+# {{MAX_RETRIES}} - Maximum retry attempts (default: 0)
+# {{RETRY_DELAY}} - Delay between retries in seconds (default: 60)
+# {{MAX_AUTO_FIX}} - Maximum auto-fix attempts (default: 3)
+# {{PROGRESS_CHECKPOINT}} - Progress checkpoint interval
+# {{WORK_DIR}} - Working directory path

@@ -1,0 +1,252 @@
+# ============================================
+# Ralph Agent Input Data Template
+# ============================================
+# This template defines how data is passed TO an agent as input.
+# Use this to standardize agent inputs in the pipeline.
+
+input_template: agent_input
+
+version: "1.0"
+
+# ============================================================================
+# INPUT DATA STRUCTURE
+# ============================================================================
+input_data:
+  # Source information
+  source:
+    pipeline_id: "{{PIPELINE_ID}}"
+    previous_task_id: "{{PREVIOUS_TASK_ID}}"
+    previous_task_name: "{{PREVIOUS_TASK_NAME}}"
+    data_timestamp: "{{DATA_TIMESTAMP}}"
+
+  # Task context
+  context:
+    current_task_id: "{{CURRENT_TASK_ID}}"
+    current_task_name: "{{CURRENT_TASK_NAME}}"
+    current_task_type: "{{TASK_TYPE}}"
+    phase: "{{CURRENT_PHASE}}"
+
+  # Previous task results
+  previous_results:
+    status:
+      state: "{{PREVIOUS_STATE}}"  # completed, failed, blocked
+      success: "{{PREVIOUS_SUCCESS}}"
+      completion_percentage: "{{PREVIOUS_COMPLETION_PCT}}"
+
+    # Files from previous task
+    files:
+      - path: "{{FILE_PATH}}"
+        action: "{{ACTION}}"  # created, modified, validated
+        status: "{{STATUS}}"  # passed, failed, pending
+        role: "{{ROLE}}"  # input, output, reference
+
+    # Metrics from previous task
+    metrics:
+      total_files: "{{TOTAL_FILES}}"
+      completed_files: "{{COMPLETED_FILES}}"
+      failed_files: "{{FAILED_FILES}}"
+      duration_seconds: "{{DURATION}}"
+
+    # Validation results
+    validation:
+      summary:
+        total_checks: "{{TOTAL_CHECKS}}"
+        passed: "{{PASSED}}"
+        failed: "{{FAILED}}"
+        success: "{{VALIDATION_SUCCESS}}"
+
+    # Custom data from previous task
+    custom_data:
+      "{{KEY}}": "{{VALUE}}"
+
+  # Requirements for current task
+  requirements:
+    specification_file: "{{SPECIFICATION_FILE}}"
+    templates:
+      - "{{TEMPLATE_PATH_1}}"
+      - "{{TEMPLATE_PATH_2}}"
+    constraints:
+      - "{{CONSTRAINT_1}}"
+      - "{{CONSTRAINT_2}}"
+    dependencies:
+      - "{{DEPENDENCY_1}}"
+
+  # Checkpoint data (if resuming)
+  checkpoint:
+    file: "{{CHECKPOINT_FILE}}"
+    exists: "{{CHECKPOINT_EXISTS}}"
+    data:
+      phase: "{{CHECKPOINT_PHASE}}"
+      completed_items:
+        - "{{ITEM_ID}}"
+      pending_items:
+        - "{{ITEM_ID}}"
+
+# ============================================================================
+# INPUT TEMPLATES - Predefined formats for common scenarios
+# ============================================================================
+input_templates:
+
+  # Input for refactoring tasks
+  refactor_input:
+    description: "Input for refactoring agent"
+    
+    context:
+      current_task_type: "refactor"
+    
+    requirements:
+      specification_file: ".ralph/docs/requirements/SERVICE_REQUIREMENTS.md"
+      templates:
+        - ".ralph/ralph_templates/implementer_hat.yml"
+      constraints:
+        - "Must follow SOLID principles"
+        - "Must pass validate_file_complete.sh"
+        - "Must use Protocol interfaces"
+    
+    previous_results:
+      files:
+        - path: "{{CURRENT_FILE_TO_REFACTOR}}"
+          action: "modify"
+          status: "pending"
+          role: "input"
+
+  # Input for validation tasks
+  validation_input:
+    description: "Input for validation agent"
+    
+    context:
+      current_task_type: "validation"
+    
+    requirements:
+      specification_file: ".ralph/docs/validation/validation_requirements.md"
+      templates:
+        - ".ralph/ralph_templates/validation_hat.yml"
+      constraints:
+        - "Must use validate_file_complete.sh"
+        - "Only mark passed if success: true"
+    
+    previous_results:
+      files:
+        - path: "{{FILE_TO_VALIDATE}}"
+          action: "validate"
+          status: "pending"
+          role: "input"
+
+  # Input for implementation tasks
+  implementation_input:
+    description: "Input for implementation agent"
+    
+    context:
+      current_task_type: "implementation"
+      phase: "{{STARTING_PHASE}}"
+    
+    requirements:
+      specification_file: "{{SPECIFICATION_FILE}}"
+      templates:
+        - ".ralph/ralph_templates/implementer_hat.yml"
+      constraints:
+        - "Must follow specifications exactly"
+        - "Must add type hints and docstrings"
+        - "Must pass validation"
+    
+    previous_results:
+      custom_data:
+        design_decisions: "{{DESIGN_DECISIONS}}"
+        architecture_choices: "{{ARCHITECTURE_CHOICES}}"
+
+# ============================================================================
+# PROMPT GENERATION - Convert input data to agent prompt
+# ============================================================================
+prompt_generation:
+  method: "template_based"
+  
+  template: |
+    # {{CURRENT_TASK_NAME}}
+    
+    You are continuing a pipeline of tasks. Here is the context:
+    
+    ## Previous Task Results
+    **Task:** {{PREVIOUS_TASK_NAME}}
+    **Status:** {{PREVIOUS_STATE}}
+    **Completion:** {{PREVIOUS_COMPLETION_PCT}}%
+    
+    ### Files from Previous Task:
+    {{#each previous_results.files}}
+    - **{{this.path}}**
+      - Action: "{{this.action}}"
+      - Status: "{{this.status}}"
+      - Role: "{{this.role}}"
+    {{/each}}
+    
+    ### Metrics:
+    - Total Files: "{{previous_results.metrics.total_files}}"
+    - Completed: "{{previous_results.metrics.completed_files}}"
+    - Failed: "{{previous_results.metrics.failed_files}}"
+    - Duration: "{{previous_results.metrics.duration_seconds}}"s
+    
+    ### Validation Summary:
+    - Total Checks: "{{previous_results.validation.summary.total_checks}}"
+    - Passed: "{{previous_results.validation.summary.passed}}"
+    - Failed: "{{previous_results.validation.summary.failed}}"
+    - Success: "{{previous_results.validation.summary.success}}"
+    
+    {{#if checkpoint.exists}}
+    ## Checkpoint Status
+    **Current Phase:** {{checkpoint.data.phase}}
+    **Completed Items:** {{checkpoint.data.completed_items.length}}
+    **Pending Items:** {{checkpoint.data.pending_items}}
+    {{/if}}
+    
+    ## Your Task
+    **Task ID:** {{CURRENT_TASK_ID}}
+    **Task Type:** {{current.task_type}}
+    **Phase:** {{context.phase}}
+    
+    ### Requirements:
+    - Specification: "{{requirements.specification_file}}"
+    - Templates: "{{join requirements.templates ", "}}"
+    - Constraints:
+    {{#each requirements.constraints}}
+      - {{this}}
+    {{/each}}
+    
+    ### Instructions:
+    1. Read the specification file
+    2. Review previous task results
+    3. Continue from where the previous task left off
+    4. Follow the requirements and constraints
+    5. Validate your work
+    6. Only mark complete when validation passes
+    
+    ### Custom Data from Previous Task:
+    {{#each previous_results.custom_data}}
+    - **{{@key}}:** {{this}}
+    {{/each}}
+
+# ============================================================================
+# VARIABLES TO REPLACE
+# ============================================================================
+# When using this template, replace these variables:
+#
+# {{PIPELINE_ID}} - Pipeline identifier
+# {{PREVIOUS_TASK_ID}} - Previous task ID
+# {{PREVIOUS_TASK_NAME}} - Previous task name
+# {{PREVIOUS_STATE}} - Previous task state
+# {{PREVIOUS_SUCCESS}} - Previous task success (true/false)
+# {{PREVIOUS_COMPLETION_PCT}} - Previous task completion percentage
+# {{CURRENT_TASK_ID}} - Current task ID
+# {{CURRENT_TASK_NAME}} - Current task name
+# {{TASK_TYPE}} - Task type (refactor, validation, implementation)
+# {{CURRENT_PHASE}} - Current phase
+# {{FILE_PATH}} - Path to file
+# {{ACTION}} - File action (created, modified, validated)
+# {{STATUS}} - File status (passed, failed, pending)
+# {{ROLE}} - File role (input, output, reference)
+# {{SPECIFICATION_FILE}} - Path to specification
+# {{TEMPLATE_PATH_N}} - Paths to templates
+# {{CONSTRAINT_N}} - Constraint descriptions
+# {{CHECKPOINT_FILE}} - Path to checkpoint file
+# {{CHECKPOINT_EXISTS}} - Whether checkpoint exists (true/false)
+# {{CHECKPOINT_PHASE}} - Checkpoint phase
+# {{ITEM_ID}} - Item identifiers
+# {{DATA_TIMESTAMP}} - Timestamp of data

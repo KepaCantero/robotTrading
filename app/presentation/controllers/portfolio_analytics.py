@@ -254,7 +254,9 @@ async def get_risk_metrics(
         return RiskMetricsResponse(success=True, data=metrics, error=None)
 
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
-        return RiskMetricsResponse(success=False, data=None, error=f"Failed to get risk metrics: {str(e)}")
+        return RiskMetricsResponse(
+            success=False, data=None, error=f"Failed to get risk metrics: {str(e)}"
+        )
 
 
 @router.get("/analytics/{portfolio_id}", response_model=PortfolioAnalyticsResponse)

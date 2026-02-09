@@ -2824,6 +2824,75 @@
         },
         "tags": [],
         "model_saved": true
+      },
+      "normal_supervised_random_forest_20260208_192640": {
+        "model_id": "normal_supervised_random_forest_20260208_192640",
+        "regime": "normal",
+        "model_type": "supervised",
+        "algorithm": "random_forest",
+        "model_path": "models/registry/models/normal_supervised_random_forest_20260208_192640.joblib",
+        "model_format": "joblib",
+        "registered_at": "2026-02-08T19:26:40.953648",
+        "metadata": {
+          "training_date": "2025-04-09T00:00:00",
+          "metrics": {
+            "error": "insufficient_classes",
+            "message": "Solo hay 1 clase(s) en los labels. Se necesita al menos 2 clases.",
+            "unique_labels": 1,
+            "total_samples": 433
+          },
+          "n_features": 49,
+          "n_samples": 433,
+          "feature_importance": {}
+        },
+        "tags": [],
+        "model_saved": true
+      },
+      "normal_supervised_random_forest_20260208_192641": {
+        "model_id": "normal_supervised_random_forest_20260208_192641",
+        "regime": "normal",
+        "model_type": "supervised",
+        "algorithm": "random_forest",
+        "model_path": "models/registry/models/normal_supervised_random_forest_20260208_192641.joblib",
+        "model_format": "joblib",
+        "registered_at": "2026-02-08T19:26:41.483048",
+        "metadata": {
+          "training_date": "2025-04-23T00:00:00",
+          "metrics": {
+            "error": "insufficient_classes",
+            "message": "Solo hay 1 clase(s) en los labels. Se necesita al menos 2 clases.",
+            "unique_labels": 1,
+            "total_samples": 481
+          },
+          "n_features": 49,
+          "n_samples": 481,
+          "feature_importance": {}
+        },
+        "tags": [],
+        "model_saved": true
+      },
+      "normal_supervised_random_forest_20260208_192642": {
+        "model_id": "normal_supervised_random_forest_20260208_192642",
+        "regime": "normal",
+        "model_type": "supervised",
+        "algorithm": "random_forest",
+        "model_path": "models/registry/models/normal_supervised_random_forest_20260208_192642.joblib",
+        "model_format": "joblib",
+        "registered_at": "2026-02-08T19:26:42.460637",
+        "metadata": {
+          "training_date": "2025-06-09T15:30:00",
+          "metrics": {
+            "error": "insufficient_classes",
+            "message": "Solo hay 1 clase(s) en los labels. Se necesita al menos 2 clases.",
+            "unique_labels": 1,
+            "total_samples": 814
+          },
+          "n_features": 49,
+          "n_samples": 814,
+          "feature_importance": {}
+        },
+        "tags": [],
+        "model_saved": true
       }
     }
   },
@@ -5637,6 +5706,75 @@
       "model_path": "models/registry/models/normal_supervised_random_forest_20260208_135028.joblib",
       "model_format": "joblib",
       "registered_at": "2026-02-08T13:50:28.509264",
+      "metadata": {
+        "training_date": "2025-06-09T15:30:00",
+        "metrics": {
+          "error": "insufficient_classes",
+          "message": "Solo hay 1 clase(s) en los labels. Se necesita al menos 2 clases.",
+          "unique_labels": 1,
+          "total_samples": 814
+        },
+        "n_features": 49,
+        "n_samples": 814,
+        "feature_importance": {}
+      },
+      "tags": [],
+      "model_saved": true
+    },
+    "normal_supervised_random_forest_20260208_192640": {
+      "model_id": "normal_supervised_random_forest_20260208_192640",
+      "regime": "normal",
+      "model_type": "supervised",
+      "algorithm": "random_forest",
+      "model_path": "models/registry/models/normal_supervised_random_forest_20260208_192640.joblib",
+      "model_format": "joblib",
+      "registered_at": "2026-02-08T19:26:40.953648",
+      "metadata": {
+        "training_date": "2025-04-09T00:00:00",
+        "metrics": {
+          "error": "insufficient_classes",
+          "message": "Solo hay 1 clase(s) en los labels. Se necesita al menos 2 clases.",
+          "unique_labels": 1,
+          "total_samples": 433
+        },
+        "n_features": 49,
+        "n_samples": 433,
+        "feature_importance": {}
+      },
+      "tags": [],
+      "model_saved": true
+    },
+    "normal_supervised_random_forest_20260208_192641": {
+      "model_id": "normal_supervised_random_forest_20260208_192641",
+      "regime": "normal",
+      "model_type": "supervised",
+      "algorithm": "random_forest",
+      "model_path": "models/registry/models/normal_supervised_random_forest_20260208_192641.joblib",
+      "model_format": "joblib",
+      "registered_at": "2026-02-08T19:26:41.483048",
+      "metadata": {
+        "training_date": "2025-04-23T00:00:00",
+        "metrics": {
+          "error": "insufficient_classes",
+          "message": "Solo hay 1 clase(s) en los labels. Se necesita al menos 2 clases.",
+          "unique_labels": 1,
+          "total_samples": 481
+        },
+        "n_features": 49,
+        "n_samples": 481,
+        "feature_importance": {}
+      },
+      "tags": [],
+      "model_saved": true
+    },
+    "normal_supervised_random_forest_20260208_192642": {
+      "model_id": "normal_supervised_random_forest_20260208_192642",
+      "regime": "normal",
+      "model_type": "supervised",
+      "algorithm": "random_forest",
+      "model_path": "models/registry/models/normal_supervised_random_forest_20260208_192642.joblib",
+      "model_format": "joblib",
+      "registered_at": "2026-02-08T19:26:42.460637",
       "metadata": {
         "training_date": "2025-06-09T15:30:00",
         "metrics": {

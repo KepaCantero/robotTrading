@@ -1,0 +1,50 @@
+# ============================================
+# Ralph Hat Template: Final Reviewer
+# ============================================
+# Reusable hat for final verification.
+
+hat_template: final_reviewer
+
+name: "Final Reviewer"
+description: "Verifies completion and runs final checks"
+
+triggers:
+  - "{{TASK_PREFIX}}.complete"
+
+publishes:
+  - "{{TASK_PREFIX}}.final_summary"
+
+instructions: |
+  ## FINAL REVIEWER - Verification
+
+  Run final verification:
+
+  ```bash
+  # 1. Verify sample of files
+  for file in {{SAMPLE_FILES}}; do
+    scripts/validate_file_complete.sh "$file" | jq '.summary.success'
+  done
+  # Must ALL return "true"
+
+  # 2. Verify checkpoint complete
+  cat .ralph/checkpoint_{{TASK_NAME}}.json | jq '.summary.completed'
+  # Must equal {{TOTAL_FILES}}
+  ```
+
+  If ALL clean:
+  ```
+  ralph emit "{{TASK_PREFIX}}.final_summary" "all_passed"
+  Output: **{{COMPLETION_PROMISE}}**
+  ```
+
+  If errors:
+  ```
+  ralph emit "{{TASK_PREFIX}}.failed" "found_errors=<n>"
+  ```
+
+# Variables to replace:
+# {{TASK_PREFIX}} - Task event prefix (e.g., "validation", "fix")
+# {{TASK_NAME}} - Checkpoint file name
+# {{SAMPLE_FILES}} - Files to verify
+# {{TOTAL_FILES}} - Expected total
+# {{COMPLETION_PROMISE}} - Promise string to output

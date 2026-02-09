@@ -1,0 +1,204 @@
+# ============================================
+# Ralph Task Output Template
+# ============================================
+# This template defines the standardized output format for Ralph task results.
+# Use this to ensure consistent data passing between agents in the pipeline.
+
+output_template: task_result
+
+version: "1.0"
+
+# ============================================================================
+# OUTPUT FORMAT - Standardized structure for all task results
+# ============================================================================
+output_format:
+  # Task identification
+  task_id: "{{TASK_ID}}"
+  task_name: "{{TASK_NAME}}"
+  task_type: "{{TASK_TYPE}}"  # refactor, validation, analysis, implementation
+
+  # Execution metadata
+  execution:
+    started_at: "{{START_TIME}}"
+    completed_at: "{{END_TIME}}"
+    duration_seconds: "{{DURATION}}"
+    iterations: "{{ITERATIONS}}"
+    agent: "{{AGENT_NAME}}"
+
+  # Status
+  status:
+    state: "{{STATE}}"  # completed, failed, blocked, partial
+    completion_percentage: "{{COMPLETION_PCT}}"  # 0-100
+    success: "{{SUCCESS}}"  # true/false
+
+  # Results data (customizable per task)
+  results:
+    # Files processed/created/modified
+    files:
+      - path: "{{FILE_PATH}}"
+        action: "{{ACTION}}"  # created, modified, validated
+        status: "{{STATUS}}"  # passed, failed, pending
+        checks:
+          "{{CHECK_NAME}}": "{{CHECK_RESULT}}"
+
+    # Metrics
+    metrics:
+      total_files: "{{TOTAL_FILES}}"
+      completed_files: "{{COMPLETED_FILES}}"
+      failed_files: "{{FAILED_FILES}}"
+      blocked_files: "{{BLOCKED_FILES}}"
+
+    # Custom data (task-specific)
+    custom_data:
+      "{{KEY}}": "{{VALUE}}"
+
+  # Validation results (if applicable)
+  validation:
+    tool: "{{VALIDATION_TOOL}}"  # validate_file_complete.sh, etc.
+    summary:
+      total_checks: "{{TOTAL_CHECKS}}"
+      passed: "{{PASSED}}"
+      failed: "{{FAILED}}"
+      success: "{{VALIDATION_SUCCESS}}"
+
+  # Errors and warnings
+  issues:
+    errors:
+      - code: "{{ERROR_CODE}}"
+        message: "{{ERROR_MESSAGE}}"
+        file: "{{FILE_PATH}}"
+        line: "{{LINE_NUMBER}}"
+    warnings:
+      - code: "{{WARNING_CODE}}"
+        message: "{{WARNING_MESSAGE}}"
+        file: "{{FILE_PATH}}"
+
+  # Next steps (for pipeline coordination)
+  next_steps:
+    next_task: "{{NEXT_TASK_ID}}"
+    ready_to_proceed: "{{READY_TO_PROCEED}}"
+    required_data:
+      "{{DATA_KEY}}": "{{DATA_VALUE}}"
+
+  # Checkpoint data
+  checkpoint:
+    file: ".ralph/checkpoints/{{TASK_NAME}}_checkpoint.json"
+    data:
+      phase: "{{CURRENT_PHASE}}"
+      completed_items:
+        - "{{ITEM_ID}}"
+      pending_items:
+        - "{{ITEM_ID}}"
+
+# ============================================================================
+# OUTPUT TEMPLATES - Predefined formats for common task types
+# ============================================================================
+output_templates:
+
+  refactor_complete:
+    description: "Output for completed refactoring tasks"
+    status:
+      state: "completed"
+      completion_percentage: 100
+      success: true
+    results:
+      files:
+        - path: "{{REFACTORED_FILE}}"
+          action: "modified"
+          status: "passed"
+          validation:
+            success: true
+    validation:
+      summary:
+        success: true
+
+  validation_complete:
+    description: "Output for validation tasks"
+    status:
+      state: "completed"
+      completion_percentage: 100
+      success: true
+    results:
+      metrics:
+        total_files: "{{TOTAL_FILES}}"
+        completed_files: "{{TOTAL_FILES}}"
+        failed_files: 0
+    validation:
+      summary:
+        success: true
+
+  implementation_partial:
+    description: "Output for partially completed tasks"
+    status:
+      state: "partial"
+      completion_percentage: "{{COMPLETION_PCT}}"
+      success: false
+    results:
+      metrics:
+        total_files: "{{TOTAL_FILES}}"
+        completed_files: "{{COMPLETED}}"
+        failed_files: "{{FAILED}}"
+        blocked_files: "{{BLOCKED}}"
+    issues:
+      errors:
+        - message: "{{ERROR_MESSAGE}}"
+          file: "{{FILE_PATH}}"
+
+  task_failed:
+    description: "Output for failed tasks"
+    status:
+      state: "failed"
+      completion_percentage: "{{COMPLETION_PCT}}"
+      success: false
+    issues:
+      errors:
+        - code: "{{ERROR_CODE}}"
+          message: "{{ERROR_MESSAGE}}"
+    checkpoint:
+      data:
+        phase: "{{FAILED_PHASE}}"
+
+# ============================================================================
+# EVENT EMISSION TEMPLATES - For pipeline coordination
+# ============================================================================
+event_templates:
+  task_complete:
+    event: "task.complete"
+    data:
+      task_id: "{{TASK_ID}}"
+      status: "completed"
+      output_file: "{{OUTPUT_FILE}}"
+      next_task: "{{NEXT_TASK_ID}}"
+
+  task_failed:
+    event: "task.failed"
+    data:
+      task_id: "{{TASK_ID}}"
+      status: "failed"
+      error: "{{ERROR_MESSAGE}}"
+      retry_able: "{{RETRY_ABLE}}"
+
+  task_blocked:
+    event: "task.blocked"
+    data:
+      task_id: "{{TASK_ID}}"
+      status: "blocked"
+      blocking_issue: "{{BLOCKING_ISSUE}}"
+      required_action: "{{REQUIRED_ACTION}}"
+
+  task_next_phase:
+    event: "task.next_phase"
+    data:
+      task_id: "{{TASK_ID}}"
+      current_phase: "{{CURRENT_PHASE}}"
+      next_phase: "{{NEXT_PHASE}}"
+      progress: "{{PROGRESS}}"
+
+# ============================================================================
+# PROMISE TEMPLATES - Standardized completion promises
+# ============================================================================
+promise_templates:
+  refactor_complete: "{{TASK_NAME}}_REFACTOR_COMPLETE"
+  validation_complete: "{{TASK_NAME}}_VALIDATION_COMPLETE"
+  implementation_complete: "{{TASK_NAME}}_IMPLEMENTATION_COMPLETE"
+  analysis_complete: "{{TASK_NAME}}_ANALYSIS_COMPLETE"

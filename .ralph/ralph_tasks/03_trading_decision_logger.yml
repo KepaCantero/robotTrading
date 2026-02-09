@@ -1,0 +1,501 @@
+# ============================================
+# Ralph Task 03: Trading Decision Logger Implementation
+# ============================================
+# PRIORIDAD: P0 (CRÍTICA) - Logging append-only para Hacienda
+# OBJETIVO: Implementar logger append-only con correlation ID (R15, R28)
+# TIEMPO: ~6 horas
+# DEPENDS ON: 01_protocol_interfaces
+#
+# Requirements: .ralph/docs/requirements/SERVICE_REQUIREMENTS.md
+# Rules: .ralph/rules/rules_mapping.yml - R15 (Logging), R28 (Registro Hacienda)
+# ============================================================================
+
+event_loop:
+  prompt_file: ".ralph/ralph_tasks/prompts/03_trading_decision_logger.md"
+  completion_promise: "TRADING_DECISION_LOGGER_COMPLETE"
+  max_iterations: 80
+  max_runtime_seconds: 21600  # 6 hours
+  checkpoint_interval: 3
+  starting_event: "logger.start"
+
+cli:
+  backend: "claude"
+
+core:
+  specs_dir: "./specs/"
+
+hats:
+  logger_implementer:
+    name: "Trading Decision Logger Implementer"
+    description: "Implementa logger append-only con correlation ID"
+    triggers: ["logger.start", "logger.next"]
+    publishes: ["logger.next", "logger.complete", "logger.blocked"]
+    default_publishes: "logger.next"
+    instructions: |
+      ## TRADING DECISION LOGGER IMPLEMENTATION
+
+      **REQUISITOS:**
+      1. Leer: `.ralph/docs/requirements/SERVICE_REQUIREMENTS.md` - Sección R15
+      2. Leer: `.ralph/rules/rules_mapping.yml` - R15, R28
+      3. Verificar que existe: `app/core/protocols/i_trading_decision_logger.py`
+
+      **OBJETIVO:** Implementar logging append-only con correlation ID para auditoría
+
+      ### REGLAS CRÍTICAS:
+      - **R15:** Logging append-only + correlation ID obligatorio
+      - **R28:** Registrar para Hacienda (5 años mínimo)
+      - **LOG-001:** Structured logging con timestamp
+      - **AUD-001:** Audit trail completo
+      - **NO FALLBACKS:** Si falta algo, usar @todo flag
+
+      ### FASE 1: Crear directorio
+
+      ```bash
+      mkdir -p app/services/logging
+      touch app/services/logging/__init__.py
+      ```
+
+      ### FASE 2: Implementar LogEntry
+
+      Archivo: `app/services/logging/log_entry.py`
+      ```python
+      """
+      Log Entry - Inmutable append-only log entry
+
+      Cada entrada es inmutable y se añade al log append-only.
+      """
+      from dataclasses import dataclass
+      from datetime import datetime
+      from typing import Optional, Any
+      from decimal import Decimal
+      import uuid
+
+
+      @dataclass(frozen=True)
+      class LogEntry:
+          """
+          Entrada de log inmutable (append-only)
+
+          Atributos:
+              correlation_id: ID único que relaciona todas las entradas de una operación
+              timestamp: Timestamp ISO 8601
+              event_type: Tipo de evento (signal, validation, execution, result)
+              data: Datos del evento (JSON serializable)
+              metadata: Metadatos adicionales
+          """
+          correlation_id: str
+          timestamp: str
+          event_type: str
+          data: dict[str, Any]
+          metadata: dict[str, Any]
+
+          @classmethod
+          def create(cls, event_type: str, data: dict, metadata: Optional[dict] = None) -> "LogEntry":
+              """
+              Crear nueva entrada de log con correlation ID único
+
+              Args:
+                  event_type: Tipo de evento
+                  data: Datos del evento
+                  metadata: Metadatos opcionales
+
+              Returns:
+                  LogEntry con correlation_id generado
+              """
+              correlation_id = str(uuid.uuid4())
+              timestamp = datetime.utcnow().isoformat() + "Z"
+
+              return cls(
+                  correlation_id=correlation_id,
+                  timestamp=timestamp,
+                  event_type=event_type,
+                  data=data,
+                  metadata=metadata or {}
+              )
+
+          def to_dict(self) -> dict:
+              """Convertir a diccionario para serialización JSON"""
+              return {
+                  "correlation_id": self.correlation_id,
+                  "timestamp": self.timestamp,
+                  "event_type": self.event_type,
+                  "data": self.data,
+                  "metadata": self.metadata,
+              }
+
+          def with_correlation_id(self, correlation_id: str) -> "LogEntry":
+              """
+              Crear nueva entrada con correlation_id existente
+
+              Usado para añadir entradas relacionadas a una operación existente.
+
+              Args:
+                  correlation_id: Correlation ID existente
+
+              Returns:
+                  Nuevo LogEntry con mismo correlation_id
+              """
+              return LogEntry(
+                  correlation_id=correlation_id,
+                  timestamp=datetime.utcnow().isoformat() + "Z",
+                  event_type=self.event_type,
+                  data=self.data,
+                  metadata=self.metadata
+              )
+      ```
+
+      ### FASE 3: Implementar AppendOnlyLog
+
+      Archivo: `app/services/logging/append_only_log.py`
+      ```python
+      """
+      Append-Only Log Storage
+
+      Almacenamiento append-only para logs de trading.
+      """
+      from typing import List
+      from pathlib import Path
+      import json
+      from datetime import datetime
+
+      from app.services.logging.log_entry import LogEntry
+
+
+      class AppendOnlyLog:
+          """
+          Log append-only para decisiones de trading
+
+          Características:
+          - Solo append (no delete, no update)
+          - Persistencia en disco
+          - Rotación por fecha
+          """
+
+          def __init__(self, log_dir: str = ".ralph/logs/trading"):
+              """
+              Inicializar log append-only
+
+              Args:
+                  log_dir: Directorio para almacenar logs
+              """
+              self.log_dir = Path(log_dir)
+              self.log_dir.mkdir(parents=True, exist_ok=True)
+
+              # Archivo actual (por fecha)
+              self._current_date = datetime.utcnow().date()
+              self._current_file = self._get_log_file(self._current_date)
+
+          def _get_log_file(self, date: datetime.date) -> Path:
+              """Obtener archivo de log para fecha específica"""
+              return self.log_dir / f"trading_{date.isoformat()}.log"
+
+          def append(self, entry: LogEntry) -> None:
+              """
+              Añadir entrada al log (append-only)
+
+              Args:
+                  entry: Entrada a añadir
+              """
+              # Rotar si cambió el día
+              current_date = datetime.utcnow().date()
+              if current_date != self._current_date:
+                  self._current_date = current_date
+                  self._current_file = self._get_log_file(current_date)
+
+              # Añadir entrada al archivo (append-only)
+              with open(self._current_file, "a") as f:
+                  f.write(json.dumps(entry.to_dict()) + "\n")
+
+          def get_entries_by_correlation_id(self, correlation_id: str) -> List[dict]:
+              """
+              Obtener todas las entradas con un correlation_id
+
+              Args:
+                  correlation_id: Correlation ID a buscar
+
+              Returns:
+                  Lista de entradas con ese correlation_id
+              """
+              entries = []
+
+              # Buscar en archivos de logs (últimos 7 días por defecto)
+              for days_ago in range(7):
+                  date = datetime.utcnow().date() - __import__('datetime').timedelta(days=days_ago)
+                  log_file = self._get_log_file(date)
+
+                  if not log_file.exists():
+                      continue
+
+                  with open(log_file, "r") as f:
+                      for line in f:
+                          entry = json.loads(line.strip())
+                          if entry.get("correlation_id") == correlation_id:
+                              entries.append(entry)
+
+              return entries
+
+          def export_date_range(self, start_date: datetime.date, end_date: datetime.date) -> List[dict]:
+              """
+              Exportar entradas en rango de fechas
+
+              Args:
+                  start_date: Fecha inicial
+                  end_date: Fecha final
+
+              Returns:
+                  Lista de todas las entradas en el rango
+              """
+              entries = []
+              current = start_date
+
+              while current <= end_date:
+                  log_file = self._get_log_file(current)
+
+                  if log_file.exists():
+                      with open(log_file, "r") as f:
+                          for line in f:
+                              entries.append(json.loads(line.strip()))
+
+                  current += __import__('datetime').timedelta(days=1)
+
+              return entries
+      ```
+
+      ### FASE 4: Implementar TradingDecisionLogger
+
+      Archivo: `app/services/logging/trading_decision_logger.py`
+      ```python
+      """
+      Trading Decision Logger - R15, R28
+
+      Logger append-only con correlation ID para todas las decisiones de trading.
+      """
+      from typing import List, Optional
+      from decimal import Decimal
+      from datetime import datetime
+
+      from app.services.logging.log_entry import LogEntry
+      from app.services.logging.append_only_log import AppendOnlyLog
+      from app.core.protocols.i_trading_decision_logger import ITradingDecisionLogger  # @skip-import
+
+
+      class TradingDecisionLogger(ITradingDecisionLogger):
+          """
+          Logger de decisiones de trading (R15, R28)
+
+          Implementa:
+          - R15: Logging append-only con correlation ID
+          - R28: Registro para Hacienda (5 años)
+          """
+
+          def __init__(self, log_dir: str = ".ralph/logs/trading"):
+              self._log = AppendOnlyLog(log_dir)
+
+          def log_signal(
+              self,
+              signal: dict,
+              metadata: Optional[dict] = None
+          ) -> str:
+              """
+              Log signal con correlation ID
+
+              Args:
+                  signal: Datos de la señal
+                  metadata: Metadatos adicionales
+
+              Returns:
+                  Correlation ID para esta operación
+              """
+              entry = LogEntry.create(
+                  event_type="signal_received",
+                  data={
+                      "symbol": signal.get("symbol"),
+                      "action": signal.get("action"),
+                      "quantity": signal.get("quantity"),
+                      "price": signal.get("price"),
+                  },
+                  metadata=metadata or {}
+              )
+
+              self._log.append(entry)
+              return entry.correlation_id
+
+          def log_execution(
+              self,
+              correlation_id: str,
+              result: dict
+          ) -> None:
+              """
+              Log execution result
+
+              Args:
+                  correlation_id: ID de correlación de la operación
+                  result: Resultado de la ejecución
+              """
+              entry = LogEntry(
+                  correlation_id=correlation_id,
+                  timestamp=datetime.utcnow().isoformat() + "Z",
+                  event_type="execution_result",
+                  data={
+                      "order_id": result.get("order_id"),
+                      "status": result.get("status"),
+                      "filled_price": result.get("filled_price"),
+                      "filled_quantity": result.get("filled_quantity"),
+                      "commission": result.get("commission"),
+                  },
+                  metadata={}
+              )
+
+              self._log.append(entry)
+
+          def log_validation_result(
+              self,
+              correlation_id: str,
+              validator: str,
+              passed: bool,
+              details: Optional[dict] = None
+          ) -> None:
+              """
+              Log validation result
+
+              Args:
+                  correlation_id: ID de correlación
+                  validator: Nombre del validador (ej: "R1_Kelly", "R2_Drawdown")
+                  passed: Si pasó la validación
+                  details: Detalles adicionales
+              """
+              entry = LogEntry(
+                  correlation_id=correlation_id,
+                  timestamp=datetime.utcnow().isoformat() + "Z",
+                  event_type="validation_result",
+                  data={
+                      "validator": validator,
+                      "passed": passed,
+                      "details": details or {},
+                  },
+                  metadata={}
+              )
+
+              self._log.append(entry)
+
+          def get_logs_by_correlation_id(self, correlation_id: str) -> List[dict]:
+              """
+              Obtener logs por correlation ID
+
+              Args:
+                  correlation_id: ID de correlación
+
+              Returns:
+                  Lista de entradas con ese ID
+              """
+              return self._log.get_entries_by_correlation_id(correlation_id)
+
+          def export_for_hacienda(self, year: int) -> List[dict]:
+              """
+              R28: Exportar logs para Hacienda (5 años)
+
+              Args:
+                  year: Año a exportar
+
+              Returns:
+                  Lista de todas las operaciones del año
+              """
+              start_date = datetime(year, 1, 1).date()
+              end_date = datetime(year, 12, 31).date()
+
+              entries = self._log.export_date_range(start_date, end_date)
+
+              # Agrupar por correlation_id y formatear para Hacienda
+              operations = {}
+              for entry in entries:
+                  corr_id = entry["correlation_id"]
+                  if corr_id not in operations:
+                      operations[corr_id] = []
+
+                  operations[corr_id].append(entry)
+
+              # Formatear para Hacienda
+              formatted = []
+              for corr_id, entries_list in operations.items():
+                  # Extraer datos relevantes
+                  signal_entry = next((e for e in entries_list if e["event_type"] == "signal_received"), None)
+                  execution_entry = next((e for e in entries_list if e["event_type"] == "execution_result"), None)
+
+                  if signal_entry and execution_entry:
+                      formatted.append({
+                          "correlation_id": corr_id,
+                          "timestamp": signal_entry["timestamp"],
+                          "symbol": signal_entry["data"]["symbol"],
+                          "action": signal_entry["data"]["action"],
+                          "quantity": signal_entry["data"]["quantity"],
+                          "entry_price": signal_entry["data"]["price"],
+                          "exit_price": execution_entry["data"]["filled_price"],
+                          "profit_loss": self._calculate_pnl(signal_entry, execution_entry),
+                      })
+
+              return formatted
+
+          def _calculate_pnl(self, signal_entry: dict, execution_entry: dict) -> float:
+              """Calcular P&L desde entradas de log"""
+              # @todo: Implementar cálculo real de P&L
+              # TODO: Incluir comisiones y ajustes
+              return 0.0
+      ```
+
+      ### FASE 5: Validar
+
+      ```bash
+      # Verificar archivos creados
+      ls -la app/services/logging/
+
+      # Validar cada archivo
+      for f in app/services/logging/*.py; do
+        python .ralph/scripts/utils.py validate "$f" | jq '.success'
+      done
+
+      # Verificar que LogEntry es inmutable (frozen=True)
+      grep "@dataclass(frozen=True)" app/services/logging/log_entry.py
+
+      # Verificar correlation ID
+      grep "correlation_id" app/services/logging/log_entry.py | wc -l  # Debe ser >= 3
+
+      # Verificar append-only
+      grep "append" app/services/logging/append_only_log.py | wc -l  # Debe ser >= 2
+      ```
+
+      ### FASE 6: Test manual
+
+      ```python
+      # Test básico
+      from app.services.logging.trading_decision_logger import TradingDecisionLogger
+
+      logger = TradingDecisionLogger()
+
+      # Log signal
+      signal = {"symbol": "SAN", "action": "BUY", "quantity": 100, "price": 3.50}
+      correlation_id = logger.log_signal(signal)
+      print(f"Correlation ID: {correlation_id}")
+
+      # Log execution
+      result = {"order_id": "12345", "status": "FILLED", "filled_price": 3.52}
+      logger.log_execution(correlation_id, result)
+
+      # Log validation
+      logger.log_validation_result(correlation_id, "R1_Kelly", True)
+
+      # Obtener logs
+      logs = logger.get_logs_by_correlation_id(correlation_id)
+      print(f"Logs: {len(logs)} entries")
+
+      # Exportar para Hacienda
+      hacienda_logs = logger.export_for_hacienda(2026)
+      print(f"Hacienda logs: {len(hacienda_logs)} operations")
+      ```
+
+memories:
+  enabled: true
+  inject: auto
+  budget: 3000
+
+checkpoint:
+  file: ".ralph/checkpoints/03_trading_decision_logger_checkpoint.json"

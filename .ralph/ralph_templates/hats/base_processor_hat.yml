@@ -1,0 +1,142 @@
+# ============================================
+# Ralph Hat: Base Processor
+# ============================================
+# Template base para tareas de procesamiento
+# Elimina duplicados - usa este como base
+
+hat_template: base_processor
+
+name: "Base Processor"
+description: "Template base para procesamiento de archivos"
+
+triggers:
+  - "{{TASK_PREFIX}}.start"
+  - "{{TASK_PREFIX}}.next"
+
+publishes:
+  - "{{TASK_PREFIX}}.next"
+  - "{{TASK_PREFIX}}.complete"
+  - "{{TASK_PREFIX}}.blocked"
+
+default_publishes: "{{TASK_PREFIX}}.next"
+
+# ============================================================================
+# SHARED INSTRUCTIONS (reutilizables)
+# ============================================================================
+shared_instructions: |
+  ## SHARED WORKFLOW
+
+  ### Paso 1: Verificar requirements
+  ```bash
+  # Si NO existe .requirements/{{file}}.requirements.md:
+  # 1. Leer archivo: cat {{file}}
+  # 2. Generar requirements.md con análisis completo
+  # 3. Guardar en .requirements/{{file}}.requirements.md
+  ```
+
+  ### Paso 2: Leer archivo actual
+  ```bash
+  cat {{file_path}}
+  ```
+
+  ### Paso 3: Validar
+  ```bash
+  python scripts/utils.py validate {{file_path}}
+  # Returns JSON con success: true/false
+  ```
+
+  ### Paso 4: Si hay errores
+  ```bash
+  # Auto-fix
+  black {{file_path}}
+  isort {{file_path}}
+  ruff check {{file_path}} --fix
+
+  # Re-validar
+  python scripts/utils.py validate {{file_path}}
+  ```
+
+  ### Paso 5: SOLO cuando success: true
+  - Marcar como completado en checkpoint
+  - Continuar siguiente archivo
+
+# ============================================================================
+# VALIDATION SCRIPTS (reutilizables)
+# ============================================================================
+validation_scripts: |
+  ## VALIDATION COMMANDS
+
+  # Validar archivo completo
+  validate_file() {
+    python scripts/utils.py validate "$1"
+  }
+
+  # Listar archivos por categoría
+  list_files() {
+    python scripts/utils.py list_files --category "$1"
+  }
+
+  # Verificar progreso
+  check_progress() {
+    python scripts/utils.py check_progress --task "$1"
+  }
+
+# ============================================================================
+# CHECKPOINT FORMAT (estandarizado)
+# ============================================================================
+checkpoint_format: |
+  ```json
+  {
+    "task_id": "{{TASK_ID}}",
+    "task_name": "{{TASK_NAME}}",
+    "started_at": "{{timestamp}}",
+    "files": {
+      "{{file_path}}": {
+        "status": "COMPLETED",
+        "validated_at": "{{timestamp}}",
+        "validation": {
+          "success": true,
+          "checks": {
+            "black": "passed",
+            "isort": "passed",
+            "ruff": "passed",
+            "mypy": "passed"
+          }
+        }
+      }
+    },
+    "summary": {
+      "total_files": 0,
+      "completed": 0,
+      "blocked": 0
+    }
+  }
+  ```
+
+# ============================================================================
+# EVENT FORMAT (estandarizado)
+# ============================================================================
+event_format: |
+  ## EVENT TEMPLATES
+
+  # Progreso
+  ralph emit "{{TASK_PREFIX}}.next" "file={{file}}, progress={{n}}/{{total}}"
+
+  # Completado
+  ralph emit "{{TASK_PREFIX}}.complete" "total={{n}}, completed={{n}}"
+
+  # Bloqueado
+  ralph emit "{{TASK_PREFIX}}.blocked" "file={{file}}, errors={{desc}}"
+
+# ============================================================================
+# GOLDEN RULES (aplican a todas las tareas)
+# ============================================================================
+golden_rules: |
+  ## REGLAS DE ORO
+
+  - ❌ NO marcar COMPLETED si validate_file_complete.sh falla
+  - ❌ NO confiar en "juicio" - solo confiar en herramientas
+  - ❌ NO inventar información del código
+  - ✅ SOLO marcar completado si success: true
+  - ✅ Validar después de CADA cambio
+  - ✅ Generar requirements.md si NO existe

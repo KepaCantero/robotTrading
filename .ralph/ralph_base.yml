@@ -1,0 +1,141 @@
+# ============================================
+# Ralph Base Configuration (Reusable)
+# ============================================
+# This file contains SHARED configuration for all Ralph tasks.
+# Import this in your task-specific config and override specific values.
+
+# ============================================================================
+# EVENT LOOP - Standardized values (can be overridden)
+# ============================================================================
+event_loop:
+  # Standardized: 150 iterations, 24 hours, checkpoint every 3
+  max_iterations: 150
+  max_runtime_seconds: 86400  # 24 hours default
+  checkpoint_interval: 3  # Standardized for all tasks
+
+  # Completion promise format: {TASK_ID}_COMPLETE
+  # Examples: "01_PROTOCOL_INTERFACES_COMPLETE", "02_SPAIN_TAX_ENGINE_COMPLETE"
+
+  # These MUST be overridden in task-specific configs:
+  # prompt_file: ".ralph/ralph_tasks/prompts/TASK_ID.md"
+  # completion_promise: "{TASK_ID}_COMPLETE"
+  # starting_event: "task.start"
+
+# ============================================================================
+# CLI - Always the same
+# ============================================================================
+cli:
+  backend: "claude"
+
+# ============================================================================
+# CORE - Standardized paths
+# ============================================================================
+core:
+  specs_dir: ".ralph/docs/"  # Changed from ./specs/ to .ralph/docs/
+
+# ============================================================================
+# TASKS - Always enabled
+# ============================================================================
+tasks:
+  enabled: true
+
+# ============================================================================
+# MEMORIES - Standardized budget (can be overridden)
+# ============================================================================
+memories:
+  enabled: true
+  inject: auto
+  budget: 10000  # Increased from 3000 for complex tasks
+  # For simple tasks, can override to 5000
+
+# ============================================================================
+# SHARED INSTRUCTIONS - Reusable patterns
+# ============================================================================
+# These instruction blocks can be included in any hat's instructions:
+
+validation_instructions: |
+  ## SHARED VALIDATION INSTRUCTIONS
+
+  ### Validate ANY file:
+  ```bash
+  python .ralph/scripts/utils.py validate <file_path>
+  # Returns JSON with success: true/false
+  ```
+
+  ### Auto-fix formatting:
+  ```bash
+  black <file_path>
+  isort <file_path>
+  ruff check <file_path> --fix
+  ```
+
+  ### Re-validate after fixes:
+  ```bash
+  python .ralph/scripts/utils.py validate <file_path> | jq '.success'
+  # Must return "true"
+  ```
+
+golden_rules: |
+  ## REGLAS DE ORO (aplican a TODAS las tareas)
+
+  - ❌ NO marcar como COMPLETED/PASSED/FIXED si `python scripts/utils.py validate` falla
+  - ❌ NO confiar en el "juicio" - solo confiar en las herramientas
+  - ❌ NO inventar información del código
+  - ✅ SOLO marcar completado si TODOS los checks pasan (success: true)
+  - ✅ Validar después de CADA cambio
+
+checkpoint_format: |
+  ## Checkpoint Format (standardized):
+
+  ```json
+  {
+    "task_id": "<TASK_ID>",
+    "task_name": "<TASK_NAME>",
+    "started_at": "2026-02-08T10:00:00Z",
+    "completed_at": "2026-02-08T14:00:00Z",
+    "status": "COMPLETED",
+    "progress": {
+      "total_files": 10,
+      "created_files": 10,
+      "modified_files": 0,
+      "validated_files": 10
+    },
+    "outputs": {
+      "files_created": ["app/path/file1.py", "app/path/file2.py"],
+      "files_modified": [],
+      "validation_passed": true
+    },
+    "validation": {
+      "all_files_validated": true,
+      "black_passed": true,
+      "isort_passed": true,
+      "ruff_passed": true,
+      "mypy_passed": true
+    },
+    "next_task": "<NEXT_TASK_ID>",
+    "errors": [],
+    "warnings": [],
+    "timestamp": "2026-02-08T14:00:00Z"
+  }
+  ```
+
+  ## Valid status values:
+  - PENDING: Task not started
+  - IN_PROGRESS: Task currently running
+  - COMPLETED: Task finished successfully
+  - FAILED: Task failed with errors
+  - BLOCKED: Task blocked by dependencies
+  - SKIPPED: Task was skipped
+
+# ============================================================================
+# EVENT FORMAT TEMPLATES - Standardized event emission
+# ============================================================================
+event_templates:
+  progress: |
+    python .ralph/scripts/emit.py "task.next" '{"file": "<path>", "progress": "<n>/<total>"}'
+  complete: |
+    python .ralph/scripts/emit.py "task.complete" '{"total": <n>, "completed": <n>}'
+  blocked: |
+    python .ralph/scripts/emit.py "task.blocked" '{"file": "<path>", "errors": "<description>"}'
+  failed: |
+    python .ralph/scripts/emit.py "task.failed" '{"reason": "<description>"}'

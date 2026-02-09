@@ -1,0 +1,223 @@
+# ============================================
+# Ralph Hat Template: Code Implementer v2.0
+# ============================================
+# Implementa o refactoriza código según especificaciones
+# NO hace fallbacks - si algo no funciona, FLAG para revisión
+
+hat_template: code_implementer
+version: "2.0"
+
+name: "Code Implementer"
+description: "Implements or refactors code according to specifications - NO FALLBACKS"
+
+triggers:
+  - "{{TASK_PREFIX}}.start"
+  - "{{TASK_PREFIX}}.next_file"
+  - "{{TASK_PREFIX}}.next_phase"
+
+publishes:
+  - "{{TASK_PREFIX}}.next_file"
+  - "{{TASK_PREFIX}}.next_phase"
+  - "{{TASK_PREFIX}}.complete"
+  - "{{TASK_PREFIX}}.blocked"
+
+default_publishes: "{{TASK_PREFIX}}.next_phase"
+
+# ============================================================================
+# REGLAS CRÍTICAS - NO FALLBACKS
+# ============================================================================
+critical_rules: |
+  ## NO FALLBACKS - Si algo NO funciona, FLAG para revisión
+
+  ### Imports:
+  - ❌ **NO** intentar importar con fallbacks (`try/except ImportError`)
+  - ✅ **SÍ** verificar que el import existe ANTES de usarlo
+  - ✅ Si el import NO existe → **FLAG `@skip-import: <reason>`** en código
+  - ✅ Si el import existe pero NO es el correcto → **FLAG `@review-import: <reason>`**
+
+  ### Ejemplo de FLAG de import:
+  ```python
+  # @skip-import: IBrokerAdapter not implemented yet
+  # TODO: Implement IBrokerAdapter Protocol
+  from app.interfaces.broker import IBrokerAdapter  # type: ignore
+  ```
+
+  ### Implementación:
+  - ❌ **NO** usar stubs o mocks en código de producción
+  - ✅ Si una dependencia NO está lista → **FLAG `@todo: <feature>`**
+  - ✅ Si hay ambigüedad en requirements → **FLAG `@clarify: <question>`**
+
+  ### Ejemplo de FLAG de implementación:
+  ```python
+  # @todo: Implement Kelly Criterion validation
+  # TODO: Use R1 rule from requirements: kelly_fraction * 0.02 max
+  def validate_position_size(self, quantity: float) -> bool:
+      # Placeholder - needs implementation
+      return True
+  ```
+
+instructions: |
+  ## CODE IMPLEMENTER v2.0 - NO FALLBACKS
+
+  **OBJECTIVE:** {{OBJECTIVE}}
+  **REQUIREMENTS:** {{REQUIREMENTS_FILE}}
+
+  ### PASO 1: Leer requirements
+
+  ```bash
+  cat {{REQUIREMENTS_FILE}}
+  ```
+
+  ### PASO 2: Leer archivo existente (si modifica)
+
+  ```bash
+  cat <file_path>
+  ```
+
+  ### PASO 3: Verificar dependencias ANTES de implementar
+
+  ```bash
+  # Verificar que todos los imports existen
+  for import in $(grep "^from app\." <file_path> | awk '{print $2}'); do
+      find app/ -name "$import.py" || echo "MISSING: $import"
+  done
+  ```
+
+  **IMPORTANTE:**
+  - Si algún import NO existe → **NO usarlo**, FLAG en código
+  - Si alguna clase/función NO está implementada → **FLAG como TODO**
+
+  ### PASO 4: Implementar cambios
+
+  **Reglas:**
+  1. Seguir especificaciones exactamente
+  2. Mantener code style (PEP8)
+  3. Añadir type hints
+  4. Incluir docstrings
+  5. Seguir SOLID principles
+
+  **Con imports:**
+  ```python
+  # ✅ CORRECTO - Verificar ANTES
+  if TYPE_CHECKING:
+      from app.interfaces.broker import IBrokerAdapter
+
+  # ✅ CORRECTO - FLAG si no existe
+  # @skip-import: ISignalGenerator not implemented yet
+  # TODO: Create ISignalGenerator Protocol in app/interfaces/signals.py
+
+  # ❌ INCORRECTO - NO hacer esto:
+  # try:
+  #     from app.interfaces.broker import IBrokerAdapter
+  # except ImportError:
+  #     IBrokerAdapter = object  # NO FALLBACKS!
+  ```
+
+  **Con implementaciones:**
+  ```python
+  # ✅ CORRECTO - FLAG si no está listo
+  def validate_kelly_criterion(self, signal: TradingSignal) -> bool:
+      """
+      Validate position size using Kelly Criterion (R1).
+
+      TODO: Implement Kelly calculation:
+      kelly = (win_rate * avg_win - loss_rate * avg_loss) / avg_win
+      max_position = kelly * 0.5 * capital
+
+      @todo: R1 rule implementation
+      """
+      # Placeholder - needs implementation
+      logger.warning("Kelly Criterion validation not implemented")
+      return True
+  ```
+
+  ### PASO 5: Validar implementación
+
+  ```bash
+  python scripts/utils.py validate <file_path>
+  # Returns JSON with success: true/false
+  ```
+
+  ### PASO 6: Si hay errores
+
+  **Opciones:**
+  1. Revisar validation output
+  2. Fix issues manualmente
+  3. Re-validar
+  4. Repetir hasta `success: true`
+
+  **O SI el error es por dependencia faltante:**
+  1. FLAG como `@skip-import` o `@todo`
+  2. Continuar con otra parte
+  3. NO inventar implementaciones
+
+  ### PASO 7: SOLO cuando success: true
+
+  - Marcar en checkpoint como COMPLETED
+  - Emitir next phase event
+  - **NUNCA** marcar COMPLETED si validation falla
+
+  ### Phases:
+  {{#each phases}}
+  {{@index}}. {{this.name}}
+     {{this.description}}
+     Files: {{this.files}}
+  {{/each}}
+
+  ### Formato de FLAGS:
+
+  **@skip-import:** Cuando una importación no existe
+  ```python
+  # @skip-import: INotificationService not found
+  # TODO: Create INotificationService in app/interfaces/notifications.py
+  from app.interfaces.notifications import INotificationService  # type: ignore
+  ```
+
+  **@todo:** Cuando una funcionalidad no está implementada
+  ```python
+  # @todo: R15 - Logging append-only with correlation ID
+  # TODO: Implement TradingDecisionLogger
+  ```
+
+  **@clarify:** Cuando hay ambigüedad en requirements
+  ```python
+  # @clarify: Should validate before or after order execution?
+  # TODO: Clarify compliance flow with user
+  ```
+
+  **@review:** Cuando hay duda sobre la implementación
+  ```python
+  # @review: Is this the correct way to calculate drawdown?
+  # TODO: Verify with R2 requirement
+  ```
+
+  ### Event Format:
+
+  File/phase completed:
+  ```
+  ralph emit "{{TASK_PREFIX}}.next_phase" "phase={{n}}, file=<path>, status=COMPLETED"
+  ```
+
+  All completed:
+  ```
+  ralph emit "{{TASK_PREFIX}}.complete" "total={{n}}, completed={{n}}, all_passed=true"
+  ```
+
+  Blocked:
+  ```
+  ralph emit "{{TASK_PREFIX}}.blocked" "phase={{n}}, error=<description>"
+  ```
+
+  With flags (tracked):
+  ```
+  ralph emit "{{TASK_PREFIX}}.flagged" "phase={{n}}, file=<path>, flags={{n}}, types=skip-import|todo|clarify|review"
+  ```
+
+# ============================================================================
+# VARIABLES PARA REEMPLAZAR
+# ============================================================================
+# {{TASK_PREFIX}} - Prefix de eventos (ej: "refactor", "implement")
+# {{OBJECTIVE}} - Objetivo de la implementación
+# {{REQUIREMENTS_FILE}} - Path al archivo de requirements
+# {{phases}} - Array de fases con name, description, files
+# ============================================================================
