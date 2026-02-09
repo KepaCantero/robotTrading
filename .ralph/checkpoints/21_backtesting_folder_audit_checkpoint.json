@@ -1,0 +1,171 @@
+{
+  "task_id": "21_backtesting_folder_audit",
+  "task_name": "Comprehensive Backtest Test (Compliance Engine)",
+  "started_at": "2026-02-09T00:00:00Z",
+  "status": "PENDING",
+  "phase": 6,
+  "priority": "P1",
+  "estimated_hours": 8,
+  "depends_on": [
+    "09_compliance_engine_refactor",
+    "17_backtest_fixes"
+  ],
+  "completion_promise": "COMPREHENSIVE_BACKTEST_TEST_COMPLETE",
+  "description": "Create comprehensive backtest test using ComplianceEngine (replaces scripts/archived/comprehensive_oneYear_test.py)",
+  "phases": {
+    "phase_1_create": {
+      "name": "Create Test File",
+      "description": "Create comprehensive backtest test file using ComplianceEngine",
+      "status": "PENDING",
+      "started_at": null,
+      "completed_at": null,
+      "steps": [
+        "Create tests/backtesting/test_comprehensive_backtesting_via_compliance.py",
+        "Import ComplianceEngine (NOT ComprehensiveBacktestRunner)",
+        "Implement 10 backtest types (BASELINE, LEARNING_ENGINES, WALK_FORWARD, MONTE_CARLO, GRID_SEARCH, ABLATION, OUT_OF_SAMPLE, MULTI_STRATEGY, REGIME_TEST, HYPERPARAMETER)",
+        "Implement SpainTaxCalculator (IRPF 19/21/23%)",
+        "Implement correlation ID logging (R15)",
+        "Implement SOLID principles (Protocol for DIP)"
+      ]
+    },
+    "phase_2_validate": {
+      "name": "Validate Test",
+      "description": "Validate test uses ComplianceEngine correctly",
+      "status": "PENDING",
+      "started_at": null,
+      "completed_at": null,
+      "steps": [
+        "Verify ComplianceEngine import exists",
+        "Verify NO ComprehensiveBacktestRunner direct usage",
+        "Verify all 10 backtest types present",
+        "Verify Spain Tax implemented (0.19, 0.21, 0.23)",
+        "Verify correlation ID logging implemented",
+        "Verify SOLID principles (Protocol usage)",
+        "Run utils.py validate (expect success: true)"
+      ]
+    },
+    "phase_3_report": {
+      "name": "Generate Report",
+      "description": "Generate final validation report",
+      "status": "PENDING",
+      "started_at": null,
+      "completed_at": null,
+      "steps": [
+        "Generate COMPREHENSIVE_BACKTEST_TEST_REPORT.md",
+        "Document all 10 backtest types",
+        "Document compliance features (R1, R2, R4, Spain Tax, R15)",
+        "Document SOLID principles implemented"
+      ]
+    }
+  },
+  "deliverables": {
+    "test_file": "tests/backtesting/test_comprehensive_backtesting_via_compliance.py",
+    "report_file": ".ralph/outputs/COMPREHENSIVE_BACKTEST_TEST_REPORT.md",
+    "replaces": "scripts/archived/comprehensive_oneYear_test.py"
+  },
+  "backtest_types": {
+    "1": {
+      "name": "BASELINE",
+      "description": "Reference performance without ML"
+    },
+    "2": {
+      "name": "LEARNING_ENGINES",
+      "description": "supervised, deep, reinforcement, transformer (only supervised on macOS)"
+    },
+    "3": {
+      "name": "WALK_FORWARD",
+      "description": "Time-window optimization"
+    },
+    "4": {
+      "name": "MONTE_CARLO",
+      "description": "Stress test (100 simulations for quick testing)"
+    },
+    "5": {
+      "name": "GRID_SEARCH",
+      "description": "Parameter space exploration"
+    },
+    "6": {
+      "name": "ABLATION",
+      "description": "Individual module impact"
+    },
+    "7": {
+      "name": "OUT_OF_SAMPLE",
+      "description": "Forward validation (70/15/15 split)"
+    },
+    "8": {
+      "name": "MULTI_STRATEGY",
+      "description": "All 4 strategies"
+    },
+    "9": {
+      "name": "REGIME_TEST",
+      "description": "Market regime performance (HMM)"
+    },
+    "10": {
+      "name": "HYPERPARAMETER",
+      "description": "Optuna optimization (50 trials)"
+    }
+  },
+  "validation_criteria": {
+    "uses_compliance_engine": {
+      "description": "Test imports and uses ComplianceEngine (NOT ComprehensiveBacktestRunner directly)",
+      "status": "PENDING",
+      "validated_at": null,
+      "command": "grep -n 'from.*compliance_engine import ComplianceEngine' tests/backtesting/test_comprehensive_backtesting_via_compliance.py"
+    },
+    "no_direct_runner": {
+      "description": "Test does NOT use ComprehensiveBacktestRunner directly",
+      "status": "PENDING",
+      "validated_at": null,
+      "command": "! grep -q 'ComprehensiveBacktestRunner' tests/backtesting/test_comprehensive_backtesting_via_compliance.py"
+    },
+    "all_10_types": {
+      "description": "Test includes all 10 backtest types",
+      "status": "PENDING",
+      "validated_at": null,
+      "expected_count": 10
+    },
+    "spain_tax": {
+      "description": "Spain Tax calculator implemented (IRPF 19/21/23%)",
+      "status": "PENDING",
+      "validated_at": null,
+      "command": "grep -n '0.19\\|0.21\\|0.23\\|IRPF\\|SpainTaxCalculator' tests/backtesting/test_comprehensive_backtesting_via_compliance.py"
+    },
+    "correlation_id": {
+      "description": "Correlation ID logging implemented (R15)",
+      "status": "PENDING",
+      "validated_at": null,
+      "command": "grep -n 'correlation_id\\|uuid.uuid4()' tests/backtesting/test_comprehensive_backtesting_via_compliance.py"
+    },
+    "solid_principles": {
+      "description": "SOLID principles implemented (Protocol for DIP)",
+      "status": "PENDING",
+      "validated_at": null,
+      "command": "grep -n 'Protocol' tests/backtesting/test_comprehensive_backtesting_via_compliance.py"
+    },
+    "validation_passes": {
+      "description": "utils.py validate returns success: true",
+      "status": "PENDING",
+      "validated_at": null,
+      "command": "python .ralph/scripts/utils.py validate tests/backtesting/test_comprehensive_backtesting_via_compliance.py"
+    }
+  },
+  "metadata": {
+    "version": "2.0",
+    "created_at": "2026-02-09T00:00:00Z",
+    "last_updated": "2026-02-09T00:00:00Z",
+    "notes": "Creates comprehensive backtest test using ComplianceEngine. Replaces scripts/archived/comprehensive_oneYear_test.py which bypasses ComplianceEngine.",
+    "references": [
+      ".ralph/outputs/COMPREHENSIVE_ONYEART_TEST_AUDIT.md",
+      "app/core/compliance_engine.py",
+      "app/core/compliance/protocols.py",
+      "scripts/archived/comprehensive_oneYear_test.py"
+    ],
+    "compliance_features": {
+      "R1": "Kelly Criterion + 2% max (validated by ComplianceEngine)",
+      "R2": "Drawdown 15% stop (validated by ComplianceEngine)",
+      "R4": "R:R 2:1 minimum (validated by ComplianceEngine)",
+      "R15": "Logging append-only + correlation ID",
+      "SpainTax": "IRPF progresivo 19/21/23%"
+    }
+  }
+}

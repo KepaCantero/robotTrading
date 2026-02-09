@@ -12,7 +12,10 @@ from decimal import Decimal
 import pytest
 
 from app.models.portfolio import CircuitBreakerState
-from app.services.circuit_breaker_manager import CircuitBreakerManager, CircuitBreakerType
+from app.services.api_circuit_breaker import (
+    CircuitBreakerManager,
+    CircuitBreakerType,
+)
 
 
 class TestExtremeDrawdownScenarios:
