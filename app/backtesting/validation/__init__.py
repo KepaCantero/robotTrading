@@ -132,6 +132,16 @@ from .walk_forward import (
     calculate_degradation,
 )
 
+# Task 17: Backtest Fixes - P&L and Drawdown Validators
+from .pnl_validator import (
+    PnLValidator,
+    PnLValidationError,
+)
+from .drawdown_validator import (
+    DrawdownValidator,
+    DrawdownValidationError,
+)
+
 __all__ = [
     # FASE 5.3: Validation Module (New)
     # Models
@@ -225,4 +235,9 @@ __all__ = [
     "CrossValidation",
     "cross_validate",
     "nested_cross_validate",
+    # Task 17: Backtest Fixes
+    "PnLValidator",
+    "PnLValidationError",
+    "DrawdownValidator",
+    "DrawdownValidationError",
 ]

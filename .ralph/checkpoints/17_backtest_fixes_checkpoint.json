@@ -1,0 +1,28 @@
+{
+  "task": "17_backtest_fixes",
+  "status": "COMPLETED",
+  "completed_at": "2026-02-09T05:50:15Z",
+  "files_created": [
+    "app/backtesting/validation/pnl_validator.py",
+    "app/backtesting/validation/drawdown_validator.py",
+    "tests/unit/backtesting/test_pnl_validator.py",
+    "tests/unit/backtesting/test_drawdown_validator.py",
+    "tests/unit/backtesting/__init__.py"
+  ],
+  "files_modified": [
+    "app/backtesting/validation/__init__.py"
+  ],
+  "features": [
+    "PnLValidator - Validates trade P&L calculations",
+    "PnLValidationError - Exception for P&L validation failures",
+    "DrawdownValidator - Validates drawdown calculations",
+    "DrawdownValidationError - Exception for drawdown validation failures",
+    "Comprehensive test coverage (44 tests)",
+    "Integration with existing backtesting models"
+  ],
+  "validation_results": {
+    "pnl_validator_tests": "19/19 PASSED",
+    "drawdown_validator_tests": "25/25 PASSED",
+    "total_tests": "44/44 PASSED"
+  }
+}

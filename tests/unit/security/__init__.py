@@ -1,10 +1,10 @@
 """
-Security Test Suite
+Unit tests for the security services package.
 
-Comprehensive security tests covering:
-- Secret management and validation
-- Input validation and sanitization
-- Output encoding
-- Injection prevention
-- Rate limiting
+This package contains tests for:
+- API key management (test_api_key_manager.py)
+- Secrets management (test_secrets_manager.py)
+- Key rotation (test_key_rotation.py)
+
+R29: Security Hardening
 """
