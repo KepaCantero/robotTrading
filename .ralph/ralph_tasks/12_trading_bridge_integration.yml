@@ -1,0 +1,777 @@
+# ============================================
+# Ralph Task 12: Trading Bridge Integration
+# ============================================
+# PRIORIDAD: P0 (CRÍTICA)
+# FASE: Phase 4 - Integration Layer
+# OBJETIVO: Integrar TradingBridge con ComplianceEngine
+# TIEMPO: ~4 horas
+#
+# Depends on: 09_compliance_engine_refactor
+# ============================================================================
+
+event_loop:
+  prompt_file: ".ralph/ralph_tasks/prompts/12_trading_bridge_integration.md"
+  completion_promise: "TRADING_BRIDGE_INTEGRATION_COMPLETE"
+  max_iterations: 100
+  max_runtime_seconds: 14400  # 4 hours
+  checkpoint_interval: 3
+  starting_event: "integration.start"
+
+cli:
+  backend: "claude"
+
+core:
+  specs_dir: "./specs/"
+
+hats:
+  integrator:
+    name: "Trading Bridge Integrator"
+    description: "Integra TradingBridge con ComplianceEngine coordinator"
+    triggers: ["integration.start", "integration.next_step"]
+    publishes: ["integration.next_step", "integration.complete", "integration.blocked"]
+    default_publishes: "integration.next_step"
+    instructions: |
+      ## TRADING BRIDGE INTEGRATION
+
+      **OBJETIVO:** Integrar `TradingBridgeOrchestrator` con `ComplianceEngine` para
+      proporcionar ejecución de trades en vivo vía alertas.
+
+      ### DEPENDENCIAS SATISFECHAS
+      - Task 01 (Protocol interfaces) - COMPLETED
+      - Task 09 (Compliance Engine refactor) - COMPLETED
+      - Task 10 (Execution Engine Integration) - COMPLETED
+      - Task 11 (Order Manager Integration) - COMPLETED
+
+      ### SITUACIÓN ACTUAL
+      - `app/services/live_trading/trading_bridge_orchestrator.py` tiene `TradingBridgeOrchestrator`
+      - `app/core/protocols/i_trade_executor.py` define el protocolo `ITradeExecutor`
+      - Necesitamos crear un adaptador que conecte TradingBridgeOrchestrator con ITradeExecutor
+
+      ### PASO 1: Leer Componentes Existentes
+
+      ```bash
+      # Leer TradingBridgeOrchestrator existente
+      cat app/services/live_trading/trading_bridge_orchestrator.py
+
+      # Leer ITradeExecutor protocol
+      cat app/core/protocols/i_trade_executor.py
+
+      # Verificar estructura de servicios de ejecución existentes
+      ls app/services/execution/
+      ```
+
+      ### PASO 2: Crear Adaptador para Integration
+
+      Archivo: `app/services/execution/trading_bridge_adapter.py`
+
+      ```python
+      """
+      Adaptador entre TradingBridgeOrchestrator y ITradeExecutor protocol.
+
+      Este adaptador permite que el ComplianceEngine utilice el TradingBridgeOrchestrator
+      para ejecutar trades en vivo basándose en alertas.
+      """
+      from __future__ import annotations
+
+      import logging
+      from decimal import Decimal
+      from typing import Any, Dict, Optional, list
+
+      from app.core.protocols import ITradeExecutor
+      from app.services.live_trading.trading_bridge_orchestrator import (
+          TradingBridgeOrchestrator,
+          get_trading_bridge_orchestrator,
+      )
+      from app.services.live_trading.broker_connector import OrderSide
+
+      logger = logging.getLogger(__name__)
+
+
+      class TradingBridgeAdapter(ITradeExecutor):
+          """
+          Adaptador que implementa ITradeExecutor usando TradingBridgeOrchestrator.
+
+          Este adaptador conecta el orquestador de trading en vivo (TradingBridgeOrchestrator)
+          con el protocolo ITradeExecutor del ComplianceEngine.
+
+          Proporciona:
+          1. Ejecución de órdenes basada en alertas
+          2. Validación de riesgos mediante RiskGates
+          3. Mapeo de alertas a señales de trading
+          4. Monitoreo de ejecución de órdenes
+
+          Integration Points:
+          - TradingBridgeOrchestrator: Proporciona ejecución de trades en vivo
+          - ComplianceEngine: Utiliza ITradeExecutor para ejecución de trades
+          """
+
+          def __init__(
+              self,
+              trading_bridge: Optional[TradingBridgeOrchestrator] = None,
+              enable_logging: bool = False,
+          ):
+              """
+              Initialize TradingBridgeAdapter.
+
+              Args:
+                  trading_bridge: Optional TradingBridgeOrchestrator instance
+                                   (defaults to singleton instance)
+                  enable_logging: Enable detailed logging for execution events
+              """
+              self.trading_bridge = trading_bridge or get_trading_bridge_orchestrator()
+              self.enable_logging = enable_logging
+              self._order_mapping: Dict[str, str] = {}  # Maps order_id to execution_id
+
+          async def execute_order(
+              self,
+              signal: "TradeSignal",
+          ) -> "TradeResult":
+              """
+              Execute order using TradingBridgeOrchestrator.
+
+              Este método implementa el protocolo ITradeExecutor convirtiendo
+              un TradeSignal en una ejecución vía TradingBridgeOrchestrator.
+
+              Args:
+                  signal: TradeSignal containing:
+                      - symbol: Trading symbol
+                      - order_side: BUY or SELL
+                      - quantity: Order quantity
+                      - price: Signal price
+                      - order_type: MARKET or LIMIT
+                      - stop_loss: Optional stop loss price
+                      - take_profit: Optional take profit price
+
+              Returns:
+                  TradeResult con detalles de ejecución:
+                      - order_id: Identificador único de orden
+                      - symbol: Símbolo de trading
+                      - side: Lado de la orden
+                      - quantity: Cantidad ejecutada
+                      - execution_price: Precio de ejecución
+                      - status: Estado de FILL
+                      - commission: Comisión calculada
+                      - slippage_bps: Slippage aplicado en basis points
+              """
+              from dataclasses import dataclass
+              from app.services.alerting_system import AlertEvent, AlertSeverity
+
+              @dataclass
+              class TradeResult:
+                  """Result of trade execution via ITradeExecutor."""
+                  success: bool
+                  order_id: str
+                  symbol: str
+                  side: str
+                  quantity: Decimal
+                  execution_price: Decimal
+                  status: str
+                  commission: Decimal
+                  slippage_bps: Decimal
+                  signal_price: Decimal
+                  error: Optional[str] = None
+
+              try:
+                  # Extract signal data
+                  symbol = signal.symbol
+                  side = signal.order_side.value
+                  quantity = signal.quantity
+                  signal_price = signal.price or Decimal("0")
+
+                  # Create mock alert event for the signal
+                  alert_event = AlertEvent(
+                      event_id=f"alert_{signal.signal_id if hasattr(signal, 'signal_id') else 'manual'}",
+                      rule_id="manual_trade",
+                      symbol=symbol,
+                      severity=AlertSeverity.MEDIUM,
+                      metric_value=signal_price,
+                      timestamp=datetime.utcnow(),
+                  )
+
+                  # Process alert through trading bridge
+                  execution = await self.trading_bridge.process_alert(alert_event)
+
+                  if not execution:
+                      # Failed to execute
+                      return TradeResult(
+                          success=False,
+                          order_id="",
+                          symbol=symbol,
+                          side=side,
+                          quantity=quantity,
+                          execution_price=Decimal("0"),
+                          status="FAILED",
+                          commission=Decimal("0"),
+                          slippage_bps=Decimal("0"),
+                          signal_price=signal_price,
+                          error="Trading bridge did not return execution",
+                      )
+
+                  # Map order_id to execution_id
+                  self._order_mapping[execution.order_id] = execution.execution_id
+
+                  if self.enable_logging:
+                      logger.info(
+                          f"TradingBridgeAdapter: {symbol} {side} {quantity} @ {execution.execution_price} "
+                          f"(order_id: {execution.order_id}, execution_id: {execution.execution_id})"
+                      )
+
+                  return TradeResult(
+                      success=True,
+                      order_id=execution.order_id,
+                      symbol=execution.symbol,
+                      side=execution.side.value,
+                      quantity=execution.quantity,
+                      execution_price=execution.execution_price,
+                      status=execution.execution_status.value,
+                      commission=Decimal("0"),  # Commission handled by broker
+                      slippage_bps=Decimal("0"),  # Slippage handled by broker
+                      signal_price=signal_price,
+                  )
+
+              except Exception as e:
+                  logger.error(f"TradingBridgeAdapter.execute_order failed: {e}")
+                  return TradeResult(
+                      success=False,
+                      order_id="",
+                      symbol=getattr(signal, "symbol", "UNKNOWN"),
+                      side=getattr(signal, "order_side", "BUY").value if hasattr(signal, "order_side") else "BUY",
+                      quantity=getattr(signal, "quantity", Decimal("0")),
+                      execution_price=Decimal("0"),
+                      status="FAILED",
+                      commission=Decimal("0"),
+                      slippage_bps=Decimal("0"),
+                      signal_price=Decimal("0"),
+                      error=str(e),
+                  )
+
+          async def cancel_order(self, order_id: str) -> bool:
+              """
+              Cancel order via TradingBridgeOrchestrator.
+
+              Args:
+                  order_id: Order identifier to cancel
+
+              Returns:
+                  True if cancellation successful, False otherwise
+              """
+              try:
+                  if self.enable_logging:
+                      logger.debug(f"TradingBridgeAdapter.cancel_order: {order_id}")
+
+                  # The TradingBridgeOrchestrator doesn't have direct cancel
+                  # We need to cancel via the broker
+                  broker = self.trading_bridge.broker
+                  result = await broker.cancel_order(order_id)
+
+                  return result
+
+              except Exception as e:
+                  logger.error(f"TradingBridgeAdapter.cancel_order failed: {e}")
+                  return False
+
+          async def modify_order(self, order_id: str, new_price: Decimal) -> bool:
+              """
+              Modify order price via TradingBridgeOrchestrator.
+
+              Args:
+                  order_id: Order identifier to modify
+                  new_price: New price for the order
+
+              Returns:
+                  True if modification successful, False otherwise
+              """
+              try:
+                  if self.enable_logging:
+                      logger.debug(f"TradingBridgeAdapter.modify_order: {order_id} -> {new_price}")
+
+                  # The TradingBridgeOrchestrator doesn't have direct modify
+                  # We need to modify via the broker
+                  broker = self.trading_bridge.broker
+                  result = await broker.modify_order(order_id, new_price)
+
+                  return result
+
+              except Exception as e:
+                  logger.error(f"TradingBridgeAdapter.modify_order failed: {e}")
+                  return False
+
+          async def get_order_status(self, order_id: str) -> str:
+              """
+              Get order status via TradingBridgeOrchestrator.
+
+              Args:
+                  order_id: Order identifier
+
+              Returns:
+                  Order status: "FILLED", "PENDING", "CANCELLED", "UNKNOWN"
+              """
+              try:
+                  if self.enable_logging:
+                      logger.debug(f"TradingBridgeAdapter.get_order_status: {order_id}")
+
+                  broker = self.trading_bridge.broker
+                  status = await broker.get_order_status(order_id)
+
+                  return status.value if hasattr(status, 'value') else str(status)
+
+              except Exception as e:
+                  logger.error(f"TradingBridgeAdapter.get_order_status failed: {e}")
+                  return "UNKNOWN"
+
+          async def get_open_orders(self) -> list:
+              """
+              Get open orders via TradingBridgeOrchestrator.
+
+              Returns:
+                  List of open orders
+              """
+              try:
+                  if self.enable_logging:
+                      logger.debug("TradingBridgeAdapter.get_open_orders")
+
+                  broker = self.trading_bridge.broker
+                  open_orders = await broker.get_open_orders()
+
+                  return open_orders
+
+              except Exception as e:
+                  logger.error(f"TradingBridgeAdapter.get_open_orders failed: {e}")
+                  return []
+
+          # -------------------------------------------------------------------------
+          # Additional methods for enhanced functionality
+          # -------------------------------------------------------------------------
+
+          def get_execution_history(self) -> list:
+              """
+              Get execution history from trading bridge.
+
+              Returns:
+                  List of recent executions
+              """
+              return self.trading_bridge.get_recent_executions(limit=100)
+
+          def get_bridge_statistics(self) -> Dict[str, Any]:
+              """
+              Get trading bridge statistics.
+
+              Returns:
+                  Dictionary with bridge metrics
+              """
+              return self.trading_bridge.get_bridge_statistics()
+
+
+      def get_trading_bridge_adapter(
+          enable_logging: bool = False,
+      ) -> TradingBridgeAdapter:
+          """
+          Factory function to get TradingBridgeAdapter instance.
+
+          Args:
+              enable_logging: Enable detailed logging
+
+          Returns:
+              Configured TradingBridgeAdapter instance
+
+          Example:
+              >>> adapter = get_trading_bridge_adapter(enable_logging=True)
+              >>> result = await adapter.execute_order(signal)
+          """
+          return TradingBridgeAdapter(enable_logging=enable_logging)
+      ```
+
+      ### PASO 3: Actualizar exports del paquete
+
+      Archivo: `app/services/execution/__init__.py`
+
+      ```python
+      """
+      Execution service adapters for ITradeExecutor protocol integration.
+
+      This module provides adapters that connect various execution engines
+      with the ITradeExecutor protocol used by ComplianceEngine.
+      """
+      from app.services.execution.execution_adapter import (
+          ExecutionEngineAdapter,
+          get_execution_adapter,
+      )
+      from app.services.execution.order_manager_adapter import (
+          OrderManagerAdapter,
+      )
+
+      __all__ = [
+          "ExecutionEngineAdapter",
+          "get_execution_adapter",
+          "OrderManagerAdapter",
+      ]
+      ```
+
+      Actualizar para incluir TradingBridgeAdapter:
+
+      ```python
+      """
+      Execution service adapters for ITradeExecutor protocol integration.
+
+      This module provides adapters that connect various execution engines
+      with the ITradeExecutor protocol used by ComplianceEngine.
+      """
+      from app.services.execution.execution_adapter import (
+          ExecutionEngineAdapter,
+          get_execution_adapter,
+      )
+      from app.services.execution.order_manager_adapter import (
+          OrderManagerAdapter,
+      )
+      from app.services.execution.trading_bridge_adapter import (
+          TradingBridgeAdapter,
+          get_trading_bridge_adapter,
+      )
+
+      __all__ = [
+          "ExecutionEngineAdapter",
+          "get_execution_adapter",
+          "OrderManagerAdapter",
+          "TradingBridgeAdapter",
+          "get_trading_bridge_adapter",
+      ]
+      ```
+
+      ### PASO 4: Crear Tests
+
+      Archivo: `tests/unit/execution/test_trading_bridge_adapter.py`
+
+      ```python
+      """
+      Unit tests for TradingBridgeAdapter.
+
+      Tests the integration between TradingBridgeOrchestrator and ITradeExecutor protocol.
+      """
+      import pytest
+      from decimal import Decimal
+      from datetime import datetime
+      from unittest.mock import AsyncMock, MagicMock, patch
+
+      from app.services.execution.trading_bridge_adapter import (
+          TradingBridgeAdapter,
+          get_trading_bridge_adapter,
+      )
+      from app.services.live_trading.broker_connector import OrderSide, OrderStatus
+
+
+      @pytest.fixture
+      def mock_trading_bridge():
+          """Create a mock TradingBridgeOrchestrator."""
+          bridge = MagicMock()
+          bridge.broker = MagicMock()
+
+          # Mock process_alert
+          execution = MagicMock()
+          execution.order_id = "broker_order_123"
+          execution.execution_id = "exec_abc123"
+          execution.symbol = "AAPL"
+          execution.side = OrderSide.BUY
+          execution.quantity = Decimal("100")
+          execution.execution_price = Decimal("150.25")
+          execution.execution_status = OrderStatus.FILLED
+
+          bridge.process_alert = AsyncMock(return_value=execution)
+
+          # Mock broker methods
+          bridge.broker.cancel_order = AsyncMock(return_value=True)
+          bridge.broker.modify_order = AsyncMock(return_value=True)
+          bridge.broker.get_order_status = AsyncMock(return_value=OrderStatus.FILLED)
+          bridge.broker.get_open_orders = AsyncMock(return_value=[])
+
+          # Mock other methods
+          bridge.get_recent_executions = MagicMock(return_value=[])
+          bridge.get_bridge_statistics = MagicMock(return_value={
+              "status": "monitoring",
+              "total_executions": 1,
+          })
+
+          return bridge
+
+
+      @pytest.fixture
+      def adapter(mock_trading_bridge):
+          """Create TradingBridgeAdapter with mock trading bridge."""
+          return TradingBridgeAdapter(trading_bridge=mock_trading_bridge)
+
+
+      @pytest.fixture
+      def mock_signal():
+          """Create a mock TradeSignal."""
+          signal = MagicMock()
+          signal.symbol = "AAPL"
+          signal.order_side = OrderSide.BUY
+          signal.quantity = Decimal("100")
+          signal.price = Decimal("150")
+          signal.signal_id = "signal_123"
+          return signal
+
+
+      class TestTradingBridgeAdapter:
+          """Test suite for TradingBridgeAdapter."""
+
+          @pytest.mark.asyncio
+          async def test_execute_order_success(self, adapter, mock_signal):
+              """Test successful order execution."""
+              result = await adapter.execute_order(mock_signal)
+
+              assert result.success is True
+              assert result.order_id == "broker_order_123"
+              assert result.symbol == "AAPL"
+              assert result.side == "BUY"
+              assert result.quantity == Decimal("100")
+              assert result.execution_price == Decimal("150.25")
+              assert result.status == "FILLED"
+
+          @pytest.mark.asyncio
+          async def test_execute_order_failure_no_execution(self, mock_trading_bridge, mock_signal):
+              """Test order execution when trading bridge returns None."""
+              mock_trading_bridge.process_alert = AsyncMock(return_value=None)
+              adapter = TradingBridgeAdapter(trading_bridge=mock_trading_bridge)
+
+              result = await adapter.execute_order(mock_signal)
+
+              assert result.success is False
+              assert result.status == "FAILED"
+              assert "did not return execution" in result.error
+
+          @pytest.mark.asyncio
+          async def test_execute_order_exception(self, mock_trading_bridge, mock_signal):
+              """Test order execution when exception occurs."""
+              mock_trading_bridge.process_alert = AsyncMock(side_effect=Exception("Bridge error"))
+              adapter = TradingBridgeAdapter(trading_bridge=mock_trading_bridge)
+
+              result = await adapter.execute_order(mock_signal)
+
+              assert result.success is False
+              assert result.status == "FAILED"
+              assert "Bridge error" in result.error
+
+          @pytest.mark.asyncio
+          async def test_cancel_order_success(self, adapter):
+              """Test successful order cancellation."""
+              result = await adapter.cancel_order("order_123")
+
+              assert result is True
+              adapter.trading_bridge.broker.cancel_order.assert_called_once_with("order_123")
+
+          @pytest.mark.asyncio
+          async def test_cancel_order_failure(self, adapter):
+              """Test order cancellation when it fails."""
+              adapter.trading_bridge.broker.cancel_order = AsyncMock(return_value=False)
+
+              result = await adapter.cancel_order("order_123")
+
+              assert result is False
+
+          @pytest.mark.asyncio
+          async def test_modify_order_success(self, adapter):
+              """Test successful order modification."""
+              result = await adapter.modify_order("order_123", Decimal("155"))
+
+              assert result is True
+              adapter.trading_bridge.broker.modify_order.assert_called_once_with("order_123", Decimal("155"))
+
+          @pytest.mark.asyncio
+          async def test_get_order_status(self, adapter):
+              """Test getting order status."""
+              result = await adapter.get_order_status("order_123")
+
+              assert result == "FILLED"
+              adapter.trading_bridge.broker.get_order_status.assert_called_once_with("order_123")
+
+          @pytest.mark.asyncio
+          async def test_get_open_orders(self, adapter):
+              """Test getting open orders."""
+              adapter.trading_bridge.broker.get_open_orders = AsyncMock(return_value=["order1", "order2"])
+
+              result = await adapter.get_open_orders()
+
+              assert result == ["order1", "order2"]
+
+          def test_get_execution_history(self, adapter):
+              """Test getting execution history."""
+              adapter.trading_bridge.get_recent_executions.return_value = ["exec1", "exec2"]
+
+              result = adapter.get_execution_history()
+
+              assert result == ["exec1", "exec2"]
+              adapter.trading_bridge.get_recent_executions.assert_called_once_with(limit=100)
+
+          def test_get_bridge_statistics(self, adapter):
+              """Test getting bridge statistics."""
+              result = adapter.get_bridge_statistics()
+
+              assert result["total_executions"] == 1
+              adapter.trading_bridge.get_bridge_statistics.assert_called_once()
+
+          def test_order_mapping(self, adapter):
+              """Test that order IDs are mapped to execution IDs."""
+              # The mapping is done internally during execute_order
+              # This test verifies the mapping dictionary exists
+              assert hasattr(adapter, "_order_mapping")
+              assert isinstance(adapter._order_mapping, dict)
+
+
+      class TestTradingBridgeAdapterFactory:
+          """Test suite for TradingBridgeAdapter factory function."""
+
+          def test_get_trading_bridge_adapter_default(self):
+              """Test factory function with default parameters."""
+              with patch('app.services.execution.trading_bridge_adapter.get_trading_bridge_orchestrator') as mock_get:
+                  mock_bridge = MagicMock()
+                  mock_get.return_value = mock_bridge
+
+                  adapter = get_trading_bridge_adapter()
+
+                  assert isinstance(adapter, TradingBridgeAdapter)
+                  assert adapter.trading_bridge == mock_bridge
+                  assert adapter.enable_logging is False
+
+          def test_get_trading_bridge_adapter_with_logging(self):
+              """Test factory function with logging enabled."""
+              with patch('app.services.execution.trading_bridge_adapter.get_trading_bridge_orchestrator') as mock_get:
+                  mock_bridge = MagicMock()
+                  mock_get.return_value = mock_bridge
+
+                  adapter = get_trading_bridge_adapter(enable_logging=True)
+
+                  assert isinstance(adapter, TradingBridgeAdapter)
+                  assert adapter.enable_logging is True
+      ```
+
+      ### PASO 5: Validar
+
+      ```bash
+      # Validar código
+      python -m py_compile app/services/execution/trading_bridge_adapter.py
+
+      # Ejecutar tests
+      pytest tests/unit/execution/test_trading_bridge_adapter.py -v
+
+      # Validar imports
+      python -c "from app.services.execution import TradingBridgeAdapter; print('OK')"
+      python -c "from app.services.execution import get_trading_bridge_adapter; print('OK')"
+      ```
+
+      ### PASO 6: Actualizar Checkpoint
+
+      ```bash
+      # Crear checkpoint
+      cat > .ralph/checkpoints/12_trading_bridge_integration_checkpoint.json << 'EOF'
+      {
+        "task": "12_trading_bridge_integration",
+        "status": "COMPLETED",
+        "completed_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+        "files_created": [
+          "app/services/execution/trading_bridge_adapter.py",
+          "tests/unit/execution/test_trading_bridge_adapter.py"
+        ],
+        "files_modified": [
+          "app/services/execution/__init__.py"
+        ],
+        "integration_points": [
+          "TradingBridgeAdapter connects TradingBridgeOrchestrator to ITradeExecutor",
+          "ComplianceEngine can use live trading execution via TradingBridge",
+          "OrderManagerAdapter and ExecutionEngineAdapter remain for other use cases"
+        ]
+      }
+      EOF
+
+      # Actualizar checkpoint master
+      python .ralph/scripts/update_master_checkpoint.py 12_trading_bridge_integration COMPLETED
+      ```
+
+      ### PASO 7: Actualizar Scratchpad
+
+      Añadir a `.ralph/agent/scratchpad.md`:
+
+      ```markdown
+      ## 2026-02-09 XX:XX UTC - Task 12 COMPLETED
+
+      ### Summary of Work Done
+
+      **Task 12_trading_bridge_integration - COMPLETED**
+
+      Integrated TradingBridge with ComplianceEngine:
+
+      1. **TradingBridgeAdapter** (`app/services/execution/trading_bridge_adapter.py`)
+         - Implements ITradeExecutor protocol using TradingBridgeOrchestrator
+         - Connects live trading alert-based execution to coordinator layer
+         - Provides order placement via alert-to-trade pipeline
+
+      ### Files Created
+      - `app/services/execution/trading_bridge_adapter.py` - Main adapter implementation
+      - `tests/unit/execution/test_trading_bridge_adapter.py` - Comprehensive unit tests
+
+      ### Files Modified
+      - `app/services/execution/__init__.py` - Updated to export TradingBridgeAdapter
+
+      ### Validation Results
+      - ITradeExecutor protocol compliance: 5/5 methods implemented
+      - Tests passed: All unit tests pass
+      - Integration: Connected to TradingBridgeOrchestrator
+
+      ### Phase 4 Complete
+      Phase 4 (Integration Layer) is now COMPLETE with all 3 adapters:
+      - Task 10: ExecutionEngineAdapter (backtesting)
+      - Task 11: OrderManagerAdapter (live trading order management)
+      - Task 12: TradingBridgeAdapter (live trading alert-based execution)
+
+      ### Next Task
+      13_live_trading_cli (Phase 5 - first task of 4)
+
+      ### Overall Progress
+      - 12 out of 19 tasks COMPLETED
+      - Phase 4 Integration Layer: 3/3 COMPLETED
+      ```
+
+      ### Event Format:
+      Completado: `ralph emit "integration.complete" "task=12_trading_bridge_integration"`
+      Bloqueado: `ralph emit "integration.blocked" "error=..."`
+
+  final_reviewer:
+    name: "Integration Reviewer"
+    description: "Verifica integración completa"
+    triggers: ["integration.complete"]
+    publishes: ["integration.final_summary"]
+    instructions: |
+      ## FINAL REVIEW
+
+      ```bash
+      # 1. Verificar archivos creados
+      ls app/services/execution/trading_bridge_adapter.py
+      ls tests/unit/execution/test_trading_bridge_adapter.py
+
+      # 2. Validar imports
+      python -c "from app.services.execution import TradingBridgeAdapter; print('OK')"
+      python -c "from app.services.execution import get_trading_bridge_adapter; print('OK')"
+
+      # 3. Ejecutar tests
+      pytest tests/unit/execution/test_trading_bridge_adapter.py -v
+
+      # 4. Verificar protocol compliance
+      grep -c "async def execute_order\|async def cancel_order\|async def modify_order\|async def get_order_status\|async def get_open_orders" app/services/execution/trading_bridge_adapter.py
+      # Debe ser 5 (ITradeExecutor tiene 5 métodos)
+
+      # 5. Verificar que todos los adapters están exportados
+      grep "__all__" app/services/execution/__init__.py
+      # Debe incluir ExecutionEngineAdapter, OrderManagerAdapter, TradingBridgeAdapter
+      ```
+
+      Si TODO limpio: `ralph emit "integration.final_summary" "all_passed"`
+
+tasks:
+  enabled: true
+
+memories:
+  enabled: true
+  inject: auto
+  budget: 2000
+
+checkpoint:
+  file: ".ralph/checkpoints/12_trading_bridge_integration_checkpoint.json"
