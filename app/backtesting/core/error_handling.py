@@ -117,7 +117,7 @@ def _train_process_worker(
         import importlib
 
         # Re-import the strategy module in the subprocess
-        module = importlib.import_module(strategy_module)
+        importlib.import_module(strategy_module)
 
         logger.info(
             "Training in subprocess",
@@ -336,8 +336,7 @@ def _train_in_subprocess(
 
     # Start training process with module-level function (pickle-able)
     p = ctx.Process(
-        target=_train_process_worker,
-        args=(result_queue, strategy.__module__, engine_type, {})
+        target=_train_process_worker, args=(result_queue, strategy.__module__, engine_type, {})
     )
 
     try:

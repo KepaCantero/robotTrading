@@ -318,7 +318,9 @@ async def update_market_prices(
     try:
         await service.update_market_prices(request.quotes)
         updated_symbols = list(request.quotes.keys())
-        return MarketUpdateResponse(success=True, updated_symbols=updated_symbols, count=len(updated_symbols))
+        return MarketUpdateResponse(
+            success=True, updated_symbols=updated_symbols, count=len(updated_symbols)
+        )
     except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
         raise HTTPException(status_code=400, detail=str(e))
 

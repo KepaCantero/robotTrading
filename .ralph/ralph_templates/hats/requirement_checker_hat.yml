@@ -1,0 +1,106 @@
+# ============================================
+# Ralph Hat: Requirement Checker + Generator
+# ============================================
+# Verifica si existe requirements.md y lo genera si no
+
+hat_template: requirement_checker
+
+name: "Requirement Checker"
+description: "Verifica y genera requirements.md si no existe"
+
+triggers:
+  - "task.start"
+  - "file.process"
+  - "audit.start"
+
+publishes:
+  - "requirements.ready"
+  - "requirements.generated"
+  - "requirements.exists"
+
+instructions: |
+  ## REQUIREMENT CHECKER - Verificar y generar requirements
+
+  ### Por cada archivo a procesar:
+
+  1. **Verificar si existe requirements.md:**
+  ```bash
+  ls .requirements/{{file_path}}.requirements.md
+  ```
+
+  2. **Si NO existe:**
+  a. Leer el archivo Python:
+  ```bash
+  cat {{file_path}}
+  ```
+
+  b. Generar requirements.md ANÁLISIS COMPLETO:
+  ```markdown
+  # Requirements: {{file_path}}
+
+  ## Source File Analysis
+  - **File Path**: `{{file_path}}`
+  - **Lines of Code**: <contar reales>
+  - **Status**: Analysis Complete
+
+  ## Purpose
+  <Descripción basada en el código>
+
+  ## Dependencies
+  ### Internal
+  - `from app.xxx import yyy` → listar todos
+
+  ### External
+  - `import pandas as pd` → listar todos
+
+  ## Classes/Functions
+  ### class NombreClase
+  **Purpose**: <descripción>
+  **Methods**:
+  - `def metodo(self, ...)`: <descripción>
+
+  ### def funcion(...)
+  **Purpose**: <descripción>
+
+  ## Business Logic
+  <Descripción de lógica implementada>
+
+  ## Critical Rules (BASE_RULES.md)
+  - TYP-001: Type hints → [✅/❌]
+  - LOG-001: Structured logging → [✅/❌]
+  - ERR-001: Error handling → [✅/❌]
+
+  ## Audit Status
+  | **Last Audit Date** | {{date}} |
+  | **Audit Status** | NEEDS_AUDIT |
+  ```
+
+  c. Crear directorio si no existe:
+  ```bash
+  mkdir -p .requirements/$(dirname {{file_path}})
+  ```
+
+  d. Guardar requirements.md:
+  ```bash
+  cat > .requirements/{{file_path}}.requirements.md << 'EOF'
+  <contenido generado arriba>
+  EOF
+  ```
+
+  3. **Emitir evento:**
+  ```
+  ralph emit "requirements.ready" "file={{file_path}}, requirements_exists=true"
+  ```
+
+  ### Checkpoint:
+  ```json
+  {
+    "requirements": {
+      "{{file_path}}": {
+        "status": "generated",
+        "file": ".requirements/{{file_path}}.requirements.md",
+        "timestamp": "{{timestamp}}"
+      }
+    }
+  }
+  ```

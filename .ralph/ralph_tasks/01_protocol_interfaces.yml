@@ -1,0 +1,415 @@
+# ============================================
+# Ralph Task 01: Protocol Interfaces Foundation
+# ============================================
+# PRIORIDAD: P0 (CRÍTICA) - Base para toda la arquitectura SOLID
+# OBJETIVO: Crear interfaces Protocol (ISP, DIP, LSP) para toda la arquitectura
+# TIEMPO: ~4 horas
+#
+# Requirements: .ralph/docs/requirements/SERVICE_REQUIREMENTS.md
+# Architecture: .ralph/docs/architecture/compliance_engine_architecture_analysis.md
+# ============================================================================
+
+event_loop:
+  prompt_file: ".ralph/ralph_tasks/prompts/01_protocol_interfaces.md"
+  completion_promise: "PROTOCOL_INTERFACES_COMPLETE"
+  max_iterations: 50
+  max_runtime_seconds: 14400  # 4 hours
+  checkpoint_interval: 3  # Standardized
+  starting_event: "protocol_interfaces.start"
+
+cli:
+  backend: "claude"
+
+core:
+  specs_dir: "./specs/"
+
+hats:
+  protocol_creator:
+    name: "Protocol Interfaces Creator"
+    description: "Crea interfaces Protocol para arquitectura SOLID"
+    triggers: ["protocol_interfaces.start", "protocol_interfaces.next"]
+    publishes: ["protocol_interfaces.next", "protocol_interfaces.complete", "protocol_interfaces.blocked"]
+    default_publishes: "protocol_interfaces.next"
+    instructions: |
+      ## PROTOCOL INTERFACES FOUNDATION
+
+      **REQUISITOS:**
+      1. Leer: `.ralph/docs/requirements/SERVICE_REQUIREMENTS.md` - Sección SOLID Principles
+      2. Leer: `.ralph/docs/architecture/compliance_engine_architecture_analysis.md`
+
+      **OBJETIVO:** Crear interfaces Protocol siguiendo ISP (< 5 métodos por interfaz)
+
+      ### REGLAS CRÍTICAS:
+      - **ISP-001:** Cada Protocol debe tener máximo 5 métodos
+      - **LSP-001:** Usar typing.Protocol, NO abc.ABC
+      - **DIP-001:** Todas las dependencias usarán estos Protocol
+      - **NO FALLBACKS:** Si falta algún import, usar @skip-import flag
+
+      ### FASE 1: Crear directorio base
+
+      ```bash
+      mkdir -p app/core/protocols
+      touch app/core/protocols/__init__.py
+      ```
+
+      ### FASE 2: Crear Protocol Interfaces
+
+      **2.1 Core Protocols**
+      Archivo: `app/core/protocols/i_pre_trade_validator.py`
+      ```python
+      """
+      Pre-trade validation protocols (R1, R2, R4)
+      """
+      from typing import Protocol, Optional
+      from decimal import Decimal
+
+      class IPreTradeValidator(Protocol):
+          """Validaciones pre-trade (R1, R2, R4) - Máximo 5 métodos"""
+
+          async def validate_kelly(self, capital: Decimal, order_value: Decimal) -> bool:
+              """R1: Kelly Criterion + 2% max"""
+              ...
+
+          async def validate_drawdown(self) -> bool:
+              """R2: Drawdown 15% stop"""
+              ...
+
+          async def validate_rr_ratio(self, entry: Decimal, target: Decimal, stop: Decimal) -> bool:
+              """R4: R:R 2:1 minimum"""
+              ...
+
+          async def validate_stop_loss(self, stop_loss: Optional[Decimal]) -> bool:
+              """R3: Stop Loss SIEMPRE requerido"""
+              ...
+
+          async def validate_market_hours(self) -> bool:
+              """R9: Evitar horarios de baja liquidez"""
+              ...
+      ```
+
+      **2.2 Execution Protocols**
+      Archivo: `app/core/protocols/i_trade_executor.py`
+      ```python
+      """
+      Trade execution protocols
+      """
+      from typing import Protocol
+      from app.core.trade_result import TradeResult  # @skip-import si no existe
+
+      class ITradeExecutor(Protocol):
+          """Ejecuta trades vía broker - Máximo 5 métodos"""
+
+          async def execute_order(self, signal: 'TradeSignal') -> TradeResult:
+              """Ejecutar orden con validaciones"""
+              ...
+
+          async def cancel_order(self, order_id: str) -> bool:
+              """Cancelar orden existente"""
+              ...
+
+          async def modify_order(self, order_id: str, new_price: Decimal) -> bool:
+              """Modificar orden existente"""
+              ...
+
+          async def get_order_status(self, order_id: str) -> str:
+              """Obtener estado de orden"""
+              ...
+
+          async def get_open_orders(self) -> list['TradeSignal']:
+              """Obtener órdenes abiertas"""
+              ...
+      ```
+
+      **2.3 Analysis Protocols**
+      Archivo: `app/core/protocols/i_post_trade_analyzer.py`
+      ```python
+      """
+      Post-trade analysis protocols (R11, R12, R13)
+      """
+      from typing import Protocol
+      from decimal import Decimal
+
+      class IPostTradeAnalyzer(Protocol):
+          """Análisis post-trade - Máximo 5 métodos"""
+
+          async def update_trailing_stop(self, position_id: str, current_price: Decimal) -> Optional[Decimal]:
+              """R11: Trailing Stop Dinámico"""
+              ...
+
+          async def check_partial_take_profit(self, position_id: str, current_pnl: Decimal) -> bool:
+              """R12: Take Profit Parcial"""
+              ...
+
+          async def evaluate_pyramiding(self, position_id: str, unrealized_pnl: Decimal) -> bool:
+              """R13: Pyramiding (solo ganadores)"""
+              ...
+
+          async def calculate_position_metrics(self, position_id: str) -> dict:
+              """Calcular métricas de posición"""
+              ...
+
+          async def generate_exit_signal(self, position_id: str) -> Optional['TradeSignal']:
+              """Generar señal de salida"""
+              ...
+      ```
+
+      **2.4 Broker Protocols**
+      Archivo: `app/core/protocols/i_broker_adapter.py`
+      ```python
+      """
+      Broker adapter protocols
+      """
+      from typing import Protocol, Optional
+      from decimal import Decimal
+
+      class IBrokerAdapter(Protocol):
+          """Adapter para broker - Máximo 5 métodos"""
+
+          async def connect(self) -> bool:
+              """Conectar al broker"""
+              ...
+
+          async def disconnect(self) -> bool:
+              """Desconectar del broker"""
+              ...
+
+          async def place_order(self, order: dict) -> str:
+              """Colocar orden, retorna order_id"""
+              ...
+
+          async def cancel_order(self, order_id: str) -> bool:
+              """Cancelar orden"""
+              ...
+
+          async def get_account(self) -> dict:
+              """Obtener datos de cuenta"""
+              ...
+      ```
+
+      **2.5 Tax Protocols**
+      Archivo: `app/core/protocols/i_spain_tax_engine.py`
+      ```python
+      """
+      Spain tax protocols (IRPF, Dividendos, Modelo 720)
+      """
+      from typing import Protocol
+      from decimal import Decimal
+
+      class ISpainTaxEngine(Protocol):
+          """Motor de impuestos España - Máximo 5 métodos"""
+
+          def calculate_capital_gains_tax(self, profit: Decimal) -> Decimal:
+              """IRPF-001: Progresivo 19/21/23%"""
+              ...
+
+          def calculate_dividend_tax(self, symbol: str, amount: Decimal) -> Decimal:
+              """DIV-001: UE 0% vs No-UE 19%"""
+              ...
+
+          def is_eu_country(self, symbol: str) -> bool:
+              """Verificar si país es UE"""
+              ...
+
+          def check_modelo_720_threshold(self, foreign_assets: Decimal) -> bool:
+              """MOD720-001: > €50k extranjeros"""
+              ...
+
+          def generate_modelo_720_report(self) -> dict:
+              """Generar reporte Modelo 720"""
+              ...
+      ```
+
+      **2.6 Logging Protocols**
+      Archivo: `app/core/protocols/i_trading_decision_logger.py`
+      ```python
+      """
+      Logging protocols (R15, R28)
+      """
+      from typing import Protocol
+
+      class ITradingDecisionLogger(Protocol):
+          """Logger append-only con correlation ID - Máximo 5 métodos"""
+
+          def log_signal(self, signal: 'TradeSignal', metadata: dict) -> str:
+              """Log signal con correlation ID"""
+              ...
+
+          def log_execution(self, correlation_id: str, result: 'TradeResult') -> None:
+              """Log execution result"""
+              ...
+
+          def log_validation_result(self, correlation_id: str, validator: str, passed: bool) -> None:
+              """Log validation result"""
+              ...
+
+          def get_logs_by_correlation_id(self, correlation_id: str) -> list:
+              """Obtener logs por correlation ID"""
+              ...
+
+          def export_for_hacienda(self, year: int) -> list:
+              """R28: Exportar logs para Hacienda (5 años)"""
+              ...
+      ```
+
+      **2.7 Risk Protocols**
+      Archivo: `app/core/protocols/i_kill_switch_monitor.py`
+      ```python
+      """
+      Risk monitoring protocols (R2)
+      """
+      from typing import Protocol
+
+      class IKillSwitchMonitor(Protocol):
+          """Monitor de drawdown máximo - Máximo 5 métodos"""
+
+          async def check_kill_switch(self) -> bool:
+              """R2: Verificar si drawdown >= 15%"""
+              ...
+
+          async def get_current_drawdown(self) -> float:
+              """Obtener drawdown actual"""
+              ...
+
+          async def activate_kill_switch(self, reason: str) -> bool:
+              """Activar kill switch"""
+              ...
+
+          async def deactivate_kill_switch(self) -> bool:
+              """Desactivar kill switch"""
+              ...
+
+          async def get_kill_switch_status(self) -> dict:
+              """Obtener estado del kill switch"""
+              ...
+      ```
+
+      **2.8 Additional Protocols**
+      Archivo: `app/core/protocols/i_alert_processor.py`
+      ```python
+      """Alert processing protocols"""
+      from typing import Protocol
+
+      class IAlertProcessor(Protocol):
+          """Procesa alertas de mercado - Máximo 5 métodos"""
+
+          async def process_alert(self, alert: dict) -> Optional['TradeSignal']:
+              """Procesa alerta y genera señal"""
+              ...
+
+          async def validate_alert(self, alert: dict) -> bool:
+              """Valida formato de alerta"""
+              ...
+
+          async def filter_duplicate_alerts(self, alerts: list) -> list:
+              """Filtra alertas duplicadas"""
+              ...
+
+          async def prioritize_alerts(self, alerts: list) -> list:
+              """Prioriza alertas por urgencia"""
+              ...
+
+          async def get_alert_history(self, symbol: str, days: int) -> list:
+              """Obtener historial de alertas"""
+              ...
+      ```
+
+      Archivo: `app/core/protocols/i_strategy_cycle_runner.py`
+      ```python
+      """Strategy cycle protocols"""
+      from typing import Protocol
+      from app.core/cycle_result import CycleResult  # @skip-import si no existe
+
+      class IStrategyCycleRunner(Protocol):
+          """Ejecuta ciclos de estrategia - Máximo 5 métodos"""
+
+          async def run_cycle(self, signals: list['TradeSignal']) -> CycleResult:
+              """Ejecutar ciclo completo"""
+              ...
+
+          async def validate_cycle_input(self, signals: list) -> bool:
+              """Valida entrada del ciclo"""
+              ...
+
+          async def execute_cycle_phase(self, phase: str, signals: list) -> dict:
+              """Ejecuta fase del ciclo"""
+              ...
+
+          async def handle_cycle_error(self, error: Exception) -> None:
+              """Maneja errores del ciclo"""
+              ...
+
+          async def get_cycle_metrics(self) -> dict:
+              """Obtener métricas del ciclo"""
+              ...
+      ```
+
+      ### FASE 3: Validar
+
+      ```bash
+      # Verificar archivos creados
+      ls -la app/core/protocols/*.py
+
+      # Validar cada archivo
+      for f in app/core/protocols/*.py; do
+        python .ralph/scripts/utils.py validate "$f" | jq '.success'
+      done
+
+      # Verificar que todos usan Protocol
+      grep -l "class.*Protocol" app/core/protocols/*.py | wc -l  # Debe ser >= 9
+
+      # Verificar que ninguno usa ABC
+      grep "abc.ABC" app/core/protocols/*.py  # No debe retornar nada
+
+      # Verificar ISP (< 5 métodos por Protocol)
+      for file in app/core/protocols/i_*.py; do
+        echo "Checking $file..."
+        grep -A 20 "class.*Protocol" "$file" | grep "def " | wc -l  # Debe ser <= 5
+      done
+      ```
+
+      ### FASE 4: Crear __init__.py
+
+      Archivo: `app/core/protocols/__init__.py`
+      ```python
+      """
+      Protocol interfaces for SOLID architecture
+
+      This module contains all Protocol interfaces used throughout
+      the application for dependency inversion and interface segregation.
+      """
+
+      from app.core.protocols.i_pre_trade_validator import IPreTradeValidator
+      from app.core.protocols.i_trade_executor import ITradeExecutor
+      from app.core.protocols.i_post_trade_analyzer import IPostTradeAnalyzer
+      from app.core.protocols.i_broker_adapter import IBrokerAdapter
+      from app.core.protocols.i_spain_tax_engine import ISpainTaxEngine
+      from app.core.protocols.i_trading_decision_logger import ITradingDecisionLogger
+      from app.core.protocols.i_kill_switch_monitor import IKillSwitchMonitor
+      from app.core.protocols.i_alert_processor import IAlertProcessor
+      from app.core.protocols.i_strategy_cycle_runner import IStrategyCycleRunner
+
+      __all__ = [
+          "IPreTradeValidator",
+          "ITradeExecutor",
+          "IPostTradeAnalyzer",
+          "IBrokerAdapter",
+          "ISpainTaxEngine",
+          "ITradingDecisionLogger",
+          "IKillSwitchMonitor",
+          "IAlertProcessor",
+          "IStrategyCycleRunner",
+      ]
+      ```
+
+      ### Validar __init__.py
+      ```bash
+      python .ralph/scripts/utils.py validate app/core/protocols/__init__.py
+      ```
+
+memories:
+  enabled: true
+  inject: auto
+  budget: 3000
+
+checkpoint:
+  file: ".ralph/checkpoints/01_protocol_interfaces_checkpoint.json"

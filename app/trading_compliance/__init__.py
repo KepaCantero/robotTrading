@@ -605,11 +605,21 @@ class ComplianceAwarePaperTrader:
 
             if side == "BUY":
                 execution_price = base_price * (
-                    Decimal("1") + (Decimal(str(self._default_spread_bps)) / Decimal("2") + Decimal(str(impact_bps))) / Decimal("10000")
+                    Decimal("1")
+                    + (
+                        Decimal(str(self._default_spread_bps)) / Decimal("2")
+                        + Decimal(str(impact_bps))
+                    )
+                    / Decimal("10000")
                 )
             else:  # SELL
                 execution_price = base_price * (
-                    Decimal("1") - (Decimal(str(self._default_spread_bps)) / Decimal("2") + Decimal(str(impact_bps))) / Decimal("10000")
+                    Decimal("1")
+                    - (
+                        Decimal(str(self._default_spread_bps)) / Decimal("2")
+                        + Decimal(str(impact_bps))
+                    )
+                    / Decimal("10000")
                 )
 
             logger.info(

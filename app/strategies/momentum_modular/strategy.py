@@ -205,7 +205,9 @@ class ModularMomentumStrategy(BaseStrategy):
                 logger.info(
                     "⚠️ El entrenamiento se hará en subprocess. No habrá predicciones del modelo durante el backtest."
                 )
-                self.learning_engine = None  # NO crear - evitar import de stable-baselines3 en proceso principal
+                self.learning_engine = (
+                    None  # NO crear - evitar import de stable-baselines3 en proceso principal
+                )
             elif engine_type == "transformer":
                 # CRÍTICO: NO crear TransformerEngine en proceso principal - causa mutex.cc blocking
                 logger.info(
@@ -239,7 +241,9 @@ class ModularMomentumStrategy(BaseStrategy):
                 logger.error("💡 El learning engine se intentará inicializar más tarde o se omitirá")
                 self.learning_engine = None
             else:
-                logger.error(f"❌ Error al inicializar learning engine {engine_type}: {type(e).__name__}: {e}")
+                logger.error(
+                    f"❌ Error al inicializar learning engine {engine_type}: {type(e).__name__}: {e}"
+                )
                 self.learning_engine = None
 
     def _is_market_regime_safe(self, market_context: Dict[str, Any]) -> bool:

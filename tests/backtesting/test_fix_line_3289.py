@@ -10,12 +10,12 @@ This test validates:
 """
 
 from datetime import datetime, timedelta
+from decimal import Decimal
 
 import pytest
 
-from app.backtesting.data_split import TrainValTestSplitter, DataSplit
+from app.backtesting.data_split import DataSplit, TrainValTestSplitter
 from app.models.market_data import Quote
-from decimal import Decimal
 
 
 class TestLine3289Fix:
@@ -33,7 +33,7 @@ class TestLine3289Fix:
                 bid=Decimal("100.0"),
                 ask=Decimal("100.5"),
                 last=Decimal("100.25"),
-                volume=Decimal("1000")
+                volume=Decimal("1000"),
             )
             for i in range(100)
         ]
@@ -42,7 +42,7 @@ class TestLine3289Fix:
         train, val, test = splitter.split_data(
             market_data=quotes,  # This is the fix
             start_date=datetime(2024, 1, 1),
-            end_date=datetime(2024, 3, 1)
+            end_date=datetime(2024, 3, 1),
         )
 
         # Verify split worked correctly
@@ -63,7 +63,7 @@ class TestLine3289Fix:
                 bid=Decimal(str(150 + i)),
                 ask=Decimal(str(150.5 + i)),
                 last=Decimal(str(150.25 + i)),
-                volume=Decimal("10000")
+                volume=Decimal("10000"),
             )
             for i in range(500)
         ]
@@ -97,7 +97,7 @@ class TestLine3289Fix:
                 bid=Decimal("100.0"),
                 ask=Decimal("101.0"),
                 last=Decimal("100.5"),
-                volume=Decimal(f"{i * 100}")
+                volume=Decimal(f"{i * 100}"),
             )
             for i in range(100)
         ]
@@ -118,6 +118,7 @@ class TestLine3289Fix:
     def test_parameter_signature_matches(self):
         """Test that the parameter name matches the actual function signature."""
         import inspect
+
         from app.backtesting.data_split import TrainValTestSplitter
 
         sig = inspect.signature(TrainValTestSplitter.split_data)
@@ -140,7 +141,7 @@ class TestLine3289Fix:
                 bid=Decimal("100.0"),
                 ask=Decimal("100.5"),
                 last=Decimal("100.25"),
-                volume=Decimal("1000")
+                volume=Decimal("1000"),
             )
             for i in range(100)
         ]
@@ -172,7 +173,7 @@ class TestEdgeCasesForLine3289Fix:
                 bid=Decimal("100.0"),
                 ask=Decimal("100.5"),
                 last=Decimal("100.25"),
-                volume=Decimal("1000")
+                volume=Decimal("1000"),
             )
             for i in range(100)
         ]
@@ -181,11 +182,7 @@ class TestEdgeCasesForLine3289Fix:
         start = datetime(2024, 1, 11)
         end = datetime(2024, 1, 20)
 
-        train, val, test = splitter.split_data(
-            market_data=quotes,
-            start_date=start,
-            end_date=end
-        )
+        train, val, test = splitter.split_data(market_data=quotes, start_date=start, end_date=end)
 
         # All items should be within date range
         all_items = train + val + test
@@ -203,7 +200,7 @@ class TestEdgeCasesForLine3289Fix:
                 bid=Decimal("100.0"),
                 ask=Decimal("100.5"),
                 last=Decimal("100.25"),
-                volume=Decimal("1000")
+                volume=Decimal("1000"),
             )
             for i in range(100)
         ]
@@ -211,7 +208,5 @@ class TestEdgeCasesForLine3289Fix:
         # Date range that doesn't overlap with quotes
         with pytest.raises(ValueError, match="No data after applying date filters"):
             splitter.split_data(
-                market_data=quotes,
-                start_date=datetime(2025, 1, 1),
-                end_date=datetime(2025, 12, 31)
+                market_data=quotes, start_date=datetime(2025, 1, 1), end_date=datetime(2025, 12, 31)
             )

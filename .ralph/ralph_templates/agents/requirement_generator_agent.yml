@@ -1,0 +1,423 @@
+# ============================================
+# Ralph Agent: Requirement Generator v3.0
+# ============================================
+# Genera archivos de requirements.md con extracción DETERMINISTA de docs
+# USA docs_extraction_mapping.yml para saber QUÉ hacer
+
+agent_id: requirement_generator
+agent_type: generator
+version: "3.0"
+
+description: |
+  Analiza archivos Python y genera requirements.md automáticamente.
+  Usa extracción determinista de docs/ - NO hay juicio, solo seguir pasos.
+
+triggers:
+  - "file.requires_analysis"
+  - "requirements.missing"
+  - "audit.needs_requirements"
+
+input_schema:
+  file_path:
+    type: string
+    required: true
+    description: "Ruta del archivo Python a analizar"
+
+output_schema:
+  requirements_file:
+    type: string
+    description: "Ruta del archivo requirements.md generado"
+  sources_used:
+    type: array
+    items: string
+    description: "Archivos de docs leídos (determinista)"
+  applied_rules:
+    type: object
+    properties:
+      solid: array
+      trading: array
+      spain_tax: array
+      base_rules: array
+    description: "Reglas aplicables (de docs_extraction_mapping.yml)"
+
+instructions: >-
+  ## REQUIREMENT GENERATOR v3.0 - Extracción Determinista de Docs
+
+  ### PRIMERO: Leer el mapeo de extracción
+
+  ```bash
+  # ESTE archivo te dice QUÉ hacer
+  cat .ralph/rules/docs_extraction_mapping.yml
+  ```
+
+  ### PASO 1: Identificar archivo (DETERMINISTA)
+
+  ```python
+  # 1. Leer rules_mapping.yml
+  import yaml
+  with open('.ralph/rules/rules_mapping.yml') as f:
+      rules_mapping = yaml.safe_load(f)
+
+  # 2. Buscar archivo exacto
+  if file_path in rules_mapping['file_pattern_mapping']:
+      file_info = rules_mapping['file_pattern_mapping'][file_path]
+  else:
+      # 3. Buscar por patrón
+      import fnmatch
+      for pattern, info in rules_mapping['file_pattern_mapping'].items():
+          if fnmatch.fnmatch(file_path, pattern):
+              file_info = info
+              break
+      else:
+          # 4. Usar servicio base
+          service = detect_service_from_path(file_path)
+          file_info = {
+              'service': service,
+              'component': extract_component_name(file_path),
+              'priority': rules_mapping['service_mapping'][service].get('priority', 'P1')
+          }
+  ```
+
+  ### PASO 2: Extraer SOLID Rules (DETERMINISTA)
+
+  ```bash
+  # 2.1 Leer fuente de verdad
+  cat .ralph/docs/requirements/SERVICE_REQUIREMENTS.md
+
+  # 2.2 Extraer sección "## SOLID Principles"
+  # Buscar DESPUÉS de este heading hasta el próximo ##
+
+  # 2.3 Para cada regla SRP-001, OCP-001, LSP-001, ISP-001, DIP-001:
+  # Extraer:
+  # - name (del heading)
+  # - description (de "**Qué es:**")
+  # - violation (de "**Violación en:**")
+  # - solution (de "**Solución:**")
+
+  # 2.4 Generar objeto
+  solid_rule = {
+      "rule_id": "SRP-001",
+      "name": "Single Responsibility Principle",
+      "description": "<texto extraído>",
+      "violation_location": "<archivos afectados>",
+      "solution": "<solución propuesta>"
+  }
+  ```
+
+  ### PASO 3: Extraer Trading Rules (DETERMINISTA)
+
+  ```bash
+  # 3.1 Leer fuente de verdad
+  cat .ralph/docs/realistic_trading_rules.md
+
+  # 3.2 Extraer sección "### Reglas Prioritarias (P0)"
+  # Buscar DESPUÉS de este heading hasta "### Reglas Secundarias"
+
+  # 3.3 Para cada regla que aplica al servicio:
+  # (usar file_info['service'] para filtrar)
+  #
+  # Extraer con patrón:
+  # **R{id}:** {nombre}
+  # - **Categoría:** {categoria}
+  # - **Por qué:** {por_que}
+  # - **Implementación realista:** {implementacion}
+
+  # 3.4 Generar objeto
+  trading_rule = {
+      "rule_id": "R1",
+      "name": "Kelly Criterion + 2% Max",
+      "category": "risk_management",
+      "rationale": "<por qué>",
+      "implementation": "<código>",
+      "priority": "P0"
+  }
+  ```
+
+  ### PASO 4: Extraer Spain Tax Rules (DETERMINISTA)
+
+  ```bash
+  # 4.1 Leer fuente de verdad
+  cat .ralph/docs/requirements/SERVICE_REQUIREMENTS.md
+
+  # 4.2 Extraer sección "## Spain-Specific Requirements"
+  # Buscar DESPUÉS de este heading
+
+  # 4.3 Extraer 3 subsecciones:
+
+  # IRPF (después de "### IRPF (Impuesto sobre la Renta)"):
+  irpf_rule = {
+      "rule_id": "IRPF-001",
+      "name": "IRPF Progresivo 19/21/23%",
+      "brackets": [
+          {"min": 0, "max": 6000, "rate": 0.19},
+          {"min": 6000, "max": 50000, "rate": 0.21},
+          {"min": 50000, "max": 999999, "rate": 0.23}
+      ],
+      "specificity": "<texto extraído>"
+  }
+
+  # Dividendos (después de "### Dividendos UE vs No-UE"):
+  div_rule = {
+      "rule_id": "DIV-001",
+      "name": "Dividendos UE 0% vs No-UE 19%",
+      "eu_countries": "<lista de países>",
+      "withholding": {"eu": 0.0, "non_eu": 0.19}
+  }
+
+  # Modelo 720 (después de "### Modelo 720"):
+  mod720_rule = {
+      "rule_id": "MOD720-001",
+      "name": "Modelo 720 > €50k Extranjeros",
+      "threshold": 50000,
+      "requirement": "<texto extraído>"
+  }
+  ```
+
+  ### PASO 5: Extraer Implementation Gaps (DETERMINISTA)
+
+  ```bash
+  # 5.1 Leer fuente de verdad
+  cat .ralph/docs/implementation_analysis_R1-R29.md
+
+  # 5.2 Buscar tabla de implementación
+  # Patrón de fila:
+  # | R{id} | {nombre} | {estado} | {archivos} | {gap} |
+
+  # 5.3 Para cada trading rule del PASO 3:
+  # Buscar su fila en la tabla
+  # Extraer: estado (IMPLEMENTED/PARTIAL/NOT_IMPLEMENTED)
+  # Extraer: archivos afectados
+  # Extraer: gap_description
+
+  # 5.4 Agregar al trading_rule
+  trading_rule['implementation_status'] = "<estado>"
+  trading_rule['affected_files'] = "<archivos>"
+  trading_rule['gap'] = "<gap>"
+  ```
+
+  ### PASO 6: Extraer Base Rules (DETERMINISTA)
+
+  ```bash
+  # 6.1 Leer docs_extraction_mapping.yml
+  cat .ralph/rules/docs_extraction_mapping.yml
+
+  # 6.2 Buscar service_base_rules[file_info['service']]
+  # Esto retorna lista de reglas base
+
+  # 6.3 Para cada regla base:
+  # Extraer definición de base_rules en docs_extraction_mapping.yml
+
+  base_rule = {
+      "rule_id": "TYP-001",
+      "name": "Type Hints Requeridos",
+      "description": "<descripción>",
+      "check": "<cómo validar>"
+  }
+  ```
+
+  ### PASO 7: Leer archivo Python (ANÁLISIS)
+
+  ```bash
+  # 7.1 Leer el archivo
+  cat {{file_path}}
+
+  # 7.2 Extraer información básica
+  - **Component**: <de file_info>
+  - **Service**: <de file_info>
+  - **Priority**: <de file_info>
+  - **Lines of Code**: <wc -l>
+  - **Classes**: <grep -c "^class ">
+  - **Functions**: <grep -c "^def ">
+
+  # 7.3 Extraer dependencies
+  - **Internal**: grep "^from app\." | uniq
+  - **External**: grep "^import " | grep -v "^from app\." | uniq
+
+  # 7.4 Extraer classes/functions con docstrings
+  grep -A 5 "^class " # para extraer propósito de docstring
+  grep -A 5 "^def "  # para extraer propósito de docstring
+  ```
+
+  ### PASO 8: Verificar cumplimiento (DETERMINISTA)
+
+  ```python
+  # Para cada SOLID rule:
+  # - Buscar violaciones en código
+  # - Marcar [✅] si cumple, [❌] si no, [⚠️] parcial
+
+  # Para cada Trading rule:
+  # - Buscar implementación en código
+  # - Usar implementation_status del PASO 5
+  # - Marcar [✅] si IMPLEMENTED, [⚠️] si PARTIAL, [❌] si NOT_IMPLEMENTED
+
+  # Para cada Spain Tax rule:
+  # - Buscar implementación en código
+  # - Marcar [✅] si está, [❌] si no
+
+  # Para cada Base rule:
+  # - Validar con checks especificados
+  # - Marcar [✅] si pasa, [❌] si falla
+  ```
+
+  ### PASO 9: Generar requirements.md
+
+  ```markdown
+  # Requirements: {{file_path}}
+
+  ## Source File Analysis
+  - **File Path**: `{{file_path}}`
+  - **Component**: {{component_name}}
+  - **Service**: {{service_name}}
+  - **Priority**: {{priority}}
+  - **Lines of Code**: {{count_lines}}
+  - **Status**: Analysis Complete
+
+  ## Purpose
+  {{del docstring de clase principal}}
+
+  ## Dependencies
+  ### Internal
+  {{lista de imports from app.xxx}}
+
+  ### External
+  {{lista de imports de librerías}}
+
+  ## Classes/Functions
+  {{para cada clase/function: nombre + propósito del docstring}}
+
+  ## Business Logic
+  {{descripción basada en código}}
+
+  ## Project Rules (DETERMINISTA - de docs/)
+  ### SOLID Principles (5 rules)
+  {{para cada SOLID rule extraída del PASO 2}}
+  - {{rule_id}}: {{name}} → [{{check_status}}] {{description}}
+
+  ### Trading Rules ({{count}} rules)
+  {{para cada Trading rule aplicable del PASO 3}}
+  - {{rule_id}}: {{name}} → [{{status}}]
+    - Category: {{category}}
+    - Priority: {{priority}}
+    - Implementation: {{code}}
+    - Status: {{implementation_status}}
+    - Gap: {{gap_description}}
+
+  ### Spain Tax Rules (3 rules)
+  {{para cada Spain Tax rule del PASO 4}}
+  - {{rule_id}}: {{name}} → [{{check_status}}]
+    - Category: {{category}}
+    - Implementation: {{details}}
+
+  ### Base Rules ({{count}} rules)
+  {{para cada Base rule del PASO 6}}
+  - {{rule_id}}: {{name}} → [{{check_status}}] {{description}}
+
+  ## Audit Status
+  | **Last Audit Date** | {{current_date}} |
+  | **Component** | {{component}} |
+  | **Service** | {{service}} |
+  | **Priority** | {{priority}} |
+  | **Audit Status** | NEEDS_AUDIT |
+
+  ## Implementation Gap
+  {{para cada rule con status [❌] o [⚠️]}}
+  ### {{rule_id}}: {{name}}
+  **Status**: [IMPLEMENTED/PARTIAL/MISSING]
+  **Evidence**: {{location_in_code}}
+  **Gap**: {{what_is_missing}}
+  ```
+
+  ### PASO 10: Guardar
+
+  ```bash
+  # Crear directorio
+  mkdir -p .requirements/$(dirname {{file_path}})
+
+  # Guardar
+  cat > .requirements/{{file_path}}.requirements.md << 'EOF'
+  {{contenido generado arriba}}
+  EOF
+
+  # Verificar
+  ls -la .requirements/{{file_path}}.requirements.md
+  ```
+
+  ### PASO 11: Validar salida
+
+  ```bash
+  # Debe tener estas secciones (todas):
+  grep "## Source File Analysis" .requirements/{{file_path}}.requirements.md
+  grep "## Project Rules (DETERMINISTA" .requirements/{{file_path}}.requirements.md
+  grep "### SOLID Principles" .requirements/{{file_path}}.requirements.md
+  grep "### Trading Rules" .requirements/{{file_path}}.requirements.md
+  grep "### Spain Tax Rules" .requirements/{{file_path}}.requirements.md
+  grep "### Base Rules" .requirements/{{file_path}}.requirements.md
+  grep "## Implementation Gap" .requirements/{{file_path}}.requirements.md
+
+  # Debe tener counts correctos:
+  # SOLID: 5 rules
+  # Trading: >= 3 rules (según servicio)
+  # Spain Tax: 3 rules
+  # Base Rules: >= 3 rules (según servicio)
+  ```
+
+  ### Output JSON:
+
+  ```json
+  {
+    "requirements_file": ".requirements/{{file_path}}.requirements.md",
+    "sources_used": [
+      ".ralph/rules/docs_extraction_mapping.yml",
+      ".ralph/rules/rules_mapping.yml",
+      ".ralph/docs/requirements/SERVICE_REQUIREMENTS.md",
+      ".ralph/docs/realistic_trading_rules.md",
+      ".ralph/docs/implementation_analysis_R1-R29.md",
+      "{{file_path}}"
+    ],
+    "applied_rules": {
+      "solid": ["SRP-001", "OCP-001", "LSP-001", "ISP-001", "DIP-001"],
+      "trading": ["R1", "R2", "R4", "R15"],
+      "spain_tax": ["IRPF-001", "DIV-001", "MOD720-001"],
+      "base_rules": ["TYP-001", "LOG-001", "ERR-001", "ASYNC-001"]
+    },
+    "analysis": {
+      "component": "{{component}}",
+      "service": "{{service}}",
+      "priority": "{{priority}}",
+      "lines_of_code": {{n}},
+      "classes": {{n}},
+      "functions": {{n}}
+    },
+    "extraction_summary": {
+      "solid_rules_extracted": 5,
+      "trading_rules_extracted": {{n}},
+      "spain_tax_rules_extracted": 3,
+      "base_rules_extracted": {{n}}
+    },
+    "status": "created",
+    "timestamp": "{{timestamp}}"
+  }
+  ```
+
+  ### REGLAS (OBLIGATORIO):
+
+  - ❌ **NO INVENTAR** - Extraer TODO de docs/ usando patrones
+  - ✅ **SEGUIR PASOS** - Ejecutar PASO 1 a PASO 11 en orden
+  - ✅ **VALIDAR FUENTES** - Siempre verificar que el archivo existe antes de leer
+  - ✅ **USAR PATRONES** - Extraer con grep/regex, NO con "juicio"
+  - ✅ **VERIFICAR SALIDA** - Ejecutar validaciones del PASO 11
+  - ✅ **REPORTAR FUENTES** - Siempre listar sources_used en output
+
+  ### CHECKLIST DE VALIDACIÓN:
+
+  Antes de marcar como completado:
+  - [ ] requirements.md fue creado en .requirements/
+  - [ ] Tiene sección "## Project Rules (DETERMINISTA"
+  - [ ] Tiene 4 subsecciones: SOLID, Trading, Spain Tax, Base
+  - [ ] SOLID tiene 5 rules (SRP, OCP, LSP, ISP, DIP)
+  - [ ] Trading tiene >= 3 rules (según servicio)
+  - [ ] Spain Tax tiene 3 rules (IRPF, DIV, MOD720)
+  - [ ] Base Rules tiene >= 3 rules (según servicio)
+  - [ ] Implementation Gap lista todos los [❌] y [⚠️]
+  - [ ] sources_used lista 6 archivos
+  - [ ] extraction_summary tiene counts correctos

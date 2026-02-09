@@ -216,7 +216,9 @@ class Transaction(Base):  # type: ignore[valid-type]
     lot_id: Optional[UUID] = sa.Column(
         PGUUID(as_uuid=True), sa.ForeignKey('lots.id'), nullable=True
     )
-    lot = sa.orm.relationship("Lot", back_populates="transactions", foreign_keys="Transaction.lot_id")
+    lot = sa.orm.relationship(
+        "Lot", back_populates="transactions", foreign_keys="Transaction.lot_id"
+    )
 
     # Tax-related fields
     is_taxable: bool = sa.Column(sa.Boolean, default=True)

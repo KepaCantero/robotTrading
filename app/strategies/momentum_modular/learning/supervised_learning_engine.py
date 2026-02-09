@@ -78,7 +78,9 @@ class SupervisedLearningEngine(BaseLearningEngine):
         self.sample_weights_ = None  # Stores sample weights from uniqueness calculation
 
     def train(
-        self, training_data: Optional[Dict[str, Any]] = None, validation_data: Optional[Dict[str, Any]] = None
+        self,
+        training_data: Optional[Dict[str, Any]] = None,
+        validation_data: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, float]:
         """
         Entrenar modelo supervisado.

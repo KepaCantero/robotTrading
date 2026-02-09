@@ -9,11 +9,10 @@ Tests cover:
 - Edge cases and error handling
 """
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pytest
-
-import matplotlib.pyplot as plt
 
 from app.backtesting.labeling.triple_barrier import (
     TripleBarrierConfig,

@@ -1,0 +1,314 @@
+# ============================================
+# Docs Extraction Mapping - Sistema Determinista
+# ============================================
+# Define QUÉ archivo leer y QUÉ extraer de cada uno
+# El requirement agent USA ESTO para saber qué hacer
+
+version: "1.0"
+project: "AlgoTrading"
+
+# ============================================================================
+# MAPEO DE FUENTES DE VERDAD
+# ============================================================================
+# Cada categoría de regla tiene SU fuente de verdad en docs/
+truth_sources:
+  solid:
+    source_file: ".ralph/docs/requirements/SERVICE_REQUIREMENTS.md"
+    section: "## SOLID Principles"
+    extraction_method: "parse_markdown_section"
+
+  trading:
+    source_file: ".ralph/docs/realistic_trading_rules.md"
+    section: "### Reglas Prioritarias (P0)"
+    extraction_method: "parse_r1_to_r29_rules"
+
+  spain_tax:
+    source_file: ".ralph/docs/requirements/SERVICE_REQUIREMENTS.md"
+    section: "## Spain-Specific Requirements"
+    subsections:
+      - "### IRPF (Impuesto sobre la Renta)"
+      - "### Dividendos UE vs No-UE"
+      - "### Modelo 720"
+    extraction_method: "parse_markdown_sections"
+
+  implementation_gaps:
+    source_file: ".ralph/docs/implementation_analysis_R1-R29.md"
+    section: "## Estado de Implementación por Regla"
+    extraction_method: "parse_implementation_status"
+
+# ============================================================================
+# EXTRACCIÓN DETERMINISTA POR CATEGORÍA
+# ============================================================================
+extraction_rules:
+  # ========================================================================
+  # SOLID - Extraer de SERVICE_REQUIREMENTS.md
+  # ========================================================================
+  solid:
+    steps:
+      - step: 1
+        action: "READ_FILE"
+        file: ".ralph/docs/requirements/SERVICE_REQUIREMENTS.md"
+        extract: "section_after: '## SOLID Principles'"
+
+      - step: 2
+        action: "PARSE"
+        pattern: |
+          ### SRP-001: Single Responsibility Principle
+          **Qué es:** ...(extraer texto)
+          **Violación en:** ...(extraer archivos afectados)
+          **Solución:** ...(extraer solución)
+
+      - step: 3
+        action: "CREATE_RULE_OBJECT"
+        output_format:
+          rule_id: "SRP-001"
+          name: "Single Responsibility Principle"
+          description: "<texto extraído>"
+          violation_location: "<archivos afectados>"
+          solution: "<solución propuesta>"
+
+    all_rules_to_extract:
+      - SRP-001
+      - OCP-001
+      - LSP-001
+      - ISP-001
+      - DIP-001
+
+  # ========================================================================
+  # TRADING (R1-R29) - Extraer de realistic_trading_rules.md
+  # ========================================================================
+  trading:
+    steps:
+      - step: 1
+        action: "READ_FILE"
+        file: ".ralph/docs/realistic_trading_rules.md"
+        extract: "lines_between: '### Reglas Prioritarias (P0)' and '### Reglas Secundarias (P1)'"
+
+      - step: 2
+        action: "PARSE_EACH_RULE"
+        pattern: |
+          **R{id}:** {nombre}
+          - **Categoría:** {categoria}
+          - **Por qué:** {por_que}
+          - **Implementación realista:** {implementacion}
+
+      - step: 3
+        action: "CREATE_RULE_OBJECT"
+        output_format:
+          rule_id: "R{id}"
+          name: "<nombre>"
+          category: "<categoria>"
+          rationale: "<por_que>"
+          implementation: "<implementacion>"
+
+    all_rules_to_extract:
+      - R1
+      - R2
+      - R3
+      - R4
+      - R5
+      - R6
+      - R7
+      - R10
+      - R11
+      - R12
+      - R13
+      - R14
+      - R15
+      - R16
+      - R19
+      - R20
+      - R21
+      - R28
+      - R29
+
+  # ========================================================================
+  # SPAIN TAX - Extraer de SERVICE_REQUIREMENTS.md
+  # ========================================================================
+  spain_tax:
+    steps:
+      - step: 1
+        action: "READ_FILE"
+        file: ".ralph/docs/requirements/SERVICE_REQUIREMENTS.md"
+        extract: "section_after: '## Spain-Specific Requirements'"
+
+      - step: 2
+        action: "PARSE_SUBSECTIONS"
+        subsections:
+          IRPF:
+            pattern: |
+              ### IRPF (Impuesto sobre la Renta)
+              **Tramos:** ...(extraer tramos)
+              **Especificidad España:** ...(extraer)
+
+          DIVIDENDS:
+            pattern: |
+              ### Dividendos UE vs No-UE
+              **Países UE:** ...(extraer lista)
+              **Retención:** ...(extraer porcentajes)
+
+          MODELO_720:
+            pattern: |
+              ### Modelo 720 (Activos en el Extranjero)
+              **Umbral:** ...(extraer)
+              **Requisito:** ...(extraer)
+
+      - step: 3
+        action: "CREATE_RULE_OBJECTS"
+        output_format:
+          IRPF-001:
+            name: "IRPF Progresivo 19/21/23%"
+            brackets: "<tramos extraídos>"
+            specificity: "<especificidad España>"
+          DIV-001:
+            name: "Dividendos UE 0% vs No-UE 19%"
+            eu_countries: "<lista UE>"
+            withholding: "<porcentajes>"
+          MOD720-001:
+            name: "Modelo 720 > €50k Extranjeros"
+            threshold: "<umbral>"
+            requirement: "<requisito>"
+
+    all_rules_to_extract:
+      - IRPF-001
+      - DIV-001
+      - MOD720-001
+      - LOSS-CF-001
+
+  # ========================================================================
+  # IMPLEMENTATION GAPS - Extraer de implementation_analysis_R1-R29.md
+  # ========================================================================
+  implementation_gaps:
+    steps:
+      - step: 1
+        action: "READ_FILE"
+        file: ".ralph/docs/implementation_analysis_R1-R29.md"
+
+      - step: 2
+        action: "PARSE_STATUS_TABLE"
+        pattern: |
+          | R{id} | {nombre} | {estado} | {archivos} | {gap} |
+
+      - step: 3
+        action: "CREATE_STATUS_OBJECT"
+        output_format:
+          rule_id: "R{id}"
+          implementation_status: "<estado>"  # IMPLEMENTED, PARTIAL, NOT_IMPLEMENTED
+          affected_files: "<archivos>"
+          gap_description: "<gap>"
+
+    all_rules_to_check:
+      - R1
+      - R2
+      - R3
+      - R4
+      - R5
+      - R6
+      - R7
+      - R10
+      - R11
+      - R12
+      - R13
+      - R14
+      - R15
+      - R16
+      - R19
+      - R20
+      - R21
+      - R28
+      - R29
+
+# ============================================================================
+# BASE RULES - Definidas en este archivo (no requieren extracción)
+# ============================================================================
+base_rules:
+  TYP-001:
+    name: "Type Hints Requeridos"
+    description: "Todas las funciones deben tener type hints"
+    check: "Usar mypy para validar"
+
+  LOG-001:
+    name: "Structured Logging"
+    description: "Usar structlog con correlation_id"
+    check: "Verificar formato de logs"
+
+  ERR-001:
+    name: "Error Handling Completo"
+    description: "Try/except con logging de errores"
+    check: "Verificar que no hay bare excepts"
+
+  ASYNC-001:
+    name: "No Blocking in Async"
+    description: "No usar operaciones bloqueantes en funciones async"
+    check: "Verificar que no hay time.sleep(), sync I/O en async"
+
+  SEC-001:
+    name: "Audit Logging Obligatorio"
+    description: "Registrar todas las decisiones de trading"
+    check: "Verificar append-only log"
+
+  # Reglas adicionales
+  TIM-001:
+    name: "Timing de Ejecución"
+    description: "Evitar horarios de baja liquidez"
+    check: "Verificar filtros de tiempo"
+
+  VAL-001:
+    name: "Validación de Datos"
+    description: "Validar datos de entrada y salida"
+    check: "Verificar validaciones"
+
+  ISO-001:
+    name: "Aislamiento de Datos"
+    description: "Separar train/test sin leak"
+    check: "Verificar separación de datos"
+
+  SIG-001:
+    name: "Señales Bien Definidas"
+    description: "Señales de trading estandarizadas"
+    check: "Verificar formato de señales"
+
+  CONF-001:
+    name: "Configuración Externa"
+    description: "Parámetros en config, no hardcoded"
+    check: "Verificar inyección de config"
+
+  PUR-001:
+    name: "Data Purging Sanitización"
+    description: "Limpiar datos sensibles"
+    check: "Verificar sanitización"
+
+  RISK-001:
+    name: "Validaciones de Riesgo"
+    description: "Validar límites de riesgo"
+    check: "Verificar checks de riesgo"
+
+  AUD-001:
+    name: "Audit Trail Completo"
+    description: "Registro de todas las operaciones"
+    check: "Verificar audit logs"
+
+  SEC-002:
+    name: "Seguridad de Datos Sensibles"
+    description: "Proteger datos críticos"
+    check: "Verificar encriptación/cifrado"
+
+# ============================================================================
+# SERVICIOS Y SUS BASE RULES
+# ============================================================================
+service_base_rules:
+  compliance: [TYP-001, LOG-001, ERR-001, ASYNC-001, SEC-001]
+  execution: [TYP-001, LOG-001, ERR-001, ASYNC-001, TIM-001]
+  backtesting: [TYP-001, LOG-001, VAL-001, ISO-001]
+  strategy: [TYP-001, LOG-001, SIG-001, CONF-001]
+  data: [TYP-001, LOG-001, VAL-001, PUR-001]
+  position_management: [TYP-001, LOG-001, ERR-001, RISK-001]
+  reconciliation: [TYP-001, LOG-001, AUD-001, SEC-002]
+
+  # Servicios adicionales
+  risk_management: [TYP-001, LOG-001, ERR-001, RISK-001, ASYNC-001]
+  notifications: [TYP-001, LOG-001, ERR-001, ASYNC-001]
+  reporting: [TYP-001, LOG-001, VAL-001, AUD-001]
+  monitoring: [TYP-001, LOG-001, ERR-001, ASYNC-001]
+  storage: [TYP-001, LOG-001, ERR-001, SEC-002]
+  api: [TYP-001, LOG-001, ERR-001, SEC-001, ASYNC-001]

@@ -1,0 +1,364 @@
+# ============================================
+# Ralph Task: Master Orchestrator
+# ============================================
+# PRIORIDAD: P0 - ORQUESTADOR PRINCIPAL
+# OBJETIVO: Ejecutar TODAS las tareas en orden correcto
+# TIEMPO: ~172 horas (4-5 semanas)
+#
+# Este es el punto de entrada principal para implementar TODO el sistema
+# ============================================================================
+#
+# NOTA: Task 99 (Final Cleanup) se ejecuta AL FINAL de todo el proceso
+# para verificar y resolver todos los TODOs/@flags pendientes
+# ============================================================================
+
+event_loop:
+  prompt_file: ".ralph/ralph_tasks/prompts/00_master_orchestrator.md"
+  completion_promise: "ALGOTRADING_SYSTEM_COMPLETE"
+  max_iterations: 500
+  max_runtime_seconds: 604800  # 7 días máximo
+  checkpoint_interval: 3  # Standardized
+  starting_event: "master.start"
+
+cli:
+  backend: "claude"
+
+core:
+  specs_dir: "./specs/"
+
+hats:
+  master_orchestrator:
+    name: "Master Orchestrator"
+    description: "Orquesta la ejecución de todas las tareas Ralph en orden"
+    triggers: ["master.start", "master.next_task"]
+    publishes: ["master.next_task", "master.complete", "master.failed", "master.blocked"]
+    default_publishes: "master.next_task"
+    instructions: |
+      ## MASTER ORCHESTRATOR - Sistema AlgoTrading Completo
+
+      **OBJETIVO:** Ejecutar TODAS las tareas Ralph en orden correcto
+
+      ### ESTRATEGIA DE EJECUCIÓN
+
+      **Orden CRÍTICO:** Las tareas deben ejecutarse en este orden por dependencias
+
+      ```
+      ┌─────────────────────────────────────────────────────────────┐
+      │  PHASE 1: FOUNDATION Layer (DEBE SER PRIMERO)              │
+      ├─────────────────────────────────────────────────────────────┤
+      │  01. 01_protocol_interfaces      (4h)  ← FUNDAMENTAL         │
+      │  02. 02_spain_tax_engine         (8h)  ← Depende de 01      │
+      │  03. 03_trading_decision_logger  (6h)  ← Depende de 01      │
+      │  04. 04_risk_validators          (8h)  ← Depende de 01      │
+      └─────────────────────────────────────────────────────────────┘
+                                ↓
+      ┌─────────────────────────────────────────────────────────────┐
+      │  PHASE 2: INFRASTRUCTURE & Services Layer                   │
+      ├─────────────────────────────────────────────────────────────┤
+      │  05. 08_broker_adapters          (16h) ← Depende de 01      │
+      │  06. 05_position_management      (12h) ← Depende de 01      │
+      │  07. 06_reconciliation_daily     (6h)  ← Depende de 01      │
+      │  08. 07_capital_phase_manager    (6h)  ← Independiente      │
+      └─────────────────────────────────────────────────────────────┘
+                                ↓
+      ┌─────────────────────────────────────────────────────────────┐
+      │  PHASE 3: COORDINATOR Layer                                 │
+      ├─────────────────────────────────────────────────────────────┤
+      │  09. 09_compliance_engine_refactor (16h) ← Depende de 01-04 │
+      └─────────────────────────────────────────────────────────────┘
+                                ↓
+      ┌─────────────────────────────────────────────────────────────┐
+      │  PHASE 4: INTEGRATION Layer                                 │
+      ├─────────────────────────────────────────────────────────────┤
+      │  10. 10_execution_engine_integration (4h) ← Depende de 09  │
+      │  11. 11_order_manager_integration    (4h) ← Depende de 09  │
+      │  12. 12_trading_bridge_integration  (4h) ← Depende de 09  │
+      └─────────────────────────────────────────────────────────────┘
+                                ↓
+      ┌─────────────────────────────────────────────────────────────┐
+      │  PHASE 5: USER INTERFACE Layer                             │
+      ├─────────────────────────────────────────────────────────────┤
+      │  13. 13_live_trading_cli          (8h)  ← Depende de 09, 12 │
+      │  14. 14_user_config_single_user   (6h)  ← Independiente      │
+      │  15. 15_alerting_telegram         (6h)  ← Independiente      │
+      │  16. 16_simple_dashboard          (12h) ← Depende de 09     │
+      └─────────────────────────────────────────────────────────────┘
+                                ↓
+      ┌─────────────────────────────────────────────────────────────┐
+      │  PHASE 6: VALIDATION Layer                                  │
+      ├─────────────────────────────────────────────────────────────┤
+      │  17. 17_backtest_fixes            (12h) ← Independiente     │
+      │  18. 20_testing_integration       (16h) ← Depende de 09-12  │
+      └─────────────────────────────────────────────────────────────┘
+                                ↓
+      ┌─────────────────────────────────────────────────────────────┐
+      │  PHASE 7: SECURITY Layer                                    │
+      ├─────────────────────────────────────────────────────────────┤
+      │  19. 19_security_hardening         (8h)  ← Independiente     │
+      └─────────────────────────────────────────────────────────────┘
+                                ↓
+      ┌─────────────────────────────────────────────────────────────┐
+      │  PHASE 8: OPTIONAL (P2)                                     │
+      ├─────────────────────────────────────────────────────────────┤
+      │  20. 18_additional_rules           (24h) ← Depende de 01    │
+      └─────────────────────────────────────────────────────────────┘
+                                ↓
+      ┌─────────────────────────────────────────────────────────────┐
+      │  PHASE 9: FINAL CLEANUP (DEBE SER ÚLTIMO)                   │
+      ├─────────────────────────────────────────────────────────────┤
+      │  99. 99_final_cleanup              (4h)  ← Depende de TODAS │
+      │      Verifica y resuelve todos los TODOs/@flags              │
+      └─────────────────────────────────────────────────────────────┘
+      ```
+
+      ### EJECUCIÓN DE TAREAS
+
+      Para cada tarea:
+      1. Leer el archivo YAML de la tarea
+      2. Ejecutar según instrucciones
+      3. Validar output
+      4. Marcar como COMPLETED en checkpoint
+      5. Continuar a siguiente tarea
+
+      ### COMANDOS PARA EJECUTAR CADA TAREA
+
+      ```bash
+      # PHASE 1: FOUNDATION (MÁS CRÍTICO - EMPEZAR AQUÍ)
+      ralph run .ralph/ralph_tasks/01_protocol_interfaces.yml
+      ralph run .ralph/ralph_tasks/02_spain_tax_engine.yml
+      ralph run .ralph/ralph_tasks/03_trading_decision_logger.yml
+      ralph run .ralph/ralph_tasks/04_risk_validators.yml
+
+      # PHASE 2: INFRASTRUCTURE & SERVICES
+      ralph run .ralph/ralph_tasks/08_broker_adapters.yml
+      ralph run .ralph/ralph_tasks/05_position_management.yml
+      ralph run .ralph/ralph_tasks/06_reconciliation_daily.yml
+      ralph run .ralph/ralph_tasks/07_capital_phase_manager.yml
+
+      # PHASE 3: COORDINATOR
+      ralph run .ralph/ralph_tasks/09_compliance_engine_refactor.yml
+
+      # PHASE 4: INTEGRATION
+      ralph run .ralph/ralph_tasks/10_execution_engine_integration.yml
+      ralph run .ralph/ralph_tasks/11_order_manager_integration.yml
+      ralph run .ralph/ralph_tasks/12_trading_bridge_integration.yml
+
+      # PHASE 5: USER INTERFACE
+      ralph run .ralph/ralph_tasks/13_live_trading_cli.yml
+      ralph run .ralph/ralph_tasks/14_user_config_single_user.yml
+      ralph run .ralph/ralph_tasks/15_alerting_telegram.yml
+      ralph run .ralph/ralph_tasks/16_simple_dashboard.yml
+
+      # PHASE 6: VALIDATION
+      ralph run .ralph/ralph_tasks/17_backtest_fixes.yml
+      ralph run .ralph/ralph_tasks/20_testing_integration.yml
+
+      # PHASE 7: SECURITY
+      ralph run .ralph/ralph_tasks/19_security_hardening.yml
+
+      # PHASE 8: OPTIONAL (P2 - puede saltarse)
+      ralph run .ralph/ralph_tasks/18_additional_rules.yml
+
+      # PHASE 9: FINAL CLEANUP (DEBE EJECUTARSE AL FINAL)
+      ralph run .ralph/ralph_tasks/99_final_cleanup.yml
+      ```
+
+      ### CHECKPOINT GLOBAL
+
+      Crear checkpoint maestro que rastrea TODAS las tareas:
+
+      ```json
+      {
+        "master_orchestrator": {
+          "started_at": "2026-02-08T...",
+          "current_phase": 1,
+          "current_task": "01_protocol_interfaces",
+          "total_tasks": 19,
+          "completed_tasks": 0,
+          "failed_tasks": 0,
+          "blocked_tasks": 0
+        },
+        "phases": {
+          "phase_1_foundation": {
+            "name": "Foundation Layer",
+            "tasks": ["01_protocol_interfaces", "02_spain_tax_engine", "03_trading_decision_logger", "04_risk_validators"],
+            "status": "pending",
+            "completed": 0,
+            "total": 4
+          },
+          "phase_2_infrastructure": {
+            "name": "Infrastructure & Services",
+            "tasks": ["08_broker_adapters", "05_position_management", "06_reconciliation_daily", "07_capital_phase_manager"],
+            "status": "pending",
+            "completed": 0,
+            "total": 4
+          },
+          "phase_3_coordinator": {
+            "name": "Coordinator Layer",
+            "tasks": ["09_compliance_engine_refactor"],
+            "status": "pending",
+            "completed": 0,
+            "total": 1
+          },
+          "phase_4_integration": {
+            "name": "Integration Layer",
+            "tasks": ["10_execution_engine_integration", "11_order_manager_integration", "12_trading_bridge_integration"],
+            "status": "pending",
+            "completed": 0,
+            "total": 3
+          },
+          "phase_5_ui": {
+            "name": "User Interface Layer",
+            "tasks": ["13_live_trading_cli", "14_user_config_single_user", "15_alerting_telegram", "16_simple_dashboard"],
+            "status": "pending",
+            "completed": 0,
+            "total": 4
+          },
+          "phase_6_validation": {
+            "name": "Validation Layer",
+            "tasks": ["17_backtest_fixes", "20_testing_integration"],
+            "status": "pending",
+            "completed": 0,
+            "total": 2
+          },
+          "phase_7_security": {
+            "name": "Security Layer",
+            "tasks": ["19_security_hardening"],
+            "status": "pending",
+            "completed": 0,
+            "total": 1
+          },
+          "phase_8_optional": {
+            "name": "Optional (P2)",
+            "tasks": ["18_additional_rules"],
+            "status": "pending",
+            "completed": 0,
+            "total": 1
+          },
+          "phase_9_final_cleanup": {
+            "name": "Final Cleanup & TODO Resolution",
+            "tasks": ["99_final_cleanup"],
+            "status": "pending",
+            "completed": 0,
+            "total": 1,
+            "critical": true,
+            "description": "Verifica y resuelve todos los TODOs/@flags pendientes al final del proceso"
+          }
+        },
+        "tasks": {
+          "01_protocol_interfaces": {"status": "pending", "phase": 1},
+          "02_spain_tax_engine": {"status": "pending", "phase": 1, "depends_on": ["01_protocol_interfaces"]},
+          "03_trading_decision_logger": {"status": "pending", "phase": 1, "depends_on": ["01_protocol_interfaces"]},
+          "04_risk_validators": {"status": "pending", "phase": 1, "depends_on": ["01_protocol_interfaces"]},
+          "08_broker_adapters": {"status": "pending", "phase": 2, "depends_on": ["01_protocol_interfaces"]},
+          "05_position_management": {"status": "pending", "phase": 2, "depends_on": ["01_protocol_interfaces"]},
+          "06_reconciliation_daily": {"status": "pending", "phase": 2, "depends_on": ["01_protocol_interfaces"]},
+          "07_capital_phase_manager": {"status": "pending", "phase": 2},
+          "09_compliance_engine_refactor": {"status": "pending", "phase": 3, "depends_on": ["01_protocol_interfaces", "02_spain_tax_engine", "03_trading_decision_logger", "04_risk_validators"]},
+          "10_execution_engine_integration": {"status": "pending", "phase": 4, "depends_on": ["09_compliance_engine_refactor"]},
+          "11_order_manager_integration": {"status": "pending", "phase": 4, "depends_on": ["09_compliance_engine_refactor"]},
+          "12_trading_bridge_integration": {"status": "pending", "phase": 4, "depends_on": ["09_compliance_engine_refactor"]},
+          "13_live_trading_cli": {"status": "pending", "phase": 5, "depends_on": ["09_compliance_engine_refactor", "12_trading_bridge_integration"]},
+          "14_user_config_single_user": {"status": "pending", "phase": 5},
+          "15_alerting_telegram": {"status": "pending", "phase": 5},
+          "16_simple_dashboard": {"status": "pending", "phase": 5, "depends_on": ["09_compliance_engine_refactor"]},
+          "17_backtest_fixes": {"status": "pending", "phase": 6},
+          "20_testing_integration": {"status": "pending", "phase": 6, "depends_on": ["09_compliance_engine_refactor", "10_execution_engine_integration", "11_order_manager_integration", "12_trading_bridge_integration"]},
+          "19_security_hardening": {"status": "pending", "phase": 7},
+          "18_additional_rules": {"status": "pending", "phase": 8, "priority": "P2"},
+          "99_final_cleanup": {
+            "status": "pending",
+            "phase": 9,
+            "critical": true,
+            "description": "Final cleanup - Verify and resolve all TODOs/@flags",
+            "depends_on": [
+              "01_protocol_interfaces",
+              "02_spain_tax_engine",
+              "03_trading_decision_logger",
+              "04_risk_validators",
+              "08_broker_adapters",
+              "05_position_management",
+              "06_reconciliation_daily",
+              "07_capital_phase_manager",
+              "09_compliance_engine_refactor",
+              "10_execution_engine_integration",
+              "11_order_manager_integration",
+              "12_trading_bridge_integration",
+              "13_live_trading_cli",
+              "14_user_config_single_user",
+              "15_alerting_telegram",
+              "16_simple_dashboard",
+              "17_backtest_fixes",
+              "20_testing_integration",
+              "19_security_hardening",
+              "18_additional_rules"
+            ]
+          }
+        }
+      }
+      ```
+
+      ### VALIDACIÓN POR FASE
+
+      Después de completar cada fase:
+      1. Verificar que TODOS los archivos de la fase validan
+      2. Verificar que no hay flags @todo sin resolver
+      3. Ejecutar tests de integración de la fase
+      4. Solo entonces continuar a siguiente fase
+
+      ### PRIORIDADES
+
+      **P0 (CRÍTICAS para producción):**
+      - Fase 1 COMPLETA (Foundation)
+      - Fase 3 (Coordinator)
+      - Fase 4 (Integration)
+      - Tarea 13 (CLI)
+      - Tareas 17, 20 (Validation)
+
+      **P1 (IMPORTANTES pero no bloquean):**
+      - Fase 2 (Infrastructure)
+      - Fase 5 - Tareas 14, 15, 16
+      - Tarea 19 (Security)
+
+      **P2 (OPCIONAL):**
+      - Tarea 18 (Additional rules)
+
+      ### ESTRATEGIA DE EJECUCIÓN RECOMENDADA
+
+      **Opción A: Full Sequential (TODO de una vez)**
+      ```bash
+      # Ejecutar fase 1 completa primero
+      for task in 01_protocol_interfaces 02_spain_tax_engine 03_trading_decision_logger 04_risk_validators; do
+        ralph run .ralph/ralph_tasks/${task}.yml
+        if [ $? -ne 0 ]; then
+          echo "Task ${task} failed - stopping"
+          exit 1
+        fi
+      done
+      ```
+
+      **Opción B: Phase-by-Phase (con pausas)**
+      ```bash
+      # Ejecutar una fase a la vez
+      ralph run .ralph/ralph_tasks/00_master_orchestrator.yml --phase=1
+      # Revisar resultados
+      # Continuar a siguiente fase
+      ralph run .ralph/ralph_tasks/00_master_orchestrator.yml --phase=2
+      ```
+
+      **Opción C: Task-by-Task (máximo control)**
+      ```bash
+      # Ejecutar una tarea a la vez
+      ralph run .ralph/ralph_tasks/01_protocol_interfaces.yml
+      # Revisar resultados, validar manualmente
+      # Continuar siguiente tarea
+      ralph run .ralph/ralph_tasks/02_spain_tax_engine.yml
+      ```
+
+memories:
+  enabled: true
+  inject: auto
+  budget: 5000
+
+checkpoint:
+  file: ".ralph/checkpoints/00_master_orchestrator_checkpoint.json"

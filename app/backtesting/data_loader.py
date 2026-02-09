@@ -145,7 +145,7 @@ class DataLoader:
             # Handle 'date' or 'timestamp' column
             date_col = 'date' if 'date' in df.columns else 'timestamp'
             df[date_col] = pd.to_datetime(df[date_col])
-            
+
             # CRITICAL: Set date column as index for proper timestamp extraction
             df.set_index(date_col, inplace=True)
 

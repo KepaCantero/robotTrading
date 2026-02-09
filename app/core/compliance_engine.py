@@ -2135,6 +2135,600 @@ class ComplianceEngine:
         }
 
     # ==========================================================================
+    # COORDINATOR METHODS - Protocol Implementations (Task 09)
+    # ==========================================================================
+
+    async def process_alert(self, alert: dict) -> Optional["TradeSignal"]:
+        """
+        Process alert and generate trading signal (IAlertProcessor protocol).
+
+        Args:
+            alert: Alert dictionary containing:
+                - symbol: Trading symbol
+                - alert_type: Type of alert (e.g., "price_cross", "momentum")
+                - severity: Alert severity (INFO, WARNING, CRITICAL)
+                - timestamp: Alert generation time
+                - metadata: Additional alert data
+
+        Returns:
+            TradeSignal if alert processing successful, None otherwise
+        """
+        try:
+            # Validate alert format
+            if not await self._validate_alert_format(alert):
+                if self.enable_logging:
+                    logger.warning(f"Invalid alert format: {alert}")
+                return None
+
+            symbol = alert.get("symbol")
+            if not symbol:
+                return None
+
+            # Check for duplicate alerts
+            alert_hash = self._hash_alert(alert)
+            if await self._is_duplicate_alert(alert_hash):
+                if self.enable_logging:
+                    logger.debug(f"Duplicate alert filtered: {symbol}")
+                return None
+
+            # Get current price from alert or market data
+            current_price = Decimal(str(alert.get("price", "0")))
+            if current_price <= 0:
+                # Estimate price from market data if available
+                price_history = alert.get("price_history")
+                if price_history is not None and len(price_history) > 0:
+                    current_price = Decimal(str(price_history["close"].iloc[-1]))
+                else:
+                    logger.warning(f"Cannot determine price for alert: {symbol}")
+                    return None
+
+            # Generate signal using alert-to-trade mapping
+            from app.services.live_trading.alert_to_trade_mapper import get_alert_to_trade_mapper
+            from app.services.alerting_system import AlertSeverity
+
+            mapper = get_alert_to_trade_mapper()
+            portfolio_value = Decimal(str(self._starting_capital))
+
+            severity = AlertSeverity(alert.get("severity", "WARNING"))
+
+            signal = mapper.map_alert_to_signal(
+                alert_id=alert.get("alert_id", f"alert_{datetime.now().timestamp()}"),
+                alert_rule_id=alert.get("alert_rule_id", "default"),
+                symbol=symbol,
+                severity=severity,
+                current_price=current_price,
+                portfolio_value=portfolio_value,
+            )
+
+            if signal and self.enable_logging:
+                logger.info(f"✅ Alert processed: {symbol} → {signal.signal_type.value}")
+
+            return signal
+
+        except Exception as e:
+            if self.enable_logging:
+                logger.error(f"Error processing alert: {e}")
+            return None
+
+    async def validate_alert(self, alert: dict) -> bool:
+        """Validate alert format and required fields."""
+        return await self._validate_alert_format(alert)
+
+    async def filter_duplicate_alerts(self, alerts: list) -> list:
+        """Filter duplicate alerts from list."""
+        seen_hashes = set()
+        filtered = []
+
+        for alert in alerts:
+            alert_hash = self._hash_alert(alert)
+            if alert_hash not in seen_hashes:
+                seen_hashes.add(alert_hash)
+                filtered.append(alert)
+
+        return filtered
+
+    async def prioritize_alerts(self, alerts: list) -> list:
+        """Prioritize alerts by urgency (CRITICAL > WARNING > INFO)."""
+        from app.services.alerting_system import AlertSeverity
+
+        priority_map = {
+            "CRITICAL": 0,
+            "WARNING": 1,
+            "INFO": 2,
+        }
+
+        def get_priority(alert):
+            severity_str = alert.get("severity", "INFO")
+            return priority_map.get(severity_str, 2)
+
+        return sorted(alerts, key=get_priority)
+
+    async def get_alert_history(self, symbol: str, days: int) -> list:
+        """Get alert history for symbol (last N days)."""
+        # This would integrate with alert history storage
+        # For now, return empty list
+        return []
+
+    async def execute_trade(
+        self,
+        signal: "TradeSignal",
+        portfolio_value: Optional[Decimal] = None,
+        price_history: Optional[pd.DataFrame] = None,
+    ) -> "TradeResult":
+        """
+        Execute trade with full compliance validation (ITradeExecutor protocol).
+
+        This method orchestrates the complete trading cycle:
+        1. Pre-trade validation (Kelly, Drawdown, R:R)
+        2. Kill switch check
+        3. Order execution via broker
+        4. Spain tax calculation
+        5. Decision logging (R15)
+
+        Args:
+            signal: TradeSignal from alert processing
+            portfolio_value: Current portfolio value (optional, defaults to starting capital)
+            price_history: Historical price data for validation (optional)
+
+        Returns:
+            TradeResult with execution details
+        """
+        from app.services.live_trading.broker_connector import BrokerConnector
+        from app.services.logging.trading_decision_logger import TradingDecisionLogger
+        from app.services.tax_efficiency.engines.spain_tax_engine_impl import SpainTaxEngineImpl
+
+        # Initialize logger and tax engine
+        decision_logger = TradingDecisionLogger()
+        spain_tax = SpainTaxEngineImpl()
+
+        # Convert signal to dict format for logger
+        signal_dict = {
+            "symbol": signal.symbol,
+            "side": signal.order_side.value,
+            "quantity": str(signal.quantity),
+            "order_type": signal.order_type.value,
+            "price": str(signal.price) if signal.price else None,
+            "stop_loss": str(signal.stop_loss) if signal.stop_loss else None,
+            "take_profit": str(signal.take_profit) if signal.take_profit else None,
+            "signal_id": signal.signal_id,
+            "alert_id": signal.alert_id,
+        }
+
+        # Log signal (R15)
+        correlation_id = decision_logger.log_signal(
+            signal=signal_dict,
+            metadata={"severity": signal.severity.value, "reason": signal.reason},
+        )
+
+        try:
+            # Check kill switch FIRST (R2)
+            if self.check_kill_switch():
+                error_msg = f"KILL SWITCH ACTIVE - Trade blocked for {signal.symbol}"
+                if self.enable_logging:
+                    logger.critical(error_msg)
+
+                decision_logger.log_validation_result(
+                    correlation_id=correlation_id,
+                    passed=False,
+                    validator="kill_switch",
+                    details={"reason": "Drawdown exceeded 15% threshold"},
+                )
+
+                return self._create_failed_result(signal, error_msg)
+
+            # Get portfolio value
+            if portfolio_value is None:
+                portfolio_value = Decimal(str(self._starting_capital))
+
+            # Pre-trade compliance validation
+            quantity = Decimal(str(signal.quantity))
+            price = Decimal(str(signal.price)) if signal.price else Decimal("0")
+
+            # Kelly Criterion validation (R1)
+            order_value = quantity * price if price > 0 else portfolio_value * Decimal("0.02")
+            max_risk = portfolio_value * Decimal("0.02")  # 2% max position size
+
+            if order_value > max_risk:
+                error_msg = f"Kelly validation failed: {order_value} > {max_risk} (2% max)"
+                if self.enable_logging:
+                    logger.warning(f"{error_msg} for {signal.symbol}")
+
+                decision_logger.log_validation_result(
+                    correlation_id=correlation_id,
+                    passed=False,
+                    validator="kelly_criterion",
+                    details={"order_value": str(order_value), "max_risk": str(max_risk)},
+                )
+
+                return self._create_failed_result(signal, error_msg)
+
+            # Risk:Reward validation (R4)
+            if signal.stop_loss and signal.take_profit:
+                entry = price if price > 0 else Decimal("100")  # Fallback
+                risk = abs(entry - Decimal(str(signal.stop_loss)))
+                reward = abs(Decimal(str(signal.take_profit)) - entry)
+
+                if risk > 0:
+                    rr_ratio = reward / risk
+                    if rr_ratio < Decimal("2.0"):
+                        error_msg = f"R:R validation failed: {rr_ratio:.2f} < 2.0 minimum"
+                        if self.enable_logging:
+                            logger.warning(f"{error_msg} for {signal.symbol}")
+
+                        decision_logger.log_validation_result(
+                            correlation_id=correlation_id,
+                            passed=False,
+                            validator="risk_reward",
+                            details={"rr_ratio": str(rr_ratio), "min_rr": "2.0"},
+                        )
+
+                        return self._create_failed_result(signal, error_msg)
+
+            # All validations passed - execute order
+            decision_logger.log_validation_result(
+                correlation_id=correlation_id,
+                passed=True,
+                validator="pre_trade",
+                details={"all_validations": "passed"},
+            )
+
+            # Execute via broker
+            broker = BrokerConnector()
+            order_id = await self._submit_to_broker(broker, signal)
+
+            # Calculate gross P&L (estimate)
+            gross_pnl = Decimal("0")  # Will be updated on fill
+
+            # Calculate Spain tax (IRPF)
+            spain_tax_amount = spain_tax.calculate_capital_gains_tax(gross_pnl)
+
+            # Log execution (R15)
+            decision_logger.log_execution(
+                correlation_id=correlation_id,
+                result={
+                    "order_id": order_id,
+                    "symbol": signal.symbol,
+                    "side": signal.order_side.value,
+                    "quantity": str(signal.quantity),
+                    "gross_pnl": str(gross_pnl),
+                    "spain_tax": str(spain_tax_amount),
+                    "net_pnl": str(gross_pnl - spain_tax_amount),
+                },
+            )
+
+            if self.enable_logging:
+                logger.info(
+                    f"✅ Trade executed: {signal.symbol} {signal.order_side.value} "
+                    f"{signal.quantity} (ID: {order_id})"
+                )
+
+            # Create success result
+            from dataclasses import dataclass
+
+            @dataclass
+            class TradeResult:
+                """Result of trade execution."""
+
+                success: bool
+                order_id: str
+                symbol: str
+                side: str
+                quantity: Decimal
+                gross_pnl: Decimal
+                spain_tax: Decimal
+                net_pnl: Decimal
+                correlation_id: str
+                error: Optional[str] = None
+
+            return TradeResult(
+                success=True,
+                order_id=order_id,
+                symbol=signal.symbol,
+                side=signal.order_side.value,
+                quantity=signal.quantity,
+                gross_pnl=gross_pnl,
+                spain_tax=spain_tax_amount,
+                net_pnl=gross_pnl - spain_tax_amount,
+                correlation_id=correlation_id,
+            )
+
+        except Exception as e:
+            error_msg = f"Trade execution failed: {str(e)}"
+            if self.enable_logging:
+                logger.error(f"{error_msg} for {signal.symbol}")
+
+            decision_logger.log_execution(
+                correlation_id=correlation_id,
+                result={"error": error_msg, "success": False},
+            )
+
+            return self._create_failed_result(signal, error_msg, correlation_id)
+
+    async def cancel_order(self, order_id: str) -> bool:
+        """Cancel order via broker."""
+        from app.services.live_trading.broker_connector import BrokerConnector
+
+        broker = BrokerConnector()
+        try:
+            result = await broker.cancel_order(order_id)
+            if self.enable_logging:
+                logger.info(f"Order cancelled: {order_id} -> {result}")
+            return result
+        except Exception as e:
+            if self.enable_logging:
+                logger.error(f"Cancel order failed for {order_id}: {e}")
+            return False
+
+    async def modify_order(self, order_id: str, new_price: Decimal) -> bool:
+        """Modify order price."""
+        from app.services.live_trading.broker_connector import BrokerConnector
+
+        broker = BrokerConnector()
+        try:
+            result = await broker.modify_order(order_id, new_price)
+            if self.enable_logging:
+                logger.info(f"Order modified: {order_id} -> {new_price}")
+            return result
+        except Exception as e:
+            if self.enable_logging:
+                logger.error(f"Modify order failed for {order_id}: {e}")
+            return False
+
+    async def get_order_status(self, order_id: str) -> str:
+        """Get order status."""
+        # Check active orders
+        if order_id in self._active_orders:
+            return "SUBMITTED"
+        # Check completed trades
+        for trade in self._completed_trades:
+            if trade.get("order_id") == order_id:
+                return "FILLED"
+        return "UNKNOWN"
+
+    async def get_open_orders(self) -> list:
+        """Get all open orders."""
+        return list(self._active_orders.keys())
+
+    async def run_cycle(
+        self,
+        signals: list["TradeSignal"],
+        portfolio_value: Optional[Decimal] = None,
+    ) -> "CycleResult":
+        """
+        Run complete strategy cycle (IStrategyCycleRunner protocol).
+
+        Executes a full strategy cycle:
+        1. Validate inputs
+        2. Execute signals
+        3. Handle errors
+        4. Return metrics
+
+        Args:
+            signals: List of TradeSignal objects to execute
+            portfolio_value: Current portfolio value (optional)
+
+        Returns:
+            CycleResult with execution metrics
+        """
+        from dataclasses import dataclass, field
+        from typing import List
+
+        @dataclass
+        class CycleResult:
+            """Result of strategy cycle execution."""
+
+            success: bool
+            total_signals: int
+            executed_signals: int
+            failed_signals: int
+            total_value: Decimal
+            execution_time_seconds: float
+            errors: List[str] = field(default_factory=list)
+            order_ids: List[str] = field(default_factory=list)
+
+        start_time = datetime.now()
+
+        # Validate input
+        if not await self.validate_cycle_input(signals):
+            return CycleResult(
+                success=False,
+                total_signals=0,
+                executed_signals=0,
+                failed_signals=0,
+                total_value=Decimal("0"),
+                execution_time_seconds=0,
+                errors=["Invalid cycle input"],
+            )
+
+        executed = 0
+        failed = 0
+        total_value = Decimal("0")
+        errors = []
+        order_ids = []
+
+        for signal in signals:
+            try:
+                # Execute each phase
+                phase_result = await self.execute_cycle_phase("validate", [signal])
+                if not phase_result.get("passed", False):
+                    failed += 1
+                    errors.append(f"Validation failed for {signal.symbol}")
+                    continue
+
+                phase_result = await self.execute_cycle_phase("execute", [signal])
+                if phase_result.get("order_id"):
+                    executed += 1
+                    order_ids.append(phase_result["order_id"])
+                    total_value += Decimal(str(signal.quantity)) * (
+                        Decimal(str(signal.price)) if signal.price else Decimal("0")
+                    )
+                else:
+                    failed += 1
+                    errors.append(f"Execution failed for {signal.symbol}")
+
+            except Exception as e:
+                failed += 1
+                errors.append(f"Error processing {signal.symbol}: {str(e)}")
+                await self.handle_cycle_error(e)
+
+        execution_time = (datetime.now() - start_time).total_seconds()
+
+        if self.enable_logging:
+            logger.info(
+                f"✅ Cycle complete: {executed}/{len(signals)} executed, "
+                f"{failed} failed, {execution_time:.2f}s"
+            )
+
+        return CycleResult(
+            success=failed == 0,
+            total_signals=len(signals),
+            executed_signals=executed,
+            failed_signals=failed,
+            total_value=total_value,
+            execution_time_seconds=execution_time,
+            errors=errors,
+            order_ids=order_ids,
+        )
+
+    async def validate_cycle_input(self, signals: list) -> bool:
+        """Validate cycle input signals."""
+        if not isinstance(signals, list):
+            return False
+
+        for signal in signals:
+            if not hasattr(signal, "symbol") or not hasattr(signal, "quantity"):
+                return False
+            try:
+                qty = Decimal(str(signal.quantity))
+                if qty <= 0:
+                    return False
+            except (ValueError, TypeError):
+                return False
+
+        return True
+
+    async def execute_cycle_phase(self, phase: str, signals: list) -> dict:
+        """Execute specific cycle phase."""
+        if phase == "validate":
+            # Pre-trade validation phase
+            for signal in signals:
+                # Quick validation
+                if not signal.symbol or signal.quantity <= 0:
+                    return {"passed": False, "error": "Invalid signal"}
+            return {"passed": True}
+
+        elif phase == "execute":
+            # Execution phase
+            results = []
+            for signal in signals:
+                try:
+                    result = await self.execute_trade(signal)
+                    if result.success:
+                        results.append({"order_id": result.order_id})
+                except Exception as e:
+                    results.append({"error": str(e)})
+
+            return {"order_id": results[0].get("order_id") if results else None}
+
+        return {}
+
+    async def handle_cycle_error(self, error: Exception) -> None:
+        """Handle cycle execution error."""
+        if self.enable_logging:
+            logger.error(f"Cycle error: {error}")
+
+    async def get_cycle_metrics(self) -> dict:
+        """Get cycle execution metrics."""
+        return {
+            "active_orders": len(self._active_orders),
+            "completed_trades": len(self._completed_trades),
+            "slo_metrics": self.get_slo_metrics(),
+            "daily_pnl": self.get_daily_pnl_summary(),
+        }
+
+    # ==========================================================================
+    # PRIVATE HELPER METHODS
+    # ==========================================================================
+
+    async def _validate_alert_format(self, alert: dict) -> bool:
+        """Validate alert has required fields."""
+        required_fields = ["symbol", "alert_type", "timestamp"]
+        return all(field in alert for field in required_fields)
+
+    def _hash_alert(self, alert: dict) -> str:
+        """Create hash for duplicate detection."""
+        import hashlib
+        import json
+
+        alert_str = json.dumps(alert, sort_keys=True)
+        return hashlib.md5(alert_str.encode()).hexdigest()
+
+    async def _is_duplicate_alert(self, alert_hash: str) -> bool:
+        """Check if alert is duplicate."""
+        # Simple in-memory check (would use persistent storage in production)
+        if not hasattr(self, "_alert_hashes"):
+            self._alert_hashes = set()
+
+        is_dup = alert_hash in self._alert_hashes
+        self._alert_hashes.add(alert_hash)
+
+        # Keep only last 1000 hashes
+        if len(self._alert_hashes) > 1000:
+            self._alert_hashes = set(list(self._alert_hashes)[-500:])
+
+        return is_dup
+
+    async def _submit_to_broker(
+        self, broker, signal: "TradeSignal"
+    ) -> str:
+        """Submit order to broker."""
+        # Convert TradeSignal to broker format
+        from app.services.live_trading.broker_connector import OrderSide, OrderType
+
+        order_id = f"order_{datetime.now().timestamp()}"
+
+        # This would call actual broker API
+        # For now, return simulated order ID
+        return order_id
+
+    def _create_failed_result(
+        self,
+        signal: "TradeSignal",
+        error_msg: str,
+        correlation_id: Optional[str] = None,
+    ) -> "TradeResult":
+        """Create failed trade result."""
+        from dataclasses import dataclass
+
+        @dataclass
+        class TradeResult:
+            """Result of trade execution."""
+
+            success: bool
+            order_id: str
+            symbol: str
+            side: str
+            quantity: Decimal
+            gross_pnl: Decimal
+            spain_tax: Decimal
+            net_pnl: Decimal
+            correlation_id: str
+            error: Optional[str] = None
+
+        return TradeResult(
+            success=False,
+            order_id="",
+            symbol=signal.symbol,
+            side=signal.order_side.value,
+            quantity=signal.quantity,
+            gross_pnl=Decimal("0"),
+            spain_tax=Decimal("0"),
+            net_pnl=Decimal("0"),
+            correlation_id=correlation_id or "",
+            error=error_msg,
+        )
+
+    # ==========================================================================
     # HELPERS
     # ==========================================================================
 

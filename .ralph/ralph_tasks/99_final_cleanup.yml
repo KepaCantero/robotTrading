@@ -1,0 +1,489 @@
+# ============================================
+# Ralph Task 99: Final Cleanup & TODO Resolution
+# ============================================
+# PRIORIDAD: P0 - TAREA FINAL DE LIMPIEZA
+# OBJETIVO: Verificar y resolver todos los TODOs/@flags pendientes
+# TIEMPO: ~4 horas
+# DEPENDS ON: Todas las tareas anteriores completadas (01-20)
+#
+# Esta tarea DEBE ejecutarse al final de todo el proceso
+# ============================================================================
+#
+# FLUJO COMPLETO:
+# 1. Escanear código con scan_flags.py (script Python)
+# 2. Para cada flag encontrado, usar implementer_hat para arreglar
+# 3. Validar cambios con utils.py validate
+# 4. Generar reporte final
+# ============================================================================
+
+event_loop:
+  prompt_file: ".ralph/ralph_tasks/prompts/99_final_cleanup.md"
+  completion_promise: "SYSTEM_CLEAN_AND_COMPLETE"
+  max_iterations: 100
+  max_runtime_seconds: 14400  # 4 hours
+  checkpoint_interval: 3
+  starting_event: "cleanup.start"
+
+cli:
+  backend: "claude"
+
+core:
+  specs_dir: "./specs/"
+
+hats:
+  cleanup_scanner:
+    name: "Cleanup Scanner"
+    description: "Escanea código en busca de flags usando scan_flags.py"
+    triggers: ["cleanup.start"]
+    publishes: ["cleanup.scan_complete", "cleanup.no_flags", "cleanup.blocked"]
+    default_publishes: "cleanup.scan_complete"
+    instructions: |
+      ## CLEANUP SCANNER - FASE 1: Escanear código
+
+      **OBJETIVO:** Escanear TODO el código en busca de flags usando el script Python.
+
+      ### PASO 1: Ejecutar script de escaneo
+
+      ```bash
+      # Escanear app/ completo con el script Python
+      python .ralph/scripts/scan_flags.py \
+        --dir app/ \
+        --output .ralph/outputs/flags_found.json \
+        --format json
+
+      # También generar reporte markdown
+      python .ralph/scripts/scan_flags.py \
+        --dir app/ \
+        --output .ralph/outputs/flags_report.md \
+        --format markdown
+      ```
+
+      ### PASO 2: Verificar resultados
+
+      ```bash
+      # Leer reporte JSON
+      cat .ralph/outputs/flags_found.json | jq '.total_flags'
+
+      # Si es 0, emitir cleanup.no_flags
+      # Si > 0, emitir cleanup.scan_complete con datos
+      ```
+
+      ### PASO 3: Si hay flags, continuar a cleanup.next_flag
+
+      ```bash
+      # Emitir evento con primer flag
+      ralph emit "cleanup.next_flag" "$(cat .ralph/outputs/flags_found.json | jq '.all_flags[0]')"
+      ```
+
+      ### Event Format:
+
+      No flags found:
+      ```
+      ralph emit "cleanup.no_flags" "total=0, timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+      ```
+
+      Scan complete with flags:
+      ```
+      ralph emit "cleanup.scan_complete" "total=<n>, flags_by_type=<json>"
+      ```
+
+  cleanup_implementer:
+    name: "Cleanup Implementer"
+    description: "Implementa fixes para flags encontrados usando implementer_hat flow"
+    triggers: ["cleanup.next_flag", "cleanup.fix_complete"]
+    publishes: ["cleanup.next_flag", "cleanup.fix_complete", "cleanup.all_complete", "cleanup.blocked"]
+    default_publishes: "cleanup.next_flag"
+    instructions: |
+      ## CLEANUP IMPLEMENTER - FASE 2: Arreglar flags (usa implementer_hat flow)
+
+      **OBJETIVO:** Para cada flag encontrado, aplicar el fix correspondiente siguiendo el flujo del implementer_hat.
+
+      ### TEMPLATE del implementer_hat APLICADO:
+
+      **REGLAS CRÍTICAS - NO FALLBACKS:**
+      - ❌ **NO** intentar importar con fallbacks (`try/except ImportError`)
+      - ✅ **SÍ** verificar que el import existe ANTES de usarlo
+      - ✅ Si el import NO existe → **FLAG `@skip-import: <reason>`** en código
+      - ✅ Si una dependencia NO está lista → **FLAG `@todo: <feature>`**
+
+      ### PARA CADA FLAG ENCONTRADO:
+
+      Leer flag desde evento o JSON:
+      ```json
+      {
+        "file": "app/services/logging/trading_decision_logger.py",
+        "line": 279,
+        "flag_type": "@skip-import",
+        "reason": "ITradingDecisionLogger not implemented yet",
+        "context": {...}
+      }
+      ```
+
+      ### ESTRATEGIA POR TIPO DE FLAG:
+
+      #### 1. @skip-import
+      ```bash
+      # PASO 1: Leer archivo
+      cat <file_path>
+
+      # PASO 2: Extraer el import que falta
+      grep "@skip-import" <file_path>
+
+      # PASO 3: Verificar si el import AHORA existe
+      find app/ -name "<import_name>.py"
+
+      # PASO 4A: Si EXISTE → Eliminar el flag @skip-import
+      # Editar el archivo, quitar el comentario @skip-import
+      # Validar con: python .ralph/scripts/utils.py validate <file_path>
+
+      # PASO 4B: Si NO EXISTE → Crear stub mínimo
+      # Crear el archivo con un stub Protocol
+      # Validar con: python .ralph/scripts/utils.py validate <stub_file>
+
+      # PASO 4C: Si NO se puede crear stub → Documentar mejor
+      # Mejorar el comentario @skip-import con más contexto
+      ```
+
+      #### 2. @todo
+      ```bash
+      # PASO 1: Leer archivo y contexto del @todo
+      cat <file_path> | head -n <line> | tail -n 5
+
+      # PASO 2: Analizar si la tarea es trivial
+      # Si es trivial (< 30 min) → Implementar ahora
+      # Si es compleja → Documentar como "pending for task XX"
+
+      # PASO 3A: Implementar si es trivial
+      # Editar el archivo
+      # Validar con: python .ralph/scripts/utils.py validate <file_path>
+
+      # PASO 3B: Documentar si es compleja
+      # Cambiar @todo por: ✅ PENDING: Task XX - <description>
+      ```
+
+      #### 3. @clarify
+      ```bash
+      # PASO 1: Leer contexto
+      cat <file_path> | head -n <line> | tail -n 5
+
+      # PASO 2: Aclarar con documentación
+      # Reemplazar @clarify por comentario claro explicando el punto
+      # O eliminar si no es relevante
+
+      # Validar cambios
+      ```
+
+      #### 4. @review
+      ```bash
+      # PASO 1: Revisar el código marcado
+      cat <file_path> | head -n <line> | tail -n 10
+
+      # PASO 2: Arreglar problemas encontrados
+      # Editar el archivo con la corrección
+
+      # PASO 3: Eliminar flag @review si está correcto
+
+      # Validar cambios
+      ```
+
+      #### 5. @fixme / XXX / FIXME
+      ```bash
+      # MISMO flujo que @review pero más crítico
+      # Son bugs o código peligroso
+
+      # PASO 1: Leer contexto extendido
+      # PASO 2: Arreglar el bug
+      # PASO 3: Validar extensivamente
+
+      # NUNCA dejar un @fixme o XXX sin arreglar
+      ```
+
+      #### 6. @hack
+      ```bash
+      # PASO 1: Identificar por qué es un hack
+      # PASO 2: Implementar solución proper
+      # PASO 3: Reemplazar hack con implementación correcta
+
+      # Si no se puede reemplazar ahora, documentar:
+      # @hack: <reason> - TODO: Replace with proper implementation in task XX
+      ```
+
+      ### PASO 5: Validar SIEMPRE después de cambios
+
+      ```bash
+      # Para cada archivo modificado:
+      python .ralph/scripts/utils.py validate <file_path>
+
+      # Debe retornar: {"success": true, ...}
+
+      # Si success: false → Revisar errores y corregir
+      # NUNCA continuar si validation falla
+      ```
+
+      ### PASO 6: Marcar flag como resuelto y continuar
+
+      ```bash
+      # Emitir evento de siguiente flag
+      ralph emit "cleanup.next_flag" "$(cat .ralph/outputs/flags_remaining.json | jq '.all_flags[0]')"
+      ```
+
+      ### Si no hay más flags:
+      ```bash
+      ralph emit "cleanup.all_complete" "total_resolved=<n>, timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+      ```
+
+      ### STUB TEMPLATE para imports faltantes:
+
+      ```python
+      """
+      Stub para <ProtocolName>
+
+      @note: Task XX no ejecutada aún
+      @todo: Ejecutar task XX para implementar funcionalidad completa
+      """
+      from typing import Protocol, Any
+
+
+      class <ProtocolName>(Protocol):
+          """
+          Stub de <ProtocolName>
+
+          Task XX no ejecutada - Solo métodos mínimos definidos.
+          """
+
+          def method1(self, param1: str) -> str:
+              """
+              Method 1 stub.
+
+              @todo: Implementar en task XX
+              """
+              raise NotImplementedError(
+                  "<ProtocolName>.method1 not implemented - Task XX not executed"
+              )
+
+          def method2(self, param1: int, param2: float) -> bool:
+              """
+              Method 2 stub.
+
+              @todo: Implementar en task XX
+              """
+              raise NotImplementedError(
+                  "<ProtocolName>.method2 not implemented - Task XX not executed"
+              )
+      ```
+
+      ### Event Format:
+
+      Fix complete:
+      ```
+      ralph emit "cleanup.fix_complete" "file=<path>, flag_type=<type>, line=<n>, status=FIXED"
+      ```
+
+      All complete:
+      ```
+      ralph emit "cleanup.all_complete" "total_resolved=<n>, remaining=0, timestamp=..."
+      ```
+
+      Blocked:
+      ```
+      ralph emit "cleanup.blocked" "file=<path>, error=<description>, cannot_resolve=true"
+      ```
+
+  cleanup_validator:
+    name: "Cleanup Validator"
+    description: "Valida que no quedan flags y genera reporte final"
+    triggers: ["cleanup.all_complete", "cleanup.no_flags"]
+    publishes: ["cleanup.complete", "cleanup.blocked"]
+    default_publishes: "cleanup.complete"
+    instructions: |
+      ## CLEANUP VALIDATOR - FASE 3: Validación final y reporte
+
+      **OBJETIVO:** Validar que no quedan flags críticos y generar reporte final.
+
+      ### PASO 1: Re-escanear para verificar
+
+      ```bash
+      # Ejecutar scan_flags.py nuevamente
+      python .ralph/scripts/scan_flags.py \
+        --dir app/ \
+        --output .ralph/outputs/flags_final.json \
+        --format json
+
+      # Verificar total
+      cat .ralph/outputs/flags_final.json | jq '.total_flags'
+      ```
+
+      ### PASO 2: Si quedan flags críticos (@skip-import, @fixme, XXX, FIXME)
+
+      ```bash
+      # Contar flags críticos
+      cat .ralph/outputs/flags_final.json | jq '.summary | {"@skip-import", "@fixme", "XXX", "FIXME"}'
+
+      # Si hay alguno → cleanup.blocked
+      ralph emit "cleanup.blocked" "critical_flags_remaining=<n>, cannot_complete=true"
+      ```
+
+      ### PASO 3: Si solo quedan @todo documentados como pending
+
+      ```bash
+      # Verificar que todos los @todo están documentados
+      grep -r "@todo" app/ | grep -v "PENDING\|Task XX\|pending for"
+
+      # Si la salida está vacía → OK, son @todos documentados
+      # Si hay @todos sin documentar → cleanup.blocked
+      ```
+
+      ### PASO 4: Validar sintaxis de todo el código
+
+      ```bash
+      # Compilar todos los archivos Python
+      for f in $(find app/ -name "*.py" | grep -v __pycache__); do
+        python -m py_compile "$f" 2>&1 | tee -a .ralph/outputs/syntax_check.log
+      done
+
+      # Si hay errores → cleanup.blocked
+      # Si no hay errores → continuar
+      ```
+
+      ### PASO 5: Validar imports críticos
+
+      ```bash
+      # Intentar importar módulos principales
+      python -c "
+      try:
+          from app.core.protocols import *
+          print('✅ app.core.protocols imports OK')
+      except ImportError as e:
+          print(f'❌ Import error: {e}')
+          exit(1)
+      " 2>&1 | tee -a .ralph/outputs/imports_check.log
+      ```
+
+      ### PASO 6: Generar reporte final
+
+      ```bash
+      # Crear reporte markdown
+      cat > .ralph/outputs/FINAL_CLEANUP_REPORT.md << 'EOF'
+      # Final Cleanup Report
+
+      **Generated:** $(date -u +%Y-%m-%dT%H:%M:%SZ)
+      **Task:** 99_final_cleanup
+
+      ## Summary
+
+      - **Total flags found:** <n>
+      - **Flags resolved:** <n>
+      - **Flags documented as pending:** <n>
+      - **Stubs created:** <n>
+      - **Critical flags remaining:** 0
+
+      ## Resolution by Type
+
+      | Flag Type | Found | Resolved | Documented | Remaining |
+      |-----------|-------|----------|------------|-----------|
+      | @skip-import | <n> | <n> | <n> | 0 |
+      | @todo | <n> | <n> | <n> | <n> |
+      | @clarify | <n> | <n> | 0 | 0 |
+      | @review | <n> | <n> | 0 | 0 |
+      | @fixme | <n> | <n> | 0 | 0 |
+      | @hack | <n> | <n> | 0 | 0 |
+      | XXX | <n> | <n> | 0 | 0 |
+
+      ## Stubs Created
+
+      1. `app/core/protocols/i_<name>.py` - Stub for <ProtocolName>
+      2. ...
+
+      ## Pending @todos (Documented)
+
+      The following @todos are documented as pending for future tasks:
+
+      1. **File:** `app/services/<file>.py`
+         - **Line:** <n>
+         - **Pending for:** Task XX
+         - **Description:** <description>
+
+      ## Validation Status
+
+      - ✅ No critical flags remaining
+      - ✅ All Python files compile without syntax errors
+      - ✅ Core imports work correctly
+      - ✅ All non-critical flags are documented
+
+      ## Recommendation
+
+      **SYSTEM READY FOR PRODUCTION**
+
+      All critical flags have been resolved. The system has:
+      - No unresolved @skip-import flags
+      - No unresolved @fixme or XXX flags
+      - All imports working correctly
+      - All code validating successfully
+
+      Remaining @todos are documented as pending for specific future tasks.
+      EOF
+      ```
+
+      ### PASO 7: Emitir cleanup.complete
+
+      ```bash
+      ralph emit "cleanup.complete" "status=SUCCESS, report=.ralph/outputs/FINAL_CLEANUP_REPORT.md"
+      ```
+
+      ### PASO 8: Actualizar checkpoint
+
+      ```bash
+      # Marcar task como COMPLETED
+      python .ralph/scripts/resume.py "99_final_cleanup"
+      # Actualizar checkpoint con status: COMPLETED
+      ```
+
+      ### CHECKPOINT FINAL:
+
+      ```json
+      {
+        "task_id": "99_final_cleanup",
+        "task_name": "Final Cleanup & TODO Resolution",
+        "started_at": "2026-02-08T...",
+        "completed_at": "2026-02-08T...",
+        "status": "COMPLETED",
+        "progress": {
+          "total_flags_found": <n>,
+          "flags_resolved": <n>,
+          "flags_documented": <n>,
+          "stubs_created": <n>
+        },
+        "outputs": {
+          "flags_resolved": {
+            "@skip-import": <n>,
+            "@todo": <n>,
+            "@clarify": <n>,
+            "@review": <n>,
+            "@fixme": <n>,
+            "@hack": <n>,
+            "XXX": <n>
+          },
+          "stubs_created": [
+            "app/core/protocols/i_<name>.py"
+          ],
+          "validation_passed": true
+        },
+        "validation": {
+          "no_critical_flags": true,
+          "all_optional_flags_documented": true,
+          "syntax_check_passed": true,
+          "imports_check_passed": true
+        },
+        "errors": [],
+        "warnings": [],
+        "timestamp": "2026-02-08T..."
+      }
+      ```
+
+memories:
+  enabled: true
+  inject: auto
+  budget: 10000
+
+checkpoint:
+  file: ".ralph/checkpoints/99_final_cleanup_checkpoint.json"

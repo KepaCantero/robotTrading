@@ -122,6 +122,7 @@ class AggressiveMemoryManager:
         self.__dict__.update(state)
         # Recreate the unpicklable lock
         import threading
+
         self._lock = threading.RLock()
 
     def add_result(self, result: BacktestResultDict) -> None:

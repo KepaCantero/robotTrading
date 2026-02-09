@@ -260,7 +260,15 @@ class TradingBridgeOrchestrator:
                     logger.error("❌ Trade execution failed")
                     return None
 
-            except (ValueError, KeyError, AttributeError, IndexError, TypeError, ConnectionError, OSError) as e:
+            except (
+                ValueError,
+                KeyError,
+                AttributeError,
+                IndexError,
+                TypeError,
+                ConnectionError,
+                OSError,
+            ) as e:
                 self.status = BridgeStatus.ERROR
                 logger.error(f"❌ Error processing alert: {str(e)}")
                 if hasattr(alert_event, 'event_id'):

@@ -1,0 +1,283 @@
+# ============================================
+# Ralph Task 01: ComplianceEngine Refactor
+# ============================================
+# PRIORIDAD: P0 (CRÍTICA)
+# OBJETIVO: Refactorizar ComplianceEngine para SOLID + R1-R29 + Spain Tax
+# TIEMPO: ~40-60 horas
+#
+# Requirements: .ralph/docs/requirements/SERVICE_REQUIREMENTS.md
+# ============================================================================
+
+event_loop:
+  prompt_file: ".ralph/ralph_tasks/prompts/09_compliance_engine_refactor.md"
+  completion_promise: "COMPLIANCE_ENGINE_REFACTOR_COMPLETE"
+  max_iterations: 200
+  max_runtime_seconds: 216000  # 60 hours
+  checkpoint_interval: 3  # Standardized
+  starting_event: "refactor.start"
+
+cli:
+  backend: "claude"
+
+core:
+  specs_dir: "./specs/"
+
+hats:
+  refactor_implementer:
+    name: "ComplianceEngine Refactorer"
+    description: "Refactoriza ComplianceEngine según SERVICE_REQUIREMENTS.md"
+    triggers: ["refactor.start", "refactor.next_phase"]
+    publishes: ["refactor.next_phase", "refactor.complete", "refactor.blocked"]
+    default_publishes: "refactor.next_phase"
+    instructions: |
+      ## COMPLIANCE ENGINE REFACTOR
+
+      **REQUISITOS:**
+      1. Leer: `.ralph/docs/requirements/SERVICE_REQUIREMENTS.md`
+      2. Leer: `.ralph/docs/architecture/compliance_engine_solid_audit.md`
+
+      **OBJETIVO:** Convertir ComplianceEngine en coordinator SOLID con:
+      - 5 principios SOLID
+      - Reglas R1-R29 de trading
+      - Spain Tax (IRPF 19/21/23%)
+
+      ### FASE 1: Crear Protocol Interfaces (ISP + DIP + LSP)
+
+      Archivo: `app/services/compliance/protocols.py`
+
+      ```python
+      from typing import Protocol, Optional
+      from decimal import Decimal
+
+      # === CORE INTERFACES (segregated, < 5 methods) ===
+
+      class IPreTradeValidator(Protocol):
+          """Validaciones pre-trade (R1, R2, R4)"""
+          async def validate_kelly(self, capital: Decimal, order_value: Decimal) -> bool: ...
+          async def validate_drawdown(self) -> bool: ...
+          async def validate_rr_ratio(self, entry: Decimal, target: Decimal, stop: Decimal) -> bool: ...
+
+      class ITradeExecutor(Protocol):
+          """Ejecuta trades vía broker"""
+          async def execute_order(self, signal: TradeSignal) -> ExecutionResult: ...
+
+      class ISpainTaxEngine(Protocol):
+          """Cálculo impuestos España (IRPF progresivo)"""
+          def calculate_capital_gains_tax(self, profit: Decimal) -> Decimal: ...
+          def is_eu_dividend(self, symbol: str) -> bool: ...
+
+      class ITradingDecisionLogger(Protocol):
+          """Logging append-only con correlation ID (R15)"""
+          def log_signal(self, signal: TradeSignal, metadata: dict) -> str: ...
+          def log_execution(self, correlation_id: str, result: ExecutionResult) -> None: ...
+
+      class IKillSwitchMonitor(Protocol):
+          """Monitor de drawdown máximo (R2)"""
+          async def check_kill_switch(self) -> bool: ...
+      ```
+
+      Validar: `python .ralph/scripts/utils.py validate app/services/compliance/protocols.py`
+
+      ### FASE 2: Crear Implementaciones (SRP - 1 responsabilidad)
+
+      Archivos con 1 responsabilidad cada uno:
+
+      **2.1** `app/services/compliance/pre_trade_validator.py`
+      ```python
+      class PreTradeValidator:
+          """Validaciones pre-trade (R1, R2, R4)"""
+
+          async def validate_kelly(self, capital: Decimal, order_value: Decimal) -> bool:
+              """R1: Kelly + 2% max"""
+              max_risk = capital * Decimal("0.02")
+              return order_value <= max_risk
+
+          async def validate_drawdown(self) -> bool:
+              """R2: Drawdown 15% stop"""
+              current_dd = await self.drawdown_monitor.get_current_drawdown()
+              return current_dd < 0.15
+
+          async def validate_rr_ratio(self, entry: Decimal, target: Decimal, stop: Decimal) -> bool:
+              """R4: R:R 2:1 minimum"""
+              risk = abs(entry - stop)
+              reward = abs(target - entry)
+              if risk == 0: return False
+              return (reward / risk) >= Decimal("2.0")
+      ```
+
+      **2.2** `app/services/compliance/spain_tax_engine.py`
+      ```python
+      class SpainTaxEngine:
+          """Cálculo de impuestos España"""
+
+          TAX_BRACKETS = [
+              (Decimal("0"), Decimal("6000"), Decimal("0.19")),    # 19%
+              (Decimal("6000"), Decimal("50000"), Decimal("0.21")),  # 21%
+              (Decimal("50000"), Decimal("999999"), Decimal("0.23")), # 23%
+          ]
+
+          def calculate_capital_gains_tax(self, profit: Decimal) -> Decimal:
+              """IRPF progresivo sin distinción LT/ST"""
+              tax = Decimal("0")
+              remaining = profit
+              for min_amt, max_amt, rate in self.TAX_BRACKETS:
+                  if remaining <= 0: break
+                  taxable = min(remaining, max_amt - min_amt)
+                  tax += taxable * rate
+                  remaining -= taxable
+              return tax
+      ```
+
+      **2.3** `app/services/compliance/trading_decision_logger.py`
+      ```python
+      class TradingDecisionLogger:
+          """Logging append-only (R15)"""
+
+          def __init__(self, log_path: str = "data/trading_decisions.jsonl"):
+              self.log_path = log_path
+
+          def log_signal(self, signal: TradeSignal, metadata: dict) -> str:
+              """Genera correlation_id y loguea"""
+              import uuid, json
+              correlation_id = str(uuid.uuid4())
+              log_entry = {
+                  "timestamp": datetime.utcnow().isoformat(),
+                  "correlation_id": correlation_id,
+                  "event": "signal_received",
+                  "signal": signal.dict(),
+                  "metadata": metadata
+              }
+              with open(self.log_path, "a") as f:
+                  f.write(json.dumps(log_entry) + "\n")
+              return correlation_id
+      ```
+
+      Validar cada archivo: `python .ralph/scripts/utils.py validate <archivo>`
+
+      ### FASE 3: Refactorizar ComplianceEngine (Coordinator)
+
+      Editar: `app/services/compliance/compliance_engine.py`
+
+      ```python
+      class ComplianceEngine:
+          """
+          Coordinator del flujo completo de trading.
+          ÚNICA responsabilidad: Coordinar ciclo con compliance.
+          """
+
+          def __init__(
+              self,
+              pre_trade_validator: IPreTradeValidator,
+              trade_executor: ITradeExecutor,
+              spain_tax_engine: ISpainTaxEngine,
+              decision_logger: ITradingDecisionLogger,
+              kill_switch: IKillSwitchMonitor,
+          ):
+              self.pre_trade_validator = pre_trade_validator
+              self.trade_executor = trade_executor
+              self.spain_tax_engine = spain_tax_engine
+              self.decision_logger = decision_logger
+              self.kill_switch = kill_switch
+
+          async def execute_trade(self, signal: TradeSignal, portfolio: Portfolio) -> TradeResult:
+              """Ejecuta ciclo completo con compliance"""
+              correlation_id = self.decision_logger.log_signal(signal, {})
+
+              # R2: Kill switch
+              if await self.kill_switch.check_kill_switch():
+                  raise TradingHaltedError("Drawdown >= 15%")
+
+              # Validaciones pre-trade
+              if not await self.pre_trade_validator.validate_drawdown():
+                  raise DrawdownExceededError("Drawdown >= 15%")
+
+              # R4: R:R 2:1
+              if not await self.pre_trade_validator.validate_rr_ratio(
+                  signal.price, signal.target_price, signal.stop_loss
+              ):
+                  raise InsufficientRiskRewardRatioError("R:R < 2:1")
+
+              # Ejecutar
+              result = await self.trade_executor.execute_order(signal)
+
+              # Spain Tax
+              pnl = self._calculate_pnl(signal, result)
+              spain_tax = self.spain_tax_engine.calculate_capital_gains_tax(pnl)
+
+              # R15: Log
+              self.decision_logger.log_execution(correlation_id, {
+                  "gross_pnl": str(pnl),
+                  "spain_tax": str(spain_tax),
+                  "net_pnl": str(pnl - spain_tax),
+              })
+
+              return TradeResult(..., net_pnl=pnl - spain_tax)
+      ```
+
+      Validar: `python .ralph/scripts/utils.py validate app/services/compliance/compliance_engine.py`
+
+      ### Checkpoint:
+      ```json
+      {
+        "phases": {
+          "phase_1_protocols": "COMPLETED",
+          "phase_2_implementations": "PENDING",
+          "phase_3_refactor": "PENDING"
+        }
+      }
+      ```
+
+      ### Por cada fase:
+      1. Crear/editar archivos según código arriba
+      2. Validar: `scripts/validate_file_complete.sh <archivo>`
+      3. Si falla → arreglar
+      4. SOLO cuando success: true → marcar COMPLETED
+      5. Continuar siguiente fase
+
+      ### Event Format:
+      Fase completada: `ralph emit "refactor.next_phase" "phase=<n>"`
+      Todas completadas: `ralph emit "refactor.complete" "all_passed=true"`
+      Bloqueado: `ralph emit "refactor.blocked" "error=..."`
+
+  final_reviewer:
+    name: "Final Reviewer"
+    description: "Verifica refactorización completa"
+    triggers: ["refactor.complete"]
+    publishes: ["refactor.final_summary"]
+    instructions: |
+      ## FINAL REVIEW
+
+      ```bash
+      # 1. Verificar archivos creados
+      ls app/services/compliance/protocols.py
+      ls app/services/compliance/pre_trade_validator.py
+      ls app/services/compliance/spain_tax_engine.py
+      ls app/services/compliance/trading_decision_logger.py
+
+      # 2. Validar TODOS
+      for f in app/services/compliance/*.py; do
+        python .ralph/scripts/utils.py validate "$f" | jq '.summary.success'
+      done
+
+      # 3. Verificar SOLID
+      grep "class.*:" app/services/compliance/*.py | wc -l  # >= 5 clases
+      grep -A 5 "class.*Protocol" app/services/compliance/protocols.py | grep "def " | wc -l  # <= 5 por Protocol
+
+      # 4. Verificar R1-R29
+      grep -n "0.02\|2%" app/services/compliance/pre_trade_validator.py  # R1
+      grep -n "0.15\|15%" app/services/compliance/pre_trade_validator.py  # R2
+      grep -n "2.0\|2:1" app/services/compliance/pre_trade_validator.py  # R4
+      grep -n "correlation_id" app/services/compliance/trading_decision_logger.py  # R15
+      grep -n "0.19\|0.21\|0.23" app/services/compliance/spain_tax_engine.py  # Spain Tax
+      ```
+
+      Si TODO limpio: `ralph emit "refactor.final_summary" "all_passed"`
+      Output: **COMPLIANCE_ENGINE_REFACTOR_COMPLETE**
+
+tasks:
+  enabled: true
+
+memories:
+  enabled: true
+  inject: auto
+  budget: 3000

@@ -177,7 +177,9 @@ class TransformerEngine(BaseLearningEngine):
         return sequences, labels
 
     def train(  # noqa: C901 - Complex training loop (PyTorch patterns require complexity)
-        self, training_data: Optional[Dict[str, Any]] = None, validation_data: Optional[Dict[str, Any]] = None
+        self,
+        training_data: Optional[Dict[str, Any]] = None,
+        validation_data: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, float]:
         """
         Entrenar el modelo Transformer.

@@ -30,13 +30,7 @@ from app.backtesting.execution import (
     SlippageModel,
     TransactionCostCalculator,
 )
-from app.backtesting.execution.models import (
-    FillReason,
-    MarketSnapshot,
-    Order,
-    OrderSide,
-    OrderType,
-)
+from app.backtesting.execution.models import FillReason, MarketSnapshot, Order, OrderSide, OrderType
 from app.backtesting.execution.slippage_model import TimeOfDay
 
 # ============================================================================
