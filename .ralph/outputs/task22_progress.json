@@ -1,16 +1,17 @@
 {
   "task": "Ralph Task 22: Code Quality Refactor - Production-Ready",
   "started_at": "2025-02-11T15:00:00Z",
-  "last_updated": "2025-02-11T16:00:00Z",
+  "last_updated": "2025-02-11T17:00:00Z",
   "phases": {
     "phase_1_config": {
       "name": "Configuration Files",
       "path": "app/core/config/",
       "total_files": 11,
-      "fixed_files": 1,
+      "fixed_files": 2,
       "status": "complete",
       "files_fixed": [
-        "app/core/config/trading_config.py - Added capital_loss_threshold and max_cost_impact_ratio"
+        "app/core/config/trading_config.py - Added capital_loss_threshold, max_cost_impact_ratio, and 27 analytics config fields",
+        "app/core/config/trading_config.py - Added portfolio analytics configuration fields"
       ]
     },
     "phase_2_protocols": {
@@ -36,9 +37,9 @@
     },
     "phase_5_core_services": {
       "name": "Core Services",
-      "path": "app/core/, app/domain/services/",
+      "path": "app/core/, app/domain/services/, app/services/",
       "total_files": 45,
-      "fixed_files": 0,
+      "fixed_files": 1,
       "status": "in_progress"
     },
     "phase_6_execution": {
@@ -83,7 +84,8 @@
     "app/services/deployment_decision/deployment_decision_orchestrator.py - Added config import and updated thresholds",
     "app/core/config/trading_config.py - Added capital_loss_threshold and max_cost_impact_ratio",
     "app/services/risk/validators/risk_reward_validator.py - Updated to use centralized config for min_rr_ratio",
-    "app/providers/paper_trading.py - Fixed getattr syntax and added config import"
+    "app/providers/paper_trading.py - Fixed getattr syntax and added config import",
+    "app/services/portfolio_analytics_service.py - Updated to use centralized config for analytics thresholds"
   ],
   "issues_found": {
     "hardcoded_values": [
@@ -91,7 +93,8 @@
       "cost_analysis_service.py - FIXED max_cost_impact_ratio",
       "deployment_decision_orchestrator.py - FIXED drawdown and capital loss thresholds",
       "risk_reward_validator.py - FIXED MIN_RR_RATIO",
-      "paper_trading.py - FIXED getattr syntax error"
+      "paper_trading.py - FIXED getattr syntax error",
+      "portfolio_analytics_service.py - FIXED 27+ hardcoded values with config"
     ],
     "not_implemented_errors": [],
     "todo_comments": [
@@ -100,9 +103,9 @@
   },
   "summary": {
     "total_files": 931,
-    "files_processed": 6,
-    "files_fixed": 6,
-    "remaining_files": 925,
-    "completion_percentage": 0.6
+    "files_processed": 7,
+    "files_fixed": 7,
+    "remaining_files": 924,
+    "completion_percentage": 0.7
   }
 }
