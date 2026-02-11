@@ -5,8 +5,6 @@ This service provides comprehensive portfolio analytics including performance
 metrics calculation, risk analysis, and portfolio management features.
 """
 
-from __future__ import annotations
-
 import statistics
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -15,7 +13,7 @@ from uuid import UUID
 
 from loguru import logger
 
-from app.core.centralized_config import get_config
+from app.core.config.trading_config import get_config
 from app.models.portfolio import Portfolio
 from app.models.portfolio_analytics import (
     ExtendedPortfolio,
@@ -37,8 +35,14 @@ class PortfolioAnalyticsService:
     def __init__(self, market_data_service: Optional[MarketDataService] = None):
         """Initialize the portfolio analytics service."""
         self.market_data_service = market_data_service
-        # Load trading thresholds from config
-        self._tt = get_config().trading_thresholds
+        self._config = get_config()
+        # Use centralized config for risk-free rate and benchmark return
+        self._risk_free_rate = Decimal(str(getattr(
+            self._config.trading, 'portfolio_risk_free_rate', 0.02
+        )))
+        self._benchmark_return = Decimal(str(getattr(
+            self._config.trading, 'analytics_benchmark_return', 0.08
+        )))
 
     async def calculate_performance_metrics(
         self,
@@ -75,8 +79,15 @@ class PortfolioAnalyticsService:
         sharpe_ratio = self._calculate_sharpe_ratio(returns)
         sortino_ratio = self._calculate_sortino_ratio(returns)
         max_drawdown = self._calculate_max_drawdown(portfolio_values)
-        var_95 = self._calculate_var(returns, 0.95)
-        var_99 = self._calculate_var(returns, 0.99)
+        # Use config for VaR confidence levels
+        var_95_confidence = float(getattr(
+            self._config.trading, 'analytics_var_95_confidence', 0.95
+        ))
+        var_99_confidence = float(getattr(
+            self._config.trading, 'analytics_var_99_confidence', 0.99
+        ))
+        var_95 = self._calculate_var(returns, var_95_confidence)
+        var_99 = self._calculate_var(returns, var_99_confidence)
 
         # Additional metrics
         calmar_ratio = self._calculate_calmar_ratio(annualized_return, max_drawdown)
@@ -128,7 +139,7 @@ class PortfolioAnalyticsService:
 
         # Get historical returns for risk calculation
         end_date = datetime.utcnow()
-        start_date = end_date - timedelta(days=self._tt.yearly_history_length)  # Use config
+        start_date = end_date - timedelta(days=252)  # 1 year of trading days
 
         portfolio_values = await self._get_portfolio_values(portfolio, start_date, end_date)
         returns = self._calculate_returns(portfolio_values)
@@ -140,8 +151,7 @@ class PortfolioAnalyticsService:
 
         # Volatility metrics
         daily_volatility = self._calculate_volatility(returns)
-        # Use sqrt of annual_trading_days from config
-        annualized_volatility = daily_volatility * Decimal(str(self._tt.annual_trading_days ** 0.5))
+        annualized_volatility = daily_volatility * Decimal(str(252**0.5))
         realized_volatility = self._calculate_realized_volatility(returns)
 
         # Downside risk
@@ -284,15 +294,20 @@ class PortfolioAnalyticsService:
 
         current_allocation = await self.analyze_portfolio_allocation(portfolio)
 
-        # Default target allocation (use config values)
+        # Default target allocation (60/40 equity/cash)
         if not target_allocation:
-            equity_target = Decimal(str(self._tt.equity_allocation_target * 100))
-            cash_target = Decimal(str(self._tt.cash_allocation_target * 100))
+            # Use config for default allocation
+            target_equity = Decimal(str(getattr(
+                self._config.trading, 'analytics_target_equity_allocation', 0.60
+            ) * 100))
+            target_cash = Decimal(str(getattr(
+                self._config.trading, 'analytics_target_cash_allocation', 0.40
+            ) * 100))
             target_allocation = PortfolioAllocation(
                 portfolio_id=portfolio.id,
-                equity_allocation=equity_target,
+                equity_allocation=target_equity,
                 fixed_income_allocation=Decimal("0"),
-                cash_allocation=cash_target,
+                cash_allocation=target_cash,
                 alternative_allocation=Decimal("0"),
                 domestic_allocation=Decimal("100"),
                 international_allocation=Decimal("0"),
@@ -304,7 +319,10 @@ class PortfolioAnalyticsService:
         )
         cash_deviation = abs(current_allocation.cash_allocation - target_allocation.cash_allocation)
 
-        rebalance_threshold = Decimal(str(self._tt.rebalance_threshold_pct * 100))  # Use config
+        # Use config for rebalance threshold
+        rebalance_threshold = Decimal(str(getattr(
+            self._config.trading, 'analytics_rebalance_threshold', 0.05
+        ) * 100))
 
         if equity_deviation < rebalance_threshold and cash_deviation < rebalance_threshold:
             logger.info("Portfolio is within rebalancing thresholds")
@@ -481,9 +499,11 @@ class PortfolioAnalyticsService:
         current_date = start_date
 
         while current_date <= end_date:
-            # Mock portfolio value calculation - use config
+            # Mock portfolio value calculation
             base_value = portfolio.total_value
-            daily_return = Decimal(str(self._tt.mock_daily_return))
+            daily_return = Decimal(str(getattr(
+                self._config.trading, 'analytics_mock_daily_return', 0.001
+            )))
             value = base_value * (1 + daily_return) ** ((current_date - start_date).days)
             values.append(value)
             current_date += timedelta(days=1)
@@ -519,9 +539,9 @@ class PortfolioAnalyticsService:
 
         avg_return = sum(returns) / len(returns)
 
-        # Convert to annualized based on period - use config for trading days
+        # Convert to annualized based on period
         if period == PerformancePeriod.DAILY:
-            annualized = avg_return * self._tt.annual_trading_days
+            annualized = avg_return * 252
         elif period == PerformancePeriod.WEEKLY:
             annualized = avg_return * 52
         elif period == PerformancePeriod.MONTHLY:
@@ -563,8 +583,8 @@ class PortfolioAnalyticsService:
         if volatility == 0:
             return Decimal("0")
 
-        # Ensure reasonable values - use config for risk free rate and trading days
-        risk_free_daily = Decimal(str(self._tt.risk_free_rate)) / Decimal(str(self._tt.annual_trading_days))
+        # Ensure reasonable values
+        risk_free_daily = self._risk_free_rate / 252
         excess_return = avg_return - risk_free_daily
 
         # Cap the Sharpe ratio to reasonable range
@@ -587,7 +607,7 @@ class PortfolioAnalyticsService:
         if downside_deviation == 0:
             return Decimal("0")
 
-        return (avg_return - Decimal(str(self._tt.risk_free_rate)) / Decimal(str(self._tt.annual_trading_days)) / Decimal(str(downside_deviation))
+        return (avg_return - self._risk_free_rate / 252) / Decimal(str(downside_deviation))
 
     def _calculate_max_drawdown(self, values: List[Decimal]) -> Decimal:
         """Calculate maximum drawdown."""
@@ -633,7 +653,7 @@ class PortfolioAnalyticsService:
             return Decimal("0")
 
         avg_return = sum(returns) / len(returns)
-        benchmark_return = Decimal(str(self._tt.benchmark_return)) / Decimal(str(self._tt.annual_trading_days))
+        benchmark_return = self._benchmark_return / 252  # Daily benchmark return
 
         excess_return = avg_return - benchmark_return
         tracking_error = self._calculate_tracking_error(returns)
@@ -657,7 +677,7 @@ class PortfolioAnalyticsService:
             return Decimal("0")
 
         # Cap the Treynor ratio to reasonable range
-        treynor = (avg_return - Decimal(str(self._tt.risk_free_rate)) / Decimal(str(self._tt.annual_trading_days)) / beta
+        treynor = (avg_return - self._risk_free_rate / 252) / beta
         return max(min(treynor, Decimal("10")), Decimal("-10"))
 
     def _calculate_jensen_alpha(self, returns: List[Decimal]) -> Decimal:
@@ -666,12 +686,12 @@ class PortfolioAnalyticsService:
             return Decimal("0")
 
         avg_return = sum(returns) / len(returns)
-        benchmark_return = Decimal(str(self._tt.benchmark_return)) / Decimal(str(self._tt.annual_trading_days))
+        benchmark_return = self._benchmark_return / 252
         beta = Decimal("1")  # Simplified
 
         # Cap the Jensen's alpha to reasonable range
-        alpha = (avg_return - Decimal(str(self._tt.risk_free_rate)) / Decimal(str(self._tt.annual_trading_days))) - beta * (
-            benchmark_return - Decimal(str(self._tt.risk_free_rate)) / Decimal(str(self._tt.annual_trading_days))
+        alpha = (avg_return - self._risk_free_rate / 252) - beta * (
+            benchmark_return - self._risk_free_rate / 252
         )
         return max(min(alpha, Decimal("1")), Decimal("-1"))
 
@@ -680,7 +700,7 @@ class PortfolioAnalyticsService:
         if not returns:
             return Decimal("0")
 
-        benchmark_return = Decimal(str(self._tt.benchmark_return)) / Decimal(str(self._tt.annual_trading_days))
+        benchmark_return = self._benchmark_return / 252
         excess_returns = [r - benchmark_return for r in returns]
 
         return self._calculate_volatility(excess_returns) / 100
@@ -689,9 +709,9 @@ class PortfolioAnalyticsService:
         self, start_date: datetime, end_date: datetime
     ) -> Optional[Decimal]:
         """Get benchmark return for the period."""
-        # Simplified - would need benchmark data - use config
+        # Simplified - would need benchmark data
         days = (end_date - start_date).days
-        return Decimal(str(self._tt.benchmark_return)) * Decimal(str(days)) / Decimal("365")
+        return self._benchmark_return * days / 365
 
     def _calculate_realized_volatility(self, returns: List[Decimal]) -> Decimal:
         """Calculate realized volatility."""
@@ -813,7 +833,9 @@ class PortfolioAnalyticsService:
     async def _calculate_average_correlation(self, portfolio: Portfolio) -> Decimal:
         """Calculate average correlation between positions."""
         # Simplified - would need historical correlation data
-        return Decimal("0.3")  # Mock value
+        return Decimal(str(getattr(
+            self._config.trading, 'analytics_default_average_correlation', 0.3
+        )))
 
     def _calculate_diversification_ratio(self, portfolio: Portfolio) -> Decimal:
         """Calculate diversification ratio."""
@@ -827,29 +849,55 @@ class PortfolioAnalyticsService:
         return effective_positions / actual_positions
 
     def _assess_risk_level(self, risk_metrics: RiskMetrics) -> RiskLevel:
-        """Assess overall risk level - use config thresholds."""
-        volatility_score = min(risk_metrics.annualized_volatility / self._tt.volatility_risk_max, Decimal("1"))
-        concentration_score = risk_metrics.largest_position_weight / self._tt.concentration_weight_max
+        """Assess overall risk level."""
+        # Use config for threshold values
+        volatility_max = Decimal(str(getattr(
+            self._config.trading, 'analytics_volatility_max_score', 0.20
+        )))
+        concentration_max = Decimal(str(getattr(
+            self._config.trading, 'analytics_concentration_max_score', 0.20
+        )))
+        volatility_score = min(risk_metrics.annualized_volatility / volatility_max, Decimal("1"))
+        concentration_score = risk_metrics.largest_position_weight / concentration_max
         correlation_score = risk_metrics.average_correlation
 
         risk_score = (volatility_score + concentration_score + correlation_score) / 3
 
-        if risk_score < Decimal("0.25"):
+        # Use config for risk score thresholds
+        low_threshold = Decimal(str(getattr(
+            self._config.trading, 'analytics_risk_score_low_threshold', 0.25
+        )))
+        moderate_threshold = Decimal(str(getattr(
+            self._config.trading, 'analytics_risk_score_moderate_threshold', 0.5
+        )))
+        high_threshold = Decimal(str(getattr(
+            self._config.trading, 'analytics_risk_score_high_threshold', 0.75
+        )))
+
+        if risk_score < low_threshold:
             return RiskLevel.LOW
-        elif risk_score < Decimal("0.5"):
+        elif risk_score < moderate_threshold:
             return RiskLevel.MODERATE
-        elif risk_score < Decimal("0.75"):
+        elif risk_score < high_threshold:
             return RiskLevel.HIGH
         else:
             return RiskLevel.VERY_HIGH
 
     def _calculate_risk_score(self, risk_metrics: RiskMetrics) -> Decimal:
-        """Calculate risk score (0-100) - use config thresholds."""
+        """Calculate risk score (0-100)."""
+        # Use config for max values
+        volatility_max = Decimal(str(getattr(
+            self._config.trading, 'analytics_volatility_max_score', 0.50
+        )))
+        concentration_max = Decimal(str(getattr(
+            self._config.trading, 'analytics_concentration_max_score', 0.50
+        )))
+
         volatility_score = (
-            min(risk_metrics.annualized_volatility, Decimal(str(self._tt.max_volatility_for_risk_score))) / Decimal(str(self._tt.max_volatility_for_risk_score)) * 40
+            min(risk_metrics.annualized_volatility, volatility_max) / volatility_max * 40
         )
         concentration_score = (
-            min(risk_metrics.largest_position_weight, Decimal(str(self._tt.max_position_weight_for_risk_score))) / Decimal(str(self._tt.max_position_weight_for_risk_score)) * 30
+            min(risk_metrics.largest_position_weight, concentration_max) / concentration_max * 30
         )
         correlation_score = risk_metrics.average_correlation * 30
 
@@ -858,37 +906,47 @@ class PortfolioAnalyticsService:
     def _calculate_health_score(
         self, portfolio: Portfolio, performance: PerformanceMetrics, risk: RiskMetrics
     ) -> Decimal:
-        """Calculate portfolio health score - use config weights."""
-        # Performance component - use config weight
+        """Calculate portfolio health score."""
+        # Performance component (40%)
+        max_performance = Decimal(str(getattr(
+            self._config.trading, 'analytics_max_performance_return', 0.20
+        )))
         performance_score = (
-            min(max(performance.annualized_return, Decimal("0")), Decimal(str(self._tt.max_annualized_return_for_health)))
-            / Decimal(str(self._tt.max_annualized_return_for_health))
-            * self._tt.health_score_performance_weight * 100
+            min(max(performance.annualized_return, Decimal("0")), max_performance)
+            / max_performance
+            * 40
         )
 
-        # Risk component - use config weight
-        risk_score = max(Decimal("100") - self._calculate_risk_score(risk), Decimal("0")) * Decimal(
-            str(self._tt.health_score_risk_weight)
+        # Risk component (30%)
+        max_risk = Decimal(str(getattr(
+            self._config.trading, 'analytics_max_risk_score', 0.50
+        )))
+        risk_score = max(max_risk * 2 - self._calculate_risk_score(risk), Decimal("0")) * Decimal(
+            "0.3"
         )
 
-        # Diversification component - use config weight
+        # Diversification component (30%)
+        well_diversified = Decimal(str(getattr(
+            self._config.trading, 'analytics_well_diversified_positions', 0.10
+        )))
         diversification_score = (
-            min(risk.effective_number_of_positions / Decimal(str(self._tt.effective_positions_for_health)), Decimal("1"))
-            * self._tt.health_score_diversification_weight * 100
+            min(risk.effective_number_of_positions / well_diversified, Decimal("1")) * 30
         )
 
         return performance_score + risk_score + diversification_score
 
     def _calculate_diversification_score(self, portfolio: Portfolio) -> Decimal:
-        """Calculate diversification score - use config threshold."""
+        """Calculate diversification score."""
         if not portfolio.positions:
             return Decimal("0")
 
         effective_positions = self._calculate_effective_positions(portfolio)
-        # Use config for max positions
-        max_positions = Decimal(str(self._tt.max_effective_positions_for_diversification))
+        # Use config for well diversified threshold
+        well_diversified = Decimal(str(getattr(
+            self._config.trading, 'analytics_well_diversified_positions', 0.10
+        )))
 
-        return min(effective_positions / max_positions, Decimal("1")) * 100
+        return min(effective_positions / well_diversified, Decimal("1")) * 100
 
     def _calculate_liquidity_score(self, portfolio: Portfolio) -> Decimal:
         """Calculate liquidity score."""
@@ -904,27 +962,42 @@ class PortfolioAnalyticsService:
     def _generate_recommendations(
         self, portfolio: Portfolio, performance: PerformanceMetrics, risk: RiskMetrics
     ) -> List[str]:
-        """Generate portfolio recommendations - use config thresholds."""
+        """Generate portfolio recommendations."""
         recommendations = []
 
-        # Performance recommendations - use config
-        if performance.annualized_return < Decimal(str(self._tt.min_annualized_return_for_recommendation)):
+        # Performance recommendations
+        annualized_return_threshold = Decimal(str(getattr(
+            self._config.trading, 'analytics_annualized_return_threshold', 0.05
+        )))
+        if performance.annualized_return < annualized_return_threshold:
             recommendations.append("Consider increasing equity exposure for better returns")
 
-        if performance.sharpe_ratio < Decimal(str(self._tt.min_sharpe_for_recommendation)):
+        sharpe_threshold = Decimal(str(getattr(
+            self._config.trading, 'analytics_sharpe_ratio_threshold', 0.5
+        )))
+        if performance.sharpe_ratio < sharpe_threshold:
             recommendations.append("Portfolio risk-adjusted returns are low - consider rebalancing")
 
-        # Risk recommendations - use config
-        if risk.annualized_volatility > Decimal(str(self._tt.high_volatility_threshold)):
+        # Risk recommendations
+        volatility_high_threshold = Decimal(str(getattr(
+            self._config.trading, 'analytics_volatility_high_threshold', 0.20
+        )))
+        if risk.annualized_volatility > volatility_high_threshold:
             recommendations.append("High volatility detected - consider reducing position sizes")
 
-        if risk.largest_position_weight > Decimal(str(self._tt.high_drawdown_threshold)):
+        largest_position_high_threshold = Decimal(str(getattr(
+            self._config.trading, 'analytics_largest_position_high_threshold', 0.20
+        )))
+        if risk.largest_position_weight > largest_position_high_threshold:
             recommendations.append(
                 "Concentration risk high - consider diversifying largest positions"
             )
 
         # Diversification recommendations
-        if len(portfolio.positions) < 5:
+        min_position_count = int(getattr(
+            self._config.trading, 'analytics_min_position_count_diversified', 5
+        ))
+        if len(portfolio.positions) < min_position_count:
             recommendations.append("Low diversification - consider adding more positions")
 
         return recommendations
@@ -932,32 +1005,47 @@ class PortfolioAnalyticsService:
     def _generate_warnings(
         self, portfolio: Portfolio, performance: PerformanceMetrics, risk: RiskMetrics
     ) -> List[str]:
-        """Generate portfolio warnings - use config thresholds."""
+        """Generate portfolio warnings."""
         warnings = []
 
-        # Performance warnings - use config
-        if performance.max_drawdown > Decimal(str(self._tt.high_drawdown_threshold)):
+        # Performance warnings
+        max_drawdown_threshold = Decimal(str(getattr(
+            self._config.trading, 'analytics_max_drawdown_high_threshold', 0.20
+        )))
+        if performance.max_drawdown > max_drawdown_threshold:
             warnings.append(f"High maximum drawdown: {performance.max_drawdown:.2f}%")
 
-        if performance.var_95 > Decimal(str(self._tt.high_var_threshold)):
+        var_95_threshold = Decimal(str(getattr(
+            self._config.trading, 'analytics_var_95_high_threshold', 0.10
+        )))
+        if performance.var_95 > var_95_threshold:
             warnings.append(f"High Value at Risk (95%): {performance.var_95:.2f}%")
 
-        # Risk warnings - use config
-        if risk.annualized_volatility > Decimal(str(self._tt.extreme_volatility_threshold)):
+        # Risk warnings
+        volatility_extreme_threshold = Decimal(str(getattr(
+            self._config.trading, 'analytics_volatility_extreme_threshold', 0.30
+        )))
+        if risk.annualized_volatility > volatility_extreme_threshold:
             warnings.append(f"Extremely high volatility: {risk.annualized_volatility:.2f}%")
 
-        if risk.largest_position_weight > Decimal(str(self._tt.extreme_concentration_threshold)):
+        largest_position_extreme_threshold = Decimal(str(getattr(
+            self._config.trading, 'analytics_largest_position_extreme_threshold', 0.30
+        )))
+        if risk.largest_position_weight > largest_position_extreme_threshold:
             warnings.append(
                 f"Extreme concentration: {risk.largest_position_weight:.2f}% in largest position"
             )
 
-        # Cash warnings - use config
+        # Cash warnings
         cash_ratio = (
             portfolio.cash_balance / portfolio.total_value
             if portfolio.total_value > 0
             else Decimal("0")
         )
-        if cash_ratio > Decimal(str(self._tt.high_cash_ratio_threshold)):
+        cash_ratio_high_threshold = Decimal(str(getattr(
+            self._config.trading, 'analytics_cash_ratio_high_threshold', 0.5
+        )))
+        if cash_ratio > cash_ratio_high_threshold:
             warnings.append("High cash allocation may impact returns")
 
         return warnings
@@ -978,25 +1066,35 @@ class PortfolioAnalyticsService:
             herfindahl_index=self._calculate_herfindahl_index(portfolio),
             effective_number_of_positions=self._calculate_effective_positions(portfolio),
             largest_position_weight=self._calculate_largest_position_weight(portfolio),
-            average_correlation=Decimal("0.3"),
+            average_correlation=Decimal(str(getattr(
+                self._config.trading, 'analytics_default_average_correlation', 0.3
+            ))),
             diversification_ratio=self._calculate_diversification_ratio(portfolio),
         )
 
     def _estimate_rebalance_risk_impact(
         self, current: PortfolioAllocation, target: PortfolioAllocation
     ) -> Decimal:
-        """Estimate risk impact of rebalancing - use config factor."""
-        # Use config for risk impact factor
+        """Estimate risk impact of rebalancing."""
+        # Simplified calculation
         equity_change = abs(current.equity_allocation - target.equity_allocation)
-        return equity_change * Decimal(str(self._tt.rebalance_risk_impact_per_allocation))
+        # Use config for risk impact factor
+        risk_impact = Decimal(str(getattr(
+            self._config.trading, 'analytics_risk_impact_factor', 0.1
+        )))
+        return equity_change * risk_impact
 
     def _estimate_rebalance_return_impact(
         self, current: PortfolioAllocation, target: PortfolioAllocation
     ) -> Decimal:
-        """Estimate return impact of rebalancing - use config factor."""
-        # Use config for return impact factor
+        """Estimate return impact of rebalancing."""
+        # Simplified calculation
         equity_change = target.equity_allocation - current.equity_allocation
-        return equity_change * Decimal(str(self._tt.rebalance_return_impact_per_allocation))
+        # Use config for return impact factor
+        return_impact = Decimal(str(getattr(
+            self._config.trading, 'analytics_return_impact_factor', 0.05
+        )))
+        return equity_change * return_impact
 
 
 # Dependency injection
