@@ -38,6 +38,7 @@ exclude:
     - ".venv/"
     - ".pytest_cache/"
     - ".mypy_cache/"
+    - "backtesting/"  # Has its own quality validation
 
 # ============================================================================
 # HATS - Claude processes files directly using Read/Edit/Grep tools
@@ -64,8 +65,9 @@ hats:
       4. models (app/models/, app/domain/entities/)
       5. services (app/services/, app/domain/services/)
       6. strategies (app/strategies/, app/domain/strategies/)
-      7. backtesting (app/backtesting/)
-      8. analysis (app/analysis/)
+      7. analysis (app/analysis/)
+
+      EXCLUDE: backtesting (app/backtesting/) - has its own validation
 
       Save to .ralph/outputs/FILE_LIST.json:
       {
