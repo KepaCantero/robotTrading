@@ -1,13 +1,21 @@
 # ============================================
 # Ralph Task 22: Code Quality Refactor - Production-Ready
 # ============================================
-# VERSION: 10.0 - MODULAR PER-FILE PROCESSING
+# VERSION: 11.0 - PER-FILE COMPLETE PROCESSING (ONE HAT)
 #
-# WORKFLOW:
-# 1. HAT 1: File Discovery - Enumerate Python files
-# 2. HAT 2: Code Analyzer - Claude ANALYZES all files, creates CODE_ANALYSIS.json
-# 3. HAT 3: Per-File Fixer - Claude FIXES one file at a time using analysis
-# 4. HAT 4: Final Validator - Claude validates all quality gates
+# WORKFLOW: UN SOLO HAT procesa UN archivo a la vez
+# Por cada archivo: encuentra → arregla → valida → siguiente
+#
+# PARA CADA ARCHIVO (UNO A UNO):
+# 1. encuentra hardcoded values → arregla
+# 2. busca cálculos manuales → arregla con librerías especializadas
+# 3. busca funciones incompletas → arregla
+# 4. busca fallos producción → arregla
+# 5. audita contra .requirements.md → arregla
+# 6. valida → arregla si falta
+# 7. siguiente archivo
+#
+# NADA de scripts - Claude usa Read/Edit/Grep directamente
 # ============================================================================
 
 event_loop:
@@ -28,6 +36,7 @@ core:
 shared_vars:
   OUTPUT_DIR: ".ralph/outputs"
   APP_DIR: "app"
+  REQUIREMENTS_DIR: ".requirements"
 
 exclude:
   directory_patterns:
@@ -38,27 +47,25 @@ exclude:
     - ".venv/"
     - ".pytest_cache/"
     - ".mypy_cache/"
-    - "backtesting/"  # Has its own quality validation
+    - "backtesting/"
 
 # ============================================================================
-# HATS - Claude processes files directly using Read/Edit/Grep tools
+# UN SOLO HAT - Procesa archivos UNO A UNO
 # ============================================================================
 
 hats:
-  # ==========================================================================
-  # HAT 1: File Discovery
-  # ==========================================================================
-  file_discovery:
-    name: "File Discovery"
-    description: "Enumerate all Python files to process"
+  per_file_processor:
+    name: "Per-File Complete Processor"
+    description: "Process ONE file completely: find → fix → validate → next"
     triggers: ["code_quality.start"]
-    publishes: ["files.discovered"]
+    publishes: ["code_quality.all_complete"]
 
     instructions: |
-      Use Glob tool to find all .py files in app/ directory.
-      Exclude: tests, __pycache__, migrations, venv, .venv, .pytest_cache, .mypy_cache
+      CRITICAL: Process files ONE AT A TIME. For EACH file:
 
-      Sort files by dependency order:
+      Use Glob tool to find all .py files in app/ (exclude tests, __pycache__, migrations, venv, backtesting)
+
+      Sort by dependency order:
       1. config (app/core/config/)
       2. protocols (app/core/protocols/, app/interfaces/)
       3. utils (app/utils/, app/core/utils/)
@@ -67,129 +74,61 @@ hats:
       6. strategies (app/strategies/, app/domain/strategies/)
       7. analysis (app/analysis/)
 
-      EXCLUDE: backtesting (app/backtesting/) - has its own validation
+      Save list to .ralph/outputs/FILE_LIST.json with current_index=0, completed=[]
 
-      Save to .ralph/outputs/FILE_LIST.json:
-      {
-        "total_files": N,
-        "files": ["path/to/file1.py", ...],
-        "current_index": 0,
-        "completed": []
-      }
+      FOR EACH FILE (one at a time):
 
-      Emit "files.discovered" with total_files count.
-
-  # ==========================================================================
-  # HAT 2: Code Analyzer - ANALYSIS ONLY (Claude uses Read/Grep)
-  # ==========================================================================
-  code_analyzer:
-    name: "Code Analyzer"
-    description: "Claude analyzes ALL files to identify problems (NO FIXING)"
-    triggers: ["files.discovered"]
-    publishes: ["analysis.complete"]
-
-    instructions: |
-      CRITICAL: ANALYSIS ONLY. Do NOT fix anything yet.
-
-      Load FILE_LIST.json. For EACH file:
-
-      1. Read file with Read tool
-      2. Use Grep tool to find problems:
-         - Hardcoded Decimal('0.XX'): grep 'Decimal("0\.'
-         - Hardcoded floats (0.02, 0.05, 0.15, 2.0)
+      1. READ file with Read tool
+      2. FIND hardcoded values using Grep tool:
+         - Decimal('0.XX') patterns
+         - 0.02, 0.05, 0.15, 2.0 float literals
          - Spain tax rates (0.19, 0.21, 0.23)
-         - Manual std calc (math.sqrt.*sum)
-         - TODO/FIXME/XXX/HACK comments
-         - raise NotImplementedError
-         - pass with # stub/placeholder
 
-      3. Catalog ALL problems in CODE_ANALYSIS.json:
-      {
-        "files_with_issues": {
-          "app/path/to/file.py": {
-            "hardcoded_decimals": [{"line": N, "code": "Decimal(\"0.05\")"}],
-            "hardcoded_floats": [{"type": "0.02", "line": N, "code": "0.02"}],
-            "spain_tax_rates": [...],
-            "manual_calcs": [...],
-            "todos": [...],
-            "not_implemented": [...],
-            "stubs": [...]
-          }
-        },
-        "summary": { "hardcoded_decimals": N, "hardcoded_floats": N, ... }
-      }
-
-      Emit "analysis.complete" with files_analyzed count.
-
-  # ==========================================================================
-  # HAT 3: Per-File Fixer - Claude FIXES one file at a time
-  # ==========================================================================
-  per_file_fixer:
-    name: "Per-File Fixer"
-    description: "Claude fixes ALL problems in ONE file before moving to next"
-    triggers: ["analysis.complete"]
-    publishes: ["code_quality.all_complete"]
-
-    instructions: |
-      Load CODE_ANALYSIS.json and FILE_LIST.json.
-
-      For EACH file with problems:
-
-      1. Read file with Read tool
-      2. Apply ALL fixes at once using Edit tool:
-
-         Hardcoded Decimal('0.XX'):
+      3. FIX hardcoded values with Edit tool:
          -> Decimal(str(getattr(config.trading, 'param_name', default)))
-
-         Hardcoded floats (0.02->max_risk_per_trade, 0.05->default_threshold,
-                       0.15->max_drawdown_pct, 2.0->min_rr_ratio):
          -> float(getattr(config.trading, 'param_name', default))
 
-         Spain tax rates (0.19->irpf_rate_19, 0.21->irpf_rate_21, 0.23->irpf_rate_23):
-         -> float(getattr(config.spain_tax, 'param_name', default))
+      4. FIND manual calculations using Grep:
+         - math.sqrt without numpy
+         - Manual std calculations
 
-         Manual calc (math.sqrt without numpy):
-         -> Add 'import numpy as np' if needed
-         -> Replace with np.std(values)
+      5. FIX manual calculations with Edit tool:
+         - Add 'import numpy as np' if needed
+         -> np.std(values)
 
-         TODO comments:
-         -> If service_registry TODO: convert to documentation comment
-         -> Else: remove or implement
+      6. FIND incomplete functions using Grep:
+         - raise NotImplementedError
+         - pass # stub/placeholder
+         - TODO/FIXME/XXX/HACK comments
 
-         NotImplementedError:
-         -> If statsmodels context: add comment about optional dependency
-         -> Else: return None with TODO comment or implement
+      7. FIX incomplete functions:
+         - If service_registry TODO: convert to documentation
+         - If statsmodels context: add comment about optional dependency
+         - Else: implement or add proper placeholder
 
-         Stub implementations (pass # stub):
-         -> Remove stub or implement properly
+      8. READ .requirements.md for this file:
+         Path: .requirements/app/path/to/file.py.requirements.md
 
-      3. Use Grep to validate fixes worked
-      4. Update FILE_LIST.json (mark completed, increment index)
-      5. Save checkpoint every 50 files
-      6. Next file
+      9. AUDIT against requirements:
+         - Check for gaps/missing implementations
+         - Fix any violations found
 
-      Emit "code_quality.all_complete" when all files processed.
+      10. VALIDATE with Grep:
+           - grep Decimal("0\. -> should return 0
+           - grep raise NotImplementedError -> should return 0
+           - grep "# TODO:" -> should return 0 (excluding service docs)
 
-  # ==========================================================================
-  # HAT 4: Final Validator
-  # ==========================================================================
-  final_validator:
-    name: "Final Quality Validator"
-    description: "Claude validates all quality gates pass"
-    triggers: ["code_quality.all_complete"]
-    publishes: ["code_quality.validation_complete", "code_quality.blocked"]
+      11. IF validation fails: FIX again, then re-validate
 
-    instructions: |
-      Use Grep tool to validate ALL quality gates:
+      12. UPDATE FILE_LIST.json: mark completed, increment current_index
+          Save checkpoint every 50 files
 
-      1. grep -r 'Decimal("0\.' app/ --include=*.py | grep -v test
-      2. grep -rP '(?<![\w.])0\.02(?![\w])' app/ --include=*.py | grep -v test
-      3. grep -r "raise NotImplementedError" app/ --include=*.py | grep -v test
-      4. grep -r "# TODO:" app/ --include=*.py | grep -v test | grep -v service
+      13. NEXT FILE
 
-      Generate final report in CODE_QUALITY_FINAL_REPORT.json.
+      When all files processed:
+      Generate final report in .ralph/outputs/CODE_QUALITY_FINAL_REPORT.json
 
-      Emit "code_quality.validation_complete" with status=COMPLETE or FAILED.
+      Emit "code_quality.all_complete" with files_processed count
 
 # ============================================================================
 # TASK CONFIGURATION
