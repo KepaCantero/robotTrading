@@ -1,21 +1,13 @@
 # ============================================
 # Ralph Task 22: Code Quality Refactor - Production-Ready
 # ============================================
-# VERSION: 11.0 - PER-FILE COMPLETE PROCESSING (ONE HAT)
+# VERSION: 12.0 - USING RALPH HAT TEMPLATES
 #
-# WORKFLOW: UN SOLO HAT procesa UN archivo a la vez
-# Por cada archivo: encuentra → arregla → valida → siguiente
-#
-# PARA CADA ARCHIVO (UNO A UNO):
-# 1. encuentra hardcoded values → arregla
-# 2. busca cálculos manuales → arregla con librerías especializadas
-# 3. busca funciones incompletas → arregla
-# 4. busca fallos producción → arregla
-# 5. audita contra .requirements.md → arregla
-# 6. valida → arregla si falta
-# 7. siguiente archivo
-#
-# NADA de scripts - Claude usa Read/Edit/Grep directamente
+# Uses existing hat templates:
+# - base_processor_hat.yml
+# - requirement_checker_hat.yml
+# - implementer_hat.yml
+# - validation_hat.yml
 # ============================================================================
 
 event_loop:
@@ -37,6 +29,9 @@ shared_vars:
   OUTPUT_DIR: ".ralph/outputs"
   APP_DIR: "app"
   REQUIREMENTS_DIR: ".requirements"
+  TASK_PREFIX: "code_quality"
+  TASK_NAME: "Code Quality Refactor"
+  TASK_ID: "22"
 
 exclude:
   directory_patterns:
@@ -50,20 +45,23 @@ exclude:
     - "backtesting/"
 
 # ============================================================================
-# UN SOLO HAT - Procesa archivos UNO A UNO
+# HATS - Using Ralph hat templates
 # ============================================================================
 
 hats:
-  per_file_processor:
-    name: "Per-File Complete Processor"
-    description: "Process ONE file completely: find → fix → validate → next"
+  # ==========================================================================
+  # HAT 1: File Discovery (base_processor_hat template)
+  # ==========================================================================
+  file_discovery:
+    name: "File Discovery"
+    description: "Enumerate all Python files to process"
+    hat_template: ".ralph/ralph_templates/hats/base_processor_hat.yml"
     triggers: ["code_quality.start"]
-    publishes: ["code_quality.all_complete"]
+    publishes: ["files.discovered"]
 
     instructions: |
-      CRITICAL: Process files ONE AT A TIME. For EACH file:
-
-      Use Glob tool to find all .py files in app/ (exclude tests, __pycache__, migrations, venv, backtesting)
+      Glob → find .py files in app/
+      Exclude: tests, __pycache__, migrations, venv, backtesting
 
       Sort by dependency order:
       1. config (app/core/config/)
@@ -74,61 +72,84 @@ hats:
       6. strategies (app/strategies/, app/domain/strategies/)
       7. analysis (app/analysis/)
 
-      Save list to .ralph/outputs/FILE_LIST.json with current_index=0, completed=[]
+      Save to .ralph/outputs/FILE_LIST.json
 
-      FOR EACH FILE (one at a time):
+      Emit "files.discovered"
 
-      1. READ file with Read tool
-      2. FIND hardcoded values using Grep tool:
-         - Decimal('0.XX') patterns
-         - 0.02, 0.05, 0.15, 2.0 float literals
-         - Spain tax rates (0.19, 0.21, 0.23)
+  # ==========================================================================
+  # HAT 2: Requirement Checker (requirement_checker_hat template)
+  # ==========================================================================
+  requirement_checker:
+    name: "Requirement Checker"
+    description: "Check/generate .requirements.md for each file"
+    hat_template: ".ralph/ralph_templates/hats/requirement_checker_hat.yml"
+    triggers: ["files.discovered"]
+    publishes: ["requirements.checked"]
 
-      3. FIX hardcoded values with Edit tool:
-         -> Decimal(str(getattr(config.trading, 'param_name', default)))
-         -> float(getattr(config.trading, 'param_name', default))
+    instructions: |
+      FOR EACH FILE in FILE_LIST.json:
+      1. Check if .requirements/app/path/file.py.requirements.md exists
+      2. If NO: Generate requirements.md with full analysis
+      3. Save to .requirements/
 
-      4. FIND manual calculations using Grep:
-         - math.sqrt without numpy
-         - Manual std calculations
+      Emit "requirements.checked"
 
-      5. FIX manual calculations with Edit tool:
-         - Add 'import numpy as np' if needed
-         -> np.std(values)
+  # ==========================================================================
+  # HAT 3: Code Implementer (implementer_hat template)
+  # ==========================================================================
+  code_implementer:
+    name: "Code Implementer"
+    description: "Fix code quality issues per file"
+    hat_template: ".ralph/ralph_templates/hats/implementer_hat.yml"
+    triggers: ["requirements.checked"]
+    publishes: ["code_quality.fixed"]
 
-      6. FIND incomplete functions using Grep:
-         - raise NotImplementedError
-         - pass # stub/placeholder
-         - TODO/FIXME/XXX/HACK comments
+    template_vars:
+      TASK_PREFIX: "code_quality"
+      OBJECTIVE: "Fix all code quality issues in each file"
+      REQUIREMENTS_FILE: ".ralph/docs/requirements.txt"
 
-      7. FIX incomplete functions:
-         - If service_registry TODO: convert to documentation
-         - If statsmodels context: add comment about optional dependency
-         - Else: implement or add proper placeholder
+    instructions: |
+      FOR EACH FILE:
+      1. Read .requirements/app/path/file.py.requirements.md
+      2. Read file with cat
+      3. Find hardcoded values:
+         - Grep: Decimal("0."), 0.02, 0.05, 0.15, 2.0
+         - Fix: → getattr(config.trading, 'param', default)
 
-      8. READ .requirements.md for this file:
-         Path: .requirements/app/path/to/file.py.requirements.md
+      4. Find manual calculations:
+         - Grep: math.sqrt (no numpy)
+         - Fix: add numpy, use np.std
 
-      9. AUDIT against requirements:
-         - Check for gaps/missing implementations
-         - Fix any violations found
+      5. Find incomplete functions:
+         - Grep: raise NotImplementedError, pass # stub, TODO/FIXME
+         - Fix: implement or remove
 
-      10. VALIDATE with Grep:
-           - grep Decimal("0\. -> should return 0
-           - grep raise NotImplementedError -> should return 0
-           - grep "# TODO:" -> should return 0 (excluding service docs)
+      6. Validate with Grep
+      7. If fails: fix again, re-validate
+      8. When success: mark completed, next file
 
-      11. IF validation fails: FIX again, then re-validate
+      Emit "code_quality.fixed"
 
-      12. UPDATE FILE_LIST.json: mark completed, increment current_index
-          Save checkpoint every 50 files
+  # ==========================================================================
+  # HAT 4: Final Validator (validation_hat template)
+  # ==========================================================================
+  final_validator:
+    name: "Final Quality Validator"
+    description: "Validate all quality gates pass"
+    hat_template: ".ralph/ralph_templates/hats/validation_hat.yml"
+    triggers: ["code_quality.fixed"]
+    publishes: ["code_quality.validation_complete", "code_quality.blocked"]
 
-      13. NEXT FILE
+    instructions: |
+      Use Grep to validate ALL quality gates:
+      1. grep Decimal("0\. → should return 0
+      2. grep raise NotImplementedError → should return 0
+      3. grep "# TODO:" → should return 0 (excluding service docs)
 
-      When all files processed:
-      Generate final report in .ralph/outputs/CODE_QUALITY_FINAL_REPORT.json
+      Generate report in .ralph/outputs/CODE_QUALITY_FINAL_REPORT.json
 
-      Emit "code_quality.all_complete" with files_processed count
+      Emit "code_quality.validation_complete" with status=COMPLETE or FAILED
 
 # ============================================================================
 # TASK CONFIGURATION
