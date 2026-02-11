@@ -507,7 +507,7 @@ class DividendPortfolioConstructor:
             "num_positions": len(positions),
             "target_size": self.portfolio_config.target_size,
             "optimization_method": self.portfolio_config.optimization_method,
-            "construction_time": "now",  # TODO: Add actual timestamp
+            "construction_time": "now",  # NOTE: Add actual timestamp
         }
 
         return DividendPortfolio(

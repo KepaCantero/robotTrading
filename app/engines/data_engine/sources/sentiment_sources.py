@@ -10,6 +10,7 @@ Fuentes soportadas:
 import asyncio
 import logging
 from typing import Any, Dict, List, Optional
+import numpy as np
 
 # REQUIRED: No fallbacks - aiohttp is required for async HTTP requests
 import aiohttp  # noqa: F401
@@ -171,7 +172,7 @@ class TwitterSentimentSource(BaseDataSource):
                             sentiment_scores.append(0.0)
 
                     avg_sentiment = (
-                        sum(sentiment_scores) / len(sentiment_scores) if sentiment_scores else 0.0
+                        np.mean(sentiment_scores) if sentiment_scores else 0.0
                     )
 
                     return {
@@ -357,7 +358,7 @@ class RedditSentimentSource(BaseDataSource):
                     sentiment_scores.append(0.0)
 
             avg_sentiment = (
-                sum(sentiment_scores) / len(sentiment_scores) if sentiment_scores else 0.0
+                np.mean(sentiment_scores) if sentiment_scores else 0.0
             )
 
             return {
@@ -519,7 +520,7 @@ class NewsSentimentSource(BaseDataSource):
                         sentiment_scores.append(0.0)
 
                 avg_sentiment = (
-                    sum(sentiment_scores) / len(sentiment_scores) if sentiment_scores else 0.0
+                    np.mean(sentiment_scores) if sentiment_scores else 0.0
                 )
 
                 return {
@@ -573,7 +574,7 @@ class NewsSentimentSource(BaseDataSource):
                             sentiment_scores.append(sentiment * relevance)
 
                 avg_sentiment = (
-                    sum(sentiment_scores) / len(sentiment_scores) if sentiment_scores else 0.0
+                    np.mean(sentiment_scores) if sentiment_scores else 0.0
                 )
 
                 return {
@@ -704,7 +705,7 @@ class NewsSentimentSource(BaseDataSource):
 
                 # Calcular sentimiento promedio ponderado
                 if sentiment_scores:
-                    avg_sentiment = sum(sentiment_scores) / len(sentiment_scores)
+                    avg_sentiment = np.mean(sentiment_scores)
                 else:
                     avg_sentiment = 0.0
 

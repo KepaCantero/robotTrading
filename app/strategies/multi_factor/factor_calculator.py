@@ -350,7 +350,7 @@ class FactorCalculator:
             return Decimal("50")
 
         # Average quality score
-        avg_quality = sum(quality_components) / len(quality_components)
+        avg_quality = np.mean(quality_components)
         return Decimal(str(max(0, min(100, avg_quality))))
 
     def _calculate_factor_momentum(self, factor_scores: FactorScores) -> Decimal:
@@ -383,7 +383,7 @@ class FactorCalculator:
         if not momentum_components:
             return Decimal("50")
 
-        avg_momentum = sum(momentum_components) / len(momentum_components)
+        avg_momentum = np.mean(momentum_components)
         return Decimal(str(max(0, min(100, avg_momentum))))
 
     def _log_cap(self, market_cap: Optional[Decimal]) -> Optional[Decimal]:
@@ -436,7 +436,7 @@ class FactorCalculator:
         self,
         factor_scores_dict: Dict[str, FactorScores],
         factor_premiums: Dict[str, float],
-        risk_free_rate: float = 0.02,
+        risk_free_rate: float = getattr(config.trading, 'max_risk_per_trade', 0.02),
     ) -> Dict[str, Decimal]:
         """
         Calculate predicted returns using factor model.

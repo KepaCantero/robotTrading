@@ -26,6 +26,8 @@ from typing import Optional, Tuple
 import numpy as np
 import pandas as pd
 
+from app.core.config.base import get_config
+
 logger = logging.getLogger(__name__)
 
 
@@ -78,26 +80,26 @@ class ChanStopLossCalculator:
     4. Time-based stops (exit if no movement after N periods)
     """
 
-    # Default ATR multiplier for stop loss (Ernest Chan recommends 2-3x)
-    DEFAULT_ATR_MULTIPLIER = 2.0
-
-    # Default fixed percentage stop
-    DEFAULT_FIXED_STOP_PCT = 0.05  # 5%
-
     def __init__(
         self,
-        atr_multiplier: float = DEFAULT_ATR_MULTIPLIER,
-        fixed_stop_pct: float = DEFAULT_FIXED_STOP_PCT,
+        atr_multiplier: float = None,
+        fixed_stop_pct: float = None,
     ):
         """
         Initialize stop-loss calculator.
 
         Args:
-            atr_multiplier: Multiplier for ATR-based stops
-            fixed_stop_pct: Fixed percentage for simple stops
+            atr_multiplier: Multiplier for ATR-based stops (uses config if None)
+            fixed_stop_pct: Fixed percentage for simple stops (uses config if None)
         """
-        self.atr_multiplier = atr_multiplier
-        self.fixed_stop_pct = fixed_stop_pct
+        # Get defaults from config
+        config = get_config()
+        self.atr_multiplier = float(getattr(
+            config.trading, 'chan_atr_multiplier', 2.0
+        )) if atr_multiplier is None else float(atr_multiplier)
+        self.fixed_stop_pct = float(getattr(
+            config.trading, 'chan_fixed_stop_pct', 0.05
+        )) if fixed_stop_pct is None else float(fixed_stop_pct)
 
     def calculate_atr_stop_loss(
         self,
@@ -204,12 +206,15 @@ class ChanStopLossCalculator:
 
         except (ValueError, TypeError) as e:
             logger.error(f"Error calculating fixed stop loss: {e}")
+            # Get fallback stop percentage from config
+            config = get_config()
+            fallback_stop = float(getattr(config.trading, 'stop_loss_pct', 0.05))
             return StopLossResult(
-                stop_loss_price=entry_price * 0.95,
-                stop_loss_distance=entry_price * 0.05,
-                stop_loss_percentage=0.05,
+                stop_loss_price=entry_price * (1 - fallback_stop),
+                stop_loss_distance=entry_price * fallback_stop,
+                stop_loss_percentage=fallback_stop,
                 method_used="Fixed (fallback)",
-                risk_amount=entry_price * 0.05,
+                risk_amount=entry_price * fallback_stop,
                 reason="Calculation error",
             )
 
@@ -268,12 +273,15 @@ class ChanStopLossCalculator:
 
         except (ValueError, TypeError) as e:
             logger.error(f"Error calculating trailing stop: {e}")
+            # Get fallback stop percentage from config
+            config = get_config()
+            fallback_stop = float(getattr(config.trading, 'stop_loss_pct', 0.05))
             return StopLossResult(
-                stop_loss_price=current_price * 0.95,
-                stop_loss_distance=current_price * 0.05,
-                stop_loss_percentage=0.05,
+                stop_loss_price=current_price * (1 - fallback_stop),
+                stop_loss_distance=current_price * fallback_stop,
+                stop_loss_percentage=fallback_stop,
                 method_used="Fixed (fallback)",
-                risk_amount=current_price * 0.05,
+                risk_amount=current_price * fallback_stop,
                 reason="Calculation error",
             )
 
@@ -289,26 +297,26 @@ class ChanPositionSizer:
     4. Maximum drawdown constraints
     """
 
-    # Default risk per trade (Ernest Chan recommends 1-2%)
-    DEFAULT_RISK_PER_TRADE = 0.02
-
-    # Maximum position size as % of capital
-    DEFAULT_MAX_POSITION_PCT = 0.25
-
     def __init__(
         self,
-        risk_per_trade: float = DEFAULT_RISK_PER_TRADE,
-        max_position_pct: float = DEFAULT_MAX_POSITION_PCT,
+        risk_per_trade: float = None,
+        max_position_pct: float = None,
     ):
         """
         Initialize position sizer.
 
         Args:
-            risk_per_trade: Maximum % of capital to risk per trade
-            max_position_pct: Maximum position size as % of capital
+            risk_per_trade: Maximum % of capital to risk per trade (uses config if None)
+            max_position_pct: Maximum position size as % of capital (uses config if None)
         """
-        self.risk_per_trade = risk_per_trade
-        self.max_position_pct = max_position_pct
+        # Get defaults from config
+        config = get_config()
+        self.risk_per_trade = float(getattr(
+            config.trading, 'max_risk_per_trade', 0.02
+        )) if risk_per_trade is None else float(risk_per_trade)
+        self.max_position_pct = float(getattr(
+            config.trading, 'max_position_size', 0.25
+        )) if max_position_pct is None else float(max_position_pct)
 
     def calculate_risk_based_position(
         self,
@@ -349,7 +357,10 @@ class ChanPositionSizer:
 
             if risk_per_share == 0:
                 logger.warning("Stop loss equals entry price, using minimum position")
-                risk_per_share = entry_price * 0.01
+                # Get minimum position size from config
+                config = get_config()
+                min_pos_pct = float(getattr(config.trading, 'min_position_size', 0.01))
+                risk_per_share = entry_price * min_pos_pct
 
             # Calculate shares
             shares = int(risk_amount / risk_per_share)
@@ -474,7 +485,7 @@ class ChanPositionSizer:
         entry_price: float,
         stop_loss_price: float,
         volatility: float,
-        target_risk: float = 0.02,
+        target_risk: float = None,
     ) -> PositionSizeResult:
         """
         Calculate position size adjusted for volatility.
@@ -489,11 +500,15 @@ class ChanPositionSizer:
             entry_price: Entry price
             stop_loss_price: Stop loss price
             volatility: Current volatility (std dev of returns)
-            target_risk: Target risk amount as % of capital
+            target_risk: Target risk amount as % of capital (uses config if None)
 
         Returns:
             PositionSizeResult with volatility-adjusted size
         """
+        # Get default target risk from config
+        if target_risk is None:
+            config = get_config()
+            target_risk = float(getattr(config.trading, 'max_risk_per_trade', 0.02))
         try:
             # Base position on risk
             base_result = self.calculate_risk_based_position(
@@ -504,8 +519,15 @@ class ChanPositionSizer:
             )
 
             # Adjust for volatility
-            # If volatility is high (above 0.02 = 2%), reduce position
-            vol_adjustment = min(1.0, 0.02 / volatility) if volatility > 0 else 1.0
+            # Get high volatility threshold from config
+            config = get_config()
+            # volatility_threshold_extreme is stored as a percentage (50.0 = 50%), convert to decimal
+            high_volatility_threshold = float(getattr(
+                config.trading, 'volatility_threshold_extreme', 50.0
+            )) / 100.0
+
+            # If volatility is high (above threshold), reduce position
+            vol_adjustment = min(1.0, high_volatility_threshold / volatility) if volatility > 0 else 1.0
 
             adjusted_shares = int(base_result.shares * vol_adjustment)
             adjusted_dollar_amount = adjusted_shares * entry_price
@@ -538,34 +560,39 @@ class ChanDrawdownController:
     2. Reduce position sizes as drawdown increases
     3. Stop trading if maximum drawdown exceeded
     4. Scale back in gradually after drawdown
+
+    Uses centralized configuration for thresholds.
     """
-
-    # Default maximum drawdown (Ernest Chan recommends 20-25%)
-    DEFAULT_MAX_DRAWDOWN = 0.25
-
-    # Drawdown levels for position reduction
-    DRAWDOWN_REDUCTION_LEVELS = {
-        0.10: 0.75,  # At 10% DD, reduce to 75% size
-        0.15: 0.50,  # At 15% DD, reduce to 50% size
-        0.20: 0.25,  # At 20% DD, reduce to 25% size
-    }
 
     def __init__(
         self,
-        max_drawdown: float = DEFAULT_MAX_DRAWDOWN,
+        max_drawdown: float = None,
         peak_equity: float = 100000.0,
     ):
         """
         Initialize drawdown controller.
 
         Args:
-            max_drawdown: Maximum acceptable drawdown (0-1)
+            max_drawdown: Maximum acceptable drawdown (0-1, uses config if None)
             peak_equity: Starting peak equity
         """
+        # Get max drawdown from config if not provided
+        if max_drawdown is None:
+            config = get_config()
+            max_drawdown = config.trading.max_drawdown_limit
+
         self.max_drawdown = max_drawdown
         self.peak_equity = peak_equity
         self.current_equity = peak_equity
         self.is_trading_halted = False
+
+        # Drawdown levels for position reduction (from config)
+        config = get_config()
+        self.drawdown_reduction_levels = {
+            config.trading.max_drawdown_limit * 0.4: 0.75,  # At 40% of max DD, reduce to 75% size
+            config.trading.max_drawdown_limit * 0.6: 0.50,  # At 60% of max DD, reduce to 50% size
+            config.trading.max_drawdown_limit * 0.8: 0.25,  # At 80% of max DD, reduce to 25% size
+        }
 
     def update_equity(self, new_equity: float) -> None:
         """
@@ -615,7 +642,7 @@ class ChanDrawdownController:
         current_dd = self.get_current_drawdown()
 
         # Find the appropriate reduction level
-        for dd_threshold, multiplier in sorted(self.DRAWDOWN_REDUCTION_LEVELS.items()):
+        for dd_threshold, multiplier in sorted(self.drawdown_reduction_levels.items()):
             if current_dd >= dd_threshold:
                 return multiplier
 
@@ -682,7 +709,7 @@ class ChanRiskMetrics:
         self,
         returns: pd.Series,
         equity_curve: Optional[pd.Series] = None,
-        risk_free_rate: float = 0.02,
+        risk_free_rate: float = None,
     ) -> RiskMetrics:
         """
         Calculate all risk metrics.
@@ -690,11 +717,15 @@ class ChanRiskMetrics:
         Args:
             returns: Return series
             equity_curve: Optional equity curve for drawdown calculation
-            risk_free_rate: Annual risk-free rate
+            risk_free_rate: Annual risk-free rate (uses config if None)
 
         Returns:
             RiskMetrics with all calculated metrics
         """
+        # Get default risk-free rate from config
+        if risk_free_rate is None:
+            config = get_config()
+            risk_free_rate = float(getattr(config.trading, 'portfolio_risk_free_rate', 0.02))
         try:
             returns_clean = returns.dropna()
 
@@ -886,11 +917,14 @@ def calculate_optimal_position_size(
             kwargs.get("kelly_fraction", 0.5),
         )
     elif method == "volatility_adjusted":
+        # Get default volatility from config if not provided
+        config = get_config()
+        default_vol = float(getattr(config.trading, 'pairs_trading_default_volatility', 0.02))
         return sizer.calculate_volatility_adjusted_position(
             capital,
             entry_price,
             stop_loss_price,
-            kwargs.get("volatility", 0.02),
+            kwargs.get("volatility", default_vol),
         )
     else:
         return sizer.calculate_risk_based_position(capital, entry_price, stop_loss_price)

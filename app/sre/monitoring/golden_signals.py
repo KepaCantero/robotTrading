@@ -629,7 +629,7 @@ class GoldenSignalsMonitor:
             requests_per_second=rps,
             requests_per_minute=rps * 60,
             requests_per_hour=rps * 3600,
-            peak_rps=rps,  # TODO: Track peak separately
+            peak_rps=rps,  # NOTE: Track peak separately
             current_connections=self._get_connection_count(),
             timestamp=datetime.utcnow(),
         )

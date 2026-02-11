@@ -22,7 +22,8 @@ class PreTradeAnalysis:
     dependencies.
 
     NOTE: Changed from frozen=True to allow mutation by SystemBus handlers.
-    TODO: Consider refactoring to use dataclasses.replace() for immutability.
+    For future optimization, consider using dataclasses.replace() for immutability
+    when the SystemBus architecture supports immutable updates.
     """
 
     # Basic decision

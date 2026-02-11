@@ -17,7 +17,7 @@ from collections import deque
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Sequence
 
-from app.core.centralized_config import get_strategy_config, get_trading_threshold
+from app.core.config.base import get_config
 from app.models.market_data import Quote
 from app.models.portfolio import Portfolio
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
@@ -64,8 +64,9 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
         # Confianza mínima para pasar risk_check
         self.min_signal_confidence: float = float(config.get("min_signal_confidence", 60.0))
 
-        # Load strategy-specific configuration from YAML and override defaults
-        strategy_config = get_strategy_config("breakout")
+        # Load strategy-specific configuration from centralized config and override defaults
+        centralized_config = get_config()
+        strategy_config = centralized_config.get_strategy_config("breakout")
         if strategy_config:
             params = strategy_config.parameters
             # Merge strategy parameters into local config
@@ -92,15 +93,15 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
                     params.get("min_signal_confidence", self.min_signal_confidence)
                 )
 
-            # Risk parameters from YAML
+            # Risk parameters from centralized config with fallback to strategy config
             self.stop_loss = Decimal(
-                str(strategy_config.stop_loss_pct or get_trading_threshold("stop_loss_pct"))
+                str(strategy_config.stop_loss_pct or centralized_config.trading.stop_loss_pct)
             )
             self.take_profit = Decimal(
-                str(strategy_config.take_profit_pct or get_trading_threshold("take_profit_pct"))
+                str(strategy_config.take_profit_pct or centralized_config.trading.take_profit_pct)
             )
             self.max_position_size = Decimal(
-                str(strategy_config.max_position_size or get_trading_threshold("max_position_size"))
+                str(strategy_config.max_position_size or centralized_config.trading.max_position_size)
             )
             if "max_exposure" in params:
                 self.max_exposure = Decimal(str(params.get("max_exposure", self.max_exposure)))
@@ -382,30 +383,78 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
         confidence = 50.0  # base
 
         range_width = max(range_high - range_low, 1e-8)
-        if direction == "up":
-            distance_beyond = max(0.0, current_price - range_high)
-        else:
-            distance_beyond = max(0.0, range_low - current_price)
 
-        distance_ratio = distance_beyond / range_width
+        try:
+            config = get_config()
 
-        # Contribución por distancia (hasta +25)
-        if distance_ratio > 0.05:
-            confidence += 25.0
-        elif distance_ratio > 0.02:
-            confidence += 15.0
-        elif distance_ratio > 0.01:
-            confidence += 10.0
+            if direction == "up":
+                distance_beyond = max(0.0, current_price - range_high)
+            else:
+                distance_beyond = max(0.0, range_low - current_price)
 
-        # Contribución por volumen (hasta +25)
-        if volume_ratio > 3.0:
-            confidence += 25.0
-        elif volume_ratio > 2.0:
-            confidence += 15.0
-        elif volume_ratio > float(self.min_volume_ratio):
-            confidence += 10.0
+            distance_ratio = distance_beyond / range_width
 
-        return min(100.0, max(0.0, confidence))
+            # Contribución por distancia (hasta +25)
+            distance_high_threshold = float(getattr(
+                config.trading, 'breakout_distance_high_threshold', 0.05
+            ))
+            distance_medium_threshold = float(getattr(
+                config.trading, 'breakout_distance_medium_threshold', 0.02
+            ))
+            distance_low_threshold = float(getattr(
+                config.trading, 'breakout_distance_low_threshold', 0.01
+            ))
+
+            if distance_ratio > distance_high_threshold:
+                confidence += 25.0
+            elif distance_ratio > distance_medium_threshold:
+                confidence += 15.0
+            elif distance_ratio > distance_low_threshold:
+                confidence += 10.0
+
+            # Contribución por volumen (hasta +25)
+            volume_high_threshold = float(getattr(
+                config.trading, 'breakout_volume_ratio_high_threshold', 3.0
+            ))
+            volume_medium_threshold = float(getattr(
+                config.trading, 'breakout_volume_ratio_medium_threshold', 2.0
+            ))
+            min_volume_threshold = float(self.min_volume_ratio)
+
+            if volume_ratio > volume_high_threshold:
+                confidence += 25.0
+            elif volume_ratio > volume_medium_threshold:
+                confidence += 15.0
+            elif volume_ratio > min_volume_threshold:
+                confidence += 10.0
+
+            return min(100.0, max(0.0, confidence))
+
+        except (ValueError, AttributeError, KeyError) as e:
+            logger.error(f"Error calculating breakout confidence: {e}")
+            # Fallback to original hardcoded values
+            if direction == "up":
+                distance_beyond = max(0.0, current_price - range_high)
+            else:
+                distance_beyond = max(0.0, range_low - current_price)
+
+            distance_ratio = distance_beyond / range_width
+
+            if distance_ratio > 0.05:
+                confidence += 25.0
+            elif distance_ratio > 0.02:
+                confidence += 15.0
+            elif distance_ratio > 0.01:
+                confidence += 10.0
+
+            if volume_ratio > 3.0:
+                confidence += 25.0
+            elif volume_ratio > 2.0:
+                confidence += 15.0
+            elif volume_ratio > float(self.min_volume_ratio):
+                confidence += 10.0
+
+            return min(100.0, max(0.0, confidence))
 
     @staticmethod
     def _map_confidence_to_strength(confidence: float) -> SignalStrength:

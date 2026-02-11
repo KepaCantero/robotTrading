@@ -12,6 +12,7 @@ from decimal import Decimal
 from itertools import product
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+import numpy as np
 
 import yaml
 
@@ -259,15 +260,15 @@ class GridSearchOptimizer:
         objective_metric = wf_config.get("objective_metric", "sharpe")
 
         if objective_metric == "sharpe":
-            avg_score = sum(r["sharpe"] for r in results) / len(results)
+            avg_score = np.mean([r["sharpe"] for r in results])
         elif objective_metric == "return":
-            avg_score = sum(r["return"] for r in results) / len(results)
+            avg_score = np.mean([r["return"] for r in results])
         elif objective_metric == "calmar":
             returns = [r["return"] for r in results]
             drawdowns = [r["max_drawdown"] for r in results]
-            avg_score = sum(r / max(dd, 0.01) for r, dd in zip(returns, drawdowns)) / len(results)
+            avg_score = np.mean([r / max(dd, 0.01) for r, dd in zip(returns, drawdowns)])
         else:
-            avg_score = sum(r["sharpe"] for r in results) / len(results)
+            avg_score = np.mean([r["sharpe"] for r in results])
 
         return {
             "avg_score": avg_score,
@@ -348,12 +349,8 @@ class GridSearchOptimizer:
                         continue
 
                     # Check constraints
-                    avg_drawdown = sum(w["max_drawdown"] for w in wf_result["windows"]) / len(
-                        wf_result["windows"]
-                    )
-                    avg_trades = sum(w["trades"] for w in wf_result["windows"]) / len(
-                        wf_result["windows"]
-                    )
+                    avg_drawdown = np.mean([w["max_drawdown"] for w in wf_result["windows"]])
+                    avg_trades = np.mean([w["trades"] for w in wf_result["windows"]])
 
                     if avg_drawdown > constraints.get("max_drawdown_pct", 0.25):
                         logger.debug(f"Combination {combo_num} exceeds max drawdown constraint")

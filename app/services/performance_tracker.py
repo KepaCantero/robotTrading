@@ -7,6 +7,7 @@ Tracks performance metrics per cycle to monitor system efficiency and identify b
 import logging
 import time
 from typing import Any, Dict, List, Optional
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -129,14 +130,12 @@ class PerformanceTracker:
 
         return {
             "total_cycles": len(recent_cycles),
-            "avg_duration_ms": sum(c.duration_ms for c in recent_cycles) / len(recent_cycles),
-            "avg_signals_per_cycle": sum(c.signals_generated for c in recent_cycles)
-            / len(recent_cycles),
-            "avg_trades_per_cycle": sum(c.trades_executed for c in recent_cycles)
-            / len(recent_cycles),
+            "avg_duration_ms": np.mean([c.duration_ms for c in recent_cycles]),
+            "avg_signals_per_cycle": np.mean([c.signals_generated for c in recent_cycles]),
+            "avg_trades_per_cycle": np.mean([c.trades_executed for c in recent_cycles]),
             "total_errors": sum(c.errors_count for c in recent_cycles),
             "total_warnings": sum(c.warnings_count for c in recent_cycles),
-            "error_rate": sum(c.errors_count for c in recent_cycles) / len(recent_cycles),
+            "error_rate": np.mean([c.errors_count for c in recent_cycles]),
             "max_duration_ms": max(c.duration_ms for c in recent_cycles),
             "min_duration_ms": min(c.duration_ms for c in recent_cycles),
         }

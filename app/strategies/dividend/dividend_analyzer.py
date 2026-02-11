@@ -18,6 +18,8 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Dict, List, Optional, Tuple
 
+import numpy as np
+
 from .models import DividendProfile, DividendSafety
 
 logger = logging.getLogger(__name__)
@@ -485,13 +487,13 @@ class DividendAnalyzer:
         if len(eps_values) < 2:
             return Decimal("50")
 
-        avg = sum(eps_values) / len(eps_values)
+        avg = np.mean(eps_values)
         if avg == 0:
             return Decimal("0")
 
         # Coeficiente de variación
-        variance = sum((e - avg) ** 2 for e in eps_values) / len(eps_values)
-        std_dev = variance**0.5
+        variance = np.var(eps_values)
+        std_dev = np.sqrt(variance)
         cv = std_dev / abs(avg) if avg != 0 else 1
 
         # Convertir a score (CV bajo = score alto)

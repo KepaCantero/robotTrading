@@ -2,6 +2,8 @@
 Reconnection Manager - Manages reconnection with exponential backoff.
 
 Essential for 24/7 operation where network glitches are common.
+
+Uses centralized configuration for all timeout and backoff parameters.
 """
 
 import asyncio
@@ -11,30 +13,51 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Callable, Dict, Optional
 
+from app.core.centralized_config import get_config
 from app.core.timezone_utils import utc_now
 
 logger = logging.getLogger(__name__)
 
 
-@dataclass
 class ReconnectionConfig:
-    """Configuration for reconnection behavior."""
+    """
+    Configuration for reconnection behavior.
 
-    max_attempts: int = 10
-    base_delay_seconds: float = 1.0
-    max_delay_seconds: float = 60.0
-    exponential_base: float = 2.0
-    jitter: bool = True
-    jitter_factor: float = 0.1
+    Uses centralized configuration for all timeout and backoff parameters.
+    """
 
-    # Callbacks
-    on_attempt: Optional[Callable[[int], None]] = None
-    on_success: Optional[Callable[[int], None]] = None
-    on_failure: Optional[Callable[[], None]] = None
+    def __init__(self, custom_config: Optional[Dict] = None):
+        """
+        Initialize ReconnectionConfig with centralized config values.
 
-    # Alert thresholds
-    alert_after_attempts: int = 3
-    alert_callback: Optional[Callable[[int], None]] = None
+        Args:
+            custom_config: Optional dict to override specific values
+        """
+        # Get centralized config for default values - use directly, no hasattr
+        tt = get_config().trading_thresholds
+
+        # Core reconnection parameters from centralized config
+        self.max_attempts = tt.reconnection_max_attempts
+        self.base_delay_seconds = tt.reconnection_base_delay_seconds
+        self.max_delay_seconds = tt.reconnection_max_delay_seconds
+        self.exponential_base = tt.reconnection_exponential_base
+        self.jitter = True
+        self.jitter_factor = tt.reconnection_jitter_factor
+
+        # Alert thresholds from centralized config
+        self.alert_after_attempts = tt.reconnection_alert_after_attempts
+
+        # Callbacks (not configurable)
+        self.on_attempt: Optional[Callable[[int], None]] = None
+        self.on_success: Optional[Callable[[int], None]] = None
+        self.on_failure: Optional[Callable[[], None]] = None
+        self.alert_callback: Optional[Callable[[int], None]] = None
+
+        # Apply any custom overrides
+        if custom_config:
+            for key, value in custom_config.items():
+                if hasattr(self, key):
+                    setattr(self, key, value)
 
 
 @dataclass
@@ -139,8 +162,10 @@ class ReconnectionManager:
                     f"{self.config.max_attempts}"
                 )
 
-                # Try to connect
-                result = await asyncio.wait_for(connect_func(), timeout=30.0)
+                # Try to connect - use centralized config timeout
+                tt = get_config().trading_thresholds
+                timeout = tt.reconnection_default_timeout
+                result = await asyncio.wait_for(connect_func(), timeout=timeout)
 
                 # Success!
                 self.stats.successful_connections += 1
@@ -197,7 +222,7 @@ class ReconnectionManager:
         self,
         connect_func: Callable[[], Any],
         check_func: Optional[Callable[[], bool]] = None,
-        reconnect_delay: float = 1.0,
+        reconnect_delay: Optional[float] = None,
     ):
         """
         Continuously maintain connection, reconnecting if lost.
@@ -205,8 +230,12 @@ class ReconnectionManager:
         Args:
             connect_func: Async function that attempts connection
             check_func: Optional function to check if connection is alive
-            reconnect_delay: Delay before attempting reconnection
+            reconnect_delay: Delay before attempting reconnection (uses centralized config if None)
         """
+        # Use centralized config for reconnect_delay if not provided
+        if reconnect_delay is None:
+            tt = get_config().trading_thresholds
+            reconnect_delay = tt.reconnection_maintain_delay
         while True:
             try:
                 # Try to connect
@@ -219,9 +248,11 @@ class ReconnectionManager:
 
                 # Connection successful, monitor it
                 if check_func:
-                    # Monitor connection health
+                    # Monitor connection health - use centralized config interval
+                    tt = get_config().trading_thresholds
+                    health_check_interval = tt.reconnection_health_check_interval
                     while True:
-                        await asyncio.sleep(5.0)
+                        await asyncio.sleep(health_check_interval)
 
                         if not await check_func():
                             logger.warning(f"{self.service_name}: Connection lost")

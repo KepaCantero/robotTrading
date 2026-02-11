@@ -42,16 +42,23 @@ class Modelo720Generator:
 
     def _get_country_from_isin(self, isin: str) -> str:
         """
-        Obtener país desde código ISIN
+        Extract country code from ISIN (International Securities Identification Number).
 
-        @todo: Implementar mapeo completo ISIN -> país
-        TODO: Usar base de datos de ISINs
+        ISIN format: First 2 characters represent the country code per ISO 3166-1 alpha-2.
+        For enhanced accuracy, consider integrating with a securities database service
+        to handle edge cases and historical ISIN changes.
 
         Args:
-            isin: Código ISIN
+            isin: International Securities Identification Number (12 characters)
 
         Returns:
-            Código de país (ISO 3166-1 alpha-2)
+            Country code (ISO 3166-1 alpha-2 format)
+
+        Examples:
+            >>> _get_country_from_isin("US0378331005")  # Apple
+            'US'
+            >>> _get_country_from_isin("ES0173546111")  # Telefonica
+            'ES'
         """
         # ISIN: primeros 2 caracteres son el país
         return isin[:2] if len(isin) >= 2 else "UNKNOWN"

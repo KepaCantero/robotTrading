@@ -357,7 +357,7 @@ class CryptoIndicators:
         if not score_parts:
             return None
 
-        avg_score = sum(score_parts) / len(score_parts)
+        avg_score = np.mean(score_parts)
 
         logger.debug(f"Network health score: {avg_score:.1f}")
 

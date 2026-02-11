@@ -20,6 +20,7 @@ import logging
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
+import numpy as np
 import pandas as pd
 
 from app.core.compliance.results import OptimizeResult
@@ -304,7 +305,7 @@ class PortfolioComplianceOptimizer:
             portfolio_returns = returns.dot(weight_series)
 
             expected_return = portfolio_returns.mean() * 252  # Annualized
-            risk = portfolio_returns.std() * (252**0.5)  # Annualized
+            risk = portfolio_returns.std() * np.sqrt(252)  # Annualized
             sharpe_ratio = expected_return / risk if risk > 0 else 0
 
             return {

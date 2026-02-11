@@ -293,7 +293,7 @@ class FactorPortfolioConstructor:
                 scores = factor_scores_dict[profile.symbol]
 
                 # Expected return from factor premiums
-                exp_return = 0.02  # Risk-free rate
+                exp_return = getattr(config.trading, 'max_risk_per_trade', 0.02)  # Risk-free rate
 
                 if scores.value_score is not None:
                     exp_return += float(scores.value_score) * self.factor_premiums["value"]
@@ -507,7 +507,7 @@ class FactorPortfolioConstructor:
                 }
 
                 # Calculate expected return
-                exp_return = 0.02  # Risk-free
+                exp_return = getattr(config.trading, 'max_risk_per_trade', 0.02)  # Risk-free
                 exp_return += factor_exposure["value"] * self.factor_premiums["value"]
                 exp_return += (
                     factor_exposure["profitability"] * self.factor_premiums["profitability"]

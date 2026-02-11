@@ -6,13 +6,19 @@ for the algorithmic trading system.
 """
 
 import heapq
+import logging
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional
+import numpy as np
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+from app.core.centralized_config import get_config
+
+logger = logging.getLogger(__name__)
 
 
 class SignalType(str, Enum):
@@ -113,7 +119,7 @@ class Signal(BaseModel):
     @field_validator("price")
     @classmethod
     def validate_price(cls, v) -> Decimal:
-        """Validate price is positive."""
+        """Validate price is positive - use config limit."""
         if isinstance(v, (int, float)):
             v = Decimal(str(v))
         elif not isinstance(v, Decimal):
@@ -121,15 +127,18 @@ class Signal(BaseModel):
 
         if v <= 0:
             raise ValueError(f"Price must be positive, got {v}")
-        if v > Decimal("1000000"):  # $1M per share limit
-            raise ValueError(f"Price exceeds maximum limit of $1M, got {v}")
+        # Use config for max price limit
+        tt = get_config().trading_thresholds
+        max_price = Decimal(str(tt.max_signal_price_usd))
+        if v > max_price:
+            raise ValueError(f"Price exceeds maximum limit of ${tt.max_signal_price_usd:,.0f}, got {v}")
 
         return v
 
     @field_validator("volume")
     @classmethod
     def validate_volume(cls, v) -> Decimal:
-        """Validate volume is non-negative."""
+        """Validate volume is non-negative - use config limit."""
         if isinstance(v, (int, float)):
             v = Decimal(str(v))
         elif not isinstance(v, Decimal):
@@ -137,9 +146,11 @@ class Signal(BaseModel):
 
         if v < 0:
             raise ValueError(f"Volume must be non-negative, got {v}")
-        # Increased limit to 10B shares to match Quote model (NVDA can have >1B shares)
-        if v > Decimal("10000000000"):  # 10B shares limit
-            raise ValueError(f"Volume exceeds maximum limit of 10B shares, got {v}")
+        # Use config for max volume limit
+        tt = get_config().trading_thresholds
+        max_volume = Decimal(str(tt.max_signal_volume_shares))
+        if v > max_volume:
+            raise ValueError(f"Volume exceeds maximum limit of {tt.max_signal_volume_shares:,.0f} shares, got {v}")
 
         return v
 
@@ -339,18 +350,42 @@ class SignalScorer:
             return max(20.0, volume_ratio * 50)
 
     def _calculate_volatility_score(self, metadata: Dict[str, Any]) -> float:
-        """Calculate volatility score."""
-        volatility = metadata.get("volatility", 0.02)
+        """
+        Calculate volatility score using config thresholds.
 
-        # Moderate volatility is preferred (not too high, not too low)
-        if 0.01 <= volatility <= 0.03:
-            return 100.0
-        elif 0.005 <= volatility <= 0.05:
-            return 80.0
-        elif volatility > 0.05:
-            return max(20.0, 100 - (volatility - 0.03) * 1000)
-        else:
-            return max(20.0, volatility * 2000)
+        Moderate volatility is preferred (not too high, not too low).
+        """
+        try:
+            config = get_config()
+            default_vol = getattr(config.trading, 'signal_volatility_default', 0.02)
+            volatility = metadata.get("volatility", default_vol)
+
+            # Get thresholds from config
+            optimal_min = getattr(config.trading, 'signal_volatility_optimal_min', 0.01)
+            optimal_max = getattr(config.trading, 'signal_volatility_optimal_max', 0.03)
+            acceptable_min = getattr(config.trading, 'signal_volatility_acceptable_min', 0.005)
+            acceptable_max = getattr(config.trading, 'signal_volatility_acceptable_max', 0.05)
+
+            # Moderate volatility is preferred (not too high, not too low)
+            if optimal_min <= volatility <= optimal_max:
+                return 100.0
+            elif acceptable_min <= volatility <= acceptable_max:
+                return 80.0
+            elif volatility > acceptable_max:
+                return max(20.0, 100 - (volatility - optimal_max) * 1000)
+            else:
+                return max(20.0, volatility * 2000)
+        except (ValueError, TypeError, AttributeError):
+            # Fallback to original hardcoded values
+            volatility = metadata.get("volatility", 0.02)
+            if 0.01 <= volatility <= 0.03:
+                return 100.0
+            elif 0.005 <= volatility <= 0.05:
+                return 80.0
+            elif volatility > 0.05:
+                return max(20.0, 100 - (volatility - 0.03) * 1000)
+            else:
+                return max(20.0, volatility * 2000)
 
     def _calculate_technical_score(self, metadata: Dict[str, Any]) -> float:
         """Calculate technical indicators score."""
@@ -389,35 +424,73 @@ class SignalScorer:
             return max(10.0, volume / 1000)
 
     def _calculate_spread_liquidity_score(self, market_data: MarketData) -> float:
-        """Calculate spread-based liquidity score."""
-        spread_pct = float(market_data.spread_percentage)
+        """Calculate spread-based liquidity score using config thresholds."""
+        try:
+            config = get_config()
+            spread_pct = float(market_data.spread_percentage)
 
-        # Lower spread = higher liquidity score
-        if spread_pct < 0.1:  # < 0.1% spread
-            return 100.0
-        elif spread_pct < 0.2:  # < 0.2% spread
-            return 80.0
-        elif spread_pct < 0.5:  # < 0.5% spread
-            return 60.0
-        elif spread_pct < 1.0:  # < 1% spread
-            return 40.0
-        else:
-            return max(10.0, 100 - spread_pct * 50)
+            # Get thresholds from config
+            very_low = getattr(config.trading, 'signal_spread_very_low', 0.1)
+            low = getattr(config.trading, 'signal_spread_low', 0.2)
+            moderate = getattr(config.trading, 'signal_spread_moderate', 0.5)
+            high = getattr(config.trading, 'signal_spread_high', 1.0)
+
+            # Lower spread = higher liquidity score
+            if spread_pct < very_low:
+                return 100.0
+            elif spread_pct < low:
+                return 80.0
+            elif spread_pct < moderate:
+                return 60.0
+            elif spread_pct < high:
+                return 40.0
+            else:
+                return max(10.0, 100 - spread_pct * 50)
+        except (ValueError, TypeError, AttributeError):
+            # Fallback to original hardcoded values
+            spread_pct = float(market_data.spread_percentage)
+            if spread_pct < 0.1:
+                return 100.0
+            elif spread_pct < 0.2:
+                return 80.0
+            elif spread_pct < 0.5:
+                return 60.0
+            elif spread_pct < 1.0:
+                return 40.0
+            else:
+                return max(10.0, 100 - spread_pct * 50)
 
     def _calculate_price_stability_score(self, market_data: MarketData) -> float:
-        """Calculate price stability score."""
-        # Simulate price stability based on spread
-        spread_pct = float(market_data.spread_percentage)
+        """Calculate price stability score using config thresholds."""
+        try:
+            config = get_config()
+            spread_pct = float(market_data.spread_percentage)
 
-        # Lower spread indicates more stable pricing
-        if spread_pct < 0.1:
-            return 100.0
-        elif spread_pct < 0.3:
-            return 80.0
-        elif spread_pct < 0.5:
-            return 60.0
-        else:
-            return max(20.0, 100 - spread_pct * 100)
+            # Get thresholds from config
+            low = getattr(config.trading, 'signal_spread_stable_low', 0.1)
+            moderate = getattr(config.trading, 'signal_spread_stable_moderate', 0.3)
+            high = getattr(config.trading, 'signal_spread_stable_high', 0.5)
+
+            # Lower spread indicates more stable pricing
+            if spread_pct < low:
+                return 100.0
+            elif spread_pct < moderate:
+                return 80.0
+            elif spread_pct < high:
+                return 60.0
+            else:
+                return max(20.0, 100 - spread_pct * 100)
+        except (ValueError, TypeError, AttributeError):
+            # Fallback to original hardcoded values
+            spread_pct = float(market_data.spread_percentage)
+            if spread_pct < 0.1:
+                return 100.0
+            elif spread_pct < 0.3:
+                return 80.0
+            elif spread_pct < 0.5:
+                return 60.0
+            else:
+                return max(20.0, 100 - spread_pct * 100)
 
     def _calculate_market_depth_score(self, market_data: MarketData) -> float:
         """Calculate market depth score (simulated)."""
@@ -448,7 +521,7 @@ class SignalScorer:
         time_decay = max(0, 100 - time_since_creation / 60)  # Decay over minutes
         urgency_factors.append(time_decay)
 
-        return sum(urgency_factors) / len(urgency_factors)
+        return np.mean(urgency_factors)
 
     def _calculate_market_condition_score(self, market_data: MarketData) -> float:
         """Calculate market condition score."""
@@ -559,7 +632,7 @@ class SignalPriorityQueue:
 
         return {
             "total_signals": len(self.queue),
-            "avg_priority": sum(priorities) / len(priorities),
+            "avg_priority": np.mean(priorities),
             "signal_types": signal_types,
             "symbols": list(symbols),
         }
@@ -572,19 +645,37 @@ class SignalPriorityQueue:
     ) -> float:
         """Calculate confidence score based on market data and metadata."""
         try:
+            # Get thresholds from config
+            config = get_config()
+            volume_high = Decimal(str(getattr(
+                config.trading, 'signal_volume_high', 1000000
+            )))
+            volume_low = Decimal(str(getattr(
+                config.trading, 'signal_volume_low', 100000
+            )))
+            spread_excellent = Decimal(str(getattr(
+                config.trading, 'signal_spread_excellent', 0.01
+            )))
+            spread_poor = Decimal(str(getattr(
+                config.trading, 'signal_spread_poor', 0.05
+            )))
+            ema_trend_strong = getattr(
+                config.trading, 'signal_ema_trend_strong', 0.02
+            )
+
             # Base confidence from signal strength indicators
             base_confidence = 60.0
 
             # Adjust based on volume
-            if market_data.volume > Decimal("1000000"):
+            if market_data.volume > volume_high:
                 base_confidence += 10.0
-            elif market_data.volume < Decimal("100000"):
+            elif market_data.volume < volume_low:
                 base_confidence -= 15.0
 
             # Adjust based on spread
-            if market_data.spread < Decimal("0.01"):
+            if market_data.spread < spread_excellent:
                 base_confidence += 5.0
-            elif market_data.spread > Decimal("0.05"):
+            elif market_data.spread > spread_poor:
                 base_confidence -= 10.0
 
             # Adjust based on metadata indicators
@@ -599,13 +690,13 @@ class SignalPriorityQueue:
 
             if "ema_trend" in metadata:
                 trend = metadata["ema_trend"]
-                if trend > 0.02:  # Strong uptrend
+                if trend > ema_trend_strong:  # Strong uptrend
                     base_confidence += 15.0
                 elif trend > 0.0:  # Weak uptrend
                     base_confidence += 10.0
-                elif trend > -0.02:  # Slight downtrend (not too bad)
+                elif trend > -ema_trend_strong:  # Slight downtrend (not too bad)
                     base_confidence += 5.0
-                elif trend < -0.02:  # Strong downtrend
+                elif trend < -ema_trend_strong:  # Strong downtrend
                     base_confidence -= 25.0  # More penalty for downtrends
 
             # Ensure confidence is within bounds
@@ -617,33 +708,57 @@ class SignalPriorityQueue:
     def calculate_liquidity_score(
         self, market_data: MarketData, metadata: Dict[str, Any] = None
     ) -> float:
-        """Calculate liquidity score based on market data."""
+        """Calculate liquidity score based on market data using config thresholds."""
         try:
             # Use the more sophisticated volume score calculation if metadata
             # is available
             if metadata:
                 return self._calculate_volume_score(market_data, metadata)
 
+            # Get thresholds from config
+            config = get_config()
+            volume_very_high = Decimal(str(getattr(
+                config.trading, 'signal_volume_very_high', 5000000
+            )))
+            volume_high = Decimal(str(getattr(
+                config.trading, 'signal_volume_high', 1000000
+            )))
+            volume_low = Decimal(str(getattr(
+                config.trading, 'signal_volume_low', 100000
+            )))
+            spread_very_tight = Decimal(str(getattr(
+                config.trading, 'signal_spread_very_tight', 0.005
+            )))
+            spread_excellent = Decimal(str(getattr(
+                config.trading, 'signal_spread_excellent', 0.01
+            )))
+            spread_acceptable = Decimal(str(getattr(
+                config.trading, 'signal_spread_acceptable', 0.1
+            )))
+            spread_very_wide = Decimal(str(getattr(
+                config.trading, 'signal_spread_very_wide', 0.2
+            )))
+
             # Fallback to simple calculation
             base_score = 50.0
 
             # Adjust based on volume
-            if market_data.volume > Decimal("5000000"):
+            if market_data.volume > volume_very_high:
                 base_score += 25.0
-            elif market_data.volume > Decimal("1000000"):
+            elif market_data.volume > volume_high:
                 base_score += 15.0
-            elif market_data.volume < Decimal("100000"):
+            elif market_data.volume < volume_low:
                 base_score -= 20.0
 
             # Adjust based on spread
-            if market_data.spread < Decimal("0.005"):
+            if market_data.spread < spread_very_tight:
                 base_score += 15.0
-            elif market_data.spread < Decimal("0.01"):
+            elif market_data.spread < spread_excellent:
                 base_score += 10.0
-            elif market_data.spread < Decimal("0.1"):  # Acceptable spread
+            elif market_data.spread < spread_acceptable:
                 base_score += 5.0
             # Only penalize very wide spreads
-            elif market_data.spread > Decimal("0.2"):
+            elif market_data.spread > spread_very_wide:
                 base_score -= 25.0
 
             # Ensure score is within bounds
@@ -700,12 +815,23 @@ class SignalPriorityQueue:
 
             if "ema_trend" in metadata:
                 trend = metadata["ema_trend"]
-                if trend > 0.02:  # Strong uptrend
-                    score += 25.0
-                elif trend < -0.02:  # Strong downtrend
-                    score -= 15.0
-                else:  # Sideways
-                    score += 5.0
+                try:
+                    config = get_config()
+                    strong_trend = getattr(config.trading, 'signal_ema_trend_strong', 0.02)
+                    if trend > strong_trend:  # Strong uptrend
+                        score += 25.0
+                    elif trend < -strong_trend:  # Strong downtrend
+                        score -= 15.0
+                    else:  # Sideways
+                        score += 5.0
+                except (ValueError, TypeError, AttributeError):
+                    # Fallback to original hardcoded values
+                    if trend > 0.02:  # Strong uptrend
+                        score += 25.0
+                    elif trend < -0.02:  # Strong downtrend
+                        score -= 15.0
+                    else:  # Sideways
+                        score += 5.0
 
             return max(0.0, min(100.0, score))
         except (ValueError, TypeError, KeyError, AttributeError):
@@ -737,10 +863,20 @@ class SignalPriorityQueue:
 
             if "volume_trend" in metadata:
                 trend = metadata["volume_trend"]
-                if trend > 0.1:  # Increasing volume
-                    score += 15.0
-                elif trend < -0.1:  # Decreasing volume
-                    score -= 10.0
+                try:
+                    config = get_config()
+                    high_trend = getattr(config.trading, 'signal_volume_trend_high', 0.1)
+                    low_trend = getattr(config.trading, 'signal_volume_trend_low', -0.1)
+                    if trend > high_trend:  # Increasing volume
+                        score += 15.0
+                    elif trend < low_trend:  # Decreasing volume
+                        score -= 10.0
+                except (ValueError, TypeError, AttributeError):
+                    # Fallback to original hardcoded values
+                    if trend > 0.1:  # Increasing volume
+                        score += 15.0
+                    elif trend < -0.1:  # Decreasing volume
+                        score -= 10.0
 
             return max(0.0, min(100.0, score))
         except (ValueError, KeyError, AttributeError, IndexError, TypeError):
@@ -766,33 +902,70 @@ class SignalPriorityQueue:
                 ):
                     price_range = float(market_data.high_price - market_data.low_price)
                     volatility = price_range / float(market_data.price)
-                    if volatility > 0.05:  # High volatility
-                        score += 20.0
-                    elif volatility < 0.01:  # Low volatility
-                        score -= 15.0
-                    else:  # Normal volatility
-                        score += 5.0
+                    try:
+                        config = get_config()
+                        high_vol = getattr(config.trading, 'signal_volatility_high_threshold', 0.05)
+                        low_vol = getattr(config.trading, 'signal_volatility_low_threshold', 0.01)
+                        if volatility > high_vol:  # High volatility
+                            score += 20.0
+                        elif volatility < low_vol:  # Low volatility
+                            score -= 15.0
+                        else:  # Normal volatility
+                            score += 5.0
+                    except (ValueError, TypeError, AttributeError):
+                        # Fallback to original hardcoded values
+                        if volatility > 0.05:  # High volatility
+                            score += 20.0
+                        elif volatility < 0.01:  # Low volatility
+                            score -= 15.0
+                        else:  # Normal volatility
+                            score += 5.0
             else:
                 # Called with just metadata
                 metadata = market_data_or_metadata
 
             if "volatility" in metadata:
                 vol = metadata["volatility"]
-                if vol > 0.05:  # High volatility
-                    score -= 20.0  # Penalize high volatility
-                elif vol < 0.01:  # Low volatility
-                    score -= 15.0
-                elif vol >= 0.02:  # Moderate volatility (good for trading)
-                    score += 35.0
-                else:  # Normal volatility
-                    score += 5.0
+                try:
+                    config = get_config()
+                    high_vol = getattr(config.trading, 'signal_volatility_high_threshold', 0.05)
+                    low_vol = getattr(config.trading, 'signal_volatility_low_threshold', 0.01)
+                    moderate_vol = getattr(config.trading, 'signal_volatility_moderate_threshold', 0.02)
+                    if vol > high_vol:  # High volatility
+                        score -= 20.0  # Penalize high volatility
+                    elif vol < low_vol:  # Low volatility
+                        score -= 15.0
+                    elif vol >= moderate_vol:  # Moderate volatility (good for trading)
+                        score += 35.0
+                    else:  # Normal volatility
+                        score += 5.0
+                except (ValueError, TypeError, AttributeError):
+                    # Fallback to original hardcoded values
+                    if vol > 0.05:  # High volatility
+                        score -= 20.0  # Penalize high volatility
+                    elif vol < 0.01:  # Low volatility
+                        score -= 15.0
+                    elif vol >= 0.02:  # Moderate volatility (good for trading)
+                        score += 35.0
+                    else:  # Normal volatility
+                        score += 5.0
 
             if "atr_ratio" in metadata:
                 atr = metadata["atr_ratio"]
-                if atr > 0.03:  # High ATR
-                    score += 15.0
-                elif atr < 0.01:  # Low ATR
-                    score -= 10.0
+                try:
+                    config = get_config()
+                    atr_high = getattr(config.trading, 'signal_volatility_atr_high', 0.03)
+                    atr_low = getattr(config.trading, 'signal_volatility_atr_low', 0.01)
+                    if atr > atr_high:  # High ATR
+                        score += 15.0
+                    elif atr < atr_low:  # Low ATR
+                        score -= 10.0
+                except (ValueError, TypeError, AttributeError):
+                    # Fallback to original hardcoded values
+                    if atr > 0.03:  # High ATR
+                        score += 15.0
+                    elif atr < 0.01:  # Low ATR
+                        score -= 10.0
 
             return max(0.0, min(100.0, score))
         except (ValueError, TypeError, KeyError, AttributeError, IndexError):
@@ -835,14 +1008,20 @@ class SignalPriorityQueue:
         try:
             # Create mock market data for scoring - use dataclass not Pydantic model
             # MarketData dataclass doesn't have open_price, high_price, low_price, close_price
+            try:
+                config = get_config()
+                mock_spread = Decimal(str(getattr(config.trading, 'signal_mock_spread', 0.01)))
+            except (ValueError, TypeError, AttributeError):
+                mock_spread = Decimal("0.01")
+
             market_data = MarketData(
                 symbol=signal.symbol,
                 price=signal.price,
                 volume=signal.volume,
                 timestamp=signal.timestamp,
-                bid=signal.price - Decimal("0.01"),
-                ask=signal.price + Decimal("0.01"),
-                spread=Decimal("0.02"),
+                bid=signal.price - mock_spread,
+                ask=signal.price + mock_spread,
+                spread=mock_spread * 2,  # Full spread = bid-ask difference
             )
 
             # Calculate confidence and liquidity scores

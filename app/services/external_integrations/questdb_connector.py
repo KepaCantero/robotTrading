@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Optional
+import numpy as np
 
 import aiohttp
 
@@ -360,7 +361,7 @@ class QuestDBConnector:
                 "count": len(close_prices),
                 "min": min(close_prices),
                 "max": max(close_prices),
-                "avg": sum(close_prices) / len(close_prices),
+                "avg": np.mean(close_prices),
             }
             logger.info(f"✅ Statistics for {symbol}: {stats['count']} records")
             return stats

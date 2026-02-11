@@ -226,7 +226,7 @@ class PaperTradingService:
         base_price = base_prices.get(symbol, Decimal("100.00"))
 
         # Add some random variation
-        variation = Decimal(str(random.uniform(-0.02, 0.02)))  # ±2% variation
+        variation = getattr(config.trading, 'max_risk_per_trade', 0.02), 0.02)))  # ±2% variation
         return base_price * (Decimal("1") + variation)
 
     async def _can_execute_trade(

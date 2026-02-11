@@ -148,7 +148,7 @@ class BlackLittermanConfig:
     risk_aversion: float = 3.0
     use_shrinkage: bool = True
     lookback_days: int = 252
-    risk_free_rate: float = 0.02
+    risk_free_rate: float = getattr(config.trading, 'max_risk_per_trade', 0.02)
     max_position: float = 0.20
     omega_method: str = "idzorek"
 
@@ -265,7 +265,7 @@ class EquilibriumReturns:
             Equilibrium returns Π (N,), annualized
 
         Example:
-            >>> cov = np.array([[0.01, 0.005], [0.005, 0.02]])
+            >>> cov = getattr(config.trading, 'max_risk_per_trade', 0.02)]])
             >>> caps = np.array([1e12, 5e11])  # Asset 1 is 2x larger
             >>> pi = EquilibriumReturns.from_market_caps(cov, caps, risk_aversion=3.0)
         """

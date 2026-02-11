@@ -13,6 +13,7 @@ import random
 from datetime import datetime
 from math import exp, log
 from typing import Any, Callable, Dict, List
+import numpy as np
 
 from tqdm import tqdm
 
@@ -452,7 +453,7 @@ class RandomSearchOptimizerCV(RandomSearchOptimizer):
                     iteration=iteration,
                     metrics={
                         "cv_scores": cv_scores,
-                        "cv_mean": sum(cv_scores) / len(cv_scores) if cv_scores else 0.0,
+                        "cv_mean": np.mean(cv_scores) if cv_scores else 0.0,
                         "cv_std": self._std(cv_scores) if len(cv_scores) > 1 else 0.0,
                         "cv_min": min(cv_scores) if cv_scores else 0.0,
                         "cv_max": max(cv_scores) if cv_scores else 0.0,
@@ -498,7 +499,7 @@ class RandomSearchOptimizerCV(RandomSearchOptimizer):
             return float("-inf") if self.config.maximize else float("inf")
 
         if self.cv_metric == "mean":
-            return sum(cv_scores) / len(cv_scores)
+            return np.mean(cv_scores)
         elif self.cv_metric == "min":
             return min(cv_scores)
         elif self.cv_metric == "median":
@@ -509,7 +510,7 @@ class RandomSearchOptimizerCV(RandomSearchOptimizer):
             else:
                 return (sorted_scores[mid - 1] + sorted_scores[mid]) / 2
         else:
-            return sum(cv_scores) / len(cv_scores)
+            return np.mean(cv_scores)
 
     def _std(self, values: List[float]) -> float:
         """Calculate standard deviation."""

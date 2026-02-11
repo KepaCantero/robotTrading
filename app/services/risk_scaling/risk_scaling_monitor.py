@@ -15,6 +15,7 @@ import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Dict, List, Optional
+import numpy as np
 
 from app.services.risk_scaling.models import (
     AlertSubscription,
@@ -225,32 +226,32 @@ class RiskScalingMonitor:
             "data_points": len(history),
             "combined_scale": {
                 "current": scales[-1],
-                "avg": sum(scales) / len(scales),
+                "avg": np.mean(scales),
                 "min": min(scales),
                 "max": max(scales),
                 "trend": "increasing" if scales[-1] > scales[0] else "decreasing",
             },
             "volatility_scale": {
                 "current": volatilities[-1],
-                "avg": sum(volatilities) / len(volatilities),
+                "avg": np.mean(volatilities),
                 "min": min(volatilities),
                 "max": max(volatilities),
             },
             "sharpe_scale": {
                 "current": sharpes[-1],
-                "avg": sum(sharpes) / len(sharpes),
+                "avg": np.mean(sharpes),
                 "min": min(sharpes),
                 "max": max(sharpes),
             },
             "loss_scale": {
                 "current": losses[-1],
-                "avg": sum(losses) / len(losses),
+                "avg": np.mean(losses),
                 "min": min(losses),
                 "max": max(losses),
             },
             "drawdown_scale": {
                 "current": drawdowns[-1],
-                "avg": sum(drawdowns) / len(drawdowns),
+                "avg": np.mean(drawdowns),
                 "min": min(drawdowns),
                 "max": max(drawdowns),
             },

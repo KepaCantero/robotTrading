@@ -8,12 +8,15 @@ Spain tax rules:
 - No wash sale rule
 - EU dividends: 0% withholding tax
 - Modelo 720: €50k foreign assets reporting threshold
+
+Uses centralized configuration from SpainTaxConfig.
 """
 
 import logging
 from decimal import Decimal
 from typing import Dict, List, Optional
 
+from app.core.config.base import get_config
 from app.core.decimal_utils import to_decimal
 
 from .base import TaxEngine
@@ -36,38 +39,32 @@ class SpainTaxEngine(TaxEngine):
     - No wash sale rule
     - EU dividends: 0% withholding (Parent-Subsidiary Directive)
     - Losses can offset gains with 4-year carryforward
+
+    All tax rates and thresholds are loaded from centralized configuration.
     """
-
-    # Spain tax brackets (2024/2025 - IRPF Ahorro)
-    BRACKET_1_LIMIT = Decimal("33007.99")
-    BRACKET_2_LIMIT = Decimal("53407.99")
-
-    RATE_1 = Decimal("0.19")  # 19%
-    RATE_2 = Decimal("0.21")  # 21%
-    RATE_3 = Decimal("0.23")  # 23%
-
-    # Modelo 720 threshold (foreign assets reporting)
-    MODELO_720_THRESHOLD = Decimal("50000.00")
-
-    # Loss carryforward period (years)
-    LOSS_CARRYFORWARD_YEARS = 4
 
     def __init__(self, config: Optional[Dict] = None):
         """
-        Initialize Spain tax engine.
+        Initialize Spain tax engine with centralized configuration.
 
         Args:
-            config: Optional configuration with custom tax rates
+            config: Optional configuration with custom tax rates (overrides centralized config)
         """
         super().__init__(config)
 
-        # Allow overriding tax rates via config
-        if config:
-            self.RATE_1 = to_decimal(config.get("rate_1", self.RATE_1))
-            self.RATE_2 = to_decimal(config.get("rate_2", self.RATE_2))
-            self.RATE_3 = to_decimal(config.get("rate_3", self.RATE_3))
-            self.BRACKET_1_LIMIT = to_decimal(config.get("bracket_1_limit", self.BRACKET_1_LIMIT))
-            self.BRACKET_2_LIMIT = to_decimal(config.get("bracket_2_limit", self.BRACKET_2_LIMIT))
+        # Load Spain tax configuration from centralized config
+        spain_tax = get_config().spain_tax
+
+        # Use config values as defaults, allow override via parameter
+        self.BRACKET_1_LIMIT = to_decimal(config.get("bracket_1_limit", "33007.99")) if config else Decimal("33007.99")
+        self.BRACKET_2_LIMIT = to_decimal(config.get("bracket_2_limit", "53407.99")) if config else Decimal("53407.99")
+
+        self.RATE_1 = to_decimal(config.get("rate_1", spain_tax.irpf_rate_19)) if config else Decimal(str(spain_tax.irpf_rate_19))
+        self.RATE_2 = to_decimal(config.get("rate_2", spain_tax.irpf_rate_21)) if config else Decimal(str(spain_tax.irpf_rate_21))
+        self.RATE_3 = to_decimal(config.get("rate_3", spain_tax.irpf_rate_23)) if config else Decimal(str(spain_tax.irpf_rate_23))
+
+        self.MODELO_720_THRESHOLD = to_decimal(str(spain_tax.modelo_720_threshold_eur))
+        self.LOSS_CARRYFORWARD_YEARS = int(spain_tax.capital_loss_carry_forward_years)
 
     def calculate_capital_gains_tax(
         self,
@@ -136,8 +133,8 @@ class SpainTaxEngine(TaxEngine):
         """
         Spain: No wash sale rule.
 
-        Unlike the US, Spain does not have a wash sale rule.
-        Investors can sell and repurchase the same security immediately
+        Unlike US, Spain does not have a wash sale rule.
+        Investors can sell and repurchase same security immediately
         without triggering wash sale disallowance.
 
         Returns:
@@ -189,9 +186,11 @@ class SpainTaxEngine(TaxEngine):
         """
         Get withholding tax rate for foreign dividends.
 
+        Uses centralized configuration for dividend withholding rates.
+
         EU dividends: 0% withholding (Parent-Subsidiary Directive)
-        US dividends: 15% (US-Spain tax treaty)
-        Other countries: Default 19%
+        US/UK/CH dividends: 15% (tax treaties)
+        Other countries: Default from config (typically 19%)
 
         Args:
             country: Country code (e.g., "US", "FR", "DE")
@@ -199,49 +198,26 @@ class SpainTaxEngine(TaxEngine):
         Returns:
             Withholding tax rate
         """
+        # Load withholding rates from config
+        spain_tax = get_config().spain_tax
+        eu_withholding = Decimal(str(spain_tax.eu_dividend_withholding_pct))
+        non_eu_withholding = Decimal(str(spain_tax.non_eu_dividend_withholding_pct))
+
         # EU/EEA countries with 0% withholding (Parent-Subsidiary Directive)
         eu_countries = {
-            "AT",
-            "BE",
-            "BG",
-            "HR",
-            "CY",
-            "CZ",
-            "DK",
-            "EE",
-            "FI",
-            "FR",
-            "DE",
-            "GR",
-            "HU",
-            "IE",
-            "IT",
-            "LV",
-            "LT",
-            "LU",
-            "MT",
-            "NL",
-            "PL",
-            "PT",
-            "RO",
-            "SK",
-            "SI",
-            "ES",
-            "SE",
+            "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI",
+            "FR", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU",
+            "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE",
         }
 
         country_upper = country.upper()
 
         if country_upper in eu_countries:
-            return Decimal("0")  # EU: 0% withholding
-        elif country_upper == "US":
-            return Decimal("0.15")  # US: 15% per tax treaty
-        elif country_upper == "UK":
-            return Decimal("0.15")  # UK: 15% per tax treaty
-        elif country_upper == "CH":
-            return Decimal("0.15")  # Switzerland: 15% per tax treaty
+            return eu_withholding  # EU: 0% withholding from config
+        elif country_upper in ("US", "UK", "CH"):
+            return Decimal("0.15")  # US/UK/CH: 15% per tax treaty
         else:
-            return Decimal("0.19")  # Default: 19%
+            return non_eu_withholding  # Default from config
 
     def calculate_total_tax_liability(
         self,
@@ -334,7 +310,7 @@ class SpainTaxEngine(TaxEngine):
         """
         Calculate tax with gain/loss compensation.
 
-        Spain allows losses to offset gains in the same tax year.
+        Spain allows losses to offset gains in same tax year.
         Excess losses can be carried forward for 4 years.
 
         Args:
@@ -349,7 +325,8 @@ class SpainTaxEngine(TaxEngine):
         net_gain = max(total_gains - total_losses, Decimal("0"))
 
         logger.info(
-            f"Gain compensation: gains={total_gains}, losses={total_losses}, " f"net={net_gain}"
+            f"Gain compensation: gains={total_gains}, losses={total_losses}, "
+            f"net={net_gain}"
         )
 
         return self.calculate_capital_gains_tax(net_gain)

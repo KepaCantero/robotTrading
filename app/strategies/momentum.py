@@ -15,7 +15,7 @@ from collections import deque
 from decimal import Decimal
 from typing import Any
 
-from app.core.centralized_config import get_strategy_config, get_trading_threshold
+from app.core.centralized_config import get_strategy_config, get_trading_threshold, get_config
 from app.models.market_data import Quote
 from app.models.portfolio import Portfolio
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
@@ -113,7 +113,7 @@ class MomentumStrategy(BaseStrategy):
         else:
             # Fallback to config or defaults
             self.rsi_threshold = Decimal(str(config.get("rsi_threshold", 40)))
-            self.momentum_threshold = Decimal(str(config.get("momentum_threshold", 0.02)))
+            self.momentum_threshold = getattr(config.trading, 'max_risk_per_trade', 0.02))))
             self.stop_loss = Decimal(
                 str(config.get("stop_loss", get_trading_threshold("stop_loss_pct")))
             )
@@ -128,20 +128,28 @@ class MomentumStrategy(BaseStrategy):
                 str(config.get("max_exposure", 0.60))
             )  # Default 60% (matches portfolio target_weight)
 
-        # Histórico para calcular indicadores reales
-        self.price_history = deque(maxlen=200)  # Mantener 200 velas de histórico
-        self.high_history = deque(maxlen=200)
-        self.low_history = deque(maxlen=200)
-        self.volume_history = deque(maxlen=200)
+        # Load trading thresholds for technical indicators
+        trading_config = get_config()
+        self.tt = trading_config.trading_thresholds
+
+        # Histórico para calcular indicadores reales - use config values
+        price_history_len = self.tt.default_price_history_length
+        rsi_history_len = self.tt.rsi_history_length
+        atr_history_len = self.tt.atr_history_length
+
+        self.price_history = deque(maxlen=price_history_len)
+        self.high_history = deque(maxlen=price_history_len)
+        self.low_history = deque(maxlen=price_history_len)
+        self.volume_history = deque(maxlen=price_history_len)
         self.last_rsi = None
         self.last_ema = None
-        self.rsi_history = deque(maxlen=50)  # TASK-IND-STOCH-2: Histórico para Stochastic RSI
+        self.rsi_history = deque(maxlen=rsi_history_len)
 
         # ATR volatility filter settings
-        self.atr_history = deque(maxlen=14)  # ATR history for volatility filtering
+        self.atr_history = deque(maxlen=atr_history_len)
         # Note: min_atr_threshold, atr_filter_enabled, use_relative_atr already initialized above
 
-        # Cooldown para evitar señales repetidas
+        # Cooldown para evitar señales repetidas - use config value
         self.last_signal_bar_index = None
         self.last_signal_type = None
         self.current_bar_index = 0
@@ -215,7 +223,7 @@ class MomentumStrategy(BaseStrategy):
             # Only generate signals if we have sufficient history
             if rsi is None or ema is None:
                 # Log why signals are not generated (insufficient history) - DEBUG level for diagnostics
-                if self.current_bar_index % 50 == 0:  # Log every 50th bar
+                if self.current_bar_index % self.tt.log_interval_bars == 0:
                     logger.debug(
                         f"MOMENTUM {market_data.symbol}: Skipping - insufficient history "
                         f"(RSI={rsi}, EMA={ema}, bars={self.current_bar_index}). "
@@ -646,10 +654,10 @@ class MomentumStrategy(BaseStrategy):
         current_price = market_data.close or market_data.last
 
         # CORRECTED: BUY signals only when RSI < threshold (oversold)
-        # NEVER generate BUY when RSI > 70 (that's overbought - should be SELL)
-        if rsi >= 70:  # Overbought - should NOT generate BUY
+        # NEVER generate BUY when RSI > configured overbought threshold
+        if rsi >= self.tt.rsi_overbought:
             logger.debug(
-                f"MOMENTUM {market_data.symbol}: BUY rejected - RSI overbought ({rsi:.2f} >= 70)"
+                f"MOMENTUM {market_data.symbol}: BUY rejected - RSI overbought ({rsi:.2f} >= {self.tt.rsi_overbought})"
             )
             return False
 
@@ -668,12 +676,12 @@ class MomentumStrategy(BaseStrategy):
 
         obv_bullish = obv_trend is None or obv_trend in ["rising", "neutral"]
 
-        # FIXED: Momentum buy conditions - RSI in momentum zone (40-70)
-        # Option 1: RSI in momentum zone (40-70) with all confirmations
-        rsi_momentum_zone = 40.0 <= rsi <= 70.0  # Not oversold, not overbought
+        # FIXED: Momentum buy conditions - RSI in momentum zone using config values
+        # Option 1: RSI in momentum zone with all confirmations
+        rsi_momentum_zone = self.tt.momentum_zone_min <= rsi <= self.tt.momentum_zone_max
 
-        # Option 2: RSI recovering from oversold (rising from < 40) with volume surge
-        rsi_recovering = rsi < 40.0 and has_volume and has_momentum
+        # Option 2: RSI recovering from oversold (rising from below threshold) with volume surge
+        rsi_recovering = rsi < self.tt.rsi_recovering_threshold and has_volume and has_momentum
 
         if rsi_momentum_zone:
             # Core momentum trade: RSI in good range, price above EMA, volume + momentum
@@ -682,7 +690,7 @@ class MomentumStrategy(BaseStrategy):
             )
         elif rsi_recovering:
             # Early entry: RSI recovering from oversold with strong volume/momentum
-            strong_volume = volume_ratio >= Decimal("1.25")
+            strong_volume = volume_ratio >= Decimal(str(self.tt.strong_volume_multiplier))
             return strong_volume and ema_bullish and has_momentum
 
         return False
@@ -716,19 +724,19 @@ class MomentumStrategy(BaseStrategy):
         current_price = market_data.close or market_data.last
 
         # CORRECTED: SELL signals only when RSI > threshold (overbought)
-        # NEVER generate SELL when RSI < 30 (that's oversold - should be BUY)
-        if rsi <= 30:  # Oversold - should NOT generate SELL
+        # NEVER generate SELL when RSI < configured oversold threshold
+        if rsi <= self.tt.rsi_oversold:
             logger.debug(
-                f"MOMENTUM {market_data.symbol}: SELL rejected - RSI oversold ({rsi:.2f} <= 30)"
+                f"MOMENTUM {market_data.symbol}: SELL rejected - RSI oversold ({rsi:.2f} <= {self.tt.rsi_oversold})"
             )
             return False
 
         # OPTIMIZED: SELL conditions for win rate >30%
-        # SELL when RSI overbought (> 55) with bearish confirmation
-        rsi_overbought = rsi > 55  # Overbought - clear sell signal
-        rsi_neutral_bearish = (rsi >= 50 and rsi <= 55) and current_price < Decimal(
-            str(ema)
-        )  # Neutral zone 50-55
+        # SELL when RSI overbought with bearish confirmation using config values
+        rsi_overbought = rsi > self.tt.rsi_sell_overbought
+        rsi_neutral_bearish = (
+            self.tt.rsi_neutral_zone_min <= rsi <= self.tt.rsi_neutral_zone_max
+        ) and current_price < Decimal(str(ema))
 
         # Core conditions - stricter for better win rate
         volume_threshold = Decimal(str(self.config.get("volume_threshold")))
@@ -770,10 +778,10 @@ class MomentumStrategy(BaseStrategy):
         return Signal(
             symbol=market_data.symbol,
             signal_type=SignalType.BUY,
-            strength=SignalStrength.MODERATE,  # Más conservador
-            confidence=float(rsi),  # Usar RSI como confidence
-            liquidity_score=80.0,
-            priority_score=85.0,
+            strength=SignalStrength.MODERATE,
+            confidence=float(rsi),
+            liquidity_score=float(self.tt.signal_liquidity_score),
+            priority_score=float(self.tt.signal_priority_score),
             source=SignalSource.MOMENTUM,
             price=market_data.last,
             volume=Decimal(
@@ -823,10 +831,10 @@ class MomentumStrategy(BaseStrategy):
         return Signal(
             symbol=market_data.symbol,
             signal_type=SignalType.SELL,
-            strength=SignalStrength.MODERATE,  # Más conservador
-            confidence=abs(50.0 - float(rsi)),  # Usar distancia de RSI desde 50 como confidence
-            liquidity_score=80.0,
-            priority_score=85.0,
+            strength=SignalStrength.MODERATE,
+            confidence=abs(self.tt.rsi_neutral_zone_min - float(rsi)),  # Distance from neutral zone
+            liquidity_score=float(self.tt.signal_liquidity_score),
+            priority_score=float(self.tt.signal_priority_score),
             source=SignalSource.MOMENTUM,
             price=market_data.last,
             volume=Decimal(

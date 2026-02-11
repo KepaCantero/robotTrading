@@ -11,7 +11,7 @@ import statistics
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
-from app.core.centralized_config import get_config
+from app.core.config.base import get_config
 from app.models.profitability_validation import (
     CostBreakdown,
     HistoricalValidation,
@@ -89,6 +89,9 @@ class ProfitabilityCalculator:
     def _estimate_costs_from_trades(self, trades_data: List[Dict[str, Any]]) -> CostBreakdown:
         """Estimar costos basados en datos de trades."""
 
+        config = get_config()
+        cost_config = config.trading_costs
+
         total_commissions = Decimal("0")
         total_slippage = Decimal("0")
         total_market_impact = Decimal("0")
@@ -104,23 +107,23 @@ class ProfitabilityCalculator:
                 pnl = Decimal(str(pnl))
 
             # Estimar valor del trade basado en PnL (simplificado)
-            # Estimación conservadora
-            estimated_trade_value = abs(pnl) * Decimal("10")
+            # Estimación conservadora - usa config
+            estimated_trade_value = abs(pnl) * cost_config.trade_value_multiplier
 
-            commission = estimated_trade_value * Decimal("0.001")  # 0.1%
+            commission = estimated_trade_value * cost_config.commission_rate
             total_commissions += commission
 
             # Estimar slippage (0.05% del valor del trade)
-            slippage = estimated_trade_value * Decimal("0.0005")  # 0.05%
+            slippage = estimated_trade_value * cost_config.slippage_rate
             total_slippage += slippage
 
             # Estimar market impact (0.02% del valor del trade)
-            market_impact = estimated_trade_value * Decimal("0.0002")  # 0.02%
+            market_impact = estimated_trade_value * cost_config.market_impact_rate
             total_market_impact += market_impact
 
-            # Costos fijos por trade
-            total_infrastructure += Decimal("1.0")  # $1 por trade
-            total_data_fees += Decimal("0.5")  # $0.5 por trade
+            # Costos fijos por trade - usa config
+            total_infrastructure += cost_config.infrastructure_cost_per_trade
+            total_data_fees += cost_config.data_fee_per_trade
 
         return CostBreakdown(
             commissions=total_commissions,
@@ -205,6 +208,9 @@ class ProfitabilityCalculator:
         if len(trades_data) < 2:
             return None
 
+        config = get_config()
+        base_capital = config.trading_costs.assumed_base_capital
+
         # Extraer retornos
         returns = []
         for trade in trades_data:
@@ -213,8 +219,8 @@ class ProfitabilityCalculator:
                 pnl = Decimal(str(pnl))
 
             # Convertir a retorno porcentual (simplificado)
-            # Asumiendo capital base de 1000
-            return_pct = (pnl / Decimal("1000")) * 100
+            # Usa capital base configurado
+            return_pct = (pnl / base_capital) * 100
             returns.append(float(return_pct))
 
         if len(returns) < 2:

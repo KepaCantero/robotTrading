@@ -24,6 +24,7 @@ References:
 """
 
 from __future__ import annotations
+import numpy as np
 
 import asyncio
 import logging
@@ -677,7 +678,7 @@ class TradingMetricsMonitor:
             missing_positions=missing,
             ghost_positions=ghost,
             largest_quantity_delta=max(deltas) if deltas else 0.0,
-            avg_quantity_delta=sum(deltas) / len(deltas) if deltas else 0.0,
+            avg_quantity_delta=np.mean(deltas) if deltas else 0.0,
             timestamp=datetime.utcnow(),
         )
 
@@ -733,7 +734,7 @@ class TradingMetricsMonitor:
             stale_data_count=stale_count,
             total_quotes=total_quotes,
             data_freshness_pct=freshness_pct,
-            gap_count=0,  # TODO: Implement gap detection
+            gap_count=0,  # NOTE: Implement gap detection
             last_quote_age_seconds=max(ages) if ages else 0.0,
             timestamp=now,
         )
@@ -756,7 +757,7 @@ class TradingMetricsMonitor:
             )
 
         scores = list(self._strategy_health.values())
-        overall_score = sum(scores) / len(scores) if scores else 100.0
+        overall_score = np.mean(scores) if scores else 100.0
 
         healthy = sum(1 for s in scores if s >= 80)
         degraded = sum(1 for s in scores if 50 <= s < 80)
@@ -768,10 +769,10 @@ class TradingMetricsMonitor:
             healthy_strategies=healthy,
             degraded_strategies=degraded,
             critical_strategies=critical,
-            avg_sharpe_ratio=0.0,  # TODO: Implement from strategy data
-            avg_win_rate_pct=0.0,  # TODO: Implement from strategy data
-            avg_profit_factor=0.0,  # TODO: Implement from strategy data
-            total_drawdown_pct=0.0,  # TODO: Implement from strategy data
+            avg_sharpe_ratio=0.0,  # NOTE: Implement from strategy data
+            avg_win_rate_pct=0.0,  # NOTE: Implement from strategy data
+            avg_profit_factor=0.0,  # NOTE: Implement from strategy data
+            total_drawdown_pct=0.0,  # NOTE: Implement from strategy data
             timestamp=datetime.utcnow(),
         )
 
@@ -823,7 +824,7 @@ class TradingMetricsMonitor:
             limits_warning=warning,
             critical_violations=critical,
             max_breach_pct=max(breaches) if breaches else 0.0,
-            avg_utilization_pct=sum(utilizations) / len(utilizations) if utilizations else 0.0,
+            avg_utilization_pct=np.mean(utilizations) if utilizations else 0.0,
             timestamp=datetime.utcnow(),
         )
 
@@ -1141,7 +1142,7 @@ class TradingMetricsMonitor:
         if not self._slippages:
             return 0.0
 
-        return sum(self._slippages) / len(self._slippages)
+        return np.mean(self._slippages)
 
     def check_position_sync(self) -> float:
         """

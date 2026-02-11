@@ -9,6 +9,7 @@ from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional
+import numpy as np
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -163,9 +164,7 @@ class AssetUniverse(BaseModel):
         self.total_assets = len(self.assets)
 
         if self.assets:
-            self.avg_liquidity_score = sum(asset.liquidity_score for asset in self.assets) / len(
-                self.assets
-            )
+            self.avg_liquidity_score = np.mean([asset.liquidity_score for asset in self.assets])
 
             market_caps = [asset.market_cap for asset in self.assets if asset.market_cap]
             if market_caps:

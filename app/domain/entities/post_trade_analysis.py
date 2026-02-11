@@ -20,6 +20,10 @@ class PostTradeAnalysis:
     This is a domain entity that contains the results of comprehensive
     post-trade analysis across all trading systems without any infrastructure
     dependencies.
+
+    Default values for execution_quality_score and fill_rate are defined here.
+    For creating new instances with config-driven defaults, use the factory method
+    create_with_config_defaults() which loads values from centralized config.
     """
 
     order_id: str
@@ -101,14 +105,45 @@ class PostTradeAnalysis:
             "slo_met": self.slo_met,
         }
 
-    def get_slo_summary(self) -> str:
-        """Get a human-readable SLO summary."""
+    def get_slo_summary(self, slo_latency_threshold_ms: float = 100.0) -> str:
+        """
+        Get a human-readable SLO summary.
+
+        Args:
+            slo_latency_threshold_ms: SLO latency threshold in milliseconds.
+                Defaults to 100.0ms. For config-driven value, use
+                config.trading.slo_latency_threshold_ms.
+
+        Returns:
+            Human-readable SLO status string.
+        """
         status = "✅ MET" if self.slo_met else "❌ VIOLATED"
         return (
             f"SLO {status}: {self.latency_ms:.0f}ms "
-            f"(threshold: 100ms, fill rate: {self.fill_rate:.1f}%)"
+            f"(threshold: {slo_latency_threshold_ms:.0f}ms, fill rate: {self.fill_rate:.1f}%)"
         )
 
-    def is_high_quality_execution(self) -> bool:
-        """Determine if this was a high-quality execution."""
-        return self.slo_met and self.execution_quality_score >= 70.0 and self.fill_rate >= 95.0
+    def is_high_quality_execution(
+        self,
+        min_execution_quality_score: float = 70.0,
+        min_fill_rate: float = 95.0
+    ) -> bool:
+        """
+        Determine if this was a high-quality execution.
+
+        Args:
+            min_execution_quality_score: Minimum execution quality score threshold.
+                Defaults to 70.0. For config-driven value, use
+                config.trading.min_high_quality_execution_score.
+            min_fill_rate: Minimum fill rate threshold (0-100).
+                Defaults to 95.0. For config-driven value, use
+                config.trading.min_high_quality_fill_rate.
+
+        Returns:
+            True if execution meets high-quality criteria, False otherwise.
+        """
+        return (
+            self.slo_met and
+            self.execution_quality_score >= min_execution_quality_score and
+            self.fill_rate >= min_fill_rate
+        )

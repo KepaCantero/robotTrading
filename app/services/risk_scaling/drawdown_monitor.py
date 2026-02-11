@@ -11,6 +11,8 @@ Logic:
 - > 15% drawdown → scale = 0.0x (halt trading - circuit breaker)
 
 Reset: When equity reaches new all-time high
+
+Uses centralized configuration for all thresholds and scaling factors.
 """
 
 import logging
@@ -18,6 +20,9 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
 from typing import List, Optional, Tuple
+import numpy as np
+
+from app.core.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -41,13 +46,17 @@ class DrawdownMonitor:
         should_halt = monitor.should_halt_trading(current_dd)
     """
 
-    def __init__(self, max_drawdown_limit: Decimal = Decimal("0.15")):
+    def __init__(self, max_drawdown_limit: Optional[Decimal] = None):
         """
         Initialize drawdown monitor.
 
         Args:
-            max_drawdown_limit: Maximum allowed drawdown before halting (default 15% = 0.15)
+            max_drawdown_limit: Maximum allowed drawdown before halting (uses centralized config if None)
         """
+        # Use centralized config for max_drawdown_limit if not provided
+        if max_drawdown_limit is None:
+            tt = get_config().trading_thresholds
+            max_drawdown_limit = Decimal(str(tt.drawdown_max_limit))
         self.max_drawdown_limit = max_drawdown_limit
         self.peak_equity = Decimal("0")
         self.current_drawdown = Decimal("0")
@@ -117,10 +126,10 @@ class DrawdownMonitor:
         Return position sizing scale based on drawdown.
 
         Mapping:
-        - 0-5% drawdown: 1.0x (normal)
-        - 5-10% drawdown: 0.8x (caution)
-        - 10-15% drawdown: 0.5x (warning)
-        - >15% drawdown: 0.0x (halt)
+        - 0-caution_threshold% drawdown: 1.0x (normal)
+        - caution_threshold-warning_threshold% drawdown: caution_scale (caution)
+        - warning_threshold-max_limit% drawdown: warning_scale (warning)
+        - >max_limit% drawdown: halt_scale (halt)
 
         Args:
             current_drawdown: Current drawdown as decimal (0-1)
@@ -129,20 +138,28 @@ class DrawdownMonitor:
         Returns:
             Scaling factor (0.0 to 1.0), quantized to 2 decimals
         """
+        # Get thresholds and scales from centralized config
+        tt = get_config().trading_thresholds
+        caution_threshold = Decimal(str(tt.drawdown_caution_threshold))
+        warning_threshold = Decimal(str(tt.drawdown_warning_threshold))
+        caution_scale = Decimal(str(tt.drawdown_caution_scale))
+        warning_scale = Decimal(str(tt.drawdown_warning_scale))
+        halt_scale = Decimal(str(tt.drawdown_halt_scale))
+
         if max_drawdown_limit is None:
             max_drawdown_limit = self.max_drawdown_limit
 
         if current_drawdown >= max_drawdown_limit:
             # Circuit breaker: halt trading
-            return Decimal("0.0")
-        elif current_drawdown >= Decimal("0.10"):
-            # Warning: 10-15% drawdown
-            return Decimal("0.5")
-        elif current_drawdown >= Decimal("0.05"):
-            # Caution: 5-10% drawdown
-            return Decimal("0.8")
+            return halt_scale
+        elif current_drawdown >= warning_threshold:
+            # Warning zone
+            return warning_scale
+        elif current_drawdown >= caution_threshold:
+            # Caution zone
+            return caution_scale
         else:
-            # Normal: < 5% drawdown
+            # Normal zone
             return Decimal("1.0")
 
     def should_halt_trading(
@@ -213,11 +230,16 @@ class DrawdownMonitor:
         Returns:
             Severity level string
         """
+        # Get thresholds from centralized config
+        tt = get_config().trading_thresholds
+        caution_threshold = Decimal(str(tt.drawdown_caution_threshold))
+        warning_threshold = Decimal(str(tt.drawdown_warning_threshold))
+
         if current_drawdown >= self.max_drawdown_limit:
             return "HALT"
-        elif current_drawdown >= Decimal("0.10"):
+        elif current_drawdown >= warning_threshold:
             return "WARNING"
-        elif current_drawdown >= Decimal("0.05"):
+        elif current_drawdown >= caution_threshold:
             return "CAUTION"
         else:
             return "NORMAL"
@@ -312,7 +334,7 @@ class DrawdownMonitor:
         return {
             "current_underwater_days": current_underwater,
             "avg_underwater_days": (
-                sum(underwater_periods) / len(underwater_periods) if underwater_periods else 0
+                np.mean(underwater_periods) if underwater_periods else 0
             ),
             "max_underwater_days": max(underwater_periods) if underwater_periods else 0,
             "num_underwater_periods": len(underwater_periods),

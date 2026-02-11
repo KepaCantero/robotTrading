@@ -21,7 +21,7 @@ from typing import Any, Dict, List, Optional, Sequence
 
 import numpy as np
 
-from app.core.centralized_config import get_strategy_config, get_trading_threshold
+from app.core.config.base import get_config
 from app.models.market_data import Quote
 from app.models.portfolio import Portfolio
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
@@ -79,13 +79,14 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
             str(config.get("funding_rate_threshold", 0.0001))
         )
 
-        # Risk parameters
-        self.stop_loss = Decimal(str(config.get("stop_loss", 0.03)))
-        self.take_profit = Decimal(str(config.get("take_profit", 0.06)))
-        self.max_position_size = Decimal(str(config.get("max_position_size", 0.10)))
+        # Risk parameters from centralized config with fallback to local config
+        centralized_config = get_config()
+        self.stop_loss = Decimal(str(config.get("stop_loss", centralized_config.trading.stop_loss_pct)))
+        self.take_profit = Decimal(str(config.get("take_profit", centralized_config.trading.take_profit_pct)))
+        self.max_position_size = Decimal(str(config.get("max_position_size", centralized_config.trading.max_position_size)))
 
-        # Load strategy-specific configuration from YAML
-        strategy_config = get_strategy_config("arbitrage")
+        # Load strategy-specific configuration from centralized config
+        strategy_config = centralized_config.get_strategy_config("arbitrage")
         if strategy_config:
             params = strategy_config.parameters
             if isinstance(params, dict):
@@ -137,15 +138,15 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
                         str(params.get("funding_rate_threshold", self.funding_rate_threshold))
                     )
 
-            # Risk parameters from YAML
+            # Risk parameters from centralized config with fallback to strategy config
             self.stop_loss = Decimal(
-                str(strategy_config.stop_loss_pct or get_trading_threshold("stop_loss_pct"))
+                str(strategy_config.stop_loss_pct or centralized_config.trading.stop_loss_pct)
             )
             self.take_profit = Decimal(
-                str(strategy_config.take_profit_pct or get_trading_threshold("take_profit_pct"))
+                str(strategy_config.take_profit_pct or centralized_config.trading.take_profit_pct)
             )
             self.max_position_size = Decimal(
-                str(strategy_config.max_position_size or get_trading_threshold("max_position_size"))
+                str(strategy_config.max_position_size or centralized_config.trading.max_position_size)
             )
 
         # Arbitrage pairs configuration

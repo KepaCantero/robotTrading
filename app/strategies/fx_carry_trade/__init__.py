@@ -19,7 +19,7 @@ Examples:
     ...     InMemoryFXRateProvider,
     ...     FXCarryTradeConfig,
     ... )
-    >>> config = FXCarryTradeConfig(min_carry_threshold=Decimal("0.02"))
+    >>> config = getattr(config.trading, 'max_risk_per_trade', 0.02)"))
     >>> provider = InMemoryFXRateProvider()
     >>> strategy = FXCarryTradeStrategy(config=config, rate_provider=provider)
 """

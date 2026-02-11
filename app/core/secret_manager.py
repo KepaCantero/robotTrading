@@ -16,6 +16,7 @@ Features:
 
 Usage:
     from app.core.secret_manager import get_secret, require_secret
+import numpy as np
 
     # Get secret with fallback (for development)
     api_key = get_secret("API_KEY", default=None)
@@ -595,7 +596,7 @@ class SecretManager:
 
         # Calculate average strength score and adjust compliance
         if report.strength_scores:
-            avg_strength = sum(report.strength_scores.values()) / len(report.strength_scores)
+            np.mean(list(report.strength_scores.values()))
             report.compliance_score = (report.compliance_score + avg_strength) / 2
 
         report.compliance_score = max(0, min(100, report.compliance_score))

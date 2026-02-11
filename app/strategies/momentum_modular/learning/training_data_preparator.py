@@ -477,7 +477,7 @@ class TrainingDataPreparator:
             indicators_df['atr']
             .rolling(window=30)
             .apply(
-                lambda x: (x.iloc[-1] <= x).sum() / len(x) * 100 if len(x) > 0 else 50, raw=False
+                lambda x: (x.iloc[-1] <= x).mean() * 100 if len(x) > 0 else 50, raw=False
             )
             .fillna(50)
         )

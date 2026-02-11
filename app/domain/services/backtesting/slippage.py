@@ -20,6 +20,8 @@ from decimal import Decimal
 from enum import Enum
 from typing import Optional
 
+from app.core.centralized_config import get_config
+
 
 class SlippageType(str, Enum):
     """Type of slippage model."""
@@ -407,6 +409,10 @@ class SpreadAwareSlippageModel(SlippageModel):
         """
         self._config = config or SpreadAwareSlippageConfig()
 
+        # Load trading thresholds from config
+        trading_config = get_config()
+        self._tt = trading_config.trading_thresholds
+
     def calculate_slippage(
         self,
         symbol: str,
@@ -425,9 +431,9 @@ class SpreadAwareSlippageModel(SlippageModel):
         if spread and self._config.half_spread:
             spread_pct = float(spread) / float(price)
             if side == "buy":
-                slippage_pct += spread_pct * (0.5 + self._config.spread_skew * 0.5)
+                slippage_pct += spread_pct * (self._tt.spread_skew_base + self._config.spread_skew * (1 - self._tt.spread_skew_base))
             else:
-                slippage_pct += spread_pct * (0.5 + (1 - self._config.spread_skew) * 0.5)
+                slippage_pct += spread_pct * (self._tt.spread_skew_base + (1 - self._config.spread_skew) * (1 - self._tt.spread_skew_base))
 
         # Add liquidity premium
         slippage_pct += self._config.liquidity_premium

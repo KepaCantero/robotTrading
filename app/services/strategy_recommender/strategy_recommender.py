@@ -19,6 +19,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Optional, Tuple
+import numpy as np
 
 from .models import (
     ObjectiveWeights,
@@ -408,7 +409,7 @@ class StrategyRecommender:
                 if r.success and r.overall_score > Decimal("0")
             ]
             if scores:
-                avg_score = sum(scores) / len(scores)
+                avg_score = np.mean(scores)
 
         return {
             "total_recommendations": total,

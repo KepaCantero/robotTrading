@@ -3,17 +3,22 @@ Currency Hedging Engine - TASK-5.5-CURRENCY-HEDGING
 
 Calculates hedge recommendations, ratios, and costs for multi-currency portfolios.
 Provides core hedging logic independent of portfolio service.
+Uses centralized configuration for thresholds and parameters.
 """
 
 import logging
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List
+from typing import Dict, List, TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
+from app.core.centralized_config import get_config
 from app.models.portfolio import Portfolio
 from app.services.forex_data_service import get_forex_fetcher
+
+if TYPE_CHECKING:
+    pass
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +54,8 @@ class CurrencyHedgingEngine:
     - Hedge recommendation generation
     - Hedge ratio calculation
     - Cost estimation
+
+    Uses centralized configuration for all thresholds and parameters.
     """
 
     def __init__(self, config: Dict = None):
@@ -56,16 +63,20 @@ class CurrencyHedgingEngine:
         Initialize hedging engine.
 
         Args:
-            config: Optional config dict with thresholds
+            config: Optional config dict with thresholds (overrides centralized config)
         """
-        # Default configuration
+        # Load centralized config - use directly, no hasattr checks
+        tt = get_config().trading_thresholds
+        self._tt = tt  # Store config reference
+
+        # Default configuration - use centralized config directly
         self.config = config or {
-            "single_currency_max": 0.25,
-            "total_fx_max": 0.50,
-            "minimum_exposure": Decimal("50000"),
-            "max_cost_bps": Decimal("10"),
+            "single_currency_max": tt.currency_single_max,
+            "total_fx_max": tt.currency_total_max,
+            "minimum_exposure": Decimal(str(tt.currency_min_exposure)),
+            "max_cost_bps": Decimal(str(tt.currency_max_cost_bps)),
             "hedge_strategy": "partial",
-            "partial_hedge_percentage": 0.5,
+            "partial_hedge_percentage": tt.currency_partial_hedge_pct,
         }
 
         self.forex_fetcher = get_forex_fetcher()
@@ -151,16 +162,26 @@ class CurrencyHedgingEngine:
             if exposure_pct < Decimal(str(self.config["single_currency_max"])):
                 logger.debug(f"  {currency}: {exposure_pct} < max threshold, checking...")
 
-            # Determine urgency
-            if exposure_pct > Decimal("0.35"):
+            # Determine urgency using config thresholds
+            urgency_immediate = Decimal(str(getattr(
+                self._tt, 'currency_urgency_immediate', 0.35
+            )))
+            urgency_normal = Decimal(str(getattr(
+                self._tt, 'currency_urgency_normal', 0.25
+            )))
+
+            if exposure_pct > urgency_immediate:
                 urgency = HedgeUrgency.IMMEDIATE
-            elif exposure_pct > Decimal("0.25"):
+            elif exposure_pct > urgency_normal:
                 urgency = HedgeUrgency.NORMAL
             else:
                 urgency = HedgeUrgency.LOW
 
             # Calculate hedge ratio
-            correlation = correlations.get(currency, Decimal("0.5"))
+            default_correlation = Decimal(str(getattr(
+                self._tt, 'currency_default_correlation', 0.5
+            )))
+            correlation = correlations.get(currency, default_correlation)
             hedge_ratio = self._calculate_hedge_ratio(exposure_pct, correlation, urgency)
 
             if hedge_ratio == Decimal("0"):
@@ -210,7 +231,7 @@ class CurrencyHedgingEngine:
         urgency: HedgeUrgency,
     ) -> Decimal:
         """
-        Calculate hedge ratio based on exposure and correlation.
+        Calculate hedge ratio based on exposure and correlation using config.
 
         Args:
             exposure_pct: Exposure as percentage of portfolio
@@ -222,6 +243,20 @@ class CurrencyHedgingEngine:
         """
         strategy = self.config.get("hedge_strategy", "partial")
 
+        # Get rolling hedge ratios from config
+        rolling_base = Decimal(str(getattr(
+            self._tt, 'currency_hedge_rolling_base', 0.5
+        )))
+        rolling_immediate = Decimal(str(getattr(
+            self._tt, 'currency_hedge_rolling_immediate', 0.8
+        )))
+        rolling_normal = Decimal(str(getattr(
+            self._tt, 'currency_hedge_rolling_normal', 0.6
+        )))
+        correlation_adjustment = Decimal(str(getattr(
+            self._tt, 'currency_correlation_adjustment', 0.5
+        )))
+
         if strategy == "full":
             # Full hedge
             base_ratio = Decimal("1.0")
@@ -230,24 +265,24 @@ class CurrencyHedgingEngine:
             base_ratio = Decimal(str(self.config.get("partial_hedge_percentage", 0.5)))
         elif strategy == "rolling":
             # Rolling hedge adjusted by urgency
-            base_ratio = Decimal("0.5")
+            base_ratio = rolling_base
             if urgency == HedgeUrgency.IMMEDIATE:
-                base_ratio = Decimal("0.8")
+                base_ratio = rolling_immediate
             elif urgency == HedgeUrgency.NORMAL:
-                base_ratio = Decimal("0.6")
+                base_ratio = rolling_normal
         else:
-            base_ratio = Decimal("0.5")
+            base_ratio = rolling_base
 
         # Adjust by correlation
         # Higher correlation = less hedge needed
-        adjusted_ratio = base_ratio * (Decimal("1.0") - correlation * Decimal("0.5"))
+        adjusted_ratio = base_ratio * (Decimal("1.0") - correlation * correlation_adjustment)
 
         # Clamp to [0, 1]
         return max(Decimal("0"), min(Decimal("1.0"), adjusted_ratio))
 
     def _estimate_hedge_cost(self, forex_pair: str, contract_size: Decimal) -> Decimal:
         """
-        Estimate cost of hedging in basis points.
+        Estimate cost of hedging in basis points using config.
 
         Args:
             forex_pair: Forex pair (e.g., "EUR/USD")
@@ -256,19 +291,33 @@ class CurrencyHedgingEngine:
         Returns:
             Cost in basis points
         """
+        # Get cost factors from config
+        execution_cost_factor = Decimal(str(getattr(
+            self._tt, 'currency_execution_cost_factor', 0.5
+        )))
+        slippage_base = Decimal(str(getattr(
+            self._tt, 'currency_slippage_base_bps', 0.5
+        )))
+        size_large_threshold = Decimal(str(getattr(
+            self._tt, 'currency_size_large_threshold', 1000000
+        )))
+        size_large_factor = Decimal(str(getattr(
+            self._tt, 'currency_size_large_factor', 0.8
+        )))
+
         # Get bid-ask spread
         spread_bps = self.forex_fetcher.get_bid_ask_spread(forex_pair)
 
-        # Assume 0.5x spread for execution
-        execution_cost = spread_bps * Decimal("0.5")
+        # Assume configurable factor of spread for execution
+        execution_cost = spread_bps * execution_cost_factor
 
-        # Add slippage estimate (0.5 bps base)
-        slippage = Decimal("0.5")
+        # Add slippage estimate using config base
+        slippage = slippage_base
 
         # Scale by contract size (larger contracts may have better rates)
         size_factor = Decimal("1.0")
-        if contract_size > Decimal("1000000"):
-            size_factor = Decimal("0.8")
+        if contract_size > size_large_threshold:
+            size_factor = size_large_factor
 
         total_cost = (execution_cost + slippage) * size_factor
 

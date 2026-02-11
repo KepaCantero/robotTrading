@@ -37,7 +37,19 @@ except ImportError:
     STATSMODELS_AVAILABLE = False
 
     def adfuller(*args, **kwargs):
-        raise NotImplementedError("statsmodels required for ADF test")
+        """
+        Fallback adfuller function when statsmodels is not available.
+
+        Returns a tuple indicating stationarity test failed.
+        """
+        import warnings
+        warnings.warn(
+            "statsmodels not installed - ADF test not available. "
+            "Install statsmodels for cointegration testing: pip install statsmodels",
+            ImportWarning,
+        )
+        # Return p-value of 1.0 (fail to reject null hypothesis of non-stationarity)
+        return (None, 1.0, None, None, None, None, None)
 
 
 # Check for arch package
@@ -136,12 +148,20 @@ class MomentumScorer:
                     liquidity_score = min(1.0, avg_volume / self.config.MIN_LIQUIDITY_USD)
 
             # Normalize metrics
-            (rsi / 100.0) if rsi is not None else 0.5
-            min(1.0, max(0.0, (roc_optimal + 0.1) / 0.2)) if roc_optimal is not None else 0.5
+            rsi_norm = (rsi / 100.0) if rsi is not None else 0.5
+            roc_norm = (
+                min(1.0, max(0.0, (roc_optimal + self.config.MOMENTUM_ROC_NORMALIZATION_OFFSET) / self.config.MOMENTUM_ROC_NORMALIZATION_SCALE))
+                if roc_optimal is not None else 0.5
+            )
             sortino_norm = min(1.0, max(0.0, sortino / 2.0)) if sortino is not None else 0.5
-            min(1.0, max(0.0, (slope_pct + 0.1) / 0.2))
-            min(1.0, max(0.0, (spearman_rho + 1) / 2))
-            h_long_norm = (h_long - 0.3) / 0.4 if h_long is not None else 0.5
+            slope_norm = (
+                min(1.0, max(0.0, (slope_pct + self.config.MOMENTUM_SLOPE_NORMALIZATION_OFFSET) / self.config.MOMENTUM_SLOPE_NORMALIZATION_SCALE))
+            )
+            spearman_norm = min(1.0, max(0.0, (spearman_rho + 1) / 2))
+            h_long_norm = (
+                (h_long - self.config.MOMENTUM_HURST_NORMALIZATION_OFFSET) / self.config.MOMENTUM_HURST_NORMALIZATION_SCALE
+                if h_long is not None else 0.5
+            )
 
             # Weighted score
             weights = self.config.MOMENTUM_WEIGHTS
@@ -360,10 +380,10 @@ class MeanReversionScorer:
             inv_tau_norm = 0.5
             if half_life is not None:
                 inv_tau = 1.0 / half_life
-                inv_tau_norm = min(1.0, max(0.0, (inv_tau - 0.01) / 0.1))
+                inv_tau_norm = min(1.0, max(0.0, (inv_tau - self.config.INVERSE_TAU_NORMALIZATION_OFFSET) / self.config.INVERSE_TAU_NORMALIZATION_SCALE))
 
             sortino_norm = min(1.0, max(0.0, sortino / 2.0)) if sortino is not None else 0.5
-            h_long_norm = max(0.0, (0.5 - h_long) / 0.2) if h_long is not None else 0.5
+            h_long_norm = max(0.0, (self.config.MEAN_REVERSION_HURST_NORMALIZATION_CENTER - h_long) / self.config.MEAN_REVERSION_HURST_NORMALIZATION_SCALE) if h_long is not None else 0.5
 
             # Weighted score
             weights = self.config.MEAN_REVERSION_WEIGHTS
@@ -418,7 +438,7 @@ class MeanReversionScorer:
                     logger.debug(f"GARCH fitting failed: {e}, using EWMA")
 
             # Use EWMA volatility
-            alpha = 0.94
+            alpha = self.config.EWMA_ALPHA
             ewma_var = clean_returns.ewm(alpha=alpha, adjust=False).var().iloc[-1]
             ewma_vol = np.sqrt(ewma_var)
 
@@ -577,7 +597,7 @@ class PairsTradingScorer:
             inv_tau_norm = 0.5
             if half_life is not None:
                 inv_tau = 1.0 / half_life
-                inv_tau_norm = min(1.0, max(0.0, (inv_tau - 0.01) / 0.1))
+                inv_tau_norm = min(1.0, max(0.0, (inv_tau - self.config.INVERSE_TAU_NORMALIZATION_OFFSET) / self.config.INVERSE_TAU_NORMALIZATION_SCALE))
 
             # Weighted score
             weights = self.config.PAIRS_TRADING_WEIGHTS
@@ -657,7 +677,7 @@ class PairsTradingScorer:
                     garch_normalization_factor = (
                         garch_vol_spread / (spread_std * np.sqrt(252)) if spread_std > 0 else 1.0
                     )
-                    garch_normalized_z = spread_z_score / max(garch_normalization_factor, 0.01)
+                    garch_normalized_z = spread_z_score / max(garch_normalization_factor, self.config.GARCH_NORMALIZATION_MIN_FACTOR)
                     logger.debug(
                         f"Pair {ticker1}-{ticker2}: z_raw={spread_z_score:.4f}, "
                         f"GARCH_vol={garch_vol_spread:.4f}, z_GARCH={garch_normalized_z:.4f}"

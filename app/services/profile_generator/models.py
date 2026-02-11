@@ -2,13 +2,31 @@
 T2.1: Investment Profile Models
 
 Dataclasses for investment profiles and related structures.
+Uses centralized configuration for default values.
 """
 
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    pass
+
+# Helper functions to get defaults from centralized config
+def _get_default_max_leverage() -> Decimal:
+    return Decimal("1.0")  # No leverage by default
+
+def _get_default_max_position_size() -> Decimal:
+    return Decimal("5.0")  # 5% of portfolio
+
+def _get_default_max_daily_loss() -> Decimal:
+    from app.core.centralized_config import get_config
+    return Decimal(str(get_config().trading_thresholds.circuit_breaker_daily_loss))
+
+def _get_default_max_concentration() -> Decimal:
+    return Decimal("30.0")  # 30% in single asset
 
 
 class CapitalTier(str, Enum):
@@ -80,11 +98,11 @@ class InvestmentProfile:
     concurrent_positions: Optional[int] = None  # Optimized concurrent positions
     feasibility_validation: Optional[Dict] = None  # AbsoluteReturnValidation results
 
-    # Risk and leverage
-    max_leverage: Decimal = field(default=Decimal("1.0"))
-    max_position_size_pct: Decimal = field(default=Decimal("5.0"))  # % of portfolio
-    max_daily_loss_pct: Decimal = field(default=Decimal("1.0"))
-    max_portfolio_concentration_pct: Decimal = field(default=Decimal("30.0"))  # % in single asset
+    # Risk and leverage - use centralized config for defaults
+    max_leverage: Decimal = field(default_factory=_get_default_max_leverage)
+    max_position_size_pct: Decimal = field(default_factory=_get_default_max_position_size)  # % of portfolio
+    max_daily_loss_pct: Decimal = field(default_factory=_get_default_max_daily_loss)  # Uses config
+    max_portfolio_concentration_pct: Decimal = field(default_factory=_get_default_max_concentration)  # % in single asset
 
     # Dynamic adjustment
     rebalance_frequency_days: int = 30

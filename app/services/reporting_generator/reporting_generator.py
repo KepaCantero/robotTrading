@@ -195,7 +195,7 @@ class ReportingGenerator:
         else:
             scores.append(0)
 
-        avg_score = sum(scores) / len(scores)
+        avg_score = np.mean(scores)
 
         if avg_score >= 2.5:
             return "excellent"

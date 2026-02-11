@@ -37,6 +37,7 @@ from typing import Any, Dict, List, Optional
 from app.models.market_data import Quote
 from app.models.portfolio import Portfolio
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
+from app.core.centralized_config import get_config
 
 # Import both BaseStrategy classes - inherit from app's BaseStrategy
 # but also be compatible with registry's BaseStrategy via async execute()
@@ -94,6 +95,10 @@ class MultiFactorStrategy(BaseStrategy):
         """
         super().__init__(config)
 
+        # Load trading thresholds for history length
+        trading_config = get_config()
+        tt = trading_config.trading_thresholds
+
         # Parse configuration
         self.strategy_config = self._parse_config(config)
 
@@ -109,9 +114,9 @@ class MultiFactorStrategy(BaseStrategy):
         self.last_rebalance_date: Optional[date] = None
         self.rebalance_count = 0
 
-        # Performance tracking
-        self.return_history: deque = deque(maxlen=100)
-        self.factor_exposure_history: deque = deque(maxlen=100)
+        # Performance tracking - use config value
+        self.return_history: deque = deque(maxlen=tt.multi_factor_history_length)
+        self.factor_exposure_history: deque = deque(maxlen=tt.multi_factor_history_length)
 
         logger.info(
             f"✅ MultiFactorStrategy initialized: "
@@ -588,6 +593,11 @@ class MultiFactorStrategy(BaseStrategy):
     def validate_config(self) -> bool:
         """Validate strategy configuration."""
         try:
+            # Get config for thresholds
+            cfg = get_config()
+            weights_tolerance = Decimal(str(getattr(cfg.trading, 'factor_weights_tolerance', 0.05)))
+            max_single_position_limit = Decimal(str(getattr(cfg.trading, 'max_single_position_limit', 0.5)))
+
             # Validate weights sum
             total_weight = (
                 self.strategy_config.value_weight
@@ -597,7 +607,7 @@ class MultiFactorStrategy(BaseStrategy):
                 + self.strategy_config.investment_weight
             )
 
-            if abs(total_weight - Decimal("1.0")) > Decimal("0.05"):
+            if abs(total_weight - Decimal("1.0")) > weights_tolerance:
                 logger.error(f"Factor weights must sum to 1.0, sum to {total_weight}")
                 return False
 
@@ -607,8 +617,8 @@ class MultiFactorStrategy(BaseStrategy):
                 return False
 
             # Validate position limits
-            if self.strategy_config.max_single_position > Decimal("0.5"):
-                logger.error("max_single_position cannot exceed 0.5")
+            if self.strategy_config.max_single_position > max_single_position_limit:
+                logger.error(f"max_single_position cannot exceed {max_single_position_limit}")
                 return False
 
             return True

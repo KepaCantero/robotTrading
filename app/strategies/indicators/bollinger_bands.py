@@ -382,7 +382,7 @@ class BollingerBandsIndicator:
 
             # Calculate percentile rank
             percentile = (
-                (recent_bandwidths < current_bandwidth).sum() / len(recent_bandwidths) * 100
+                (recent_bandwidths < current_bandwidth).mean() * 100
             )
 
             return percentile

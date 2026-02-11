@@ -67,7 +67,7 @@ class RiskConfigurator:
                 max_drawdown=Decimal("0.15"),  # 15% max drawdown
                 max_daily_loss=Decimal("0.05"),  # 5% daily circuit breaker
                 max_position_size=Decimal("0.05"),  # 5% per position
-                portfolio_var_limit=Decimal("0.02"),  # 2% VaR limit
+                portfolio_var_limit= getattr(config.trading, 'max_risk_per_trade', 0.02)"),  # 2% VaR limit
                 leverage_allowed=False,
                 max_leverage=Decimal("1.0"),
                 stop_loss_atr_multiplier=Decimal("2.0"),

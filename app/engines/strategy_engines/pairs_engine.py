@@ -20,7 +20,7 @@ import scipy.stats  # noqa: F401
 
 SCIPY_AVAILABLE = True
 
-from app.core.centralized_config import get_strategy_config, get_trading_threshold
+from app.core.config.base import get_config
 from app.models.market_data import Quote
 from app.models.portfolio import Portfolio
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
@@ -50,8 +50,9 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
         """
         super().__init__(config)
 
-        # Load strategy-specific configuration
-        strategy_config = get_strategy_config("pairs_trading")
+        # Load strategy-specific configuration from centralized config
+        centralized_config = get_config()
+        strategy_config = centralized_config.get_strategy_config("pairs_trading")
         if strategy_config:
             params = strategy_config.parameters
             self.cointegration_threshold = Decimal(str(params.get("cointegration_threshold")))
@@ -66,20 +67,20 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
             self.slippage_per_trade_pct = Decimal(str(params.get("slippage_per_trade_pct")))
             self.commission_per_trade_pct = Decimal(str(params.get("commission_per_trade_pct")))
 
-            # Risk parameters
+            # Risk parameters from centralized config with fallback to strategy config
             self.stop_loss = Decimal(
-                str(strategy_config.stop_loss_pct or get_trading_threshold("stop_loss_pct"))
+                str(strategy_config.stop_loss_pct or centralized_config.trading.stop_loss_pct)
             )
             self.take_profit = Decimal(
-                str(strategy_config.take_profit_pct or get_trading_threshold("take_profit_pct"))
+                str(strategy_config.take_profit_pct or centralized_config.trading.take_profit_pct)
             )
             self.max_position_size = Decimal(
-                str(strategy_config.max_position_size or get_trading_threshold("max_position_size"))
+                str(strategy_config.max_position_size or centralized_config.trading.max_position_size)
             )
         else:
             # Fallback to config or defaults
             self.cointegration_threshold = Decimal(str(config.get("cointegration_threshold", 0.05)))
-            self.spread_threshold = Decimal(str(config.get("spread_threshold", 0.02)))
+            self.spread_threshold = Decimal(str(getattr(centralized_config.trading, 'max_risk_per_trade', 0.02)))
             self.lookback_period = config.get("lookback_period", 60)
             self.min_correlation = Decimal(str(config.get("min_correlation", 0.7)))
             self.max_pair_exposure = Decimal(str(config.get("max_pair_exposure", 0.20)))
@@ -93,13 +94,13 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
             )
 
             self.stop_loss = Decimal(
-                str(config.get("stop_loss", get_trading_threshold("stop_loss_pct")))
+                str(config.get("stop_loss", centralized_config.trading.stop_loss_pct))
             )
             self.take_profit = Decimal(
-                str(config.get("take_profit", get_trading_threshold("take_profit_pct")))
+                str(config.get("take_profit", centralized_config.trading.take_profit_pct))
             )
             self.max_position_size = Decimal(
-                str(config.get("max_position_size", get_trading_threshold("max_position_size")))
+                str(config.get("max_position_size", centralized_config.trading.max_position_size))
             )
 
         # Pair symbols configuration

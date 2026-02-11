@@ -26,8 +26,12 @@ class SpainDividendTaxCalculator:
     NON_EU_WITHHOLDING = Decimal("0.19")
 
     def __init__(self):
-        # @todo: Mapeo ticker -> código país
-        # TODO: Cargar desde base de datos o API
+        """Initialize the dividend tax calculator.
+
+        The ticker-to-country mapping contains major European and Spanish stocks.
+        For production use, integrate with a securities master database or broker API
+        to maintain comprehensive ticker mappings.
+        """
         self._ticker_to_country: dict[str, str] = {
             # IBEX35
             "SAN": "ES", "REE": "ES", "TEF": "ES",
@@ -75,16 +79,21 @@ class SpainDividendTaxCalculator:
 
     def _get_country(self, symbol: str) -> str:
         """
-        Obtener código del país desde ticker
+        Get country code for a stock symbol.
 
-        @todo: Implementar mapeo completo
-        TODO: Conectar con API de IBKR
+        This method looks up the country from the internal ticker-to-country mapping.
+        For enhanced accuracy, consider integrating with Interactive Brokers or other
+        broker APIs to fetch country information directly.
 
         Args:
-            symbol: Ticker
+            symbol: Stock ticker symbol (e.g., "SAN", "ASML")
 
         Returns:
-            Código de país (ISO 3166-1 alpha-2)
+            Country code (ISO 3166-1 alpha-2 format)
+            Returns "UNKNOWN" if ticker not found in mapping
+
+        Note:
+            To add new ticker mappings, use add_ticker_mapping() method
         """
         return self._ticker_to_country.get(symbol, "UNKNOWN")
 

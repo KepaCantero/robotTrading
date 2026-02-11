@@ -10,6 +10,8 @@ Formula:
 - Sharpe = (mean_return - risk_free_rate) / std_return
 - Annualized = Sharpe * sqrt(252)
 - Scaling based on performance brackets
+
+Uses centralized configuration for trading calendar constants.
 """
 
 import logging
@@ -18,6 +20,8 @@ import statistics
 from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Dict, List, Optional, Tuple
+
+from app.core.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -38,15 +42,23 @@ class SharpeRatioMonitor:
         scale = monitor.calculate_sharpe_scale(sharpe)
     """
 
-    def __init__(self, risk_free_rate: Decimal = Decimal("0.02")):
+    def __init__(self, risk_free_rate: Decimal = None):
         """
         Initialize Sharpe ratio monitor.
 
         Args:
-            risk_free_rate: Annual risk-free rate (default 2% = 0.02)
+            risk_free_rate: Annual risk-free rate (uses centralized config if None)
         """
-        self.risk_free_rate = risk_free_rate  # 0.02 = 2% per year
-        self.daily_risk_free_rate = risk_free_rate / Decimal("252")  # ~0.000079
+        # Get trading calendar constants from centralized config
+        tt = get_config().trading_thresholds
+        annual_trading_days = tt.annual_trading_days_const
+
+        # Use default from centralized config if not provided
+        if risk_free_rate is None:
+            risk_free_rate = Decimal(str(tt.opportunity_risk_free_rate))
+
+        self.risk_free_rate = risk_free_rate
+        self.daily_risk_free_rate = risk_free_rate / Decimal(str(annual_trading_days))
         self.sharpe_history: Dict[str, List[Tuple[datetime, Decimal]]] = {}
 
     async def calculate_rolling_sharpe(
@@ -73,7 +85,10 @@ class SharpeRatioMonitor:
         if risk_free_rate is None:
             risk_free_rate = self.risk_free_rate
 
-        daily_rf = risk_free_rate / Decimal("252")
+        # Get trading calendar constants from centralized config
+        tt = get_config().trading_thresholds
+        annual_trading_days = Decimal(str(tt.annual_trading_days_const))
+        daily_rf = risk_free_rate / annual_trading_days
 
         if len(daily_returns) < window_days:
             logger.warning(
@@ -103,8 +118,10 @@ class SharpeRatioMonitor:
         # Calculate daily Sharpe
         daily_sharpe = (mean_return - daily_rf) / std_return
 
-        # Annualize: multiply by sqrt(252)
-        annualized_sharpe = daily_sharpe * Decimal(str(math.sqrt(252)))
+        # Annualize: multiply by sqrt(annual_trading_days)
+        tt = get_config().trading_thresholds
+        annual_trading_days = tt.annual_trading_days_const
+        annualized_sharpe = daily_sharpe * Decimal(str(math.sqrt(annual_trading_days)))
 
         return annualized_sharpe.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 

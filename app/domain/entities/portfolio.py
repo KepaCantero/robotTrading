@@ -16,6 +16,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, Iterator, List, Optional
 
+from app.core.config.base import get_config
 from app.domain.entities.position import Position, PositionSide, PositionStatus
 from app.domain.value_objects.capital import Capital
 from app.domain.value_objects.money import Money
@@ -577,11 +578,25 @@ class Portfolio:
         max_position_size = initial_capital * max_position_size_pct
         max_portfolio_exposure = initial_capital * max_portfolio_exposure_pct
 
+        # Get default risk parameters from centralized config
+        try:
+            config = get_config()
+            stop_loss_pct = Decimal(str(getattr(
+                config.trading, 'stop_loss_pct', 0.05
+            )))
+            take_profit_pct = Decimal(str(getattr(
+                config.trading, 'take_profit_pct', 0.10
+            )))
+        except (AttributeError, ValueError) as e:
+            logger.warning(f"Error loading trading config for portfolio creation: {e}, using defaults")
+            stop_loss_pct = Decimal('0.05')
+            take_profit_pct = Decimal('0.10')
+
         risk_params = RiskParameters(
             max_position_size=max_position_size,
             max_portfolio_exposure=max_portfolio_exposure,
-            stop_loss_pct=Decimal('0.05'),
-            take_profit_pct=Decimal('0.10'),
+            stop_loss_pct=stop_loss_pct,
+            take_profit_pct=take_profit_pct,
         )
 
         return cls(

@@ -20,6 +20,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Optional, Protocol
 
+from app.core.centralized_config import get_config
 from app.strategies.fx_carry_trade.models import FXPair, FXRateQuote, InterestRateQuote
 
 logger = logging.getLogger(__name__)
@@ -950,14 +951,15 @@ class MockFXDataSource:
         # Calculate cross rate
         rate = base_rate / quote_rate
 
-        # Add time-based variation
+        # Add time-based variation - use config values
         days_diff = (as_of - self.base_date).days if self.base_date else 0
         if days_diff != 0:
+            tt = get_config().trading_thresholds
             # Add small random-like variation based on days
-            variation = Decimal(str(days_diff * 0.0001))
+            variation = Decimal(str(days_diff * tt.fx_daily_variation_factor))
             rate = rate * (Decimal("1") + variation)
 
-        return rate.quantize(Decimal("0.0001"))
+        return rate.quantize(Decimal(tt.fx_quantization_precision))
 
     def get_forward_points(self, pair: str, as_of: date, months: int) -> Decimal:
         """
@@ -973,19 +975,21 @@ class MockFXDataSource:
         """
         base, quote = self._parse_pair(pair)
 
-        # Get interest rates
-        base_rate = self._base_rates_interest.get(base, Decimal("0.02"))
-        quote_rate = self._base_rates_interest.get(quote, Decimal("0.02"))
+        # Get interest rates - use config default
+        tt = get_config().trading_thresholds
+        default_rate = Decimal(str(tt.fx_default_interest_rate))
+        base_rate = self._base_rates_interest.get(base, default_rate)
+        quote_rate = self._base_rates_interest.get(quote, default_rate)
 
-        # Calculate forward points using interest rate differential
-        # points = spot * (quote_rate - base_rate) * (months / 12)
+        # Calculate forward points using interest rate differential - use config
+        tt = get_config().trading_thresholds
         spot = self.get_rate(pair, as_of)
         rate_diff = quote_rate - base_rate
-        time_factor = Decimal(str(months)) / Decimal("12")
+        time_factor = Decimal(str(months)) / Decimal(str(tt.fx_months_per_year))
 
         points = spot * rate_diff * time_factor
 
-        return points.quantize(Decimal("0.0001"))
+        return points.quantize(Decimal(tt.fx_quantization_precision))
 
     def get_interest_rate(self, currency: str, as_of: date, months: int) -> Decimal:
         """
@@ -1001,20 +1005,23 @@ class MockFXDataSource:
         """
         currency_upper = currency.upper()
 
-        # Get base rate
-        base_rate = self._base_rates_interest.get(currency_upper, Decimal("0.02"))
+        # Get base rate - use config default
+        tt = get_config().trading_thresholds
+        base_rate = self._base_rates_interest.get(
+            currency_upper, Decimal(str(tt.fx_default_interest_rate))
+        )
 
-        # Add small time-based variation
+        # Add small time-based variation - use config value
         days_diff = (as_of - self.base_date).days if self.base_date else 0
         if days_diff != 0:
-            variation = Decimal(str(days_diff * 0.00001))
+            variation = Decimal(str(days_diff * tt.fx_long_term_variation_factor))
             base_rate = base_rate + variation
 
         # Ensure non-negative
         if base_rate < 0:
             base_rate = Decimal("0")
 
-        return base_rate.quantize(Decimal("0.0001"))
+        return base_rate.quantize(Decimal(tt.fx_quantization_precision))
 
 
 # ============================================================================

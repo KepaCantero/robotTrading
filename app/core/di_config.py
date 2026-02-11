@@ -18,9 +18,15 @@ def configure_container() -> DIContainer:
 
     This function sets up:
     - Domain factories
-    - Repository implementations
-    - Application services
+    - Repository implementations (when available)
+    - Application services (when available)
     - Infrastructure components
+
+    Note:
+        Additional repository and service registrations should be added here
+        as implementations become available. The container supports both
+        singleton and factory registrations depending on the lifecycle
+        requirements of each component.
 
     Returns:
         Configured DI container
@@ -33,13 +39,15 @@ def configure_container() -> DIContainer:
         TradingEntityFactory(),
     )
 
-    # TODO: Register repositories when implementations are available
+    # Repository registrations (to be added when implementations are available)
+    # Example:
     # container.register_singleton(
     #     AbstractRepository,
     #     SqlAlchemyRepository(...),
     # )
 
-    # TODO: Register application services
+    # Application service registrations (to be added when implementations are available)
+    # Example:
     # container.register_factory(
     #     "portfolio_service",
     #     lambda c: PortfolioService(

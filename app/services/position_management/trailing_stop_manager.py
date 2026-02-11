@@ -8,6 +8,8 @@ R11 Rules:
 - Mover a break-even en 2R
 - Trailing stop 50% del beneficio en 3R
 - Trailing stop 1.5% desde máximo en 1R
+
+Uses centralized configuration for default trailing percentage.
 """
 
 from __future__ import annotations
@@ -15,7 +17,12 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
+
+from app.core.centralized_config import get_config
+
+if TYPE_CHECKING:
+    pass
 
 logger = logging.getLogger(__name__)
 
@@ -43,10 +50,10 @@ class TrailingStopManager:
     Attributes:
         entry_price: Precio de entrada de la posición
         initial_stop: Stop loss inicial
-        trailing_pct: Porcentaje de trailing (default 1.5%)
-    """
+        trailing_pct: Porcentaje de trailing (uses centralized config)
 
-    DEFAULT_TRAILING_PCT = Decimal("0.015")  # 1.5%
+    Uses centralized configuration for default trailing percentage.
+    """
 
     def __init__(
         self,
@@ -60,16 +67,21 @@ class TrailingStopManager:
         Args:
             entry_price: Precio de entrada de la posición
             initial_stop: Stop loss inicial
-            trailing_pct: Porcentaje de trailing (default 1.5%)
+            trailing_pct: Porcentaje de trailing (uses centralized config for default)
         """
         if entry_price <= 0:
             raise ValueError("entry_price must be positive")
         if initial_stop <= 0:
             raise ValueError("initial_stop must be positive")
 
+        # Store config reference for centralized access
+        tt = get_config().trading_thresholds
+        self._tt = tt
+
         self.entry_price = entry_price
         self.initial_stop = initial_stop
-        self.trailing_pct = trailing_pct or self.DEFAULT_TRAILING_PCT
+        # Use centralized config directly - no helper function, no fallback
+        self.trailing_pct = trailing_pct or Decimal(str(tt.trailing_stop_default_pct))
         self.highest_price = entry_price
         self.current_stop = initial_stop
 
@@ -96,31 +108,37 @@ class TrailingStopManager:
         # Beneficio en R-múltiplos
         r_multiple = float(unrealized_pnl / initial_risk) if initial_risk > 0 else 0.0
 
+        # Get R-multiple thresholds from centralized config
+        r1_threshold = self._tt.trailing_stop_r1_threshold
+        r2_threshold = self._tt.trailing_stop_r2_threshold
+        r3_threshold = self._tt.trailing_stop_r3_threshold
+        r3_trailing_pct = Decimal(str(self._tt.trailing_stop_r3_trailing_pct))
+
         previous_stop = self.current_stop
         new_stop = self.current_stop
         action = "none"
         reason = "No change"
 
         # Aplicar reglas según R-múltiplos (en orden descendente)
-        if r_multiple >= 3.0:
-            # Trailing stop al 50% del beneficio actual
+        if r_multiple >= r3_threshold:
+            # Trailing stop al porcentaje configurado del beneficio actual
             profit = current_price - self.entry_price
-            new_stop = current_price - (profit * Decimal("0.5"))
+            new_stop = current_price - (profit * r3_trailing_pct)
             action = "trailing_50pct"
-            reason = f"R={r_multiple:.1f}: Trailing stop at 50% of profit"
+            reason = f"R={r_multiple:.1f}: Trailing stop at {r3_trailing_pct:.0%} of profit"
 
-        elif r_multiple >= 2.0:
+        elif r_multiple >= r2_threshold:
             # Mover a break-even
             new_stop = self.entry_price
             action = "break_even"
             reason = f"R={r_multiple:.1f}: Moved to break-even"
 
-        elif r_multiple >= 1.0:
-            # Trailing stop del 1.5% desde el precio actual (no desde máximo)
+        elif r_multiple >= r1_threshold:
+            # Trailing stop del porcentaje configurado desde el precio actual
             # Esto permite que el stop suba con el precio pero no baje
             new_stop = current_price * (Decimal("1") - self.trailing_pct)
             action = "trailing_1.5pct"
-            reason = f"R={r_multiple:.1f}: Trailing stop at 1.5% from current price"
+            reason = f"R={r_multiple:.1f}: Trailing stop at {self.trailing_pct:.2%} from current price"
 
         # Solo actualizar si el nuevo stop es más alto (protege ganancias)
         # Para posiciones LONG, higher stop = mejor protección

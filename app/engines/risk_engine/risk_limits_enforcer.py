@@ -21,13 +21,35 @@ Reference: Hull, Options, Futures, and Other Derivatives, Chapter 18
 
 import logging
 from datetime import datetime
+from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 import numpy as np
 
+from app.core.config.base import get_config
 from app.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
+
+
+def _get_risk_config(attr_name: str, default_value: float) -> Decimal:
+    """
+    Get risk management configuration value with fallback default.
+
+    Args:
+        attr_name: Config attribute name
+        default_value: Default value if config attribute not found
+
+    Returns:
+        Decimal value from config or default
+    """
+    try:
+        config = get_config()
+        value = float(getattr(config.trading, attr_name, default_value))
+        return Decimal(str(value))
+    except (AttributeError, ValueError, TypeError) as e:
+        logger.warning(f"Error getting risk config '{attr_name}': {e}, using default {default_value}")
+        return Decimal(str(default_value))
 
 
 class RiskLimitsEnforcer:
@@ -42,24 +64,23 @@ class RiskLimitsEnforcer:
         Initialize risk limits enforcer.
 
         Args:
-            config: Configuration dictionary
+            config: Configuration dictionary (deprecated, uses centralized config instead)
         """
-        config = config or {}
-
+        # Use centralized config system with fallbacks
         # VaR limits (as percentages of portfolio value)
-        self.var_warning_limit = config.get('var_warning_limit', 0.02)  # 2%
-        self.var_critical_limit = config.get('var_critical_limit', 0.03)  # 3%
-        self.var_halt_limit = config.get('var_halt_limit', 0.05)  # 5%
+        self.var_warning_limit = _get_risk_config("var_enforcer_warning_limit", 0.02)
+        self.var_critical_limit = _get_risk_config("var_enforcer_critical_limit", 0.03)
+        self.var_halt_limit = _get_risk_config("var_enforcer_halt_limit", 0.05)
 
         # Position limits
-        self.max_position_pct = config.get('max_position_pct', 0.20)  # 20%
-        self.max_concentration_pct = config.get('max_concentration_pct', 0.40)  # 40%
+        self.max_position_pct = _get_risk_config("risk_enforcer_max_position_pct", 0.20)
+        self.max_concentration_pct = _get_risk_config("risk_enforcer_max_concentration_pct", 0.40)
 
         # Leverage limits
-        self.max_leverage = config.get('max_leverage', 2.0)  # 2x
+        self.max_leverage = _get_risk_config("risk_enforcer_max_leverage", 2.0)
 
         # Drawdown limits
-        self.max_drawdown_pct = config.get('max_drawdown_pct', 0.15)  # 15%
+        self.max_drawdown_pct = _get_risk_config("max_drawdown_limit", 0.15)
 
         # Enforcement state
         self.trading_halted = False
@@ -293,10 +314,24 @@ class RiskLimitsEnforcer:
                 weight = float(position.market_value / portfolio.total_equity)
 
                 # Risk level based on weight
-                if weight > 0.15:
+                # Get risk heatmap thresholds from config
+                try:
+                    config = get_config()
+                    high_risk_threshold = float(getattr(
+                        config.trading, 'risk_heatmap_high_threshold', 0.15
+                    ))
+                    medium_risk_threshold = float(getattr(
+                        config.trading, 'risk_heatmap_medium_threshold', 0.10
+                    ))
+                except (AttributeError, ValueError, TypeError) as e:
+                    self.logger.warning(f"Error getting risk heatmap thresholds: {e}, using defaults")
+                    high_risk_threshold = 0.15
+                    medium_risk_threshold = 0.10
+
+                if weight > high_risk_threshold:
                     risk_level = 'HIGH'
                     risk_color = 'red'
-                elif weight > 0.10:
+                elif weight > medium_risk_threshold:
                     risk_level = 'MEDIUM'
                     risk_color = 'yellow'
                 else:
@@ -343,7 +378,15 @@ class RiskLimitsEnforcer:
         self,
         heatmap_data: List[Dict[str, Any]],
     ) -> Dict[str, Any]:
-        """Analyze risk distribution across positions."""
+        """
+        Analyze risk distribution across positions.
+
+        Args:
+            heatmap_data: List of heatmap data items with risk contributions
+
+        Returns:
+            Risk distribution metrics
+        """
         if not heatmap_data:
             return {}
 
@@ -351,10 +394,23 @@ class RiskLimitsEnforcer:
         top_3_risk = sum(item.get('risk_pct', 0) for item in heatmap_data[:3])
         top_5_risk = sum(item.get('risk_pct', 0) for item in heatmap_data[:5])
 
-        # Risk concentration assessment
-        if top_3_risk > 60:
+        # Risk concentration assessment using config
+        try:
+            config = get_config()
+            high_threshold = float(getattr(
+                config.trading, 'risk_concentration_high_threshold', 60.0
+            ))
+            medium_threshold = float(getattr(
+                config.trading, 'risk_concentration_medium_threshold', 40.0
+            ))
+        except (AttributeError, ValueError, TypeError) as e:
+            self.logger.warning(f"Error getting risk concentration thresholds: {e}, using defaults")
+            high_threshold = 60.0
+            medium_threshold = 40.0
+
+        if top_3_risk > high_threshold:
             concentration = 'HIGH'
-        elif top_3_risk > 40:
+        elif top_3_risk > medium_threshold:
             concentration = 'MEDIUM'
         else:
             concentration = 'LOW'
@@ -421,12 +477,22 @@ class RiskLimitsEnforcer:
             total_exposure = sum(class_exposures.values())
             risk_attributions = {}
 
+            # Get default volatility from config
+            try:
+                config = get_config()
+                default_vol = float(getattr(
+                    config.trading, 'risk_enforcer_default_volatility', 0.2
+                ))
+            except (AttributeError, ValueError, TypeError) as e:
+                self.logger.warning(f"Error getting default volatility: {e}, using default 0.2")
+                default_vol = 0.2
+
             for asset_class, exposure in class_exposures.items():
                 weight = exposure / total_exposure if total_exposure > 0 else 0
 
                 # Average volatility for asset class
-                vols = class_volatilities.get(asset_class, [0.2])
-                avg_vol = np.mean(vols) if vols else 0.2
+                vols = class_volatilities.get(asset_class, [default_vol])
+                avg_vol = np.mean(vols) if vols else default_vol
 
                 # Risk contribution (simplified)
                 risk_contribution = weight * avg_vol
@@ -473,7 +539,7 @@ class RiskLimitsEnforcer:
         self,
         base_position_value: float,
         current_var_utilization: float,
-        max_utilization: float = 0.8,
+        max_utilization: Optional[float] = None,
     ) -> float:
         """
         Calculate dynamically adjusted position size based on VaR utilization.
@@ -483,11 +549,15 @@ class RiskLimitsEnforcer:
         Args:
             base_position_value: Original position value
             current_var_utilization: Current VaR / limit
-            max_utilization: Maximum utilization before scaling
+            max_utilization: Maximum utilization before scaling (uses config if not provided)
 
         Returns:
             Adjusted position value
         """
+        # Get max utilization from config if not provided
+        if max_utilization is None:
+            max_utilization = float(_get_risk_config("dynamic_position_max_utilization", 0.8))
+
         if current_var_utilization >= max_utilization:
             return 0.0  # No new positions
 

@@ -10,6 +10,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Tuple
+import numpy as np
 
 from .models import ParameterGrid
 from .trial import TrialContext, TrialHistory, TrialResult, TrialStatus, create_trial_id
@@ -144,7 +145,7 @@ class OptimizationResult:
         """Get fraction of successful trials."""
         if not self.all_trials:
             return 0.0
-        return sum(1 for t in self.all_trials if t.is_success) / len(self.all_trials)
+        return np.mean([1 for t in self.all_trials if t.is_success])
 
     @property
     def mean_score(self) -> float:
@@ -152,7 +153,7 @@ class OptimizationResult:
         successful = [t for t in self.all_trials if t.is_success]
         if not successful:
             return 0.0
-        return sum(t.objective_value for t in successful) / len(successful)
+        return np.mean([t.objective_value for t in successful])
 
     @property
     def std_score(self) -> float:

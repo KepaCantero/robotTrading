@@ -26,6 +26,8 @@ from typing import Any, Dict, List, Optional, Tuple, Union  # noqa: F401
 import numpy as np
 import pandas as pd
 
+from app.core.config.base import get_config
+
 # mypy: ignore-errors
 # pylint: disable=unsupported-binary-operation  # For Python 3.10+ union syntax
 
@@ -775,7 +777,7 @@ class OrderFlowSimulator:
         num_orders: int,
         base_price: float,
         price_impact: float = 0.001,
-        spread_bps: float = 1.0,
+        spread_bps: float = None,
     ) -> list[Order]:
         """
         Generate simulated order flow
@@ -784,11 +786,16 @@ class OrderFlowSimulator:
             num_orders: Number of orders to generate
             base_price: Base price for orders
             price_impact: Price impact per order
-            spread_bps: Bid-ask spread in bps
+            spread_bps: Bid-ask spread in bps (uses config if None)
 
         Returns:
             List of simulated orders
         """
+        # Get default spread from config if not provided
+        if spread_bps is None:
+            config = get_config()
+            spread_bps = float(config.compliance.ESTIMATED_SPREAD_BPS)
+
         orders = []
         current_time = datetime.now()
 

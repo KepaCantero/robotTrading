@@ -45,6 +45,7 @@ import pandas as pd
 
 # USE THE NEW COMPLIANCE ENGINE
 from app.core.compliance_engine import PostTradeAnalysis, PreTradeAnalysis, get_compliance_engine
+from app.core.config.base import get_config
 
 # Avoid circular imports
 if TYPE_CHECKING:
@@ -198,9 +199,13 @@ class ComplianceAwareBacktester:
             reason = "; ".join(analysis.reasons)
             return False, reason, analysis
 
-        if analysis.total_cost_bps > 20:  # High cost threshold
+        # Get high cost threshold from config
+        config = get_config()
+        high_cost_threshold = config.compliance.MAX_SLIPPAGE_BPS * 2  # Example: 2x max slippage
+
+        if analysis.total_cost_bps > high_cost_threshold:
             self.compliance_metrics["passed_through"] += 1
-            return True, "High cost - consider splitting", analysis
+            return True, f"High cost - consider splitting ({analysis.total_cost_bps:.1f} bps)", analysis
 
         self.compliance_metrics["passed_through"] += 1
 
@@ -242,15 +247,22 @@ class ComplianceAwareBacktester:
 
         if not can_execute:
             # Return with high cost to discourage execution
-            return price, 1000.0
+            # Use config for high penalty value
+            config = get_config()
+            high_penalty_bps = config.compliance.MAX_SLIPPAGE_BPS * 100  # 1000 bps penalty
+            return price, float(high_penalty_bps)
 
         # Calculate execution price with market impact
         impact_bps = analysis.total_cost_bps
 
+        # Get BPS multiplier from config
+        config = get_config()
+        bps_multiplier = Decimal(str(config.trading.bps_multiplier))
+
         if side == "BUY":
-            execution_price = price * (Decimal("1") + Decimal(str(impact_bps)) / Decimal("10000"))
+            execution_price = price * (Decimal("1") + Decimal(str(impact_bps)) / bps_multiplier)
         else:  # SELL
-            execution_price = price * (Decimal("1") - Decimal(str(impact_bps)) / Decimal("10000"))
+            execution_price = price * (Decimal("1") - Decimal(str(impact_bps)) / bps_multiplier)
 
         return execution_price, impact_bps
 
@@ -557,8 +569,9 @@ class ComplianceAwarePaperTrader:
         else:
             self.engine = None
 
-        # Simulation parameters
-        self._default_spread_bps = 5.0
+        # Simulation parameters - use config for default spread
+        config = get_config()
+        self._default_spread_bps = config.compliance.ESTIMATED_SPREAD_BPS
 
         logger.info("ComplianceAwarePaperTrader initialized")
 
@@ -591,6 +604,10 @@ class ComplianceAwarePaperTrader:
         # STEP 1: Calculate Realistic Execution Price using THE Compliance Engine
         # -------------------------------------------------------------------------
         if self.realistic_simulation and self.engine:
+            # Get BPS multiplier from config
+            config = get_config()
+            bps_multiplier = Decimal(str(config.trading.bps_multiplier))
+
             # Use THE Compliance Engine
             analysis = self.engine.analyze_pre_trade(
                 symbol=symbol,
@@ -610,7 +627,7 @@ class ComplianceAwarePaperTrader:
                         Decimal(str(self._default_spread_bps)) / Decimal("2")
                         + Decimal(str(impact_bps))
                     )
-                    / Decimal("10000")
+                    / bps_multiplier
                 )
             else:  # SELL
                 execution_price = base_price * (
@@ -619,7 +636,7 @@ class ComplianceAwarePaperTrader:
                         Decimal(str(self._default_spread_bps)) / Decimal("2")
                         + Decimal(str(impact_bps))
                     )
-                    / Decimal("10000")
+                    / bps_multiplier
                 )
 
             logger.info(

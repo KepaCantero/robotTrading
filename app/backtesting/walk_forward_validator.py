@@ -764,19 +764,19 @@ class WalkForwardValidator:
         is_sharpe_ratios = [r.is_sharpe_ratio for r in results if r.is_sharpe_ratio != 0]
         is_drawdowns = [r.is_max_drawdown for r in results if r.is_max_drawdown != 0]
 
-        avg_return = sum(total_returns) / len(total_returns)
+        avg_return = np.mean(total_returns)
         std_return = np.std(total_returns) if len(total_returns) > 1 else 0
-        avg_sharpe = sum(sharpe_ratios) / len(sharpe_ratios)
-        avg_drawdown = sum(max_drawdowns) / len(max_drawdowns)
+        avg_sharpe = np.mean(sharpe_ratios)
+        avg_drawdown = np.mean(max_drawdowns)
         consistency = len([r for r in total_returns if r > 0]) / len(total_returns)
 
         # IS/OOS Analysis (Req #2)
         is_oos_analysis = {
-            "avg_is_return": sum(is_returns) / len(is_returns) if is_returns else 0.0,
+            "avg_is_return": np.mean(is_returns) if is_returns else 0.0,
             "avg_is_sharpe": (
-                sum(is_sharpe_ratios) / len(is_sharpe_ratios) if is_sharpe_ratios else 0.0
+                np.mean(is_sharpe_ratios) if is_sharpe_ratios else 0.0
             ),
-            "avg_is_drawdown": sum(is_drawdowns) / len(is_drawdowns) if is_drawdowns else 0.0,
+            "avg_is_drawdown": np.mean(is_drawdowns) if is_drawdowns else 0.0,
         }
 
         # Consistency Ratio: Sharpe_OOS / Sharpe_IS (Req #2)
@@ -1026,7 +1026,7 @@ class CrossValidationTemporal:
 
         # Calculate aggregated metrics
         total_returns = [r["result"]["total_return"] for r in results]
-        avg_return = sum(total_returns) / len(total_returns)
+        avg_return = np.mean(total_returns)
         return_variance = np.var(total_returns) if len(total_returns) > 1 else 0
         consistency_score = len([r for r in total_returns if r > 0]) / len(total_returns)
 
@@ -1315,8 +1315,8 @@ class StressTester:
             "by_scenario_type": {
                 scenario: {
                     "count": len(scenarios),
-                    "avg_return": sum(s["total_return"] for s in scenarios) / len(scenarios),
-                    "survival_rate": sum(1 for s in scenarios if s["survived"]) / len(scenarios),
+                    "avg_return": np.mean([s["total_return"] for s in scenarios]),
+                    "survival_rate": np.mean([1 for s in scenarios if s["survived"]]),
                     "scenarios": scenarios,
                 }
                 for scenario, scenarios in by_scenario.items()

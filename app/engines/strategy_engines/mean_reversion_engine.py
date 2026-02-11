@@ -13,7 +13,7 @@ from collections import deque
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Sequence
 
-from app.core.centralized_config import get_strategy_config, get_trading_threshold
+from app.core.config.base import get_config
 from app.models.market_data import Quote
 from app.models.portfolio import Portfolio
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
@@ -43,8 +43,9 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
         """
         super().__init__(config)
 
-        # Load strategy-specific configuration
-        strategy_config = get_strategy_config("mean_reversion")
+        # Load strategy-specific configuration from centralized config
+        centralized_config = get_config()
+        strategy_config = centralized_config.get_strategy_config("mean_reversion")
         if strategy_config:
             params = strategy_config.parameters
             self.z_score_threshold = Decimal(str(params.get("z_score_threshold")))
@@ -54,28 +55,28 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
             self.atr_floor = Decimal(str(params.get("atr_floor")))
             self.price_range_multiplier = Decimal(str(params.get("price_range_multiplier")))
 
-            # Risk parameters
+            # Risk parameters from centralized config with fallback to strategy config
             self.stop_loss = Decimal(
-                str(strategy_config.stop_loss_pct or get_trading_threshold("stop_loss_pct"))
+                str(strategy_config.stop_loss_pct or centralized_config.trading.stop_loss_pct)
             )
             self.take_profit = Decimal(
-                str(strategy_config.stop_loss_pct or get_trading_threshold("take_profit_pct"))
+                str(strategy_config.stop_loss_pct or centralized_config.trading.take_profit_pct)
             )
             self.max_position_size = Decimal(
-                str(strategy_config.max_position_size or get_trading_threshold("max_position_size"))
+                str(strategy_config.max_position_size or centralized_config.trading.max_position_size)
             )
         else:
             # Fallback to config or defaults
             self.z_score_threshold = Decimal(str(config.get("z_score_threshold", 2.0)))
             self.lookback_period = config.get("lookback_period", 20)
             self.stop_loss = Decimal(
-                str(config.get("stop_loss", get_trading_threshold("stop_loss_pct")))
+                str(config.get("stop_loss", centralized_config.trading.stop_loss_pct))
             )
             self.take_profit = Decimal(
-                str(config.get("take_profit", get_trading_threshold("take_profit_pct")))
+                str(config.get("take_profit", centralized_config.trading.take_profit_pct))
             )
             self.max_position_size = Decimal(
-                str(config.get("max_position_size", get_trading_threshold("max_position_size")))
+                str(config.get("max_position_size", centralized_config.trading.max_position_size))
             )
             self.volatility_threshold = Decimal(str(config.get("volatility_threshold", 0.02)))
             self.mean_reversion_speed = Decimal(str(config.get("mean_reversion_speed", 0.1)))
@@ -361,9 +362,14 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
         elif abs_z_score >= 1.5:
             confidence += 15.0
 
-        if volatility < 0.01:
+        # Volatility thresholds from config (very low and low volatility for confidence bonus)
+        centralized_config = get_config()
+        vol_very_low = centralized_config.trading.get("volatility_confidence_very_low", 0.01)
+        vol_low = centralized_config.trading.get("volatility_confidence_low", 0.02)
+
+        if volatility < vol_very_low:
             confidence += 10.0
-        elif volatility < 0.02:
+        elif volatility < vol_low:
             confidence += 5.0
 
         return min(100.0, max(0.0, confidence))

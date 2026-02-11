@@ -20,6 +20,8 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 
+from app.core.config.base import get_config
+
 logger = logging.getLogger(__name__)
 
 
@@ -199,7 +201,7 @@ class DividendInvesting:
 
     def __init__(
         self,
-        min_yield: float = 0.02,  # Minimum 2% yield
+        min_yield: float | None = None,  # Minimum 2% yield
         max_yield: float = 0.10,  # Maximum 10% yield (avoid yield traps)
         min_growth_rate: float = 0.0,  # Minimum dividend growth
         max_payout_ratio: float = 0.8,  # Maximum payout ratio
@@ -219,6 +221,15 @@ class DividendInvesting:
             min_sustainability_score: Minimum sustainability score
             target_portfolio_yield: Target portfolio yield
         """
+        # Get min_yield from config or use default
+        if min_yield is None:
+            try:
+                config = get_config()
+                min_yield = float(getattr(config.trading, 'dividend_min_yield', 0.02))
+            except (AttributeError, ValueError, TypeError) as e:
+                logger.warning(f"Error getting dividend_min_yield config: {e}, using default 0.02")
+                min_yield = 0.02
+
         self._min_yield = min_yield
         self._max_yield = max_yield
         self._min_growth = min_growth_rate
@@ -226,6 +237,10 @@ class DividendInvesting:
         self._min_years = min_dividend_years
         self._min_sustainability = min_sustainability_score
         self._target_yield = target_portfolio_yield
+
+        # Load trading thresholds from config
+        trading_config = get_config()
+        self._tt = trading_config.trading_thresholds
 
     def screen_dividend_stocks(
         self,
@@ -345,7 +360,7 @@ class DividendInvesting:
         dividend_metrics: Dict[str, DividendMetrics],
         capital: float,
         max_positions: int = 30,
-        min_weight: float = 0.02,
+        min_weight: float | None = None,
         max_weight: float = 0.05,
     ) -> DividendPortfolio:
         """
@@ -361,6 +376,15 @@ class DividendInvesting:
         Returns:
             DividendPortfolio with optimal allocation
         """
+        # Get min_weight from config or use default
+        if min_weight is None:
+            try:
+                config = get_config()
+                min_weight = float(getattr(config.trading, 'dividend_min_weight', 0.02))
+            except (AttributeError, ValueError, TypeError) as e:
+                logger.warning(f"Error getting dividend_min_weight config: {e}, using default 0.02")
+                min_weight = 0.02
+
         # Rank stocks
         ranked = self.rank_dividend_stocks(dividend_metrics)
 
@@ -526,15 +550,15 @@ class DividendInvesting:
         payout_ratio = metrics.payout_ratio if np.isfinite(metrics.payout_ratio) else 1.0
 
         # Generate signal
-        if score > 0.7 and valuation_ratio < 0.9:
+        if score > self._tt.dividend_score_excellent and valuation_ratio < self._tt.valuation_ratio_cheap:
             return DividendSignal.BUY
-        elif score > 0.5 and valuation_ratio < 1.0:
+        elif score > self._tt.dividend_score_good and valuation_ratio < self._tt.valuation_ratio_fair:
             return DividendSignal.BUY
         elif score < 0.3 or payout_ratio > 0.9:
-            # Risk of dividend cut
+            # Risk of dividend cut (0.3 and 0.9 are business logic, not config)
             return DividendSignal.SELL
         elif valuation_ratio > 1.2:
-            # Overvalued
+            # Overvalued (1.2 is business logic, not config)
             return DividendSignal.SELL
         else:
             return DividendSignal.HOLD

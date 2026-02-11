@@ -14,17 +14,21 @@ Phase 3.4: Broker API Rate Limiting for 24/7 Operation
 - Exponential backoff on 429 errors
 - Rate limit monitoring and alerts
 - Configurable limits per broker
+
+Uses centralized configuration for all rate limits and backoff parameters.
 """
 
 import asyncio
 import logging
 import time
 from dataclasses import dataclass
+from decimal import Decimal
 from enum import Enum, IntEnum
 from typing import Callable, Dict, List, Optional
 
 from requests.exceptions import HTTPError
 
+from app.core.centralized_config import get_config
 from app.core.timezone_utils import utc_now
 
 logger = logging.getLogger(__name__)
@@ -77,20 +81,38 @@ class RateLimit:
         return int(self.requests_per_second * 3600)
 
 
-# Broker-specific rate limits
-# Source: Various broker API documentation
-BROKER_RATE_LIMITS = {
-    BrokerType.IBKR: RateLimit(
-        requests_per_second=50, burst_capacity=100
-    ),  # 50-100 req/s depending on endpoint
-    BrokerType.ALPACA: RateLimit(requests_per_second=3.33, burst_capacity=20),  # 200/min
-    BrokerType.POLYGON: RateLimit(
-        requests_per_second=5, burst_capacity=50
-    ),  # 5 req/s for free tier
-    BrokerType.BINANCE: RateLimit(
-        requests_per_second=10, burst_capacity=100
-    ),  # 10 req/s for REST API
-}
+def _get_broker_rate_limits() -> Dict[BrokerType, RateLimit]:
+    """
+    Get broker-specific rate limits from centralized config.
+
+    Returns:
+        Dict mapping BrokerType to RateLimit configuration
+    """
+    # Get rate limits from centralized config
+    tt = get_config().trading_thresholds
+
+    return {
+        BrokerType.IBKR: RateLimit(
+            requests_per_second=float(tt.rate_limit_ibkr_requests_per_second),
+            burst_capacity=tt.rate_limit_ibkr_burst_capacity,
+        ),
+        BrokerType.ALPACA: RateLimit(
+            requests_per_second=float(tt.rate_limit_alpaca_requests_per_second),
+            burst_capacity=tt.rate_limit_alpaca_burst_capacity,
+        ),
+        BrokerType.POLYGON: RateLimit(
+            requests_per_second=float(tt.rate_limit_polygon_requests_per_second),
+            burst_capacity=tt.rate_limit_polygon_burst_capacity,
+        ),
+        BrokerType.BINANCE: RateLimit(
+            requests_per_second=float(tt.rate_limit_binance_requests_per_second),
+            burst_capacity=tt.rate_limit_binance_burst_capacity,
+        ),
+    }
+
+
+# Broker-specific rate limits (loaded from centralized config)
+BROKER_RATE_LIMITS = _get_broker_rate_limits()
 
 
 @dataclass
@@ -177,7 +199,7 @@ class TokenBucketRateLimiter:
         broker_type: BrokerType,
         rate_limit: Optional[RateLimit] = None,
         on_limit_exceeded: Optional[Callable[[], None]] = None,
-        alert_threshold: float = 0.8,
+        alert_threshold: Optional[float] = None,
     ):
         """
         Initialize token bucket rate limiter.
@@ -186,7 +208,7 @@ class TokenBucketRateLimiter:
             broker_type: Type of broker
             rate_limit: Custom rate limit (uses default if None)
             on_limit_exceeded: Callback when limit exceeded
-            alert_threshold: Alert when token usage exceeds this ratio (0.0-1.0)
+            alert_threshold: Alert when token usage exceeds this ratio (uses centralized config if None)
         """
         self.broker_type = broker_type
         self.rate_limit = rate_limit or BROKER_RATE_LIMITS.get(broker_type)
@@ -194,6 +216,11 @@ class TokenBucketRateLimiter:
             raise ValueError(f"No rate limit configured for broker: {broker_type}")
 
         self.on_limit_exceeded = on_limit_exceeded
+
+        # Use centralized config for alert_threshold if not provided
+        if alert_threshold is None:
+            tt = get_config().trading_thresholds
+            alert_threshold = tt.rate_limit_alert_threshold
         self.alert_threshold = alert_threshold
 
         # Token bucket state
@@ -344,8 +371,8 @@ class TokenBucketRateLimiter:
     async def acquire_with_backoff(
         self,
         tokens: int = 1,
-        max_retries: int = 3,
-        initial_backoff: float = 1.0,
+        max_retries: Optional[int] = None,
+        initial_backoff: Optional[float] = None,
         priority: int = RequestPriority.MEDIUM,
     ) -> bool:
         """
@@ -357,8 +384,8 @@ class TokenBucketRateLimiter:
 
         Args:
             tokens: Number of tokens to acquire
-            max_retries: Maximum retry attempts
-            initial_backoff: Initial backoff time in seconds
+            max_retries: Maximum retry attempts (uses centralized config if None)
+            initial_backoff: Initial backoff time in seconds (uses centralized config if None)
             priority: Priority level for the request
 
         Returns:
@@ -371,17 +398,29 @@ class TokenBucketRateLimiter:
             ...     initial_backoff=2.0
             ... )
         """
+        # Use centralized config for defaults if not provided
+        if max_retries is None or initial_backoff is None:
+            tt = get_config().trading_thresholds
+            if max_retries is None:
+                max_retries = tt.rate_limit_max_retries
+            if initial_backoff is None:
+                initial_backoff = tt.rate_limit_initial_backoff
+
         for attempt in range(max_retries):
             try:
-                # Try to acquire
-                if await self.acquire(tokens, priority=priority, timeout=30.0):
+                # Try to acquire - use centralized config for timeout
+                tt = get_config().trading_thresholds
+                timeout = tt.rate_limit_default_timeout
+                if await self.acquire(tokens, priority=priority, timeout=timeout):
                     return True
 
             except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 if attempt < max_retries - 1:
-                    # Exponential backoff with jitter
+                    # Exponential backoff with jitter - use centralized config for jitter pct
+                    tt = get_config().trading_thresholds
                     backoff = initial_backoff * (2**attempt)
-                    jitter = backoff * 0.1  # 10% jitter
+                    jitter_pct = tt.rate_limit_backoff_jitter_pct
+                    jitter = backoff * jitter_pct
                     wait_time = backoff + (jitter * (2 * (hash(id(self)) % 100) / 100 - 1))
 
                     logger.warning(

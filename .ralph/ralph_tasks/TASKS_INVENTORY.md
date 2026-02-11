@@ -1,15 +1,15 @@
 # 📋 Inventario Exhaustivo de Tareas Ralph
 
-**Fecha:** 2026-02-08
+**Fecha:** 2026-02-10
 **Estado:** Plan completo creado
-**Total tareas:** 18 tareas planificadas
-**Tareas creadas:** 5 tareas YAML + 1 orquestador
+**Total tareas:** 22 tareas planificadas
+**Tareas creadas:** 21 tareas YAML + 1 orquestador
 
 ---
 
 ## 📁 Archivos en ralph_tasks/
 
-### YAML de Tareas (5 creadas + 1 actualizada + 1 orquestador)
+### YAML de Tareas (21 creadas + 1 orquestador)
 
 | Archivo | Estado | Prioridad | Horas | Descripción |
 |---------|--------|-----------|-------|-------------|
@@ -18,28 +18,99 @@
 | `02_spain_tax_engine.yml` | ✅ CREADO | P0 | 8h | Motor impuestos España |
 | `03_trading_decision_logger.yml` | ✅ CREADO | P0 | 6h | Logger append-only |
 | `04_risk_validators.yml` | ✅ CREADO | P0 | 8h | Validadores R1,R2,R4 |
-| `01_compliance_engine_refactor.yml` | ✅ ACTUALIZADO | P0 | 16h | Refactor ComplianceEngine |
+| `09_compliance_engine_refactor.yml` | ✅ CREADO | P0 | 16h | Refactor ComplianceEngine |
+| `22_code_quality_refactor.yml` | ✅ CREADO | P1 | 15h | Config, Hardcoded Values & Libraries |
 
 ### Tareas Planificadas (Sin YAML aún)
 
 | ID | Prioridad | Horas | Descripción | Archivo a crear |
 |----|-----------|-------|-------------|-----------------|
-| 05 | P1 | 12h | Position Management (R11,R12,R13) | `05_position_management.yml` |
-| 06 | P1 | 6h | Reconciliation Daily (R16) | `06_reconciliation_daily.yml` |
-| 07 | P1 | 6h | Capital Phase Manager (R25-R27) | `07_capital_phase_manager.yml` |
-| 08 | P0 | 16h | Broker Adapters (IBKR Spain) | `08_broker_adapters.yml` |
-| 09 | P0 | 16h | ComplianceEngine Refactor | Ya existe (01_compliance_engine_refactor.yml) |
-| 10 | P0 | 4h | Execution Engine Integration | `10_execution_engine_integration.yml` |
-| 11 | P0 | 4h | Order Manager Integration | `11_order_manager_integration.yml` |
-| 12 | P0 | 4h | Trading Bridge Integration | `12_trading_bridge_integration.yml` |
-| 13 | P0 | 8h | Live Trading CLI | `13_live_trading_cli.yml` |
-| 14 | P1 | 6h | Single User Config | `14_user_config_single_user.yml` |
-| 15 | P1 | 6h | Telegram Alerting | `15_alerting_telegram.yml` |
-| 16 | P1 | 12h | Simple Dashboard | `16_simple_dashboard.yml` |
-| 17 | P0 | 12h | Backtest Fixes | `17_backtest_fixes.yml` |
-| 18 | P2 | 24h | Additional Rules (R6,R7,R9...) | `18_additional_rules.yml` |
-| 19 | P1 | 8h | Security Hardening (R29) | `19_security_hardening.yml` |
-| 20 | P0 | 16h | Integration Tests | `20_testing_integration.yml` |
+| 05 | P1 | 12h | Position Management (R11,R12,R13) | ✅ YA CREADO |
+| 06 | P1 | 6h | Reconciliation Daily (R16) | ✅ YA CREADO |
+| 07 | P1 | 6h | Capital Phase Manager (R25-R27) | ✅ YA CREADO |
+| 08 | P0 | 16h | Broker Adapters (IBKR Spain) | ✅ YA CREADO |
+| 10 | P0 | 4h | Execution Engine Integration | ✅ YA CREADO |
+| 11 | P0 | 4h | Order Manager Integration | ✅ YA CREADO |
+| 12 | P0 | 4h | Trading Bridge Integration | ✅ YA CREADO |
+| 13 | P0 | 8h | Live Trading CLI | ✅ YA CREADO |
+| 14 | P1 | 6h | Single User Config | ✅ YA CREADO |
+| 15 | P1 | 6h | Telegram Alerting | ✅ YA CREADO |
+| 16 | P1 | 12h | Simple Dashboard | ✅ YA CREADO |
+| 17 | P0 | 12h | Backtest Fixes | ✅ YA CREADO |
+| 19 | P1 | 8h | Security Hardening (R29) | ✅ YA CREADO |
+| 20 | P0 | 16h | Integration Tests | ✅ YA CREADO |
+| 21 | P1 | 10h | Backtesting Folder Audit | ✅ YA CREADO |
+| 22 | P1 | 15h | Code Quality Refactor | ✅ CREADO |
+| 99 | P2 | 8h | Final Cleanup | ✅ CREADO |
+
+---
+
+## 📝 Tareas Recientes (2026-02-10)
+
+### ✅ TAREA 22: Code Quality Refactor - Production-Ready (Modular + Dependency-Aware)
+
+**Archivo:** `22_code_quality_refactor.yml`
+**Estado:** ✅ CREADO (Versión 4.1 - Dependency-Aware Processing Order)
+**Prioridad:** P1 - IMPORTANTE
+**Horas:** 30-40h (estimación realista)
+**Depends on:** Ninguna (independiente)
+
+**Objetivo:** Revisar TODOS los archivos de `app/` para:
+1. Usar config modular centralizada
+2. Eliminar valores hardcoded
+3. Usar librerías especializadas (numpy, pandas, scipy)
+4. **PRODUCTION-READY**: No se aceptan implementaciones incompletas
+5. **DEPENDENCY-AWARE**: Procesar en orden de dependencias para no romper nada
+
+**Sistema Modular:**
+- Usa templates de `.ralph/ralph_templates/hats/`
+- Scripts de validación en `.ralph/scripts/utils.py`
+- Event-driven con triggers/publishes
+- Checkpoint con formato estandarizado
+
+**Processing Order (10 fases - V4.1 NEW):**
+1. **Config** (app/core/config/) → Otros archivos dependen de get_config()
+2. **Interfaces/Protocols** → Implementaciones dependen de protocolos
+3. **Utils** → Utilidades base sin dependencias
+4. **Models** → Modelos de datos
+5. **Core Services** → Servicios core (compliance, validators)
+6. **Execution Services** → Ejecución y órdenes
+7. **Strategies** → Estrategias de trading
+8. **Backtesting** → Motor de backtesting
+9. **Analysis** → Análisis y métricas
+10. **Remaining** → Archivos restantes
+
+**HATS (4 fases):**
+1. **auditor** (`base_processor_hat.yml`) → Inventario ORDENADO + Auditoría
+2. **fixer** (`implementer_hat.yml`) → Correcciones file-by-file (en orden)
+3. **validator** (`validation_hat.yml`) → Validación final
+4. **final_reporter** (`final_reviewer_hat.yml`) → Reporte final
+
+**Quality Gates (todos required=true):**
+- `no_hardcoded_decimal` - No Decimal('0.XX') hardcoded
+- `no_hardcoded_float` - No 0.XX float hardcoded
+- `no_todo_fixme` - No TODO/FIXME/XXX/HACK
+- `no_stub_implementations` - No pass # stub
+- `no_not_implemented` - No raise NotImplementedError
+- `config_usage` - Usar getattr(config.trading, ...)
+- `numpy_usage` - Usar numpy para cálculos
+- `type_hints` - Type hints en funciones
+- `docstrings` - Docstrings en funciones públicas
+- `error_handling` - Error handling
+
+**Salida esperada:**
+- `.ralph/outputs/CODE_QUALITY_AUDIT.json` - Auditoría
+- `.ralph/outputs/CODE_QUALITY_FIXES.json` - Correcciones
+- `.ralph/outputs/CODE_QUALITY_FINAL_REPORT.json` - Validación final
+- `.ralph/outputs/TASK22_EXECUTIVE_SUMMARY.md` - Resumen ejecutivo
+
+**Validación:**
+- grep para hardcoded values (debe retornar vacío)
+- grep para incomplete implementations (debe retornar vacío)
+- pyright para type hints
+- black/isort/ruff para code style
+
+---
 
 ### Prompts (Ninguno creado aún)
 

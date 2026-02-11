@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List
+import numpy as np
 
 from pydantic import BaseModel, Field
 
@@ -154,8 +155,8 @@ class DataValidationService:
             price_changes.append(change)
 
         # Calculate mean and std
-        mean_change = sum(price_changes) / len(price_changes)
-        variance = sum((x - mean_change) ** 2 for x in price_changes) / len(price_changes)
+        mean_change = np.mean(price_changes)
+        variance = np.mean([(x - mean_change) ** 2 for x in price_changes])
         std_change = variance**0.5
 
         if std_change == 0:

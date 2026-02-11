@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import Dict, List, Optional
+import numpy as np
 
 import aiohttp
 from requests.exceptions import HTTPError, RequestException
@@ -360,8 +361,8 @@ class AlertingRulesEngine:
             return False
 
         values = [v for _, v in history[-100:]]  # Last 100 values
-        mean = sum(values) / len(values)
-        variance = sum((v - mean) ** 2 for v in values) / len(values)
+        mean = np.mean(values)
+        variance = np.mean([(v - mean) ** 2 for v in values])
         std_dev = variance**0.5
 
         threshold = mean + (std_dev * rule.std_dev_multiplier)

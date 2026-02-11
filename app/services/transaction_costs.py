@@ -29,6 +29,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 
+from app.core.centralized_config import get_config
+
 logger = logging.getLogger(__name__)
 
 
@@ -251,7 +253,9 @@ class TransactionCostModel:
         # Calculate cost metrics
         cost_per_share = total_cost / order.quantity if order.quantity > 0 else Decimal("0")
         trade_value = order.quantity * execution_price
-        cost_as_bps = float(total_cost / trade_value * 10000) if trade_value > 0 else 0.0
+        # Use config value for BPS multiplier
+        tt = get_config().trading_thresholds
+        cost_as_bps = float(total_cost / trade_value * tt.bps_multiplier) if trade_value > 0 else 0.0
 
         # Estimate execution duration
         expected_duration = self._estimate_execution_duration(
@@ -398,21 +402,29 @@ class TransactionCostModel:
         Calculate slippage (difference between expected and actual execution).
 
         Slippage is often correlated with market impact.
+        Uses centralized config for market order slippage percentage.
         """
         # For market orders, slippage ≈ market impact
         if order.order_type == "market":
-            return market_impact * Decimal("0.5")  # Assume 50% of impact is slippage
+            tt = get_config().trading_thresholds
+            slippage_pct = Decimal(str(tt.tx_market_order_slippage_pct))
+            return market_impact * slippage_pct
 
         # For limit orders, less slippage but potential non-execution
         return Decimal("0")
 
     def _calculate_fees(self, order: OrderSpecification, market_data: MarketData) -> Decimal:
-        """Calculate exchange and regulatory fees."""
-        # SEC fee (selling only): $0.0000207 per share
-        sec_fee = Decimal("0") if order.side == "buy" else order.quantity * Decimal("0.0000207")
+        """Calculate exchange and regulatory fees. Uses centralized config for fee rates."""
+        # Get fee rates from centralized config
+        tt = get_config().trading_thresholds
+        sec_fee_rate = Decimal(str(tt.tx_sec_fee_per_share))
+        trading_fee_rate = Decimal(str(tt.tx_trading_fee_per_share))
 
-        # Trading fee (e.g., NYSE: $0.000175 per share)
-        trading_fee = order.quantity * Decimal("0.000175")
+        # SEC fee (selling only)
+        sec_fee = Decimal("0") if order.side == "buy" else order.quantity * sec_fee_rate
+
+        # Trading fee
+        trading_fee = order.quantity * trading_fee_rate
 
         # Total fees
         total_fees = sec_fee + trading_fee

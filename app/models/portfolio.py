@@ -12,6 +12,8 @@ from typing import List, Optional, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from app.core.config.base import get_config
+
 
 class HedgingMetadata(BaseModel):
     """Metadata for currency hedging on positions [TASK-5.5-CURRENCY-HEDGING]."""
@@ -51,14 +53,22 @@ class HedgingMetadata(BaseModel):
     @field_validator("hedge_cost_bps")
     @classmethod
     def validate_hedge_cost(cls, v) -> Decimal:
-        """Validate hedge cost."""
+        """
+        Validate hedge cost.
+
+        Uses configured maximum hedge cost limit.
+        """
         if isinstance(v, (int, float)):
             v = Decimal(str(v))
         elif not isinstance(v, Decimal):
             raise ValueError("Hedge cost must be a number")
 
-        if v > Decimal("1000"):  # 1000 bps = 10% max cost
-            raise ValueError(f"Hedge cost exceeds maximum limit of 1000 bps, got {v}")
+        # Get max hedge cost from config
+        config = get_config()
+        max_hedge_cost = Decimal(str(getattr(config.compliance, 'MAX_HEDGE_COST_BPS', 1000)))
+
+        if v > max_hedge_cost:
+            raise ValueError(f"Hedge cost exceeds maximum limit of {max_hedge_cost} bps, got {v}")
 
         return v
 
@@ -166,8 +176,11 @@ class Position(BaseModel):
 
         # Validate unrealized P&L calculation
         if self.quantity != 0:
+            from app.core.config.base import get_config
+            cfg = get_config()
+            tolerance = Decimal(str(getattr(cfg.trading, 'portfolio_pnl_tolerance', 0.01)))
             expected_unrealized = self.quantity * (self.market_price - self.avg_price)
-            if abs(self.unrealized_pnl - expected_unrealized) > Decimal("0.01"):
+            if abs(self.unrealized_pnl - expected_unrealized) > tolerance:
                 raise ValueError(
                     "Unrealized P&L calculation mismatch. "
                     f"Expected: {expected_unrealized}, Got: {self.unrealized_pnl}"

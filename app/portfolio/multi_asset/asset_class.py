@@ -17,6 +17,31 @@ import numpy as np
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.core.config.base import get_config
+
+
+def _get_asset_config(attr_name: str, default_value: float) -> float:
+    """
+    Get asset class configuration value with fallback default.
+
+    Args:
+        attr_name: Config attribute name
+        default_value: Default value if config attribute not found
+
+    Returns:
+        Float value from config or default
+    """
+    try:
+        config = get_config()
+        return float(getattr(config.trading, attr_name, default_value))
+    except (AttributeError, ValueError, TypeError) as e:
+        # Use default value without logging - these are fallback values
+        return default_value
+
+
+# Risk-free rate default - now loaded from config (for backward compatibility reference)
+# Use config.trading.portfolio_risk_free_rate instead
+
 
 class RebalanceFrequency(str, Enum):
     """Rebalancing frequency options."""
@@ -106,16 +131,36 @@ class AssetClassType(str, Enum):
         Returns:
             Tuple of (min_volatility, max_volatility) as annualized decimals
         """
-        volatility_map = {
-            cls.EQUITY: (Decimal("0.10"), Decimal("0.30")),  # 10-30%
-            cls.CRYPTO: (Decimal("0.40"), Decimal("1.20")),  # 40-120%
-            cls.FOREX: (Decimal("0.05"), Decimal("0.15")),  # 5-15%
-            cls.FIXED_INCOME: (Decimal("0.02"), Decimal("0.10")),  # 2-10%
-            cls.COMMODITY: (Decimal("0.15"), Decimal("0.40")),  # 15-40%
-            cls.REAL_ESTATE: (Decimal("0.10"), Decimal("0.25")),  # 10-25%
-            cls.CASH: (Decimal("0.00"), Decimal("0.02")),  # 0-2%
-        }
-        return volatility_map.get(asset_type, (Decimal("0.05"), Decimal("0.20")))  # type: ignore
+        asset_type_lower = asset_type.lower() if isinstance(asset_type, str) else str(asset_type)
+
+        # Get volatility ranges from config with fallback defaults
+        if "equity" in asset_type_lower:
+            vol_min = _get_asset_config("asset_class_equity_vol_min", 0.10)
+            vol_max = _get_asset_config("asset_class_equity_vol_max", 0.30)
+        elif "crypto" in asset_type_lower:
+            vol_min = _get_asset_config("asset_class_crypto_vol_min", 0.40)
+            vol_max = _get_asset_config("asset_class_crypto_vol_max", 1.20)
+        elif "forex" in asset_type_lower:
+            vol_min = _get_asset_config("asset_class_forex_vol_min", 0.05)
+            vol_max = _get_asset_config("asset_class_forex_vol_max", 0.15)
+        elif "fixed_income" in asset_type_lower or "fixedincome" in asset_type_lower:
+            vol_min = _get_asset_config("asset_class_fixed_income_vol_min", 0.02)
+            vol_max = _get_asset_config("asset_class_fixed_income_vol_max", 0.10)
+        elif "commodity" in asset_type_lower:
+            vol_min = _get_asset_config("asset_class_commodity_vol_min", 0.15)
+            vol_max = _get_asset_config("asset_class_commodity_vol_max", 0.40)
+        elif "real_estate" in asset_type_lower or "realestate" in asset_type_lower:
+            vol_min = _get_asset_config("asset_class_real_estate_vol_min", 0.10)
+            vol_max = _get_asset_config("asset_class_real_estate_vol_max", 0.25)
+        elif "cash" in asset_type_lower:
+            vol_min = _get_asset_config("asset_class_cash_vol_min", 0.00)
+            vol_max = _get_asset_config("asset_class_cash_vol_max", 0.02)
+        else:
+            # Default fallback
+            vol_min = _get_asset_config("asset_class_default_vol_min", 0.05)
+            vol_max = _get_asset_config("asset_class_default_vol_max", 0.20)
+
+        return (Decimal(str(vol_min)), Decimal(str(vol_max)))
 
     @classmethod
     def get_typical_return(cls, asset_type: str) -> Tuple[Decimal, Decimal]:
@@ -128,16 +173,36 @@ class AssetClassType(str, Enum):
         Returns:
             Tuple of (min_return, max_return) as annualized decimals
         """
-        return_map = {
-            cls.EQUITY: (Decimal("0.05"), Decimal("0.12")),  # 5-12%
-            cls.CRYPTO: (Decimal("-0.20"), Decimal("0.50")),  # -20% to 50%
-            cls.FOREX: (Decimal("-0.05"), Decimal("0.10")),  # -5% to 10%
-            cls.FIXED_INCOME: (Decimal("0.01"), Decimal("0.06")),  # 1-6%
-            cls.COMMODITY: (Decimal("-0.10"), Decimal("0.20")),  # -10% to 20%
-            cls.REAL_ESTATE: (Decimal("0.03"), Decimal("0.10")),  # 3-10%
-            cls.CASH: (Decimal("0.00"), Decimal("0.03")),  # 0-3%
-        }
-        return return_map.get(asset_type, (Decimal("0.00"), Decimal("0.10")))  # type: ignore
+        asset_type_lower = asset_type.lower() if isinstance(asset_type, str) else str(asset_type)
+
+        # Get return ranges from config with fallback defaults
+        if "equity" in asset_type_lower:
+            ret_min = _get_asset_config("asset_class_equity_return_min", 0.05)
+            ret_max = _get_asset_config("asset_class_equity_return_max", 0.12)
+        elif "crypto" in asset_type_lower:
+            ret_min = _get_asset_config("asset_class_crypto_return_min", -0.20)
+            ret_max = _get_asset_config("asset_class_crypto_return_max", 0.50)
+        elif "forex" in asset_type_lower:
+            ret_min = _get_asset_config("asset_class_forex_return_min", -0.05)
+            ret_max = _get_asset_config("asset_class_forex_return_max", 0.10)
+        elif "fixed_income" in asset_type_lower or "fixedincome" in asset_type_lower:
+            ret_min = _get_asset_config("asset_class_fixed_income_return_min", 0.01)
+            ret_max = _get_asset_config("asset_class_fixed_income_return_max", 0.06)
+        elif "commodity" in asset_type_lower:
+            ret_min = _get_asset_config("asset_class_commodity_return_min", -0.10)
+            ret_max = _get_asset_config("asset_class_commodity_return_max", 0.20)
+        elif "real_estate" in asset_type_lower or "realestate" in asset_type_lower:
+            ret_min = _get_asset_config("asset_class_real_estate_return_min", 0.03)
+            ret_max = _get_asset_config("asset_class_real_estate_return_max", 0.10)
+        elif "cash" in asset_type_lower:
+            ret_min = _get_asset_config("asset_class_cash_return_min", 0.00)
+            ret_max = _get_asset_config("asset_class_cash_return_max", 0.03)
+        else:
+            # Default fallback
+            ret_min = _get_asset_config("asset_class_default_return_min", 0.00)
+            ret_max = _get_asset_config("asset_class_default_return_max", 0.10)
+
+        return (Decimal(str(ret_min)), Decimal(str(ret_max)))
 
 
 @dataclass
@@ -199,16 +264,20 @@ class AssetClassReturns:
         annualized = vol * np.sqrt(n_periods)
         return Decimal(str(annualized))
 
-    def sharpe_ratio(self, risk_free_rate: float = 0.02) -> float:
+    def sharpe_ratio(self, risk_free_rate: Optional[float] = None) -> float:
         """
         Calculate Sharpe ratio.
 
         Args:
-            risk_free_rate: Risk-free rate for Sharpe ratio calculation
+            risk_free_rate: Risk-free rate for Sharpe ratio calculation.
+                If None, uses config value or default.
 
         Returns:
             Sharpe ratio value
         """
+        if risk_free_rate is None:
+            risk_free_rate = _get_asset_config("portfolio_risk_free_rate", 0.02)
+
         excess_return = self.annualized_return - Decimal(str(risk_free_rate))
         vol = self.annualized_volatility
 
@@ -315,17 +384,22 @@ class AssetClassMetrics:
         if self.volatility < 0:
             raise ValueError(f"Volatility must be non-negative, got {self.volatility}")
 
-        if self.volatility > Decimal("2"):
-            raise ValueError(f"Volatility exceeds reasonable maximum, got {self.volatility}")
-
-        if self.expected_return < Decimal("-1"):
+        max_vol = _get_asset_config("asset_class_max_volatility", 2.0)
+        if self.volatility > Decimal(str(max_vol)):
             raise ValueError(
-                f"Expected return cannot be less than -100%, got {self.expected_return}"
+                f"Volatility exceeds reasonable maximum ({max_vol}), got {self.volatility}"
             )
 
-        if self.expected_return > Decimal("2"):
+        min_return = _get_asset_config("asset_class_min_expected_return", -1.0)
+        if self.expected_return < Decimal(str(min_return)):
             raise ValueError(
-                f"Expected return exceeds reasonable maximum, got {self.expected_return}"
+                f"Expected return cannot be less than {min_return*100}%, got {self.expected_return}"
+            )
+
+        max_return = _get_asset_config("asset_class_max_expected_return", 2.0)
+        if self.expected_return > Decimal(str(max_return)):
+            raise ValueError(
+                f"Expected return exceeds reasonable maximum ({max_return}), got {self.expected_return}"
             )
 
         return True
@@ -542,13 +616,17 @@ class AssetClass:
         if self.volatility < 0:
             raise ValueError(f"Volatility must be non-negative, got {self.volatility}")
 
-        if self.volatility > Decimal("2"):
-            raise ValueError(f"Volatility exceeds reasonable maximum, got {self.volatility}")
+        max_vol = _get_asset_config("asset_class_max_volatility", 2.0)
+        if self.volatility > Decimal(str(max_vol)):
+            raise ValueError(
+                f"Volatility exceeds reasonable maximum ({max_vol}), got {self.volatility}"
+            )
 
         # Check expected return
-        if self.expected_return < Decimal("-1"):
+        min_return = _get_asset_config("asset_class_min_expected_return", -1.0)
+        if self.expected_return < Decimal(str(min_return)):
             raise ValueError(
-                f"Expected return cannot be less than -100%, got {self.expected_return}"
+                f"Expected return cannot be less than {min_return*100}%, got {self.expected_return}"
             )
 
         # Validate rebalance frequency
@@ -572,8 +650,20 @@ class AssetClass:
             return Decimal("0")
         return self.expected_return / self.volatility
 
-    def calculate_sharpe_ratio(self, risk_free_rate: float = 0.02) -> float:
-        """Calculate Sharpe ratio."""
+    def calculate_sharpe_ratio(self, risk_free_rate: Optional[float] = None) -> float:
+        """
+        Calculate Sharpe ratio.
+
+        Args:
+            risk_free_rate: Risk-free rate for Sharpe ratio calculation.
+                If None, uses config value or default.
+
+        Returns:
+            Sharpe ratio value
+        """
+        if risk_free_rate is None:
+            risk_free_rate = _get_asset_config("portfolio_risk_free_rate", 0.02)
+
         rf = Decimal(str(risk_free_rate))
         if self.volatility == 0:
             return 0.0
@@ -581,8 +671,13 @@ class AssetClass:
 
     @property
     def sharpe_ratio(self) -> float:
-        """Calculate Sharpe ratio with default risk-free rate."""
-        return self.calculate_sharpe_ratio(0.02)
+        """
+        Calculate Sharpe ratio with default risk-free rate.
+
+        Returns:
+            Sharpe ratio using config-based risk-free rate
+        """
+        return self.calculate_sharpe_ratio()
 
     def to_config(self) -> AssetClassConfig:
         """Convert to AssetClassConfig object."""

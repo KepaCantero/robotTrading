@@ -21,7 +21,7 @@ import scipy.stats  # noqa: F401
 
 SCIPY_AVAILABLE = True
 
-from app.core.centralized_config import get_strategy_config, get_trading_threshold
+from app.core.centralized_config import get_strategy_config, get_trading_threshold, get_config
 from app.models.market_data import Quote
 from app.models.portfolio import Portfolio
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
@@ -42,6 +42,10 @@ class PairsTradingStrategy(BaseStrategy):
             config: Configuración de la estrategia
         """
         super().__init__(config)
+
+        # Load trading thresholds for use throughout the strategy
+        trading_config = get_config()
+        tt = trading_config.trading_thresholds
 
         # Load strategy-specific configuration
         strategy_config = get_strategy_config("pairs_trading")
@@ -135,8 +139,8 @@ class PairsTradingStrategy(BaseStrategy):
 
         # REFACTORED: Store price history for both symbols in pair for vectorized calculations
         self.price_history = defaultdict(
-            lambda: deque(maxlen=300)
-        )  # Increased to 300 for rolling cointegration
+            lambda: deque(maxlen=tt.pairs_trading_history_length)
+        )  # Use config value
 
         # IMPROVEMENT: Rolling cointegration revalidation (every 30 days)
         self.last_cointegration_recalc_date = None
@@ -226,8 +230,8 @@ class PairsTradingStrategy(BaseStrategy):
                 # Threshold is already in decimal format
                 spread_threshold_decimal = self.spread_threshold
 
-            # Use 50% of threshold for more permissive signal generation
-            spread_threshold_half = spread_threshold_decimal / Decimal("2")
+            # Use configured divisor for more permissive signal generation
+            spread_threshold_half = spread_threshold_decimal / Decimal(str(tt.spread_threshold_half_divisor))
 
             if not hasattr(self, '_call_count'):
                 self._call_count = 0
@@ -263,10 +267,12 @@ class PairsTradingStrategy(BaseStrategy):
                     self.last_trade_date = current_date
 
             # IMPROVEMENT: Apply stricter correlation and cointegration filters
-            # RELAXED: Use 80% of threshold for more signals (was 100%)
-            correlation_passed = correlation >= (self.min_correlation * Decimal("0.8"))
+            # RELAXED: Use configured multiplier for more signals
+            correlation_passed = correlation >= (
+                self.min_correlation * Decimal(str(tt.cointegration_relaxed_multiplier))
+            )
             cointegration_passed = cointegration_score >= (
-                self.cointegration_threshold * Decimal("0.8")
+                self.cointegration_threshold * Decimal(str(tt.cointegration_relaxed_multiplier))
             )
 
             # NEW: Calculate spread z-score and half-life for minimum edge filter
@@ -466,8 +472,12 @@ class PairsTradingStrategy(BaseStrategy):
             # since we're reducing exposure by selling
             max_allowed_total_exposure = self.max_total_exposure
             if signal.signal_type == SignalType.SELL and existing_position:
-                # For SELL operations, allow up to 15% total exposure (even if config is lower)
-                max_allowed_total_exposure = Decimal("0.15")
+                # For SELL operations, use configured sell exposure limit
+                config = get_config()
+                sell_limit = Decimal(str(getattr(
+                    config.trading, 'pairs_trading_sell_exposure_limit', 0.15
+                )))
+                max_allowed_total_exposure = sell_limit
 
             if total_exposure > max_allowed_total_exposure:
                 logger.info(
@@ -482,9 +492,14 @@ class PairsTradingStrategy(BaseStrategy):
             # since we're reducing exposure by selling
             max_allowed_exposure = self.max_pair_exposure
             if signal.signal_type == SignalType.SELL and existing_position:
-                # For SELL operations, allow up to 15% pair exposure (even if config is lower)
+                # For SELL operations, use configured sell exposure limit
                 # This allows selling positions even when pair exposure is temporarily high
-                max_allowed_exposure = Decimal("0.15")
+                # Reuse the same config value as total exposure for consistency
+                config = get_config()
+                sell_limit = Decimal(str(getattr(
+                    config.trading, 'pairs_trading_sell_exposure_limit', 0.15
+                )))
+                max_allowed_exposure = sell_limit
 
             if pair_exposure > max_allowed_exposure:
                 logger.info(
@@ -527,19 +542,25 @@ class PairsTradingStrategy(BaseStrategy):
 
         if len(symbol1_history) < 2 or len(symbol2_history) < 2:
             # Not enough history - use simplified calculation based on current prices
+            # Get default volatility from config
+            config = get_config()
+            default_vol = Decimal(str(getattr(
+                config.trading, 'pairs_trading_default_volatility', 0.02
+            )))
+
             if market_data.symbol == self.pair_symbols[0]:
                 # We need the other symbol's price - estimate from volatility
                 volatility = (
                     (market_data.high - market_data.low) / market_data.last
                     if market_data.last > 0
-                    else Decimal("0.02")
+                    else default_vol
                 )
                 spread = volatility * Decimal("0.5")  # Simplified spread
             else:
                 volatility = (
                     (market_data.high - market_data.low) / market_data.last
                     if market_data.last > 0
-                    else Decimal("0.02")
+                    else default_vol
                 )
                 spread = -volatility * Decimal("0.5")  # Opposite sign for second symbol
             return spread
@@ -604,8 +625,14 @@ class PairsTradingStrategy(BaseStrategy):
         Returns:
             Correlación calculada (0-1)
         """
+        # Get default correlation from config
+        config = get_config()
+        default_corr = Decimal(str(getattr(
+            config.trading, 'pairs_trading_default_correlation', 0.75
+        )))
+
         if len(self.pair_symbols) < 2:
-            return Decimal("0.75")
+            return default_corr
 
         # Get price histories for both symbols
         symbol1_history = list(self.price_history[self.pair_symbols[0]])
@@ -614,7 +641,7 @@ class PairsTradingStrategy(BaseStrategy):
         min_length = min(len(symbol1_history), len(symbol2_history))
         if min_length < 2:
             # Not enough history - return default correlation
-            return Decimal("0.75")
+            return default_corr
 
         # REFACTORED: Use numpy for vectorized correlation calculation
         prices1 = np.array(symbol1_history[-min_length:])
@@ -624,10 +651,10 @@ class PairsTradingStrategy(BaseStrategy):
         if len(prices1) >= 2 and np.std(prices1) > 0 and np.std(prices2) > 0:
             correlation_matrix = np.corrcoef(prices1, prices2)
             correlation = (
-                float(correlation_matrix[0, 1]) if not np.isnan(correlation_matrix[0, 1]) else 0.75
+                float(correlation_matrix[0, 1]) if not np.isnan(correlation_matrix[0, 1]) else float(default_corr)
             )
         else:
-            correlation = 0.75  # Default correlation
+            correlation = float(default_corr)  # Default correlation
 
         logger.debug(
             f"PAIRS_TRADING {market_data.symbol}: Correlation calculated: {correlation:.4f} "
@@ -648,8 +675,14 @@ class PairsTradingStrategy(BaseStrategy):
         Returns:
             Score de cointegración (0-1)
         """
+        # Get default cointegration score from config
+        config = get_config()
+        default_coint = Decimal(str(getattr(
+            config.trading, 'pairs_trading_default_cointegration', 0.75
+        )))
+
         if len(self.pair_symbols) < 2:
-            return Decimal("0.75")
+            return default_coint
 
         symbol1_history = list(self.price_history[self.pair_symbols[0]])
         symbol2_history = list(self.price_history[self.pair_symbols[1]])
@@ -657,7 +690,7 @@ class PairsTradingStrategy(BaseStrategy):
         min_length = min(len(symbol1_history), len(symbol2_history))
         if min_length < 10:
             # Not enough history - return default score
-            return Decimal("0.75")
+            return default_coint
 
         # IMPROVEMENT: Rolling window regression - recalculate every 30 days
         current_date = (
@@ -687,7 +720,7 @@ class PairsTradingStrategy(BaseStrategy):
             logger.debug(
                 f"PAIRS_TRADING {market_data.symbol}: Insufficient data for rolling cointegration ({len(prices1)} < 60)"
             )
-            return Decimal("0.75")
+            return default_coint
 
         if SCIPY_AVAILABLE and len(prices1) >= 60:
             try:
@@ -726,7 +759,7 @@ class PairsTradingStrategy(BaseStrategy):
                 return self.cached_cointegration_score
             except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 logger.warning(f"PAIRS_TRADING cointegration calculation error: {e}")
-                return Decimal("0.75")
+                return default_coint
         else:
             # Fallback: estimate based on price stability
             price_stability = (
@@ -970,6 +1003,13 @@ class PairsTradingStrategy(BaseStrategy):
         """Create a simple buy signal for pairs trading."""
         # FIX: volume is placeholder - get_position_size() calculates actual size
         volume_placeholder = Decimal("1")
+
+        # Get default spread from config for metadata
+        config = get_config()
+        default_spread = Decimal(str(getattr(
+            config.trading, 'pairs_trading_default_spread', 0.02
+        )))
+
         return Signal(
             symbol=market_data.symbol,
             signal_type=SignalType.BUY,
@@ -984,7 +1024,7 @@ class PairsTradingStrategy(BaseStrategy):
             metadata={
                 "strategy": self.name,
                 "pair_type": "buy_signal",
-                "spread": str(Decimal("0.02")),
+                "spread": str(default_spread),
             },
         )
 
@@ -992,6 +1032,13 @@ class PairsTradingStrategy(BaseStrategy):
         """Create a simple sell signal for pairs trading."""
         # FIX: volume is placeholder - get_position_size() calculates actual size
         volume_placeholder = Decimal("1")
+
+        # Get default spread from config for metadata
+        config = get_config()
+        default_spread = Decimal(str(getattr(
+            config.trading, 'pairs_trading_default_spread', 0.02
+        )))
+
         return Signal(
             symbol=market_data.symbol,
             signal_type=SignalType.SELL,
@@ -1006,6 +1053,6 @@ class PairsTradingStrategy(BaseStrategy):
             metadata={
                 "strategy": self.name,
                 "pair_type": "sell_signal",
-                "spread": str(Decimal("0.02")),
+                "spread": str(default_spread),
             },
         )

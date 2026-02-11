@@ -50,6 +50,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
+import empyrical  # Financial metrics library (annual_volatility, sharpe_ratio, etc.)
 from pydantic import BaseModel, Field, field_validator
 
 # Add project root to path
@@ -522,9 +523,12 @@ class SystemBus:
         Returns:
             PreTradeAnalysis with comprehensive results from ALL systems
         """
+        from app.core.centralized_config import get_compliance_config
+        config = get_compliance_config()
+
         result = PreTradeAnalysis(
             can_execute=True,
-            confidence=1.0,
+            confidence=config.INITIAL_CONFIDENCE,
             venue="lit_exchange",
             algorithm="LIMIT",
             systems_total=len(self._execution_order),
@@ -554,8 +558,10 @@ class SystemBus:
 
                 # Handle critical failures
                 if self._is_critical_failure(system_name):
+                    from app.core.centralized_config import get_compliance_config
+                    config = get_compliance_config()
                     result.can_execute = False
-                    result.confidence *= 0.5
+                    result.confidence *= config.CONF_CRITICAL_FAILURE_MULTIPLIER
                     result.reasons.append(f"Critical system {system_name} failed")
 
         result.systems_contributed = systems_executed
@@ -614,17 +620,21 @@ class SystemBus:
 
     def _aggregate_metrics(self, result: PreTradeAnalysis):
         """Aggregate metrics from multiple systems."""
-        # Liquidity (Harris + O'Hara)
+        from app.core.centralized_config import get_compliance_config
+        config = get_compliance_config()
+
+        # Liquidity (Harris + O'Hara) - using configurable weights
         result.liquidity_score = (
-            result.harris_liquidity_score * 0.6 + result.ohara_price_discovery_score * 0.4
+            result.harris_liquidity_score * config.HARRIS_LIQUIDITY_WEIGHT +
+            result.ohara_price_discovery_score * config.OHARA_LIQUIDITY_WEIGHT
         )
 
-        # Liquidity regime (combine both)
+        # Liquidity regime (combine both) - using configurable thresholds
         if result.ohara_liquidity_regime != "NORMAL":
             result.liquidity_regime = result.ohara_liquidity_regime
-        elif result.harris_liquidity_score < 30:
+        elif result.harris_liquidity_score < config.LIQUIDITY_LOW_THRESHOLD:
             result.liquidity_regime = "LOW"
-        elif result.harris_liquidity_score > 70:
+        elif result.harris_liquidity_score > config.LIQUIDITY_HIGH_THRESHOLD:
             result.liquidity_regime = "HIGH"
 
         # Total cost (sum of components)
@@ -652,20 +662,61 @@ class SystemBus:
         urgency,
         signal_time,
     ) -> bool:
-        """Handle Data Engine checks."""
+        """
+        Handle Data Engine checks.
+
+        NOTE: Calculates data quality metrics from actual price_history data.
+        Uses ComplianceConfig for minimum data quality thresholds.
+        """
         try:
-            # Check data freshness
-            result.data_freshness_ms = 50.0  # Placeholder
+            from app.core.centralized_config import get_compliance_config
+            config = get_compliance_config()
 
-            # Check data quality
-            result.data_quality_score = 100.0
+            # Calculate data quality from actual data (not hardcoded)
+            if price_history is not None and len(price_history) > 0:
+                # Data quality: percentage of non-null values across all columns
+                total_cells = len(price_history) * len(price_history.columns)
+                non_null_cells = price_history.count().sum()
+                result.data_quality_score = (non_null_cells / total_cells) * config.PERCENTAGE_MULTIPLIER if total_cells > 0 else 0.0
 
-            # Check for missing data
-            if price_history is not None:
+                # Check for missing data
                 result.missing_data_detected = price_history.isnull().any().any()
 
+                # Calculate data freshness from most recent timestamp
+                # Assuming price_history has a DatetimeIndex or timestamp column
+                if hasattr(price_history.index, 'max'):
+                    most_recent_time = price_history.index.max()
+                    if hasattr(most_recent_time, 'to_pydatetime'):
+                        most_recent_time = most_recent_time.to_pydatetime()
+                    # Calculate freshness in milliseconds
+                    time_diff = datetime.now() - most_recent_time
+                    result.data_freshness_ms = time_diff.total_seconds() * config.MILLISECONDS_MULTIPLIER
+                else:
+                    # Can't calculate freshness, use None to indicate not available
+                    result.data_freshness_ms = None
+
+                # Adjust confidence if data quality is below threshold
+                if result.data_quality_score < config.MIN_STATISTICAL_MODEL_HEALTH:
+                    result.confidence -= config.CONF_LOW_MODEL_HEALTH_PENALTY
+                    result.reasons.append(
+                        f"Data quality ({result.data_quality_score:.0f}%) below minimum ({config.MIN_STATISTICAL_MODEL_HEALTH:.0f}%)"
+                    )
+
+                if result.missing_data_detected:
+                    result.confidence -= config.CONF_LOW_MODEL_HEALTH_PENALTY
+                    result.reasons.append("Missing data detected in price history")
+            else:
+                # No price history available
+                result.data_quality_score = 0.0
+                result.data_freshness_ms = None
+                result.missing_data_detected = True
+                result.confidence = 0.0
+                result.can_execute = False
+                result.reasons.append("No price history available for data validation")
+
             return True
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Data engine analysis failed: {e}")
             return False
 
     def _handle_context_engine(
@@ -680,11 +731,55 @@ class SystemBus:
         urgency,
         signal_time,
     ) -> bool:
-        """Handle Context Engine analysis."""
+        """
+        Handle Context Engine analysis.
+
+        NOTE: ContextEngine.get_current_regime() is computational (no external I/O).
+        Timeout handling is delegated to the ContextEngine subsystem if needed.
+        Uses ComplianceConfig for all confidence adjustments.
+        """
         try:
-            # Get regime from context engine
+            from app.core.centralized_config import get_compliance_config
+            config = get_compliance_config()
+
+            if price_history is not None and 'close' in price_history.columns:
+                # Extract prices as list for ContextEngine
+                prices = price_history['close'].tolist()
+
+                # Get current regime using ensemble method (combines HMM, clustering, correlation)
+                regime_result = subsystem.get_current_regime(prices, method='ensemble')
+
+                if regime_result and 'regime' in regime_result:
+                    detected_regime = regime_result['regime']
+                    regime_conf = regime_result.get('confidence', config.DEFAULT_REGIME_CONFIDENCE)
+
+                    # Only set market_regime if not already set by Chan (Chan takes precedence)
+                    if not result.market_regime:
+                        result.market_regime = detected_regime
+
+                    # Always update regime_confidence if higher
+                    result.regime_confidence = max(result.regime_confidence, regime_conf)
+
+                    # Adjust confidence based on regime (using config values)
+                    if detected_regime == "BEAR" or detected_regime == "high_volatility":
+                        result.confidence -= config.CONF_BEAR_REGIME_PENALTY
+                    elif detected_regime == "BULL" or detected_regime == "low_volatility":
+                        result.confidence += config.CONF_BULL_REGIME_BONUS
+
+                # Also get volatility regime for additional context
+                vol_result = subsystem.get_volatility_regime(prices)
+                if vol_result:
+                    result.volatility_regime = vol_result.get('regime', 'NORMAL')
+                    vol_percentile = vol_result.get('percentile', 50)
+
+                    # Adjust confidence for extreme volatility (using config threshold)
+                    if vol_percentile > config.HIGH_VOLATILITY_PERCENTILE:
+                        result.confidence -= config.CONF_HIGH_VOLATILITY_PENALTY
+                        result.reasons.append(f"High volatility regime (percentile: {vol_percentile})")
+
             return True
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Context engine analysis failed: {e}")
             return False
 
     def _handle_ernest_chan(
@@ -704,22 +799,27 @@ class SystemBus:
 
         NOTE: RegimeDetector.detect_regimes() is computational (no external I/O).
         Timeout handling is delegated to the RegimeDetector subsystem if needed.
+        Uses ComplianceConfig for confidence adjustments.
         """
         try:
+            from app.core.centralized_config import get_compliance_config
+            config = get_compliance_config()
+
             if price_history is not None:
                 regime_result = subsystem["regime"].detect_regimes(price_history)
                 if regime_result and len(regime_result) > 0:
                     result.chan_regime = regime_result[-1]
-                    result.regime_confidence = 0.7
+                    result.regime_confidence = config.DEFAULT_REGIME_CONFIDENCE
 
-                    # Adjust confidence based on regime
+                    # Adjust confidence based on regime (using config values)
                     if result.chan_regime == "BEAR":
-                        result.confidence -= 0.1
+                        result.confidence -= config.CONF_BEAR_REGIME_PENALTY
                     elif result.chan_regime == "BULL":
-                        result.confidence += 0.05
+                        result.confidence += config.CONF_BULL_REGIME_BONUS
 
             return True
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Ernest Chan analysis failed: {e}")
             return False
 
     def _handle_risk_engine(
@@ -734,8 +834,16 @@ class SystemBus:
         urgency,
         signal_time,
     ) -> bool:
-        """Handle Risk Engine checks with REAL validations."""
+        """
+        Handle Risk Engine checks with REAL validations.
+
+        Uses ComplianceConfig for all confidence multipliers and penalties.
+        """
         try:
+            from app.core.centralized_config import get_compliance_config
+            config = get_compliance_config()
+            compliance_config = get_compliance_config()
+
             # Get current portfolio state from the risk engine
             try:
                 current_positions = subsystem.get_current_positions()
@@ -758,7 +866,7 @@ class SystemBus:
 
             if not position_limit_ok:
                 result.can_execute = False
-                result.confidence *= 0.3
+                result.confidence *= compliance_config.CONF_POSITION_LIMIT_MULTIPLIER
                 max_pct = self.config.max_position_ratio * 100
                 result.reasons.append(
                     f"Position limit exceeded: {position_ratio:.1%} of portfolio > {max_pct:.0f}% limit (Chan Rule 1)"
@@ -777,7 +885,7 @@ class SystemBus:
 
             if not drawdown_limit_ok:
                 result.can_execute = False
-                result.confidence *= 0.2
+                result.confidence *= compliance_config.CONF_DRAWDOWN_LIMIT_MULTIPLIER
                 max_dd_pct = self.config.max_drawdown_ratio * 100
                 result.reasons.append(
                     f"Drawdown limit exceeded: {current_drawdown:.1%} > {max_dd_pct:.0f}% limit (Chan Rule 1)"
@@ -803,7 +911,7 @@ class SystemBus:
             leverage_ok = leverage_ratio <= self.config.max_leverage_ratio
             if not leverage_ok:
                 result.can_execute = False
-                result.confidence *= 0.4
+                result.confidence *= compliance_config.CONF_LEVERAGE_LIMIT_MULTIPLIER
                 result.reasons.append(
                     f"Leverage too high: {leverage_ratio:.2f}x > {self.config.max_leverage_ratio}x limit"
                 )
@@ -819,11 +927,11 @@ class SystemBus:
                 # Use configured max data age (addresses GAP-CFG-002)
                 if 'timestamp' in price_history.columns:
                     last_timestamp = pd.to_datetime(price_history['timestamp'].iloc[-1])
-                    data_age = (datetime.now() - last_timestamp).total_seconds() / 86400  # days
+                    data_age = (datetime.now() - last_timestamp).total_seconds() / config.SECONDS_PER_DAY
                 elif len(price_history) > 0:
                     # Assume index is timestamp if no timestamp column
                     last_timestamp = pd.to_datetime(price_history.index[-1])
-                    data_age = (datetime.now() - last_timestamp).total_seconds() / 86400
+                    data_age = (datetime.now() - last_timestamp).total_seconds() / config.SECONDS_PER_DAY
                 else:
                     data_age = 0
 
@@ -843,7 +951,7 @@ class SystemBus:
                 # Use configured min quality threshold (addresses GAP-CFG-002)
                 if result.data_quality_score < engine.config.min_data_quality_score:
                     result.can_execute = False
-                    result.confidence *= 0.5
+                    result.confidence *= compliance_config.CONF_CIRCUIT_BREAKER_MULTIPLIER
                     result.reasons.append(
                         f"Data quality too low: {result.data_quality_score:.0f}% < "
                         f"{engine.config.min_data_quality_score:.0f}% threshold"
@@ -862,11 +970,12 @@ class SystemBus:
                 if len(clean_prices) > 1:  # Need at least 2 data points
                     returns = clean_prices.pct_change().dropna()
                     if len(returns) > 0:
-                        result.portfolio_var = float(returns.std() * (252**0.5))
+                        # Use empyrical library for accurate annual volatility calculation
+                        result.portfolio_var = float(empyrical.annual_volatility(returns))
 
                         # Use configured max portfolio volatility (addresses GAP-CFG-002)
                         if abs(result.portfolio_var) > engine.config.max_portfolio_volatility:
-                            result.confidence -= 0.15
+                            result.confidence -= compliance_config.CONF_HIGH_VOLATILITY_PENALTY
                             result.reasons.append(
                                 f"High portfolio volatility: {result.portfolio_var:.2%}"
                             )
@@ -892,6 +1001,9 @@ class SystemBus:
     ) -> bool:
         """Handle Hull risk metrics."""
         try:
+            from app.core.centralized_config import get_compliance_config
+            config = get_compliance_config()
+
             if price_history is not None:
                 returns = price_history["close"].pct_change().dropna()
 
@@ -913,7 +1025,7 @@ class SystemBus:
                 # Use configured max daily VaR (addresses GAP-CFG-002)
                 engine = self.engine
                 if abs(result.hull_var_1d_95) > engine.config.max_daily_var_95:
-                    result.confidence -= 0.1
+                    result.confidence -= config.CONF_HIGH_VAR_PENALTY
                     result.reasons.append(f"High daily VaR: {result.hull_var_1d_95:.2%}")
 
             return True
@@ -932,13 +1044,53 @@ class SystemBus:
         urgency,
         signal_time,
     ) -> bool:
-        """Handle Strategy analysis."""
+        """
+        Handle Strategy analysis.
+
+        NOTE: Uses StrategyStockAllocatorConfig for Hurst thresholds.
+        Uses ComplianceConfig for default values.
+        Calculates momentum/mean-reversion signal from actual price data.
+        """
         try:
-            # Get strategy signal
-            result.strategy_signal = 0.5
-            result.strategy_health = 100.0
+            from app.core.centralized_config import (
+                get_compliance_config,
+                get_strategy_stock_allocator_config,
+            )
+
+            config = get_compliance_config()
+            alloc_config = get_strategy_stock_allocator_config()
+            compliance_config = get_compliance_config()
+
+            if price_history is not None and len(price_history) >= alloc_config.SLOPE_WINDOW_MIN:
+                # Calculate returns
+                returns = price_history["close"].pct_change().dropna()
+
+                # Calculate momentum signal based on recent returns
+                if len(returns) >= alloc_config.SLOPE_WINDOW_MIN:
+                    recent_returns = returns.tail(alloc_config.SLOPE_WINDOW_MIN)
+                    avg_return = recent_returns.mean()
+
+                    # Normalize signal to 0-1 range (0=bearish, 1=bullish)
+                    # Using sigmoid-like transformation with config scaling factor
+                    import math
+                    result.strategy_signal = 1.0 / (1.0 + math.exp(-avg_return * compliance_config.STRATEGY_SIGNAL_SCALING_FACTOR))
+
+                    # Strategy health: based on return consistency
+                    # Positive returns more often = healthier strategy
+                    (recent_returns > 0).mean()
+                    result.strategy_health = positive_returns_pct * config.PERCENTAGE_MULTIPLIER
+                else:
+                    # Use config defaults when insufficient data
+                    result.strategy_signal = compliance_config.DEFAULT_SIGNAL_STRENGTH
+                    result.strategy_health = compliance_config.DEFAULT_HEALTH_SCORE
+            else:
+                # Default neutral values when insufficient data
+                result.strategy_signal = compliance_config.DEFAULT_SIGNAL_STRENGTH
+                result.strategy_health = compliance_config.DEFAULT_HEALTH_SCORE
+
             return True
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Strategy analysis failed: {e}")
             return False
 
     def _handle_narang(
@@ -958,8 +1110,12 @@ class SystemBus:
 
         NOTE: AlphaModel.generate_alpha() is computational (no external I/O).
         Timeout handling is delegated to the AlphaModel subsystem if needed.
+        Uses ComplianceConfig for quality thresholds.
         """
         try:
+            from app.core.centralized_config import get_compliance_config
+            config = get_compliance_config()
+
             if price_history is not None:
                 alpha_signal = subsystem["alpha"].generate_alpha(
                     symbol=symbol,
@@ -969,17 +1125,18 @@ class SystemBus:
 
                 result.narang_alpha_signal = float(alpha_signal.confidence)
 
-                # Quality assessment
-                if alpha_signal.confidence >= 0.7:
+                # Quality assessment using config thresholds
+                if alpha_signal.confidence >= config.ALPHA_QUALITY_HIGH_THRESHOLD:
                     result.narang_alpha_quality = "HIGH"
-                elif alpha_signal.confidence >= 0.4:
+                elif alpha_signal.confidence >= config.ALPHA_QUALITY_MEDIUM_THRESHOLD:
                     result.narang_alpha_quality = "MEDIUM"
                 else:
                     result.narang_alpha_quality = "LOW"
-                    result.confidence -= 0.2
+                    result.confidence -= config.CONF_LOW_SHARPE_PENALTY
 
             return True
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Narang analysis failed: {e}")
             return False
 
     def _handle_lopez_de_prado(
@@ -994,16 +1151,42 @@ class SystemBus:
         urgency,
         signal_time,
     ) -> bool:
-        """Handle Lopez de Prado analysis."""
-        try:
-            # Meta-labeling signal
-            result.meta_labeling_signal = 0.5
+        """
+        Handle Lopez de Prado analysis.
 
-            # MCC metric
-            result.mcc_metric = 0.7
+        NOTE: MetaLabeling requires fitting before prediction.
+        In pre-trade context, we check if model is fitted and use cached metrics.
+        Timeout handling is delegated to the MetaLabeling subsystem if needed.
+        Uses ComplianceConfig for default values.
+        """
+        try:
+            from app.core.centralized_config import get_compliance_config
+            config = get_compliance_config()
+
+            # Check if meta-labeling model is fitted
+            if hasattr(subsystem, '_is_fitted') and subsystem._is_fitted:
+                # Model is fitted, we could make predictions if we have features
+                # For now, use the meta accuracy as signal strength
+                if hasattr(subsystem, 'meta_model'):
+                    # Meta-model accuracy indicates how well we can predict primary model correctness
+                    result.meta_labeling_signal = config.FITTED_MODEL_SIGNAL_STRENGTH
+            else:
+                # Model not fitted - use conservative estimate
+                result.meta_labeling_signal = config.DEFAULT_SIGNAL_STRENGTH
+
+            # MCC (Matthews Correlation Coefficient) - requires validation data
+            # Without fitted model, use config default
+            result.mcc_metric = config.DEFAULT_MCC_METRIC
+
+            # Sample weights availability - check if purged CV is configured
+            if hasattr(subsystem, 'config') and subsystem.config.use_purged_cv:
+                result.sample_weights_available = True
+            else:
+                result.sample_weights_available = False
 
             return True
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Lopez de Prado analysis failed: {e}")
             return False
 
     def _handle_hastie(
@@ -1018,16 +1201,62 @@ class SystemBus:
         urgency,
         signal_time,
     ) -> bool:
-        """Handle Hastie statistical learning checks."""
-        try:
-            # Statistical model health
-            result.statistical_model_health = 95.0
+        """
+        Handle Hastie statistical learning checks.
 
-            # Cross-validation score
-            result.cross_validation_score = 0.75
+        NOTE: Uses ComplianceConfig for all thresholds.
+        Calculates metrics from actual price data when available.
+        """
+        try:
+            from app.core.centralized_config import get_compliance_config
+            from statsmodels.tsa.stattools import adfuller
+            from scipy import stats
+
+            config = get_compliance_config()
+
+            if price_history is not None and len(price_history) >= config.MIN_PRICE_HISTORY_LENGTH:
+                returns = price_history["close"].pct_change().dropna()
+
+                # Statistical model health: based on stationarity of returns using ADF test
+                # ADF test is the proper statistical test for stationarity (stability)
+                adf_result = adfuller(returns, maxlag=int(config.RETURN_STABILITY_WINDOW))
+                adf_pvalue = adf_result[1]  # p-value from ADF test
+                # Convert p-value to health score: lower p-value = more stationary = higher health
+                if adf_pvalue < config.ADF_PVALUE_THRESHOLD:
+                    result.statistical_model_health = 100.0 - (adf_pvalue * config.STATIONARY_HEALTH_MULTIPLIER)
+                else:
+                    result.statistical_model_health = max(0.0, 100.0 - (adf_pvalue * config.NON_STATIONARY_HEALTH_MULTIPLIER))
+
+                # Cross-validation score: use coefficient of variation (CV) from scipy
+                # CV measures relative variability (std/mean), lower CV = more consistent = higher CV score
+                if returns.mean() != 0:
+                    cv = stats.variation(returns.values)  # Coefficient of variation
+                    # Convert CV to score: lower CV = higher score (0-1 range)
+                    result.cross_validation_score = max(0.0, min(1.0, 1.0 - cv))
+                else:
+                    # Fallback to config minimum if mean is zero
+                    result.cross_validation_score = config.MIN_CROSS_VALIDATION_SCORE
+            else:
+                # No data available - use minimum thresholds from config
+                result.statistical_model_health = config.MIN_STATISTICAL_MODEL_HEALTH
+                result.cross_validation_score = config.MIN_CROSS_VALIDATION_SCORE
+
+            # Check against minimum thresholds from config
+            if result.statistical_model_health < config.MIN_STATISTICAL_MODEL_HEALTH:
+                result.confidence -= config.CONF_LOW_MODEL_HEALTH_PENALTY
+                result.reasons.append(
+                    f"Statistical model health ({result.statistical_model_health:.1f}) below minimum ({config.MIN_STATISTICAL_MODEL_HEALTH:.1f})"
+                )
+
+            if result.cross_validation_score < config.MIN_CROSS_VALIDATION_SCORE:
+                result.confidence -= config.CONF_LOW_CV_SCORE_PENALTY
+                result.reasons.append(
+                    f"Cross-validation score ({result.cross_validation_score:.2f}) below minimum ({config.MIN_CROSS_VALIDATION_SCORE:.2f})"
+                )
 
             return True
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Hastie analysis failed: {e}")
             return False
 
     def _handle_harris(
@@ -1049,6 +1278,9 @@ class SystemBus:
         Timeout handling is delegated to the HarrisIntegrator subsystem.
         """
         try:
+            from app.core.centralized_config import get_compliance_config
+            config = get_compliance_config()
+
             harris_check = subsystem.pre_trade_check(
                 symbol=symbol,
                 side=side,
@@ -1064,14 +1296,17 @@ class SystemBus:
             # Note: Field names differ between HarrisIntegrator.PreTradeCheckResult and PreTradeAnalysis
             result.harris_order_book_depth_ok = harris_check.order_book_depth_ok
             # liquidity_score doesn't exist in PreTradeCheckResult, use liquidity_sufficient as proxy
-            result.harris_liquidity_score = 100.0 if harris_check.liquidity_sufficient else 0.0
+            result.harris_liquidity_score = (
+                config.LIQUIDITY_SCORE_SUFFICIENT if harris_check.liquidity_sufficient
+                else config.LIQUIDITY_SCORE_INSUFFICIENT
+            )
             result.harris_vpin = getattr(harris_check, 'vpin', 0.0)
             result.harris_pin = getattr(harris_check, 'pin', 0.0)
             # PreTradeCheckResult has estimated_cost_bps, not separate market_impact/timing_cost
             # Use estimated_cost_bps as market_impact_bps for now
             result.market_impact_bps = getattr(harris_check, 'estimated_cost_bps', 0.0)
             # timing_cost_bps not available in PreTradeCheckResult, estimate as portion of cost
-            result.timing_cost_bps = getattr(harris_check, 'estimated_cost_bps', 0.0) * 0.3
+            result.timing_cost_bps = getattr(harris_check, 'estimated_cost_bps', 0.0) * config.TIMING_COST_MULTIPLIER
             # Map venue names
             result.venue = getattr(harris_check, 'recommended_venue', 'lit_exchange')
             result.algorithm = getattr(harris_check, 'recommended_order_type', 'LIMIT')
@@ -1099,22 +1334,89 @@ class SystemBus:
         urgency,
         signal_time,
     ) -> bool:
-        """Handle O'Hara microstructure analysis."""
+        """
+        Handle O'Hara microstructure analysis.
+
+        NOTE: Liquidity and order flow analysis are computational (no external I/O).
+        Timeout handling is delegated to the subsystem analyzers if needed.
+        Uses ComplianceConfig for all thresholds and estimates.
+        """
         try:
-            # Liquidity regime
-            result.ohara_liquidity_regime = "NORMAL"
+            from app.core.centralized_config import get_compliance_config
+            config = get_compliance_config()
 
-            # Order flow toxicity
-            result.ohara_order_flow_toxicity = 0.3
+            # subsystem is a dict with 'liquidity' and 'order_flow' analyzers
+            liquidity_analyzer = subsystem.get("liquidity")
+            order_flow_analyzer = subsystem.get("order_flow")
 
-            # Price discovery
-            result.ohara_price_discovery_score = 60.0
+            # === Liquidity Analysis ===
+            if liquidity_analyzer and price_history is not None:
+                # Calculate volatility from price history
+                vol_window = config.VOLATILITY_WINDOW
+                if len(price_history) >= vol_window:
+                    returns = price_history["close"].pct_change().dropna()
+                    volatility = returns.tail(vol_window).std()
+                else:
+                    volatility = config.ESTIMATED_VOLATILITY
 
-            # Dark pool availability
-            result.dark_pool_available = False
+                # Estimate spread from price data (bid-ask bounce estimation)
+                # Use high-low range as proxy for spread
+                spread_window = config.SPREAD_WINDOW
+                if "high" in price_history.columns and "low" in price_history.columns:
+                    recent_spread = ((price_history["high"] - price_history["low"]) / price_history["close"]).tail(spread_window).mean()
+                    spread_bps = float(recent_spread * config.BASIS_POINTS_MULTIPLIER)
+                else:
+                    spread_bps = config.ESTIMATED_SPREAD_BPS
+
+                # Calculate liquidity score using config estimates
+                liquidity_score = liquidity_analyzer.calculate_liquidity_score(
+                    spread_bps=spread_bps,
+                    depth=Decimal(str(config.ESTIMATED_DEPTH)),
+                    volatility=volatility,
+                    volume=config.ESTIMATED_VOLUME,
+                )
+
+                # Classify regime
+                result.ohara_liquidity_regime = liquidity_analyzer.classify_liquidity_regime(liquidity_score)
+                result.ohara_price_discovery_score = liquidity_score
+
+                # Adjust confidence based on liquidity (using config penalties)
+                if result.ohara_liquidity_regime == "POOR":
+                    result.confidence -= config.CONF_POOR_LIQUIDITY_PENALTY
+                    result.reasons.append("Poor liquidity conditions detected (O'Hara)")
+                elif result.ohara_liquidity_regime == "LOW":
+                    result.confidence -= config.CONF_LOW_LIQUIDITY_PENALTY
+            else:
+                result.ohara_liquidity_regime = "NORMAL"
+                result.ohara_price_discovery_score = config.MIN_LIQUIDITY_SCORE
+
+            # === Order Flow Analysis ===
+            if order_flow_analyzer:
+                # Order flow toxicity - requires trade history
+                # Without trade data, use volatility-based estimate
+                flow_window = config.FLOW_VOLATILITY_WINDOW
+                if price_history is not None and len(price_history) >= flow_window:
+                    returns = price_history["close"].pct_change().dropna()
+                    # Higher volatility correlates with higher information asymmetry
+                    flow_volatility = returns.tail(flow_window).std()
+                    result.ohara_order_flow_toxicity = min(1.0, flow_volatility * config.ORDER_FLOW_TOXICITY_SCALING_FACTOR)
+                else:
+                    result.ohara_order_flow_toxicity = config.DEFAULT_ORDER_FLOW_TOXICITY
+
+                # Adjust confidence for high toxicity (using config threshold)
+                if result.ohara_order_flow_toxicity > config.MAX_ORDER_FLOW_TOXICITY:
+                    result.confidence -= config.CONF_HIGH_TOXICITY_PENALTY
+                    result.reasons.append(f"High order flow toxicity: {result.ohara_order_flow_toxicity:.2f}")
+            else:
+                result.ohara_order_flow_toxicity = config.DEFAULT_ORDER_FLOW_TOXICITY
+
+            # Dark pool availability (O'Hara Chapter 8)
+            # For most equities, dark pools are available but not always optimal
+            result.dark_pool_available = True  # Assume available for most stocks
 
             return True
-        except Exception:
+        except Exception as e:
+            logger.warning(f"O'Hara analysis failed: {e}")
             return False
 
     def _handle_portfolio_engine(
@@ -1129,19 +1431,64 @@ class SystemBus:
         urgency,
         signal_time,
     ) -> bool:
-        """Handle Portfolio Engine analysis."""
+        """
+        Handle Portfolio Engine analysis.
+
+        NOTE: PortfolioEngine is async, so we use cached data when available.
+        Uses StrategyStockAllocatorConfig for exposure limits.
+        """
         try:
-            # Current exposure
-            result.current_exposure = 0.5
+            # Import config to get actual limits
+            from app.core.centralized_config import get_strategy_stock_allocator_config
 
-            # Diversification score
-            result.diversification_score = 0.7
+            config = get_strategy_stock_allocator_config()
 
-            # Correlation risk
-            result.correlation_risk = 0.3
+            # Try to get current portfolio from cache
+            if hasattr(subsystem, 'current_portfolio') and subsystem.current_portfolio:
+                portfolio = subsystem.current_portfolio
+
+                # Calculate current exposure (total positions / equity)
+                total_exposure = 0.0
+                position_count = 0
+                for position in portfolio.positions:
+                    if hasattr(position, 'market_value'):
+                        total_exposure += abs(float(position.market_value))
+                        position_count += 1
+
+                if hasattr(portfolio, 'total_equity') and portfolio.total_equity > 0:
+                    result.current_exposure = total_exposure / float(portfolio.total_equity)
+
+                    # Check against MAX_STRATEGY_EXPOSURE limit
+                    if result.current_exposure > config.MAX_STRATEGY_EXPOSURE:
+                        result.can_execute = False
+                        result.confidence = 0.0
+                        result.reasons.append(
+                            f"Current exposure ({result.current_exposure:.1%}) exceeds MAX_STRATEGY_EXPOSURE ({config.MAX_STRATEGY_EXPOSURE:.1%})"
+                        )
+                else:
+                    result.current_exposure = 0.0
+
+                # Calculate diversification score based on position count vs MAX_ASSETS_PER_PAIR
+                # More positions = better diversification, up to a reasonable limit
+                max_positions = config.MAX_ASSETS_PER_PAIR * 10  # Scale to portfolio level
+                result.diversification_score = min(1.0, position_count / max_positions) if position_count > 0 else 0.0
+
+                # Correlation risk - estimate based on concentration
+                # Fewer positions = higher correlation risk
+                if position_count <= 1:
+                    result.correlation_risk = config.MAX_CORRELATION_RISK  # Maximum risk with single position
+                else:
+                    # Use HHI (Herfindahl-Hirschman Index) concept: lower concentration = lower risk
+                    result.correlation_risk = config.MAX_CORRELATION_RISK / position_count
+            else:
+                # No portfolio data - use conservative defaults
+                result.current_exposure = 0.0
+                result.diversification_score = 0.0
+                result.correlation_risk = config.MAX_CORRELATION_RISK
 
             return True
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Portfolio engine analysis failed: {e}")
             return False
 
     def _handle_backtesting_engine(
@@ -1156,16 +1503,54 @@ class SystemBus:
         urgency,
         signal_time,
     ) -> bool:
-        """Handle Backtesting Engine checks."""
-        try:
-            # Backtest confidence
-            result.backtest_confidence = 0.8
+        """
+        Handle Backtesting Engine checks.
 
-            # Historical Sharpe
-            result.historical_sharpe = 1.5
+        NOTE: Uses StrategyStockAllocatorConfig for LOOKBACK_MAX_DAYS and SLOPE_WINDOW_MIN.
+        Uses ComplianceConfig for all thresholds and penalties.
+        Calculates metrics from actual price history data.
+        """
+        try:
+            from app.core.centralized_config import (
+                get_compliance_config,
+                get_strategy_stock_allocator_config,
+            )
+
+            config = get_compliance_config()
+            alloc_config = get_strategy_stock_allocator_config()
+            compliance_config = get_compliance_config()
+
+            if price_history is not None and len(price_history) >= alloc_config.LOOKBACK_MAX_DAYS:
+                # Calculate historical return metrics
+                returns = price_history["close"].pct_change().dropna()
+
+                # Backtest confidence - based on trend consistency
+                if len(returns) >= alloc_config.SLOPE_WINDOW_MIN:
+                    recent_trend = returns.tail(alloc_config.SLOPE_WINDOW_MIN).mean()
+                    older_trend = returns.head(len(returns) - alloc_config.SLOPE_WINDOW_MIN).mean()
+                    epsilon = compliance_config.EPSILON_DIVISION
+                    trend_consistency = 1.0 - abs(recent_trend - older_trend) / (abs(older_trend) + epsilon)
+                    result.backtest_confidence = max(compliance_config.MIN_BACKTEST_CONFIDENCE, min(1.0, trend_consistency))
+                else:
+                    result.backtest_confidence = compliance_config.DEFAULT_SIGNAL_STRENGTH
+
+                # Historical Sharpe ratio (annualized) - using empyrical library
+                if len(returns) >= alloc_config.SLOPE_WINDOW_MIN:
+                    # Use empyrical library for accurate Sharpe ratio calculation
+                    result.historical_sharpe = float(empyrical.sharpe_ratio(returns))
+
+                    # Check against MIN_SORTINO_RATIO threshold
+                    if result.historical_sharpe < alloc_config.MIN_SORTINO_RATIO:
+                        result.confidence -= compliance_config.CONF_LOW_SHARPE_PENALTY
+                        result.reasons.append(
+                            f"Sharpe ratio ({result.historical_sharpe:.2f}) below MIN_SORTINO_RATIO ({alloc_config.MIN_SORTINO_RATIO:.2f})"
+                        )
+                else:
+                    result.historical_sharpe = compliance_config.MIN_HISTORICAL_SHARPE
 
             return True
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Backtesting engine analysis failed: {e}")
             return False
 
     def _handle_execution_engine(
@@ -1180,19 +1565,50 @@ class SystemBus:
         urgency,
         signal_time,
     ) -> bool:
-        """Handle Execution Engine checks."""
+        """
+        Handle Execution Engine checks.
+
+        NOTE: Uses TradingConfig for position sizing limits.
+        Estimates slippage based on MIN_LIQUIDITY_USD threshold.
+        """
         try:
-            # Execution probability
-            result.execution_probability = 0.95
+            from app.core.centralized_config import get_strategy_stock_allocator_config, get_compliance_config
+            from app.core.environment_config import get_trading_config
 
-            # Slippage estimate
-            result.estimated_slippage_bps = 5.0
+            alloc_config = get_strategy_stock_allocator_config()
+            trading_config = get_trading_config()
+            config = get_compliance_config()
 
-            # Optimal participation rate
-            result.optimal_participation_rate = 0.1
+            if subsystem and hasattr(subsystem, 'estimate_execution_probability'):
+                # Get execution probability from microstructure engine
+                exec_prob = subsystem.estimate_execution_probability(
+                    symbol=symbol,
+                    side=side,
+                    quantity=float(quantity),
+                    price=float(price),
+                    urgency=urgency,
+                )
+                result.execution_probability = max(0.0, min(1.0, exec_prob))
+            else:
+                # Estimate based on urgency (higher urgency = lower probability)
+                result.execution_probability = 1.0 - (urgency * config.URGENCY_IMPACT_COEFFICIENT)
+
+            # Estimate slippage based on urgency and execution probability
+            # Using GARCH_FORECAST_HORIZON as reference for volatility impact
+            base_slippage = config.BASE_SLIPPAGE_BPS  # Base slippage in bps
+            urgency_multiplier = config.URGENCY_BASE_MULTIPLIER + urgency  # High urgency increases slippage
+            result.estimated_slippage_bps = base_slippage * urgency_multiplier * (config.SLIPPAGE_VOLATILITY_FACTOR - result.execution_probability)
+
+            # Optimal participation rate based on TradingConfig max_position_size
+            # Higher urgency = higher participation rate, but capped by max_position_size
+            result.optimal_participation_rate = min(
+                trading_config.max_position_size,
+                config.BASE_PARTICIPATION_RATE + urgency * trading_config.max_position_size
+            )
 
             return True
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Execution engine analysis failed: {e}")
             return False
 
     def _handle_tomasini(
@@ -1207,19 +1623,31 @@ class SystemBus:
         urgency,
         signal_time,
     ) -> bool:
-        """Handle Tomasini architecture checks."""
-        try:
-            # Architecture score
-            result.tomasini_architecture_score = 95.0
+        """
+        Handle Tomasini architecture checks.
 
-            # Walk-forward validation
+        NOTE: Tomasini is about architecture patterns (Rule 4).
+        Returns static compliance metrics for system architecture.
+        """
+        try:
+            from app.core.centralized_config import get_compliance_config
+            config = get_compliance_config()
+
+            # Architecture score - check if subsystem indicates compliance
+            if isinstance(subsystem, dict) and subsystem.get('architecture_compliant'):
+                result.tomasini_architecture_score = config.TOMASINI_ARCHITECTURE_SCORE_COMPLIANT
+            else:
+                result.tomasini_architecture_score = config.TOMASINI_ARCHITECTURE_SCORE_DEFAULT
+
+            # Walk-forward validation - assumes proper testing setup
             result.walk_forward_passed = True
 
-            # Overfitting risk
+            # Overfitting risk - assume LOW for well-architected system
             result.overfitting_risk = "LOW"
 
             return True
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Tomasini analysis failed: {e}")
             return False
 
     def _handle_live_trading(
@@ -1234,22 +1662,41 @@ class SystemBus:
         urgency,
         signal_time,
     ) -> bool:
-        """Handle Live Trading checks."""
+        """
+        Handle Live Trading checks.
+
+        NOTE: BrokerConnector provides account status.
+        Timeout handling is delegated to the BrokerConnector subsystem.
+        """
         try:
-            # Account balance
-            result.account_balance_ok = True
+            if subsystem and hasattr(subsystem, 'get_account_info'):
+                # Get actual account status from broker
+                account_info = subsystem.get_account_info()
 
-            # Buying power
-            result.buying_power_ok = True
+                result.account_balance_ok = account_info.get('balance_ok', True)
+                result.buying_power_ok = account_info.get('buying_power_ok', True)
+                result.day_trading_count = account_info.get('day_trading_count', 0)
+                result.pattern_day_trader_ok = account_info.get('pattern_day_trader', True)
 
-            # Day trading count
-            result.day_trading_count = 2
-
-            # Pattern day trader
-            result.pattern_day_trader_ok = True
+                # Adjust confidence if account issues
+                if not result.account_balance_ok:
+                    result.can_execute = False
+                    result.confidence = 0.0
+                    result.reasons.append("Insufficient account balance")
+                if not result.buying_power_ok:
+                    result.can_execute = False
+                    result.confidence = 0.0
+                    result.reasons.append("Insufficient buying power")
+            else:
+                # Fallback - assume OK
+                result.account_balance_ok = True
+                result.buying_power_ok = True
+                result.day_trading_count = 0
+                result.pattern_day_trader_ok = True
 
             return True
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Live trading checks failed: {e}")
             return False
 
     def _handle_paper_trading(
@@ -1264,11 +1711,22 @@ class SystemBus:
         urgency,
         signal_time,
     ) -> bool:
-        """Handle Paper Trading checks."""
+        """
+        Handle Paper Trading checks.
+
+        NOTE: PaperAdapter provides simulated account status.
+        Similar to live trading but with simulated data.
+        """
         try:
-            # Similar to live trading
+            # Paper trading always has sufficient balance (simulated)
+            result.account_balance_ok = True
+            result.buying_power_ok = True
+            result.day_trading_count = 0  # No PDT rules in paper trading
+            result.pattern_day_trader_ok = True
+
             return True
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Paper trading checks failed: {e}")
             return False
 
     def _handle_percival(
@@ -1283,13 +1741,31 @@ class SystemBus:
         urgency,
         signal_time,
     ) -> bool:
-        """Handle Percival architecture checks."""
+        """
+        Handle Percival architecture checks.
+
+        NOTE: Percival is about architecture patterns (Rule 8).
+        Returns static compliance metrics for system architecture.
+        """
         try:
-            result.architecture_pattern_compliance = 95.0
-            result.clean_architecture_score = 95.0
-            result.dependency_health = 90.0
+            from app.core.centralized_config import get_compliance_config
+            config = get_compliance_config()
+
+            # Architecture pattern compliance
+            if isinstance(subsystem, dict) and subsystem.get('architecture_compliant'):
+                result.architecture_pattern_compliance = config.PERCIVAL_ARCHITECTURE_COMPLIANT_SCORE
+            else:
+                result.architecture_pattern_compliance = config.PERCIVAL_ARCHITECTURE_DEFAULT_SCORE
+
+            # Clean architecture score
+            result.clean_architecture_score = config.PERCIVAL_CLEAN_ARCHITECTURE_SCORE
+
+            # Dependency health
+            result.dependency_health = config.PERCIVAL_DEPENDENCY_HEALTH_SCORE
+
             return True
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Percival analysis failed: {e}")
             return False
 
     def _handle_google_sre(
@@ -1304,14 +1780,37 @@ class SystemBus:
         urgency,
         signal_time,
     ) -> bool:
-        """Handle Google SRE checks."""
+        """
+        Handle Google SRE checks.
+
+        NOTE: SRE monitoring provides system health metrics.
+        """
         try:
-            result.slo_compliance = True
-            result.error_budget_remaining = 95.0
-            result.latency_p95_ms = 45.0
-            result.golden_signals_health = 98.0
+            from app.core.centralized_config import get_compliance_config
+            config = get_compliance_config()
+
+            # Get golden signals from SRE monitor
+            if subsystem and hasattr(subsystem, 'get_golden_signals'):
+                signals = subsystem.get_golden_signals()
+                result.slo_compliance = signals.get('slo_compliance', True)
+                result.error_budget_remaining = signals.get('error_budget_remaining', config.SLO_DEFAULT_ERROR_BUDGET)
+                result.latency_p95_ms = signals.get('latency_p95_ms', config.SLO_DEFAULT_LATENCY_P95_MS)
+                result.golden_signals_health = signals.get('health', config.SLO_DEFAULT_HEALTH)
+
+                # Check SLO compliance
+                if not result.slo_compliance:
+                    result.confidence -= config.CONF_SLO_VIOLATION_PENALTY
+                    result.reasons.append("SLO compliance issues detected")
+            else:
+                # Default values
+                result.slo_compliance = True
+                result.error_budget_remaining = config.SLO_DEFAULT_ERROR_BUDGET
+                result.latency_p95_ms = config.SLO_DEFAULT_LATENCY_P95_MS
+                result.golden_signals_health = config.SLO_DEFAULT_HEALTH
+
             return True
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Google SRE checks failed: {e}")
             return False
 
     def _handle_beck_tdd(
@@ -1326,13 +1825,30 @@ class SystemBus:
         urgency,
         signal_time,
     ) -> bool:
-        """Handle Beck TDD checks."""
+        """
+        Handle Beck TDD checks.
+
+        NOTE: Beck is about TDD patterns (Rule 21).
+        Returns static compliance metrics for testing practices.
+        """
         try:
-            result.test_coverage = 95.0
-            result.tests_passing = True
-            result.tdd_compliance = 95.0
+            from app.core.centralized_config import get_compliance_config
+            config = get_compliance_config()
+
+            # TDD compliance metrics
+            if isinstance(subsystem, dict) and subsystem.get('tdd_compliant'):
+                result.test_coverage = config.TDD_COMPLIANT_COVERAGE
+                result.tests_passing = True
+                result.tdd_compliance = config.TDD_COMPLIANT_TDD_SCORE
+            else:
+                # Conservative estimates
+                result.test_coverage = config.TDD_FALLBACK_COVERAGE
+                result.tests_passing = True
+                result.tdd_compliance = config.TDD_FALLBACK_TDD_SCORE
+
             return True
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Beck TDD checks failed: {e}")
             return False
 
     def _handle_martin_arch(
@@ -1347,13 +1863,30 @@ class SystemBus:
         urgency,
         signal_time,
     ) -> bool:
-        """Handle Martin Clean Architecture checks."""
+        """
+        Handle Martin Clean Architecture checks.
+
+        NOTE: Martin is about clean architecture (Rule 18).
+        Returns static compliance metrics for architecture patterns.
+        """
         try:
-            result.martin_layer_separation = 95.0
-            result.martin_dependency_rule = 95.0
-            result.martin_interface_health = 95.0
+            from app.core.centralized_config import get_compliance_config
+            config = get_compliance_config()
+
+            # Clean architecture metrics
+            if isinstance(subsystem, dict) and subsystem.get('clean_arch_compliant'):
+                result.martin_layer_separation = config.MARTIN_COMPLIANT_SCORE
+                result.martin_dependency_rule = config.MARTIN_COMPLIANT_SCORE
+                result.martin_interface_health = config.MARTIN_COMPLIANT_SCORE
+            else:
+                # Conservative estimates
+                result.martin_layer_separation = config.MARTIN_FALLBACK_SCORE
+                result.martin_dependency_rule = config.MARTIN_FALLBACK_SCORE
+                result.martin_interface_health = config.MARTIN_FALLBACK_SCORE
+
             return True
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Martin architecture checks failed: {e}")
             return False
 
 
@@ -1420,7 +1953,10 @@ class ComplianceEngine:
 
         # Kill Switch tracking (Hull Rule 13.1)
         self._daily_pnl_tracking: List[Dict[str, Any]] = []
-        self._starting_capital: float = 100000.0  # Default starting capital
+        # Use ComplianceConfig for default starting capital
+        from app.core.centralized_config import get_compliance_config
+        config = get_compliance_config()
+        self._starting_capital: float = config.DEFAULT_STARTING_CAPITAL
 
         self._initialized = True
 
@@ -1648,12 +2184,12 @@ class ComplianceEngine:
                 else 0.0
             ),
             "avg_win": (
-                sum(t.get('pnl', 0) for t in winning_trades) / len(winning_trades)
+                np.mean([t.get('pnl', 0) for t in winning_trades])
                 if winning_trades
                 else 0.0
             ),
             "avg_loss": (
-                sum(t.get('pnl', 0) for t in losing_trades) / len(losing_trades)
+                np.mean([t.get('pnl', 0) for t in losing_trades])
                 if losing_trades
                 else 0.0
             ),
@@ -1840,7 +2376,7 @@ class ComplianceEngine:
         quantity: Decimal,
         price: Decimal,
         price_history: Optional[pd.DataFrame] = None,
-        urgency: float = 0.5,
+        urgency: Optional[float] = None,
         signal_time: Optional[datetime] = None,
     ) -> PreTradeAnalysis:
         """
@@ -1879,6 +2415,12 @@ class ComplianceEngine:
             )
 
         # Use SystemBus to coordinate ALL 17 systems
+        # Use default urgency from config if not provided
+        if urgency is None:
+            from app.core.centralized_config import get_compliance_config
+            config = get_compliance_config()
+            urgency = config.DEFAULT_URGENCY
+
         return self._system_bus.execute_pre_trade_analysis(
             symbol=symbol,
             side=side,
@@ -1926,8 +2468,11 @@ class ComplianceEngine:
         Returns:
             PostTradeAnalysis with comprehensive quality metrics
         """
+        from app.core.centralized_config import get_compliance_config
+        config = get_compliance_config()
+
         # Calculate latency
-        latency_ms = (execution_time - submission_time).total_seconds() * 1000
+        latency_ms = (execution_time - submission_time).total_seconds() * config.MILLISECONDS_MULTIPLIER
 
         # Harris analysis
         harris = self._get_subsystem("harris")
@@ -2079,6 +2624,9 @@ class ComplianceEngine:
         filled_quantity: Optional[Decimal] = None,
     ) -> None:
         """Track order completion for SLO monitoring."""
+        from app.core.centralized_config import get_compliance_config
+        config = get_compliance_config()
+
         if order_id not in self._active_orders:
             logger.warning(f"Unknown order ID: {order_id}")
             return
@@ -2087,7 +2635,7 @@ class ComplianceEngine:
         filled_quantity = filled_quantity or order["quantity"]
 
         # Calculate latency
-        latency_ms = (execution_time - order["submission_time"]).total_seconds() * 1000
+        latency_ms = (execution_time - order["submission_time"]).total_seconds() * config.MILLISECONDS_MULTIPLIER
 
         # Check SLO (use configured threshold, addresses GAP-CFG-002)
         slo_met = latency_ms < self.config.slo_latency_ms
@@ -2324,12 +2872,16 @@ class ComplianceEngine:
             quantity = Decimal(str(signal.quantity))
             price = Decimal(str(signal.price)) if signal.price else Decimal("0")
 
-            # Kelly Criterion validation (R1)
-            order_value = quantity * price if price > 0 else portfolio_value * Decimal("0.02")
-            max_risk = portfolio_value * Decimal("0.02")  # 2% max position size
+            # Kelly Criterion validation (R1) - using ComplianceConfig
+            from app.core.centralized_config import get_compliance_config
+            config = get_compliance_config()
+
+            kelly_max_position_pct = Decimal(str(config.KELLY_MAX_POSITION_PCT))
+            order_value = quantity * price if price > 0 else portfolio_value * kelly_max_position_pct
+            max_risk = portfolio_value * kelly_max_position_pct  # Max position size from config
 
             if order_value > max_risk:
-                error_msg = f"Kelly validation failed: {order_value} > {max_risk} (2% max)"
+                error_msg = f"Kelly validation failed: {order_value} > {max_risk} ({config.KELLY_MAX_POSITION_PCT:.1%} max)"
                 if self.enable_logging:
                     logger.warning(f"{error_msg} for {signal.symbol}")
 
@@ -2342,16 +2894,20 @@ class ComplianceEngine:
 
                 return self._create_failed_result(signal, error_msg)
 
-            # Risk:Reward validation (R4)
+            # Risk:Reward validation (R4) - using ComplianceConfig
+            from app.core.centralized_config import get_compliance_config
+            config = get_compliance_config()
+
             if signal.stop_loss and signal.take_profit:
-                entry = price if price > 0 else Decimal("100")  # Fallback
+                entry = price if price > 0 else Decimal(str(config.DEFAULT_FALLBACK_PRICE))
                 risk = abs(entry - Decimal(str(signal.stop_loss)))
                 reward = abs(Decimal(str(signal.take_profit)) - entry)
 
                 if risk > 0:
                     rr_ratio = reward / risk
-                    if rr_ratio < Decimal("2.0"):
-                        error_msg = f"R:R validation failed: {rr_ratio:.2f} < 2.0 minimum"
+                    min_rr = Decimal(str(config.MIN_RISK_REWARD_RATIO))
+                    if rr_ratio < min_rr:
+                        error_msg = f"R:R validation failed: {rr_ratio:.2f} < {config.MIN_RISK_REWARD_RATIO} minimum"
                         if self.enable_logging:
                             logger.warning(f"{error_msg} for {signal.symbol}")
 
@@ -2359,7 +2915,7 @@ class ComplianceEngine:
                             correlation_id=correlation_id,
                             passed=False,
                             validator="risk_reward",
-                            details={"rr_ratio": str(rr_ratio), "min_rr": "2.0"},
+                            details={"rr_ratio": str(rr_ratio), "min_rr": str(config.MIN_RISK_REWARD_RATIO)},
                         )
 
                         return self._create_failed_result(signal, error_msg)
@@ -2736,7 +3292,10 @@ class ComplianceEngine:
         """Estimate average daily volume."""
         if price_history is not None and "volume" in price_history.columns:
             return Decimal(str(price_history["volume"].mean()))
-        return Decimal("1000000")
+        # Use ComplianceConfig for default estimated volume
+        from app.core.centralized_config import get_compliance_config
+        config = get_compliance_config()
+        return Decimal(str(config.ESTIMATED_VOLUME))
 
     def get_system_status(self) -> Dict[str, Any]:
         """Get status of ALL systems."""
@@ -2777,8 +3336,8 @@ def get_compliance_engine(
 
         # Use custom configuration
         custom_config = ComplianceConfig(
-            max_position_ratio=0.15,
-            kill_switch_threshold=-0.03,
+            max_position_ratio=float(config.MAX_POSITION_RATIO) if hasattr(config, 'MAX_POSITION_RATIO') else 0.15,
+            kill_switch_threshold=float(config.KILL_SWITCH_THRESHOLD) if hasattr(config, 'KILL_SWITCH_THRESHOLD') else -0.03,
         )
         engine = get_compliance_engine(config=custom_config)
 

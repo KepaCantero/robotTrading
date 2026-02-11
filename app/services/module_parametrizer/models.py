@@ -2,12 +2,29 @@
 T3.1: Module Parametrizer Models
 
 Dataclasses for module-level parameter generation and configuration.
+Uses centralized configuration for default values.
 """
 
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    pass
+
+# Helper functions to get defaults from centralized config
+def _get_default_max_position_size() -> Decimal:
+    from app.core.centralized_config import get_config
+    return Decimal(str(get_config().trading_thresholds.max_position_size))
+
+def _get_default_stop_loss() -> Decimal:
+    from app.core.centralized_config import get_config
+    return Decimal(str(get_config().trading_thresholds.stop_loss_pct))
+
+def _get_default_take_profit() -> Decimal:
+    from app.core.centralized_config import get_config
+    return Decimal(str(get_config().trading_thresholds.take_profit_pct))
 
 
 class ParameterizationPreset(str, Enum):
@@ -20,17 +37,17 @@ class ParameterizationPreset(str, Enum):
 
 @dataclass
 class ModuleParameterConfig:
-    """Configuration parameters for a single trading module."""
+    """Configuration parameters for a single trading module - uses centralized config for defaults."""
 
     # Module identification
     module_name: str
     enabled: bool = True
     priority: int = 0  # 0 = highest, 10 = lowest
 
-    # Common risk parameters (shared across most modules)
-    max_position_size: Decimal = field(default=Decimal("0.10"))  # % of portfolio
-    stop_loss_pct: Decimal = field(default=Decimal("0.03"))
-    take_profit_pct: Decimal = field(default=Decimal("0.08"))
+    # Common risk parameters (shared across most modules) - use centralized config
+    max_position_size: Decimal = field(default_factory=_get_default_max_position_size)  # Uses config
+    stop_loss_pct: Decimal = field(default_factory=_get_default_stop_loss)  # Uses config
+    take_profit_pct: Decimal = field(default_factory=_get_default_take_profit)  # Uses config
     max_exposure: Decimal = field(default=Decimal("0.25"))  # % of capital
     max_positions: int = 5
     risk_adjustment: Decimal = field(default=Decimal("1.0"))  # 0.5 = half risk, 1.5 = 1.5x risk

@@ -164,7 +164,7 @@ class RegimeAnalyzer:
             volatility = regime_returns.std()
             sharpe = (mean_return / volatility * np.sqrt(252)) if volatility > 0 else 0
             max_dd = self._calculate_max_drawdown(regime_returns)
-            win_rate = (regime_returns > 0).sum() / len(regime_returns)
+            win_rate = (regime_returns > 0).mean()
             num_periods = len(regime_returns)
 
             regime_name = {0: "Bear", 1: "Neutral", 2: "Bull"}.get(regime, f"Regime_{regime}")

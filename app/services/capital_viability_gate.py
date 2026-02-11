@@ -9,11 +9,15 @@ Validates if a profit goal is mathematically achievable given:
 
 This is a MANDATORY gate before any trading begins.
 If profit goal is unreachable, system disables trading and recommends action.
+
+Uses centralized configuration for all thresholds.
 """
 
 import logging
 from decimal import Decimal
 from typing import Dict
+
+from app.core.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -24,12 +28,19 @@ class CapitalViabilityValidator:
 
     Uses forensic analysis to prevent accounts from chasing impossible returns
     and eroding capital through commission/slippage on unwinnable trades.
+
+    Uses centralized configuration for all thresholds.
     """
 
-    # Thresholds
-    ALPHA_THRESHOLD = Decimal("0.10")  # 10% = unreachable for most strategies
-    MIN_ACHIEVABLE_ALPHA = Decimal("0.02")  # 2% = conservative realistic floor
-    MAX_ACHIEVABLE_ALPHA = Decimal("0.05")  # 5% = optimistic ceiling (rare)
+    @staticmethod
+    def _get_thresholds():
+        """Get thresholds from centralized config - use directly, no hasattr."""
+        tt = get_config().trading_thresholds
+        return {
+            "alpha_threshold": Decimal(str(tt.capital_viability_alpha_threshold)),
+            "min_achievable_alpha": Decimal(str(tt.capital_viability_min_achievable)),
+            "max_achievable_alpha": Decimal(str(tt.capital_viability_max_achievable)),
+        }
 
     @staticmethod
     def validate_profit_goal(
@@ -119,28 +130,29 @@ class CapitalViabilityValidator:
 
         # === CALCULATE ACHIEVABLE ALPHA ===
 
+        # Get thresholds from centralized config
+        thresholds = CapitalViabilityValidator._get_thresholds()
+        alpha_threshold = thresholds["alpha_threshold"]
+        min_achievable_alpha = thresholds["min_achievable_alpha"]
+        max_achievable_alpha = thresholds["max_achievable_alpha"]
+
         # Use provided expected_alpha_per_trade if available
         if expected_alpha_per_trade is not None and expected_alpha_per_trade > Decimal("0"):
             expected_alpha_pct = expected_alpha_per_trade * Decimal(expected_trades_per_month)
         else:
-            # Default: use conservative estimate (2-5% monthly)
-            # Larger accounts can be more optimistic (closer to 5%)
-            # Smaller accounts should be conservative (closer to 2%)
+            # Default: use conservative estimate (from centralized config)
+            # Larger accounts can be more optimistic (closer to max)
+            # Smaller accounts should be conservative (closer to min)
             if capital >= Decimal("50000"):
-                expected_alpha_pct = CapitalViabilityValidator.MAX_ACHIEVABLE_ALPHA
+                expected_alpha_pct = max_achievable_alpha
             elif capital >= Decimal("25000"):
-                expected_alpha_pct = (
-                    CapitalViabilityValidator.MIN_ACHIEVABLE_ALPHA
-                    + CapitalViabilityValidator.MAX_ACHIEVABLE_ALPHA
-                ) / Decimal(
-                    "2"
-                )  # 3.5%
+                expected_alpha_pct = (min_achievable_alpha + max_achievable_alpha) / Decimal("2")  # Midpoint
             else:
-                expected_alpha_pct = CapitalViabilityValidator.MIN_ACHIEVABLE_ALPHA
+                expected_alpha_pct = min_achievable_alpha
 
         # === VIABILITY DECISION ===
 
-        is_viable = required_alpha_pct <= CapitalViabilityValidator.ALPHA_THRESHOLD
+        is_viable = required_alpha_pct <= alpha_threshold
 
         # Determine severity
         if required_alpha_pct > Decimal("0.20"):
@@ -216,7 +228,9 @@ class CapitalViabilityValidator:
         """
 
         if target_alpha_pct is None:
-            target_alpha_pct = Decimal("0.05")  # 5% = realistic achievable
+            # Use centralized config for default target alpha
+            thresholds = CapitalViabilityValidator._get_thresholds()
+            target_alpha_pct = thresholds["max_achievable_alpha"]  # 5% = realistic achievable
 
         gross_goal = monthly_goal / (Decimal("1") - tax_rate)
         total_commission = commission_per_trade * Decimal(expected_trades_per_month)

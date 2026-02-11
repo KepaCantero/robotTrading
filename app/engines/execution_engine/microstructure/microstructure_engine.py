@@ -187,7 +187,7 @@ class MarketMicrostructureEngine:
                 else Decimal("1000000")
             )
             volatility = (
-                price_history["close"].pct_change().std() * (252**0.5)
+                price_history["close"].pct_change().std() * np.sqrt(252)
                 if len(price_history) > 1
                 else 0.02
             )

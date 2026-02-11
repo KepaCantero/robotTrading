@@ -14,6 +14,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from decimal import Decimal
 
+from app.core.config.base import get_config
+
 
 @dataclass(frozen=True)
 class FundamentalLawComponents:
@@ -195,7 +197,7 @@ class ICMetrics:
         >>> metrics = ICMetrics(
         ...     ic=Decimal("0.05"),
         ...     ic_rank=Decimal("0.04"),
-        ...     ic_decay=[Decimal("0.05"), Decimal("0.03"), Decimal("0.02")],
+        ...     ic_decay= getattr(config.trading, 'max_risk_per_trade', 0.02)")],
         ...     statistical_significance=0.001,
         ...     confidence_interval=(Decimal("0.03"), Decimal("0.07"))
         ... )
@@ -261,6 +263,32 @@ class ICMetrics:
         else:
             return "poor"
 
+    def get_skill_level_config(self) -> str:
+        """
+        Get skill level using configured thresholds.
+
+        Uses the same config-based assessment as FundamentalLawCalculator.
+        """
+        config = get_config()
+        ic_excellent = Decimal(str(getattr(
+            config.trading, 'fundamental_law_ic_excellent', 0.05
+        )))
+        ic_good = Decimal(str(getattr(
+            config.trading, 'fundamental_law_ic_good', 0.03
+        )))
+        ic_fair = Decimal(str(getattr(
+            config.trading, 'fundamental_law_ic_fair', 0.01
+        )))
+
+        if self.ic >= ic_excellent:
+            return "excellent"
+        elif self.ic >= ic_good:
+            return "good"
+        elif self.ic >= ic_fair:
+            return "fair"
+        else:
+            return "poor"
+
     def get_signal_persistence(self) -> str:
         """
         Assess how long the predictive signal persists.
@@ -291,9 +319,15 @@ class ICMetrics:
 
         decay_ratio = abs(final_ic) / abs(initial_ic)
 
-        if decay_ratio >= Decimal("0.7"):
+        # Get persistence thresholds from config
+        from app.core.config.base import get_config
+        cfg = get_config()
+        long_threshold = Decimal(str(getattr(cfg.trading, 'signal_persistence_long', 0.7)))
+        medium_threshold = Decimal(str(getattr(cfg.trading, 'signal_persistence_medium', 0.4)))
+
+        if decay_ratio >= long_threshold:
             return "long"  # Signal persists well
-        elif decay_ratio >= Decimal("0.4"):
+        elif decay_ratio >= medium_threshold:
             return "medium"  # Moderate decay
         else:
             return "short"  # Signal decays quickly
@@ -352,9 +386,14 @@ class BreadthMetrics:
             >>> metrics.get_breadth_category()
             'high'
         """
-        if self.effective_breadth >= Decimal("1000"):
+        # Get breadth thresholds from config (use defaults if not available)
+        config = get_config()
+        breadth_high = getattr(config.trading, 'breadth_high_threshold', 1000)
+        breadth_medium = getattr(config.trading, 'breadth_medium_threshold', 100)
+
+        if self.effective_breadth >= Decimal(str(breadth_high)):
             return "high"
-        elif self.effective_breadth >= Decimal("100"):
+        elif self.effective_breadth >= Decimal(str(breadth_medium)):
             return "medium"
         else:
             return "low"
@@ -439,7 +478,7 @@ class StrategyAnalysis:
             ...     strategy_name="Test Strategy",
             ...     components=FundamentalLawComponents(
             ...         information_ratio=Decimal("0.5"),
-            ...         information_coefficient=Decimal("0.02"),
+            ...         information_coefficient= getattr(config.trading, 'max_risk_per_trade', 0.02)"),
             ...         breadth=Decimal("100"),
             ...         breadth_sqrt=Decimal("10.0"),
             ...         transfer_coefficient=Decimal("0.8")

@@ -6,6 +6,8 @@ Protects against catastrophic losses by closing all positions when:
 - System is shutting down
 - Critical errors occur
 - Manual emergency trigger is activated
+
+Uses centralized configuration for all timeout parameters.
 """
 
 import asyncio
@@ -19,6 +21,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 from requests.exceptions import HTTPError
 
+from app.core.centralized_config import get_config
 from app.core.timezone_utils import utc_now
 
 logger = logging.getLogger(__name__)
@@ -83,7 +86,7 @@ class EmergencyCloser:
         broker,
         alert_callback: Optional[Callable[[str], None]] = None,
         require_confirmation: bool = False,
-        confirmation_timeout_seconds: float = 30.0,
+        confirmation_timeout_seconds: Optional[float] = None,
     ):
         """
         Initialize emergency closer.
@@ -92,11 +95,16 @@ class EmergencyCloser:
             broker: Broker connector for executing orders
             alert_callback: Optional callback for sending alerts
             require_confirmation: If True, waits for confirmation before closing
-            confirmation_timeout_seconds: How long to wait for confirmation
+            confirmation_timeout_seconds: How long to wait for confirmation (uses centralized config if None)
         """
         self.broker = broker
         self.alert_callback = alert_callback
         self.require_confirmation = require_confirmation
+
+        # Use centralized config for confirmation_timeout if not provided
+        if confirmation_timeout_seconds is None:
+            tt = get_config().trading_thresholds
+            confirmation_timeout_seconds = tt.emergency_confirmation_timeout
         self.confirmation_timeout_seconds = confirmation_timeout_seconds
 
         # State
@@ -437,7 +445,9 @@ class EmergencyCloser:
 
             quantity = getattr(position, 'quantity', Decimal("0"))
 
-            # Place market order
+            # Place market order - use centralized config for timeout
+            tt = get_config().trading_thresholds
+            timeout = tt.emergency_position_close_timeout
             order = await asyncio.wait_for(
                 self.broker.place_order(
                     symbol=position.symbol,
@@ -445,7 +455,7 @@ class EmergencyCloser:
                     quantity=quantity,
                     order_type="MARKET",
                 ),
-                timeout=30.0,
+                timeout=timeout,
             )
 
             if order:

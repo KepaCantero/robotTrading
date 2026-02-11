@@ -4,6 +4,7 @@ SectorRotationDetector - Detector de rotación sectorial (simplificado).
 
 import logging
 from typing import Any, Dict, List
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ class SectorRotationDetector:
 
         # Calcular returns promedio por sector
         avg_returns = {
-            sector: sum(returns) / len(returns) if returns else 0.0
+            sector: np.mean(returns) if returns else 0.0
             for sector, returns in sector_returns.items()
         }
 

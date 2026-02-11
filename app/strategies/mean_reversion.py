@@ -14,7 +14,7 @@ import logging
 from decimal import Decimal
 from typing import Any
 
-from app.core.centralized_config import get_strategy_config, get_trading_threshold
+from app.core.centralized_config import get_strategy_config, get_trading_threshold, get_config
 from app.models.market_data import Quote
 from app.models.portfolio import Portfolio
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
@@ -36,6 +36,11 @@ class MeanReversionStrategy(BaseStrategy):
             config: Configuración de la estrategia
         """
         super().__init__(config)
+
+        # Load trading thresholds for history length and mean reversion specific values
+        trading_config = get_config()
+        tt = trading_config.trading_thresholds
+        self._tt = tt  # Store for other config access
 
         # Load strategy-specific configuration
         strategy_config = get_strategy_config("mean_reversion")
@@ -78,18 +83,18 @@ class MeanReversionStrategy(BaseStrategy):
             self.atr_floor = Decimal(str(config.get("atr_floor")))
             self.price_range_multiplier = Decimal(str(config.get("price_range_multiplier")))
 
-        # Parámetros adicionales
+        # Parámetros adicionales - use config for default
         min_z_score_value = config.get("min_z_score")
         if min_z_score_value is None and strategy_config:
-            min_z_score_value = strategy_config.parameters.get("min_z_score", 1.5)
+            min_z_score_value = strategy_config.parameters.get("min_z_score", self._tt.min_z_score_default)
         elif min_z_score_value is None:
-            min_z_score_value = 1.5  # Valor por defecto
+            min_z_score_value = self._tt.min_z_score_default  # Use config default
         self.min_z_score = Decimal(str(min_z_score_value))
 
-        # Initialize price history for logging purposes (similar to MomentumStrategy)
+        # Initialize price history for logging purposes - use config value
         from collections import deque
 
-        self.price_history = deque(maxlen=200)  # Maintain up to 200 bars of history
+        self.price_history = deque(maxlen=tt.default_price_history_length)
 
         # ✅ USE LIBRARY: Initialize TechnicalIndicatorCalculator (uses pandas-ta-classic)
         self.indicator_calculator = TechnicalIndicatorCalculator()
@@ -276,7 +281,7 @@ class MeanReversionStrategy(BaseStrategy):
 
             # Verificar límites de exposición (más conservador que momentum)
             total_exposure = self._calculate_total_exposure(portfolio)
-            max_exposure = Decimal("0.6")  # Máximo 60% de exposición
+            max_exposure = Decimal(str(self._tt.mean_reversion_max_exposure))  # Use config value
             if total_exposure > max_exposure:
                 logger.info(
                     f"⚠️ MEAN_REVERSION risk_check REJECTED {signal.signal_type} {signal.symbol}: "
@@ -326,7 +331,7 @@ class MeanReversionStrategy(BaseStrategy):
                 if market_data.open > 0
                 else Decimal("0")
             )
-            std_dev = Decimal("0.02")
+            std_dev = Decimal(str(self._tt.mean_reversion_simulated_std_dev))  # Use config value
             return price_change / std_dev if std_dev > 0 else Decimal("0")
 
         # ✅ USE LIBRARY: Use TechnicalIndicatorCalculator.calculate_zscore() (pandas-ta-classic)
@@ -422,13 +427,13 @@ class MeanReversionStrategy(BaseStrategy):
         """
         # OPTIMIZED: More permissive BUY conditions for 50-100 trades target
         # Check if z-score indicates undervaluation (reduced threshold to 70%)
-        z_score_buy = -self.z_score_threshold * Decimal("0.7")  # 70% of threshold (was 0.8)
+        z_score_buy = -self.z_score_threshold * Decimal(str(self._tt.z_score_entry_multiplier))  # Use config multiplier
         is_undervalued = z_score < z_score_buy
 
         # Price drop/rise checks removed - optional for more opportunities
         very_oversold = z_score < -self.z_score_threshold * Decimal(
-            "1.2"
-        )  # Reduced from 1.5 to 1.2
+            str(self._tt.z_score_modified_threshold)
+        )  # Use config value
 
         # Price range multiplier for relative price moves
         price_range = (
@@ -461,13 +466,13 @@ class MeanReversionStrategy(BaseStrategy):
         """
         # OPTIMIZED: More permissive SELL conditions for 50-100 trades target
         # Check if z-score indicates overvaluation (reduced threshold to 70%)
-        z_score_sell = self.z_score_threshold * Decimal("0.7")  # 70% of threshold (was 0.8)
+        z_score_sell = self.z_score_threshold * Decimal(str(self._tt.z_score_entry_multiplier))  # Use config multiplier
         is_overvalued = z_score > z_score_sell
 
         # Price drop/rise checks removed - optional for more opportunities
         very_overbought = z_score > self.z_score_threshold * Decimal(
-            "1.2"
-        )  # Reduced from 1.5 to 1.2
+            str(self._tt.z_score_modified_threshold)
+        )  # Use config value
 
         # Price range multiplier for relative price moves
         price_range = (
@@ -501,9 +506,9 @@ class MeanReversionStrategy(BaseStrategy):
             symbol=market_data.symbol,
             signal_type=SignalType.BUY,
             strength=SignalStrength.MODERATE,
-            confidence=70.0,
-            liquidity_score=75.0,
-            priority_score=80.0,
+            confidence=self._tt.mean_reversion_default_confidence,  # Use config
+            liquidity_score=self._tt.mean_reversion_default_liquidity,  # Use config
+            priority_score=self._tt.mean_reversion_default_priority,  # Use config
             source=SignalSource.MOMENTUM,
             price=market_data.last,
             volume=Decimal(
@@ -535,9 +540,9 @@ class MeanReversionStrategy(BaseStrategy):
             symbol=market_data.symbol,
             signal_type=SignalType.SELL,
             strength=SignalStrength.MODERATE,
-            confidence=70.0,
-            liquidity_score=75.0,
-            priority_score=80.0,
+            confidence=self._tt.mean_reversion_default_confidence,  # Use config
+            liquidity_score=self._tt.mean_reversion_default_liquidity,  # Use config
+            priority_score=self._tt.mean_reversion_default_priority,  # Use config
             source=SignalSource.MOMENTUM,
             price=market_data.last,
             volume=Decimal(
@@ -601,4 +606,4 @@ class MeanReversionStrategy(BaseStrategy):
             Volatilidad estimada
         """
         # Implementación simplificada
-        return Decimal("0.015")  # Volatilidad promedio simulada
+        return Decimal(str(self._tt.mean_reversion_simulated_volatility))  # Use config value

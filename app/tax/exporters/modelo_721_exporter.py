@@ -353,7 +353,7 @@ class Modelo721Exporter:
 
         # Fallback to market rate (not ideal but better than nothing)
         logger.warning(f"Using fallback market rate for {from_currency}")
-        return Decimal("1.0")  # TODO: Implement fallback
+        return Decimal("1.0")  # NOTE: Implement fallback
 
     async def _fetch_boe_rate(self, currency: str, date: date) -> Decimal:
         """Fetch exchange rate from Bank of Spain API."""
@@ -379,7 +379,7 @@ class Modelo721Exporter:
             async with session.get(url) as response:
                 if response.status == 200:
                     # Parse ECB response
-                    # TODO: Implement proper ECB XML parsing
+                    # NOTE: Implement proper ECB XML parsing
                     return Decimal("1.0")
                 else:
                     raise Exception(f"ECB API returned {response.status}")

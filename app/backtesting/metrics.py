@@ -34,6 +34,7 @@ except ImportError:
         "For full functionality, install: pip install empyrical-reloaded"
     )
 
+from app.core.decimal_utils import safe_mean
 from app.backtesting.advanced_metrics import AdvancedMetricsCalculator
 from app.backtesting.lopez_de_prado_metrics import (
     ConcentrationAnalyzer,
@@ -170,12 +171,12 @@ class MetricsCalculator:
 
         # Trade statistics
         avg_win = (
-            (sum((t.pnl or Decimal("0")) for t in winning_trades) / len(winning_trades))
+            safe_mean([t.pnl or Decimal("0") for t in winning_trades])
             if winning_trades
             else Decimal("0")
         )
         avg_loss = (
-            (sum((t.pnl or Decimal("0")) for t in losing_trades) / len(losing_trades))
+            safe_mean([t.pnl or Decimal("0") for t in losing_trades])
             if losing_trades
             else Decimal("0")
         )
@@ -503,8 +504,8 @@ class MetricsCalculator:
                 return None
 
             # Calculate average win and average loss (absolute values)
-            avg_win = sum(abs(t.pnl or Decimal("0")) for t in wins) / len(wins)
-            avg_loss = abs(sum(t.pnl or Decimal("0") for t in losses) / len(losses))
+            avg_win = safe_mean([abs(t.pnl or Decimal("0")) for t in wins])
+            avg_loss = safe_mean([abs(t.pnl or Decimal("0")) for t in losses])
 
             if avg_loss == 0:
                 return None
@@ -530,7 +531,7 @@ class MetricsCalculator:
         if not durations:
             return Decimal("0")
 
-        return sum(durations) / len(durations)
+        return safe_mean(durations)
 
     def calculate_cagr(
         self,

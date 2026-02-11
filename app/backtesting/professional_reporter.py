@@ -11,6 +11,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, List, Optional, TypedDict, Union
+import numpy as np
 
 from app.backtesting.acceptance_criteria import AcceptanceReport
 from app.backtesting.capital_scale_analyzer import CapitalScaleAnalysisReport
@@ -363,10 +364,10 @@ class ProfessionalReporter:
                             dds.append(float(w.max_drawdown))
 
                 if sharpes:
-                    avg_sharpe = sum(sharpes) / len(sharpes)
+                    avg_sharpe = np.mean(sharpes)
                     content += f"- **Avg Sharpe (OOS):** {avg_sharpe:.2f}\n"
                 if dds:
-                    avg_dd = sum(dds) / len(dds)
+                    avg_dd = np.mean(dds)
                     content += f"- **Avg Max DD:** {avg_dd:.2%}\n"
 
         if capital_scale:

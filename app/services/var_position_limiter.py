@@ -7,6 +7,8 @@ against portfolio Value-at-Risk calculations.
 This module implements Phase 2.5 of the risk management system,
 providing VaR-based position limits that use real correlation
 matrices from Phase 2.4.
+
+Uses centralized configuration for all thresholds and parameters.
 """
 
 import logging
@@ -17,6 +19,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
 import numpy as np
 
+from app.core.centralized_config import get_config
 from app.core.decimal_utils import to_decimal, validate_price
 
 if TYPE_CHECKING:
@@ -29,14 +32,35 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class VaRConfig:
-    """Configuration for VaR-based position limits."""
+    """Configuration for VaR-based position limits using centralized config."""
 
-    max_var_limit_pct: Decimal = Decimal("0.02")  # 2% daily VaR limit
-    confidence_level: float = 0.95  # 95% confidence
-    lookback_days: int = 60
-    warning_threshold_pct: Decimal = Decimal("0.8")  # Warn at 80% of limit
-    use_real_correlation: bool = True
-    default_volatility: float = 0.2  # 20% annual vol for symbols without data
+    def __init__(self, custom_config: Optional[Dict] = None):
+        """Initialize config with centralized values."""
+        tt = get_config().trading
+
+        # Get VaR configuration from centralized config
+        self.max_var_limit_pct = Decimal(str(getattr(
+            tt, 'var_max_limit_pct', 0.02
+        )))
+        self.confidence_level = getattr(
+            tt, 'var_confidence_level', 0.95
+        )
+        self.lookback_days = getattr(
+            tt, 'var_lookback_days', 60
+        )
+        self.warning_threshold_pct = Decimal(str(getattr(
+            tt, 'var_warning_threshold_pct', 0.8
+        )))
+        self.use_real_correlation = True  # Always use real correlation
+        self.default_volatility = getattr(
+            tt, 'var_default_volatility', 0.2
+        )
+
+        # Apply any custom overrides
+        if custom_config:
+            for key, value in custom_config.items():
+                if hasattr(self, key):
+                    setattr(self, key, value)
 
 
 @dataclass
@@ -351,7 +375,7 @@ class VaRPositionLimiter:
             z_score = norm.ppf(confidence_level)
             incremental_var = (
                 portfolio_value
-                * to_decimal(str(incremental_variance**0.5))
+                * safe_decimal_sqrt(incremental_variance)
                 * to_decimal(str(z_score))
             )
 

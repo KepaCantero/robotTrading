@@ -65,6 +65,7 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional
+import numpy as np
 
 from app.core.interfaces.broker_base import Order
 from app.sre.data_integrity.sanity_layer import DataSanityLayer, SanityCheckResult
@@ -622,7 +623,7 @@ class ShadowModeExecutor:
             return report
 
         # Validation 1: Success rate
-        success_rate = sum(1 for r in recent_results if not r.was_rejected) / len(recent_results)
+        success_rate = np.mean([1 for r in recent_results if not r.was_rejected])
         report["validations"].append(
             {
                 "name": "success_rate",
@@ -665,9 +666,7 @@ class ShadowModeExecutor:
 
         # Validation 4: Shadow vs real comparison (if available)
         if self.comparisons:
-            avg_price_diff_bps = sum(c.price_difference_bps or 0 for c in self.comparisons) / len(
-                self.comparisons
-            )
+            avg_price_diff_bps = np.mean([c.price_difference_bps or 0 for c in self.comparisons])
 
             if abs(avg_price_diff_bps) > 50:  # 50 bps threshold
                 report["warnings"].append(
@@ -790,8 +789,8 @@ class ShadowModeExecutor:
         for symbol, orders in by_symbol.items():
             symbol_stats[symbol] = {
                 "count": len(orders),
-                "fill_rate": sum(1 for o in orders if not o.was_rejected) / len(orders),
-                "avg_slippage_bps": sum(o.slippage_bps or 0 for o in orders) / len(orders),
+                "fill_rate": np.mean([1 for o in orders if not o.was_rejected]),
+                "avg_slippage_bps": np.mean([o.slippage_bps or 0 for o in orders]),
             }
 
         return {

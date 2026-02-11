@@ -9,6 +9,7 @@ import traceback
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+import numpy as np
 
 from .models import TrialStatus
 
@@ -183,7 +184,7 @@ class TrialHistory:
         if not successful_trials:
             return 0.0
 
-        return sum(t.objective_value for t in successful_trials) / len(successful_trials)
+        return np.mean([t.objective_value for t in successful_trials])
 
     def get_std_score(self) -> float:
         """
@@ -322,7 +323,7 @@ class TrialHistory:
     def get_mean_execution_time(self) -> float:
         """Get mean execution time."""
         times = self.get_execution_times()
-        return sum(times) / len(times) if times else 0.0
+        return np.mean(times) if times else 0.0
 
     def get_total_time(self) -> float:
         """Get total optimization time."""

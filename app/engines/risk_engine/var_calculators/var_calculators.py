@@ -664,7 +664,7 @@ def calculate_var(
         Dictionary with VaR and related metrics
 
     Example:
-        >>> returns = np.array([-0.02, 0.01, -0.01, 0.03, -0.005])
+        >>> returns = getattr(config.trading, 'max_risk_per_trade', 0.02), 0.01, -0.01, 0.03, -0.005])
         >>> result = calculate_var(returns, method='historical', confidence_level=0.95)
         >>> print(f"VaR: {result['var']:.2%}")
     """
@@ -1238,7 +1238,7 @@ def run_var_backtest(
         Comprehensive backtest results
 
     Example:
-        >>> var_preds = np.array([-0.02, -0.025, -0.018, ...])
+        >>> var_preds = getattr(config.trading, 'max_risk_per_trade', 0.02), -0.025, -0.018, ...])
         >>> actual = np.array([-0.015, -0.03, -0.01, ...])
         >>> results = run_var_backtest(var_preds, actual, confidence_level=0.95)
         >>> print(f"Result: {results['overall_result']}")

@@ -394,6 +394,8 @@ class FactorStrategyConfig(BaseModel):
     @model_validator(mode="after")
     def validate_weights_sum(self) -> "FactorStrategyConfig":
         """Validate that factor weights sum approximately to 1."""
+        from app.core.config.base import get_config
+
         total = (
             self.value_weight
             + self.profitability_weight
@@ -401,16 +403,24 @@ class FactorStrategyConfig(BaseModel):
             + self.size_weight
             + self.investment_weight
         )
-        if abs(total - Decimal("1.0")) > Decimal("0.05"):
+        # Get tolerance from config
+        cfg = get_config()
+        tolerance = Decimal(str(getattr(cfg.trading, 'factor_weights_tolerance', 0.05)))
+        if abs(total - Decimal("1.0")) > tolerance:
             raise ValueError(f"Factor weights must sum to 1.0, sum to {total}")
         return self
 
     @model_validator(mode="after")
     def validate_tilt_ranges(self) -> "FactorStrategyConfig":
         """Validate that tilts are within reasonable ranges."""
+        from app.core.config.base import get_config
+
         total_tilt = abs(self.value_tilt) + abs(self.size_tilt) + abs(self.profitability_tilt)
-        if total_tilt > Decimal("0.8"):
-            raise ValueError(f"Total absolute tilt exceeds 0.8: {total_tilt}")
+        # Get tilt limit from config
+        cfg = get_config()
+        max_tilt = Decimal(str(getattr(cfg.trading, 'max_total_tilt', 0.8)))
+        if total_tilt > max_tilt:
+            raise ValueError(f"Total absolute tilt exceeds {max_tilt}: {total_tilt}")
         return self
 
     def get_factor_tilts(self) -> List[FactorTilt]:

@@ -11,6 +11,8 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Optional, Tuple
 
+from app.core.config.base import get_config
+
 logger = logging.getLogger(__name__)
 
 
@@ -84,9 +86,19 @@ class DeploymentDecisionOrchestrator:
     """
 
     def __init__(self):
-        """Initialize deployment decision orchestrator."""
+        """Initialize deployment decision orchestrator with config."""
         self.decision_history: List[DeploymentDecision] = []
         self.decision_metrics: Dict[str, Dict] = {}
+
+        # Load threshold values from centralized config
+        config = get_config()
+        self._drawdown_threshold = Decimal(str(getattr(
+            config.trading, 'max_drawdown_limit', 0.15
+        )))
+        self._capital_loss_threshold = Decimal(str(getattr(
+            config.trading, 'capital_loss_threshold', 0.40
+        )))
+
         logger.info("✅ DeploymentDecisionOrchestrator initialized")
 
     async def orchestrate(
@@ -344,7 +356,7 @@ class DeploymentDecisionOrchestrator:
 
         # Drawdown assessment
         drawdown_abs = abs(max_drawdown)
-        if drawdown_abs > Decimal("0.30"):
+        if drawdown_abs > self._drawdown_threshold:
             warnings.append(f"High drawdown risk: {drawdown_abs:.1%}")
 
         # Risk profile compatibility
@@ -361,9 +373,9 @@ class DeploymentDecisionOrchestrator:
                 f"user profile ({user_risk_profile})"
             )
 
-        # Maximum loss assessment
-        if estimated_max_loss < -initial_capital * Decimal("0.40"):
-            warnings.append("Potential loss exceeds 40% of capital")
+        # Maximum loss assessment (using config threshold)
+        if estimated_max_loss < -initial_capital * self._capital_loss_threshold:
+            warnings.append(f"Potential loss exceeds {self._capital_loss_threshold:.0%} of capital")
 
         return {
             "drawdown": drawdown_abs,

@@ -14,7 +14,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from app.core.centralized_config import get_config
 from app.models.order import Order, OrderSide, OrderStatus, OrderType
 from app.models.portfolio import Portfolio
-from app.models.signal import Signal, SignalType
+from app.models.signal import Signal, SignalType, SignalSource
 
 logger = logging.getLogger(__name__)
 
@@ -33,10 +33,14 @@ class SignalExecutionEngine:
     def __init__(self):
         """Inicializar motor de ejecución."""
         self.config = get_config().trading
+        tt = get_config().trading_thresholds
 
         # Configuración de ejecución
         self.max_execution_time_ms = self.config.max_execution_time_ms
         self.max_latency_ms = self.config.max_latency_ms
+
+        # Use config for history size
+        self.max_history_size = tt.execution_history_max_size
 
         # Métricas de rendimiento
         self.executions_attempted = 0
@@ -46,7 +50,9 @@ class SignalExecutionEngine:
 
         # Historial de ejecuciones
         self.execution_history: List[Dict[str, Any]] = []
-        self.max_history_size = 1000
+
+        # Store config for simulated latency
+        self._simulated_latency_seconds = tt.simulated_latency_ms / 1000.0
 
     async def execute_signal(
         self,
@@ -210,11 +216,9 @@ class SignalExecutionEngine:
             }
 
     async def _simulate_order_execution(self, order: Order, portfolio: Portfolio) -> Dict[str, Any]:
-        """Simular ejecución de orden."""
-        # Simular latencia de ejecución
-        import asyncio
-
-        await asyncio.sleep(0.001)  # 1ms de latencia simulada
+        """Simular ejecución de orden - use config for latency."""
+        # Simular latencia de ejecución - use config value
+        await asyncio.sleep(self._simulated_latency_seconds)
 
         # Simular ejecución exitosa
         order.status = OrderStatus.FILLED

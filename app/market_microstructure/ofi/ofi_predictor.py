@@ -176,13 +176,13 @@ class OFIPredictor:
             Signal value: 1.0 (strong buy), 0.5 (buy), 0.0 (neutral),
                         -0.5 (sell), -1.0 (strong sell)
         """
-        if ofi > 0.3:
+        if ofi > self.config.threshold_strong_buy:
             return 1.0  # Strong buy
-        elif ofi > 0.1:
+        elif ofi > self.config.threshold_moderate_buy:
             return 0.5  # Moderate buy
-        elif ofi < -0.3:
+        elif ofi < self.config.threshold_strong_sell:
             return -1.0  # Strong sell
-        elif ofi < -0.1:
+        elif ofi < self.config.threshold_moderate_sell:
             return -0.5  # Moderate sell
         else:
             return 0.0  # Neutral
@@ -205,10 +205,10 @@ class OFIPredictor:
             predicted_return = self._linear_model.predict(ofi_scaled)[0]
 
             # Convert to signal
-            if predicted_return > 0.001:  # 0.1% threshold
-                return min(1.0, predicted_return * 1000)
-            elif predicted_return < -0.001:
-                return max(-1.0, predicted_return * 1000)
+            if predicted_return > self.config.model_return_threshold:
+                return min(1.0, predicted_return * self.config.model_signal_multiplier)
+            elif predicted_return < -self.config.model_return_threshold:
+                return max(-1.0, predicted_return * self.config.model_signal_multiplier)
             else:
                 return 0.0
         except (ValueError, AttributeError) as e:
@@ -229,23 +229,27 @@ class OFIPredictor:
         Returns:
             Signal value based on momentum
         """
-        if len(historical_ofi) < 5:
+        if len(historical_ofi) < self.config.momentum_min_samples:
             return 0.0
 
         # Calculate momentum (recent - previous average)
-        recent = np.mean(historical_ofi[-3:])
-        previous = np.mean(historical_ofi[-10:-3]) if len(historical_ofi) >= 10 else 0.0
+        recent = np.mean(historical_ofi[-self.config.momentum_recent_window :])
+        previous = (
+            np.mean(historical_ofi[-self.config.momentum_previous_window : -self.config.momentum_recent_window])
+            if len(historical_ofi) >= self.config.momentum_previous_window
+            else 0.0
+        )
 
         momentum = recent - previous
 
         # Convert to signal
-        if momentum > 0.1:
+        if momentum > self.config.momentum_strong:
             return 1.0
-        elif momentum > 0.05:
+        elif momentum > self.config.momentum_moderate:
             return 0.5
-        elif momentum < -0.1:
+        elif momentum < self.config.momentum_strong_negative:
             return -1.0
-        elif momentum < -0.05:
+        elif momentum < self.config.momentum_moderate_negative:
             return -0.5
         else:
             return 0.0
@@ -268,27 +272,25 @@ class OFIPredictor:
             Tuple of (direction, confidence)
         """
         # Weight the signals
-        weights = {"threshold": 0.5, "model": 0.3, "momentum": 0.2}
-
-        combined = weights["threshold"] * threshold_signal
-        combined += weights["momentum"] * momentum_signal
+        combined = self.config.weight_threshold * threshold_signal
+        combined += self.config.weight_momentum * momentum_signal
 
         if model_signal is not None:
-            combined += weights["model"] * model_signal
+            combined += self.config.weight_model * model_signal
         else:
             # Redistribute weight if no model
-            combined /= weights["threshold"] + weights["momentum"]
+            combined /= self.config.weight_threshold + self.config.weight_momentum
 
         # Determine direction
-        if combined > 0.3:
+        if combined > self.config.direction_up_threshold:
             direction = "up"
-        elif combined < -0.3:
+        elif combined < self.config.direction_down_threshold:
             direction = "down"
         else:
             direction = "neutral"
 
         # Confidence is based on signal strength
-        confidence = min(1.0, abs(combined))
+        confidence = min(self.config.confidence_max, abs(combined))
 
         return direction, confidence
 
@@ -333,13 +335,18 @@ class OFIPredictor:
 
             # Expected return = OFI * correlation * vol_adjustment
             # This is a simplified model
-            expected_return = ofi * corr * return_std * 100
+            expected_return = (
+                ofi * corr * return_std * self.config.expected_return_multiplier
+            )
 
             # Convert to basis points
-            expected_bps = Decimal(str(expected_return * 100))
+            expected_bps = Decimal(str(expected_return * self.config.expected_bps_multiplier))
 
             # Cap extreme values
-            expected_bps = max(Decimal("-500"), min(Decimal("500"), expected_bps))
+            expected_bps = max(
+                Decimal(str(self.config.expected_bps_min)),
+                min(Decimal(str(self.config.expected_bps_max)), expected_bps),
+            )
 
             return expected_bps
 
@@ -359,11 +366,11 @@ class OFIPredictor:
     def _get_horizon_string(self, horizon: OFIHorizon) -> str:
         """Convert horizon enum to string."""
         horizon_map = {
-            OFIHorizon.SHORT: "5m",
-            OFIHorizon.MEDIUM: "15m",
-            OFIHorizon.LONG: "60m",
+            OFIHorizon.SHORT: self.config.horizon_short,
+            OFIHorizon.MEDIUM: self.config.horizon_medium,
+            OFIHorizon.LONG: self.config.horizon_long,
         }
-        return horizon_map.get(horizon, "5m")
+        return horizon_map.get(horizon, self.config.horizon_short)
 
     def train_model(
         self,
@@ -393,12 +400,12 @@ class OFIPredictor:
                 f"OFI history ({len(ofi_history)}) and returns history ({len(returns_history)}) must have same length"
             )
 
-        if len(ofi_history) < 10:
+        if len(ofi_history) < self.config.min_training_samples:
             logger.warning(
                 "Insufficient data for training",
                 extra={
                     "ofi_history_length": len(ofi_history),
-                    "minimum_required": 10,
+                    "minimum_required": self.config.min_training_samples,
                 },
             )
             return
@@ -418,7 +425,9 @@ class OFIPredictor:
 
             # Train logistic regression for direction
             direction = (y > 0).astype(int)
-            self._logistic_model = LogisticRegression(random_state=42)
+            self._logistic_model = LogisticRegression(
+                random_state=self.config.logistic_random_state
+            )
             self._logistic_model.fit(X_scaled, direction)
 
             # Store correlation
@@ -527,17 +536,17 @@ class OFIPredictor:
         """
         if not self._is_trained or self._logistic_model is None or self._scaler is None:
             # Fallback to OFI magnitude
-            return min(1.0, abs(ofi) * 2)
+            return min(self.config.confidence_max, abs(ofi) * self.config.fallback_confidence_multiplier)
 
         try:
             ofi_scaled = self._scaler.transform([[ofi]])
             proba = self._logistic_model.predict_proba(ofi_scaled)[0]
             return float(max(proba))
         except (ValueError, AttributeError):
-            return min(1.0, abs(ofi) * 2)
+            return min(self.config.confidence_max, abs(ofi) * self.config.fallback_confidence_multiplier)
 
     def calculate_prediction_intervals(
-        self, ofi: float, confidence_level: float = 0.95
+        self, ofi: float, confidence_level: float | None = None
     ) -> tuple[float, float]:
         """
         Calculate prediction intervals for expected return.
@@ -552,6 +561,10 @@ class OFIPredictor:
         if not self._is_trained or self._linear_model is None:
             return (0.0, 0.0)
 
+        # Use configured confidence level if not provided
+        if confidence_level is None:
+            confidence_level = self.config.default_confidence_level
+
         try:
             # Get prediction
             prediction = self.predict_with_model(ofi)
@@ -560,7 +573,7 @@ class OFIPredictor:
 
             # Calculate residual standard error (simplified)
             # In practice, would use proper standard error calculation
-            std_error = abs(prediction) * 0.5  # Conservative estimate
+            std_error = abs(prediction) * self.config.prediction_std_error_ratio
 
             # Z-score for confidence level
             from scipy.stats import norm
@@ -604,11 +617,11 @@ class OFIPredictor:
         Returns:
             Tuple of (has_changed, regime_description)
         """
-        if len(historical_ofi) < window * 2:
+        if len(historical_ofi) < window * self.config.regime_window_multiplier:
             return (False, "insufficient_data")
 
         recent = historical_ofi[-window:]
-        previous = historical_ofi[-(window * 2) : -window]
+        previous = historical_ofi[-(window * self.config.regime_window_multiplier) : -window]
 
         recent_mean = float(np.mean(recent))
         previous_mean = float(np.mean(previous))
@@ -616,28 +629,28 @@ class OFIPredictor:
         previous_std = float(np.std(previous))
 
         # Check for mean shift
-        mean_shift = abs(recent_mean - previous_mean) / (abs(previous_mean) + 0.01)
+        mean_shift = abs(recent_mean - previous_mean) / (abs(previous_mean) + self.config.regime_shift_epsilon)
 
         # Check for volatility shift
-        vol_shift = abs(recent_std - previous_std) / (previous_std + 0.01)
+        vol_shift = abs(recent_std - previous_std) / (previous_std + self.config.regime_shift_epsilon)
 
         # Determine regime
-        if mean_shift > 0.5:
-            if recent_mean > 0.2:
+        if mean_shift > self.config.regime_mean_shift_threshold:
+            if recent_mean > self.config.regime_bullish_threshold:
                 return (True, "shifted_to_bullish")
-            elif recent_mean < -0.2:
+            elif recent_mean < self.config.regime_bearish_threshold:
                 return (True, "shifted_to_bearish")
 
-        if vol_shift > 0.5:
+        if vol_shift > self.config.regime_vol_shift_threshold:
             if recent_std > previous_std:
                 return (True, "volatility_increased")
             else:
                 return (True, "volatility_decreased")
 
         # Current regime
-        if recent_mean > 0.1:
+        if recent_mean > self.config.regime_neutral_positive:
             regime = "bullish_regime"
-        elif recent_mean < -0.1:
+        elif recent_mean < self.config.regime_neutral_negative:
             regime = "bearish_regime"
         else:
             regime = "neutral_regime"

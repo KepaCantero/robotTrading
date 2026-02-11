@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 
+from app.core.config.base import get_config
 from app.models.market_data import Quote
 from app.models.portfolio import Portfolio
 from app.models.signal import Signal, SignalType
@@ -153,7 +154,17 @@ class BaseStrategy(ABC):
         Returns:
             Tamaño de posición calculado (en número de acciones/shares)
         """
-        max_position_size = Decimal(str(self.config.get("max_position_size", 0.1)))
+        # First try strategy-specific config, then fall back to centralized config
+        if "max_position_size" in self.config:
+            max_position_size = Decimal(str(self.config["max_position_size"]))
+        else:
+            try:
+                config = get_config()
+                max_position_size = Decimal(str(getattr(
+                    config.trading, 'max_position_size', 0.1
+                )))
+            except (AttributeError, ValueError):
+                max_position_size = Decimal("0.1")
         available_cash = portfolio.cash
 
         if signal.signal_type == SignalType.BUY:
@@ -220,8 +231,19 @@ class BaseStrategy(ABC):
                 elif signal.signal_type == SignalType.SELL:
                     return signal.price + stop_distance
 
-        # Fallback: usar stop loss porcentual fijo si no hay ATR
-        stop_loss_pct = Decimal(str(self.config.get("stop_loss", 0.05)))
+        # Fallback: usar stop loss porcentual desde config centralizado
+        # First try strategy-specific config, then fall back to centralized config
+        stop_loss_pct = None
+        if "stop_loss" in self.config:
+            stop_loss_pct = Decimal(str(self.config["stop_loss"]))
+        else:
+            try:
+                config = get_config()
+                stop_loss_pct = Decimal(str(getattr(
+                    config.trading, 'stop_loss_pct', 0.05
+                )))
+            except (AttributeError, ValueError):
+                stop_loss_pct = Decimal("0.05")
 
         # FIX: Use signal_type instead of direction
         if signal.signal_type == SignalType.BUY:
@@ -241,7 +263,18 @@ class BaseStrategy(ABC):
         Returns:
             Precio de take profit o None si no aplica
         """
-        take_profit_pct = Decimal(str(self.config.get("take_profit", 0.10)))
+        # First try strategy-specific config, then fall back to centralized config
+        take_profit_pct = None
+        if "take_profit" in self.config:
+            take_profit_pct = Decimal(str(self.config["take_profit"]))
+        else:
+            try:
+                config = get_config()
+                take_profit_pct = Decimal(str(getattr(
+                    config.trading, 'take_profit_pct', 0.10
+                )))
+            except (AttributeError, ValueError):
+                take_profit_pct = Decimal("0.10")
 
         # FIX: Use signal_type instead of direction
         if signal.signal_type == SignalType.BUY:

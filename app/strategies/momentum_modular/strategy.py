@@ -7,10 +7,12 @@ from collections import deque
 from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
+import numpy as np
 
 if TYPE_CHECKING:
     pass
 
+from app.core.centralized_config import get_config
 from app.models.market_data import Quote
 from app.models.portfolio import Portfolio
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
@@ -73,6 +75,10 @@ class ModularMomentumStrategy(BaseStrategy):
             config: Configuración desde YAML (momentum_modular.yaml)
         """
         super().__init__(config)
+
+        # Load modular strategy config
+        trading_config = get_config()
+        self._cfg = trading_config.trading_thresholds.momentum  # Use modular config
 
         # Configuración
         self.preset = config.get("preset", "balanced")
@@ -269,10 +275,10 @@ class ModularMomentumStrategy(BaseStrategy):
         # BAD REGIME CONDITIONS (return False - NO trading)
 
         # 1. Bear market crash: trend DOWN with high strength
-        if market_type == 'trend_down' and trend_strength > 0.6:
+        if market_type == 'trend_down' and trend_strength > self._cfg.bear_market_strength_threshold:
             _rate_limited_logger.warning(
                 f"🚨 BEAR MARKET CRASH DETECTED: "
-                f"type={market_type}, strength={trend_strength:.2f} > 0.6 - "
+                f"type={market_type}, strength={trend_strength:.2f} > {self._cfg.bear_market_strength_threshold:.2f} - "
                 f"STOPPING TRADING to prevent losses",
                 key="bear_market_crash",
             )
@@ -288,11 +294,11 @@ class ModularMomentumStrategy(BaseStrategy):
             return False
 
         # 3. HIGH volatility regime (crash/crisis conditions)
-        # If volatility is above 75th percentile, market is in crisis
-        if volatility_percentile > 75:
+        # If volatility is above configured percentile, market is in crisis
+        if volatility_percentile > self._cfg.volatility_crisis_percentile:
             _rate_limited_logger.warning(
                 f"🔥 EXTREME VOLATILITY CRISIS: "
-                f"volatility_percentile={volatility_percentile} > 75 - "
+                f"volatility_percentile={volatility_percentile} > {self._cfg.volatility_crisis_percentile:.0f} - "
                 f"STOPPING TRADING to prevent crash losses",
                 key="volatility_crisis",
             )
@@ -309,8 +315,8 @@ class ModularMomentumStrategy(BaseStrategy):
             )
             return True
 
-        # 2. Normal volatility (40-70 percentile) with any trend except strong down
-        if 40 <= volatility_percentile <= 70:
+        # 2. Normal volatility (configured range) with any trend except strong down
+        if self._cfg.normal_volatility_min <= volatility_percentile <= self._cfg.normal_volatility_max:
             if market_type != 'trend_down' or trend_strength <= 0.5:
                 logger.debug(
                     f"✅ NORMAL VOLATILITY: "
@@ -361,8 +367,7 @@ class ModularMomentumStrategy(BaseStrategy):
             self.volume_history.append(float(market_data.volume or 0))
 
             # Necesitamos suficiente histórico para calcular indicadores
-            min_history = 60  # Suficiente para EMA slow (26) + RSI (14) + buffer
-            if len(self.price_history) < min_history:
+            if len(self.price_history) < self._cfg.min_history_length:
                 return []
 
             # 2. Calcular indicadores técnicos
@@ -417,7 +422,7 @@ class ModularMomentumStrategy(BaseStrategy):
                     # Si no está entrenado pero está habilitado, intentar entrenar automáticamente
                     if not self.learning_engine.is_ready():
                         # Intentar entrenar con datos históricos si hay suficientes
-                        if len(self.price_history) >= 100:  # Mínimo de datos para entrenar
+                        if len(self.price_history) >= self._cfg.auto_train_min_history:  # Use config value
                             try:
                                 self._auto_train_learning_engine()
                             except (RuntimeError, ValueError, TypeError, KeyError) as e:
@@ -509,15 +514,15 @@ class ModularMomentumStrategy(BaseStrategy):
             # 7. Crear señal
             confidence = self._calculate_signal_confidence(filter_results, learning_prediction)
 
-            # Calcular strength basado en confidence
+            # Calcular strength basado en confidence - use config thresholds
             # IMPORTANTE: Debe coincidir con validación en Signal model
             # - STRONG/VERY_STRONG requieren confidence >= 70.0
             # - WEAK requiere confidence <= 80.0
-            if confidence >= 80.0:
+            if confidence >= self._cfg.very_strong_confidence:
                 strength = SignalStrength.VERY_STRONG
-            elif confidence >= 70.0:  # Cambiado de 65.0 a 70.0 para cumplir validación Pydantic
+            elif confidence >= self._cfg.strong_confidence:
                 strength = SignalStrength.STRONG
-            elif confidence >= 50.0:
+            elif confidence >= self._cfg.moderate_confidence:
                 strength = SignalStrength.MODERATE
             else:
                 strength = SignalStrength.WEAK
@@ -526,33 +531,33 @@ class ModularMomentumStrategy(BaseStrategy):
             # Esto previene errores de validación Pydantic
             if (
                 strength in [SignalStrength.STRONG, SignalStrength.VERY_STRONG]
-                and confidence < 70.0
+                and confidence < self._cfg.strong_confidence
             ):
                 # Ajustar strength a MODERATE si confidence es demasiado bajo
                 logger.warning(
                     f"⚠️ Confidence {confidence:.2f} es demasiado bajo para {strength}, ajustando a MODERATE"
                 )
                 strength = SignalStrength.MODERATE
-            elif strength == SignalStrength.WEAK and confidence > 80.0:
+            elif strength == SignalStrength.WEAK and confidence > self._cfg.very_strong_confidence:
                 # Ajustar strength si confidence es demasiado alto para WEAK
                 logger.warning(
                     f"⚠️ Confidence {confidence:.2f} es demasiado alto para {strength}, ajustando a MODERATE"
                 )
                 strength = SignalStrength.MODERATE
 
-            # Calcular liquidity_score (usar volume_ratio del indicador o default)
+            # Calcular liquidity_score (usar volume_ratio del indicador o default) - use config
             volume_ratio = indicators.get('volume_ratio', 1.0)
             liquidity_score = min(
-                100.0, max(0.0, (volume_ratio - 0.5) * 50.0)
-            )  # Normalizar 0.5-2.0 -> 0-100
+                100.0, max(0.0, (volume_ratio - self._cfg.volume_ratio_min) * self._cfg.volume_ratio_multiplier)
+            )  # Normalizar using config values
 
-            # Calcular priority_score (combinación de confidence y liquidity)
-            priority_score = (confidence * 0.7) + (liquidity_score * 0.3)
+            # Calcular priority_score (combinación de confidence y liquidity) - use config weights
+            priority_score = (confidence * self._cfg.priority_confidence_weight) + (liquidity_score * self._cfg.priority_liquidity_weight)
 
-            # Obtener volume del market_data o usar un default
+            # Obtener volume del market_data o usar un default - use config
             volume = Decimal(str(getattr(market_data, 'volume', 0)))
             if volume == 0:
-                volume = Decimal("0.01")  # Default mínimo
+                volume = Decimal(str(self._cfg.default_volume))  # Use config value
 
             # Usar SignalSource enum - momentum_modular es una variante de momentum
             signal_source = SignalSource.MOMENTUM
@@ -773,20 +778,20 @@ class ModularMomentumStrategy(BaseStrategy):
         rsi = filter_results.get('rsi_filter', {}).get('value')
         momentum = filter_results.get('momentum_filter', {}).get('value')
 
-        # Sobrecompra extrema (only if RSI is available)
-        if rsi is not None and isinstance(rsi, (int, float)) and rsi > 75:
+        # Sobrecompra extrema (only if RSI is available) - use config
+        if rsi is not None and isinstance(rsi, (int, float)) and rsi > self._cfg.rsi_overbought_sell:
             should_sell = True
             sell_reason = "OVERBOUGHT"
             logger.debug(f"🔴 SELL signal: RSI overbought ({rsi:.1f})")
 
-        # Tendencia bajista fuerte
-        if market_type == 'trend_down' and market_strength > 0.7:
+        # Tendencia bajista fuerte - use config
+        if market_type == 'trend_down' and market_strength > self._cfg.trend_down_sell_strength:
             should_sell = True
             sell_reason = "STRONG_DOWNTREND"
             logger.debug(f"🔴 SELL signal: Strong downtrend ({market_strength:.2f})")
 
-        # Momentum negativo significativo (only if momentum is available)
-        if momentum is not None and isinstance(momentum, (int, float)) and momentum < -0.03:
+        # Momentum negativo significativo (only if momentum is available) - use config
+        if momentum is not None and isinstance(momentum, (int, float)) and momentum < self._cfg.negative_momentum_threshold:
             should_sell = True
             sell_reason = "NEGATIVE_MOMENTUM"
             logger.debug(f"🔴 SELL signal: Negative momentum ({momentum:.3f})")
@@ -805,18 +810,18 @@ class ModularMomentumStrategy(BaseStrategy):
         filter_results: Dict[str, Dict[str, Any]],
         learning_prediction: Optional[Dict[str, Any]],
     ) -> float:
-        """Calcular confianza de la señal."""
+        """Calcular confianza de la señal - use config weights for learning combination."""
         # Confianza base desde filtros
         confidences = [res.get('confidence', 0.0) for res in filter_results.values()]
-        base_confidence = sum(confidences) / len(confidences) if confidences else 0.5
+        base_confidence = np.mean(confidences) if confidences else 0.5
 
-        # Ajustar con predicción de learning engine
+        # Ajustar con predicción de learning engine - use config weights
         if learning_prediction:
             learning_confidence = learning_prediction.get(
                 'confidence', learning_prediction.get('success_probability', 0.5)
             )
-            # Combinar: 60% filtros, 40% learning
-            combined = base_confidence * 0.6 + learning_confidence * 0.4
+            # Combinar: usar pesos de config
+            combined = base_confidence * self._cfg.learning_filter_weight + learning_confidence * self._cfg.learning_confidence_weight
             return min(100.0, max(0.0, combined * 100))
 
         return min(100.0, max(0.0, base_confidence * 100))
@@ -853,7 +858,7 @@ class ModularMomentumStrategy(BaseStrategy):
                     logger.debug(f"FeatureExtractor no disponible: {e}")
                     self._feature_extractor = None
 
-            if self._feature_extractor is not None and len(self.price_history) >= 100:
+            if self._feature_extractor is not None and len(self.price_history) >= self._cfg.auto_train_min_history:  # Use config
                 # Crear datos sintéticos basados en histórico
                 # Nota: Esto es una aproximación. En producción, necesitaríamos los quotes completos
                 logger.debug(
@@ -891,16 +896,17 @@ class ModularMomentumStrategy(BaseStrategy):
             }
         )
 
-        # Determinar longitud de secuencia requerida
-        sequence_length = 60  # Default
+        # Determinar longitud de secuencia requerida - use config values
         learning_engine_type = self.learning_engine.__class__.__name__
         if learning_engine_type == 'DeepLearningEngine':
-            # Obtener sequence_length de la configuración del engine
+            # Obtener sequence_length de la configuración del engine, fallback to config
             engine_config = getattr(self.learning_engine, 'config', {})
             params = engine_config.get('parameters', {})
-            sequence_length = params.get('sequence_length', 60)
+            sequence_length = params.get('sequence_length', self._cfg.default_sequence_length)
         elif learning_engine_type == 'TransformerEngine':
-            sequence_length = 30  # Default para Transformer
+            sequence_length = self._cfg.transformer_sequence_length  # Use config
+        else:
+            sequence_length = self._cfg.default_sequence_length  # Use config default
 
         # Construir secuencia usando FeatureExtractor
         if self._feature_extractor is None:
@@ -1109,7 +1115,7 @@ class ModularMomentumStrategy(BaseStrategy):
         # Calculate smoothed %K (SMA of raw StochRSI)
         if len(self._stoch_k_history) >= smooth_k:
             k_values = list(self._stoch_k_history)[-smooth_k:]
-            stoch_rsi_k = sum(k_values) / len(k_values)
+            stoch_rsi_k = np.mean(k_values)
         else:
             stoch_rsi_k = stoch_rsi_raw
 
@@ -1121,7 +1127,7 @@ class ModularMomentumStrategy(BaseStrategy):
 
         if len(self._stoch_d_history) >= smooth_d:
             d_values = list(self._stoch_d_history)[-smooth_d:]
-            stoch_rsi_d = sum(d_values) / len(d_values)
+            stoch_rsi_d = np.mean(d_values)
         else:
             stoch_rsi_d = stoch_rsi_k
 
@@ -1159,8 +1165,8 @@ class ModularMomentumStrategy(BaseStrategy):
         return ["name", "preset"]
 
     def get_position_size(self, signal: Signal, portfolio: Portfolio) -> Decimal:
-        """Calcular tamaño de posición."""
-        max_position_size = Decimal(str(self.config.get("max_position_size", 0.1)))
+        """Calcular tamaño de posición - use config value."""
+        max_position_size = Decimal(str(self.config.get("max_position_size", self._cfg.max_position_size_default)))
         available_cash = portfolio.cash
 
         if signal.signal_type == SignalType.BUY:

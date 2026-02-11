@@ -318,7 +318,7 @@ class AwesomeQuantIntegrator:
                 "sortino_ratio": float(empyrical.sortino_ratio(returns)),
                 "calmar_ratio": float(empyrical.calmar_ratio(returns)),
                 "omega_ratio": float(empyrical.omega_ratio(returns)),
-                "win_rate": float((returns > 0).sum() / len(returns) if len(returns) > 0 else 0),
+                "win_rate": float((returns > 0).mean()),
                 "var_95": float(empyrical.value_at_risk(returns, 0.95)),
                 "cvar_95": float(empyrical.conditional_value_at_risk(returns, 0.95)),
             }
@@ -409,7 +409,7 @@ class AwesomeQuantIntegrator:
             metrics["avg_drawdown"] = float(drawdown[drawdown < 0].mean())
 
             # Win/Loss metrics
-            metrics["win_rate"] = float((returns > 0).sum() / len(returns))
+            metrics["win_rate"] = float((returns > 0).mean())
             metrics["best_return"] = float(returns.max())
             metrics["worst_return"] = float(returns.min())
             metrics["avg_positive_return"] = float(
@@ -632,7 +632,7 @@ class AwesomeQuantIntegrator:
 
             # Win rate
             metrics["win_rate"] = (
-                float((returns > 0).sum() / len(returns)) if len(returns) > 0 else 0.0
+                float((returns > 0).mean()) if len(returns) > 0 else 0.0
             )
 
             # Value at Risk metrics

@@ -16,6 +16,7 @@ from typing import Any, Dict, List
 
 from .asset_class import AssetClass, AssetClassType
 from .models import MultiAssetAllocation, MultiAssetPortfolio, Trade
+from app.core.config.base import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -411,7 +412,9 @@ class MultiAssetRebalancer:
                 total_tax += tax
 
         total_cost = total_commission + total_spread + total_impact + total_tax
-        cost_pct = (total_cost / portfolio_value * 100) if portfolio_value > 0 else Decimal("0")
+        # Use config percentage multiplier
+        tt = get_config().trading_thresholds
+        cost_pct = (total_cost / portfolio_value * tt.percentage_multiplier) if portfolio_value > 0 else Decimal("0")
 
         return CostEstimate(
             commission=total_commission,
@@ -567,9 +570,13 @@ class MultiAssetRebalancer:
         return min(1.0, combined_score)
 
     def _get_spread_rate(self, asset_class_identifier: str) -> Decimal:
-        """Get typical spread rate for asset class."""
-        # Default rate
-        default_rate = Decimal("0.0005")  # 0.05%
+        """Get typical spread rate for asset class from config."""
+        # Get transaction costs from config
+        config = get_config()
+        tt = config.trading
+
+        # Default rate from config
+        default_rate = Decimal(str(getattr(tt, 'tx_cost_equity', 0.0005)))
 
         # Try to convert to AssetClassType
         try:
@@ -578,13 +585,14 @@ class MultiAssetRebalancer:
             # If it's a name, use default rate
             return default_rate
 
+        # Get spread rates from config
         spread_rates = {
-            AssetClassType.EQUITY: Decimal("0.0005"),  # 0.05%
-            AssetClassType.CRYPTO: Decimal("0.001"),  # 0.1%
-            AssetClassType.FOREX: Decimal("0.0001"),  # 0.01%
-            AssetClassType.FIXED_INCOME: Decimal("0.001"),  # 0.1%
-            AssetClassType.COMMODITY: Decimal("0.0005"),
-            AssetClassType.REAL_ESTATE: Decimal("0.001"),
+            AssetClassType.EQUITY: Decimal(str(getattr(tt, 'tx_cost_equity', 0.0005))),
+            AssetClassType.CRYPTO: Decimal(str(getattr(tt, 'tx_cost_crypto', 0.001))),
+            AssetClassType.FOREX: Decimal(str(getattr(tt, 'tx_cost_forex', 0.0001))),
+            AssetClassType.FIXED_INCOME: Decimal(str(getattr(tt, 'tx_cost_fixed_income', 0.001))),
+            AssetClassType.COMMODITY: Decimal(str(getattr(tt, 'tx_cost_commodity', 0.0005))),
+            AssetClassType.REAL_ESTATE: Decimal(str(getattr(tt, 'tx_cost_real_estate', 0.001))),
             AssetClassType.CASH: Decimal("0"),
         }
         return spread_rates.get(asset_type, default_rate)
@@ -606,10 +614,14 @@ class MultiAssetRebalancer:
         return trade_value * Decimal(str(impact_bps)) / Decimal("10000")
 
     def _get_tax_rate(self, asset_class_identifier: str) -> Decimal:
-        """Get tax rate for asset class."""
+        """Get tax rate for asset class from config."""
+        # Get tax rate from config
+        config = get_config()
+        tt = config.trading
+
         # Simplified - use same rate for all (short-term capital gains)
         # Could be made asset-class specific in the future
-        return Decimal("0.25")  # 25% tax rate
+        return Decimal(str(getattr(tt, 'portfolio_tax_rate', 0.25)))
 
     def _create_target_portfolio(
         self,
@@ -660,19 +672,27 @@ class MultiAssetRebalancer:
         # Calculate maximum deviation
         max_deviation = max(abs(d) for d in deviations.values()) if deviations else Decimal("0")
 
+        # Get config for cost efficiency threshold
+        cfg = get_config()
+        cost_threshold = Decimal(str(getattr(cfg.trading, 'max_cost_impact_ratio', 0.30)))
+
         # Check cost efficiency
-        cost_too_high = cost_estimate.cost_as_percentage > Decimal("1")  # 1% threshold
+        cost_too_high = cost_estimate.cost_as_percentage > cost_threshold
+
+        # Get rebalance thresholds from config
+        rebalance_threshold_high = Decimal(str(getattr(cfg.trading, 'portfolio_max_deviation_high', 0.10)))
+        rebalance_threshold_medium = Decimal(str(getattr(cfg.trading, 'portfolio_max_deviation_moderate', 0.05)))
 
         if max_deviation > Decimal("0.15"):
             # More than 15% deviation - critical
             return RebalancePriority.CRITICAL
-        elif max_deviation > Decimal("0.10"):
+        elif max_deviation > rebalance_threshold_high:
             # More than 10% deviation - high
             return RebalancePriority.HIGH
         elif cost_too_high:
             # Costs too high - defer
             return RebalancePriority.DEFER
-        elif max_deviation > Decimal("0.05"):
+        elif max_deviation > rebalance_threshold_medium:
             # More than 5% deviation - medium
             return RebalancePriority.MEDIUM
         else:

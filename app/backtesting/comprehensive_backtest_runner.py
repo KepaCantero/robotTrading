@@ -2393,9 +2393,9 @@ class ComprehensiveBacktestRunner:
         in_labels = triple_barrier_labels(in_sample_prices)
         oos_labels = triple_barrier_labels(oos_prices)
 
-        in_signal_quality = sum(1 for l in in_labels if l == 1) / len(in_labels) if in_labels else 0
+        in_signal_quality = np.mean([1 for l in in_labels if l == 1]) if in_labels else 0
         oos_signal_quality = (
-            sum(1 for l in oos_labels if l == 1) / len(oos_labels) if oos_labels else 0
+            np.mean([1 for l in oos_labels if l == 1]) if oos_labels else 0
         )
 
         logger.info("Signal Quality (Triple Barrier):")

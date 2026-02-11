@@ -942,7 +942,7 @@ class ProfileBatchBacktester:
         sharpe_decays = [w["sharpe_decay"] for w in window_results]
         avg_decay = np.mean(sharpe_decays)
 
-        success_rate = sum(1 for s in test_sharpes if s > 0) / len(test_sharpes)
+        success_rate = np.mean([1 for s in test_sharpes if s > 0])
 
         # Determine if passed
         min_avg_sharpe = wf_config.get("min_avg_sharpe", 0.5)

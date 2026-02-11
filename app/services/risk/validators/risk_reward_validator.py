@@ -2,9 +2,12 @@
 Risk:Reward Validator (R4)
 
 Valida que la relación riesgo:retorno sea mínimo 2:1
+Uses centralized configuration for minimum R:R ratio.
 """
 from decimal import Decimal
 from dataclasses import dataclass
+
+from app.core.config.base import get_config
 
 
 @dataclass
@@ -21,10 +24,15 @@ class RiskRewardValidator:
     """
     Validador de Risk:Reward (R4)
 
-    Mínimo R:R = 2:1
+    Mínimo R:R = 2:1 (loaded from centralized config)
     """
 
-    MIN_RR_RATIO = Decimal("2.0")
+    def __init__(self):
+        """Initialize validator with config values."""
+        config = get_config()
+        self.MIN_RR_RATIO = Decimal(str(getattr(
+            config.trading, 'min_rr_ratio', 2.0
+        )))
 
     def validate(
         self,

@@ -11,6 +11,7 @@ SOLID Principles:
 
 import logging
 from typing import List
+import numpy as np
 
 from app.models.momentum import MomentumAnalysis, MomentumSignal, TechnicalIndicators, Timeframe
 from app.services.momentum.protocols import IndicatorCalculator, PriceDataProvider
@@ -161,7 +162,7 @@ class MomentumAnalyzer:
                 risk_score += 1
 
         if signals:
-            avg_strength = sum(s.strength for s in signals) / len(signals)
+            avg_strength = np.mean([s.strength for s in signals])
             if avg_strength > 80:
                 risk_score += 2
             elif avg_strength > 60:

@@ -53,7 +53,7 @@ class RiskCalculator:
     Provides pure risk calculation logic without external dependencies.
     """
 
-    def __init__(self, risk_free_rate: Decimal = Decimal("0.02")):
+    def __init__(self, risk_free_rate: Decimal = getattr(config.trading, 'max_risk_per_trade', 0.02)")):
         """
         Initialize risk calculator.
 
@@ -347,7 +347,7 @@ class RiskCalculator:
             return Decimal("0")
 
         # Assume 2% daily volatility per position (conservative)
-        position_vol = Decimal("0.02")
+        position_vol = getattr(config.trading, 'max_risk_per_trade', 0.02)")
 
         # Portfolio vol = weighted average * sqrt(n) for uncorrelated
         n = len(weights)

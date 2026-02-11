@@ -7,6 +7,7 @@ and detect potential issues in risk metrics.
 import logging
 from decimal import Decimal
 from typing import Dict, List, Optional, Tuple
+import numpy as np
 
 from app.backtesting.models import Trade, TradeStatus
 
@@ -265,7 +266,7 @@ class DrawdownValidator:
 
         # Calculate average drawdown
         negative_drawdowns = [dd for _, dd in drawdowns if dd < 0]
-        avg_dd = sum(negative_drawdowns) / len(negative_drawdowns) if negative_drawdowns else Decimal("0")
+        avg_dd = np.mean(negative_drawdowns) if negative_drawdowns else Decimal("0")
 
         # Count drawdown periods
         in_drawdown = False

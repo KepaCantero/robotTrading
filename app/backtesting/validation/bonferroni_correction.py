@@ -219,7 +219,7 @@ class BonferroniCorrector:
             for strategy_name, sharpe in sharpe_ratios.items():
                 # Calculate t-statistic for Sharpe ratio
                 # t = Sharpe * sqrt(T) where T is number of observations
-                t_stat = sharpe * (num_observations**0.5)
+                t_stat = sharpe * np.sqrt(num_observations)
 
                 # Two-tailed p-value
                 p_value = 2 * (1 - stats.t.cdf(abs(t_stat), df=num_observations - 1))
@@ -279,7 +279,7 @@ class BonferroniCorrector:
             # Calculate p-values for all parameter combinations
             p_values = []
             for m in metrics:
-                t_stat = m * (num_observations**0.5)
+                t_stat = m * np.sqrt(num_observations)
                 p_value = 2 * (1 - stats.t.cdf(abs(t_stat), df=num_observations - 1))
                 p_values.append(p_value)
 
@@ -466,7 +466,7 @@ def is_strategy_significant(
         True if significant after correction
     """
     # Calculate t-statistic
-    t_stat = sharpe_ratio * (num_observations**0.5)
+    t_stat = sharpe_ratio * np.sqrt(num_observations)
 
     # Calculate p-value
     p_value = 2 * (1 - stats.t.cdf(abs(t_stat), df=num_observations - 1))

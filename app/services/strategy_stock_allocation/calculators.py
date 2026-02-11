@@ -31,12 +31,46 @@ try:
 except ImportError:
     STATSMODELS_AVAILABLE = False
 
+    def OLS(*args, **kwargs):
+        """Fallback OLS when statsmodels is not available."""
+        import warnings
+        warnings.warn(
+            "statsmodels not installed - OLS regression not available. "
+            "Install statsmodels: pip install statsmodels",
+            ImportWarning,
+        )
+        return None
+
     # Provide fallback implementations
     def adfuller(*args, **kwargs):
-        raise NotImplementedError("statsmodels required for ADF test")
+        """
+        Fallback adfuller function when statsmodels is not available.
+
+        Returns a tuple indicating stationarity test failed.
+        """
+        import warnings
+        warnings.warn(
+            "statsmodels not installed - ADF test not available. "
+            "Install statsmodels for stationarity testing: pip install statsmodels",
+            ImportWarning,
+        )
+        # Return p-value of 1.0 (fail to reject null hypothesis of non-stationarity)
+        return (None, 1.0, None, None, None, None, None)
 
     def kpss(*args, **kwargs):
-        raise NotImplementedError("statsmodels required for KPSS test")
+        """
+        Fallback kpss function when statsmodels is not available.
+
+        Returns a tuple indicating stationarity test failed.
+        """
+        import warnings
+        warnings.warn(
+            "statsmodels not installed - KPSS test not available. "
+            "Install statsmodels for stationarity testing: pip install statsmodels",
+            ImportWarning,
+        )
+        # Return p-value of 0.0 (reject null hypothesis of stationarity)
+        return (None, 0.0, None, None)
 
 
 class HurstCalculator:

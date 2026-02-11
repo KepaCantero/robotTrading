@@ -19,6 +19,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
+from app.core.config.base import get_config
 from app.market_making.avellaneda_stoikov.as_model import calculate_inventory_risk
 from app.market_making.avellaneda_stoikov.models import (
     ASConfig,
@@ -406,7 +407,8 @@ class InventoryManager:
             Recommended position size (can be negative for short).
         """
         # Base position size from capital
-        risk_amount = float(capital) * 0.02  # 2% risk per trade
+        config = get_config()
+        risk_amount = getattr(config.trading, 'max_risk_per_trade', 0.02)  # 2% risk per trade
         price_f = float(price)
         vol_f = float(volatility)
 

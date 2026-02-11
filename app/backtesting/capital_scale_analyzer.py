@@ -438,7 +438,7 @@ class CapitalScaleAnalyzer:
             else:
                 commission_scores.append(Decimal("10"))
         commission_score = (
-            sum(commission_scores) / len(commission_scores) if commission_scores else Decimal("0")
+            np.mean(commission_scores) if commission_scores else Decimal("0")
         )
 
         # Win rate stability (using config penalty factor)

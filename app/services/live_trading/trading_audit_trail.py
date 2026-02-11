@@ -24,6 +24,7 @@ from decimal import Decimal
 from enum import Enum
 from pathlib import Path
 from typing import Deque, Dict, List, Optional
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -631,7 +632,7 @@ class TradingAuditTrail:
                         time_diff = (exec_event.timestamp - trade_event.timestamp).total_seconds()
                         execution_times.append(time_diff)
             if execution_times:
-                avg_execution_time = sum(execution_times) / len(execution_times)
+                avg_execution_time = np.mean(execution_times)
 
         # Count critical and high risk
         critical_count = len([e for e in alert_events if e.details.get("severity") == "critical"])

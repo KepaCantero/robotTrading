@@ -11,6 +11,7 @@ from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+import numpy as np
 
 import yaml
 
@@ -226,7 +227,7 @@ class MomentumAutoOptimizer:
             if not scores:
                 return -1000.0
 
-            return sum(scores) / len(scores)
+            return np.mean(scores)
 
         # Run optimization
         study.optimize(objective, n_trials=20)  # Limited trials for monthly updates

@@ -1,23 +1,30 @@
 # ============================================
-# Ralph Task 21: Comprehensive Backtest Test (Compliance Engine)
+# Ralph Task 21: Backtesting Compliance Audit & Fix
 # ============================================
 # PRIORIDAD: P1 (IMPORTANTE)
-# OBJETIVO: Crear test completo de backtesting usando ComplianceEngine
-# TIEMPO: ~6-8 horas
-# DEPENDS ON: 09_compliance_engine_refactor, 17_backtest_fixes
+# OBJETIVO: Auditar y arreglar tests de backtesting para que cumplan las reglas de trading
+# TIEMPO: ~8-10 horas
+# DEPENDS ON: 09_compliance_engine_refactor
 #
 # Requirements: .ralph/docs/requirements/SERVICE_REQUIREMENTS.md
-# Audit: .ralph/outputs/COMPREHENSIVE_ONYEART_TEST_AUDIT.md
-# Replaces: scripts/archived/comprehensive_oneYear_test.py
+# Trading Rules: rules/trading/ (Ernest Chan, Tomasini, etc.)
+#
+# FLUJO:
+#   1. AUDIT: Analizar tests existentes vs reglas de trading
+#   2. CLEANUP: Eliminar tests obsoletos/duplicados
+#   3. FIX: Agente especializado corrige tests que violan reglas
+#   4. VALIDATE: Verificar que todos los tests cumplen
+# ============================================================================
+# VERSION: 4.0 - Refactorizado para usar templates correctamente
 # ============================================================================
 
 event_loop:
-  prompt_file: ".ralph/ralph_tasks/prompts/21_backtesting_folder_audit.md"
-  completion_promise: "COMPREHENSIVE_BACKTEST_TEST_COMPLETE"
-  max_iterations: 80
-  max_runtime_seconds: 28800  # 8 hours
+  prompt_file: ".ralph/ralph_tasks/prompts/21_backtesting_audit_and_fix.md"
+  completion_promise: "BACKTESTING_COMPLIANCE_COMPLETE"
+  max_iterations: 100
+  max_runtime_seconds: 36000  # 10 hours
   checkpoint_interval: 3
-  starting_event: "backtest_test.start"
+  starting_event: "backtest_audit.start"
 
 cli:
   backend: "claude"
@@ -25,391 +32,416 @@ cli:
 core:
   specs_dir: "./specs/"
 
+# ============================================================================
+# SHARED VARIABLES - Usadas por todos los hats
+# ============================================================================
+shared_vars:
+  OUTPUT_DIR: ".ralph/outputs"
+  SCRIPTS_DIR: ".ralph/scripts"
+  AUDIT_SCRIPT: ".ralph/scripts/audit_backtesting_rules.py"
+  CLEANUP_SCRIPT: ".ralph/scripts/cleanup_obsolete_backtests.py"
+  VERIFY_SCRIPT: ".ralph/scripts/verify_compliance_validations.py"
+  TEST_DIR: "tests/backtesting"
+  REQUIREMENTS_FILE: ".ralph/docs/requirements/SERVICE_REQUIREMENTS.md"
+
+# ============================================================================
+# REGLA PRINCIPAL: TODO PASA POR COMPLIANCE_ENGINE
+# ============================================================================
+# Arquitectura obligatoria:
+#
+#     ┌─────────────────────────────────────────────────────────────┐
+#     │                    BacktestEngine                            │
+#     │  ┌───────────────────────────────────────────────────────┐  │
+#     │  │            ComplianceEngine                           │  │
+#     │  │  ┌─────────────────────────────────────────────────┐  │  │
+#     │  │  │  Todas las validaciones de trading AQUÍ        │  │  │
+#     │  │  │  - R1: Kelly Criterion + 2% max                │  │  │
+#     │  │  │  - R2: Drawdown 15% stop                       │  │  │
+#     │  │  │  - R4: R:R 2:1 mínimo                           │  │  │
+#     │  │  │  - CHAN-002: Max Drawdown < 25%                │  │  │
+#     │  │  │  - RET-003: Transaction Costs                   │  │  │
+#     │  │  └─────────────────────────────────────────────────┘  │  │
+#     │  │                                                       │  │
+#     │  │  NO se permite bypassear estas validaciones         │  │
+#     │  └───────────────────────────────────────────────────────┘  │
+#     └─────────────────────────────────────────────────────────────┘
+#
+# ┌────────────────────────────────────────────────────────────────┐
+# │                  LO QUE ESTÁ PROHIBIDO:                       │
+# ├────────────────────────────────────────────────────────────────┤
+# │ ❌ Usar ComprehensiveBacktestRunner directamente              │
+# │ ❌ Validar Kelly, Drawdown, R:R en el test                  │
+# │ ❌ Calcular transaction costs en el test                     │
+# │ ❌ Ejecutar trades sin pasar por ComplianceEngine           │
+# └────────────────────────────────────────────────────────────────┘
+#
+# ┌────────────────────────────────────────────────────────────────┐
+# │                  LO QUE ESTÁ PERMITIDO:                       │
+# ├────────────────────────────────────────────────────────────────┤
+# │ ✅ Usar BacktestEngine (ya tiene ComplianceEngine)           │
+# │ ✅ Usar SimpleBacktester (ya tiene ComplianceEngine)         │
+# │ ✅ Validar métricas de RESULTADO (Sharpe final del test)      │
+# │ ✅ Verificar que ComplianceEngine está configurado           │
+# └────────────────────────────────────────────────────────────────┘
+# ============================================================================
+trading_rules:
+  # Regla principal - Todo pasa por ComplianceEngine
+  GOLDEN_RULE:
+    id: "GOLDEN_RULE"
+    name: "TODO pasa por ComplianceEngine"
+    description: "Todas las validaciones de trading deben estar en ComplianceEngine"
+    category: "CRITICAL"
+    compliance_check: "Ningún trade se ejecuta sin pasar por ComplianceEngine"
+    # Implementación:
+    # - app/backtesting/engine.py:158 → self.compliance_engine = ComplianceEngine()
+    # - app/backtesting/engine.py:557 → check_kill_switch() antes de trade
+    # - app/backtesting/engine.py:586 → analyze_pre_trade() validaciones
+    # - app/backtesting/engine.py:625 → analyze_post_trade() análisis
+
+  # Reglas específicas (implementadas en ComplianceEngine)
+  CHAN-002:
+    id: "CHAN-002"
+    name: "Max Drawdown < 25%"
+    source: "01-ernest-chan-algorithmic-trading.md"
+    description: "ComplianceEngine config.max_drawdown_ratio <= 0.25"
+    category: "CRITICAL"
+    compliance_check: "config.max_drawdown_ratio <= 0.25"
+    implementation: "app/core/compliance_engine.py:90-95 (config), 767-783 (validation)"
+
+  RET-003:
+    id: "RET-003"
+    name: "Transaction Costs in ComplianceEngine"
+    source: "64-realistic-retail-trading-rules.md"
+    description: "ComplianceEngine usa TransactionCostModel"
+    category: "CRITICAL"
+    compliance_check: "TransactionCostModel registrado en service_registry"
+    implementation: "app/core/compliance/protocols.py:285"
+
+  # Validación de RESULTADO (en test, no en ComplianceEngine)
+  CHAN-001:
+    id: "CHAN-001"
+    name: "Sharpe Ratio > 1.0 (resultado del test)"
+    source: "01-ernest-chan-algorithmic-trading.md"
+    description: "El resultado final del backtest debe tener Sharpe > 1.0"
+    category: "CRITICAL"
+    # NOTA: Esta es una validación de RESULTADO, no de trade individual
+    # Por lo tanto está en el test, no en ComplianceEngine
+    test_validation: "assert result.performance.sharpe_ratio > 1.0"
+
+  # Arquitectura
+  ARCH-001:
+    id: "ARCH-001"
+    name: "Usar BacktestEngine (con ComplianceEngine integrado)"
+    source: "architecture"
+    description: "Usar BacktestEngine que ya tiene ComplianceEngine integrado"
+    category: "CRITICAL"
+    validation: "from app.backtesting.engine import BacktestEngine"
+    implementation: "app/backtesting/engine.py:158"
+
+# ============================================================================
+# HATS - Usan templates, solo definen variables específicas
+# ============================================================================
 hats:
-  # ============================================================================
-  # HAT 1: Requirement Generator - Extrae requisitos de docs
-  # ============================================================================
-  requirement_generator:
-    name: "Requirement Generator"
-    description: "Genera requisitos para test de backtesting con ComplianceEngine"
-    hat_template: ".ralph/ralph_templates/hats/requirement_checker_hat.yml"
-    triggers: ["backtest_test.start"]
-    publishes: ["backtest_test.requirements_ready", "backtest_test.blocked"]
+  # ==========================================================================
+  # HAT 1: AUDITOR - Usa base_processor_hat.yml
+  # ==========================================================================
+  auditor:
+    name: "Trading Rules Auditor"
+    description: "Audita tests de backtesting contra reglas de trading"
+    hat_template: ".ralph/ralph_templates/hats/base_processor_hat.yml"
+    triggers: ["backtest_audit.start"]
+    publishes: ["backtest_audit.audit_complete", "backtest_audit.blocked"]
+    template_vars:
+      TASK_PREFIX: "backtest_audit"
+      SCRIPT: "{{AUDIT_SCRIPT}}"
+      OUTPUT_FILE: "{{OUTPUT_DIR}}/BACKTESTING_AUDIT.json"
+    # Solo sobrescribimos lo necesario, el resto viene del template
     instructions: |
-      ## REQUIREMENT GENERATOR - Backtest Test con ComplianceEngine
+      ## TRADING RULES AUDITOR
 
-      **OBJECTIVE:** Extraer requisitos para crear test de backtesting que use ComplianceEngine
+      **OBJECTIVE:** Auditar que ComplianceEngine tiene las validaciones requeridas y que los tests la usan
 
-      **REQUIREMENTS FILE:** .ralph/docs/requirements/SERVICE_REQUIREMENTS.md
+      ### Reglas a validar (definidas en shared_vars.trading_rules):
+      {{#each trading_rules}}
+      - **{{this.id}}**: {{this.name}} ({{this.category}})
+        {{this.description}}
+      {{/each}}
 
-      ### PASO 1: Leer audit previo
-
-      ```bash
-      cat .ralph/outputs/COMPREHENSIVE_ONYEART_TEST_AUDIT.md
-      ```
-
-      ### PASO 2: Leer ComplianceEngine existente
+      ### PASO 0: Verificar ComplianceEngine tiene las validaciones
 
       ```bash
-      # Verificar que ComplianceEngine existe
-      ls app/core/compliance_engine.py
+      # CRÍTICO: Verificar que ComplianceEngine está configurado correctamente
+      python {{VERIFY_SCRIPT}} --output {{OUTPUT_DIR}}/COMPLIANCE_VALIDATIONS.json || {
+        echo "❌ ComplianceEngine validation failed"
+        ralph emit "backtest_audit.blocked" "error=compliance_engine_not_valid"
+        exit 1
+      }
 
-      # Verificar protocolos
-      ls app/core/compliance/protocols.py
+      # Verificar resultados
+      cat {{OUTPUT_DIR}}/COMPLIANCE_VALIDATIONS.json | python3 -m json.tool
       ```
 
-      ### PASO 3: Extraer requisitos específicos
-
-      **Del audit, extraer:**
-      - Los 10 tipos de backtest que debe probar
-      - Violaciones críticas que el nuevo test debe evitar:
-        * NO usar ComprehensiveBacktestRunner directamente
-        * DEBE usar ComplianceEngine
-      - Validaciones requeridas (R1, R2, R4, R15, Spain Tax)
-
-      **De SERVICE_REQUIREMENTS, extraer:**
-      - R1: Kelly Criterion + 2% max
-      - R2: Drawdown 15% stop
-      - R4: R:R 2:1 mínimo
-      - R15: Logging append-only + correlation ID
-      - Spain Tax: IRPF 19/21/23%
-
-      ### PASO 4: Generar lista de requisitos
-
-      ```
-      REQUISITOS PARA test_comprehensive_backtesting_via_compliance.py:
-
-      1. IMPORTANTE: Usar ComplianceEngine (NO ComprehensiveBacktestRunner directo)
-      2. Implementar 10 tipos de backtest:
-         - BASELINE, LEARNING_ENGINES, WALK_FORWARD, MONTE_CARLO
-         - GRID_SEARCH, ABLATION, OUT_OF_SAMPLE, MULTI_STRATEGY
-         - REGIME_TEST, HYPERPARAMETER
-      3. SpainTaxCalculator con IRPF progresivo (0-6000€: 19%, 6000-50000€: 21%, >50000€: 23%)
-      4. Correlation ID logging (R15)
-      5. SOLID principles (Protocol para DIP)
-      6. Ubicación: tests/backtesting/test_comprehensive_backtesting_via_compliance.py
-      ```
-
-      ### PASO 5: Verificar dependencias
+      ### PASO 1: Preparación (usando shared_instructions.base_processor)
 
       ```bash
-      # Verificar que ComplianceEngine existe
-      grep -n "class ComplianceEngine" app/core/compliance_engine.py
+      # Asegurar scripts ejecutables
+      chmod +x {{AUDIT_SCRIPT}}
+      chmod +x {{CLEANUP_SCRIPT}}
+      chmod +x {{VERIFY_SCRIPT}}
 
-      # Verificar que tiene run_backtest method
-      grep -n "def run_backtest" app/core/compliance_engine.py
+      # Crear directorio de outputs
+      mkdir -p {{OUTPUT_DIR}}
+      ```
+
+      ### PASO 2: Ejecutar auditoría de tests
+
+      ```bash
+      timeout 600 python {{AUDIT_SCRIPT}} \
+        --test-dir {{TEST_DIR}} \
+        --output {{OUTPUT_FILE}} || {
+        echo "❌ Audit failed"
+        ralph emit "backtest_audit.blocked" "error=audit_failed"
+        exit 1
+      }
+      ```
+
+      ### PASO 3: Verificar que tests usan BacktestEngine
+
+      ```bash
+      # Buscar tests que NO usan BacktestEngine
+      grep -r "ComprehensiveBacktestRunner" {{TEST_DIR}}/*.py && {
+        echo "❌ Found tests using deprecated ComprehensiveBacktestRunner"
+        ralph emit "backtest_audit.blocked" "error=deprecated_runner_found"
+      } || echo "✅ No tests using deprecated runner"
       ```
 
       ### Event Format:
-      Completo: `ralph emit "backtest_test.requirements_ready" "requirements=<n>"`
-      Bloqueado: `ralph emit "backtest_test.blocked" "error=..."`
+      ```bash
+      ralph emit "backtest_audit.audit_complete" "violations=${n}, score=${pct}"
+      ```
 
-  # ============================================================================
-  # HAT 2: Implementer - Crea el test
-  # ============================================================================
-  implementer:
-    name: "Code Implementer"
-    description: "Implementa test de backtesting usando ComplianceEngine"
+  # ==========================================================================
+  # HAT 2: CLEANUP - Usa base_processor_hat.yml
+  # ==========================================================================
+  cleanup:
+    name: "Obsolete Tests Cleaner"
+    description: "Elimina tests de backtesting obsoletos y duplicados"
+    hat_template: ".ralph/ralph_templates/hats/base_processor_hat.yml"
+    triggers: ["backtest_audit.audit_complete"]
+    publishes: ["backtest_audit.cleanup_complete", "backtest_audit.blocked"]
+    template_vars:
+      TASK_PREFIX: "backtest_cleanup"
+      SCRIPT: "{{CLEANUP_SCRIPT}}"
+      AUDIT_FILE: "{{OUTPUT_DIR}}/BACKTESTING_AUDIT.json"
+      OUTPUT_FILE: "{{OUTPUT_DIR}}/CLEANUP_PLAN.json"
+    instructions: |
+      ## OBSOLETE TESTS CLEANER
+
+      ### PASO 1: Crear backup (CRÍTICO)
+
+      ```bash
+      backup_dir="{{OUTPUT_DIR}}/cleanup_backup_$(date +%Y%m%d_%H%M%S)"
+      mkdir -p "$backup_dir"
+
+      # Backup completo antes de cualquier acción
+      if [ -d "{{TEST_DIR}}" ]; then
+        tar -czf "$backup_dir/backtesting_backup.tar.gz" {{TEST_DIR}}/
+        echo "✅ Backup: $backup_dir"
+      fi
+      ```
+
+      ### PASO 2: Ejecutar análisis DRY RUN
+
+      ```bash
+      python {{CLEANUP_SCRIPT}} \
+        --dry-run \
+        --audit-file {{AUDIT_FILE}} \
+        --output {{OUTPUT_FILE}}
+      ```
+
+      ### PASO 3: Revisar y confirmar
+
+      ```bash
+      cat {{OUTPUT_FILE}}.md
+      ```
+
+      ### PASO 4: Ejecutar cleanup (solo si confirmado)
+
+      ```bash
+      python {{CLEANUP_SCRIPT}} --clean \
+        --audit-file {{AUDIT_FILE}} \
+        --output {{OUTPUT_FILE}} 2>&1 | tee "$backup_dir/cleanup.log"
+      ```
+
+      ### Event Format:
+      ```bash
+      ralph emit "backtest_audit.cleanup_complete" "backup=$backup_dir"
+      ```
+
+  # ==========================================================================
+  # HAT 3: FIXER - Usa implementer_hat.yml
+  # ==========================================================================
+  fixer:
+    name: "Backtesting Fixer Agent"
+    description: "Corrige tests para cumplir reglas de trading"
     hat_template: ".ralph/ralph_templates/hats/implementer_hat.yml"
-    triggers: ["backtest_test.requirements_ready"]
-    publishes: ["backtest_test.next_phase", "backtest_test.complete", "backtest_test.blocked"]
-    default_publishes: "backtest_test.next_phase"
+    triggers: ["backtest_audit.cleanup_complete"]
+    publishes: ["backtest_audit.fix_complete", "backtest_audit.blocked"]
     template_vars:
-      TASK_PREFIX: "backtest_test"
-      OBJECTIVE: "Create comprehensive backtest test using ComplianceEngine"
-      REQUIREMENTS_FILE: ".ralph/docs/requirements/SERVICE_REQUIREMENTS.md"
+      TASK_PREFIX: "backtest_fixer"
+      OBJECTIVE: "Fix backtesting tests to comply with trading rules"
+      REQUIREMENTS_FILE: "{{REQUIREMENTS_FILE}}"
+      AUDIT_FILE: "{{OUTPUT_DIR}}/BACKTESTING_AUDIT.json"
+      PHASES:
+        - name: "fix_architecture"
+          description: "Replace ComprehensiveBacktestRunner with BacktestEngine"
+          files: "dynamic"
+        - name: "add_validations"
+          description: "Add Sharpe, Drawdown validations"
+          files: "dynamic"
     instructions: |
-      ## CODE IMPLEMENTER - Comprehensive Backtest Test
+      ## BACKTESTING FIXER (usa implementer_hat.yml template)
 
-      **OBJECTIVE:** Crear `tests/backtesting/test_comprehensive_backtesting_via_compliance.py`
+      **OBJECTIVE:** {{OBJECTIVE}}
 
-      **REQUIREMENTS:** .ralph/docs/requirements/SERVICE_REQUIREMENTS.md
-
-      ### CRÍTICO: Usar ComplianceEngine
-
-      ```python
-      # ❌ INCORRECTO (como comprehensive_oneYear_test.py)
-      from app.backtesting.comprehensive_backtest_runner import ComprehensiveBacktestRunner
-      runner = ComprehensiveBacktestRunner(config)
-
-      # ✅ CORRECTO (nuevo test)
-      from app.core.compliance_engine import ComplianceEngine
-      engine = ComplianceEngine.from_config(config)
-      result = engine.run_backtest(...)
-      ```
-
-      ### PASO 1: Verificar dependencias
+      ### PASO 1: Leer auditoría
 
       ```bash
-      # Verificar ComplianceEngine existe
-      ls app/core/compliance_engine.py
-
-      # Verificar que tiene run_backtest
-      grep -n "def run_backtest" app/core/compliance_engine.py
-      ```
-
-      ### PASO 2: Crear archivo de test
-
-      ```bash
-      # Crear directorio si no existe
-      mkdir -p tests/backtesting
-
-      # Crear archivo
-      cat > tests/backtesting/test_comprehensive_backtesting_via_compliance.py << 'TESTEOF'
-      #!/usr/bin/env python3
-      """
-      Comprehensive Backtesting Test Suite - COMPLIANCE ENGINE VERSION
-
-      Tests ALL 10 backtesting types through ComplianceEngine.
-      Replaces: scripts/archived/comprehensive_oneYear_test.py
-
-      Backtest Types (10 total):
-      1.  Baseline        - Reference performance without ML
-      2.  Learning Engines - supervised, deep, reinforcement, transformer
-      3.  Walk-Forward    - Time-window optimization
-      4.  Monte Carlo     - Stress test (100 sims for quick testing)
-      5.  Grid Search     - Parameter space exploration
-      6.  Ablation        - Individual module impact
-      7.  Out-of-Sample   - Forward validation (70/15/15 split)
-      8.  Multi-Strategy  - All 4 strategies
-      9.  Regime Test     - Market regime performance (HMM)
-      10. Hyperparameter  - Optuna optimization
-
-      Compliance Features:
-      - Uses ComplianceEngine for ALL backtesting
-      - Validates R1 (Kelly + 2%), R2 (Drawdown 15%), R4 (R:R 2:1)
-      - Calculates Spain Tax (IRPF 19/21/23%)
-      - Logs with correlation ID (R15)
-      - Follows SOLID principles
-      """
-      TESTEOF
-      ```
-
-      ### PASO 3: Implementar estructura completa
-
-      El archivo debe incluir:
-
-      **1. Imports correctos:**
-      ```python
-      from app.core.compliance_engine import ComplianceEngine
-      from app.core.compliance.protocols import IBacktestRunner
-      from app.core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance, TaxResidence
-      ```
-
-      **2. Enum de 10 tipos de backtest:**
-      ```python
-      class BacktestType(Enum):
-          BASELINE = "baseline"
-          LEARNING_ENGINES = "learning_engines"
-          WALK_FORWARD = "walk_forward"
-          MONTE_CARLO = "monte_carlo"
-          GRID_SEARCH = "grid_search"
-          ABLATION = "ablation"
-          OUT_OF_SAMPLE = "out_of_sample"
-          MULTI_STRATEGY = "multi_strategy"
-          REGIME_TEST = "regime_test"
-          HYPERPARAMETER = "hyperparameter"
-      ```
-
-      **3. SpainTaxCalculator (SRP):**
-      ```python
-      class SpainTaxCalculator:
-          """Calculates Spain IRPF tax (19/21/23%)"""
-
-          TAX_BRACKETS = [
-              (Decimal("0"), Decimal("6000"), Decimal("0.19")),
-              (Decimal("6000"), Decimal("50000"), Decimal("0.21")),
-              (Decimal("50000"), Decimal("999999999"), Decimal("0.23")),
-          ]
-
-          @classmethod
-          def calculate_tax(cls, gross_pnl: float) -> float:
-              # IRPF progresivo sin distinción LT/ST
-              ...
-      ```
-
-      **4. ComplianceBacktestOrchestrator (SRP):**
-      ```python
-      class ComplianceBacktestOrchestrator:
-          """Orchestrates backtesting via ComplianceEngine"""
-
-          def __init__(self, start_date: str, end_date: str):
-              self.engine = ComplianceEngine.from_config(config)
-              self._tax_calculator = SpainTaxCalculator()
-
-          def run_all_backtests(self, profile: InputProfile) -> TestSummary:
-              # Ejecuta los 10 tipos via ComplianceEngine
-              for bt_type in BacktestType:
-                  result = self.engine.run_backtest(
-                      backtest_type=bt_type.value,
-                      config=config,
-                      profile=profile,
-                      correlation_id=str(uuid.uuid4()),
-                  )
-                  # Calculate Spain Tax
-                  spain_tax = self._tax_calculator.calculate_tax(gross_pnl)
-                  net_pnl = gross_pnl - spain_tax
-                  ...
-      ```
-
-      ### PASO 4: Configuración de los 10 backtests
-
-      ```python
-      def _get_test_config(self) -> dict:
-          return {
-              "backtests": {
-                  "baseline": {"enabled": True},
-                  "learning_engines": {"enabled": True, "types": ["supervised"]},
-                  "walk_forward": {"enabled": True, "min_train_days": 100},
-                  "monte_carlo": {"enabled": True, "num_simulations": 100},
-                  "grid_search": {"enabled": True},
-                  "ablation": {"enabled": True},
-                  "out_of_sample": {"enabled": True, "train_ratio": 0.70},
-                  "multi_strategy": {"enabled": True},
-                  "regime_test": {"enabled": True, "detection_method": "hmm"},
-                  "hyperparameter_optimization": {"enabled": True, "n_trials": 50},
-              },
-              "random_seed": 42,
-          }
-      ```
-
-      ### PASO 5: Validar implementación
-
-      ```bash
-      # Validar sintaxis
-      python .ralph/scripts/utils.py validate tests/backtesting/test_comprehensive_backtesting_via_compliance.py
-
-      # Esperar: success: true
-      ```
-
-      ### Event Format:
-      Completo: `ralph emit "backtest_test.complete" "file=tests/backtesting/test_comprehensive_backtesting_via_compliance.py"`
-      Bloqueado: `ralph emit "backtest_test.blocked" "error=..."`
-
-  # ============================================================================
-  # HAT 3: Validator - Valida el test creado
-  # ============================================================================
-  validator:
-    name: "Validator"
-    description: "Valida que el test usa ComplianceEngine correctamente"
-    hat_template: ".ralph/ralph_templates/hats/validation_hat.yml"
-    triggers: ["backtest_test.complete"]
-    publishes: ["backtest_test.validation_complete"]
-    template_vars:
-      TOTAL_FILES: 1
-      FILE_LIST: "tests/backtesting/test_comprehensive_backtesting_via_compliance.py"
-      GOLDEN_RULES: |
-        ✅ Must use ComplianceEngine (NOT ComprehensiveBacktestRunner directly)
-        ✅ Must implement all 10 backtest types
-        ✅ Must include SpainTaxCalculator (IRPF 19/21/23%)
-        ✅ Must include correlation ID logging (R15)
-        ✅ Must follow SOLID principles (Protocol for DIP)
-    instructions: |
-      ## VALIDATOR - Comprehensive Backtest Test
-
-      **OBJECTIVE:** Validar que el test usa ComplianceEngine correctamente
-
-      ### Validaciones críticas:
-
-      ```bash
-      # 1. Verificar ComplianceEngine import
-      grep -n "from.*compliance_engine import ComplianceEngine" \
-        tests/backtesting/test_comprehensive_backtesting_via_compliance.py
-      # ✅ Esperar: Encontrado
-
-      # 2. Verificar NO usa ComprehensiveBacktestRunner directamente
-      ! grep -q "ComprehensiveBacktestRunner" \
-        tests/backtesting/test_comprehensive_backtesting_via_compliance.py
-      # ✅ Esperar: No encontrado
-
-      # 3. Verificar 10 tipos de backtest
-      types=$(grep -o "BASELINE\|LEARNING_ENGINES\|WALK_FORWARD\|MONTE_CARLO\|GRID_SEARCH\|ABLATION\|OUT_OF_SAMPLE\|MULTI_STRATEGY\|REGIME_TEST\|HYPERPARAMETER" \
-        tests/backtesting/test_comprehensive_backtesting_via_compliance.py | sort -u | wc -l)
-      [ "$types" -eq 10 ]
-      # ✅ Esperar: 10
-
-      # 4. Verificar Spain Tax
-      grep -n "0.19\|0.21\|0.23\|IRPF\|SpainTaxCalculator" \
-        tests/backtesting/test_comprehensive_backtesting_via_compliance.py
-      # ✅ Esperar: Encontrado
-
-      # 5. Verificar correlation ID
-      grep -n "correlation_id\|uuid.uuid4()" \
-        tests/backtesting/test_comprehensive_backtesting_via_compliance.py
-      # ✅ Esperar: Encontrado
-
-      # 6. Verificar SOLID (Protocol)
-      grep -n "Protocol" tests/backtesting/test_comprehensive_backtesting_via_compliance.py
-      # ✅ Esperar: Encontrado
-
-      # 7. Validar sintaxis
-      python .ralph/scripts/utils.py validate \
-        tests/backtesting/test_comprehensive_backtesting_via_compliance.py
-      # ✅ Esperar: success: true
-      ```
-
-      ### Si TODO pasa:
-      ```bash
-      ralph emit "backtest_test.validation_complete" "all_validated=true"
-      Output: **COMPREHENSIVE_BACKTEST_TEST_COMPLETE**
-      ```
-
-  # ============================================================================
-  # HAT 4: Final Reviewer - Genera reporte final
-  # ============================================================================
-  final_reviewer:
-    name: "Final Reviewer"
-    description: "Genera reporte final de validación"
-    hat_template: ".ralph/ralph_templates/hats/final_reviewer_hat.yml"
-    triggers: ["backtest_test.validation_complete"]
-    publishes: ["backtest_test.final_summary"]
-    instructions: |
-      ## FINAL REVIEWER - Comprehensive Backtest Test
-
-      ### Generar reporte final:
-
-      ```bash
-      cat > .ralph/outputs/COMPREHENSIVE_BACKTEST_TEST_REPORT.md << 'EOF'
-      # Comprehensive Backtest Test - Creation Report
-
-      **Created:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
-      **File:** tests/backtesting/test_comprehensive_backtesting_via_compliance.py
-      **Replaces:** scripts/archived/comprehensive_oneYear_test.py
-
-      ## Features Implemented
-      - ✅ Uses ComplianceEngine (NOT direct runner)
-      - ✅ Tests all 10 backtest types
-      - ✅ Validates R1, R2, R4 (via ComplianceEngine)
-      - ✅ Calculates Spain Tax (IRPF 19/21/23%)
-      - ✅ Logs with correlation ID (R15)
-      - ✅ Follows SOLID principles
-
-      ## Backtest Types (10)
-      1. Baseline
-      2. Learning Engines (supervised)
-      3. Walk-Forward
-      4. Monte Carlo (100 sims)
-      5. Grid Search
-      6. Ablation
-      7. Out-of-Sample
-      8. Multi-Strategy
-      9. Regime Test
-      10. Hyperparameter
-
-      ## Validation Results
-      $(cat validation_results.json)
-
-      ## Usage
-      ```bash
-      python tests/backtesting/test_comprehensive_backtesting_via_compliance.py
-      ```
+      # Extraer archivos con violaciones
+      python3 << 'EOF'
+      import json
+      with open('{{AUDIT_FILE}}') as f:
+        data = json.load(f)
+      for r in data['detailed_results']:
+        if r['violations']:
+          print(r['file'])
       EOF
       ```
 
-      ### Output:
+      ### PASO 2: Para cada archivo, aplicar correcciones
+
+      **ARCH-001 Fix (usando critical_rules del template):**
+      ```python
+      # ❌ INCORRECTO
+      from app.backtesting.comprehensive_backtest_runner import ComprehensiveBacktestRunner
+
+      # ✅ CORRECTO (sin fallbacks)
+      from app.backtesting.engine import BacktestEngine
+      ```
+
+      **CHAN-001/002 Fix:**
+      ```python
+      # @todo: Add proper error handling if performance attrs missing
+      if hasattr(result, 'performance'):
+        assert result.performance.sharpe_ratio > 1.0
+        assert result.performance.max_drawdown < 0.25
+      ```
+
+      ### PASO 3: Validar (usando validation_scripts del template)
+
       ```bash
-      ralph emit "backtest_test.final_summary" "report=.ralph/outputs/COMPREHENSIVE_BACKTEST_TEST_REPORT.md"
-      Output: **COMPREHENSIVE_BACKTEST_TEST_COMPLETE**
+      python .ralph/scripts/utils.py validate <file_path>
+      ```
+
+      ### Event Format:
+      ```bash
+      ralph emit "backtest_audit.fix_complete" "fixed=<n>"
+      ```
+
+  # ==========================================================================
+  # HAT 4: VALIDATOR - Usa validation_hat.yml
+  # ==========================================================================
+  validator:
+    name: "Final Validator"
+    description: "Valida que todos los tests cumplen las reglas"
+    hat_template: ".ralph/ralph_templates/hats/validation_hat.yml"
+    triggers: ["backtest_audit.fix_complete"]
+    publishes: ["backtest_audit.validation_complete", "backtest_audit.blocked"]
+    template_vars:
+      TOTAL_FILES: "dynamic"
+      FILE_LIST: "{{TEST_DIR}}/**/*.py"
+      OUTPUT_FILE: "{{OUTPUT_DIR}}/FINAL_AUDIT.json"
+      GOLDEN_RULES: |
+        ✅ Sharpe Ratio > 1.0 (CHAN-001)
+        ✅ Max Drawdown < 25% (CHAN-002)
+        ✅ Uses BacktestEngine (ARCH-001)
+    instructions: |
+      ## FINAL VALIDATOR
+
+      ### PASO 1: Auditoría final
+
+      ```bash
+      timeout 600 python {{AUDIT_SCRIPT}} \
+        --test-dir {{TEST_DIR}} \
+        --output {{OUTPUT_FILE}}
+      ```
+
+      ### PASO 2: Validar criterios (usando golden_rules del template)
+
+      ```bash
+      python3 << 'EOF'
+      import json, sys
+      with open('{{OUTPUT_FILE}}') as f:
+        data = json.load(f)
+      violations = data['summary']['total_critical_violations']
+      score = data['summary']['average_compliance_score']
+      if violations > 0 or score < 80:
+        sys.exit(1)
+      EOF
+      ```
+
+      ### PASO 3: Generar reporte
+
+      ```bash
+      # Usar variables expandidas (sin 'EOF' con comillas)
+      total=$(python3 -c "import json; print(json.load(open('{{OUTPUT_FILE}}'))['summary']['total_files_audited'])")
+      cat > {{OUTPUT_DIR}}/BACKTESTING_COMPLIANCE_REPORT.md << EOF
+      # Compliance Report
+      Total: $total files
+      Status: ✅ COMPLIANT
+      EOF
+      ```
+
+      ### Event Format:
+      ```bash
+      ralph emit "backtest_audit.validation_complete" "all_validated=true"
+      ```
+
+  # ==========================================================================
+  # HAT 5: FINAL REPORTER - Usa final_reviewer_hat.yml
+  # ==========================================================================
+  final_reporter:
+    name: "Final Reporter"
+    description: "Genera reporte final"
+    hat_template: ".ralph/ralph_templates/hats/final_reviewer_hat.yml"
+    triggers: ["backtest_audit.validation_complete"]
+    publishes: ["backtest_audit.final_summary"]
+    template_vars:
+      OUTPUT_DIR: "{{OUTPUT_DIR}}"
+    instructions: |
+      ## FINAL REPORTER
+
+      ### Generar executive summary
+
+      ```bash
+      cat > {{OUTPUT_DIR}}/TASK21_EXECUTIVE_SUMMARY.md << EOF
+      # Task 21: Backtesting Compliance Audit
+
+      **Completed:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+      **Status:** ✅ COMPLETE
+
+      ## Results
+      - All tests comply with trading rules
+      - Zero critical violations
+      - BacktestEngine architecture verified
+
+      **Completion Promise:** BACKTESTING_COMPLIANCE_COMPLETE
+      EOF
+      ```
+
+      ### Event Format:
+      ```bash
+      ralph emit "backtest_audit.final_summary" "report={{OUTPUT_DIR}}/TASK21_EXECUTIVE_SUMMARY.md"
       ```
 
 tasks:

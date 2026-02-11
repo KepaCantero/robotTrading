@@ -245,18 +245,29 @@ class IntermarketRelationship(BaseModel):
 
     @property
     def is_active(self) -> bool:
-        """Check if relationship is currently active (significance > 70%)."""
-        return self.significance >= Decimal("70")
+        """Check if relationship is currently active (significance > threshold)."""
+        from app.core.config.base import get_config
+        cfg = get_config()
+        min_significance = Decimal(str(getattr(cfg.trading, 'fx_intermarket_min_significance', 70)))
+        return self.significance >= min_significance
 
     @property
     def strength(self) -> str:
         """Get relationship strength category."""
+        from app.core.config.base import get_config
+        cfg = get_config()
         abs_corr = abs(self.correlation)
-        if abs_corr >= Decimal("0.8"):
+
+        # Get correlation thresholds from config
+        very_strong = Decimal(str(getattr(cfg.trading, 'fx_corr_very_strong', 0.8)))
+        strong = Decimal(str(getattr(cfg.trading, 'fx_corr_strong', 0.6)))
+        moderate = Decimal(str(getattr(cfg.trading, 'fx_corr_moderate', 0.4)))
+
+        if abs_corr >= very_strong:
             return "very_strong"
-        elif abs_corr >= Decimal("0.6"):
+        elif abs_corr >= strong:
             return "strong"
-        elif abs_corr >= Decimal("0.4"):
+        elif abs_corr >= moderate:
             return "moderate"
         else:
             return "weak"
@@ -290,7 +301,7 @@ class IntermarketSignal(BaseModel):
         ...     strength=80,
         ...     trigger_asset="SPX",
         ...     relationship_type=RelationshipType.SAFE_HAVEN,
-        ...     expected_move=Decimal("0.02"),
+        ...     expected_move= getattr(config.trading, 'max_risk_per_trade', 0.02)"),
         ...     confidence=85
         ... )
     """
@@ -314,16 +325,25 @@ class IntermarketSignal(BaseModel):
     @model_validator(mode="after")
     def validate_signal_consistency(self) -> "IntermarketSignal":
         """Validate signal consistency."""
+        from app.core.config.base import get_config
+        cfg = get_config()
+
+        # Get thresholds from config
+        strong_signal_threshold = Decimal(str(getattr(cfg.trading, 'fx_signal_strong_threshold', 80)))
+        min_confidence_for_strong = Decimal(str(getattr(cfg.trading, 'fx_signal_min_confidence_strong', 70)))
+        max_expected_move = Decimal(str(getattr(cfg.trading, 'fx_signal_max_expected_move', 0.1)))
+        min_actionable_confidence = Decimal(str(getattr(cfg.trading, 'fx_signal_min_actionable_confidence', 60)))
+
         # Strong signals should have high confidence
-        if self.strength >= Decimal("80"):
-            if self.confidence < Decimal("70"):
+        if self.strength >= strong_signal_threshold:
+            if self.confidence < min_confidence_for_strong:
                 raise ValueError(
                     f"Strong signal (strength={self.strength}) requires "
-                    f"confidence >= 70%, got {self.confidence}"
+                    f"confidence >= {min_confidence_for_strong}%, got {self.confidence}"
                 )
 
         # Expected move should be reasonable
-        if abs(self.expected_move) > Decimal("0.1"):  # 10% daily move is extreme
+        if abs(self.expected_move) > max_expected_move:
             raise ValueError(f"Expected move seems unrealistic: {self.expected_move}")
 
         return self
@@ -340,8 +360,11 @@ class IntermarketSignal(BaseModel):
 
     @property
     def is_actionable(self) -> bool:
-        """Check if signal is actionable (confidence > 60%)."""
-        return self.confidence > Decimal("60")
+        """Check if signal is actionable (confidence > threshold)."""
+        from app.core.config.base import get_config
+        cfg = get_config()
+        min_confidence = Decimal(str(getattr(cfg.trading, 'fx_signal_min_actionable_confidence', 60)))
+        return self.confidence > min_confidence
 
 
 class FXIntermarketConfig(BaseModel):

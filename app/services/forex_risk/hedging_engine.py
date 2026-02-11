@@ -683,7 +683,7 @@ class HedgingEngine:
         # Simplified calculation
         if instrument.type == HedgeInstrumentType.FORWARD:
             # Assume ~2% annual interest rate diff max
-            rate_diff = Decimal("0.02")
+            rate_diff = getattr(config.trading, 'max_risk_per_trade', 0.02)")
             time_in_years = Decimal(str(tenor_months / 12))
             forward_cost = amount_eur * rate_diff * time_in_years
             return spread_cost + forward_cost

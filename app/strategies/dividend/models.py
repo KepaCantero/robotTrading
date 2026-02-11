@@ -13,6 +13,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional
+import numpy as np
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -305,7 +306,7 @@ class DividendProfile(BaseModel):
         valid_scores = [s for s in scores if s is not None]
         if not valid_scores:
             return None
-        return sum(valid_scores) / len(valid_scores)
+        return np.mean(valid_scores)
 
 
 class DividendStock(BaseModel):

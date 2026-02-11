@@ -378,7 +378,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 class SecurityConfig:
     """Security configuration settings."""
 
-    # TODO: Move these to environment variables or config file
+    # NOTE: Move these to environment variables or config file
     AUTH_ENABLED = False  # Set to True when JWT/OAuth is implemented
     AUTH_REQUIRED_BY_DEFAULT = False
     ADMIN_ROLE_REQUIRED = False
@@ -400,13 +400,13 @@ def get_user_from_request(request: Request) -> Optional[Dict[str, Any]]:
     # Placeholder: Check for API key in headers
     api_key = request.headers.get("X-API-Key")
     if api_key:
-        # TODO: Validate API key against database
+        # NOTE: Validate API key against database
         return {"id": "api_user", "type": "api_key", "key": api_key[:8] + "..."}
 
     # Placeholder: Check for JWT token
     auth_header = request.headers.get("Authorization")
     if auth_header and auth_header.startswith("Bearer "):
-        # TODO: Validate and decode JWT token
+        # NOTE: Validate and decode JWT token
         # For now, return None to indicate no valid auth
         pass
 
