@@ -596,6 +596,124 @@ class TradingThresholds(BaseModel):
         description="Maximum income need for portfolio allocation (8%)"
     )
 
+    # Portfolio analytics configuration
+    analytics_benchmark_return: float = Field(
+        default=0.08, ge=0.0, le=1.0,
+        description="Benchmark return for portfolio analytics (8%)"
+    )
+    analytics_var_95_confidence: float = Field(
+        default=0.95, ge=0.5, le=0.99,
+        description="VaR 95% confidence level"
+    )
+    analytics_var_99_confidence: float = Field(
+        default=0.99, ge=0.5, le=0.99,
+        description="VaR 99% confidence level"
+    )
+    analytics_rebalance_threshold: float = Field(
+        default=0.05, ge=0.0, le=0.5,
+        description="Rebalancing threshold for portfolio (5%)"
+    )
+    analytics_target_equity_allocation: float = Field(
+        default=0.60, ge=0.0, le=1.0,
+        description="Target equity allocation for default portfolio (60%)"
+    )
+    analytics_target_cash_allocation: float = Field(
+        default=0.40, ge=0.0, le=1.0,
+        description="Target cash allocation for default portfolio (40%)"
+    )
+    analytics_sharpe_ratio_threshold: float = Field(
+        default=0.5, ge=0.0, le=5.0,
+        description="Sharpe ratio threshold for recommendations (0.5)"
+    )
+    analytics_annualized_return_threshold: float = Field(
+        default=0.05, ge=0.0, le=1.0,
+        description="Annualized return threshold for recommendations (5%)"
+    )
+    analytics_volatility_high_threshold: float = Field(
+        default=0.20, ge=0.0, le=1.0,
+        description="High volatility threshold (20%)"
+    )
+    analytics_volatility_extreme_threshold: float = Field(
+        default=0.30, ge=0.0, le=1.0,
+        description="Extreme volatility threshold (30%)"
+    )
+    analytics_largest_position_high_threshold: float = Field(
+        default=0.20, ge=0.0, le=1.0,
+        description="High largest position threshold (20%)"
+    )
+    analytics_largest_position_extreme_threshold: float = Field(
+        default=0.30, ge=0.0, le=1.0,
+        description="Extreme largest position threshold (30%)"
+    )
+    analytics_max_drawdown_high_threshold: float = Field(
+        default=0.20, ge=0.0, le=1.0,
+        description="High max drawdown threshold (20%)"
+    )
+    analytics_var_95_high_threshold: float = Field(
+        default=0.10, ge=0.0, le=1.0,
+        description="High VaR 95% threshold (10%)"
+    )
+    analytics_cash_ratio_high_threshold: float = Field(
+        default=0.5, ge=0.0, le=1.0,
+        description="High cash ratio threshold (50%)"
+    )
+    analytics_risk_score_low_threshold: float = Field(
+        default=0.25, ge=0.0, le=1.0,
+        description="Low risk score threshold (25%)"
+    )
+    analytics_risk_score_moderate_threshold: float = Field(
+        default=0.5, ge=0.0, le=1.0,
+        description="Moderate risk score threshold (50%)"
+    )
+    analytics_risk_score_high_threshold: float = Field(
+        default=0.75, ge=0.0, le=1.0,
+        description="High risk score threshold (75%)"
+    )
+    analytics_default_average_correlation: float = Field(
+        default=0.3, ge=0.0, le=1.0,
+        description="Default average correlation for mock data (30%)"
+    )
+    analytics_risk_impact_factor: float = Field(
+        default=0.1, ge=0.0, le=1.0,
+        description="Risk impact factor per 1% allocation change (0.1%)"
+    )
+    analytics_return_impact_factor: float = Field(
+        default=0.05, ge=0.0, le=1.0,
+        description="Return impact factor per 1% allocation change (0.05%)"
+    )
+    analytics_mock_daily_return: float = Field(
+        default=0.001, ge=0.0, le=0.1,
+        description="Mock daily return for portfolio value calculation (0.1%)"
+    )
+    analytics_volatility_max_score: float = Field(
+        default=0.20, ge=0.0, le=1.0,
+        description="Max volatility for risk score calculation (20%)"
+    )
+    analytics_concentration_max_score: float = Field(
+        default=0.20, ge=0.0, le=1.0,
+        description="Max concentration for risk score calculation (20%)"
+    )
+    analytics_max_performance_return: float = Field(
+        default=0.20, ge=0.0, le=1.0,
+        description="Max annualized return for health score (20%)"
+    )
+    analytics_max_risk_score: float = Field(
+        default=0.50, ge=0.0, le=1.0,
+        description="Max risk score for health score calculation (50%)"
+    )
+    analytics_well_diversified_positions: float = Field(
+        default=0.10, ge=0.0, le=1.0,
+        description="Max effective positions for well diversified (10%)"
+    )
+    analytics_min_position_count_diversified: int = Field(
+        default=5, ge=1, le=50,
+        description="Minimum position count for good diversification (5)"
+    )
+    analytics_tail_ratio_size: float = Field(
+        default=0.1, ge=0.01, le=0.5,
+        description="Tail size for tail ratio calculation (10%)"
+    )
+
     # Transaction costs by asset class (per trade)
     tx_cost_equity: float = Field(
         default=0.0005, ge=0.0, le=0.1,
