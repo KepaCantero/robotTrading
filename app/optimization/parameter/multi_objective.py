@@ -304,7 +304,7 @@ class ParetoFront:
             b = x2 - x1
             c = x1 * y2 - x2 * y1
 
-            return abs(a * x0 + b * y0 + c) / ((a**2 + b**2) ** 0.5)
+            return abs(a * x0 + b * y0 + c) / np.sqrt(a**2 + b**2)
 
         # For higher dimensions, use simplified approach
         return sum(abs(p - s) for p, s in zip(point, line_start))

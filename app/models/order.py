@@ -5,12 +5,14 @@ This module defines order models with comprehensive domain validation
 for the algorithmic trading system.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+from app.core.centralized_config import get_config
 
 
 class OrderType(str, Enum):
@@ -72,7 +74,7 @@ class Order(BaseModel):
     @field_validator("quantity", "filled_quantity", "commission")
     @classmethod
     def validate_quantity_fields(cls, v) -> Decimal:
-        """Validate quantity fields are positive."""
+        """Validate quantity fields are positive - use config limit."""
         if isinstance(v, (int, float)):
             v = Decimal(str(v))
         elif not isinstance(v, Decimal):
@@ -80,15 +82,18 @@ class Order(BaseModel):
 
         if v < 0:
             raise ValueError(f"Quantity fields must be non-negative, got {v}")
-        if v > Decimal("1000000"):  # 1M shares limit
-            raise ValueError(f"Quantity exceeds maximum limit of 1M shares, got {v}")
+        # Use config for max quantity limit
+        tt = get_config().trading_thresholds
+        max_quantity = Decimal(str(tt.max_order_quantity_shares))
+        if v > max_quantity:
+            raise ValueError(f"Quantity exceeds maximum limit of {tt.max_order_quantity_shares:,.0f} shares, got {v}")
 
         return v
 
     @field_validator("price", "stop_price", "filled_price")
     @classmethod
     def validate_price_fields(cls, v) -> Optional[Decimal]:
-        """Validate price fields are positive."""
+        """Validate price fields are positive - use config limit."""
         if v is None:
             return v
 
@@ -99,25 +104,28 @@ class Order(BaseModel):
 
         if v <= 0:
             raise ValueError(f"Price fields must be positive, got {v}")
-        if v > Decimal("1000000"):  # $1M per share limit
-            raise ValueError(f"Price exceeds maximum limit of $1M, got {v}")
+        # Use config for max price limit
+        tt = get_config().trading_thresholds
+        max_price = Decimal(str(tt.max_order_price_usd))
+        if v > max_price:
+            raise ValueError(f"Price exceeds maximum limit of ${tt.max_order_price_usd:,.0f}, got {v}")
 
         return v
 
     @field_validator("timestamp")
     @classmethod
     def validate_timestamp(cls, v: datetime) -> datetime:
-        """Validate timestamp is reasonable."""
+        """Validate timestamp is reasonable - use config for age limit."""
         now = datetime.utcnow()
         if v > now:
             raise ValueError(f"Timestamp cannot be in the future, got {v}")
 
-        # Check if timestamp is too old (more than 1 year)
-        from datetime import timedelta
-
-        one_year_ago = now - timedelta(days=365)
-        if v < one_year_ago:
-            raise ValueError(f"Timestamp is too old (more than 1 year), got {v}")
+        # Check if timestamp is too old - use config
+        tt = get_config().trading_thresholds
+        max_age_days = tt.max_order_timestamp_age_days
+        oldest_allowed = now - timedelta(days=max_age_days)
+        if v < oldest_allowed:
+            raise ValueError(f"Timestamp is too old (more than {max_age_days} days), got {v}")
 
         return v
 

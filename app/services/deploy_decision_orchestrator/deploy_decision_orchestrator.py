@@ -14,6 +14,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Optional
+import numpy as np
 
 from app.services.capacity_fade_validation import (
     CapacityFadeRequest,
@@ -286,7 +287,7 @@ class DeployDecisionOrchestrator:
         else:
             scores.append(Decimal("30"))
 
-        return sum(scores) / len(scores)
+        return np.mean(scores)
 
     async def _assess_capacity_fade(self, deployment_input: DeploymentInput) -> tuple:
         """

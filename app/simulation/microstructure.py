@@ -600,7 +600,7 @@ class LiquidityProvider:
         self,
         symbol: str,
         max_position: Decimal = Decimal("10000"),
-        risk_tolerance: float = 0.02,
+        risk_tolerance: float = getattr(config.trading, 'max_risk_per_trade', 0.02),
         target_spread_bps: float = 10.0,
         min_profit_bps: float = 2.0,
         adverse_selection_threshold: float = 0.6,

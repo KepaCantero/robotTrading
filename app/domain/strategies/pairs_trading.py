@@ -17,6 +17,8 @@ from typing import Dict, List, Optional
 
 import numpy as np
 
+from app.core.centralized_config import get_config
+
 logger = logging.getLogger(__name__)
 
 
@@ -138,6 +140,10 @@ class PairsTrading:
         self._min_half_life = min_half_life
         self._max_half_life = max_half_life
         self._num_pairs = num_pairs
+
+        # Load trading thresholds from config
+        trading_config = get_config()
+        self._tt = trading_config.trading_thresholds
 
     def find_cointegrated_pairs(
         self,
@@ -443,7 +449,7 @@ class PairsTrading:
             half_life = float('inf')
 
         # Simple cointegration criterion
-        is_cointegrated = correlation > 0.7 and half_life < self._max_half_life
+        is_cointegrated = correlation > self._tt.pairs_correlation_min and half_life < self._max_half_life
 
         return CointegrationResult(
             is_cointegrated=is_cointegrated,

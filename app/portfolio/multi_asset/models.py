@@ -16,6 +16,8 @@ from typing import Any, Dict, List, Optional
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.core.centralized_config import get_config
+
 
 class RiskTolerance(str, Enum):
     """Risk tolerance levels for strategic allocation."""
@@ -477,7 +479,7 @@ class MultiAssetPortfolio:
         return False
 
     def calculate_portfolio_metrics(
-        self, returns: pd.DataFrame, risk_free_rate: float = 0.02
+        self, returns: pd.DataFrame, risk_free_rate: float = getattr(config.trading, 'max_risk_per_trade', 0.02)
     ) -> PortfolioMetrics:
         """
         Calculate portfolio-level metrics.
@@ -525,15 +527,20 @@ class MultiAssetPortfolio:
         total_return = Decimal(str(portfolio_returns.sum()))
         len(portfolio_returns)
 
-        # Annualized return (assuming daily returns)
-        annualized_return = Decimal(str((1 + portfolio_returns.mean()) ** 252 - 1))
+        # Annualized return (assuming daily returns) - use config value
+        tt = get_config().trading_thresholds
+        annualized_return = Decimal(
+            str((1 + portfolio_returns.mean()) ** tt.annual_trading_days - 1)
+        )
 
         # Volatility
-        volatility = Decimal(str(portfolio_returns.std() * np.sqrt(252)))
+        volatility = Decimal(str(portfolio_returns.std() * np.sqrt(tt.annual_trading_days)))
 
         # Sharpe ratio
-        excess_returns = portfolio_returns.mean() - risk_free_rate / 252
-        sharpe = Decimal(str(excess_returns / portfolio_returns.std() * np.sqrt(252)))
+        excess_returns = portfolio_returns.mean() - risk_free_rate / tt.annual_trading_days
+        sharpe = Decimal(
+            str(excess_returns / portfolio_returns.std() * np.sqrt(tt.annual_trading_days))
+        )
 
         # Max drawdown
         cumulative = (1 + portfolio_returns).cumprod()

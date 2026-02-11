@@ -12,6 +12,8 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.core.config.base import get_config
+
 
 class OptimizationObjective(str, Enum):
     """Optimization objective types."""
@@ -414,7 +416,11 @@ class StrategyAllocation(BaseModel):
     @property
     def needs_rebalance(self) -> bool:
         """Check if allocation needs rebalancing (>5% drift)."""
-        return self.drift > Decimal("0.05")
+        config = get_config()
+        threshold = Decimal(str(getattr(
+            config.trading, 'portfolio_rebalance_threshold', 0.05
+        )))
+        return self.drift > threshold
 
 
 class CombinedPortfolio(BaseModel):

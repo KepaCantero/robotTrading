@@ -118,7 +118,7 @@ def demo_benchmarking() -> None:
         logger.debug("")  # type: ignore[arg-type]
 
     # Generate summary
-    avg_speedup = sum(r.speedup for r in results) / len(results)
+    avg_speedup = np.mean([r.speedup for r in results])
     logger.debug(f"Average speedup: {avg_speedup:.2f}x")
     logger.debug("")  # type: ignore[arg-type]
 

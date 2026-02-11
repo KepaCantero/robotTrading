@@ -30,6 +30,7 @@ from sqlalchemy.exc import (
     ProgrammingError,
 )
 
+from app.core.centralized_config import get_config
 from app.core.decimal_utils import to_decimal, validate_price
 
 logger = logging.getLogger(__name__)
@@ -265,38 +266,56 @@ class MonitoredPosition:
         )
 
 
-@dataclass
 class PositionMonitorConfig:
     """
     Configuration for position monitor.
 
+    Uses centralized configuration for all timeout and interval values.
+
     Attributes:
-        check_interval_seconds: How often to check positions (default: 1 second)
-        max_price_fetch_retries: Max retries for fetching prices
-        price_fetch_timeout_seconds: Timeout for price fetching
+        check_interval_seconds: How often to check positions (uses centralized config)
+        max_price_fetch_retries: Max retries for fetching prices (uses centralized config)
+        price_fetch_timeout_seconds: Timeout for price fetching (uses centralized config)
         auto_restart: Automatically restart monitoring on errors
         log_all_checks: Log every position check (verbose)
         audit_log_enabled: Enable audit logging
         persist_state: Persist state to database
-        state_sync_interval_seconds: How often to sync state to DB
+        state_sync_interval_seconds: How often to sync state to DB (uses centralized config)
         execute_stops_automatically: Automatically execute stops when triggered
-        stop_execution_timeout_seconds: Timeout for stop order execution
+        stop_execution_timeout_seconds: Timeout for stop order execution (uses centralized config)
     """
 
-    check_interval_seconds: float = 1.0  # Check every second
-    max_price_fetch_retries: int = 3
-    price_fetch_timeout_seconds: float = 5.0
-    auto_restart: bool = True
-    log_all_checks: bool = False
-    audit_log_enabled: bool = True
+    def __init__(self, custom_config: Optional[Dict] = None):
+        """
+        Initialize PositionMonitorConfig with centralized config values.
 
-    # Database persistence
-    persist_state: bool = True
-    state_sync_interval_seconds: float = 10.0
+        Args:
+            custom_config: Optional dict with custom values (overrides centralized config)
+        """
+        # Get centralized config for default values
+        tt = get_config().trading_thresholds
 
-    # Stop execution
-    execute_stops_automatically: bool = True
-    stop_execution_timeout_seconds: float = 30.0
+        # Use centralized config directly - no hasattr, no fallbacks
+        self.check_interval_seconds = tt.position_monitor_check_interval
+        self.max_price_fetch_retries = tt.position_monitor_max_retries
+        self.price_fetch_timeout_seconds = tt.position_monitor_price_fetch_timeout
+        self.auto_restart: bool = True
+        self.log_all_checks: bool = False
+        self.audit_log_enabled: bool = True
+
+        # Database persistence
+        self.persist_state: bool = True
+        self.state_sync_interval_seconds = tt.position_monitor_state_sync_interval
+
+        # Stop execution
+        self.execute_stops_automatically: bool = True
+        self.stop_execution_timeout_seconds = tt.position_monitor_stop_execution_timeout
+
+        # Apply any custom overrides
+        if custom_config:
+            for key, value in custom_config.items():
+                if hasattr(self, key):
+                    setattr(self, key, value)
 
 
 class PositionMonitor:

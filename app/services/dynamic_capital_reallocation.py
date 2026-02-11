@@ -9,12 +9,17 @@ Implements dynamic capital reallocation based on rolling performance metrics:
 
 Based on diagnosis: Multi-strategy system needs adaptive capital allocation
 instead of static weights.
+
+Uses centralized configuration for all thresholds and parameters.
 """
 
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Dict, List, Optional, Tuple
+import numpy as np
+
+from app.core.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +48,7 @@ class PerformanceMetrics:
         """Calculate return/drawdown ratio (risk-adjusted metric)."""
         if self.max_drawdown == 0:
             return 0.0
-        avg_return = float(sum(self.returns)) / len(self.returns) if self.returns else 0.0
+        avg_return = float(np.mean(self.returns)) if self.returns else 0.0
         return avg_return / abs(self.max_drawdown) if self.max_drawdown != 0 else 0.0
 
     @property
@@ -88,30 +93,34 @@ class DynamicCapitalReallocationEngine:
 
     def __init__(
         self,
-        rebalance_frequency_days: int = 30,
-        rolling_window_days: int = 30,
-        min_weight: Decimal = Decimal("0.05"),  # 5% minimum
-        max_weight: Decimal = Decimal("0.70"),  # 70% maximum
-        volatility_target: float = 0.10,  # 10% annualized volatility target
-        min_trades_threshold: int = 5,  # Minimum trades to be considered active
+        rebalance_frequency_days: int = None,
+        rolling_window_days: int = None,
+        min_weight: Decimal = None,
+        max_weight: Decimal = None,
+        volatility_target: float = None,
+        min_trades_threshold: int = None,
     ):
         """
         Initialize reallocation engine.
 
         Args:
-            rebalance_frequency_days: Days between rebalancing (default 30)
-            rolling_window_days: Rolling window for performance calculation (default 30)
-            min_weight: Minimum weight per strategy (default 5%)
-            max_weight: Maximum weight per strategy (default 70%)
-            volatility_target: Target annualized volatility (default 10%)
-            min_trades_threshold: Minimum trades required to be considered active
+            rebalance_frequency_days: Days between rebalancing (uses centralized config if None)
+            rolling_window_days: Rolling window for performance calculation (uses centralized config if None)
+            min_weight: Minimum weight per strategy (uses centralized config if None)
+            max_weight: Maximum weight per strategy (uses centralized config if None)
+            volatility_target: Target annualized volatility (uses centralized config if None)
+            min_trades_threshold: Minimum trades required to be considered active (uses centralized config if None)
         """
-        self.rebalance_frequency_days = rebalance_frequency_days
-        self.rolling_window_days = rolling_window_days
-        self.min_weight = min_weight
-        self.max_weight = max_weight
-        self.volatility_target = volatility_target
-        self.min_trades_threshold = min_trades_threshold
+        # Get centralized config for defaults
+        tt = get_config().trading_thresholds
+        self._tt = tt
+
+        self.rebalance_frequency_days = rebalance_frequency_days if rebalance_frequency_days is not None else tt.dynamic_realloc_rebalance_days
+        self.rolling_window_days = rolling_window_days if rolling_window_days is not None else tt.dynamic_realloc_rolling_window
+        self.min_weight = min_weight if min_weight is not None else Decimal(str(tt.dynamic_realloc_min_weight))
+        self.max_weight = max_weight if max_weight is not None else Decimal(str(tt.dynamic_realloc_max_weight))
+        self.volatility_target = volatility_target if volatility_target is not None else tt.dynamic_realloc_volatility_target
+        self.min_trades_threshold = min_trades_threshold if min_trades_threshold is not None else tt.dynamic_realloc_min_trades
 
         # Performance history per strategy
         self.performance_history: Dict[str, List[Tuple[datetime, PerformanceMetrics]]] = {}
@@ -240,10 +249,10 @@ class DynamicCapitalReallocationEngine:
             total_trades_sum += metrics.total_trades
 
         # Calculate aggregated metrics
-        avg_sharpe = sum(sharpe_ratios) / len(sharpe_ratios) if sharpe_ratios else None
+        avg_sharpe = np.mean(sharpe_ratios) if sharpe_ratios else None
         worst_drawdown = min(max_drawdowns) if max_drawdowns else 0.0
-        avg_win_rate = sum(win_rates) / len(win_rates) if win_rates else 0.0
-        avg_volatility = sum(volatilities) / len(volatilities) if volatilities else 0.0
+        avg_win_rate = np.mean(win_rates) if win_rates else 0.0
+        avg_volatility = np.mean(volatilities) if volatilities else 0.0
 
         return PerformanceMetrics(
             returns=all_returns,

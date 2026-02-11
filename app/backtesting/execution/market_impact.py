@@ -28,6 +28,7 @@ Reference:
 from __future__ import annotations
 
 import logging
+import math
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
@@ -390,10 +391,15 @@ class MarketImpactModel:
         historical_impacts: List[Dict[str, Any]],
     ) -> AlmgrenChrissConfig:
         """
-        Calibrate impact coefficients from historical execution data.
+        Calibrate impact coefficients from historical execution data using
+        ordinary least squares regression.
 
-        This is a simplified calibration - in production you'd use
-        more sophisticated regression analysis.
+        The Almgren-Chriss model decomposes market impact into:
+        observed_impact = γ * (order_size/adv) + η * σ * sqrt(order_size/adv)
+
+        We perform linear regression to estimate:
+        - γ (gamma): Permanent impact coefficient
+        - η (eta): Temporary impact coefficient
 
         Args:
             historical_impacts: List of dicts with keys:
@@ -403,20 +409,115 @@ class MarketImpactModel:
                 - observed_impact_bps: Actual impact observed
 
         Returns:
-            Calibrated AlmgrenChrissConfig
+            Calibrated AlmgrenChrissConfig with regression-estimated coefficients
         """
-        # Simplified calibration (placeholder)
-        # In production, use linear regression on:
-        # observed_impact = γ * (order_size/adv) + η * σ * sqrt(order_size/adv)
-
         if not historical_impacts:
+            logger.warning("No historical data provided for calibration, using defaults")
             return self.ac_config
 
-        # For now, return defaults
-        # TODO: Implement proper regression calibration
-        logger.warning("Coefficient calibration not fully implemented, using defaults")
+        if len(historical_impacts) < 3:
+            logger.warning(
+                f"Insufficient data points for calibration ({len(historical_impacts)} < 3), using defaults"
+            )
+            return self.ac_config
 
-        return self.ac_config
+        try:
+            # Prepare data for regression
+            # Model: impact = gamma * X1 + eta * X2
+            # where X1 = order_size/adv, X2 = volatility * sqrt(order_size/adv)
+
+            X1_values = []  # Permanent impact regressor (order_size / adv)
+            X2_values = []  # Temporary impact regressor (volatility * sqrt(order_size / adv))
+            y_values = []  # Observed impact (dependent variable)
+
+            for data_point in historical_impacts:
+                try:
+                    order_size = Decimal(str(data_point.get("order_size", 0)))
+                    adv = Decimal(str(data_point.get("adv", 1)))
+                    volatility = Decimal(str(data_point.get("volatility", 0)))
+                    observed_impact = Decimal(str(data_point.get("observed_impact_bps", 0)))
+
+                    # Skip invalid data points
+                    if adv <= 0 or order_size <= 0:
+                        continue
+
+                    # Calculate regressors
+                    participation_rate = float(order_size / adv)
+                    X1 = participation_rate  # Permanent: order_size / adv
+                    X2 = float(volatility) * math.sqrt(participation_rate)  # Temporary: vol * sqrt(order_size / adv)
+
+                    X1_values.append(X1)
+                    X2_values.append(X2)
+                    y_values.append(float(observed_impact))
+
+                except (ValueError, TypeError, ZeroDivisionError) as e:
+                    logger.debug(f"Skipping invalid data point: {e}")
+                    continue
+
+            if len(X1_values) < 3:
+                logger.warning("Insufficient valid data points for regression, using defaults")
+                return self.ac_config
+
+            # Perform ordinary least squares regression
+            # Using numpy for efficient computation
+            import numpy as np
+
+            # Design matrix: [X1, X2]
+            X = np.column_stack([X1_values, X2_values])
+            y = np.array(y_values)
+
+            # Add intercept column (not strictly needed as impact should be 0 at 0 participation,
+            # but helps with model fitting)
+            X_with_intercept = np.column_stack([np.ones(len(X1_values)), X])
+
+            # OLS regression: (X^T X)^-1 X^T y
+            try:
+                # Use np.linalg.lstsq for numerical stability
+                coefficients, residuals, rank, singular_values = np.linalg.lstsq(
+                    X_with_intercept, y, rcond=None
+                )
+
+                # Extract coefficients (skipping intercept)
+                # coefficients[0] = intercept, coefficients[1] = gamma, coefficients[2] = eta
+                intercept = coefficients[0]
+                gamma = max(0, coefficients[1])  # Permanent impact coefficient (non-negative)
+                eta = max(0, coefficients[2])  # Temporary impact coefficient (non-negative)
+
+                # Calculate R-squared for goodness of fit
+                y_pred = X_with_intercept @ coefficients
+                ss_tot = np.sum((y - np.mean(y)) ** 2)
+                ss_res = np.sum((y - y_pred) ** 2)
+                r_squared = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0
+
+                logger.info(
+                    f"Market impact calibration complete: "
+                    f"γ={gamma:.6f}, η={eta:.6f}, R²={r_squared:.4f} "
+                    f"(from {len(X1_values)} data points)"
+                )
+
+                # If coefficients are effectively zero or regression failed, use defaults
+                if gamma < 1e-10 and eta < 1e-10:
+                    logger.warning("Regression produced near-zero coefficients, using defaults")
+                    return self.ac_config
+
+                # Create calibrated config with regression coefficients
+                calibrated_config = AlmgrenChrissConfig(
+                    permanent_coef=Decimal(str(gamma)),
+                    temporary_coef=Decimal(str(eta)),
+                    volatility_exponent=self.ac_config.volatility_exponent,
+                    adv_exponent=self.ac_config.adv_exponent,
+                    max_impact_bps=self.ac_config.max_impact_bps,
+                )
+
+                return calibrated_config
+
+            except (np.linalg.LinAlgError, ValueError) as e:
+                logger.error(f"Regression failed due to numerical error: {e}, using defaults")
+                return self.ac_config
+
+        except Exception as e:
+            logger.error(f"Error during coefficient calibration: {e}, using defaults", exc_info=True)
+            return self.ac_config
 
     def estimate_impact_range(
         self,

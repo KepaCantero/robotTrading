@@ -9,6 +9,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Dict, List, Optional
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -129,8 +130,8 @@ class ReportingGenerator:
         """Calculate risk metrics."""
         # Calculate volatility from monthly returns
         if monthly_returns:
-            avg_return = sum(monthly_returns) / len(monthly_returns)
-            variance = sum((r - avg_return) ** 2 for r in monthly_returns) / len(monthly_returns)
+            avg_return = np.mean(monthly_returns)
+            variance = np.mean([(r - avg_return) ** 2 for r in monthly_returns])
             volatility = variance**0.5
         else:
             volatility = 0.0

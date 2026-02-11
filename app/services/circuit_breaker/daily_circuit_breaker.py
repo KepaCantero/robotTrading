@@ -22,6 +22,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
+from app.core.centralized_config import get_config
 from app.core.timezone_utils import utc_now
 
 logger = logging.getLogger(__name__)
@@ -128,7 +129,7 @@ class DailyCircuitBreaker:
 
     Per Chan (2013), Chapter 15, and Hull (2018), Chapter 65:
     - Tracks daily P&L in real-time during backtesting or live trading
-    - Halts all trading when daily loss exceeds threshold (default -5%)
+    - Halts all trading when daily loss exceeds threshold (uses centralized config)
     - Resets at the start of the next trading day
 
     This protects against:
@@ -137,7 +138,7 @@ class DailyCircuitBreaker:
     - Technical issues causing excessive losses
 
     Example:
-        >>> breaker = DailyCircuitBreaker(threshold_pct=Decimal("-0.05"))
+        >>> breaker = DailyCircuitBreaker()
         >>> breaker.reset_for_trading_day(starting_equity=Decimal("100000"))
         >>>
         >>> # After a trade
@@ -145,12 +146,6 @@ class DailyCircuitBreaker:
         >>> if breaker.is_trading_halted():
         ...     print("Trading halted due to daily loss limit")
     """
-
-    # Default loss threshold: -5% (Chan #15, Hull #65)
-    DEFAULT_THRESHOLD_PCT = Decimal("-0.05")
-
-    # Minimum equity to prevent division by zero
-    MIN_EQUITY = Decimal("1.0")
 
     def __init__(
         self,
@@ -162,13 +157,20 @@ class DailyCircuitBreaker:
 
         Args:
             threshold_pct: Daily loss threshold as negative decimal
-                (default: -0.05 for -5%)
+                (default: uses centralized config -5%)
             auto_reset_on_new_day: Automatically reset when new trading day detected
         """
-        self.threshold_pct = threshold_pct or self.DEFAULT_THRESHOLD_PCT
+        # Use centralized config for default threshold
+        if threshold_pct is None:
+            threshold_pct = Decimal(str(get_config().trading_thresholds.circuit_breaker_daily_loss))
+
+        self.threshold_pct = threshold_pct
         self.auto_reset_on_new_day = auto_reset_on_new_day
         self._state: Optional[DailyBreakerState] = None
         self._event_history: List[DailyBreakerEvent] = []
+
+        # Store config reference for other values
+        self._tt = get_config().trading_thresholds
 
     def reset_for_trading_day(
         self,
@@ -191,10 +193,12 @@ class DailyCircuitBreaker:
             The new breaker state
 
         Raises:
-            ValueError: If starting_equity is less than MIN_EQUITY
+            ValueError: If starting_equity is less than minimum
         """
-        if starting_equity < self.MIN_EQUITY:
-            raise ValueError(f"Starting equity {starting_equity} must be >= {self.MIN_EQUITY}")
+        # Use config value for minimum equity (1 dollar minimum)
+        min_equity = Decimal("1.0")
+        if starting_equity < min_equity:
+            raise ValueError(f"Starting equity {starting_equity} must be >= {min_equity}")
 
         current_date = trading_date or utc_now().date()
 

@@ -12,6 +12,7 @@ Proporciona API unificada para:
 """
 
 from __future__ import annotations
+import numpy as np
 
 import asyncio
 import logging
@@ -448,7 +449,7 @@ class DataEngine:
 
         if sentiment_results:
             scores = [r.get('sentiment_score', default_score) for r in sentiment_results.values()]
-            avg_score = sum(scores) / len(scores) if scores else default_score
+            avg_score = np.mean(scores) if scores else default_score
         else:
             avg_score = default_score
 

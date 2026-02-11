@@ -15,6 +15,7 @@ import logging
 import time
 from decimal import Decimal
 from typing import Dict, List, Optional
+import numpy as np
 
 from .models import CryptoAsset, CryptoAssetType, CryptoExchange, CryptoScreeningResult
 
@@ -317,12 +318,8 @@ class CryptoScreener:
 
         total_evaluations = sum(r.total_evaluated for r in self.screening_history)
         total_passed = sum(len(r.passed_assets) for r in self.screening_history)
-        avg_pass_rate = sum(r.pass_rate for r in self.screening_history) / len(
-            self.screening_history
-        )
-        avg_time_ms = sum(r.screening_time_ms for r in self.screening_history) / len(
-            self.screening_history
-        )
+        avg_pass_rate = np.mean([r.pass_rate for r in self.screening_history])
+        avg_time_ms = np.mean([r.screening_time_ms for r in self.screening_history])
 
         return {
             "total_screenings": len(self.screening_history),

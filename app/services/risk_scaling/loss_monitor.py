@@ -12,6 +12,8 @@ Logic:
 - 4+ losses → scale = 0.5x (50% reduction, max reduction)
 
 Reset: When 3+ winning trades occur in a row
+
+Uses centralized configuration for all thresholds and scaling factors.
 """
 
 import logging
@@ -19,6 +21,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
 from typing import List, Optional
+
+from app.core.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -56,13 +60,17 @@ class LossMonitor:
         should_reset = monitor.should_reset_loss_counter(trade_results)
     """
 
-    def __init__(self, reset_threshold: int = 3):
+    def __init__(self, reset_threshold: Optional[int] = None):
         """
         Initialize loss monitor.
 
         Args:
-            reset_threshold: Number of wins needed to reset loss counter (default 3)
+            reset_threshold: Number of wins needed to reset loss counter (uses centralized config if None)
         """
+        # Use centralized config for reset_threshold if not provided
+        if reset_threshold is None:
+            tt = get_config().trading_thresholds
+            reset_threshold = tt.loss_monitor_reset_threshold
         self.reset_threshold = reset_threshold
         self.consecutive_loss_count = 0
         self.consecutive_win_count = 0
@@ -121,12 +129,12 @@ class LossMonitor:
         """
         Return position sizing scale based on loss streak.
 
-        Mapping:
+        Mapping (from centralized config):
         - 0 losses: 1.0x
-        - 1 loss: 0.9x (10% reduction)
-        - 2 losses: 0.8x (20% reduction)
-        - 3 losses: 0.6x (40% reduction)
-        - 4+ losses: 0.5x (50% reduction, maximum)
+        - 1 loss: scale_1_loss (default 0.9x = 10% reduction)
+        - 2 losses: scale_2_losses (default 0.8x = 20% reduction)
+        - 3 losses: scale_3_losses (default 0.6x = 40% reduction)
+        - 4+ losses: scale_max_reduction (default 0.5x = 50% reduction, maximum)
 
         Args:
             consecutive_losses: Count of consecutive losing trades
@@ -134,37 +142,48 @@ class LossMonitor:
         Returns:
             Scaling factor (0.5 to 1.0), quantized to 2 decimals
         """
+        # Get scales from centralized config
+        tt = get_config().trading_thresholds
+        scale_1 = Decimal(str(tt.loss_monitor_scale_1_loss))
+        scale_2 = Decimal(str(tt.loss_monitor_scale_2_losses))
+        scale_3 = Decimal(str(tt.loss_monitor_scale_3_losses))
+        scale_max = Decimal(str(tt.loss_monitor_scale_max_reduction))
+
         if consecutive_losses <= 0:
             scale = Decimal("1.0")
         elif consecutive_losses == 1:
-            scale = Decimal("0.9")
+            scale = scale_1
         elif consecutive_losses == 2:
-            scale = Decimal("0.8")
+            scale = scale_2
         elif consecutive_losses == 3:
-            scale = Decimal("0.6")
+            scale = scale_3
         else:
             # 4+ losses: max reduction
-            scale = Decimal("0.5")
+            scale = scale_max
 
         return scale.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
     def should_reset_loss_counter(
         self,
         trade_results: List[TradeResult],
-        lookback_trades: int = 10,
+        lookback_trades: Optional[int] = None,
     ) -> bool:
         """
         Check if loss streak should reset.
 
-        Resets when reset_threshold (default 3) consecutive winning trades occur.
+        Resets when reset_threshold consecutive winning trades occur.
 
         Args:
             trade_results: List of trade results
-            lookback_trades: How many recent trades to examine (default 10)
+            lookback_trades: How many recent trades to examine (uses centralized config if None)
 
         Returns:
             True if reset condition met
         """
+        # Use centralized config for lookback_trades if not provided
+        if lookback_trades is None:
+            tt = get_config().trading_thresholds
+            lookback_trades = tt.loss_monitor_lookback_trades
         if not trade_results:
             return False
 
@@ -217,18 +236,22 @@ class LossMonitor:
     def calculate_win_rate(
         self,
         trade_results: List[TradeResult],
-        window_trades: int = 20,
+        window_trades: Optional[int] = None,
     ) -> Decimal:
         """
         Calculate win rate from recent trades.
 
         Args:
             trade_results: List of trade results
-            window_trades: Number of recent trades to consider (default 20)
+            window_trades: Number of recent trades to consider (uses centralized config if None)
 
         Returns:
             Win rate as percentage (0-100)
         """
+        # Use centralized config for window_trades if not provided
+        if window_trades is None:
+            tt = get_config().trading_thresholds
+            window_trades = tt.loss_monitor_window_trades
         if not trade_results:
             return Decimal("0")
 
@@ -243,7 +266,7 @@ class LossMonitor:
     def calculate_average_win_loss_ratio(
         self,
         trade_results: List[TradeResult],
-        window_trades: int = 20,
+        window_trades: Optional[int] = None,
     ) -> Optional[Decimal]:
         """
         Calculate average win size vs average loss size.
@@ -252,11 +275,15 @@ class LossMonitor:
 
         Args:
             trade_results: List of trade results
-            window_trades: Number of recent trades (default 20)
+            window_trades: Number of recent trades (uses centralized config if None)
 
         Returns:
             Win/Loss ratio or None if insufficient data
         """
+        # Use centralized config for window_trades if not provided
+        if window_trades is None:
+            tt = get_config().trading_thresholds
+            window_trades = tt.loss_monitor_window_trades
         if not trade_results:
             return None
 

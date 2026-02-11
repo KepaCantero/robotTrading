@@ -682,7 +682,7 @@ class BlackLittermanOptimizer(BaseOptimizer):
             # Get views configuration
             views = constraints.get('views', {})
             view_confidences = constraints.get('view_confidences', {})
-            tau = constraints.get('tau', 0.05)  # Typical value: 0.025 to 0.05
+            tau = getattr(config.trading, 'max_risk_per_trade', 0.02)5 to 0.05
 
             # If no views, use implied equilibrium returns with Markowitz
             if not views:

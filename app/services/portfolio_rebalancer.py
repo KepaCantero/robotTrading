@@ -11,6 +11,8 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, Optional
 
+from app.core.centralized_config import get_config
+
 logger = logging.getLogger(__name__)
 
 
@@ -63,21 +65,24 @@ class DynamicCapitalAdjuster:
 
     def __init__(
         self,
-        min_allocation: Decimal = Decimal("0.10"),  # 10% minimum
-        max_allocation: Decimal = Decimal("0.70"),  # 70% maximum
-        adjustment_factor: Decimal = Decimal("0.20"),  # 20% reduction per streak
+        min_allocation: Optional[Decimal] = None,
+        max_allocation: Optional[Decimal] = None,
+        adjustment_factor: Optional[Decimal] = None,
     ):
         """
         Initialize capital adjuster.
 
         Args:
-            min_allocation: Minimum allocation ratio (0-1)
-            max_allocation: Maximum allocation ratio (0-1)
-            adjustment_factor: Reduction factor per negative streak (0-1)
+            min_allocation: Minimum allocation ratio (0-1) - uses config if None
+            max_allocation: Maximum allocation ratio (0-1) - uses config if None
+            adjustment_factor: Reduction factor per negative streak (0-1) - uses config if None
         """
-        self.min_allocation = min_allocation
-        self.max_allocation = max_allocation
-        self.adjustment_factor = adjustment_factor
+        # Load trading thresholds from config if not provided
+        tt = get_config().trading_thresholds
+        self.min_allocation = min_allocation or Decimal(str(tt.min_allocation_weight))
+        self.max_allocation = max_allocation or Decimal(str(tt.max_allocation_weight))
+        self.adjustment_factor = adjustment_factor or Decimal(str(tt.capital_adjustment_factor))
+        self._tt = tt  # Store for other thresholds
 
     def calculate_adjusted_weight(
         self,
@@ -101,15 +106,15 @@ class DynamicCapitalAdjuster:
         # Reduce weight based on consecutive losses
         if consecutive_losses > 0:
             reduction = min(
-                self.adjustment_factor * consecutive_losses, Decimal("0.50")  # Max 50% reduction
+                self.adjustment_factor * consecutive_losses, Decimal(str(self._tt.max_reduction_factor))
             )
             adjusted = adjusted * (Decimal("1") - reduction)
 
-        # Further reduce based on poor recent performance
-        if recent_performance < Decimal("-0.10"):  # Worse than -10%
-            adjusted = adjusted * Decimal("0.80")  # Reduce by 20%
-        elif recent_performance < Decimal("-0.05"):  # Worse than -5%
-            adjusted = adjusted * Decimal("0.90")  # Reduce by 10%
+        # Further reduce based on poor recent performance - use config thresholds
+        if recent_performance < Decimal(str(self._tt.poor_performance_threshold)):
+            adjusted = adjusted * (Decimal("1") - Decimal(str(self._tt.strong_performance_reduction)))
+        elif recent_performance < Decimal(str(self._tt.weak_performance_threshold)):
+            adjusted = adjusted * (Decimal("1") - Decimal(str(self._tt.moderate_performance_reduction)))
 
         # Enforce bounds
         adjusted = max(self.min_allocation, min(self.max_allocation, adjusted))
@@ -120,7 +125,7 @@ class DynamicCapitalAdjuster:
         self,
         consecutive_losses: int,
         recent_performance: Decimal,
-        threshold_losses: int = 3,
+        threshold_losses: Optional[int] = None,
     ) -> bool:
         """
         Determine if allocation should be reduced.
@@ -128,17 +133,21 @@ class DynamicCapitalAdjuster:
         Args:
             consecutive_losses: Number of consecutive losses
             recent_performance: Recent performance metric
-            threshold_losses: Threshold for consecutive losses
+            threshold_losses: Threshold for consecutive losses (uses config if None)
 
         Returns:
             True if allocation should be reduced
         """
+        # Use config for threshold if not provided
+        if threshold_losses is None:
+            threshold_losses = self._tt.consecutive_losses_threshold
+
         # Reduce if too many consecutive losses
         if consecutive_losses >= threshold_losses:
             return True
 
-        # Reduce if very poor recent performance
-        if recent_performance < Decimal("-0.15"):  # Worse than -15%
+        # Reduce if very poor recent performance - use config threshold
+        if recent_performance < Decimal(str(self._tt.poor_performance_threshold)):
             return True
 
         return False
@@ -153,18 +162,20 @@ class PortfolioRebalancer:
 
     def __init__(
         self,
-        rebalance_frequency_days: int = 30,
-        drift_threshold: Decimal = Decimal("0.05"),  # 5% drift
+        rebalance_frequency_days: Optional[int] = None,
+        drift_threshold: Optional[Decimal] = None,
     ):
         """
         Initialize rebalancer.
 
         Args:
-            rebalance_frequency_days: Days between rebalances (default 30)
-            drift_threshold: Allowed drift from target (default 5%)
+            rebalance_frequency_days: Days between rebalances (uses config if None)
+            drift_threshold: Allowed drift from target (uses config if None)
         """
-        self.rebalance_frequency_days = rebalance_frequency_days
-        self.drift_threshold = drift_threshold
+        # Load trading thresholds from config if not provided
+        tt = get_config().trading_thresholds
+        self.rebalance_frequency_days = rebalance_frequency_days or tt.rebalance_frequency_days
+        self.drift_threshold = drift_threshold or Decimal(str(tt.rebalance_drift_threshold))
         self.rebalancing_targets: Dict[str, RebalancingTarget] = {}
         self.capital_adjuster = DynamicCapitalAdjuster()
 

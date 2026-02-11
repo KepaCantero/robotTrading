@@ -16,6 +16,8 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 
+from app.core.config.base import get_config
+
 
 class QualitySignal(str, Enum):
     """Signal for quality investing."""
@@ -377,7 +379,7 @@ class QualityInvesting:
         quality_metrics: Dict[str, QualityMetrics],
         capital: float,
         max_positions: int = 25,
-        min_weight: float = 0.02,
+        min_weight: float | None = None,
         max_weight: float = 0.06,
     ) -> QualityPortfolio:
         """
@@ -393,6 +395,16 @@ class QualityInvesting:
         Returns:
             QualityPortfolio with optimal allocation
         """
+        # Get min_weight from config if not provided
+        if min_weight is None:
+            try:
+                config = get_config()
+                min_weight = float(getattr(
+                    config.trading, 'min_allocation_weight', 0.02
+                ))
+            except (AttributeError, Exception):
+                min_weight = 0.02
+
         # Rank stocks
         ranked = self.rank_quality_stocks(quality_metrics)
 

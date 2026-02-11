@@ -11,6 +11,8 @@ from decimal import Decimal
 from threading import Lock
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
+import numpy as np
+
 from app.backtesting.models import BacktestConfig, BacktestResult
 
 # Forward reference for type hints
@@ -198,7 +200,7 @@ class OrchestrationResult:
             if total_returns:
                 summary.update(
                     {
-                        'avg_return': sum(total_returns) / len(total_returns),
+                        'avg_return': np.mean(total_returns),
                         'best_return': max(total_returns),
                         'worst_return': min(total_returns),
                     }
@@ -207,7 +209,7 @@ class OrchestrationResult:
             if sharpe_ratios:
                 summary.update(
                     {
-                        'avg_sharpe': sum(sharpe_ratios) / len(sharpe_ratios),
+                        'avg_sharpe': np.mean(sharpe_ratios),
                         'best_sharpe': max(sharpe_ratios),
                     }
                 )

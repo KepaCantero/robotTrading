@@ -16,7 +16,7 @@ from collections import deque
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Sequence
 
-from app.core.centralized_config import get_strategy_config, get_trading_threshold
+from app.core.config.base import get_config
 from app.models.market_data import Quote
 from app.models.portfolio import Portfolio
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
@@ -55,8 +55,9 @@ class TrendFollowingStrategyEngine(BaseStrategyEngine):
         self.macd_signal_period = config.get("macd_signal_period", 9)
         self.volume_lookback = config.get("volume_lookback", 20)
 
-        # Load strategy-specific configuration
-        strategy_config = get_strategy_config("trend_following")
+        # Load strategy-specific configuration from centralized config
+        centralized_config = get_config()
+        strategy_config = centralized_config.get_strategy_config("trend_following")
         if strategy_config:
             params = strategy_config.parameters
             if isinstance(params, dict):
@@ -77,15 +78,15 @@ class TrendFollowingStrategyEngine(BaseStrategyEngine):
                 str(params.get("macd_histogram_threshold", 0.0))
             )  # Histograma debe ser positivo/negativo según dirección
 
-            # Risk parameters
+            # Risk parameters from centralized config with fallback to strategy config
             self.stop_loss = Decimal(
-                str(strategy_config.stop_loss_pct or get_trading_threshold("stop_loss_pct"))
+                str(strategy_config.stop_loss_pct or centralized_config.trading.stop_loss_pct)
             )
             self.take_profit = Decimal(
-                str(strategy_config.take_profit_pct or get_trading_threshold("take_profit_pct"))
+                str(strategy_config.take_profit_pct or centralized_config.trading.take_profit_pct)
             )
             self.max_position_size = Decimal(
-                str(strategy_config.max_position_size or get_trading_threshold("max_position_size"))
+                str(strategy_config.max_position_size or centralized_config.trading.max_position_size)
             )
             self.max_exposure = Decimal(str(params.get("max_exposure", 0.60)))
 
@@ -107,9 +108,9 @@ class TrendFollowingStrategyEngine(BaseStrategyEngine):
             self.macd_histogram_threshold = Decimal(
                 str(config.get("macd_histogram_threshold", 0.0))
             )
-            self.stop_loss = Decimal(str(get_trading_threshold("stop_loss_pct")))
-            self.take_profit = Decimal(str(get_trading_threshold("take_profit_pct")))
-            self.max_position_size = Decimal(str(get_trading_threshold("max_position_size")))
+            self.stop_loss = Decimal(str(centralized_config.trading.stop_loss_pct))
+            self.take_profit = Decimal(str(centralized_config.trading.take_profit_pct))
+            self.max_position_size = Decimal(str(centralized_config.trading.max_position_size))
             self.max_exposure = Decimal(str(config.get("max_exposure", 0.60)))
 
         # Históricos

@@ -172,8 +172,8 @@ class OFICalculator:
         else:
             ofi = (bid_vol - ask_vol) / total_vol
 
-        # Clamp to [-1, 1] for numerical stability
-        ofi = max(-1.0, min(1.0, ofi))
+        # Clamp to configured range for numerical stability
+        ofi = max(self.config.ofi_min_value, min(self.config.ofi_max_value, ofi))
 
         # Store in history
         self._ofi_history.append(ofi)
@@ -240,7 +240,10 @@ class OFICalculator:
         for price, qty in order_book.bids[: self.config.top_levels]:
             self._validate_price(price)
             distance = float((mid_price - price) / mid_price)
-            weight = max(0.1, 1.0 - distance * 10)  # Decay weight with distance
+            weight = max(
+                self.config.weight_min,
+                self.config.weight_max - distance * self.config.distance_multiplier
+            )  # Decay weight with distance
             weighted_bid_vol += int(qty * weight)
 
         # Weight asks by proximity to mid
@@ -248,7 +251,10 @@ class OFICalculator:
         for price, qty in order_book.asks[: self.config.top_levels]:
             self._validate_price(price)
             distance = float((price - mid_price) / mid_price)
-            weight = max(0.1, 1.0 - distance * 10)
+            weight = max(
+                self.config.weight_min,
+                self.config.weight_max - distance * self.config.distance_multiplier
+            )
             weighted_ask_vol += int(qty * weight)
 
         return weighted_bid_vol, weighted_ask_vol
@@ -327,11 +333,15 @@ class OFICalculator:
             >>> momentum = calculator.calculate_ofi_momentum([0.1, 0.2, 0.3, 0.25])
             >>> # Positive momentum indicates increasing buying pressure
         """
-        if len(ofi_history) < window * 2:
+        if len(ofi_history) < window * self.config.window_size_multiplier:
             return 0.0
 
         recent = np.mean(ofi_history[-window:])
-        previous = np.mean(ofi_history[-(window * 2) : -window])
+        previous = np.mean(
+            ofi_history[
+                -(window * self.config.window_size_multiplier) : -window
+            ]
+        )
 
         return float(recent - previous)
 
@@ -380,8 +390,8 @@ class OFICalculator:
         # Convert to numpy array
         ofi_array = np.array(ofi_history)
 
-        # Calculate exponential weights
-        alpha = 2.0 / (window + 1)
+        # Calculate exponential weights using specialized formula
+        alpha = self.config.ema_alpha_numerator / (window + 1)
         smoothed = np.zeros_like(ofi_array)
         smoothed[0] = ofi_array[0]
 
@@ -436,11 +446,17 @@ class OFICalculator:
         std_ofi = float(np.std(recent))
 
         # Use mean and variability to determine regime
-        if mean_ofi > 0.1 and std_ofi < 0.3:
+        if (
+            mean_ofi > self.config.regime_bullish_mean_threshold
+            and std_ofi < self.config.regime_stable_std_threshold
+        ):
             return "bullish_flow"
-        elif mean_ofi < -0.1 and std_ofi < 0.3:
+        elif (
+            mean_ofi < self.config.regime_bearish_mean_threshold
+            and std_ofi < self.config.regime_stable_std_threshold
+        ):
             return "bearish_flow"
-        elif std_ofi > 0.4:
+        elif std_ofi > self.config.regime_volatile_std_threshold:
             return "volatile"
         else:
             return "balanced"
@@ -460,7 +476,7 @@ class OFICalculator:
         Returns:
             List of autocorrelation values
         """
-        if len(ofi_history) < max_lag + 10:
+        if len(ofi_history) < max_lag + self.config.max_lag_offset:
             return []
 
         ofi_array = np.array(ofi_history)
@@ -646,7 +662,10 @@ class OFICalculator:
         Returns:
             Dictionary with predictive power metrics
         """
-        if len(ofi_history) != len(returns_history) or len(ofi_history) < 20:
+        if (
+            len(ofi_history) != len(returns_history)
+            or len(ofi_history) < self.config.min_predictive_power_samples
+        ):
             return {"error": "Insufficient or mismatched data"}
 
         ofi_array = np.array(ofi_history)
@@ -674,7 +693,9 @@ class OFICalculator:
         # Find best lag
         best_corr = 0.0
         best_lag = 0
-        for lag in range(1, min(20, len(ofi_array) // 2)):
+        for lag in range(
+            1, min(self.config.default_max_lag, len(ofi_array) // 2)
+        ):
             corr = np.corrcoef(ofi_array[:-lag], returns_array[lag:])[0, 1]
             if not np.isnan(corr) and abs(corr) > abs(best_corr):
                 best_corr = corr

@@ -20,6 +20,8 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
+from app.core.config.base import get_config
+
 logger = logging.getLogger(__name__)
 
 
@@ -99,16 +101,24 @@ class FactorModelResult:
     t_stats: Dict[str, float]  # T-statistics
     standard_errors: Dict[str, float]  # Standard errors
     n_obs: int  # Number of observations
+    p_value_significance_threshold: float = 0.1  # Configured threshold for alpha significance
 
     @property
     def is_market_beta_significant(self) -> bool:
         """Check if market beta is statistically significant (p < 0.05)."""
-        return self.p_values.get("market", 1.0) < 0.05
+        try:
+            config = get_config()
+            significance_threshold = float(getattr(
+                config.trading, 'p_value_significance_threshold', 0.05
+            ))
+        except (AttributeError, Exception):
+            significance_threshold = 0.05
+        return self.p_values.get("market", 1.0) < significance_threshold
 
     @property
     def has_positive_alpha(self) -> bool:
         """Check if alpha is positive and significant."""
-        return self.loadings.alpha > 0 and self.p_values.get("alpha", 1.0) < 0.1
+        return self.loadings.alpha > 0 and self.p_values.get("alpha", 1.0) < self.p_value_significance_threshold
 
 
 class FamaFrenchModel:
@@ -127,7 +137,7 @@ class FamaFrenchModel:
     def __init__(
         self,
         model_type: str = "3factor",  # 3factor or 4factor
-        risk_free_rate: float = 0.02,
+        risk_free_rate: float | None = None,
     ):
         """
         Initialize Fama-French model.
@@ -137,7 +147,21 @@ class FamaFrenchModel:
             risk_free_rate: Annual risk-free rate
         """
         self._model_type = model_type
+
+        # Get risk-free rate from config if not provided
+        if risk_free_rate is None:
+            try:
+                config = get_config()
+                risk_free_rate = float(getattr(
+                    config.trading, 'risk_free_rate', 0.02
+                ))
+            except (AttributeError, Exception):
+                risk_free_rate = 0.02
         self._risk_free_rate = risk_free_rate
+
+        # Load trading thresholds from config
+        trading_config = get_config()
+        self._tt = trading_config.trading_thresholds
 
     def estimate_loadings(
         self,
@@ -179,6 +203,7 @@ class FamaFrenchModel:
                 t_stats={name: 0.0 for name in factor_names},
                 standard_errors={name: 1.0 for name in factor_names},
                 n_obs=len(asset_returns),
+                p_value_significance_threshold=self._tt.p_value_significance,
             )
 
         # Handle NaN values in asset returns
@@ -204,6 +229,7 @@ class FamaFrenchModel:
                 t_stats={name: 0.0 for name in factor_names},
                 standard_errors={name: 1.0 for name in factor_names},
                 n_obs=len(asset_returns_clean),
+                p_value_significance_threshold=self._tt.p_value_significance,
             )
 
         # Log if we filtered values
@@ -323,6 +349,7 @@ class FamaFrenchModel:
             t_stats=t_dict,
             standard_errors=se_dict,
             n_obs=n_obs,
+            p_value_significance_threshold=self._tt.p_value_significance,
         )
 
     def construct_factor_portfolio(

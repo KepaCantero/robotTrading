@@ -589,7 +589,7 @@ class FXCarryTradeConfig(BaseModel):
 
     Examples:
         >>> config = FXCarryTradeConfig(
-        ...     min_carry_threshold=Decimal("0.02"),
+        ...     min_carry_threshold= getattr(config.trading, 'max_risk_per_trade', 0.02)"),
         ...     max_positions=5,
         ...     position_size=Decimal("0.1")
         ... )

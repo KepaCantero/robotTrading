@@ -32,6 +32,7 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import List, Optional, Tuple
 
+from app.core.config.base import get_config
 from app.services.account_configuration import AccountConfiguration, AccountTier
 from app.services.capital_tier_strategy_selector import RiskProfile
 
@@ -707,7 +708,9 @@ class AbsoluteReturnOptimizer:
                 tier=self.tier.value,
                 max_position_size=config.get("position_size_pct", Decimal("0.05")),
                 max_concurrent_trades=config.get("max_concurrent_trades", 2),
-                max_daily_loss_pct=config.get("max_daily_loss_pct", Decimal("0.02")),
+                max_daily_loss_pct=Decimal(str(getattr(
+                    get_config().trading, 'max_daily_loss_pct', 0.02
+                ))),  # Use centralized config
                 max_drawdown_pct=Decimal("0.10"),
                 leverage_allowed=Decimal("1.5"),
                 learning_enabled=config.get("learning_enabled", False),

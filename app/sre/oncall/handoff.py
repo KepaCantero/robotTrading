@@ -20,6 +20,7 @@ Domain Model (Cosmic Python - Rule 16):
 """
 
 from __future__ import annotations
+import numpy as np
 
 import asyncio
 import logging
@@ -900,7 +901,7 @@ class HandoffManager:
                 s.quality_score for s in self._sessions.values() if s.quality_score is not None
             ]
 
-            avg_quality = sum(quality_scores) / len(quality_scores) if quality_scores else 0.0
+            avg_quality = np.mean(quality_scores) if quality_scores else 0.0
 
             return {
                 "total_sessions": total,

@@ -363,8 +363,11 @@ class CostParametersModel(BaseModel):
     @classmethod
     def validate_commission_rates(cls, v):
         """Validate commission rates."""
+        from app.core.config.base import get_config
+        cfg = get_config()
+        max_commission = Decimal(str(getattr(cfg.trading, 'cost_max_commission_rate', 0.1)))
         for asset_class, rate in v.items():
-            if rate < 0 or rate > Decimal("0.1"):  # Max 10% commission
+            if rate < 0 or rate > max_commission:
                 raise ValueError(f"Invalid commission rate for {asset_class}: {rate}")
         return v
 
@@ -372,8 +375,11 @@ class CostParametersModel(BaseModel):
     @classmethod
     def validate_slippage_rates(cls, v):
         """Validate slippage rates."""
+        from app.core.config.base import get_config
+        cfg = get_config()
+        max_slippage = Decimal(str(getattr(cfg.trading, 'cost_max_slippage_rate', 0.05)))
         for asset_class, rate in v.items():
-            if rate < 0 or rate > Decimal("0.05"):  # Max 5% slippage
+            if rate < 0 or rate > max_slippage:
                 raise ValueError(f"Invalid slippage rate for {asset_class}: {rate}")
         return v
 

@@ -22,6 +22,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Any
 
+from app.core.centralized_config import get_config
 from app.strategies.base import BaseStrategy
 from app.strategies.fx_carry_trade.carry_calculator import CarryCalculator, CarryTradeOpportunity
 from app.strategies.fx_carry_trade.fx_rates_provider import FXRateProvider, InMemoryFXRateProvider
@@ -109,18 +110,22 @@ class FXCarryTradeStrategy(BaseStrategy):
         Raises:
             ValueError: If config is invalid
         """
+        # Load modular strategy config for defaults
+        trading_config = get_config()
+        _cfg = trading_config.trading_thresholds.fx_carry  # Modular config
+
         # Handle dict config for BaseStrategy compatibility
         if isinstance(config, dict):
-            # Extract known parameters or use defaults
+            # Extract known parameters or use defaults from modular config
             strategy_config = FXCarryTradeConfig(
-                min_carry_threshold=Decimal(str(config.get("min_carry_threshold", "0.01"))),
-                max_positions=config.get("max_positions", 10),
-                position_size=Decimal(str(config.get("position_size", "0.1"))),
+                min_carry_threshold=Decimal(str(config.get("min_carry_threshold", _cfg.min_carry_threshold))),
+                max_positions=config.get("max_positions", _cfg.max_positions_default),
+                position_size=Decimal(str(config.get("position_size", _cfg.position_size_default))),
                 forward_months=config.get("forward_months", 3),
-                stop_loss=Decimal(str(config.get("stop_loss", "0.05"))),
-                take_profit=Decimal(str(config.get("take_profit", "0.15"))),
-                max_leverage=Decimal(str(config.get("max_leverage", "2.0"))),
-                min_liquidity=Decimal(str(config.get("min_liquidity", "1000000"))),
+                stop_loss=Decimal(str(config.get("stop_loss", _cfg.stop_loss_default))),
+                take_profit=Decimal(str(config.get("take_profit", _cfg.take_profit_default))),
+                max_leverage=Decimal(str(config.get("max_leverage", _cfg.max_leverage))),
+                min_liquidity=Decimal(str(config.get("min_liquidity", _cfg.min_liquidity))),
             )
             super().__init__(config)
         else:
@@ -143,6 +148,7 @@ class FXCarryTradeStrategy(BaseStrategy):
             )
 
         self.config = strategy_config
+        self._cfg = _cfg  # Store modular config reference for use in methods
         self.calculator = calculator or CarryCalculator(
             signal_threshold=strategy_config.min_carry_threshold,
         )
@@ -262,7 +268,7 @@ class FXCarryTradeStrategy(BaseStrategy):
 
     def _calculate_confidence(self, signal: FXCarrySignal) -> float:
         """
-        Calculate confidence score for a signal.
+        Calculate confidence score for a signal - use config values.
 
         Args:
             signal: The carry trade signal
@@ -270,13 +276,13 @@ class FXCarryTradeStrategy(BaseStrategy):
         Returns:
             Confidence score (0-100)
         """
-        # Base confidence from signal strength
+        # Base confidence from signal strength - use config multiplier
         signal_strength = abs(float(signal.signal))
-        base_confidence = min(signal_strength * 100, 80)
+        base_confidence = min(signal_strength * self._cfg.base_confidence_multiplier, self._cfg.carry_boost_max)
 
-        # Boost for positive carry (positive expected return)
+        # Boost for positive carry (positive expected return) - use config
         if signal.carry > 0:
-            carry_boost = min(float(signal.carry) * 500, 20)
+            carry_boost = min(float(signal.carry) * self._cfg.carry_boost_multiplier, self._cfg.carry_boost_max)
         else:
             carry_boost = 0
 
@@ -372,14 +378,14 @@ class FXCarryTradeStrategy(BaseStrategy):
         # Base position using configured fraction
         position_value = capital * self.config.position_size
 
-        # Volatility adjustment (higher vol = smaller position)
-        # Normalize vol: 0.01 (1%) is baseline giving 1.0x adjustment
+        # Volatility adjustment (higher vol = smaller position) - use config values
+        # Normalize vol: configured baseline is baseline giving 1.0x adjustment
         # Formula: adjustment = baseline_vol / actual_vol
-        # If vol is 0.02 (2%), adjustment = 0.01/0.02 = 0.5 (halve position)
-        # If vol is 0.005 (0.5%), adjustment = 0.01/0.005 = 2.0 (double position, capped)
-        baseline_volatility = Decimal("0.01")  # 1% baseline
+        # If vol is 0.02 (2%), adjustment = getattr(config.trading, 'max_risk_per_trade', 0.02) = 0.5 (halve position)
+        # If vol is 0.005 (0.5%), adjustment = baseline/0.005 = 2.0 (double position, capped)
+        baseline_volatility = Decimal(str(self._cfg.baseline_volatility))
         vol_adjustment = baseline_volatility / max(volatility, baseline_volatility)
-        vol_adjustment = min(vol_adjustment, Decimal("2.0"))  # Cap at 2x for low vol
+        vol_adjustment = min(vol_adjustment, Decimal(str(self._cfg.vol_adjustment_max)))  # Use config cap
 
         position_value = position_value * vol_adjustment
 
@@ -416,16 +422,16 @@ class FXCarryTradeStrategy(BaseStrategy):
         # Forward premium reflects market's expected price movement
         base_volatility = abs(signal.forward_premium)
 
-        # Add minimum volatility floor (2% annual)
-        min_volatility = Decimal("0.02")
+        # Add minimum volatility floor - use config value
+        min_volatility = Decimal(str(self._cfg.min_volatility))
 
         # Scale: forward premium is typically for 3 months, annualize it
         # Multiply by 4 (for quarters in a year) but cap at reasonable max
         quarterly_volatility = base_volatility * Decimal("4")
         estimated_volatility = max(quarterly_volatility, min_volatility)
 
-        # Cap at 50% annual volatility for safety
-        max_volatility = Decimal("0.50")
+        # Cap at configured max annual volatility for safety - use config
+        max_volatility = Decimal(str(self._cfg.max_volatility))
         estimated_volatility = min(estimated_volatility, max_volatility)
 
         return estimated_volatility

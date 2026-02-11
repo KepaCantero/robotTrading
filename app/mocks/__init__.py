@@ -6,6 +6,7 @@ APIs to enable testing and development without real API calls.
 """
 
 import asyncio
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
@@ -14,6 +15,70 @@ from typing import Any, Dict, List, Optional
 from app.models.momentum import MarketData
 from app.models.order import Order, OrderSide, OrderStatus, OrderType
 from app.models.portfolio import AssetClass, Position
+
+
+@dataclass
+class MockConfig:
+    """
+    Configuration for mock trading behavior.
+
+    Centralizes all hardcoded values used in mock implementations
+    for better auditability and testing.
+    """
+
+    # Connection and processing delays (seconds)
+    connection_delay: float = 0.1
+    processing_delay: float = 0.05
+
+    # Default prices
+    default_price: Decimal = Decimal("100.00")
+    default_btc_price: Decimal = Decimal("50000.00")
+    default_base_price: Decimal = Decimal("150.00")
+    default_spread: Decimal = Decimal("0.01")
+
+    # Market data generation multipliers
+    high_price_multiplier: Decimal = Decimal("1.02")
+    low_price_multiplier: Decimal = Decimal("0.98")
+
+    # Order execution thresholds
+    buy_execution_threshold: Decimal = Decimal("0.95")  # 5% below market
+    sell_execution_threshold: Decimal = Decimal("1.05")  # 5% above market
+
+    # Limit order rejection thresholds
+    limit_buy_rejection_threshold: Decimal = Decimal("0.9")  # 10% below market
+    limit_sell_rejection_threshold: Decimal = Decimal("1.1")  # 10% above market
+
+    # Klines generation
+    klines_price_variation_percent: float = 0.01  # 1% variation
+    klines_variation_range: int = 10  # Range for variation calculation
+    klines_variation_offset: int = 5  # Offset for variation calculation
+
+    # Default balances
+    default_usd_balance: Decimal = Decimal("100000")
+    default_aapl_balance: Decimal = Decimal("1000")
+    default_btc_balance: Decimal = Decimal("1.0")
+    default_eth_balance: Decimal = Decimal("10.0")
+    default_usdt_balance: Decimal = Decimal("10000.0")
+
+    # Default account values
+    default_total_cash: Decimal = Decimal("100000.00")
+    default_buying_power: Decimal = Decimal("200000.00")
+    default_equity: Decimal = Decimal("150000.00")
+
+    # Volume defaults
+    default_volume: Decimal = Decimal("1000000")
+    default_klines_volume: str = "100.00000000"
+    default_quote_asset_volume: str = "5000000.00000000"
+    default_number_of_trades: int = 1000
+    default_taker_buy_base_volume: str = "50.00000000"
+    default_taker_buy_quote_volume: str = "2500000.00000000"
+
+    # Timestamp multiplier for milliseconds
+    timestamp_ms_multiplier: int = 1000
+
+
+# Global mock configuration instance
+MOCK_CONFIG = MockConfig()
 
 
 class MockConnectionStatus(str, Enum):
@@ -32,8 +97,9 @@ class MockIBKRClient:
     Simulates IBKR TWS API behavior without requiring actual connection.
     """
 
-    def __init__(self, account_id: str = "DU123456"):
+    def __init__(self, account_id: str = "DU123456", config: MockConfig = MOCK_CONFIG):
         self.account_id = account_id
+        self.config = config
         self.connection_status = MockConnectionStatus.DISCONNECTED
         self.positions: Dict[str, Position] = {}
         self.orders: Dict[str, Order] = {}
@@ -41,14 +107,14 @@ class MockIBKRClient:
         self.original_orders: Dict[str, Order] = {}
         self.market_data: Dict[str, MarketData] = {}
         self.balances: Dict[str, Decimal] = {
-            "USD": Decimal("100000"),
-            "AAPL": Decimal("1000"),
+            "USD": self.config.default_usd_balance,
+            "AAPL": self.config.default_aapl_balance,
         }  # Default balance
         self._order_counter = 1
 
     async def connect(self) -> bool:
         """Simulate connection to IBKR."""
-        await asyncio.sleep(0.1)  # Simulate connection delay
+        await asyncio.sleep(self.config.connection_delay)
         self.connection_status = MockConnectionStatus.CONNECTED
         return True
 
@@ -64,10 +130,10 @@ class MockIBKRClient:
 
         return {
             "account_id": self.account_id,
-            "total_cash": Decimal("100000.00"),
-            "buying_power": Decimal("200000.00"),
-            "equity": Decimal("150000.00"),
-            "net_liquidation": Decimal("150000.00"),
+            "total_cash": self.config.default_total_cash,
+            "buying_power": self.config.default_buying_power,
+            "equity": self.config.default_equity,
+            "net_liquidation": self.config.default_equity,
             "currency": "USD",
             "timestamp": datetime.utcnow(),
         }
@@ -118,7 +184,7 @@ class MockIBKRClient:
         order.status = OrderStatus.PENDING
 
         # Simulate order execution
-        await asyncio.sleep(0.05)  # Simulate processing delay
+        await asyncio.sleep(self.config.processing_delay)
 
         if self._should_execute_order(updated_order):
             await self._execute_order(updated_order)
@@ -135,9 +201,7 @@ class MockIBKRClient:
                 if market_data:
                     current_price = market_data.close_price
                     if updated_order.side == OrderSide.BUY:
-                        if updated_order.price < current_price * Decimal(
-                            "0.9"
-                        ):  # More than 10% below market
+                        if updated_order.price < current_price * self.config.limit_buy_rejection_threshold:
                             updated_order.status = OrderStatus.REJECTED
                             updated_order.rejected_reason = "Insufficient funds"
                             order.status = OrderStatus.REJECTED
@@ -146,9 +210,7 @@ class MockIBKRClient:
                             updated_order.status = OrderStatus.PENDING
                             order.status = OrderStatus.PENDING
                     else:
-                        if updated_order.price > current_price * Decimal(
-                            "1.1"
-                        ):  # More than 10% above market
+                        if updated_order.price > current_price * self.config.limit_sell_rejection_threshold:
                             updated_order.status = OrderStatus.REJECTED
                             updated_order.rejected_reason = "Insufficient funds"
                             order.status = OrderStatus.REJECTED
@@ -215,10 +277,10 @@ class MockIBKRClient:
             symbol=symbol,
             timestamp=datetime.utcnow(),
             open_price=base_price,
-            high_price=base_price * Decimal("1.02"),
-            low_price=base_price * Decimal("0.98"),
+            high_price=base_price * self.config.high_price_multiplier,
+            low_price=base_price * self.config.low_price_multiplier,
             close_price=base_price,
-            volume=Decimal("1000000"),
+            volume=self.config.default_volume,
             bid=base_price - spread / Decimal("2"),
             ask=base_price + spread / Decimal("2"),
             spread=spread,
@@ -241,11 +303,11 @@ class MockIBKRClient:
             if market_data:
                 current_price = market_data.close_price
             else:
-                current_price = Decimal("100.00")
+                current_price = self.config.default_price
 
             if order.side == OrderSide.BUY:
-                return order.price >= current_price * Decimal("0.95")  # Within 5%
-            return order.price <= current_price * Decimal("1.05")  # Within 5%
+                return order.price >= current_price * self.config.buy_execution_threshold
+            return order.price <= current_price * self.config.sell_execution_threshold
 
         return False
 
@@ -254,7 +316,7 @@ class MockIBKRClient:
         try:
             if order.side == OrderSide.BUY:
                 required_balance = order.quantity * order.price
-                available_balance = self.balances.get("USD", Decimal("100000"))
+                available_balance = self.balances.get("USD", self.config.default_usd_balance)
                 return available_balance >= required_balance
             # For sell orders, check if we have the asset
             available_quantity = self.balances.get(order.symbol, Decimal("0"))
@@ -302,7 +364,7 @@ class MockIBKRClient:
         market_data = self.market_data.get(symbol)
         if market_data:
             return market_data.close_price
-        return Decimal("100.00")  # Default price
+        return self.config.default_price
 
 
 class MockBinanceClient:
@@ -312,9 +374,15 @@ class MockBinanceClient:
     Simulates Binance API behavior without requiring actual connection.
     """
 
-    def __init__(self, api_key: str = "mock_api_key", api_secret: str = "mock_api_secret"):
+    def __init__(
+        self,
+        api_key: str = "mock_api_key",
+        api_secret: str = "mock_api_secret",
+        config: MockConfig = MOCK_CONFIG,
+    ):
         self.api_key = api_key
         self.api_secret = api_secret
+        self.config = config
         self.connection_status = MockConnectionStatus.DISCONNECTED
         self.balances: Dict[str, Decimal] = {}
         self.orders: Dict[str, Order] = {}
@@ -325,7 +393,7 @@ class MockBinanceClient:
 
     async def connect(self) -> bool:
         """Simulate connection to Binance."""
-        await asyncio.sleep(0.1)  # Simulate connection delay
+        await asyncio.sleep(self.config.connection_delay)
         self.connection_status = MockConnectionStatus.CONNECTED
         return True
 
@@ -345,9 +413,21 @@ class MockBinanceClient:
             "can_withdraw": True,
             "can_deposit": True,
             "balances": [
-                {"asset": "BTC", "free": "1.00000000", "locked": "0.00000000"},
-                {"asset": "ETH", "free": "10.00000000", "locked": "0.00000000"},
-                {"asset": "USDT", "free": "10000.00000000", "locked": "0.00000000"},
+                {
+                    "asset": "BTC",
+                    "free": str(self.config.default_btc_balance),
+                    "locked": "0.00000000",
+                },
+                {
+                    "asset": "ETH",
+                    "free": str(self.config.default_eth_balance),
+                    "locked": "0.00000000",
+                },
+                {
+                    "asset": "USDT",
+                    "free": str(self.config.default_usdt_balance),
+                    "locked": "0.00000000",
+                },
             ],
             "timestamp": datetime.utcnow(),
         }
@@ -391,7 +471,7 @@ class MockBinanceClient:
         order.status = OrderStatus.PENDING
 
         # Simulate order execution
-        await asyncio.sleep(0.05)  # Simulate processing delay
+        await asyncio.sleep(self.config.processing_delay)
 
         if self._should_execute_order(updated_order):
             await self._execute_order(updated_order)
@@ -408,9 +488,7 @@ class MockBinanceClient:
                 if market_data:
                     current_price = market_data.close_price
                     if updated_order.side == OrderSide.BUY:
-                        if updated_order.price < current_price * Decimal(
-                            "0.9"
-                        ):  # More than 10% below market
+                        if updated_order.price < current_price * self.config.limit_buy_rejection_threshold:
                             updated_order.status = OrderStatus.REJECTED
                             updated_order.rejected_reason = "Insufficient funds"
                             order.status = OrderStatus.REJECTED
@@ -419,9 +497,7 @@ class MockBinanceClient:
                             updated_order.status = OrderStatus.PENDING
                             order.status = OrderStatus.PENDING
                     else:
-                        if updated_order.price > current_price * Decimal(
-                            "1.1"
-                        ):  # More than 10% above market
+                        if updated_order.price > current_price * self.config.limit_sell_rejection_threshold:
                             updated_order.status = OrderStatus.REJECTED
                             updated_order.rejected_reason = "Insufficient funds"
                             order.status = OrderStatus.REJECTED
@@ -486,30 +562,37 @@ class MockBinanceClient:
             raise ConnectionError("Not connected to Binance")
 
         # Generate mock klines data
-        base_price = Decimal("50000.00")
+        base_price = self.config.default_btc_price
         klines = []
 
         for i in range(limit):
-            price_change = Decimal(str(0.01 * (i % 10 - 5)))  # ±5% variation
+            price_change = Decimal(
+                str(
+                    self.config.klines_price_variation_percent
+                    * (i % self.config.klines_variation_range - self.config.klines_variation_offset)
+                )
+            )
             price = base_price * (Decimal("1") + price_change)
 
             klines.append(
                 {
                     "open_time": int(
-                        (datetime.utcnow() - timedelta(days=limit - i)).timestamp() * 1000
+                        (datetime.utcnow() - timedelta(days=limit - i)).timestamp()
+                        * self.config.timestamp_ms_multiplier
                     ),
                     "open": str(price),
-                    "high": str(price * Decimal("1.02")),
-                    "low": str(price * Decimal("0.98")),
+                    "high": str(price * self.config.high_price_multiplier),
+                    "low": str(price * self.config.low_price_multiplier),
                     "close": str(price),
-                    "volume": "100.00000000",
+                    "volume": self.config.default_klines_volume,
                     "close_time": int(
-                        (datetime.utcnow() - timedelta(days=limit - i - 1)).timestamp() * 1000
+                        (datetime.utcnow() - timedelta(days=limit - i - 1)).timestamp()
+                        * self.config.timestamp_ms_multiplier
                     ),
-                    "quote_asset_volume": "5000000.00000000",
-                    "number_of_trades": 1000,
-                    "taker_buy_base_asset_volume": "50.00000000",
-                    "taker_buy_quote_asset_volume": "2500000.00000000",
+                    "quote_asset_volume": self.config.default_quote_asset_volume,
+                    "number_of_trades": self.config.default_number_of_trades,
+                    "taker_buy_base_asset_volume": self.config.default_taker_buy_base_volume,
+                    "taker_buy_quote_asset_volume": self.config.default_taker_buy_quote_volume,
                 }
             )
 
@@ -590,7 +673,7 @@ class MockBinanceClient:
         market_data = self.market_data.get(symbol)
         if market_data:
             return market_data.close_price
-        return Decimal("50000.00")  # Default BTC price
+        return self.config.default_btc_price
 
 
 # Factory functions for easy instantiation

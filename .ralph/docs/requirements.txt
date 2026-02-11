@@ -1,0 +1,12 @@
+Obten la lista de archivos de manera inteligente para que no tener que auditar una archivo ya auditado otra vez,
+por cada archivo haz:
+    - encuentra los valores hardcodeados, nada de scripts
+    - arregla los valores hardodeados, nada de scripts
+    - buscan funciones donde se haya calculo manual, hay que hacerlo con librerias especializads, nada de scripts, usa el archivo requiremts si lo necesitas
+    - busca funciones incompletas, nada de scripts
+    - busca fallos que impidan al codigo no ser de produccion, nada de scripts
+    - audita contra requirements
+    - arregla todo
+    - valida y arregla
+
+la tarea de ralph tiene que estar diseñada de forma modular, nada de codigo de python, crea script, la comunicacion entre hats se hace con templates para asegurar eficaci, y se usa @tech-lead-orchestrator para todo,

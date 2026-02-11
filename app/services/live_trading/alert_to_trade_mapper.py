@@ -6,6 +6,8 @@ Translates alert triggers into trading actions based on rules:
 - Alert type → Order type and direction
 - Symbol-specific rules
 - Risk-adjusted quantities
+
+Uses centralized configuration for all thresholds and parameters.
 """
 
 import logging
@@ -13,13 +15,23 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, TYPE_CHECKING
 
+from app.core.centralized_config import get_config
 from app.services.alerting_system import AlertSeverity
 
 from .broker_connector import OrderSide, OrderType
 
+if TYPE_CHECKING:
+    pass
+
 logger = logging.getLogger(__name__)
+
+
+def _get_default_limit_offset() -> Decimal:
+    """Get default limit price offset from centralized config."""
+    tt = get_config().trading_thresholds
+    return Decimal(str(tt.alert_limit_price_offset))
 
 
 class TradeSignalType(Enum):
@@ -52,7 +64,7 @@ class AlertToTradeRule:
     # Risk adjustments
     max_position_size: Decimal = Decimal("50000")
     use_limit_orders: bool = False
-    limit_price_offset: Decimal = Decimal("0.01")  # 1% offset
+    limit_price_offset: Decimal = field(default_factory=_get_default_limit_offset)  # Uses centralized config
     # Time-based rules
     quiet_period_minutes: int = 0  # Cooldown between trades
     last_triggered_at: Optional[datetime] = None

@@ -9,6 +9,8 @@ Formula:
 - ATR = Average of True Range over 14 periods
 - True Range = max(high-low, |high-close_prev|, |low-close_prev|)
 - Volatility Scale = base_scale / (current_ATR / average_ATR)
+
+Uses centralized configuration for all thresholds and parameters.
 """
 
 import logging
@@ -17,6 +19,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Dict, List, Optional
+
+from app.core.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -60,13 +64,17 @@ class VolatilityMonitor:
         scale = monitor.calculate_volatility_scale(symbol, current_atr, avg_atr)
     """
 
-    def __init__(self, atr_period: int = 14):
+    def __init__(self, atr_period: Optional[int] = None):
         """
         Initialize volatility monitor.
 
         Args:
-            atr_period: Number of periods for ATR calculation (default 14)
+            atr_period: Number of periods for ATR calculation (uses centralized config if None)
         """
+        # Use centralized config for atr_period if not provided
+        if atr_period is None:
+            tt = get_config().trading_thresholds
+            atr_period = tt.volatility_atr_period
         self.atr_period = atr_period
         self.atr_history: Dict[str, List[Decimal]] = {}  # symbol -> list of ATRs
         self.volatility_spikes: Dict[str, List[datetime]] = {}  # symbol -> spike times
@@ -112,7 +120,7 @@ class VolatilityMonitor:
         self,
         symbol: str,
         prices: Optional[List[PriceData]] = None,
-        lookback_periods: int = 60,
+        lookback_periods: Optional[int] = None,
     ) -> Decimal:
         """
         Calculate historical average ATR for symbol.
@@ -120,11 +128,15 @@ class VolatilityMonitor:
         Args:
             symbol: Trading symbol
             prices: Price data (if None, uses cached history)
-            lookback_periods: How many periods back to average (default 60)
+            lookback_periods: How many periods back to average (uses centralized config if None)
 
         Returns:
             Average ATR as Decimal
         """
+        # Use centralized config for lookback_periods if not provided
+        if lookback_periods is None:
+            tt = get_config().trading_thresholds
+            lookback_periods = tt.volatility_lookback_periods
         if symbol not in self.atr_history or not self.atr_history[symbol]:
             if prices is None:
                 raise ValueError(f"No ATR history for {symbol} and no prices provided")
@@ -172,8 +184,14 @@ class VolatilityMonitor:
             base_scale: Base scaling factor (default 1.0)
 
         Returns:
-            Scaling factor (0.5 to 1.5), quantized to 3 decimals
+            Scaling factor (min_scale to max_scale), quantized to 3 decimals
         """
+        # Get thresholds from centralized config
+        tt = get_config().trading_thresholds
+        min_ratio = Decimal(str(tt.volatility_min_ratio))
+        scale_min = Decimal(str(tt.volatility_scale_min))
+        scale_max = Decimal(str(tt.volatility_scale_max))
+
         # CRITICAL: Handle zero values to prevent division by zero
         if average_atr == Decimal("0") or average_atr is None:
             logger.warning(f"{symbol}: Average ATR is 0, returning base scale")
@@ -187,7 +205,6 @@ class VolatilityMonitor:
         atr_ratio = current_atr / average_atr
 
         # CRITICAL: Protect against near-zero ratio causing scale explosion
-        min_ratio = Decimal("0.01")  # 1% minimum ratio
         atr_ratio = max(atr_ratio, min_ratio)
 
         # Scale = base / ratio
@@ -195,8 +212,8 @@ class VolatilityMonitor:
         # If ratio > 1: scale < base (high vol → smaller positions)
         scale = base_scale / atr_ratio
 
-        # Enforce bounds: 0.5x minimum, 1.5x maximum
-        scale = max(Decimal("0.5"), min(scale, Decimal("1.5")))
+        # Enforce bounds from centralized config
+        scale = max(scale_min, min(scale, scale_max))
 
         scale = scale.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
@@ -213,10 +230,10 @@ class VolatilityMonitor:
         current_atr: Decimal,
         average_atr: Decimal,
         std_dev: Optional[Decimal] = None,
-        threshold_multiplier: Decimal = Decimal("2.0"),
+        threshold_multiplier: Optional[Decimal] = None,
     ) -> bool:
         """
-        Check if ATR > mean + 2σ (volatility spike).
+        Check if ATR > mean + nσ (volatility spike).
 
         A spike indicates extreme volatility requiring position reduction.
 
@@ -225,14 +242,20 @@ class VolatilityMonitor:
             current_atr: Current ATR
             average_atr: Average ATR
             std_dev: Standard deviation of ATR (calculated if None)
-            threshold_multiplier: Multiplier for spike detection (default 2.0 = 2σ)
+            threshold_multiplier: Multiplier for spike detection (uses centralized config if None)
 
         Returns:
             True if volatility spike detected
         """
+        # Get thresholds from centralized config
+        tt = get_config().trading_thresholds
+        if threshold_multiplier is None:
+            threshold_multiplier = Decimal(str(tt.volatility_spike_threshold_multiplier))
+        simple_multiplier = Decimal(str(tt.volatility_spike_simple_multiplier))
+
         if std_dev is None:
-            # Use a simple heuristic: if current > 1.5x average, it's a spike
-            spike_threshold = average_atr * Decimal("1.5")
+            # Use a simple heuristic: if current > multiplier * average, it's a spike
+            spike_threshold = average_atr * simple_multiplier
         else:
             # Use standard deviation approach
             spike_threshold = average_atr + (std_dev * threshold_multiplier)
@@ -266,15 +289,22 @@ class VolatilityMonitor:
         Returns:
             Regime: "very_low", "low", "normal", "high", "very_high"
         """
+        # Get thresholds from centralized config
+        tt = get_config().trading_thresholds
+        very_low_threshold = Decimal(str(tt.volatility_regime_very_low))
+        low_threshold = Decimal(str(tt.volatility_regime_low))
+        normal_upper = Decimal(str(tt.volatility_regime_normal_upper))
+        high_threshold = Decimal(str(tt.volatility_regime_high))
+
         ratio = current_atr / average_atr if average_atr > Decimal("0") else Decimal("1")
 
-        if ratio < Decimal("0.75"):
+        if ratio < very_low_threshold:
             return "very_low"
-        elif ratio < Decimal("0.90"):
+        elif ratio < low_threshold:
             return "low"
-        elif ratio <= Decimal("1.10"):
+        elif ratio <= normal_upper:
             return "normal"
-        elif ratio < Decimal("1.50"):
+        elif ratio < high_threshold:
             return "high"
         else:
             return "very_high"
@@ -282,18 +312,22 @@ class VolatilityMonitor:
     def get_recent_volatility_spikes(
         self,
         symbol: str,
-        lookback_minutes: int = 60,
+        lookback_minutes: Optional[int] = None,
     ) -> List[datetime]:
         """
         Get recent volatility spikes for symbol.
 
         Args:
             symbol: Trading symbol
-            lookback_minutes: How far back to look (default 60 minutes)
+            lookback_minutes: How far back to look (uses centralized config if None)
 
         Returns:
             List of spike timestamps within lookback window
         """
+        # Use centralized config for lookback_minutes if not provided
+        if lookback_minutes is None:
+            tt = get_config().trading_thresholds
+            lookback_minutes = tt.volatility_spike_lookback_minutes
         if symbol not in self.volatility_spikes:
             return []
 
@@ -303,7 +337,7 @@ class VolatilityMonitor:
     def calculate_atr_std_dev(
         self,
         symbol: str,
-        lookback_periods: int = 30,
+        lookback_periods: Optional[int] = None,
     ) -> Decimal:
         """
         Calculate standard deviation of ATR values.
@@ -312,11 +346,15 @@ class VolatilityMonitor:
 
         Args:
             symbol: Trading symbol
-            lookback_periods: Number of periods to use (default 30)
+            lookback_periods: Number of periods to use (uses centralized config if None)
 
         Returns:
             Standard deviation as Decimal
         """
+        # Use centralized config for lookback_periods if not provided
+        if lookback_periods is None:
+            tt = get_config().trading_thresholds
+            lookback_periods = tt.volatility_std_dev_lookback
         if symbol not in self.atr_history or not self.atr_history[symbol]:
             raise ValueError(f"No ATR history for {symbol}")
 

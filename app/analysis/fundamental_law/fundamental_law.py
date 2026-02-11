@@ -29,6 +29,7 @@ import pandas as pd
 from app.analysis.fundamental_law.breadth_calculator import BreadthCalculator
 from app.analysis.fundamental_law.ic_calculator import ICCalculator
 from app.analysis.fundamental_law.models import FundamentalLawComponents, StrategyAnalysis
+from app.core.config.base import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -171,7 +172,7 @@ class FundamentalLawCalculator:
         Examples:
             >>> calculator = FundamentalLawCalculator()
             >>> returns = pd.Series([0.01, 0.02, -0.01, 0.03, 0.01] * 20)
-            >>> forecasts = pd.Series([0.015, 0.025, -0.005, 0.02, 0.008] * 20)
+            >>> forecasts = getattr(config.trading, 'max_risk_per_trade', 0.02)5, -0.005, 0.02, 0.008] * 20)
             >>> benchmark = pd.Series([0.005, 0.01, -0.005, 0.01, 0.005] * 20)
             >>> components = calculator.decompose_ir(returns, forecasts, benchmark)
             >>> components.information_ratio > 0
@@ -424,23 +425,27 @@ class FundamentalLawCalculator:
             logger.warning("Tracking error is zero, returning IR of 0")
             return Decimal("0")
 
-        # Annualize (assuming daily returns)
-        # IR_annual = IR_daily × √252
+        # Annualize (using configured trading days per year)
+        config = get_config()
+        trading_days = getattr(config.trading, 'fundamental_law_trading_days_per_year', 252)
         daily_ir = mean_active / std_active
-        annual_ir = daily_ir * Decimal(str(np.sqrt(252)))
+        annual_ir = daily_ir * Decimal(str(np.sqrt(trading_days)))
 
         return round(annual_ir, 4)
 
     def _estimate_periods_per_year(self, returns: pd.Series) -> float:
         """Estimate number of trading periods per year from index."""
+        config = get_config()
+        default_trading_days = getattr(config.trading, 'fundamental_law_trading_days_per_year', 252)
+
         if not isinstance(returns.index, pd.DatetimeIndex):
             # Assume daily if not DatetimeIndex
-            return 252.0
+            return float(default_trading_days)
 
         # Calculate days in data
         days = (returns.index[-1] - returns.index[0]).days
         if days < 1:
-            return 252.0
+            return float(default_trading_days)
 
         # Calculate periods per day
         periods_per_day = len(returns) / days
@@ -449,43 +454,85 @@ class FundamentalLawCalculator:
         return periods_per_day * 365.25
 
     def _assess_skill_level(self, ic: Decimal) -> str:
-        """Assess forecasting skill based on IC."""
-        if ic >= Decimal("0.05"):
+        """Assess forecasting skill based on IC using config thresholds."""
+        config = get_config()
+        ic_excellent = Decimal(str(getattr(
+            config.trading, 'fundamental_law_ic_excellent', 0.05
+        )))
+        ic_good = Decimal(str(getattr(
+            config.trading, 'fundamental_law_ic_good', 0.03
+        )))
+        ic_fair = Decimal(str(getattr(
+            config.trading, 'fundamental_law_ic_fair', 0.01
+        )))
+
+        if ic >= ic_excellent:
             return "excellent"
-        elif ic >= Decimal("0.03"):
+        elif ic >= ic_good:
             return "good"
-        elif ic >= Decimal("0.01"):
+        elif ic >= ic_fair:
             return "fair"
         else:
             return "poor"
 
     def _assess_breadth(self, breadth: Decimal) -> str:
-        """Assess breadth level."""
-        if breadth >= Decimal("1000"):
+        """
+        Assess breadth level.
+
+        Uses configured thresholds from centralized config.
+        """
+        config = get_config()
+        # Get breadth thresholds from config (use defaults if not available)
+        breadth_high = getattr(config.trading, 'breadth_high_threshold', Decimal("1000"))
+        breadth_medium = getattr(config.trading, 'breadth_medium_threshold', Decimal("100"))
+
+        if breadth >= breadth_high:
             return "high"
-        elif breadth >= Decimal("100"):
+        elif breadth >= breadth_medium:
             return "medium"
         else:
             return "low"
 
     def _assess_ir(self, ir: Decimal) -> str:
-        """Assess Information Ratio quality."""
-        if ir >= Decimal("1.0"):
+        """Assess Information Ratio quality using config thresholds."""
+        config = get_config()
+        ir_excellent = Decimal(str(getattr(
+            config.trading, 'fundamental_law_ir_excellent', 1.0
+        )))
+        ir_good = Decimal(str(getattr(
+            config.trading, 'fundamental_law_ir_good', 0.5
+        )))
+        ir_fair = Decimal(str(getattr(
+            config.trading, 'fundamental_law_ir_fair', 0.25
+        )))
+
+        if ir >= ir_excellent:
             return "excellent"
-        elif ir >= Decimal("0.5"):
+        elif ir >= ir_good:
             return "good"
-        elif ir >= Decimal("0.25"):
+        elif ir >= ir_fair:
             return "fair"
         else:
             return "poor"
 
     def _assess_tc(self, tc: Decimal) -> str:
-        """Assess Transfer Coefficient."""
-        if tc >= Decimal("0.8"):
+        """Assess Transfer Coefficient using config thresholds."""
+        config = get_config()
+        tc_excellent = Decimal(str(getattr(
+            config.trading, 'fundamental_law_tc_excellent', 0.8
+        )))
+        tc_good = Decimal(str(getattr(
+            config.trading, 'fundamental_law_tc_good', 0.6
+        )))
+        tc_fair = Decimal(str(getattr(
+            config.trading, 'fundamental_law_tc_fair', 0.4
+        )))
+
+        if tc >= tc_excellent:
             return "excellent"
-        elif tc >= Decimal("0.6"):
+        elif tc >= tc_good:
             return "good"
-        elif tc >= Decimal("0.4"):
+        elif tc >= tc_fair:
             return "fair"
         else:
             return "poor"

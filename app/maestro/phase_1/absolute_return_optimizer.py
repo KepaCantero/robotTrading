@@ -12,6 +12,7 @@ import logging
 from decimal import Decimal
 from typing import Dict
 
+from app.core.config.base import get_config
 from .capital_tier_selector import CapitalTierSelector
 from .models import AbsoluteReturnTarget, AbsoluteReturnValidation
 
@@ -191,7 +192,16 @@ class ParameterOptimizer:
 
         # Calculate optimal number of concurrent positions
         # Diversify across multiple positions to reduce risk
-        if required_position_pct <= Decimal("0.05"):
+        try:
+            config = get_config()
+            small_position_threshold = Decimal(str(getattr(
+                config.trading, 'position_size_small_threshold', 0.05
+            )))
+        except (AttributeError, ValueError) as e:
+            logger.error(f"Error loading position sizing config: {e}, using default 0.05")
+            small_position_threshold = Decimal("0.05")
+
+        if required_position_pct <= small_position_threshold:
             num_positions = max(1, int(max_position_pct / required_position_pct))
         else:
             num_positions = max(1, int(max_position_pct * 10 / required_position_pct))

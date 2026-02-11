@@ -3,11 +3,15 @@ Trading validators to prevent financial disasters.
 
 This module provides validation functions to ensure trading operations
 are safe and comply with risk management rules.
+
+Uses centralized configuration for all thresholds and parameters.
 """
 
 import logging
 from decimal import Decimal
 from typing import Optional
+
+from app.core.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -60,15 +64,20 @@ class TradingValidator:
                 "Position size cannot be zero or negative."
             )
 
-        # Default: max 25% of capital in single position
-        # This is a conservative risk management rule
+        # Get thresholds from centralized config
+        tt = get_config().trading_thresholds
+        default_max_position_pct = Decimal(str(tt.validator_default_max_position_pct))
+        min_position_pct = Decimal(str(tt.validator_min_position_pct))
+        max_position_limit_pct = Decimal(str(tt.validator_max_position_pct))
+
+        # Default: max position % from centralized config
         if max_position_percent is None:
-            max_position_percent = Decimal("0.25")  # 25%
+            max_position_percent = default_max_position_pct
 
         # Validate max_position_percent is reasonable
-        if not (Decimal("0.01") <= max_position_percent <= Decimal("1.0")):
+        if not (min_position_pct <= max_position_percent <= max_position_limit_pct):
             raise ValueError(
-                f"max_position_percent must be between 1% and 100%, got {max_position_percent*100}%"
+                f"max_position_percent must be between {min_position_pct*100:.1f}% and {max_position_limit_pct*100:.1f}%, got {max_position_percent*100:.1f}%"
             )
 
         max_position = capital * max_position_percent
@@ -155,9 +164,11 @@ class TradingValidator:
                     "For long positions, stop-loss limits downside risk."
                 )
 
-            # Check if stop-loss is too far (more than 50% away)
+            # Check if stop-loss is too far (more than configured threshold)
+            tt = get_config().trading_thresholds
+            stop_loss_warning_pct = Decimal(str(tt.validator_stop_loss_warning_pct))
             loss_percent = (entry_price - stop_loss) / entry_price
-            if loss_percent > Decimal("0.5"):
+            if loss_percent > stop_loss_warning_pct:
                 logger.warning(
                     f"Stop-loss for long position is {loss_percent*100:.1f}% away from entry. "
                     f"Entry: ${entry_price:.2f}, Stop: ${stop_loss:.2f}. "
@@ -174,9 +185,11 @@ class TradingValidator:
                     "For short positions, stop-loss limits upside risk."
                 )
 
-            # Check if stop-loss is too far (more than 50% away)
+            # Check if stop-loss is too far (more than configured threshold)
+            tt = get_config().trading_thresholds
+            stop_loss_warning_pct = Decimal(str(tt.validator_stop_loss_warning_pct))
             loss_percent = (stop_loss - entry_price) / entry_price
-            if loss_percent > Decimal("0.5"):
+            if loss_percent > stop_loss_warning_pct:
                 logger.warning(
                     f"Stop-loss for short position is {loss_percent*100:.1f}% away from entry. "
                     f"Entry: ${entry_price:.2f}, Stop: ${stop_loss:.2f}. "
@@ -198,7 +211,7 @@ class TradingValidator:
         entry_price: Decimal,
         stop_loss: Decimal,
         take_profit: Optional[Decimal] = None,
-        min_reward_risk_ratio: Decimal = Decimal("2.0"),
+        min_reward_risk_ratio: Decimal = None,
     ) -> bool:
         """
         Validate that the trade has a favorable risk-reward ratio.
@@ -209,7 +222,7 @@ class TradingValidator:
             entry_price: Entry price
             stop_loss: Stop loss price
             take_profit: Take profit price (optional)
-            min_reward_risk_ratio: Minimum acceptable reward/risk ratio (default 2.0)
+            min_reward_risk_ratio: Minimum acceptable reward/risk ratio (uses centralized config if None)
 
         Returns:
             True if valid
@@ -217,6 +230,11 @@ class TradingValidator:
         Raises:
             ValueError: If risk-reward ratio is unfavorable
         """
+        # Get default from centralized config if not provided
+        if min_reward_risk_ratio is None:
+            tt = get_config().trading_thresholds
+            min_reward_risk_ratio = Decimal(str(tt.validator_min_reward_risk_ratio))
+
         if stop_loss is None:
             raise ValueError("Stop-loss is required for risk-reward calculation")
 

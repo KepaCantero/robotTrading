@@ -10,9 +10,10 @@ Key principles:
 - Safe conversion from external data sources
 """
 
-import logging
+import math
+import numbers
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation, getcontext
-from typing import Optional, Union
+from typing import List, Optional, Sequence, Union
 
 # Set high precision for financial calculations
 getcontext().prec = 28  # Sufficient for most financial calculations
@@ -510,3 +511,351 @@ def validate_price_for_asset_class(
 
     # Round to appropriate precision
     return round_price(decimal_value, asset_class, symbol)
+
+
+# ============================================================================
+# STATISTICAL CALCULATION UTILITIES
+# These functions provide centralized, optimized statistical calculations
+# ============================================================================
+
+
+def safe_mean(
+    values: Sequence[Union[int, float, str, Decimal]],
+    default: Optional[Decimal] = None
+) -> Optional[Decimal]:
+    """
+    Calculate mean (average) of a sequence of values using specialized libraries.
+
+    Replaces manual sum(values) / len(values) calculations.
+
+    Args:
+        values: Sequence of numeric values
+        default: Value to return if sequence is empty (default: None)
+
+    Returns:
+        Mean as Decimal, or default if sequence is empty
+
+    Examples:
+        >>> safe_mean([1, 2, 3, 4, 5])
+        Decimal('3')
+        >>> safe_mean([])
+        None
+        >>> safe_mean([], Decimal("0"))
+        Decimal('0')
+    """
+    if not values:
+        return default
+
+    # Convert all values to Decimal
+    decimal_values = [to_decimal(v) for v in values if v is not None]
+    if not decimal_values:
+        return default
+
+    # Use built-in sum which is optimized in Python
+    return sum(decimal_values) / len(decimal_values)
+
+
+def safe_variance(
+    values: Sequence[Union[int, float, str, Decimal]],
+    default: Optional[Decimal] = None,
+    sample: bool = False
+) -> Optional[Decimal]:
+    """
+    Calculate variance of a sequence of values.
+
+    Replaces manual sum((x - mean)**2) / n calculations.
+
+    Args:
+        values: Sequence of numeric values
+        default: Value to return if sequence is empty (default: None)
+        sample: If True, calculate sample variance (n-1 denominator)
+
+    Returns:
+        Variance as Decimal, or default if sequence is empty/has 1 element
+
+    Examples:
+        >>> safe_variance([1, 2, 3, 4, 5])
+        Decimal('2')
+        >>> safe_variance([1, 2, 3, 4, 5], sample=True)
+        Decimal('2.5')
+    """
+    mean_val = safe_mean(values)
+    if mean_val is None:
+        return default
+
+    decimal_values = [to_decimal(v) for v in values if v is not None]
+    n = len(decimal_values)
+
+    if n < 2:
+        return default
+
+    # Calculate variance
+    squared_diffs = [(v - mean_val) ** 2 for v in decimal_values]
+    denominator = n - 1 if sample else n
+    return sum(squared_diffs) / denominator
+
+
+def safe_std(
+    values: Sequence[Union[int, float, str, Decimal]],
+    default: Optional[Decimal] = None,
+    sample: bool = False
+) -> Optional[Decimal]:
+    """
+    Calculate standard deviation of a sequence of values.
+
+    Replaces manual variance**0.5 or math.sqrt(variance) calculations.
+
+    Args:
+        values: Sequence of numeric values
+        default: Value to return if sequence is empty (default: None)
+        sample: If True, calculate sample std (n-1 denominator)
+
+    Returns:
+        Standard deviation as Decimal, or default if sequence is empty/has 1 element
+
+    Examples:
+        >>> safe_std([1, 2, 3, 4, 5])
+        Decimal('1.414213562373095048801689')
+    """
+    variance_val = safe_variance(values, default, sample=sample)
+    if variance_val is None or variance_val < 0:
+        return default
+
+    # Use Decimal sqrt() for precision
+    try:
+        return variance_val.sqrt()
+    except (InvalidOperation, AttributeError):
+        # Fallback to math.sqrt for very old Python versions
+        return Decimal(str(math.sqrt(float(variance_val))))
+
+
+def safe_decimal_sqrt(
+    value: Union[int, float, str, Decimal],
+    default: Optional[Decimal] = None
+) -> Optional[Decimal]:
+    """
+    Calculate square root of a Decimal value.
+
+    Replaces manual value**0.5 or math.sqrt(value) for Decimals.
+
+    Args:
+        value: The value to calculate square root of
+        default: Value to return if value is negative (default: None)
+
+    Returns:
+        Square root as Decimal, or default if value is negative
+
+    Examples:
+        >>> safe_decimal_sqrt(25)
+        Decimal('5')
+        >>> safe_decimal_sqrt(-1)
+        None
+    """
+    decimal_value = to_decimal(value)
+    if decimal_value is None:
+        return default
+
+    if decimal_value < 0:
+        return default
+
+    try:
+        return decimal_value.sqrt()
+    except (InvalidOperation, AttributeError):
+        return Decimal(str(math.sqrt(float(decimal_value))))
+
+
+# ============================================================================
+# FINANCIAL CALCULATION UTILITIES
+# ============================================================================
+
+# Basis point constant: 1 BPS = 0.01% = 0.0001 = 1/10000
+_BPS_CONVERSION_FACTOR = Decimal("10000")
+_BPS_DECIMAL_FACTOR = Decimal("0.0001")  # 1/10000
+
+
+def to_bps(
+    value: Union[int, float, str, Decimal],
+    precision: int = 2
+) -> Decimal:
+    """
+    Convert a decimal value to basis points (BPS).
+
+    1 BPS = 0.01% = 0.0001 = 1/10000
+
+    Replaces manual value * 10000 calculations.
+
+    Args:
+        value: The decimal value to convert (e.g., 0.01 for 1%)
+        precision: Decimal precision for result (default: 2)
+
+    Returns:
+        Value in basis points as Decimal
+
+    Examples:
+        >>> to_bps(0.01)  # 1%
+        Decimal('100.00')
+        >>> to_bps(0.025)  # 2.5%
+        Decimal('250.00')
+        >>> to_bps("0.005")  # 0.5%
+        Decimal('50.00')
+    """
+    decimal_value = to_decimal_required(value)
+    result = decimal_value * _BPS_CONVERSION_FACTOR
+    return round_decimal(result, precision)
+
+
+def from_bps(
+    bps_value: Union[int, float, str, Decimal],
+    precision: int = 6
+) -> Decimal:
+    """
+    Convert basis points (BPS) to decimal value.
+
+    1 BPS = 0.01% = 0.0001 = 1/10000
+
+    Replaces manual value / 10000 calculations.
+
+    Args:
+        bps_value: The basis points value to convert
+        precision: Decimal precision for result (default: 6)
+
+    Returns:
+        Decimal value (e.g., 0.01 for 100 BPS)
+
+    Examples:
+        >>> from_bps(100)  # 100 BPS = 1%
+        Decimal('0.010000')
+        >>> from_bps(250)  # 250 BPS = 2.5%
+        Decimal('0.025000')
+        >>> from_bps("50")  # 50 BPS = 0.5%
+        Decimal('0.005000')
+    """
+    decimal_value = to_decimal_required(bps_value)
+    result = decimal_value * _BPS_DECIMAL_FACTOR
+    return round_decimal(result, precision)
+
+
+def to_bps_float(value: float) -> float:
+    """
+    Convert a float to basis points (BPS) as float.
+
+    Faster version for float calculations without Decimal overhead.
+
+    Args:
+        value: The float value to convert
+
+    Returns:
+        Value in basis points as float
+
+    Examples:
+        >>> to_bps_float(0.01)  # 1%
+        100.0
+        >>> to_bps_float(0.025)  # 2.5%
+        250.0
+    """
+    return value * 10000.0
+
+
+def from_bps_float(bps_value: float) -> float:
+    """
+    Convert basis points (BPS) to decimal value as float.
+
+    Faster version for float calculations without Decimal overhead.
+
+    Args:
+        bps_value: The basis points value to convert
+
+    Returns:
+        Decimal value as float
+
+    Examples:
+        >>> from_bps_float(100)  # 100 BPS = 1%
+        0.01
+        >>> from_bps_float(250)  # 250 BPS = 2.5%
+        0.025
+    """
+    return bps_value / 10000.0
+
+
+def spread_to_bps(
+    bid: Union[int, float, str, Decimal],
+    ask: Union[int, float, str, Decimal],
+    precision: int = 2
+) -> Decimal:
+    """
+    Convert bid-ask spread to basis points.
+
+    Spread BPS = (ask - bid) / midpoint * 10000
+
+    Args:
+        bid: Bid price
+        ask: Ask price
+        precision: Decimal precision for result (default: 2)
+
+    Returns:
+        Spread in basis points as Decimal
+
+    Examples:
+        >>> spread_to_bps(100, 101)
+        Decimal('99.50')  # Approximately 1% spread
+    """
+    decimal_bid = to_decimal_required(bid)
+    decimal_ask = to_decimal_required(ask)
+
+    midpoint = (decimal_bid + decimal_ask) / 2
+    if midpoint == 0:
+        return Decimal("0")
+
+    spread_decimal = (decimal_ask - decimal_bid) / midpoint
+    return to_bps(spread_decimal, precision)
+
+
+def annualize_volatility(
+    daily_volatility: Union[int, float, str, Decimal],
+    trading_days: int = 252
+) -> Decimal:
+    """
+    Annualize daily volatility using proper sqrt calculation.
+
+    Annual Volatility = Daily Volatility * sqrt(trading_days)
+
+    Replaces manual volatility * (252**0.5) calculations.
+
+    Args:
+        daily_volatility: Daily volatility value
+        trading_days: Number of trading days per year (default: 252)
+
+    Returns:
+        Annualized volatility as Decimal
+
+    Examples:
+        >>> annualize_volatility(0.01)
+        Decimal('0.158707...')  # ~15.87% annualized
+    """
+    decimal_vol = to_decimal_required(daily_volatility)
+    sqrt_days = safe_decimal_sqrt(trading_days) or Decimal(str(math.sqrt(trading_days)))
+    return decimal_vol * sqrt_days
+
+
+def annualize_returns(
+    daily_return: Union[int, float, str, Decimal],
+    trading_days: int = 252
+) -> Decimal:
+    """
+    Annualize daily returns.
+
+    Annual Return = Daily Return * trading_days
+
+    Args:
+        daily_return: Daily return value
+        trading_days: Number of trading days per year (default: 252)
+
+    Returns:
+        Annualized return as Decimal
+
+    Examples:
+        >>> annualize_returns(0.001)
+        Decimal('0.252')  # 25.2% annualized
+    """
+    decimal_return = to_decimal_required(daily_return)
+    return decimal_return * Decimal(trading_days)

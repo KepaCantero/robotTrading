@@ -19,6 +19,8 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 
+from app.core.config.base import get_config
+
 logger = logging.getLogger(__name__)
 
 
@@ -89,7 +91,14 @@ class LowVolatilityPortfolio:
     @property
     def is_low_vol_portfolio(self) -> bool:
         """Check if portfolio is low volatility."""
-        return self.portfolio_volatility < 0.15  # Less than 15% annual vol
+        try:
+            config = get_config()
+            low_vol_threshold = getattr(
+                config.trading, 'low_volatility_portfolio_threshold', 0.15
+            )
+        except (AttributeError, Exception):
+            low_vol_threshold = 0.15
+        return self.portfolio_volatility < low_vol_threshold
 
     def get_volatility_breakdown(self) -> Dict[str, float]:
         """Get breakdown of volatility by category."""
@@ -150,7 +159,7 @@ class LowVolatilityAnomaly:
         self,
         returns: np.ndarray,  # Daily returns
         market_returns: np.ndarray,  # Market returns (for beta)
-        risk_free_rate: float = 0.02,
+        risk_free_rate: float | None = None,
     ) -> VolatilityMetrics:
         """
         Calculate comprehensive volatility metrics.
@@ -163,6 +172,16 @@ class LowVolatilityAnomaly:
         Returns:
             VolatilityMetrics with calculated values
         """
+        # Get risk-free rate from config if not provided
+        if risk_free_rate is None:
+            try:
+                config = get_config()
+                risk_free_rate = float(getattr(
+                    config.trading, 'risk_free_rate', 0.02
+                ))
+            except (AttributeError, Exception):
+                risk_free_rate = 0.02
+
         # Input validation
         if len(returns) == 0:
             logger.warning("Empty returns array provided to calculate_volatility_metrics")
@@ -312,7 +331,7 @@ class LowVolatilityAnomaly:
         vol_array = np.array(volatilities)
 
         for metrics in volatility_metrics.values():
-            rank = np.sum(vol_array <= metrics.annualized_volatility) / len(vol_array)
+            rank = np.np.mean(vol_array <= metrics.annualized_volatility)
             metrics.percentile_rank = float(rank)
 
         # Screen stocks

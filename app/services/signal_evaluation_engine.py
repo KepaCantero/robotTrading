@@ -141,8 +141,9 @@ class SignalEvaluationEngine:
         spread_pct = metadata.get("spread_pct", 0.01)
         avg_volume = metadata.get("avg_volume", 1000000)
 
-        # Score basado en spread (menor spread = mayor liquidez)
-        spread_score = max(0, 100 - (spread_pct * 10000))
+        # Score basado en spread (menor spread = mayor liquidez) - use config BPS multiplier
+        tt = get_config().trading_thresholds
+        spread_score = max(0, 100 - (spread_pct * tt.bps_multiplier))
 
         # Score basado en volumen promedio
         volume_score = min(avg_volume / 1000000 * 50, 100.0)

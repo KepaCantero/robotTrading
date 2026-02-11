@@ -10,6 +10,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
+from app.core.config.base import get_config
 from app.models.portfolio import (
     AssetClass,
     AssetUniverse,
@@ -230,10 +231,12 @@ class PaperTradingPortfolioProvider:
 
     async def _update_market_prices(self):
         """Update market prices with simulated movement."""
+        cfg = get_config()
         for symbol in self.market_prices:
             # Simulate price movement (-2% to +2%)
             current_price = self.market_prices[symbol]
-            change_percent = random.uniform(-0.02, 0.02)
+            # Use config value for max risk per trade (2% default)
+            change_percent = getattr(cfg.trading, 'max_risk_per_trade', 0.02)
             new_price = current_price * (1 + Decimal(str(change_percent)))
             self.market_prices[symbol] = new_price
 

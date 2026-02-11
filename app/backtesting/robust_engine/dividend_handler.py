@@ -392,7 +392,7 @@ class DividendHandler:
             "yield_on_cost": float(self.tracker.yield_on_cost),
             "annual_income": {year: float(amount) for year, amount in annual_income.items()},
             "average_annual_income": float(
-                sum(annual_income.values()) / len(annual_income) if annual_income else 0
+                np.mean(list(annual_income.values())) if annual_income else 0
             ),
             "drip_enabled": self.drip_config.enable_drip,
         }

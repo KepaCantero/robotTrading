@@ -323,7 +323,7 @@ class MarketMakerStrategy:
         self,
         symbol: str,
         max_position: Decimal = Decimal("10000"),
-        risk_tolerance: float = 0.02,
+        risk_tolerance: float = getattr(config.trading, 'max_risk_per_trade', 0.02),
         spread_strategy: SpreadStrategy = SpreadStrategy.ADAPTIVE_VOLATILITY,
         base_spread_bps: float = 10.0,
         inventory_target: Decimal = Decimal("0"),

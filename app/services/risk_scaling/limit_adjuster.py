@@ -10,7 +10,29 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Dict, Optional, Tuple
 
+from app.core.config.base import get_config
+
 logger = logging.getLogger(__name__)
+
+
+def _get_config_limit(attr_name: str, default_value: float) -> Decimal:
+    """
+    Get limit value from config with fallback default.
+
+    Args:
+        attr_name: Config attribute name
+        default_value: Default value if config attribute not found
+
+    Returns:
+        Decimal value from config or default
+    """
+    try:
+        config = get_config()
+        value = float(getattr(config.trading, attr_name, default_value))
+        return Decimal(str(value))
+    except (AttributeError, ValueError, TypeError) as e:
+        logger.warning(f"Error getting config limit '{attr_name}': {e}, using default {default_value}")
+        return Decimal(str(default_value))
 
 
 @dataclass
@@ -37,71 +59,106 @@ class LimitAdjuster:
     - Tighter limits when market/portfolio stress high
     - Looser limits when conditions favorable
     - Hard stops to prevent catastrophic loss
+
+    All configurable values are loaded from the centralized config system.
     """
-
-    # Default limits by capital tier (as % of capital)
-    DEFAULT_LIMITS_BY_TIER = {
-        "micro": {
-            "stop_loss_pct": Decimal("0.02"),  # 2% stops
-            "daily_loss_limit_pct": Decimal("0.05"),  # 5% daily max loss
-            "max_position_pct": Decimal("0.10"),  # 10% max per position
-            "leverage": Decimal("1.0"),  # No leverage
-            "margin_requirement": Decimal("0.50"),  # 50% margin
-            "max_drawdown_pct": Decimal("0.10"),  # 10% max drawdown
-        },
-        "small": {
-            "stop_loss_pct": Decimal("0.025"),
-            "daily_loss_limit_pct": Decimal("0.08"),
-            "max_position_pct": Decimal("0.15"),
-            "leverage": Decimal("1.0"),
-            "margin_requirement": Decimal("0.33"),
-            "max_drawdown_pct": Decimal("0.15"),
-        },
-        "medium": {
-            "stop_loss_pct": Decimal("0.03"),
-            "daily_loss_limit_pct": Decimal("0.10"),
-            "max_position_pct": Decimal("0.20"),
-            "leverage": Decimal("1.5"),
-            "margin_requirement": Decimal("0.25"),
-            "max_drawdown_pct": Decimal("0.20"),
-        },
-        "large": {
-            "stop_loss_pct": Decimal("0.035"),
-            "daily_loss_limit_pct": Decimal("0.15"),
-            "max_position_pct": Decimal("0.25"),
-            "leverage": Decimal("2.0"),
-            "margin_requirement": Decimal("0.20"),
-            "max_drawdown_pct": Decimal("0.25"),
-        },
-    }
-
-    # Volatility multipliers (expand/contract limits)
-    VOLATILITY_MULTIPLIERS = {
-        "very_low": Decimal("1.2"),  # Expand limits in calm markets
-        "low": Decimal("1.1"),
-        "normal": Decimal("1.0"),  # Baseline
-        "high": Decimal("0.8"),  # Contract limits
-        "extreme": Decimal("0.5"),  # Severe contraction
-    }
-
-    # Drawdown multipliers (tighten as portfolio loses)
-    DRAWDOWN_MULTIPLIERS = {
-        "healthy": Decimal("1.0"),  # < 5% drawdown
-        "caution": Decimal("0.8"),  # 5-10% drawdown
-        "warning": Decimal("0.6"),  # 10-15% drawdown
-        "critical": Decimal("0.3"),  # 15-20% drawdown
-        "halt": Decimal("0.0"),  # > 20% or hard stop hit
-    }
 
     def __init__(self):
         """Initialize limit adjuster."""
         logger.info("✅ LimitAdjuster initialized")
 
+    def _get_tier_limits(self, tier: str) -> Dict[str, Decimal]:
+        """
+        Get default limits for a capital tier from config.
+
+        Args:
+            tier: Capital tier (micro/small/medium/large)
+
+        Returns:
+            Dict with limit values for the tier
+        """
+        tier = tier.lower()
+        if tier == "micro":
+            return {
+                "stop_loss_pct": _get_config_limit("limit_micro_stop_loss_pct", 0.02),
+                "daily_loss_limit_pct": _get_config_limit("limit_micro_daily_loss_limit_pct", 0.05),
+                "max_position_pct": _get_config_limit("limit_micro_max_position_pct", 0.10),
+                "leverage": _get_config_limit("limit_micro_leverage", 1.0),
+                "margin_requirement": _get_config_limit("limit_micro_margin_requirement", 0.50),
+                "max_drawdown_pct": _get_config_limit("limit_micro_max_drawdown_pct", 0.10),
+            }
+        elif tier == "small":
+            return {
+                "stop_loss_pct": _get_config_limit("limit_small_stop_loss_pct", 0.025),
+                "daily_loss_limit_pct": _get_config_limit("limit_small_daily_loss_limit_pct", 0.08),
+                "max_position_pct": _get_config_limit("limit_small_max_position_pct", 0.15),
+                "leverage": _get_config_limit("limit_small_leverage", 1.0),
+                "margin_requirement": _get_config_limit("limit_small_margin_requirement", 0.33),
+                "max_drawdown_pct": _get_config_limit("limit_small_max_drawdown_pct", 0.15),
+            }
+        elif tier == "medium":
+            return {
+                "stop_loss_pct": _get_config_limit("limit_medium_stop_loss_pct", 0.03),
+                "daily_loss_limit_pct": _get_config_limit("limit_medium_daily_loss_limit_pct", 0.10),
+                "max_position_pct": _get_config_limit("limit_medium_max_position_pct", 0.20),
+                "leverage": _get_config_limit("limit_medium_leverage", 1.5),
+                "margin_requirement": _get_config_limit("limit_medium_margin_requirement", 0.25),
+                "max_drawdown_pct": _get_config_limit("limit_medium_max_drawdown_pct", 0.20),
+            }
+        elif tier == "large":
+            return {
+                "stop_loss_pct": _get_config_limit("limit_large_stop_loss_pct", 0.035),
+                "daily_loss_limit_pct": _get_config_limit("limit_large_daily_loss_limit_pct", 0.15),
+                "max_position_pct": _get_config_limit("limit_large_max_position_pct", 0.25),
+                "leverage": _get_config_limit("limit_large_leverage", 2.0),
+                "margin_requirement": _get_config_limit("limit_large_margin_requirement", 0.20),
+                "max_drawdown_pct": _get_config_limit("limit_large_max_drawdown_pct", 0.25),
+            }
+        else:
+            # Default to medium tier for unknown tiers
+            return self._get_tier_limits("medium")
+
+    def _get_volatility_multipliers(self) -> Dict[str, Decimal]:
+        """
+        Get volatility multipliers from config.
+
+        Returns:
+            Dict with multiplier values for each volatility state
+        """
+        return {
+            "very_low": _get_config_limit("limit_vol_multiplier_very_low", 1.2),
+            "low": _get_config_limit("limit_vol_multiplier_low", 1.1),
+            "normal": _get_config_limit("limit_vol_multiplier_normal", 1.0),
+            "high": _get_config_limit("limit_vol_multiplier_high", 0.8),
+            "extreme": _get_config_limit("limit_vol_multiplier_extreme", 0.5),
+        }
+
+    def _get_drawdown_multipliers(self) -> Dict[str, Decimal]:
+        """
+        Get drawdown multipliers from config.
+
+        Returns:
+            Dict with multiplier values for each drawdown state
+        """
+        return {
+            "healthy": _get_config_limit("limit_dd_multiplier_healthy", 1.0),
+            "caution": _get_config_limit("limit_dd_multiplier_caution", 0.8),
+            "warning": _get_config_limit("limit_dd_multiplier_warning", 0.6),
+            "critical": _get_config_limit("limit_dd_multiplier_critical", 0.3),
+            "halt": _get_config_limit("limit_dd_multiplier_halt", 0.0),
+        }
+
     def get_base_limits(self, capital_tier: str) -> TradingLimits:
-        """Get default limits for capital tier."""
-        defaults = self.DEFAULT_LIMITS_BY_TIER.get(
-            capital_tier.lower(), self.DEFAULT_LIMITS_BY_TIER["medium"]
-        )
+        """
+        Get default limits for capital tier from config.
+
+        Args:
+            capital_tier: Capital tier (micro/small/medium/large)
+
+        Returns:
+            TradingLimits with configured values for the tier
+        """
+        defaults = self._get_tier_limits(capital_tier)
 
         return TradingLimits(
             stop_loss_pct=defaults["stop_loss_pct"],
@@ -134,30 +191,37 @@ class LimitAdjuster:
 
         vol_ratio = current_volatility / average_volatility
 
+        # Get thresholds from config
+        very_low_threshold = _get_config_limit("limit_vol_ratio_very_low_threshold", 0.7)
+        low_threshold = _get_config_limit("limit_vol_ratio_low_threshold", 0.9)
+        normal_upper = _get_config_limit("limit_vol_ratio_normal_upper", 1.1)
+        high_upper = _get_config_limit("limit_vol_ratio_high_upper", 1.5)
+
         # Determine vol state
-        if vol_ratio < Decimal("0.7"):
+        if vol_ratio < very_low_threshold:
             vol_state = "very_low"
-        elif vol_ratio < Decimal("0.9"):
+        elif vol_ratio < low_threshold:
             vol_state = "low"
-        elif vol_ratio < Decimal("1.1"):
+        elif vol_ratio < normal_upper:
             vol_state = "normal"
-        elif vol_ratio < Decimal("1.5"):
+        elif vol_ratio < high_upper:
             vol_state = "high"
         else:
             vol_state = "extreme"
 
-        multiplier = self.VOLATILITY_MULTIPLIERS[vol_state]
+        multipliers = self._get_volatility_multipliers()
+        multiplier = multipliers[vol_state]
 
         adjusted = TradingLimits(
             stop_loss_pct=base_limits.stop_loss_pct * multiplier,
             daily_loss_limit=base_limits.daily_loss_limit * multiplier,
             max_position_size=base_limits.max_position_size * multiplier,
             max_portfolio_leverage=base_limits.max_portfolio_leverage * multiplier,
-            min_margin_requirement=base_limits.min_margin_requirement / multiplier,
+            min_margin_requirement=base_limits.min_margin_requirement / multiplier if multiplier > Decimal("0") else base_limits.min_margin_requirement,
             max_drawdown_limit=base_limits.max_drawdown_limit * multiplier,
         )
 
-        reason = f"Volatility {vol_ratio:.2f}x ({vol_state}) → multiplier {multiplier:.2f}x"
+        reason = f"Volatility {float(vol_ratio):.2f}x ({vol_state}) → multiplier {float(multiplier):.2f}x"
         logger.info(f"Limit adjustment for volatility: {reason}")
 
         return adjusted, reason
@@ -179,19 +243,26 @@ class LimitAdjuster:
         """
         current_drawdown_pct = Decimal(str(current_drawdown_pct))
 
+        # Get thresholds from config
+        healthy_threshold = _get_config_limit("limit_dd_healthy_threshold", 0.05)
+        caution_threshold = _get_config_limit("limit_dd_caution_threshold", 0.10)
+        warning_threshold = _get_config_limit("limit_dd_warning_threshold", 0.15)
+        critical_threshold = _get_config_limit("limit_dd_critical_threshold", 0.20)
+
         # Determine drawdown state
-        if current_drawdown_pct < Decimal("0.05"):
+        if current_drawdown_pct < healthy_threshold:
             dd_state = "healthy"
-        elif current_drawdown_pct < Decimal("0.10"):
+        elif current_drawdown_pct < caution_threshold:
             dd_state = "caution"
-        elif current_drawdown_pct < Decimal("0.15"):
+        elif current_drawdown_pct < warning_threshold:
             dd_state = "warning"
-        elif current_drawdown_pct < Decimal("0.20"):
+        elif current_drawdown_pct < critical_threshold:
             dd_state = "critical"
         else:
             dd_state = "halt"
 
-        multiplier = self.DRAWDOWN_MULTIPLIERS[dd_state]
+        multipliers = self._get_drawdown_multipliers()
+        multiplier = multipliers[dd_state]
 
         adjusted = TradingLimits(
             stop_loss_pct=base_limits.stop_loss_pct * multiplier,
@@ -207,7 +278,8 @@ class LimitAdjuster:
         )
 
         reason = (
-            f"Drawdown {current_drawdown_pct:.1%} ({dd_state}) → " f"multiplier {multiplier:.2f}x"
+            f"Drawdown {float(current_drawdown_pct):.1%} ({dd_state}) → "
+            f"multiplier {float(multiplier):.2f}x"
         )
         logger.info(f"Limit adjustment for drawdown: {reason}")
 

@@ -5,10 +5,14 @@ R16: Reconciliación Diaria - Component for detecting position discrepancies
 
 This module provides specialized detection of position, price, and value discrepancies
 between broker and internal records.
+
+Uses centralized configuration for all tolerance thresholds.
 """
 
 from decimal import Decimal
 from typing import Optional
+
+from app.core.config.base import get_config
 
 
 class DiscrepancyDetector:
@@ -16,12 +20,12 @@ class DiscrepancyDetector:
     Detector of discrepancies in reconciliation (R16)
 
     Analyzes differences between broker and system internal positions
-    with configurable tolerance thresholds.
+    with configurable tolerance thresholds from centralized config.
 
-    Tolerances:
-    - Quantity: ±1 share
-    - Price: ±0.1%
-    - Value: ±0.5%
+    Tolerances are loaded from config:
+    - reconciliation_quantity_tolerance: ±N shares
+    - reconciliation_price_tolerance_pct: ±N%
+    - reconciliation_value_tolerance_pct: ±N%
 
     Example:
         detector = DiscrepancyDetector()
@@ -33,10 +37,19 @@ class DiscrepancyDetector:
             logger.warning(f"Quantity mismatch: {result}")
     """
 
-    # Tolerance thresholds (R16)
-    QUANTITY_TOLERANCE = Decimal("1")  # 1 share
-    PRICE_TOLERANCE_PCT = Decimal("0.001")  # 0.1%
-    VALUE_TOLERANCE_PCT = Decimal("0.005")  # 0.5%
+    def __init__(self):
+        """Initialize detector and load tolerances from centralized config."""
+        config = get_config()
+        # Get tolerances from config with defaults
+        self.QUANTITY_TOLERANCE = Decimal(str(getattr(
+            config.trading, 'reconciliation_quantity_tolerance', 1
+        )))
+        self.PRICE_TOLERANCE_PCT = Decimal(str(getattr(
+            config.trading, 'reconciliation_price_tolerance_pct', 0.001
+        )))
+        self.VALUE_TOLERANCE_PCT = Decimal(str(getattr(
+            config.trading, 'reconciliation_value_tolerance_pct', 0.005
+        )))
 
     def detect_position_mismatch(
         self, broker_qty: Decimal, internal_qty: Decimal

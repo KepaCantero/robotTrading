@@ -70,11 +70,75 @@ class DashboardDataLoader:
         return strategies
 
     def _get_strategy_status(self, strategy_name: str) -> str:
-        """Get current status of strategy."""
-        # TODO: Implement actual status check
+        """
+        Get current status of strategy.
+
+        Args:
+            strategy_name: Name of the strategy
+
+        Returns:
+            Strategy status string (Idle, Running, Paused, Error)
+        """
+        # Try to load strategy status from backtest results
+        results = self.load_backtest_results(strategy_name)
+        if results:
+            # Check if strategy is currently running (has recent activity)
+            last_updated = results.get("timestamp")
+            if last_updated:
+                return "Completed"
+
+        # Check paper trading logs for active status
+        paper_log = self.paper_trading_path.parent / f"paper_trading_{strategy_name}.log"
+        if paper_log.exists():
+            try:
+                # Read last few lines to check for recent activity
+                with open(paper_log, "r") as f:
+                    lines = f.readlines()[-10:] if f.readlines() else []
+                if lines and "running" in str(lines).lower():
+                    return "Running"
+            except (FileNotFoundError, PermissionError, IOError, OSError):
+                pass
+
+        # Default to Idle status
         return "Idle"
 
     def _get_last_pnl(self, strategy_name: str) -> float:
-        """Get last PnL for strategy."""
-        # TODO: Implement actual PnL retrieval
+        """
+        Get last PnL for strategy.
+
+        Args:
+            strategy_name: Name of the strategy
+
+        Returns:
+            Last PnL value or 0.0 if not available
+        """
+        # Try to load PnL from backtest results
+        results = self.load_backtest_results(strategy_name)
+        if results:
+            # Look for PnL in various possible fields
+            pnl = results.get("total_pnl") or results.get("pnl") or results.get("final_pnl")
+            if pnl is not None:
+                try:
+                    return float(pnl)
+                except (ValueError, TypeError):
+                    pass
+
+        # Try to load from paper trading logs
+        paper_log = self.paper_trading_path.parent / f"paper_trading_{strategy_name}.log"
+        if paper_log.exists():
+            try:
+                with open(paper_log, "r") as f:
+                    content = f.read()
+                # Look for PnL pattern in log (e.g., "PnL: 123.45")
+                import re
+                pnl_match = re.search(r'[Pp][Nn][Ll]:\s*[-+]?\d*\.?\d+', content)
+                if pnl_match:
+                    try:
+                        return float(pnl_match.group().split(':')[1].strip())
+                    except (ValueError, IndexError):
+                        pass
+            except (FileNotFoundError, PermissionError, IOError, OSError):
+                pass
+
+        # Default to 0.0 if no PnL found
         return 0.0

@@ -15,6 +15,8 @@ from datetime import datetime
 from functools import wraps
 from typing import Any, Callable, Dict, List, Optional, TypeVar
 
+from app.core.config.base import get_config
+
 logger = logging.getLogger(__name__)
 
 T = TypeVar('T')
@@ -99,17 +101,44 @@ class ConservativeBacktestFallback(FallbackStrategy):
     """Fallback strategy for backtest failures: use simplified model."""
 
     async def execute(self, context: Dict[str, Any]) -> Dict[str, Any]:
-        """Return conservative backtest result."""
+        """
+        Return conservative backtest result.
+
+        Uses configurable fallback parameters for conservative estimates when
+        the actual backtest engine is unavailable.
+        """
         logger.warning("🟡 Using conservative backtest fallback strategy")
+
+        try:
+            config = get_config()
+            # Get fallback parameters from config with defaults
+            annual_return = float(getattr(
+                config.trading, 'fallback_conservative_annual_return', 0.05
+            ))
+            sharpe_ratio = float(getattr(
+                config.trading, 'fallback_conservative_sharpe_ratio', 0.5
+            ))
+            max_drawdown = float(getattr(
+                config.trading, 'fallback_expected_max_drawdown', -0.15
+            ))
+            feasibility_ratio = float(getattr(
+                config.trading, 'fallback_feasibility_ratio', 0.8
+            ))
+        except (AttributeError, ValueError) as e:
+            logger.error(f"Error loading fallback config: {e}, using defaults")
+            annual_return = 0.05
+            sharpe_ratio = 0.5
+            max_drawdown = -0.15
+            feasibility_ratio = 0.8
 
         # Use historical average returns as fallback
         context.get("capital", 50000)
         return {
             "strategy_name": context.get("strategy_name", "fallback"),
-            "total_return": 0.05,  # Conservative 5% annual return
-            "sharpe_ratio": 0.5,  # Conservative Sharpe ratio
-            "max_drawdown": -0.15,  # Expected maximum drawdown
-            "feasibility_ratio": 0.8,  # Slightly conservative
+            "total_return": annual_return,
+            "sharpe_ratio": sharpe_ratio,
+            "max_drawdown": max_drawdown,
+            "feasibility_ratio": feasibility_ratio,
             "viability_status": "CONDITIONAL",
             "is_fallback": True,
             "fallback_reason": "Using conservative backtest model",

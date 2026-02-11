@@ -136,7 +136,7 @@ class VWAPExecutor:
         start_time: Optional[datetime] = None,
         end_time: Optional[datetime] = None,
         max_slices: int = 20,
-        min_slice_pct: float = 0.02,  # Minimum 2% per slice
+        min_slice_pct: float = getattr(config.trading, 'max_risk_per_trade', 0.02),  # Minimum 2% per slice
         custom_volume_profile: Optional[Dict[str, float]] = None,
     ) -> ExecutionPlan:
         """
@@ -305,7 +305,7 @@ class VWAPExecutor:
         quantity: float,
         start_time: datetime,
         end_time: datetime,
-        daily_volatility: float = 0.02,  # 2% daily vol
+        daily_volatility: float = getattr(config.trading, 'max_risk_per_trade', 0.02),  # 2% daily vol
     ) -> float:
         """
         Calculate timing risk (uncertainty from delayed execution).
@@ -513,7 +513,7 @@ class ImplementationShortfallExecutor:
         urgency: float = 0.5,  # 0 to 1
         price: float = 100.0,
         daily_volume: float = 1_000_000,
-        daily_volatility: float = 0.02,
+        daily_volatility: float = getattr(config.trading, 'max_risk_per_trade', 0.02),
         max_duration_minutes: int = 240,
     ) -> ExecutionPlan:
         """

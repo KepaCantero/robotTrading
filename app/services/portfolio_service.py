@@ -22,7 +22,10 @@ from app.models.portfolio import (
     PortfolioProvider,
     Position,
 )
-from app.services.circuit_breaker_manager import CircuitBreakerManager, CircuitBreakerType
+from app.services.api_circuit_breaker import (
+    CircuitBreakerManager,
+    CircuitBreakerType,
+)
 from app.services.country_diversification_validator import CountryDiversificationValidator
 from app.services.currency_hedging_engine import CurrencyHedgingEngine
 from app.services.portfolio_risk_manager import PortfolioRiskManager
@@ -350,21 +353,38 @@ class PortfolioService:
 
     async def get_asset_universe(self) -> List[AssetUniverse]:
         """Obtener universo de activos soportados."""
+        # Get asset universe configuration from config
+        config = get_config()
+        tt = config.trading
+
+        equity_max_spread = Decimal(str(getattr(
+            tt, 'asset_universe_equity_max_spread', 0.01
+        )))
+        equity_min_volume = Decimal(str(getattr(
+            tt, 'asset_universe_equity_min_volume', 1000000
+        )))
+        crypto_max_spread = Decimal(str(getattr(
+            tt, 'asset_universe_crypto_max_spread', 0.005
+        )))
+        crypto_min_volume = Decimal(str(getattr(
+            tt, 'asset_universe_crypto_min_volume', 10000000
+        )))
+
         # Mock data para testing - en producción vendría de una fuente real
         return [
             AssetUniverse(
                 broker="paper_trading",
                 asset_class=AssetClass.EQUITY,
                 symbols=["AAPL", "GOOGL", "MSFT", "TSLA", "AMZN"],
-                min_volume=Decimal("1000000"),
-                max_spread=Decimal("0.01"),
+                min_volume=equity_min_volume,
+                max_spread=equity_max_spread,
             ),
             AssetUniverse(
                 broker="paper_trading",
                 asset_class=AssetClass.CRYPTO,
                 symbols=["BTCUSDT", "ETHUSDT", "ADAUSDT"],
-                min_volume=Decimal("10000000"),
-                max_spread=Decimal("0.005"),
+                min_volume=crypto_min_volume,
+                max_spread=crypto_max_spread,
             ),
         ]
 
@@ -384,13 +404,22 @@ class PortfolioService:
         if symbol.upper() not in supported_symbols:
             return None
 
+        # Get market regime defaults from config
+        config = get_config()
+        tt = config.trading
+
+        default_confidence = getattr(tt, 'market_regime_default_confidence', 0.75)
+        default_atr_ratio = getattr(tt, 'market_regime_default_atr_ratio', 0.02)
+        default_trend_strength = getattr(tt, 'market_regime_default_trend_strength', 0.3)
+        default_volatility_level = getattr(tt, 'market_regime_default_volatility_level', 0.25)
+
         # Mock data para testing - en producción vendría de análisis real
         return MarketRegimeData(
             regime=MarketRegime.RANGING,
-            confidence=0.75,
-            atr_ratio=0.02,
-            trend_strength=0.3,
-            volatility_level=0.25,
+            confidence=default_confidence,
+            atr_ratio=default_atr_ratio,
+            trend_strength=default_trend_strength,
+            volatility_level=default_volatility_level,
             timestamp=datetime.now(),
         )
 

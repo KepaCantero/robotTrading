@@ -118,6 +118,7 @@ class OrderBookSnapshot:
         spread = self.spread
         if mid_price is None or spread is None or mid_price == 0:
             return None
+        # NOTE: Use OFIConfig().bps_multiplier when config is injected into this dataclass
         return float(spread / mid_price * 10000)
 
     @property
@@ -248,12 +249,232 @@ class OFIConfig(BaseModel):
     top_levels: int = Field(default=5, ge=1, le=20, description="Top levels to consider")
     smoothing_window: int = Field(default=3, ge=1, le=20, description="Smoothing window")
 
+    # OFI value clamping (ofi_calculator.py line 176)
+    ofi_min_value: float = Field(
+        default=-1.0, ge=-1.0, le=0.0, description="Minimum OFI value for clamping"
+    )
+    ofi_max_value: float = Field(
+        default=1.0, ge=0.0, le=1.0, description="Maximum OFI value for clamping"
+    )
+
+    # Weight calculation constants (ofi_calculator.py lines 243, 251)
+    weight_min: float = Field(
+        default=0.1, ge=0.0, le=1.0, description="Minimum weight for distance-based calculation"
+    )
+    weight_max: float = Field(
+        default=1.0, ge=0.0, le=1.0, description="Maximum weight for distance-based calculation"
+    )
+    distance_multiplier: float = Field(
+        default=10.0, ge=1.0, le=100.0, description="Multiplier for distance in weight calculation"
+    )
+
+    # Window calculations (ofi_calculator.py lines 330, 334)
+    window_size_multiplier: int = Field(
+        default=2, ge=1, le=10, description="Multiplier for window size in momentum calculation"
+    )
+
+    # EMA calculation (ofi_calculator.py line 384)
+    ema_alpha_numerator: float = Field(
+        default=2.0, ge=1.0, le=10.0, description="Numerator for EMA alpha calculation (alpha = 2/(window+1))"
+    )
+
+    # Regime detection thresholds (ofi_calculator.py lines 441-443)
+    regime_bullish_mean_threshold: float = Field(
+        default=0.1, ge=0.0, le=1.0, description="Mean OFI threshold for bullish regime"
+    )
+    regime_bearish_mean_threshold: float = Field(
+        default=-0.1, ge=-1.0, le=0.0, description="Mean OFI threshold for bearish regime"
+    )
+    regime_stable_std_threshold: float = Field(
+        default=0.3, ge=0.0, le=1.0, description="Std threshold for stable regime"
+    )
+    regime_volatile_std_threshold: float = Field(
+        default=0.4, ge=0.0, le=1.0, description="Std threshold for volatile regime"
+    )
+
+    # Autocorrelation settings (ofi_calculator.py lines 463, 677)
+    max_lag_offset: int = Field(
+        default=10, ge=1, le=100, description="Offset for max lag calculation"
+    )
+    default_max_lag: int = Field(
+        default=20, ge=1, le=100, description="Default maximum lag for autocorrelation"
+    )
+
+    # Predictive power settings (ofi_calculator.py line 649)
+    min_predictive_power_samples: int = Field(
+        default=20, ge=5, le=100, description="Minimum samples for predictive power calculation"
+    )
+
+    # Basis points conversion (OrderBookSnapshot line 121)
+    bps_multiplier: int = Field(
+        default=10000, ge=1, le=100000, description="Multiplier for basis points conversion"
+    )
+
+    # ========== PREDICTOR CONFIGURATION (ofi_predictor.py) ==========
+
+    # Threshold signal levels (ofi_predictor.py lines 179-188)
+    threshold_strong_buy: float = Field(
+        default=0.3, ge=0.0, le=1.0, description="OFI threshold for strong buy signal"
+    )
+    threshold_moderate_buy: float = Field(
+        default=0.1, ge=0.0, le=1.0, description="OFI threshold for moderate buy signal"
+    )
+    threshold_strong_sell: float = Field(
+        default=-0.3, ge=-1.0, le=0.0, description="OFI threshold for strong sell signal"
+    )
+    threshold_moderate_sell: float = Field(
+        default=-0.1, ge=-1.0, le=0.0, description="OFI threshold for moderate sell signal"
+    )
+
+    # Model signal conversion (ofi_predictor.py lines 208-211)
+    model_return_threshold: float = Field(
+        default=0.001, ge=0.0, le=0.1, description="Return threshold for model signal"
+    )
+    model_signal_multiplier: int = Field(
+        default=1000, ge=1, le=10000, description="Multiplier for converting return to signal"
+    )
+
+    # Momentum calculation windows (ofi_predictor.py lines 232, 236-237)
+    momentum_min_samples: int = Field(
+        default=5, ge=2, le=20, description="Minimum samples for momentum calculation"
+    )
+    momentum_recent_window: int = Field(
+        default=3, ge=1, le=10, description="Recent window for momentum calculation"
+    )
+    momentum_previous_window: int = Field(
+        default=10, ge=2, le=20, description="Previous window for momentum calculation"
+    )
+
+    # Momentum signal thresholds (ofi_predictor.py lines 242-249)
+    momentum_strong: float = Field(
+        default=0.1, ge=0.0, le=1.0, description="Strong momentum threshold"
+    )
+    momentum_moderate: float = Field(
+        default=0.05, ge=0.0, le=1.0, description="Moderate momentum threshold"
+    )
+    momentum_strong_negative: float = Field(
+        default=-0.1, ge=-1.0, le=0.0, description="Strong negative momentum threshold"
+    )
+    momentum_moderate_negative: float = Field(
+        default=-0.05, ge=-1.0, le=0.0, description="Moderate negative momentum threshold"
+    )
+
+    # Signal combination weights (ofi_predictor.py line 271)
+    weight_threshold: float = Field(
+        default=0.5, ge=0.0, le=1.0, description="Weight for threshold signal"
+    )
+    weight_model: float = Field(
+        default=0.3, ge=0.0, le=1.0, description="Weight for model signal"
+    )
+    weight_momentum: float = Field(
+        default=0.2, ge=0.0, le=1.0, description="Weight for momentum signal"
+    )
+
+    # Direction thresholds (ofi_predictor.py lines 283, 285)
+    direction_up_threshold: float = Field(
+        default=0.3, ge=0.0, le=1.0, description="Combined signal threshold for up direction"
+    )
+    direction_down_threshold: float = Field(
+        default=-0.3, ge=-1.0, le=0.0, description="Combined signal threshold for down direction"
+    )
+
+    # Confidence calculation (ofi_predictor.py lines 291, 530, 537)
+    confidence_max: float = Field(
+        default=1.0, ge=0.1, le=1.0, description="Maximum confidence value"
+    )
+    fallback_confidence_multiplier: float = Field(
+        default=2.0, ge=0.1, le=10.0, description="Multiplier for fallback confidence calculation"
+    )
+
+    # Expected move calculation (ofi_predictor.py lines 336, 339, 342)
+    expected_return_multiplier: int = Field(
+        default=100, ge=1, le=1000, description="Multiplier for expected return calculation"
+    )
+    expected_bps_multiplier: int = Field(
+        default=100, ge=1, le=1000, description="Multiplier to convert to basis points"
+    )
+    expected_bps_max: int = Field(
+        default=500, ge=10, le=5000, description="Maximum expected move in bps"
+    )
+    expected_bps_min: int = Field(
+        default=-500, ge=-5000, le=-10, description="Minimum expected move in bps"
+    )
+
+    # Horizon strings (ofi_predictor.py lines 362-364)
+    horizon_short: str = Field(
+        default="5m", description="Short horizon string"
+    )
+    horizon_medium: str = Field(
+        default="15m", description="Medium horizon string"
+    )
+    horizon_long: str = Field(
+        default="60m", description="Long horizon string"
+    )
+
+    # Training parameters (ofi_predictor.py lines 396, 421)
+    min_training_samples: int = Field(
+        default=10, ge=5, le=100, description="Minimum samples for model training"
+    )
+    logistic_random_state: int = Field(
+        default=42, ge=1, le=1000, description="Random state for logistic regression"
+    )
+
+    # Prediction intervals (ofi_predictor.py lines 540, 563)
+    default_confidence_level: float = Field(
+        default=0.95, ge=0.5, le=0.99, description="Default confidence level for prediction intervals"
+    )
+    prediction_std_error_ratio: float = Field(
+        default=0.5, ge=0.1, le=2.0, description="Ratio for std error estimation in prediction intervals"
+    )
+
+    # Regime detection parameters (ofi_predictor.py lines 607-640)
+    regime_window_multiplier: int = Field(
+        default=2, ge=1, le=5, description="Window multiplier for regime detection"
+    )
+    regime_shift_epsilon: float = Field(
+        default=0.01, ge=0.001, le=0.1, description="Epsilon for regime shift calculation"
+    )
+    regime_mean_shift_threshold: float = Field(
+        default=0.5, ge=0.1, le=2.0, description="Threshold for mean shift detection"
+    )
+    regime_vol_shift_threshold: float = Field(
+        default=0.5, ge=0.1, le=2.0, description="Threshold for volatility shift detection"
+    )
+    regime_bullish_threshold: float = Field(
+        default=0.2, ge=0.0, le=1.0, description="Mean OFI threshold for bullish regime"
+    )
+    regime_bearish_threshold: float = Field(
+        default=-0.2, ge=-1.0, le=0.0, description="Mean OFI threshold for bearish regime"
+    )
+    regime_neutral_positive: float = Field(
+        default=0.1, ge=0.0, le=1.0, description="Positive threshold for neutral regime"
+    )
+    regime_neutral_negative: float = Field(
+        default=-0.1, ge=-1.0, le=0.0, description="Negative threshold for neutral regime"
+    )
+
     @field_validator("ofi_threshold_sell")
     @classmethod
     def sell_threshold_must_be_negative(cls, v: float) -> float:
         """Ensure sell threshold is negative or zero."""
         if v > 0:
             raise ValueError("ofi_threshold_sell must be <= 0")
+        return v
+
+    @field_validator("ofi_min_value")
+    @classmethod
+    def ofi_min_must_be_negative_or_zero(cls, v: float) -> float:
+        """Ensure OFI min value is negative or zero."""
+        if v > 0:
+            raise ValueError("ofi_min_value must be <= 0")
+        return v
+
+    @field_validator("regime_bearish_mean_threshold")
+    @classmethod
+    def bearish_threshold_must_be_negative(cls, v: float) -> float:
+        """Ensure bearish threshold is negative or zero."""
+        if v > 0:
+            raise ValueError("regime_bearish_mean_threshold must be <= 0")
         return v
 
 

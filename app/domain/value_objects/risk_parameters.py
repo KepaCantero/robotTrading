@@ -142,13 +142,13 @@ class RiskParameters:
             return cls(
                 max_position_size=Decimal('0.08'),
                 max_portfolio_exposure=Decimal('1.8'),
-                stop_loss_pct=Decimal('0.025'),
+                stop_loss_pct=Decimal('0.02'),  # 2% stop loss for large tier
                 take_profit_pct=Decimal('0.05'),
             )
         else:  # institutional
             return cls(
                 max_position_size=Decimal('0.05'),
                 max_portfolio_exposure=Decimal('2.0'),
-                stop_loss_pct=Decimal('0.02'),
+                stop_loss_pct=Decimal('0.02'),  # 2% stop loss for institutional
                 take_profit_pct=Decimal('0.04'),
             )

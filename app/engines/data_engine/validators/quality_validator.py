@@ -13,6 +13,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -241,7 +242,7 @@ class QualityValidator:
             complete_fields = sum(1 for field in required_fields if data.get(field) is not None)
             completeness_scores.append(complete_fields / len(required_fields))
         completeness = (
-            sum(completeness_scores) / len(completeness_scores) if completeness_scores else 0.0
+            np.mean(completeness_scores) if completeness_scores else 0.0
         )
 
         # Consistency: % de registros con OHLC consistente

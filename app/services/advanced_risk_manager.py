@@ -15,10 +15,31 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, Optional
 
+from app.core.config.base import get_config
 from app.models.portfolio import Portfolio
 from app.models.signal import Signal
 
 logger = logging.getLogger(__name__)
+
+
+def _get_risk_config(attr_name: str, default_value: float) -> Decimal:
+    """
+    Get risk management configuration value with fallback default.
+
+    Args:
+        attr_name: Config attribute name
+        default_value: Default value if config attribute not found
+
+    Returns:
+        Decimal value from config or default
+    """
+    try:
+        config = get_config()
+        value = float(getattr(config.trading, attr_name, default_value))
+        return Decimal(str(value))
+    except (AttributeError, ValueError, TypeError) as e:
+        logger.warning(f"Error getting risk config '{attr_name}': {e}, using default {default_value}")
+        return Decimal(str(default_value))
 
 
 class TradeRiskLimiter:
@@ -28,13 +49,15 @@ class TradeRiskLimiter:
     Ensures no single trade risks more than 2% of capital.
     """
 
-    def __init__(self, max_risk_per_trade: Decimal = Decimal("0.02")):
+    def __init__(self, max_risk_per_trade: Optional[Decimal] = None):
         """
         Initialize risk limiter.
 
         Args:
-            max_risk_per_trade: Maximum risk per trade (default 2% = 0.02)
+            max_risk_per_trade: Maximum risk per trade (uses config if not provided)
         """
+        if max_risk_per_trade is None:
+            max_risk_per_trade = _get_risk_config("max_risk_per_trade", 0.02)
         self.max_risk_per_trade = max_risk_per_trade
 
     def calculate_max_position_size(
@@ -119,13 +142,15 @@ class RiskRewardValidator:
     Ensures minimum 1:3 risk/reward ratio (risk 1 to gain 3).
     """
 
-    def __init__(self, min_reward_ratio: Decimal = Decimal("3.0")):
+    def __init__(self, min_reward_ratio: Optional[Decimal] = None):
         """
         Initialize validator.
 
         Args:
-            min_reward_ratio: Minimum reward/risk ratio (default 3.0 = 1:3)
+            min_reward_ratio: Minimum reward/risk ratio (uses config if not provided)
         """
+        if min_reward_ratio is None:
+            min_reward_ratio = _get_risk_config("min_reward_ratio", 3.0)
         self.min_reward_ratio = min_reward_ratio
 
     def validate_risk_reward(
@@ -196,11 +221,11 @@ class StrategyExposureLimiter:
     """
 
     def __init__(self):
-        """Initialize exposure limiter."""
+        """Initialize exposure limiter with values from config."""
         self.strategy_limits = {
-            "momentum": Decimal("0.50"),  # 50%
-            "mean_reversion": Decimal("0.30"),  # 30%
-            "pairs_trading": Decimal("0.30"),  # 30%
+            "momentum": _get_risk_config("strategy_exposure_momentum", 0.50),
+            "mean_reversion": _get_risk_config("strategy_exposure_mean_reversion", 0.30),
+            "pairs_trading": _get_risk_config("strategy_exposure_pairs_trading", 0.30),
         }
 
     def calculate_strategy_exposure(self, portfolio: Portfolio, strategy_name: str) -> Decimal:
@@ -261,13 +286,15 @@ class DrawdownMonitor:
     Monitors portfolio drawdown and triggers stop when >15%.
     """
 
-    def __init__(self, max_drawdown: Decimal = Decimal("0.15")):
+    def __init__(self, max_drawdown: Optional[Decimal] = None):
         """
         Initialize drawdown monitor.
 
         Args:
-            max_drawdown: Maximum allowed drawdown (default 15% = 0.15)
+            max_drawdown: Maximum allowed drawdown (uses config if not provided)
         """
+        if max_drawdown is None:
+            max_drawdown = _get_risk_config("max_drawdown_pct", 0.15)
         self.max_drawdown = max_drawdown
         self.peak_equity: Decimal = Decimal("0")
         self.is_stopped: bool = False
@@ -402,18 +429,18 @@ class AdvancedRiskManager:
 
     def __init__(
         self,
-        max_risk_per_trade: Decimal = Decimal("0.02"),
-        min_reward_ratio: Decimal = Decimal("3.0"),
-        max_drawdown: Decimal = Decimal("0.15"),
+        max_risk_per_trade: Optional[Decimal] = None,
+        min_reward_ratio: Optional[Decimal] = None,
+        max_drawdown: Optional[Decimal] = None,
         max_consecutive_stops: int = 5,
     ):
         """
         Initialize advanced risk manager.
 
         Args:
-            max_risk_per_trade: Maximum risk per trade (default 2%)
-            min_reward_ratio: Minimum reward/risk ratio (default 3.0)
-            max_drawdown: Maximum drawdown limit (default 15%)
+            max_risk_per_trade: Maximum risk per trade (uses config if not provided)
+            min_reward_ratio: Minimum reward/risk ratio (uses config if not provided)
+            max_drawdown: Maximum drawdown limit (uses config if not provided)
             max_consecutive_stops: Max consecutive stops (default 5)
         """
         self.trade_risk_limiter = TradeRiskLimiter(max_risk_per_trade)

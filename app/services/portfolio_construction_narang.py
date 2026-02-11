@@ -457,7 +457,7 @@ class PortfolioConstructor:
         cov_matrix = returns[available_symbols].cov().values * 252
 
         # Risk-free rate
-        rf = self.config.get("risk_free_rate", 0.02)
+        rf = getattr(config.trading, 'risk_free_rate', 0.02)
 
         # Objective: maximize Sharpe ratio = (mu'w - rf) / sqrt(w'Sigma*w)
         # Equivalent to minimizing: - (mu'w - rf) / sqrt(w'Sigma*w)

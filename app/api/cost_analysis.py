@@ -22,6 +22,7 @@ from typing import Any, Dict
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.backtesting.models import Trade, TradeStatus
+from app.core.config.base import get_config
 from app.services.cost_analysis_service import CostAnalysisResult, CostAnalysisService
 
 from . import audit_logger, get_correlation_id
@@ -247,7 +248,9 @@ async def validate_profitability(
             gross_profit=Decimal(str(analysis_data["gross_profit"])),
             net_profit=Decimal(str(analysis_data["net_profit"])),
             cost_impact_ratio=Decimal(str(analysis_data["cost_impact_ratio"])),
-            profitability_threshold=Decimal("0.02"),  # Default threshold
+            profitability_threshold=Decimal(str(getattr(
+                get_config().trading, 'cost_profitability_threshold', 0.02
+            ))),  # Default threshold from config
             cost_breakdowns=[],
             is_profitable=analysis_data["is_profitable"],
             exceeds_cost_threshold=analysis_data["exceeds_cost_threshold"],
@@ -298,11 +301,16 @@ async def update_cost_parameters(
 ):
     """Update cost parameters configuration."""
     try:
+        config = get_config()
+
         if "commission_rates" in parameters:
+            max_commission_rate = float(getattr(
+                config.trading, 'cost_max_commission_rate', 0.1
+            ))
             for asset_class, rate in parameters["commission_rates"].items():
-                if rate > 0.1:  # Max 10% commission
+                if rate > max_commission_rate:  # Max commission from config
                     raise ValueError(
-                        f"Commission rate for {asset_class} ({rate}) exceeds maximum allowed (0.1)"
+                        f"Commission rate for {asset_class} ({rate}) exceeds maximum allowed ({max_commission_rate})"
                     )
             service.commission_rates = {
                 asset_class: Decimal(str(rate))
@@ -310,10 +318,13 @@ async def update_cost_parameters(
             }
 
         if "slippage_rates" in parameters:
+            max_slippage_rate = float(getattr(
+                config.trading, 'cost_max_slippage_rate', 0.05
+            ))
             for asset_class, rate in parameters["slippage_rates"].items():
-                if rate > 0.05:  # Max 5% slippage
+                if rate > max_slippage_rate:  # Max slippage from config
                     raise ValueError(
-                        f"Slippage rate for {asset_class} ({rate}) exceeds maximum allowed (0.05)"
+                        f"Slippage rate for {asset_class} ({rate}) exceeds maximum allowed ({max_slippage_rate})"
                     )
             service.slippage_rates = {
                 asset_class: Decimal(str(rate))

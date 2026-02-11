@@ -15,6 +15,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.backtesting.models import Trade, TradeStatus
 from app.services.cost_analysis_service import CostAnalysisResult, CostAnalysisService
+from app.core.config.base import get_config
 
 router = APIRouter(prefix="/cost-analysis", tags=["cost-analysis"])
 
@@ -181,7 +182,9 @@ async def validate_profitability(
             gross_profit=Decimal(str(analysis_data["gross_profit"])),
             net_profit=Decimal(str(analysis_data["net_profit"])),
             cost_impact_ratio=Decimal(str(analysis_data["cost_impact_ratio"])),
-            profitability_threshold=Decimal("0.02"),  # Default threshold
+            profitability_threshold=Decimal(str(getattr(
+                get_config().trading, 'profitability_threshold', 0.02
+            ))),  # Use centralized config
             cost_breakdowns=[],
             is_profitable=analysis_data["is_profitable"],
             exceeds_cost_threshold=analysis_data["exceeds_cost_threshold"],

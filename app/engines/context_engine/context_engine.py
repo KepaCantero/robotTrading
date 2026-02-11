@@ -254,7 +254,7 @@ class ContextEngine:
             regime = 'unknown'
 
         # Confianza promedio
-        confidence = sum(confidences) / len(confidences) if confidences else 0.0
+        confidence = np.mean(confidences) if confidences else 0.0
 
         return {'regime': regime, 'confidence': confidence}
 

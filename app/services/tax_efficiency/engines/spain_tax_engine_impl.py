@@ -97,16 +97,24 @@ class SpainTaxEngineImpl(ISpainTaxEngine):
 
     def is_eu_country(self, symbol: str) -> bool:
         """
-        Verificar si el ticker es de un país UE
+        Check if a stock symbol is from an EU country.
 
-        @todo: Implementar mapeo completo ticker -> país
-        TODO: Agregar más tickers europeos
+        This method checks if the ticker belongs to a European Union country
+        for dividend tax calculation purposes (EU dividends: 0% withholding).
+
+        The current implementation uses a curated list of major EU tickers.
+        For comprehensive coverage, integrate with a securities master database
+        or broker API that provides country of incorporation data.
 
         Args:
-            symbol: Símbolo de ticker
+            symbol: Stock ticker symbol (e.g., "SAN", "ASML", "AAPL")
 
         Returns:
-            True si es UE, False otherwise
+            True if the ticker is from an EU country, False otherwise
+
+        Note:
+            This list includes IBEX35 and Euro Stoxx 50 constituents.
+            Add additional tickers as needed for your trading universe.
         """
         # Mapeo básico de tickers conocidos
         eu_tickers = {
@@ -120,9 +128,6 @@ class SpainTaxEngineImpl(ISpainTaxEngine):
             # Other EU
             "SAP", "SIE", "NESN", "RO", "NOVN", "UBSG", "DNB",
         }
-
-        # @clarify: ¿Cómo detectar país desde ticker de IBKR?
-        # TODO: Implementar búsqueda en base de datos de IBKR
 
         return symbol in eu_tickers
 
@@ -138,27 +143,66 @@ class SpainTaxEngineImpl(ISpainTaxEngine):
         """
         return foreign_assets > self.MODELO_720_THRESHOLD
 
-    def generate_modelo_720_report(self) -> dict:
+    def generate_modelo_720_report(self, foreign_assets_data: Optional[dict] = None) -> dict:
         """
-        MOD720-001: Generar reporte para Modelo 720
+        Generate a Modelo 720 report structure for foreign assets declaration.
 
-        @todo: Implementar generación real del reporte
-        TODO: Conectar con datos de broker
+        Modelo 720 is an annual information report that Spanish tax residents must
+        file when they hold assets abroad worth more than €50,000 in total.
+
+        Deadline: March 31st of the following year.
+
+        For production implementation, integrate with broker API to automatically
+        populate foreign assets data from account holdings.
+
+        Args:
+            foreign_assets_data: Optional dict with actual asset values from broker.
+                Expected format:
+                {
+                    "stocks": {"symbol": value, ...},
+                    "funds": {"isin": value, ...},
+                    "bonds": {"isin": value, ...},
+                    "cash_accounts": {"bank": value, ...}
+                }
 
         Returns:
-            Diccionario con datos para Modelo 720
+            Dictionary with Modelo 720 report structure
+
+        Example:
+            >>> generate_modelo_720_report({
+            ...     "stocks": {"AAPL": 50000},
+            ...     "funds": {},
+            ...     "bonds": {},
+            ...     "cash_accounts": {}
+            ... })
         """
+        current_year = datetime.now().year
+
+        # If no data provided, return template structure
+        if foreign_assets_data is None:
+            foreign_assets_data = {
+                "stocks": {},
+                "funds": {},
+                "bonds": {},
+                "cash_accounts": {},
+            }
+
+        # Calculate total value
+        total_value = Decimal("0")
+        for category in foreign_assets_data.values():
+            if isinstance(category, dict):
+                total_value += Decimal(str(sum(
+                    Decimal(str(v)) for v in category.values() if isinstance(v, (int, float, str, Decimal))
+                )))
+
         return {
             "report_type": "MODELO_720",
-            "year": datetime.now().year,
-            "deadline": "2026-03-31",  # Siempre antes del 31 de marzo
+            "year": current_year,
+            "deadline": f"{current_year + 1}-03-31",  # Always before March 31st
             "threshold": float(self.MODELO_720_THRESHOLD),
-            "foreign_assets": {
-                "stocks": "TODO: Get from broker",
-                "funds": "TODO: Get from broker",
-                "bonds": "TODO: Get from broker",
-            },
-            "@todo": "Conectar con broker API para obtener valores reales"
+            "total_value_eur": float(total_value),
+            "above_threshold": total_value > self.MODELO_720_THRESHOLD,
+            "foreign_assets": foreign_assets_data,
         }
 
     def record_loss(self, year: int, loss: Decimal) -> None:

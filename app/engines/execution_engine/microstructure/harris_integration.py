@@ -449,7 +449,7 @@ class HarrisMicrostructureIntegrator:
             return {"avg_improvement_bps": 0.0, "pct_improved": 0.0}
 
         avg_improvement = np.mean(improvements)
-        pct_improved = sum(1 for i in improvements if i > 0) / len(improvements)
+        pct_improved = np.mean([1 for i in improvements if i > 0])
 
         if avg_improvement < 0:
             logger.warning(f"Harris 6.10: Average price worse than NBBO: {avg_improvement:.4%}")
@@ -522,9 +522,9 @@ class HarrisMicrostructureIntegrator:
                 reasons.append("Shallow order book - reduced confidence")
 
         # Rule 6.4: Market impact estimation
-        volatility = 0.02  # Default
+        volatility = getattr(config.trading, 'max_risk_per_trade', 0.02)  # Default
         if price_history is not None and len(price_history) > 1:
-            volatility = price_history["close"].pct_change().std() * (252**0.5)
+            volatility = price_history["close"].pct_change().std() * np.sqrt(252)
 
         impact_estimate = self.estimate_market_impact(
             symbol=symbol,

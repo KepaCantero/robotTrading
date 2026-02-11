@@ -147,6 +147,7 @@ S = TypeVar("S", bound=StrategyProtocol)
 from ...backtesting.validation.models import WalkForwardConfig
 from ...backtesting.validation.walk_forward import WalkForwardValidator
 from ...core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
+from ...core.config.base import get_config
 from ...optimization.parameter.base_optimizer import OptimizationConfig
 from ...optimization.parameter.bayesian_optimizer import BayesianOptimizer
 from ...optimization.parameter.models import ParameterGrid, ParameterRange, ParameterType
@@ -747,7 +748,9 @@ class StrategySelector:
                     initial_capital=Decimal("100000"),
                     commission_per_trade=Decimal("1.0"),
                     slippage_percentage=Decimal("0.1"),
-                    risk_free_rate=Decimal("0.02"),
+                    risk_free_rate=Decimal(str(getattr(
+                        get_config().trading, 'risk_free_rate', 0.02
+                    ))),
                 )
 
                 # Create market data list for backtester
@@ -1188,7 +1191,9 @@ class StrategySelector:
                     initial_capital=Decimal("100000"),
                     commission_per_trade=Decimal("1.0"),
                     slippage_percentage=Decimal("0.1"),
-                    risk_free_rate=Decimal("0.02"),
+                    risk_free_rate=Decimal(str(getattr(
+                        get_config().trading, 'risk_free_rate', 0.02
+                    ))),
                 )
 
                 # Create market data list for backtester
@@ -1921,12 +1926,23 @@ class StrategySelector:
         Returns:
             Dictionary with momentum-specific performance metrics
         """
+        config = get_config()
         return {
-            "expected_return": Decimal("0.15"),  # 15% annual
-            "expected_risk": Decimal("0.20"),  # 20% vol
-            "sharpe_ratio": Decimal("0.75"),
-            "max_drawdown": Decimal("0.25"),
-            "win_rate": Decimal("0.55"),
+            "expected_return": Decimal(str(getattr(
+                config.trading, 'momentum_expected_return', 0.15
+            ))),  # Use centralized config
+            "expected_risk": Decimal(str(getattr(
+                config.trading, 'momentum_expected_risk', 0.20
+            ))),  # Use centralized config
+            "sharpe_ratio": Decimal(str(getattr(
+                config.trading, 'momentum_sharpe_ratio', 0.75
+            ))),  # Use centralized config
+            "max_drawdown": Decimal(str(getattr(
+                config.trading, 'momentum_max_drawdown', 0.25
+            ))),  # Use centralized config
+            "win_rate": Decimal(str(getattr(
+                config.trading, 'momentum_win_rate', 0.55
+            ))),  # Use centralized config
         }
 
     def _estimate_carry_trade_performance(self) -> dict[str, Decimal]:
@@ -1951,12 +1967,23 @@ class StrategySelector:
         Returns:
             Dictionary with low volatility-specific performance metrics
         """
+        config = get_config()
         return {
-            "expected_return": Decimal("0.10"),  # Lower return but more stable
-            "expected_risk": Decimal("0.10"),  # Lower volatility
-            "sharpe_ratio": Decimal("1.00"),  # Better risk-adjusted return
-            "max_drawdown": Decimal("0.15"),
-            "win_rate": Decimal("0.55"),
+            "expected_return": Decimal(str(getattr(
+                config.trading, 'low_vol_expected_return', 0.10
+            ))),  # Lower return but more stable
+            "expected_risk": Decimal(str(getattr(
+                config.trading, 'low_vol_expected_risk', 0.10
+            ))),  # Lower volatility
+            "sharpe_ratio": Decimal(str(getattr(
+                config.trading, 'low_vol_sharpe_ratio', 1.00
+            ))),  # Better risk-adjusted return
+            "max_drawdown": Decimal(str(getattr(
+                config.trading, 'low_vol_max_drawdown', 0.15
+            ))),  # Use centralized config
+            "win_rate": Decimal(str(getattr(
+                config.trading, 'low_vol_win_rate', 0.55
+            ))),  # Use centralized config
         }
 
     def _estimate_mean_reversion_performance(self) -> dict[str, Decimal]:

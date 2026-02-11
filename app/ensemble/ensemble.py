@@ -174,8 +174,8 @@ class EnsembleVoting:
             # Get majority decision
             majority_type = counts.most_common(1)[0][0]
 
-            # Calculate average confidence
-            avg_confidence = sum(s.confidence for s in signals) / len(signals)
+            # Calculate average confidence using numpy
+            avg_confidence = np.mean([s.confidence for s in signals])
 
             # Build vote dictionary
             strategy_votes = self._build_strategy_votes(signals)

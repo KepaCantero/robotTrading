@@ -30,6 +30,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from app.services.transaction_costs import ExecutionAlgorithm  # Enum
 from app.services.transaction_costs import MarketData, OrderSpecification, TransactionCostModel
+from app.core.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -191,15 +192,16 @@ class ExecutionAlgoBase(ABC):
         From Narang: Implementation shortfall = (decision_price - execution_price) +
         (market_movement during execution) + (opportunity cost of unfilled shares)
 
-        Simplified: (benchmark_price - avg_price) / benchmark_price * 10000
+        Simplified: (benchmark_price - avg_price) / benchmark_price * BPS_MULTIPLIER
         """
         if execution_report.benchmark_price == 0:
             return 0.0
 
+        tt = get_config().trading_thresholds
         shortfall = (
             float(execution_report.benchmark_price - execution_report.average_price)
             / float(execution_report.benchmark_price)
-            * 10000
+            * tt.bps_multiplier
         )
 
         return shortfall

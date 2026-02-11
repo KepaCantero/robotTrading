@@ -829,7 +829,7 @@ def get_regime_statistics(
             {
                 'regime': regime,
                 'periods': mask.sum(),
-                'pct_time': float(mask.sum() / len(regimes) * 100),
+                'percentage': mask.mean() * 100,
                 'mean_return': float(regime_returns.mean()),
                 'volatility': float(regime_returns.std()),
                 'sharpe': float(regime_returns.mean() / regime_returns.std() * np.sqrt(252)),

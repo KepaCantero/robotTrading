@@ -13,6 +13,7 @@ from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional
+import numpy as np
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -199,7 +200,7 @@ class LowVolatilityProfile(BaseModel):
         valid_scores = [s for s in scores if s is not None]
         if not valid_scores:
             return None
-        return sum(valid_scores) / len(valid_scores)
+        return np.mean(valid_scores)
 
     @property
     def is_defensive_stock(self) -> bool:

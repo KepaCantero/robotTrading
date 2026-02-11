@@ -7,6 +7,7 @@ Integrates templates, metrics, and portfolio data to generate comprehensive repo
 import logging
 from datetime import datetime
 from typing import Dict, Optional
+import numpy as np
 
 import pandas as pd
 
@@ -146,7 +147,7 @@ class ReportingOrchestrator:
         sorted_returns = sorted(returns)
         index = int(len(sorted_returns) * (1 - confidence))
         tail = sorted_returns[: max(index, 1)]
-        return float(sum(tail) / len(tail)) if tail else 0.0
+        return float(np.mean(tail)) if tail else 0.0
 
     @staticmethod
     def _calculate_calmar(annual_return: float, max_drawdown: float) -> float:

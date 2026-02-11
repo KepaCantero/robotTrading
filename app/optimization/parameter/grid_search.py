@@ -14,6 +14,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
 from itertools import product
 from typing import Any, Callable, Dict, List, Optional, Tuple
+import numpy as np
 
 from tqdm import tqdm
 
@@ -527,7 +528,7 @@ class GridSearchOptimizerCV(GridSearchOptimizer):
 
             # Aggregate CV scores
             if self.cv_metric == "mean":
-                cv_score = sum(cv_scores) / len(cv_scores)
+                cv_score = np.mean(cv_scores)
             elif self.cv_metric == "min":
                 cv_score = min(cv_scores)
             elif self.cv_metric == "median":
@@ -539,7 +540,7 @@ class GridSearchOptimizerCV(GridSearchOptimizer):
                     else (sorted_scores[mid - 1] + sorted_scores[mid]) / 2
                 )
             else:
-                cv_score = sum(cv_scores) / len(cv_scores)
+                cv_score = np.mean(cv_scores)
 
             # Create trial result
             result = TrialResult(
@@ -550,7 +551,7 @@ class GridSearchOptimizerCV(GridSearchOptimizer):
                 iteration=i,
                 metrics={
                     "cv_scores": cv_scores,
-                    "cv_mean": sum(cv_scores) / len(cv_scores),
+                    "cv_mean": np.mean(cv_scores),
                     "cv_std": self._std(cv_scores) if len(cv_scores) > 1 else 0.0,
                 },
             )

@@ -20,6 +20,7 @@ import time
 from decimal import Decimal
 from typing import Dict, List
 
+from app.core.centralized_config import get_config
 from .models import (
     DividendProfile,
     DividendSafety,
@@ -52,6 +53,10 @@ class DividendScreener:
         """
         self.config = config
         self.criteria = self._create_screening_criteria()
+
+        # Load fundamental analysis thresholds from config
+        tt = get_config().trading_thresholds
+        self.fa = tt  # Fundamental analysis thresholds
 
     def _create_screening_criteria(self) -> DividendScreeningCriteria:
         """
@@ -394,12 +399,12 @@ class DividendScreener:
         elif payout > 60:
             base_score -= 10
 
-        # Bonus por dividend coverage ratio
+        # Bonus por dividend coverage ratio - use config values
         if profile.dividend_data.dividend_coverage_ratio:
             coverage = float(profile.dividend_data.dividend_coverage_ratio)
-            if coverage >= 2.0:
+            if coverage >= self.fa.dividend_coverage_excellent:
                 base_score = min(100, base_score + 10)
-            elif coverage >= 1.5:
+            elif coverage >= self.fa.dividend_coverage_good:
                 base_score = min(100, base_score + 5)
 
         return max(0.0, min(100.0, base_score))
@@ -416,34 +421,34 @@ class DividendScreener:
         """
         score = 50.0  # Base score
 
-        # P/E ratio (ideal: 10-20)
+        # P/E ratio (ideal range) - use config values
         if profile.pe_ratio is not None:
             pe = float(profile.pe_ratio)
-            if 10 <= pe <= 20:
+            if self.fa.pe_ideal_min <= pe <= self.fa.pe_ideal_max:
                 score += 20
-            elif 5 <= pe < 10:
+            elif self.fa.pe_problematic_max <= pe < self.fa.pe_very_cheap_max:
                 score += 30  # Muy barato
-            elif 20 < pe <= 25:
+            elif self.fa.pe_ideal_max < pe <= self.fa.pe_acceptable_max:
                 score += 10
-            elif pe > 25 or pe < 5:
+            elif pe > self.fa.pe_too_expensive_min or pe < self.fa.pe_problematic_max:
                 score -= 20  # Muy caro o problema
 
-        # P/B ratio (ideal: 1-3)
+        # P/B ratio (ideal range) - use config values
         if profile.pb_ratio is not None:
             pb = float(profile.pb_ratio)
-            if 1 <= pb <= 3:
+            if self.fa.pb_ideal_min <= pb <= self.fa.pb_ideal_max:
                 score += 15
-            elif 0.5 <= pb < 1:
+            elif self.fa.pb_very_cheap_max <= pb < self.fa.pb_ideal_min:
                 score += 25  # Muy barato
-            elif pb > 5:
+            elif pb > self.fa.pb_too_expensive:
                 score -= 15
 
-        # ROE (ideal: >15%)
+        # ROE (ideal thresholds) - use config values
         if profile.roe is not None:
             roe = float(profile.roe)
-            if roe >= 15:
+            if roe >= self.fa.roe_excellent:
                 score += 15
-            elif roe >= 10:
+            elif roe >= self.fa.roe_good:
                 score += 10
             elif roe < 0:
                 score -= 20
@@ -452,7 +457,7 @@ class DividendScreener:
 
     def _get_recommendation(self, score: float) -> str:
         """
-        Obtener recomendación basada en score.
+        Obtener recomendación basada en score - use config thresholds.
 
         Args:
             score: Score de decisión
@@ -460,9 +465,9 @@ class DividendScreener:
         Returns:
             Recomendación: buy/hold/avoid
         """
-        if score >= 70:
+        if score >= self.fa.dividend_buy_score:
             return "buy"
-        elif score >= 50:
+        elif score >= self.fa.dividend_hold_score:
             return "hold"
         else:
             return "avoid"

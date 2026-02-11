@@ -26,6 +26,8 @@ from typing import Dict, List, Tuple
 import numpy as np
 import pandas as pd
 
+from app.core.config.base import get_config
+
 # mypy: ignore-errors
 # pylint: disable=unsupported-binary-operation  # For Python 3.10+ union syntax
 
@@ -322,11 +324,16 @@ class LiquidityAnalyzer:
         Returns:
             Regime classification
         """
-        if liquidity_score >= 80:
+        config = get_config()
+        high_threshold = getattr(config.market_microstructure, 'liquidity_high_threshold', 80.0)
+        normal_threshold = getattr(config.market_microstructure, 'liquidity_normal_threshold', 60.0)
+        low_threshold = getattr(config.market_microstructure, 'liquidity_low_threshold', 40.0)
+
+        if liquidity_score >= high_threshold:
             return 'HIGH'
-        elif liquidity_score >= 60:
+        elif liquidity_score >= normal_threshold:
             return 'NORMAL'
-        elif liquidity_score >= 40:
+        elif liquidity_score >= low_threshold:
             return 'LOW'
         else:
             return 'POOR'
@@ -644,7 +651,12 @@ class LiquidityAnalyzer:
             returns = price_history['close'].pct_change().dropna()
             volatility = returns.tail(20).std()
         else:
-            volatility = 0.02  # Default
+            config = get_config()
+            volatility = getattr(
+                config.market_microstructure,
+                'default_volatility',
+                0.02
+            )  # Default from config
 
         # Calculate composite liquidity score
         liquidity_score = self.calculate_liquidity_score(
@@ -794,6 +806,12 @@ class LiquidityAnalyzer:
         depth_profile = self.measure_market_depth(order_book, required_size)
 
         # Decompose spread
+        config = get_config()
+        default_vol = getattr(
+            config.market_microstructure,
+            'default_volatility',
+            0.02
+        )
         spread_decomp = self.decompose_spread(
             spread_bps=metrics.bid_ask_spread_bps,
             price_variance=(
@@ -802,7 +820,7 @@ class LiquidityAnalyzer:
             order_flow_imbalance=depth_profile.imbalance_ratio,
             volume=volume,
             volatility=(
-                price_history['close'].pct_change().std() if len(price_history) > 1 else 0.02
+                price_history['close'].pct_change().std() if len(price_history) > 1 else default_vol
             ),
         )
 
@@ -811,7 +829,7 @@ class LiquidityAnalyzer:
             required_size=required_size or Decimal('1000'),
             available_depth=metrics.quoted_depth,
             volatility=(
-                price_history['close'].pct_change().std() if len(price_history) > 1 else 0.02
+                price_history['close'].pct_change().std() if len(price_history) > 1 else default_vol
             ),
             average_daily_volume=volume,
         )
@@ -903,6 +921,8 @@ class LiquidityMonitor:
             Alert dictionary or None if no alert
         """
         alerts = []
+        config = get_config()
+        wide_spread_threshold = getattr(config.market_microstructure, 'wide_spread_bps', 10.0)
 
         # Low liquidity score alert
         if current_metrics.liquidity_score < self.liquidity_threshold:
@@ -916,7 +936,7 @@ class LiquidityMonitor:
             )
 
         # Wide spread alert
-        if current_metrics.bid_ask_spread_bps > 10:
+        if current_metrics.bid_ask_spread_bps > wide_spread_threshold:
             alerts.append(
                 {
                     'type': 'WIDE_SPREAD',

@@ -55,7 +55,7 @@ PHASE_CONFIGS: dict[CapitalPhase, PhaseRiskParameters] = {
     ),
     # R26: Growth phase (€10k-€50k) - Moderate
     CapitalPhase.GROWTH: PhaseRiskParameters(
-        max_risk_per_trade_pct=Decimal("0.02"),  # 2% - Moderate
+        max_risk_per_trade_pct= getattr(config.trading, 'max_risk_per_trade', 0.02)"),  # 2% - Moderate
         max_portfolio_risk_pct=Decimal("0.10"),  # 10% total
         max_positions=5,
         max_correlation=Decimal("0.7"),

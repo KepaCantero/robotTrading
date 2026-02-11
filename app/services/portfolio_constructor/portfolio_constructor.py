@@ -13,6 +13,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Optional
+import numpy as np
 
 from .models import AllocationWeight, PortfolioAllocation, PortfolioConstructionRequest
 
@@ -404,7 +405,7 @@ class PortfolioConstructor:
             portfolio_drawdown = portfolio_volatility * Decimal("2")
 
             # Diversification ratio
-            equal_weight_volatility = sum(volatilities.values()) / len(request.enabled_modules)
+            equal_weight_volatility = np.mean(list(volatilities.values()))
             diversification_ratio = (
                 equal_weight_volatility / portfolio_volatility
                 if portfolio_volatility > 0
@@ -557,7 +558,7 @@ class PortfolioConstructor:
                 if p.success and p.expected_portfolio_sharpe > Decimal("0")
             ]
             if sharpes:
-                avg_sharpe = sum(sharpes) / len(sharpes)
+                avg_sharpe = np.mean(sharpes)
 
         return {
             "total_constructions": total,

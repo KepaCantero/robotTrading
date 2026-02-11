@@ -653,13 +653,13 @@ volatility_annual = returns.rolling(window).std() * np.sqrt(252)
 # Rolling Sharpe Ratio
 # ❌ Non-vectorized
 sharpe = np.zeros(len(returns) - window + 1)
-risk_free = 0.02 / 252  # Daily risk-free rate
+risk_free = getattr(config.trading, 'max_risk_per_trade', 0.02) / 252  # Daily risk-free rate
 for i in range(window - 1, len(returns)):
     excess_returns = returns[i-window+1:i+1] - risk_free
     sharpe[i - window + 1] = np.mean(excess_returns) / np.std(excess_returns)
 
 # ✅ Vectorized
-risk_free = 0.02 / 252
+risk_free = getattr(config.trading, 'max_risk_per_trade', 0.02) / 252
 excess_returns = returns - risk_free
 sharpe = excess_returns.rolling(window).mean() / excess_returns.rolling(window).std()
 

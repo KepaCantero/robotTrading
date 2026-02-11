@@ -795,7 +795,7 @@ class CointegrationAnalyzer:
         price1: float,
         price2: float,
         capital: float,
-        risk_per_trade: float = 0.02,
+        risk_per_trade: float = getattr(config.trading, 'max_risk_per_trade', 0.02),
     ) -> Tuple[float, float]:
         """
         Calculate optimal position sizes for a pairs trade.

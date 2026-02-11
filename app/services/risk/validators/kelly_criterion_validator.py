@@ -29,13 +29,13 @@ class KellyCriterionValidator:
     Máximo riesgo: 2% del capital
     """
 
-    MAX_RISK_PCT = Decimal("0.02")  # 2% máximo
+    MAX_RISK_PCT = getattr(config.trading, 'max_risk_per_trade', 0.02)")  # 2% máximo
 
     def __init__(
         self,
         win_rate: float = 0.55,
         avg_win: float = 0.03,
-        avg_loss: float = 0.02
+        avg_loss: float = getattr(config.trading, 'max_risk_per_trade', 0.02)
     ):
         """
         Inicializar validador con parámetros históricos

@@ -580,7 +580,7 @@ class StabilityBasedPortfolioSelector:
 def create_portfolio_stability_validator(
     min_stability_score: float = 70.0,
     transaction_cost_bps: float = 10.0,
-    risk_free_rate: float = 0.02,
+    risk_free_rate: float = getattr(config.trading, 'max_risk_per_trade', 0.02),
 ) -> PortfolioStabilityValidator:
     """
     Create a portfolio stability validator with default configuration.

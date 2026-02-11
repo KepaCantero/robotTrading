@@ -19,6 +19,7 @@ Usage:
 """
 
 from __future__ import annotations
+import numpy as np
 
 import asyncio
 import logging
@@ -615,7 +616,7 @@ class StressTester:
 
         # Check latency
         if latencies:
-            avg_latency = sum(latencies) / len(latencies)
+            avg_latency = np.mean(latencies)
             if avg_latency > load_test.stop_on_latency_ms:
                 return True
 

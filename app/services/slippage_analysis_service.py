@@ -30,6 +30,8 @@ class VolatilityCalculator:
 
     def __init__(self, lookback_days: int = 30):
         self.lookback_days = lookback_days
+        # Load trading thresholds for volatility trend thresholds
+        self._tt = get_config().trading_thresholds
 
     def calculate_volatility(self, price_history: List[Decimal]) -> VolatilityMetrics:
         """Calcular métricas de volatilidad."""
@@ -42,12 +44,21 @@ class VolatilityCalculator:
         # Calcular returns
         returns = np.diff(np.log(prices))
 
-        # Volatilidad actual (últimos 5 días)
+        # Volatilidad actual (últimos 5 días) - use config values
         recent_returns = returns[-5:] if len(returns) >= 5 else returns
-        current_volatility = Decimal(str(np.std(recent_returns) * np.sqrt(252) * 100))
+        tt = get_config().trading_thresholds
+        current_volatility = Decimal(
+            str(
+                np.std(recent_returns)
+                * np.sqrt(tt.annual_trading_days)
+                * tt.percentage_multiplier
+            )
+        )
 
         # Volatilidad histórica (todo el período)
-        historical_volatility = Decimal(str(np.std(returns) * np.sqrt(252) * 100))
+        historical_volatility = Decimal(
+            str(np.std(returns) * np.sqrt(tt.annual_trading_days) * tt.percentage_multiplier)
+        )
 
         # Percentil de volatilidad
         volatility_percentile = self._calculate_percentile(
@@ -72,10 +83,11 @@ class VolatilityCalculator:
         """Calcular percentil de volatilidad actual."""
         if historical == 0:
             return 50.0
-        return float((current / historical) * 100)
+        tt = get_config().trading_thresholds
+        return float((current / historical) * tt.percentage_multiplier)
 
     def _calculate_trend(self, returns: np.ndarray) -> str:
-        """Calcular tendencia de volatilidad."""
+        """Calcular tendencia de volatilidad - use config thresholds."""
         if len(returns) < 10:
             return "insufficient_data"
 
@@ -84,9 +96,9 @@ class VolatilityCalculator:
         recent_vol = np.std(returns[-window_size:])
         previous_vol = np.std(returns[-window_size * 2 : -window_size])
 
-        if recent_vol > previous_vol * 1.1:
+        if recent_vol > previous_vol * self._tt.volatility_trend_increasing_threshold:
             return "increasing"
-        elif recent_vol < previous_vol * 0.9:
+        elif recent_vol < previous_vol * self._tt.volatility_trend_decreasing_threshold:
             return "decreasing"
         else:
             return "stable"
@@ -107,6 +119,10 @@ class VolatilityCalculator:
 
 class LiquidityCalculator:
     """Calculadora de liquidez del mercado."""
+
+    def __init__(self):
+        # Load trading thresholds for liquidity calculation
+        self._tt = get_config().trading_thresholds
 
     def calculate_liquidity(
         self, quote: Quote, volume_24h: Decimal, order_book_depth: Decimal
@@ -133,30 +149,34 @@ class LiquidityCalculator:
         )
 
     def _calculate_liquidity_score(self, spread: Decimal, volume: Decimal, depth: Decimal) -> float:
-        """Calcular score de liquidez (0-1)."""
-        # Normalizar spread (menor es mejor)
-        spread_score = max(0, 1 - float(spread) / 5.0)  # Máximo 5% spread
+        """Calcular score de liquidez (0-1) - use config values."""
+        # Normalizar spread (menor es mejor) - use config
+        spread_score = max(0, 1 - float(spread) / self._tt.liquidity_max_spread_percent)
 
-        # Normalizar volumen (mayor es mejor)
-        volume_score = min(1.0, float(volume) / 1000000)  # Normalizar a 1M
+        # Normalizar volumen (mayor es mejor) - use config
+        volume_score = min(1.0, float(volume) / self._tt.liquidity_volume_normalization)
 
-        # Normalizar profundidad (mayor es mejor)
-        depth_score = min(1.0, float(depth) / 100000)  # Normalizar a 100K
+        # Normalizar profundidad (mayor es mejor) - use config
+        depth_score = min(1.0, float(depth) / self._tt.liquidity_depth_normalization)
 
-        # Score combinado con pesos
-        return spread_score * 0.4 + volume_score * 0.4 + depth_score * 0.2
+        # Score combinado con pesos - use config weights
+        return (
+            spread_score * self._tt.liquidity_spread_weight
+            + volume_score * self._tt.liquidity_volume_weight
+            + depth_score * self._tt.liquidity_depth_weight
+        )
 
     def _determine_liquidity_regime(
         self, liquidity_score: float, spread: Decimal
     ) -> MarketCondition:
-        """Determinar régimen de liquidez."""
+        """Determinar régimen de liquidez - use config multiplier."""
         config = get_config()
         min_liquidity = config.trading.min_liquidity_score
         max_spread = config.trading.max_spread_threshold
 
         if liquidity_score < min_liquidity or spread > max_spread:
             return MarketCondition.LOW_LIQUIDITY
-        elif liquidity_score < min_liquidity * 1.5:
+        elif liquidity_score < min_liquidity * self._tt.liquidity_stress_multiplier:
             return MarketCondition.MARKET_STRESS
         else:
             return MarketCondition.NORMAL
@@ -164,6 +184,10 @@ class LiquidityCalculator:
 
 class OrderSizeCalculator:
     """Calculadora de impacto del tamaño de orden."""
+
+    def __init__(self):
+        # Load trading thresholds for order size thresholds
+        self._tt = get_config().trading_thresholds
 
     def calculate_order_impact(
         self, order_size: Decimal, market_cap: Decimal, current_price: Decimal
@@ -182,15 +206,15 @@ class OrderSizeCalculator:
         )
 
     def _calculate_impact_multiplier(self, market_cap_ratio: Decimal) -> float:
-        """Calcular multiplicador de impacto basado en el ratio."""
-        # Función exponencial para capturar impacto no lineal
+        """Calcular multiplicador de impacto basado en el ratio - use config thresholds."""
+        # Función exponencial para capturar impacto no lineal - use config
         ratio = float(market_cap_ratio)
-        if ratio <= 0.001:  # < 0.1%
+        if ratio <= self._tt.order_size_tiny_threshold:
             return 1.0
-        elif ratio <= 0.01:  # < 1%
-            return 1.0 + ratio * 10
-        else:  # >= 1%
-            return 1.0 + ratio * 20
+        elif ratio <= self._tt.order_size_small_threshold:
+            return 1.0 + ratio * self._tt.order_size_small_multiplier
+        else:
+            return 1.0 + ratio * self._tt.order_size_large_multiplier
 
 
 class DynamicSlippageService:
@@ -290,13 +314,19 @@ class DynamicSlippageService:
     def _calculate_market_impact(
         self, order_size_impact: OrderSizeImpact, liquidity_metrics: LiquidityMetrics
     ) -> SlippageComponent:
-        """Calcular impacto del mercado."""
+        """Calcular impacto del mercado usando config."""
+        # Get market stress threshold from config
+        config = get_config()
+        market_stress_threshold = Decimal(str(getattr(
+            config.trading, 'slippage_market_stress_threshold', 0.01
+        )))
+
         base_impact = float(order_size_impact.market_cap_ratio) * 100
         liquidity_adjustment = 1 / max(0.1, liquidity_metrics.liquidity_score)
         impact_value = Decimal(str(base_impact * liquidity_adjustment))
 
         # Determinar condición del mercado basada en el impacto
-        if order_size_impact.market_cap_ratio > Decimal("0.01"):
+        if order_size_impact.market_cap_ratio > market_stress_threshold:
             market_condition = MarketCondition.MARKET_STRESS
         else:
             market_condition = MarketCondition.NORMAL
@@ -336,13 +366,25 @@ class DynamicSlippageService:
     def _calculate_volatility_adjustment(
         self, volatility_metrics: VolatilityMetrics
     ) -> SlippageComponent:
-        """Calcular ajuste por volatilidad."""
+        """Calcular ajuste por volatilidad usando config."""
+        # Get volatility adjustment factors from config
+        config = get_config()
+        adj_extreme = Decimal(str(getattr(
+            config.trading, 'slippage_vol_adjustment_extreme', 2.0
+        )))
+        adj_high = Decimal(str(getattr(
+            config.trading, 'slippage_vol_adjustment_high', 1.0
+        )))
+        adj_normal = Decimal(str(getattr(
+            config.trading, 'slippage_vol_adjustment_normal', 0.2
+        )))
+
         if volatility_metrics.volatility_regime == MarketCondition.EXTREME_EVENTS:
-            adjustment = Decimal("2.0")
+            adjustment = adj_extreme
         elif volatility_metrics.volatility_regime == MarketCondition.HIGH_VOLATILITY:
-            adjustment = Decimal("1.0")
+            adjustment = adj_high
         else:
-            adjustment = Decimal("0.2")
+            adjustment = adj_normal
 
         return SlippageComponent(
             slippage_type=SlippageType.VOLATILITY_ADJUSTMENT,

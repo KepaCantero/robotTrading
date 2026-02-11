@@ -32,7 +32,7 @@ class ParetoFrontOptimizer:
         ...     objectives=['maximize_return', 'minimize_risk']
         ... )
         >>> pareto_front = optimizer.optimize(
-        ...     returns_data={'momentum': [0.01, 0.02, ...], ...},
+        ...     returns_data= getattr(config.trading, 'max_risk_per_trade', 0.02), ...], ...},
         ...     population_size=50,
         ...     generations=100
         ... )

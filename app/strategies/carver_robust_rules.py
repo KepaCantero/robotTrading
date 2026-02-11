@@ -22,7 +22,7 @@ from datetime import datetime, time
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from app.core.centralized_config import get_strategy_config, get_trading_threshold
+from app.core.centralized_config import get_strategy_config, get_trading_threshold, get_config
 from app.models.market_data import Quote
 from app.models.portfolio import Portfolio
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
@@ -53,6 +53,10 @@ class CarverRobustRulesStrategy(BaseStrategy):
             config: Strategy configuration
         """
         super().__init__(config)
+
+        # Load trading thresholds for history length
+        trading_config = get_config()
+        tt = trading_config.trading_thresholds
 
         # Load strategy-specific configuration
         strategy_config = get_strategy_config("carver_robust")
@@ -101,10 +105,10 @@ class CarverRobustRulesStrategy(BaseStrategy):
         self.decay_factor = Decimal(str(config.get("decay_factor", 0.1)))
         self.use_decay = config.get("use_decay", True)
 
-        # Price history for calculations
-        self.price_history = deque(maxlen=200)
-        self.high_history = deque(maxlen=200)
-        self.low_history = deque(maxlen=200)
+        # Price history for calculations - use config value
+        self.price_history = deque(maxlen=tt.default_price_history_length)
+        self.high_history = deque(maxlen=tt.default_price_history_length)
+        self.low_history = deque(maxlen=tt.default_price_history_length)
 
         # Indicator calculator
         self.indicator_calculator = TechnicalIndicatorCalculator()
@@ -307,7 +311,7 @@ class CarverRobustRulesStrategy(BaseStrategy):
         # Calculate standard deviation
         import numpy as np
 
-        volatility = float(np.std(returns) if returns else 0.02)
+        volatility = getattr(config.trading, 'max_risk_per_trade', 0.02))
 
         return volatility
 

@@ -123,7 +123,7 @@ class RiskGates:
 
         # Additional risk parameters from config
         self.stop_loss_pct = Decimal(str(thresholds.stop_loss_pct))  # From config: 0.05
-        self.max_risk_per_trade = Decimal(str(thresholds.max_risk_per_trade))  # From config: 0.02
+        self.max_risk_per_trade = getattr(config.trading, 'max_risk_per_trade', 0.02)
         self.circuit_breaker_daily_loss = Decimal(  # Chan #15: 5% daily loss circuit breaker
             str(thresholds.circuit_breaker_daily_loss)
         )  # 0.03

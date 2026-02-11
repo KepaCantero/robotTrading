@@ -6,6 +6,7 @@ including performance metrics, risk assessment, and comparison.
 """
 
 from __future__ import annotations
+import numpy as np
 
 from decimal import Decimal
 from typing import Any
@@ -95,11 +96,11 @@ class AnalyzeBacktestResultsUseCase:
 
         comparison = {
             'backtest_count': len(backtests),
-            'avg_return': str(sum(returns) / len(returns)),
+            'avg_return': str(np.mean(returns)),
             'best_return': str(max(returns)),
             'worst_return': str(min(returns)),
-            'avg_sharpe': str(sum(sharpe_ratios) / len(sharpe_ratios)) if sharpe_ratios else None,
-            'avg_drawdown': str(sum(drawdowns) / len(drawdowns)) if drawdowns else None,
+            'avg_sharpe': str(np.mean(sharpe_ratios)) if sharpe_ratios else None,
+            'avg_drawdown': str(np.mean(drawdowns)) if drawdowns else None,
             'best_backtest': max(
                 backtest_ids,
                 key=lambda bid: backtests[backtest_ids.index(bid)].result.total_return_pct,

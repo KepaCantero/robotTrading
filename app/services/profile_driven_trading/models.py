@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
+import numpy as np
 
 
 class StageType(Enum):
@@ -171,7 +172,7 @@ class SignalSet:
             "momentum_signals_count": len(self.momentum_signals),
             "mean_reversion_signals_count": len(self.mean_reversion_signals),
             "avg_confidence": (
-                sum(self.confidence_scores.values()) / len(self.confidence_scores)
+                np.mean(list(self.confidence_scores.values()))
                 if self.confidence_scores
                 else 0
             ),

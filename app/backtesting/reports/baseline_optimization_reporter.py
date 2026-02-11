@@ -280,19 +280,52 @@ class BaselineOptimizationReporter:
         """
         Generate PDF from HTML report.
 
-        Note: This requires a headless browser or PDF library.
-        Placeholder for future implementation.
+        Note: PDF generation requires the optional weasyprint library.
+        The feature is available but not enabled by default.
+
+        To enable PDF generation:
+        1. Install weasyprint: pip install weasyprint
+        2. Ensure system dependencies (GTK, Cairo) are installed
+        3. PDF generation will automatically work
 
         Args:
-            html: HTML content
-            output_path: Optional path to save PDF
+            html: HTML content to convert to PDF
+            output_path: Optional path to save PDF file
 
         Returns:
-            PDF bytes
+            PDF bytes, or empty bytes if weasyprint is not available
+
+        Example:
+            >>> pdf_bytes = reporter.generate_pdf(html_report, output_path="report.pdf")
+            >>> if pdf_bytes:
+            ...     with open("report.pdf", "wb") as f:
+            ...         f.write(pdf_bytes)
         """
-        # TODO: Implement PDF generation using weasyprint or similar
-        logger.warning("PDF generation not yet implemented")
-        return b""
+        try:
+            from weasyprint import HTML
+
+            # Generate PDF from HTML
+            html_doc = HTML(string=html)
+            pdf_bytes = html_doc.write_pdf()
+
+            # Save to file if output path provided
+            if output_path:
+                Path(output_path).write_bytes(pdf_bytes)
+                logger.info(f"PDF report saved to {output_path}")
+
+            return pdf_bytes
+
+        except ImportError:
+            logger.debug(
+                "PDF generation requires weasyprint. "
+                "Install with: pip install weasyprint. "
+                "HTML reports are fully functional without PDF export."
+            )
+            return b""
+
+        except Exception as e:
+            logger.error(f"Error generating PDF: {e}", exc_info=True)
+            return b""
 
     def _extract_metrics(self, results: Dict[str, Any]) -> Dict[str, float]:
         """Extract key metrics from results dictionary."""

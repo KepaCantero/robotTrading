@@ -18,6 +18,8 @@ from typing import Dict, List, Optional
 
 import numpy as np
 
+from app.core.config.base import get_config
+
 logger = logging.getLogger(__name__)
 
 
@@ -197,8 +199,20 @@ class TimeSeriesMomentum:
 
             # Calculate stop loss and take profit
             atr = self._calculate_atr(prices_clean[-20:]) if len(prices_clean) >= 20 else None
-            stop_loss = current_price * (1 - 0.02) if atr else None  # 2% stop
-            take_profit = current_price * (1 + 0.06) if atr else None  # 6% target
+            if atr:
+                try:
+                    config = get_config()
+                    stop_loss_pct = float(getattr(config.trading, 'stop_loss_pct', 0.02))
+                    take_profit_pct = float(getattr(config.trading, 'take_profit_pct', 0.06))
+                    stop_loss = current_price * (1 - stop_loss_pct)
+                    take_profit = current_price * (1 + take_profit_pct)
+                except (AttributeError, ValueError, TypeError) as e:
+                    logger.warning(f"Error getting stop loss/take profit config: {e}, using defaults")
+                    stop_loss = current_price * 0.98  # 2% stop loss
+                    take_profit = current_price * 1.06  # 6% take profit
+            else:
+                stop_loss = None
+                take_profit = None
 
             return TimeSeriesSignal(
                 symbol=symbol,
@@ -219,8 +233,20 @@ class TimeSeriesMomentum:
             state = TrendState.DOWNTREND
 
             atr = self._calculate_atr(prices_clean[-20:]) if len(prices_clean) >= 20 else None
-            stop_loss = current_price * (1 + 0.02) if atr else None
-            take_profit = current_price * (1 - 0.06) if atr else None
+            if atr:
+                try:
+                    config = get_config()
+                    stop_loss_pct = float(getattr(config.trading, 'stop_loss_pct', 0.02))
+                    take_profit_pct = float(getattr(config.trading, 'take_profit_pct', 0.06))
+                    stop_loss = current_price * (1 + stop_loss_pct)  # For short, stop loss is above
+                    take_profit = current_price * (1 - take_profit_pct)  # For short, target is below
+                except (AttributeError, ValueError, TypeError) as e:
+                    logger.warning(f"Error getting stop loss/take profit config: {e}, using defaults")
+                    stop_loss = current_price * 1.02  # 2% stop loss for short
+                    take_profit = current_price * 0.94  # 6% take profit for short
+            else:
+                stop_loss = None
+                take_profit = None
 
             return TimeSeriesSignal(
                 symbol=symbol,
@@ -295,16 +321,29 @@ class TimeSeriesMomentum:
         Returns:
             Position size (scaled by -1 to 1)
         """
+        # Get position sizing parameters from config
+        try:
+            config = get_config()
+            vol_target = float(getattr(config.trading, 'momentum_volatility_target', 0.15))
+            vol_floor = float(getattr(config.trading, 'momentum_volatility_floor', 0.01))
+            fixed_max_position = float(getattr(config.trading, 'momentum_fixed_max_position', 0.5))
+            default_max_position = float(getattr(config.trading, 'momentum_default_max_position', 0.3))
+        except (AttributeError, ValueError, TypeError) as e:
+            logger.warning(f"Error getting position sizing config: {e}, using defaults")
+            vol_target = 0.15
+            vol_floor = 0.01
+            fixed_max_position = 0.5
+            default_max_position = 0.3
+
         if self._position_sizing == "volatility_target":
             # Inverse volatility sizing
-            target_vol = 0.15  # 15% annual volatility target
-            size = strength * target_vol / (volatility + 0.01)
+            size = strength * vol_target / (volatility + vol_floor)
 
         elif self._position_sizing == "fixed":
-            size = strength * 0.5  # Max 50% position
+            size = strength * fixed_max_position
 
         else:  # default
-            size = strength * 0.3
+            size = strength * default_max_position
 
         return direction * min(size, 1.0)
 

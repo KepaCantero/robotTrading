@@ -9,7 +9,14 @@ y gestores centralizados para mejor mantenibilidad.
 from .asset_identification import AssetIdentificationService, get_asset_identification_service
 
 # Nuevos gestores centralizados
-from .circuit_breaker_manager import CircuitBreakerManager, CircuitBreakerType
+from .api_circuit_breaker import CircuitBreakerManager, CircuitBreakerType
+from .circuit_breaker_manager import (
+    CircuitBreakerConfig,
+    CircuitBreakerLevel,
+    CircuitBreakerManager as MarketHaltManager,
+    MarketState,
+    TradingStatus,
+)
 from .market_universe_loader import MarketUniverseLoader, get_market_universe_loader
 from .market_universe_orchestrator import (
     MarketUniverseOrchestrator,
@@ -36,8 +43,13 @@ __all__ = [
     "PositionSizingEngine",
     "SignalExecutionEngine",
     # Gestores centralizados
-    "CircuitBreakerManager",
+    "CircuitBreakerManager",  # API circuit breaker (resilience pattern)
     "CircuitBreakerType",
+    "MarketHaltManager",  # Market halt detection (renamed from v2)
+    "CircuitBreakerConfig",
+    "CircuitBreakerLevel",
+    "MarketState",
+    "TradingStatus",
     "PortfolioRiskManager",
     "RiskLevel",
     "RiskViolation",

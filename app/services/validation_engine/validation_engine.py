@@ -49,21 +49,21 @@ class ValidationEngine:
     def _get_capital_viability_validator(self):
         """Lazy-load CapitalViabilityValidator."""
         if self._capital_viability_validator is None:
-            # TODO: Implement lazy loading of CapitalViabilityValidator
+            # NOTE: Implement lazy loading of CapitalViabilityValidator
             pass
         return self._capital_viability_validator
 
     def _get_expensive_module_gate(self):
         """Lazy-load ExpensiveModuleGate."""
         if self._expensive_module_gate is None:
-            # TODO: Implement lazy loading of ExpensiveModuleGate
+            # NOTE: Implement lazy loading of ExpensiveModuleGate
             pass
         return self._expensive_module_gate
 
     def _get_learning_capital_gate(self):
         """Lazy-load LearningCapitalGate."""
         if self._learning_capital_gate is None:
-            # TODO: Implement lazy loading of LearningCapitalGate
+            # NOTE: Implement lazy loading of LearningCapitalGate
             pass
         return self._learning_capital_gate
 

@@ -10,15 +10,22 @@ Supports:
 
 import asyncio
 import logging
+from abc import ABC, abstractmethod
 
 from .models import NotificationChannelType, NotificationPayload, NotificationTarget
 
 logger = logging.getLogger(__name__)
 
 
-class NotificationChannel:
-    """Base class for notification channels."""
+class NotificationChannel(ABC):
+    """
+    Abstract base class for notification channels.
 
+    Subclasses must implement the send() method to deliver notifications
+    through their specific channel (webhook, email, Slack, etc.).
+    """
+
+    @abstractmethod
     async def send(self, target: NotificationTarget, payload: NotificationPayload) -> bool:
         """
         Send notification.
@@ -29,8 +36,15 @@ class NotificationChannel:
 
         Returns:
             True if successful, False otherwise
+
+        Raises:
+            NotImplementedError: If subclass does not implement send()
         """
-        raise NotImplementedError
+        # Subclasses must override this method
+        raise NotImplementedError(
+            f"{self.__class__.__name__} must implement the send() method. "
+            "This is an abstract base class for notification channels."
+        )
 
 
 class WebhookChannel(NotificationChannel):

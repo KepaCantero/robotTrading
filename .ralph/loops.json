@@ -1,3 +1,12 @@
 {
-  "loops": []
+  "loops": [
+    {
+      "id": "pure-gull",
+      "pid": 61366,
+      "started": "2026-02-11T12:53:04.701729Z",
+      "prompt": ".ralph/ralph_tasks/22_code_quality_refactor.yml",
+      "worktree_path": "/Users/kepa.cantero/Projects/algoTrading/.worktrees/pure-gull",
+      "workspace": "/Users/kepa.cantero/Projects/algoTrading/.worktrees/pure-gull"
+    }
+  ]
 }

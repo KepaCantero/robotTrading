@@ -32,6 +32,9 @@ class ExtendedPortfolio(BasePortfolio):
     @model_validator(mode="after")
     def validate_portfolio_consistency(self) -> "ExtendedPortfolio":
         """Validate portfolio consistency."""
+        from app.core.config.base import get_config
+        cfg = get_config()
+
         if self.cash_balance != self.cash:
             raise ValueError("Cash balance must match cash field")
 
@@ -40,7 +43,9 @@ class ExtendedPortfolio(BasePortfolio):
         for position in self.positions:
             calculated_total += position.market_value
 
-        if abs(self.total_value - calculated_total) > Decimal("0.01"):
+        # Get tolerance from config
+        tolerance = Decimal(str(getattr(cfg.trading, 'portfolio_value_tolerance', 0.01)))
+        if abs(self.total_value - calculated_total) > tolerance:
             raise ValueError(
                 f"Total value mismatch. Expected: {calculated_total}, Got: {self.total_value}"
             )
@@ -339,6 +344,9 @@ class PortfolioAllocation(BaseModel):
     @model_validator(mode="after")
     def validate_allocation_sum(self) -> "PortfolioAllocation":
         """Validate that allocations sum to 100%."""
+        from app.core.config.base import get_config
+        cfg = get_config()
+
         total_allocation = (
             self.equity_allocation
             + self.fixed_income_allocation
@@ -346,7 +354,9 @@ class PortfolioAllocation(BaseModel):
             + self.alternative_allocation
         )
 
-        if abs(total_allocation - Decimal("100")) > Decimal("0.01"):
+        # Get tolerance from config
+        tolerance = Decimal(str(getattr(cfg.trading, 'portfolio_allocation_tolerance', 0.01)))
+        if abs(total_allocation - Decimal("100")) > tolerance:
             raise ValueError(f"Asset class allocations must sum to 100%, got {total_allocation}")
 
         return self

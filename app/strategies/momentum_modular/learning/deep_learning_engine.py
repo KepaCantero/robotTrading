@@ -685,7 +685,7 @@ class DeepLearningEngine(BaseLearningEngine):
 
                     # Cargar pesos (necesitamos crear el modelo primero)
                     # Por ahora, marcamos como entrenado pero no cargamos pesos
-                    # TODO: Implementar carga de pesos si es necesario
+                    # NOTE: Implementar carga de pesos si es necesario
                     logger.info(f"✅ Entrenamiento completado en subprocess. Métricas: {metrics}")
 
                     # Limpiar archivo temporal

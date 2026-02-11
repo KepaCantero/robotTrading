@@ -13,7 +13,7 @@ from collections import deque
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Sequence
 
-from app.core.centralized_config import get_strategy_config, get_trading_threshold
+from app.core.config.base import get_config
 from app.models.market_data import Quote
 from app.models.portfolio import Portfolio
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
@@ -54,10 +54,12 @@ class MomentumStrategyEngine(BaseStrategyEngine):
         self.atr_filter_enabled = config.get("atr_filter_enabled", True)
         self.use_relative_atr = config.get("use_relative_atr", True)
 
-        # Load strategy-specific configuration
-        strategy_config = get_strategy_config("momentum")
-        if strategy_config:
-            params = strategy_config.parameters
+        # Load strategy-specific configuration from centralized config
+        centralized_config = get_config()
+        strategy_cfg = centralized_config.get_strategy_config("momentum")
+
+        if strategy_cfg:
+            params = strategy_cfg.parameters
             if isinstance(params, dict):
                 try:
                     self.config.update({k: v for k, v in params.items() if v is not None})
@@ -72,15 +74,15 @@ class MomentumStrategyEngine(BaseStrategyEngine):
             self.momentum_threshold = Decimal(str(params.get("momentum_threshold")))
             self.volume_threshold = Decimal(str(params.get("volume_threshold")))
 
-            # Risk parameters
+            # Risk parameters - use centralized config with fallback to strategy config
             self.stop_loss = Decimal(
-                str(strategy_config.stop_loss_pct or get_trading_threshold("stop_loss_pct"))
+                str(strategy_cfg.stop_loss_pct or centralized_config.trading.stop_loss_pct)
             )
             self.take_profit = Decimal(
-                str(strategy_config.take_profit_pct or get_trading_threshold("take_profit_pct"))
+                str(strategy_cfg.take_profit_pct or centralized_config.trading.take_profit_pct)
             )
             self.max_position_size = Decimal(
-                str(strategy_config.max_position_size or get_trading_threshold("max_position_size"))
+                str(strategy_cfg.max_position_size or centralized_config.trading.max_position_size)
             )
             self.max_exposure = Decimal(str(params.get("max_exposure", 0.60)))
 
@@ -330,34 +332,83 @@ class MomentumStrategyEngine(BaseStrategyEngine):
         Returns:
             Confidence entre 0 y 100
         """
-        # Base confidence
-        confidence = 50.0
+        try:
+            config = get_config()
 
-        # RSI contribution (RSI bajo = más momentum alcista)
-        if rsi < 30:
-            confidence += 20.0
-        elif rsi < 40:
-            confidence += 15.0
-        elif rsi < 50:
-            confidence += 10.0
+            # Base confidence
+            confidence = 50.0
 
-        # Momentum contribution
-        if momentum > 0.05:
-            confidence += 15.0
-        elif momentum > 0.02:
-            confidence += 10.0
+            # RSI contribution (RSI bajo = más momentum alcista)
+            rsi_very_oversold = float(getattr(
+                config.trading, 'momentum_rsi_very_oversold', 30.0
+            ))
+            rsi_oversold = float(getattr(
+                config.trading, 'momentum_rsi_oversold', 40.0
+            ))
+            rsi_neutral_low = float(getattr(
+                config.trading, 'momentum_rsi_neutral_low', 50.0
+            ))
 
-        # Volume contribution
-        if volume_ratio > 2.0:
-            confidence += 10.0
-        elif volume_ratio > 1.5:
-            confidence += 5.0
+            if rsi < rsi_very_oversold:
+                confidence += 20.0
+            elif rsi < rsi_oversold:
+                confidence += 15.0
+            elif rsi < rsi_neutral_low:
+                confidence += 10.0
 
-        # EMA contribution
-        if price_above_ema:
-            confidence += 5.0
+            # Momentum contribution
+            momentum_high_threshold = float(getattr(
+                config.trading, 'momentum_confidence_high_threshold', 0.05
+            ))
+            momentum_medium_threshold = float(getattr(
+                config.trading, 'momentum_confidence_medium_threshold', 0.02
+            ))
 
-        return min(100.0, max(0.0, confidence))
+            if momentum > momentum_high_threshold:
+                confidence += 15.0
+            elif momentum > momentum_medium_threshold:
+                confidence += 10.0
+
+            # Volume contribution
+            volume_high_threshold = float(getattr(
+                config.trading, 'momentum_volume_ratio_high_threshold', 2.0
+            ))
+            volume_medium_threshold = float(getattr(
+                config.trading, 'momentum_volume_ratio_medium_threshold', 1.5
+            ))
+
+            if volume_ratio > volume_high_threshold:
+                confidence += 10.0
+            elif volume_ratio > volume_medium_threshold:
+                confidence += 5.0
+
+            # EMA contribution
+            if price_above_ema:
+                confidence += 5.0
+
+            return min(100.0, max(0.0, confidence))
+
+        except (ValueError, AttributeError, KeyError) as e:
+            logger.error(f"Error calculating confidence in MomentumStrategyEngine: {e}")
+            # Fallback to original hardcoded values
+            confidence = 50.0
+            if rsi < 30:
+                confidence += 20.0
+            elif rsi < 40:
+                confidence += 15.0
+            elif rsi < 50:
+                confidence += 10.0
+            if momentum > 0.05:
+                confidence += 15.0
+            elif momentum > 0.02:
+                confidence += 10.0
+            if volume_ratio > 2.0:
+                confidence += 10.0
+            elif volume_ratio > 1.5:
+                confidence += 5.0
+            if price_above_ema:
+                confidence += 5.0
+            return min(100.0, max(0.0, confidence))
 
     def get_required_parameters(self) -> List[str]:
         """Obtener parámetros requeridos."""

@@ -165,7 +165,7 @@ class ForexDataFetcher:
             correlations = asyncio.run(
                 self.reconnection_manager.connect_with_backoff(_fetch_correlations)
             )
-            # Function may raise NotImplementedError or return None
+            # Function returns None if API not configured
             if correlations is not None:
                 self.correlation_cache = (correlations, utc_now())
                 logger.info(f"Fetched {len(correlations)} correlations from API")
@@ -255,31 +255,33 @@ class ForexDataFetcher:
         """Get reconnection statistics."""
         return self.reconnection_manager.get_stats()
 
-    def _fetch_correlations_from_api(self, base_currency: str) -> Dict[str, Decimal]:
+    def _fetch_correlations_from_api(self, base_currency: str) -> Optional[Dict[str, Decimal]]:
         """
         Fetch correlation matrix from OANDA/FXCM API.
 
-        This is a placeholder - would be implemented with actual API calls.
+        Note: API integration requires exchange API credentials and rate limiting.
+        Current implementation returns None to trigger fallback to DEFAULT_CORRELATIONS.
 
         Args:
             base_currency: Base currency
 
         Returns:
-            Dict of correlations
+            Dict of correlations or None if API unavailable
         """
-        logger.debug(f"Attempting to fetch correlations from API for {base_currency}")
-        # In a real implementation, this would:
-        # 1. Connect to OANDA or FXCM API
-        # 2. Fetch historical price data
-        # 3. Calculate correlations using pandas/numpy
-        # 4. Return correlation matrix
-        raise NotImplementedError("API correlation fetching not yet implemented")
+        logger.debug(f"API correlation fetching not configured for {base_currency}")
+        # API integration requires:
+        # 1. Exchange API credentials (OANDA, FXCM)
+        # 2. Historical price data endpoints
+        # 3. Correlation calculation using pandas/numpy
+        # For now, return None to trigger fallback to DEFAULT_CORRELATIONS
+        return None
 
     def _fetch_rate_from_api(self, pair: str) -> Optional[Decimal]:
         """
         Fetch current exchange rate from OANDA/FXCM API.
 
-        This is a placeholder - would be implemented with actual API calls.
+        Note: API integration requires exchange API credentials and rate limiting.
+        Current implementation returns None to trigger fallback to default rates.
 
         Args:
             pair: Forex pair (e.g., "EUR/USD")
@@ -287,12 +289,13 @@ class ForexDataFetcher:
         Returns:
             Current exchange rate or None if fetch fails
         """
-        logger.debug(f"Attempting to fetch rate from API for {pair}")
-        # In a real implementation, this would:
-        # 1. Connect to OANDA or FXCM API
-        # 2. Request current price
-        # 3. Parse and return Decimal rate
-        raise NotImplementedError("API rate fetching not yet implemented")
+        logger.debug(f"API rate fetching not configured for {pair}")
+        # API integration requires:
+        # 1. Exchange API credentials (OANDA, FXCM)
+        # 2. Real-time price endpoints
+        # 3. Rate limiting and error handling
+        # For now, return None to trigger fallback to default rates
+        return None
 
     def _get_fallback_rate(self, pair: str) -> Decimal:
         """

@@ -17,6 +17,8 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
+from app.core.centralized_config import get_config
+
 logger = logging.getLogger(__name__)
 
 
@@ -162,6 +164,10 @@ class CoveredCallStrategy:
         self._max_iv = max_iv_percentile
         self._roll_threshold = roll_threshold
         self._assign_threshold = assignment_threshold
+
+        # Load trading thresholds from config
+        trading_config = get_config()
+        self._tt = trading_config.trading_thresholds
 
     def select_optimal_call(
         self,
@@ -339,7 +345,7 @@ class CoveredCallStrategy:
     ) -> Optional[OptionData]:
         """Find call option with higher strike for more premium."""
         # Look for higher strike with similar expiration
-        target_strike = stock_price * (1 + self._target_otm * 1.5)  # More OTM
+        target_strike = stock_price * (1 + self._target_otm * self._tt.covered_call_otm_multiplier)  # More OTM
 
         best_call = None
         min_distance = float('inf')

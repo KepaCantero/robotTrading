@@ -3,9 +3,12 @@ Cost Analysis Service for AlgoTrading system.
 
 This module provides comprehensive cost analysis functionality including
 transaction costs, slippage analysis, infrastructure costs, and profitability validation.
+
+Uses centralized configuration for trading calendar constants.
 """
 
 from __future__ import annotations
+import numpy as np
 
 import logging
 from dataclasses import dataclass
@@ -15,6 +18,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
 from app.backtesting.models import Trade, TradeStatus
+from app.core.config.base import get_config
 from app.models.order import OrderType
 
 logger = logging.getLogger(__name__)
@@ -90,26 +94,54 @@ class CostAnalysisService:
     """Service for analyzing trading costs and profitability."""
 
     def __init__(self):
-        """Initialize the cost analysis service."""
-        # Default cost parameters
-        self.commission_rates = {
-            "equity": Decimal("0.005"),  # 0.5% per trade
-            "crypto": Decimal("0.001"),  # 0.1% per trade
-            "forex": Decimal("0.0002"),  # 0.02% per trade
-        }
+        """Initialize the cost analysis service with centralized configuration."""
+        try:
+            config = get_config()
 
-        self.slippage_rates = {
-            "equity": Decimal("0.001"),  # 0.1% slippage
-            "crypto": Decimal("0.0005"),  # 0.05% slippage
-            "forex": Decimal("0.0001"),  # 0.01% slippage
-        }
+            # Default cost parameters (asset class defaults are acceptable as hardcoded)
+            self.commission_rates = {
+                "equity": Decimal("0.005"),  # 0.5% per trade
+                "crypto": Decimal("0.001"),  # 0.1% per trade
+                "forex": Decimal("0.0002"),  # 0.02% per trade
+            }
 
-        self.infrastructure_cost_per_trade = Decimal("0.50")  # $0.50 per trade
-        self.borrowing_cost_rate = Decimal("0.05")  # 5% annual borrowing cost
+            self.slippage_rates = {
+                "equity": Decimal("0.001"),  # 0.1% slippage
+                "crypto": Decimal("0.0005"),  # 0.05% slippage
+                "forex": Decimal("0.0001"),  # 0.01% slippage
+            }
 
-        # Profitability thresholds
-        self.min_profitability_threshold = Decimal("0.02")  # 2% minimum profit
-        self.max_cost_impact_ratio = Decimal("0.30")  # 30% max cost impact
+            self.infrastructure_cost_per_trade = Decimal("0.50")  # $0.50 per trade
+            self.borrowing_cost_rate = Decimal(str(getattr(
+                config.trading, 'borrowing_cost_rate', 0.05
+            )))  # 5% annual borrowing cost from config
+
+            # Profitability thresholds from config
+            self.min_profitability_threshold = Decimal(str(getattr(
+                config.trading, 'max_risk_per_trade', 0.02
+            )))  # 2% minimum profit
+            # Cost impact ratio: 30% is Chan's recommended maximum
+            self.max_cost_impact_ratio = Decimal(str(getattr(
+                config.trading, 'max_cost_impact_ratio', 0.30
+            )))  # 30% max cost impact from config
+
+        except (AttributeError, ValueError) as e:
+            logger.warning(f"Error loading config for CostAnalysisService: {e}. Using defaults.")
+            # Fallback to hardcoded defaults if config fails
+            self.commission_rates = {
+                "equity": Decimal("0.005"),
+                "crypto": Decimal("0.001"),
+                "forex": Decimal("0.0002"),
+            }
+            self.slippage_rates = {
+                "equity": Decimal("0.001"),
+                "crypto": Decimal("0.0005"),
+                "forex": Decimal("0.0001"),
+            }
+            self.infrastructure_cost_per_trade = Decimal("0.50")
+            self.borrowing_cost_rate = Decimal("0.05")
+            self.min_profitability_threshold = Decimal("0.02")
+            self.max_cost_impact_ratio = Decimal("0.30")
 
     def analyze_trade_costs(self, trade: Trade, market_data: Dict[str, Any]) -> CostBreakdown:
         """Analyze costs for a single trade."""
@@ -387,8 +419,12 @@ class CostAnalysisService:
         # Total cost per round trip
         total_cost_per_trade = commission_rate + slippage_rate
 
-        # Annualized turnover rate (assuming 252 trading days)
-        annual_turnover = Decimal("252") / Decimal(str(holding_period_days))
+        # Annualized turnover rate (using centralized config for trading days)
+        config = get_config()
+        annual_trading_days = Decimal(str(getattr(
+            config.trading, 'annual_trading_days_const', 252
+        )))
+        annual_turnover = annual_trading_days / Decimal(str(holding_period_days))
 
         # Minimum annual profit edge required
         min_edge = total_cost_per_trade * annual_turnover
@@ -513,18 +549,29 @@ class CostAnalysisService:
     def _calculate_real_slippage(
         self, trade: Trade, market_data: Dict[str, Any], asset_class: str
     ) -> Decimal:
-        """Calculate real slippage per trade (not average)."""
+        """
+        Calculate real slippage per trade (not average).
+
+        Args:
+            trade: Trade to calculate slippage for
+            market_data: Market data for the symbol
+            asset_class: Asset class (equity/crypto/forex)
+
+        Returns:
+            Slippage amount in currency units
+        """
         try:
             # Get market data for the trade
             symbol_data = market_data.get(trade.symbol, {})
 
             # Calculate slippage based on order type and market conditions
-            # Since Trade model doesn't have order_type, we'll assume MARKET
-            # orders
+            # Since Trade model doesn't have order_type, we'll assume MARKET orders
             base_slippage = self.slippage_rates.get(asset_class, self.slippage_rates["equity"])
 
-            # Adjust for market volatility
-            volatility = symbol_data.get("volatility", 0.02)
+            # Adjust for market volatility using config
+            config = get_config()
+            default_volatility = getattr(config.trading, 'max_risk_per_trade', 0.02)
+            volatility = float(symbol_data.get('volatility', default_volatility))
             volatility_multiplier = Decimal(str(1 + volatility))
 
             # Adjust for order size
@@ -545,24 +592,50 @@ class CostAnalysisService:
             return (trade_value * base_slippage).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
     def _calculate_market_impact(self, trade: Trade, market_data: Dict[str, Any]) -> Decimal:
-        """Calculate market impact cost."""
+        """
+        Calculate market impact cost using centralized configuration.
+
+        Uses config parameters for order size thresholds and impact rates.
+
+        Args:
+            trade: Trade to calculate market impact for
+            market_data: Market data for the symbol
+
+        Returns:
+            Market impact cost in currency units
+        """
         try:
+            config = get_config()
             symbol_data = market_data.get(trade.symbol, {})
             avg_volume = symbol_data.get("avg_volume", Decimal("1000000"))
 
-            # Market impact is proportional to order size relative to average
-            # volume
+            # Market impact is proportional to order size relative to average volume
             volume_ratio = trade.quantity / avg_volume if avg_volume > 0 else Decimal("0")
 
+            # Get market impact thresholds from config
+            large_order_threshold = Decimal(str(getattr(
+                config.trading, 'market_impact_large_order_threshold', 0.10
+            )))
+            medium_order_threshold = Decimal(str(getattr(
+                config.trading, 'market_impact_medium_order_threshold', 0.05
+            )))
+            large_order_rate = Decimal(str(getattr(
+                config.trading, 'market_impact_large_order_rate', 0.005
+            )))
+            medium_order_rate = Decimal(str(getattr(
+                config.trading, 'market_impact_medium_order_rate', 0.002
+            )))
+            small_order_rate = Decimal(str(getattr(
+                config.trading, 'market_impact_small_order_rate', 0.0005
+            )))
+
             # Market impact increases with order size
-            # Large order (>10% of avg volume)
-            if volume_ratio > Decimal("0.1"):
-                impact_rate = Decimal("0.005")  # 0.5%
-            # Medium order (>5% of avg volume)
-            elif volume_ratio > Decimal("0.05"):
-                impact_rate = Decimal("0.002")  # 0.2%
-            else:  # Small order
-                impact_rate = Decimal("0.0005")  # 0.05%
+            if volume_ratio > large_order_threshold:
+                impact_rate = large_order_rate
+            elif volume_ratio > medium_order_threshold:
+                impact_rate = medium_order_rate
+            else:
+                impact_rate = small_order_rate
 
             trade_value = trade.quantity * trade.entry_price
             return (trade_value * impact_rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
@@ -616,12 +689,12 @@ class CostAnalysisService:
 
         # Analyze cost components
         avg_slippage = (
-            sum(bd.slippage for bd in cost_breakdowns) / len(cost_breakdowns)
+            np.mean([bd.slippage for bd in cost_breakdowns])
             if cost_breakdowns
             else Decimal("0")
         )
         avg_commission = (
-            sum(bd.commission for bd in cost_breakdowns) / len(cost_breakdowns)
+            np.mean([bd.commission for bd in cost_breakdowns])
             if cost_breakdowns
             else Decimal("0")
         )

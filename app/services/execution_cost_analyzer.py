@@ -14,6 +14,7 @@ import logging
 from collections import deque
 from decimal import Decimal
 from typing import Dict, Optional, Tuple
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +85,7 @@ class ExecutionCostAnalyzer:
             return self._volatility_adjusted_slippage(volatility_percentile)
 
         # Use average of recent trades, adjusted for current volatility
-        avg_slippage = sum(self.slippage_history) / len(self.slippage_history)
+        avg_slippage = np.mean(self.slippage_history)
         vol_adjustment = self._get_volatility_multiplier(volatility_percentile)
 
         current_estimate = avg_slippage * vol_adjustment
@@ -245,7 +246,7 @@ class ExecutionCostAnalyzer:
         slippages = list(self.slippage_history)
         slippages_sorted = sorted(slippages)
 
-        avg = sum(slippages) / len(slippages)
+        avg = np.mean(slippages)
         median = (
             slippages_sorted[len(slippages) // 2]
             if len(slippages) % 2 == 1
@@ -282,8 +283,8 @@ class ExecutionCostAnalyzer:
         recent = list(self.slippage_history)[-window_size:]
         older = list(self.slippage_history)[-window_size * 2 : -window_size]
 
-        recent_avg = sum(recent) / len(recent)
-        older_avg = sum(older) / len(older)
+        recent_avg = np.mean(recent)
+        older_avg = np.mean(older)
 
         # Detect 50% increase in slippage
         if recent_avg > older_avg * Decimal("1.50"):

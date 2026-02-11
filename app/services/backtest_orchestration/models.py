@@ -2,13 +2,47 @@
 T4.1: BacktestOrchestrator Models
 
 Dataclasses for backtesting orchestration, execution, and result handling.
+Uses centralized configuration for default values.
 """
 
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    pass
+
+# Import config for default values (avoid circular import)
+def _get_default_commission() -> Decimal:
+    from app.core.centralized_config import get_config
+    return Decimal("0.001")  # 0.1% default commission
+
+def _get_default_slippage() -> Decimal:
+    from app.core.centralized_config import get_config
+    tt = get_config().trading_thresholds
+    return tt.base_slippage / Decimal("100")  # Convert % to decimal
+
+def _get_default_stop_loss() -> Decimal:
+    from app.core.centralized_config import get_config
+    tt = get_config().trading_thresholds
+    return Decimal(str(tt.stop_loss_pct))
+
+def _get_default_take_profit() -> Decimal:
+    from app.core.centralized_config import get_config
+    tt = get_config().trading_thresholds
+    return Decimal(str(tt.take_profit_pct))
+
+def _get_default_max_loss() -> Decimal:
+    from app.core.centralized_config import get_config
+    tt = get_config().trading_thresholds
+    return Decimal(str(tt.circuit_breaker_daily_loss))
+
+def _get_default_position_size() -> Decimal:
+    from app.core.centralized_config import get_config
+    tt = get_config().trading_thresholds
+    return Decimal(str(tt.max_position_size))
 
 
 class BacktestStatus(str, Enum):
@@ -23,7 +57,7 @@ class BacktestStatus(str, Enum):
 
 @dataclass
 class BacktestConfig:
-    """Configuration for a single backtest execution."""
+    """Configuration for a single backtest execution - uses centralized config for defaults."""
 
     # Test metadata
     test_id: str
@@ -35,19 +69,19 @@ class BacktestConfig:
     initial_capital: Decimal
     start_date: date
     end_date: date
-    commission_pct: Decimal = field(default=Decimal("0.001"))  # 0.1%
-    slippage_pct: Decimal = field(default=Decimal("0.0005"))  # 0.05%
+    commission_pct: Decimal = field(default_factory=_get_default_commission)  # Uses config
+    slippage_pct: Decimal = field(default_factory=_get_default_slippage)  # Uses config
 
     # Strategy parameters
     strategy_name: str = "momentum_modular"
     symbols: List[str] = field(default_factory=list)
     max_positions: int = 10
-    max_position_size_pct: Decimal = field(default=Decimal("0.10"))
+    max_position_size_pct: Decimal = field(default_factory=_get_default_position_size)  # Uses config
 
-    # Risk parameters
-    max_loss_pct: Decimal = field(default=Decimal("0.05"))  # Max daily loss 5%
-    stop_loss_pct: Decimal = field(default=Decimal("0.03"))
-    take_profit_pct: Decimal = field(default=Decimal("0.08"))
+    # Risk parameters - use centralized config
+    max_loss_pct: Decimal = field(default_factory=_get_default_max_loss)  # Uses config (circuit_breaker_daily_loss)
+    stop_loss_pct: Decimal = field(default_factory=_get_default_stop_loss)  # Uses config
+    take_profit_pct: Decimal = field(default_factory=_get_default_take_profit)  # Uses config
 
     # Validation/gating
     run_risk_envelope: bool = True

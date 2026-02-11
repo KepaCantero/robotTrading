@@ -25,6 +25,7 @@ from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional, Tuple  # noqa: F401
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -577,7 +578,7 @@ class LimitOrderBook:
             ask_price, _ = snapshot.asks[i]
             spreads.append(ask_price - bid_price)
 
-        avg_spread = sum(spreads) / len(spreads) if spreads else Decimal("0")
+        avg_spread = np.mean(spreads) if spreads else Decimal("0")
 
         # Calculate cumulative depth
         cumulative_bid_depth = sum(qty for _, qty in snapshot.bids[:10])

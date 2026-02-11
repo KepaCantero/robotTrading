@@ -25,6 +25,8 @@ from decimal import Decimal
 from typing import Dict, List, Optional
 
 from .limit_adjuster import LimitAdjuster
+import numpy as np
+
 from .models import RiskAdjustedPortfolio, RiskScalingRequest
 from .realtime_monitor import RealTimeMonitor
 from .risk_adjustment_calculator import RiskAdjustmentCalculator, get_risk_adjustment_calculator
@@ -214,7 +216,7 @@ class RiskScalingApplication:
                 if s.risk_scaling_applied and s.success
             ]
             if factors:
-                avg_scaling_factor = sum(factors) / len(factors)
+                avg_scaling_factor = np.mean(factors)
 
         return {
             "total_scalings": total,

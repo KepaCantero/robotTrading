@@ -6,6 +6,8 @@ from typing import Dict, List, Optional, Tuple, Union  # noqa: F401
 
 import numpy as np
 
+from app.core.centralized_config import get_config
+
 logger = logging.getLogger(__name__)
 
 """
@@ -54,9 +56,14 @@ class PositionSizingEngine:
             strategy_config = get_strategy_config()
             atr_multiplier = strategy_config.get_atr_multiplier('default_stop')
         elif atr_multiplier is None:
-            atr_multiplier = 2.0
+            # Use centralized config for default ATR multiplier
+            trading_config = get_config()
+            atr_multiplier = trading_config.trading_thresholds.atr_multiplier_default
 
         self.atr_multiplier = Decimal(str(atr_multiplier))
+
+        # Load trading thresholds for other parameters
+        self._tt = get_config().trading_thresholds
 
     def calculate_stop_loss_price(
         self,
@@ -144,10 +151,11 @@ class PositionSizingEngine:
                 strategy_config = get_strategy_config()
                 risk_config = strategy_config.get_risk_config()
                 risk_per_trade_pct = float(
-                    risk_config.get('risk_per_trade', {}).get('default', 0.02)
+                    risk_config.get('risk_per_trade', {}).get('default', self._tt.risk_per_trade_default)
                 )
             else:
-                risk_per_trade_pct = 0.02  # Default 2% risk per trade
+                # Use centralized config
+                risk_per_trade_pct = self._tt.risk_per_trade_default
 
         # Calculate risk amount in dollars
         risk_amount = capital * Decimal(str(risk_per_trade_pct)) / Decimal("100")
@@ -157,13 +165,12 @@ class PositionSizingEngine:
             stop_distance = Decimal(str(atr)) * self.atr_multiplier
 
             # CRITICAL VALIDATION: Ensure stop distance is reasonable vs entry price
-            # Stop distance should not exceed 20% of entry price (sanity check)
-            max_stop_pct = Decimal("0.20")
-            max_stop_distance = entry_price * max_stop_pct
+            # Stop distance should not exceed configured max % of entry price (sanity check)
+            max_stop_distance = entry_price * Decimal(str(self._tt.max_stop_distance_pct))
 
             if stop_distance > max_stop_distance:
                 logger.warning(
-                    f"ATR stop distance {stop_distance} exceeds 20% of price {entry_price}, "
+                    f"ATR stop distance {stop_distance} exceeds {self._tt.max_stop_distance_pct:.0%} of price {entry_price}, "
                     f"capping at {max_stop_distance}"
                 )
                 stop_distance = max_stop_distance
@@ -183,9 +190,8 @@ class PositionSizingEngine:
 
                 return shares
 
-        # Fallback: Use fixed percentage stop (e.g., 5%)
-        default_stop_pct = Decimal("0.05")
-        stop_distance = entry_price * default_stop_pct
+        # Fallback: Use fixed percentage stop from config
+        stop_distance = entry_price * Decimal(str(self._tt.default_stop_loss_pct))
 
         if stop_distance > 0:
             shares = risk_amount / stop_distance
@@ -288,11 +294,11 @@ class PositionSizingEngine:
         kelly_numerator = (win_rate_float * avg_win_float) - ((1 - win_rate_float) * avg_loss_float)
         raw_kelly = kelly_numerator / avg_win_float
 
-        # Apply Half-Kelly (conservative approach per Ernest Chan)
-        half_kelly = raw_kelly * 0.5
+        # Apply Half-Kelly (conservative approach per Ernest Chan) - use config value
+        half_kelly = raw_kelly * self._tt.kelly_half_multiplier
 
-        # Cap at 25% maximum position size (risk management constraint)
-        capped_kelly = max(0.0, min(half_kelly, 0.25))
+        # Cap at configured maximum position size (risk management constraint)
+        capped_kelly = max(0.0, min(half_kelly, self._tt.kelly_max_position_pct))
 
         # Generate recommendation based on raw Kelly
         if raw_kelly <= 0:
@@ -302,7 +308,7 @@ class PositionSizingEngine:
                 f"Recommendation: AVOID trade. win_rate={win_rate_float:.2f}, "
                 f"avg_win=${avg_win_float:.2f}, avg_loss=${avg_loss_float:.2f}"
             )
-        elif raw_kelly < 0.02:
+        elif raw_kelly < self._tt.kelly_min_positive_threshold:
             recommendation = "REDUCE"
             logger.info(
                 f"Kelly Criterion indicates marginal edge: {raw_kelly:.4f}. "
@@ -331,12 +337,12 @@ class PositionSizingEngine:
             position_value = capital * Decimal(str(capped_kelly))
             result["position_value"] = position_value
 
-            # Validate position value is reasonable
-            max_position_value = capital * Decimal("0.25")
+            # Validate position value is reasonable - use config
+            max_position_value = capital * Decimal(str(self._tt.kelly_max_position_pct))
             if position_value > max_position_value:
                 logger.warning(
                     f"Calculated position value ${position_value:.2f} exceeds "
-                    f"25% cap of ${max_position_value:.2f}. Capping at 25%."
+                    f"{self._tt.kelly_max_position_pct:.0%} cap of ${max_position_value:.2f}. Capping at {self._tt.kelly_max_position_pct:.0%}."
                 )
                 result["position_value"] = max_position_value
 
@@ -389,19 +395,19 @@ class PositionSizingEngine:
         if float(avg_win) <= 0 or float(abs(avg_loss)) <= 0:
             logger.warning(
                 f"Insufficient backtest data for Kelly calculation. "
-                f"avg_win={avg_win}, avg_loss={avg_loss}. Using fallback 2% rule."
+                f"avg_win={avg_win}, avg_loss={avg_loss}. Using fallback {self._tt.kelly_fallback_fraction:.0%} rule."
             )
-            # Fallback to 2% rule when Kelly metrics unavailable
+            # Fallback to configured % rule when Kelly metrics unavailable
             fallback_result = {
-                "kelly_fraction": Decimal("0.02"),
-                "half_kelly_fraction": Decimal("0.02"),
-                "position_percentage": Decimal("2.0"),
-                "recommendation": "FALLBACK_2PCT",
+                "kelly_fraction": Decimal(str(self._tt.kelly_fallback_fraction)),
+                "half_kelly_fraction": Decimal(str(self._tt.kelly_fallback_fraction)),
+                "position_percentage": Decimal(str(self._tt.kelly_fallback_fraction * 100)),
+                "recommendation": "FALLBACK_PCT",
                 "fallback_reason": "Insufficient backtest data",
             }
 
             if capital is not None:
-                fallback_result["position_value"] = capital * Decimal("0.02")
+                fallback_result["position_value"] = capital * Decimal(str(self._tt.kelly_fallback_fraction))
 
             return fallback_result
 
@@ -440,7 +446,7 @@ class MetaLabelingPositionSizer:
         >>> position_sizes = sizer.calculate_position_size(
         ...     signals=np.array([1, -1, 1, 0]),
         ...     meta_proba=np.array([0.7, 0.6, 0.8, 0.4]),
-        ...     expected_returns=np.array([0.02, -0.015, 0.025, 0.0])
+        ...     expected_returns= getattr(config.trading, 'max_risk_per_trade', 0.02), -0.015, 0.025, 0.0])
         ... )
         >>> print(f"Position sizes: {position_sizes}")
     """
@@ -510,7 +516,7 @@ class MetaLabelingPositionSizer:
             >>> position_sizes = sizer.calculate_position_size(
             ...     signals=np.array([1, -1, 1, 0]),
             ...     meta_proba=np.array([0.7, 0.6, 0.8, 0.4]),
-            ...     expected_returns=np.array([0.02, -0.015, 0.025, 0.0]),
+            ...     expected_returns= getattr(config.trading, 'max_risk_per_trade', 0.02), -0.015, 0.025, 0.0]),
             ...     capital=Decimal("10000")
             ... )
             >>> print(f"Position sizes: {position_sizes}")

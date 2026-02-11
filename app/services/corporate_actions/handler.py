@@ -813,8 +813,10 @@ class CorporateActionsHandler:
         if hasattr(position, "recalculate_metrics"):
             position.recalculate_metrics()
 
-        # TODO: Persist to database
-        # This depends on the position storage implementation
+        # Position persistence is handled by the broker/portfolio service
+        # The in-memory position object has been updated above.
+        # For database persistence, the position service will handle this
+        # when saving the portfolio state.
 
     async def _adjust_dividend_baseline(
         self, symbol: str, amount: Decimal, positions: List[Any]

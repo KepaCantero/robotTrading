@@ -13,6 +13,7 @@ from decimal import Decimal
 from typing import List, Optional
 
 from app.backtesting.models import BacktestConfig, PerformanceMetrics, Trade, TradeStatus
+from app.core.decimal_utils import safe_mean, safe_variance
 
 logger = logging.getLogger(__name__)
 
@@ -193,8 +194,8 @@ class PerformanceMetricsCalculator:
             return None
 
         # Calculate mean and standard deviation
-        mean_return = sum(returns) / len(returns)
-        variance = sum((r - mean_return) ** 2 for r in returns) / len(returns)
+        mean_return = safe_mean(returns)
+        variance = safe_variance(returns)
         std_dev = Decimal(str(math.sqrt(float(variance))))
 
         if std_dev == 0:

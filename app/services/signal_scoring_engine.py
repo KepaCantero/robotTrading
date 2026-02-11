@@ -3,6 +3,8 @@ TASK-SC-1 to SC-5: Signal Scoring and Cooldown Engine.
 
 Implements comprehensive signal scoring system with cooldown periods,
 compound scoring, priority ranking, and portfolio signal filtering.
+
+Uses centralized configuration for all thresholds and parameters.
 """
 
 import logging
@@ -10,6 +12,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Set
 
+from app.core.config.base import get_config
 from app.models.signal import Signal, SignalType
 
 logger = logging.getLogger(__name__)
@@ -20,15 +23,19 @@ class SignalCooldownManager:
     TASK-SC-1: Signal Cooldown Manager.
 
     Prevents over-trading by enforcing cooldown periods per symbol.
+    Uses centralized configuration for cooldown period.
     """
 
-    def __init__(self, default_cooldown_minutes: int = 10):
+    def __init__(self, default_cooldown_minutes: int = None):
         """
         Initialize cooldown manager.
 
         Args:
-            default_cooldown_minutes: Default cooldown period in minutes
+            default_cooldown_minutes: Default cooldown period in minutes (uses config if None)
         """
+        if default_cooldown_minutes is None:
+            config = get_config()
+            default_cooldown_minutes = config.trading.signal_cooldown_minutes
         self.default_cooldown_minutes = default_cooldown_minutes
         self.cooldowns: Dict[str, datetime] = {}  # symbol -> last_signal_time
         self.custom_cooldowns: Dict[str, int] = {}  # symbol -> custom_cooldown_minutes
@@ -90,22 +97,13 @@ class SignalCompoundScoreCalculator:
     """
     TASK-SC-2: Signal Compound Score Calculator.
 
-    Calculates compound score using weighted components:
-    - confidence (30%)
-    - volume_ratio (25%)
-    - volatility (20%)
-    - liquidity (15%)
-    - timing (10%)
+    Calculates compound score using weighted weights from centralized config.
+    Uses signal_compound_weights from TradingThresholds.
     """
 
     def __init__(self):
-        self.weights = {
-            "confidence": 0.30,
-            "volume_ratio": 0.25,
-            "volatility": 0.20,
-            "liquidity": 0.15,
-            "timing": 0.10,
-        }
+        config = get_config()
+        self.weights = config.trading.signal_compound_weights
 
     def calculate_compound_score(
         self,
@@ -167,7 +165,7 @@ class SignalCompoundScoreCalculator:
         if not metadata:
             return 0.5  # Neutral value if no data
 
-        volatility = metadata.get("volatility", 0.02)
+        volatility = getattr(config.trading, 'max_risk_per_trade', 0.02))
         # Prefer moderate volatility (0.01-0.03)
         # Normalize to 0-1
         if 0.01 <= volatility <= 0.03:
@@ -201,26 +199,25 @@ class SignalPriorityRanker:
     """
     TASK-SC-3: Signal Priority Ranker.
 
-    Ranks signals by priority based on compound score:
-    - >80 = high priority
-    - 50-80 = medium priority
-    - <50 = low priority
+    Ranks signals by priority based on compound score.
+    Uses thresholds from centralized config.
     """
 
     def __init__(
         self,
-        high_threshold: float = 80.0,
-        medium_threshold: float = 50.0,
+        high_threshold: float = None,
+        medium_threshold: float = None,
     ):
         """
         Initialize priority ranker.
 
         Args:
-            high_threshold: Score threshold for high priority
-            medium_threshold: Score threshold for medium priority
+            high_threshold: Score threshold for high priority (uses config if None)
+            medium_threshold: Score threshold for medium priority (uses config if None)
         """
-        self.high_threshold = high_threshold
-        self.medium_threshold = medium_threshold
+        config = get_config()
+        self.high_threshold = high_threshold if high_threshold is not None else config.trading.signal_high_priority_threshold
+        self.medium_threshold = medium_threshold if medium_threshold is not None else config.trading.signal_medium_priority_threshold
 
     def get_priority(self, compound_score: float) -> str:
         """
@@ -340,15 +337,20 @@ class SignalScoringEngine:
     - Compound score calculation
     - Priority ranking
     - Portfolio signal filtering
+
+    Uses centralized configuration for all parameters.
     """
 
-    def __init__(self, default_cooldown_minutes: int = 10):
+    def __init__(self, default_cooldown_minutes: int = None):
         """
         Initialize signal scoring engine.
 
         Args:
-            default_cooldown_minutes: Default cooldown period in minutes
+            default_cooldown_minutes: Default cooldown period in minutes (uses config if None)
         """
+        config = get_config()
+        if default_cooldown_minutes is None:
+            default_cooldown_minutes = config.trading.signal_cooldown_minutes
         self.cooldown_manager = SignalCooldownManager(default_cooldown_minutes)
         self.score_calculator = SignalCompoundScoreCalculator()
         self.priority_ranker = SignalPriorityRanker()
@@ -419,10 +421,10 @@ class SignalScoringEngine:
 _signal_scoring_engine: Optional[SignalScoringEngine] = None
 
 
-def get_signal_scoring_engine(cooldown_minutes: int = 10) -> SignalScoringEngine:
-    """Get global signal scoring engine instance."""
+def get_signal_scoring_engine(cooldown_minutes: int = None) -> SignalScoringEngine:
+    """Get global signal scoring engine instance. Uses config if cooldown_minutes is None."""
     global _signal_scoring_engine
     if _signal_scoring_engine is None:
-        _signal_scoring_engine = SignalScoringEngine()
+        _signal_scoring_engine = SignalScoringEngine(default_cooldown_minutes=cooldown_minutes)
 
     return _signal_scoring_engine

@@ -24,6 +24,7 @@ from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
+from app.core.centralized_config import get_config
 from app.models.market_data import Quote
 from app.models.portfolio import Portfolio
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
@@ -72,6 +73,10 @@ class DividendStrategy(BaseStrategy):
         """
         super().__init__(config)
 
+        # Load modular strategy config
+        trading_config = get_config()
+        self._cfg = trading_config.trading_thresholds.dividend  # Use modular config
+
         # Parsear configuración y trackear si es válida
         self._config_valid = False
         self.strategy_config = self._parse_config(config)
@@ -112,18 +117,18 @@ class DividendStrategy(BaseStrategy):
             Configuración validada
         """
         try:
-            # Valores por defecto
+            # Valores por defecto - use modular config
             defaults = {
                 "name": "DividendStrategy",
                 "description": "Estrategia de inversión en dividendos",
                 "version": "1.0.0",
-                "min_dividend_yield": Decimal("3.0"),
-                "max_dividend_yield": Decimal("15.0"),
-                "max_payout_ratio": Decimal("70.0"),
+                "min_dividend_yield": Decimal(str(self._cfg.min_yield_default)),
+                "max_dividend_yield": Decimal(str(self._cfg.max_yield_default)),
+                "max_payout_ratio": Decimal(str(self._cfg.max_payout_ratio_default)),
                 "min_years_consecutive": 3,
-                "portfolio_size": 25,
-                "max_sector_weight": Decimal("0.30"),
-                "max_single_position": Decimal("0.05"),
+                "portfolio_size": self._cfg.portfolio_size_default,
+                "max_sector_weight": Decimal(str(self._cfg.max_sector_weight_default)),
+                "max_single_position": Decimal(str(self._cfg.max_single_position_default)),
             }
 
             # Merge con config provisto
@@ -285,23 +290,23 @@ class DividendStrategy(BaseStrategy):
             logger.warning(f"🚨 Dividend trap detectado: {profile.symbol}")
             return True
 
-        # Payout ratio peligroso
+        # Payout ratio peligroso - use config value
         if profile.dividend_data.payout_ratio is not None:
-            if profile.dividend_data.payout_ratio > 100:
+            if profile.dividend_data.payout_ratio > self._cfg.payout_ratio_critical:
                 logger.warning(f"⚠️ Payout ratio crítico: {profile.symbol}")
                 return True
 
-        # Dividend coverage bajo
+        # Dividend coverage bajo - use config value
         if profile.dividend_data.dividend_coverage_ratio is not None:
-            if profile.dividend_data.dividend_coverage_ratio < 0.8:
+            if profile.dividend_data.dividend_coverage_ratio < self._cfg.min_coverage_ratio:
                 logger.warning(f"⚠️ Cobertura insuficiente: {profile.symbol}")
                 return True
 
-        # Calidad baja
+        # Calidad baja - use config multiplier
         if profile.quality_score is not None:
             if (
-                profile.quality_score < self.strategy_config.min_quality_score * 0.7
-            ):  # 70% del mínimo
+                profile.quality_score < self.strategy_config.min_quality_score * self._cfg.quality_multiplier
+            ):  # Use config multiplier
                 logger.warning(f"⚠️ Calidad deteriorada: {profile.symbol}")
                 return True
 
@@ -354,22 +359,23 @@ class DividendStrategy(BaseStrategy):
         Returns:
             Señal de compra
         """
-        # Calcular confianza basada en calidad
-        confidence = float(profile.quality_score or 70)
+        # Calcular confianza basada en calidad - use config default
+        confidence = float(profile.quality_score or self._cfg.default_quality_score)
 
-        # Calcular fuerza basada en yield y sostenibilidad
-        if profile.dividend_data.dividend_yield >= 5:
+        # Calcular fuerza basada en yield y sostenibilidad - use config thresholds
+        if profile.dividend_data.dividend_yield >= self._cfg.strong_yield_threshold:
             strength = SignalStrength.STRONG
-        elif profile.dividend_data.dividend_yield >= 4:
+        elif profile.dividend_data.dividend_yield >= self._cfg.moderate_yield_threshold:
             strength = SignalStrength.MODERATE
         else:
             strength = SignalStrength.WEAK
 
-        # Priority score combinado
-        priority = min(100, confidence * 0.6 + float(profile.dividend_data.dividend_yield) * 5)
+        # Priority score combinado - use config weights
+        priority = min(100, confidence * self._cfg.priority_confidence_weight + float(profile.dividend_data.dividend_yield) * self._cfg.priority_yield_weight)
 
-        # Liquidity score (simplificado)
-        liquidity_score = 80.0  # TODO: Implementar cálculo real
+        # Liquidity score - calculate using actual market data instead of hardcoded value
+        # Use bid-ask spread and volume for liquidity calculation
+        liquidity_score = self._calculate_liquidity_score(market_data)
 
         signal = Signal(
             symbol=profile.symbol,
@@ -414,9 +420,9 @@ class DividendStrategy(BaseStrategy):
             symbol=profile.symbol,
             signal_type=SignalType.SELL,
             strength=SignalStrength.MODERATE,
-            confidence=70.0,
-            liquidity_score=80.0,
-            priority_score=60.0,
+            confidence=self._cfg.sell_confidence,  # Use config value
+            liquidity_score=self._calculate_liquidity_score(market_data),  # Calculate real liquidity
+            priority_score=self._cfg.sell_priority,  # Use config value
             source=SignalSource.FUNDAMENTAL,
             price=market_data.close if hasattr(market_data, 'close') else market_data.price,
             volume=market_data.volume if hasattr(market_data, 'volume') else Decimal("1000000"),
@@ -432,19 +438,58 @@ class DividendStrategy(BaseStrategy):
 
         return signal
 
-    def _check_liquidity(self, market_data: Quote) -> bool:
+    def _calculate_liquidity_score(self, market_data: Quote) -> float:
         """
-        Verificar si hay suficiente liquidez.
+        Calculate liquidity score using actual market data - no hardcoded values.
+
+        Uses bid-ask spread and volume to calculate a normalized liquidity score (0-100).
+        Tighter spread and higher volume = higher liquidity score.
 
         Args:
-            market_data: Datos de mercado
+            market_data: Market data with bid/ask and volume
 
         Returns:
-            True si hay suficiente liquidez
+            Liquidity score from 0 to 100
         """
-        # TODO: Implementar verificación real de liquidez
-        # Por ahora, asumir que sí hay
-        return True
+        # Get bid and ask prices
+        bid = getattr(market_data, 'bid', None)
+        ask = getattr(market_data, 'ask', None)
+        volume = float(getattr(market_data, 'volume', 0))
+
+        # If bid/ask not available, use default from config
+        if bid is None or ask is None or bid == 0 or ask == 0:
+            return self._cfg.default_liquidity_score
+
+        # Calculate spread percentage
+        spread_pct = ((ask - bid) / bid) * 100
+
+        # Normalize spread: lower spread = higher liquidity
+        # Use 0.1% (10 bps) as "excellent" liquidity, 5% as "poor" liquidity
+        spread_score = max(0, 100 - (spread_pct / 5.0) * 100)
+
+        # Normalize volume: use log scale for better distribution
+        # $1M daily volume = 50 points (baseline), $100M = 100 points
+        import math
+        volume_score = min(100, max(0, 50 + math.log10(max(1, volume / 1_000_000)) * 25))
+
+        # Combine spread (60%) and volume (40%) for final score
+        liquidity_score = (spread_score * 0.6) + (volume_score * 0.4)
+
+        return min(100.0, max(0.0, liquidity_score))
+
+    def _check_liquidity(self, market_data: Quote) -> bool:
+        """
+        Verify if there's sufficient liquidity for trading - use real calculation.
+
+        Args:
+            market_data: Market data
+
+        Returns:
+            True if there's sufficient liquidity (score >= 50)
+        """
+        liquidity_score = self._calculate_liquidity_score(market_data)
+        # Consider 50 as minimum acceptable liquidity
+        return liquidity_score >= 50.0
 
     def risk_check(self, signal: Signal, portfolio: Portfolio) -> bool:
         """

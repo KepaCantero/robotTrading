@@ -6,6 +6,7 @@ including average entry prices, commission costs, and P&L percentages.
 """
 
 from __future__ import annotations
+import numpy as np
 
 import logging
 from decimal import Decimal
@@ -164,7 +165,7 @@ class ProfitAndLossCalculator:
 
         # Calculate commission
         avg_commission_per_buy = (
-            sum(t.commission for t in buy_trades if t.commission) / len(buy_trades)
+            np.mean([t.commission for t in buy_trades if t.commission])
             if buy_trades and any(t.commission for t in buy_trades)
             else self.config.commission_per_trade
         )

@@ -14,6 +14,7 @@ from collections import deque
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Sequence
+import numpy as np
 
 from app.models.market_data import Quote
 from app.models.portfolio import Portfolio
@@ -536,7 +537,7 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
         """Calcular confianza de la señal."""
         # Confianza base desde filtros
         confidences = [res.get('confidence', 0.0) for res in filter_results.values()]
-        base_confidence = sum(confidences) / len(confidences) if confidences else 0.5
+        base_confidence = np.mean(confidences) if confidences else 0.5
 
         # Ajustar con predicción de learning engine (si está disponible)
         if learning_prediction:
