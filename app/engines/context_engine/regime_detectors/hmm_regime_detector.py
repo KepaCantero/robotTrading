@@ -192,6 +192,8 @@ class HMMRegimeDetector:
 
             # Calcular probabilidades
             log_probs = self.model.score_samples(observations[-1:])
+            # Ensure log_probs is array-like before indexing
+            log_probs = np.atleast_1d(log_probs)
             probs = np.exp(log_probs[0])
 
             # Normalizar probabilidades
@@ -216,7 +218,7 @@ class HMMRegimeDetector:
                 'state': int(current_state),
             }
 
-        except (ValueError, TypeError, KeyError, AttributeError) as e:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Error detectando régimen con HMM: {e}")
             return {
                 'regime': 'unknown',

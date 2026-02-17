@@ -298,7 +298,7 @@ class TradeExecutor:
         current_position = self.position_manager.get_position(signal.symbol)
 
         if current_position <= 0:
-            logger.warning(
+            logger.debug(
                 f"SELL {signal.symbol} (strategy={strategy_name}): "
                 f"No position to sell (position={current_position})"
             )
