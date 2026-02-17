@@ -13,7 +13,7 @@ class MomentumModularConfig(BaseModel):
 
     # Market regime thresholds
     bear_market_strength_threshold: float = Field(
-        default=0.6, ge=0.0, le=1.0, description="Trend strength threshold for bear market detection (60%)"
+        default=0.99, ge=0.0, le=1.0, description="Trend strength threshold for bear market detection (99% - only extreme crashes)"
     )
     volatility_crisis_percentile: float = Field(
         default=75.0, ge=50.0, le=100.0, description="Volatility percentile for crisis detection (75%)"

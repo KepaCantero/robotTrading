@@ -10,6 +10,7 @@ Key principles:
 - Safe conversion from external data sources
 """
 
+import logging
 import math
 import numbers
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation, getcontext

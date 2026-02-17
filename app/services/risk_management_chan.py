@@ -26,7 +26,7 @@ from typing import Optional, Tuple
 import numpy as np
 import pandas as pd
 
-from app.core.config.base import get_config
+from app.core.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -508,7 +508,7 @@ class ChanPositionSizer:
         # Get default target risk from config
         if target_risk is None:
             config = get_config()
-            target_risk = float(getattr(config.trading, 'max_risk_per_trade', 0.02))
+            target_risk = float(getattr(config.trading, 'max_risk_per_trade', 0.02)
         try:
             # Base position on risk
             base_result = self.calculate_risk_based_position(

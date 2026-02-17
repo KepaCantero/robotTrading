@@ -94,9 +94,15 @@ class TrendDetector(BaseMarketDetector):
         fast_above_slow = current_fast > current_slow
         price_above_fast = current_price > current_fast
 
+        # CRITICAL: Usar 25% como divisor para strength más realista
+        # Esto previene falsos positivos de "crisis" durante correcciones normales
+        # 12.5% distance = 0.5 strength, 25% distance = 1.0 strength
+        # Increased from 0.15 to reduce sensitivity for bear market detection
+        STRENGTH_DIVISOR = 0.25
+
         if fast_above_slow and price_above_fast:
             distance = (current_fast - current_slow) / current_slow if current_slow > 0 else 0
-            strength = min(1.0, distance / 0.05)
+            strength = min(1.0, distance / STRENGTH_DIVISOR)
             confidence = min(1.0, strength / self.min_trend_strength)
 
             if strength >= self.min_trend_strength:
@@ -114,7 +120,7 @@ class TrendDetector(BaseMarketDetector):
 
         elif not fast_above_slow and not price_above_fast:
             distance = (current_slow - current_fast) / current_fast if current_fast > 0 else 0
-            strength = min(1.0, distance / 0.05)
+            strength = min(1.0, distance / STRENGTH_DIVISOR)
             confidence = min(1.0, strength / self.min_trend_strength)
 
             if strength >= self.min_trend_strength:

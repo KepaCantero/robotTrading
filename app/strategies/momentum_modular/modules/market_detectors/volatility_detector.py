@@ -2,6 +2,7 @@
 VolatilityDetector - Módulo independiente para detectar régimen de volatilidad.
 """
 
+import bisect
 import logging
 from typing import Dict, List
 
@@ -76,14 +77,14 @@ class VolatilityDetector(BaseMarketDetector):
                 'method': 'atr_percentile',
             }
 
-        # Calcular percentil del ATR actual
+        # Calcular percentil del ATR actual usando bisect para mayor precisión
         current_atr = atr_history[-1]
-        sorted_atr = sorted(atr_history[-self.percentile_window :])
-        percentile = (
-            (sorted_atr.index(current_atr) / len(sorted_atr)) * 100
-            if current_atr in sorted_atr
-            else 50
-        )
+        window = atr_history[-self.percentile_window:]
+        sorted_atr = sorted(window)
+
+        # Usar bisect para encontrar la posición correcta (evita problemas con floats)
+        pos = bisect.bisect_left(sorted_atr, current_atr)
+        percentile = (pos / len(sorted_atr)) * 100
 
         if percentile >= self.high_vol_threshold:
             regime = 'high'

@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.core.config.base import get_config
+from app.core.centralized_config import get_config
 
 
 def _get_asset_config(attr_name: str, default_value: float) -> float:

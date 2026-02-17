@@ -724,7 +724,7 @@ class MultiAssetAllocator:
         # Calculate Sharpe ratio
         if expected_volatility > 0:
             try:
-                from app.core.config.base import get_config
+                from app.core.centralized_config import get_config
                 cfg = get_config()
                 rf = Decimal(str(getattr(cfg.trading, 'portfolio_risk_free_rate', 0.02)))  # 2% risk-free rate
             except (ValueError, TypeError, AttributeError):

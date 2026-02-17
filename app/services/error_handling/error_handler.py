@@ -15,7 +15,7 @@ from datetime import datetime
 from functools import wraps
 from typing import Any, Callable, Dict, List, Optional, TypeVar
 
-from app.core.config.base import get_config
+from app.core.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 

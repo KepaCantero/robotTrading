@@ -2,6 +2,12 @@
 Multi-Strategy Backtesting Engine.
 
 TASK-PA-1, PA-2: Implements multi-strategy backtesting with capital allocation.
+
+COMPLIANCE: Integrado con BacktestingCompliance para validar:
+- R5: Walk-Forward Analysis
+- R6: Overfitting Prevention
+- R7: Monte Carlo para riesgo
+- DATA-001: Purged Cross-Validation
 """
 
 import logging
@@ -15,6 +21,14 @@ import pandas as pd
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig, BacktestResult
 from app.backtesting.signal_diagnostic_logger import SignalDiagnosticLogger
+
+# COMPLIANCE: Importar BacktestingCompliance para R5, R6, R7, DATA-001
+from app.backtesting.backtesting_compliance import (
+    BacktestingCompliance,
+    BacktestingComplianceResult,
+    create_backtesting_compliance,
+)
+
 from app.core.centralized_config import StockAllocationSettings
 from app.models.market_data import Quote
 from app.services.dynamic_capital_reallocation import DynamicCapitalReallocationEngine
@@ -84,10 +98,15 @@ class MultiStrategyBacktester:
                 rolling_window_days=30,
             )
             logger.info(
-                f"✅ Dynamic Capital Reallocation Engine enabled (frequency: {reallocation_frequency_days} days)"
+                f"Dynamic Capital Reallocation Engine enabled (frequency: {reallocation_frequency_days} days)"
             )
         else:
             self.reallocation_engine = None
+
+        # COMPLIANCE: Inicializar BacktestingCompliance para R5, R6, R7, DATA-001
+        self.backtesting_compliance = create_backtesting_compliance()
+        self.compliance_results: List[BacktestingComplianceResult] = []
+        logger.info("MultiStrategyBacktester: BacktestingCompliance initialized (R5, R6, R7, DATA-001)")
 
     def run_multi_strategy_backtest(
         self, quotes: List[Quote], start_date: datetime, end_date: datetime

@@ -12,7 +12,7 @@ import logging
 from decimal import Decimal
 from typing import Dict
 
-from app.core.config.base import get_config
+from app.core.centralized_config import get_config
 from .capital_tier_selector import CapitalTierSelector
 from .models import AbsoluteReturnTarget, AbsoluteReturnValidation
 

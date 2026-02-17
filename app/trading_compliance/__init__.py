@@ -45,7 +45,7 @@ import pandas as pd
 
 # USE THE NEW COMPLIANCE ENGINE
 from app.core.compliance_engine import PostTradeAnalysis, PreTradeAnalysis, get_compliance_engine
-from app.core.config.base import get_config
+from app.core.centralized_config import get_config
 
 # Avoid circular imports
 if TYPE_CHECKING:

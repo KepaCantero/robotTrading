@@ -1,5 +1,5 @@
 """
-Technical indicator calculator using pandas-ta-classic library.
+Technical indicator calculator using pandas-ta library with fallback.
 
 SOLID Principles:
 - SRP: Only calculates technical indicators
@@ -15,7 +15,18 @@ from typing import TYPE_CHECKING, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
-import pandas_ta_classic as ta
+
+# Try pandas_ta first, then pandas_ta_classic, with fallback
+try:
+    import pandas_ta as ta
+    PANDAS_TA_AVAILABLE = True
+except ImportError:
+    try:
+        import pandas_ta_classic as ta
+        PANDAS_TA_AVAILABLE = True
+    except ImportError:
+        ta = None
+        PANDAS_TA_AVAILABLE = False
 
 if TYPE_CHECKING:
     from app.models.momentum import TechnicalIndicators
@@ -58,25 +69,49 @@ class TechnicalIndicatorCalculator:
             return None
 
         try:
-            df = pd.Series(prices, name="close")
-            rsi_series = ta.rsi(df, length=period)
+            # Try pandas_ta if available
+            if PANDAS_TA_AVAILABLE and ta is not None:
+                df = pd.Series(prices, name="close")
+                rsi_series = ta.rsi(df, length=period)
 
-            if rsi_series is None or rsi_series.empty or rsi_series.isna().all():
-                logger.debug("RSI: pandas_ta_classic returned None or all NaN values")
-                return None
+                if rsi_series is not None and not rsi_series.empty and not rsi_series.isna().all():
+                    rsi_value = float(rsi_series.iloc[-1])
+                    logger.debug(f"RSI({period}) calculated: {rsi_value:.2f} from {len(prices)} prices")
+                    return round(rsi_value, 2)
 
-            rsi_value = float(rsi_series.iloc[-1])
-            logger.debug(f"RSI({period}) calculated: {rsi_value:.2f} from {len(prices)} prices")
+            # Fallback: Manual RSI calculation
+            logger.debug("RSI: Using manual calculation fallback")
+            prices_array = np.array(prices, dtype=float)
+            deltas = np.diff(prices_array)
+
+            gains = np.where(deltas > 0, deltas, 0)
+            losses = np.where(deltas < 0, -deltas, 0)
+
+            # Use simple moving average for initial average
+            avg_gain = np.mean(gains[:period])
+            avg_loss = np.mean(losses[:period])
+
+            # Use exponential smoothing for the rest
+            for i in range(period, len(gains)):
+                avg_gain = (avg_gain * (period - 1) + gains[i]) / period
+                avg_loss = (avg_loss * (period - 1) + losses[i]) / period
+
+            if avg_loss == 0:
+                return 100.0
+
+            rs = avg_gain / avg_loss
+            rsi_value = 100.0 - (100.0 / (1.0 + rs))
+            logger.debug(f"RSI({period}) calculated manually: {rsi_value:.2f}")
             return round(rsi_value, 2)
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error(f"RSI calculation error with pandas_ta_classic: {e}")
-            raise
+            logger.error(f"RSI calculation error: {e}")
+            return None
 
     @staticmethod
     def calculate_ema(prices: List[float], period: int = 9) -> Optional[float]:
         """
-        Calculate Exponential Moving Average using pandas-ta-classic.ema() library.
+        Calculate Exponential Moving Average using pandas-ta or manual fallback.
 
         Args:
             prices: List of price values
@@ -97,20 +132,34 @@ class TechnicalIndicatorCalculator:
             return None
 
         try:
-            df = pd.Series(prices, name="close")
-            ema_series = ta.ema(df, length=period)
+            # Try pandas_ta if available
+            if PANDAS_TA_AVAILABLE and ta is not None:
+                df = pd.Series(prices, name="close")
+                ema_series = ta.ema(df, length=period)
 
-            if ema_series is None or ema_series.empty or ema_series.isna().all():
-                logger.debug("EMA: pandas_ta_classic returned None or all NaN values")
-                return None
+                if ema_series is not None and not ema_series.empty and not ema_series.isna().all():
+                    ema_value = float(ema_series.iloc[-1])
+                    logger.debug(f"EMA({period}) calculated: {ema_value:.2f} from {len(prices)} prices")
+                    return round(ema_value, 2)
 
-            ema_value = float(ema_series.iloc[-1])
-            logger.debug(f"EMA({period}) calculated: {ema_value:.2f} from {len(prices)} prices")
-            return round(ema_value, 2)
+            # Fallback: Manual EMA calculation
+            logger.debug("EMA: Using manual calculation fallback")
+            prices_array = np.array(prices, dtype=float)
+            multiplier = 2.0 / (period + 1)
+
+            # Start with SMA for first EMA value
+            ema = np.mean(prices_array[:period])
+
+            # Calculate EMA for remaining prices
+            for price in prices_array[period:]:
+                ema = (price - ema) * multiplier + ema
+
+            logger.debug(f"EMA({period}) calculated manually: {ema:.2f}")
+            return round(float(ema), 2)
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error(f"EMA calculation error with pandas_ta_classic: {e}")
-            raise
+            logger.error(f"EMA calculation error: {e}")
+            return None
 
     @staticmethod
     def calculate_macd(

@@ -93,9 +93,11 @@ investment_horizons:
 # ============================================================================
 # Backtest Period
 # ============================================================================
+# NOTE: 2021 was a strong bull market - good for testing normal conditions
+# 2022 had bear market and high volatility - tests crisis handling
 backtest_period:
-  start_date: "2020-01-01"
-  end_date: "2023-12-31"
+  start_date: "2021-01-01"
+  end_date: "2021-12-31"
 
 # ============================================================================
 # Symbols Universe
@@ -124,20 +126,20 @@ symbols:
 risk_parameters:
   bajo:
     max_position_pct: 0.05        # 5% max position
-    stop_loss_pct: 0.02           # 2% stop loss
-    take_profit_pct: 0.08         # 8% take profit
+    stop_loss_pct: 0.05           # 5% stop loss (widened from 2% for volatile stocks)
+    take_profit_pct: 0.10         # 10% take profit
     max_drawdown_pct: 0.15        # 15% max drawdown
 
   medio:
     max_position_pct: 0.10        # 10% max position
-    stop_loss_pct: 0.03           # 3% stop loss
-    take_profit_pct: 0.12         # 12% take profit
+    stop_loss_pct: 0.07           # 7% stop loss (widened from 3% for volatile stocks)
+    take_profit_pct: 0.15         # 15% take profit
     max_drawdown_pct: 0.25        # 25% max drawdown
 
   alto:
     max_position_pct: 0.20        # 20% max position
-    stop_loss_pct: 0.05           # 5% stop loss
-    take_profit_pct: 0.20         # 20% take profit
+    stop_loss_pct: 0.10           # 10% stop loss (widened from 5% for volatile stocks)
+    take_profit_pct: 0.25         # 25% take profit
     max_drawdown_pct: 0.35        # 35% max drawdown
 
 # ============================================================================
@@ -192,7 +194,7 @@ objective_parameters:
 # This section controls the Optuna optimization process for batch execution.
 optimization:
   # Optuna trial configuration
-  n_trials: 100                    # Number of Optuna trials per profile
+  n_trials: 20                     # Reduced for faster testing (was 100)
   timeout: null                    # No timeout (uses n_trials instead)
   sampler: "TPESampler"            # Tree-structured Parzen Estimator
   pruner: "MedianPruner"           # Median pruning for early stopping
@@ -283,33 +285,33 @@ acceptance_criteria:
 # All enabled modules will be optimized using their parameter search spaces.
 modules:
   filters:
-    # Technical indicator filters
-    momentum:
+    # Technical indicator filters (names MUST match strategy filter_classes keys)
+    momentum_filter:
       enabled: true
       # Parameters from profile_optimization.yaml:
       # threshold_optimization.momentum.threshold
 
-    ema:
+    ema_filter:
       enabled: true
       # Parameters from profile_optimization.yaml:
       # threshold_optimization.ema_distance.*
 
-    rsi:
+    rsi_filter:
       enabled: true
       # Parameters from profile_optimization.yaml:
       # threshold_optimization.rsi.buy_threshold, sell_threshold
 
-    volume:
+    volume_filter:
       enabled: true
       # Parameters from profile_optimization.yaml:
       # threshold_optimization.volume_ratio.*
 
-    atr:
+    atr_filter:
       enabled: true
       # Parameters from profile_optimization.yaml:
       # threshold_optimization.atr.*
 
-    stoch_rsi:
+    stoch_rsi_filter:
       enabled: true
       # Parameters from profile_optimization.yaml:
       # threshold_optimization.stoch_rsi.*

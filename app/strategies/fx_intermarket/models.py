@@ -246,7 +246,7 @@ class IntermarketRelationship(BaseModel):
     @property
     def is_active(self) -> bool:
         """Check if relationship is currently active (significance > threshold)."""
-        from app.core.config.base import get_config
+        from app.core.centralized_config import get_config
         cfg = get_config()
         min_significance = Decimal(str(getattr(cfg.trading, 'fx_intermarket_min_significance', 70)))
         return self.significance >= min_significance
@@ -254,7 +254,7 @@ class IntermarketRelationship(BaseModel):
     @property
     def strength(self) -> str:
         """Get relationship strength category."""
-        from app.core.config.base import get_config
+        from app.core.centralized_config import get_config
         cfg = get_config()
         abs_corr = abs(self.correlation)
 
@@ -325,7 +325,7 @@ class IntermarketSignal(BaseModel):
     @model_validator(mode="after")
     def validate_signal_consistency(self) -> "IntermarketSignal":
         """Validate signal consistency."""
-        from app.core.config.base import get_config
+        from app.core.centralized_config import get_config
         cfg = get_config()
 
         # Get thresholds from config
@@ -361,7 +361,7 @@ class IntermarketSignal(BaseModel):
     @property
     def is_actionable(self) -> bool:
         """Check if signal is actionable (confidence > threshold)."""
-        from app.core.config.base import get_config
+        from app.core.centralized_config import get_config
         cfg = get_config()
         min_confidence = Decimal(str(getattr(cfg.trading, 'fx_signal_min_actionable_confidence', 60)))
         return self.confidence > min_confidence

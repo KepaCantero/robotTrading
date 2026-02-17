@@ -15,7 +15,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, Optional
 
-from app.core.config.base import get_config
+from app.core.centralized_config import get_config
 from app.models.portfolio import Portfolio
 from app.models.signal import Signal
 

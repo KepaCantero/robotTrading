@@ -12,7 +12,7 @@ from typing import List, Optional, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from app.core.config.base import get_config
+from app.core.centralized_config import get_config
 
 
 class HedgingMetadata(BaseModel):
@@ -176,7 +176,7 @@ class Position(BaseModel):
 
         # Validate unrealized P&L calculation
         if self.quantity != 0:
-            from app.core.config.base import get_config
+            from app.core.centralized_config import get_config
             cfg = get_config()
             tolerance = Decimal(str(getattr(cfg.trading, 'portfolio_pnl_tolerance', 0.01)))
             expected_unrealized = self.quantity * (self.market_price - self.avg_price)

@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Dict, Optional, Tuple
 
-from app.core.config.base import get_config
+from app.core.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 

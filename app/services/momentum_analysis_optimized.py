@@ -40,10 +40,17 @@ logging.info(
     f"✅ Numba accelerators enabled: {numba_info['functions_optimized']} functions optimized"
 )
 
-# REQUIRED: pandas-ta-classic as secondary option
-import pandas_ta_classic as ta
-
-PANDAS_TA_AVAILABLE = True
+# Try pandas_ta first, then pandas_ta_classic, with fallback
+try:
+    import pandas_ta as ta
+    PANDAS_TA_AVAILABLE = True
+except ImportError:
+    try:
+        import pandas_ta_classic as ta
+        PANDAS_TA_AVAILABLE = True
+    except ImportError:
+        ta = None
+        PANDAS_TA_AVAILABLE = False
 
 
 logger = logging.getLogger(__name__)

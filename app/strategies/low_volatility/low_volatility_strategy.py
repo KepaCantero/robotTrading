@@ -89,7 +89,7 @@ class LowVolatilityStrategy(BaseStrategy):
         # Inicializar componentes
         self.screener = LowBetaScreener(self.strategy_config)
         self.calculator = VolatilityCalculator(
-            risk_free_rate= getattr(config.trading, 'max_risk_per_trade', 0.02)))),
+            risk_free_rate= getattr(config.trading, 'max_risk_per_trade', 0.02))),
             trading_days_per_year=config.get("trading_days_per_year", 252),
         )
         self.constructor = LowVolatilityPortfolioConstructor(self.strategy_config)

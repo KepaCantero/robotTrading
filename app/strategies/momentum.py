@@ -113,7 +113,7 @@ class MomentumStrategy(BaseStrategy):
         else:
             # Fallback to config or defaults
             self.rsi_threshold = Decimal(str(config.get("rsi_threshold", 40)))
-            self.momentum_threshold = getattr(config.trading, 'max_risk_per_trade', 0.02))))
+            self.momentum_threshold = getattr(config.trading, 'max_risk_per_trade', 0.02)
             self.stop_loss = Decimal(
                 str(config.get("stop_loss", get_trading_threshold("stop_loss_pct")))
             )

@@ -167,16 +167,16 @@ class BacktestConfigLoader:
             max_value=Decimal("1"),  # 0-100% as decimal (0.0 to 1.0)
         )
 
-        # Optional stop loss
-        stop_loss_raw = config.get('stop_loss')
+        # Optional stop loss - support both stop_loss and stop_loss_pct keys
+        stop_loss_raw = config.get('stop_loss') or config.get('stop_loss_pct')
         stop_loss_percentage = None
         if stop_loss_raw is not None:
             stop_loss_percentage = self._validate_percentage(
                 stop_loss_raw, "stop_loss", max_value=Decimal("100")
             )
 
-        # Optional take profit
-        take_profit_raw = config.get('take_profit')
+        # Optional take profit - support both take_profit and take_profit_pct keys
+        take_profit_raw = config.get('take_profit') or config.get('take_profit_pct')
         take_profit_percentage = None
         if take_profit_raw is not None:
             take_profit_percentage = self._validate_positive_decimal(

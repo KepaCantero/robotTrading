@@ -295,11 +295,14 @@ class YAMLConfigLoader:
             # Lookback days: must be positive integer
             "lookback_max_days": lambda v: isinstance(v, int) and v > 0,
             "lookback_min_days": lambda v: isinstance(v, int) and v >= 0,
-            # Thresholds: must be numeric
-            "threshold": lambda v: isinstance(v, (int, float)),
+            # Thresholds: can be numeric OR dict (for optimization ranges or nested threshold configs)
+            # Dicts are valid if they contain threshold-related keys or are nested configurations
+            "threshold": lambda v: isinstance(v, (int, float)) or isinstance(v, dict),
             "enabled": lambda v: isinstance(v, bool),
-            # Tier validation
-            "tier": lambda v: v in ["micro", "small", "medium", "large"],
+            # Tier validation - only validate string values, not tier config dicts
+            "tier": lambda v: (
+                isinstance(v, str) and v in ["micro", "small", "medium", "large"]
+            ) or isinstance(v, dict),  # tier config dicts are valid
         }
 
         # Recursively validate nested config

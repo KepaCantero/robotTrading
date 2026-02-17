@@ -31,6 +31,13 @@ from app.backtesting.core.error_handling import MutexError, TrainingError, train
 from app.backtesting.core.executor import ProcessPoolBacktestExecutor, SimpleBacktestExecutor
 from app.backtesting.core.memory_manager import AggressiveMemoryManager
 
+# COMPLIANCE: Backtesting Compliance (R5, R6, R7, DATA-001)
+from app.backtesting.backtesting_compliance import (
+    BacktestingCompliance,
+    BacktestingComplianceResult,
+    create_backtesting_compliance,
+)
+
 # Data loading
 from app.backtesting.data_loader import DataLoader
 
@@ -136,6 +143,11 @@ class ComprehensiveBacktestRunner:
 
         if self.meta_enabled:
             self._integrate_meta_analyzer()
+
+        # COMPLIANCE: Inicializar BacktestingCompliance para R5, R6, R7, DATA-001
+        self.backtesting_compliance = create_backtesting_compliance()
+        self.compliance_results: List[BacktestingComplianceResult] = []
+        logger.info("BacktestingCompliance initialized (R5, R6, R7, DATA-001)")
 
         logger.info(f"ComprehensiveBacktestRunner initialized with {len(self.quotes)} quotes")
         if self.parallel_enabled:
@@ -330,6 +342,9 @@ class ComprehensiveBacktestRunner:
         # Guardar resultados
         self._save_results(results)
 
+        # COMPLIANCE: Validar reglas R5, R6, R7, DATA-001
+        self._run_compliance_validation(results)
+
         duration = (datetime.now() - start_time).total_seconds()
         logger.info("=" * 80)
         logger.info("COMPREHENSIVE BACKTEST SUITE COMPLETED")
@@ -338,6 +353,123 @@ class ComprehensiveBacktestRunner:
         logger.info("=" * 80)
 
         return results
+
+    def _run_compliance_validation(self, results: List[Dict[str, Any]]) -> BacktestingComplianceResult:
+        """
+        Ejecutar validación de compliance sobre los resultados de backtest.
+
+        COMPLIANCE: Valida las reglas R5, R6, R7, DATA-001:
+        - R5: Walk-Forward Analysis (si hay resultados WF)
+        - R6: Overfitting Prevention (ratio parámetros/observaciones)
+        - R7: Monte Carlo (si hay resultados MC)
+        - DATA-001: Purged CV (si hay resultados de validación)
+
+        Args:
+            results: Lista de resultados de backtests
+
+        Returns:
+            BacktestingComplianceResult con el resultado de la validación
+        """
+        logger.info("=" * 80)
+        logger.info("COMPLIANCE VALIDATION (R5, R6, R7, DATA-001)")
+        logger.info("=" * 80)
+
+        # Extraer información de resultados
+        n_parameters = self._count_optimizable_parameters()
+        n_observations = len(self.quotes)
+
+        # Extraer resultados de walk-forward si existen
+        walk_forward_windows = self._extract_walk_forward_results(results)
+
+        # Extraer resultados de Monte Carlo si existen
+        mc_results = [r for r in results if r.get('test_type') == 'monte_carlo']
+        n_mc_simulations = len(mc_results)
+        mc_var_95 = 0.0
+        mc_var_99 = 0.0
+        if mc_results:
+            returns = [r.get('return_pct', 0) for r in mc_results]
+            mc_var_95 = float(np.percentile(returns, 5)) if returns else 0.0
+            mc_var_99 = float(np.percentile(returns, 1)) if returns else 0.0
+
+        # Ejecutar validación completa
+        compliance_result = self.backtesting_compliance.validate_backtest(
+            n_parameters=n_parameters,
+            n_observations=n_observations,
+            walk_forward_windows=walk_forward_windows,
+            monte_carlo_var_95=mc_var_95,
+            monte_carlo_var_99=mc_var_99,
+            monte_carlo_simulations=n_mc_simulations,
+            purge_days=5,  # Default purge days
+            embargo_days=10,  # Default embargo days
+        )
+
+        self.compliance_results.append(compliance_result)
+
+        # Log resumen
+        summary = compliance_result.get_summary()
+        if compliance_result.is_compliant:
+            logger.info(f"COMPLIANCE PASSED: {summary}")
+        else:
+            logger.warning(f"COMPLIANCE FAILED: {summary}")
+            for violation in compliance_result.violations:
+                logger.warning(f"  [{violation.severity}] {violation.rule_id}: {violation.message}")
+
+        return compliance_result
+
+    def _count_optimizable_parameters(self) -> int:
+        """
+        Contar parámetros optimizables en la configuración.
+
+        Returns:
+            Número aproximado de parámetros optimizables
+        """
+        count = 0
+
+        # Contar parámetros de módulos
+        modules = self.raw_config.get('modules', {})
+        for module_name, module_config in modules.items():
+            if isinstance(module_config, dict):
+                # Contar thresholds y parámetros
+                if 'thresholds' in module_config:
+                    count += len(module_config['thresholds'])
+                if 'parameters' in module_config:
+                    count += len(module_config['parameters'])
+
+        # Contar parámetros de learning engines
+        learning_engines = self.raw_config.get('learning_engines', {})
+        for engine_name, engine_config in learning_engines.items():
+            if isinstance(engine_config, dict) and engine_config.get('enabled', False):
+                if 'config' in engine_config:
+                    count += len(engine_config['config'])
+
+        # Parámetros base de backtest
+        count += 6  # initial_capital, commission, slippage, max_position, stop_loss, take_profit
+
+        return count
+
+    def _extract_walk_forward_results(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        Extraer resultados de walk-forward para validación R5.
+
+        Args:
+            results: Lista de resultados de backtests
+
+        Returns:
+            Lista de resultados por ventana walk-forward
+        """
+        wf_results = [r for r in results if 'walk_forward' in r.get('test_type', '')]
+        windows = []
+
+        for r in wf_results:
+            windows.append({
+                'is_return': r.get('train_return', 0),
+                'oos_return': r.get('return_pct', 0),
+                'is_sharpe': r.get('train_sharpe', 0),
+                'oos_sharpe': r.get('sharpe_ratio', 0),
+                'trades': r.get('total_trades', 0),
+            })
+
+        return windows
 
     def run_specific_backtests(self, backtest_names: List[str]) -> List[Dict[str, Any]]:
         """
@@ -3539,15 +3671,32 @@ class ComprehensiveBacktestRunner:
             filters_config = {}
             filters = self.raw_config['modules']['filters']
 
+            # Mapeo de nombres de filtros (config -> estrategia)
+            filter_name_map = {
+                'ema': 'ema_filter',
+                'rsi': 'rsi_filter',
+                'stoch_rsi': 'stoch_rsi_filter',
+                'momentum': 'momentum_filter',
+                'volume': 'volume_filter',
+                'atr': 'atr_filter',
+            }
+
             for filter_name, filter_config in filters.items():
                 if filter_config.get('enabled', False):
+                    # Mapear nombre del filtro
+                    # First check if name already has _filter suffix
+                    if filter_name.endswith('_filter'):
+                        mapped_name = filter_name
+                    else:
+                        mapped_name = filter_name_map.get(filter_name, f'{filter_name}_filter')
+
                     # Extraer parámetros default
                     filter_params = {}
                     for param_name, param_config in filter_config.get('parameters', {}).items():
                         if 'default' in param_config:
                             filter_params[param_name] = param_config['default']
 
-                    filters_config[filter_name] = {'enabled': True, **filter_params}
+                    filters_config[mapped_name] = {'enabled': True, **filter_params}
 
             # ModularMomentumStrategy lee filtros desde config['modules'][nombre_filtro]
             # NO desde presets.custom.filters

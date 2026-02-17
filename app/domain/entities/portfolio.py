@@ -16,7 +16,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, Iterator, List, Optional
 
-from app.core.config.base import get_config
+from app.core.centralized_config import get_config
 from app.domain.entities.position import Position, PositionSide, PositionStatus
 from app.domain.value_objects.capital import Capital
 from app.domain.value_objects.money import Money
