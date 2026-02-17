@@ -150,11 +150,89 @@ class BayesianOptimizer:
         params: Dict[str, Any],
         multi_strategy: bool = False,
     ) -> Dict[str, Any]:
-        """Run backtest with specific parameters."""
+        """Run backtest with specific parameters.
+
+        Maps optimization parameters to the strategy's nested configuration structure:
+        - rsi_threshold → modules.rsi_filter.adaptive_thresholds.*.buy_threshold
+        - ema_short → modules.ema_filter.parameters.fast_period
+        - ema_long → modules.ema_filter.parameters.slow_period
+        - volume_threshold → modules.volume_filter.thresholds.*.min_volume_ratio
+        - stop_loss → risk_manager.stop_loss.fixed_percentage.value
+        - take_profit → risk_manager.take_profit.fixed_percentage.value
+        """
+        import copy
         from uuid import uuid4
 
-        updated_config = config.copy()
-        updated_config["strategy"].update(params)
+        updated_config = copy.deepcopy(config)
+        strategy = updated_config.get("strategy", {})
+
+        # Ensure modules structure exists
+        if "modules" not in strategy:
+            strategy["modules"] = {}
+
+        # Map RSI threshold to all adaptive thresholds
+        rsi_threshold = params.get("rsi_threshold")
+        if rsi_threshold is not None:
+            if "rsi_filter" not in strategy["modules"]:
+                strategy["modules"]["rsi_filter"] = {}
+            if "adaptive_thresholds" not in strategy["modules"]["rsi_filter"]:
+                strategy["modules"]["rsi_filter"]["adaptive_thresholds"] = {}
+
+            # Update buy_threshold for all contexts
+            for context in ["trend_up", "trend_down", "range", "high_vol"]:
+                if context not in strategy["modules"]["rsi_filter"]["adaptive_thresholds"]:
+                    strategy["modules"]["rsi_filter"]["adaptive_thresholds"][context] = {}
+                strategy["modules"]["rsi_filter"]["adaptive_thresholds"][context]["buy_threshold"] = rsi_threshold
+
+        # Map EMA periods
+        ema_short = params.get("ema_short")
+        ema_long = params.get("ema_long")
+        if ema_short is not None or ema_long is not None:
+            if "ema_filter" not in strategy["modules"]:
+                strategy["modules"]["ema_filter"] = {"parameters": {}}
+            if "parameters" not in strategy["modules"]["ema_filter"]:
+                strategy["modules"]["ema_filter"]["parameters"] = {}
+            if ema_short is not None:
+                strategy["modules"]["ema_filter"]["parameters"]["fast_period"] = ema_short
+            if ema_long is not None:
+                strategy["modules"]["ema_filter"]["parameters"]["slow_period"] = ema_long
+
+        # Map volume threshold
+        volume_threshold = params.get("volume_threshold")
+        if volume_threshold is not None:
+            if "volume_filter" not in strategy["modules"]:
+                strategy["modules"]["volume_filter"] = {"thresholds": {}}
+            if "thresholds" not in strategy["modules"]["volume_filter"]:
+                strategy["modules"]["volume_filter"]["thresholds"] = {}
+            # Update for all presets
+            for preset in ["conservative", "balanced", "aggressive"]:
+                strategy["modules"]["volume_filter"]["thresholds"][preset] = {
+                    "min_volume_ratio": volume_threshold
+                }
+
+        # Map stop_loss and take_profit
+        stop_loss = params.get("stop_loss")
+        take_profit = params.get("take_profit")
+
+        if stop_loss is not None or take_profit is not None:
+            if "risk_manager" not in strategy:
+                strategy["risk_manager"] = {}
+
+            if stop_loss is not None:
+                if "stop_loss" not in strategy["risk_manager"]:
+                    strategy["risk_manager"]["stop_loss"] = {"fixed_percentage": {}}
+                if "fixed_percentage" not in strategy["risk_manager"]["stop_loss"]:
+                    strategy["risk_manager"]["stop_loss"]["fixed_percentage"] = {}
+                strategy["risk_manager"]["stop_loss"]["fixed_percentage"]["value"] = stop_loss
+
+            if take_profit is not None:
+                if "take_profit" not in strategy["risk_manager"]:
+                    strategy["risk_manager"]["take_profit"] = {"fixed_percentage": {}}
+                if "fixed_percentage" not in strategy["risk_manager"]["take_profit"]:
+                    strategy["risk_manager"]["take_profit"]["fixed_percentage"] = {}
+                strategy["risk_manager"]["take_profit"]["fixed_percentage"]["value"] = take_profit
+
+        updated_config["strategy"] = strategy
 
         temp_config_path = self.output_dir / f"temp_opt_{uuid4().hex[:8]}.yaml"
         with open(temp_config_path, "w") as f:
