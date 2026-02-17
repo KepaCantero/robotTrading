@@ -100,14 +100,15 @@ class TradeExecutor:
 
         strategy_name = signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
 
-        # Close existing position before opening new one
+        # Skip BUY signal if already holding a position
+        # CRITICAL FIX: Don't close and reopen - just skip to prevent commission losses
         current_position = self.position_manager.get_position(signal.symbol)
         if current_position > 0:
-            logger.info(
+            logger.debug(
                 f"BUY {signal.symbol} (strategy={strategy_name}): "
-                f"Closing existing position ({current_position:.6f}) before opening new BUY"
+                f"Skipping - already holding position ({current_position:.6f})"
             )
-            close_position_func(signal.symbol, market_data.timestamp, "signal_reverse")
+            return None, capital
 
         current_price = get_price(market_data)
 

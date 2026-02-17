@@ -131,7 +131,7 @@ class BayesianOptimizer:
                 rsi_buy_min = rsi_buy_config.get("min", 20)
                 rsi_buy_max = rsi_buy_config.get("max", 35)
 
-                vol_config = self.profile_config_loader.get_threshold_config("volume_ratio", {})
+                vol_config = self.profile_config_loader.get_threshold_config("volume_ratio")
                 vol_min = vol_config.get("min", 1.0)
                 vol_max = vol_config.get("max", 1.5)
 

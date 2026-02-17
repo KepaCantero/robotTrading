@@ -33,8 +33,11 @@ class EMAFilter(BaseFilter):
         self.confirmation_method = self.config.get("confirmation", {}).get("price_above_ema", True)
 
         # Thresholds del preset (usar thresholds cargados desde YAML)
-        self.min_distance_pct = self.thresholds.get("min_distance_pct", 0.005)
+        # FIX: Lowered from 0.005 (0.5%) - too restrictive for trend confirmation
+        self.min_distance_pct = self.thresholds.get("min_distance_pct", 0.002)
         self.require_crossover = self.thresholds.get("require_crossover", False)
+        # FIX: Allow dip buying even if price slightly below EMA fast during pullbacks
+        self.allow_dip_buy = self.thresholds.get("allow_dip_buy", True)
 
     def _apply_filter_logic(self, indicators: Dict, market_context: Dict, signal_type: str) -> Dict:
         """
@@ -55,6 +58,12 @@ class EMAFilter(BaseFilter):
                 'reason': 'EMA indicators missing',
                 'metadata': {},
             }
+
+        # DEBUG: Log EMA values to understand why SELL passes but BUY doesn't
+        logger.debug(
+            f"EMA_FILTER: price={current_price:.2f}, fast={ema_fast:.2f}, slow={ema_slow:.2f}, "
+            f"fast>slow={ema_fast > ema_slow}, price>fast={current_price > ema_fast}"
+        )
 
         if signal_type == "BUY":
             # Verificar que EMA rápida esté por encima de EMA lenta
@@ -79,12 +88,24 @@ class EMAFilter(BaseFilter):
                 }
 
             # Verificar precio vs EMA según método
-            if self.confirmation_method == "price_above":
+            # FIX: Allow dip buying during pullbacks (price can be slightly below EMA fast)
+            if self.confirmation_method == "price_above" and not self.allow_dip_buy:
                 if current_price <= ema_fast:
                     return {
                         'passed': False,
                         'confidence': 0.0,
                         'reason': f'Price ({current_price:.2f}) not above EMA fast ({ema_fast:.2f})',
+                        'metadata': {},
+                    }
+            elif self.confirmation_method == "price_above" and self.allow_dip_buy:
+                # Allow price to be up to 2% below EMA fast (dip opportunity)
+                max_dip_pct = 0.02
+                dip_pct = (ema_fast - current_price) / ema_fast if current_price < ema_fast else 0
+                if dip_pct > max_dip_pct:
+                    return {
+                        'passed': False,
+                        'confidence': 0.0,
+                        'reason': f'Price ({current_price:.2f}) too far below EMA fast ({ema_fast:.2f}): dip {dip_pct:.2%} > {max_dip_pct:.2%}',
                         'metadata': {},
                     }
 

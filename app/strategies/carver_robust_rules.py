@@ -311,7 +311,7 @@ class CarverRobustRulesStrategy(BaseStrategy):
         # Calculate standard deviation
         import numpy as np
 
-        volatility = getattr(config.trading, 'max_risk_per_trade', 0.02))
+        volatility = getattr(config.trading, 'max_risk_per_trade', 0.02)
 
         return volatility
 

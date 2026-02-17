@@ -1572,11 +1572,10 @@ class SystemBus:
         Estimates slippage based on MIN_LIQUIDITY_USD threshold.
         """
         try:
-            from app.core.centralized_config import get_strategy_stock_allocator_config, get_compliance_config
-            from app.core.environment_config import get_trading_config
+            from app.core.centralized_config import get_strategy_stock_allocator_config, get_compliance_config, get_config
 
             alloc_config = get_strategy_stock_allocator_config()
-            trading_config = get_trading_config()
+            trading_config = get_config().trading
             config = get_compliance_config()
 
             if subsystem and hasattr(subsystem, 'estimate_execution_probability'):

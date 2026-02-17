@@ -29,7 +29,7 @@ import pandas as pd
 from app.analysis.fundamental_law.breadth_calculator import BreadthCalculator
 from app.analysis.fundamental_law.ic_calculator import ICCalculator
 from app.analysis.fundamental_law.models import FundamentalLawComponents, StrategyAnalysis
-from app.core.config.base import get_config
+from app.core.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 

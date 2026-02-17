@@ -128,6 +128,9 @@ class TestOptimizedStrategy:
             optimized_metrics={"sharpe": 2.0},
             best_parameters={"lookback": 30},
             optimization_history=[],
+            walk_forward_results={"passed": True},
+            monte_carlo_results={"passed": True},
+            out_of_sample_results={"passed": True},
             comparison=comparison,
             ready_for_paper_trading=True,
             recommendation="Deploy with caution",
@@ -158,6 +161,7 @@ class TestProfileResult:
             objetivo_inversion=ObjectivoInversion.MAXIMIZAR_CAPITAL,
             risk_tolerance=RiskTolerance.ALTO,
             capital_initial=100000,
+            investment_horizon=12,
         )
 
         result = ProfileResult(

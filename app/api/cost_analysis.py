@@ -22,7 +22,7 @@ from typing import Any, Dict
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.backtesting.models import Trade, TradeStatus
-from app.core.config.base import get_config
+from app.core.centralized_config import get_config
 from app.services.cost_analysis_service import CostAnalysisResult, CostAnalysisService
 
 from . import audit_logger, get_correlation_id

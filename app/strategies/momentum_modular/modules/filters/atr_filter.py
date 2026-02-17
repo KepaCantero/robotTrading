@@ -36,10 +36,11 @@ class ATRFilter(BaseFilter):
         self.low_vol_thresholds = volatility_thresholds.get("low", {})
 
         # Thresholds del preset (usar thresholds cargados desde YAML)
+        # FIX: Lowered thresholds - 60th percentile is too restrictive
         self.min_atr_percentile = self.thresholds.get(
-            "min_percentile", self.thresholds.get("min_atr_percentile", 60)
+            "min_percentile", self.thresholds.get("min_atr_percentile", 40)  # Lowered from 60
         )
-        self.min_relative_atr = self.thresholds.get("min_relative_atr", 0.006)
+        self.min_relative_atr = self.thresholds.get("min_relative_atr", 0.004)  # Lowered from 0.006
 
     def _get_thresholds_for_volatility(self, market_context: Dict) -> Dict:
         """Obtener thresholds según régimen de volatilidad."""
@@ -70,7 +71,7 @@ class ATRFilter(BaseFilter):
             relative_atr = atr / current_price
 
         if self.method == "relative_percentile":
-            # Requiere tanto percentil como ATR relativo
+            # FIX: Use OR logic instead of AND - either condition passing is sufficient
             if atr_percentile is None or relative_atr is None:
                 return {
                     'passed': False,
@@ -82,16 +83,25 @@ class ATRFilter(BaseFilter):
             percentile_pass = atr_percentile >= min_atr_percentile
             relative_pass = relative_atr >= min_relative_atr
 
-            if percentile_pass and relative_pass:
+            # FIX: OR logic - either condition is sufficient
+            if percentile_pass or relative_pass:
                 # Calcular confianza basada en qué tan por encima está
-                percentile_confidence = min(1.0, (atr_percentile / 100) * 1.2)
-                relative_confidence = min(1.0, (relative_atr / min_relative_atr) * 0.8)
-                confidence = (percentile_confidence + relative_confidence) / 2
+                confidence = 0.5
+                if percentile_pass:
+                    confidence += min(0.3, (atr_percentile - min_atr_percentile) / 100)
+                if relative_pass:
+                    confidence += min(0.2, (relative_atr - min_relative_atr) / min_relative_atr * 0.2)
+
+                passed_type = []
+                if percentile_pass:
+                    passed_type.append(f'percentile {atr_percentile:.1f}>={min_atr_percentile}')
+                if relative_pass:
+                    passed_type.append(f'relative {relative_atr:.4f}>={min_relative_atr:.4f}')
 
                 return {
                     'passed': True,
-                    'confidence': confidence,
-                    'reason': f'ATR percentile {atr_percentile:.1f} >= {min_atr_percentile} and relative ATR {relative_atr:.4f} >= {min_relative_atr:.4f}',
+                    'confidence': min(1.0, confidence),
+                    'reason': f'ATR passed: {" OR ".join(passed_type)}',
                     'metadata': {
                         'atr_percentile': atr_percentile,
                         'relative_atr': relative_atr,
@@ -102,7 +112,7 @@ class ATRFilter(BaseFilter):
                 return {
                     'passed': False,
                     'confidence': 0.0,
-                    'reason': f'ATR conditions not met: percentile {atr_percentile or "N/A"} >= {min_atr_percentile}, relative {relative_atr or "N/A":.4f} >= {min_relative_atr:.4f}',
+                    'reason': f'ATR conditions not met: percentile {atr_percentile:.1f} < {min_atr_percentile} AND relative {relative_atr:.4f} < {min_relative_atr:.4f}',
                     'metadata': {'atr_percentile': atr_percentile, 'relative_atr': relative_atr},
                 }
 

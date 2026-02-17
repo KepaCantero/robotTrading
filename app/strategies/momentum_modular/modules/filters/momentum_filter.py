@@ -29,8 +29,10 @@ class MomentumFilter(BaseFilter):
         self.method = settings.get("method", "roc")
 
         # Thresholds del preset (usar thresholds cargados desde YAML)
-        self.min_positive_momentum = self.thresholds.get("min_positive_momentum", 0.015)
-        self.min_negative_momentum = self.thresholds.get("min_negative_momentum", -0.015)
+        # FIX: Lowered from 0.015 (1.5%) - too restrictive, missing valid signals
+        self.min_positive_momentum = self.thresholds.get("min_positive_momentum", 0.005)
+        # FIX: Raised from -0.015 - allow earlier SELL signals on weakening momentum
+        self.min_negative_momentum = self.thresholds.get("min_negative_momentum", -0.005)
 
     def _apply_filter_logic(self, indicators: Dict, market_context: Dict, signal_type: str) -> Dict:
         """Aplicar lógica del filtro de momentum."""

@@ -82,7 +82,7 @@ class MeanVarianceOptimizer:
 
     Usage:
         >>> optimizer = MeanVarianceOptimizer()
-        >>> result = getattr(config.trading, 'max_risk_per_trade', 0.02))
+        >>> result = getattr(config.trading, 'max_risk_per_trade', 0.02)
     """
 
     def __init__(self):

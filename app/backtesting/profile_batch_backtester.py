@@ -11,6 +11,12 @@ This module implements comprehensive batch backtesting for investor profiles wit
 
 REFACTORED VERSION - Uses service layer for better separation of concerns.
 
+COMPLIANCE: Integrado con BacktestingCompliance para validar:
+- R5: Walk-Forward Analysis
+- R6: Overfitting Prevention
+- R7: Monte Carlo para riesgo
+- DATA-001: Purged Cross-Validation
+
 Usage:
     ```python
     from app.backtesting.profile_batch_backtester import ProfileBatchBacktester
@@ -65,6 +71,14 @@ from app.backtesting.services import (
     ProfileResult,
     ReportGenerationService,
 )
+
+# COMPLIANCE: Importar BacktestingCompliance para R5, R6, R7, DATA-001
+from app.backtesting.backtesting_compliance import (
+    BacktestingCompliance,
+    BacktestingComplianceResult,
+    create_backtesting_compliance,
+)
+
 from app.core.config.profile_config_loader import ProfileConfigLoader
 from app.core.models.input_profile import InputProfile
 from app.services.profile_driven_trading.profile_strategy_mapper import (
@@ -178,6 +192,11 @@ class ProfileBatchBacktester:
 
         # Results storage
         self.results: Dict[str, ProfileResult] = {}
+
+        # COMPLIANCE: Inicializar BacktestingCompliance para R5, R6, R7, DATA-001
+        self.backtesting_compliance = create_backtesting_compliance()
+        self.compliance_results: List[BacktestingComplianceResult] = []
+        logger.info("BacktestingCompliance initialized (R5, R6, R7, DATA-001)")
 
         logger.info(f"ProfileBatchBacktester initialized with config: {config_path}")
 
@@ -427,9 +446,10 @@ class ProfileBatchBacktester:
         config["input"] = {
             "start_date": backtest_period.get("start_date", "2020-01-01"),
             "end_date": backtest_period.get("end_date", "2023-12-31"),
+            "symbols": self.config_service.get_symbols(),  # Symbols dentro de input
         }
 
-        # Get symbols
+        # Get symbols (also at root for backward compatibility)
         config["symbols"] = self.config_service.get_symbols()
 
         # Strategy configuration will be updated by optimization
@@ -443,6 +463,16 @@ class ProfileBatchBacktester:
         # Merge risk and objective parameters
         if risk_params:
             config["strategy"].update(risk_params)
+            # CRITICAL: Also merge into backtest section for BacktestConfigLoader
+            if "backtest" not in config:
+                config["backtest"] = {}
+            # Map stop_loss_pct -> stop_loss for config_loader
+            if "stop_loss_pct" in risk_params:
+                config["backtest"]["stop_loss"] = risk_params["stop_loss_pct"]
+            if "take_profit_pct" in risk_params:
+                config["backtest"]["take_profit"] = risk_params["take_profit_pct"]
+            if "max_position_pct" in risk_params:
+                config["backtest"]["max_position_size"] = risk_params["max_position_pct"]
         if obj_params:
             config["strategy"].update(obj_params)
 
@@ -634,7 +664,7 @@ class ProfileBatchBacktester:
                 rsi_buy_min = rsi_buy_config.get("min", 20)
                 rsi_buy_max = rsi_buy_config.get("max", 35)
 
-                vol_config = self.profile_config_loader.get_threshold_config("volume_ratio", {})
+                vol_config = self.profile_config_loader.get_threshold_config("volume_ratio")
                 vol_min = vol_config.get("min", 1.0)
                 vol_max = vol_config.get("max", 1.5)
 

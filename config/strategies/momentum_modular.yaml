@@ -104,22 +104,23 @@ modules:
       period: 14
 
     # FIXED: Thresholds adaptativos según contexto - NOW USING SINGLE THRESHOLDS
+    # FIX: Lowered buy_thresholds for more BUY signals
     adaptive_thresholds:
       trend_up:
-        buy_threshold: 45   # In uptrend, wait for deeper pullback
-        sell_threshold: 70  # Sell when clearly overbought
+        buy_threshold: 40   # FIX: Lowered from 45
+        sell_threshold: 80  # Raised from 70
 
       trend_down:
-        buy_threshold: 30   # In downtrend, buy earlier dips
-        sell_threshold: 50  # Take profits earlier in downtrend
+        buy_threshold: 25   # Lowered from 30
+        sell_threshold: 55  # Raised from 50
 
       range:
         buy_threshold: 30   # Standard oversold
         sell_threshold: 70  # Standard overbought
 
       high_vol:
-        buy_threshold: 35   # More permissive in high volatility
-        sell_threshold: 65  # Take profits earlier
+        buy_threshold: 30   # Lowered from 35
+        sell_threshold: 70  # Raised from 65
 
   # STOCHASTIC RSI FILTER
   # Standard StochRSI Strategy:
@@ -142,16 +143,18 @@ modules:
       d_period: 3
 
     # FIXED: Now using single thresholds for oversold/overbought
+    # FIXED: Now using single thresholds for oversold/overbought
+    # FIX: Raised oversold_threshold for more BUY signals
     thresholds:
       conservative:
-        oversold_threshold: 25     # More conservative - wait for deeper oversold
+        oversold_threshold: 30     # FIX: Raised from 25
         overbought_threshold: 75   # Take profits earlier
       balanced:
-        oversold_threshold: 20     # Standard oversold
-        overbought_threshold: 80   # Standard overbought
+        oversold_threshold: 30     # FIX: Raised from 20
+        overbought_threshold: 75   # FIX: Lowered from 80
       aggressive:
-        oversold_threshold: 15     # More aggressive - buy earlier
-        overbought_threshold: 85   # Let profits run longer
+        oversold_threshold: 35     # FIX: Raised from 15
+        overbought_threshold: 80   # FIX: Lowered from 85
 
   # MOMENTUM FILTER (ROC - Rate of Change)
   momentum_filter:
@@ -168,16 +171,17 @@ modules:
       period: 12
       method: "roc" # 'roc' | 'momentum' | 'price_change'
 
+    # FIX: Lowered momentum thresholds for more BUY signals
     thresholds:
       conservative:
-        min_positive_momentum: 0.03 # 3%
-        min_negative_momentum: -0.03
+        min_positive_momentum: 0.02 # FIX: Lowered from 0.03
+        min_negative_momentum: -0.02
       balanced:
-        min_positive_momentum: 0.015 # 1.5%
-        min_negative_momentum: -0.015
+        min_positive_momentum: 0.005 # FIX: Lowered from 0.015
+        min_negative_momentum: -0.005
       aggressive:
-        min_positive_momentum: 0.01 # 1%
-        min_negative_momentum: -0.01
+        min_positive_momentum: 0.003 # FIX: Lowered from 0.01
+        min_negative_momentum: -0.003
 
   # VOLUME FILTER
   volume_filter:
@@ -191,13 +195,14 @@ modules:
       lookback_period: 20
       method: "ratio" # 'ratio' | 'percentile' | 'sma_cross'
 
+    # FIX: Lowered volume requirements - don't require above-average volume
     thresholds:
       conservative:
-        min_volume_ratio: 1.2 # 20% sobre promedio
+        min_volume_ratio: 1.0 # FIX: Lowered from 1.2
       balanced:
-        min_volume_ratio: 1.1 # 10% sobre promedio
+        min_volume_ratio: 0.9 # FIX: Lowered from 1.1
       aggressive:
-        min_volume_ratio: 1.05 # 5% sobre promedio
+        min_volume_ratio: 0.8 # FIX: Lowered from 1.05
 
   # ATR FILTER - Filtro de volatilidad
   atr_filter:
@@ -212,29 +217,30 @@ modules:
       method: "relative_percentile"
       use_relative_atr: true # ATR como % del precio
 
+    # FIX: Lowered ATR thresholds for more permissive trading
     thresholds:
       # Thresholds adaptativos según volatilidad
       high_vol:
-        min_atr_percentile: 50 # Percentil 50
-        min_relative_atr: 0.004 # 0.4%
+        min_atr_percentile: 40 # FIX: Lowered from 50
+        min_relative_atr: 0.003 # FIX: Lowered from 0.004
 
       normal_vol:
-        min_atr_percentile: 60 # Percentil 60
-        min_relative_atr: 0.006 # 0.6%
+        min_atr_percentile: 40 # FIX: Lowered from 60
+        min_relative_atr: 0.004 # FIX: Lowered from 0.006
 
       low_vol:
-        min_atr_percentile: 70 # Percentil 70
-        min_relative_atr: 0.008 # 0.8%
+        min_atr_percentile: 50 # FIX: Lowered from 70
+        min_relative_atr: 0.005 # FIX: Lowered from 0.008
 
       conservative:
-        min_atr_percentile: 70
-        min_relative_atr: 0.008
-      balanced:
-        min_atr_percentile: 60
-        min_relative_atr: 0.006
-      aggressive:
         min_atr_percentile: 50
+        min_relative_atr: 0.005
+      balanced:
+        min_atr_percentile: 40
         min_relative_atr: 0.004
+      aggressive:
+        min_atr_percentile: 30
+        min_relative_atr: 0.003
 
 # RISK MANAGER
 risk_manager:

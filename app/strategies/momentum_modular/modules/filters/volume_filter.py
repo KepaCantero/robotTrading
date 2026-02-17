@@ -29,7 +29,8 @@ class VolumeFilter(BaseFilter):
         self.method = settings.get("method", "ratio")
 
         # Thresholds del preset (usar thresholds cargados desde YAML)
-        self.min_volume_ratio = self.thresholds.get("min_volume_ratio", 1.1)
+        # FIX: Lowered from 1.1 - requiring above-average volume is too restrictive
+        self.min_volume_ratio = self.thresholds.get("min_volume_ratio", 0.9)
 
     def _apply_filter_logic(self, indicators: Dict, market_context: Dict, signal_type: str) -> Dict:
         """Aplicar lógica del filtro de volumen."""

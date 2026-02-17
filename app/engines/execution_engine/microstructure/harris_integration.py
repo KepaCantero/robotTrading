@@ -32,6 +32,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 
+from app.core.centralized_config import get_config
 from .almgren_chriss_model import MarketImpactEstimate, get_almgren_chriss_model
 from .bid_ask_bounce_removal import get_bid_ask_bounce_remover
 from .dark_pool_router import DarkPoolDecision, get_dark_pool_router
@@ -522,6 +523,7 @@ class HarrisMicrostructureIntegrator:
                 reasons.append("Shallow order book - reduced confidence")
 
         # Rule 6.4: Market impact estimation
+        config = get_config()
         volatility = getattr(config.trading, 'max_risk_per_trade', 0.02)  # Default
         if price_history is not None and len(price_history) > 1:
             volatility = price_history["close"].pct_change().std() * np.sqrt(252)

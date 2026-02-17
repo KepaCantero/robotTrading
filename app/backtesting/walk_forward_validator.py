@@ -6,6 +6,12 @@ Comprehensive validation system including:
 - Temporal cross-validation
 - Stress testing with synthetic data generation
 - Monte Carlo simulations
+
+COMPLIANCE: Integrado con BacktestingCompliance para validar:
+- R5: Walk-Forward Analysis
+- R6: Overfitting Prevention
+- R7: Monte Carlo para riesgo
+- DATA-001: Purged Cross-Validation
 """
 
 import json
@@ -21,6 +27,14 @@ import yaml
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig
 from app.backtesting.realistic_data_generator import MarketRegime, RealisticDataGenerator
+
+# COMPLIANCE: Importar BacktestingCompliance para R5, R6, R7, DATA-001
+from app.backtesting.backtesting_compliance import (
+    BacktestingCompliance,
+    BacktestingComplianceResult,
+    create_backtesting_compliance,
+)
+
 from app.models.market_data import Quote
 
 logger = logging.getLogger(__name__)
@@ -552,6 +566,8 @@ class WalkForwardValidator:
 
     Trains on historical window, validates on subsequent period, then rolls forward.
     Now with configurable thresholds and comprehensive reporting.
+
+    COMPLIANCE: Integra BacktestingCompliance para validar reglas R5, R6, R7, DATA-001.
     """
 
     def __init__(
@@ -584,6 +600,11 @@ class WalkForwardValidator:
                 "max_avg_drawdown": -0.20,
             },
         )
+
+        # COMPLIANCE: Inicializar validador de compliance
+        self.backtesting_compliance = create_backtesting_compliance()
+        self.compliance_results: List[BacktestingComplianceResult] = []
+        logger.info("WalkForwardValidator initialized with BacktestingCompliance (R5, R6, R7, DATA-001)")
 
     def create_windows(
         self,
@@ -907,6 +928,64 @@ class WalkForwardValidator:
             "is_oos_analysis": is_oos_analysis,
             "thresholds": self.thresholds,
         }
+
+    def validate_compliance(
+        self,
+        walk_forward_results: List[Dict[str, Any]],
+        n_parameters: int = 10,
+        n_observations: int = 1000,
+    ) -> BacktestingComplianceResult:
+        """
+        Validar compliance de walk-forward según reglas R5, R6, R7, DATA-001.
+
+        COMPLIANCE: Este método integra las validaciones de backtesting:
+        - R5: Walk-Forward Analysis (consistencia y degradación)
+        - R6: Overfitting Prevention (ratio parámetros/observaciones)
+        - DATA-001: Purged CV (purge days y embargo)
+
+        Args:
+            walk_forward_results: Resultados de las ventanas walk-forward
+            n_parameters: Número de parámetros optimizables
+            n_observations: Número de observaciones en el dataset
+
+        Returns:
+            BacktestingComplianceResult con el resultado de la validación
+        """
+        logger.info("Validating walk-forward compliance (R5, R6, DATA-001)...")
+
+        # Preparar datos para R5 (Walk-Forward)
+        windows = []
+        for r in walk_forward_results:
+            is_metrics = r.get('is_metrics', {})
+            oos_metrics = r.get('oos_metrics', {})
+            windows.append({
+                'is_return': is_metrics.get('total_return', 0),
+                'oos_return': oos_metrics.get('total_return', 0),
+                'is_sharpe': is_metrics.get('sharpe_ratio', 0),
+                'oos_sharpe': oos_metrics.get('sharpe_ratio', 0),
+                'trades': oos_metrics.get('total_trades', 0),
+            })
+
+        # Ejecutar validación
+        compliance_result = self.backtesting_compliance.validate_backtest(
+            n_parameters=n_parameters,
+            n_observations=n_observations,
+            walk_forward_windows=windows,
+            purge_days=5,  # Default purge days
+            embargo_days=10,  # Default embargo days
+        )
+
+        self.compliance_results.append(compliance_result)
+
+        # Log resumen
+        if compliance_result.is_compliant:
+            logger.info(f"Walk-Forward COMPLIANCE PASSED: {compliance_result.get_summary()}")
+        else:
+            logger.warning(f"Walk-Forward COMPLIANCE FAILED: {compliance_result.get_summary()}")
+            for v in compliance_result.violations:
+                logger.warning(f"  [{v.severity}] {v.rule_id}: {v.message}")
+
+        return compliance_result
 
 
 # ============================================================================

@@ -12,7 +12,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Set
 
-from app.core.config.base import get_config
+from app.core.centralized_config import get_config
 from app.models.signal import Signal, SignalType
 
 logger = logging.getLogger(__name__)
@@ -165,7 +165,7 @@ class SignalCompoundScoreCalculator:
         if not metadata:
             return 0.5  # Neutral value if no data
 
-        volatility = getattr(config.trading, 'max_risk_per_trade', 0.02))
+        volatility = getattr(config.trading, 'max_risk_per_trade', 0.02)
         # Prefer moderate volatility (0.01-0.03)
         # Normalize to 0-1
         if 0.01 <= volatility <= 0.03:

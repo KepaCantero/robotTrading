@@ -26,7 +26,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union  # noqa: F401
 import numpy as np
 import pandas as pd
 
-from app.core.config.base import get_config
+from app.core.centralized_config import get_config
 
 # mypy: ignore-errors
 # pylint: disable=unsupported-binary-operation  # For Python 3.10+ union syntax

@@ -89,7 +89,7 @@ class MarkowitzOptimizer(BaseOptimizer):
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         """Initialize Markowitz optimizer."""
         super().__init__(config)
-        self.risk_free_rate = getattr(config.trading, 'max_risk_per_trade', 0.02)) if config else 0.02
+        self.risk_free_rate = getattr(config.trading, 'max_risk_per_trade', 0.02) if config else 0.02
 
     def optimize(
         self,

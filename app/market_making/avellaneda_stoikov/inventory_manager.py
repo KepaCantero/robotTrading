@@ -19,7 +19,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
-from app.core.config.base import get_config
+from app.core.centralized_config import get_config
 from app.market_making.avellaneda_stoikov.as_model import calculate_inventory_risk
 from app.market_making.avellaneda_stoikov.models import (
     ASConfig,

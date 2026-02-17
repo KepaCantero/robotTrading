@@ -2517,6 +2517,11 @@ class CentralizedConfig(BaseSettings):
         """Get configuration for a specific strategy."""
         return self.strategies.get(strategy_name)
 
+    @property
+    def trading_thresholds(self) -> "TradingThresholds":
+        """Alias for trading property - backwards compatibility."""
+        return self.trading
+
     def get_trading_threshold(self, threshold_name: str) -> Any:
         """Get a specific trading threshold value."""
         if not hasattr(self.trading, threshold_name):
@@ -2624,6 +2629,20 @@ def get_strategy_config(strategy_name: str) -> Optional[StrategyConfig]:
 def get_compliance_config() -> ComplianceConfig:
     """Get compliance engine configuration."""
     return get_config().compliance
+
+
+def get_strategy_stock_allocator_config(tier: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Get Strategy Stock Allocator configuration.
+
+    Args:
+        tier: Capital tier for applying overrides
+
+    Returns:
+        Complete Strategy Stock Allocator configuration
+    """
+    from app.core.config_loader import load_strategy_stock_allocator_config
+    return load_strategy_stock_allocator_config(tier)
 
 
 def reload_config():

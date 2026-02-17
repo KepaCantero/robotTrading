@@ -129,9 +129,9 @@ class Signal(BaseModel):
             raise ValueError(f"Price must be positive, got {v}")
         # Use config for max price limit
         tt = get_config().trading_thresholds
-        max_price = Decimal(str(tt.max_signal_price_usd))
+        max_price = Decimal(str(getattr(tt, 'max_signal_price_usd', 1000000)))
         if v > max_price:
-            raise ValueError(f"Price exceeds maximum limit of ${tt.max_signal_price_usd:,.0f}, got {v}")
+            raise ValueError(f"Price exceeds maximum limit, got {v}")
 
         return v
 
@@ -148,9 +148,9 @@ class Signal(BaseModel):
             raise ValueError(f"Volume must be non-negative, got {v}")
         # Use config for max volume limit
         tt = get_config().trading_thresholds
-        max_volume = Decimal(str(tt.max_signal_volume_shares))
+        max_volume = Decimal(str(getattr(tt, 'max_signal_volume_shares', 10000000)))
         if v > max_volume:
-            raise ValueError(f"Volume exceeds maximum limit of {tt.max_signal_volume_shares:,.0f} shares, got {v}")
+            raise ValueError(f"Volume exceeds maximum limit, got {v}")
 
         return v
 

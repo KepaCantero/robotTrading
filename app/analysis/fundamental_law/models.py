@@ -14,7 +14,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from decimal import Decimal
 
-from app.core.config.base import get_config
+from app.core.centralized_config import get_config
 
 
 @dataclass(frozen=True)
@@ -320,7 +320,7 @@ class ICMetrics:
         decay_ratio = abs(final_ic) / abs(initial_ic)
 
         # Get persistence thresholds from config
-        from app.core.config.base import get_config
+        from app.core.centralized_config import get_config
         cfg = get_config()
         long_threshold = Decimal(str(getattr(cfg.trading, 'signal_persistence_long', 0.7)))
         medium_threshold = Decimal(str(getattr(cfg.trading, 'signal_persistence_medium', 0.4)))

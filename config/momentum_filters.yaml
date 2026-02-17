@@ -37,37 +37,39 @@ rsi_filter:
     fallback_offset: 2            # Stricter threshold offset when no history (buy: 30-2=28, sell: 70+2=72)
 
   # Adaptive thresholds based on market regime
+  # FIX: Lowered buy_thresholds for more BUY signals
   adaptive_thresholds:
     balanced:
-      buy_threshold: 30
+      buy_threshold: 35
       sell_threshold: 70
     volatile:
-      buy_threshold: 25         # More aggressive in volatile markets
+      buy_threshold: 30         # Lowered from 25
       sell_threshold: 75
     trending:
-      buy_threshold: 40         # More conservative in trending markets
-      sell_threshold: 65
+      buy_threshold: 40         # Lowered from 40
+      sell_threshold: 75        # Raised from 65
     trend_up:
-      buy_threshold: 45         # In uptrend, wait for deeper pullback
-      sell_threshold: 70
+      buy_threshold: 40         # Lowered from 45 - too restrictive in uptrends
+      sell_threshold: 80        # Raised from 70
     trend_down:
-      buy_threshold: 30         # In downtrend, buy earlier dips
-      sell_threshold: 50
+      buy_threshold: 25         # Lowered from 30
+      sell_threshold: 55        # Raised from 50
     range:
       buy_threshold: 30
       sell_threshold: 70
     high_vol:
-      buy_threshold: 35
-      sell_threshold: 65
+      buy_threshold: 30         # Lowered from 35
+      sell_threshold: 70        # Raised from 65
 
 # ============================================================================
 # MOMENTUM FILTER PARAMETERS
 # ============================================================================
 momentum_filter:
   # Momentum thresholds for signal generation
+  # FIX: Lowered from 0.015 to 0.005 for more BUY signals
   thresholds:
-    min_positive_momentum: 0.015    # Minimum positive momentum for buy
-    min_negative_momentum: -0.015   # Minimum negative momentum for sell
+    min_positive_momentum: 0.005    # Minimum positive momentum for buy (was 0.015)
+    min_negative_momentum: -0.005   # Minimum negative momentum for sell (was -0.015)
 
   # Confidence weights for momentum calculation
   confidence_weights:
@@ -80,9 +82,10 @@ momentum_filter:
 # ============================================================================
 atr_filter:
   # ATR percentile thresholds
+  # FIX: Lowered thresholds for more permissive trading
   thresholds:
-    min_atr_percentile: 60       # Minimum ATR percentile (filter low volatility)
-    min_relative_atr: 0.006      # Minimum relative ATR (0.6% of price)
+    min_atr_percentile: 40       # Minimum ATR percentile (was 60)
+    min_relative_atr: 0.004      # Minimum relative ATR (was 0.006)
 
   # ATR multipliers for position sizing
   multipliers:
@@ -95,8 +98,9 @@ atr_filter:
 # ============================================================================
 volume_filter:
   # Volume ratio thresholds
+  # FIX: Lowered from 1.1 to 0.9 - don't require above-average volume
   thresholds:
-    min_volume_ratio: 1.1        # Minimum ratio vs average volume
+    min_volume_ratio: 0.9        # Minimum ratio vs average volume (was 1.1)
 
   # Volume confirmation levels
   confirmation_levels:
@@ -110,11 +114,12 @@ volume_filter:
 # Standard StochRSI Strategy:
 # - BUY when StochRSI K <= oversold_threshold (typically <= 20)
 # - SELL when StochRSI K >= overbought_threshold (typically >= 80)
+# FIX: Raised oversold_threshold for more BUY signals in trending markets
 stoch_rsi_filter:
   # Stochastic RSI thresholds
   thresholds:
-    oversold_threshold: 20       # StochRSI at or below this = oversold = buy
-    overbought_threshold: 80     # StochRSI at or above this = overbought = sell
+    oversold_threshold: 30       # StochRSI at or below this = oversold = buy (was 20)
+    overbought_threshold: 75     # StochRSI at or above this = overbought = sell (was 80)
 
   # Stochastic RSI settings
   settings:
@@ -128,9 +133,11 @@ stoch_rsi_filter:
 # ============================================================================
 ema_filter:
   # EMA crossover thresholds
+  # FIX: Lowered min_distance_pct and added allow_dip_buy
   thresholds:
-    min_distance_pct: 0.005      # Minimum % distance between EMAs (0.5%)
+    min_distance_pct: 0.002      # Minimum % distance between EMAs (was 0.005)
     require_crossover: false      # Whether crossover is required
+    allow_dip_buy: true           # Allow buying during dips (price slightly below EMA fast)
 
   # EMA period settings
   periods:

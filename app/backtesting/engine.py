@@ -97,6 +97,9 @@ class BacktestEngine:
         # Track last known price for each symbol for accurate equity curve calculation
         self.last_known_prices: Dict[str, Decimal] = {}
 
+        # Store market_data for building price_history for compliance engine
+        self._market_data_list: List = []
+
         # Initialize service classes
         # PositionManager - pure state holder for positions
         self.position_manager = PositionManager()
@@ -287,6 +290,9 @@ class BacktestEngine:
         # Initialize backtest
         self._reset_backtest()
 
+        # Store market_data for compliance engine price_history
+        self._market_data_list = market_data
+
         # Process each market data point
         signal_index = 0
         signals_processed = 0
@@ -385,6 +391,60 @@ class BacktestEngine:
             total_return=total_return,
             annualized_return=annualized_return,
         )
+
+    def _build_price_history(
+        self, symbol: str, current_timestamp: datetime, lookback_days: int = 252
+    ):
+        """
+        Build a price history DataFrame for compliance engine validation.
+
+        Args:
+            symbol: Symbol to build history for
+            current_timestamp: Current timestamp (get data up to this point)
+            lookback_days: Number of days to look back (default 252 trading days)
+
+        Returns:
+            pandas DataFrame with OHLCV data and DatetimeIndex, or None if no data
+        """
+        import pandas as pd
+        from datetime import timedelta
+
+        if not self._market_data_list:
+            return None
+
+        # Calculate lookback timestamp
+        lookback_timestamp = current_timestamp - timedelta(days=lookback_days)
+
+        # Filter market data for this symbol up to current timestamp
+        historical_data = []
+        for md in self._market_data_list:
+            if md.symbol == symbol and lookback_timestamp <= md.timestamp <= current_timestamp:
+                # Extract OHLCV data
+                row = {
+                    'timestamp': md.timestamp,
+                    'open': getattr(md, 'open', None) or getattr(md, 'open_price', None),
+                    'high': getattr(md, 'high', None) or getattr(md, 'high_price', None),
+                    'low': getattr(md, 'low', None) or getattr(md, 'low_price', None),
+                    'close': get_price(md),
+                    'volume': getattr(md, 'volume', 0),
+                }
+                historical_data.append(row)
+
+        if not historical_data:
+            return None
+
+        # Build DataFrame with DatetimeIndex
+        df = pd.DataFrame(historical_data)
+        df['timestamp'] = pd.to_datetime(df['timestamp'])
+        df.set_index('timestamp', inplace=True)
+        df.sort_index(inplace=True)
+
+        # Convert Decimal to float for pandas compatibility
+        for col in ['open', 'high', 'low', 'close']:
+            if col in df.columns:
+                df[col] = df[col].apply(lambda x: float(x) if hasattr(x, '__float__') else x)
+
+        return df
 
     def _reset_backtest(self) -> None:
         """Reset backtest state."""
@@ -585,12 +645,17 @@ class BacktestEngine:
         if action == "BUY":
             # COMPLIANCE: Pre-trade analysis - validate trade before execution
             current_price = get_price(market_data)
+            # Build price history for compliance engine validation
+            price_history = self._build_price_history(
+                symbol=signal.symbol,
+                current_timestamp=market_data.timestamp,
+            )
             pre_trade_analysis = self.compliance_engine.analyze_pre_trade(
                 symbol=signal.symbol,
                 side="BUY",
                 quantity=Decimal("0"),  # Will be calculated by executor
                 price=current_price,
-                price_history=None,  # Could pass historical data if available
+                price_history=price_history,
                 urgency=0.5,
                 signal_time=signal.timestamp,
             )
@@ -650,12 +715,17 @@ class BacktestEngine:
         elif action == "SELL":
             # COMPLIANCE: Pre-trade analysis - validate sell trade before execution
             current_price = get_price(market_data)
+            # Build price history for compliance engine validation
+            price_history = self._build_price_history(
+                symbol=signal.symbol,
+                current_timestamp=market_data.timestamp,
+            )
             pre_trade_analysis = self.compliance_engine.analyze_pre_trade(
                 symbol=signal.symbol,
                 side="SELL",
                 quantity=Decimal("0"),  # Will be calculated by executor
                 price=current_price,
-                price_history=None,  # Could pass historical data if available
+                price_history=price_history,
                 urgency=0.5,
                 signal_time=signal.timestamp,
             )
@@ -792,7 +862,8 @@ class BacktestEngine:
                 return False
 
         # Calculate expected profit at take profit
-        expected_profit = max_position_value * (take_profit_pct / Decimal("100"))
+        # take_profit_pct is stored as decimal (0.12 = 12%), so use directly
+        expected_profit = max_position_value * take_profit_pct
 
         # Validate: expected profit must be GREATER THAN 5x round-trip commission
         min_required_profit = round_trip_commission * 5
@@ -1052,6 +1123,7 @@ class BacktestEngine:
                 current_position
                 * (exit_price_with_slippage - (current_price or recent_trades[-1].entry_price))
             ),
+            reason=reason,  # FIX: Set the reason for the trade
         )
 
         # Close all matching buy trades

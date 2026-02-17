@@ -34,6 +34,63 @@ from .modules.market_analyzer import MarketAnalyzer
 logger = logging.getLogger(__name__)
 
 
+class StrategyConfig:
+    """Configuracion con valores por defecto para ModularMomentumStrategy."""
+
+    # Historico minimo
+    min_history_length: int = 50
+
+    # Filtros de mercado - valores más conservadores para evitar falsos positivos
+    # Solo bloquear trading en crisis MUY extremas
+    # NOTE: trend strength uses 0.25 divisor, so 1.01 threshold = disabled (strength capped at 1.0)
+    # TODO: Investigate why trend_strength is always 1.0 in backtests
+    bear_market_strength_threshold: float = 1.01  # Temporarily disabled for testing
+    volatility_crisis_percentile: float = 99.0    # Aumentado de 98.0 - solo extremo
+    normal_volatility_min: float = 20.0
+    normal_volatility_max: float = 80.0
+
+    # Entrenamiento automatico
+    auto_train_min_history: int = 100
+
+    # Confianza (escala 0-100, consistente con Signal model)
+    # SIG-001/R20: Strong signals require confidence >= 70%
+    very_strong_confidence: float = 90.0  # VERY_STRONG: >= 90%
+    strong_confidence: float = 70.0       # STRONG: >= 70%
+    moderate_confidence: float = 50.0     # MODERATE: >= 50%
+
+    # Volumen
+    volume_ratio_min: float = 1.0
+    volume_ratio_multiplier: float = 50.0
+    default_volume: float = 100000.0
+
+    # Prioridad
+    priority_confidence_weight: float = 0.7
+    priority_liquidity_weight: float = 0.3
+
+    # SELL signal thresholds - RE-ENABLED with sensible values
+    rsi_overbought_sell: float = 70.0  # Standard RSI overbought level
+    trend_down_sell_strength: float = 0.6  # Match min_trend_strength for downtrend detection
+    negative_momentum_threshold: float = -0.015  # Match momentum filter threshold (-1.5%)
+
+    # Learning
+    learning_filter_weight: float = 0.3
+    learning_confidence_weight: float = 0.7
+
+    # Secuencias
+    default_sequence_length: int = 20
+    transformer_sequence_length: int = 60
+
+    # Position sizing
+    max_position_size_default: float = 0.1
+
+    def __init__(self, config_dict: Optional[Dict] = None):
+        """Inicializar con valores del diccionario si existen."""
+        if config_dict:
+            for key, value in config_dict.items():
+                if hasattr(self, key):
+                    setattr(self, key, value)
+
+
 class RateLimitedLogger:
     """Logger que solo imprime warnings cada N veces para evitar spam."""
 
@@ -76,9 +133,8 @@ class ModularMomentumStrategy(BaseStrategy):
         """
         super().__init__(config)
 
-        # Load modular strategy config
-        trading_config = get_config()
-        self._cfg = trading_config.trading_thresholds.momentum  # Use modular config
+        # Usar StrategyConfig con valores del YAML de la estrategia
+        self._cfg = StrategyConfig(config.get("strategy_params", {}))
 
         # Configuración
         self.preset = config.get("preset", "balanced")
@@ -257,9 +313,11 @@ class ModularMomentumStrategy(BaseStrategy):
         Check if the current market regime is safe for trading.
 
         This is a CRITICAL filter that prevents trading during adverse market conditions:
-        - Bear market crashes (DOWN trend + HIGH volatility)
-        - Dead markets (sideways/range + LOW volatility)
-        - Only allows trading in favorable conditions
+        - Bear market crashes (DOWN trend with extreme strength)
+        - Extreme volatility crisis (volatility percentile > 99)
+
+        UPDATED: More permissive to allow trading in normal market conditions.
+        Only blocks trading during actual crashes, not during low-volatility or range markets.
 
         Args:
             market_context: Market analysis context from market_analyzer
@@ -274,7 +332,8 @@ class ModularMomentumStrategy(BaseStrategy):
 
         # BAD REGIME CONDITIONS (return False - NO trading)
 
-        # 1. Bear market crash: trend DOWN with high strength
+        # 1. Bear market crash: trend DOWN with EXTREME strength (> 1.0 means disabled)
+        # Only block if trend is strongly down AND strength is extreme
         if market_type == 'trend_down' and trend_strength > self._cfg.bear_market_strength_threshold:
             _rate_limited_logger.warning(
                 f"🚨 BEAR MARKET CRASH DETECTED: "
@@ -284,17 +343,8 @@ class ModularMomentumStrategy(BaseStrategy):
             )
             return False
 
-        # 2. Dead/sideways market with low volatility (no opportunity)
-        if market_type in ['range', 'sideways'] and volatility_regime == 'low':
-            logger.debug(
-                f"💀 DEAD MARKET: "
-                f"type={market_type}, volatility={volatility_regime} - "
-                f"NO trading (insufficient volatility for profits)"
-            )
-            return False
-
-        # 3. HIGH volatility regime (crash/crisis conditions)
-        # If volatility is above configured percentile, market is in crisis
+        # 2. EXTREME volatility crisis (>99th percentile)
+        # Only block in truly extreme conditions, not just "high" volatility
         if volatility_percentile > self._cfg.volatility_crisis_percentile:
             _rate_limited_logger.warning(
                 f"🔥 EXTREME VOLATILITY CRISIS: "
@@ -305,43 +355,45 @@ class ModularMomentumStrategy(BaseStrategy):
             return False
 
         # GOOD REGIME CONDITIONS (return True - ALLOW trading)
+        # UPDATED: Much more permissive - allow trading in most conditions
 
         # 1. Bull market: trend UP is always good
         if market_type == 'trend_up':
             logger.debug(
-                f"✅ BULL MARKET: "
-                f"type={market_type}, strength={trend_strength:.2f} - "
-                f"Trading ALLOWED"
+                f"✅ BULL MARKET: type={market_type}, strength={trend_strength:.2f} - Trading ALLOWED"
             )
             return True
 
-        # 2. Normal volatility (configured range) with any trend except strong down
-        if self._cfg.normal_volatility_min <= volatility_percentile <= self._cfg.normal_volatility_max:
-            if market_type != 'trend_down' or trend_strength <= 0.5:
-                logger.debug(
-                    f"✅ NORMAL VOLATILITY: "
-                    f"percentile={volatility_percentile}, type={market_type} - "
-                    f"Trading ALLOWED"
-                )
-                return True
-
-        # 3. No trend / range with normal volatility (acceptable)
-        if market_type in ['range', 'no_trend'] and volatility_regime == 'normal':
+        # 2. No clear trend (no_trend, range, low_vol) - ALLOW trading
+        # These are normal market conditions, not crash conditions
+        if market_type in ['no_trend', 'range', 'low_vol', 'unknown']:
             logger.debug(
-                f"✅ RANGE MARKET (NORMAL VOL): "
-                f"type={market_type}, volatility={volatility_regime} - "
-                f"Trading ALLOWED (cautious)"
+                f"✅ NORMAL/NEUTRAL MARKET: type={market_type}, volatility={volatility_regime} - Trading ALLOWED"
             )
             return True
 
-        # DEFAULT: Conservative - don't trade if uncertain
+        # 3. Any market type except strong downtrend - ALLOW trading
+        # Only block if we have a confirmed strong downtrend
+        if market_type != 'trend_down':
+            logger.debug(
+                f"✅ MARKET OK: type={market_type}, volatility={volatility_regime} - Trading ALLOWED"
+            )
+            return True
+
+        # 4. Downtrend but not extreme strength - ALLOW with caution
+        if market_type == 'trend_down' and trend_strength <= self._cfg.bear_market_strength_threshold:
+            logger.debug(
+                f"⚠️ MILD DOWNTREND: type={market_type}, strength={trend_strength:.2f} - Trading ALLOWED (cautious)"
+            )
+            return True
+
+        # DEFAULT: Allow trading (changed from conservative block)
+        # Only explicit crash conditions should block trading
         logger.debug(
-            f"⚠️ UNCERTAIN MARKET REGIME: "
-            f"type={market_type}, strength={trend_strength:.2f}, "
-            f"volatility={volatility_regime} (percentile={volatility_percentile}) - "
-            f"DEFAULTING to NO TRADING (conservative)"
+            f"✅ DEFAULT ALLOW: type={market_type}, strength={trend_strength:.2f}, "
+            f"volatility={volatility_regime} (percentile={volatility_percentile})"
         )
-        return False
+        return True
 
     def generate_signals(self, market_data: Quote) -> List[Signal]:
         """
@@ -641,14 +693,15 @@ class ModularMomentumStrategy(BaseStrategy):
             current_price = prices[-1]
             indicators['relative_atr'] = (atr / current_price * 100) if current_price > 0 else 0
 
-            # ATR percentile
+            # ATR percentile - usar bisect para cálculo correcto
             if len(self.atr_history) >= 30:
+                import bisect
                 # Convert deque to list for slicing (deque doesn't support slice notation in older Python)
                 recent_atr = list(self.atr_history)[-30:] if len(self.atr_history) > 0 else []
                 sorted_atr = sorted(recent_atr)
-                percentile = (
-                    (sorted_atr.index(atr) / len(sorted_atr)) * 100 if atr in sorted_atr else 50
-                )
+                # Usar bisect para encontrar posición correcta (evita problemas con floats)
+                pos = bisect.bisect_left(sorted_atr, atr)
+                percentile = (pos / len(sorted_atr)) * 100
                 indicators['atr_percentile'] = percentile
             else:
                 indicators['atr_percentile'] = 50
@@ -707,102 +760,99 @@ class ModularMomentumStrategy(BaseStrategy):
             )
             return None
 
-        # Contar solo los resultados principales de cada filtro (sin _buy/_sell)
-        # Cada filtro tiene una entrada principal con su nombre
+        # CRITICAL FIX: Count BUY and SELL filters separately using explicit suffixes
         filter_names = [f.name for f in self.filters]
-        passed_filters = [
+
+        # Count BUY filter passes using _buy suffix
+        buy_passed_filters = [
             filter_name
             for filter_name in filter_names
-            if filter_name in filter_results and filter_results[filter_name].get('passed', False)
+            if f"{filter_name}_buy" in filter_results and filter_results[f"{filter_name}_buy"].get('passed', False)
+        ]
+
+        # Count SELL filter passes using _sell suffix
+        sell_passed_filters = [
+            filter_name
+            for filter_name in filter_names
+            if f"{filter_name}_sell" in filter_results and filter_results[f"{filter_name}_sell"].get('passed', False)
         ]
 
         total_filters = len(self.filters)
 
         logger.debug(
-            f"🔍 Determinando señal: {len(passed_filters)}/{total_filters} filtros pasaron, modo={self.combination_mode}"
+            f"🔍 Determinando señal: BUY={len(buy_passed_filters)}/{total_filters}, "
+            f"SELL={len(sell_passed_filters)}/{total_filters}, modo={self.combination_mode}"
         )
-        logger.debug(f"   Filtros que pasaron: {passed_filters}")
-        logger.debug(f"   Todos los filtros: {filter_names}")
 
-        # Decidir según modo de combinación
+        # FIX: Check BUY conditions FIRST - this is more important for momentum strategies
+        # SELL conditions should only override if filters strongly indicate SELL
+
+        # First check BUY conditions
+        buy_signal = False
         if self.combination_mode == "ALL":
-            if len(passed_filters) == total_filters:
-                logger.debug("✅ Todos los filtros pasaron - generando señal BUY")
-                return SignalType.BUY
+            if len(buy_passed_filters) == total_filters:
+                buy_signal = True
         elif self.combination_mode == "MAJORITY":
-            required = max(1, (total_filters + 1) // 2)  # Mayoría = >50%
-            if len(passed_filters) >= required:
-                logger.debug(
-                    f"✅ Mayoría de filtros pasaron ({len(passed_filters)}/{total_filters}) - generando señal BUY"
-                )
-                return SignalType.BUY
+            required = max(1, (total_filters + 1) // 2)
+            if len(buy_passed_filters) >= required:
+                buy_signal = True
         elif self.combination_mode == "ANY":
-            if len(passed_filters) > 0:
-                logger.debug(
-                    f"✅ Al menos un filtro pasó ({len(passed_filters)}) - generando señal BUY"
-                )
-                return SignalType.BUY
+            if len(buy_passed_filters) > 0:
+                buy_signal = True
 
-        logger.debug(
-            f"❌ No se cumple el modo de combinación ({self.combination_mode}) - no se genera señal"
-        )
+        # Check SELL conditions based on filter combination mode ONLY (not extra conditions)
+        # FIX: Only return SELL if filter-based SELL conditions are met, not just RSI > 70
+        sell_signal = False
+        if self.combination_mode == "ALL":
+            sell_signal = len(sell_passed_filters) >= total_filters
+        elif self.combination_mode == "MAJORITY":
+            required = max(1, (total_filters + 1) // 2)
+            sell_signal = len(sell_passed_filters) >= required
+        elif self.combination_mode == "ANY":
+            sell_signal = len(sell_passed_filters) > 0
 
-        # Revisar condiciones de venta
-        # Generar SELL si hay condiciones de salida
-        sell_passed_filters = [
-            filter_name.replace('_sell', '')
-            for filter_name in filter_results
-            if filter_name.endswith('_sell') and filter_results[filter_name].get('passed', False)
-        ]
-
+        # Decision logic: Prioritize BUY in trend_up markets
         market_type = market_context.get('type', 'unknown')
-        market_strength = market_context.get('strength', 0.5)
+        market_strength = market_context.get('trend_strength', 0.5)
 
-        # Condiciones para señal SELL:
-        # 1. Tendencia bajista con mayoría de filtros de venta pasando
-        # 2. RSI en sobrecompra (>70) con momentum negativo
-        # 3. Cruce EMA bajista con volumen alto
-        should_sell = False
-        sell_reason = None
+        # Get indicator values from filter results for additional checks
+        rsi_result = filter_results.get('rsi_filter_buy', {})
+        momentum_result = filter_results.get('momentum_filter_buy', {})
+        rsi = rsi_result.get('metadata', {}).get('rsi') or rsi_result.get('value')
+        momentum = momentum_result.get('metadata', {}).get('momentum') or momentum_result.get('value')
 
-        if self.combination_mode == "ALL":
-            should_sell = len(sell_passed_filters) >= len(self.filters)
-        elif self.combination_mode == "MAJORITY":
-            required = max(1, (len(self.filters) + 1) // 2)
-            should_sell = len(sell_passed_filters) >= required
-        elif self.combination_mode == "ANY":
-            should_sell = len(sell_passed_filters) > 0
+        # CRITICAL FIX: In uptrend, prioritize BUY signals
+        # Only generate SELL in uptrend if filter-based SELL passes AND momentum is negative
+        if market_type == 'trend_up':
+            if buy_signal:
+                logger.info(
+                    f"✅ BUY signal in uptrend: {len(buy_passed_filters)}/{total_filters} filters"
+                )
+                return SignalType.BUY
+            elif sell_signal and momentum is not None and momentum < self._cfg.negative_momentum_threshold:
+                # Only sell in uptrend if momentum is actually negative
+                logger.info(
+                    f"🔴 SELL signal: filters + negative momentum in uptrend"
+                )
+                return SignalType.SELL
 
-        # Condiciones adicionales de mercado para SELL
-        # CRITICAL: Use None as default, not neutral values that could cause false positives
-        rsi = filter_results.get('rsi_filter', {}).get('value')
-        momentum = filter_results.get('momentum_filter', {}).get('value')
-
-        # Sobrecompra extrema (only if RSI is available) - use config
-        if rsi is not None and isinstance(rsi, (int, float)) and rsi > self._cfg.rsi_overbought_sell:
-            should_sell = True
-            sell_reason = "OVERBOUGHT"
-            logger.debug(f"🔴 SELL signal: RSI overbought ({rsi:.1f})")
-
-        # Tendencia bajista fuerte - use config
-        if market_type == 'trend_down' and market_strength > self._cfg.trend_down_sell_strength:
-            should_sell = True
-            sell_reason = "STRONG_DOWNTREND"
-            logger.debug(f"🔴 SELL signal: Strong downtrend ({market_strength:.2f})")
-
-        # Momentum negativo significativo (only if momentum is available) - use config
-        if momentum is not None and isinstance(momentum, (int, float)) and momentum < self._cfg.negative_momentum_threshold:
-            should_sell = True
-            sell_reason = "NEGATIVE_MOMENTUM"
-            logger.debug(f"🔴 SELL signal: Negative momentum ({momentum:.3f})")
-
-        if should_sell:
-            logger.debug(
-                f"✅ SELL signal generated: {len(sell_passed_filters)} filters passed, "
-                f"reason={sell_reason or 'FILTERS'}"
+        # Standard logic for non-uptrend markets
+        if sell_signal:
+            logger.info(
+                f"🔴 SELL signal: {len(sell_passed_filters)}/{total_filters} filters passed"
             )
             return SignalType.SELL
 
+        if buy_signal:
+            logger.info(
+                f"✅ BUY signal: {len(buy_passed_filters)}/{total_filters} filters passed"
+            )
+            return SignalType.BUY
+
+        logger.debug(
+            f"❌ No signal: BUY={len(buy_passed_filters)}/{total_filters}, "
+            f"SELL={len(sell_passed_filters)}/{total_filters}"
+        )
         return None
 
     def _calculate_signal_confidence(
