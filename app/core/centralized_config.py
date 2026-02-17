@@ -33,6 +33,7 @@ from app.core.strategy_config import (
     FXCarryTradeStrategyConfig,
     MomentumModularConfig,
 )
+from app.core.config.signal_risk import MarketMicrostructureThresholds
 
 logger = logging.getLogger(__name__)
 
@@ -2473,6 +2474,9 @@ class CentralizedConfig(BaseSettings):
     )
     compliance: ComplianceConfig = Field(
         default_factory=ComplianceConfig, description="Compliance engine configuration"
+    )
+    market_microstructure: MarketMicrostructureThresholds = Field(
+        default_factory=MarketMicrostructureThresholds, description="Market microstructure thresholds"
     )
 
     # Strategy configurations
