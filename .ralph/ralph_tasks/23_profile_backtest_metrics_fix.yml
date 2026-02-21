@@ -1,0 +1,510 @@
+# ============================================
+# Ralph Task 23: Profile Backtest Metrics Fix
+# ============================================
+# PRIORIDAD: P0 - CRITICO
+# FASE: Phase 7 - Backtesting Quality
+# OBJETIVO: Diagnosticar y arreglar Sharpe ratio negativo y métricas pobres
+# TIEMPO: ~16 horas (con iteraciones automáticas)
+#
+# DIAGNOSIS:
+#   - Baseline Sharpe: -1099.01 (extremadamente pobre)
+#   - Optimized Sharpe: -166.53 (mejora 84.8% pero todavia pobre)
+#   - Max Drawdown: -18.29%
+#   - Return: N/A
+#   - Status: REJECTED
+#
+# MECANISMO DE AUTO-ITERACION:
+#   - La tarea se retroalimenta automáticamente
+#   - Itera hasta alcanzar métricas objetivo o max_iterations
+#   - Aprende de intentos fallidos
+#   - Guarda historial de intentos en memory
+#
+# Depends on: 17_backtest_fixes (validadores P&L y drawdown)
+# ============================================================================
+
+event_loop:
+  prompt_file: ".ralph/ralph_tasks/prompts/23_profile_backtest_metrics_fix.md"
+  completion_promise: "PROFILE_BACKTEST_METRICS_FIX_COMPLETE"
+  max_iterations: 300  # Aumentado para permitir iteraciones de auto-mejora
+  max_runtime_seconds: 172800  # 48 hours - tiempo para múltiples iteraciones
+  checkpoint_interval: 3  # Checkpoint más frecuente
+  starting_event: "metrics_fix.start"
+
+# ============================================================================
+# VARIABLE DE ESTADO - Se mantiene entre iteraciones
+# ============================================================================
+variables:
+  iteration_count: 0
+  max_iterations_allowed: 50  # Max 50 intentos de fix
+  target_sharpe: 0.5
+  target_return: 0.0
+  target_win_rate: 0.45
+  current_best_sharpe: -9999
+  best_params: null
+  attempt_history: []  # Historial de intentos para learning
+
+cli:
+  backend: "claude"
+
+core:
+  specs_dir: "./specs/"
+
+hats:
+  metrics_diagnostician:
+    name: "Metrics Diagnostician"
+    description: "Diagnostica problemas con Sharpe ratio y metricas de backtesting"
+    triggers: ["metrics_fix.start", "metrics_fix.diagnose", "metrics_fix.iterate"]
+    publishes: ["metrics_fix.diagnose", "metrics_fix.fix_params", "metrics_fix.fix_strategy", "metrics_fix.fix_calculation", "metrics_fix.blocked", "metrics_fix.iterate"]
+    default_publishes: "metrics_fix.diagnose"
+    instructions: |
+      ## PROFILE BACKTEST METRICS FIX - DIAGNOSTICO CON AUTO-ITERACION
+
+      **OBJETIVO:** Arreglar Sharpe ratio negativo (-1099.01 baseline, -166.53 optimizado)
+      y lograr metricas aceptables para que el profile investor sea APPROVED.
+
+      **MECANISMO DE AUTO-ITERACION:**
+      Esta tarea se retroalimenta automaticamente. Si un fix no funciona,
+      vuelve a diagnosticar con la nueva informacion y prueba otro enfoque.
+
+      ### VARIABLE DE ESTADO (consultar en cada iteracion):
+      ```yaml
+      iteration_count: {{iteration_count}}
+      max_iterations_allowed: 50
+      target_sharpe: 0.5
+      target_return: 0.0
+      current_best_sharpe: {{current_best_sharpe}}
+      best_params: {{best_params}}
+      ```
+
+      ### FASE 1: CARGAR HISTORIAL DE INTENTOS
+
+      Antes de diagnosticar, leer intentos anteriores:
+      ```bash
+      # Leer historial si existe
+      cat .ralph/outputs/23_attempt_history.json 2>/dev/null || echo "[]"
+      ```
+
+      Aprender de intentos fallidos:
+      - Si RSI adjustment no funcionó → probar volume adjustment
+      - Si parameter widening no funcionó → probar strategy config
+      - Si todo falló → revisar cálculo de Sharpe
+
+      ### FASE 2: DIAGNOSTICO INICIAL
+
+      #### 2.1 Analizar Sharpe Ratio Calculator
+      ```bash
+      grep -rn "sharpe_ratio" app/backtesting/ --include="*.py" | head -30
+      cat app/backtesting/performance_calculator.py | grep -A 50 "def.*sharpe"
+      ```
+
+      #### 2.2 Verificar datos de entrada
+      ```bash
+      cat config/profile_batch_backtest.yaml | grep -A 20 "symbols"
+      cat config/profile_batch_backtest.yaml | grep -A 10 "backtest_period"
+      ```
+
+      #### 2.3 Analizar estrategia actual
+      ```bash
+      cat config/strategies/momentum_modular.yaml
+      cat config/profile_optimization.yaml | head -100
+      ```
+
+      ### FASE 3: IDENTIFICAR CAUSAS (con prioridad basada en historial)
+
+      1. **Sharpe negativo extremo (-1099) indica:**
+         - [ ] Retorno promedio negativo
+         - [ ] Volatilidad casi cero (division por ~0)
+         - [ ] Error en calculo de returns
+         - [ ] Datos insuficientes o corruptos
+
+      2. **Return N/A indica:**
+         - [ ] No se calcularon retornos
+         - [ ] No hubo trades cerrados
+         - [ ] Error en equity curve
+
+      ### FASE 4: CATEGORIZAR Y RUTEAR
+
+      Basado en diagnostico E historial de intentos, decidir:
+
+      - **A) Bug en cálculo** → `metrics_fix.fix_calculation`
+      - **B) Parametros restrictivos** → `metrics_fix.fix_params`
+      - [ ] **C) Estrategia config** → `metrics_fix.fix_strategy`
+      - [ ] **D) Necesita mas iteracion** → `metrics_fix.iterate`
+
+      ### GUARDAR ESTADO ANTES DE CONTINUAR:
+      ```bash
+      # Incrementar contador
+      NEW_ITER=$(({{iteration_count}} + 1))
+
+      # Guardar diagnostico
+      echo "{
+        \"iteration\": $NEW_ITER,
+        \"timestamp\": \"$(date -Iseconds)\",
+        \"diagnosis\": \"<diagnostico actual>\",
+        \"action_taken\": \"<accion a tomar>\"
+      }" >> .ralph/outputs/23_attempt_history.json
+      ```
+
+      ### Eventos:
+      - Fix calculation bug: `ralph emit "metrics_fix.fix_calculation" "issue=..."`
+      - Fix params: `ralph emit "metrics_fix.fix_params" "issue=..."`
+      - Fix strategy: `ralph emit "metrics_fix.fix_strategy" "issue=..."`
+      - Nueva iteracion: `ralph emit "metrics_fix.iterate" "reason=need_different_approach"`
+      - Bloqueado: `ralph emit "metrics_fix.blocked" "error=..."`
+
+  params_fixer:
+    name: "Parameters Fixer"
+    description: "Arregla parametros de optimizacion y configuracion"
+    triggers: ["metrics_fix.fix_params"]
+    publishes: ["metrics_fix.validate", "metrics_fix.blocked"]
+    default_publishes: "metrics_fix.validate"
+    instructions: |
+      ## FIX PARAMETROS DE OPTIMIZACION
+
+      ### FASE 4: AJUSTAR PARAMETROS
+
+      #### 4.1 Parametros actuales en profile_batch_backtester.py
+      ```python
+      # Lineas 671-694 - rangos por defecto
+      rsi_buy_min, rsi_buy_max = 20, 35  # RSI muy restrictivo?
+      vol_min, vol_max = 1.0, 1.5        # Volume threshold
+
+      # Otros parametros
+      ema_short: 5-20
+      ema_long: 20-50
+      stop_loss: 0.01-0.05
+      take_profit: 0.05-0.20
+      ```
+
+      #### 4.2 Ajustar rangos basado en diagnostico
+
+      Si el problema es **pocos trades**:
+      - Ampliar RSI range: 15-45
+      - Reducir volume threshold: 0.8-1.3
+      - Ampliar EMA ranges
+
+      Si el problema es **trades perdedores**:
+      - Ajustar stop_loss ranges
+      - Ajustar take_profit ratios
+      - Considerar risk/reward minimo 1:2
+
+      #### 4.3 Actualizar profile_optimization.yaml
+
+      ```yaml
+      # Ajustar segun diagnostico
+      parameter_ranges:
+        rsi_filter:
+          buy_threshold:
+            min: 15   # Era 20
+            max: 45   # Era 35
+          sell_threshold:
+            min: 55
+            max: 85
+
+        ema_filter:
+          fast_period:
+            min: 8
+            max: 15
+          slow_period:
+            min: 20
+            max: 35
+
+        volume_filter:
+          min_volume_ratio:
+            min: 0.8  # Era 1.0
+            max: 1.2
+
+        risk_manager:
+          stop_loss_pct:
+            min: 0.02
+            max: 0.08
+          take_profit_pct:
+            min: 0.04
+            max: 0.15
+      ```
+
+      #### 4.4 Aumentar trials de optimizacion
+
+      ```yaml
+      optimization:
+        n_trials: 200  # Era 100
+        timeout: 1800  # 30 min
+      ```
+
+      ### Eventos:
+      - Validar: `ralph emit "metrics_fix.validate" "fixed=params"`
+
+  strategy_fixer:
+    name: "Strategy Config Fixer"
+    description: "Arregla configuracion de estrategia momentum_modular"
+    triggers: ["metrics_fix.fix_strategy"]
+    publishes: ["metrics_fix.validate", "metrics_fix.blocked"]
+    default_publishes: "metrics_fix.validate"
+    instructions: |
+      ## FIX CONFIGURACION DE ESTRATEGIA
+
+      ### FASE 5: AJUSTAR STRATEGY CONFIG
+
+      #### 5.1 Revisar momentum_modular.yaml
+
+      Verificar:
+      - Filtros habilitados
+      - Umbrales adecuados
+      - Modulo de decision activo
+
+      #### 5.2 Ajustes recomendados
+
+      ```yaml
+      # config/strategies/momentum_modular.yaml
+
+      filters:
+        rsi_filter:
+          enabled: true
+          parameters:
+            period: 14
+          adaptive_thresholds:
+            trend_up:
+              buy_threshold: 35   # Mas permisivo
+              sell_threshold: 75
+            trend_down:
+              buy_threshold: 25
+              sell_threshold: 65
+            range:
+              buy_threshold: 30
+              sell_threshold: 70
+
+        ema_filter:
+          enabled: true
+          parameters:
+            fast_period: 12
+            slow_period: 26
+          require_crossover: true
+
+        volume_filter:
+          enabled: true
+          thresholds:
+            conservative:
+              min_volume_ratio: 1.0
+            balanced:
+              min_volume_ratio: 0.9  # Mas permisivo
+            aggressive:
+              min_volume_ratio: 0.8
+
+      risk_manager:
+        stop_loss:
+          method: "fixed_percentage"
+          value: 0.03
+        take_profit:
+          method: "fixed_percentage"
+          value: 0.08
+          min_risk_reward: 2.0  # Asegurar R:R positivo
+      ```
+
+      #### 5.3 Verificar modulo de decision
+
+      ```bash
+      # Ver decision engine
+      cat config/strategies/momentum_modular.yaml | grep -A 20 "decision:"
+      ```
+
+      ### Eventos:
+      - Validar: `ralph emit "metrics_fix.validate" "fixed=strategy"`
+
+  calculation_fixer:
+    name: "Calculation Bug Fixer"
+    description: "Arregla bugs en calculo de Sharpe ratio y returns"
+    triggers: ["metrics_fix.fix_calculation"]
+    publishes: ["metrics_fix.validate", "metrics_fix.blocked"]
+    default_publishes: "metrics_fix.validate"
+    instructions: |
+      ## FIX BUGS EN CALCULO DE METRICAS
+
+      ### FASE 5B: ANALIZAR SHARPE RATIO CALCULATOR
+
+      El Sharpe de -1099 indica posible bug en el calculo.
+
+      #### 5B.1 Revisar performance_calculator.py
+      ```bash
+      cat app/backtesting/performance_calculator.py | grep -A 80 "def calculate_sharpe"
+      ```
+
+      #### 5B.2 Verificar posibles bugs:
+
+      **Bug 1: Division por cero (volatilidad ~0)**
+      ```python
+      # Si volatilidad es casi 0, Sharpe explota
+      # FIX: Añadir piso minimo
+      MIN_VOLATILITY = 0.001
+      volatility = max(volatility, MIN_VOLATILITY)
+      ```
+
+      **Bug 2: Returns mal calculados**
+      ```python
+      # Verificar que returns se calculan desde equity curve
+      # NO desde precios individuales
+      returns = equity_curve.pct_change().dropna()
+      ```
+
+      **Bug 3: Annualizacion incorrecta**
+      ```python
+      # Para datos diarios: sqrt(252)
+      # Para datos horarios: sqrt(252 * 6.5)
+      annualization_factor = np.sqrt(252)
+      ```
+
+      **Bug 4: Risk-free rate handling**
+      ```python
+      # Sharpe = (return - rf) / volatility
+      # Asegurar que rf esta en la misma unidad que returns
+      ```
+
+      #### 5B.3 Verificar equity curve construction
+      ```bash
+      # Buscar como se construye la equity curve
+      grep -rn "equity_curve" app/backtesting/ --include="*.py" | head -20
+      ```
+
+      #### 5B.4 Aplicar fixes
+
+      Si se encuentra bug, aplicar fix en:
+      - `app/backtesting/performance_calculator.py`
+      - O donde corresponda
+
+      ### Eventos:
+      - Validar: `ralph emit "metrics_fix.validate" "fixed=calculation"`
+
+  validator:
+    name: "Metrics Validator with Feedback Loop"
+    description: "Valida fixes y decide si iterar o completar"
+    triggers: ["metrics_fix.validate", "metrics_fix.run_test"]
+    publishes: ["metrics_fix.run_test", "metrics_fix.iterate", "metrics_fix.complete", "metrics_fix.blocked"]
+    default_publishes: "metrics_fix.run_test"
+    instructions: |
+      ## VALIDAR FIXES CON AUTO-FEEDBACK
+
+      ### FASE 6: EJECUTAR TEST Y ANALIZAR
+
+      ```bash
+      # Ejecutar profile backtest simple
+      python tests/backtesting/test_profile_backtest_simple.py 2>&1 | tee .ralph/outputs/23_last_test_output.txt
+      ```
+
+      ### FASE 7: EXTRAER METRICAS ACTUALES
+
+      ```bash
+      # Extraer Sharpe del output
+      LAST_SHARPE=$(grep "Sharpe:" .ralph/outputs/23_last_test_output.txt | tail -1 | awk '{print $2}')
+      echo "Last Sharpe: $LAST_SHARPE"
+      ```
+
+      ### FASE 8: COMPARAR CON TARGETS Y BEST
+
+      | Metric | Target | Current | Best So Far | Status |
+      |--------|--------|---------|-------------|--------|
+      | Sharpe | > 0.5  | ?       | {{current_best_sharpe}} | ? |
+      | Return | > 0%   | ?       | -           | ? |
+
+      ### FASE 9: DECISION LOGIC (AUTO-ITERACION)
+
+      ```python
+      # Pseudocodigo de decision
+      current_sharpe = extract_sharpe_from_output()
+
+      if current_sharpe >= 0.5:
+          # SUCCESS! Completar
+          emit("metrics_fix.complete", "status=SUCCESS")
+      elif current_sharpe > {{current_best_sharpe}}:
+          # Mejora! Guardar como best y seguir iterando
+          update_variable("current_best_sharpe", current_sharpe)
+          emit("metrics_fix.iterate", "reason=improving")
+      elif {{iteration_count}} >= {{max_iterations_allowed}}:
+          # Max iteraciones alcanzadas
+          emit("metrics_fix.complete", "status=PARTIAL")
+      else:
+          # No mejora, probar otro enfoque
+          emit("metrics_fix.iterate", "reason=need_different_approach")
+      ```
+
+      ### FASE 10: ACTUALIZAR HISTORIAL
+
+      ```bash
+      # Guardar resultado de esta iteracion
+      cat >> .ralph/outputs/23_attempt_history.json << EOF
+      {
+        "iteration": {{iteration_count}},
+        "timestamp": "$(date -Iseconds)",
+        "sharpe": $LAST_SHARPE,
+        "action": "<que se hizo>",
+        "result": "<mejor/empeoró/sin_cambio>"
+      }
+      EOF
+      ```
+
+      ### Eventos:
+      - Correr test: `ralph emit "metrics_fix.run_test" "iteration={{iteration_count}}"`
+      - Iterar mas: `ralph emit "metrics_fix.iterate" "reason=..."`
+      - Completado: `ralph emit "metrics_fix.complete" "status=SUCCESS/PARTIAL"`
+      - Bloqueado: `ralph emit "metrics_fix.blocked" "error=..."`
+
+  final_reviewer:
+    name: "Final Metrics Reviewer"
+    description: "Revision final de metricas y documentacion"
+    triggers: ["metrics_fix.complete"]
+    publishes: ["metrics_fix.final_summary"]
+    instructions: |
+      ## FINAL REVIEW Y DOCUMENTACION
+
+      ### Verificar resultado final:
+      ```bash
+      # Ejecutar test final
+      python tests/backtesting/test_profile_backtest_simple.py 2>&1 | tail -50
+      ```
+
+      ### Generar reporte de iteraciones:
+      ```bash
+      # Ver historial completo
+      cat .ralph/outputs/23_attempt_history.json
+      ```
+
+      ### Crear resumen ejecutivo:
+      ```bash
+      cat > .ralph/outputs/23_metrics_fix_summary.md << 'EOF'
+      # Profile Backtest Metrics Fix - Resumen
+
+      ## Estado Final
+      - Iteraciones totales: {{iteration_count}}
+      - Sharpe inicial: -1099.01
+      - Sharpe final: <ultimo>
+      - Mejora: <X>%
+
+      ## Cambios Realizados
+      <lista de cambios>
+
+      ## Intentos Fallidos
+      <lo que no funcionó>
+
+      ## Recomendaciones Futuras
+      <para seguir mejorando>
+      EOF
+      ```
+
+      ### Verificar:
+      1. Sharpe ratio > 0.5 (o mejor posible)
+      2. Return > 0%
+      3. Ready for Paper Trading status
+      4. Compliance checks passing
+
+      Si EXITOSO: `ralph emit "metrics_fix.final_summary" "status=SUCCESS"`
+      Si PARCIAL: `ralph emit "metrics_fix.final_summary" "status=PARTIAL_BEST_EFFORT"`
+      Si FALLIDO: `ralph emit "metrics_fix.final_summary" "status=FAILED_NEEDS_MANUAL"`
+
+tasks:
+  enabled: true
+
+memories:
+  enabled: true
+  inject: auto
+  budget: 4000
+
+checkpoint:
+  file: ".ralph/checkpoints/23_profile_backtest_metrics_fix_checkpoint.json"

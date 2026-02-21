@@ -317,15 +317,15 @@ class TestSignalProcessor:
 
     def test_validate_risk_envelope_rejection(self, config, mock_strategy, buy_signal):
         """Test risk envelope validation rejection."""
-        # Create mock risk validator
-        mock_risk_validator = MagicMock()
-        mock_risk_validator.validate_trade.return_value = (False, "Position too large")
+        # Create mock compliance engine
+        mock_compliance_engine = MagicMock()
+        mock_compliance_engine.validate_risk_envelope.return_value = (False, "Position too large")
 
-        # Enable risk envelope with mock validator
+        # Enable risk envelope with mock compliance engine
         processor = SignalProcessor(
             config=config,
             strategy=mock_strategy,
-            risk_envelope_validator=mock_risk_validator,
+            compliance_engine=mock_compliance_engine,
             enable_risk_envelope=True,
         )
 
@@ -518,17 +518,17 @@ class TestSignalProcessor:
 
         assert result == "BUY"
 
-    def test_validate_risk_envelope_no_validator(self, config, mock_strategy, buy_signal):
-        """Test risk envelope validation when validator is None."""
+    def test_validate_risk_envelope_no_compliance_engine(self, config, mock_strategy, buy_signal):
+        """Test risk envelope validation when compliance engine is None."""
         processor = SignalProcessor(
             config=config,
             strategy=mock_strategy,
             enable_risk_envelope=True,
-            risk_envelope_validator=None,
+            compliance_engine=None,
         )
 
-        # Should create validator automatically
-        assert processor.risk_validator is not None
+        # Should create ComplianceEngine automatically (singleton)
+        assert processor.compliance_engine is not None
 
     def test_total_portfolio_capital_custom(self, config):
         """Test custom total portfolio capital."""

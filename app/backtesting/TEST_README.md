@@ -1034,7 +1034,7 @@ vix_high = 31-35  # Above threshold (2× slippage)
 
 **Dependencies:**
 - `decimal`, `pytest`
-- `CostCalculator`, `AssetType` from `app.backtesting.cost_calculator`
+- `TransactionCostModel` from `app.backtesting.services.transaction_cost_model`
 
 ---
 

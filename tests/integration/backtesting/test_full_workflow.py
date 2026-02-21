@@ -32,7 +32,6 @@ from bs4 import BeautifulSoup
 
 from app.backtesting.acceptance_criteria import AcceptanceCriteria, AcceptanceReport, VerdictStatus
 from app.backtesting.capital_scale_analyzer import CapitalScaleAnalysisReport, CapitalScaleAnalyzer
-from app.backtesting.cost_calculator import CostCalculator
 from app.backtesting.execution_engine import ExecutionType, PessimisticExecutionEngine, Position
 from app.backtesting.models import BacktestConfig, BacktestResult, TradeStatus
 from app.backtesting.professional_reporter import ProfessionalReport, ProfessionalReporter
@@ -591,50 +590,7 @@ class TestEndToEndProfessionalBacktesting:
         ), "Execution should not be better than SL"
 
         # ============================================================
-        # Step 7: ADV-Based Slippage (Tight ranges ±25%)
-        # ============================================================
-        cost_calculator = CostCalculator()
-
-        # Large cap: 2-5 bps (using ±25% tolerance)
-        large_cap_slippage = float(
-            cost_calculator.calculate_adv_based_slippage_bps(
-                order_value=Decimal("100000"),  # $100K order
-                adv_value=Decimal("2000000000"),  # $2B ADV (large cap)
-            )
-        )
-        # Base is 3.5 bps, verify within ±25% (2.625 - 4.375 bps)
-        assert (
-            2.5 <= large_cap_slippage <= 5.0
-        ), f"Large cap slippage should be 2.5-5.0 bps, got {large_cap_slippage}"
-
-        # Small cap: 10-25 bps (using ±25% tolerance)
-        small_cap_slippage = float(
-            cost_calculator.calculate_adv_based_slippage_bps(
-                order_value=Decimal("100000"),  # $100K order
-                adv_value=Decimal("50000000"),  # $50M ADV (small cap)
-            )
-        )
-        # Base is 17.5 bps, verify within range (10-25 bps)
-        assert (
-            10.0 <= small_cap_slippage <= 25.0
-        ), f"Small cap slippage should be 10-25 bps, got {small_cap_slippage}"
-
-        # Volatility multiplier: VIX > 30 should double slippage
-        high_vol_slippage = float(
-            cost_calculator.calculate_adv_based_slippage_bps(
-                order_value=Decimal("100000"),
-                adv_value=Decimal("2000000000"),
-                vix=Decimal("35"),  # High VIX
-            )
-        )
-        # Should be approximately 2x base slippage (±10% tolerance)
-        expected_doubled = large_cap_slippage * 2.0
-        assert (
-            abs(high_vol_slippage - expected_doubled) <= expected_doubled * 0.10
-        ), "High VIX should ~2x slippage"
-
-        # ============================================================
-        # Step 8: Robustness Testing (NO MOCKS - Real execution)
+        # Step 7: Robustness Testing (NO MOCKS - Real execution)
         # ============================================================
         robustness_tester = RobustnessTester(
             parameter_variation_pct=0.20,  # ±20% variation
@@ -658,7 +614,7 @@ class TestEndToEndProfessionalBacktesting:
         assert len(param_result.tested_values) == 3, "Should test 3 parameter values"
 
         # ============================================================
-        # Step 9: Acceptance Criteria (CALCULATED from real results)
+        # Step 8: Acceptance Criteria (CALCULATED from real results)
         # ============================================================
         acceptance_criteria = AcceptanceCriteria()
 
@@ -714,7 +670,7 @@ class TestEndToEndProfessionalBacktesting:
         ), "Max DD should match backtest"
 
         # ============================================================
-        # Step 10: Professional Reporting (HTML parsing)
+        # Step 9: Professional Reporting (HTML parsing)
         # ============================================================
         reporter = ProfessionalReporter()
 

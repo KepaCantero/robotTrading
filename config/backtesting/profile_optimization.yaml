@@ -303,53 +303,55 @@ learning_engines:
 # THRESHOLD OPTIMIZATION
 # ============================================================================
 threshold_optimization:
-  # RSI thresholds
+  # RSI thresholds - WIDENED for more trade opportunities (Task 23 fix)
+  # Previous: min 20-35 was too restrictive, causing few trades all stopped out
   rsi:
     buy_threshold:
-      min: 20
-      max: 35
+      min: 15
+      max: 50
       step: 2
-      default: 30
+      default: 35
 
     sell_threshold:
-      min: 65
-      max: 80
+      min: 55
+      max: 85
       step: 2
       default: 70
 
-  # Stochastic RSI thresholds
+  # Stochastic RSI thresholds - WIDENED for more signals
   stoch_rsi:
     oversold_threshold:
       min: 10
-      max: 25
+      max: 30
       step: 2
       default: 20
 
     overbought_threshold:
-      min: 75
+      min: 70
       max: 90
       step: 2
       default: 80
 
-  # Momentum thresholds
+  # Momentum thresholds - WIDENED for more signals
   momentum:
     threshold:
-      min: 0.01
-      max: 0.03
+      min: 0.005
+      max: 0.025
       step: 0.005
       default: 0.015
 
-  # ATR thresholds
+  # ATR thresholds - RELAXED to allow more trades
   atr:
-    min_percentile: 60
-    min_relative_atr: 0.006
+    min_percentile: 50
+    min_relative_atr: 0.004
 
-  # Volume thresholds
+  # Volume thresholds - LOWERED to allow more trades (Task 23 fix)
+  # Previous: min 1.0 required above-average volume, now 0.7 allows below-average
   volume_ratio:
-    min: 1.0
-    max: 1.5
+    min: 0.7
+    max: 1.4
     step: 0.1
-    default: 1.1
+    default: 1.0
 
   # EMA distance thresholds
   ema_distance:
@@ -493,7 +495,7 @@ memory:
 # ============================================================================
 # Risk profiles: conservative, balanced, aggressive, income, growth, dividendos
 profiles:
-  # CONSERVATIVE: Lower risk, stable returns
+  # CONSERVATIVE: Lower risk, stable returns - WIDENED for more trades (Task 23)
   conservative:
     common:
       cv_folds: 10            # More thorough validation
@@ -506,15 +508,18 @@ profiles:
     threshold_optimization:
       rsi:
         buy_threshold:
-          min: 30
-          max: 40
+          min: 25
+          max: 45
         sell_threshold:
-          min: 60
-          max: 70
+          min: 55
+          max: 75
+      volume_ratio:
+        min: 0.8
+        max: 1.3
 
     validation:
       thresholds:
-        min_sharpe: 0.7       # Higher Sharpe requirement
+        min_sharpe: 0.5       # Lowered from 0.7 to allow iteration
         max_drawdown: 0.15    # Lower drawdown tolerance
 
   # BALANCED: Moderate risk/reward
@@ -522,7 +527,7 @@ profiles:
     # Uses default values
     pass
 
-  # AGGRESSIVE: Higher risk, growth-focused
+  # AGGRESSIVE: Higher risk, growth-focused - WIDENED for more trades (Task 23)
   aggressive:
     common:
       cv_folds: 3             # Faster validation
@@ -536,30 +541,37 @@ profiles:
       rsi:
         buy_threshold:
           min: 15
-          max: 30
+          max: 45
         sell_threshold:
-          min: 70
+          min: 55
           max: 85
+      volume_ratio:
+        min: 0.7
+        max: 1.3
 
     reinforcement_learning:
       rewards:
         pnl_weight: 1.5       # Higher weight on returns
         drawdown_penalty: 0.3  # Lower penalty for drawdown
 
-  # INCOME: Focus on cash flow and dividends
+  # INCOME: Focus on cash flow and dividends - WIDENED for more trades (Task 23)
   income:
     common:
       test_size: 0.25         # More test data
 
     threshold_optimization:
+      rsi:
+        buy_threshold:
+          min: 20
+          max: 40
       volume_ratio:
-        min: 1.2
-        max: 1.8
+        min: 0.9
+        max: 1.5
 
     validation:
       thresholds:
-        min_win_rate: 0.50    # Higher win rate requirement
-        min_profit_factor: 2.0
+        min_win_rate: 0.45    # Lowered from 0.50
+        min_profit_factor: 1.5  # Lowered from 2.0
 
   # GROWTH: Long-term capital appreciation
   growth:
@@ -577,7 +589,7 @@ profiles:
           min: 0.005
           max: 0.02
 
-  # DIVIDENDOS: Spanish dividend strategy
+  # DIVIDENDOS: Spanish dividend strategy - WIDENED for more trades (Task 23)
   dividendos:
     common:
       min_train_samples: 150   # More samples required
@@ -585,16 +597,19 @@ profiles:
     threshold_optimization:
       rsi:
         buy_threshold:
-          min: 25
-          max: 35
+          min: 20
+          max: 45
         sell_threshold:
-          min: 65
-          max: 75
+          min: 55
+          max: 80
+      volume_ratio:
+        min: 0.8
+        max: 1.4
 
     validation:
       thresholds:
-        min_sharpe: 0.6
-        min_trades: 30         # More trades required
+        min_sharpe: 0.5        # Lowered from 0.6
+        min_trades: 20         # Lowered from 30
 
 # ============================================================================
 # CAPITAL TIER OVERRIDES

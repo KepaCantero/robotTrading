@@ -72,6 +72,17 @@ from app.backtesting.services import (
     ReportGenerationService,
 )
 
+# SHARED MODULES: Eliminates code duplication across backtesting
+from app.backtesting.shared import (
+    ConfigDict,
+    MetricsDict,
+    MetricsFactory,
+    ParameterDict,
+    ParameterMappingService,
+    TempConfigManager,
+    get_empty_metrics,
+)
+
 # COMPLIANCE: Importar BacktestingCompliance para R5, R6, R7, DATA-001
 from app.backtesting.backtesting_compliance import (
     BacktestingCompliance,
@@ -88,10 +99,7 @@ from app.services.profile_driven_trading.profile_strategy_mapper import (
 
 logger = logging.getLogger(__name__)
 
-# Type aliases for better type safety
-ConfigDict = Dict[str, Any]
-MetricsDict = Dict[str, Union[float, int, str, bool, None]]
-ParameterDict = Dict[str, Any]
+# Additional type aliases (not in shared module)
 OptimizationHistoryEntry = Dict[str, Any]
 ValidationResultDict = Dict[str, Any]
 PerStrategyResultsDict = Dict[str, Dict[str, Any]]
@@ -619,6 +627,10 @@ class ProfileBatchBacktester:
         # Generate recommendation using service
         recommendation = self.metrics_service.generate_recommendation(comparison, ready)
 
+        # CRITICAL FIX: Persist optimized parameters to YAML config
+        if ready and best_params:
+            self._persist_optimized_params(best_params, profile)
+
         return OptimizedStrategy(
             profile_id=profile.input_id,
             baseline_metrics=baseline_for_comparison,
@@ -688,8 +700,14 @@ class ProfileBatchBacktester:
                 "ema_short": trial.suggest_int("ema_short", 5, 20),
                 "ema_long": trial.suggest_int("ema_long", 20, 50),
                 "volume_threshold": trial.suggest_float("volume_threshold", vol_min, vol_max),
-                "stop_loss": trial.suggest_float("stop_loss", 0.01, 0.05),
-                "take_profit": trial.suggest_float("take_profit", 0.05, 0.20),
+                # FIX: Widened stop_loss range to match realistic volatility for tech stocks
+                # Old: 0.01 - 0.05 (1% - 5%) - too tight, caused frequent stop-outs
+                # New: 0.03 - 0.10 (3% - 10%) - allows for normal intraday volatility
+                "stop_loss": trial.suggest_float("stop_loss", 0.03, 0.10),
+                # FIX: Widened take_profit range for better R:R ratios
+                # Old: 0.05 - 0.20 (5% - 20%) - limited upside potential
+                # New: 0.08 - 0.30 (8% - 30%) - allows capturing larger moves
+                "take_profit": trial.suggest_float("take_profit", 0.08, 0.30),
             }
 
             try:
@@ -744,6 +762,9 @@ class ProfileBatchBacktester:
         """
         Run backtest with specific parameters.
 
+        Uses shared ParameterMappingService for parameter mapping and
+        TempConfigManager for automatic cleanup.
+
         Args:
             profile: InputProfile
             config: Configuration dict
@@ -753,51 +774,44 @@ class ProfileBatchBacktester:
         Returns:
             Backtest metrics (single or multi-strategy)
         """
-        # Update config with params
-        updated_config = config.copy()
-        updated_config["strategy"].update(params)
+        # Use shared ParameterMappingService (eliminates ~100 lines of duplicate code)
+        updated_config = ParameterMappingService.map_params_to_strategy_config(params, config)
 
-        # Create temp config
-        temp_config_path = self.output_dir / f"temp_{uuid4().hex[:8]}.yaml"
-        with open(temp_config_path, "w") as f:
-            yaml.dump(updated_config, f)
+        # Use shared TempConfigManager for automatic cleanup
+        with TempConfigManager(updated_config, self.output_dir, prefix="temp") as temp_config_path:
+            try:
+                runner = ComprehensiveBacktestRunner(str(temp_config_path))
 
-        try:
-            runner = ComprehensiveBacktestRunner(str(temp_config_path))
-
-            if multi_strategy:
-                # Multi-strategy execution
-                results = runner.run_multi_strategy_backtest()
-                # Aggregate results
-                aggregated = self._aggregate_multi_strategy_results(results, profile)
-                # Add per-strategy results
-                per_strategy = {}
-                for result in results:
-                    strategy_name = result.get("strategy_name", "unknown")
-                    if strategy_name != "combined":
-                        per_strategy[strategy_name] = {
-                            "total_pnl": result.get("total_pnl", 0.0),
-                            "return_pct": result.get("return_pct", 0.0),
-                            "sharpe_ratio": result.get("sharpe_ratio", 0.0),
-                            "max_drawdown": result.get("max_drawdown", 0.0),
-                            "win_rate": result.get("win_rate", 0.0),
-                            "total_trades": result.get("total_trades", 0),
-                        }
-                aggregated["per_strategy_results"] = per_strategy
-                aggregated["combined"] = aggregated
-                return aggregated
-            else:
-                # Single strategy execution
-                results = runner.run_baseline_backtest()
-                return self._safe_extract_first_result(
-                    results, context=f"backtest with params for {profile.objetivo_inversion.value}"
-                )
-        except Exception as e:
-            logger.error(f"Backtest with params failed: {e}", exc_info=True)
-            return self._get_empty_metrics()
-        finally:
-            if temp_config_path.exists():
-                temp_config_path.unlink()
+                if multi_strategy:
+                    # Multi-strategy execution
+                    results = runner.run_multi_strategy_backtest()
+                    # Aggregate results
+                    aggregated = self._aggregate_multi_strategy_results(results, profile)
+                    # Add per-strategy results
+                    per_strategy = {}
+                    for result in results:
+                        strategy_name = result.get("strategy_name", "unknown")
+                        if strategy_name != "combined":
+                            per_strategy[strategy_name] = {
+                                "total_pnl": result.get("total_pnl", 0.0),
+                                "return_pct": result.get("return_pct", 0.0),
+                                "sharpe_ratio": result.get("sharpe_ratio", 0.0),
+                                "max_drawdown": result.get("max_drawdown", 0.0),
+                                "win_rate": result.get("win_rate", 0.0),
+                                "total_trades": result.get("total_trades", 0),
+                            }
+                    aggregated["per_strategy_results"] = per_strategy
+                    aggregated["combined"] = aggregated
+                    return aggregated
+                else:
+                    # Single strategy execution
+                    results = runner.run_baseline_backtest()
+                    return self._safe_extract_first_result(
+                        results, context=f"backtest with params for {profile.objetivo_inversion.value}"
+                    )
+            except Exception as e:
+                logger.error(f"Backtest with params failed: {e}", exc_info=True)
+                return self._get_empty_metrics()
 
     def _run_walk_forward(
         self,
@@ -1326,17 +1340,165 @@ class ProfileBatchBacktester:
 
         return results[0]
 
-    def _get_empty_metrics(self) -> MetricsDict:
-        """Get empty metrics dict."""
+    def _persist_optimized_params(
+        self, best_params: ParameterDict, profile: InputProfile
+    ) -> bool:
+        """
+        Persist optimized parameters to YAML config files.
+
+        CRITICAL FIX: This bridges the gap between backtesting optimization
+        and production configuration by updating the strategy YAML files.
+
+        Args:
+            best_params: Optimized parameters from Optuna
+            profile: InputProfile for tier/context info
+
+        Returns:
+            True if persistence was successful
+        """
+        try:
+            from app.core.yaml_config_updater import YAMLConfigUpdater
+
+            # Convert optimization params to YAMLConfigUpdater format
+            yaml_format = self._convert_optimized_params_to_yaml_format(best_params)
+
+            # Get tier for tier-specific config updates
+            tier = ProfileGenerationService.get_capital_tier_key(profile)
+
+            # Update YAML config files
+            updater = YAMLConfigUpdater(config_dir=Path("config"))
+            success = updater.update_from_optimization_results(yaml_format, tier=tier)
+
+            if success:
+                logger.info(
+                    f"✅ Optimized parameters persisted to YAML config for {profile.objetivo_inversion.value}"
+                )
+                # Also update CentralizedConfig in-memory
+                self._update_centralized_config(best_params)
+            else:
+                logger.warning("⚠️ Failed to persist some optimized parameters to YAML")
+
+            return success
+
+        except ImportError:
+            logger.warning("YAMLConfigUpdater not available, skipping config persistence")
+            return False
+        except (ValueError, KeyError, TypeError, IOError) as e:
+            logger.error(f"Failed to persist optimized parameters: {e}", exc_info=True)
+            return False
+
+    def _convert_optimized_params_to_yaml_format(
+        self, best_params: ParameterDict
+    ) -> Dict[str, Any]:
+        """
+        Convert optimization parameters to YAMLConfigUpdater format.
+
+        Maps flat optimization parameters to nested structure expected by
+        YAMLConfigUpdater.update_from_optimization_results().
+
+        Args:
+            best_params: Flat optimization parameters from Optuna
+
+        Returns:
+            Nested dict in YAMLConfigUpdater format
+        """
         return {
-            "total_pnl": 0.0,
-            "return_pct": 0.0,
-            "sharpe_ratio": 0.0,
-            "max_drawdown": 0.0,
-            "win_rate": 0.0,
-            "total_trades": 0,
-            "winning_trades": 0,
+            "filters": {
+                "rsi_filter": {
+                    "adaptive_thresholds": {
+                        "trend_up": {"buy_threshold": best_params.get("rsi_threshold", 30)},
+                        "trend_down": {"buy_threshold": best_params.get("rsi_threshold", 30)},
+                        "range": {"buy_threshold": best_params.get("rsi_threshold", 30)},
+                        "high_vol": {"buy_threshold": best_params.get("rsi_threshold", 30)},
+                    }
+                },
+                "ema_filter": {
+                    "parameters": {
+                        "fast_period": best_params.get("ema_short", 12),
+                        "slow_period": best_params.get("ema_long", 26),
+                    }
+                },
+                "volume_filter": {
+                    "thresholds": {
+                        "conservative": {"min_volume_ratio": best_params.get("volume_threshold", 1.2)},
+                        "balanced": {"min_volume_ratio": best_params.get("volume_threshold", 1.2)},
+                        "aggressive": {"min_volume_ratio": best_params.get("volume_threshold", 1.2)},
+                    }
+                },
+            },
+            "strategies": {
+                "momentum_modular": {
+                    "risk_manager": {
+                        "stop_loss": {"fixed_percentage": {"value": best_params.get("stop_loss", 0.02)}},
+                        "take_profit": {"fixed_percentage": {"value": best_params.get("take_profit", 0.10)}},
+                    }
+                }
+            },
         }
+
+    def _update_centralized_config(self, best_params: ParameterDict) -> bool:
+        """
+        Update CentralizedConfig with optimized parameters in-memory.
+
+        This ensures the running application immediately uses optimized values
+        without needing a restart.
+
+        Args:
+            best_params: Optimized parameters from Optuna
+
+        Returns:
+            True if update was successful
+        """
+        try:
+            from app.core.centralized_config import get_config
+
+            config = get_config()
+
+            # Update strategy config if momentum_modular exists
+            if "momentum_modular" in config.strategies:
+                updates = {
+                    "modules": {
+                        "rsi_filter": {
+                            "adaptive_thresholds": {
+                                "trend_up": {"buy_threshold": best_params.get("rsi_threshold", 30)},
+                                "trend_down": {"buy_threshold": best_params.get("rsi_threshold", 30)},
+                                "range": {"buy_threshold": best_params.get("rsi_threshold", 30)},
+                                "high_vol": {"buy_threshold": best_params.get("rsi_threshold", 30)},
+                            }
+                        },
+                        "ema_filter": {
+                            "parameters": {
+                                "fast_period": best_params.get("ema_short", 12),
+                                "slow_period": best_params.get("ema_long", 26),
+                            }
+                        },
+                        "volume_filter": {
+                            "thresholds": {
+                                "conservative": {"min_volume_ratio": best_params.get("volume_threshold", 1.2)},
+                                "balanced": {"min_volume_ratio": best_params.get("volume_threshold", 1.2)},
+                                "aggressive": {"min_volume_ratio": best_params.get("volume_threshold", 1.2)},
+                            }
+                        },
+                    }
+                }
+                config.update_strategy_config("momentum_modular", updates)
+                logger.info("✅ CentralizedConfig updated with optimized parameters")
+                return True
+            else:
+                logger.warning("momentum_modular not found in CentralizedConfig strategies")
+                return False
+
+        except ImportError:
+            logger.debug("CentralizedConfig not available for in-memory update")
+            return False
+        except (ValueError, KeyError, TypeError, AttributeError) as e:
+            logger.error(f"Failed to update CentralizedConfig: {e}")
+            return False
+
+    # Delegates to shared MetricsFactory (eliminates duplicate code)
+    def _get_empty_metrics(self) -> MetricsDict:
+        """Get empty metrics dict. Delegates to shared MetricsFactory."""
+        return get_empty_metrics(include_pnl=True)
 
 
 # ============================================================================

@@ -24,36 +24,63 @@ class ReconnectionConfig:
     Configuration for reconnection behavior.
 
     Uses centralized configuration for all timeout and backoff parameters.
+    Supports both keyword arguments and custom_config dict for overrides.
     """
 
-    def __init__(self, custom_config: Optional[Dict] = None):
+    def __init__(
+        self,
+        custom_config: Optional[Dict] = None,
+        *,
+        max_attempts: Optional[int] = None,
+        base_delay_seconds: Optional[float] = None,
+        max_delay_seconds: Optional[float] = None,
+        exponential_base: Optional[float] = None,
+        jitter: Optional[bool] = None,
+        jitter_factor: Optional[float] = None,
+        alert_after_attempts: Optional[int] = None,
+        on_attempt: Optional[Callable[[int], None]] = None,
+        on_success: Optional[Callable[[int], None]] = None,
+        on_failure: Optional[Callable[[], None]] = None,
+        alert_callback: Optional[Callable[[int], None]] = None,
+    ):
         """
         Initialize ReconnectionConfig with centralized config values.
 
         Args:
-            custom_config: Optional dict to override specific values
+            custom_config: Optional dict to override specific values (legacy)
+            max_attempts: Override max reconnection attempts
+            base_delay_seconds: Override base delay in seconds
+            max_delay_seconds: Override max delay cap in seconds
+            exponential_base: Override exponential backoff base
+            jitter: Override jitter enabled flag
+            jitter_factor: Override jitter factor
+            alert_after_attempts: Override alert threshold
+            on_attempt: Callback for each attempt
+            on_success: Callback on successful connection
+            on_failure: Callback when all attempts fail
+            alert_callback: Callback when alert threshold reached
         """
-        # Get centralized config for default values - use directly, no hasattr
+        # Get centralized config for default values
         tt = get_config().trading_thresholds
 
-        # Core reconnection parameters from centralized config
-        self.max_attempts = tt.reconnection_max_attempts
-        self.base_delay_seconds = tt.reconnection_base_delay_seconds
-        self.max_delay_seconds = tt.reconnection_max_delay_seconds
-        self.exponential_base = tt.reconnection_exponential_base
-        self.jitter = True
-        self.jitter_factor = tt.reconnection_jitter_factor
+        # Core reconnection parameters from centralized config (with kwarg overrides)
+        self.max_attempts = max_attempts if max_attempts is not None else tt.reconnection_max_attempts
+        self.base_delay_seconds = base_delay_seconds if base_delay_seconds is not None else tt.reconnection_base_delay_seconds
+        self.max_delay_seconds = max_delay_seconds if max_delay_seconds is not None else tt.reconnection_max_delay_seconds
+        self.exponential_base = exponential_base if exponential_base is not None else tt.reconnection_exponential_base
+        self.jitter = jitter if jitter is not None else True
+        self.jitter_factor = jitter_factor if jitter_factor is not None else tt.reconnection_jitter_factor
 
-        # Alert thresholds from centralized config
-        self.alert_after_attempts = tt.reconnection_alert_after_attempts
+        # Alert thresholds from centralized config (with kwarg overrides)
+        self.alert_after_attempts = alert_after_attempts if alert_after_attempts is not None else tt.reconnection_alert_after_attempts
 
-        # Callbacks (not configurable)
-        self.on_attempt: Optional[Callable[[int], None]] = None
-        self.on_success: Optional[Callable[[int], None]] = None
-        self.on_failure: Optional[Callable[[], None]] = None
-        self.alert_callback: Optional[Callable[[int], None]] = None
+        # Callbacks
+        self.on_attempt = on_attempt
+        self.on_success = on_success
+        self.on_failure = on_failure
+        self.alert_callback = alert_callback
 
-        # Apply any custom overrides
+        # Apply any custom overrides from dict (lowest priority)
         if custom_config:
             for key, value in custom_config.items():
                 if hasattr(self, key):

@@ -185,8 +185,8 @@ class ModularMomentumStrategy(BaseStrategy):
         # NO importar aquí para evitar bloqueos - se importará cuando realmente se use
         self._feature_extractor = None
 
-        # Thresholds configurables
-        self.min_success_probability = self.current_preset.get("min_confidence", 0.6)
+        # Thresholds configurables - lowered from 0.6 to 0.45 for less aggressive filtering
+        self.min_success_probability = self.current_preset.get("min_confidence", 0.45)
         combination_mode = self.current_preset.get("combination_mode", "MAJORITY")
         self.combination_mode = combination_mode  # "ALL", "MAJORITY", "ANY"
 
@@ -247,39 +247,16 @@ class ModularMomentumStrategy(BaseStrategy):
                 from .learning.supervised_learning_engine import SupervisedLearningEngine
 
                 self.learning_engine = SupervisedLearningEngine(self._learning_config)
-            elif engine_type == "deep":
-                # CRÍTICO: NO crear DeepLearningEngine en proceso principal - causa mutex.cc blocking
-                # Se entrenará en subprocess y NO se usará para predicciones en proceso principal
-                logger.info(
-                    "⚠️ Deep Learning configurado pero NO se inicializará en proceso principal (previene mutex.cc blocking)"
+            elif engine_type in ("deep", "transformer", "reinforcement"):
+                # Use SubprocessLearningEngineWrapper for PyTorch/stable-baselines3 engines
+                # This solves the macOS mutex.cc blocking issue
+                from .learning.subprocess_engine_wrapper import SubprocessLearningEngineWrapper
+
+                logger.info(f"🚀 Initializing {engine_type} engine via SubprocessWrapper (macOS safe)")
+                self.learning_engine = SubprocessLearningEngineWrapper(
+                    engine_type=engine_type,
+                    config=self._learning_config,
                 )
-                logger.info(
-                    "⚠️ El entrenamiento se hará en subprocess. No habrá predicciones del modelo durante el backtest."
-                )
-                self.learning_engine = None  # NO crear - evitar cualquier import de PyTorch
-                # NO desactivar _learning_engine_type - mantenerlo para saber qué tipo es
-            elif engine_type == "reinforcement":
-                # CRÍTICO: NO crear ReinforcementLearningEngine en proceso principal - causa mutex.cc blocking
-                # gymnasium/stable-baselines3 usan múltiples threads que causan deadlocks
-                logger.info(
-                    "⚠️ Reinforcement Learning configurado pero NO se inicializará en proceso principal (previene mutex.cc blocking)"
-                )
-                logger.info(
-                    "⚠️ El entrenamiento se hará en subprocess. No habrá predicciones del modelo durante el backtest."
-                )
-                self.learning_engine = (
-                    None  # NO crear - evitar import de stable-baselines3 en proceso principal
-                )
-            elif engine_type == "transformer":
-                # CRÍTICO: NO crear TransformerEngine en proceso principal - causa mutex.cc blocking
-                logger.info(
-                    "⚠️ Transformer configurado pero NO se inicializará en proceso principal (previene mutex.cc blocking)"
-                )
-                logger.info(
-                    "⚠️ El entrenamiento se hará en subprocess. No habrá predicciones del modelo durante el backtest."
-                )
-                self.learning_engine = None  # NO crear - evitar cualquier import de PyTorch
-                # NO desactivar _learning_engine_type - mantenerlo para saber qué tipo es
 
             if self.learning_engine and self.learning_engine.enabled:
                 logger.info(f"✅ Learning engine inicializado: {engine_type}")
@@ -715,6 +692,54 @@ class ModularMomentumStrategy(BaseStrategy):
         indicators['stoch_rsi_k'] = stoch_rsi_k  # Can be None - filters must handle this
         indicators['stoch_rsi_d'] = stoch_rsi_d  # Can be None - filters must handle this
 
+        # ============================================================
+        # INDICADORES ADICIONALES PARA MEJORAR FEATURES DEL MODELO
+        # ============================================================
+
+        # MACD (12, 26, 9)
+        macd, macd_signal, macd_histogram = self._calculate_macd(prices)
+        indicators['macd'] = macd
+        indicators['macd_signal'] = macd_signal
+        indicators['macd_histogram'] = macd_histogram
+
+        # Bollinger Bands (20, 2)
+        bb_upper, bb_middle, bb_lower, bb_width, bb_position = self._calculate_bollinger_bands(prices)
+        indicators['bb_upper'] = bb_upper
+        indicators['bb_middle'] = bb_middle
+        indicators['bb_lower'] = bb_lower
+        indicators['bb_width'] = bb_width
+        indicators['bb_position'] = bb_position
+
+        # ADX (14) - Average Directional Index
+        adx, plus_di, minus_di = self._calculate_adx(highs, lows, prices)
+        indicators['adx'] = adx
+        indicators['plus_di'] = plus_di
+        indicators['minus_di'] = minus_di
+
+        # CCI (20) - Commodity Channel Index
+        cci = self._calculate_cci(highs, lows, prices)
+        indicators['cci'] = cci
+
+        # Williams %R (14)
+        williams_r = self._calculate_williams_r(highs, lows, prices)
+        indicators['williams_r'] = williams_r
+
+        # OBV - On-Balance Volume
+        obv, obv_ema, obv_trend = self._calculate_obv(prices, volumes)
+        indicators['obv'] = obv
+        indicators['obv_ema'] = obv_ema
+        indicators['obv_trend'] = obv_trend
+
+        # Multi-period ROC
+        indicators['roc_5'] = self.indicator_calculator.calculate_roc(prices, period=5)
+        indicators['roc_10'] = self.indicator_calculator.calculate_roc(prices, period=10)
+        indicators['roc_20'] = self.indicator_calculator.calculate_roc(prices, period=20)
+
+        # Period high/low for price position
+        lookback = min(20, len(prices))
+        indicators['period_high'] = max(prices[-lookback:]) if lookback > 0 else prices[-1]
+        indicators['period_low'] = min(prices[-lookback:]) if lookback > 0 else prices[-1]
+
         # Precio actual
         indicators['price'] = prices[-1]
 
@@ -1087,13 +1112,15 @@ class ModularMomentumStrategy(BaseStrategy):
                                     )
                                     break
 
-        # Ajustar confianza mínima requerida basado en predicción
+        # Ajustar confianza mínima requerida basado en predicción - less aggressive
         if 'confidence' in prediction:
             predicted_confidence = prediction['confidence']
-            if predicted_confidence < 0.5:
-                self.min_success_probability = 0.7  # Ser más estricto
+            if predicted_confidence < 0.4:
+                self.min_success_probability = 0.50  # Ser moderadamente estricto
+            elif predicted_confidence < 0.5:
+                self.min_success_probability = 0.45  # Normal-bajo
             else:
-                self.min_success_probability = 0.6  # Normal
+                self.min_success_probability = 0.40  # Permisivo cuando hay confianza
 
         # Ajustar thresholds globales de la estrategia si están en la predicción
         if 'threshold_adjustments' in prediction:
@@ -1186,6 +1213,254 @@ class ModularMomentumStrategy(BaseStrategy):
         stoch_rsi_d = max(0.0, min(100.0, stoch_rsi_d))
 
         return round(stoch_rsi_k, 2), round(stoch_rsi_d, 2)
+
+    def _calculate_macd(
+        self, prices: list, fast_period: int = 12, slow_period: int = 26, signal_period: int = 9
+    ) -> tuple:
+        """
+        Calculate MACD (Moving Average Convergence Divergence).
+
+        Returns:
+            tuple: (macd, signal, histogram) or (0.0, 0.0, 0.0) if insufficient data
+        """
+        if len(prices) < slow_period + signal_period:
+            return 0.0, 0.0, 0.0
+
+        # Calculate EMAs
+        def ema(data, period):
+            multiplier = 2 / (period + 1)
+            ema_val = data[0]
+            for price in data[1:]:
+                ema_val = (price - ema_val) * multiplier + ema_val
+            return ema_val
+
+        # Calculate MACD line (fast EMA - slow EMA)
+        fast_ema = ema(prices, fast_period)
+        slow_ema = ema(prices, slow_period)
+        macd_line = fast_ema - slow_ema
+
+        # Store MACD history for signal calculation
+        if not hasattr(self, '_macd_history'):
+            self._macd_history = deque(maxlen=signal_period * 2)
+
+        self._macd_history.append(macd_line)
+
+        # Calculate signal line (EMA of MACD)
+        if len(self._macd_history) >= signal_period:
+            signal_line = ema(list(self._macd_history), signal_period)
+        else:
+            signal_line = macd_line
+
+        histogram = macd_line - signal_line
+
+        return round(macd_line, 4), round(signal_line, 4), round(histogram, 4)
+
+    def _calculate_bollinger_bands(
+        self, prices: list, period: int = 20, std_dev: float = 2.0
+    ) -> tuple:
+        """
+        Calculate Bollinger Bands.
+
+        Returns:
+            tuple: (upper, middle, lower, width, position) - position is 0-1 where price is in band
+        """
+        if len(prices) < period:
+            current_price = prices[-1] if prices else 0
+            return current_price, current_price, current_price, 0.0, 0.5
+
+        recent_prices = prices[-period:]
+        middle = np.mean(recent_prices)
+        std = np.std(recent_prices)
+
+        upper = middle + (std_dev * std)
+        lower = middle - (std_dev * std)
+        width = (upper - lower) / middle if middle > 0 else 0.0
+
+        # Calculate position (0 = at lower band, 1 = at upper band)
+        current_price = prices[-1]
+        if upper != lower:
+            position = (current_price - lower) / (upper - lower)
+        else:
+            position = 0.5
+
+        return round(upper, 4), round(middle, 4), round(lower, 4), round(width, 4), round(position, 4)
+
+    def _calculate_adx(
+        self, highs: list, lows: list, prices: list, period: int = 14
+    ) -> tuple:
+        """
+        Calculate ADX (Average Directional Index) and DI indicators.
+
+        Returns:
+            tuple: (adx, plus_di, minus_di) or (25.0, 25.0, 25.0) if insufficient data
+        """
+        if len(prices) < period * 2:
+            return 25.0, 25.0, 25.0
+
+        # Initialize history storage
+        if not hasattr(self, '_adx_data'):
+            self._adx_data = {
+                'plus_dm': deque(maxlen=period * 2),
+                'minus_dm': deque(maxlen=period * 2),
+                'tr': deque(maxlen=period * 2),
+            }
+
+        # Calculate True Range and Directional Movement
+        for i in range(max(1, len(self._adx_data['tr']) + 1), len(prices)):
+            high = highs[i]
+            low = lows[i]
+            prev_high = highs[i - 1]
+            prev_low = lows[i - 1]
+            prev_close = prices[i - 1]
+
+            # True Range
+            tr = max(high - low, abs(high - prev_close), abs(low - prev_close))
+            self._adx_data['tr'].append(tr)
+
+            # Directional Movement
+            up_move = high - prev_high
+            down_move = prev_low - low
+
+            plus_dm = up_move if up_move > down_move and up_move > 0 else 0
+            minus_dm = down_move if down_move > up_move and down_move > 0 else 0
+
+            self._adx_data['plus_dm'].append(plus_dm)
+            self._adx_data['minus_dm'].append(minus_dm)
+
+        if len(self._adx_data['tr']) < period:
+            return 25.0, 25.0, 25.0
+
+        # Smoothed values
+        tr_list = list(self._adx_data['tr'])[-period:]
+        plus_dm_list = list(self._adx_data['plus_dm'])[-period:]
+        minus_dm_list = list(self._adx_data['minus_dm'])[-period:]
+
+        atr_smoothed = np.mean(tr_list)
+        plus_di = 100 * np.mean(plus_dm_list) / atr_smoothed if atr_smoothed > 0 else 0
+        minus_di = 100 * np.mean(minus_dm_list) / atr_smoothed if atr_smoothed > 0 else 0
+
+        # DX and ADX
+        di_diff = abs(plus_di - minus_di)
+        di_sum = plus_di + minus_di
+        dx = 100 * di_diff / di_sum if di_sum > 0 else 0
+
+        # Store DX for ADX calculation
+        if not hasattr(self, '_dx_history'):
+            self._dx_history = deque(maxlen=period)
+
+        self._dx_history.append(dx)
+        adx = np.mean(list(self._dx_history)) if self._dx_history else 25.0
+
+        return round(adx, 2), round(plus_di, 2), round(minus_di, 2)
+
+    def _calculate_cci(self, highs: list, lows: list, prices: list, period: int = 20) -> float:
+        """
+        Calculate CCI (Commodity Channel Index).
+
+        Returns:
+            float: CCI value or 0.0 if insufficient data
+        """
+        if len(prices) < period:
+            return 0.0
+
+        # Calculate Typical Price
+        recent_highs = highs[-period:]
+        recent_lows = lows[-period:]
+        recent_prices = prices[-period:]
+
+        tp_list = [(h + l + c) / 3 for h, l, c in zip(recent_highs, recent_lows, recent_prices)]
+        tp_sma = np.mean(tp_list)
+        mean_deviation = np.mean([abs(tp - tp_sma) for tp in tp_list])
+
+        current_tp = (highs[-1] + lows[-1] + prices[-1]) / 3
+
+        # CCI = (TP - SMA) / (0.015 * Mean Deviation)
+        if mean_deviation > 0:
+            cci = (current_tp - tp_sma) / (0.015 * mean_deviation)
+        else:
+            cci = 0.0
+
+        return round(cci, 2)
+
+    def _calculate_williams_r(
+        self, highs: list, lows: list, prices: list, period: int = 14
+    ) -> float:
+        """
+        Calculate Williams %R.
+
+        Returns:
+            float: Williams %R (-100 to 0) or -50.0 if insufficient data
+        """
+        if len(prices) < period:
+            return -50.0
+
+        recent_highs = highs[-period:]
+        recent_lows = lows[-period:]
+
+        highest_high = max(recent_highs)
+        lowest_low = min(recent_lows)
+        current_close = prices[-1]
+
+        # Williams %R = (Highest High - Close) / (Highest High - Lowest Low) * -100
+        if highest_high != lowest_low:
+            williams_r = ((highest_high - current_close) / (highest_high - lowest_low)) * -100
+        else:
+            williams_r = -50.0
+
+        return round(williams_r, 2)
+
+    def _calculate_obv(self, prices: list, volumes: list, ema_period: int = 20) -> tuple:
+        """
+        Calculate OBV (On-Balance Volume).
+
+        Returns:
+            tuple: (obv, obv_ema, obv_trend) - obv_trend is divergence from price
+        """
+        if len(prices) < 2 or len(volumes) < 2:
+            return 0.0, 0.0, 0.0
+
+        # Initialize OBV history
+        if not hasattr(self, '_obv_history'):
+            self._obv_history = deque(maxlen=ema_period * 2)
+            self._obv_value = 0.0
+
+        # Calculate incremental OBV
+        for i in range(max(1, len(self._obv_history)), len(prices)):
+            if prices[i] > prices[i - 1]:
+                self._obv_value += volumes[i]
+            elif prices[i] < prices[i - 1]:
+                self._obv_value -= volumes[i]
+
+            self._obv_history.append(self._obv_value)
+
+        if len(self._obv_history) == 0:
+            return 0.0, 0.0, 0.0
+
+        # Calculate OBV EMA
+        obv_list = list(self._obv_history)
+        if len(obv_list) >= ema_period:
+            multiplier = 2 / (ema_period + 1)
+            obv_ema = obv_list[0]
+            for obv in obv_list[1:]:
+                obv_ema = (obv - obv_ema) * multiplier + obv_ema
+        else:
+            obv_ema = np.mean(obv_list)
+
+        # Calculate OBV trend (divergence from price direction)
+        if len(prices) >= 5 and len(obv_list) >= 5:
+            price_change = prices[-1] - prices[-5]
+            obv_change = obv_list[-1] - obv_list[-5]
+
+            # Positive = bullish (OBV up while price up, or OBV up while price down = bullish divergence)
+            # Negative = bearish divergence
+            if price_change != 0:
+                obv_trend = obv_change / abs(price_change) / 1000  # Normalize
+            else:
+                obv_trend = obv_change / 1000
+        else:
+            obv_trend = 0.0
+
+        return round(self._obv_value, 2), round(obv_ema, 2), round(obv_trend, 4)
 
     def _calculate_recent_win_rate(self) -> float:
         """Calcular win rate de trades recientes."""

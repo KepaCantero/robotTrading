@@ -1,0 +1,11 @@
+{
+  "run_id": "836f91d6",
+  "test_period": "2025-02-08 to 2026-02-08",
+  "generated_at": "2026-02-19T13:50:43.100473",
+  "total_profiles_analyzed": 60,
+  "best_by_objective": {},
+  "best_by_risk": {},
+  "best_by_horizon": {},
+  "top_10_overall": [],
+  "worst_10_overall": []
+}

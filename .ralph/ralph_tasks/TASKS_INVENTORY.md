@@ -1,9 +1,9 @@
 # 📋 Inventario Exhaustivo de Tareas Ralph
 
-**Fecha:** 2026-02-10
+**Fecha:** 2026-02-21
 **Estado:** Plan completo creado
-**Total tareas:** 22 tareas planificadas
-**Tareas creadas:** 21 tareas YAML + 1 orquestador
+**Total tareas:** 23 tareas planificadas
+**Tareas creadas:** 22 tareas YAML + 1 orquestador
 
 ---
 
@@ -20,6 +20,7 @@
 | `04_risk_validators.yml` | ✅ CREADO | P0 | 8h | Validadores R1,R2,R4 |
 | `09_compliance_engine_refactor.yml` | ✅ CREADO | P0 | 16h | Refactor ComplianceEngine |
 | `22_code_quality_refactor.yml` | ✅ CREADO | P1 | 15h | Config, Hardcoded Values & Libraries |
+| `23_profile_backtest_metrics_fix.yml` | ✅ CREADO | P0 | 16h | Fix Sharpe Ratio & Profile Metrics |
 
 ### Tareas Planificadas (Sin YAML aún)
 
@@ -559,5 +560,57 @@ ralph run .ralph/ralph_tasks/00_master_orchestrator.yml
 
 ---
 
-**Última actualización:** 2026-02-08
-**Estado:** ✅ Inventario completo - 6 tareas YAML creadas, 12 pendientes
+**Última actualización:** 2026-02-21
+**Estado:** ✅ Inventario completo - 22 tareas YAML creadas
+
+---
+
+## 🔧 TAREA 23: Profile Backtest Metrics Fix (NUEVA - 2026-02-21)
+
+**Archivo:** `23_profile_backtest_metrics_fix.yml`
+**Estado:** ✅ CREADO
+**Prioridad:** P0 - CRITICO
+**Horas:** 16h
+**Depends on:** 17_backtest_fixes (validadores P&L y drawdown)
+
+### Problema Actual
+```
+Baseline Sharpe: -1099.01 (extremadamente pobre)
+Optimized Sharpe: -166.53 (84.8% mejora pero todavia pobre)
+Return: N/A
+Max Drawdown: -18.29%
+Status: REJECTED
+```
+
+### Objetivo
+Lograr metricas aceptables para que el profile investor sea APPROVED:
+- Sharpe Ratio > 0.5
+- Return > 0%
+- Win Rate > 45%
+- Ready for Paper Trading = True
+
+### HATS (5 fases)
+1. **metrics_diagnostician** - Diagnostica problemas con Sharpe ratio
+2. **params_fixer** - Arregla parametros de optimizacion
+3. **strategy_fixer** - Arregla configuracion de estrategia
+4. **validator** - Valida que los fixes mejoren las metricas
+5. **final_reviewer** - Revision final y documentacion
+
+### Archivos a Modificar
+1. `app/backtesting/performance_calculator.py` - Sharpe calculation
+2. `app/backtesting/profile_batch_backtester.py` - Parameter ranges
+3. `config/profile_optimization.yaml` - Optimization config
+4. `config/strategies/momentum_modular.yaml` - Strategy config
+5. `config/profile_batch_backtest.yaml` - Backtest config
+
+### Salida Esperada
+- `.ralph/outputs/23_metrics_diagnosis.md` - Diagnostico
+- `.ralph/outputs/23_metrics_fix_summary.md` - Resumen de fixes
+- Profile backtest con Sharpe > 0.5 y APPROVED
+
+### Ejecucion
+```bash
+ralph run .ralph/ralph_tasks/23_profile_backtest_metrics_fix.yml
+```
+
+---

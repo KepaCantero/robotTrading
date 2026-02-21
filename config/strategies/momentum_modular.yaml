@@ -33,7 +33,7 @@ market_analyzer:
     squeeze_threshold: 0.1
 
 # PRESET DE CONFIGURACIÓN
-preset: "balanced" # 'conservative' | 'balanced' | 'aggressive'
+preset: "aggressive" # 'conservative' | 'balanced' | 'aggressive' - ITERATION 10: More permissive
 
 presets:
   conservative:
@@ -89,8 +89,9 @@ modules:
   # Standard RSI Strategy:
   # - BUY when RSI <= buy_threshold (oversold condition, typically <= 30)
   # - SELL when RSI >= sell_threshold (overbought condition, typically >= 70)
+  # DISABLED: Testing if RSI is blocking profitable signals (Iteration 9)
   rsi_filter:
-    enabled: true
+    enabled: false
     priority: "high"
 
     active_in_contexts:
@@ -126,8 +127,9 @@ modules:
   # Standard StochRSI Strategy:
   # - BUY when StochRSI K <= oversold_threshold (typically <= 20)
   # - SELL when StochRSI K >= overbought_threshold (typically >= 80)
+  # DISABLED: Testing if RSI-related filters are blocking profitable signals (Iteration 9)
   stoch_rsi_filter:
-    enabled: true
+    enabled: false
     priority: "medium"
 
     active_in_contexts:
@@ -172,16 +174,17 @@ modules:
       method: "roc" # 'roc' | 'momentum' | 'price_change'
 
     # FIX: Lowered momentum thresholds for more BUY signals
+    # ITERATION 10: Even more permissive
     thresholds:
       conservative:
-        min_positive_momentum: 0.02 # FIX: Lowered from 0.03
-        min_negative_momentum: -0.02
+        min_positive_momentum: 0.01 # FIX: Lowered from 0.02
+        min_negative_momentum: -0.01
       balanced:
-        min_positive_momentum: 0.005 # FIX: Lowered from 0.015
-        min_negative_momentum: -0.005
-      aggressive:
-        min_positive_momentum: 0.003 # FIX: Lowered from 0.01
+        min_positive_momentum: 0.003 # FIX: Lowered from 0.005
         min_negative_momentum: -0.003
+      aggressive:
+        min_positive_momentum: 0.001 # FIX: Very sensitive
+        min_negative_momentum: -0.001
 
   # VOLUME FILTER
   volume_filter:
@@ -196,13 +199,14 @@ modules:
       method: "ratio" # 'ratio' | 'percentile' | 'sma_cross'
 
     # FIX: Lowered volume requirements - don't require above-average volume
+    # ITERATION 10: Even more permissive
     thresholds:
       conservative:
-        min_volume_ratio: 1.0 # FIX: Lowered from 1.2
+        min_volume_ratio: 0.8 # FIX: Lowered from 1.2
       balanced:
-        min_volume_ratio: 0.9 # FIX: Lowered from 1.1
+        min_volume_ratio: 0.7 # FIX: Lowered from 1.1
       aggressive:
-        min_volume_ratio: 0.8 # FIX: Lowered from 1.05
+        min_volume_ratio: 0.5 # FIX: Very permissive for more signals
 
   # ATR FILTER - Filtro de volatilidad
   atr_filter:
@@ -218,18 +222,19 @@ modules:
       use_relative_atr: true # ATR como % del precio
 
     # FIX: Lowered ATR thresholds for more permissive trading
+    # ITERATION 10: Even more permissive
     thresholds:
       # Thresholds adaptativos según volatilidad
       high_vol:
-        min_atr_percentile: 40 # FIX: Lowered from 50
-        min_relative_atr: 0.003 # FIX: Lowered from 0.004
+        min_atr_percentile: 30 # FIX: Lowered from 40
+        min_relative_atr: 0.002 # FIX: Lowered from 0.003
 
       normal_vol:
-        min_atr_percentile: 40 # FIX: Lowered from 60
-        min_relative_atr: 0.004 # FIX: Lowered from 0.006
+        min_atr_percentile: 30 # FIX: Lowered from 40
+        min_relative_atr: 0.003 # FIX: Lowered from 0.004
 
       low_vol:
-        min_atr_percentile: 50 # FIX: Lowered from 70
+        min_atr_percentile: 30 # FIX: Lowered from 50
         min_relative_atr: 0.005 # FIX: Lowered from 0.008
 
       conservative:

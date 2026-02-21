@@ -19,6 +19,12 @@ import optuna
 import yaml
 
 from app.backtesting.comprehensive_backtest_runner import ComprehensiveBacktestRunner
+from app.backtesting.shared import (
+    MetricsFactory,
+    ParameterMappingService,
+    TempConfigManager,
+    get_empty_metrics,
+)
 from app.core.config.profile_config_loader import ProfileConfigLoader
 from app.core.models.input_profile import InputProfile
 
@@ -83,8 +89,14 @@ class BayesianOptimizer:
                 "ema_short": trial.suggest_int("ema_short", 5, 20),
                 "ema_long": trial.suggest_int("ema_long", 20, 50),
                 "volume_threshold": trial.suggest_float("volume_threshold", vol_min, vol_max),
-                "stop_loss": trial.suggest_float("stop_loss", 0.01, 0.05),
-                "take_profit": trial.suggest_float("take_profit", 0.05, 0.20),
+                # FIX: Widened stop_loss range to match realistic volatility for tech stocks
+                # Old: 0.01 - 0.05 (1% - 5%) - too tight, caused frequent stop-outs
+                # New: 0.03 - 0.10 (3% - 10%) - allows for normal intraday volatility
+                "stop_loss": trial.suggest_float("stop_loss", 0.03, 0.10),
+                # FIX: Widened take_profit range for better R:R ratios
+                # Old: 0.05 - 0.20 (5% - 20%) - limited upside potential
+                # New: 0.08 - 0.30 (8% - 30%) - allows capturing larger moves
+                "take_profit": trial.suggest_float("take_profit", 0.08, 0.30),
             }
 
             try:
@@ -152,119 +164,32 @@ class BayesianOptimizer:
     ) -> Dict[str, Any]:
         """Run backtest with specific parameters.
 
-        Maps optimization parameters to the strategy's nested configuration structure:
-        - rsi_threshold → modules.rsi_filter.adaptive_thresholds.*.buy_threshold
-        - ema_short → modules.ema_filter.parameters.fast_period
-        - ema_long → modules.ema_filter.parameters.slow_period
-        - volume_threshold → modules.volume_filter.thresholds.*.min_volume_ratio
-        - stop_loss → risk_manager.stop_loss.fixed_percentage.value
-        - take_profit → risk_manager.take_profit.fixed_percentage.value
+        Uses shared ParameterMappingService for parameter mapping and
+        TempConfigManager for automatic cleanup.
         """
-        import copy
-        from uuid import uuid4
+        # Use shared ParameterMappingService (eliminates ~100 lines of duplicate code)
+        updated_config = ParameterMappingService.map_params_to_strategy_config(params, config)
 
-        updated_config = copy.deepcopy(config)
-        strategy = updated_config.get("strategy", {})
+        # Use shared TempConfigManager for automatic cleanup
+        with TempConfigManager(updated_config, self.output_dir, prefix="temp_opt") as temp_config_path:
+            try:
+                runner = ComprehensiveBacktestRunner(str(temp_config_path))
 
-        # Ensure modules structure exists
-        if "modules" not in strategy:
-            strategy["modules"] = {}
+                if multi_strategy:
+                    results = runner.run_multi_strategy_backtest()
+                    for r in results:
+                        if r.get("strategy_name") == "combined":
+                            return r
+                    return results[0] if results else get_empty_metrics(include_pnl=False)
+                else:
+                    results = runner.run_baseline_backtest()
+                    return results[0] if results else get_empty_metrics(include_pnl=False)
 
-        # Map RSI threshold to all adaptive thresholds
-        rsi_threshold = params.get("rsi_threshold")
-        if rsi_threshold is not None:
-            if "rsi_filter" not in strategy["modules"]:
-                strategy["modules"]["rsi_filter"] = {}
-            if "adaptive_thresholds" not in strategy["modules"]["rsi_filter"]:
-                strategy["modules"]["rsi_filter"]["adaptive_thresholds"] = {}
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
+                logger.error(f"Backtest with params failed: {e}")
+                return get_empty_metrics(include_pnl=False)
 
-            # Update buy_threshold for all contexts
-            for context in ["trend_up", "trend_down", "range", "high_vol"]:
-                if context not in strategy["modules"]["rsi_filter"]["adaptive_thresholds"]:
-                    strategy["modules"]["rsi_filter"]["adaptive_thresholds"][context] = {}
-                strategy["modules"]["rsi_filter"]["adaptive_thresholds"][context]["buy_threshold"] = rsi_threshold
-
-        # Map EMA periods
-        ema_short = params.get("ema_short")
-        ema_long = params.get("ema_long")
-        if ema_short is not None or ema_long is not None:
-            if "ema_filter" not in strategy["modules"]:
-                strategy["modules"]["ema_filter"] = {"parameters": {}}
-            if "parameters" not in strategy["modules"]["ema_filter"]:
-                strategy["modules"]["ema_filter"]["parameters"] = {}
-            if ema_short is not None:
-                strategy["modules"]["ema_filter"]["parameters"]["fast_period"] = ema_short
-            if ema_long is not None:
-                strategy["modules"]["ema_filter"]["parameters"]["slow_period"] = ema_long
-
-        # Map volume threshold
-        volume_threshold = params.get("volume_threshold")
-        if volume_threshold is not None:
-            if "volume_filter" not in strategy["modules"]:
-                strategy["modules"]["volume_filter"] = {"thresholds": {}}
-            if "thresholds" not in strategy["modules"]["volume_filter"]:
-                strategy["modules"]["volume_filter"]["thresholds"] = {}
-            # Update for all presets
-            for preset in ["conservative", "balanced", "aggressive"]:
-                strategy["modules"]["volume_filter"]["thresholds"][preset] = {
-                    "min_volume_ratio": volume_threshold
-                }
-
-        # Map stop_loss and take_profit
-        stop_loss = params.get("stop_loss")
-        take_profit = params.get("take_profit")
-
-        if stop_loss is not None or take_profit is not None:
-            if "risk_manager" not in strategy:
-                strategy["risk_manager"] = {}
-
-            if stop_loss is not None:
-                if "stop_loss" not in strategy["risk_manager"]:
-                    strategy["risk_manager"]["stop_loss"] = {"fixed_percentage": {}}
-                if "fixed_percentage" not in strategy["risk_manager"]["stop_loss"]:
-                    strategy["risk_manager"]["stop_loss"]["fixed_percentage"] = {}
-                strategy["risk_manager"]["stop_loss"]["fixed_percentage"]["value"] = stop_loss
-
-            if take_profit is not None:
-                if "take_profit" not in strategy["risk_manager"]:
-                    strategy["risk_manager"]["take_profit"] = {"fixed_percentage": {}}
-                if "fixed_percentage" not in strategy["risk_manager"]["take_profit"]:
-                    strategy["risk_manager"]["take_profit"]["fixed_percentage"] = {}
-                strategy["risk_manager"]["take_profit"]["fixed_percentage"]["value"] = take_profit
-
-        updated_config["strategy"] = strategy
-
-        temp_config_path = self.output_dir / f"temp_opt_{uuid4().hex[:8]}.yaml"
-        with open(temp_config_path, "w") as f:
-            yaml.dump(updated_config, f)
-
-        try:
-            runner = ComprehensiveBacktestRunner(str(temp_config_path))
-
-            if multi_strategy:
-                results = runner.run_multi_strategy_backtest()
-                for r in results:
-                    if r.get("strategy_name") == "combined":
-                        return r
-                return results[0] if results else self._get_empty_metrics()
-            else:
-                results = runner.run_baseline_backtest()
-                return results[0] if results else self._get_empty_metrics()
-
-        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-            logger.error(f"Backtest with params failed: {e}")
-            return self._get_empty_metrics()
-
-        finally:
-            if temp_config_path.exists():
-                temp_config_path.unlink()
-
+    # Delegates to shared MetricsFactory (eliminates duplicate code)
     def _get_empty_metrics(self) -> Dict[str, Any]:
-        """Return empty metrics dict."""
-        return {
-            "sharpe_ratio": 0.0,
-            "return_pct": 0.0,
-            "max_drawdown": 0.0,
-            "win_rate": 0.0,
-            "total_trades": 0,
-        }
+        """Return empty metrics dict. Delegates to shared MetricsFactory."""
+        return get_empty_metrics(include_pnl=False)

@@ -386,7 +386,7 @@ class ProfileDrivenTradingOrchestrator:
         generation_result = await profile_generator.generate(request)
 
         if not generation_result.success:
-            raise Exception(f"Profile generation failed: {generation_result.error_message}")
+            raise RuntimeError(f"Profile generation failed: {generation_result.error_message}")
 
         profile = generation_result.profile
 

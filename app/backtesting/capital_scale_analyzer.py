@@ -19,7 +19,10 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 
 from app.backtesting.constants import BACKTESTING_CONSTANTS
-from app.backtesting.cost_calculator import AssetType, CostCalculator
+from app.backtesting.services.transaction_cost_model import (
+    BrokerType,
+    TransactionCostModel,
+)
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig, BacktestResult, PerformanceMetrics
 from app.models.market_data import Quote
@@ -106,7 +109,10 @@ class CapitalScaleAnalyzer:
         )
         self.enable_adv_rule = enable_adv_rule
         self.enable_adaptive_commission = enable_adaptive_commission
-        self.cost_calculator = CostCalculator(use_dynamic_costs=True)
+        self.transaction_cost_model = TransactionCostModel(
+            broker=BrokerType.INTERACTIVE_BROKERS,
+            conservative=True,
+        )
 
         # Commission models by capital level (from config)
         self._commission_models = CS_CONSTANTS.COMMISSION_MODELS
@@ -125,7 +131,14 @@ class CapitalScaleAnalyzer:
             Commission amount
         """
         if not self.enable_adaptive_commission:
-            return self.cost_calculator.calculate_commission(AssetType.EQUITY, trade_value)
+            # Use TransactionCostModel for base commission calculation
+            cost_result = self.transaction_cost_model.calculate_costs(
+                symbol="EQUITY",
+                side="BUY",
+                quantity=Decimal("1"),
+                price=trade_value,
+            )
+            return cost_result.commission
 
         # Find closest capital level model
         closest_level = min(self._commission_models.keys(), key=lambda x: abs(x - capital_level))
@@ -143,7 +156,14 @@ class CapitalScaleAnalyzer:
                     pct_cost = trade_value * bracket["rate"]
                     return max(bracket["min"], pct_cost)
 
-        return self.cost_calculator.calculate_commission(AssetType.EQUITY, trade_value)
+        # Fallback to TransactionCostModel
+        cost_result = self.transaction_cost_model.calculate_costs(
+            symbol="EQUITY",
+            side="BUY",
+            quantity=Decimal("1"),
+            price=trade_value,
+        )
+        return cost_result.commission
 
     def apply_adv_limit(
         self,

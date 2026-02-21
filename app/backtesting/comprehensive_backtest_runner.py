@@ -2184,6 +2184,263 @@ class ComprehensiveBacktestRunner:
         except Exception:
             return None
 
+    def run_optuna_optimization(self) -> List[Dict[str, Any]]:
+        """
+        Execute Optuna-based hyperparameter optimization for learning engines.
+
+        Uses Bayesian optimization (TPE sampler) to efficiently find optimal
+        hyperparameters for the supervised learning engine.
+
+        Following López de Prado best practices:
+        - Purged cross-validation to prevent look-ahead bias
+        - Proper train/validation split
+        - Multiple trials with pruning of unpromising configurations
+
+        Returns:
+            List with optimization results including best parameters,
+            all trial results, and comparison with baseline
+        """
+        import optuna
+        from optuna.samplers import TPESampler
+        from optuna.pruners import MedianPruner
+        import copy
+
+        logger.info("=" * 80)
+        logger.info("OPTUNA OPTIMIZATION - Bayesian Hyperparameter Search")
+        logger.info("=" * 80)
+
+        # Get optimization config
+        opt_config = self.raw_config.get('backtests', {}).get('hyperparameter_optimization', {})
+        n_trials = opt_config.get('n_trials', 50)
+        timeout = opt_config.get('timeout', 600)
+        metric = opt_config.get('metric', 'sharpe_ratio')
+
+        logger.info(f"Configuration: {n_trials} trials, {timeout}s timeout, optimizing {metric}")
+
+        # Store results
+        trial_results = []
+        best_result = None
+        best_params = None
+        best_value = float('-inf')
+
+        # Get learning engine config
+        learning_config = self.raw_config.get('learning_engines', {}).get('supervised', {})
+        algorithm = learning_config.get('parameters', {}).get('algorithm', 'random_forest')
+
+        logger.info(f"Optimizing {algorithm} learning engine")
+
+        def objective(trial: optuna.Trial) -> float:
+            """Optuna objective function for hyperparameter optimization."""
+            nonlocal best_result, best_params, best_value
+
+            try:
+                # Suggest hyperparameters based on algorithm
+                if algorithm == 'random_forest':
+                    params = {
+                        'n_estimators': trial.suggest_int('n_estimators', 20, 200),
+                        'max_depth': trial.suggest_int('max_depth', 3, 20),
+                        'min_samples_split': trial.suggest_int('min_samples_split', 2, 20),
+                        'min_samples_leaf': trial.suggest_int('min_samples_leaf', 1, 10),
+                        'max_features': trial.suggest_categorical('max_features', ['sqrt', 'log2', None]),
+                    }
+                elif algorithm == 'xgboost':
+                    params = {
+                        'n_estimators': trial.suggest_int('n_estimators', 20, 200),
+                        'max_depth': trial.suggest_int('max_depth', 3, 15),
+                        'learning_rate': trial.suggest_float('learning_rate', 0.01, 0.3, log=True),
+                        'min_child_weight': trial.suggest_int('min_child_weight', 1, 10),
+                        'subsample': trial.suggest_float('subsample', 0.6, 1.0),
+                        'colsample_bytree': trial.suggest_float('colsample_bytree', 0.6, 1.0),
+                    }
+                elif algorithm == 'lightgbm':
+                    params = {
+                        'n_estimators': trial.suggest_int('n_estimators', 20, 200),
+                        'max_depth': trial.suggest_int('max_depth', 3, 15),
+                        'learning_rate': trial.suggest_float('learning_rate', 0.01, 0.3, log=True),
+                        'num_leaves': trial.suggest_int('num_leaves', 20, 150),
+                        'min_child_samples': trial.suggest_int('min_child_samples', 5, 50),
+                    }
+                else:
+                    # Default params for unknown algorithms
+                    params = {
+                        'n_estimators': trial.suggest_int('n_estimators', 20, 200),
+                        'max_depth': trial.suggest_int('max_depth', 3, 15),
+                    }
+
+                # Also optimize lookahead_days
+                lookahead_days = trial.suggest_int('lookahead_days', 3, 10)
+
+                # Create modified config for this trial
+                trial_config = copy.deepcopy(self.raw_config)
+                trial_config.setdefault('learning_engines', {}).setdefault('supervised', {})
+                trial_config['learning_engines']['supervised']['parameters'] = params
+                trial_config['learning_engines']['supervised']['lookahead_days'] = lookahead_days
+
+                # Create a temporary runner with the trial config
+                # Write config to temp file
+                import tempfile
+                import yaml
+
+                with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+                    yaml.dump(trial_config, f)
+                    temp_config_path = f.name
+
+                try:
+                    # Run backtest with trial parameters
+                    trial_runner = ComprehensiveBacktestRunner(temp_config_path)
+                    results = trial_runner.run_learning_engines_backtest()
+
+                    if not results or len(results) == 0:
+                        return float('-inf')
+
+                    # Get the result metric
+                    result = results[0] if isinstance(results[0], dict) else {}
+                    value = result.get(metric, 0) or 0
+
+                    # Store trial result
+                    trial_result = {
+                        'trial_number': trial.number,
+                        'params': params,
+                        'lookahead_days': lookahead_days,
+                        'value': value,
+                        'total_pnl': result.get('total_pnl', 0),
+                        'return_pct': result.get('return_pct', 0),
+                        'sharpe_ratio': result.get('sharpe_ratio', 0),
+                        'win_rate': result.get('win_rate', 0),
+                        'total_trades': result.get('total_trades', 0),
+                    }
+                    trial_results.append(trial_result)
+
+                    # Track best
+                    if value > best_value:
+                        best_value = value
+                        best_params = params.copy()
+                        best_params['lookahead_days'] = lookahead_days
+                        best_result = result
+
+                    logger.info(
+                        f"Trial {trial.number}: {metric}={value:.4f}, "
+                        f"PnL=${result.get('total_pnl', 0):.2f}, "
+                        f"Trades={result.get('total_trades', 0)}"
+                    )
+
+                    return value
+
+                finally:
+                    # Clean up temp file
+                    import os
+                    if os.path.exists(temp_config_path):
+                        os.remove(temp_config_path)
+
+            except Exception as e:
+                logger.warning(f"Trial {trial.number} failed: {e}")
+                return float('-inf')
+
+        # Run baseline first for comparison
+        logger.info("-" * 60)
+        logger.info("Running BASELINE for comparison...")
+        baseline_result = self.run_baseline_backtest()
+        baseline_metrics = {}
+        if baseline_result:
+            if isinstance(baseline_result, list) and len(baseline_result) > 0:
+                baseline_metrics = baseline_result[0] if isinstance(baseline_result[0], dict) else {}
+            elif isinstance(baseline_result, dict):
+                baseline_metrics = baseline_result
+
+            logger.info(
+                f"Baseline: PnL=${baseline_metrics.get('total_pnl', 0):.2f}, "
+                f"Sharpe={baseline_metrics.get('sharpe_ratio', 0):.2f}"
+            )
+
+        # Create and run Optuna study
+        logger.info("-" * 60)
+        logger.info("Starting Optuna optimization...")
+
+        sampler = TPESampler(seed=42)
+        pruner = MedianPruner(n_startup_trials=5, n_warmup_steps=3)
+
+        study = optuna.create_study(
+            direction='maximize',
+            sampler=sampler,
+            pruner=pruner,
+            study_name='learning_engine_optimization',
+        )
+
+        optuna.logging.set_verbosity(optuna.logging.WARNING)
+
+        study.optimize(
+            objective,
+            n_trials=n_trials,
+            timeout=timeout,
+            show_progress_bar=False,
+        )
+
+        logger.info("-" * 60)
+        logger.info(f"Optimization complete: {len(study.trials)} trials")
+
+        # Compile final results
+        final_results = {
+            'test_type': 'optuna_optimization',
+            'test_name': 'Optuna Hyperparameter Optimization',
+            'algorithm': algorithm,
+            'optimization_metric': metric,
+            'n_trials': len(study.trials),
+            'best_trial': study.best_trial.number if study.best_trial else None,
+            'best_params': best_params,
+            'best_value': float(best_value) if best_value != float('-inf') else None,
+            'best_result': {
+                'total_pnl': best_result.get('total_pnl', 0) if best_result else 0,
+                'return_pct': best_result.get('return_pct', 0) if best_result else 0,
+                'sharpe_ratio': best_result.get('sharpe_ratio', 0) if best_result else 0,
+                'win_rate': best_result.get('win_rate', 0) if best_result else 0,
+                'total_trades': best_result.get('total_trades', 0) if best_result else 0,
+            } if best_result else {},
+            'baseline': {
+                'total_pnl': baseline_metrics.get('total_pnl', 0),
+                'return_pct': baseline_metrics.get('return_pct', 0),
+                'sharpe_ratio': baseline_metrics.get('sharpe_ratio', 0),
+                'win_rate': baseline_metrics.get('win_rate', 0),
+                'total_trades': baseline_metrics.get('total_trades', 0),
+            },
+            'improvement': {
+                'pnl_diff': (best_result.get('total_pnl', 0) if best_result else 0) - baseline_metrics.get('total_pnl', 0),
+                'sharpe_diff': (best_result.get('sharpe_ratio', 0) if best_result else 0) - baseline_metrics.get('sharpe_ratio', 0),
+            },
+            'all_trials': trial_results[:20],  # First 20 trials
+            'optimization_history': [
+                {'trial': t.number, 'value': t.value}
+                for t in study.trials
+                if t.value is not None
+            ],
+        }
+
+        # Log summary
+        logger.info("=" * 60)
+        logger.info("OPTUNA OPTIMIZATION - FINAL RESULTS")
+        logger.info("=" * 60)
+        logger.info(f"Best Trial: #{final_results['best_trial']}")
+        logger.info(f"Best Params: {best_params}")
+        logger.info("")
+        logger.info("COMPARISON:")
+        logger.info(
+            f"  Baseline PnL:    ${baseline_metrics.get('total_pnl', 0):,.2f} | "
+            f"Sharpe: {baseline_metrics.get('sharpe_ratio', 0):.2f}"
+        )
+        logger.info(
+            f"  Optimized PnL:   ${final_results['best_result'].get('total_pnl', 0):,.2f} | "
+            f"Sharpe: {final_results['best_result'].get('sharpe_ratio', 0):.2f}"
+        )
+        improvement = final_results['improvement']['pnl_diff']
+        logger.info(
+            f"  Improvement:     ${improvement:,.2f} ({'✅ BETTER' if improvement > 0 else '❌ WORSE'})"
+        )
+        logger.info("=" * 80)
+
+        # Save results
+        self.memory_manager.add_result(final_results)
+
+        return [final_results]
+
     def run_out_of_sample_backtest(self) -> List[Dict[str, Any]]:
         """
         Ejecutar backtest out-of-sample con validación rigorosa.
@@ -3664,7 +3921,23 @@ class ComprehensiveBacktestRunner:
         Crear configuración de estrategia desde config YAML.
 
         Phase 5: Now delegates to StrategyFactory to reduce God Object.
+
+        Supports two config structures:
+        1. YAML with modules.filters at root (from momentum_modular.yaml)
+        2. Optimized config with strategy.modules (from Bayesian optimizer)
         """
+        # Check for strategy.modules (from optimizer) FIRST
+        strategy_config = self.raw_config.get('strategy', {})
+        if 'modules' in strategy_config:
+            # Config from optimizer - use the modules directly
+            return {
+                'type': strategy_config.get('type', 'modular_momentum'),
+                'preset': strategy_config.get('preset', 'balanced'),
+                'modules': strategy_config['modules'],
+                'thresholds': strategy_config.get('thresholds', {}),
+                'risk_manager': strategy_config.get('risk_manager', {}),
+            }
+
         # Si la config tiene modules.filters, crear config adaptada
         if 'modules' in self.raw_config and 'filters' in self.raw_config['modules']:
             # Crear configuración de filtros desde YAML

@@ -20,13 +20,17 @@ from typing import Any, Dict, List, Union
 import yaml
 
 from app.backtesting.comprehensive_backtest_runner import ComprehensiveBacktestRunner
+from app.backtesting.shared import (
+    MetricsDict,
+    TempConfigManager,
+    get_empty_metrics,
+)
 from app.core.models.input_profile import InputProfile
 
 logger = logging.getLogger(__name__)
 
-# Type aliases for better type safety
+# Type aliases (additional ones not in shared module)
 ConfigDict = Dict[str, Any]
-MetricsDict = Dict[str, Union[float, int, str, bool, None]]
 PerStrategyDict = Dict[str, MetricsDict]
 
 
@@ -67,26 +71,19 @@ class BaselineBacktestExecutor:
             f"({'multi-strategy' if multi_strategy else 'single-strategy'})"
         )
 
-        # Create temporary config file
-        temp_config_path = self.output_dir / f"temp_{profile.input_id}.yaml"
-        with open(temp_config_path, "w") as f:
-            yaml.dump(config, f)
+        # Use shared TempConfigManager for automatic cleanup
+        with TempConfigManager(config, self.output_dir, prefix=f"temp_{profile.input_id[:8]}") as temp_config_path:
+            try:
+                runner = ComprehensiveBacktestRunner(str(temp_config_path))
 
-        try:
-            runner = ComprehensiveBacktestRunner(str(temp_config_path))
+                if multi_strategy:
+                    return self._run_multi_strategy_baseline(runner, profile)
+                else:
+                    return self._run_single_strategy_baseline(runner, profile)
 
-            if multi_strategy:
-                return self._run_multi_strategy_baseline(runner, profile)
-            else:
-                return self._run_single_strategy_baseline(runner, profile)
-
-        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-            logger.error(f"Baseline backtest failed: {e}", exc_info=True)
-            return self._get_empty_metrics()
-
-        finally:
-            if temp_config_path.exists():
-                temp_config_path.unlink()
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
+                logger.error(f"Baseline backtest failed: {e}", exc_info=True)
+                return self._get_empty_metrics()
 
     def _run_single_strategy_baseline(
         self, runner: ComprehensiveBacktestRunner, profile: InputProfile
@@ -289,13 +286,7 @@ class BaselineBacktestExecutor:
         logger.debug(f"Successfully extracted result for {context}")
         return result
 
+    # Delegates to shared MetricsFactory (eliminates duplicate code)
     def _get_empty_metrics(self) -> MetricsDict:
-        """Return empty metrics dict."""
-        return {
-            "sharpe_ratio": 0.0,
-            "return_pct": 0.0,
-            "max_drawdown": 0.0,
-            "win_rate": 0.0,
-            "total_trades": 0,
-            "total_pnl": 0.0,
-        }
+        """Return empty metrics dict. Delegates to shared MetricsFactory."""
+        return get_empty_metrics(include_pnl=True)

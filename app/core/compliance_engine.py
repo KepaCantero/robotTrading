@@ -63,6 +63,9 @@ from app.domain.entities.post_trade_analysis import PostTradeAnalysis
 # Import domain entities
 from app.domain.entities.pre_trade_analysis import PreTradeAnalysis
 
+# Import subsystem config factory
+from app.core.utils.subsystem_config_factory import get_subsystem_config_factory
+
 logger = logging.getLogger(__name__)
 
 
@@ -232,65 +235,57 @@ class SystemAvailability:
 
     def _check_backtesting(self) -> bool:
         try:
-            pass
-
-            return True
+            from importlib.util import find_spec
+            return find_spec("app.backtesting") is not None
         except ImportError:
             return False
 
     def _check_live_trading(self) -> bool:
         try:
-            pass
-
-            return True
+            from importlib.util import find_spec
+            return find_spec("app.providers.live_trading") is not None
         except ImportError:
             return False
 
     def _check_paper_trading(self) -> bool:
         try:
-            pass
-
-            return True
+            from importlib.util import find_spec
+            return find_spec("app.providers.paper_trading") is not None
         except ImportError:
             return False
 
     def _check_strategies(self) -> bool:
         try:
-            pass
-
-            return True
+            from importlib.util import find_spec
+            return find_spec("app.strategies") is not None
         except ImportError:
             return False
 
     def _check_risk_engine(self) -> bool:
         try:
-            pass
-
-            return True
+            from importlib.util import find_spec
+            return find_spec("app.engines.risk_engine") is not None
         except ImportError:
             return False
 
     def _check_portfolio_engine(self) -> bool:
         try:
-            pass
-
-            return True
+            from importlib.util import find_spec
+            return find_spec("app.engines.portfolio_engine") is not None
         except ImportError:
             return False
 
     def _check_data_engine(self) -> bool:
         try:
-            pass
-
-            return True
+            from importlib.util import find_spec
+            return find_spec("app.services.data_service") is not None
         except ImportError:
             return False
 
     def _check_context_engine(self) -> bool:
         try:
-            pass
-
-            return True
+            from importlib.util import find_spec
+            return find_spec("app.maestro") is not None
         except ImportError:
             return False
 
@@ -302,9 +297,8 @@ class SystemAvailability:
         in the microstructure subdirectory.
         """
         try:
-            pass
-
-            return True
+            from importlib.util import find_spec
+            return find_spec("app.microstructure") is not None
         except ImportError as e:
             if self.enable_logging:
                 logger.debug(f"Execution engine not available: {e}")
@@ -312,25 +306,22 @@ class SystemAvailability:
 
     def _check_chan(self) -> bool:
         try:
-            pass
-
-            return True
+            from importlib.util import find_spec
+            return find_spec("app.services.momentum_analysis_chan") is not None
         except ImportError:
             return False
 
     def _check_narang(self) -> bool:
         try:
-            pass
-
-            return True
+            from importlib.util import find_spec
+            return find_spec("app.services") is not None
         except ImportError:
             return False
 
     def _check_lopez_de_prado(self) -> bool:
         try:
-            pass
-
-            return True
+            from importlib.util import find_spec
+            return find_spec("app.services.optimization_chan") is not None
         except ImportError:
             return False
 
@@ -343,25 +334,22 @@ class SystemAvailability:
 
     def _check_hastie(self) -> bool:
         try:
-            pass
-
-            return True
+            from importlib.util import find_spec
+            return find_spec("app.ensemble") is not None
         except ImportError:
             return False
 
     def _check_harris(self) -> bool:
         try:
-            pass
-
-            return True
+            from importlib.util import find_spec
+            return find_spec("app.engines.execution_engine.microstructure.harris_integration") is not None
         except ImportError:
             return False
 
     def _check_ohara(self) -> bool:
         try:
-            pass
-
-            return True
+            from importlib.util import find_spec
+            return find_spec("app.microstructure") is not None
         except ImportError:
             return False
 
@@ -374,17 +362,15 @@ class SystemAvailability:
 
     def _check_hull(self) -> bool:
         try:
-            pass
-
-            return True
+            from importlib.util import find_spec
+            return find_spec("app.services.risk_management_chan") is not None
         except ImportError:
             return False
 
     def _check_sre(self) -> bool:
         try:
-            pass
-
-            return True
+            from importlib.util import find_spec
+            return find_spec("app.sre") is not None
         except ImportError:
             return False
 
@@ -861,13 +847,13 @@ class SystemBus:
             position_ratio = position_value / portfolio_value if portfolio_value > 0 else 0
 
             # Use configured max position ratio (addresses GAP-CFG-002)
-            position_limit_ok = position_ratio <= self.config.max_position_ratio
+            position_limit_ok = position_ratio <= self.engine.config.max_position_ratio
             result.position_limit_ok = position_limit_ok
 
             if not position_limit_ok:
                 result.can_execute = False
                 result.confidence *= compliance_config.CONF_POSITION_LIMIT_MULTIPLIER
-                max_pct = self.config.max_position_ratio * 100
+                max_pct = self.engine.config.max_position_ratio * 100
                 result.reasons.append(
                     f"Position limit exceeded: {position_ratio:.1%} of portfolio > {max_pct:.0f}% limit (Chan Rule 1)"
                 )
@@ -880,13 +866,13 @@ class SystemBus:
                 current_drawdown = 0.0
 
             # Use configured max drawdown ratio (addresses GAP-CFG-002)
-            drawdown_limit_ok = current_drawdown <= self.config.max_drawdown_ratio
+            drawdown_limit_ok = current_drawdown <= self.engine.config.max_drawdown_ratio
             result.drawdown_limit_ok = drawdown_limit_ok
 
             if not drawdown_limit_ok:
                 result.can_execute = False
                 result.confidence *= compliance_config.CONF_DRAWDOWN_LIMIT_MULTIPLIER
-                max_dd_pct = self.config.max_drawdown_ratio * 100
+                max_dd_pct = self.engine.config.max_drawdown_ratio * 100
                 result.reasons.append(
                     f"Drawdown limit exceeded: {current_drawdown:.1%} > {max_dd_pct:.0f}% limit (Chan Rule 1)"
                 )
@@ -908,12 +894,12 @@ class SystemBus:
             result.leverage_ratio = leverage_ratio
 
             # Use configured max leverage ratio (addresses GAP-CFG-002)
-            leverage_ok = leverage_ratio <= self.config.max_leverage_ratio
+            leverage_ok = leverage_ratio <= self.engine.config.max_leverage_ratio
             if not leverage_ok:
                 result.can_execute = False
                 result.confidence *= compliance_config.CONF_LEVERAGE_LIMIT_MULTIPLIER
                 result.reasons.append(
-                    f"Leverage too high: {leverage_ratio:.2f}x > {self.config.max_leverage_ratio}x limit"
+                    f"Leverage too high: {leverage_ratio:.2f}x > {self.engine.config.max_leverage_ratio}x limit"
                 )
 
             # ========== 4. DATA QUALITY CHECK ==========
@@ -1123,16 +1109,22 @@ class SystemBus:
                     timestamp=datetime.now(),
                 )
 
-                result.narang_alpha_signal = float(alpha_signal.confidence)
+                # Check if alpha_signal is valid before accessing attributes
+                if alpha_signal is not None and hasattr(alpha_signal, 'confidence'):
+                    result.narang_alpha_signal = float(alpha_signal.confidence)
 
-                # Quality assessment using config thresholds
-                if alpha_signal.confidence >= config.ALPHA_QUALITY_HIGH_THRESHOLD:
-                    result.narang_alpha_quality = "HIGH"
-                elif alpha_signal.confidence >= config.ALPHA_QUALITY_MEDIUM_THRESHOLD:
-                    result.narang_alpha_quality = "MEDIUM"
+                    # Quality assessment using config thresholds
+                    if alpha_signal.confidence >= config.ALPHA_QUALITY_HIGH_THRESHOLD:
+                        result.narang_alpha_quality = "HIGH"
+                    elif alpha_signal.confidence >= config.ALPHA_QUALITY_MEDIUM_THRESHOLD:
+                        result.narang_alpha_quality = "MEDIUM"
+                    else:
+                        result.narang_alpha_quality = "LOW"
+                        result.confidence -= config.CONF_LOW_SHARPE_PENALTY
                 else:
-                    result.narang_alpha_quality = "LOW"
-                    result.confidence -= config.CONF_LOW_SHARPE_PENALTY
+                    # Alpha model returned None or invalid signal
+                    result.narang_alpha_signal = 0.0
+                    result.narang_alpha_quality = "NONE"
 
             return True
         except Exception as e:
@@ -1278,8 +1270,15 @@ class SystemBus:
         Timeout handling is delegated to the HarrisIntegrator subsystem.
         """
         try:
+            from decimal import InvalidOperation, DivisionByZero
             from app.core.centralized_config import get_compliance_config
             config = get_compliance_config()
+
+            # Estimate ADV with error handling
+            try:
+                adv = self.engine._estimate_adv(price_history)
+            except (InvalidOperation, DivisionByZero, ValueError):
+                adv = Decimal("1000000")  # Default ADV
 
             harris_check = subsystem.pre_trade_check(
                 symbol=symbol,
@@ -1287,7 +1286,7 @@ class SystemBus:
                 quantity=quantity,
                 current_price=price,
                 price_history=price_history,
-                adv=self.engine._estimate_adv(price_history),
+                adv=adv,
                 urgency=urgency,
                 signal_time=signal_time,
             )
@@ -1442,6 +1441,13 @@ class SystemBus:
             from app.core.centralized_config import get_strategy_stock_allocator_config
 
             config = get_strategy_stock_allocator_config()
+            # Config is a dict from YAML, use proper dict access
+            exposure_config = config.get('exposure', {})
+            max_strategy_exposure = exposure_config.get('max_strategy_exposure', 0.50)
+            max_pair_exposure = exposure_config.get('max_pair_exposure', 0.15)
+            max_assets_per_pair = exposure_config.get('max_assets_per_pair', 2)
+            # Default correlation risk since it's not in config
+            max_correlation_risk = 1.0
 
             # Try to get current portfolio from cache
             if hasattr(subsystem, 'current_portfolio') and subsystem.current_portfolio:
@@ -1458,33 +1464,33 @@ class SystemBus:
                 if hasattr(portfolio, 'total_equity') and portfolio.total_equity > 0:
                     result.current_exposure = total_exposure / float(portfolio.total_equity)
 
-                    # Check against MAX_STRATEGY_EXPOSURE limit
-                    if result.current_exposure > config.MAX_STRATEGY_EXPOSURE:
+                    # Check against max_strategy_exposure limit
+                    if result.current_exposure > max_strategy_exposure:
                         result.can_execute = False
                         result.confidence = 0.0
                         result.reasons.append(
-                            f"Current exposure ({result.current_exposure:.1%}) exceeds MAX_STRATEGY_EXPOSURE ({config.MAX_STRATEGY_EXPOSURE:.1%})"
+                            f"Current exposure ({result.current_exposure:.1%}) exceeds max_strategy_exposure ({max_strategy_exposure:.1%})"
                         )
                 else:
                     result.current_exposure = 0.0
 
-                # Calculate diversification score based on position count vs MAX_ASSETS_PER_PAIR
+                # Calculate diversification score based on position count vs max_assets_per_pair
                 # More positions = better diversification, up to a reasonable limit
-                max_positions = config.MAX_ASSETS_PER_PAIR * 10  # Scale to portfolio level
+                max_positions = max_assets_per_pair * 10  # Scale to portfolio level
                 result.diversification_score = min(1.0, position_count / max_positions) if position_count > 0 else 0.0
 
                 # Correlation risk - estimate based on concentration
                 # Fewer positions = higher correlation risk
                 if position_count <= 1:
-                    result.correlation_risk = config.MAX_CORRELATION_RISK  # Maximum risk with single position
+                    result.correlation_risk = max_correlation_risk  # Maximum risk with single position
                 else:
                     # Use HHI (Herfindahl-Hirschman Index) concept: lower concentration = lower risk
-                    result.correlation_risk = config.MAX_CORRELATION_RISK / position_count
+                    result.correlation_risk = max_correlation_risk / position_count
             else:
                 # No portfolio data - use conservative defaults
                 result.current_exposure = 0.0
                 result.diversification_score = 0.0
-                result.correlation_risk = config.MAX_CORRELATION_RISK
+                result.correlation_risk = max_correlation_risk
 
             return True
         except Exception as e:
@@ -1506,7 +1512,7 @@ class SystemBus:
         """
         Handle Backtesting Engine checks.
 
-        NOTE: Uses StrategyStockAllocatorConfig for LOOKBACK_MAX_DAYS and SLOPE_WINDOW_MIN.
+        NOTE: Uses StrategyStockAllocatorConfig for lookback_max_days and slope_window_min.
         Uses ComplianceConfig for all thresholds and penalties.
         Calculates metrics from actual price history data.
         """
@@ -1520,14 +1526,23 @@ class SystemBus:
             alloc_config = get_strategy_stock_allocator_config()
             compliance_config = get_compliance_config()
 
-            if price_history is not None and len(price_history) >= alloc_config.LOOKBACK_MAX_DAYS:
+            # Config is a dict from YAML, use proper dict access
+            data_validation = alloc_config.get('data_validation', {})
+            garch_config = alloc_config.get('garch', {})
+            risk_metrics = alloc_config.get('risk_metrics', {})
+
+            lookback_max_days = data_validation.get('lookback_max_days', 126)
+            slope_window_min = garch_config.get('slope_window_min', 30)
+            min_sortino_ratio = risk_metrics.get('min_sortino_ratio', 0.5)
+
+            if price_history is not None and len(price_history) >= lookback_max_days:
                 # Calculate historical return metrics
                 returns = price_history["close"].pct_change().dropna()
 
                 # Backtest confidence - based on trend consistency
-                if len(returns) >= alloc_config.SLOPE_WINDOW_MIN:
-                    recent_trend = returns.tail(alloc_config.SLOPE_WINDOW_MIN).mean()
-                    older_trend = returns.head(len(returns) - alloc_config.SLOPE_WINDOW_MIN).mean()
+                if len(returns) >= slope_window_min:
+                    recent_trend = returns.tail(slope_window_min).mean()
+                    older_trend = returns.head(len(returns) - slope_window_min).mean()
                     epsilon = compliance_config.EPSILON_DIVISION
                     trend_consistency = 1.0 - abs(recent_trend - older_trend) / (abs(older_trend) + epsilon)
                     result.backtest_confidence = max(compliance_config.MIN_BACKTEST_CONFIDENCE, min(1.0, trend_consistency))
@@ -1535,15 +1550,15 @@ class SystemBus:
                     result.backtest_confidence = compliance_config.DEFAULT_SIGNAL_STRENGTH
 
                 # Historical Sharpe ratio (annualized) - using empyrical library
-                if len(returns) >= alloc_config.SLOPE_WINDOW_MIN:
+                if len(returns) >= slope_window_min:
                     # Use empyrical library for accurate Sharpe ratio calculation
                     result.historical_sharpe = float(empyrical.sharpe_ratio(returns))
 
-                    # Check against MIN_SORTINO_RATIO threshold
-                    if result.historical_sharpe < alloc_config.MIN_SORTINO_RATIO:
+                    # Check against min_sortino_ratio threshold
+                    if result.historical_sharpe < min_sortino_ratio:
                         result.confidence -= compliance_config.CONF_LOW_SHARPE_PENALTY
                         result.reasons.append(
-                            f"Sharpe ratio ({result.historical_sharpe:.2f}) below MIN_SORTINO_RATIO ({alloc_config.MIN_SORTINO_RATIO:.2f})"
+                            f"Sharpe ratio ({result.historical_sharpe:.2f}) below min_sortino_ratio ({min_sortino_ratio:.2f})"
                         )
                 else:
                     result.historical_sharpe = compliance_config.MIN_HISTORICAL_SHARPE
@@ -2221,6 +2236,8 @@ class ComplianceEngine:
 
     def _load_subsystem(self, name: str) -> Optional[Any]:
         """Load a specific subsystem from ALL 17 systems."""
+        # Get config factory for subsystem configurations
+        config_factory = get_subsystem_config_factory()
 
         # -------------------------------------------------------------------------
         # 8 MAIN SYSTEMS
@@ -2228,14 +2245,15 @@ class ComplianceEngine:
 
         try:
             if name == "backtesting_engine":
-                from app.backtesting.engine import SimpleBacktester
+                from app.backtesting.engine import BacktestEngine
 
-                return SimpleBacktester()  # pylint: disable=no-value-for-parameter
+                config = config_factory.get_backtest_config()
+                return BacktestEngine(config=config)
 
             elif name == "live_trading":
                 from app.services.live_trading.broker_connector import BrokerConnector
 
-                return BrokerConnector()  # pylint: disable=no-value-for-parameter
+                return BrokerConnector()  # Has default broker_type
 
             elif name == "paper_trading":
                 from app.services.live_trading.broker_adapters.paper_adapter import PaperAdapter
@@ -2250,12 +2268,14 @@ class ComplianceEngine:
             elif name == "risk_engine":
                 from app.engines.risk_engine import RiskEngine
 
-                return RiskEngine()  # pylint: disable=no-value-for-parameter
+                config = config_factory.get_risk_engine_config()
+                return RiskEngine(config=config)
 
             elif name == "portfolio_engine":
                 from app.engines.portfolio_engine import PortfolioEngine
 
-                return PortfolioEngine()  # pylint: disable=no-value-for-parameter
+                config = config_factory.get_portfolio_engine_config()
+                return PortfolioEngine(config=config)
 
             elif name == "data_engine":
                 from app.engines.data_engine import DataEngine
@@ -2292,11 +2312,13 @@ class ComplianceEngine:
                 from app.services.portfolio_construction_narang import get_portfolio_constructor
                 from app.strategies.alpha_models import get_alpha_model
 
+                # Use correct model_type: "multi_factor" not "multifactor"
+                alpha_config = config_factory.get_alpha_model_config()
+                portfolio_config = config_factory.get_portfolio_constructor_config()
+
                 return {
-                    "alpha": get_alpha_model({"model_type": "multifactor"}),
-                    "portfolio": get_portfolio_constructor(
-                        {"optimization_method": "mean_variance"}
-                    ),
+                    "alpha": get_alpha_model(alpha_config),
+                    "portfolio": get_portfolio_constructor(portfolio_config),
                 }
 
             elif name == "lopez_de_prado":
@@ -2363,6 +2385,222 @@ class ComplianceEngine:
             return None
 
         return None
+
+    # ==========================================================================
+    # POSITION SIZING - For Backtesting to be "Stupid"
+    # ==========================================================================
+
+    def calculate_position_size(
+        self,
+        symbol: str,
+        price: Decimal,
+        capital: Decimal,
+        confidence: float = 100.0,
+        max_position_ratio: Optional[float] = None,
+    ) -> Decimal:
+        """
+        Calculate recommended position size for a trade.
+
+        This method allows backtesting to be "stupid" - it just asks the
+        ComplianceEngine what quantity to use, then executes with that quantity.
+
+        Position sizing factors:
+        - Max position size from config (default 10% of capital)
+        - Signal confidence (scales position size)
+        - Commission ratio constraints (ensures cost efficiency)
+        - Minimum position value (avoids tiny positions)
+
+        Args:
+            symbol: Trading symbol (for logging)
+            price: Current market price
+            capital: Available capital
+            confidence: Signal confidence (0-100, default 100)
+            max_position_ratio: Override max position ratio (optional)
+
+        Returns:
+            Recommended position size (number of shares/units)
+
+        Example:
+            >>> qty = compliance_engine.calculate_position_size(
+            ...     symbol="AAPL",
+            ...     price=Decimal("150.00"),
+            ...     capital=Decimal("100000"),
+            ...     confidence=85.0,
+            ... )
+        """
+        from decimal import ROUND_HALF_UP
+
+        # Validation
+        if price <= 0:
+            logger.warning(f"Invalid price {price} for {symbol}, returning 0")
+            return Decimal("0")
+
+        if capital <= 0:
+            logger.warning(f"Invalid capital {capital}, returning 0")
+            return Decimal("0")
+
+        # Get max position ratio from config or parameter
+        max_ratio = max_position_ratio or self.config.max_position_ratio
+
+        # Calculate confidence factor (scale position by signal confidence)
+        # Minimum 50% of max position even with low confidence
+        confidence_factor = max(confidence / 100.0, 0.5)
+
+        # Calculate base position value
+        max_position_value = capital * Decimal(str(max_ratio))
+        position_value = max_position_value * Decimal(str(confidence_factor))
+
+        # Ensure minimum position value (1% of capital)
+        min_position_value = capital * Decimal("0.01")
+        position_value = max(position_value, min_position_value)
+
+        # Calculate number of shares
+        position_size = position_value / price
+
+        # Ensure minimum shares (at least 1)
+        position_size = max(position_size, Decimal("1"))
+
+        # Round to reasonable precision
+        return position_size.quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP)
+
+    # ==========================================================================
+    # RISK ENVELOPE VALIDATION - Consolidated from RiskEnvelopeValidator
+    # ==========================================================================
+
+    def validate_risk_envelope(
+        self,
+        symbol: str,
+        trade_value: Decimal,
+        strategy_name: str,
+        current_portfolio: Dict[str, Decimal],
+        strategy_positions: Dict[str, Decimal],
+        total_capital: Decimal,
+        strategy_capital: Decimal,
+        max_symbol_exposure_pct: Decimal = Decimal("0.20"),
+        max_strategy_exposure_pct: Decimal = Decimal("0.70"),
+        max_portfolio_exposure_pct: Decimal = Decimal("0.95"),
+    ) -> Tuple[bool, str]:
+        """
+        Validate if a trade would exceed risk envelope constraints.
+
+        This method consolidates the functionality from RiskEnvelopeValidator
+        to provide a single point of risk validation in ComplianceEngine.
+
+        Validates:
+        - Symbol-level exposure (default 20% max per symbol)
+        - Strategy-level exposure (default 70% max per strategy)
+        - Portfolio-level exposure (default 95% max total)
+
+        Args:
+            symbol: Trading symbol
+            trade_value: Value of the trade (price * quantity)
+            strategy_name: Name of the strategy
+            current_portfolio: Current positions across all strategies (symbol -> value)
+            strategy_positions: Current positions for this strategy (symbol -> value)
+            total_capital: Total portfolio capital
+            strategy_capital: Capital allocated to this strategy
+            max_symbol_exposure_pct: Maximum exposure per symbol (default 20%)
+            max_strategy_exposure_pct: Maximum exposure per strategy (default 70%)
+            max_portfolio_exposure_pct: Maximum total portfolio exposure (default 95%)
+
+        Returns:
+            Tuple of (is_valid, reason)
+        """
+        # Check 1: Symbol-level exposure limit
+        current_symbol_exposure = current_portfolio.get(symbol, Decimal("0"))
+        new_symbol_exposure = current_symbol_exposure + trade_value
+        symbol_exposure_pct = (
+            new_symbol_exposure / total_capital if total_capital > 0 else Decimal("0")
+        )
+
+        if symbol_exposure_pct > max_symbol_exposure_pct:
+            reason = (
+                f"Symbol exposure limit exceeded: {symbol_exposure_pct:.1%} > "
+                f"{max_symbol_exposure_pct:.1%} (current=${current_symbol_exposure:.2f}, "
+                f"trade=${trade_value:.2f})"
+            )
+            if self.enable_logging:
+                logger.warning(f"RISK ENVELOPE REJECTED: {symbol} {reason}")
+            return False, reason
+
+        # Check 2: Strategy-level exposure limit
+        current_strategy_exposure = sum(strategy_positions.values())
+        new_strategy_exposure = current_strategy_exposure + trade_value
+        strategy_exposure_pct = (
+            new_strategy_exposure / strategy_capital if strategy_capital > 0 else Decimal("0")
+        )
+
+        if strategy_exposure_pct > max_strategy_exposure_pct:
+            reason = (
+                f"Strategy exposure limit exceeded for {strategy_name}: "
+                f"{strategy_exposure_pct:.1%} > {max_strategy_exposure_pct:.1%} "
+                f"(strategy capital=${strategy_capital:.2f})"
+            )
+            if self.enable_logging:
+                logger.warning(f"RISK ENVELOPE REJECTED: {reason}")
+            return False, reason
+
+        # Check 3: Portfolio-level exposure limit
+        total_current_exposure = sum(current_portfolio.values())
+        total_new_exposure = total_current_exposure + trade_value
+        portfolio_exposure_pct = (
+            total_new_exposure / total_capital if total_capital > 0 else Decimal("0")
+        )
+
+        if portfolio_exposure_pct > max_portfolio_exposure_pct:
+            reason = (
+                f"Portfolio exposure limit exceeded: {portfolio_exposure_pct:.1%} > "
+                f"{max_portfolio_exposure_pct:.1%} "
+                f"(current total=${total_current_exposure:.2f}, trade=${trade_value:.2f})"
+            )
+            if self.enable_logging:
+                logger.warning(f"RISK ENVELOPE REJECTED: {reason}")
+            return False, reason
+
+        # All checks passed
+        if self.enable_logging:
+            logger.debug(
+                f"RISK ENVELOPE PASSED: {symbol} "
+                f"(symbol={symbol_exposure_pct:.1%}, strategy={strategy_exposure_pct:.1%}, "
+                f"portfolio={portfolio_exposure_pct:.1%})"
+            )
+        return True, "OK"
+
+    def get_risk_envelope_exposures(
+        self,
+        current_portfolio: Dict[str, Decimal],
+        strategy_positions: Dict[str, Decimal],
+        total_capital: Decimal,
+        strategy_capital: Decimal,
+    ) -> Dict[str, float]:
+        """
+        Get current exposure metrics for risk envelope.
+
+        Args:
+            current_portfolio: Current positions across all strategies
+            strategy_positions: Current positions for this strategy
+            total_capital: Total portfolio capital
+            strategy_capital: Capital allocated to this strategy
+
+        Returns:
+            Dictionary with exposure percentages
+        """
+        total_portfolio_exposure = sum(current_portfolio.values())
+        total_strategy_exposure = sum(strategy_positions.values())
+
+        return {
+            "portfolio_exposure_pct": (
+                float(total_portfolio_exposure / total_capital) if total_capital > 0 else 0.0
+            ),
+            "strategy_exposure_pct": (
+                float(total_strategy_exposure / strategy_capital) if strategy_capital > 0 else 0.0
+            ),
+            "largest_symbol_exposure_pct": (
+                float(max(current_portfolio.values()) / total_capital)
+                if current_portfolio and total_capital > 0
+                else 0.0
+            ),
+        }
 
     # ==========================================================================
     # MAIN API - PRE-TRADE ANALYSIS
@@ -3289,8 +3527,16 @@ class ComplianceEngine:
 
     def _estimate_adv(self, price_history: Optional[pd.DataFrame]) -> Decimal:
         """Estimate average daily volume."""
+        import math
+
         if price_history is not None and "volume" in price_history.columns:
-            return Decimal(str(price_history["volume"].mean()))
+            mean_volume = price_history["volume"].mean()
+            # Handle NaN or infinite values
+            if pd.isna(mean_volume) or math.isnan(mean_volume) or math.isinf(mean_volume):
+                from app.core.centralized_config import get_compliance_config
+                config = get_compliance_config()
+                return Decimal(str(config.ESTIMATED_VOLUME))
+            return Decimal(str(mean_volume))
         # Use ComplianceConfig for default estimated volume
         from app.core.centralized_config import get_compliance_config
         config = get_compliance_config()

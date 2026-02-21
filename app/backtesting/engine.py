@@ -35,7 +35,6 @@ from app.core.trading_validators import TradingValidator
 from app.models.portfolio import AssetClass, Portfolio, Position
 from app.models.signal import Signal
 from app.services.dynamic_capital_reallocation import DynamicCapitalReallocationEngine
-from app.services.risk_envelope_validator import RiskEnvelopeValidator
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +67,7 @@ class BacktestEngine:
         diagnostic_logger=None,
         strategy=None,
         enable_risk_envelope: bool = True,
-        risk_envelope_validator: Optional[RiskEnvelopeValidator] = None,
+        compliance_engine: Optional[ComplianceEngine] = None,
         strategy_name: str = "unknown",
         total_portfolio_capital: Optional[Decimal] = None,
         reallocation_engine: Optional[DynamicCapitalReallocationEngine] = None,
@@ -81,7 +80,7 @@ class BacktestEngine:
             diagnostic_logger: Optional diagnostic logger
             strategy: Strategy instance for risk_check (optional but required for risk checking)
             enable_risk_envelope: Enable risk envelope validation (default True)
-            risk_envelope_validator: Optional custom RiskEnvelopeValidator instance
+            compliance_engine: Optional ComplianceEngine instance (uses singleton if not provided)
             strategy_name: Name of strategy for risk envelope logging
             total_portfolio_capital: Total portfolio capital for multi-strategy scenarios (defaults to initial_capital)
             reallocation_engine: Optional DynamicCapitalReallocationEngine instance for performance tracking
@@ -117,7 +116,7 @@ class BacktestEngine:
         self.signal_processor = SignalProcessor(
             config=config,
             strategy=strategy,
-            risk_envelope_validator=risk_envelope_validator,
+            compliance_engine=compliance_engine,
             enable_risk_envelope=enable_risk_envelope,
             diagnostic_logger=diagnostic_logger,
             total_portfolio_capital=self.total_portfolio_capital,
@@ -208,7 +207,7 @@ class BacktestEngine:
         self.signal_processor = SignalProcessor(
             config=self.config,
             strategy=None,  # Strategy is not picklable, set to None
-            risk_envelope_validator=None,
+            compliance_engine=None,
             enable_risk_envelope=False,
             diagnostic_logger=None,
             total_portfolio_capital=self.total_portfolio_capital,
@@ -643,17 +642,28 @@ class BacktestEngine:
         )
 
         if action == "BUY":
-            # COMPLIANCE: Pre-trade analysis - validate trade before execution
+            # COMPLIANCE: Calculate position size FIRST (backtesting is "stupid", asks compliance engine)
             current_price = get_price(market_data)
+
+            # Ask ComplianceEngine for position size
+            estimated_quantity = self.compliance_engine.calculate_position_size(
+                symbol=signal.symbol,
+                price=current_price,
+                capital=self.capital,
+                confidence=signal.confidence if hasattr(signal, 'confidence') else 100.0,
+            )
+
             # Build price history for compliance engine validation
             price_history = self._build_price_history(
                 symbol=signal.symbol,
                 current_timestamp=market_data.timestamp,
             )
+
+            # COMPLIANCE: Pre-trade analysis with estimated quantity
             pre_trade_analysis = self.compliance_engine.analyze_pre_trade(
                 symbol=signal.symbol,
                 side="BUY",
-                quantity=Decimal("0"),  # Will be calculated by executor
+                quantity=estimated_quantity,  # Now using estimated quantity, not Decimal("0")!
                 price=current_price,
                 price_history=price_history,
                 urgency=0.5,
@@ -676,13 +686,14 @@ class BacktestEngine:
                     )
                 return  # Do NOT execute this trade
 
-            # Execute buy trade
+            # Execute buy trade - pass position_size from ComplianceEngine to avoid duplication
             trade, new_capital = self.trade_executor.execute_buy_signal(
                 signal=signal,
                 market_data=market_data,
                 capital=self.capital,
                 close_position_func=self._close_position,
                 validate_profitability_func=self._validate_trade_profitability,
+                position_size=estimated_quantity,  # Use quantity from ComplianceEngine
             )
             if trade:
                 self.trades.append(trade)
@@ -715,15 +726,21 @@ class BacktestEngine:
         elif action == "SELL":
             # COMPLIANCE: Pre-trade analysis - validate sell trade before execution
             current_price = get_price(market_data)
+
+            # Get current position quantity for SELL (from position_manager)
+            current_position_qty = self.position_manager.get_position(signal.symbol)
+
             # Build price history for compliance engine validation
             price_history = self._build_price_history(
                 symbol=signal.symbol,
                 current_timestamp=market_data.timestamp,
             )
+
+            # COMPLIANCE: Pre-trade analysis with actual position quantity
             pre_trade_analysis = self.compliance_engine.analyze_pre_trade(
                 symbol=signal.symbol,
                 side="SELL",
-                quantity=Decimal("0"),  # Will be calculated by executor
+                quantity=Decimal(str(current_position_qty)),  # Actual position quantity, not Decimal("0")!
                 price=current_price,
                 price_history=price_history,
                 urgency=0.5,

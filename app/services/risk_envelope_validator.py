@@ -1,6 +1,26 @@
 """
 Risk Envelope Validator
 
+DEPRECATED: This module is DEPRECATED. Use ComplianceEngine.validate_risk_envelope() instead.
+
+Migration guide:
+    OLD:
+        from app.services.risk_envelope_validator import RiskEnvelopeValidator
+        validator = RiskEnvelopeValidator()
+        is_valid, reason = validator.validate_trade(...)
+
+    NEW:
+        from app.core.compliance_engine import ComplianceEngine
+        engine = ComplianceEngine()
+        is_valid, reason = engine.validate_risk_envelope(...)
+
+The ComplianceEngine provides a single point of risk validation with
+the same functionality plus integration with all other compliance systems.
+
+This module will be removed in a future version.
+
+---
+
 Validates that trades don't exceed maximum exposure limits.
 Prevents the system from taking positions that would exceed:
 - 20% total exposure per symbol
@@ -10,6 +30,15 @@ Prevents the system from taking positions that would exceed:
 Addresses issue: Pairs Trading appears to violate exposure limits,
 causing large losses despite small nominal returns.
 """
+
+import warnings
+
+warnings.warn(
+    "risk_envelope_validator.py is DEPRECATED. "
+    "Use ComplianceEngine.validate_risk_envelope() instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 import logging
 from decimal import Decimal

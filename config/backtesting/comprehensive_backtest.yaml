@@ -139,7 +139,7 @@ learning_engines:
       train_test_split: 0.7 # 70% train, 30% test
 
   deep:
-    enabled: false # Deshabilitado para velocidad con 25 años de datos
+    enabled: true # HABILITADO - usa SubprocessLearningEngineWrapper para macOS
     parameters:
       architecture: "lstm" # lstm, gru, transformer
       sequence_length:
@@ -168,7 +168,7 @@ learning_engines:
         default: 0.001
 
   reinforcement:
-    enabled: false # Deshabilitado para velocidad
+    enabled: true # HABILITADO - usa SubprocessLearningEngineWrapper para macOS
     parameters:
       algorithm: "ppo" # ppo, a2c, ddpg
       training_steps:
@@ -181,7 +181,7 @@ learning_engines:
         default: 0.0003
 
   transformer:
-    enabled: false # Deshabilitado para velocidad
+    enabled: true # HABILITADO - usa SubprocessLearningEngineWrapper para macOS
     parameters:
       nhead: 8
       num_layers: 4
@@ -204,7 +204,7 @@ backtests:
 
   # 2️⃣ Learning Engines Test
   learning_engines:
-    enabled: false # Deshabilitado para velocidad con 25 años de datos
+    enabled: true # HABILITADO para probar todos los learning engines
     description: "Probar cada learning engine individualmente (supervised, deep, reinforcement)"
     use_multi_strategy: true # Ejecutar también multi-strategy para comparación
 
@@ -231,7 +231,7 @@ backtests:
 
   # 5️⃣ Transformer-driven Optimization
   transformer_optimization:
-    enabled: false # Deshabilitado para velocidad
+    enabled: true # HABILITADO - optimización iterativa con Transformer
     description: "Optimizar parámetros iterativamente usando Transformer"
     max_iterations: 50
     convergence_threshold: 0.01 # Cambio mínimo en Sharpe para converger
@@ -240,7 +240,7 @@ backtests:
 
   # 6️⃣ Ablation / Modular Impact Test
   ablation:
-    enabled: false # Deshabilitado para velocidad
+    enabled: true # HABILITADO - medir impacto de cada módulo
     description: "Medir impacto individual de cada módulo"
     modules_to_test:
       - "ema_filter"
@@ -253,7 +253,7 @@ backtests:
 
   # 7️⃣ Parameter Sensitivity / Grid Search
   grid_search:
-    enabled: false # Deshabilitado para velocidad, usar hyperparameter_optimization en su lugar
+    enabled: true # HABILITADO - búsqueda de parámetros óptimos
     description: "Identificar rangos de parámetros robustos (limitado a thresholds)"
     search_method: "random" # grid, random
     num_combinations: 50 # Número de combinaciones a probar

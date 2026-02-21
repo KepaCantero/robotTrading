@@ -256,7 +256,7 @@ class ParetoFrontOptimizer:
                 evaluated.append(solution)
 
             except Exception:
-                # Skip invalid solutions
+                logger.warning("Skipping invalid solution in Pareto evaluation", exc_info=True)
                 continue
 
         return evaluated
@@ -308,7 +308,7 @@ class ParetoFrontOptimizer:
                     )
 
             except Exception:
-                # Use default value if calculation fails
+                logger.warning(f"Objective calculation failed for {obj.value}", exc_info=True)
                 objectives[obj.value] = 0.0
 
         return objectives

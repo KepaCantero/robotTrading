@@ -198,15 +198,24 @@ class PerformanceMetricsCalculator:
         variance = safe_variance(returns)
         std_dev = Decimal(str(math.sqrt(float(variance))))
 
-        if std_dev == 0:
-            return None
+        # CRITICAL FIX: Add volatility floor to prevent extreme Sharpe values
+        # When all trades have similar P&L (e.g., all stopped out at same %),
+        # std_dev is very small but not zero, causing Sharpe to explode.
+        # Minimum 5% annualized volatility is a reasonable floor for any trading strategy.
+        MIN_ANNUAL_VOLATILITY = Decimal("0.05")  # 5% minimum annualized volatility
 
         # Annualize (252 trading days)
         annual_mean = mean_return * Decimal("252")
         annual_std = std_dev * Decimal(str(math.sqrt(252)))
 
+        # Apply volatility floor
+        annual_std = max(annual_std, MIN_ANNUAL_VOLATILITY)
+
+        if annual_std == 0:
+            return None
+
         excess_return = annual_mean - self.config.risk_free_rate
-        sharpe = excess_return / annual_std if annual_std > 0 else None
+        sharpe = excess_return / annual_std
 
         return sharpe
 

@@ -659,6 +659,7 @@ class CorrelationAnalyzer:
             }
 
         except Exception:
+            logger.error("Correlation stability analysis failed", exc_info=True)
             return {
                 "mean_correlation": 0.0,
                 "std_correlation": 0.0,

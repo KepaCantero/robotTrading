@@ -1,0 +1,159 @@
+# Interactive Brokers Configuration
+# Reference: https://www.interactivebrokers.com/en/pricing/commissions-home.php
+#
+# This configuration provides realistic transaction costs for backtesting.
+# BUG #3 FIX: Previous backtests used unrealistic costs.
+
+broker:
+  name: "Interactive Brokers"
+  type: "interactive_brokers"
+
+  # Account settings
+  account_type: "margin"  # margin or cash
+  base_currency: "USD"
+
+# Commission Structure (Tiered Pricing - US Stocks)
+# As of 2024
+commission:
+  # Per-share pricing
+  per_share: 0.005        # $0.005 per share
+  minimum: 1.00           # $1.00 minimum per order
+  maximum_percent: 0.5    # 0.5% of trade value maximum
+
+  # Alternative: Fixed pricing (uncomment to use)
+  # fixed_rate_percent: 0.005  # 0.005% of trade value
+  # fixed_minimum: 1.00        # $1.00 minimum
+
+# Exchange and Regulatory Fees (US Markets)
+# These are pass-through fees charged on top of commissions
+regulatory_fees:
+  # SEC Fee (Section 31 fee) - charged on SELLS only
+  # Rate: $27.80 per $1,000,000 of principal (2024)
+  sec_fee_rate: 0.0000278
+
+  # Trading Activity Fee (TAF) - charged on SELLS only
+  # FINRA fee: $0.000166 per share
+  taf_per_share: 0.000166
+
+  # Maximum TAF per trade
+  taf_maximum: 8.22
+
+# Bid-Ask Spread Estimates
+# Used for market impact and execution cost modeling
+spread:
+  # By market cap category
+  large_cap_bps: 3        # S&P 500 stocks: ~3 bps
+  mid_cap_bps: 8          # Mid-cap stocks: ~8 bps
+  small_cap_bps: 15       # Small-cap stocks: ~15 bps
+  default_bps: 5          # Default assumption: 5 bps
+
+  # By trading session
+  regular_hours_multiplier: 1.0
+  pre_market_multiplier: 2.0
+  after_hours_multiplier: 2.5
+
+# Market Impact Parameters
+# Based on Almgren-Chriss model simplified implementation
+market_impact:
+  # Temporary impact coefficient (immediate price movement)
+  temporary_impact: 0.1
+
+  # Permanent impact coefficient (lasting price movement)
+  permanent_impact: 0.05
+
+  # Participation rate limits
+  max_participation_rate: 0.10  # Don't exceed 10% of average volume
+
+  # Volatility scaling
+  volatility_baseline: 0.20    # 20% annualized
+
+# Slippage Parameters
+# Execution uncertainty beyond market impact
+slippage:
+  # Base slippage by order type (basis points)
+  market_order_bps: 5
+  limit_order_bps: 2
+  stop_order_bps: 3
+  stop_limit_order_bps: 2
+
+  # Multipliers
+  high_volatility_multiplier: 1.5    # Vol > 40%
+  low_liquidity_multiplier: 2.0      # ADV < 100k shares
+  fast_market_multiplier: 1.5        # During rapid price moves
+
+# Margin Requirements
+margin:
+  # Initial margin (Reg T)
+  initial_margin_long: 0.50    # 50% for long positions
+  initial_margin_short: 0.50   # 50% for short positions
+
+  # Maintenance margin
+  maintenance_margin_long: 0.25    # 25% for long positions
+  maintenance_margin_short: 0.30   # 30% for short positions
+
+  # Concentration margin (for large positions)
+  concentration_threshold: 0.10    # 10% of portfolio
+  concentration_margin_add: 0.10   # Additional 10% margin
+
+# Trading Hours (US Eastern Time)
+trading_hours:
+  regular:
+    start: "09:30"
+    end: "16:00"
+  pre_market:
+    start: "04:00"
+    end: "09:30"
+  after_hours:
+    start: "16:00"
+    end: "20:00"
+
+# Order Routing
+order_routing:
+  # Smart routing enabled by default
+  smart_routing: true
+
+  # Preferred venues (in order)
+  venues:
+    - "NYSE"
+    - "NASDAQ"
+    - "ARCA"
+    - "BATS"
+    - "IEX"
+
+  # Dark pool access
+  dark_pool_enabled: true
+  dark_pool_max_participation: 0.05  # Max 5% via dark pools
+
+# Risk Controls
+risk_controls:
+  # Maximum order size (shares)
+  max_order_size: 100000
+
+  # Maximum order value (USD)
+  max_order_value: 5000000
+
+  # Price band (don't trade more than X% from last price)
+  price_band_percent: 5.0
+
+  # Rate limiting
+  max_orders_per_second: 10
+  max_orders_per_minute: 100
+
+# Cost Aggregation for Backtesting
+# Summary of expected round-trip costs
+backtest_assumptions:
+  # Typical round-trip cost breakdown (basis points)
+  typical_round_trip_bps:
+    commission: 2           # IBKR per-share pricing
+    spread: 5               # Typical spread
+    market_impact: 3        # For moderate size orders
+    regulatory: 0.5         # SEC + TAF on sell side
+    slippage: 5             # Execution uncertainty
+    total: 15.5             # Total round-trip cost
+
+  # Conservative round-trip (add 50% buffer)
+  conservative_round_trip_bps: 23.25
+
+  # For profitability validation
+  # Trade must have expected profit > this to be viable
+  minimum_profitable_move_bps: 25

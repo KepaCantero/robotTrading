@@ -1,4 +1,4 @@
-# pylint: disable=eval-used,subprocess-run-check
+# pylint: disable=subprocess-run-check
 # mypy: ignore-errors
 """
 Dead Man's Switch - Health Check Monitoring
@@ -20,6 +20,8 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
 import aiosqlite
+
+from app.core.utils.safe_parse import safe_parse
 
 logger = logging.getLogger(__name__)
 
@@ -304,9 +306,7 @@ class DeadMansSwitch:
                         resolved_at=None,
                         missed_pings=row[2],
                         last_ping_at=datetime.fromisoformat(row[3]) if row[3] else None,
-                        recovery_actions=eval(
-                            row[4]
-                        ),  # nosec B307 - internal data from controlled source
+                        recovery_actions=safe_parse(row[4], default=[]),
                         status=SwitchStatus(row[5]),
                         root_cause=row[6],
                     )
@@ -422,14 +422,14 @@ class DeadMansSwitch:
                     timeout=self.config.health_check_timeout,
                 ) as response:
                     if response.status >= 400:
-                        raise Exception(f"Health check failed: HTTP {response.status}")
+                        raise ConnectionError(f"Health check failed: HTTP {response.status}")
 
                     await response.read()
 
         except asyncio.TimeoutError:
-            raise Exception("Health check timeout")
+            raise TimeoutError("Health check timeout")
         except Exception as e:
-            raise Exception(f"Health check error: {e}")
+            raise ConnectionError(f"Health check error: {e}")
 
     async def _monitor_loop(self) -> None:
         """Monitor for missed pings."""
@@ -542,10 +542,18 @@ class DeadMansSwitch:
                 self.logger.info(f"Executing restart command: {self.config.restart_command}")
 
                 import subprocess
+                import shlex
 
-                result = subprocess.run(  # nosec B602 - controlled restart command
-                    self.config.restart_command,
-                    shell=True,
+                # SECURITY: Parse command safely to avoid shell injection
+                # shlex.split() properly handles quoted arguments
+                if isinstance(self.config.restart_command, str):
+                    cmd_args = shlex.split(self.config.restart_command)
+                else:
+                    cmd_args = list(self.config.restart_command)
+
+                result = subprocess.run(
+                    cmd_args,
+                    shell=False,  # nosec B603 - Using shlex.split for safe parsing
                     timeout=60,
                     capture_output=True,
                     check=False,

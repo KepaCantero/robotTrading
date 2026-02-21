@@ -3,6 +3,7 @@ LearningEngine - Sistema modular de aprendizaje híbrido para estrategias de tra
 """
 
 from .base_learning_engine import BaseLearningEngine
+from .subprocess_engine_wrapper import SubprocessLearningEngineWrapper
 
 # Drift detection y overfitting (siempre disponibles) [TASK-4.2-DRIFT]
 from .drift_detector import (
@@ -86,6 +87,7 @@ HYBRID_AVAILABLE = False
 __all__ = [
     # Base
     "BaseLearningEngine",
+    "SubprocessLearningEngineWrapper",
     # Drift detection [TASK-4.2-DRIFT]
     "PSIDetector",
     "ADWINDetector",

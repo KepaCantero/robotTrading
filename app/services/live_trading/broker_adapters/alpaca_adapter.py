@@ -170,10 +170,10 @@ class AlpacaAdapter:
             str: Order ID
 
         Raises:
-            Exception: If order placement fails
+            ConnectionError: If not connected to Alpaca
         """
         if not self.is_connected:
-            raise Exception("Not connected to Alpaca")
+            raise ConnectionError("Not connected to Alpaca")
 
         # CRITICAL: Validate BEFORE executing
         # Get available capital
@@ -834,10 +834,10 @@ class AlpacaAdapter:
                 - timestamp: Execution timestamp
 
         Raises:
-            Exception: If trade execution fails
+            ConnectionError: If not connected to Alpaca
         """
         if not self.is_connected:
-            raise Exception("Not connected to Alpaca - cannot execute trade")
+            raise ConnectionError("Not connected to Alpaca - cannot execute trade")
 
         # Validate quantity
         if quantity <= Decimal("0"):

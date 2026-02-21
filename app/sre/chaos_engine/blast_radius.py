@@ -1,4 +1,3 @@
-# pylint: disable=eval-used
 """
 Blast Radius Controller - Limits Failure Impact (SRE Rule 20)
 
@@ -28,6 +27,8 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 import aiosqlite
+
+from app.core.utils.safe_parse import safe_parse
 
 logger = logging.getLogger(__name__)
 
@@ -210,27 +211,19 @@ class BlastRadiusController:
                     config = BlastRadiusConfig(
                         scope=BlastRadiusScope(row[0]),
                         percentage=Decimal(row[1]),
-                        pods=eval(row[2]),  # nosec B307 - internal data from controlled source
-                        nodes=eval(row[3]),  # nosec B307 - internal data from controlled source
-                        zones=eval(row[4]),  # nosec B307 - internal data from controlled source
-                        regions=eval(row[5]),  # nosec B307 - internal data from controlled source
-                        traffic_split=eval(
-                            row[6]
-                        ),  # nosec B307 - internal data from controlled source
+                        pods=safe_parse(row[2], default=[]),
+                        nodes=safe_parse(row[3], default=[]),
+                        zones=safe_parse(row[4], default=[]),
+                        regions=safe_parse(row[5], default=[]),
+                        traffic_split=safe_parse(row[6], default={}),
                     )
 
                     self._active_containment = ContainmentState(
                         config=config,
                         applied_at=datetime.fromisoformat(row[7]),
-                        active_failures=eval(
-                            row[8]
-                        ),  # nosec B307 - internal data from controlled source
-                        isolated_domains=eval(
-                            row[9]
-                        ),  # nosec B307 - internal data from controlled source
-                        health_status=eval(
-                            row[10]
-                        ),  # nosec B307 - internal data from controlled source
+                        active_failures=safe_parse(row[8], default=[]),
+                        isolated_domains=safe_parse(row[9], default=[]),
+                        health_status=safe_parse(row[10], default={}),
                     )
 
                     self.logger.info("Loaded active containment")
