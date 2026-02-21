@@ -139,6 +139,156 @@ class FeatureExtractor:
         feature_names.append('stoch_rsi_k_above_d')
 
         # ============================================================
+        # 1.5 INDICADORES TÉCNICOS ADICIONALES (Mejora de Features)
+        # ============================================================
+
+        # MACD
+        macd = indicators.get('macd', 0.0)
+        macd_signal = indicators.get('macd_signal', 0.0)
+        macd_histogram = indicators.get('macd_histogram', 0.0)
+
+        raw_features['macd'] = macd
+        raw_features['macd_signal'] = macd_signal
+        raw_features['macd_histogram'] = macd_histogram
+
+        # Normalizar MACD usando sigmoid
+        feature_vector.append(self._normalize_momentum(macd * 10))  # Escalar para mejor rango
+        feature_names.append('macd_normalized')
+        feature_vector.append(self._normalize_momentum(macd_signal * 10))
+        feature_names.append('macd_signal_normalized')
+        feature_vector.append(self._normalize_momentum(macd_histogram * 100))
+        feature_names.append('macd_histogram_normalized')
+        feature_vector.append(1.0 if macd > macd_signal else 0.0)  # MACD crossover
+        feature_names.append('macd_above_signal')
+
+        # Bollinger Bands
+        bb_upper = indicators.get('bb_upper', current_price)
+        bb_middle = indicators.get('bb_middle', current_price)
+        bb_lower = indicators.get('bb_lower', current_price)
+        bb_width = indicators.get('bb_width', 0.0)
+        bb_position = indicators.get('bb_position', 0.5)  # 0=lower, 1=upper
+
+        raw_features['bb_upper'] = bb_upper
+        raw_features['bb_middle'] = bb_middle
+        raw_features['bb_lower'] = bb_lower
+        raw_features['bb_width'] = bb_width
+        raw_features['bb_position'] = bb_position
+
+        feature_vector.append(bb_position)  # Ya está normalizado 0-1
+        feature_names.append('bb_position')
+        feature_vector.append(min(1.0, bb_width * 10))  # Normalizar width
+        feature_names.append('bb_width_normalized')
+        feature_vector.append(1.0 if current_price > bb_middle else 0.0)
+        feature_names.append('price_above_bb_middle')
+        # Squeeze detection (low volatility)
+        feature_vector.append(1.0 if bb_width < 0.02 else 0.0)
+        feature_names.append('bb_squeeze')
+
+        # ADX (Average Directional Index) - Trend Strength
+        adx = indicators.get('adx', 25.0)
+        plus_di = indicators.get('plus_di', 25.0)
+        minus_di = indicators.get('minus_di', 25.0)
+
+        raw_features['adx'] = adx
+        raw_features['plus_di'] = plus_di
+        raw_features['minus_di'] = minus_di
+
+        feature_vector.append(adx / 100.0)  # Normalizar 0-1
+        feature_names.append('adx_normalized')
+        feature_vector.append(1.0 if adx > 25 else 0.0)  # Strong trend
+        feature_names.append('strong_trend')
+        feature_vector.append(1.0 if plus_di > minus_di else 0.0)  # Bullish direction
+        feature_names.append('bullish_direction')
+        feature_vector.append(abs(plus_di - minus_di) / 100.0)  # DI difference
+        feature_names.append('di_difference_normalized')
+
+        # CCI (Commodity Channel Index)
+        cci = indicators.get('cci', 0.0)
+        raw_features['cci'] = cci
+
+        # Normalizar CCI (típicamente -200 a 200)
+        feature_vector.append(max(-1.0, min(1.0, cci / 200.0)))
+        feature_names.append('cci_normalized')
+        feature_vector.append(1.0 if cci > 100 else 0.0)  # Overbought
+        feature_names.append('cci_overbought')
+        feature_vector.append(1.0 if cci < -100 else 0.0)  # Oversold
+        feature_names.append('cci_oversold')
+
+        # Williams %R
+        williams_r = indicators.get('williams_r', -50.0)
+        raw_features['williams_r'] = williams_r
+
+        # Williams %R va de -100 a 0, normalizar a 0-1
+        feature_vector.append((williams_r + 100) / 100.0)
+        feature_names.append('williams_r_normalized')
+        feature_vector.append(1.0 if williams_r > -20 else 0.0)  # Overbought
+        feature_names.append('williams_r_overbought')
+        feature_vector.append(1.0 if williams_r < -80 else 0.0)  # Oversold
+        feature_names.append('williams_r_oversold')
+
+        # OBV (On-Balance Volume) - relative
+        obv = indicators.get('obv', 0.0)
+        obv_ema = indicators.get('obv_ema', obv)
+        obv_trend = indicators.get('obv_trend', 0.0)  # OBV price divergence
+
+        raw_features['obv'] = obv
+        raw_features['obv_ema'] = obv_ema
+        raw_features['obv_trend'] = obv_trend
+
+        # OBV trend direction (comparado con su EMA)
+        if obv_ema != 0:
+            feature_vector.append(min(1.0, max(-1.0, (obv - obv_ema) / abs(obv_ema) * 10)))
+        else:
+            feature_vector.append(0.0)
+        feature_names.append('obv_relative')
+        feature_vector.append(self._normalize_momentum(obv_trend))
+        feature_names.append('obv_trend_normalized')
+
+        # Multi-period Rate of Change (ROC)
+        roc_5 = indicators.get('roc_5', 0.0)   # 5-period ROC
+        roc_10 = indicators.get('roc_10', 0.0)  # 10-period ROC
+        roc_20 = indicators.get('roc_20', 0.0)  # 20-period ROC
+
+        raw_features['roc_5'] = roc_5
+        raw_features['roc_10'] = roc_10
+        raw_features['roc_20'] = roc_20
+
+        feature_vector.append(self._normalize_momentum(roc_5 * 10))
+        feature_names.append('roc_5_normalized')
+        feature_vector.append(self._normalize_momentum(roc_10 * 10))
+        feature_names.append('roc_10_normalized')
+        feature_vector.append(self._normalize_momentum(roc_20 * 10))
+        feature_names.append('roc_20_normalized')
+        # ROC acceleration (cambio en velocidad)
+        roc_acceleration = roc_5 - roc_10 if roc_10 != 0 else 0.0
+        feature_vector.append(self._normalize_momentum(roc_acceleration * 100))
+        feature_names.append('roc_acceleration')
+
+        # Price Distance from High/Low (period)
+        period_high = indicators.get('period_high', current_price)
+        period_low = indicators.get('period_low', current_price)
+
+        raw_features['period_high'] = period_high
+        raw_features['period_low'] = period_low
+
+        if period_high > period_low:
+            price_position_in_range = (current_price - period_low) / (period_high - period_low)
+        else:
+            price_position_in_range = 0.5
+
+        feature_vector.append(price_position_in_range)
+        feature_names.append('price_position_in_range')
+        # Distance from high/low as percentage
+        if current_price > 0:
+            feature_vector.append(min(1.0, abs(current_price - period_high) / current_price * 10))
+            feature_names.append('distance_from_high_normalized')
+            feature_vector.append(min(1.0, abs(current_price - period_low) / current_price * 10))
+            feature_names.append('distance_from_low_normalized')
+        else:
+            feature_vector.extend([0.0, 0.0])
+            feature_names.extend(['distance_from_high_normalized', 'distance_from_low_normalized'])
+
+        # ============================================================
         # 2. RESULTADOS DE FILTROS (TODOS)
         # ============================================================
 

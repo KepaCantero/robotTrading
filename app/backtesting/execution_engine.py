@@ -20,7 +20,10 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
 from app.backtesting.constants import BACKTESTING_CONSTANTS
-from app.backtesting.cost_calculator import CostCalculator
+from app.backtesting.services.transaction_cost_model import (
+    BrokerType,
+    TransactionCostModel,
+)
 from app.models.market_data import Quote
 
 logger = logging.getLogger(__name__)
@@ -91,7 +94,7 @@ class PessimisticExecutionEngine:
         self,
         execution_type: ExecutionType = ExecutionType.PESSIMISTIC,
         base_slippage_bps: Optional[Decimal] = None,  # Uses config default if None
-        cost_calculator: Optional[CostCalculator] = None,
+        transaction_cost_model: Optional[TransactionCostModel] = None,
         enable_next_day_execution: Optional[bool] = None,  # Uses config default if None
     ):
         """
@@ -100,14 +103,17 @@ class PessimisticExecutionEngine:
         Args:
             execution_type: Type of execution simulation
             base_slippage_bps: Base slippage in basis points (default: from config)
-            cost_calculator: Optional cost calculator
+            transaction_cost_model: Optional transaction cost model
             enable_next_day_execution: If True, execute at next bar open (default: from config)
         """
         self.execution_type = execution_type
         self.base_slippage_bps = (
             base_slippage_bps if base_slippage_bps is not None else EXEC_CONSTANTS.BASE_SLIPPAGE_BPS
         )
-        self.cost_calculator = cost_calculator or CostCalculator()
+        self.transaction_cost_model = transaction_cost_model or TransactionCostModel(
+            broker=BrokerType.INTERACTIVE_BROKERS,
+            conservative=True,
+        )
         self.enable_next_day_execution = (
             enable_next_day_execution
             if enable_next_day_execution is not None
@@ -155,12 +161,15 @@ class PessimisticExecutionEngine:
         else:
             execution_price = next_open_price * (Decimal("1") - slippage_bps / Decimal("10000"))
 
-        # Calculate commission
+        # Calculate commission using TransactionCostModel
         trade_value = execution_price * quantity
-        commission = self.cost_calculator.calculate_commission(
-            self.cost_calculator.detect_asset_type(symbol),
-            trade_value,
+        cost_result = self.transaction_cost_model.calculate_costs(
+            symbol=symbol,
+            side=side.upper(),
+            quantity=quantity,
+            price=execution_price,
         )
+        commission = cost_result.commission
 
         return ExecutionResult(
             symbol=symbol,
@@ -262,15 +271,17 @@ class PessimisticExecutionEngine:
             else:  # TP hit
                 exit_price = execution_price * (Decimal("1") + slippage_bps / Decimal("10000"))
 
-        # Calculate commission
+        # Calculate commission using TransactionCostModel
         trade_value = exit_price * position.quantity
-        commission = self.cost_calculator.calculate_commission(
-            self.cost_calculator.detect_asset_type(position.symbol),
-            trade_value,
-        )
-
         # Determine exit side (opposite of entry)
         exit_side = "sell" if position.side.lower() == "long" else "buy"
+        cost_result = self.transaction_cost_model.calculate_costs(
+            symbol=position.symbol,
+            side=exit_side.upper(),
+            quantity=position.quantity,
+            price=exit_price,
+        )
+        commission = cost_result.commission
 
         result = ExecutionResult(
             symbol=position.symbol,

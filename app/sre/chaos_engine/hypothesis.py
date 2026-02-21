@@ -1,4 +1,3 @@
-# pylint: disable=eval-used
 # mypy: ignore-errors
 """
 Chaos Hypothesis - Scientific Approach to Chaos (SRE Rule 20)
@@ -30,6 +29,8 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 import aiosqlite
+
+from app.core.utils.safe_parse import safe_parse
 
 logger = logging.getLogger(__name__)
 
@@ -522,9 +523,7 @@ class HypothesisValidator:
                         "status": row[1],
                         "confidence": row[2],
                         "validated_at": row[3],
-                        "details": eval(
-                            row[4]
-                        ),  # nosec B307 - internal data from controlled source
+                        "details": safe_parse(row[4], default={}),
                     }
                     for row in rows
                 ]

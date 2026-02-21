@@ -24,14 +24,18 @@ import pandas as pd
 import yaml
 
 from app.backtesting.comprehensive_backtest_runner import ComprehensiveBacktestRunner
+from app.backtesting.shared import (
+    MetricsDict,
+    TempConfigManager,
+    get_empty_metrics,
+)
 from app.core.config.profile_config_loader import ProfileConfigLoader
 from app.core.models.input_profile import InputProfile
 
 logger = logging.getLogger(__name__)
 
-# Type aliases for better type safety
+# Type aliases (additional ones not in shared module)
 ConfigDict = Dict[str, Any]
-MetricsDict = Dict[str, Union[float, int, str, bool, None]]
 ValidationResultDict = Dict[str, Any]  # Contains 'passed' bool and validation metrics
 
 
@@ -41,6 +45,10 @@ class WalkForwardValidator:
 
     Tests strategy robustness by rolling through time windows
     with train/test splits.
+
+    Note: This is a profile-batch specific implementation.
+    See also: app.backtesting.walk_forward_validator.WalkForwardValidator
+    for the main implementation.
     """
 
     def __init__(
@@ -169,15 +177,10 @@ class WalkForwardValidator:
             if temp_config_path.exists():
                 temp_config_path.unlink()
 
+    # Delegates to shared MetricsFactory (eliminates duplicate code)
     def _get_empty_metrics(self) -> MetricsDict:
-        """Return empty metrics dict."""
-        return {
-            "sharpe_ratio": 0.0,
-            "return_pct": 0.0,
-            "max_drawdown": 0.0,
-            "win_rate": 0.0,
-            "total_trades": 0,
-        }
+        """Return empty metrics dict. Delegates to shared MetricsFactory."""
+        return get_empty_metrics(include_pnl=False)
 
 
 class MonteCarloSimulator:
@@ -186,6 +189,10 @@ class MonteCarloSimulator:
 
     Evaluates strategy robustness through random sampling
     of historical returns.
+
+    Note: This is a profile-batch specific implementation.
+    See also: app.backtesting.walk_forward_validator.MonteCarloSimulator
+    for the main implementation.
     """
 
     def __init__(
@@ -288,15 +295,10 @@ class MonteCarloSimulator:
             if temp_config_path.exists():
                 temp_config_path.unlink()
 
+    # Delegates to shared MetricsFactory (eliminates duplicate code)
     def _get_empty_metrics(self) -> MetricsDict:
-        """Return empty metrics dict."""
-        return {
-            "sharpe_ratio": 0.0,
-            "return_pct": 0.0,
-            "max_drawdown": 0.0,
-            "win_rate": 0.0,
-            "total_trades": 0,
-        }
+        """Return empty metrics dict. Delegates to shared MetricsFactory."""
+        return get_empty_metrics(include_pnl=False)
 
 
 class OutOfSampleValidator:
@@ -409,12 +411,7 @@ class OutOfSampleValidator:
             if temp_config_path.exists():
                 temp_config_path.unlink()
 
+    # Delegates to shared MetricsFactory (eliminates duplicate code)
     def _get_empty_metrics(self) -> MetricsDict:
-        """Return empty metrics dict."""
-        return {
-            "sharpe_ratio": 0.0,
-            "return_pct": 0.0,
-            "max_drawdown": 0.0,
-            "win_rate": 0.0,
-            "total_trades": 0,
-        }
+        """Return empty metrics dict. Delegates to shared MetricsFactory."""
+        return get_empty_metrics(include_pnl=False)

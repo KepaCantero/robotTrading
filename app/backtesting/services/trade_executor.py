@@ -3,6 +3,9 @@ Trade Executor service for backtesting.
 
 This service is responsible for executing buy and sell trades with all
 necessary validations including liquidity, position sizing, and cost calculations.
+
+BUG #3 FIX: Now uses TransactionCostModel for realistic costs instead of
+simple percentage-based commission.
 """
 
 from __future__ import annotations
@@ -15,6 +18,12 @@ from uuid import uuid4
 from app.backtesting.models import BacktestConfig, Trade, TradeStatus
 from app.backtesting.services.pnl_calculator import ProfitAndLossCalculator
 from app.backtesting.services.position_manager import PositionManager
+from app.backtesting.services.transaction_cost_model import (
+    BrokerType,
+    OrderType,
+    TransactionCostModel,
+    TransactionCostResult,
+)
 from app.models.signal import Signal
 
 logger = logging.getLogger(__name__)
@@ -28,7 +37,7 @@ class TradeExecutor:
     - Buy order execution with all validations
     - Sell order execution with P&L calculation
     - Position size calculation based on risk
-    - Commission and slippage application
+    - Commission and slippage application using TransactionCostModel
     - Liquidity-aware execution
 
     Dependencies:
@@ -36,6 +45,7 @@ class TradeExecutor:
     - TradingValidator: Position size and stop-loss validation
     - PositionManager: Track and update positions
     - ProfitAndLossCalculator: Calculate trade profitability
+    - TransactionCostModel: Realistic transaction cost calculation
     - config: Backtest configuration
     """
 
@@ -46,6 +56,8 @@ class TradeExecutor:
         pnl_calculator: ProfitAndLossCalculator,
         diagnostic_logger: Optional[Any] = None,
         strategy: Optional[Any] = None,
+        use_realistic_costs: bool = True,
+        broker_type: BrokerType = BrokerType.INTERACTIVE_BROKERS,
     ):
         """
         Initialize the TradeExecutor.
@@ -56,6 +68,8 @@ class TradeExecutor:
             pnl_calculator: ProfitAndLossCalculator instance
             diagnostic_logger: Optional diagnostic logger
             strategy: Optional strategy instance for custom parameters
+            use_realistic_costs: Use TransactionCostModel for realistic costs (default True)
+            broker_type: Broker type for cost modeling (default IBKR)
         """
         from app.backtesting.liquidity_validator import LiquidityValidator
         from app.core.trading_validators import TradingValidator
@@ -65,6 +79,13 @@ class TradeExecutor:
         self.pnl_calculator = pnl_calculator
         self.diagnostic_logger = diagnostic_logger
         self.strategy = strategy
+
+        # BUG #3 FIX: Initialize TransactionCostModel for realistic costs
+        self.use_realistic_costs = use_realistic_costs
+        self.transaction_cost_model = TransactionCostModel(
+            broker=broker_type,
+            conservative=True,  # Use conservative estimates for backtesting
+        )
 
         # Initialize validators
         self.trading_validator = TradingValidator()
@@ -82,6 +103,7 @@ class TradeExecutor:
         capital: Decimal,
         close_position_func: Callable,
         validate_profitability_func: Callable,
+        position_size: Optional[Decimal] = None,  # Pass from ComplianceEngine to avoid duplication
     ) -> tuple[Optional[Trade], Decimal]:
         """
         Execute a buy signal with all validations.
@@ -92,6 +114,7 @@ class TradeExecutor:
             capital: Current available capital
             close_position_func: Function to close existing positions
             validate_profitability_func: Function to validate trade profitability
+            position_size: Pre-calculated position size from ComplianceEngine (avoids duplication)
 
         Returns:
             Tuple of (executed_trade or None, updated_capital)
@@ -116,8 +139,13 @@ class TradeExecutor:
         if not validate_profitability_func(signal, current_price):
             return None, capital
 
-        # Calculate position size
-        position_size = self._calculate_position_size(signal, current_price, capital)
+        # Position size MUST come from ComplianceEngine - no fallback allowed
+        if position_size is None:
+            raise ValueError(
+                "position_size is required. "
+                "Pass position_size from ComplianceEngine.calculate_position_size() "
+                "to ensure consistent position sizing across the system."
+            )
         logger.info(
             f"BUY {signal.symbol} (strategy={strategy_name}): "
             f"position_size={position_size}, price={current_price}, capital={capital}"
@@ -212,23 +240,28 @@ class TradeExecutor:
             )
             return None, capital
 
-        # Calculate commission
-        commission_pct = self._get_strategy_commission(signal, strategy_name)
-        trade_value = position_size * execution_price
-        if commission_pct is not None:
-            commission = trade_value * (commission_pct / Decimal("100"))
-        else:
-            commission = self.config.commission_per_trade
+        # BUG #3 FIX: Calculate transaction costs using realistic model
+        cost_result = self._calculate_transaction_costs(
+            symbol=signal.symbol,
+            side="BUY",
+            quantity=position_size,
+            price=execution_price,
+            signal=signal,
+            market_data=market_data,
+        )
 
-        # Calculate costs
-        slippage_cost = abs(position_size * (execution_price - current_price))
-        total_cost = position_size * execution_price + commission
+        # Extract individual costs for logging and trade record
+        commission = cost_result.commission
+        slippage_cost = cost_result.slippage_cost + cost_result.market_impact_cost
+        total_cost = position_size * execution_price + cost_result.total_cost
 
         logger.info(
             f"BUY {signal.symbol} (strategy={strategy_name}): "
             f"execution_price=${execution_price:.4f}, "
             f"commission=${commission:.2f}, "
-            f"slippage_cost=${slippage_cost:.2f}, total_cost=${total_cost:.2f}"
+            f"spread=${cost_result.spread_cost:.2f}, "
+            f"slippage=${slippage_cost:.2f}, "
+            f"total_cost=${total_cost:.2f} ({cost_result.total_cost_bps:.1f} bps)"
         )
 
         if total_cost > capital:
@@ -306,13 +339,11 @@ class TradeExecutor:
 
         current_price = get_price(market_data)
 
-        # Calculate sell quantity
-        calculated_sell_size = self._calculate_position_size(signal, current_price, capital)
-        sell_quantity = min(current_position, calculated_sell_size)
+        # Sell the entire current position (no need to calculate position size for sells)
+        sell_quantity = current_position
 
         logger.info(
             f"SELL {signal.symbol} (strategy={strategy_name}): "
-            f"calculated_sell_size={calculated_sell_size}, "
             f"sell_quantity={sell_quantity}, current_position={current_position}"
         )
 
@@ -358,23 +389,32 @@ class TradeExecutor:
         if fill_result.market_impact and fill_result.market_impact > Decimal("0.005"):
             logger.info(f"SELL {signal.symbol}: Market impact = {fill_result.market_impact:.2%}")
 
-        # Calculate commission
-        commission_pct = self._get_strategy_commission(signal, strategy_name)
-        trade_value = sell_quantity * execution_price
-        if commission_pct is not None:
-            commission = trade_value * (commission_pct / Decimal("100"))
-        else:
-            commission = self.config.commission_per_trade
+        # BUG #3 FIX: Calculate transaction costs using realistic model
+        cost_result = self._calculate_transaction_costs(
+            symbol=signal.symbol,
+            side="SELL",
+            quantity=sell_quantity,
+            price=execution_price,
+            signal=signal,
+            market_data=market_data,
+        )
 
-        # Calculate proceeds
-        slippage_cost = abs(sell_quantity * (execution_price - current_price))
-        proceeds = sell_quantity * execution_price - commission
+        # Extract individual costs for logging and trade record
+        commission = cost_result.commission
+        slippage_cost = cost_result.slippage_cost + cost_result.market_impact_cost
+        total_costs = cost_result.total_cost  # Includes SEC/TAF fees on sells
+
+        # Calculate proceeds (sell value minus all costs)
+        proceeds = sell_quantity * execution_price - total_costs
 
         logger.info(
             f"SELL {signal.symbol} (strategy={strategy_name}): "
             f"execution_price=${execution_price:.4f}, "
             f"commission=${commission:.2f}, "
-            f"slippage_cost=${slippage_cost:.2f}, proceeds=${proceeds:.2f}"
+            f"spread=${cost_result.spread_cost:.2f}, "
+            f"sec/taf=${cost_result.sec_fee + cost_result.taf_fee:.2f}, "
+            f"slippage=${slippage_cost:.2f}, "
+            f"proceeds=${proceeds:.2f} (total costs: {cost_result.total_cost_bps:.1f} bps)"
         )
 
         # Calculate P&L using PnL calculator
@@ -383,7 +423,7 @@ class TradeExecutor:
             symbol=signal.symbol,
             sell_quantity=sell_quantity,
             execution_price=execution_price,
-            commission=commission,
+            commission=total_costs,  # Use total costs, not just commission
         )
 
         # Create trade
@@ -434,48 +474,6 @@ class TradeExecutor:
             )
 
         return trade, capital + proceeds
-
-    def _calculate_position_size(self, signal: Signal, price: Decimal, capital: Decimal) -> Decimal:
-        """Calculate position size based on signal and risk management."""
-        from decimal import ROUND_HALF_UP
-
-        confidence_factor = Decimal(str(max(signal.confidence / 100.0, 0.5)))
-        max_position_value = capital * self.config.max_position_size
-
-        position_value = max_position_value * confidence_factor
-
-        # Adjust for commission ratio
-        strategy_name = signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
-        commission_pct = self._get_strategy_commission(signal, strategy_name)
-
-        if commission_pct is None:
-            commission = self.config.commission_per_trade
-            if commission > 0:
-                round_trip_commission = commission * 2
-                current_commission_ratio = (
-                    round_trip_commission / position_value if position_value > 0 else Decimal("1")
-                )
-
-                if current_commission_ratio > Decimal("0.01"):
-                    min_position_value = round_trip_commission / Decimal("0.01")
-                    position_value = max(position_value, min_position_value)
-                    position_value = min(position_value, max_position_value)
-
-                    logger.info(
-                        f"Adjusted position value for {signal.symbol} from "
-                        f"${max_position_value * confidence_factor:.2f} "
-                        f"to ${position_value:.2f} to maintain commission ratio <= 1%"
-                    )
-
-        # Ensure minimum position value
-        min_position_value = capital * Decimal("0.01")
-        position_value = max(position_value, min_position_value)
-
-        position_size = position_value / price
-        min_size = Decimal("1")
-        position_size = max(position_size, min_size)
-
-        return position_size.quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP)
 
     def _get_strategy_commission(self, signal: Signal, strategy_name: str) -> Optional[Decimal]:
         """Get commission percentage for strategy."""
@@ -547,3 +545,66 @@ class TradeExecutor:
         reason_parts.append(f"conf={signal.confidence:.1f}%")
 
         return " ".join(reason_parts)
+
+    def _calculate_transaction_costs(
+        self,
+        symbol: str,
+        side: str,
+        quantity: Decimal,
+        price: Decimal,
+        signal: Optional[Signal] = None,
+        market_data: Optional[Any] = None,
+    ) -> TransactionCostResult:
+        """
+        Calculate transaction costs using TransactionCostModel.
+
+        BUG #3 FIX: Uses realistic cost model instead of simple percentage.
+
+        Args:
+            symbol: Trading symbol
+            side: BUY or SELL
+            quantity: Number of shares
+            price: Execution price
+            signal: Optional signal for metadata
+            market_data: Optional market data for volume/volatility
+
+        Returns:
+            TransactionCostResult with all cost components
+        """
+        strategy_name = "unknown"
+        if signal and signal.metadata:
+            strategy_name = signal.metadata.get("strategy", "unknown")
+
+        # Check if strategy overrides commission percentage
+        commission_pct = self._get_strategy_commission(signal, strategy_name) if signal else None
+
+        if commission_pct is not None:
+            # Strategy has custom commission percentage - use simple calculation
+            trade_value = quantity * price
+            commission = trade_value * (commission_pct / Decimal("100"))
+
+            return TransactionCostResult(
+                gross_value=trade_value,
+                commission=commission,
+                total_cost=commission,
+                total_cost_bps=(commission / trade_value * Decimal("10000")) if trade_value > 0 else Decimal("0"),
+            )
+
+        # Use realistic TransactionCostModel
+        # Get volume from market data if available
+        average_volume = None
+        if market_data and hasattr(market_data, "volume"):
+            try:
+                average_volume = Decimal(str(market_data.volume))
+            except (ValueError, TypeError):
+                pass
+
+        return self.transaction_cost_model.calculate_costs(
+            symbol=symbol,
+            side=side,
+            quantity=quantity,
+            price=price,
+            order_type=OrderType.MARKET,  # Backtesting assumes market orders
+            average_volume=average_volume,
+        )
+

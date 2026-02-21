@@ -1586,7 +1586,15 @@ class SectorCountryDiversificationConfig(BaseModel):
 # =============================================================================
 
 class CentralizedConfig(SettingsBase):
-    """Centralized configuration for the entire application."""
+    """
+    Centralized configuration for the entire application.
+
+    Note: This is an alternative configuration class for trading-specific
+    contexts. The main CentralizedConfig is in app.core.centralized_config.
+    Consider using that one for new code.
+    """
+    # This class is deprecated - use app.core.centralized_config.CentralizedConfig instead
+    # Kept for backward compatibility with portfolio_analytics_service.py
 
     # Environment
     environment: Environment = Field(default=Environment.DEVELOPMENT, description="Current environment")

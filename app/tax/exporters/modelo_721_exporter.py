@@ -368,7 +368,7 @@ class Modelo721Exporter:
                     logger.info(f"BOE rate: {currency}/EUR = {rate}")
                     return rate
                 else:
-                    raise Exception(f"BOE API returned {response.status}")
+                    raise RuntimeError(f"BOE API returned {response.status}")
 
     async def _fetch_ecb_rate(self, currency: str, date: date) -> Decimal:
         """Fetch exchange rate from European Central Bank API."""
@@ -382,7 +382,7 @@ class Modelo721Exporter:
                     # NOTE: Implement proper ECB XML parsing
                     return Decimal("1.0")
                 else:
-                    raise Exception(f"ECB API returned {response.status}")
+                    raise RuntimeError(f"ECB API returned {response.status}")
 
     async def _export_coinpanda(
         self, transactions: List[Transaction], balances: List[BalanceSnapshot], output_path: Path

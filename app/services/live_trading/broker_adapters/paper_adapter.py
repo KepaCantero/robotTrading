@@ -119,10 +119,10 @@ class PaperAdapter:
             str: Order ID
 
         Raises:
-            Exception: If order placement fails
+            ConnectionError: If not connected to paper trading
         """
         if not self.is_connected:
-            raise Exception("Not connected to paper trading")
+            raise ConnectionError("Not connected to paper trading")
 
         try:
             # SEC-005: Check for duplicate client_order_id

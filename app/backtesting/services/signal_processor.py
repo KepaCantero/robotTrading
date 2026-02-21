@@ -12,8 +12,8 @@ from decimal import Decimal
 from typing import Any, Dict, Optional
 
 from app.backtesting.models import BacktestConfig
+from app.core.compliance_engine import ComplianceEngine
 from app.models.signal import Signal, SignalType
-from app.services.risk_envelope_validator import RiskEnvelopeValidator
 
 logger = logging.getLogger(__name__)
 
@@ -23,14 +23,14 @@ class SignalProcessor:
     Processes and validates trading signals before execution.
 
     This service handles:
-    - Risk envelope validation
+    - Risk envelope validation (via ComplianceEngine)
     - Strategy risk checks
     - Trade profitability validation
     - Signal rejection logging
 
     Dependencies:
     - TradingValidator: Position size and stop-loss validation
-    - RiskEnvelopeValidator: Portfolio-level risk management
+    - ComplianceEngine: Portfolio-level risk management (includes risk envelope validation)
     - strategy: Strategy instance for custom risk checks
     - diagnostic_logger: Optional logging for rejected signals
     """
@@ -39,7 +39,7 @@ class SignalProcessor:
         self,
         config: BacktestConfig,
         strategy: Optional[Any] = None,
-        risk_envelope_validator: Optional[RiskEnvelopeValidator] = None,
+        compliance_engine: Optional[ComplianceEngine] = None,
         enable_risk_envelope: bool = True,
         diagnostic_logger: Optional[Any] = None,
         total_portfolio_capital: Optional[Decimal] = None,
@@ -51,7 +51,7 @@ class SignalProcessor:
         Args:
             config: Backtest configuration
             strategy: Optional strategy instance for risk_check validation
-            risk_envelope_validator: Optional RiskEnvelopeValidator instance
+            compliance_engine: Optional ComplianceEngine instance (uses singleton if not provided)
             enable_risk_envelope: Enable risk envelope validation (default True)
             diagnostic_logger: Optional diagnostic logger for rejected signals
             total_portfolio_capital: Total portfolio capital for multi-strategy scenarios
@@ -62,7 +62,7 @@ class SignalProcessor:
         self.config = config
         self.strategy = strategy
         self.enable_risk_envelope = enable_risk_envelope
-        self.risk_validator = risk_envelope_validator
+        self.compliance_engine = compliance_engine or ComplianceEngine()
         self.diagnostic_logger = diagnostic_logger
         self.total_portfolio_capital = total_portfolio_capital or config.initial_capital
         self.strategy_name = strategy_name
@@ -71,11 +71,7 @@ class SignalProcessor:
         self.trading_validator = TradingValidator()
 
         if enable_risk_envelope:
-            if not self.risk_validator:
-                from app.services.risk_envelope_validator import RiskEnvelopeValidator
-
-                self.risk_validator = RiskEnvelopeValidator()
-            logger.info(f"Risk Envelope Validator enabled for {strategy_name}")
+            logger.info(f"Risk Envelope validation enabled for {strategy_name} (via ComplianceEngine)")
 
     def process_signal(
         self,
@@ -267,7 +263,7 @@ class SignalProcessor:
         create_portfolio_func,
     ) -> bool:
         """
-        Validate signal using Risk Envelope constraints.
+        Validate signal using Risk Envelope constraints via ComplianceEngine.
 
         Args:
             signal: Trading signal to validate
@@ -282,7 +278,7 @@ class SignalProcessor:
         """
         from app.backtesting.engine import get_price
 
-        if not self.enable_risk_envelope or not self.risk_validator:
+        if not self.enable_risk_envelope:
             return True
 
         current_price = get_price(market_data)
@@ -326,9 +322,9 @@ class SignalProcessor:
         else:
             trade_value = Decimal("0")
 
-        # Validate trade
+        # Validate trade using ComplianceEngine
         if trade_value > 0:
-            is_valid, reason = self.risk_validator.validate_trade(
+            is_valid, reason = self.compliance_engine.validate_risk_envelope(
                 symbol=signal.symbol,
                 trade_value=trade_value,
                 strategy_name=self.strategy_name,

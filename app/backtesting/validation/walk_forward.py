@@ -47,6 +47,10 @@ class WalkForwardValidator:
     simulates real-world trading by periodically optimizing parameters
     on in-sample data and testing on out-of-sample data.
 
+    Note: This is a validation-specific implementation.
+    See also: app.backtesting.walk_forward_validator.WalkForwardValidator
+    for the main implementation.
+
     Example:
         ```python
         validator = WalkForwardValidator(config)

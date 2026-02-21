@@ -1,4 +1,3 @@
-# pylint: disable=eval-used
 # mypy: ignore-errors
 """
 Shift Handoff Procedures - SRE Rule 24
@@ -31,6 +30,8 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
 import aiosqlite
+
+from app.core.utils.safe_parse import safe_parse
 
 logger = logging.getLogger(__name__)
 
@@ -607,11 +608,7 @@ class HandoffManager:
                                 datetime.fromisoformat(comp_row[3]) if comp_row[3] else None
                             ),
                             notes=comp_row[4],
-                            artifacts=eval(
-                                comp_row[5]
-                            )  # nosec B307 - internal data from controlled source
-                            if comp_row[5]
-                            else [],
+                            artifacts=safe_parse(comp_row[5], default=[]) if comp_row[5] else [],
                         )
                         session.completions[completion.item_id] = completion
 

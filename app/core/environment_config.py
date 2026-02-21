@@ -341,7 +341,13 @@ class MonitoringConfig(BaseSettings):
 
 
 class CentralizedConfig(BaseSettings):
-    """Centralized configuration for the entire application."""
+    """
+    Centralized configuration for the entire application.
+
+    Note: This is a lightweight environment-focused configuration.
+    The main CentralizedConfig is in app.core.centralized_config.
+    Consider using that one for comprehensive application configuration.
+    """
 
     # Environment
     environment: Environment = Field(default=Environment.DEVELOPMENT, env="ENVIRONMENT")

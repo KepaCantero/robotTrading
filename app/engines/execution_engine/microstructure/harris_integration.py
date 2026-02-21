@@ -524,9 +524,18 @@ class HarrisMicrostructureIntegrator:
 
         # Rule 6.4: Market impact estimation
         config = get_config()
-        volatility = getattr(config.trading, 'max_risk_per_trade', 0.02)  # Default
+        # Default volatility from config or use default value
+        try:
+            volatility = getattr(config.trading, 'max_risk_per_trade', 0.02)
+        except AttributeError:
+            volatility = 0.02  # Default 2% daily volatility
+
         if price_history is not None and len(price_history) > 1:
-            volatility = price_history["close"].pct_change().std() * np.sqrt(252)
+            calculated_vol = price_history["close"].pct_change().std() * np.sqrt(252)
+            # Use calculated volatility only if it's a valid number
+            import math
+            if not pd.isna(calculated_vol) and not math.isnan(calculated_vol) and not math.isinf(calculated_vol):
+                volatility = calculated_vol
 
         impact_estimate = self.estimate_market_impact(
             symbol=symbol,

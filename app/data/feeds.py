@@ -15,6 +15,7 @@ from typing import Any, Dict, List, Optional
 import aiohttp
 from aiohttp import ClientError
 
+from app.core.api_endpoints import ENDPOINTS
 from app.models.market_data import (
     DataFeedConfig,
     DataFeedType,
@@ -104,7 +105,7 @@ class AlphaVantageFeed(DataFeedInterface):
 
     def __init__(self, config: DataFeedConfig):
         super().__init__(config)
-        self.base_url = "https://www.alphavantage.co/query"
+        self.base_url = ENDPOINTS.ALPHA_VANTAGE
 
     async def connect(self) -> bool:
         """Connect to Alpha Vantage API."""
@@ -241,7 +242,7 @@ class YahooFinanceFeed(DataFeedInterface):
 
     def __init__(self, config: DataFeedConfig):
         super().__init__(config)
-        self.base_url = "https://query1.finance.yahoo.com/v8/finance/chart"
+        self.base_url = ENDPOINTS.YAHOO_FINANCE_V8
 
     async def connect(self) -> bool:
         """Connect to Yahoo Finance API."""
@@ -388,7 +389,7 @@ class PolygonFeed(DataFeedInterface):
 
     def __init__(self, config: DataFeedConfig):
         super().__init__(config)
-        self.base_url = "https://api.massive.com"
+        self.base_url = ENDPOINTS.MASSIVE
 
     async def connect(self) -> bool:
         """Connect to Massive.com (Polygon.io) API."""

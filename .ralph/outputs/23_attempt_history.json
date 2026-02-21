@@ -1,0 +1,97 @@
+[
+  {
+    "iteration": 1,
+    "timestamp": "2026-02-21T03:30:00Z",
+    "diagnosis": "Sharpe calculation uses per-trade returns causing extreme values when volatility is low. Parameter ranges too restrictive causing 0% win rate.",
+    "action_taken": "emit metrics_fix.fix_calculation",
+    "root_causes": [
+      "per_trade_returns_in_sharpe_calc",
+      "restrictive_rsi_range_20_35",
+      "restrictive_volume_range_1_0_1_5"
+    ]
+  },
+  {
+    "iteration": 2,
+    "timestamp": "2026-02-21T04:30:00Z",
+    "action_taken": "Added volatility floor (5%) to Sharpe calculation",
+    "sharpe_before": -1099.01,
+    "sharpe_after": -0.673,
+    "result": "improved"
+  },
+  {
+    "iteration": 3,
+    "timestamp": "2026-02-21T04:35:00Z",
+    "action_taken": "Validated Sharpe fix - still negative but reasonable",
+    "sharpe": -0.673,
+    "result": "validated",
+    "next_action": "parameter_widening"
+  },
+  {
+    "iteration": 4,
+    "timestamp": "2026-02-21T04:45:00Z",
+    "action_taken": "Widened parameters: RSI 15-50, Volume 0.7-1.4, updated all profiles",
+    "files_modified": ["config/backtesting/profile_optimization.yaml"],
+    "result": "applied"
+  },
+  {
+    "iteration": 5,
+    "timestamp": "2026-02-21T05:05:00Z",
+    "action_taken": "Validated parameter fix - NO IMPROVEMENT in Sharpe",
+    "sharpe_baseline": -0.673,
+    "sharpe_optimized": -0.677,
+    "result": "no_change",
+    "diagnosis": "Parameter fix did not improve metrics. Real issue is in strategy signal generation or risk management (stop_loss/take_profit ratios). Need different approach.",
+    "next_action": "investigate_strategy_logic"
+  },
+  {
+    "iteration": 6,
+    "timestamp": "2026-02-21T05:15:00Z",
+    "action_taken": "Widened stop_loss (3-10%) and take_profit (8-30%) in bayesian_optimizer.py",
+    "files_modified": ["app/backtesting/profile_batch/bayesian_optimizer.py"],
+    "result": "applied"
+  },
+  {
+    "iteration": 7,
+    "timestamp": "2026-02-21T05:30:00Z",
+    "action_taken": "Fixed duplicate code in profile_batch_backtester.py (same SL/TP ranges)",
+    "files_modified": ["app/backtesting/profile_batch_backtester.py"],
+    "sharpe_baseline": -0.673,
+    "sharpe_optimized": -0.674,
+    "result": "no_change",
+    "diagnosis": "Risk parameters fix did not improve. Return visible: -18.3% baseline, -22.2% optimized. All trades hitting stop loss."
+  },
+  {
+    "iteration": 8,
+    "timestamp": "2026-02-21T05:45:00Z",
+    "action_taken": "Summary analysis - identified signal logic as root cause",
+    "result": "analysis_complete",
+    "recommendation": "Try radical approaches: disable RSI, use trend following"
+  },
+  {
+    "iteration": 9,
+    "timestamp": "2026-02-21T06:00:00Z",
+    "action_taken": "Disabled RSI and StochRSI filters entirely in momentum_modular.yaml",
+    "files_modified": ["config/strategies/momentum_modular.yaml"],
+    "sharpe_baseline": -0.673,
+    "sharpe_optimized": -0.674,
+    "result": "no_change"
+  },
+  {
+    "iteration": 10,
+    "timestamp": "2026-02-21T06:05:00Z",
+    "action_taken": "Changed preset to aggressive, lowered all thresholds (volume, ATR, momentum)",
+    "files_modified": ["config/strategies/momentum_modular.yaml"],
+    "sharpe_baseline": -0.673,
+    "sharpe_optimized": -0.674,
+    "result": "no_change",
+    "diagnosis": "Strategy config changes don't affect profile_batch_backtester which uses profile_optimization.yaml parameters. Fundamental issue is signal generation logic."
+  },
+  {
+    "iteration": 11,
+    "timestamp": "2026-02-21T06:10:00Z",
+    "action_taken": "Final validation and documentation",
+    "sharpe_final": -0.673,
+    "result": "PARTIAL",
+    "conclusion": "Sharpe calculation bug fixed (99.94% improvement). Strategy signal logic needs fundamental changes - parameter tuning alone cannot achieve Sharpe > 0.5."
+  }
+]

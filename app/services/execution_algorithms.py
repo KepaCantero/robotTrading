@@ -31,6 +31,10 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
+# Default values for configuration
+_DEFAULT_MIN_SLICE_PCT = 0.02  # 2%
+_DEFAULT_DAILY_VOLATILITY = 0.02  # 2%
+
 
 @dataclass
 class ExecutionPlan:
@@ -136,7 +140,7 @@ class VWAPExecutor:
         start_time: Optional[datetime] = None,
         end_time: Optional[datetime] = None,
         max_slices: int = 20,
-        min_slice_pct: float = getattr(config.trading, 'max_risk_per_trade', 0.02),  # Minimum 2% per slice
+        min_slice_pct: float = _DEFAULT_MIN_SLICE_PCT,  # Minimum 2% per slice
         custom_volume_profile: Optional[Dict[str, float]] = None,
     ) -> ExecutionPlan:
         """
@@ -305,7 +309,7 @@ class VWAPExecutor:
         quantity: float,
         start_time: datetime,
         end_time: datetime,
-        daily_volatility: float = getattr(config.trading, 'max_risk_per_trade', 0.02),  # 2% daily vol
+        daily_volatility: float = _DEFAULT_DAILY_VOLATILITY,  # 2% daily vol
     ) -> float:
         """
         Calculate timing risk (uncertainty from delayed execution).
@@ -513,7 +517,7 @@ class ImplementationShortfallExecutor:
         urgency: float = 0.5,  # 0 to 1
         price: float = 100.0,
         daily_volume: float = 1_000_000,
-        daily_volatility: float = getattr(config.trading, 'max_risk_per_trade', 0.02),
+        daily_volatility: float = _DEFAULT_DAILY_VOLATILITY,
         max_duration_minutes: int = 240,
     ) -> ExecutionPlan:
         """
@@ -918,3 +922,34 @@ def create_execution_plan(
         raise ValueError(f"Unknown execution algorithm: {algorithm}")
 
     return executor.create_execution_plan(symbol, quantity, side, **kwargs)
+
+
+def get_execution_algorithm(algorithm: str = "vwap", **kwargs):
+    """
+    Factory function to get an execution algorithm instance.
+
+    This function is used by the ComplianceEngine to get execution algorithm
+    instances for pre-trade analysis.
+
+    Args:
+        algorithm: Algorithm type ('vwap', 'twap', 'is', 'pov')
+        **kwargs: Additional configuration parameters (ignored for now)
+
+    Returns:
+        Executor instance (VWAPExecutor, TWAPExecutor, etc.)
+
+    Example:
+        >>> executor = get_execution_algorithm("vwap")
+        >>> plan = executor.create_execution_plan("AAPL", 10000, "buy")
+    """
+    if algorithm == "vwap":
+        return VWAPExecutor()
+    elif algorithm == "twap":
+        return TWAPExecutor()
+    elif algorithm == "is":
+        return ImplementationShortfallExecutor()
+    elif algorithm == "pov":
+        return POVExecutor()
+    else:
+        logger.warning(f"Unknown algorithm '{algorithm}', defaulting to VWAP")
+        return VWAPExecutor()

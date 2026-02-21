@@ -1,4 +1,3 @@
-# pylint: disable=eval-used
 """
 Chaos Orchestrator - Coordinates Chaos Engineering Experiments
 
@@ -37,6 +36,7 @@ from typing import Any, Dict, List, Optional
 
 import aiosqlite
 
+from app.core.utils.safe_parse import safe_parse
 from .blast_radius import BlastRadiusController
 from .hypothesis import ChaosHypothesis, HypothesisStatus, HypothesisValidator, ValidationResult
 
@@ -261,17 +261,17 @@ class ChaosOrchestrator:
                         name=row[1],
                         hypothesis=row[2],
                         description=row[3] or "",
-                        injectors=eval(row[4]),  # nosec B307 - internal data from controlled source
+                        injectors=safe_parse(row[4], default=[]),
                         duration_minutes=row[5],
                         status=ExperimentStatus(row[6]),
                         created_at=datetime.fromisoformat(row[7]),
                         started_at=datetime.fromisoformat(row[8]) if row[8] else None,
                         completed_at=datetime.fromisoformat(row[9]) if row[9] else None,
-                        blast_radius_config=eval(row[10]) if row[10] else None,  # nosec B307
-                        validation_result=eval(row[11]) if row[11] else None,  # nosec B307
-                        metrics=eval(row[12]) if row[12] else {},  # nosec B307
-                        incidents=eval(row[13]) if row[13] else [],  # nosec B307
-                        rollback_actions=eval(row[14]) if row[14] else [],  # nosec B307
+                        blast_radius_config=safe_parse(row[10], default=None),
+                        validation_result=safe_parse(row[11], default=None),
+                        metrics=safe_parse(row[12], default={}),
+                        incidents=safe_parse(row[13], default=[]),
+                        rollback_actions=safe_parse(row[14], default=[]),
                     )
                     self._active_experiments[experiment.id] = experiment
 
