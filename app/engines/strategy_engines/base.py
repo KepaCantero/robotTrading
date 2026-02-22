@@ -18,9 +18,9 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Callable, Dict, List, Optional
 
-from app.models.market_data import Quote
-from app.models.signal import Signal
-from app.strategies.base import BaseStrategy
+from app.domain.models.market_data import Quote
+from app.domain.models.signal import Signal
+from app.domain.strategies.base import BaseStrategy
 
 logger = logging.getLogger(__name__)
 

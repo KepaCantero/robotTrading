@@ -28,7 +28,7 @@ import numpy as np
 # Import Numba for JIT compilation (REQUIRED for 50-100x speedup)
 from numba import jit
 
-from app.models.portfolio import Portfolio
+from app.domain.models.portfolio import Portfolio
 
 NUMBA_AVAILABLE = True
 NUMBA_VERSION = numba.__version__

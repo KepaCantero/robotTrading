@@ -25,7 +25,7 @@ from sqlalchemy.exc import (
 
 logger = logging.getLogger(__name__)
 
-from app.models.optimization import (  # noqa: E402
+from app.domain.models.optimization import (  # noqa: E402
     OptimizationArtifact,
     OptimizationConfig,
     OptimizationMethod,

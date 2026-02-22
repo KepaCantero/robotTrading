@@ -13,7 +13,7 @@ from typing import Any, Dict, Optional
 
 from app.backtesting.models import BacktestConfig
 from app.core.compliance_engine import ComplianceEngine
-from app.models.signal import Signal, SignalType
+from app.domain.models.signal import Signal, SignalType
 
 logger = logging.getLogger(__name__)
 

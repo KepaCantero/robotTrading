@@ -2,7 +2,9 @@
 
 ## Layered Architecture
 
-This system follows Clean Architecture principles with clear separation of concerns:
+This system follows Clean Architecture principles with clear separation of concerns.
+
+### Current Structure (After Reorganization)
 
 ```
 app/
@@ -10,43 +12,106 @@ app/
 │   ├── entities/             # Domain entities (Order, Portfolio, Position)
 │   ├── value_objects/        # Value objects (Money, Capital, RiskParameters)
 │   ├── factories/            # Entity factories
-│   ├── models/               # Domain models (Pydantic models)
+│   ├── models/               # Domain models (Pydantic models) + app/models migrated
 │   ├── configurators/        # Domain configurators
 │   ├── portfolio_optimization/  # Portfolio optimization algorithms
-│   └── repositories/         # Repository interfaces (not implementations)
+│   ├── repositories/         # Repository interfaces (not implementations)
+│   ├── strategies/           # Trading strategies (migrated from app/strategies)
+│   ├── analysis/             # Analysis tools (migrated from app/analysis)
+│   ├── optimization/         # Optimization algorithms (migrated from app/optimization)
+│   ├── portfolio/            # Portfolio management (migrated from app/portfolio)
+│   ├── tax/                  # Tax calculations (migrated from app/tax)
+│   ├── ensemble/             # Strategy ensembles (migrated from app/ensemble)
+│   ├── trading/              # Trading logic
+│   │   └── market_making/    # Market making strategies
+│   └── market_analysis/      # Market analysis (consolidated microstructure)
+│       └── microstructure/   # Market microstructure + OFI
 │
 ├── application/              # Application Layer (Use cases)
 │   ├── use_cases/            # Use case orchestrators
 │   ├── services/             # Application services
 │   ├── dto/                  # Data Transfer Objects
 │   ├── interfaces/           # Application interfaces
-│   └── routers/              # API routers
+│   ├── routers/              # API routers
+│   └── orchestration/        # Orchestration logic (migrated from app/maestro)
 │
 ├── infrastructure/           # Infrastructure Layer (External concerns)
 │   ├── persistence/          # Database implementations
+│   │   └── database/         # Database models (migrated from app/database)
 │   ├── external/             # External APIs
 │   ├── repositories/         # Repository implementations
-│   └── messaging/            # Message queues
+│   ├── messaging/            # Message queues
+│   ├── providers/            # Service providers (migrated from app/providers)
+│   ├── data/                 # Data infrastructure (migrated from app/data)
+│   ├── middleware/           # Middleware (migrated from app/middleware)
+│   └── config/               # Infrastructure config (migrated from app/user_config)
 │
 ├── presentation/             # Presentation Layer (API/UI)
 │   ├── controllers/          # API endpoints
 │   ├── views/                # Views/dashboards
-│   └── dto/                  # Request/Response DTOs
+│   ├── dto/                  # Request/Response DTOs
+│   ├── api/                  # API routes (migrated from app/api)
+│   └── dashboard/            # Dashboard UI (migrated from app/dashboard)
 │
-├── strategies/               # Trading Strategies (Domain protocols)
-│   ├── base.py               # Strategy protocol/interface
-│   ├── momentum/             # Momentum strategy implementations
-│   ├── mean_reversion/       # Mean reversion strategy
-│   ├── dividend/             # Dividend strategy
-│   └── multi_factor/         # Multi-factor strategy
+├── shared/                   # Shared utilities (NEW)
+│   ├── config/               # Shared configuration
+│   ├── logging/              # Logging utilities
+│   ├── exceptions/           # Shared exceptions (migrated from app/exceptions)
+│   ├── constants/            # Global constants
+│   └── utils/                # Utility functions
+│
+├── backtesting/              # Backtesting framework (specialized layer)
+│   ├── core/                 # Core backtesting logic
+│   ├── execution/            # Execution simulation
+│   ├── services/             # Backtesting services
+│   └── shared/               # Shared backtesting utilities
 │
 ├── engines/                  # Trading Engines (Orchestration)
 │   ├── execution_engine/     # Order execution
 │   ├── risk_engine/          # Risk management
 │   ├── portfolio_engine/     # Portfolio management
-│   └── data_engine/          # Data acquisition
+│   └── strategy_engines/     # Strategy-specific engines
 │
-└── services/                 # Shared Services (being phased out)
+├── security/                 # Security layer (cross-cutting)
+│
+├── sre/                      # Site Reliability Engineering
+│
+├── simulation/               # Simulation tools
+│
+└── core/                     # Core utilities (to be reviewed)
+```
+
+## Directory Count Progress
+
+| Stage | Directories | Notes |
+|-------|-------------|-------|
+| Before | 42 | Cluttered, many orphans |
+| After Phase 1-3 | 14 | Clean Architecture layers |
+| After Phase 4 | 11 | services/ migrated and removed |
+| Target | ~10 | Almost complete |
+
+## Import Migration
+
+Use the migration script for automatic import updates:
+
+```bash
+# Dry run to see changes
+python scripts/migrate_imports.py --dry-run
+
+# Apply changes
+python scripts/migrate_imports.py
+```
+
+### Import Mapping Examples
+
+```python
+# OLD → NEW
+from app.strategies import X     → from app.domain.strategies import X
+from app.models import X         → from app.domain.models import X
+from app.api import X            → from app.presentation.api import X
+from app.dashboard import X      → from app.presentation.dashboard import X
+from app.database import X       → from app.infrastructure.persistence.database import X
+from app.microstructure import X → from app.domain.market_analysis.microstructure import X
 ```
 
 ## Dependency Rules
@@ -63,23 +128,30 @@ app/
 3. **Interface Segregation**: Small, focused interfaces
 4. **Open/Closed**: Open for extension, closed for modification
 
-## Migration Path
+## Migration Status
 
-The current `app/services/` directory (119 files) is being refactored:
-- Domain services → `domain/services/`
-- Application services → `application/services/`
-- Infrastructure services → `infrastructure/`
+### Completed
+- [x] Consolidated microstructure/ + market_microstructure/ → domain/market_analysis/microstructure/
+- [x] Migrated strategies/ → domain/strategies/
+- [x] Migrated models/ → domain/models/
+- [x] Migrated api/ → presentation/api/
+- [x] Migrated dashboard/ → presentation/dashboard/
+- [x] Migrated database/ → infrastructure/persistence/database/
+- [x] Migrated providers/ → infrastructure/providers/
+- [x] Migrated analysis/ → domain/analysis/
+- [x] Migrated optimization/ → domain/optimization/
+- [x] Created shared/ directory
+- [x] Migrated services/ → domain/services/, application/, infrastructure/
+- [x] Removed services/ directory (333 files migrated)
+- [x] Updated 566+ imports total
 
-## Import Aliases (for backward compatibility)
-
-```python
-# Old imports (still work during migration)
-from app.services.portfolio_service import PortfolioService
-
-# New imports (preferred)
-from app.application.services.portfolio_service import PortfolioService
-```
+### Pending
+- [ ] Review engines/ directory structure
+- [ ] Review core/ directory structure
+- [ ] Remove remaining duplicate code
+- [ ] Create __init__.py files for new directories
 
 ---
 
-*Reference: AUDIT_PLAN_COMPLETO.md - FASE 1.4*
+*Last updated: 2024-02-22*
+*Reference: Plan de Reorganización de app/ - AlgoTrading*

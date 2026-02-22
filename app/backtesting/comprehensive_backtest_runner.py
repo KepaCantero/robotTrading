@@ -54,7 +54,7 @@ from app.backtesting.models import BacktestConfig, BacktestResult
 from app.backtesting.multi_strategy_engine import MultiStrategyBacktester
 
 # Strategy implementations
-from app.strategies.momentum_modular.strategy import ModularMomentumStrategy
+from app.domain.strategies.momentum_modular.strategy import ModularMomentumStrategy
 
 # Backtesting engine and models
 

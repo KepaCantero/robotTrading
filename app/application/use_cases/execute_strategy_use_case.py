@@ -9,9 +9,9 @@ from datetime import datetime, timezone
 from typing import Any, List, Optional
 
 from app.domain.entities.order import Order, OrderSide, OrderStatus, OrderType
-from app.models.market_data import Quote
-from app.models.signal import Signal, SignalType
-from app.strategies.base import BaseStrategy
+from app.domain.models.market_data import Quote
+from app.domain.models.signal import Signal, SignalType
+from app.domain.strategies.base import BaseStrategy
 
 logger = logging.getLogger(__name__)
 

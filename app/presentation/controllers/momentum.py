@@ -14,8 +14,8 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from requests.exceptions import ConnectionError, HTTPError, RequestException
 
-from app.models.momentum import MomentumFilter, MomentumStrategy, MomentumType, Timeframe
-from app.services.momentum_analysis import MomentumAnalysisService, get_momentum_analysis_service
+from app.domain.models.momentum import MomentumFilter, MomentumStrategy, MomentumType, Timeframe
+from app.domain.services.analysis.momentum import MomentumAnalysisService, get_momentum_analysis_service
 
 # Constants
 DEFAULT_VALUE_20 = 20

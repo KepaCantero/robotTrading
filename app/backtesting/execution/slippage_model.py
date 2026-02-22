@@ -9,6 +9,8 @@ This module implements advanced slippage modeling based on:
 - Market capitalization (large caps have less slippage)
 
 Reference: Realistic slippage modeling for algorithmic trading
+
+SINGLE SOURCE OF TRUTH: Base values from CentralizedConfig.
 """
 
 from __future__ import annotations
@@ -19,7 +21,15 @@ from decimal import Decimal
 from enum import Enum
 from typing import Dict, Optional
 
+# SINGLE SOURCE OF TRUTH: Import CentralizedConfig
+from app.core.centralized_config import get_config
+
 logger = logging.getLogger(__name__)
+
+
+def _get_backtesting_config():
+    """Helper to get backtesting config from CentralizedConfig."""
+    return get_config().backtesting
 
 
 class TimeOfDay(str, Enum):
@@ -112,23 +122,35 @@ TIME_OF_DAY_IMPACTS: Dict[TimeOfDay, TimeOfDayImpact] = {
 }
 
 
+def _default_base_slippage_bps():
+    """Get default base slippage from CentralizedConfig."""
+    return _get_backtesting_config().base_slippage_bps
+
+
+def _default_max_slippage_bps():
+    """Get default max slippage (5x base)."""
+    return _get_backtesting_config().base_slippage_bps * 5
+
+
 @dataclass(frozen=True)
 class SlippageConfig:
     """
     Configuration for slippage model.
 
+    SINGLE SOURCE OF TRUTH: Base values from CentralizedConfig.
+
     Attributes:
-        base_slippage_bps: Base slippage in basis points
+        base_slippage_bps: Base slippage in basis points (from CentralizedConfig)
         vol_multiplier: Volatility multiplier (slippage increases with vol)
         adv_impact_exponent: Exponent for ADV impact (default 2 for square)
         spread_impact: Whether to include spread impact
         time_of_day_impact: Whether to apply time-of-day multipliers
         market_cap_impact: Whether to adjust for market cap
-        max_slippage_bps: Maximum slippage to apply
+        max_slippage_bps: Maximum slippage to apply (5x base)
     """
 
-    # Base slippage settings
-    base_slippage_bps: Decimal = Decimal("5")  # 5 bps base (0.05%)
+    # Base slippage settings - from CentralizedConfig
+    base_slippage_bps: Decimal = field(default_factory=_default_base_slippage_bps)
 
     # Volatility adjustment
     vol_multiplier: Decimal = Decimal("2")  # Volatility multiplier
@@ -141,8 +163,8 @@ class SlippageConfig:
     time_of_day_impact: bool = True  # Apply time-of-day multipliers
     market_cap_impact: bool = True  # Adjust for market cap
 
-    # Limits
-    max_slippage_bps: Decimal = Decimal("50")  # 50 bps max (0.5%)
+    # Limits - 5x base from CentralizedConfig
+    max_slippage_bps: Decimal = field(default_factory=_default_max_slippage_bps)
 
 
 @dataclass(frozen=True)

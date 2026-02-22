@@ -19,7 +19,7 @@ import numpy as np
 from scipy.interpolate import griddata
 
 from app.backtesting.models import BacktestConfig, BacktestResult
-from app.models.market_data import Quote
+from app.domain.models.market_data import Quote
 
 logger = logging.getLogger(__name__)
 

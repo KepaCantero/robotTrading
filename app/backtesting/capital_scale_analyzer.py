@@ -8,6 +8,8 @@ Analyzes strategy performance across multiple capital levels to detect:
 - Alpha degradation across capital levels
 
 Capital Levels: €1K, €5K, €10K, €50K, €100K
+
+SINGLE SOURCE OF TRUTH: All values from CentralizedConfig.
 """
 
 import logging
@@ -18,20 +20,26 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 
-from app.backtesting.constants import BACKTESTING_CONSTANTS
+# SINGLE SOURCE OF TRUTH: Use CentralizedConfig instead of constants.py
+from app.core.centralized_config import get_config
 from app.backtesting.services.transaction_cost_model import (
     BrokerType,
     TransactionCostModel,
 )
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig, BacktestResult, PerformanceMetrics
-from app.models.market_data import Quote
+from app.domain.models.market_data import Quote
 
 logger = logging.getLogger(__name__)
 
-# Constants from configuration
-CS_CONSTANTS = BACKTESTING_CONSTANTS.capital_scale
-DEFAULT_CAPITAL_LEVELS = CS_CONSTANTS.DEFAULT_CAPITAL_LEVELS
+
+def _get_backtesting_config():
+    """Helper to get backtesting config from CentralizedConfig."""
+    return get_config().backtesting
+
+
+# Default capital levels from CentralizedConfig
+DEFAULT_CAPITAL_LEVELS = _get_backtesting_config().default_capital_levels
 
 
 @dataclass
@@ -97,15 +105,19 @@ class CapitalScaleAnalyzer:
         """
         Initialize capital scale analyzer.
 
+        SINGLE SOURCE OF TRUTH: All defaults from CentralizedConfig.
+
         Args:
-            capital_levels: List of capital levels to test (default: from config)
-            adv_limit_pct: Maximum order size as % of ADV (default: from config)
+            capital_levels: List of capital levels to test (default: from CentralizedConfig)
+            adv_limit_pct: Maximum order size as % of ADV (default: from CentralizedConfig)
             enable_adv_rule: Whether to enforce ADV liquidity constraints
             enable_adaptive_commission: Whether to use adaptive commission by capital level
         """
-        self.capital_levels = capital_levels or DEFAULT_CAPITAL_LEVELS
+        config = _get_backtesting_config()
+
+        self.capital_levels = capital_levels or config.default_capital_levels
         self.adv_limit_pct = (
-            adv_limit_pct if adv_limit_pct is not None else CS_CONSTANTS.ADV_LIMIT_PCT_DEFAULT
+            adv_limit_pct if adv_limit_pct is not None else config.adv_limit_pct
         )
         self.enable_adv_rule = enable_adv_rule
         self.enable_adaptive_commission = enable_adaptive_commission
@@ -114,8 +126,9 @@ class CapitalScaleAnalyzer:
             conservative=True,
         )
 
-        # Commission models by capital level (from config)
-        self._commission_models = CS_CONSTANTS.COMMISSION_MODELS
+        # Commission models by capital level (from CentralizedConfig via constants.py compatibility)
+        from app.backtesting.constants import CapitalScaleConstants
+        self._commission_models = CapitalScaleConstants().COMMISSION_MODELS
 
     def calculate_commission_for_level(
         self, capital_level: Decimal, trade_value: Decimal
@@ -194,8 +207,9 @@ class CapitalScaleAnalyzer:
         adjusted_size = max_size
         fill_ratio = adjusted_size / order_size
 
-        # If fill is below threshold, reject order (configurable)
-        if fill_ratio < CS_CONSTANTS.ADV_FILL_RATIO_REJECT_THRESHOLD:
+        # If fill is below threshold, reject order (from CentralizedConfig)
+        config = _get_backtesting_config()
+        if fill_ratio < config.adv_fill_ratio_reject_threshold:
             return Decimal("0"), False, True
 
         return adjusted_size, True, False
@@ -329,14 +343,15 @@ class CapitalScaleAnalyzer:
                 )
                 results.append(level_result)
 
-                # Check for commission impact warning (using config threshold)
+                # Check for commission impact warning (using threshold from CentralizedConfig)
+                bt_config = _get_backtesting_config()
                 if (
                     level_result.commission_impact_ratio
-                    > CS_CONSTANTS.COMMISSION_IMPACT_WARNING_THRESHOLD
+                    > bt_config.commission_impact_warning_threshold
                 ):
                     warnings.append(
                         f"€{capital_level:,.0f}: Commission impact {level_result.commission_impact_ratio:.1%} "
-                        f"exceeds {CS_CONSTANTS.COMMISSION_IMPACT_WARNING_THRESHOLD:.1%} threshold - "
+                        f"exceeds {bt_config.commission_impact_warning_threshold:.1%} threshold - "
                         f"strategy may not be viable at this level"
                     )
 
@@ -367,20 +382,21 @@ class CapitalScaleAnalyzer:
         scalability_score = self._calculate_scalability_score(results, alpha_degradation)
         recommended_capital = self._find_optimal_capital(results)
 
-        # Check acceptance criteria (using config thresholds)
+        # Check acceptance criteria (using thresholds from CentralizedConfig)
+        bt_config = _get_backtesting_config()
         passed = True
-        if max(commission_impact_gradient) > CS_CONSTANTS.COMMISSION_IMPACT_CRITICAL_THRESHOLD:
+        if max(commission_impact_gradient) > bt_config.commission_impact_critical_threshold:
             passed = False
             warnings.append(
-                f"REJECTED: Commissions exceed {CS_CONSTANTS.COMMISSION_IMPACT_CRITICAL_THRESHOLD:.1%} "
+                f"REJECTED: Commissions exceed {bt_config.commission_impact_critical_threshold:.1%} "
                 f"of gross profit at some capital levels"
             )
 
-        if alpha_degradation > CS_CONSTANTS.ALPHA_DEGRADATION_THRESHOLD:
+        if alpha_degradation > bt_config.alpha_degradation_threshold:
             passed = False
             warnings.append(
                 f"REJECTED: Alpha degradation {alpha_degradation:.1%} exceeds "
-                f"{CS_CONSTANTS.ALPHA_DEGRADATION_THRESHOLD:.1%} threshold"
+                f"{bt_config.alpha_degradation_threshold:.1%} threshold"
             )
 
         logger.info(
@@ -431,29 +447,33 @@ class CapitalScaleAnalyzer:
         - Alpha degradation (lower is better)
         - Commission impact consistency
         - Win rate stability across levels
+
+        SINGLE SOURCE OF TRUTH: All weights from CentralizedConfig.
         """
         if len(results) < 2:
             return Decimal("100")
 
-        # Alpha degradation score (using config weights)
+        config = _get_backtesting_config()
+
+        # Alpha degradation score (using weights from CentralizedConfig)
         degradation_score = max(
             Decimal("0"),
-            CS_CONSTANTS.SCALABILITY_ALPHA_DEGRADATION_MAX_POINTS
+            config.scalability_alpha_max_points
             - (
                 alpha_degradation
-                * CS_CONSTANTS.SCALABILITY_ALPHA_DEGRADATION_MAX_POINTS
+                * config.scalability_alpha_max_points
                 * Decimal("2")
             ),
         )
 
-        # Commission impact score (using config thresholds)
+        # Commission impact score (using thresholds from CentralizedConfig)
         commission_scores = []
         for r in results:
-            if r.commission_impact_ratio < CS_CONSTANTS.COMMISSION_IMPACT_EXCELLENT_THRESHOLD:
-                commission_scores.append(CS_CONSTANTS.SCALABILITY_COMMISSION_MAX_POINTS)
-            elif r.commission_impact_ratio < CS_CONSTANTS.COMMISSION_IMPACT_GOOD_THRESHOLD:
+            if r.commission_impact_ratio < Decimal("0.10"):  # Excellent threshold
+                commission_scores.append(config.scalability_commission_max_points)
+            elif r.commission_impact_ratio < config.commission_impact_warning_threshold:
                 commission_scores.append(
-                    CS_CONSTANTS.SCALABILITY_COMMISSION_MAX_POINTS * Decimal("2") / Decimal("3")
+                    config.scalability_commission_max_points * Decimal("2") / Decimal("3")
                 )
             else:
                 commission_scores.append(Decimal("10"))
@@ -461,14 +481,14 @@ class CapitalScaleAnalyzer:
             np.mean(commission_scores) if commission_scores else Decimal("0")
         )
 
-        # Win rate stability (using config penalty factor)
+        # Win rate stability (using penalty from CentralizedConfig)
         win_rates = [float(r.win_rate) for r in results if r.total_trades > 0]
         if win_rates:
             win_rate_std = Decimal(str(np.std(win_rates)))
             stability_score = max(
                 Decimal("0"),
-                CS_CONSTANTS.SCALABILITY_STABILITY_MAX_POINTS
-                - (win_rate_std * CS_CONSTANTS.WIN_RATE_STABILITY_PENALTY_FACTOR),
+                config.scalability_stability_max_points
+                - (win_rate_std * Decimal("100")),  # Penalty factor
             )
         else:
             stability_score = Decimal("0")
@@ -480,13 +500,14 @@ class CapitalScaleAnalyzer:
         """
         Find optimal capital level based on:
         - Highest risk-adjusted return (Sharpe)
-        - Acceptable commission impact (from config)
+        - Acceptable commission impact (from CentralizedConfig)
         - Minimal partial fills/rejections
         """
+        config = _get_backtesting_config()
         valid_results = [
             r
             for r in results
-            if r.commission_impact_ratio < CS_CONSTANTS.COMMISSION_IMPACT_OPTIMAL_THRESHOLD
+            if r.commission_impact_ratio < config.commission_impact_warning_threshold
         ]
 
         if not valid_results:

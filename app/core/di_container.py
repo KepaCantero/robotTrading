@@ -11,7 +11,7 @@ import inspect
 from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Type, TypeVar
 
 if TYPE_CHECKING:
-    from app.strategies import (
+    from app.domain.strategies import (
         ExecutionEngine,
         StrategyConfigLoader,
         StrategyLogger,
@@ -227,7 +227,7 @@ def get_portfolio_service():
     """
     global _portfolio_service_instance
     if _portfolio_service_instance is None:
-        from app.providers.paper_trading import PaperTradingPortfolioProvider
+        from app.infrastructure.providers.paper_trading import PaperTradingPortfolioProvider
         from app.services.portfolio_service import PortfolioService
 
         provider = PaperTradingPortfolioProvider()
@@ -268,7 +268,7 @@ def get_signal_scorer_service():
     """
     global _signal_scorer_service_instance
     if _signal_scorer_service_instance is None:
-        from app.services.signal_scorer import SignalScorerService
+        from app.domain.services.signals.scorer import SignalScorerService
 
         portfolio_service = get_portfolio_service()
         _signal_scorer_service_instance = SignalScorerService(portfolio_service)
@@ -313,7 +313,7 @@ def get_strategy_registry() -> "StrategyRegistry":
     """
     global _strategy_registry_instance
     if _strategy_registry_instance is None:
-        from app.strategies import StrategyRegistry
+        from app.domain.strategies import StrategyRegistry
 
         _strategy_registry_instance = StrategyRegistry()
     return _strategy_registry_instance
@@ -341,7 +341,7 @@ def get_strategy_config_loader() -> "StrategyConfigLoader":
     """
     global _strategy_config_loader_instance
     if _strategy_config_loader_instance is None:
-        from app.strategies import StrategyConfigLoader
+        from app.domain.strategies import StrategyConfigLoader
 
         _strategy_config_loader_instance = StrategyConfigLoader()
     return _strategy_config_loader_instance
@@ -369,7 +369,7 @@ def get_strategy_logger() -> "StrategyLogger":
     """
     global _strategy_logger_instance
     if _strategy_logger_instance is None:
-        from app.strategies import StrategyLogger
+        from app.domain.strategies import StrategyLogger
 
         _strategy_logger_instance = StrategyLogger()
     return _strategy_logger_instance
@@ -400,7 +400,7 @@ def get_execution_engine() -> "ExecutionEngine":
     """
     global _execution_engine_instance
     if _execution_engine_instance is None:
-        from app.strategies import ExecutionEngine
+        from app.domain.strategies import ExecutionEngine
 
         registry = get_strategy_registry()
         logger = get_strategy_logger()

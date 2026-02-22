@@ -952,7 +952,7 @@ class StrategySelector:
         from datetime import datetime
         from decimal import Decimal
 
-        from app.models.signal import (  # pylint: disable=import-error
+        from app.domain.models.signal import (  # pylint: disable=import-error
             Signal,
             SignalSource,
             SignalStrength,
@@ -1036,7 +1036,7 @@ class StrategySelector:
         from datetime import datetime
         from decimal import Decimal
 
-        from app.models.order import MarketData  # pylint: disable=import-error
+        from app.domain.models.order import MarketData  # pylint: disable=import-error
 
         market_data_list = []
 
@@ -1695,7 +1695,7 @@ class StrategySelector:
         validator = WalkForwardValidator(config=wf_config)
 
         # Import StrategyRegistry for actual strategy creation
-        from app.strategies.registry import StrategyRegistry  # pylint: disable=import-error
+        from app.domain.strategies.registry import StrategyRegistry  # pylint: disable=import-error
 
         # Define strategy factory with actual strategy instantiation
         def strategy_factory(params: StrategyParameters) -> StrategyProtocol:

@@ -8,6 +8,8 @@ COMPLIANCE: Integrado con BacktestingCompliance para validar:
 - R6: Overfitting Prevention
 - R7: Monte Carlo para riesgo
 - DATA-001: Purged Cross-Validation
+
+SINGLE SOURCE OF TRUTH: All defaults from CentralizedConfig.
 """
 
 import logging
@@ -29,18 +31,24 @@ from app.backtesting.backtesting_compliance import (
     create_backtesting_compliance,
 )
 
-from app.core.centralized_config import StockAllocationSettings
-from app.models.market_data import Quote
+# SINGLE SOURCE OF TRUTH: Import CentralizedConfig
+from app.core.centralized_config import get_config, StockAllocationSettings
+from app.domain.models.market_data import Quote
 from app.services.dynamic_capital_reallocation import DynamicCapitalReallocationEngine
-from app.services.multi_strategy_allocation import MultiStrategyAllocationManager
+from app.domain.services.portfolio.allocation import MultiStrategyAllocationManager
 from app.services.portfolio_config_manager import (
     PortfolioConfigManager,
     get_portfolio_config_manager,
 )
-from app.services.strategy_stock_allocator import StrategyStockAllocator
-from app.strategies.base import BaseStrategy
+from app.application.orchestration.strategy_allocation import StrategyStockAllocator
+from app.domain.strategies.base import BaseStrategy
 
 logger = logging.getLogger(__name__)
+
+
+def _get_backtesting_config():
+    """Helper to get backtesting config from CentralizedConfig."""
+    return get_config().backtesting
 
 
 class MultiStrategyBacktester:
@@ -303,14 +311,16 @@ class MultiStrategyBacktester:
                 continue
 
             # Create config with allocated capital
+            # SINGLE SOURCE OF TRUTH: Defaults from CentralizedConfig
+            bt_config = _get_backtesting_config()
             config = BacktestConfig(
                 strategy_name=f"{strategy_name}_backtest",
                 initial_capital=allocated_capital,
-                commission_per_trade=self.config_params.get("commission", Decimal("1.0")),
-                slippage_percentage=self.config_params.get("slippage", Decimal("0.05")),
-                stop_loss_percentage=self.config_params.get("stop_loss"),
-                take_profit_percentage=self.config_params.get("take_profit"),
-                max_position_size=self.config_params.get("max_position_size", Decimal("0.1")),
+                commission_per_trade=self.config_params.get("commission", bt_config.min_commission),
+                slippage_percentage=self.config_params.get("slippage", bt_config.base_slippage_bps / Decimal("100")),
+                stop_loss_percentage=self.config_params.get("stop_loss", bt_config.default_stop_loss_pct * Decimal("100")),
+                take_profit_percentage=self.config_params.get("take_profit", bt_config.default_take_profit_pct * Decimal("100")),
+                max_position_size=self.config_params.get("max_position_size", bt_config.default_max_position_size),
             )
 
             # Run backtest with allocated capital

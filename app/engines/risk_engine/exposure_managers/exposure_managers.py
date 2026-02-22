@@ -13,7 +13,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from app.models.portfolio import Portfolio
+from app.domain.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
 

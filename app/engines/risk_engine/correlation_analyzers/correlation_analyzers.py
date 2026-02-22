@@ -15,7 +15,7 @@ from typing import Any, Dict, List
 import numpy as np
 import pandas as pd
 
-from app.models.portfolio import Portfolio
+from app.domain.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
 

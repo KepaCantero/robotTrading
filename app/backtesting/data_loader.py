@@ -15,7 +15,7 @@ from typing import Any, Dict, List, Optional
 
 import pandas as pd
 
-from app.models.market_data import Quote
+from app.domain.models.market_data import Quote
 
 logger = logging.getLogger(__name__)
 

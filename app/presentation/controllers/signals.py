@@ -15,10 +15,10 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel
 
-from app.models.signal import MarketData, Signal, SignalType
-from app.providers.paper_trading import PaperTradingPortfolioProvider
+from app.domain.models.signal import MarketData, Signal, SignalType
+from app.infrastructure.providers.paper_trading import PaperTradingPortfolioProvider
 from app.services.portfolio_service import PortfolioService
-from app.services.signal_scorer import SignalScorerService
+from app.domain.services.signals.scorer import SignalScorerService
 
 # Constants
 DEFAULT_VALUE_400 = 400

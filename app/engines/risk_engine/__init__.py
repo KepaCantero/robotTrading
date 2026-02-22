@@ -47,7 +47,7 @@ from typing import TYPE_CHECKING, Any, Dict, List
 # Lazy imports to avoid circular dependencies with models that require pydantic
 # Import Portfolio with fallback placeholder
 try:
-    from app.models.portfolio import Portfolio
+    from app.domain.models.portfolio import Portfolio
 except ImportError:
     # Create a minimal Portfolio placeholder if the real one can't be imported
     # This allows the risk_engine to be imported even when pydantic is missing
@@ -61,7 +61,7 @@ if TYPE_CHECKING:
 
 
 try:
-    from app.services.portfolio_risk_manager import PortfolioRiskManager
+    from app.domain.services.risk.portfolio import PortfolioRiskManager
 except ImportError:
     # Create a minimal PortfolioRiskManager placeholder
     class PortfolioRiskManager:

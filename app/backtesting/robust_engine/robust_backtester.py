@@ -16,6 +16,8 @@ Key Features:
 
 Reference:
     AUDIT_PLAN_COMPLETO - FASE 5.1: Core Backtesting Engine
+
+SINGLE SOURCE OF TRUTH: All defaults from CentralizedConfig.
 """
 
 from __future__ import annotations
@@ -30,6 +32,9 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 
+# SINGLE SOURCE OF TRUTH: Import CentralizedConfig
+from app.core.centralized_config import get_config
+
 from ..point_in_time_database import PointInTimeDatabase
 from .corporate_actions import CorporateActionHandler
 from .dividend_handler import DividendHandler, DripConfig
@@ -40,6 +45,11 @@ from .pit_database import PITDatabaseClient
 from .survivorship_adjuster import SurvivorshipAdjuster, SurvivorshipFreeResult
 
 logger = logging.getLogger(__name__)
+
+
+def _get_backtesting_config():
+    """Helper to get backtesting config from CentralizedConfig."""
+    return get_config().backtesting
 
 
 class DecimalEncoder(json.JSONEncoder):
@@ -82,9 +92,9 @@ class RobustBacktestConfig:
     initial_capital: Decimal = field(default=Decimal("100000"))
     start_date: date = field(default_factory=date.today)
     end_date: date = field(default_factory=date.today)
-    commission_per_trade: Decimal = field(default=Decimal("1.0"))
-    slippage_bps: Decimal = field(default=Decimal("5"))
-    risk_free_rate: Decimal = field(default=Decimal("0.02"))
+    commission_per_trade: Optional[Decimal] = field(default=None)  # Uses CentralizedConfig if None
+    slippage_bps: Optional[Decimal] = field(default=None)  # Uses CentralizedConfig if None
+    risk_free_rate: Optional[Decimal] = field(default=None)  # Uses CentralizedConfig if None
 
     # Feature flags
     enable_survivorship_correction: bool = field(default=True)
@@ -113,7 +123,21 @@ class RobustBacktestConfig:
     validation_strict_mode: bool = field(default=True)
 
     def __post_init__(self):
-        """Validate configuration."""
+        """
+        Validate configuration and fill defaults from CentralizedConfig.
+
+        SINGLE SOURCE OF TRUTH: All defaults from CentralizedConfig.
+        """
+        # Fill defaults from CentralizedConfig
+        config = _get_backtesting_config()
+        if self.commission_per_trade is None:
+            self.commission_per_trade = config.min_commission
+        if self.slippage_bps is None:
+            self.slippage_bps = config.base_slippage_bps
+        if self.risk_free_rate is None:
+            self.risk_free_rate = config.risk_free_rate
+
+        # Validate configuration
         if self.end_date <= self.start_date:
             raise ValueError("end_date must be after start_date")
 

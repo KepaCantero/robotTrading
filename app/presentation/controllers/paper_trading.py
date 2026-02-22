@@ -22,8 +22,8 @@ from sqlalchemy.exc import (
     ProgrammingError,
 )
 
-from app.models.market_data import Quote
-from app.models.paper_trading import (
+from app.domain.models.market_data import Quote
+from app.domain.models.paper_trading import (
     OrderSide,
     OrderType,
     PaperPortfolio,
@@ -33,7 +33,7 @@ from app.models.paper_trading import (
     PaperTradingSession,
     TradeStatus,
 )
-from app.services.paper_trading_service import PaperTradingService, get_paper_trading_service
+from app.infrastructure.brokers.paper import PaperTradingService, get_paper_trading_service
 
 router = APIRouter(prefix="/paper-trading", tags=["Paper Trading"])
 

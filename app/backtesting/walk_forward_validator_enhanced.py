@@ -61,7 +61,7 @@ from scipy import stats
 
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig
-from app.models.market_data import Quote
+from app.domain.models.market_data import Quote
 
 # Optional regime detector (may not be available)
 try:

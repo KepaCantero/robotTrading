@@ -10,6 +10,8 @@ This module simulates realistic order fills by combining:
 
 The simulator provides a realistic estimate of actual execution
 results for backtesting.
+
+SINGLE SOURCE OF TRUTH: Base values from CentralizedConfig.
 """
 
 from __future__ import annotations
@@ -19,6 +21,9 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Dict, List, Optional
 
+# SINGLE SOURCE OF TRUTH: Import CentralizedConfig
+from app.core.centralized_config import get_config
+
 from .market_impact import ImpactConfig, MarketImpactModel
 from .models import FillReason, FillResult, MarketSnapshot, Order, OrderSide
 from .slippage_model import SlippageConfig, SlippageModel
@@ -27,10 +32,27 @@ from .transaction_cost import CostConfig, TransactionCost, TransactionCostCalcul
 logger = logging.getLogger(__name__)
 
 
+def _get_backtesting_config():
+    """Helper to get backtesting config from CentralizedConfig."""
+    return get_config().backtesting
+
+
+def _default_max_participation_rate():
+    """Get default max participation rate from CentralizedConfig."""
+    return _get_backtesting_config().adv_limit_pct
+
+
+def _default_max_slippage_bps():
+    """Get default max slippage (5x base)."""
+    return _get_backtesting_config().base_slippage_bps * 5
+
+
 @dataclass(frozen=True)
 class FillConstraints:
     """
     Constraints on order fills.
+
+    SINGLE SOURCE OF TRUTH: Base values from CentralizedConfig.
 
     Attributes:
         max_participation_rate: Maximum % of ADV to participate in
@@ -40,8 +62,8 @@ class FillConstraints:
         allow_partial_fills: Whether partial fills are allowed
     """
 
-    max_participation_rate: Decimal = Decimal("0.10")  # 10% of ADV max
-    max_slippage_bps: Decimal = Decimal("50")  # 50 bps max
+    max_participation_rate: Decimal = field(default_factory=_default_max_participation_rate)
+    max_slippage_bps: Decimal = field(default_factory=_default_max_slippage_bps)
     max_market_impact_bps: Decimal = Decimal("100")  # 100 bps max
     min_fill_pct: Decimal = Decimal("0.0")  # No minimum by default
     allow_partial_fills: bool = True
@@ -51,6 +73,8 @@ class FillConstraints:
 class SimulatorConfig:
     """
     Configuration for order fill simulator.
+
+    SINGLE SOURCE OF TRUTH: Defaults from CentralizedConfig.
 
     Attributes:
         cost_config: Transaction cost configuration
@@ -65,9 +89,9 @@ class SimulatorConfig:
     impact_config: ImpactConfig = field(default_factory=ImpactConfig)
     fill_constraints: FillConstraints = field(default_factory=FillConstraints)
 
-    # Rejection thresholds
-    rejection_threshold_adv_pct: Decimal = Decimal("0.25")  # Reject > 25% ADV
-    liquidity_warning_threshold: Decimal = Decimal("0.15")  # Warn > 15% ADV
+    # Rejection thresholds - derived from CentralizedConfig
+    rejection_threshold_adv_pct: Decimal = field(default_factory=lambda: _get_backtesting_config().adv_limit_pct * Decimal("2.5"))
+    liquidity_warning_threshold: Decimal = field(default_factory=lambda: _get_backtesting_config().adv_limit_pct * Decimal("1.5"))
 
 
 class OrderFillSimulator:

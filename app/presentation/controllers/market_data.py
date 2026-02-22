@@ -16,14 +16,14 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from pydantic import BaseModel, Field
 from requests.exceptions import ConnectionError, HTTPError, RequestException
 
-from app.models.market_data import (
+from app.domain.models.market_data import (
     DataFeedConfig,
     DataFeedType,
     DataFrequency,
     HistoricalData,
     Quote,
 )
-from app.services.market_data_service import MarketDataService, get_market_data_service
+from app.infrastructure.feeds.market_data import MarketDataService, get_market_data_service
 
 router = APIRouter(prefix="/market-data", tags=["market-data"])
 

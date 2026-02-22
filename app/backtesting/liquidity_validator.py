@@ -9,6 +9,8 @@ This module addresses HIGH PRIORITY #1 from the audit report:
 - Warning for large orders (>5% of daily volume)
 - Partial fills for orders that exceed available liquidity
 - Market impact calculation
+
+SINGLE SOURCE OF TRUTH: All values from CentralizedConfig.
 """
 
 import logging
@@ -16,7 +18,15 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Optional, Tuple
 
+# SINGLE SOURCE OF TRUTH: Use CentralizedConfig for all values
+from app.core.centralized_config import get_config
+
 logger = logging.getLogger(__name__)
+
+
+def _get_backtesting_config():
+    """Helper to get backtesting config from CentralizedConfig."""
+    return get_config().backtesting
 
 
 @dataclass
@@ -47,20 +57,13 @@ class LiquidityValidator:
     - Partial fills for orders that exceed available liquidity
     - Market impact calculation based on order size
 
-    Thresholds:
-    - MAX_ORDER_PCT_OF_VOLUME: 10% - Orders exceeding this are rejected
-    - WARNING_ORDER_PCT_OF_VOLUME: 5% - Orders exceeding this trigger warnings
-    - PARTIAL_FILL_PCT: 5% - Maximum percentage of daily volume to fill in partial fills
+    SINGLE SOURCE OF TRUTH: All thresholds from CentralizedConfig.
+
+    Thresholds (from CentralizedConfig):
+    - MAX_ORDER_PCT_OF_VOLUME: max order size % of volume
+    - WARNING_ORDER_PCT_OF_VOLUME: warning threshold % of volume
+    - PARTIAL_FILL_PCT: maximum fill % for partial fills
     """
-
-    # Liquidity thresholds (configurable)
-    MAX_ORDER_PCT_OF_VOLUME = Decimal("0.10")  # 10% max - reject orders larger than this
-    WARNING_ORDER_PCT_OF_VOLUME = Decimal("0.05")  # 5% warning - log but execute
-    PARTIAL_FILL_PCT = Decimal("0.05")  # Fill up to 5% of volume for partial fills
-
-    # Market impact parameters
-    BASE_SLIPPAGE_PCT = Decimal("0.001")  # 0.1% base slippage
-    MAX_ADDITIONAL_SLIPPAGE = Decimal("0.01")  # 1% max additional slippage
 
     def __init__(
         self,
@@ -72,27 +75,41 @@ class LiquidityValidator:
         """
         Initialize liquidity validator.
 
+        SINGLE SOURCE OF TRUTH: All defaults from CentralizedConfig.
+
         Args:
             enable_partial_fills: If True, allow partial fills for large orders
-            max_order_pct_of_volume: Override default max order size (default 10%)
-            warning_order_pct_of_volume: Override default warning threshold (default 5%)
-            partial_fill_pct: Override default partial fill percentage (default 5%)
+            max_order_pct_of_volume: Override default max order size
+            warning_order_pct_of_volume: Override default warning threshold
+            partial_fill_pct: Override default partial fill percentage
         """
+        config = _get_backtesting_config()
+
         self.enable_partial_fills = enable_partial_fills
 
-        # Allow threshold customization
-        if max_order_pct_of_volume is not None:
-            self.MAX_ORDER_PCT_OF_VOLUME = max_order_pct_of_volume
-        if warning_order_pct_of_volume is not None:
-            self.WARNING_ORDER_PCT_OF_VOLUME = warning_order_pct_of_volume
-        if partial_fill_pct is not None:
-            self.PARTIAL_FILL_PCT = partial_fill_pct
+        # Get thresholds from CentralizedConfig or use overrides
+        self.max_order_pct_of_volume = (
+            max_order_pct_of_volume if max_order_pct_of_volume is not None
+            else config.adv_limit_pct
+        )
+        self.warning_order_pct_of_volume = (
+            warning_order_pct_of_volume if warning_order_pct_of_volume is not None
+            else config.adv_limit_pct / 2
+        )
+        self.partial_fill_pct = (
+            partial_fill_pct if partial_fill_pct is not None
+            else config.adv_limit_pct / 2
+        )
+
+        # Market impact parameters from CentralizedConfig
+        self.base_slippage_pct = config.base_slippage_bps / Decimal("10000")  # Convert bps to decimal
+        self.max_additional_slippage = Decimal("0.01")  # 1% max additional
 
         logger.info(
-            f"✅ LiquidityValidator initialized: "
-            f"max_order={self.MAX_ORDER_PCT_OF_VOLUME:.1%}, "
-            f"warning={self.WARNING_ORDER_PCT_OF_VOLUME:.1%}, "
-            f"partial_fill={self.PARTIAL_FILL_PCT:.1%}, "
+            f"LiquidityValidator initialized: "
+            f"max_order={self.max_order_pct_of_volume:.1%}, "
+            f"warning={self.warning_order_pct_of_volume:.1%}, "
+            f"partial_fill={self.partial_fill_pct:.1%}, "
             f"enable_partial={self.enable_partial_fills}"
         )
 
@@ -126,15 +143,15 @@ class LiquidityValidator:
         order_pct = order_quantity / daily_volume
 
         # Reject if order exceeds maximum threshold
-        if order_pct > self.MAX_ORDER_PCT_OF_VOLUME:
+        if order_pct > self.max_order_pct_of_volume:
             return False, (
                 f"Order {order_quantity:.0f} shares ({order_pct:.1%} of daily volume) "
-                f"exceeds maximum {self.MAX_ORDER_PCT_OF_VOLUME:.1%} threshold. "
+                f"exceeds maximum {self.max_order_pct_of_volume:.1%} threshold. "
                 f"Daily volume: {daily_volume:.0f} shares."
             )
 
         # Warn if order exceeds warning threshold but is still acceptable
-        if order_pct > self.WARNING_ORDER_PCT_OF_VOLUME:
+        if order_pct > self.warning_order_pct_of_volume:
             logger.warning(
                 f"⚠️ Large order for {symbol}: {order_quantity:.0f} shares "
                 f"({order_pct:.1%} of daily volume {daily_volume:.0f}) - "
@@ -181,7 +198,7 @@ class LiquidityValidator:
         order_pct = order_quantity / daily_volume
 
         # Check if we need to do a partial fill
-        max_fillable = daily_volume * self.PARTIAL_FILL_PCT
+        max_fillable = daily_volume * self.partial_fill_pct
 
         if order_quantity <= max_fillable:
             # Full fill possible - execute entire order
@@ -240,7 +257,7 @@ class LiquidityValidator:
                     rejection_reason=(
                         f"Order too large ({order_quantity:.0f} shares = {order_pct:.1%} of daily volume) "
                         f"and partial fills are disabled. "
-                        f"Maximum fillable: {max_fillable:.0f} shares ({self.PARTIAL_FILL_PCT:.1%})."
+                        f"Maximum fillable: {max_fillable:.0f} shares ({self.partial_fill_pct:.1%})."
                     ),
                     market_impact=Decimal("0"),
                 )
@@ -271,7 +288,7 @@ class LiquidityValidator:
             base_price = Decimal("100")
 
         # Start with base slippage
-        total_slippage = self.BASE_SLIPPAGE_PCT
+        total_slippage = self.base_slippage_pct
 
         # Add market impact if quantity provided
         if quantity is not None and hasattr(current_bar, 'volume'):
@@ -285,7 +302,7 @@ class LiquidityValidator:
                 additional_slippage = impact_factor * Decimal("0.1")  # Scale factor
 
                 # Cap additional slippage
-                additional_slippage = min(additional_slippage, self.MAX_ADDITIONAL_SLIPPAGE)
+                additional_slippage = min(additional_slippage, self.max_additional_slippage)
                 total_slippage += additional_slippage
 
         # Buy orders pay more (unfavorable execution)
@@ -321,7 +338,7 @@ class LiquidityValidator:
             base_price = Decimal("100")
 
         # Start with base slippage
-        total_slippage = self.BASE_SLIPPAGE_PCT
+        total_slippage = self.base_slippage_pct
 
         # Add market impact if quantity provided
         if quantity is not None and hasattr(current_bar, 'volume'):
@@ -334,7 +351,7 @@ class LiquidityValidator:
                 additional_slippage = impact_factor * Decimal("0.1")
 
                 # Cap additional slippage
-                additional_slippage = min(additional_slippage, self.MAX_ADDITIONAL_SLIPPAGE)
+                additional_slippage = min(additional_slippage, self.max_additional_slippage)
                 total_slippage += additional_slippage
 
         # Sell orders receive less (unfavorable execution)
@@ -400,16 +417,16 @@ class LiquidityValidator:
 
         metrics = {
             "daily_volume": float(daily_volume),
-            "max_order_size": float(daily_volume * self.MAX_ORDER_PCT_OF_VOLUME),
-            "warning_threshold": float(daily_volume * self.WARNING_ORDER_PCT_OF_VOLUME),
-            "partial_fill_size": float(daily_volume * self.PARTIAL_FILL_PCT),
+            "max_order_size": float(daily_volume * self.max_order_pct_of_volume),
+            "warning_threshold": float(daily_volume * self.warning_order_pct_of_volume),
+            "partial_fill_size": float(daily_volume * self.partial_fill_pct),
         }
 
         if order_quantity is not None:
             order_pct = order_quantity / daily_volume if daily_volume > 0 else Decimal("0")
             metrics["order_quantity"] = float(order_quantity)
             metrics["order_pct_of_volume"] = float(order_pct)
-            metrics["would_reject"] = order_pct > self.MAX_ORDER_PCT_OF_VOLUME
-            metrics["would_warn"] = order_pct > self.WARNING_ORDER_PCT_OF_VOLUME
+            metrics["would_reject"] = order_pct > self.max_order_pct_of_volume
+            metrics["would_warn"] = order_pct > self.warning_order_pct_of_volume
 
         return metrics

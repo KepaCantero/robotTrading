@@ -119,7 +119,7 @@ class BacktestRunnerFacade:
         self, start_date: datetime, end_date: datetime
     ) -> List[pd.DataFrame]:
         """Load market data for portfolio symbols."""
-        from app.services.portfolio_builder import PortfolioBuilder
+        from app.domain.services.portfolio.builder import PortfolioBuilder
         from app.services.portfolio_config_manager import get_portfolio_config_manager
 
         portfolio_config = get_portfolio_config_manager()

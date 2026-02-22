@@ -16,7 +16,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 
-from app.models.portfolio_analytics import (
+from app.domain.models.portfolio_analytics import (
     ExtendedPortfolio,
     PerformanceMetrics,
     PerformancePeriod,
@@ -26,7 +26,7 @@ from app.models.portfolio_analytics import (
     PortfolioRebalance,
     RiskMetrics,
 )
-from app.services.portfolio_analytics_service import (
+from app.domain.services.portfolio.analytics import (
     PortfolioAnalyticsService,
     get_portfolio_analytics_service,
 )
@@ -126,7 +126,7 @@ class AnalyticsSummaryResponse(BaseModel):
 # Mock portfolio data for demonstration
 def _get_mock_portfolio(portfolio_id: UUID) -> ExtendedPortfolio:
     """Get mock portfolio data for demonstration."""
-    from app.models.portfolio import AssetClass, Position
+    from app.domain.models.portfolio import AssetClass, Position
 
     # Create mock positions
     positions = [
@@ -317,7 +317,7 @@ async def get_rebalance_recommendation(
             request.target_equity_allocation is not None
             or request.target_cash_allocation is not None
         ):
-            from app.models.portfolio_analytics import PortfolioAllocation
+            from app.domain.models.portfolio_analytics import PortfolioAllocation
 
             equity_allocation = request.target_equity_allocation or Decimal("60")
             cash_allocation = request.target_cash_allocation or Decimal("40")
