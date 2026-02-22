@@ -14,11 +14,11 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional, Sequence
 
 from app.core.centralized_config import get_config
-from app.models.market_data import Quote
-from app.models.portfolio import Portfolio
-from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
-from app.services.momentum_analysis import TechnicalIndicatorCalculator
-from app.services.signal_scoring_engine import get_signal_scoring_engine
+from app.domain.models.market_data import Quote
+from app.domain.models.portfolio import Portfolio
+from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
+from app.domain.services.analysis.momentum import TechnicalIndicatorCalculator
+from app.domain.services.signals.scoring import get_signal_scoring_engine
 
 from .base import BaseStrategyEngine
 

@@ -17,7 +17,7 @@ from fastapi.responses import JSONResponse
 from requests.exceptions import HTTPError, RequestException
 
 from app.core.centralized_config import get_config
-from app.models.profitability_validation import (
+from app.domain.models.profitability_validation import (
     HistoricalValidation,
     ProfitabilityValidation,
     StrategyComparison,

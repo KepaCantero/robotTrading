@@ -17,11 +17,11 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional, Sequence
 
 from app.core.centralized_config import get_config
-from app.models.market_data import Quote
-from app.models.portfolio import Portfolio
-from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
-from app.services.momentum_analysis import TechnicalIndicatorCalculator
-from app.services.signal_scoring_engine import get_signal_scoring_engine
+from app.domain.models.market_data import Quote
+from app.domain.models.portfolio import Portfolio
+from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
+from app.domain.services.analysis.momentum import TechnicalIndicatorCalculator
+from app.domain.services.signals.scoring import get_signal_scoring_engine
 
 from .base import BaseStrategyEngine
 
@@ -442,9 +442,9 @@ class TrendFollowingStrategyEngine(BaseStrategyEngine):
                 )
                 return False
 
-            # Check confidence mínima
-            if signal.confidence < 50.0:  # Threshold mínimo razonable
-                logger.debug(f"Risk check failed: confidence {signal.confidence} < 50.0")
+            # Check confidence mínima - lowered to 30.0 for flexibility
+            if signal.confidence < 30.0:
+                logger.debug(f"Risk check failed: confidence {signal.confidence} < 30.0")
                 return False
 
             return True
@@ -476,7 +476,7 @@ class TrendFollowingStrategyEngine(BaseStrategyEngine):
 
     def _is_valid_confidence(self, confidence: float) -> bool:
         """Check if confidence is valid."""
-        return confidence >= 50.0
+        return confidence >= 30.0
 
     def _calculate_adx_score(self, adx: float) -> float:
         """Calculate ADX score for confidence."""

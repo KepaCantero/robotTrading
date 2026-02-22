@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 # API-009 FIX: Import AuditMiddleware for request/response logging with correlation IDs
-from app.api import AuditMiddleware
+from app.presentation.api import AuditMiddleware
 
 # ============================================================================
 # CRITICAL: Enforce Numba availability BEFORE any other imports
@@ -37,10 +37,10 @@ from sqlalchemy.exc import (
     ProgrammingError,
 )
 
-from app.api.assets import router as assets_router
-from app.api.capa2_endpoints import router as capa2_router
-from app.api.cost_analysis import router as cost_analysis_router
-from app.api.error_handler import (
+from app.presentation.api.assets import router as assets_router
+from app.presentation.api.capa2_endpoints import router as capa2_router
+from app.presentation.api.cost_analysis import router as cost_analysis_router
+from app.presentation.api.error_handler import (
     attribute_error_handler,
     generic_exception_handler,
     http_exception_handler,
@@ -52,24 +52,24 @@ from app.api.error_handler import (
     validation_exception_handler,
     value_error_handler,
 )
-from app.api.health import router as health_router
-from app.api.live_trading import router as live_trading_router
-from app.api.market_data import router as market_data_router
+from app.presentation.api.health import router as health_router
+from app.presentation.api.live_trading import router as live_trading_router
+from app.presentation.api.market_data import router as market_data_router
 
 # API-006 FIX: Import authentication and security middleware
-from app.api.middleware import (
+from app.presentation.api.middleware import (
     AuthMiddleware,
     CorrelationIdMiddleware,
     RequestLoggingMiddleware,
     SecurityHeadersMiddleware,
 )
-from app.api.momentum import router as momentum_router
-from app.api.optimization import router as optimization_router
-from app.api.paper_trading import router as paper_trading_router
-from app.api.portfolio import router as portfolio_router
-from app.api.portfolio_analytics import router as portfolio_analytics_router
-from app.api.signals import router as signals_router
-from app.api.trading_error_handler import router as trading_error_handler_router
+from app.presentation.api.momentum import router as momentum_router
+from app.presentation.api.optimization import router as optimization_router
+from app.presentation.api.paper_trading import router as paper_trading_router
+from app.presentation.api.portfolio import router as portfolio_router
+from app.presentation.api.portfolio_analytics import router as portfolio_analytics_router
+from app.presentation.api.signals import router as signals_router
+from app.presentation.api.trading_error_handler import router as trading_error_handler_router
 from app.core.config import get_settings
 from app.core.database import close_database, init_database
 

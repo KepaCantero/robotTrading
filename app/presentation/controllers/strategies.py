@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-from app.strategies import ExecutionEngine, StrategyConfigLoader, StrategyLogger, StrategyRegistry
+from app.domain.strategies import ExecutionEngine, StrategyConfigLoader, StrategyLogger, StrategyRegistry
 
 # Constants
 DEFAULT_VALUE_31 = 31

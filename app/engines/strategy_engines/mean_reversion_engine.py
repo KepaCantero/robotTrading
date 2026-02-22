@@ -14,10 +14,10 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional, Sequence
 
 from app.core.centralized_config import get_config
-from app.models.market_data import Quote
-from app.models.portfolio import Portfolio
-from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
-from app.services.momentum_analysis import TechnicalIndicatorCalculator
+from app.domain.models.market_data import Quote
+from app.domain.models.portfolio import Portfolio
+from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
+from app.domain.services.analysis.momentum import TechnicalIndicatorCalculator
 
 from .base import BaseStrategyEngine
 
@@ -60,7 +60,7 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
                 str(strategy_config.stop_loss_pct or centralized_config.trading.stop_loss_pct)
             )
             self.take_profit = Decimal(
-                str(strategy_config.stop_loss_pct or centralized_config.trading.take_profit_pct)
+                str(strategy_config.take_profit_pct or centralized_config.trading.take_profit_pct)
             )
             self.max_position_size = Decimal(
                 str(strategy_config.max_position_size or centralized_config.trading.max_position_size)
@@ -364,8 +364,9 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
 
         # Volatility thresholds from config (very low and low volatility for confidence bonus)
         centralized_config = get_config()
-        vol_very_low = centralized_config.trading.get("volatility_confidence_very_low", 0.01)
-        vol_low = centralized_config.trading.get("volatility_confidence_low", 0.02)
+        # Use getattr() for Pydantic models - they don't have .get() method
+        vol_very_low = getattr(centralized_config.trading, 'volatility_confidence_very_low', 0.01)
+        vol_low = getattr(centralized_config.trading, 'volatility_confidence_low', 0.02)
 
         if volatility < vol_very_low:
             confidence += 10.0

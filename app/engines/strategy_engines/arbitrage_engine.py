@@ -22,10 +22,10 @@ from typing import Any, Dict, List, Optional, Sequence
 import numpy as np
 
 from app.core.centralized_config import get_config
-from app.models.market_data import Quote
-from app.models.portfolio import Portfolio
-from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
-from app.services.momentum_analysis import TechnicalIndicatorCalculator
+from app.domain.models.market_data import Quote
+from app.domain.models.portfolio import Portfolio
+from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
+from app.domain.services.analysis.momentum import TechnicalIndicatorCalculator
 
 from .base import BaseStrategyEngine
 

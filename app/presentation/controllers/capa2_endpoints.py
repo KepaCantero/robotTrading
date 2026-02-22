@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 from requests.exceptions import HTTPError, RequestException
 
 from app.core.models.input_profile import InputProcessor, InputProfile
-from app.services.configuration_persistence.configuration_repository import ConfigurationRepository
+from app.infrastructure.persistence.configuration.configuration_repository import ConfigurationRepository
 from app.services.deployment.deploy_decision_orchestrator import DeployDecisionOrchestrator
 
 # Constants

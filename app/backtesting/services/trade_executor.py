@@ -6,6 +6,8 @@ necessary validations including liquidity, position sizing, and cost calculation
 
 BUG #3 FIX: Now uses TransactionCostModel for realistic costs instead of
 simple percentage-based commission.
+
+SINGLE SOURCE OF TRUTH: Uses shared utilities for slippage and trade reason.
 """
 
 from __future__ import annotations
@@ -24,7 +26,10 @@ from app.backtesting.services.transaction_cost_model import (
     TransactionCostModel,
     TransactionCostResult,
 )
-from app.models.signal import Signal
+# SHARED UTILITIES: Centralized slippage and trade utilities
+from app.backtesting.shared.slippage_utils import apply_slippage as shared_apply_slippage
+from app.backtesting.shared.trade_utils import build_trade_reason as shared_build_trade_reason
+from app.domain.models.signal import Signal
 
 logger = logging.getLogger(__name__)
 
@@ -508,43 +513,28 @@ class TradeExecutor:
     def _apply_slippage(
         self, price: Decimal, is_buy: bool, slippage_pct: Optional[Decimal] = None
     ) -> Decimal:
-        """Apply slippage to execution price."""
-        if slippage_pct is not None:
-            slippage_factor = slippage_pct / Decimal("100")
-        else:
-            slippage_factor = self.config.slippage_percentage / Decimal("100")
+        """
+        Apply slippage to execution price.
 
-        if is_buy:
-            return price * (Decimal("1") + slippage_factor)
-        else:
-            return price * (Decimal("1") - slippage_factor)
+        DELEGATES TO: app.backtesting.shared.slippage_utils.apply_slippage
+        SINGLE SOURCE OF TRUTH: All slippage calculations go through shared utility.
+        """
+        return shared_apply_slippage(
+            price=price,
+            is_buy=is_buy,
+            slippage_pct=slippage_pct,
+            is_stop=False,
+            is_volatile=False,
+        )
 
     def _build_trade_reason(self, signal: Signal, market_data: Any) -> str:
-        """Build human-readable reason for the trade from signal metadata."""
-        reason_parts = []
+        """
+        Build human-readable reason for the trade from signal metadata.
 
-        signal_type_str = (
-            signal.signal_type.value
-            if hasattr(signal.signal_type, "value")
-            else str(signal.signal_type)
-        )
-        reason_parts.append(signal_type_str.upper())
-
-        source_str = signal.source.value if hasattr(signal.source, "value") else str(signal.source)
-        if source_str:
-            reason_parts.append(f"via {source_str}")
-
-        if signal.metadata:
-            metadata_strs = []
-            for key, value in signal.metadata.items():
-                if key in ["rsi", "ema_trend", "volume_ratio", "z_score", "spread"]:
-                    metadata_strs.append(f"{key}={value}")
-            if metadata_strs:
-                reason_parts.append("(" + ", ".join(metadata_strs) + ")")
-
-        reason_parts.append(f"conf={signal.confidence:.1f}%")
-
-        return " ".join(reason_parts)
+        DELEGATES TO: app.backtesting.shared.trade_utils.build_trade_reason
+        SINGLE SOURCE OF TRUTH: All trade reason building goes through shared utility.
+        """
+        return shared_build_trade_reason(signal=signal, market_data=market_data)
 
     def _calculate_transaction_costs(
         self,

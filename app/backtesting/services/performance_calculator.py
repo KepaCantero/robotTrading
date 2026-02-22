@@ -201,8 +201,9 @@ class PerformanceMetricsCalculator:
         # CRITICAL FIX: Add volatility floor to prevent extreme Sharpe values
         # When all trades have similar P&L (e.g., all stopped out at same %),
         # std_dev is very small but not zero, causing Sharpe to explode.
-        # Minimum 5% annualized volatility is a reasonable floor for any trading strategy.
-        MIN_ANNUAL_VOLATILITY = Decimal("0.05")  # 5% minimum annualized volatility
+        # Minimum 15% annualized volatility is a reasonable floor for any trading strategy.
+        # This prevents unrealistic Sharpe ratios when few trades have similar outcomes.
+        MIN_ANNUAL_VOLATILITY = Decimal("0.15")  # 15% minimum annualized volatility
 
         # Annualize (252 trading days)
         annual_mean = mean_return * Decimal("252")

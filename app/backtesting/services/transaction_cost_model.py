@@ -13,6 +13,8 @@ References:
 - IBKR Commission Structure: https://www.interactivebrokers.com/en/pricing/commissions-home.php
 - Almgren-Chriss Market Impact Model
 - Kissell Research Group implementation patterns
+
+SINGLE SOURCE OF TRUTH: All values are sourced from CentralizedConfig.
 """
 
 from __future__ import annotations
@@ -22,6 +24,9 @@ from dataclasses import dataclass, field
 from decimal import Decimal, ROUND_HALF_UP
 from enum import Enum
 from typing import Any, Dict, Optional
+
+# SINGLE SOURCE OF TRUTH: Import CentralizedConfig for all values
+from app.core.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -41,30 +46,54 @@ class OrderType(Enum):
     STOP_LIMIT = "stop_limit"
 
 
+def _get_backtesting_config():
+    """Helper to get backtesting config from CentralizedConfig."""
+    return get_config().backtesting
+
+
 @dataclass
 class BrokerConfig:
-    """Configuration for a specific broker's cost structure."""
+    """
+    Configuration for a specific broker's cost structure.
 
-    # Commission structure
-    commission_per_share: Decimal = Decimal("0.005")  # IBKR: $0.005/share
-    commission_minimum: Decimal = Decimal("1.00")     # IBKR: $1.00 minimum
-    commission_maximum: Decimal = Decimal("0.005")   # IBKR: 0.5% of trade value max
+    SINGLE SOURCE OF TRUTH: Default values come from CentralizedConfig.
+    """
 
-    # Exchange fees (SEC, TAF, etc.)
+    # Commission structure - defaults from CentralizedConfig
+    commission_per_share: Optional[Decimal] = None   # IBKR: $0.005/share
+    commission_minimum: Optional[Decimal] = None     # IBKR: $1.00 minimum
+    commission_maximum: Optional[Decimal] = None    # IBKR: 0.5% of trade value max
+
+    # Exchange fees (SEC, TAF, etc.) - these are regulatory, not broker-specific
     sec_fee_rate: Decimal = Decimal("0.0000278")     # SEC fee per dollar of sale
     taf_fee_per_share: Decimal = Decimal("0.000166")  # Trading Activity Fee
 
-    # Spread assumptions (typical for liquid stocks)
-    default_spread_bps: Decimal = Decimal("5")       # 5 bps = 0.05%
+    # Spread assumptions (typical for liquid stocks) - from CentralizedConfig
+    default_spread_bps: Optional[Decimal] = None
     large_cap_spread_bps: Decimal = Decimal("3")     # 3 bps for large caps
     small_cap_spread_bps: Decimal = Decimal("15")    # 15 bps for small caps
 
-    # Slippage parameters (Almgren-Chriss inspired)
+    # Slippage parameters (Almgren-Chriss inspired) - from CentralizedConfig
     temporary_impact_coefficient: Decimal = Decimal("0.1")   # Temporary impact
     permanent_impact_coefficient: Decimal = Decimal("0.05")  # Permanent impact
 
-    # Participation rate limits
-    max_participation_rate: Decimal = Decimal("0.10")  # Max 10% of volume
+    # Participation rate limits - from CentralizedConfig
+    max_participation_rate: Optional[Decimal] = None
+
+    def __post_init__(self):
+        """Fill in defaults from CentralizedConfig after initialization."""
+        config = _get_backtesting_config()
+
+        if self.commission_per_share is None:
+            self.commission_per_share = config.default_commission_per_share
+        if self.commission_minimum is None:
+            self.commission_minimum = config.min_commission
+        if self.commission_maximum is None:
+            self.commission_maximum = config.default_commission_rate
+        if self.default_spread_bps is None:
+            self.default_spread_bps = config.base_slippage_bps / Decimal("2")  # Spread is half slippage
+        if self.max_participation_rate is None:
+            self.max_participation_rate = config.adv_limit_pct
 
 
 @dataclass
@@ -121,6 +150,8 @@ class TransactionCostModel:
     4. Market impact (temporary + permanent)
     5. Slippage (execution uncertainty)
 
+    SINGLE SOURCE OF TRUTH: All values sourced from CentralizedConfig.
+
     Example:
         >>> model = TransactionCostModel()
         >>> result = model.calculate_costs(
@@ -133,18 +164,18 @@ class TransactionCostModel:
         >>> print(f"Total cost: ${result.total_cost:.2f} ({result.total_cost_bps:.1f} bps)")
     """
 
-    # Default configurations per broker
+    # Default configurations per broker - use BrokerConfig() for CentralizedConfig defaults
+    # Note: BrokerConfig.__post_init__ fills in defaults from CentralizedConfig
     BROKER_CONFIGS: Dict[BrokerType, BrokerConfig] = {
-        BrokerType.INTERACTIVE_BROKERS: BrokerConfig(
-            commission_per_share=Decimal("0.005"),
-            commission_minimum=Decimal("1.00"),
-            commission_maximum=Decimal("0.005"),
-        ),
+        # IBKR: Uses CentralizedConfig defaults (commission_per_share, min, max)
+        BrokerType.INTERACTIVE_BROKERS: BrokerConfig(),  # Defaults from CentralizedConfig
+        # ALPACA: Commission-free trading
         BrokerType.ALPACA: BrokerConfig(
             commission_per_share=Decimal("0"),
             commission_minimum=Decimal("0"),
             commission_maximum=Decimal("0"),
         ),
+        # GENERIC: Slightly higher costs
         BrokerType.GENERIC: BrokerConfig(
             commission_per_share=Decimal("0.01"),
             commission_minimum=Decimal("2.00"),
@@ -385,18 +416,30 @@ class TransactionCostModel:
 
         Market orders: Higher slippage
         Limit orders: Lower slippage (but may not fill)
+
+        SINGLE SOURCE OF TRUTH: Base values from CentralizedConfig.
         """
-        # Base slippage by order type
+        # Get base slippage from CentralizedConfig
+        config = _get_backtesting_config()
+        base_slippage_bps = config.base_slippage_bps
+
+        # Order type adjustment - use config multipliers
         if order_type == OrderType.MARKET:
-            base_slippage_bps = Decimal("5")  # 5 bps for market orders
+            # Market orders have standard slippage
+            pass
         elif order_type == OrderType.LIMIT:
-            base_slippage_bps = Decimal("2")  # 2 bps for limit orders
+            # Limit orders have lower slippage (better execution expected)
+            base_slippage_bps = base_slippage_bps * config.optimistic_slippage_bps / config.base_slippage_bps
         else:
-            base_slippage_bps = Decimal("3")  # 3 bps for stop orders
+            # Stop orders have worse execution
+            base_slippage_bps = base_slippage_bps * config.stop_slippage_multiplier
 
         # Volatility adjustment
         vol = volatility or Decimal("0.20")
         vol_factor = vol / Decimal("0.20")  # Normalize to 20% baseline
+
+        # Apply volatility multiplier from config
+        vol_factor *= config.volatility_multiplier
 
         # Urgency adjustment (higher urgency = more slippage)
         urgency_factor = Decimal("0.5") + Decimal(str(urgency)) * Decimal("0.5")

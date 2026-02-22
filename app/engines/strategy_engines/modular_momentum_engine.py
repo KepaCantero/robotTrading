@@ -16,11 +16,11 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional, Sequence
 import numpy as np
 
-from app.models.market_data import Quote
-from app.models.portfolio import Portfolio
-from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
-from app.services.momentum_analysis import TechnicalIndicatorCalculator
-from app.strategies.momentum_modular.modules.filters import (
+from app.domain.models.market_data import Quote
+from app.domain.models.portfolio import Portfolio
+from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
+from app.domain.services.analysis.momentum import TechnicalIndicatorCalculator
+from app.domain.strategies.momentum_modular.modules.filters import (
     ATRFilter,
     EMAFilter,
     MomentumFilter,
@@ -28,7 +28,7 @@ from app.strategies.momentum_modular.modules.filters import (
     StochRSIFilter,
     VolumeFilter,
 )
-from app.strategies.momentum_modular.modules.market_analyzer import MarketAnalyzer
+from app.domain.strategies.momentum_modular.modules.market_analyzer import MarketAnalyzer
 
 from .base import BaseStrategyEngine
 
@@ -153,7 +153,7 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
         # Inicializar FeatureExtractor lazy
         if self._feature_extractor is None:
             try:
-                from app.strategies.momentum_modular.learning.feature_extractor import (
+                from app.domain.strategies.momentum_modular.learning.feature_extractor import (
                     FeatureExtractor,
                 )
 

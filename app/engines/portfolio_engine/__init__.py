@@ -15,7 +15,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from app.models.portfolio import Portfolio, PortfolioProvider
+from app.domain.models.portfolio import Portfolio, PortfolioProvider
 from app.services.portfolio_service import PortfolioService
 
 logger = logging.getLogger(__name__)
@@ -106,7 +106,7 @@ class PortfolioEngine(BasePortfolioEngine):
         try:
             # Crear PortfolioService si no hay provider
             if self.provider is None:
-                from app.providers.paper_trading import PaperTradingPortfolioProvider
+                from app.infrastructure.providers.paper_trading import PaperTradingPortfolioProvider
 
                 self.provider = PaperTradingPortfolioProvider()
 

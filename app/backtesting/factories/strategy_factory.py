@@ -16,10 +16,10 @@ This follows the Factory pattern for better separation of concerns.
 import logging
 from typing import Any, Dict, List, Optional
 
-from app.strategies.mean_reversion import MeanReversionStrategy
-from app.strategies.momentum import MomentumStrategy
-from app.strategies.momentum_modular.strategy import ModularMomentumStrategy
-from app.strategies.pairs_trading import PairsTradingStrategy
+from app.domain.strategies.mean_reversion import MeanReversionStrategy
+from app.domain.strategies.momentum import MomentumStrategy
+from app.domain.strategies.momentum_modular.strategy import ModularMomentumStrategy
+from app.domain.strategies.pairs_trading import PairsTradingStrategy
 
 logger = logging.getLogger(__name__)
 

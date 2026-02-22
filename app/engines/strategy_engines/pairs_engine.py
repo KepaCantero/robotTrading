@@ -21,9 +21,9 @@ import scipy.stats  # noqa: F401
 SCIPY_AVAILABLE = True
 
 from app.core.centralized_config import get_config
-from app.models.market_data import Quote
-from app.models.portfolio import Portfolio
-from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
+from app.domain.models.market_data import Quote
+from app.domain.models.portfolio import Portfolio
+from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 from .base import BaseStrategyEngine
 

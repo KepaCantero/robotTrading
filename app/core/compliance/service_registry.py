@@ -307,7 +307,7 @@ class ComplianceServiceRegistry:
 
     def _create_vwap_executor(self) -> Optional[Any]:
         try:
-            from app.services.execution_algorithms import get_execution_algorithm
+            from app.domain.services.execution.algorithms import get_execution_algorithm
 
             return get_execution_algorithm("vwap")
         except ImportError:
@@ -315,7 +315,7 @@ class ComplianceServiceRegistry:
 
     def _create_twap_executor(self) -> Optional[Any]:
         try:
-            from app.services.execution_algorithms import get_execution_algorithm
+            from app.domain.services.execution.algorithms import get_execution_algorithm
 
             return get_execution_algorithm("twap")
         except ImportError:
@@ -323,7 +323,7 @@ class ComplianceServiceRegistry:
 
     def _create_is_executor(self) -> Optional[Any]:
         try:
-            from app.services.execution_algorithms import get_execution_algorithm
+            from app.domain.services.execution.algorithms import get_execution_algorithm
 
             return get_execution_algorithm("implementation_shortfall")
         except ImportError:
@@ -331,7 +331,7 @@ class ComplianceServiceRegistry:
 
     def _create_pov_executor(self) -> Optional[Any]:
         try:
-            from app.services.execution_algorithms import get_execution_algorithm
+            from app.domain.services.execution.algorithms import get_execution_algorithm
 
             return get_execution_algorithm("pov")
         except ImportError:
@@ -351,7 +351,7 @@ class ComplianceServiceRegistry:
 
     def _create_alpha_model(self) -> Optional[Any]:
         try:
-            from app.strategies.alpha_models import get_alpha_model
+            from app.domain.strategies.alpha_models import get_alpha_model
 
             return get_alpha_model(
                 {
@@ -466,7 +466,7 @@ class ComplianceServiceRegistry:
 
     def _create_order_flow_analyzer(self) -> Optional[Any]:
         try:
-            from app.microstructure.order_flow import get_order_flow_analyzer
+            from app.domain.market_analysis.microstructure.order_flow import get_order_flow_analyzer
 
             return get_order_flow_analyzer()
         except ImportError:
@@ -474,7 +474,7 @@ class ComplianceServiceRegistry:
 
     def _create_liquidity_analyzer(self) -> Optional[Any]:
         try:
-            from app.microstructure.liquidity import get_liquidity_analyzer
+            from app.domain.market_analysis.microstructure.liquidity import get_liquidity_analyzer
 
             return get_liquidity_analyzer()
         except ImportError:
@@ -482,7 +482,7 @@ class ComplianceServiceRegistry:
 
     def _create_price_discovery_analyzer(self) -> Optional[Any]:
         try:
-            from app.microstructure.price_discovery import get_price_discovery_analyzer
+            from app.domain.market_analysis.microstructure.price_discovery import get_price_discovery_analyzer
 
             return get_price_discovery_analyzer()
         except ImportError:
@@ -490,7 +490,7 @@ class ComplianceServiceRegistry:
 
     def _create_call_auction(self) -> Optional[Any]:
         try:
-            from app.microstructure.trading_mechanisms import get_call_auction
+            from app.domain.market_analysis.microstructure.trading_mechanisms import get_call_auction
 
             return get_call_auction()
         except ImportError:

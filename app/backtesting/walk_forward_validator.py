@@ -35,7 +35,7 @@ from app.backtesting.backtesting_compliance import (
     create_backtesting_compliance,
 )
 
-from app.models.market_data import Quote
+from app.domain.models.market_data import Quote
 
 logger = logging.getLogger(__name__)
 

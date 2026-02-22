@@ -28,12 +28,15 @@ from app.backtesting.services.pnl_calculator import ProfitAndLossCalculator
 from app.backtesting.services.position_manager import PositionManager
 from app.backtesting.services.signal_processor import SignalProcessor
 from app.backtesting.services.trade_executor import TradeExecutor
+# SHARED UTILITIES: Centralized slippage and trade utilities
+from app.backtesting.shared.slippage_utils import apply_slippage as shared_apply_slippage
+from app.backtesting.shared.trade_utils import build_trade_reason as shared_build_trade_reason
 
 # COMPLIANCE: Import compliance_engine - "THE ONLY ENGINE" that must be used
 from app.core.compliance_engine import ComplianceEngine
 from app.core.trading_validators import TradingValidator
-from app.models.portfolio import AssetClass, Portfolio, Position
-from app.models.signal import Signal
+from app.domain.models.portfolio import AssetClass, Portfolio, Position
+from app.domain.models.signal import Signal
 from app.services.dynamic_capital_reallocation import DynamicCapitalReallocationEngine
 
 logger = logging.getLogger(__name__)
@@ -468,7 +471,7 @@ class BacktestEngine:
         ):
             return
 
-        from app.strategies.momentum_modular.learning.learning_updater import LearningEngineUpdater
+        from app.domain.strategies.momentum_modular.learning.learning_updater import LearningEngineUpdater
 
         if not hasattr(self.strategy, '_learning_updater'):
             self.strategy._learning_updater = LearningEngineUpdater(
@@ -959,6 +962,9 @@ class BacktestEngine:
         """
         Apply slippage to execution price.
 
+        DELEGATES TO: app.backtesting.shared.slippage_utils.apply_slippage
+        SINGLE SOURCE OF TRUTH: All slippage calculations go through shared utility.
+
         Args:
             price: Base price
             is_buy: True for buy orders, False for sell
@@ -967,50 +973,31 @@ class BacktestEngine:
         Returns:
             Execution price with slippage applied
         """
-        # Use provided slippage_pct or fall back to config
-        if slippage_pct is not None:
-            slippage_factor = slippage_pct / Decimal("100")
-        else:
-            slippage_factor = self.config.slippage_percentage / Decimal("100")
-
-        if is_buy:
-            # Buy orders execute at higher price (unfavorable)
-            return price * (Decimal("1") + slippage_factor)
-        else:
-            # Sell orders execute at lower price (unfavorable)
-            return price * (Decimal("1") - slippage_factor)
+        # Use shared utility for centralized slippage calculation
+        return shared_apply_slippage(
+            price=price,
+            is_buy=is_buy,
+            slippage_pct=slippage_pct,
+            is_stop=False,
+            is_volatile=False,
+        )
 
     def _build_trade_reason(self, signal: Signal, market_data: Any) -> str:
-        """Build human-readable reason for the trade from signal metadata."""
-        reason_parts = []
+        """
+        Build human-readable reason for the trade from signal metadata.
 
-        # Handle both SignalType enum and string
-        signal_type_str = (
-            signal.signal_type.value
-            if hasattr(signal.signal_type, 'value')
-            else str(signal.signal_type)
-        )
-        reason_parts.append(signal_type_str.upper())
+        DELEGATES TO: app.backtesting.shared.trade_utils.build_trade_reason
+        SINGLE SOURCE OF TRUTH: All trade reason building goes through shared utility.
 
-        # Add source information
-        source_str = signal.source.value if hasattr(signal.source, 'value') else str(signal.source)
-        if source_str:
-            reason_parts.append(f"via {source_str}")
+        Args:
+            signal: Trading signal
+            market_data: Current market data
 
-        # Extract and format metadata
-        if signal.metadata:
-            metadata_strs = []
-            for key, value in signal.metadata.items():
-                if key in ["rsi", "ema_trend", "volume_ratio", "z_score", "spread"]:
-                    # Technical indicators
-                    metadata_strs.append(f"{key}={value}")
-            if metadata_strs:
-                reason_parts.append("(" + ", ".join(metadata_strs) + ")")
-
-        # Add confidence
-        reason_parts.append(f"conf={signal.confidence:.1f}%")
-
-        return " ".join(reason_parts)
+        Returns:
+            Human-readable trade reason string
+        """
+        # Use shared utility for centralized trade reason building
+        return shared_build_trade_reason(signal=signal, market_data=market_data)
 
     def _create_portfolio_from_state(self, current_price_func=None) -> Portfolio:
         """

@@ -14,7 +14,7 @@ from typing import Any, Dict, List
 
 from requests.exceptions import ConnectionError, HTTPError
 
-from app.models.portfolio import Portfolio
+from app.domain.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
 

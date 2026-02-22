@@ -1,25 +1,55 @@
 """
 Backtesting Constants Configuration
 
-Centralized configuration for all hardcoded constants in backtesting modules.
-This file replaces magic numbers scattered across capital_scale_analyzer.py,
-execution_engine.py, and other backtesting modules.
+DEPRECATED: This file is now a thin wrapper around CentralizedConfig.
+All values are now managed in app/core/centralized_config.py::BacktestingConfig.
 
-All values are configurable and documented for easy maintenance.
+This file remains for backwards compatibility only.
+New code should use:
+    from app.core.centralized_config import get_config
+    config = get_config()
+    slippage = config.backtesting.base_slippage_bps
+
+Migration Guide:
+    OLD: from app.backtesting.constants import BACKTESTING_CONSTANTS
+    NEW: from app.core.centralized_config import get_config
+         backtesting_config = get_config().backtesting
 """
 
-from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Dict, List, TypedDict, Union
+from typing import Dict, List
+import warnings
 
-# ============================================================================
-# TYPED DICT DEFINITIONS
-# ============================================================================
+# Import from centralized config
+from app.core.centralized_config import get_config, BacktestingConfig
+
+# =============================================================================
+# DEPRECATION WARNING
+# =============================================================================
+
+warnings.warn(
+    "app.backtesting.constants is deprecated. "
+    "Use app.core.centralized_config.get_config().backtesting instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
+
+
+# =============================================================================
+# BACKWARDS COMPATIBILITY LAYER
+# =============================================================================
+
+def _get_backtesting_config() -> BacktestingConfig:
+    """Get backtesting config from centralized config."""
+    return get_config().backtesting
+
+
+# TypedDict definitions kept for backwards compatibility
+from typing import TypedDict, Union
 
 
 class FixedCommissionModel(TypedDict):
     """Fixed commission model."""
-
     type: str
     cost: Decimal
     description: str
@@ -27,7 +57,6 @@ class FixedCommissionModel(TypedDict):
 
 class HybridCommissionModel(TypedDict):
     """Hybrid commission model."""
-
     type: str
     min_cost: Decimal
     rate: Decimal
@@ -36,7 +65,6 @@ class HybridCommissionModel(TypedDict):
 
 class TierBracket(TypedDict):
     """Single tier bracket for tiered commission."""
-
     volume_max: Union[int, float]
     rate: Decimal
     min: Decimal
@@ -44,7 +72,6 @@ class TierBracket(TypedDict):
 
 class TieredCommissionModel(TypedDict):
     """Tiered commission model."""
-
     type: str
     brackets: List[TierBracket]
     description: str
@@ -53,153 +80,190 @@ class TieredCommissionModel(TypedDict):
 CommissionModel = Union[FixedCommissionModel, HybridCommissionModel, TieredCommissionModel]
 
 
-@dataclass(frozen=True)
+# =============================================================================
+# COMPATIBILITY CLASSES - delegate to CentralizedConfig
+# =============================================================================
+
 class CapitalScaleConstants:
-    """Constants for capital scale analyzer."""
+    """
+    DEPRECATED: Use get_config().backtesting instead.
 
-    # Default capital levels for multi-scale analysis
-    DEFAULT_CAPITAL_LEVELS: List[Decimal] = field(
-        default_factory=lambda: [
-            Decimal("1000"),  # Micro
-            Decimal("5000"),  # Small
-            Decimal("10000"),  # Medium
-            Decimal("50000"),  # Pro
-            Decimal("100000"),  # Fund
-        ]
-    )
+    This class provides backwards compatibility by delegating to CentralizedConfig.
+    """
 
-    # ADV (Average Daily Volume) limit settings
-    ADV_LIMIT_PCT_DEFAULT: Decimal = Decimal("0.02")  # 2% ADV rule
-    ADV_FILL_RATIO_REJECT_THRESHOLD: Decimal = Decimal("0.5")  # Reject if fill < 50%
+    @property
+    def DEFAULT_CAPITAL_LEVELS(self) -> List[Decimal]:
+        return _get_backtesting_config().default_capital_levels
 
-    # Commission impact thresholds (as decimals, e.g., 0.15 = 15%)
-    COMMISSION_IMPACT_WARNING_THRESHOLD: Decimal = Decimal("0.15")  # 15% - trigger warning
-    COMMISSION_IMPACT_CRITICAL_THRESHOLD: Decimal = Decimal("0.20")  # 20% - reject strategy
-    COMMISSION_IMPACT_OPTIMAL_THRESHOLD: Decimal = Decimal(
-        "0.15"
-    )  # 15% - for optimal capital selection
+    @property
+    def ADV_LIMIT_PCT_DEFAULT(self) -> Decimal:
+        return _get_backtesting_config().adv_limit_pct
 
-    # Alpha degradation threshold (as decimal, e.g., 0.50 = 50%)
-    ALPHA_DEGRADATION_THRESHOLD: Decimal = Decimal("0.50")  # 50% degradation max acceptable
+    @property
+    def ADV_FILL_RATIO_REJECT_THRESHOLD(self) -> Decimal:
+        return _get_backtesting_config().adv_fill_ratio_reject_threshold
 
-    # Commission models by capital level (€ per trade or %)
-    # Each model has: type, cost/rate, description
-    COMMISSION_MODELS: Dict[Decimal, CommissionModel] = field(
-        default_factory=lambda: {
+    @property
+    def COMMISSION_IMPACT_WARNING_THRESHOLD(self) -> Decimal:
+        return _get_backtesting_config().commission_impact_warning_threshold
+
+    @property
+    def COMMISSION_IMPACT_CRITICAL_THRESHOLD(self) -> Decimal:
+        return _get_backtesting_config().commission_impact_critical_threshold
+
+    @property
+    def COMMISSION_IMPACT_OPTIMAL_THRESHOLD(self) -> Decimal:
+        return _get_backtesting_config().commission_impact_warning_threshold
+
+    @property
+    def ALPHA_DEGRADATION_THRESHOLD(self) -> Decimal:
+        return _get_backtesting_config().alpha_degradation_threshold
+
+    @property
+    def COMMISSION_MODELS(self) -> Dict[Decimal, CommissionModel]:
+        """Build commission models from centralized config."""
+        config = _get_backtesting_config()
+        return {
             Decimal("1000"): {
                 "type": "fixed",
-                "cost": Decimal("5.0"),  # €5 per trade (high impact on €1K)
+                "cost": config.default_commission_fixed,
                 "description": "Micro account - high fixed fees",
             },
             Decimal("5000"): {
                 "type": "fixed",
-                "cost": Decimal("3.0"),  # €3 per trade
+                "cost": Decimal("3.0"),
                 "description": "Small account - reduced fixed fees",
             },
             Decimal("10000"): {
                 "type": "hybrid",
-                "min_cost": Decimal("1.0"),
-                "rate": Decimal("0.001"),  # 0.1% with €1 minimum
+                "min_cost": config.min_commission,
+                "rate": config.default_commission_rate,
                 "description": "Medium account - hybrid structure",
             },
             Decimal("50000"): {
                 "type": "tiered",
                 "brackets": [
-                    {"volume_max": 50000, "rate": Decimal("0.001"), "min": Decimal("0.50")},
-                    {"volume_max": 500000, "rate": Decimal("0.0002"), "min": Decimal("0.10")},
-                    {
-                        "volume_max": float("inf"),
-                        "rate": Decimal("0.00001"),
-                        "min": Decimal("0.01"),
-                    },
+                    {"volume_max": 50000, "rate": config.default_commission_rate, "min": Decimal("0.50")},
+                    {"volume_max": 500000, "rate": config.default_commission_rate / 5, "min": Decimal("0.10")},
+                    {"volume_max": float("inf"), "rate": config.default_commission_rate / 100, "min": Decimal("0.01")},
                 ],
                 "description": "Pro account - tiered pricing",
             },
             Decimal("100000"): {
                 "type": "tiered",
                 "brackets": [
-                    {"volume_max": 100000, "rate": Decimal("0.0005"), "min": Decimal("0.50")},
-                    {"volume_max": 500000, "rate": Decimal("0.00005"), "min": Decimal("0.05")},
-                    {
-                        "volume_max": float("inf"),
-                        "rate": Decimal("0.000002"),
-                        "min": Decimal("0.01"),
-                    },
+                    {"volume_max": 100000, "rate": config.default_commission_rate / 2, "min": Decimal("0.50")},
+                    {"volume_max": 500000, "rate": config.default_commission_rate / 20, "min": Decimal("0.05")},
+                    {"volume_max": float("inf"), "rate": config.default_commission_rate / 500, "min": Decimal("0.01")},
                 ],
                 "description": "Fund account - institutional pricing",
             },
         }
-    )
 
-    # Scalability score weights (0-100 points total)
-    SCALABILITY_ALPHA_DEGRADATION_MAX_POINTS: Decimal = Decimal("40")  # Alpha degradation score
-    SCALABILITY_COMMISSION_MAX_POINTS: Decimal = Decimal("30")  # Commission impact score
-    SCALABILITY_STABILITY_MAX_POINTS: Decimal = Decimal("30")  # Win rate stability score
+    @property
+    def SCALABILITY_ALPHA_DEGRADATION_MAX_POINTS(self) -> Decimal:
+        return _get_backtesting_config().scalability_alpha_max_points
 
-    # Commission impact score thresholds
-    COMMISSION_IMPACT_EXCELLENT_THRESHOLD: Decimal = Decimal("0.10")  # < 10% = excellent
-    COMMISSION_IMPACT_GOOD_THRESHOLD: Decimal = Decimal("0.15")  # < 15% = good
-    COMMISSION_IMPACT_POOR_THRESHOLD: Decimal = Decimal("0.15")  # >= 15% = poor
+    @property
+    def SCALABILITY_COMMISSION_MAX_POINTS(self) -> Decimal:
+        return _get_backtesting_config().scalability_commission_max_points
 
-    # Win rate stability penalty factor
-    WIN_RATE_STABILITY_PENALTY_FACTOR: Decimal = Decimal("100")  # Multiplier for std dev penalty
+    @property
+    def SCALABILITY_STABILITY_MAX_POINTS(self) -> Decimal:
+        return _get_backtesting_config().scalability_stability_max_points
+
+    @property
+    def COMMISSION_IMPACT_EXCELLENT_THRESHOLD(self) -> Decimal:
+        return Decimal("0.10")
+
+    @property
+    def COMMISSION_IMPACT_GOOD_THRESHOLD(self) -> Decimal:
+        return _get_backtesting_config().commission_impact_warning_threshold
+
+    @property
+    def COMMISSION_IMPACT_POOR_THRESHOLD(self) -> Decimal:
+        return _get_backtesting_config().commission_impact_warning_threshold
+
+    @property
+    def WIN_RATE_STABILITY_PENALTY_FACTOR(self) -> Decimal:
+        return Decimal("100")
 
 
-@dataclass(frozen=True)
 class ExecutionEngineConstants:
-    """Constants for pessimistic execution engine."""
+    """
+    DEPRECATED: Use get_config().backtesting instead.
 
-    # Slippage settings (in basis points)
-    BASE_SLIPPAGE_BPS: Decimal = Decimal("5")  # 5 bps base slippage
-    OPTIMISTIC_SLIPPAGE_BPS: Decimal = Decimal("2")  # 2 bps for optimistic mode
-    STOP_SLIPPAGE_MULTIPLIER: Decimal = Decimal("2")  # 2x slippage on stops
+    This class provides backwards compatibility by delegating to CentralizedConfig.
+    """
 
-    # Volatility multiplier for slippage calculation
-    VOLATILITY_MULTIPLIER: Decimal = Decimal("2")  # 2x slippage for high volatility
+    @property
+    def BASE_SLIPPAGE_BPS(self) -> Decimal:
+        return _get_backtesting_config().base_slippage_bps
 
-    # Execution timing settings
-    ENABLE_NEXT_DAY_EXECUTION: bool = True  # Signal at close t, execute at open t+1
+    @property
+    def OPTIMISTIC_SLIPPAGE_BPS(self) -> Decimal:
+        return _get_backtesting_config().optimistic_slippage_bps
+
+    @property
+    def STOP_SLIPPAGE_MULTIPLIER(self) -> Decimal:
+        return _get_backtesting_config().stop_slippage_multiplier
+
+    @property
+    def VOLATILITY_MULTIPLIER(self) -> Decimal:
+        return _get_backtesting_config().volatility_multiplier
+
+    @property
+    def ENABLE_NEXT_DAY_EXECUTION(self) -> bool:
+        return _get_backtesting_config().enable_next_day_execution
 
 
-@dataclass(frozen=True)
 class BacktestingConstants:
     """
+    DEPRECATED: Use get_config().backtesting instead.
+
     Main container for all backtesting constants.
 
-    Usage:
+    Usage (OLD - deprecated):
         from app.backtesting.constants import BACKTESTING_CONSTANTS
-
-        # Access capital scale constants
         capital_levels = BACKTESTING_CONSTANTS.capital_scale.DEFAULT_CAPITAL_LEVELS
-
-        # Access execution engine constants
         base_slippage = BACKTESTING_CONSTANTS.execution.BASE_SLIPPAGE_BPS
+
+    Usage (NEW - recommended):
+        from app.core.centralized_config import get_config
+        config = get_config()
+        capital_levels = config.backtesting.default_capital_levels
+        base_slippage = config.backtesting.base_slippage_bps
     """
 
-    capital_scale: CapitalScaleConstants = field(default_factory=CapitalScaleConstants)
-    execution: ExecutionEngineConstants = field(default_factory=ExecutionEngineConstants)
+    @property
+    def capital_scale(self) -> CapitalScaleConstants:
+        return CapitalScaleConstants()
+
+    @property
+    def execution(self) -> ExecutionEngineConstants:
+        return ExecutionEngineConstants()
 
 
-# Singleton instance for easy import
+# Singleton instance for easy import (backwards compatibility)
 BACKTESTING_CONSTANTS = BacktestingConstants()
 
 
 # Convenience functions for backward compatibility
 def get_default_capital_levels() -> List[Decimal]:
     """Get default capital levels for scale analysis."""
-    return BACKTESTING_CONSTANTS.capital_scale.DEFAULT_CAPITAL_LEVELS.copy()
+    return _get_backtesting_config().default_capital_levels.copy()
 
 
 def get_commission_models() -> Dict[Decimal, CommissionModel]:
     """Get commission models by capital level."""
-    return BACKTESTING_CONSTANTS.capital_scale.COMMISSION_MODELS.copy()
+    return CapitalScaleConstants().COMMISSION_MODELS.copy()
 
 
 def get_base_slippage_bps() -> Decimal:
     """Get base slippage in basis points."""
-    return BACKTESTING_CONSTANTS.execution.BASE_SLIPPAGE_BPS
+    return _get_backtesting_config().base_slippage_bps
 
 
 def get_adv_limit_pct() -> Decimal:
     """Get default ADV limit as percentage."""
-    return BACKTESTING_CONSTANTS.capital_scale.ADV_LIMIT_PCT_DEFAULT
+    return _get_backtesting_config().adv_limit_pct

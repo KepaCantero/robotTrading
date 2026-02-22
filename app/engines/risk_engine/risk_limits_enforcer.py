@@ -27,7 +27,7 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 
 from app.core.centralized_config import get_config
-from app.models.portfolio import Portfolio
+from app.domain.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
 

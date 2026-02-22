@@ -10,6 +10,8 @@ This prevents over-optimistic backtesting results that assume:
 - Instant execution at signal price
 - Best-case execution within bars
 - No liquidity constraints
+
+SINGLE SOURCE OF TRUTH: All values from CentralizedConfig.
 """
 
 import logging
@@ -19,17 +21,20 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
-from app.backtesting.constants import BACKTESTING_CONSTANTS
+# SINGLE SOURCE OF TRUTH: Use CentralizedConfig instead of constants.py
+from app.core.centralized_config import get_config
 from app.backtesting.services.transaction_cost_model import (
     BrokerType,
     TransactionCostModel,
 )
-from app.models.market_data import Quote
+from app.domain.models.market_data import Quote
 
 logger = logging.getLogger(__name__)
 
-# Constants from configuration
-EXEC_CONSTANTS = BACKTESTING_CONSTANTS.execution
+
+def _get_backtesting_config():
+    """Helper to get backtesting config from CentralizedConfig."""
+    return get_config().backtesting
 
 
 class ExecutionType(str, Enum):
@@ -100,15 +105,19 @@ class PessimisticExecutionEngine:
         """
         Initialize execution engine.
 
+        SINGLE SOURCE OF TRUTH: All defaults from CentralizedConfig.
+
         Args:
             execution_type: Type of execution simulation
-            base_slippage_bps: Base slippage in basis points (default: from config)
+            base_slippage_bps: Base slippage in basis points (default: from CentralizedConfig)
             transaction_cost_model: Optional transaction cost model
-            enable_next_day_execution: If True, execute at next bar open (default: from config)
+            enable_next_day_execution: If True, execute at next bar open (default: from CentralizedConfig)
         """
+        config = _get_backtesting_config()
+
         self.execution_type = execution_type
         self.base_slippage_bps = (
-            base_slippage_bps if base_slippage_bps is not None else EXEC_CONSTANTS.BASE_SLIPPAGE_BPS
+            base_slippage_bps if base_slippage_bps is not None else config.base_slippage_bps
         )
         self.transaction_cost_model = transaction_cost_model or TransactionCostModel(
             broker=BrokerType.INTERACTIVE_BROKERS,
@@ -117,7 +126,7 @@ class PessimisticExecutionEngine:
         self.enable_next_day_execution = (
             enable_next_day_execution
             if enable_next_day_execution is not None
-            else EXEC_CONSTANTS.ENABLE_NEXT_DAY_EXECUTION
+            else config.enable_next_day_execution
         )
 
         self._open_positions: List[Position] = []
@@ -256,8 +265,9 @@ class PessimisticExecutionEngine:
         if execution_price is None:
             return None, position
 
-        # Calculate slippage on stop execution (using config multiplier)
-        slippage_bps = self.base_slippage_bps * EXEC_CONSTANTS.STOP_SLIPPAGE_MULTIPLIER
+        # Calculate slippage on stop execution (using config multiplier from CentralizedConfig)
+        config = _get_backtesting_config()
+        slippage_bps = self.base_slippage_bps * config.stop_slippage_multiplier
 
         # Apply slippage (worse for position holder)
         if position.side.lower() == "long":
@@ -305,13 +315,14 @@ class PessimisticExecutionEngine:
         """
         Calculate slippage based on volatility.
 
-        Higher volatility = higher slippage (using config multiplier).
+        Higher volatility = higher slippage (using config multiplier from CentralizedConfig).
         """
         slippage = self.base_slippage_bps
 
         if volatility:
-            # Volatility multiplier from config
-            vol_multiplier = Decimal("1") + (volatility * EXEC_CONSTANTS.VOLATILITY_MULTIPLIER)
+            # Volatility multiplier from CentralizedConfig
+            config = _get_backtesting_config()
+            vol_multiplier = Decimal("1") + (volatility * config.volatility_multiplier)
             slippage = slippage * vol_multiplier
 
         return slippage
@@ -329,10 +340,13 @@ class PessimisticExecutionEngine:
         Returns:
             Dictionary with comparison metrics
         """
-        # Run optimistic simulation (using config slippage for optimistic)
+        # Get optimistic slippage from CentralizedConfig
+        config = _get_backtesting_config()
+
+        # Run optimistic simulation (using optimistic slippage from config)
         PessimisticExecutionEngine(
             execution_type=ExecutionType.OPTIMISTIC,
-            base_slippage_bps=EXEC_CONSTANTS.OPTIMISTIC_SLIPPAGE_BPS,
+            base_slippage_bps=config.optimistic_slippage_bps,
         )
 
         # Run pessimistic simulation

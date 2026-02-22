@@ -22,8 +22,8 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 
-from app.models.market_data import Quote
-from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
+from app.domain.models.market_data import Quote
+from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 from .base import BaseStrategyEngine
 
@@ -154,8 +154,8 @@ class BaseStrategyEnsemble(BaseStrategyEngine):
         Returns:
             True si pasa el risk check
         """
-        # Check básico de confianza
-        min_confidence = 50.0
+        # Check básico de confianza - lowered from 50.0 to 30.0 for ensemble flexibility
+        min_confidence = 30.0
         if signal.confidence < min_confidence:
             return False
 
@@ -411,15 +411,15 @@ class RegimeBasedSelector(BaseStrategyEnsemble):
         """
         super().__init__(config)
 
-        # Mapeo de régimen a estrategias preferidas
+        # Mapeo de régimen a estrategias preferidas (using correct engine names)
         self.regime_strategy_map: Dict[str, List[str]] = config.get(
             "regime_strategy_map",
             {
-                self.REGIME_TRENDING_UP: ["trend_following", "momentum", "breakout"],
-                self.REGIME_TRENDING_DOWN: ["trend_following", "momentum"],
-                self.REGIME_MEAN_REVERTING: ["mean_reversion", "pairs_trading", "arbitrage"],
-                self.REGIME_HIGH_VOLATILITY: ["breakout", "momentum"],
-                self.REGIME_LOW_VOLATILITY: ["mean_reversion", "arbitrage"],
+                self.REGIME_TRENDING_UP: ["trend_following", "momentum_engine", "breakout"],
+                self.REGIME_TRENDING_DOWN: ["trend_following", "momentum_engine"],
+                self.REGIME_MEAN_REVERTING: ["mean_reversion_engine"],
+                self.REGIME_HIGH_VOLATILITY: ["breakout", "momentum_engine"],
+                self.REGIME_LOW_VOLATILITY: ["mean_reversion_engine"],
                 self.REGIME_UNKNOWN: [],  # Usar todas
             },
         )
@@ -430,13 +430,17 @@ class RegimeBasedSelector(BaseStrategyEnsemble):
 
         # Historial de precios para detección de régimen
         self.price_history: List[float] = []
-        self.regime_lookback = config.get("regime_lookback", 50)
+        self.regime_lookback = config.get("regime_lookback", 100)  # Increased from 50 to 100
 
-        # Umbrales para detección de régimen
+        # Umbrales para detección de régimen (improved defaults)
         self.trend_threshold = config.get("trend_threshold", 0.02)  # 2% para tendencia
         self.volatility_threshold = config.get(
-            "volatility_threshold", 0.025
-        )  # 2.5% volatilidad alta
+            "volatility_threshold", 0.30  # Increased from 0.025 to 0.30 (30% annualized)
+        )
+
+        # Hysteresis for regime changes - require N consecutive detections
+        self.regime_history: List[str] = []
+        self.hysteresis_count = config.get("hysteresis_count", 3)  # Require 3 consecutive detections
 
         logger.info("RegimeBasedSelector initialized")
 
@@ -479,7 +483,7 @@ class RegimeBasedSelector(BaseStrategyEnsemble):
         return self._combine_signals(strategy_signals, market_data)
 
     def _detect_regime(self) -> None:
-        """Detectar régimen de mercado actual."""
+        """Detectar régimen de mercado actual with hysteresis."""
         if len(self.price_history) < self.regime_lookback:
             self.current_regime = self.REGIME_UNKNOWN
             self.regime_confidence = 0.0
@@ -489,7 +493,6 @@ class RegimeBasedSelector(BaseStrategyEnsemble):
 
         # Calcular retorno y volatilidad
         returns = np.diff(prices) / prices[:-1]
-        (prices[-1] / prices[0]) - 1
         volatility = np.std(returns) * np.sqrt(252)  # Anualizada
 
         # Calcular tendencia (pendiente de regresión lineal)
@@ -497,22 +500,45 @@ class RegimeBasedSelector(BaseStrategyEnsemble):
         slope = np.polyfit(x, prices, 1)[0]
         normalized_slope = slope / np.mean(prices)
 
-        # Determinar régimen
-        if volatility > self.volatility_threshold:
-            self.current_regime = self.REGIME_HIGH_VOLATILITY
-            self.regime_confidence = min(volatility / self.volatility_threshold, 2.0) * 50
-        elif volatility < self.volatility_threshold * 0.5:
-            self.current_regime = self.REGIME_LOW_VOLATILITY
-            self.regime_confidence = 70.0
-        elif normalized_slope > self.trend_threshold:
-            self.current_regime = self.REGIME_TRENDING_UP
-            self.regime_confidence = min(abs(normalized_slope) / self.trend_threshold, 2.0) * 50
+        # Detect raw regime (before hysteresis)
+        detected_regime = self.REGIME_UNKNOWN
+        detected_confidence = 0.0
+
+        # IMPORTANT: Check trend FIRST, then volatility
+        # This ensures trending markets are identified correctly
+        if normalized_slope > self.trend_threshold:
+            detected_regime = self.REGIME_TRENDING_UP
+            detected_confidence = min(abs(normalized_slope) / self.trend_threshold, 2.0) * 50
         elif normalized_slope < -self.trend_threshold:
-            self.current_regime = self.REGIME_TRENDING_DOWN
-            self.regime_confidence = min(abs(normalized_slope) / self.trend_threshold, 2.0) * 50
+            detected_regime = self.REGIME_TRENDING_DOWN
+            detected_confidence = min(abs(normalized_slope) / self.trend_threshold, 2.0) * 50
+        elif volatility > self.volatility_threshold:
+            detected_regime = self.REGIME_HIGH_VOLATILITY
+            detected_confidence = min(volatility / self.volatility_threshold, 2.0) * 50
+        elif volatility < self.volatility_threshold * 0.4:
+            detected_regime = self.REGIME_LOW_VOLATILITY
+            detected_confidence = 70.0
         else:
-            self.current_regime = self.REGIME_MEAN_REVERTING
-            self.regime_confidence = 60.0
+            detected_regime = self.REGIME_MEAN_REVERTING
+            detected_confidence = 60.0
+
+        # Apply hysteresis - only change regime if detected N consecutive times
+        self.regime_history.append(detected_regime)
+        if len(self.regime_history) > self.hysteresis_count * 2:
+            self.regime_history = self.regime_history[-self.hysteresis_count * 2 :]
+
+        # Check if we have enough history and if the detected regime is consistent
+        if len(self.regime_history) >= self.hysteresis_count:
+            recent_regimes = self.regime_history[-self.hysteresis_count :]
+            if all(r == detected_regime for r in recent_regimes):
+                # Regime is stable, update current regime
+                self.current_regime = detected_regime
+                self.regime_confidence = detected_confidence
+            # else: keep current regime (hysteresis in action)
+        else:
+            # Not enough history yet, use detected regime
+            self.current_regime = detected_regime
+            self.regime_confidence = detected_confidence
 
     def _select_strategies_for_regime(self) -> List[str]:
         """Seleccionar estrategias apropiadas para el régimen actual."""

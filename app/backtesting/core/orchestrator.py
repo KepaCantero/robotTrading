@@ -3,6 +3,8 @@ Orchestrator for backtesting operations.
 
 This module provides coordination and orchestration for backtesting operations,
 including result management, parallel execution, and test coordination.
+
+SINGLE SOURCE OF TRUTH: All defaults from CentralizedConfig.
 """
 
 import logging
@@ -15,6 +17,9 @@ import numpy as np
 
 from app.backtesting.models import BacktestConfig, BacktestResult
 
+# SINGLE SOURCE OF TRUTH: Import CentralizedConfig
+from app.core.centralized_config import get_config
+
 # Forward reference for type hints
 if TYPE_CHECKING:
     from app.backtesting.core.executor import BacktestExecutor
@@ -22,26 +27,58 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def _get_backtesting_config():
+    """Helper to get backtesting config from CentralizedConfig."""
+    return get_config().backtesting
+
+
 class BacktestDefaults:
     """
     Centralized backtest defaults and constants.
 
-    This class provides a single source of truth for default values
-    used across the backtesting system.
+    DEPRECATED: This class now delegates to CentralizedConfig.
+    SINGLE SOURCE OF TRUTH: All values from CentralizedConfig.
 
     NOTE: These defaults are used ONLY when configuration is not provided.
     Always use proper YAML configuration with risk management parameters.
     """
 
-    COMMISSION = Decimal("10.0")  # $10 per trade (realistic)
-    SLIPPAGE = Decimal("0.1")  # 0.1% slippage
-    INITIAL_CAPITAL = Decimal("100000")
-    MAX_POSITION_SIZE = Decimal("0.10")  # 10% of capital (conservative)
-    RISK_FREE_RATE = Decimal("0.02")  # 2% annual
-    STOP_LOSS_PERCENTAGE = Decimal("5.0")  # 5% stop loss
-    TAKE_PROFIT_PERCENTAGE = Decimal("10.0")  # 10% take profit
+    @property
+    def COMMISSION(self) -> Decimal:
+        """Default commission per trade."""
+        return _get_backtesting_config().default_commission_fixed
 
-    # Default metric thresholds
+    @property
+    def SLIPPAGE(self) -> Decimal:
+        """Default slippage percentage."""
+        return _get_backtesting_config().base_slippage_bps / Decimal("100")  # bps to %
+
+    @property
+    def INITIAL_CAPITAL(self) -> Decimal:
+        """Default initial capital."""
+        return Decimal("100000")
+
+    @property
+    def MAX_POSITION_SIZE(self) -> Decimal:
+        """Default max position size as % of capital."""
+        return _get_backtesting_config().default_max_position_size
+
+    @property
+    def RISK_FREE_RATE(self) -> Decimal:
+        """Default risk-free rate."""
+        return _get_backtesting_config().risk_free_rate
+
+    @property
+    def STOP_LOSS_PERCENTAGE(self) -> Decimal:
+        """Default stop loss percentage."""
+        return _get_backtesting_config().default_stop_loss_pct * Decimal("100")  # Convert to %
+
+    @property
+    def TAKE_PROFIT_PERCENTAGE(self) -> Decimal:
+        """Default take profit percentage."""
+        return _get_backtesting_config().default_take_profit_pct * Decimal("100")  # Convert to %
+
+    # Default metric thresholds (these are static)
     SHARPE_RATIO_EXCELLENT = 2.0
     SHARPE_RATIO_GOOD = 1.0
     SHARPE_RATIO_WARNING = 0.5

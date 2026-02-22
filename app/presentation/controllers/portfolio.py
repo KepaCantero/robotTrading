@@ -21,8 +21,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from requests.exceptions import HTTPError, RequestException
 
-from app.models.portfolio import AssetUniverse, MarketRegimeData, Position
-from app.providers.paper_trading import PaperTradingPortfolioProvider
+from app.domain.models.portfolio import AssetUniverse, MarketRegimeData, Position
+from app.infrastructure.providers.paper_trading import PaperTradingPortfolioProvider
 from app.services.portfolio_service import PortfolioService
 
 # Constants

@@ -1,37 +1,81 @@
-"""Domain models for the trading system.
+"""
+Portfolio, Signal, and Asset models and interfaces.
 
-This module contains pure domain models that represent business concepts
-without dependencies on external frameworks or infrastructure.
-
-Models:
-- InputProfile: User investment parameters and constraints
-- InvestmentObjective: User investment goal enum
-- RiskTolerance: Risk tolerance level enum
-- InputProfileValidator: Validator for creating InputProfile from user input
-- StrategyType: Enum of available trading strategies
-- RiskConfig: Risk parameters derived from risk tolerance
-- TaxConfig: Tax optimization parameters
-- SystemConfiguration: Complete system configuration
+This module exports the core portfolio, signal, and asset models and interfaces for the AlgoTrading system.
 """
 
-from app.domain.models.input_profile import (
-    InputProfile,
-    InputProfileValidator,
-    InvestmentObjective,
-    RiskTolerance,
-)
-from app.domain.models.risk_config import RiskConfig
-from app.domain.models.strategy_type import StrategyType
-from app.domain.models.system_configuration import SystemConfiguration
-from app.domain.models.tax_config import TaxConfig
+# Optional imports - pydantic is a required dependency for momentum models
+try:
+    from .momentum import (
+        MomentumAnalysis,
+        MomentumFilter,
+        MomentumSignal,
+        MomentumStrategy,
+        MomentumType,
+        TechnicalIndicators,
+        Timeframe,
+    )
 
+    MOMENTUM_AVAILABLE = True
+except ImportError:
+    # pydantic not available - momentum models will not be available
+    MOMENTUM_AVAILABLE = False
+    MomentumAnalysis = None
+    MomentumFilter = None
+    MomentumSignal = None
+    MomentumStrategy = None
+    MomentumType = None
+    TechnicalIndicators = None
+    Timeframe = None
+
+from .portfolio import (
+    AssetClass,
+    AssetUniverse,
+    CircuitBreaker,
+    CircuitBreakerState,
+    MarketRegime,
+    MarketRegimeData,
+    Portfolio,
+    PortfolioProvider,
+    Position,
+    TradingClientInterface,
+)
+from .signal import (
+    MarketData,
+    Signal,
+    SignalPriorityQueue,
+    SignalScorer,
+    SignalSource,
+    SignalStrength,
+    SignalType,
+)
+
+# Portfolio models
 __all__ = [
-    "InputProfile",
-    "InputProfileValidator",
-    "InvestmentObjective",
-    "RiskTolerance",
-    "StrategyType",
-    "RiskConfig",
-    "TaxConfig",
-    "SystemConfiguration",
+    "AssetClass",
+    "Position",
+    "Portfolio",
+    "MarketRegime",
+    "MarketRegimeData",
+    "AssetUniverse",
+    "CircuitBreakerState",
+    "CircuitBreaker",
+    "PortfolioProvider",
+    "TradingClientInterface",
+    # Signal models
+    "SignalType",
+    "SignalStrength",
+    "SignalSource",
+    "Signal",
+    "MarketData",
+    "SignalScorer",
+    "SignalPriorityQueue",
+    # Momentum models
+    "MomentumSignal",
+    "MomentumType",
+    "Timeframe",
+    "TechnicalIndicators",
+    "MomentumStrategy",
+    "MomentumAnalysis",
+    "MomentumFilter",
 ]
