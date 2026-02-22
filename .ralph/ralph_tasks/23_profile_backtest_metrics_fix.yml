@@ -1,47 +1,49 @@
 # ============================================
 # Ralph Task 23: Profile Backtest Metrics Fix
 # ============================================
-# PRIORIDAD: P0 - CRITICO
-# FASE: Phase 7 - Backtesting Quality
-# OBJETIVO: Diagnosticar y arreglar Sharpe ratio negativo y métricas pobres
-# TIEMPO: ~16 horas (con iteraciones automáticas)
+# PRIORITY: P0 - CRITICAL
+# PHASE: Phase 7 - Backtesting Quality
+# OBJECTIVE: Fix trading signal that causes negative Sharpe in bull market
+# TIME: ~8 hours
 #
-# DIAGNOSIS:
-#   - Baseline Sharpe: -1099.01 (extremadamente pobre)
-#   - Optimized Sharpe: -166.53 (mejora 84.8% pero todavia pobre)
-#   - Max Drawdown: -18.29%
-#   - Return: N/A
-#   - Status: REJECTED
+# UPDATED DIAGNOSIS (2026-02-21):
+#   - Sharpe BEFORE: -1099.01 (calculation bug) -> NOW: -0.67 (fixed 99.9%)
+#   - ROOT CAUSE: Signal generation logic flawed for 2021 bull market
+#   - SYMPTOM: 0% win rate, all trades hit stop loss
+#   - Return: N/A (bug in test - uses key 'total_return' but should be 'return_pct')
+#   - MaxDD: -18.29% (acceptable)
+#   - Status: REJECTED (due to negative Sharpe)
 #
-# MECANISMO DE AUTO-ITERACION:
-#   - La tarea se retroalimenta automáticamente
-#   - Itera hasta alcanzar métricas objetivo o max_iterations
-#   - Aprende de intentos fallidos
-#   - Guarda historial de intentos en memory
+# IDENTIFIED PROBLEM:
+#   The momentum_modular strategy generates signals that go against the market:
+#   - In 2021 bull market, should generate more BUY signals
+#   - But filters (RSI, EMA) are configured for mean-reversion
+#   - Result: counter-trend entry -> stop loss triggers -> 0% win rate
 #
-# Depends on: 17_backtest_fixes (validadores P&L y drawdown)
+# AUTO-ITERATION MECHANISM:
+#   - Task self-feeds automatically
+#   - Iterates until reaching Sharpe > 0.5 and Win Rate > 40%
+#   - Learns from failed attempts
+#
+# Depends on: None (isolated problem)
 # ============================================================================
 
 event_loop:
   prompt_file: ".ralph/ralph_tasks/prompts/23_profile_backtest_metrics_fix.md"
   completion_promise: "PROFILE_BACKTEST_METRICS_FIX_COMPLETE"
-  max_iterations: 300  # Aumentado para permitir iteraciones de auto-mejora
-  max_runtime_seconds: 172800  # 48 hours - tiempo para múltiples iteraciones
-  checkpoint_interval: 3  # Checkpoint más frecuente
+  max_iterations: 100
+  max_runtime_seconds: 86400  # 24 hours
+  checkpoint_interval: 3
   starting_event: "metrics_fix.start"
 
-# ============================================================================
-# VARIABLE DE ESTADO - Se mantiene entre iteraciones
-# ============================================================================
 variables:
   iteration_count: 0
-  max_iterations_allowed: 50  # Max 50 intentos de fix
+  max_iterations_allowed: 30
   target_sharpe: 0.5
-  target_return: 0.0
-  target_win_rate: 0.45
-  current_best_sharpe: -9999
-  best_params: null
-  attempt_history: []  # Historial de intentos para learning
+  target_win_rate: 0.40
+  current_best_sharpe: -0.67
+  current_best_win_rate: 0.0
+  attempt_history: []
 
 cli:
   backend: "claude"
@@ -50,453 +52,418 @@ core:
   specs_dir: "./specs/"
 
 hats:
-  metrics_diagnostician:
-    name: "Metrics Diagnostician"
-    description: "Diagnostica problemas con Sharpe ratio y metricas de backtesting"
-    triggers: ["metrics_fix.start", "metrics_fix.diagnose", "metrics_fix.iterate"]
-    publishes: ["metrics_fix.diagnose", "metrics_fix.fix_params", "metrics_fix.fix_strategy", "metrics_fix.fix_calculation", "metrics_fix.blocked", "metrics_fix.iterate"]
-    default_publishes: "metrics_fix.diagnose"
+  signal_logic_analyzer:
+    name: "Signal Logic Analyzer"
+    description: "Analyzes why signal generates 0% win rate in bull market"
+    triggers: ["metrics_fix.start", "metrics_fix.analyze_signals"]
+    publishes: ["metrics_fix.fix_entry", "metrics_fix.fix_filters", "metrics_fix.fix_exit", "metrics_fix.fix_test_bug", "metrics_fix.blocked"]
+    default_publishes: "metrics_fix.analyze_signals"
     instructions: |
-      ## PROFILE BACKTEST METRICS FIX - DIAGNOSTICO CON AUTO-ITERACION
+      ## SIGNAL GENERATION ANALYSIS - BULL MARKET ISSUE
 
-      **OBJETIVO:** Arreglar Sharpe ratio negativo (-1099.01 baseline, -166.53 optimizado)
-      y lograr metricas aceptables para que el profile investor sea APPROVED.
+      **CURRENT STATUS:**
+      - Sharpe: -0.67 (calculation bug fixed)
+      - Win Rate: 0% (MAIN PROBLEM)
+      - Return: N/A (bug in test - see below)
+      - MaxDD: -18.29%
 
-      **MECANISMO DE AUTO-ITERACION:**
-      Esta tarea se retroalimenta automaticamente. Si un fix no funciona,
-      vuelve a diagnosticar con la nueva informacion y prueba otro enfoque.
+      **ROOT PROBLEM:**
+      Signal generation logic is fundamentally flawed for 2021 bull market.
+      All trades hit stop loss with 0% win rate.
 
-      ### VARIABLE DE ESTADO (consultar en cada iteracion):
-      ```yaml
-      iteration_count: {{iteration_count}}
-      max_iterations_allowed: 50
-      target_sharpe: 0.5
-      target_return: 0.0
-      current_best_sharpe: {{current_best_sharpe}}
-      best_params: {{best_params}}
-      ```
+      ### PHASE 1: FIX BUG IN TEST (Return = N/A)
 
-      ### FASE 1: CARGAR HISTORIAL DE INTENTOS
-
-      Antes de diagnosticar, leer intentos anteriores:
-      ```bash
-      # Leer historial si existe
-      cat .ralph/outputs/23_attempt_history.json 2>/dev/null || echo "[]"
-      ```
-
-      Aprender de intentos fallidos:
-      - Si RSI adjustment no funcionó → probar volume adjustment
-      - Si parameter widening no funcionó → probar strategy config
-      - Si todo falló → revisar cálculo de Sharpe
-
-      ### FASE 2: DIAGNOSTICO INICIAL
-
-      #### 2.1 Analizar Sharpe Ratio Calculator
-      ```bash
-      grep -rn "sharpe_ratio" app/backtesting/ --include="*.py" | head -30
-      cat app/backtesting/performance_calculator.py | grep -A 50 "def.*sharpe"
-      ```
-
-      #### 2.2 Verificar datos de entrada
-      ```bash
-      cat config/profile_batch_backtest.yaml | grep -A 20 "symbols"
-      cat config/profile_batch_backtest.yaml | grep -A 10 "backtest_period"
-      ```
-
-      #### 2.3 Analizar estrategia actual
-      ```bash
-      cat config/strategies/momentum_modular.yaml
-      cat config/profile_optimization.yaml | head -100
-      ```
-
-      ### FASE 3: IDENTIFICAR CAUSAS (con prioridad basada en historial)
-
-      1. **Sharpe negativo extremo (-1099) indica:**
-         - [ ] Retorno promedio negativo
-         - [ ] Volatilidad casi cero (division por ~0)
-         - [ ] Error en calculo de returns
-         - [ ] Datos insuficientes o corruptos
-
-      2. **Return N/A indica:**
-         - [ ] No se calcularon retornos
-         - [ ] No hubo trades cerrados
-         - [ ] Error en equity curve
-
-      ### FASE 4: CATEGORIZAR Y RUTEAR
-
-      Basado en diagnostico E historial de intentos, decidir:
-
-      - **A) Bug en cálculo** → `metrics_fix.fix_calculation`
-      - **B) Parametros restrictivos** → `metrics_fix.fix_params`
-      - [ ] **C) Estrategia config** → `metrics_fix.fix_strategy`
-      - [ ] **D) Necesita mas iteracion** → `metrics_fix.iterate`
-
-      ### GUARDAR ESTADO ANTES DE CONTINUAR:
-      ```bash
-      # Incrementar contador
-      NEW_ITER=$(({{iteration_count}} + 1))
-
-      # Guardar diagnostico
-      echo "{
-        \"iteration\": $NEW_ITER,
-        \"timestamp\": \"$(date -Iseconds)\",
-        \"diagnosis\": \"<diagnostico actual>\",
-        \"action_taken\": \"<accion a tomar>\"
-      }" >> .ralph/outputs/23_attempt_history.json
-      ```
-
-      ### Eventos:
-      - Fix calculation bug: `ralph emit "metrics_fix.fix_calculation" "issue=..."`
-      - Fix params: `ralph emit "metrics_fix.fix_params" "issue=..."`
-      - Fix strategy: `ralph emit "metrics_fix.fix_strategy" "issue=..."`
-      - Nueva iteracion: `ralph emit "metrics_fix.iterate" "reason=need_different_approach"`
-      - Bloqueado: `ralph emit "metrics_fix.blocked" "error=..."`
-
-  params_fixer:
-    name: "Parameters Fixer"
-    description: "Arregla parametros de optimizacion y configuracion"
-    triggers: ["metrics_fix.fix_params"]
-    publishes: ["metrics_fix.validate", "metrics_fix.blocked"]
-    default_publishes: "metrics_fix.validate"
-    instructions: |
-      ## FIX PARAMETROS DE OPTIMIZACION
-
-      ### FASE 4: AJUSTAR PARAMETROS
-
-      #### 4.1 Parametros actuales en profile_batch_backtester.py
+      El test usa key incorrecta:
       ```python
-      # Lineas 671-694 - rangos por defecto
-      rsi_buy_min, rsi_buy_max = 20, 35  # RSI muy restrictivo?
-      vol_min, vol_max = 1.0, 1.5        # Volume threshold
+      # tests/backtesting/test_profile_backtest_simple.py:82
+      # INCORRECTO:
+      result.baseline_results.get('total_return', 'N/A')  # <- key no existe
 
-      # Otros parametros
-      ema_short: 5-20
-      ema_long: 20-50
-      stop_loss: 0.01-0.05
-      take_profit: 0.05-0.20
+      # CORRECTO:
+      result.baseline_results.get('return_pct', 'N/A')    # <- key correcta
       ```
 
-      #### 4.2 Ajustar rangos basado en diagnostico
+      **ACCION:** Cambiar 'total_return' por 'return_pct' en lineas 82 y 88.
 
-      Si el problema es **pocos trades**:
-      - Ampliar RSI range: 15-45
-      - Reducir volume threshold: 0.8-1.3
-      - Ampliar EMA ranges
+      ### PHASE 2: ANALIZAR MOMENTUM_MODULAR STRATEGY
 
-      Si el problema es **trades perdedores**:
-      - Ajustar stop_loss ranges
-      - Ajustar take_profit ratios
-      - Considerar risk/reward minimo 1:2
+      ```bash
+      # Ver estructura de la estrategia
+      head -100 app/strategies/momentum_modular/strategy.py
 
-      #### 4.3 Actualizar profile_optimization.yaml
-
-      ```yaml
-      # Ajustar segun diagnostico
-      parameter_ranges:
-        rsi_filter:
-          buy_threshold:
-            min: 15   # Era 20
-            max: 45   # Era 35
-          sell_threshold:
-            min: 55
-            max: 85
-
-        ema_filter:
-          fast_period:
-            min: 8
-            max: 15
-          slow_period:
-            min: 20
-            max: 35
-
-        volume_filter:
-          min_volume_ratio:
-            min: 0.8  # Era 1.0
-            max: 1.2
-
-        risk_manager:
-          stop_loss_pct:
-            min: 0.02
-            max: 0.08
-          take_profit_pct:
-            min: 0.04
-            max: 0.15
+      # Ver logica de generacion de senales
+      grep -n "generate_signals\|def.*signal\|BUY\|SELL" app/strategies/momentum_modular/strategy.py
       ```
 
-      #### 4.4 Aumentar trials de optimizacion
+      ### PHASE 3: IDENTIFICAR PROBLEMA EN BULL MARKET
 
-      ```yaml
-      optimization:
-        n_trials: 200  # Era 100
-        timeout: 1800  # 30 min
+      En bull market 2021, una estrategia de momentum deberia:
+      - [OK] Generar mas BUY signals que SELL
+      - [OK] Seguir la tendencia alcista
+      - [OK] Permitir que winners corran
+
+      Si 0% win rate, probablemente:
+      - [X] Genera BUY cuando precio esta alto (FOMO entry)
+      - [X] Stop loss muy tight para la volatilidad
+      - [X] No respeta trend direction
+      - [X] Filtros (RSI, EMA) configurados para mean-reversion
+
+      ### PHASE 4: REVISAR FILTROS ACTUALES
+
+      ```bash
+      cat config/strategies/momentum_modular.yaml | grep -A 50 "filters:"
       ```
-
-      ### Eventos:
-      - Validar: `ralph emit "metrics_fix.validate" "fixed=params"`
-
-  strategy_fixer:
-    name: "Strategy Config Fixer"
-    description: "Arregla configuracion de estrategia momentum_modular"
-    triggers: ["metrics_fix.fix_strategy"]
-    publishes: ["metrics_fix.validate", "metrics_fix.blocked"]
-    default_publishes: "metrics_fix.validate"
-    instructions: |
-      ## FIX CONFIGURACION DE ESTRATEGIA
-
-      ### FASE 5: AJUSTAR STRATEGY CONFIG
-
-      #### 5.1 Revisar momentum_modular.yaml
 
       Verificar:
-      - Filtros habilitados
-      - Umbrales adecuados
-      - Modulo de decision activo
+      1. **RSI Filter**: En bull market, RSI puede estar alto (>70) por mucho tiempo
+         - Si buy_threshold = 30, solo compra en oversold (contra-trend)
+         - En bull market, necesita threshold mas alto (40-50)
 
-      #### 5.2 Ajustes recomendados
+      2. **EMA Filter**: Debe confirmar trend, no contradecirlo
+         - Si require_crossover = True, puede generar senales tardias
+
+      3. **Volume Filter**: Puede bloquear senales legitimas
+
+      ### PHASE 5: CATEGORIZAR PROBLEMA
+
+      - [ ] **A) ENTRY TIMING**: Compra en picos, no en pullbacks
+      - [ ] **B) FILTER CONFIG**: Filtros configurados para mean-reversion
+      - [ ] **C) STOP LOSS**: Demasiado tight para volatilidad
+      - [ ] **D) NO TREND FILTER**: No verifica trend direction
+
+      ### Eventos:
+      - Fix test bug: `ralph emit "metrics_fix.fix_test_bug" "issue=wrong_key"`
+      - Fix entry logic: `ralph emit "metrics_fix.fix_entry" "issue=..."`
+      - Fix filters: `ralph emit "metrics_fix.fix_filters" "issue=..."`
+      - Fix exit/stop: `ralph emit "metrics_fix.fix_exit" "issue=..."`
+      - Bloqueado: `ralph emit "metrics_fix.blocked" "error=..."`
+
+  test_bug_fixer:
+    name: "Test Bug Fixer"
+    description: "Arregla bug de key incorrecta en test"
+    triggers: ["metrics_fix.fix_test_bug"]
+    publishes: ["metrics_fix.validate"]
+    default_publishes: "metrics_fix.validate"
+    instructions: |
+      ## FIX TEST BUG - RETURN N/A
+
+      ### PROBLEMA
+      El test busca 'total_return' pero el backtester retorna 'return_pct'
+
+      ### FIX EN tests/backtesting/test_profile_backtest_simple.py
+
+      Linea 82 (baseline):
+      ```python
+      # ANTES:
+      print(f"  Return: {result.baseline_results.get('total_return', 'N/A')}%")
+
+      # DESPUES:
+      print(f"  Return: {result.baseline_results.get('return_pct', 'N/A')}%")
+      ```
+
+      Linea 88 (optimizado):
+      ```python
+      # ANTES:
+      print(f"  Return: {result.optimization_results.get('total_return', 'N/A')}%")
+
+      # DESPUES:
+      print(f"  Return: {result.optimization_results.get('return_pct', 'N/A')}%")
+      ```
+
+      ### VERIFICAR
+      ```bash
+      python tests/backtesting/test_profile_backtest_simple.py 2>&1 | grep "Return:"
+      ```
+
+      ### Eventos:
+      - Validar: `ralph emit "metrics_fix.validate" "fixed=test_bug"`
+
+  entry_fixer:
+    name: "Entry Logic Fixer"
+    description: "Arregla logica de entrada para bull markets"
+    triggers: ["metrics_fix.fix_entry"]
+    publishes: ["metrics_fix.validate", "metrics_fix.iterate"]
+    default_publishes: "metrics_fix.validate"
+    instructions: |
+      ## FIX ENTRY LOGIC FOR BULL MARKET
+
+      ### PROBLEMA TIPICO EN MOMENTUM
+      En bull market, momentum strategies a menudo:
+      1. Compran en el pico (FOMO)
+      2. El precio hace pullback y dispara stop loss
+      3. Resultado: 0% win rate
+
+      ### FIX 1: TREND CONFIRMATION
+      Antes de entrar, verificar que el trend es alcista:
+
+      ```python
+      # En decision_engine.py
+      def _confirm_trend(self, data: pd.DataFrame) -> bool:
+          price = data['close'].iloc[-1]
+          ema_50 = data['ema_50'].iloc[-1]
+          ema_200 = data['ema_200'].iloc[-1] if 'ema_200' in data.columns else ema_50
+
+          return price > ema_50 > ema_200  # Bull trend
+      ```
+
+      ### FIX 2: PULLBACK ENTRY (no breakout)
+      No comprar en nuevos highs, comprar en pullbacks:
+
+      ```python
+      def _is_pullback(self, data: pd.DataFrame) -> bool:
+          recent_high = data['high'].rolling(20).max().iloc[-1]
+          current_price = data['close'].iloc[-1]
+          pullback_pct = (recent_high - current_price) / recent_high
+
+          return 0.02 <= pullback_pct <= 0.05  # Pullback saludable
+      ```
+
+      ### FIX 3: MOMENTUM DIRECTION
+      Solo entrar si momentum es POSITIVO:
+
+      ```python
+      def _check_momentum(self, data: pd.DataFrame) -> bool:
+          roc_10 = data['close'].pct_change(10).iloc[-1]
+          return roc_10 > 0  # Momentum positivo
+      ```
+
+      ### Archivos a modificar:
+      - `app/strategies/momentum_modular/decision/decision_engine.py`
+      - `app/strategies/momentum_modular/strategy.py`
+
+      ### Eventos:
+      - Validar: `ralph emit "metrics_fix.validate" "fixed=entry"`
+
+  filter_fixer:
+    name: "Filter Config Fixer"
+    description: "Ajusta filtros para bull market conditions"
+    triggers: ["metrics_fix.fix_filters"]
+    publishes: ["metrics_fix.validate", "metrics_fix.iterate"]
+    default_publishes: "metrics_fix.validate"
+    instructions: |
+      ## FIX FILTER CONFIGURATION FOR BULL MARKET
+
+      ### PROBLEMA: Filtros configurados para mean-reversion
+      Los filtros actuales bloquean senales en bull market.
+
+      ### FIX EN config/strategies/momentum_modular.yaml
 
       ```yaml
-      # config/strategies/momentum_modular.yaml
+      # ANTES (configurado para mean-reversion):
+      filters:
+        rsi_filter:
+          buy_threshold: 30   # Solo compra oversold - MAL en bull market
+          sell_threshold: 70
 
+      # DESPUES (configurado para trend-following en bull market):
       filters:
         rsi_filter:
           enabled: true
           parameters:
             period: 14
           adaptive_thresholds:
-            trend_up:
-              buy_threshold: 35   # Mas permisivo
-              sell_threshold: 75
+            trend_up:           # BULL MARKET
+              buy_threshold: 45   # Permite compras en trend
+              sell_threshold: 85  # Solo vende en extremos
             trend_down:
-              buy_threshold: 25
-              sell_threshold: 65
-            range:
               buy_threshold: 30
               sell_threshold: 70
+            range:
+              buy_threshold: 35
+              sell_threshold: 65
 
         ema_filter:
           enabled: true
           parameters:
             fast_period: 12
             slow_period: 26
-          require_crossover: true
+          require_crossover: false  # Permitir entries en trend
+          require_price_above_ema: true
 
         volume_filter:
           enabled: true
           thresholds:
-            conservative:
-              min_volume_ratio: 1.0
-            balanced:
-              min_volume_ratio: 0.9  # Mas permisivo
-            aggressive:
-              min_volume_ratio: 0.8
-
-      risk_manager:
-        stop_loss:
-          method: "fixed_percentage"
-          value: 0.03
-        take_profit:
-          method: "fixed_percentage"
-          value: 0.08
-          min_risk_reward: 2.0  # Asegurar R:R positivo
+            min_volume_ratio: 0.8  # Mas permisivo (era 1.5)
+            require_confirmation: false
       ```
 
-      #### 5.3 Verificar modulo de decision
+      ### FIX EN profile_optimization.yaml
 
-      ```bash
-      # Ver decision engine
-      cat config/strategies/momentum_modular.yaml | grep -A 20 "decision:"
+      ```yaml
+      parameter_ranges:
+        rsi_filter:
+          buy_threshold:
+            min: 40   # Aumentado de 20
+            max: 55   # Aumentado de 35
+          sell_threshold:
+            min: 75
+            max: 90
+
+        volume_filter:
+          min_volume_ratio:
+            min: 0.7  # Reducido de 1.0
+            max: 1.0
       ```
+
+      ### Archivos a modificar:
+      - `config/strategies/momentum_modular.yaml`
+      - `config/backtesting/profile_optimization.yaml`
 
       ### Eventos:
-      - Validar: `ralph emit "metrics_fix.validate" "fixed=strategy"`
+      - Validar: `ralph emit "metrics_fix.validate" "fixed=filters"`
 
-  calculation_fixer:
-    name: "Calculation Bug Fixer"
-    description: "Arregla bugs en calculo de Sharpe ratio y returns"
-    triggers: ["metrics_fix.fix_calculation"]
-    publishes: ["metrics_fix.validate", "metrics_fix.blocked"]
+  exit_fixer:
+    name: "Exit/Stop Loss Fixer"
+    description: "Arregla stop loss para permitir winners"
+    triggers: ["metrics_fix.fix_exit"]
+    publishes: ["metrics_fix.validate", "metrics_fix.iterate"]
     default_publishes: "metrics_fix.validate"
     instructions: |
-      ## FIX BUGS EN CALCULO DE METRICAS
+      ## FIX EXIT/STOP LOSS LOGIC
 
-      ### FASE 5B: ANALIZAR SHARPE RATIO CALCULATOR
+      ### PROBLEMA: Stop loss muy tight, todos los trades lo disparan
 
-      El Sharpe de -1099 indica posible bug en el calculo.
+      ### FIX EN config/strategies/momentum_modular.yaml
 
-      #### 5B.1 Revisar performance_calculator.py
-      ```bash
-      cat app/backtesting/performance_calculator.py | grep -A 80 "def calculate_sharpe"
+      ```yaml
+      # ANTES:
+      risk_manager:
+        stop_loss_pct: 0.03  # 3% muy tight
+        take_profit_pct: 0.05
+
+      # DESPUES:
+      risk_manager:
+        stop_loss:
+          method: "atr"           # ATR-based, no % fijo
+          atr_multiplier: 2.0
+          max_stop_loss_pct: 0.08  # Cap at 8%
+
+        take_profit:
+          method: "fixed_percentage"
+          value: 0.12              # 12% - dejar correr
+          min_risk_reward: 2.0     # Minimum 2:1 R:R
+
+        trailing_stop:
+          enabled: true
+          activation_threshold: 0.05  # Activa despues de 5% profit
+          trail_pct: 0.05              # Trail 5% below highest
       ```
 
-      #### 5B.2 Verificar posibles bugs:
+      ### FIX EN risk_manager (si existe)
 
-      **Bug 1: Division por cero (volatilidad ~0)**
       ```python
-      # Si volatilidad es casi 0, Sharpe explota
-      # FIX: Añadir piso minimo
-      MIN_VOLATILITY = 0.001
-      volatility = max(volatility, MIN_VOLATILITY)
+      def calculate_stop_loss(self, entry_price, current_atr):
+          # ATR-based stop loss
+          stop_distance = current_atr * self.atr_multiplier
+          stop_price = entry_price - stop_distance
+
+          # Cap at max percentage
+          max_stop = entry_price * (1 - self.max_stop_loss_pct)
+          return max(stop_price, max_stop)
       ```
 
-      **Bug 2: Returns mal calculados**
-      ```python
-      # Verificar que returns se calculan desde equity curve
-      # NO desde precios individuales
-      returns = equity_curve.pct_change().dropna()
-      ```
-
-      **Bug 3: Annualizacion incorrecta**
-      ```python
-      # Para datos diarios: sqrt(252)
-      # Para datos horarios: sqrt(252 * 6.5)
-      annualization_factor = np.sqrt(252)
-      ```
-
-      **Bug 4: Risk-free rate handling**
-      ```python
-      # Sharpe = (return - rf) / volatility
-      # Asegurar que rf esta en la misma unidad que returns
-      ```
-
-      #### 5B.3 Verificar equity curve construction
-      ```bash
-      # Buscar como se construye la equity curve
-      grep -rn "equity_curve" app/backtesting/ --include="*.py" | head -20
-      ```
-
-      #### 5B.4 Aplicar fixes
-
-      Si se encuentra bug, aplicar fix en:
-      - `app/backtesting/performance_calculator.py`
-      - O donde corresponda
+      ### Archivos a modificar:
+      - `config/strategies/momentum_modular.yaml`
+      - `app/strategies/momentum_modular/risk_manager/` (si existe)
 
       ### Eventos:
-      - Validar: `ralph emit "metrics_fix.validate" "fixed=calculation"`
+      - Validar: `ralph emit "metrics_fix.validate" "fixed=exit"`
 
   validator:
-    name: "Metrics Validator with Feedback Loop"
+    name: "Metrics Validator"
     description: "Valida fixes y decide si iterar o completar"
     triggers: ["metrics_fix.validate", "metrics_fix.run_test"]
     publishes: ["metrics_fix.run_test", "metrics_fix.iterate", "metrics_fix.complete", "metrics_fix.blocked"]
     default_publishes: "metrics_fix.run_test"
     instructions: |
-      ## VALIDAR FIXES CON AUTO-FEEDBACK
+      ## VALIDAR FIXES
 
-      ### FASE 6: EJECUTAR TEST Y ANALIZAR
-
+      ### EJECUTAR TEST
       ```bash
-      # Ejecutar profile backtest simple
-      python tests/backtesting/test_profile_backtest_simple.py 2>&1 | tee .ralph/outputs/23_last_test_output.txt
+      python tests/backtesting/test_profile_backtest_simple.py 2>&1 | tee .ralph/outputs/23_last_test.txt
       ```
 
-      ### FASE 7: EXTRAER METRICAS ACTUALES
-
+      ### EXTRAER METRICAS
       ```bash
-      # Extraer Sharpe del output
-      LAST_SHARPE=$(grep "Sharpe:" .ralph/outputs/23_last_test_output.txt | tail -1 | awk '{print $2}')
-      echo "Last Sharpe: $LAST_SHARPE"
+      SHARPE=$(grep "Sharpe:" .ralph/outputs/23_last_test.txt | grep -v "#" | tail -1 | awk '{print $2}')
+      RETURN=$(grep "Return:" .ralph/outputs/23_last_test.txt | tail -1 | awk '{print $2}')
+      MAXDD=$(grep "MaxDD:" .ralph/outputs/23_last_test.txt | tail -1 | awk '{print $2}')
       ```
 
-      ### FASE 8: COMPARAR CON TARGETS Y BEST
+      ### CRITERIOS DE EXITO
 
-      | Metric | Target | Current | Best So Far | Status |
-      |--------|--------|---------|-------------|--------|
-      | Sharpe | > 0.5  | ?       | {{current_best_sharpe}} | ? |
-      | Return | > 0%   | ?       | -           | ? |
+      | Metrica | Target | Aceptable | Estado Actual |
+      |---------|--------|-----------|---------------|
+      | Sharpe | > 1.0 | > 0.5 | -0.67 |
+      | Win Rate | > 50% | > 40% | 0% |
+      | Max DD | < 20% | < 30% | -18.29% ✓ |
 
-      ### FASE 9: DECISION LOGIC (AUTO-ITERACION)
+      ### DECISION LOGIC
 
       ```python
-      # Pseudocodigo de decision
-      current_sharpe = extract_sharpe_from_output()
-
-      if current_sharpe >= 0.5:
-          # SUCCESS! Completar
+      if sharpe >= 0.5 and win_rate >= 0.40:
           emit("metrics_fix.complete", "status=SUCCESS")
-      elif current_sharpe > {{current_best_sharpe}}:
-          # Mejora! Guardar como best y seguir iterando
-          update_variable("current_best_sharpe", current_sharpe)
+      elif sharpe > -0.67 or win_rate > 0:
+          # Mejora
+          update_best()
           emit("metrics_fix.iterate", "reason=improving")
-      elif {{iteration_count}} >= {{max_iterations_allowed}}:
-          # Max iteraciones alcanzadas
+      elif iteration >= max_iterations:
           emit("metrics_fix.complete", "status=PARTIAL")
       else:
-          # No mejora, probar otro enfoque
-          emit("metrics_fix.iterate", "reason=need_different_approach")
+          emit("metrics_fix.iterate", "reason=try_different_fix")
       ```
 
-      ### FASE 10: ACTUALIZAR HISTORIAL
-
-      ```bash
-      # Guardar resultado de esta iteracion
-      cat >> .ralph/outputs/23_attempt_history.json << EOF
-      {
-        "iteration": {{iteration_count}},
-        "timestamp": "$(date -Iseconds)",
-        "sharpe": $LAST_SHARPE,
-        "action": "<que se hizo>",
-        "result": "<mejor/empeoró/sin_cambio>"
-      }
-      EOF
-      ```
+      ### SI NO MEJORA
+      - Si fix de entry no funciono → probar fix de filters
+      - Si fix de filters no funciono → probar fix de exit
+      - Si nada funciona → revisar estrategia completamente
 
       ### Eventos:
-      - Correr test: `ralph emit "metrics_fix.run_test" "iteration={{iteration_count}}"`
-      - Iterar mas: `ralph emit "metrics_fix.iterate" "reason=..."`
-      - Completado: `ralph emit "metrics_fix.complete" "status=SUCCESS/PARTIAL"`
+      - Iterar: `ralph emit "metrics_fix.iterate" "reason=..."`
+      - Completar: `ralph emit "metrics_fix.complete" "status=..."`
       - Bloqueado: `ralph emit "metrics_fix.blocked" "error=..."`
 
   final_reviewer:
-    name: "Final Metrics Reviewer"
-    description: "Revision final de metricas y documentacion"
+    name: "Final Reviewer"
+    description: "Revision final y documentacion"
     triggers: ["metrics_fix.complete"]
     publishes: ["metrics_fix.final_summary"]
     instructions: |
-      ## FINAL REVIEW Y DOCUMENTACION
+      ## FINAL REVIEW
 
-      ### Verificar resultado final:
-      ```bash
-      # Ejecutar test final
-      python tests/backtesting/test_profile_backtest_simple.py 2>&1 | tail -50
-      ```
-
-      ### Generar reporte de iteraciones:
-      ```bash
-      # Ver historial completo
-      cat .ralph/outputs/23_attempt_history.json
-      ```
-
-      ### Crear resumen ejecutivo:
+      ### Generar reporte:
       ```bash
       cat > .ralph/outputs/23_metrics_fix_summary.md << 'EOF'
       # Profile Backtest Metrics Fix - Resumen
 
+      ## Diagnostico Original
+      - Sharpe: -1099.01 (bug de calculo)
+      - Win Rate: 0%
+      - Causa: Signal generation flawed for bull market
+
       ## Estado Final
-      - Iteraciones totales: {{iteration_count}}
-      - Sharpe inicial: -1099.01
-      - Sharpe final: <ultimo>
-      - Mejora: <X>%
+      - Sharpe: <final>
+      - Win Rate: <final>
+      - Return: <final>
+      - MaxDD: <final>
 
       ## Cambios Realizados
-      <lista de cambios>
+      1. <cambio 1>
+      2. <cambio 2>
 
-      ## Intentos Fallidos
-      <lo que no funcionó>
-
-      ## Recomendaciones Futuras
-      <para seguir mejorando>
+      ## Archivos Modificados
+      - <archivo 1>
+      - <archivo 2>
       EOF
       ```
 
       ### Verificar:
-      1. Sharpe ratio > 0.5 (o mejor posible)
-      2. Return > 0%
-      3. Ready for Paper Trading status
-      4. Compliance checks passing
+      - Sharpe > 0.5 ✓/✗
+      - Win Rate > 40% ✓/✗
+      - Return calculado correctamente ✓/✗
 
-      Si EXITOSO: `ralph emit "metrics_fix.final_summary" "status=SUCCESS"`
-      Si PARCIAL: `ralph emit "metrics_fix.final_summary" "status=PARTIAL_BEST_EFFORT"`
-      Si FALLIDO: `ralph emit "metrics_fix.final_summary" "status=FAILED_NEEDS_MANUAL"`
+      Si OK: `ralph emit "metrics_fix.final_summary" "status=SUCCESS"`
+      Si NO: `ralph emit "metrics_fix.final_summary" "status=NEEDS_MORE_WORK"`
 
 tasks:
   enabled: true
