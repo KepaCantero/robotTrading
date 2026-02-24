@@ -22,8 +22,8 @@ from typing import Any, Dict, List
 
 import yaml
 
-from app.core.config.profile_config_loader import ProfileConfigLoader
-from app.core.models.input_profile import InputProfile
+from app.shared.config.profile_config_loader import ProfileConfigLoader
+from app.domain.models.input_profile import InputProfile
 
 from .baseline_executor import BaselineBacktestExecutor
 from .profile_generator import ProfileGenerator

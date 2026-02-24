@@ -21,19 +21,20 @@ import logging
 from decimal import Decimal
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import yaml
 from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings
 
-# Import modular strategy configs to keep TradingThresholds lean
-from app.core.strategy_config import (
-    DividendStrategyConfig,
-    FXCarryTradeStrategyConfig,
-    MomentumModularConfig,
-)
-from app.core.config.signal_risk import MarketMicrostructureThresholds
+# Use TYPE_CHECKING to avoid circular imports
+if TYPE_CHECKING:
+    from app.domain.strategies.config import (
+        DividendStrategyConfig,
+        FXCarryTradeStrategyConfig,
+        MomentumModularConfig,
+    )
+from app.shared.config.signal_risk import MarketMicrostructureThresholds
 
 logger = logging.getLogger(__name__)
 
@@ -1134,20 +1135,12 @@ class TradingThresholds(BaseModel):
     # ========== MODULAR STRATEGY CONFIGURATIONS ==========
     # Strategy-specific configs are now in separate modules to keep TradingThresholds lean.
     # Import and use them directly:
-    #   from app.core.strategy_config import MomentumModularConfig, DividendStrategyConfig, FXCarryTradeStrategyConfig
+    #   from app.domain.strategies.config import MomentumModularConfig, DividendStrategyConfig, FXCarryTradeStrategyConfig
     #   momentum_cfg = MomentumModularConfig()
     #   value = momentum_cfg.bear_market_strength_threshold
-
-    # Embedded instances for convenience (optional - can also import directly)
-    momentum: MomentumModularConfig = Field(
-        default_factory=MomentumModularConfig, description="Momentum Modular Strategy configuration"
-    )
-    dividend: DividendStrategyConfig = Field(
-        default_factory=DividendStrategyConfig, description="Dividend Strategy configuration"
-    )
-    fx_carry: FXCarryTradeStrategyConfig = Field(
-        default_factory=FXCarryTradeStrategyConfig, description="FX Carry Trade Strategy configuration"
-    )
+    #
+    # NOTE: These are NOT embedded here to avoid circular imports.
+    # Use direct imports from app.domain.strategies.config instead.
 
 
 # =============================================================================
@@ -1499,7 +1492,7 @@ class StockAllocationSettings(BaseSettings):
             >>> settings = StockAllocationSettings.from_yaml()
             >>> settings = StockAllocationSettings.from_yaml(tier="micro")
         """
-        from app.core.config_loader import load_strategy_stock_allocator_config
+        from app.shared.config.config_loader import load_strategy_stock_allocator_config
 
         config = load_strategy_stock_allocator_config(tier)
 
@@ -1658,7 +1651,7 @@ class BacktestingConfig(BaseModel):
     All hardcoded values in backtesting modules should reference this config.
 
     Usage:
-        from app.core.centralized_config import get_config
+        from app.shared.config.centralized_config import get_config
         config = get_config()
         slippage = config.backtesting.base_slippage_bps
         commission = config.backtesting.default_commission_rate
@@ -1810,6 +1803,14 @@ class BacktestingConfig(BaseModel):
     default_risk_free_rate: Decimal = Field(
         default=Decimal("0.02"),  # 2% annual risk-free rate
         description="Default risk-free rate for Sharpe calculation"
+    )
+    annual_trading_days: int = Field(
+        default=252,
+        description="Number of trading days in a year for annualization"
+    )
+    default_daily_loss_limit: Decimal = Field(
+        default=Decimal("0.05"),  # 5% daily loss limit
+        description="Default daily loss limit"
     )
 
     # ========== PERFORMANCE METRICS ==========
@@ -2973,7 +2974,7 @@ def get_strategy_stock_allocator_config(tier: Optional[str] = None) -> Dict[str,
     Returns:
         Complete Strategy Stock Allocator configuration
     """
-    from app.core.config_loader import load_strategy_stock_allocator_config
+    from app.shared.config.config_loader import load_strategy_stock_allocator_config
     return load_strategy_stock_allocator_config(tier)
 
 

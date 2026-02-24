@@ -22,7 +22,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Any
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 from app.domain.strategies.base import BaseStrategy
 from app.domain.strategies.fx_carry_trade.carry_calculator import CarryCalculator, CarryTradeOpportunity
 from app.domain.strategies.fx_carry_trade.fx_rates_provider import FXRateProvider, InMemoryFXRateProvider

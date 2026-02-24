@@ -14,6 +14,8 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 
+from app.shared.config.centralized_config import get_config
+
 logger = logging.getLogger(__name__)
 
 
@@ -25,14 +27,14 @@ class InsightGenerator:
     actionable insights without LLM/NLP (deterministic, traceable output).
     """
 
-    def __init__(self, risk_free_rate: float = 0.02):
+    def __init__(self, risk_free_rate: float = None):
         """
         Initialize InsightGenerator.
 
         Args:
-            risk_free_rate: Risk-free rate for calculations (default: 0.02 = 2%)
+            risk_free_rate: Risk-free rate for calculations (default: from CentralizedConfig)
         """
-        self.risk_free_rate = risk_free_rate
+        self.risk_free_rate = risk_free_rate if risk_free_rate is not None else float(get_config().backtesting.default_risk_free_rate)
         self.insights: List[str] = []
         self.warnings: List[Dict[str, Any]] = []
         self.recommendations: List[Dict[str, Any]] = []

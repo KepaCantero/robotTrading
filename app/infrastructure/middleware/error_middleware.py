@@ -1,20 +1,59 @@
 """
 Error Handling Middleware for FastAPI
 TASK-4: Sistema de manejo de errores unificado
+
+REFACTORED: Uses lazy imports to avoid circular dependencies.
+The centralized_logging and error_handler modules are imported only when needed.
 """
+
+from __future__ import annotations
 
 # pylint: disable=import-error
 import logging
 import time
 import uuid
-from typing import Callable
+from typing import TYPE_CHECKING, Any, Callable, Optional
 
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from app.exceptions.error_handler import error_handler
-from app.services.centralized_logging import LogLevel, LogService, centralized_logger
+# Use TYPE_CHECKING for type hints only
+if TYPE_CHECKING:
+    from app.services.centralized_logging import LogLevel, LogService
+
+
+def _get_centralized_logger():
+    """
+    Lazily import centralized logger to avoid circular dependencies.
+
+    Returns:
+        CentralizedLogger instance
+    """
+    from app.services.centralized_logging import centralized_logger
+    return centralized_logger
+
+
+def _get_log_level_and_service():
+    """
+    Lazily import LogLevel and LogService enums.
+
+    Returns:
+        Tuple of (LogLevel, LogService) enums
+    """
+    from app.services.centralized_logging import LogLevel, LogService
+    return LogLevel, LogService
+
+
+def _get_error_handler():
+    """
+    Lazily import error_handler to avoid circular dependencies.
+
+    Returns:
+        ErrorHandler instance
+    """
+    from app.exceptions.error_handler import error_handler
+    return error_handler
 
 
 class ErrorHandlingMiddleware(BaseHTTPMiddleware):
@@ -68,6 +107,10 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
 
     async def _log_request_start(self, request: Request) -> None:
         """Log request start."""
+        # Lazily load centralized logger and LogService
+        centralized_logger = _get_centralized_logger()
+        LogLevel, LogService = _get_log_level_and_service()
+
         metadata = {
             "request_id": request.request_id,  # type: ignore
             "method": request.method,
@@ -89,6 +132,10 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
         self, request: Request, response: Response, process_time: float
     ) -> None:
         """Log request completion."""
+        # Lazily load centralized logger and LogService
+        centralized_logger = _get_centralized_logger()
+        LogLevel, LogService = _get_log_level_and_service()
+
         metadata = {
             "request_id": request.request_id,  # type: ignore
             "method": request.method,
@@ -131,6 +178,10 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
         self, request: Request, exc: Exception, process_time: float
     ) -> None:
         """Log request error."""
+        # Lazily load centralized logger and LogService
+        centralized_logger = _get_centralized_logger()
+        LogLevel, LogService = _get_log_level_and_service()
+
         metadata = {
             "request_id": request.request_id,  # type: ignore
             "method": request.method,
@@ -149,6 +200,8 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
 
     async def _handle_exception(self, request: Request, exc: Exception) -> JSONResponse:
         """Handle exception and return appropriate response."""
+        # Lazily load error handler
+        error_handler = _get_error_handler()
 
         # Add request context to exception if it's an AlgoTradingError
         if hasattr(exc, "details") and isinstance(exc.details, dict):
@@ -225,6 +278,9 @@ class RateLimitingMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """Apply rate limiting."""
+        # Lazily load centralized logger and LogService
+        centralized_logger = _get_centralized_logger()
+        LogLevel, LogService = _get_log_level_and_service()
 
         client_ip = request.client.host if request.client else "unknown"
         current_time = time.time()

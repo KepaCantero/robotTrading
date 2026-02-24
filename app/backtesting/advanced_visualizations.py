@@ -411,7 +411,7 @@ class AdvancedVisualizer:
     def plot_rolling_metrics(
         self,
         equity_curve: pd.Series,
-        window: int = 252,
+        window: int = None,
         figsize: Tuple[int, int] = (14, 8),
         output_file: Optional[str] = None,
     ) -> "Optional[Figure]":
@@ -420,13 +420,19 @@ class AdvancedVisualizer:
 
         Args:
             equity_curve: Series with equity values
-            window: Rolling window size (default: 252 days = 1 year)
+            window: Rolling window size (default: 1 year = annual_trading_days)
             figsize: Figure size
             output_file: Output filename
 
         Returns:
             Figure object or None
         """
+        from app.shared.config.centralized_config import get_config
+
+        annual_trading_days = get_config().backtesting.annual_trading_days
+        if window is None:
+            window = annual_trading_days
+
         # Check if required dependencies are available
         if not HAS_MATPLOTLIB or plt is None:
             logger.warning("matplotlib not available, skipping rolling metrics plot")
@@ -440,8 +446,8 @@ class AdvancedVisualizer:
                 return None
 
             # Calculate rolling metrics
-            rolling_mean = returns.rolling(window).mean() * 252 * 100  # Annualized %
-            rolling_std = returns.rolling(window).std() * np.sqrt(252) * 100  # Annualized %
+            rolling_mean = returns.rolling(window).mean() * annual_trading_days * 100  # Annualized %
+            rolling_std = returns.rolling(window).std() * np.sqrt(annual_trading_days) * 100  # Annualized %
             rolling_sharpe = rolling_mean / (rolling_std + 1e-8)
 
             # Create subplots

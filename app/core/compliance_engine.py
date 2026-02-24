@@ -2251,12 +2251,12 @@ class ComplianceEngine:
                 return BacktestEngine(config=config)
 
             elif name == "live_trading":
-                from app.application.orchestration.live_trading.broker_connector import BrokerConnector
+                from app.services.live_trading.broker_connector import BrokerConnector
 
                 return BrokerConnector()  # Has default broker_type
 
             elif name == "paper_trading":
-                from app.application.orchestration.live_trading.broker_adapters.paper_adapter import PaperAdapter
+                from app.services.live_trading.broker_adapters.paper_adapter import PaperAdapter
 
                 return PaperAdapter()  # pylint: disable=no-value-for-parameter
 
@@ -2299,7 +2299,7 @@ class ComplianceEngine:
             # -------------------------------------------------------------------------
 
             elif name == "ernest_chan":
-                from app.domain.services.execution.algorithms import get_execution_algorithm
+                from app.services.execution_algorithms import get_execution_algorithm
                 from app.services.regime_detection_chan import get_regime_detector
 
                 return {
@@ -2310,7 +2310,7 @@ class ComplianceEngine:
 
             elif name == "narang":
                 from app.services.portfolio_construction_narang import get_portfolio_constructor
-                from app.domain.strategies.alpha_models import get_alpha_model
+                from app.strategies.alpha_models import get_alpha_model
 
                 # Use correct model_type: "multi_factor" not "multifactor"
                 alpha_config = config_factory.get_alpha_model_config()
@@ -2343,8 +2343,8 @@ class ComplianceEngine:
                 return get_harris_integrator(asset_class=self.asset_class)
 
             elif name == "ohara":
-                from app.domain.market_analysis.microstructure.liquidity import get_liquidity_analyzer
-                from app.domain.market_analysis.microstructure.order_flow import get_order_flow_analyzer
+                from app.microstructure.liquidity import get_liquidity_analyzer
+                from app.microstructure.order_flow import get_order_flow_analyzer
 
                 return {
                     "liquidity": get_liquidity_analyzer(),
@@ -2476,8 +2476,8 @@ class ComplianceEngine:
         strategy_positions: Dict[str, Decimal],
         total_capital: Decimal,
         strategy_capital: Decimal,
-        max_symbol_exposure_pct: Decimal = Decimal("0.30"),  # Increased from 20% to 30%
-        max_strategy_exposure_pct: Decimal = Decimal("0.80"),  # Increased from 70% to 80%
+        max_symbol_exposure_pct: Decimal = Decimal("0.20"),
+        max_strategy_exposure_pct: Decimal = Decimal("0.70"),
         max_portfolio_exposure_pct: Decimal = Decimal("0.95"),
     ) -> Tuple[bool, str]:
         """
@@ -2487,8 +2487,8 @@ class ComplianceEngine:
         to provide a single point of risk validation in ComplianceEngine.
 
         Validates:
-        - Symbol-level exposure (default 30% max per symbol)
-        - Strategy-level exposure (default 80% max per strategy)
+        - Symbol-level exposure (default 20% max per symbol)
+        - Strategy-level exposure (default 70% max per strategy)
         - Portfolio-level exposure (default 95% max total)
 
         Args:
@@ -2499,8 +2499,8 @@ class ComplianceEngine:
             strategy_positions: Current positions for this strategy (symbol -> value)
             total_capital: Total portfolio capital
             strategy_capital: Capital allocated to this strategy
-            max_symbol_exposure_pct: Maximum exposure per symbol (default 30%)
-            max_strategy_exposure_pct: Maximum exposure per strategy (default 80%)
+            max_symbol_exposure_pct: Maximum exposure per symbol (default 20%)
+            max_strategy_exposure_pct: Maximum exposure per strategy (default 70%)
             max_portfolio_exposure_pct: Maximum total portfolio exposure (default 95%)
 
         Returns:
@@ -2968,8 +2968,8 @@ class ComplianceEngine:
                     return None
 
             # Generate signal using alert-to-trade mapping
-            from app.application.orchestration.live_trading.alert_to_trade_mapper import get_alert_to_trade_mapper
-            from app.application.alerting import AlertSeverity
+            from app.services.live_trading.alert_to_trade_mapper import get_alert_to_trade_mapper
+            from app.services.alerting_system import AlertSeverity
 
             mapper = get_alert_to_trade_mapper()
             portfolio_value = Decimal(str(self._starting_capital))
@@ -3014,7 +3014,7 @@ class ComplianceEngine:
 
     async def prioritize_alerts(self, alerts: list) -> list:
         """Prioritize alerts by urgency (CRITICAL > WARNING > INFO)."""
-        from app.application.alerting import AlertSeverity
+        from app.services.alerting_system import AlertSeverity
 
         priority_map = {
             "CRITICAL": 0,
@@ -3058,9 +3058,9 @@ class ComplianceEngine:
         Returns:
             TradeResult with execution details
         """
-        from app.application.orchestration.live_trading.broker_connector import BrokerConnector
-        from app.infrastructure.logging.trading_decision_logger import TradingDecisionLogger
-        from app.domain.services.tax.efficiency.engines.spain_tax_engine_impl import SpainTaxEngineImpl
+        from app.services.live_trading.broker_connector import BrokerConnector
+        from app.services.logging.trading_decision_logger import TradingDecisionLogger
+        from app.services.tax_efficiency.engines.spain_tax_engine_impl import SpainTaxEngineImpl
 
         # Initialize logger and tax engine
         decision_logger = TradingDecisionLogger()
@@ -3239,7 +3239,7 @@ class ComplianceEngine:
 
     async def cancel_order(self, order_id: str) -> bool:
         """Cancel order via broker."""
-        from app.application.orchestration.live_trading.broker_connector import BrokerConnector
+        from app.services.live_trading.broker_connector import BrokerConnector
 
         broker = BrokerConnector()
         try:
@@ -3254,7 +3254,7 @@ class ComplianceEngine:
 
     async def modify_order(self, order_id: str, new_price: Decimal) -> bool:
         """Modify order price."""
-        from app.application.orchestration.live_trading.broker_connector import BrokerConnector
+        from app.services.live_trading.broker_connector import BrokerConnector
 
         broker = BrokerConnector()
         try:
@@ -3476,7 +3476,7 @@ class ComplianceEngine:
     ) -> str:
         """Submit order to broker."""
         # Convert TradeSignal to broker format
-        from app.application.orchestration.live_trading.broker_connector import OrderSide, OrderType
+        from app.services.live_trading.broker_connector import OrderSide, OrderType
 
         order_id = f"order_{datetime.now().timestamp()}"
 

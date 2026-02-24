@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
-from app.core.di_container import (
+from app.shared.config.di_container import (
     get_execution_engine as di_get_execution_engine,
     get_strategy_config_loader as di_get_strategy_config_loader,
     get_strategy_logger as di_get_strategy_logger,

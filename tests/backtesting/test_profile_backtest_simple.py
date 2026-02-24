@@ -79,13 +79,13 @@ print(f"Recomendacion: {result.recommendation}")
 if result.baseline_results:
     print(f"\nBaseline:")
     print(f"  Sharpe: {result.baseline_results.get('sharpe_ratio', 'N/A')}")
-    print(f"  Return: {result.baseline_results.get('total_return', 'N/A')}%")
+    print(f"  Return: {result.baseline_results.get('return_pct', 'N/A')}%")
     print(f"  MaxDD: {result.baseline_results.get('max_drawdown', 'N/A')}%")
 
 if result.optimization_results:
     print(f"\nOptimizado:")
     print(f"  Sharpe: {result.optimization_results.get('sharpe_ratio', 'N/A')}")
-    print(f"  Return: {result.optimization_results.get('total_return', 'N/A')}%")
+    print(f"  Return: {result.optimization_results.get('return_pct', 'N/A')}%")
 
 if result.improvement_metrics:
     print(f"\nMejora:")

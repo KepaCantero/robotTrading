@@ -41,7 +41,7 @@ from enum import Enum
 from typing import Dict, Optional, Tuple
 
 # Import centralized configuration (REQUIRED - no fallbacks)
-from app.core.config.strategy_config_loader import get_strategy_config  # noqa: F401
+from app.shared.config.strategy_config_loader import get_strategy_config  # noqa: F401
 
 logger = logging.getLogger(__name__)
 

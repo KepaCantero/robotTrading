@@ -27,6 +27,8 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import numpy as np
 import pandas as pd
 
+from app.shared.config.centralized_config import CentralizedConfig, get_config
+
 logger = logging.getLogger(__name__)
 
 
@@ -110,25 +112,22 @@ class ChanSharpeRatioCalculator:
     """
 
     # Default risk-free rate (Ernest Chan uses Treasury yield)
-    DEFAULT_RISK_FREE_RATE = 0.02  # 2%
-
-    # Trading days per year (Chan uses 252)
-    TRADING_DAYS_PER_YEAR = 252
+    DEFAULT_RISK_FREE_RATE = float(get_config().backtesting.default_risk_free_rate)  # 2%
 
     def __init__(
         self,
         risk_free_rate: float = DEFAULT_RISK_FREE_RATE,
-        trading_days: int = TRADING_DAYS_PER_YEAR,
+        trading_days: int = None,
     ):
         """
         Initialize Sharpe ratio calculator.
 
         Args:
             risk_free_rate: Annual risk-free rate
-            trading_days: Number of trading days per year
+            trading_days: Number of trading days per year (default: from CentralizedConfig)
         """
         self.risk_free_rate = risk_free_rate
-        self.trading_days = trading_days
+        self.trading_days = trading_days if trading_days is not None else get_config().backtesting.annual_trading_days
 
     def calculate_sharpe_ratio(
         self,
@@ -580,14 +579,14 @@ class ChanCalmarRatioCalculator:
     Higher is better. Good strategies have Calmar > 1.
     """
 
-    def __init__(self, trading_days: int = 252):
+    def __init__(self, trading_days: int = None):
         """
         Initialize Calmar ratio calculator.
 
         Args:
-            trading_days: Trading days per year
+            trading_days: Trading days per year (default: from CentralizedConfig)
         """
-        self.trading_days = trading_days
+        self.trading_days = trading_days if trading_days is not None else get_config().backtesting.annual_trading_days
 
     def calculate_calmar_ratio(
         self,
@@ -1007,7 +1006,8 @@ class ChanStrategyComparator:
             r2 = returns2[:min_len]
 
             diff = r1 - r2
-            return float(np.std(diff, ddof=1) * np.sqrt(252))
+            annual_trading_days = get_config().backtesting.annual_trading_days
+            return float(np.std(diff, ddof=1) * np.sqrt(annual_trading_days))
 
         except (ValueError, TypeError):
             return 0.0
@@ -1031,7 +1031,8 @@ class ChanStrategyComparator:
             if std_excess == 0:
                 return 0.0
 
-            return float(mean_excess / std_excess * np.sqrt(252))
+            annual_trading_days = get_config().backtesting.annual_trading_days
+            return float(mean_excess / std_excess * np.sqrt(annual_trading_days))
 
         except (ValueError, TypeError, ZeroDivisionError):
             return 0.0
@@ -1040,10 +1041,11 @@ class ChanStrategyComparator:
 # Convenience functions
 def calculate_sharpe_ratio(
     returns: Union[pd.Series, np.ndarray, List[float]],
-    risk_free_rate: float = 0.02,
+    risk_free_rate: float = None,
 ) -> float:
     """Convenience function to calculate Sharpe ratio."""
-    calc = ChanSharpeRatioCalculator(risk_free_rate=risk_free_rate)
+    rf = risk_free_rate if risk_free_rate is not None else float(get_config().backtesting.default_risk_free_rate)
+    calc = ChanSharpeRatioCalculator(risk_free_rate=rf)
     result = calc.calculate_sharpe_ratio(returns)
     return result.annualized_sharpe
 

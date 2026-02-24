@@ -15,8 +15,8 @@ import logging
 from decimal import Decimal
 from typing import Dict, List
 
-from app.core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
-from app.core.tier_mapper import map_profile_tier_to_config
+from app.domain.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
+from app.shared.utils.tier_mapper import map_profile_tier_to_config
 
 logger = logging.getLogger(__name__)
 

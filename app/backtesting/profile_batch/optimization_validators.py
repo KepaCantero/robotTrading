@@ -29,8 +29,8 @@ from app.backtesting.shared import (
     TempConfigManager,
     get_empty_metrics,
 )
-from app.core.config.profile_config_loader import ProfileConfigLoader
-from app.core.models.input_profile import InputProfile
+from app.shared.config.profile_config_loader import ProfileConfigLoader
+from app.domain.models.input_profile import InputProfile
 
 logger = logging.getLogger(__name__)
 

@@ -33,7 +33,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 import pandas as pd
 
 # SINGLE SOURCE OF TRUTH: Import CentralizedConfig
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 
 from ..point_in_time_database import PointInTimeDatabase
 from .corporate_actions import CorporateActionHandler

@@ -12,7 +12,7 @@ from typing import Dict, Optional
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 
-from app.core.exceptions import ConfigurationError
+from app.shared.exceptions.exceptions import ConfigurationError
 
 logger = logging.getLogger(__name__)
 

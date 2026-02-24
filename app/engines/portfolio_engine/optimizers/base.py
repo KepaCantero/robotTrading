@@ -13,6 +13,8 @@ from typing import Any, Dict, Optional
 
 import numpy as np
 
+from app.shared.config.centralized_config import get_config
+
 logger = logging.getLogger(__name__)
 
 
@@ -89,7 +91,7 @@ class MarkowitzOptimizer(BaseOptimizer):
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         """Initialize Markowitz optimizer."""
         super().__init__(config)
-        self.risk_free_rate = getattr(config.trading, 'max_risk_per_trade', 0.02) if config else 0.02
+        self.risk_free_rate = float(get_config().backtesting.default_risk_free_rate)
 
     def optimize(
         self,

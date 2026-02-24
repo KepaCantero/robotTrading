@@ -25,7 +25,7 @@ from ..base_filter import BaseFilter
 
 # Try to import strategy config loader from centralized config
 try:
-    from app.core.centralized_config import get_config
+    from app.shared.config.centralized_config import get_config
 
     HAS_CONFIG_LOADER = True
 except ImportError:

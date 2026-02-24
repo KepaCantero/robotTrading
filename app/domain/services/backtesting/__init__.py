@@ -17,9 +17,12 @@ from .backtest_engine import (
     BacktestConfig,
     BacktestEngine,
     BacktestResult,
-    PerformanceMetrics,
-    Trade,
+    OrderSide,
+    OrderStatus,
+    OrderType,
 )
+# Re-export canonical Trade and PerformanceMetrics from app.backtesting.models
+from app.backtesting.models import PerformanceMetrics, Trade, TradeSide, TradeStatus
 from .dividend_handler import DividendHandler, DividendPayment, DividendReinvestmentStrategy
 from .market_impact import (
     ImpactParameters,
@@ -47,7 +50,12 @@ __all__ = [
     "BacktestEngine",
     "BacktestConfig",
     "BacktestResult",
-    "Trade",
+    "Trade",  # Re-exported from app.backtesting.models
+    "TradeSide",  # Re-exported from app.backtesting.models
+    "TradeStatus",  # Re-exported from app.backtesting.models
+    "OrderSide",
+    "OrderType",
+    "OrderStatus",
     "PerformanceMetrics",
     # Transaction Costs
     "TransactionCostModel",

@@ -31,7 +31,7 @@ from sqlalchemy.exc import (
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-from app.core.models.input_profile import InputProfile
+from app.domain.models.input_profile import InputProfile
 from app.services.profile_driven_trading.profile_strategy_mapper import StrategyMapping
 
 logger = logging.getLogger(__name__)

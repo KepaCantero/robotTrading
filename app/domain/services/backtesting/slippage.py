@@ -20,7 +20,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Optional
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 
 
 class SlippageType(str, Enum):

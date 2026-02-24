@@ -78,8 +78,16 @@ app/
 │
 ├── simulation/               # Simulation tools
 │
-└── core/                     # Core utilities (to be reviewed)
+└── core/                     # Core module (backward compatibility only)
 ```
+
+**Note:** The `core/` directory has been migrated. Contents moved to:
+- Config → `shared/config/`
+- Auth/Security → `security/`
+- Database → `infrastructure/persistence/`
+- Utils → `shared/utils/`
+- Protocols → `shared/protocols/`
+- Models → `domain/models/`
 
 ## Directory Count Progress
 
@@ -143,13 +151,12 @@ from app.microstructure import X → from app.domain.market_analysis.microstruct
 - [x] Created shared/ directory
 - [x] Migrated services/ → domain/services/, application/, infrastructure/
 - [x] Removed services/ directory (333 files migrated)
-- [x] Updated 566+ imports total
+- [x] Migrated core/ → shared/config/, security/, infrastructure/, shared/utils/, etc.
+- [x] Updated 848+ imports total
 
 ### Pending
-- [ ] Review engines/ directory structure
-- [ ] Review core/ directory structure
-- [ ] Remove remaining duplicate code
-- [ ] Create __init__.py files for new directories
+- [ ] Review engines/ directory structure (optional)
+- [ ] Remove remaining duplicate code (optional)
 
 ---
 

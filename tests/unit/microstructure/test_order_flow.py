@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from app.microstructure.order_flow import (
+from app.domain.market_analysis.microstructure.order_flow import (
     Order,
     OrderFlowAnalyzer,
     OrderFlowSimulator,

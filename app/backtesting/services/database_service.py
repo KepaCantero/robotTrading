@@ -29,8 +29,8 @@ from sqlalchemy.exc import (
 from sqlalchemy.orm import sessionmaker
 
 from app.backtesting.services.models import ProfileResult, ProfileResultDB
-from app.core.models.input_profile import InputProfile
-from app.core.tier_mapper import map_profile_tier_to_config
+from app.domain.models.input_profile import InputProfile
+from app.shared.utils.tier_mapper import map_profile_tier_to_config
 
 logger = logging.getLogger(__name__)
 

@@ -218,7 +218,7 @@ def get_portfolio_service():
     Example:
         ```python
         from fastapi import Depends
-        from app.core.di_container import get_portfolio_service
+        from app.shared.config.di_container import get_portfolio_service
 
         @router.get("/")
         async def get_portfolio(service: PortfolioService = Depends(get_portfolio_service)):
@@ -259,7 +259,7 @@ def get_signal_scorer_service():
     Example:
         ```python
         from fastapi import Depends
-        from app.core.di_container import get_signal_scorer_service
+        from app.shared.config.di_container import get_signal_scorer_service
 
         @router.post("/evaluate")
         async def evaluate_signal(service: SignalScorerService = Depends(get_signal_scorer_service)):
@@ -304,7 +304,7 @@ def get_strategy_registry() -> "StrategyRegistry":
     Example:
         ```python
         from fastapi import Depends
-        from app.core.di_container import get_strategy_registry
+        from app.shared.config.di_container import get_strategy_registry
 
         @router.get("/")
         async def get_strategies(registry: StrategyRegistry = Depends(get_strategy_registry)):
@@ -332,7 +332,7 @@ def get_strategy_config_loader() -> "StrategyConfigLoader":
     Example:
         ```python
         from fastapi import Depends
-        from app.core.di_container import get_strategy_config_loader
+        from app.shared.config.di_container import get_strategy_config_loader
 
         @router.post("/load")
         async def load_strategy(config_loader: StrategyConfigLoader = Depends(get_strategy_config_loader)):
@@ -360,7 +360,7 @@ def get_strategy_logger() -> "StrategyLogger":
     Example:
         ```python
         from fastapi import Depends
-        from app.core.di_container import get_strategy_logger
+        from app.shared.config.di_container import get_strategy_logger
 
         @router.get("/metrics")
         async def get_metrics(logger: StrategyLogger = Depends(get_strategy_logger)):
@@ -390,7 +390,7 @@ def get_execution_engine() -> "ExecutionEngine":
     Example:
         ```python
         from fastapi import Depends
-        from app.core.di_container import get_execution_engine
+        from app.shared.config.di_container import get_execution_engine
 
         @router.post("/start")
         async def start_engine(engine: ExecutionEngine = Depends(get_execution_engine)):

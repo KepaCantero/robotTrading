@@ -18,22 +18,25 @@ from typing import List, Optional
 import numpy as np
 from scipy import stats
 
+from app.shared.config.centralized_config import CentralizedConfig, get_config
+
 logger = logging.getLogger(__name__)
 
 
 class AdvancedMetricsCalculator:
     """Calculator for advanced financial metrics."""
 
-    def __init__(self, risk_free_rate: Decimal = Decimal("0.02"), confidence_level: float = 0.95):
+    def __init__(self, risk_free_rate: Decimal = None, confidence_level: float = 0.95):
         """
         Initialize advanced metrics calculator.
 
         Args:
-            risk_free_rate: Annual risk-free rate (default: 2%)
+            risk_free_rate: Annual risk-free rate (default: from CentralizedConfig)
             confidence_level: Confidence level for VaR/CVaR (default: 95%)
         """
-        self.risk_free_rate = float(risk_free_rate)
+        self.risk_free_rate = float(risk_free_rate) if risk_free_rate is not None else float(get_config().backtesting.default_risk_free_rate)
         self.confidence_level = confidence_level
+        self._annual_trading_days = get_config().backtesting.annual_trading_days
 
     def calculate_calmar_ratio(self, cagr: Decimal, max_drawdown: Decimal) -> Optional[Decimal]:
         """
@@ -156,10 +159,10 @@ class AdvancedMetricsCalculator:
         """
         Calculate Annualized Volatility.
 
-        Formula: std(returns) * sqrt(252)
+        Formula: std(returns) * sqrt(annual_trading_days)
         - Standard deviation of returns annualized
         - Higher volatility = higher risk
-        - 252 = number of trading days per year
+        - annual_trading_days = number of trading days per year (from CentralizedConfig)
 
         Args:
             returns: List of returns
@@ -174,8 +177,8 @@ class AdvancedMetricsCalculator:
             returns_array = np.array([float(r) for r in returns])
             daily_volatility = np.std(returns_array)
 
-            # Annualize
-            annualized_vol = daily_volatility * np.sqrt(252)
+            # Annualize using configured trading days
+            annualized_vol = daily_volatility * np.sqrt(self._annual_trading_days)
 
             return Decimal(str(round(annualized_vol, 6)))
 
@@ -415,9 +418,9 @@ class AdvancedMetricsCalculator:
             if downside_deviation == 0:
                 return Decimal("999") if mean_return > target_return else Decimal("0")
 
-            # Annualize
-            annual_return = mean_return * 252
-            annual_downside = downside_deviation * np.sqrt(252)
+            # Annualize using configured trading days
+            annual_return = mean_return * self._annual_trading_days
+            annual_downside = downside_deviation * np.sqrt(self._annual_trading_days)
 
             sortino = (annual_return - target_return) / annual_downside
 

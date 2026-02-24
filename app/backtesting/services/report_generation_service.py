@@ -23,7 +23,7 @@ import pandas as pd
 from jinja2 import Template
 
 from app.backtesting.services.models import ProfileResult
-from app.core.models.input_profile import ObjectivoInversion
+from app.domain.models.input_profile import ObjectivoInversion
 
 logger = logging.getLogger(__name__)
 

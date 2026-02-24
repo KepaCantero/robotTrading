@@ -22,7 +22,7 @@ from decimal import Decimal
 from typing import Dict, List, Optional
 
 # SINGLE SOURCE OF TRUTH: Import CentralizedConfig
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 
 from .market_impact import ImpactConfig, MarketImpactModel
 from .models import FillReason, FillResult, MarketSnapshot, Order, OrderSide

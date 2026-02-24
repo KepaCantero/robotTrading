@@ -18,10 +18,13 @@ from typing import Any, Dict, List, Optional
 
 from app.domain.strategies.mean_reversion import MeanReversionStrategy
 from app.domain.strategies.momentum import MomentumStrategy
-from app.domain.strategies.momentum_modular.strategy import ModularMomentumStrategy
-from app.domain.strategies.pairs_trading import PairsTradingStrategy
+# from app.domain.strategies.momentum_modular.strategy import ModularMomentumStrategy  # TODO: Create module
+from app.domain.strategies.pairs_trading import PairsTrading as PairsTradingStrategy
 
 logger = logging.getLogger(__name__)
+
+# Temporary alias until momentum_modular is created
+ModularMomentumStrategy = MomentumStrategy
 
 
 class StrategyFactory:

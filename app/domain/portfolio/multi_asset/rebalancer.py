@@ -16,7 +16,7 @@ from typing import Any, Dict, List
 
 from .asset_class import AssetClass, AssetClassType
 from .models import MultiAssetAllocation, MultiAssetPortfolio, Trade
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 

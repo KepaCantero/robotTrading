@@ -15,7 +15,7 @@ Features:
 6. Production-readiness checks
 
 Usage:
-    from app.core.secret_manager import get_secret, require_secret
+    from app.security.secret_manager import get_secret, require_secret
 import numpy as np
 
     # Get secret with fallback (for development)

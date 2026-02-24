@@ -15,7 +15,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.backtesting.models import Trade, TradeStatus
 from app.services.cost_analysis_service import CostAnalysisResult, CostAnalysisService
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 
 router = APIRouter(prefix="/cost-analysis", tags=["cost-analysis"])
 

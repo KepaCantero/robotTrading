@@ -12,7 +12,7 @@ from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 
-from app.core.logging_config import LogService, get_logger
+from app.infrastructure.logging.logging_config import LogService, get_logger
 
 logger = get_logger(__name__)
 centralized_logger = logger

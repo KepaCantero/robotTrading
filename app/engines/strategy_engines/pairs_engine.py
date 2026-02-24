@@ -20,7 +20,7 @@ import scipy.stats  # noqa: F401
 
 SCIPY_AVAILABLE = True
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
@@ -294,7 +294,7 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
             spread = np.array(prices1) - np.array(prices2)
 
             # Simple ADF test usando statsmodels con fallback
-            from app.core.statsmodels_fallback import adfuller
+            from app.shared.performance.statsmodels_fallback import adfuller
 
             result = adfuller(spread)
             return result[0]  # Return test statistic

@@ -77,7 +77,7 @@ class TradeExecutor:
             broker_type: Broker type for cost modeling (default IBKR)
         """
         from app.backtesting.liquidity_validator import LiquidityValidator
-        from app.core.trading_validators import TradingValidator
+        from app.domain.services.trading_validators import TradingValidator
 
         self.config = config
         self.position_manager = position_manager

@@ -20,7 +20,7 @@ COMPLIANCE: Integrado con BacktestingCompliance para validar:
 Usage:
     ```python
     from app.backtesting.profile_batch_backtester import ProfileBatchBacktester
-    from app.core.models.input_profile import InputProfile
+    from app.domain.models.input_profile import InputProfile
 
     # Create backtester
     backtester = ProfileBatchBacktester(config_path="config/profile_batch_backtest.yaml")
@@ -90,8 +90,8 @@ from app.backtesting.backtesting_compliance import (
     create_backtesting_compliance,
 )
 
-from app.core.config.profile_config_loader import ProfileConfigLoader
-from app.core.models.input_profile import InputProfile
+from app.shared.config.profile_config_loader import ProfileConfigLoader
+from app.domain.models.input_profile import InputProfile
 from app.services.profile_driven_trading.profile_strategy_mapper import (
     StrategyMapping,
     create_profile_mapper,
@@ -1357,7 +1357,7 @@ class ProfileBatchBacktester:
             True if persistence was successful
         """
         try:
-            from app.core.yaml_config_updater import YAMLConfigUpdater
+            from app.shared.config.yaml_config_updater import YAMLConfigUpdater
 
             # Convert optimization params to YAMLConfigUpdater format
             yaml_format = self._convert_optimized_params_to_yaml_format(best_params)
@@ -1450,7 +1450,7 @@ class ProfileBatchBacktester:
             True if update was successful
         """
         try:
-            from app.core.centralized_config import get_config
+            from app.shared.config.centralized_config import get_config
 
             config = get_config()
 

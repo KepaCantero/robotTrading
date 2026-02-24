@@ -27,6 +27,8 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 import numpy as np
 
+from app.shared.config.centralized_config import get_config
+
 if TYPE_CHECKING:
     from app.backtesting.lopez_de_prado_metrics import PortfolioStabilityMetrics
 
@@ -59,7 +61,7 @@ class StabilityValidationConfig:
 
     # Cost parameters
     transaction_cost_bps: float = 10.0  # 10 bps per trade
-    risk_free_rate: float = 0.02  # 2% annual risk-free rate
+    risk_free_rate: float = float(get_config().backtesting.default_risk_free_rate)  # Annual risk-free rate from config
 
     # Validation flags
     require_stable_for_production: bool = True
@@ -580,7 +582,7 @@ class StabilityBasedPortfolioSelector:
 def create_portfolio_stability_validator(
     min_stability_score: float = 70.0,
     transaction_cost_bps: float = 10.0,
-    risk_free_rate: float = getattr(config.trading, 'max_risk_per_trade', 0.02),
+    risk_free_rate: float = None,
 ) -> PortfolioStabilityValidator:
     """
     Create a portfolio stability validator with default configuration.
@@ -588,15 +590,16 @@ def create_portfolio_stability_validator(
     Args:
         min_stability_score: Minimum stability score (0-100)
         transaction_cost_bps: Transaction cost in basis points
-        risk_free_rate: Annual risk-free rate
+        risk_free_rate: Annual risk-free rate (default: from CentralizedConfig)
 
     Returns:
         Configured PortfolioStabilityValidator
     """
+    rf = risk_free_rate if risk_free_rate is not None else float(get_config().backtesting.default_risk_free_rate)
     config = StabilityValidationConfig(
         min_stability_score=min_stability_score,
         transaction_cost_bps=transaction_cost_bps,
-        risk_free_rate=risk_free_rate,
+        risk_free_rate=rf,
     )
 
     return PortfolioStabilityValidator(config=config)

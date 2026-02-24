@@ -14,7 +14,7 @@ import logging
 from decimal import Decimal
 from typing import Optional
 
-from app.core.di_container import DIContainer
+from app.shared.config.di_container import DIContainer
 from app.domain.entities.portfolio import Portfolio
 from app.domain.factories import AbstractEntityFactory
 from app.domain.repositories import PortfolioRepository

@@ -33,8 +33,8 @@ from app.backtesting.shared.slippage_utils import apply_slippage as shared_apply
 from app.backtesting.shared.trade_utils import build_trade_reason as shared_build_trade_reason
 
 # COMPLIANCE: Import compliance_engine - "THE ONLY ENGINE" that must be used
-from app.core.compliance_engine import ComplianceEngine
-from app.core.trading_validators import TradingValidator
+from app.domain.services.compliance.compliance_engine import ComplianceEngine
+from app.domain.services.trading_validators import TradingValidator
 from app.domain.models.portfolio import AssetClass, Portfolio, Position
 from app.domain.models.signal import Signal
 from app.services.dynamic_capital_reallocation import DynamicCapitalReallocationEngine

@@ -12,7 +12,7 @@ import numpy as np
 if TYPE_CHECKING:
     pass
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType

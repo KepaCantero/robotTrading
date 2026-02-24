@@ -22,7 +22,7 @@ from enum import Enum
 from typing import Dict, Optional
 
 # SINGLE SOURCE OF TRUTH: Import CentralizedConfig
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 

@@ -19,7 +19,7 @@ from app.presentation.api import AuditMiddleware
 # This ensures 100% Numba acceleration for all performance-critical code
 # ============================================================================
 try:
-    from app.core.numba_enforcer import enforce_numba_available
+    from app.shared.performance.numba_enforcer import enforce_numba_available
 
     enforce_numba_available()  # Will raise RuntimeError if Numba not available
 except RuntimeError as e:
@@ -70,8 +70,8 @@ from app.presentation.api.portfolio import router as portfolio_router
 from app.presentation.api.portfolio_analytics import router as portfolio_analytics_router
 from app.presentation.api.signals import router as signals_router
 from app.presentation.api.trading_error_handler import router as trading_error_handler_router
-from app.core.config import get_settings
-from app.core.database import close_database, init_database
+from app.shared.config.config import get_settings
+from app.infrastructure.persistence.database import close_database, init_database
 
 # AlgoTrading MVP - Main FastAPI Application
 #

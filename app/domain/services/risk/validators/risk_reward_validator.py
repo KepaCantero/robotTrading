@@ -7,7 +7,7 @@ Uses centralized configuration for minimum R:R ratio.
 from decimal import Decimal
 from dataclasses import dataclass
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 
 
 @dataclass

@@ -19,7 +19,7 @@ APP_DESCRIPTION = __description__
 
 # Initialize DI container on import
 # This ensures all dependencies are available throughout the application
-from app.core.di_config import initialize_container  # noqa: F401
+from app.shared.config.di_config import initialize_container  # noqa: F401
 
 _container = None
 

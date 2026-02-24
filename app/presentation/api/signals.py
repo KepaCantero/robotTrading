@@ -21,7 +21,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from pydantic import BaseModel
 
-from app.core.di_container import get_signal_scorer_service as di_get_signal_scorer_service
+from app.shared.config.di_container import get_signal_scorer_service as di_get_signal_scorer_service
 from app.domain.models.signal import MarketData, Signal, SignalType
 from app.domain.services.signals.scorer import SignalScorerService
 

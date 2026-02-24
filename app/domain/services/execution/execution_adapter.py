@@ -14,12 +14,12 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, Optional
 
-from app.backtesting.execution_engine import (
+from app.backtesting.engines.execution_engine import (
     ExecutionResult,
     PessimisticExecutionEngine,
     create_position_with_stops,
 )
-from app.core.protocols import ITradeExecutor
+from app.shared.protocols import ITradeExecutor
 
 logger = logging.getLogger(__name__)
 

@@ -1,29 +1,32 @@
 """
-InputProfile Domain Model - User investment parameters
+T1.1: InputProfile - User Input Validation & Parsing
 
-InputProfile represents the validated user input for the trading system.
-It's a domain model that captures user investment intent and constraints.
+Parse user inputs (capital, objective_inversion) into structured InputProfile.
+Entry point for the parametrization framework.
 
-Reference: Rule 05-architecture.md, Rule 02-type-hints.md
+Capabilities:
+- Validate user inputs (capital, objective)
+- Type conversion (JSON → Pydantic models)
+- Constraint checking (capital limits, risk tolerance consistency)
+- Clear error messages for invalid inputs
 """
 
-from __future__ import annotations
-
-from dataclasses import dataclass, field
+import logging
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 from uuid import uuid4
 
-from app.domain.value_objects.capital import Capital, CapitalTier
-from app.domain.value_objects.investment_horizon import HorizonCategory, InvestmentHorizon
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+logger = logging.getLogger(__name__)
 
 
-class InvestmentObjective(str, Enum):
+class ObjectivoInversion(str, Enum):
     """User investment objectives."""
 
-    MAXIMIZE_CAPITAL = "maximize_capital"
-    MAXIMIZE_DIVIDENDS = "maximize_dividends"
+    MAXIMIZAR_CAPITAL = "maximizar_capital"
+    MAXIMIZAR_DIVIDENDOS = "maximizar_dividendos"
     CAPITAL_PRESERVATION = "capital_preservation"
     BALANCED_GROWTH = "balanced_growth"
     INCOME_GENERATION = "income_generation"
@@ -32,400 +35,377 @@ class InvestmentObjective(str, Enum):
 class RiskTolerance(str, Enum):
     """User risk tolerance levels."""
 
-    LOW = "low"
-    MEDIUM = "medium"
-    HIGH = "high"
+    BAJO = "bajo"
+    MEDIO = "medio"
+    ALTO = "alto"
 
 
-@dataclass(frozen=True)
-class InputProfile:
+class TaxResidence(BaseModel):
     """
-    Domain model for user investment profile.
+    Tax residence configuration for the investor.
 
-    InputProfile is the entry point to the parametrization framework.
-    It captures and validates user investment parameters.
-
-    This model is immutable to prevent unintended state changes.
-    Use the builder pattern or factory methods for creation.
+    Critical for:
+    - Tax rate calculation
+    - Withholding tax optimization
+    - Country-specific regulations
+    - Currency hedging decisions
     """
 
-    # Core investment parameters (using value objects) - required
-    capital: Capital
-    horizon: InvestmentHorizon
-    objective: InvestmentObjective
-    risk_tolerance: RiskTolerance
-
-    # Optional parameters - with defaults
-    constraints: Optional[Dict[str, Any]] = None
-    tax_residence: Optional[Any] = None  # TaxResidence from value_objects
-
-    # Identification - with defaults
-    input_id: str = field(default_factory=lambda: str(uuid4()))
-    created_at: str = field(
-        default_factory=lambda: __import__("datetime").datetime.now().isoformat()
+    model_config = ConfigDict(
+        strict=True,
+        validate_assignment=True,
+        extra="forbid",
     )
 
-    def __post_init__(self):
-        """Validate input profile invariants."""
-        # Validate risk tolerance vs objective consistency
-        if self.objective == InvestmentObjective.CAPITAL_PRESERVATION:
-            if self.risk_tolerance == RiskTolerance.HIGH:
-                raise ValueError(
-                    "Capital preservation objective is inconsistent with high risk tolerance"
-                )
+    # Country identification
+    country_code: str = Field(
+        ...,
+        min_length=2,
+        max_length=2,
+        description="ISO 3166-1 alpha-2 country code (ES, US, UK, etc.)",
+    )
+    country_name: Optional[str] = Field(default=None, description="Full country name")
 
-        # Validate horizon allows for selected strategy
-        if self.horizon.is_short_term and self.risk_tolerance == RiskTolerance.HIGH:
-            # Warning only - allow but document
-            pass
+    # Tax rates (can be overridden with custom values)
+    capital_gains_rate_short: Decimal = Field(
+        default=Decimal("0.19"),
+        ge=Decimal("0"),
+        le=Decimal("1"),
+        description="Short-term capital gains tax rate",
+    )
+    capital_gains_rate_long: Decimal = Field(
+        default=Decimal("0.19"),
+        ge=Decimal("0"),
+        le=Decimal("1"),
+        description="Long-term capital gains tax rate",
+    )
+    dividend_tax_rate: Decimal = Field(
+        default=Decimal("0.19"),
+        ge=Decimal("0"),
+        le=Decimal("1"),
+        description="Dividend tax rate",
+    )
+    withholding_tax_domestic: Decimal = Field(
+        default=Decimal("0.19"),
+        ge=Decimal("0"),
+        le=Decimal("1"),
+        description="Domestic withholding tax rate",
+    )
+    withholding_tax_eu: Decimal = Field(
+        default=Decimal("0.00"),
+        ge=Decimal("0"),
+        le=Decimal("1"),
+        description="EU withholding tax rate (0% for EU residents)",
+    )
+    withholding_tax_us: Decimal = Field(
+        default=Decimal("0.30"),
+        ge=Decimal("0"),
+        le=Decimal("1"),
+        description="US withholding tax rate (30% without treaty)",
+    )
 
-    # Domain behaviors - capital classification
-    @property
-    def capital_tier(self) -> CapitalTier:
-        """Get capital tier for strategy gating."""
-        return self.capital.tier
+    # Country-specific rules
+    applies_wash_sale_rule: bool = Field(
+        default=False,
+        description="Whether wash sale rule applies (US only)",
+    )
+    allows_loss_carryforward: bool = Field(
+        default=True,
+        description="Whether losses can be carried forward",
+    )
+    loss_carryforward_years: Optional[int] = Field(
+        default=4,
+        ge=0,
+        description="Number of years losses can be carried forward",
+    )
 
-    @property
-    def is_small_capital(self) -> bool:
-        """Check if this is a small capital account."""
-        return self.capital.amount < Decimal("50000")
+    # Currency
+    base_currency: str = Field(
+        default="EUR",
+        description="Base currency for the investor (EUR, USD, GBP)",
+    )
 
-    @property
-    def is_large_capital(self) -> bool:
-        """Check if this is a large capital account."""
-        return self.capital.amount >= Decimal("250000")
+    # Regulatory
+    requires_currency_hedging: bool = Field(
+        default=False,
+        description="Whether currency hedging is recommended",
+    )
+    regulatory_authority: Optional[str] = Field(
+        default=None,
+        description="Main regulatory authority (CNMV, SEC, FCA, etc.)",
+    )
 
-    @property
-    def is_institutional(self) -> bool:
-        """Check if this is an institutional account."""
-        return self.capital.tier == CapitalTier.INSTITUTIONAL
 
-    # Domain behaviors - investment constraints
-    @property
-    def max_position_size(self) -> Decimal:
-        """
-        Get maximum position size based on capital and risk tolerance.
+class InputProfile(BaseModel):
+    """
+    Parsed and validated user input for parametrization framework.
 
-        Higher risk tolerance allows larger position sizes.
-        """
-        base_pct = Decimal("0.05")  # 5% base
+    This is the entry point to the system. It captures user intent:
+    - How much capital are they investing?
+    - What's their goal (maximize capital, dividends, etc.)?
+    - What's their risk appetite?
+    - How long will they invest?
 
-        if self.risk_tolerance == RiskTolerance.LOW:
-            multiplier = Decimal("0.5")  # 2.5% max
-        elif self.risk_tolerance == RiskTolerance.MEDIUM:
-            multiplier = Decimal("1.0")  # 5% max
-        else:  # HIGH
-            multiplier = Decimal("2.0")  # 10% max
+    These inputs drive the entire parametrization framework (T1.1-T14.1).
+    """
 
-        return self.capital.amount * base_pct * multiplier
+    model_config = ConfigDict(
+        strict=True,
+        validate_assignment=True,
+        extra="forbid",
+    )
 
-    @property
-    def max_portfolio_exposure(self) -> Decimal:
-        """
-        Get maximum portfolio exposure based on risk tolerance.
+    # Identification
+    input_id: str = Field(
+        default_factory=lambda: str(uuid4()), description="Unique identifier for this input"
+    )
 
-        Returns the percentage of capital that can be deployed at once.
-        """
-        if self.risk_tolerance == RiskTolerance.LOW:
-            return Decimal("0.6")  # 60%
-        elif self.risk_tolerance == RiskTolerance.MEDIUM:
-            return Decimal("0.8")  # 80%
-        else:  # HIGH
-            return Decimal("1.0")  # 100%
+    # Core Investment Parameters
+    capital_initial: Decimal = Field(
+        ...,
+        gt=Decimal("0"),
+        le=Decimal("10000000"),
+        description="Initial capital in EUR (€1 to €10M)",
+    )
 
-    @property
-    def requires_diversification(self) -> bool:
-        """
-        Check if portfolio requires strict diversification.
+    objetivo_inversion: ObjectivoInversion = Field(
+        ..., description="User investment objective (maximizar_capital, etc.)"
+    )
 
-        Larger accounts and conservative profiles need more diversification.
-        """
-        return self.is_large_capital or self.risk_tolerance == RiskTolerance.LOW
+    risk_tolerance: RiskTolerance = Field(..., description="User risk tolerance (bajo/medio/alto)")
 
-    # Domain behaviors - strategy eligibility
-    def allows_strategy(self, strategy_type: str) -> bool:
-        """
-        Check if profile allows a specific strategy.
+    investment_horizon: int = Field(
+        ..., ge=1, le=600, description="Investment horizon in months (1-50 years)"
+    )
 
-        Args:
-            strategy_type: Strategy identifier (momentum, pairs, etc.)
+    # Optional Parameters
+    constraints: Optional[Dict] = Field(
+        default=None, description="Optional constraints (sector limits, etc.)"
+    )
 
-        Returns:
-            True if strategy is allowed for this profile
-        """
-        # High-risk strategies require sufficient capital and horizon
-        if strategy_type in ["leveraged_etf", "options", "futures"]:
-            return self.is_large_capital and self.horizon.allows_high_risk()
+    # Tax Residence (CRITICAL for multi-market trading)
+    tax_residence: Optional[TaxResidence] = Field(
+        default=None,
+        description="Tax residence configuration (country, rates, currency)",
+    )
 
-        # Dividend strategies require minimum capital
-        if strategy_type == "dividend_arbitrage":
-            return self.capital.amount >= Decimal("25000")
+    # Metadata
+    created_at: str = Field(
+        default_factory=lambda: __import__('datetime').datetime.now().isoformat(),
+        description="Timestamp of input creation",
+    )
 
-        # Default: allow
-        return True
-
-    def requires_hedging(self) -> bool:
-        """
-        Check if currency hedging is recommended.
-
-        Returns True if tax residence currency differs from trading currencies.
-        """
-        if self.tax_residence is None:
-            return False
-
-        # If base currency is not USD and trading US stocks, recommend hedging
-        return (
-            self.tax_residence.base_currency != "USD"
-            and self.tax_residence.requires_currency_hedging
-        )
-
-    # Domain behaviors - validation
-    def validate_consistency(self) -> list[str]:
-        """
-        Validate internal consistency of profile parameters.
-
-        Returns:
-            List of warnings (empty if consistent)
-        """
-        warnings = []
-
-        # Check risk tolerance vs objective
-        if self.objective == InvestmentObjective.CAPITAL_PRESERVATION:
-            if self.risk_tolerance == RiskTolerance.HIGH:
-                warnings.append(
-                    "Capital preservation objective with high risk tolerance "
-                    "may lead to inconsistent recommendations"
-                )
-
-        # Check horizon vs risk tolerance
-        if self.horizon.is_short_term and self.risk_tolerance == RiskTolerance.HIGH:
-            warnings.append(
-                "Short investment horizon (< 12 months) with high risk tolerance "
-                "may expose capital to unnecessary volatility"
-            )
-
-        # Check capital size vs objective
-        if self.is_small_capital and self.objective == InvestmentObjective.MAXIMIZE_DIVIDENDS:
-            warnings.append(
-                "Small capital (< €50k) with dividend objective "
-                "may have limited diversification opportunities"
-            )
-
-        # Check horizon vs objective
-        if self.horizon.category == HorizonCategory.VERY_SHORT_TERM:
-            if self.objective in [
-                InvestmentObjective.MAXIMIZE_CAPITAL,
-                InvestmentObjective.MAXIMIZE_DIVIDENDS,
-            ]:
-                warnings.append(
-                    "Very short investment horizon may not allow sufficient time "
-                    "for capital appreciation or dividend compounding"
-                )
-
-        return warnings
-
-    # Factory methods
+    @field_validator('capital_initial', mode='before')
     @classmethod
-    def create(
-        cls,
-        capital_amount: Decimal | str | int | float,
-        horizon_months: int,
-        objective: str | InvestmentObjective,
-        risk_tolerance: str | RiskTolerance,
-        currency: str = "USD",
-        tax_country_code: Optional[str] = None,
-        constraints: Optional[Dict[str, Any]] = None,
-    ) -> InputProfile:
-        """
-        Factory method to create InputProfile with type conversions.
+    def validate_capital(cls, v):
+        """Convert capital to Decimal if needed."""
+        if isinstance(v, str):
+            try:
+                v = Decimal(v)
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
+                raise ValueError(f"Invalid capital format: {e}")
+        elif isinstance(v, (int, float)):
+            v = Decimal(str(v))
+        return v
 
-        Args:
-            capital_amount: Initial capital amount
-            horizon_months: Investment horizon in months
-            objective: Investment objective
-            risk_tolerance: Risk tolerance level
-            currency: Base currency
-            tax_country_code: ISO country code for tax residence
-            constraints: Optional additional constraints
+    @field_validator('objetivo_inversion', mode='before')
+    @classmethod
+    def validate_objetivo(cls, v):
+        """Validate objective is in enum."""
+        if isinstance(v, ObjectivoInversion):
+            return v
+        if isinstance(v, str):
+            # Try to convert string to enum
+            v = v.lower().strip()
+            try:
+                return ObjectivoInversion(v)
+            except ValueError:
+                valid_values = [e.value for e in ObjectivoInversion]
+                raise ValueError(
+                    f"Invalid objetivo_inversion: {v}. "
+                    f"Must be one of: {', '.join(valid_values)}"
+                )
+        return v
 
-        Returns:
-            Validated InputProfile instance
-        """
-        # Convert capital amount
-        if isinstance(capital_amount, str):
-            capital_amount = Decimal(capital_amount)
-        elif isinstance(capital_amount, (int, float)):
-            capital_amount = Decimal(str(capital_amount))
+    @field_validator('investment_horizon', mode='before')
+    @classmethod
+    def validate_horizon(cls, v):
+        """Validate investment horizon."""
+        if isinstance(v, str):
+            try:
+                v = int(v)
+            except ValueError:
+                raise ValueError(f"Investment horizon must be integer months: {v}")
+        return v
 
-        # Create Capital value object
-        capital = Capital.from_amount(Decimal(capital_amount), currency)
+    @field_validator('risk_tolerance', mode='before')
+    @classmethod
+    def validate_risk_tolerance(cls, v):
+        """Validate risk tolerance is in enum."""
+        if isinstance(v, RiskTolerance):
+            return v
+        if isinstance(v, str):
+            # Try to convert string to enum
+            v = v.lower().strip()
+            try:
+                return RiskTolerance(v)
+            except ValueError:
+                valid_values = [e.value for e in RiskTolerance]
+                raise ValueError(
+                    f"Invalid risk_tolerance: {v}. " f"Must be one of: {', '.join(valid_values)}"
+                )
+        return v
 
-        # Create InvestmentHorizon value object
-        horizon = InvestmentHorizon.from_months(horizon_months)
+    @property
+    def capital_flag(self) -> str:
+        """Flag capital as small, medium, or large for gating purposes."""
+        if self.capital_initial < Decimal("50000"):
+            return "small"
+        elif self.capital_initial < Decimal("250000"):
+            return "medium"
+        else:
+            return "large"
 
-        # Convert enums
-        if isinstance(objective, str):
-            objective = InvestmentObjective(objective.lower())
-        if isinstance(risk_tolerance, str):
-            # Map Spanish to English
-            tolerance_map = {
-                "bajo": RiskTolerance.LOW,
-                "medio": RiskTolerance.MEDIUM,
-                "alto": RiskTolerance.HIGH,
-                "low": RiskTolerance.LOW,
-                "medium": RiskTolerance.MEDIUM,
-                "high": RiskTolerance.HIGH,
-            }
-            risk_tolerance = tolerance_map.get(risk_tolerance.lower(), RiskTolerance.MEDIUM)
+    @property
+    def is_large_account(self) -> bool:
+        """Check if this is a large account (>€250k)."""
+        return self.capital_initial >= Decimal("250000")
 
-        # Handle tax residence
-        tax_residence = None
-        if tax_country_code:
-            from app.domain.value_objects.tax_residence import TaxResidence
-
-            # Use factory if available
-            factory_map = {
-                "ES": TaxResidence.spain,
-                "US": TaxResidence.usa,
-                "UK": TaxResidence.uk,
-            }
-            factory = factory_map.get(tax_country_code.upper())
-            tax_residence = factory() if factory else None
-
-        return cls(
-            capital=capital,
-            horizon=horizon,
-            objective=objective,
-            risk_tolerance=risk_tolerance,
-            tax_residence=tax_residence,
-            constraints=constraints,
-        )
-
-    # Serialization
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict:
         """Convert to dictionary for logging/storage."""
         return {
             "input_id": self.input_id,
-            "capital": {
-                "amount": str(self.capital.amount),
-                "currency": self.capital.currency,
-                "tier": self.capital.tier.value,
-            },
-            "horizon": {
-                "months": self.horizon.months,
-                "years": self.horizon.years,
-                "category": self.horizon.category.value,
-            },
-            "objective": self.objective.value,
+            "capital_initial": str(self.capital_initial),
+            "objetivo_inversion": self.objetivo_inversion.value,
             "risk_tolerance": self.risk_tolerance.value,
-            "max_position_size": str(self.max_position_size),
-            "max_portfolio_exposure": str(self.max_portfolio_exposure),
-            "tax_residence": str(self.tax_residence) if self.tax_residence else None,
-            "created_at": self.created_at,
+            "investment_horizon": self.investment_horizon,
+            "constraints": self.constraints,
+            "capital_flag": self.capital_flag,
+            "is_large_account": self.is_large_account,
+            "tax_residence": self.tax_residence.model_dump() if self.tax_residence else None,
         }
 
-    def __str__(self) -> str:
-        """String representation."""
-        return (
-            f"InputProfile(id={self.input_id[:8]}, "
-            f"capital={self.capital.amount} {self.capital.currency}, "
-            f"objective={self.objective.value}, "
-            f"risk={self.risk_tolerance.value})"
-        )
 
-    def __repr__(self) -> str:
-        """Developer representation."""
-        return (
-            f"InputProfile(input_id='{self.input_id}', "
-            f"capital=Capital(amount={self.capital.amount}, tier='{self.capital.tier.value}'), "
-            f"horizon=InvestmentHorizon(months={self.horizon.months}), "
-            f"objective={self.objective}, "
-            f"risk_tolerance={self.risk_tolerance})"
-        )
-
-
-# Input processor for creating profiles from user input
-class InputProfileValidator:
+class InputProcessor:
     """
-    Validator for creating InputProfile from user input.
+    Parse and validate user inputs into InputProfile.
 
-    This class handles validation and conversion of user input
-    into a proper InputProfile domain model.
+    This is the foundation task (T1.1) - no dependencies.
+    Provides clear error messages for invalid inputs.
+
+    Usage:
+        processor = InputProcessor()
+        profile = processor.process_input({
+            "capital_initial": 250000,
+            "objetivo_inversion": "maximizar_capital",
+            "risk_tolerance": "medio",
+            "investment_horizon": 12
+        })
     """
 
-    def __init__(self) -> None:
-        """Initialize validator."""
-        self._validated_count = 0
-        self._error_count = 0
+    def __init__(self):
+        """Initialize processor."""
+        self.processed_count = 0
+        self.error_count = 0
 
-    def validate(
-        self,
-        user_input: Dict[str, Any],
-    ) -> tuple[InputProfile, list[str]]:
+    def process_input(self, user_input: dict) -> InputProfile:
         """
-        Validate and create InputProfile from user input.
+        Parse and validate user input.
 
         Args:
             user_input: Dictionary with user parameters
 
         Returns:
-            Tuple of (InputProfile, warnings)
+            InputProfile: Validated input profile
 
         Raises:
-            ValueError: If input is invalid
+            ValueError: If input is invalid (with clear error message)
         """
-        # Check required fields
-        required_fields = [
-            "capital_initial",
-            "investment_horizon",
-            "objetivo_inversion",
-            "risk_tolerance",
-        ]
-        missing = [f for f in required_fields if f not in user_input]
-        if missing:
-            raise ValueError(f"Missing required fields: {', '.join(missing)}")
+        try:
+            # Validate input is dict
+            if not isinstance(user_input, dict):
+                raise ValueError(f"Input must be dictionary, got {type(user_input)}")
 
-        # Extract parameters
-        capital = user_input["capital_initial"]
-        horizon = user_input["investment_horizon"]
+            # Check required fields
+            required_fields = [
+                "capital_initial",
+                "objetivo_inversion",
+                "risk_tolerance",
+                "investment_horizon",
+            ]
+            missing = [f for f in required_fields if f not in user_input]
+            if missing:
+                raise ValueError(f"Missing required fields: {', '.join(missing)}")
 
-        # Map objective names (support both Spanish and English)
-        objective_map = {
-            "maximizar_capital": InvestmentObjective.MAXIMIZE_CAPITAL,
-            "maximize_capital": InvestmentObjective.MAXIMIZE_CAPITAL,
-            "maximizar_dividendos": InvestmentObjective.MAXIMIZE_DIVIDENDS,
-            "maximize_dividends": InvestmentObjective.MAXIMIZE_DIVIDENDS,
-            "capital_preservation": InvestmentObjective.CAPITAL_PRESERVATION,
-            "balanced_growth": InvestmentObjective.BALANCED_GROWTH,
-            "income_generation": InvestmentObjective.INCOME_GENERATION,
-        }
-        objective_raw = user_input["objetivo_inversion"]
-        objective = objective_map.get(
-            objective_raw.lower() if isinstance(objective_raw, str) else objective_raw,
-            InvestmentObjective.BALANCED_GROWTH,
-        )
+            # Create InputProfile (validates all constraints)
+            profile = InputProfile(**user_input)
 
-        # Create profile
-        profile = InputProfile.create(
-            capital_amount=capital,
-            horizon_months=horizon,
-            objective=objective,
-            risk_tolerance=user_input["risk_tolerance"],
-            currency=user_input.get("currency", "USD"),
-            tax_country_code=user_input.get("tax_country"),
-            constraints=user_input.get("constraints"),
-        )
+            logger.info(
+                f"Successfully processed input: capital={profile.capital_initial}, "
+                f"objetivo={profile.objetivo_inversion.value}, "
+                f"risk={profile.risk_tolerance.value}"
+            )
 
-        # Validate consistency
-        warnings = profile.validate_consistency()
+            self.processed_count += 1
+            return profile
 
-        self._validated_count += 1
-        return profile, warnings
+        except ValueError as e:
+            self.error_count += 1
+            logger.error(f"Input validation error: {e}")
+            raise
+        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+            self.error_count += 1
+            logger.error(f"Unexpected error processing input: {e}")
+            raise ValueError(f"Failed to process input: {e}")
 
-    @property
-    def stats(self) -> Dict[str, int]:
-        """Get validation statistics."""
+    def validate_consistency(self, profile: InputProfile) -> tuple[bool, list[str]]:
+        """
+        Additional consistency checks beyond field validation.
+
+        Args:
+            profile: InputProfile to validate
+
+        Returns:
+            Tuple of (is_valid, warnings)
+        """
+        warnings = []
+
+        # Check risk tolerance vs objective consistency
+        if profile.objetivo_inversion == ObjectivoInversion.CAPITAL_PRESERVATION:
+            if profile.risk_tolerance == RiskTolerance.ALTO:
+                warnings.append(
+                    "Warning: capital_preservation objective with alto risk tolerance "
+                    "may be contradictory. Consider lowering risk tolerance."
+                )
+
+        # Check investment horizon vs risk tolerance
+        if profile.investment_horizon < 12 and profile.risk_tolerance == RiskTolerance.ALTO:
+            warnings.append(
+                "Warning: short investment horizon (< 12 months) with alto risk tolerance "
+                "may expose capital to unnecessary volatility."
+            )
+
+        # Check capital size vs objective
+        if (
+            profile.capital_initial < Decimal("50000")
+            and profile.objetivo_inversion == ObjectivoInversion.MAXIMIZAR_DIVIDENDOS
+        ):
+            warnings.append(
+                "Warning: small capital (< €50k) with dividend objective "
+                "may have limited diversification."
+            )
+
+        is_valid = True
+        return is_valid, warnings
+
+    def get_stats(self) -> dict:
+        """Get processing statistics."""
         return {
-            "validated": self._validated_count,
-            "errors": self._error_count,
+            "processed": self.processed_count,
+            "errors": self.error_count,
+            "success_rate": (
+                self.processed_count / (self.processed_count + self.error_count)
+                if (self.processed_count + self.error_count) > 0
+                else 0
+            ),
         }

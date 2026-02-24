@@ -16,7 +16,7 @@ from typing import Any, AsyncGenerator, Callable, Dict, Optional, TypeVar
 from fastapi import HTTPException, Request, Response, status
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from app.core.logging_config import get_correlation_id, set_correlation_id
+from app.infrastructure.logging.logging_config import get_correlation_id, set_correlation_id
 
 logger = logging.getLogger(__name__)
 

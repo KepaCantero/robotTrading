@@ -13,6 +13,7 @@ from typing import Any, Dict, Optional
 import yaml
 
 from app.backtesting.models import BacktestConfig
+from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -185,7 +186,7 @@ class BacktestConfigLoader:
             # Take profit can be any positive number (not really a percentage)
 
         # Risk free rate (can be 0 or negative for some markets)
-        risk_free_rate_raw = config.get('risk_free_rate', 0.02)
+        risk_free_rate_raw = config.get('risk_free_rate', float(get_config().backtesting.default_risk_free_rate))
         try:
             risk_free_rate = Decimal(str(risk_free_rate_raw))
         except (ValueError, TypeError) as e:
