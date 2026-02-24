@@ -21,7 +21,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 from requests.exceptions import HTTPError, RequestException
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 from app.domain.models.profitability_validation import (
     HistoricalValidation,
     ProfitabilityValidation,

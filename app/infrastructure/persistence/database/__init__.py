@@ -20,8 +20,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import QueuePool
 
-from app.core.environment_config import get_config
-from app.core.exceptions import raise_database_error
+from app.shared.config.environment_config import get_config
+from app.shared.exceptions.exceptions import raise_database_error
 
 logger = logging.getLogger(__name__)
 

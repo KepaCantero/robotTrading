@@ -8,7 +8,7 @@ on abstractions, not concrete implementations.
 Reference: Rule 05-architecture.md, Rule 11-enterprise-architecture.md
 """
 
-from app.core.di_container import DIContainer, get_container
+from app.shared.config.di_container import DIContainer, get_container
 from app.domain.factories import AbstractEntityFactory, TradingEntityFactory
 
 

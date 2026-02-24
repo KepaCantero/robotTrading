@@ -35,6 +35,8 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import minimize
 
+from app.shared.config.centralized_config import get_config
+
 logger = logging.getLogger(__name__)
 
 
@@ -148,7 +150,7 @@ class BlackLittermanConfig:
     risk_aversion: float = 3.0
     use_shrinkage: bool = True
     lookback_days: int = 252
-    risk_free_rate: float = getattr(config.trading, 'max_risk_per_trade', 0.02)
+    risk_free_rate: float = float(get_config().backtesting.default_risk_free_rate)
     max_position: float = 0.20
     omega_method: str = "idzorek"
 

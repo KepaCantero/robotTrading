@@ -17,6 +17,7 @@ import numpy as np
 
 from app.domain.entities.portfolio import Portfolio
 from app.domain.entities.position import Position
+from app.shared.config.centralized_config import get_config
 
 
 @dataclass
@@ -53,14 +54,14 @@ class RiskCalculator:
     Provides pure risk calculation logic without external dependencies.
     """
 
-    def __init__(self, risk_free_rate: Decimal = getattr(config.trading, 'max_risk_per_trade', 0.02)")):
+    def __init__(self, risk_free_rate: Decimal = None):
         """
         Initialize risk calculator.
 
         Args:
-            risk_free_rate: Risk-free rate for Sharpe ratio calculation
+            risk_free_rate: Risk-free rate for Sharpe ratio calculation (default: from CentralizedConfig)
         """
-        self._risk_free_rate = risk_free_rate
+        self._risk_free_rate = risk_free_rate if risk_free_rate is not None else get_config().backtesting.default_risk_free_rate
 
     def calculate_portfolio_risk(self, portfolio: Portfolio) -> RiskMetrics:
         """
@@ -347,7 +348,7 @@ class RiskCalculator:
             return Decimal("0")
 
         # Assume 2% daily volatility per position (conservative)
-        position_vol = getattr(config.trading, 'max_risk_per_trade', 0.02)")
+        position_vol = 0.02
 
         # Portfolio vol = weighted average * sqrt(n) for uncorrelated
         n = len(weights)

@@ -34,7 +34,7 @@ try:
         return sm_adfuller(*args, **kwargs)
 
 except ImportError:
-    from app.core.statsmodels_fallback import adfuller
+    from app.shared.performance.statsmodels_fallback import adfuller
 
     STATSMODELS_AVAILABLE = False
 

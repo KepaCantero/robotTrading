@@ -23,7 +23,7 @@ from fastapi import HTTPException, Request, Response, status
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 
-from app.core.config import get_settings
+from app.shared.config.config import get_settings
 
 logger = logging.getLogger(__name__)
 

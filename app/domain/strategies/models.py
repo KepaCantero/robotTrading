@@ -394,7 +394,7 @@ class FactorStrategyConfig(BaseModel):
     @model_validator(mode="after")
     def validate_weights_sum(self) -> "FactorStrategyConfig":
         """Validate that factor weights sum approximately to 1."""
-        from app.core.centralized_config import get_config
+        from app.shared.config.centralized_config import get_config
 
         total = (
             self.value_weight
@@ -413,7 +413,7 @@ class FactorStrategyConfig(BaseModel):
     @model_validator(mode="after")
     def validate_tilt_ranges(self) -> "FactorStrategyConfig":
         """Validate that tilts are within reasonable ranges."""
-        from app.core.centralized_config import get_config
+        from app.shared.config.centralized_config import get_config
 
         total_tilt = abs(self.value_tilt) + abs(self.size_tilt) + abs(self.profitability_tilt)
         # Get tilt limit from config

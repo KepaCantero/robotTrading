@@ -23,7 +23,7 @@ import numpy as np
 import pandas as pd
 
 from app.domain.analysis.fundamental_law.models import BreadthMetrics
-from app.core.decimal_utils import to_decimal
+from app.shared.utils.decimal_utils import to_decimal
 
 logger = logging.getLogger(__name__)
 

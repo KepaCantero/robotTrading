@@ -15,7 +15,7 @@ from typing import Any, Dict, List, Optional
 import aiohttp
 from aiohttp import ClientError
 
-from app.core.api_endpoints import ENDPOINTS
+from app.presentation.api.api_endpoints import ENDPOINTS
 from app.domain.models.market_data import (
     DataFeedConfig,
     DataFeedType,

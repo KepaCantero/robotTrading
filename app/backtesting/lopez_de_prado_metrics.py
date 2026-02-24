@@ -26,6 +26,8 @@ import numpy as np
 from scipy import stats
 from scipy.cluster import hierarchy
 
+from app.shared.config.centralized_config import get_config
+
 logger = logging.getLogger(__name__)
 
 
@@ -161,14 +163,14 @@ class SharpeRatioCombinator:
     - Hierarchical combination methods
     """
 
-    def __init__(self, risk_free_rate: float = 0.02):
+    def __init__(self, risk_free_rate: float = None):
         """
         Initialize Sharpe ratio combinator.
 
         Args:
-            risk_free_rate: Annual risk-free rate (default: 2%)
+            risk_free_rate: Annual risk-free rate (default: from CentralizedConfig)
         """
-        self.risk_free_rate = risk_free_rate
+        self.risk_free_rate = risk_free_rate if risk_free_rate is not None else float(get_config().backtesting.default_risk_free_rate)
 
     def combine_sharpes_optimal(
         self,
@@ -749,17 +751,17 @@ class TurnoverAdjustedCalculator:
     def __init__(
         self,
         transaction_cost_bps: float = 10.0,  # 10 bps per trade
-        risk_free_rate: float = 0.02,
+        risk_free_rate: float = None,
     ):
         """
         Initialize turnover-adjusted calculator.
 
         Args:
             transaction_cost_bps: Transaction cost in basis points
-            risk_free_rate: Annual risk-free rate
+            risk_free_rate: Annual risk-free rate (default: from CentralizedConfig)
         """
         self.transaction_cost_bps = transaction_cost_bps
-        self.risk_free_rate = risk_free_rate
+        self.risk_free_rate = risk_free_rate if risk_free_rate is not None else float(get_config().backtesting.default_risk_free_rate)
 
     def calculate_turnover_adjusted_sharpe(
         self,
@@ -1000,29 +1002,30 @@ class ConcentrationAnalyzer:
 
 # Factory function for easy instantiation
 def create_lopez_de_prado_suite(
-    risk_free_rate: float = 0.02,
+    risk_free_rate: float = None,
     stability_threshold: float = 70.0,
     transaction_cost_bps: float = 10.0,
 ) -> Dict[str, Any]:
     """
-    Create a complete López de Prado metrics suite.
+    Create a complete Lopez de Prado metrics suite.
 
     Args:
-        risk_free_rate: Annual risk-free rate
+        risk_free_rate: Annual risk-free rate (default: from CentralizedConfig)
         stability_threshold: Portfolio stability threshold (0-100)
         transaction_cost_bps: Transaction cost in basis points
 
     Returns:
-        Dictionary with all López de Prado metrics calculators
+        Dictionary with all Lopez de Prado metrics calculators
     """
+    rf = risk_free_rate if risk_free_rate is not None else float(get_config().backtesting.default_risk_free_rate)
     return {
-        "sharpe_combiner": SharpeRatioCombinator(risk_free_rate=risk_free_rate),
+        "sharpe_combiner": SharpeRatioCombinator(risk_free_rate=rf),
         "stability_validator": PortfolioStabilityValidator(
             stability_threshold=stability_threshold,
         ),
         "turnover_calculator": TurnoverAdjustedCalculator(
             transaction_cost_bps=transaction_cost_bps,
-            risk_free_rate=risk_free_rate,
+            risk_free_rate=rf,
         ),
         "concentration_analyzer": ConcentrationAnalyzer(),
     }

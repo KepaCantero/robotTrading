@@ -18,6 +18,8 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 
+from app.shared.config.centralized_config import get_config
+
 # Try to import empyrical, provide fallback if not available
 try:
     import empyrical as ep
@@ -34,7 +36,7 @@ except ImportError:
         "For full functionality, install: pip install empyrical-reloaded"
     )
 
-from app.core.decimal_utils import safe_mean
+from app.shared.utils.decimal_utils import safe_mean
 from app.backtesting.advanced_metrics import AdvancedMetricsCalculator
 from app.backtesting.lopez_de_prado_metrics import (
     ConcentrationAnalyzer,
@@ -67,14 +69,16 @@ def _ensure_empyrical():
 class MetricsCalculator:
     """Calculator for backtesting performance metrics."""
 
-    def __init__(self, risk_free_rate: Decimal = Decimal("0.02")):
+    def __init__(self, risk_free_rate: Optional[Decimal] = None):
         """
         Initialize metrics calculator.
 
         Args:
-            risk_free_rate: Annual risk-free rate (default: 2%)
+            risk_free_rate: Annual risk-free rate (defaults to config value)
         """
-        self.risk_free_rate = risk_free_rate
+        config = get_config()
+        self.risk_free_rate = risk_free_rate if risk_free_rate is not None else config.backtesting.default_risk_free_rate
+        self._annual_trading_days = config.backtesting.annual_trading_days
 
         # Initialize López de Prado metrics components
         self._sharpe_combiner: Optional[SharpeRatioCombinator] = None
@@ -376,9 +380,9 @@ class MetricsCalculator:
                 try:
                     # Convert annual risk-free rate to daily for empyrical
                     # (empyrical expects daily rate when period='daily')
-                    daily_risk_free = float(self.risk_free_rate) / 252
+                    daily_risk_free = float(self.risk_free_rate) / self._annual_trading_days
                     sharpe = ep_module.sharpe_ratio(
-                        returns_array, risk_free=daily_risk_free, period='daily', annualization=252
+                        returns_array, risk_free=daily_risk_free, period='daily', annualization=self._annual_trading_days
                     )
                     # Handle NaN
                     if np.isnan(sharpe) or np.isinf(sharpe):
@@ -396,9 +400,9 @@ class MetricsCalculator:
                 return Decimal("0")
 
             # Annualize returns and volatility
-            # Assuming daily returns, annualize by multiplying mean by 252 and std by sqrt(252)
-            annual_return = mean_return * 252  # Trading days
-            annual_std = std_return * np.sqrt(252)
+            # Assuming daily returns, annualize by multiplying mean by trading days and std by sqrt(trading days)
+            annual_return = mean_return * self._annual_trading_days
+            annual_std = std_return * np.sqrt(self._annual_trading_days)
 
             # Risk-free rate is already annualized (e.g., 0.02 = 2% annual)
             annual_risk_free = float(self.risk_free_rate)
@@ -429,9 +433,9 @@ class MetricsCalculator:
             if ep_module is not None:
                 try:
                     # Convert annual risk-free rate to daily for empyrical
-                    daily_risk_free = float(self.risk_free_rate) / 252
+                    daily_risk_free = float(self.risk_free_rate) / self._annual_trading_days
                     sortino = ep_module.sortino_ratio(
-                        returns_array, risk_free=daily_risk_free, period='daily', annualization=252
+                        returns_array, risk_free=daily_risk_free, period='daily', annualization=self._annual_trading_days
                     )
                     # Handle NaN
                     if np.isnan(sortino) or np.isinf(sortino):
@@ -445,7 +449,7 @@ class MetricsCalculator:
 
             # Calculate downside deviation (correct formula)
             # Target is daily risk-free rate, not zero
-            daily_risk_free = float(self.risk_free_rate) / 252
+            daily_risk_free = float(self.risk_free_rate) / self._annual_trading_days
             target_return = daily_risk_free
 
             # Downside deviation: sqrt(mean(min(r - target, 0)^2))
@@ -464,9 +468,9 @@ class MetricsCalculator:
                 return Decimal("0")
 
             # Annualize
-            annual_return = mean_return * 252
+            annual_return = mean_return * self._annual_trading_days
             annual_risk_free = float(self.risk_free_rate)
-            annual_downside_std = downside_std * np.sqrt(252)
+            annual_downside_std = downside_std * np.sqrt(self._annual_trading_days)
 
             # Sortino = (Annualized Return - Risk Free) / Annualized Downside Deviation
             sortino = (
@@ -951,7 +955,7 @@ class LopezDePradoMetricsCalculator:
 
     def __init__(
         self,
-        risk_free_rate: float = 0.02,
+        risk_free_rate: Optional[float] = None,
         stability_threshold: float = 70.0,
         transaction_cost_bps: float = 10.0,
     ):
@@ -959,16 +963,18 @@ class LopezDePradoMetricsCalculator:
         Initialize López de Prado metrics calculator.
 
         Args:
-            risk_free_rate: Annual risk-free rate (default: 2%)
+            risk_free_rate: Annual risk-free rate (defaults to config value)
             stability_threshold: Minimum stability score (0-100)
             transaction_cost_bps: Transaction cost in basis points
         """
-        self.risk_free_rate = risk_free_rate
+        config = get_config()
+        self.risk_free_rate = risk_free_rate if risk_free_rate is not None else float(config.backtesting.default_risk_free_rate)
+        self._annual_trading_days = config.backtesting.annual_trading_days
         self.stability_threshold = stability_threshold
         self.transaction_cost_bps = transaction_cost_bps
 
         # Initialize metric calculators
-        self.sharpe_combiner = SharpeRatioCombinator(risk_free_rate=risk_free_rate)
+        self.sharpe_combiner = SharpeRatioCombinator(risk_free_rate=self.risk_free_rate)
         self.stability_validator = PortfolioStabilityValidator(
             stability_threshold=stability_threshold,
         )
@@ -1294,7 +1300,7 @@ class LopezDePradoMetricsCalculator:
 
 # Convenience function for creating López de Prado calculator
 def create_lopez_de_prado_calculator(
-    risk_free_rate: float = 0.02,
+    risk_free_rate: Optional[float] = None,
     stability_threshold: float = 70.0,
     transaction_cost_bps: float = 10.0,
 ) -> LopezDePradoMetricsCalculator:
@@ -1302,7 +1308,7 @@ def create_lopez_de_prado_calculator(
     Create a López de Prado metrics calculator.
 
     Args:
-        risk_free_rate: Annual risk-free rate
+        risk_free_rate: Annual risk-free rate (defaults to config value)
         stability_threshold: Minimum stability score (0-100)
         transaction_cost_bps: Transaction cost in basis points
 

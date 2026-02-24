@@ -16,7 +16,7 @@ import numpy as np
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -316,11 +316,16 @@ class SignalScorer:
         rsi = metadata.get("rsi", 50)
         ema_trend = metadata.get("ema_trend", 0)
 
-        # RSI momentum (RSI > 70 = overbought, RSI < 30 = oversold)
-        if rsi > 70:
-            rsi_score = 100 - (rsi - 70) * 2  # Penalize overbought
-        elif rsi < 30:
-            rsi_score = 100 - (30 - rsi) * 2  # Penalize oversold
+        # Get RSI thresholds from config
+        config = get_config()
+        rsi_oversold = config.trading.rsi_oversold  # Default 30
+        rsi_overbought = config.trading.rsi_overbought  # Default 70
+
+        # RSI momentum (RSI > overbought = overbought, RSI < oversold = oversold)
+        if rsi > rsi_overbought:
+            rsi_score = 100 - (rsi - rsi_overbought) * 2  # Penalize overbought
+        elif rsi < rsi_oversold:
+            rsi_score = 100 - (rsi_oversold - rsi) * 2  # Penalize oversold
         else:
             rsi_score = 100 - abs(rsi - 50) * 2  # Neutral zone
 
@@ -681,11 +686,16 @@ class SignalPriorityQueue:
             # Adjust based on metadata indicators
             if "rsi" in metadata:
                 rsi = metadata["rsi"]
-                if 40 <= rsi <= 60:  # Good neutral RSI range
+                rsi_oversold = float(config.trading.rsi_oversold)  # Default 30
+                rsi_overbought = float(config.trading.rsi_overbought)  # Default 70
+                rsi_neutral_min = (rsi_oversold + 50) / 2  # ~40
+                rsi_neutral_max = (rsi_overbought + 50) / 2  # ~60
+
+                if rsi_neutral_min <= rsi <= rsi_neutral_max:  # Good neutral RSI range
                     base_confidence += 20.0  # More generous for good neutral RSI
-                elif 30 <= rsi <= 70:  # Neutral RSI
+                elif rsi_oversold <= rsi <= rsi_overbought:  # Neutral RSI
                     base_confidence += 15.0
-                elif rsi < 30 or rsi > 70:  # Extreme RSI
+                elif rsi < rsi_oversold or rsi > rsi_overbought:  # Extreme RSI
                     base_confidence += 20.0
 
             if "ema_trend" in metadata:
@@ -803,12 +813,15 @@ class SignalPriorityQueue:
         """Calculate momentum score from metadata."""
         try:
             score = 50.0
+            config = get_config()
+            rsi_oversold = float(config.trading.rsi_oversold)  # Default 30
+            rsi_overbought = float(config.trading.rsi_overbought)  # Default 70
 
             if "rsi" in metadata:
                 rsi = metadata["rsi"]
-                if rsi < 30:  # Oversold
+                if rsi < rsi_oversold:  # Oversold
                     score += 20.0
-                elif rsi > 70:  # Overbought
+                elif rsi > rsi_overbought:  # Overbought
                     score -= 20.0
                 else:  # Neutral
                     score += 5.0
@@ -816,8 +829,7 @@ class SignalPriorityQueue:
             if "ema_trend" in metadata:
                 trend = metadata["ema_trend"]
                 try:
-                    config = get_config()
-                    strong_trend = getattr(config.trading, 'signal_ema_trend_strong', 0.02)
+                    strong_trend = float(getattr(config.trading, 'signal_ema_trend_strong', 0.02))
                     if trend > strong_trend:  # Strong uptrend
                         score += 25.0
                     elif trend < -strong_trend:  # Strong downtrend

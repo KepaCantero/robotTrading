@@ -18,7 +18,7 @@ import numpy as np
 from app.backtesting.models import BacktestConfig, BacktestResult
 
 # SINGLE SOURCE OF TRUTH: Import CentralizedConfig
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 
 # Forward reference for type hints
 if TYPE_CHECKING:

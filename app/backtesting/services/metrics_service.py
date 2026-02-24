@@ -20,7 +20,7 @@ from typing import Any, Dict, List
 import pandas as pd
 
 from app.backtesting.services.models import BaselineOptimizationComparison, OptimizedStrategy
-from app.core.models.input_profile import InputProfile
+from app.domain.models.input_profile import InputProfile
 
 logger = logging.getLogger(__name__)
 

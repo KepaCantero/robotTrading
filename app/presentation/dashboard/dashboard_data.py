@@ -3,6 +3,9 @@ Dashboard data models.
 
 Defines the data structures used by the dashboard to display
 trading information.
+
+NOTE: For canonical PerformanceMetrics, use app.backtesting.models.PerformanceMetrics
+This module contains DashboardPerformanceMetrics which is dashboard-specific.
 """
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -37,8 +40,14 @@ class PositionSummary:
 
 
 @dataclass
-class PerformanceMetrics:
-    """Trading performance metrics."""
+class DashboardPerformanceMetrics:
+    """
+    Dashboard-specific performance metrics.
+
+    This is a simplified dataclass for dashboard display purposes.
+    For comprehensive backtesting metrics, use the canonical
+    app.backtesting.models.PerformanceMetrics instead.
+    """
     total_pnl: Decimal
     daily_pnl: Decimal
     daily_return_pct: float
@@ -68,6 +77,10 @@ class PerformanceMetrics:
             "portfolio_value": float(self.portfolio_value),
             "starting_capital": float(self.starting_capital),
         }
+
+
+# Backward compatibility alias - use DashboardPerformanceMetrics instead
+PerformanceMetrics = DashboardPerformanceMetrics
 
 
 @dataclass

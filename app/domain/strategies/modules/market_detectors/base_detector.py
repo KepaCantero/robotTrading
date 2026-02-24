@@ -41,7 +41,7 @@ class BaseMarketDetector(ABC):
         # Cargar configuración desde YAML si no se proporciona
         if config is None and use_yaml:
             try:
-                from app.core.config_loader import get_detector_config
+                from app.shared.config.config_loader import get_detector_config
 
                 config = get_detector_config(name, tier=tier)
                 logger.debug(f"Loaded {name} config from YAML (tier={tier or 'default'})")

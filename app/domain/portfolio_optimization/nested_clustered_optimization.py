@@ -30,6 +30,8 @@ import numpy as np
 from scipy.optimize import minimize
 from sklearn.cluster import DBSCAN, KMeans
 
+from app.shared.config.centralized_config import get_config
+
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
@@ -65,7 +67,7 @@ class NCOConfig:
     min_samples: int = 2
     min_cluster_size: int = 2
     max_weight_single_asset: float = 0.20
-    risk_free_rate: float = 0.02
+    risk_free_rate: float = float(get_config().backtesting.default_risk_free_rate)
     random_state: int = 42
 
     def __post_init__(self) -> None:

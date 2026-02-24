@@ -1,8 +1,8 @@
 """
 Risk Engine - Base Engine (Hull Chapters 18-20)
 
-Engine principal para gestión de riesgos que extiende PortfolioRiskManager.
-Implementa recomendaciones de Hull para gestión de riesgos avanzada:
+Engine principal para gestion de riesgos que extiende PortfolioRiskManager.
+Implementa recomendaciones de Hull para gestion de riesgos avanzada:
 
 Value at Risk (VaR) Methods:
 - Historical VaR: Non-parametric using empirical distribution
@@ -37,38 +37,76 @@ GARCH Volatility Modeling:
 
 Reference:
 - Hull, Options, Futures, and Other Derivatives, Chapters 17-20
+
+REFACTORED: Uses TYPE_CHECKING and lazy imports to avoid circular dependencies.
 """
+
+from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict, List
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Protocol, runtime_checkable
 
-# Lazy imports to avoid circular dependencies with models that require pydantic
-# Import Portfolio with fallback placeholder
-try:
-    from app.domain.models.portfolio import Portfolio
-except ImportError:
-    # Create a minimal Portfolio placeholder if the real one can't be imported
-    # This allows the risk_engine to be imported even when pydantic is missing
-    class Portfolio:  # type: ignore
-        """Placeholder Portfolio class when pydantic is not available."""
-
-
-# Type alias for TYPE_CHECKING
+# Use TYPE_CHECKING for type hints only - no runtime import
 if TYPE_CHECKING:
-    PortfolioType = Portfolio
-
-
-try:
+    from app.domain.models.portfolio import Portfolio
     from app.domain.services.risk.portfolio import PortfolioRiskManager
-except ImportError:
-    # Create a minimal PortfolioRiskManager placeholder
-    class PortfolioRiskManager:
-        """Placeholder when services can't be imported."""
 
-        def assess_portfolio_risk(self, portfolio):
-            return {'risk_level': 'unknown'}
+
+# Define a Protocol for Portfolio to use at runtime instead of placeholder
+@runtime_checkable
+class PortfolioProtocol(Protocol):
+    """Protocol for Portfolio to avoid circular imports at runtime."""
+
+    @property
+    def portfolio_id(self) -> str:
+        """Portfolio identifier."""
+        ...
+
+    @property
+    def capital(self) -> Any:
+        """Current capital."""
+        ...
+
+
+def _get_portfolio_class():
+    """
+    Lazily import Portfolio class to avoid circular dependencies.
+
+    Returns:
+        Portfolio class or a minimal placeholder if import fails
+    """
+    try:
+        from app.domain.models.portfolio import Portfolio
+        return Portfolio
+    except ImportError:
+        # Return a minimal placeholder class if the real one can't be imported
+        # This allows the risk_engine to be imported even when pydantic is missing
+        class _PortfolioPlaceholder:
+            """Placeholder Portfolio class when pydantic is not available."""
+            pass
+        return _PortfolioPlaceholder
+
+
+def _get_portfolio_risk_manager():
+    """
+    Lazily import PortfolioRiskManager to avoid circular dependencies.
+
+    Returns:
+        PortfolioRiskManager class or a minimal placeholder if import fails
+    """
+    try:
+        from app.domain.services.risk.portfolio import PortfolioRiskManager
+        return PortfolioRiskManager
+    except ImportError:
+        # Create a minimal placeholder
+        class _PortfolioRiskManagerPlaceholder:
+            """Placeholder when services can't be imported."""
+
+            def assess_portfolio_risk(self, portfolio):
+                return {'risk_level': 'unknown'}
+        return _PortfolioRiskManagerPlaceholder
 
 
 from .alert_system import AlertSystem
@@ -92,6 +130,7 @@ logger = logging.getLogger(__name__)
 __all__ = [
     "RiskEngine",
     "BaseRiskEngine",
+    "PortfolioProtocol",  # Protocol for dependency injection
     "AlertSystem",
     "DrawdownController",
     "CorrelationAnalyzer",
@@ -138,7 +177,7 @@ class BaseRiskEngine(ABC):
         Inicializar Risk Engine.
 
         Args:
-            config: Configuración del engine
+            config: Configuracion del engine
         """
         self.config = config
         self.enabled = config.get('enabled', True)
@@ -150,7 +189,7 @@ class BaseRiskEngine(ABC):
         """Inicializar el engine."""
 
     @abstractmethod
-    def assess_risk(self, portfolio: Portfolio, **kwargs) -> Dict[str, Any]:
+    def assess_risk(self, portfolio: "Portfolio", **kwargs) -> Dict[str, Any]:
         """
         Evaluar riesgo del portfolio.
 
@@ -159,7 +198,7 @@ class BaseRiskEngine(ABC):
             **kwargs: Argumentos adicionales
 
         Returns:
-            Dict con evaluación de riesgo
+            Dict con evaluacion de riesgo
         """
 
 
@@ -174,8 +213,8 @@ class RiskEngine(BaseRiskEngine):
         """Inicializar Risk Engine."""
         super().__init__(config)
 
-        # PortfolioRiskManager base (mantener compatibilidad)
-        self.risk_manager = PortfolioRiskManager()
+        # PortfolioRiskManager base - lazy load to avoid circular dependencies
+        self._risk_manager = None
 
         # Componentes del engine
         self.var_calculator = None
@@ -190,9 +229,17 @@ class RiskEngine(BaseRiskEngine):
         self.risk_history: List[Dict[str, Any]] = []
         self.alert_history: List[Dict[str, Any]] = []
 
-        # Métricas
+        # Metricas
         self.risk_assessments_performed = 0
         self.alerts_triggered = 0
+
+    @property
+    def risk_manager(self):
+        """Lazy load PortfolioRiskManager to avoid circular dependencies."""
+        if self._risk_manager is None:
+            PortfolioRiskManager = _get_portfolio_risk_manager()
+            self._risk_manager = PortfolioRiskManager()
+        return self._risk_manager
 
     def initialize(self) -> None:
         """Inicializar Risk Engine."""
@@ -203,7 +250,7 @@ class RiskEngine(BaseRiskEngine):
             self.logger.error(f"Error inicializando RiskEngine: {e}", exc_info=True)
             self._initialized = False
 
-    def assess_risk(self, portfolio: Portfolio, **kwargs) -> Dict[str, Any]:
+    def assess_risk(self, portfolio: "Portfolio", **kwargs) -> Dict[str, Any]:
         """
         Evaluar riesgo completo del portfolio.
 
@@ -212,7 +259,7 @@ class RiskEngine(BaseRiskEngine):
             **kwargs: Argumentos adicionales (returns_history, prices, etc.)
 
         Returns:
-            Dict con evaluación completa de riesgo
+            Dict con evaluacion completa de riesgo
         """
         if not self._initialized:
             self.initialize()
@@ -249,7 +296,7 @@ class RiskEngine(BaseRiskEngine):
             self.logger.error(f"Error evaluando riesgo: {e}", exc_info=True)
             return {'error': str(e), 'status': 'error'}
 
-    def _assess_advanced_risk(self, portfolio: Portfolio, **kwargs) -> Dict[str, Any]:
+    def _assess_advanced_risk(self, portfolio: "Portfolio", **kwargs) -> Dict[str, Any]:
         """Evaluar riesgos avanzados."""
         assessment = {}
 
@@ -309,7 +356,7 @@ class RiskEngine(BaseRiskEngine):
 
         return assessment
 
-    def _check_alerts(self, assessment: Dict[str, Any], portfolio: Portfolio) -> None:
+    def _check_alerts(self, assessment: Dict[str, Any], portfolio: "Portfolio") -> None:
         """Verificar y generar alertas."""
         if not self.alert_system:
             return

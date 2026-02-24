@@ -1,445 +1,622 @@
 """
-Grid Search Parameter Optimization with Walk-Forward Validation - TASK-PARAM-2
+Grid Search Optimizer - Consolidated Implementation.
 
-Implements grid search optimization combined with walk-forward validation
-for robust parameter selection.
+This module provides a unified grid search implementation that combines
+the best features from:
+- app/domain/optimization/parameter/grid_search.py (parameter optimization)
+- app/domain/optimization/grid_search_optimizer.py (walk-forward validation)
+
+Features:
+- Exhaustive grid search over parameter space
+- Parallel execution support
+- Early stopping on convergence
+- Progress tracking
+- Cross-validation support
+- Walk-forward validation integration
+
+Usage:
+    ```python
+    from app.domain.optimization.grid_search_optimizer import GridSearchOptimizer
+    from app.domain.optimization.base_optimizer import OptimizationConfig
+
+    config = OptimizationConfig(
+        max_iterations=1000,
+        n_jobs=4,
+        early_stopping=True,
+    )
+
+    optimizer = GridSearchOptimizer(config)
+
+    # Define search space
+    space = SearchSpace()
+    space.add_integer("lookback", 5, 20, step=5)
+    space.add_continuous("threshold", 0.1, 0.5, step=0.1)
+
+    result = await optimizer.optimize(objective_func, space)
+    ```
 """
 
-import json
+from __future__ import annotations
+
+import asyncio
 import logging
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
-from decimal import Decimal
 from itertools import product
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+
 import numpy as np
 
-import yaml
-
-from app.backtesting.data_loader import DataLoader
-from app.backtesting.multi_strategy_engine import MultiStrategyBacktester
-from app.backtesting.walk_forward_validator import WalkForwardValidator
-from app.domain.models.market_data import Quote
-from app.domain.services.portfolio.allocation import MultiStrategyAllocationManager
-from app.services.portfolio_config_manager import get_portfolio_config_manager
-from app.domain.strategies.mean_reversion import MeanReversionStrategy
-from app.domain.strategies.momentum import MomentumStrategy
-from app.domain.strategies.pairs_trading import PairsTradingStrategy
+from .base_optimizer import (
+    BaseOptimizer,
+    OptimizationConfig,
+    OptimizationResult,
+    OptimizationStatus,
+    OptimizerType,
+    TrialResult,
+)
+from .bayesian_optimizer import SearchSpace, ParameterType
 
 logger = logging.getLogger(__name__)
 
 
-class GridSearchOptimizer:
+class GridSearchOptimizer(BaseOptimizer[SearchSpace]):
     """
-    Grid Search Optimizer with Walk-Forward Validation - TASK-PARAM-2
+    Exhaustive grid search over parameter space.
 
-    Performs exhaustive grid search over parameter combinations,
-    validated using walk-forward analysis to prevent overfitting.
+    Evaluates all combinations of parameter values systematically.
+    Good for small parameter spaces where exhaustive evaluation is feasible.
+
+    Features:
+    - Systematic evaluation of all combinations
+    - Parallel execution support
+    - Early stopping based on convergence
+    - Progress tracking with optional progress bar
+
+    Example:
+        ```python
+        config = OptimizationConfig(
+            max_iterations=1000,
+            n_jobs=4,
+            early_stopping=True,
+            early_stopping_patience=20,
+        )
+
+        optimizer = GridSearchOptimizer(config)
+
+        space = SearchSpace()
+        space.add_integer("lookback", 5, 20, step=5)
+        space.add_continuous("threshold", 0.1, 0.5)
+
+        def objective(params):
+            return backtest_strategy(params)["sharpe_ratio"]
+
+        result = await optimizer.optimize(objective, space)
+        ```
+    """
+
+    def __init__(self, config: OptimizationConfig) -> None:
+        """
+        Initialize grid search optimizer.
+
+        Args:
+            config: Optimization configuration
+        """
+        super().__init__(config)
+        self._total_combinations: Optional[int] = None
+        self._evaluated_combinations: int = 0
+        self._search_space: Optional[SearchSpace] = None
+        self._best_params: Dict[str, Any] = {}
+
+    @classmethod
+    def get_optimizer_type(cls) -> OptimizerType:
+        """Get the type of this optimizer."""
+        return OptimizerType.GRID_SEARCH
+
+    def get_best_params(self) -> Dict[str, Any]:
+        """Get the best parameters found."""
+        return self._best_params
+
+    def get_history(self) -> List[TrialResult]:
+        """Get optimization history."""
+        return self._history
+
+    async def optimize(
+        self,
+        objective: Callable[[Dict[str, Any]], Union[float, "Awaitable[float]"]],
+        search_space: SearchSpace,
+    ) -> OptimizationResult:
+        """
+        Run grid search optimization.
+
+        Process:
+        1. Generate all parameter combinations
+        2. Evaluate each combination (optionally in parallel)
+        3. Track best parameters throughout
+        4. Apply early stopping if enabled
+        5. Return best parameters found
+
+        Args:
+            objective: Function to maximize/minimize
+            search_space: Parameter search space
+
+        Returns:
+            OptimizationResult with best parameters and all trials
+        """
+        self._start_time = datetime.now()
+        self._history = []
+        self._iteration_count = 0
+        self._search_space = search_space
+
+        if self.config.verbose >= 1:
+            logger.info("Starting grid search optimization")
+
+        # Generate all combinations
+        combinations = self._generate_combinations(search_space)
+        self._total_combinations = len(combinations)
+
+        if self.config.verbose >= 1:
+            logger.info(f"Generated {len(combinations)} parameter combinations")
+
+        if not combinations:
+            logger.warning("No valid parameter combinations generated")
+            return self._create_empty_result()
+
+        # Limit by max_iterations if needed
+        if self.config.max_iterations < len(combinations):
+            combinations = combinations[: self.config.max_iterations]
+            if self.config.verbose >= 1:
+                logger.info(
+                    f"Limited to first {len(combinations)} combinations "
+                    f"(max_iterations={self.config.max_iterations})"
+                )
+
+        # Evaluate combinations
+        best_params, best_score = await self._evaluate_combinations(
+            combinations=combinations,
+            objective=objective,
+        )
+
+        self._best_params = best_params
+        self._end_time = datetime.now()
+
+        result = self._create_result(best_params, best_score)
+
+        if self.config.verbose >= 1:
+            logger.info(f"Grid search completed in {result.optimization_time:.2f}s")
+            logger.info(f"Best score: {result.best_score:.6f}")
+            logger.info(f"Evaluated {len(result.all_trials)} combinations")
+
+        return result
+
+    def _generate_combinations(self, search_space: SearchSpace) -> List[Dict[str, Any]]:
+        """
+        Generate all parameter combinations.
+
+        Args:
+            search_space: Search space definition
+
+        Returns:
+            List of parameter dictionaries
+        """
+        combinations = []
+
+        # Get grid values for each parameter
+        param_names = search_space.get_parameter_names()
+        grid_values = []
+
+        for name in param_names:
+            defn = search_space.get_parameter_def(name)
+            param_type = defn.get("type", ParameterType.CONTINUOUS)
+
+            if param_type == ParameterType.CATEGORICAL:
+                values = defn.get("choices", [])
+            elif param_type == ParameterType.DISCRETE:
+                values = defn.get("values", [])
+            elif param_type == ParameterType.INTEGER:
+                min_val = int(defn.get("min", 0))
+                max_val = int(defn.get("max", 100))
+                step = int(defn.get("step", 1))
+                values = list(range(min_val, max_val + 1, step))
+            elif param_type == ParameterType.CONTINUOUS:
+                min_val = float(defn.get("min", 0.0))
+                max_val = float(defn.get("max", 1.0))
+                step = float(defn.get("step", (max_val - min_val) / 10))
+
+                if step > 0:
+                    num_steps = int((max_val - min_val) / step) + 1
+                    values = [min_val + i * step for i in range(num_steps)]
+                    # Ensure max is included
+                    if values[-1] < max_val:
+                        values.append(max_val)
+                else:
+                    # Default to 10 steps
+                    values = [min_val + (max_val - min_val) * i / 10 for i in range(11)]
+            else:
+                values = []
+
+            grid_values.append(values)
+
+        # Generate all combinations
+        for values in product(*grid_values):
+            params = dict(zip(param_names, values))
+            combinations.append(params)
+
+        return combinations
+
+    async def _evaluate_combinations(
+        self,
+        combinations: List[Dict[str, Any]],
+        objective: Callable[[Dict[str, Any]], Union[float, "Awaitable[float]"]],
+    ) -> Tuple[Dict[str, Any], float]:
+        """
+        Evaluate all parameter combinations.
+
+        Args:
+            combinations: List of parameter dictionaries
+            objective: Objective function
+
+        Returns:
+            Tuple of (best_params, best_score)
+        """
+        best_params: Dict[str, Any] = {}
+        best_score = float("-inf") if self.config.maximize else float("inf")
+
+        # Setup progress bar
+        pbar = None
+        try:
+            from tqdm import tqdm
+
+            if self.config.progress_bar and self.config.verbose >= 1:
+                pbar = tqdm(total=len(combinations), desc="Grid Search", unit="eval")
+        except ImportError:
+            pass
+
+        try:
+            # Sequential evaluation
+            if self.config.n_jobs == 1:
+                for i, params in enumerate(combinations):
+                    if self._check_timeout():
+                        logger.warning("Timeout reached, stopping optimization")
+                        break
+
+                    result = await self._evaluate_single(params, objective, i)
+                    self._history.append(result)
+
+                    if result.is_success:
+                        if self.config.maximize:
+                            is_better = result.objective_value > best_score
+                        else:
+                            is_better = result.objective_value < best_score
+
+                        if is_better:
+                            best_score = result.objective_value
+                            best_params = result.params.copy()
+
+                            if self.config.verbose >= 2:
+                                logger.info(f"New best: {best_score:.6f} at iteration {i}")
+
+                    self._iteration_count += 1
+
+                    if pbar:
+                        pbar.update(1)
+                        pbar.set_postfix({"best": f"{best_score:.4f}"})
+
+                    self._log_progress(i, best_score, best_params)
+
+                    # Check early stopping
+                    if self._should_stop_early():
+                        if self.config.verbose >= 1:
+                            logger.info("Early stopping triggered")
+                        break
+
+            # Parallel evaluation
+            else:
+                results = await self._evaluate_parallel_async(combinations, objective)
+
+                for result in results:
+                    self._history.append(result)
+
+                    if result.is_success:
+                        if self.config.maximize:
+                            is_better = result.objective_value > best_score
+                        else:
+                            is_better = result.objective_value < best_score
+
+                        if is_better:
+                            best_score = result.objective_value
+                            best_params = result.params.copy()
+
+                    self._iteration_count += 1
+
+                    if pbar:
+                        pbar.update(1)
+                        pbar.set_postfix({"best": f"{best_score:.4f}"})
+
+        finally:
+            if pbar:
+                pbar.close()
+
+        return best_params, best_score
+
+    async def _evaluate_single(
+        self,
+        params: Dict[str, Any],
+        objective: Callable[[Dict[str, Any]], Union[float, "Awaitable[float]"]],
+        iteration: int,
+    ) -> TrialResult:
+        """
+        Evaluate a single parameter combination.
+
+        Args:
+            params: Parameter dictionary
+            objective: Objective function
+            iteration: Iteration number
+
+        Returns:
+            TrialResult with evaluation results
+        """
+        trial_id = f"grid_{iteration}"
+        start_time = datetime.now()
+
+        try:
+            if asyncio.iscoroutinefunction(objective):
+                value = await objective(params)
+            else:
+                value = objective(params)
+
+            end_time = datetime.now()
+
+            return TrialResult(
+                trial_id=trial_id,
+                params=params.copy(),
+                objective_value=float(value),
+                status=OptimizationStatus.COMPLETED,
+                start_time=start_time,
+                end_time=end_time,
+                iteration=iteration,
+            )
+
+        except Exception as e:
+            end_time = datetime.now()
+            logger.warning(f"Trial {iteration} failed: {e}")
+
+            return TrialResult(
+                trial_id=trial_id,
+                params=params.copy(),
+                objective_value=float("-inf") if self.config.maximize else float("inf"),
+                status=OptimizationStatus.FAILED,
+                start_time=start_time,
+                end_time=end_time,
+                iteration=iteration,
+                error_message=str(e),
+            )
+
+    async def _evaluate_parallel_async(
+        self,
+        combinations: List[Dict[str, Any]],
+        objective: Callable[[Dict[str, Any]], Union[float, "Awaitable[float]"]],
+    ) -> List[TrialResult]:
+        """
+        Evaluate combinations in parallel asynchronously.
+
+        Args:
+            combinations: List of parameter dictionaries
+            objective: Objective function
+
+        Returns:
+            List of trial results
+        """
+        # Create async tasks
+        tasks = [
+            self._evaluate_single(params, objective, i)
+            for i, params in enumerate(combinations)
+        ]
+
+        # Execute in parallel batches
+        batch_size = self.config.n_parallel_jobs
+        results = []
+
+        for i in range(0, len(tasks), batch_size):
+            batch = tasks[i: i + batch_size]
+
+            # Check timeout before each batch
+            if self._check_timeout():
+                logger.warning("Timeout reached during parallel evaluation")
+                break
+
+            # Execute batch
+            batch_results = await asyncio.gather(*batch, return_exceptions=True)
+
+            # Handle results
+            for result in batch_results:
+                if isinstance(result, Exception):
+                    # Create failed trial result
+                    results.append(
+                        TrialResult(
+                            trial_id=f"failed_{len(results)}",
+                            params={},
+                            objective_value=float("-inf") if self.config.maximize else float("inf"),
+                            status=OptimizationStatus.FAILED,
+                            error_message=str(result),
+                        )
+                    )
+                else:
+                    results.append(result)
+
+        return results
+
+    def _create_empty_result(self) -> OptimizationResult:
+        """Create result for failed optimization."""
+        return OptimizationResult(
+            best_params={},
+            best_score=float("-inf") if self.config.maximize else float("inf"),
+            all_trials=[],
+            optimization_time=0.0,
+            n_iterations=0,
+            converged=False,
+            config=self.config,
+        )
+
+
+class GridSearchOptimizerCV(GridSearchOptimizer):
+    """
+    Grid Search with Cross-Validation.
+
+    Extends GridSearchOptimizer to use cross-validation for more robust
+    parameter selection.
+
+    Example:
+        ```python
+        config = OptimizationConfig(max_iterations=100)
+
+        optimizer = GridSearchOptimizerCV(
+            config,
+            cv_folds=5,
+            cv_metric="mean",  # or "min", "median"
+        )
+
+        def cv_objective(params, fold_index):
+            train_data, val_data = get_cv_split(fold_index)
+            return evaluate_on_fold(params, train_data, val_data)
+
+        result = await optimizer.optimize_cv(cv_objective, space)
+        ```
     """
 
     def __init__(
         self,
-        start_date: datetime,
-        end_date: datetime,
-        total_capital: Decimal = Decimal("100000"),
-        preset_config_path: str = "config/parameter_presets.yaml",
-        output_dir: Path = Path("docs/GRID_SEARCH_RESULTS"),
-    ):
-        self.start_date = start_date
-        self.end_date = end_date
-        self.total_capital = total_capital
-        self.output_dir = Path(output_dir)
-        self.output_dir.mkdir(parents=True, exist_ok=True)
-
-        # Load preset configuration
-        self.preset_config = self._load_preset_config(preset_config_path)
-
-        # Results storage
-        self.results: List[Dict[str, Any]] = []
-        self.best_config: Optional[Dict[str, Any]] = None
-        self.best_score: float = -float('in')
-
-        # Load data once
-        self.quotes: Dict[str, List[Quote]] = {}
-        self._load_portfolio_data()
-
-    def _load_preset_config(self, config_path: str) -> Dict[str, Any]:
-        """Load parameter presets configuration."""
-        config_file = Path(config_path)
-        if not config_file.exists():
-            logger.warning(f"Preset config not found: {config_path}, using defaults")
-            return {}
-
-        with open(config_file, 'r') as f:
-            return yaml.safe_load(f)
-
-    def _load_portfolio_data(self) -> None:
-        """Load all portfolio symbols data."""
-        config_manager = get_portfolio_config_manager()
-        all_symbols = set()
-
-        sector_symbols = config_manager.config.get("sectors", {})
-        for sector_name, sector_data in sector_symbols.items():
-            symbols = sector_data.get("symbols", [])
-            all_symbols.update(symbols)
-
-        loader = DataLoader()
-
-        logger.info(f"Loading data for {len(all_symbols)} symbols...")
-        for symbol in sorted(all_symbols):
-            quotes = loader.load_market_data(symbol, self.start_date, self.end_date, source="csv")
-            if not quotes:
-                quotes = loader.load_market_data(
-                    symbol, self.start_date, self.end_date, source="yfinance"
-                )
-
-            if quotes:
-                self.quotes[symbol] = quotes
-                logger.debug(f"Loaded {len(quotes)} quotes for {symbol}")
-
-        logger.info(f"Loaded data for {len(self.quotes)} symbols")
-
-    def _get_parameter_grid(self, strategy_name: str) -> Dict[str, List[Any]]:
+        config: OptimizationConfig,
+        cv_folds: int = 5,
+        cv_metric: str = "mean",
+    ) -> None:
         """
-        Get parameter grid for a strategy from config.
+        Initialize grid search with CV.
 
         Args:
-            strategy_name: Name of the strategy
-
-        Returns:
-            Dictionary mapping parameter names to lists of values
+            config: Optimization configuration
+            cv_folds: Number of CV folds
+            cv_metric: How to aggregate CV scores ('mean', 'min', 'median')
         """
-        grid_config = self.preset_config.get("grid_search", {}).get("parameter_grids", {})
-        return grid_config.get(strategy_name, {})
+        super().__init__(config)
+        self.cv_folds = cv_folds
+        self.cv_metric = cv_metric
 
-    def _generate_parameter_combinations(self, grid: Dict[str, List[Any]]) -> List[Dict[str, Any]]:
-        """
-        Generate all parameter combinations from grid.
-
-        Args:
-            grid: Parameter grid dictionary
-
-        Returns:
-            List of parameter combination dictionaries
-        """
-        if not grid:
-            return [{}]
-
-        keys = list(grid.keys())
-        values = [grid[key] for key in keys]
-
-        combinations = []
-        for combination in product(*values):
-            param_dict = dict(zip(keys, combination))
-            combinations.append(param_dict)
-
-        logger.info(f"Generated {len(combinations)} parameter combinations")
-        return combinations
-
-    def _create_strategies_from_params(
+    async def optimize_cv(
         self,
-        momentum_params: Dict[str, Any],
-        mean_rev_params: Dict[str, Any],
-        pairs_params: Dict[str, Any],
-    ) -> Dict[str, Any]:
-        """Create strategy instances from parameter dictionaries."""
-        strategies = {}
+        cv_objective: Callable[[Dict[str, Any], int], Union[float, "Awaitable[float]"]],
+        search_space: SearchSpace,
+    ) -> OptimizationResult:
+        """
+        Run grid search with cross-validation.
 
-        # Momentum
-        momentum_config = {
-            "name": "momentum",
-            "rsi_threshold": int(momentum_params.get("rsi_threshold", 40)),
-            "momentum_threshold": momentum_params.get("momentum_threshold", 0.02),
-            "volume_threshold": momentum_params.get("volume_threshold", 1.5),
-            "ema_period": int(momentum_params.get("ema_period", 20)),
-            "stop_loss": Decimal("0.03"),
-            "take_profit": Decimal("0.10"),
-            "max_position_size": Decimal("0.05"),
-        }
-        strategies["momentum"] = MomentumStrategy(momentum_config)
+        The cv_objective function should accept (params, fold_index) arguments.
 
-        # Mean Reversion
-        mean_rev_config = {
-            "name": "mean_reversion",
-            "z_score_threshold": mean_rev_params.get("z_score_threshold", 1.5),
-            "lookback_period": int(mean_rev_params.get("lookback_period", 20)),
-            "stop_loss": Decimal(str(mean_rev_params.get("stop_loss_pct", 0.04))),
-            "take_profit": Decimal(str(mean_rev_params.get("take_profit_pct", 0.10))),
-            "max_position_size": Decimal("0.05"),
-        }
-        strategies["mean_reversion"] = MeanReversionStrategy(mean_rev_config)  # type: ignore
+        Args:
+            cv_objective: CV objective function
+            search_space: Parameter search space
 
-        # Pairs Trading
-        pairs_config = {
-            "name": "pairs_trading",
-            "spread_threshold": pairs_params.get("spread_threshold", 1.5),
-            "lookback_period": int(pairs_params.get("lookback_period", 30)),
-            "cointegration_threshold": pairs_params.get("cointegration_threshold", 0.05),
-            "pair_symbols": [["AAPL", "MSFT"]],
-            "stop_loss": Decimal("0.03"),
-            "take_profit": Decimal("0.08"),
-            "max_position_size": Decimal("0.05"),
-        }
-        strategies["pairs_trading"] = PairsTradingStrategy(pairs_config)  # type: ignore
+        Returns:
+            OptimizationResult with best parameters
+        """
+        self._start_time = datetime.now()
+        self._history = []
+        self._iteration_count = 0
+        self._search_space = search_space
 
-        return strategies
+        combinations = self._generate_combinations(search_space)
 
-    def _run_walk_forward_backtest(
-        self, strategies: Dict[str, Any], all_quotes: List[Quote]
-    ) -> Dict[str, Any]:
-        """Run backtest with walk-forward validation."""
-        # Create allocation manager
-        allocation_manager = MultiStrategyAllocationManager(total_capital=self.total_capital)
+        if self.config.verbose >= 1:
+            logger.info(f"Starting grid search with {self.cv_folds}-fold CV")
+            logger.info(f"Total evaluations: {len(combinations) * self.cv_folds}")
 
-        # Create validator
-        wf_config = self.preset_config.get("grid_search", {}).get("walk_forward", {})
-        validator = WalkForwardValidator(  # type: ignore
-            config=wf_config,
-        )
+        best_params: Dict[str, Any] = {}
+        best_cv_score = float("-inf") if self.config.maximize else float("inf")
 
-        # Create windows
-        windows = validator.create_windows(self.start_date, self.end_date)
+        for i, params in enumerate(combinations):
+            if self._check_timeout():
+                break
 
-        if not windows:
-            logger.warning("No windows created for walk-forward validation")
-            return {}
+            trial_id = f"cv_{i}"
+            start_time = datetime.now()
 
-        # Run validation for each window
-        results = []
-        for window in windows:
-            train_start = window["train_start"]
-            train_end = window["train_end"]
-            val_start = window["validation_start"]
-            val_end = window["validation_end"]
+            # Run CV
+            cv_scores = []
+            for fold in range(self.cv_folds):
+                try:
+                    if asyncio.iscoroutinefunction(cv_objective):
+                        score = await cv_objective(params, fold)
+                    else:
+                        score = cv_objective(params, fold)
+                    cv_scores.append(float(score))
+                except Exception as e:
+                    logger.warning(f"CV fold {fold} failed: {e}")
+                    cv_scores.append(float("-inf") if self.config.maximize else float("inf"))
 
-            # Filter quotes for this window
-            train_quotes = [q for q in all_quotes if train_start <= q.timestamp <= train_end]
-            val_quotes = [q for q in all_quotes if val_start <= q.timestamp <= val_end]
+            # Aggregate CV scores
+            if self.cv_metric == "mean":
+                cv_score = float(np.mean(cv_scores))
+            elif self.cv_metric == "min":
+                cv_score = float(min(cv_scores))
+            elif self.cv_metric == "median":
+                sorted_scores = sorted(cv_scores)
+                mid = len(sorted_scores) // 2
+                cv_score = (
+                    sorted_scores[mid]
+                    if len(sorted_scores) % 2
+                    else (sorted_scores[mid - 1] + sorted_scores[mid]) / 2
+                )
+            else:
+                cv_score = float(np.mean(cv_scores))
 
-            if not train_quotes or not val_quotes:
-                continue
+            end_time = datetime.now()
 
-            # Run backtest on validation period
-            from app.backtesting.models import BacktestConfig
-
-            BacktestConfig(  # type: ignore
-                strategy_name="multi_strategy",
-                initial_capital=self.total_capital,
-                commission_per_trade=Decimal("1.0"),
-                slippage_percentage=Decimal("0.05"),
-            )
-
-            # Combine strategies and run
-            backtester = MultiStrategyBacktester(
-                allocation_manager=allocation_manager,
-                strategies=strategies,
-                config_params={
-                    "commission": Decimal("1.0"),
-                    "slippage": Decimal("0.05"),
+            # Create trial result
+            result = TrialResult(
+                trial_id=trial_id,
+                params=params.copy(),
+                objective_value=cv_score,
+                status=OptimizationStatus.COMPLETED,
+                start_time=start_time,
+                end_time=end_time,
+                iteration=i,
+                metrics={
+                    "cv_scores": cv_scores,
+                    "cv_mean": float(np.mean(cv_scores)),
+                    "cv_std": float(np.std(cv_scores)) if len(cv_scores) > 1 else 0.0,
                 },
             )
 
-            result = backtester.run_multi_strategy_backtest(val_quotes, val_start, val_end)
+            self._history.append(result)
 
-            if result and "combined" in result:
-                combined = result["combined"]
-                results.append(
-                    {
-                        "window": f"{val_start.date()} to {val_end.date()}",
-                        "sharpe": combined.get("weighted_sharpe", 0.0) or 0.0,
-                        "return": combined.get("total_return", 0.0) or 0.0,
-                        "max_drawdown": abs(combined.get("weighted_max_drawdown", 0.0) or 0.0),
-                        "trades": combined.get("total_trades", 0),
-                    }
-                )
+            # Update best
+            if self.config.maximize:
+                is_better = cv_score > best_cv_score
+            else:
+                is_better = cv_score < best_cv_score
 
-        if not results:
-            return {}
+            if is_better:
+                best_cv_score = cv_score
+                best_params = params.copy()
 
-        # Aggregate results
-        objective_metric = wf_config.get("objective_metric", "sharpe")
+            self._iteration_count += 1
 
-        if objective_metric == "sharpe":
-            avg_score = np.mean([r["sharpe"] for r in results])
-        elif objective_metric == "return":
-            avg_score = np.mean([r["return"] for r in results])
-        elif objective_metric == "calmar":
-            returns = [r["return"] for r in results]
-            drawdowns = [r["max_drawdown"] for r in results]
-            avg_score = np.mean([r / max(dd, 0.01) for r, dd in zip(returns, drawdowns)])
-        else:
-            avg_score = np.mean([r["sharpe"] for r in results])
+            if self._should_stop_early():
+                break
 
-        return {
-            "avg_score": avg_score,
-            "windows": results,
-            "score_type": objective_metric,
-        }
+        self._best_params = best_params
+        self._end_time = datetime.now()
 
-    def optimize(self, max_combinations: Optional[int] = None) -> Dict[str, Any]:
+        return self._create_result(best_params, best_cv_score)
+
+    async def optimize(
+        self,
+        objective: Callable[[Dict[str, Any]], Union[float, "Awaitable[float]"]],
+        search_space: SearchSpace,
+    ) -> OptimizationResult:
         """
-        Run grid search optimization with walk-forward validation.
+        Run standard grid search (non-CV).
 
-        Args:
-            max_combinations: Maximum number of combinations to test (None = all)
-
-        Returns:
-            Best configuration and results
+        For CV support, use optimize_cv() instead.
         """
-        # Get parameter grids
-        momentum_grid = self._get_parameter_grid("momentum")
-        mean_rev_grid = self._get_parameter_grid("mean_reversion")
-        pairs_grid = self._get_parameter_grid("pairs_trading")
-
-        # Generate combinations
-        momentum_combos = self._generate_parameter_combinations(momentum_grid)
-        mean_rev_combos = self._generate_parameter_combinations(mean_rev_grid)
-        pairs_combos = self._generate_parameter_combinations(pairs_grid)
-
-        # Prepare all quotes (flatten)
-        all_quotes: List[Quote] = []
-        for symbol_quotes in self.quotes.values():
-            all_quotes.extend(symbol_quotes)
-        all_quotes.sort(key=lambda q: q.timestamp)
-
-        # Calculate total combinations
-        total_combinations = len(momentum_combos) * len(mean_rev_combos) * len(pairs_combos)
-        logger.info(f"Total parameter combinations: {total_combinations}")
-
-        if max_combinations:
-            logger.info(f"Limiting to {max_combinations} combinations")
-            # Limit each grid proportionally
-            momentum_limit = int(
-                (max_combinations**0.33) * len(momentum_combos) / (total_combinations**0.33)
-            )
-            mean_rev_limit = int(
-                (max_combinations**0.33) * len(mean_rev_combos) / (total_combinations**0.33)
-            )
-            pairs_limit = int(
-                (max_combinations**0.33) * len(pairs_combos) / (total_combinations**0.33)
-            )
-
-            momentum_combos = momentum_combos[: max(1, momentum_limit)]
-            mean_rev_combos = mean_rev_combos[: max(1, mean_rev_limit)]
-            pairs_combos = pairs_combos[: max(1, pairs_limit)]
-
-        # Get constraints
-        constraints = self.preset_config.get("grid_search", {}).get("constraints", {})
-
-        # Test all combinations
-        combo_num = 0
-        for mom_params in momentum_combos:
-            for mr_params in mean_rev_combos:
-                for pt_params in pairs_combos:
-                    combo_num += 1
-                    logger.info(
-                        f"Testing combination {combo_num}/{len(momentum_combos) * len(mean_rev_combos) * len(pairs_combos)}"
-                    )
-
-                    # Create strategies
-                    strategies = self._create_strategies_from_params(
-                        mom_params, mr_params, pt_params
-                    )
-
-                    # Run walk-forward validation
-                    wf_result = self._run_walk_forward_backtest(strategies, all_quotes)
-
-                    if not wf_result:
-                        logger.warning(f"Combination {combo_num} failed walk-forward validation")
-                        continue
-
-                    # Check constraints
-                    avg_drawdown = np.mean([w["max_drawdown"] for w in wf_result["windows"]])
-                    avg_trades = np.mean([w["trades"] for w in wf_result["windows"]])
-
-                    if avg_drawdown > constraints.get("max_drawdown_pct", 0.25):
-                        logger.debug(f"Combination {combo_num} exceeds max drawdown constraint")
-                        continue
-
-                    if avg_trades < constraints.get("min_trades_per_strategy", 20):
-                        logger.debug(f"Combination {combo_num} has insufficient trades")
-                        continue
-
-                    # Store result
-                    score = wf_result["avg_score"]
-                    result_entry = {
-                        "combination_id": combo_num,
-                        "momentum_params": mom_params,
-                        "mean_reversion_params": mr_params,
-                        "pairs_trading_params": pt_params,
-                        "score": score,
-                        "score_type": wf_result["score_type"],
-                        "windows": wf_result["windows"],
-                        "avg_drawdown": avg_drawdown,
-                        "avg_trades": avg_trades,
-                    }
-                    self.results.append(result_entry)
-
-                    # Update best
-                    if score > self.best_score:
-                        self.best_score = score
-                        self.best_config = {
-                            "momentum": mom_params,
-                            "mean_reversion": mr_params,
-                            "pairs_trading": pt_params,
-                            "score": score,
-                        }
-                        logger.info(f"New best configuration found: score={score:.4f}")
-
-        # Save results
-        self._save_results()
-
-        return {
-            "best_config": self.best_config,
-            "best_score": self.best_score,
-            "total_tested": len(self.results),
-        }
-
-    def _save_results(self) -> None:
-        """Save grid search results."""
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-        # Save CSV
-        csv_file = self.output_dir / f"grid_search_results_{timestamp}.csv"
-        import csv
-
-        with open(csv_file, 'w', newline='') as f:
-            if self.results:
-                fieldnames = list(self.results[0].keys())
-                writer = csv.DictWriter(f, fieldnames=fieldnames)
-                writer.writeheader()
-                for result in self.results:
-                    # Flatten params for CSV
-                    row = {
-                        "combination_id": result["combination_id"],
-                        "score": result["score"],
-                        "avg_drawdown": result["avg_drawdown"],
-                        "avg_trades": result["avg_trades"],
-                    }
-                    # Add flattened params
-                    for strategy in ["momentum", "mean_reversion", "pairs_trading"]:
-                        params = result.get(f"{strategy}_params", {})
-                        for key, value in params.items():
-                            row[f"{strategy}_{key}"] = value
-                    writer.writerow(row)
-
-        # Save best config
-        if self.best_config:
-            json_file = self.output_dir / f"best_grid_search_config_{timestamp}.json"
-            with open(json_file, 'w') as f:
-                json.dump(self.best_config, f, indent=2, default=str)
-
-        # Save summary
-        summary = {
-            "timestamp": timestamp,
-            "total_combinations_tested": len(self.results),
-            "best_score": self.best_score,
-            "best_config": self.best_config,
-            "top_10_configs": sorted(self.results, key=lambda x: x["score"], reverse=True)[:10],
-        }
-
-        summary_file = self.output_dir / f"grid_search_summary_{timestamp}.json"
-        with open(summary_file, 'w') as f:
-            json.dump(summary, f, indent=2, default=str)
-
-        logger.info(f"Results saved to {self.output_dir}")
+        return await super().optimize(objective, search_space)

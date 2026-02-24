@@ -15,6 +15,8 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
+from app.shared.config.centralized_config import get_config
+
 
 class SignalType(str, Enum):
     """Signal type enumeration."""
@@ -107,6 +109,11 @@ class SignalGenerator:
         """
         self._confidence_threshold = confidence_threshold
 
+        # Load RSI thresholds from config
+        config = get_config()
+        self._rsi_oversold = Decimal(str(config.trading.rsi_oversold))  # Default 30
+        self._rsi_overbought = Decimal(str(config.trading.rsi_overbought))  # Default 70
+
     def generate_ma_crossover_signal(
         self,
         indicators: IndicatorValues,
@@ -187,8 +194,8 @@ class SignalGenerator:
         Generate signal based on RSI.
 
         Strategy:
-        - BUY: RSI < 30 (oversold)
-        - SELL: RSI > 70 (overbought)
+        - BUY: RSI < oversold threshold (default 30)
+        - SELL: RSI > overbought threshold (default 70)
         - HOLD: RSI in neutral zone
 
         Args:
@@ -202,11 +209,13 @@ class SignalGenerator:
             return self._hold_signal(symbol, "RSI not available")
 
         rsi = indicators.rsi
+        rsi_oversold = self._rsi_oversold
+        rsi_overbought = self._rsi_overbought
 
-        if rsi < Decimal("30"):
+        if rsi < rsi_oversold:
             # Oversold - potential buy
-            strength = SignalStrength.STRONG if rsi < Decimal("20") else SignalStrength.MODERATE
-            confidence = (Decimal("30") - rsi) / Decimal("30")
+            strength = SignalStrength.STRONG if rsi < (rsi_oversold - Decimal("10")) else SignalStrength.MODERATE
+            confidence = (rsi_oversold - rsi) / rsi_oversold
 
             return Signal(
                 symbol=symbol,
@@ -217,10 +226,10 @@ class SignalGenerator:
                 metadata={"rsi": str(rsi)},
             )
 
-        elif rsi > Decimal("70"):
+        elif rsi > rsi_overbought:
             # Overbought - potential sell
-            strength = SignalStrength.STRONG if rsi > Decimal("80") else SignalStrength.MODERATE
-            confidence = (rsi - Decimal("70")) / Decimal("30")
+            strength = SignalStrength.STRONG if rsi > (rsi_overbought + Decimal("10")) else SignalStrength.MODERATE
+            confidence = (rsi - rsi_overbought) / (Decimal("100") - rsi_overbought)
 
             return Signal(
                 symbol=symbol,

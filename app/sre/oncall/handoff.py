@@ -31,7 +31,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 import aiosqlite
 
-from app.core.utils.safe_parse import safe_parse
+from app.shared.utils.safe_parse import safe_parse
 
 logger = logging.getLogger(__name__)
 

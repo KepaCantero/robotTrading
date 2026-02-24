@@ -32,6 +32,7 @@ try:
 except ImportError:
     from typing_extensions import ParamSpec
 
+from app.shared.config.centralized_config import get_config
 from .models import PeriodResult, WalkForwardConfig, WalkForwardResult
 
 logger = logging.getLogger(__name__)
@@ -331,8 +332,8 @@ class WalkForwardValidator:
 
         # Calculate Sharpe ratio (simplified)
         if metrics["std_return"] > 0:
-            # Assuming 2% annual risk-free rate
-            risk_free = Decimal("0.02")
+            # Get annual risk-free rate from CentralizedConfig
+            risk_free = get_config().backtesting.default_risk_free_rate
             annual_return = metrics["avg_return"] * Decimal("12")  # Monthly to annual
             annual_std = metrics["std_return"] * Decimal("12").sqrt()
             metrics["sharpe_ratio"] = (annual_return - risk_free) / annual_std

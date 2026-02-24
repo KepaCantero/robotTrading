@@ -29,7 +29,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 # Ahora importar numpy y pandas DESPUÉS de configurar variables
 import numpy as np  # noqa: E402
 
-from app.core.secure_serialization import sign_and_dump, verify_and_load  # noqa: E402
+from app.security.secure_serialization import sign_and_dump, verify_and_load  # noqa: E402
 
 from .base_learning_engine import BaseLearningEngine  # noqa: E402
 

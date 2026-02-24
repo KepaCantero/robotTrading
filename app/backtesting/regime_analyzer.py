@@ -16,6 +16,8 @@ import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 
+from app.shared.config.centralized_config import get_config
+
 logger = logging.getLogger(__name__)
 
 
@@ -64,11 +66,14 @@ class RegimeAnalyzer:
             return pd.Series([0] * len(returns), index=returns.index)
 
         try:
+            # Get trading days from config
+            annual_trading_days = get_config().backtesting.annual_trading_days
+
             # Calculate rolling volatility (annualized)
-            rolling_vol = returns.rolling(self.window).std() * np.sqrt(252)
+            rolling_vol = returns.rolling(self.window).std() * np.sqrt(annual_trading_days)
 
             # Calculate rolling return (annualized)
-            rolling_ret = returns.rolling(self.window).mean() * 252
+            rolling_ret = returns.rolling(self.window).mean() * annual_trading_days
 
             # Create feature matrix
             features = np.column_stack([rolling_vol.values, rolling_ret.values])
@@ -162,7 +167,8 @@ class RegimeAnalyzer:
             total_return = (1 + regime_returns).prod() - 1
             mean_return = regime_returns.mean()
             volatility = regime_returns.std()
-            sharpe = (mean_return / volatility * np.sqrt(252)) if volatility > 0 else 0
+            annual_trading_days = get_config().backtesting.annual_trading_days
+            sharpe = (mean_return / volatility * np.sqrt(annual_trading_days)) if volatility > 0 else 0
             max_dd = self._calculate_max_drawdown(regime_returns)
             win_rate = (regime_returns > 0).mean()
             num_periods = len(regime_returns)
@@ -174,8 +180,8 @@ class RegimeAnalyzer:
                 "periods": num_periods,
                 "pct_time": num_periods / len(returns) * 100,
                 "total_return": float(total_return),
-                "annualized_return": float(mean_return * 252),
-                "volatility": float(volatility * np.sqrt(252)),
+                "annualized_return": float(mean_return * annual_trading_days),
+                "volatility": float(volatility * np.sqrt(annual_trading_days)),
                 "sharpe_ratio": float(sharpe),
                 "max_drawdown": float(max_dd),
                 "win_rate": float(win_rate),
@@ -279,7 +285,7 @@ class RegimeAnalyzer:
             return {}
 
     def out_of_sample_regime_robustness(
-        self, returns: pd.Series, test_periods: int = 5, train_window: int = 252
+        self, returns: pd.Series, test_periods: int = 5, train_window: int = None
     ) -> Dict[str, Any]:
         """
         Walk-forward regime detection robustness testing.
@@ -289,11 +295,13 @@ class RegimeAnalyzer:
         Args:
             returns: Series of returns
             test_periods: Number of test periods (default: 5)
-            train_window: Training window size in days (default: 252 = 1 year)
+            train_window: Training window size in days (default: 1 year = annual_trading_days)
 
         Returns:
             Dict with robustness metrics
         """
+        if train_window is None:
+            train_window = get_config().backtesting.annual_trading_days
         if len(returns) < train_window + 50:
             logger.warning(f"Not enough data ({len(returns)}) for robustness testing")
             return {}
@@ -335,7 +343,8 @@ class RegimeAnalyzer:
                 if len(test_returns) > 0:
                     test_return = test_returns.sum()
                     test_volatility = test_returns.std()
-                    test_sharpe = test_return / (test_volatility + 1e-8) * np.sqrt(252)
+                    annual_trading_days = get_config().backtesting.annual_trading_days
+                    test_sharpe = test_return / (test_volatility + 1e-8) * np.sqrt(annual_trading_days)
 
                     robustness_results["period_results"].append(
                         {

@@ -29,7 +29,7 @@ from streamlit import session_state  # noqa: E402
 from app.backtesting.data_loader import DataLoader  # noqa: E402
 from app.backtesting.engine import SimpleBacktester  # noqa: E402
 from app.backtesting.models import BacktestConfig  # noqa: E402
-from app.backtesting.multi_strategy_engine import MultiStrategyBacktester  # noqa: E402
+from app.backtesting.engines.multi_strategy_engine import MultiStrategyBacktester  # noqa: E402
 
 # IMPORTANT: Import logging_config FIRST to ensure all warnings/errors go to files
 from app.presentation.dashboard.comprehensive_data_loader import ComprehensiveBacktestLoader  # noqa: E402

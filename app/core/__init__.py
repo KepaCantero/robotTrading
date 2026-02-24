@@ -16,7 +16,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Basic utilities - always import these
-from app.core.config_loader import (
+from app.shared.config.config_loader import (
     YAMLConfigLoader,
     get_config_loader,
     load_strategy_stock_allocator_config,

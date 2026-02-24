@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Optional
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 
-from app.core.exceptions import ConfigurationError, raise_configuration_error
+from app.shared.exceptions.exceptions import ConfigurationError, raise_configuration_error
 
 # Initialize logger for structured logging
 logger = logging.getLogger(__name__)

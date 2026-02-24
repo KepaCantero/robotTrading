@@ -13,8 +13,12 @@ from typing import Dict, Optional, TypedDict
 import numpy as np
 import pandas as pd
 
+from app.shared.config.centralized_config import CentralizedConfig, get_config
+
 # Trading days constant - Annual trading days (NYSE convention)
-TRADING_DAYS = 252  # Number of trading days per year for US equity markets
+# Get from CentralizedConfig for consistency across the codebase
+_config = get_config()
+TRADING_DAYS = _config.backtesting.annual_trading_days
 
 # Try to import quantstats with fallback
 try:
@@ -169,14 +173,14 @@ class FallbackMetrics(TypedDict, total=False):
 class AwesomeQuantIntegrator:
     """Integrate AWESOME-QUANT libraries for advanced metrics and analysis."""
 
-    def __init__(self, risk_free_rate: float = 0.02):
+    def __init__(self, risk_free_rate: float = None):
         """
         Initialize AWESOME-QUANT integrator.
 
         Args:
-            risk_free_rate: Risk-free rate for calculations (default: 2%)
+            risk_free_rate: Risk-free rate for calculations (default: from CentralizedConfig)
         """
-        self.risk_free_rate = risk_free_rate
+        self.risk_free_rate = risk_free_rate if risk_free_rate is not None else float(get_config().backtesting.default_risk_free_rate)
         self._check_availability()
 
     def _check_availability(self) -> None:

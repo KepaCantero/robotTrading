@@ -14,7 +14,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, Optional
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 from app.domain.models.input_profile import InputProfile, InvestmentObjective, RiskTolerance
 from app.domain.value_objects.investment_horizon import InvestmentHorizon
 from app.domain.value_objects.tax_residence import TaxResidence

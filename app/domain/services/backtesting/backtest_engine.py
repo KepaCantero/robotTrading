@@ -23,13 +23,18 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional, Tuple
+import uuid
 
 import numpy as np
 from numpy.typing import NDArray
 
+# Import canonical Trade and PerformanceMetrics from app.backtesting.models
+from app.backtesting.models import PerformanceMetrics, Trade, TradeSide, TradeStatus
+from app.shared.config.centralized_config import get_config
+
 
 class OrderSide(str, Enum):
-    """Side of an order."""
+    """Side of an order - kept for backward compatibility."""
 
     BUY = "buy"
     SELL = "sell"
@@ -53,28 +58,8 @@ class OrderStatus(str, Enum):
     REJECTED = "rejected"
 
 
-@dataclass
-class Trade:
-    """A single trade execution."""
-
-    symbol: str
-    side: OrderSide
-    quantity: Decimal
-    price: Decimal
-    timestamp: datetime
-    commission: Decimal = Decimal("0")
-    slippage: Decimal = Decimal("0")
-    market_impact: Decimal = Decimal("0")
-
-    @property
-    def notional_value(self) -> Decimal:
-        """Total value of the trade."""
-        return self.quantity * self.price
-
-    @property
-    def total_cost(self) -> Decimal:
-        """Total cost including commission and slippage."""
-        return self.commission + self.slippage + self.market_impact
+# Trade class removed - use canonical Trade from app.backtesting.models
+# The canonical Trade includes all fields needed here plus additional ones
 
 
 @dataclass
@@ -96,39 +81,8 @@ class BacktestConfig:
     max_portfolio_exposure: Optional[float] = None
 
 
-@dataclass
-class PerformanceMetrics:
-    """Performance metrics from backtest."""
-
-    total_return: float
-    annualized_return: float
-    sharpe_ratio: float
-    sortino_ratio: float
-    calmar_ratio: float
-    max_drawdown: float
-    max_drawdown_duration: int  # days
-    volatility: float
-    annualized_volatility: float
-    win_rate: float
-    profit_factor: float
-    avg_trade_return: float
-    total_trades: int
-    winning_trades: int
-    losing_trades: int
-    best_trade: float
-    worst_trade: float
-    avg_win: float
-    avg_loss: float
-    expectancy: float
-    skewness: float
-    kurtosis: float
-    var_95: float  # Value at Risk at 95%
-    var_99: float  # Value at Risk at 99%
-    cvar_95: float  # Conditional VaR at 95%
-    information_ratio: float  # vs benchmark
-    tracking_error: float
-    beta: float
-    alpha: float
+# NOTE: PerformanceMetrics is now imported from app.backtesting.models
+# This is the canonical source of truth for all performance metrics.
 
 
 @dataclass
@@ -324,13 +278,16 @@ class BacktestEngine:
             if self._positions[symbol] == 0:
                 del self._positions[symbol]
 
-        # Record trade
+        # Record trade using canonical Trade model
+        trade_timestamp = datetime.combine(self._current_date or date.today(), datetime.min.time())
         trade = Trade(
+            trade_id=str(uuid.uuid4()),
             symbol=symbol,
-            side=side,
+            side=side.value if isinstance(side, OrderSide) else side,
             quantity=quantity,
-            price=execution_price,
-            timestamp=datetime.combine(self._current_date or date.today(), datetime.min.time()),
+            entry_price=execution_price,
+            entry_time=trade_timestamp,
+            status=TradeStatus.OPEN,
             commission=commission,
             slippage=slippage if side == OrderSide.BUY else -slippage,
             market_impact=market_impact if side == OrderSide.BUY else -market_impact,
@@ -432,40 +389,16 @@ class BacktestEngine:
             benchmark_returns: Optional benchmark returns for comparison
 
         Returns:
-            PerformanceMetrics
+            PerformanceMetrics (canonical from app.backtesting.models)
         """
+        # Helper function to convert to Decimal
+        def to_decimal(val):
+            if val is None:
+                return None
+            return Decimal(str(val))
+
         if not self._returns:
-            return PerformanceMetrics(
-                total_return=0.0,
-                annualized_return=0.0,
-                sharpe_ratio=0.0,
-                sortino_ratio=0.0,
-                calmar_ratio=0.0,
-                max_drawdown=0.0,
-                max_drawdown_duration=0,
-                volatility=0.0,
-                annualized_volatility=0.0,
-                win_rate=0.0,
-                profit_factor=0.0,
-                avg_trade_return=0.0,
-                total_trades=0,
-                winning_trades=0,
-                losing_trades=0,
-                best_trade=0.0,
-                worst_trade=0.0,
-                avg_win=0.0,
-                avg_loss=0.0,
-                expectancy=0.0,
-                skewness=0.0,
-                kurtosis=0.0,
-                var_95=0.0,
-                var_99=0.0,
-                cvar_95=0.0,
-                information_ratio=0.0,
-                tracking_error=0.0,
-                beta=1.0,
-                alpha=0.0,
-            )
+            return PerformanceMetrics()
 
         returns_array = np.array(self._returns)
 
@@ -482,8 +415,8 @@ class BacktestEngine:
         volatility = float(np.std(returns_array))
         annualized_volatility = volatility * np.sqrt(252)
 
-        # Sharpe ratio (assuming 2% risk-free rate)
-        risk_free_rate = 0.02
+        # Sharpe ratio (using CentralizedConfig for risk-free rate)
+        risk_free_rate = float(get_config().backtesting.default_risk_free_rate)
         sharpe_ratio = (
             (annualized_return - risk_free_rate) / annualized_volatility
             if annualized_volatility > 0
@@ -594,35 +527,35 @@ class BacktestEngine:
             alpha = 0.0
 
         return PerformanceMetrics(
-            total_return=total_return,
-            annualized_return=annualized_return,
-            sharpe_ratio=sharpe_ratio,
-            sortino_ratio=sortino_ratio,
-            calmar_ratio=calmar_ratio,
-            max_drawdown=max_drawdown,
+            total_return=to_decimal(total_return),
+            annualized_return=to_decimal(annualized_return),
+            sharpe_ratio=to_decimal(sharpe_ratio),
+            sortino_ratio=to_decimal(sortino_ratio),
+            calmar_ratio=to_decimal(calmar_ratio),
+            max_drawdown=to_decimal(max_drawdown),
             max_drawdown_duration=max_drawdown_duration,
-            volatility=volatility,
-            annualized_volatility=annualized_volatility,
-            win_rate=win_rate,
-            profit_factor=profit_factor,
-            avg_trade_return=avg_trade_return,
+            volatility=to_decimal(volatility),
+            annualized_volatility=to_decimal(annualized_volatility),
+            win_rate=to_decimal(win_rate * 100),  # Convert to percentage
+            profit_factor=to_decimal(profit_factor) if profit_factor != float('inf') else None,
+            avg_trade_return=to_decimal(avg_trade_return),
             total_trades=len(self._trades),
             winning_trades=len([r for r in trade_returns if r > 0]),
             losing_trades=len([r for r in trade_returns if r < 0]),
-            best_trade=best_trade,
-            worst_trade=worst_trade,
-            avg_win=avg_win,
-            avg_loss=avg_loss,
-            expectancy=expectancy,
-            skewness=skewness,
-            kurtosis=kurtosis,
-            var_95=var_95,
-            var_99=var_99,
-            cvar_95=cvar_95,
-            information_ratio=information_ratio,
-            tracking_error=tracking_error,
-            beta=beta,
-            alpha=alpha,
+            best_trade=to_decimal(best_trade),
+            worst_trade=to_decimal(worst_trade),
+            avg_win=to_decimal(avg_win),
+            avg_loss=to_decimal(avg_loss),
+            expectancy=to_decimal(expectancy),
+            skewness=to_decimal(skewness),
+            kurtosis=to_decimal(kurtosis),
+            var_95=to_decimal(var_95),
+            var_99=to_decimal(var_99),
+            cvar_95=to_decimal(cvar_95),
+            information_ratio=to_decimal(information_ratio),
+            tracking_error=to_decimal(tracking_error),
+            beta=to_decimal(beta),
+            alpha=to_decimal(alpha),
         )
 
     def get_result(self) -> BacktestResult:

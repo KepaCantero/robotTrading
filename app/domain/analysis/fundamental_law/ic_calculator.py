@@ -26,7 +26,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-from app.core.decimal_utils import to_decimal
+from app.shared.utils.decimal_utils import to_decimal
 
 if TYPE_CHECKING:
     from app.domain.analysis.fundamental_law.models import ICMetrics

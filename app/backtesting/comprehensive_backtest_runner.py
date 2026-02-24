@@ -51,10 +51,11 @@ from app.backtesting.data_split import (
 # Strategy factory (Phase 5: extracted from God Object)
 from app.backtesting.factories import StrategyFactory
 from app.backtesting.models import BacktestConfig, BacktestResult
-from app.backtesting.multi_strategy_engine import MultiStrategyBacktester
+from app.backtesting.engines.multi_strategy_engine import MultiStrategyBacktester
 
 # Strategy implementations
-from app.domain.strategies.momentum_modular.strategy import ModularMomentumStrategy
+# TODO: Create momentum_modular module. Using MomentumStrategy as alias.
+from app.domain.strategies.momentum import MomentumStrategy as ModularMomentumStrategy
 
 # Backtesting engine and models
 
@@ -2463,7 +2464,7 @@ class ComprehensiveBacktestRunner:
             - Tests de estacionariedad (ADF)
             - Flags de concept drift y aceptabilidad
         """
-        from app.core.statsmodels_fallback import adfuller
+        from app.shared.performance.statsmodels_fallback import adfuller
 
         logger.info("=" * 80)
         logger.info("OUT-OF-SAMPLE BACKTEST - Starting rigorous validation")
@@ -3009,7 +3010,7 @@ class ComprehensiveBacktestRunner:
         Returns:
             InputProfile con parámetros del config
         """
-        from app.core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
+        from app.domain.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
 
         # Extraer parámetros del config
         initial_capital = Decimal(str(self.raw_config["input"]["initial_capital"]))

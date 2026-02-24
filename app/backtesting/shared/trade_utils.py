@@ -11,7 +11,7 @@ Usage:
 from typing import Any, Optional
 from decimal import Decimal
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 
 
 def build_trade_reason(signal: Any, market_data: Any = None) -> str:

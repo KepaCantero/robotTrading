@@ -46,8 +46,9 @@ from .models import (
     SpinOff,
     StockSplit,
 )
+# Import canonical PerformanceMetrics from single source of truth
+from app.backtesting.models import PerformanceMetrics
 from .performance_tracker import (
-    PerformanceMetrics,
     PerformanceTracker,
     RegimeAnalysis,
     RollingMetrics,

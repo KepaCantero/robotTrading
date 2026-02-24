@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from app.microstructure.liquidity import (
+from app.domain.market_analysis.microstructure.liquidity import (
     DepthProfile,
     LiquidityAnalyzer,
     LiquidityMonitor,
@@ -247,7 +247,7 @@ class TestLiquidityMonitor:
 
     def test_check_liquidity_alert_low_score(self, monitor):
         """Test alert for low liquidity score"""
-        from app.microstructure.liquidity import LiquidityMetrics
+        from app.domain.market_analysis.microstructure.liquidity import LiquidityMetrics
 
         low_metrics = LiquidityMetrics(
             timestamp=datetime.now(),
@@ -267,7 +267,7 @@ class TestLiquidityMonitor:
 
     def test_check_liquidity_alert_no_alert(self, monitor):
         """Test no alert for good liquidity"""
-        from app.microstructure.liquidity import LiquidityMetrics
+        from app.domain.market_analysis.microstructure.liquidity import LiquidityMetrics
 
         good_metrics = LiquidityMetrics(
             timestamp=datetime.now(),

@@ -16,6 +16,7 @@ from typing import Any, Dict, Optional
 import numpy as np
 import pandas as pd
 
+from app.shared.config.centralized_config import get_config
 from .asset_class import AssetClass, AssetClassType
 from .models import AllocationStrategy, RiskTolerance
 
@@ -87,7 +88,7 @@ class RiskParityAllocationParams:
 
     Attributes:
         asset_class_returns: Historical returns for each asset class
-        risk_free_rate: Risk-free rate
+        risk_free_rate: Risk-free rate (default: from CentralizedConfig)
         target_volatility: Target portfolio volatility
         min_weight: Minimum weight for any asset class
         max_weight: Maximum weight for any asset class
@@ -95,7 +96,7 @@ class RiskParityAllocationParams:
     """
 
     asset_class_returns: pd.DataFrame
-    risk_free_rate: float = 0.02
+    risk_free_rate: float = float(get_config().backtesting.default_risk_free_rate)
     target_volatility: Optional[float] = None
     min_weight: float = 0.0
     max_weight: float = 1.0
@@ -724,9 +725,7 @@ class MultiAssetAllocator:
         # Calculate Sharpe ratio
         if expected_volatility > 0:
             try:
-                from app.core.centralized_config import get_config
-                cfg = get_config()
-                rf = Decimal(str(getattr(cfg.trading, 'portfolio_risk_free_rate', 0.02)))  # 2% risk-free rate
+                rf = get_config().backtesting.default_risk_free_rate
             except (ValueError, TypeError, AttributeError):
                 rf = Decimal("0.02")  # Fallback default
             sharpe = (expected_return - rf) / expected_volatility

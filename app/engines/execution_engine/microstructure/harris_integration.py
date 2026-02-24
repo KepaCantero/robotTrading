@@ -32,7 +32,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 from .almgren_chriss_model import MarketImpactEstimate, get_almgren_chriss_model
 from .bid_ask_bounce_removal import get_bid_ask_bounce_remover
 from .dark_pool_router import DarkPoolDecision, get_dark_pool_router

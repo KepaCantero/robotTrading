@@ -3,6 +3,9 @@ Enhanced Portfolio Management Models
 
 This module defines enhanced models for portfolio management including
 performance metrics, risk analysis, and portfolio analytics.
+
+NOTE: For canonical PerformanceMetrics used in backtesting, use app.backtesting.models.PerformanceMetrics
+This module contains PortfolioPerformanceRecord which is a specialized model for portfolio persistence.
 """
 
 from datetime import datetime
@@ -32,7 +35,7 @@ class ExtendedPortfolio(BasePortfolio):
     @model_validator(mode="after")
     def validate_portfolio_consistency(self) -> "ExtendedPortfolio":
         """Validate portfolio consistency."""
-        from app.core.centralized_config import get_config
+        from app.shared.config.centralized_config import get_config
         cfg = get_config()
 
         if self.cash_balance != self.cash:
@@ -87,8 +90,17 @@ class PerformancePeriod(str, Enum):
     ALL_TIME = "all"
 
 
-class PerformanceMetrics(BaseModel):
-    """Portfolio performance metrics."""
+class PortfolioPerformanceRecord(BaseModel):
+    """
+    Portfolio performance record for persistence.
+
+    This is a specialized model for storing portfolio performance history.
+    It includes identity fields (id, portfolio_id, period, dates) and
+    portfolio-specific fields (cash_value, equity_value, position_count).
+
+    For backtesting performance metrics, use app.backtesting.models.PerformanceMetrics
+    which is the canonical source of truth.
+    """
 
     id: UUID = Field(default_factory=uuid4, description="Unique metrics identifier")
     portfolio_id: UUID = Field(..., description="Portfolio identifier")
@@ -174,7 +186,7 @@ class PerformanceMetrics(BaseModel):
         return v
 
     @model_validator(mode="after")
-    def validate_metrics_consistency(self) -> "PerformanceMetrics":
+    def validate_metrics_consistency(self) -> "PortfolioPerformanceRecord":
         """Validate consistency between metrics."""
         if self.start_date >= self.end_date:
             raise ValueError("Start date must be before end date")
@@ -183,6 +195,10 @@ class PerformanceMetrics(BaseModel):
             raise ValueError("Cash + Equity must equal total value")
 
         return self
+
+
+# Backward compatibility alias
+PerformanceMetrics = PortfolioPerformanceRecord
 
 
 class RiskMetrics(BaseModel):
@@ -248,7 +264,7 @@ class PortfolioAnalytics(BaseModel):
     analysis_date: datetime = Field(default_factory=datetime.utcnow, description="Analysis date")
 
     # Performance Summary
-    performance_metrics: PerformanceMetrics = Field(..., description="Performance metrics")
+    performance_metrics: PortfolioPerformanceRecord = Field(..., description="Performance metrics record")
     risk_metrics: RiskMetrics = Field(..., description="Risk metrics")
 
     # Risk Assessment
@@ -344,7 +360,7 @@ class PortfolioAllocation(BaseModel):
     @model_validator(mode="after")
     def validate_allocation_sum(self) -> "PortfolioAllocation":
         """Validate that allocations sum to 100%."""
-        from app.core.centralized_config import get_config
+        from app.shared.config.centralized_config import get_config
         cfg = get_config()
 
         total_allocation = (
@@ -413,7 +429,7 @@ class PortfolioComparison(BaseModel):
     )
 
     # Performance Comparison
-    performance_comparison: Dict[str, PerformanceMetrics] = Field(
+    performance_comparison: Dict[str, PortfolioPerformanceRecord] = Field(
         ..., description="Performance comparison"
     )
     risk_comparison: Dict[str, RiskMetrics] = Field(..., description="Risk comparison")

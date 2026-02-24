@@ -44,7 +44,7 @@ class BaseFilter(ABC):
         # Cargar configuración desde YAML si no se proporciona
         if config is None and use_yaml:
             try:
-                from app.core.config_loader import get_filter_config
+                from app.shared.config.config_loader import get_filter_config
 
                 config = get_filter_config(name, tier=tier, preset=preset)
                 logger.debug(

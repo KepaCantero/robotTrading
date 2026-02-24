@@ -21,7 +21,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 
 # SINGLE SOURCE OF TRUTH: Use CentralizedConfig instead of constants.py
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 from app.backtesting.services.transaction_cost_model import (
     BrokerType,
     TransactionCostModel,

@@ -21,7 +21,7 @@ from sqlalchemy.exc import (
 from sqlalchemy.orm import Session
 from structlog import get_logger
 
-from app.core.exceptions import raise_database_error
+from app.shared.exceptions.exceptions import raise_database_error
 from app.infrastructure.persistence.models import (
     Asset,
     Backtest,

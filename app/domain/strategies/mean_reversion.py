@@ -14,7 +14,7 @@ import logging
 from decimal import Decimal
 from typing import Any
 
-from app.core.centralized_config import get_strategy_config, get_trading_threshold, get_config
+from app.shared.config.centralized_config import get_strategy_config, get_trading_threshold, get_config
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType

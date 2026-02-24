@@ -25,6 +25,10 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
+# Import canonical PerformanceMetrics from the single source of truth
+from app.backtesting.models import PerformanceMetrics
+from app.shared.config.centralized_config import CentralizedConfig, get_config
+
 logger = logging.getLogger(__name__)
 
 
@@ -96,103 +100,8 @@ class RegimeAnalysis:
     bear_market_periods: List[Tuple[date, date]] = field(default_factory=list)
 
 
-@dataclass
-class PerformanceMetrics:
-    """
-    Comprehensive performance metrics for backtesting results.
-
-    This provides all key metrics for evaluating strategy performance
-    over long periods (25+ years).
-
-    Attributes:
-        # Basic Return Metrics
-        total_return: Total return over entire period
-        cagr: Compound Annual Growth Rate
-        annualized_return: Annualized return (arithmetic mean)
-
-        # Risk Metrics
-        volatility: Annualized volatility
-        max_drawdown: Maximum drawdown
-        max_drawdown_duration: Longest drawdown duration in days
-        calmar_ratio: CAGR / |Max Drawdown|
-        ulcer_index: Duration-weighted drawdown penalty
-
-        # Risk-Adjusted Returns
-        sharpe_ratio: Sharpe ratio (annualized)
-        sortino_ratio: Sortino ratio (downside risk)
-        omega_ratio: Probability-weighted gains/losses ratio
-
-        # Trade Statistics
-        total_trades: Total number of trades
-        winning_trades: Number of winning trades
-        losing_trades: Number of losing trades
-        win_rate: Win rate percentage
-        avg_win: Average winning trade
-        avg_loss: Average losing trade
-        profit_factor: Gross profit / |gross loss|
-        expectancy: Expected value per trade
-
-        # Return Distribution
-        best_year: Best calendar year return
-        worst_year: Worst calendar year return
-        avg_yearly_return: Average yearly return
-        skewness: Return distribution skewness
-        kurtosis: Return distribution kurtosis
-
-        # Value at Risk
-        var_95: Value at Risk at 95% confidence
-        cvar_95: Conditional VaR at 95% confidence
-
-        # Advanced Metrics
-        recovery_factor: Net profit / |Max Drawdown|
-        tail_ratio: Ratio of extreme gains to extreme losses
-        winning_streak: Longest winning streak
-        losing_streak: Longest losing streak
-    """
-
-    # Basic Return Metrics
-    total_return: float = field(default=0.0)
-    cagr: float = field(default=0.0)
-    annualized_return: float = field(default=0.0)
-
-    # Risk Metrics
-    volatility: float = field(default=0.0)
-    max_drawdown: float = field(default=0.0)
-    max_drawdown_duration: int = field(default=0)  # days
-    calmar_ratio: Optional[float] = field(default=None)
-    ulcer_index: Optional[float] = field(default=None)
-
-    # Risk-Adjusted Returns
-    sharpe_ratio: Optional[float] = field(default=None)
-    sortino_ratio: Optional[float] = field(default=None)
-    omega_ratio: Optional[float] = field(default=None)
-
-    # Trade Statistics
-    total_trades: int = field(default=0)
-    winning_trades: int = field(default=0)
-    losing_trades: int = field(default=0)
-    win_rate: float = field(default=0.0)
-    avg_win: float = field(default=0.0)
-    avg_loss: float = field(default=0.0)
-    profit_factor: Optional[float] = field(default=None)
-    expectancy: Optional[float] = field(default=None)
-
-    # Return Distribution
-    best_year: float = field(default=0.0)
-    worst_year: float = field(default=0.0)
-    avg_yearly_return: float = field(default=0.0)
-    skewness: Optional[float] = field(default=None)
-    kurtosis: Optional[float] = field(default=None)
-
-    # Value at Risk
-    var_95: Optional[float] = field(default=None)
-    cvar_95: Optional[float] = field(default=None)
-
-    # Advanced Metrics
-    recovery_factor: Optional[float] = field(default=None)
-    tail_ratio: Optional[float] = field(default=None)
-    winning_streak: int = field(default=0)
-    losing_streak: int = field(default=0)
+# NOTE: PerformanceMetrics is now imported from app.backtesting.models
+# This is the canonical source of truth for all performance metrics.
 
 
 class PerformanceTracker:
@@ -210,7 +119,7 @@ class PerformanceTracker:
         ```python
         tracker = PerformanceTracker(
             initial_capital=Decimal("100000"),
-            risk_free_rate=Decimal("0.02")
+            risk_free_rate=get_config().backtesting.default_risk_free_rate
         )
 
         # Update tracker with new equity value
@@ -224,17 +133,17 @@ class PerformanceTracker:
     def __init__(
         self,
         initial_capital: Decimal,
-        risk_free_rate: Decimal = Decimal("0.02"),
+        risk_free_rate: Decimal = None,
     ):
         """
         Initialize the performance tracker.
 
         Args:
             initial_capital: Starting capital for the backtest
-            risk_free_rate: Annual risk-free rate for Sharpe ratio
+            risk_free_rate: Annual risk-free rate for Sharpe ratio (default: from CentralizedConfig)
         """
         self.initial_capital = initial_capital
-        self.risk_free_rate = risk_free_rate
+        self.risk_free_rate = risk_free_rate if risk_free_rate is not None else get_config().backtesting.default_risk_free_rate
 
         # Equity curve tracking
         self.equity_curve: List[Tuple[date, Decimal]] = []
@@ -345,12 +254,15 @@ class PerformanceTracker:
         else:
             cagr = 0.0
 
+        # Get trading days from config
+        annual_trading_days = get_config().backtesting.annual_trading_days
+
         # Volatility
-        volatility = returns.std() * np.sqrt(252) if len(returns) > 0 else 0.0
+        volatility = returns.std() * np.sqrt(annual_trading_days) if len(returns) > 0 else 0.0
 
         # Sharpe ratio
         if len(returns) > 0 and volatility > 0:
-            excess_return = returns.mean() * 252 - float(self.risk_free_rate)
+            excess_return = returns.mean() * annual_trading_days - float(self.risk_free_rate)
             sharpe = float(excess_return / volatility) if volatility > 0 else None
         else:
             sharpe = None
@@ -399,35 +311,41 @@ class PerformanceTracker:
         # Recovery factor
         recovery_factor = total_return / abs(max_drawdown) if max_drawdown != 0 else None
 
+        # Helper function to convert to Decimal
+        def to_decimal(val):
+            if val is None:
+                return None
+            return Decimal(str(val))
+
         return PerformanceMetrics(
-            total_return=total_return,
-            cagr=cagr,
-            annualized_return=float(returns.mean() * 252) if len(returns) > 0 else 0.0,
-            volatility=volatility,
-            max_drawdown=max_drawdown,
+            total_return=to_decimal(total_return),
+            cagr=to_decimal(cagr),
+            annualized_return=to_decimal(float(returns.mean() * annual_trading_days) if len(returns) > 0 else 0.0),
+            volatility=to_decimal(volatility),
+            max_drawdown=to_decimal(max_drawdown),
             max_drawdown_duration=self._max_drawdown_duration(),
-            calmar_ratio=calmar,
-            ulcer_index=self._calculate_ulcer_index(equity_series),
-            sharpe_ratio=sharpe,
-            sortino_ratio=sortino,
-            omega_ratio=self._calculate_omega_ratio(returns),
+            calmar_ratio=to_decimal(calmar),
+            ulcer_index=to_decimal(self._calculate_ulcer_index(equity_series)),
+            sharpe_ratio=to_decimal(sharpe),
+            sortino_ratio=to_decimal(sortino),
+            omega_ratio=to_decimal(self._calculate_omega_ratio(returns)),
             total_trades=total_trades,
             winning_trades=len(self._winning_trades),
             losing_trades=len(self._losing_trades),
-            win_rate=win_rate * 100,
-            avg_win=avg_win,
-            avg_loss=avg_loss,
-            profit_factor=profit_factor,
-            expectancy=expectancy,
-            best_year=max(yearly_returns.values()) if yearly_returns else 0.0,
-            worst_year=min(yearly_returns.values()) if yearly_returns else 0.0,
-            avg_yearly_return=np.mean(list(yearly_returns.values())) if yearly_returns else 0.0,
-            skewness=skewness,
-            kurtosis=kurtosis,
-            var_95=var_95,
-            cvar_95=cvar_95,
-            recovery_factor=recovery_factor,
-            tail_ratio=self._calculate_tail_ratio(returns),
+            win_rate=to_decimal(win_rate * 100),
+            avg_win=to_decimal(avg_win),
+            avg_loss=to_decimal(avg_loss),
+            profit_factor=to_decimal(profit_factor),
+            expectancy=to_decimal(expectancy),
+            best_year=to_decimal(max(yearly_returns.values()) if yearly_returns else 0.0),
+            worst_year=to_decimal(min(yearly_returns.values()) if yearly_returns else 0.0),
+            avg_yearly_return=to_decimal(np.mean(list(yearly_returns.values())) if yearly_returns else 0.0),
+            skewness=to_decimal(skewness),
+            kurtosis=to_decimal(kurtosis),
+            var_95=to_decimal(var_95),
+            cvar_95=to_decimal(cvar_95),
+            recovery_factor=to_decimal(recovery_factor),
+            tail_ratio=to_decimal(self._calculate_tail_ratio(returns)),
             winning_streak=self._max_winning_streak,
             losing_streak=self._max_losing_streak,
         )
@@ -456,8 +374,9 @@ class PerformanceTracker:
             if len(year_data) < 2:
                 continue
 
+            annual_trading_days = get_config().backtesting.annual_trading_days
             year_return = year_data.iloc[-1] / year_data.iloc[0] - 1
-            year_vol = year_data.pct_change().std() * np.sqrt(252)
+            year_vol = year_data.pct_change().std() * np.sqrt(annual_trading_days)
 
             # Max drawdown for the year
             cummax = year_data.cummax()
@@ -468,7 +387,7 @@ class PerformanceTracker:
             returns = year_data.pct_change().dropna()
             sharpe = None
             if len(returns) > 0 and year_vol > 0:
-                excess_return = returns.mean() * 252 - float(self.risk_free_rate)
+                excess_return = returns.mean() * annual_trading_days - float(self.risk_free_rate)
                 sharpe = excess_return / year_vol
 
             # Monthly breakdown
@@ -521,17 +440,21 @@ class PerformanceTracker:
 
     def get_rolling_metrics(
         self,
-        windows: List[int] = [252, 756, 1260, 2520],  # 1, 3, 5, 10 years
+        windows: List[int] = None,  # Default calculated from annual_trading_days
     ) -> RollingMetrics:
         """
         Calculate rolling metrics over different windows.
 
         Args:
-            windows: List of window sizes in days
+            windows: List of window sizes in days (default: 1, 3, 5, 10 years based on annual_trading_days)
 
         Returns:
             RollingMetrics with calculated rolling metrics
         """
+        annual_trading_days = get_config().backtesting.annual_trading_days
+        if windows is None:
+            windows = [annual_trading_days, annual_trading_days * 3, annual_trading_days * 5, annual_trading_days * 10]
+
         if len(self.equity_curve) < 2:
             return RollingMetrics()
 
@@ -547,13 +470,13 @@ class PerformanceTracker:
 
             # Rolling metrics
             rolling_return = returns.rolling(window=window).apply(lambda x: (1 + x).prod() - 1)
-            rolling_vol = returns.rolling(window=window).std() * np.sqrt(252)
+            rolling_vol = returns.rolling(window=window).std() * np.sqrt(annual_trading_days)
             rolling_sharpe = (
-                returns.rolling(window=window).mean() * 252 - float(self.risk_free_rate)
+                returns.rolling(window=window).mean() * annual_trading_days - float(self.risk_free_rate)
             ) / rolling_vol
 
             # Use latest values
-            window_label = f"window_{window // 252}y"
+            window_label = f"window_{window // annual_trading_days}y"
             metrics[window_label] = {
                 "return": float(rolling_return.iloc[-1]),
                 "volatility": float(rolling_vol.iloc[-1]),
@@ -592,17 +515,18 @@ class PerformanceTracker:
         if len(returns) < 2:
             return None
 
+        annual_trading_days = get_config().backtesting.annual_trading_days
         downside_returns = returns[returns < 0]
         if len(downside_returns) == 0:
             # No downside volatility, return a high positive value or None
             # Return None if all returns are non-negative (no downside risk)
             return None
 
-        downside_deviation = downside_returns.std() * np.sqrt(252)
+        downside_deviation = downside_returns.std() * np.sqrt(annual_trading_days)
         if downside_deviation is None or downside_deviation == 0:
             return None
 
-        excess_return = returns.mean() * 252 - float(self.risk_free_rate)
+        excess_return = returns.mean() * annual_trading_days - float(self.risk_free_rate)
         return float(excess_return / downside_deviation)
 
     def _calculate_omega_ratio(self, returns: pd.Series, threshold: float = 0.0) -> Optional[float]:

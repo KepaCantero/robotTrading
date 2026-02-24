@@ -17,7 +17,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from app.core.protocols import ITradeExecutor
+from app.shared.protocols import ITradeExecutor
 from app.application.orchestration.live_trading.broker_connector import OrderSide, OrderStatus, OrderType
 from app.application.orchestration.live_trading.order_manager import OrderManager, get_order_manager
 

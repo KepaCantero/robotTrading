@@ -207,7 +207,17 @@ class Position(Base):
 
 
 class Trade(Base):
-    """Trade model for recording executed trades."""
+    """
+    Trade model for recording executed trades.
+
+    This is the SQLAlchemy ORM model for database persistence.
+    For the canonical Pydantic Trade model used in business logic,
+    see app.backtesting.models.Trade.
+
+    Conversion methods:
+    - to_pydantic(): Convert to canonical Pydantic Trade
+    - from_pydantic(): Create SQLAlchemy Trade from Pydantic Trade (class method)
+    """
 
     __tablename__ = "trades"
 
@@ -249,6 +259,82 @@ class Trade(Base):
         CheckConstraint("quantity > 0", name="ck_trades_quantity_positive"),
         CheckConstraint("price > 0", name="ck_trades_price_positive"),
     )
+
+    def to_pydantic(self) -> "PydanticTrade":
+        """
+        Convert SQLAlchemy Trade to canonical Pydantic Trade model.
+
+        Returns:
+            app.backtesting.models.Trade instance
+        """
+        from app.backtesting.models import Trade as PydanticTrade
+        from app.backtesting.models import TradeStatus
+
+        # Map SQLAlchemy status to Pydantic TradeStatus
+        status_map = {
+            "PENDING": TradeStatus.OPEN,
+            "FILLED": TradeStatus.CLOSED,
+            "CANCELLED": TradeStatus.CANCELLED,
+            "PARTIALLY_FILLED": TradeStatus.PARTIALLY_FILLED,
+        }
+
+        return PydanticTrade(
+            trade_id=str(self.id),
+            symbol=self.asset.symbol if self.asset else "",
+            side=self.side.lower(),
+            quantity=self.quantity,
+            entry_price=self.price,
+            entry_time=self.executed_at,
+            status=status_map.get(self.status, TradeStatus.OPEN),
+            commission=self.commission,
+            slippage=self.slippage,
+        )
+
+    @classmethod
+    def from_pydantic(
+        cls,
+        pydantic_trade: "PydanticTrade",
+        portfolio_id: uuid.UUID,
+        asset_id: uuid.UUID,
+        order_id: Optional[str] = None,
+    ) -> "Trade":
+        """
+        Create SQLAlchemy Trade from canonical Pydantic Trade model.
+
+        Args:
+            pydantic_trade: The canonical Pydantic Trade instance
+            portfolio_id: UUID of the portfolio
+            asset_id: UUID of the asset
+            order_id: Optional order ID
+
+        Returns:
+            SQLAlchemy Trade instance (not persisted)
+        """
+        from app.backtesting.models import Trade as PydanticTrade
+        from app.backtesting.models import TradeStatus
+
+        # Map Pydantic TradeStatus to SQLAlchemy status
+        status_map = {
+            TradeStatus.OPEN: "PENDING",
+            TradeStatus.CLOSED: "FILLED",
+            TradeStatus.CANCELLED: "CANCELLED",
+            TradeStatus.PARTIALLY_FILLED: "PARTIALLY_FILLED",
+        }
+
+        return cls(
+            id=uuid.UUID(pydantic_trade.trade_id) if pydantic_trade.trade_id else uuid.uuid4(),
+            portfolio_id=portfolio_id,
+            asset_id=asset_id,
+            order_id=order_id,
+            side=pydantic_trade.side.upper(),
+            quantity=pydantic_trade.quantity,
+            price=pydantic_trade.entry_price,
+            commission=pydantic_trade.commission,
+            slippage=pydantic_trade.slippage,
+            total_cost=pydantic_trade.total_cost,
+            status=status_map.get(pydantic_trade.status, "PENDING"),
+            executed_at=pydantic_trade.entry_time,
+        )
 
 
 class MarketData(Base):

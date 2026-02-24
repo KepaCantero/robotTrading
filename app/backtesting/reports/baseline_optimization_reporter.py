@@ -22,7 +22,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 from jinja2 import Template
 
-from app.core.models.input_profile import InputProfile
+from app.domain.models.input_profile import InputProfile
 
 logger = logging.getLogger(__name__)
 

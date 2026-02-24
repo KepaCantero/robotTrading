@@ -436,7 +436,7 @@ class FactorCalculator:
         self,
         factor_scores_dict: Dict[str, FactorScores],
         factor_premiums: Dict[str, float],
-        risk_free_rate: float = getattr(config.trading, 'max_risk_per_trade', 0.02),
+        risk_free_rate: float = 0.02,
     ) -> Dict[str, Decimal]:
         """
         Calculate predicted returns using factor model.

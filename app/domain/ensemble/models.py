@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 
 
 class OptimizationObjective(str, Enum):

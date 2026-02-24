@@ -11,11 +11,11 @@ from typing import List, Dict, Any, Optional
 
 from app.presentation.dashboard.dashboard_data import (
     DashboardSnapshot,
+    DashboardPerformanceMetrics,
     PositionSummary,
-    PerformanceMetrics,
     SystemStatus,
 )
-from app.core.compliance_engine import get_compliance_engine
+from app.domain.services.compliance.compliance_engine import get_compliance_engine
 
 
 class DashboardService:
@@ -57,7 +57,7 @@ class DashboardService:
             recent_alerts=recent_alerts,
         )
 
-    async def _get_performance_metrics(self) -> PerformanceMetrics:
+    async def _get_performance_metrics(self) -> DashboardPerformanceMetrics:
         """Get performance metrics from ComplianceEngine."""
         try:
             daily_summary = self._compliance_engine.get_daily_pnl_summary()
@@ -75,7 +75,7 @@ class DashboardService:
             )
             max_drawdown = self._compliance_engine._max_drawdown_ratio
 
-            return PerformanceMetrics(
+            return DashboardPerformanceMetrics(
                 total_pnl=Decimal(str(daily_summary.get("total_pnl", 0))),
                 daily_pnl=Decimal(str(daily_summary.get("daily_pnl", 0))),
                 daily_return_pct=daily_summary.get("daily_return_pct", 0.0),
@@ -230,9 +230,9 @@ class DashboardService:
             return 0.0
         return float((peak - current) / peak)
 
-    def _empty_performance(self) -> PerformanceMetrics:
+    def _empty_performance(self) -> DashboardPerformanceMetrics:
         """Return empty performance metrics."""
-        return PerformanceMetrics(
+        return DashboardPerformanceMetrics(
             total_pnl=Decimal("0"),
             daily_pnl=Decimal("0"),
             daily_return_pct=0.0,

@@ -15,6 +15,15 @@ from typing import List, Optional, Tuple
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from app.shared.config.centralized_config import CentralizedConfig
+
+
+class TradeSide(str, Enum):
+    """Trade side (buy/sell)."""
+
+    BUY = "buy"
+    SELL = "sell"
+
 
 class TradeStatus(str, Enum):
     """Trade execution status."""
@@ -26,21 +35,54 @@ class TradeStatus(str, Enum):
 
 
 class Trade(BaseModel):
-    """Individual trade record for backtesting."""
+    """
+    Canonical Trade model for the AlgoTrading system.
 
+    This is the single source of truth for all trade-related data across
+    backtesting, portfolio management, and execution layers.
+
+    Consolidated from:
+    - app/backtesting/models.py (original canonical)
+    - app/domain/portfolio/multi_asset/models.py (merged)
+    - app/domain/services/backtesting/backtest_engine.py (merged)
+
+    Note: The SQLAlchemy Trade model in app/infrastructure/persistence/database/models.py
+    remains separate for database persistence. Use to_pydantic() and from_pydantic()
+    methods for conversion.
+    """
+
+    # Core identification
     trade_id: str = Field(..., description="Unique trade identifier")
     symbol: str = Field(..., description="Trading symbol")
+
+    # Trade side and quantity
     side: str = Field(..., description="Trade side (buy/sell)")
     quantity: Decimal = Field(..., gt=0, description="Trade quantity")
-    entry_price: Decimal = Field(..., gt=0, description="Entry price")
-    exit_price: Optional[Decimal] = Field(None, gt=0, description="Exit price")
-    entry_time: datetime = Field(..., description="Entry timestamp")
-    exit_time: Optional[datetime] = Field(None, description="Exit timestamp")
+
+    # Price information
+    entry_price: Decimal = Field(..., gt=0, description="Entry/execution price")
+    exit_price: Optional[Decimal] = Field(None, gt=0, description="Exit price (for closed trades)")
+
+    # Timestamps
+    entry_time: datetime = Field(..., description="Entry/execution timestamp")
+    exit_time: Optional[datetime] = Field(None, description="Exit timestamp (for closed trades)")
+
+    # Status and P&L
     status: TradeStatus = Field(TradeStatus.OPEN, description="Trade status")
     pnl: Optional[Decimal] = Field(None, description="Profit/Loss")
     pnl_percentage: Optional[Decimal] = Field(None, description="P&L percentage")
+
+    # Transaction costs
     commission: Decimal = Field(default=Decimal("0"), ge=0, description="Commission paid")
     slippage: Decimal = Field(default=Decimal("0"), ge=0, description="Slippage cost")
+    market_impact: Decimal = Field(default=Decimal("0"), ge=0, description="Market impact cost")
+
+    # Additional context (from multi_asset Trade)
+    asset_class: Optional[str] = Field(None, description="Asset class (equity, bond, crypto, etc.)")
+    value: Optional[Decimal] = Field(None, ge=0, description="Total trade value (quantity * price)")
+    currency: str = Field(default="USD", description="Trade currency")
+    priority: int = Field(default=0, ge=0, le=100, description="Execution priority (0-100)")
+    estimated_cost: Decimal = Field(default=Decimal("0"), ge=0, description="Estimated trading cost")
     reason: Optional[str] = Field(None, description="Reason or signal that triggered the trade")
 
     @field_validator("side")
@@ -66,44 +108,127 @@ class Trade(BaseModel):
 
         return self
 
+    @property
+    def is_buy(self) -> bool:
+        """Check if this is a buy order."""
+        return self.side.lower() == "buy"
+
+    @property
+    def is_sell(self) -> bool:
+        """Check if this is a sell order."""
+        return self.side.lower() == "sell"
+
+    @property
+    def notional_value(self) -> Decimal:
+        """Total notional value of the trade."""
+        return self.quantity * self.entry_price
+
+    @property
+    def total_cost(self) -> Decimal:
+        """Total cost including commission, slippage, and market impact."""
+        return self.commission + self.slippage + self.market_impact + self.estimated_cost
+
 
 class PerformanceMetrics(BaseModel):
-    """Performance metrics for backtesting results."""
+    """
+    Canonical Performance Metrics for backtesting results.
 
-    # Basic metrics
-    total_trades: int = Field(..., ge=0, description="Total number of trades")
-    winning_trades: int = Field(..., ge=0, description="Number of winning trades")
-    losing_trades: int = Field(..., ge=0, description="Number of losing trades")
-    win_rate: Decimal = Field(..., ge=0, le=100, description="Win rate percentage")
+    This is the SINGLE SOURCE OF TRUTH for all performance metrics across the system.
+    All other PerformanceMetrics implementations should import from this module.
 
-    # P&L metrics
-    total_pnl: Decimal = Field(..., description="Total profit/loss")
-    total_pnl_percentage: Decimal = Field(..., description="Total P&L percentage")
-    gross_profit: Decimal = Field(..., ge=0, description="Gross profit")
-    gross_loss: Decimal = Field(..., le=0, description="Gross loss")
-    net_profit: Decimal = Field(..., description="Net profit")
+    Consolidates metrics from:
+    - app/backtesting/robust_engine/performance_tracker.py
+    - app/domain/services/backtesting/backtest_engine.py
+    - app/domain/models/portfolio_analytics.py
+    - app/presentation/dashboard/dashboard_data.py
+    """
 
-    # Risk metrics
-    max_drawdown: Decimal = Field(..., le=0, description="Maximum drawdown")
-    max_drawdown_percentage: Decimal = Field(..., le=0, description="Maximum drawdown percentage")
-    sharpe_ratio: Optional[Decimal] = Field(None, description="Sharpe ratio")
-    sortino_ratio: Optional[Decimal] = Field(None, description="Sortino ratio")
-    risk_reward_ratio: Optional[Decimal] = Field(
-        None, description="Average risk/reward ratio per trade (target ≥1:3)"
+    # =========================================================================
+    # RETURN METRICS
+    # =========================================================================
+    total_return: Optional[Decimal] = Field(
+        None, description="Total return over entire period (decimal form)"
+    )
+    annualized_return: Optional[Decimal] = Field(
+        None, description="Annualized return percentage"
+    )
+    cagr: Optional[Decimal] = Field(
+        None, description="Compound Annual Growth Rate (decimal form)"
+    )
+    cumulative_return: Optional[Decimal] = Field(
+        None, description="Cumulative return over period"
     )
 
-    # Advanced financial metrics (PHASE 4 MODULE 7)
+    # =========================================================================
+    # BASIC TRADE METRICS
+    # =========================================================================
+    total_trades: int = Field(default=0, ge=0, description="Total number of trades")
+    winning_trades: int = Field(default=0, ge=0, description="Number of winning trades")
+    losing_trades: int = Field(default=0, ge=0, description="Number of losing trades")
+    win_rate: Decimal = Field(default=Decimal("0"), ge=0, le=100, description="Win rate percentage")
+
+    # =========================================================================
+    # P&L METRICS
+    # =========================================================================
+    total_pnl: Decimal = Field(default=Decimal("0"), description="Total profit/loss")
+    total_pnl_percentage: Decimal = Field(
+        default=Decimal("0"), description="Total P&L percentage"
+    )
+    gross_profit: Decimal = Field(default=Decimal("0"), ge=0, description="Gross profit")
+    gross_loss: Decimal = Field(default=Decimal("0"), le=0, description="Gross loss")
+    net_profit: Decimal = Field(default=Decimal("0"), description="Net profit")
+    daily_pnl: Optional[Decimal] = Field(None, description="Daily profit/loss")
+    daily_return_pct: Optional[float] = Field(None, description="Daily return percentage")
+
+    # =========================================================================
+    # RISK METRICS
+    # =========================================================================
+    max_drawdown: Decimal = Field(
+        default=Decimal("0"), le=0, description="Maximum drawdown (decimal form)"
+    )
+    max_drawdown_percentage: Decimal = Field(
+        default=Decimal("0"), le=0, description="Maximum drawdown percentage"
+    )
+    max_drawdown_duration: Optional[int] = Field(
+        None, ge=0, description="Maximum drawdown duration in days"
+    )
+    current_drawdown: Optional[float] = Field(None, description="Current drawdown")
+    volatility: Optional[Decimal] = Field(None, description="Volatility (decimal form)")
+    volatility_annualized: Optional[Decimal] = Field(
+        None, description="Annualized Volatility: std(returns) * sqrt(252)"
+    )
+    annualized_volatility: Optional[Decimal] = Field(
+        None, description="Annualized volatility (alternative name)"
+    )
+
+    # =========================================================================
+    # RISK-ADJUSTED RETURN METRICS
+    # =========================================================================
+    sharpe_ratio: Optional[Decimal] = Field(None, description="Sharpe ratio (annualized)")
+    sortino_ratio: Optional[Decimal] = Field(
+        None, description="Sortino ratio (downside risk)"
+    )
     calmar_ratio: Optional[Decimal] = Field(
         None, description="Calmar Ratio: CAGR / |Max Drawdown| (>1.0 good, >3.0 excellent)"
     )
     omega_ratio: Optional[Decimal] = Field(
         None, description="Omega Ratio: Probability-weighted gains/losses ratio (>1.0 profitable)"
     )
+    treynor_ratio: Optional[Decimal] = Field(
+        None, description="Treynor ratio: (Return - RiskFree) / Beta"
+    )
+    information_ratio: Optional[Decimal] = Field(
+        None, description="Information ratio vs benchmark"
+    )
+    risk_reward_ratio: Optional[Decimal] = Field(
+        None, description="Average risk/reward ratio per trade (target >=1:3)"
+    )
+
+    # =========================================================================
+    # ADVANCED RISK METRICS
+    # =========================================================================
     ulcer_index: Optional[Decimal] = Field(
         None, description="Ulcer Index: Duration-weighted drawdown penalty (lower is better)"
-    )
-    volatility_annualized: Optional[Decimal] = Field(
-        None, description="Annualized Volatility: std(returns) * sqrt(252)"
     )
     recovery_factor: Optional[Decimal] = Field(
         None, description="Recovery Factor: Net Profit / |Max Drawdown|"
@@ -111,50 +236,113 @@ class PerformanceMetrics(BaseModel):
     profit_factor: Optional[Decimal] = Field(
         None, description="Profit Factor: Gross Profit / |Gross Loss| (>1.5 good, >2.0 excellent)"
     )
+    tail_ratio: Optional[Decimal] = Field(
+        None, description="Ratio of extreme gains to extreme losses"
+    )
+
+    # =========================================================================
+    # RETURN DISTRIBUTION METRICS
+    # =========================================================================
     skewness: Optional[Decimal] = Field(
         None, description="Skewness: Return distribution asymmetry (negative is worse)"
     )
     kurtosis: Optional[Decimal] = Field(
         None, description="Excess Kurtosis: Tail risk measure (negative is better)"
     )
+
+    # =========================================================================
+    # VALUE AT RISK METRICS
+    # =========================================================================
     var_95: Optional[Decimal] = Field(
         None, description="Value at Risk 95%: Worst 5% scenario (negative value = potential loss)"
+    )
+    var_99: Optional[Decimal] = Field(
+        None, description="Value at Risk 99%: Worst 1% scenario"
     )
     cvar_95: Optional[Decimal] = Field(
         None, description="Conditional VaR 95%: Expected loss beyond VaR threshold"
     )
 
-    # Trade statistics
-    avg_win: Decimal = Field(..., description="Average winning trade")
-    avg_loss: Decimal = Field(..., le=0, description="Average losing trade")
-    largest_win: Decimal = Field(..., ge=0, description="Largest winning trade")
-    largest_loss: Decimal = Field(..., le=0, description="Largest losing trade")
+    # =========================================================================
+    # TRADE STATISTICS
+    # =========================================================================
+    avg_win: Decimal = Field(default=Decimal("0"), description="Average winning trade")
+    avg_loss: Decimal = Field(default=Decimal("0"), le=0, description="Average losing trade")
+    avg_trade_return: Optional[Decimal] = Field(None, description="Average trade return")
+    largest_win: Decimal = Field(default=Decimal("0"), ge=0, description="Largest winning trade")
+    largest_loss: Decimal = Field(default=Decimal("0"), le=0, description="Largest losing trade")
+    best_trade: Optional[Decimal] = Field(None, description="Best single trade return")
+    worst_trade: Optional[Decimal] = Field(None, description="Worst single trade return")
     expectancy: Optional[Decimal] = Field(
         None,
         description="Expectancy: Expected value per trade (positive=profitable, negative=unprofitable)",
     )
 
-    # Time metrics
-    total_days: int = Field(..., ge=0, description="Total trading days")
-    avg_trade_duration: Decimal = Field(..., ge=0, description="Average trade duration in days")
+    # =========================================================================
+    # STREAK METRICS
+    # =========================================================================
+    winning_streak: Optional[int] = Field(None, ge=0, description="Longest winning streak")
+    losing_streak: Optional[int] = Field(None, ge=0, description="Longest losing streak")
+
+    # =========================================================================
+    # YEARLY PERFORMANCE METRICS
+    # =========================================================================
+    best_year: Optional[Decimal] = Field(None, description="Best calendar year return")
+    worst_year: Optional[Decimal] = Field(None, description="Worst calendar year return")
+    avg_yearly_return: Optional[Decimal] = Field(None, description="Average yearly return")
+
+    # =========================================================================
+    # BENCHMARK COMPARISON METRICS
+    # =========================================================================
+    tracking_error: Optional[Decimal] = Field(None, description="Tracking error vs benchmark")
+    beta: Optional[Decimal] = Field(None, description="Portfolio beta")
+    alpha: Optional[Decimal] = Field(None, description="Jensen's alpha")
+    jensen_alpha: Optional[Decimal] = Field(None, description="Jensen's alpha (alternative name)")
+
+    # =========================================================================
+    # TIME METRICS
+    # =========================================================================
+    total_days: int = Field(default=0, ge=0, description="Total trading days")
+    avg_trade_duration: Decimal = Field(
+        default=Decimal("0"), ge=0, description="Average trade duration in days"
+    )
+
+    # =========================================================================
+    # PORTFOLIO VALUE METRICS (for dashboard)
+    # =========================================================================
+    portfolio_value: Optional[Decimal] = Field(None, description="Current portfolio value")
+    starting_capital: Optional[Decimal] = Field(None, description="Starting capital")
 
     @model_validator(mode="after")
     def validate_metrics_consistency(self) -> "PerformanceMetrics":
-        """Validate metrics consistency."""
-        if self.total_trades != self.winning_trades + self.losing_trades:
-            raise ValueError("Total trades must equal winning + losing trades")
+        """Validate metrics consistency - only validate if fields are set."""
+        # Only validate trade counts if they are non-zero (indicates they were explicitly set)
+        if self.total_trades > 0 or self.winning_trades > 0 or self.losing_trades > 0:
+            if self.total_trades != self.winning_trades + self.losing_trades:
+                raise ValueError("Total trades must equal winning + losing trades")
 
-        if self.total_trades > 0:
+        # Only validate win rate if total_trades > 0
+        if self.total_trades > 0 and self.win_rate != Decimal("0"):
             expected_win_rate = Decimal(str((self.winning_trades / self.total_trades) * 100))
             if abs(self.win_rate - expected_win_rate) > Decimal("0.01"):
                 raise ValueError(
                     f"Win rate calculation mismatch: {self.win_rate} vs {expected_win_rate}"
                 )
 
-        if self.gross_profit + self.gross_loss != self.net_profit:
-            raise ValueError("Gross profit + gross loss must equal net profit")
+        # Only validate P&L consistency if values are set
+        if self.gross_profit != Decimal("0") or self.gross_loss != Decimal("0"):
+            if self.gross_profit + self.gross_loss != self.net_profit:
+                raise ValueError("Gross profit + gross loss must equal net profit")
 
         return self
+
+    class Config:
+        """Pydantic config for PerformanceMetrics."""
+
+        # Allow extra fields for forward compatibility
+        extra = "ignore"
+        # Use enum values
+        use_enum_values = True
 
 
 class BacktestConfig(BaseModel):

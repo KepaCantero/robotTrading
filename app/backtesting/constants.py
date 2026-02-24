@@ -6,13 +6,13 @@ All values are now managed in app/core/centralized_config.py::BacktestingConfig.
 
 This file remains for backwards compatibility only.
 New code should use:
-    from app.core.centralized_config import get_config
+    from app.shared.config.centralized_config import get_config
     config = get_config()
     slippage = config.backtesting.base_slippage_bps
 
 Migration Guide:
     OLD: from app.backtesting.constants import BACKTESTING_CONSTANTS
-    NEW: from app.core.centralized_config import get_config
+    NEW: from app.shared.config.centralized_config import get_config
          backtesting_config = get_config().backtesting
 """
 
@@ -21,7 +21,7 @@ from typing import Dict, List
 import warnings
 
 # Import from centralized config
-from app.core.centralized_config import get_config, BacktestingConfig
+from app.shared.config.centralized_config import get_config, BacktestingConfig
 
 # =============================================================================
 # DEPRECATION WARNING
@@ -229,7 +229,7 @@ class BacktestingConstants:
         base_slippage = BACKTESTING_CONSTANTS.execution.BASE_SLIPPAGE_BPS
 
     Usage (NEW - recommended):
-        from app.core.centralized_config import get_config
+        from app.shared.config.centralized_config import get_config
         config = get_config()
         capital_levels = config.backtesting.default_capital_levels
         base_slippage = config.backtesting.base_slippage_bps

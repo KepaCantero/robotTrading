@@ -20,7 +20,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Optional, Protocol
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 from app.domain.strategies.fx_carry_trade.models import FXPair, FXRateQuote, InterestRateQuote
 
 logger = logging.getLogger(__name__)

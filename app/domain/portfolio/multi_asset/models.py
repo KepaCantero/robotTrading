@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Optional
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 
 
 class RiskTolerance(str, Enum):
@@ -112,108 +112,9 @@ class PortfolioMetrics(BaseModel):
         return v
 
 
-class Trade(BaseModel):
-    """
-    Represents a single trade order.
-
-    Attributes:
-        symbol: Asset symbol to trade
-        asset_class: Asset class of the symbol
-        quantity: Quantity to trade (positive=buy, negative=sell)
-        price: Expected execution price
-        value: Total trade value
-        currency: Trade currency
-        reason: Reason for the trade
-        timestamp: When the trade was created
-        priority: Trade execution priority (higher = more important)
-        estimated_cost: Estimated trading cost
-        market_impact: Estimated market impact
-    """
-
-    model_config = ConfigDict(
-        strict=True,
-        validate_assignment=True,
-        extra="forbid",
-        str_strip_whitespace=True,
-    )
-
-    symbol: str = Field(..., description="Asset symbol to trade")
-    asset_class: str = Field(..., description="Asset class of the symbol")
-    quantity: Decimal = Field(..., description="Quantity to trade (positive=buy, negative=sell)")
-    price: Decimal = Field(..., description="Expected execution price")
-    value: Decimal = Field(..., description="Total trade value")
-    currency: str = Field(default="USD", description="Trade currency")
-    reason: str = Field(..., description="Reason for the trade")
-    timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="When the trade was created"
-    )
-    priority: int = Field(default=0, ge=0, le=100, description="Execution priority (0-100)")
-    estimated_cost: Decimal = Field(
-        default=Decimal("0"), ge=0, description="Estimated trading cost"
-    )
-    market_impact: Decimal = Field(
-        default=Decimal("0"), ge=0, description="Estimated market impact"
-    )
-
-    @field_validator("quantity")
-    @classmethod
-    def validate_quantity(cls, v: Decimal) -> Decimal:
-        """Validate quantity is non-zero."""
-        if isinstance(v, (int, float)):
-            v = Decimal(str(v))
-        elif not isinstance(v, Decimal):
-            raise ValueError("Quantity must be a number")
-
-        if v == 0:
-            raise ValueError("Trade quantity cannot be zero")
-
-        if abs(v) > Decimal("1000000"):
-            raise ValueError(f"Trade quantity exceeds maximum limit of 1M, got {v}")
-
-        return v
-
-    @field_validator("price")
-    @classmethod
-    def validate_price(cls, v: Decimal) -> Decimal:
-        """Validate price is positive."""
-        if isinstance(v, (int, float)):
-            v = Decimal(str(v))
-        elif not isinstance(v, Decimal):
-            raise ValueError("Price must be a number")
-
-        if v <= 0:
-            raise ValueError(f"Price must be positive, got {v}")
-
-        return v
-
-    @field_validator("value")
-    @classmethod
-    def validate_value(cls, v: Decimal) -> Decimal:
-        """Validate trade value."""
-        if isinstance(v, (int, float)):
-            v = Decimal(str(v))
-        elif not isinstance(v, Decimal):
-            raise ValueError("Value must be a number")
-
-        if v <= 0:
-            raise ValueError(f"Trade value must be positive, got {v}")
-
-        return v
-
-    @property
-    def is_buy(self) -> bool:
-        """Check if this is a buy order."""
-        return self.quantity > 0
-
-    @property
-    def is_sell(self) -> bool:
-        """Check if this is a sell order."""
-        return self.quantity < 0
-
-    @property
-    def total_cost(self) -> Decimal:
-        """Calculate total cost including fees."""
-        return self.value + self.estimated_cost
+# Trade class moved to app.backtesting.models as the canonical implementation
+# Use: from app.backtesting.models import Trade
+# The canonical Trade now includes all fields: asset_class, value, currency, priority, estimated_cost
 
 
 @dataclass

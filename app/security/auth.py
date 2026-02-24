@@ -29,8 +29,8 @@ from typing import Dict, List, Optional, Tuple, TypedDict
 from fastapi import Depends, HTTPException, Security, status
 from fastapi.security import APIKeyHeader, HTTPAuthorizationCredentials, HTTPBearer
 
-from app.core.audit import AuditAction, AuditLogger, get_audit_logger
-from app.core.environment_config import get_config
+from app.shared.audit import AuditAction, AuditLogger, get_audit_logger
+from app.shared.config.environment_config import get_config
 
 # Setup logger
 logger = logging.getLogger(__name__)

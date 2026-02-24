@@ -10,7 +10,7 @@ from app.infrastructure.logging.log_entry import LogEntry
 from app.infrastructure.logging.append_only_log import AppendOnlyLog
 # @skip-import - Protocol import, skip if not available
 try:
-    from app.core.protocols.i_trading_decision_logger import ITradingDecisionLogger
+    from app.shared.protocols.i_trading_decision_logger import ITradingDecisionLogger
 except ImportError:
     # Protocol not available yet, define placeholder for runtime
     class ITradingDecisionLogger:

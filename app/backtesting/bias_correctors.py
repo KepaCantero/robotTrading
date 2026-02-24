@@ -26,6 +26,8 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 
+from app.shared.config.centralized_config import get_config
+
 logger = logging.getLogger(__name__)
 
 
@@ -417,6 +419,7 @@ class BacktestValidator:
         self,
         min_samples: int = 100,
         confidence_level: float = 0.95,
+        risk_free_rate: Optional[float] = None,
     ):
         """
         Initialize backtest validator.
@@ -424,9 +427,13 @@ class BacktestValidator:
         Args:
             min_samples: Minimum samples required for validation
             confidence_level: Confidence level for statistical tests
+            risk_free_rate: Annual risk-free rate (defaults to config value)
         """
+        config = get_config()
         self.min_samples = min_samples
         self.confidence_level = confidence_level
+        self.risk_free_rate = risk_free_rate if risk_free_rate is not None else float(config.backtesting.default_risk_free_rate)
+        self._annual_trading_days = config.backtesting.annual_trading_days
 
         self.lookahead_corrector = LookAheadBiasCorrector()
         self.dividend_adjuster = DividendAndSplitAdjuster()
@@ -536,22 +543,24 @@ class BacktestValidator:
     def _calculate_sharpe_ratio(
         self,
         returns: pd.Series,
-        risk_free_rate: float = 0.02,
+        risk_free_rate: Optional[float] = None,
     ) -> float:
-        """Calculate annualized Sharpe ratio."""
+        """Calculate annualized Sharpe ratio using config defaults."""
         try:
             returns_clean = returns.dropna()
 
             if len(returns_clean) < 2:
                 return 0.0
 
-            mean_return = returns_clean.mean() * 252  # Annualize
-            std_return = returns_clean.std() * np.sqrt(252)  # Annualize
+            rfr = risk_free_rate if risk_free_rate is not None else self.risk_free_rate
+
+            mean_return = returns_clean.mean() * self._annual_trading_days  # Annualize
+            std_return = returns_clean.std() * np.sqrt(self._annual_trading_days)  # Annualize
 
             if std_return == 0:
                 return 0.0
 
-            sharpe = (mean_return - risk_free_rate) / std_return
+            sharpe = (mean_return - rfr) / std_return
             return float(sharpe)
 
         except (ValueError, ZeroDivisionError):
@@ -584,7 +593,7 @@ class BacktestValidator:
 
             # Check 3: Sample size to parameter ratio
             # (simplified - would need strategy parameters for full check)
-            if len(returns) < 252:  # Less than one year of daily data
+            if len(returns) < self._annual_trading_days:  # Less than one year of daily data
                 return True
 
             return False

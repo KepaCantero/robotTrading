@@ -20,7 +20,7 @@ import time
 from decimal import Decimal
 from typing import Dict, List
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 from .models import (
     DividendProfile,
     DividendSafety,

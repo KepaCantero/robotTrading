@@ -77,7 +77,7 @@ except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError)
     pd = None
 
 try:
-    from app.core.logging_config import setup_file_logging
+    from app.infrastructure.logging.logging_config import setup_file_logging
 except (FileNotFoundError, ValueError, KeyError, TypeError):
     setup_file_logging = None
 

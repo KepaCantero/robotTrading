@@ -291,7 +291,7 @@ def plot_stationarity_test(
             continue
 
         try:
-            from app.core.statsmodels_fallback import adfuller
+            from app.shared.performance.statsmodels_fallback import adfuller
 
             adf_result = adfuller(clean_series, maxlag=1)
             p_values.append(adf_result[1])

@@ -12,7 +12,7 @@ from decimal import Decimal
 from typing import Any, Dict, Optional
 
 from app.backtesting.models import BacktestConfig
-from app.core.compliance_engine import ComplianceEngine
+from app.domain.services.compliance.compliance_engine import ComplianceEngine
 from app.domain.models.signal import Signal, SignalType
 
 logger = logging.getLogger(__name__)
@@ -57,7 +57,7 @@ class SignalProcessor:
             total_portfolio_capital: Total portfolio capital for multi-strategy scenarios
             strategy_name: Name of strategy for logging purposes
         """
-        from app.core.trading_validators import TradingValidator
+        from app.domain.services.trading_validators import TradingValidator
 
         self.config = config
         self.strategy = strategy

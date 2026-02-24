@@ -67,8 +67,9 @@ from .models import (
     MultiAssetPortfolio,
     PortfolioMetrics,
     RiskTolerance,
-    Trade,
 )
+# Re-export Trade from canonical location for backward compatibility
+from app.backtesting.models import Trade
 from .multi_asset_portfolio import (
     MultiAssetConfig,
     MultiAssetPortfolioManager,

@@ -30,6 +30,8 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import minimize
 
+from app.shared.config.centralized_config import get_config
+
 if TYPE_CHECKING:
     pass
 
@@ -151,7 +153,7 @@ class MeanVarianceOptimizer:
         self,
         lookback_days: int = 252,
         max_position: float = 0.20,
-        risk_free_rate: float = 0.02,
+        risk_free_rate: float = None,
         regularization_gamma: float = 0.01,
         sum_tolerance: float = 1e-6,
     ) -> None:
@@ -163,7 +165,7 @@ class MeanVarianceOptimizer:
             max_position: Maximum weight per asset (Rule 70).
                 Default 0.20 forces diversification.
             risk_free_rate: Annual risk-free rate for Sharpe calculation (Rule 72).
-                Default 0.02 (2% annual).
+                Default: from get_config().backtesting.default_risk_free_rate.
             regularization_gamma: L2 regularization strength (Rule 73).
                 Default 0.01 prevents corner solutions.
             sum_tolerance: Tolerance for sum constraint validation (Rule 69).
@@ -172,6 +174,10 @@ class MeanVarianceOptimizer:
         Raises:
             ValueError: If parameters are out of valid range.
         """
+        # Use CentralizedConfig default if not provided
+        if risk_free_rate is None:
+            risk_free_rate = float(get_config().backtesting.default_risk_free_rate)
+
         self._validate_initialization_params(
             lookback_days, max_position, risk_free_rate, regularization_gamma, sum_tolerance
         )
