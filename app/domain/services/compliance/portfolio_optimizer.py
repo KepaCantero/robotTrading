@@ -23,8 +23,8 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 import pandas as pd
 
-from app.core.compliance.results import OptimizeResult
-from app.core.compliance.service_registry import get_service_registry
+from app.domain.services.compliance.results import OptimizeResult
+from app.domain.services.compliance.service_registry import get_service_registry
 
 logger = logging.getLogger(__name__)
 

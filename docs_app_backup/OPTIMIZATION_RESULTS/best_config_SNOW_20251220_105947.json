@@ -1,0 +1,27 @@
+{
+  "symbol": "SNOW",
+  "start_date": "2023-01-01T00:00:00",
+  "end_date": "2024-01-01T00:00:00",
+  "optimization_metric": "sharpe_ratio",
+  "best_score": 0.0,
+  "best_config": {
+    "preset": "aggressive",
+    "enable_learning": true,
+    "ema_fast_period": 10,
+    "ema_slow_period": 28,
+    "rsi_period": 12,
+    "rsi_buy_min": 40,
+    "rsi_buy_max": 65,
+    "momentum_threshold": 0.01,
+    "volume_threshold": 1.05,
+    "atr_percentile_threshold": 70,
+    "max_position_size": 0.05,
+    "stop_loss_pct": 0.02,
+    "take_profit_pct": 0.06,
+    "learning_engine_type": "supervised",
+    "learning_algorithm": "random_forest",
+    "min_success_probability": 0.5,
+    "rebalance_frequency_days": 7
+  },
+  "total_iterations": 100
+}

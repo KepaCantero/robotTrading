@@ -1,0 +1,239 @@
+lowered_thresholds:
+  AAPL:
+    buy_hold:
+      annualized_return: 28.08045371158525
+      end_price: 250.145
+      final_value: 344002.2223414072
+      max_drawdown: 0.3142626497709201
+      max_drawdown_pct: 31.42626497709201
+      shares: 1375.2112668308669
+      start_price: 72.7161
+      total_return: 2.440022223414072
+      total_return_pct: 244.00222234140722
+    end_date: '2024-12-31'
+    final_capital: 104495.20251833345
+    initial_capital: 100000.0
+    losing_trades: 2
+    max_drawdown_pct: -1.2129969878617024
+    sharpe_analysis:
+      issues: []
+      mean_pnl: !!python/object/apply:numpy.core.multiarray.scalar
+      - &id001 !!python/object/apply:numpy.dtype
+        args:
+        - f8
+        - false
+        - true
+        state: !!python/tuple
+        - 3
+        - <
+        - null
+        - null
+        - null
+        - -1
+        - -1
+        - 0
+      - !!binary |
+        E27vRoArfEA=
+      num_trades: 10
+      sharpe: !!python/object/apply:numpy.core.multiarray.scalar
+      - *id001
+      - !!binary |
+        7//q+0tvKkA=
+      std_pnl: !!python/object/apply:numpy.core.multiarray.scalar
+      - *id001
+      - !!binary |
+        GTLMQBXkgEA=
+    sharpe_original: 13.041353726604616
+    signals_generated: 57
+    start_date: '2020-01-01'
+    symbol: AAPL
+    total_return: 4.495202518333453
+    total_return_pct: 449.52025183334536
+    total_trades: 10
+    win_rate: 80.0
+    winning_trades: 8
+  GOOGL:
+    buy_hold:
+      annualized_return: 22.69618589912006
+      end_price: 189.3
+      final_value: 277619.7152528055
+      max_drawdown: 0.4431991265732064
+      max_drawdown_pct: 44.31991265732064
+      shares: 1466.5595100517987
+      start_price: 68.1868
+      total_return: 1.7761971525280553
+      total_return_pct: 177.61971525280552
+    end_date: '2024-12-31'
+    final_capital: 117641.51876205507
+    initial_capital: 100000.0
+    losing_trades: 0
+    max_drawdown_pct: -9.1590923118816
+    sharpe_analysis:
+      issue: insufficient_closed_trades
+      sharpe: 0.0
+    sharpe_original: 0
+    signals_generated: 52
+    start_date: '2020-01-01'
+    symbol: GOOGL
+    total_return: 17.641518762055068
+    total_return_pct: 1764.1518762055068
+    total_trades: 1
+    win_rate: 100.0
+    winning_trades: 1
+  MSFT:
+    buy_hold:
+      annualized_return: 22.40898809852063
+      end_price: 421.5
+      final_value: 274390.8393169849
+      max_drawdown: 0.3714824793007867
+      max_drawdown_pct: 37.14824793007867
+      shares: 650.9865701470578
+      start_price: 153.613
+      total_return: 1.743908393169849
+      total_return_pct: 174.39083931698488
+    end_date: '2024-12-31'
+    final_capital: 101650.64708726463
+    initial_capital: 100000.0
+    losing_trades: 3
+    max_drawdown_pct: -1.5408755767663478
+    sharpe_analysis:
+      issues: []
+      mean_pnl: !!python/object/apply:numpy.core.multiarray.scalar
+      - *id001
+      - !!binary |
+        St0Bqt2LZEA=
+      num_trades: 10
+      sharpe: !!python/object/apply:numpy.core.multiarray.scalar
+      - *id001
+      - !!binary |
+        kXnHs0P2FkA=
+      std_pnl: !!python/object/apply:numpy.core.multiarray.scalar
+      - *id001
+      - !!binary |
+        OMSOlnNPfEA=
+    sharpe_original: 5.492942042311731
+    signals_generated: 52
+    start_date: '2020-01-01'
+    symbol: MSFT
+    total_return: 1.6506470872646353
+    total_return_pct: 165.06470872646352
+    total_trades: 10
+    win_rate: 70.0
+    winning_trades: 7
+  QQQ:
+    error: 'CSV file not found: data/historical/QQQ.csv'
+  SPY:
+    error: 'CSV file not found: data/historical/SPY.csv'
+original_thresholds:
+  AAPL:
+    buy_hold:
+      annualized_return: 28.08045371158525
+      end_price: 250.145
+      final_value: 344002.2223414072
+      max_drawdown: 0.3142626497709201
+      max_drawdown_pct: 31.42626497709201
+      shares: 1375.2112668308669
+      start_price: 72.7161
+      total_return: 2.440022223414072
+      total_return_pct: 244.00222234140722
+    end_date: '2024-12-31'
+    final_capital: 104495.20251833345
+    initial_capital: 100000.0
+    losing_trades: 2
+    max_drawdown_pct: -1.2129969878617024
+    sharpe_analysis:
+      issues: []
+      mean_pnl: !!python/object/apply:numpy.core.multiarray.scalar
+      - *id001
+      - !!binary |
+        E27vRoArfEA=
+      num_trades: 10
+      sharpe: !!python/object/apply:numpy.core.multiarray.scalar
+      - *id001
+      - !!binary |
+        7//q+0tvKkA=
+      std_pnl: !!python/object/apply:numpy.core.multiarray.scalar
+      - *id001
+      - !!binary |
+        GTLMQBXkgEA=
+    sharpe_original: 13.041353726604616
+    signals_generated: 57
+    start_date: '2020-01-01'
+    symbol: AAPL
+    total_return: 4.495202518333453
+    total_return_pct: 449.52025183334536
+    total_trades: 10
+    win_rate: 80.0
+    winning_trades: 8
+  GOOGL:
+    buy_hold:
+      annualized_return: 22.69618589912006
+      end_price: 189.3
+      final_value: 277619.7152528055
+      max_drawdown: 0.4431991265732064
+      max_drawdown_pct: 44.31991265732064
+      shares: 1466.5595100517987
+      start_price: 68.1868
+      total_return: 1.7761971525280553
+      total_return_pct: 177.61971525280552
+    end_date: '2024-12-31'
+    final_capital: 117641.51876205507
+    initial_capital: 100000.0
+    losing_trades: 0
+    max_drawdown_pct: -9.1590923118816
+    sharpe_analysis:
+      issue: insufficient_closed_trades
+      sharpe: 0.0
+    sharpe_original: 0
+    signals_generated: 52
+    start_date: '2020-01-01'
+    symbol: GOOGL
+    total_return: 17.641518762055068
+    total_return_pct: 1764.1518762055068
+    total_trades: 1
+    win_rate: 100.0
+    winning_trades: 1
+  MSFT:
+    buy_hold:
+      annualized_return: 22.40898809852063
+      end_price: 421.5
+      final_value: 274390.8393169849
+      max_drawdown: 0.3714824793007867
+      max_drawdown_pct: 37.14824793007867
+      shares: 650.9865701470578
+      start_price: 153.613
+      total_return: 1.743908393169849
+      total_return_pct: 174.39083931698488
+    end_date: '2024-12-31'
+    final_capital: 101650.64708726463
+    initial_capital: 100000.0
+    losing_trades: 3
+    max_drawdown_pct: -1.5408755767663478
+    sharpe_analysis:
+      issues: []
+      mean_pnl: !!python/object/apply:numpy.core.multiarray.scalar
+      - *id001
+      - !!binary |
+        St0Bqt2LZEA=
+      num_trades: 10
+      sharpe: !!python/object/apply:numpy.core.multiarray.scalar
+      - *id001
+      - !!binary |
+        kXnHs0P2FkA=
+      std_pnl: !!python/object/apply:numpy.core.multiarray.scalar
+      - *id001
+      - !!binary |
+        OMSOlnNPfEA=
+    sharpe_original: 5.492942042311731
+    signals_generated: 52
+    start_date: '2020-01-01'
+    symbol: MSFT
+    total_return: 1.6506470872646353
+    total_return_pct: 165.06470872646352
+    total_trades: 10
+    win_rate: 70.0
+    winning_trades: 7
+  QQQ:
+    error: 'CSV file not found: data/historical/QQQ.csv'
+  SPY:
+    error: 'CSV file not found: data/historical/SPY.csv'

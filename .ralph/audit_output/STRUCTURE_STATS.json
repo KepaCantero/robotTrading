@@ -1,0 +1,977 @@
+{
+  "total_files": 1149,
+  "total_lines": 475586,
+  "by_directory": {
+    "backtesting": {
+      "files": 48,
+      "lines": 36194
+    },
+    "services": {
+      "files": 68,
+      "lines": 35723
+    },
+    "domain/strategies": {
+      "files": 51,
+      "lines": 28908
+    },
+    "domain/strategies/learning": {
+      "files": 16,
+      "lines": 14412
+    },
+    "core": {
+      "files": 14,
+      "lines": 14135
+    },
+    "presentation/api": {
+      "files": 24,
+      "lines": 12267
+    },
+    "shared/config": {
+      "files": 19,
+      "lines": 12158
+    },
+    "api": {
+      "files": 16,
+      "lines": 9225
+    },
+    "backtesting/validation": {
+      "files": 16,
+      "lines": 8826
+    },
+    "presentation/dashboard": {
+      "files": 15,
+      "lines": 8467
+    },
+    "presentation/controllers": {
+      "files": 20,
+      "lines": 7636
+    },
+    "domain/models": {
+      "files": 20,
+      "lines": 6643
+    },
+    "domain/services/compliance": {
+      "files": 9,
+      "lines": 6469
+    },
+    "domain/optimization": {
+      "files": 12,
+      "lines": 6257
+    },
+    "engines/strategy_engines": {
+      "files": 11,
+      "lines": 6158
+    },
+    "security": {
+      "files": 9,
+      "lines": 6003
+    },
+    "backtesting/labeling": {
+      "files": 7,
+      "lines": 5449
+    },
+    "domain/market_analysis/microstructure": {
+      "files": 6,
+      "lines": 5308
+    },
+    "backtesting/robust_engine": {
+      "files": 9,
+      "lines": 4951
+    },
+    "services/live_trading": {
+      "files": 10,
+      "lines": 4718
+    },
+    "backtesting/services": {
+      "files": 17,
+      "lines": 4703
+    },
+    "engines/execution_engine/microstructure": {
+      "files": 10,
+      "lines": 4618
+    },
+    "backtesting/execution": {
+      "files": 10,
+      "lines": 4560
+    },
+    "simulation": {
+      "files": 6,
+      "lines": 4236
+    },
+    "domain/services/portfolio_optimization": {
+      "files": 10,
+      "lines": 4190
+    },
+    "services/risk_scaling": {
+      "files": 11,
+      "lines": 4089
+    },
+    "services/live_trading/broker_adapters": {
+      "files": 9,
+      "lines": 4056
+    },
+    "domain/optimization/parameter": {
+      "files": 8,
+      "lines": 4016
+    },
+    "services/reporting_generator": {
+      "files": 8,
+      "lines": 3869
+    },
+    "domain/portfolio/multi_asset": {
+      "files": 6,
+      "lines": 3723
+    },
+    "domain/ensemble": {
+      "files": 6,
+      "lines": 3675
+    },
+    "sre/chaos_engine": {
+      "files": 7,
+      "lines": 3551
+    },
+    "shared/utils": {
+      "files": 7,
+      "lines": 3485
+    },
+    "sre/oncall": {
+      "files": 5,
+      "lines": 3476
+    },
+    "domain/market_analysis/microstructure/ofi": {
+      "files": 6,
+      "lines": 3418
+    },
+    "application/use_cases": {
+      "files": 7,
+      "lines": 3329
+    },
+    "backtesting/engines": {
+      "files": 6,
+      "lines": 3325
+    },
+    "sre/error_budgets": {
+      "files": 6,
+      "lines": 3286
+    },
+    "services/alerting_system": {
+      "files": 10,
+      "lines": 3229
+    },
+    "shared/performance": {
+      "files": 5,
+      "lines": 3112
+    },
+    "domain/services": {
+      "files": 7,
+      "lines": 3106
+    },
+    "backtesting/feature_engineering": {
+      "files": 5,
+      "lines": 3077
+    },
+    "domain/portfolio_optimization": {
+      "files": 4,
+      "lines": 3026
+    },
+    "domain/entities": {
+      "files": 9,
+      "lines": 2940
+    },
+    "domain/services/backtesting": {
+      "files": 7,
+      "lines": 2916
+    },
+    "engines/risk_engine/stress_testers": {
+      "files": 6,
+      "lines": 2908
+    },
+    "services/profile_driven_trading": {
+      "files": 6,
+      "lines": 2871
+    },
+    "services/strategy_stock_allocation": {
+      "files": 10,
+      "lines": 2859
+    },
+    "backtesting/core": {
+      "files": 7,
+      "lines": 2856
+    },
+    "engines/risk_engine": {
+      "files": 4,
+      "lines": 2817
+    },
+    "domain/analysis/vectorization": {
+      "files": 6,
+      "lines": 2775
+    },
+    "backtesting/profile_batch": {
+      "files": 9,
+      "lines": 2741
+    },
+    "models": {
+      "files": 5,
+      "lines": 2657
+    },
+    "application/services": {
+      "files": 5,
+      "lines": 2496
+    },
+    "domain/services/indicators": {
+      "files": 4,
+      "lines": 2481
+    },
+    "sre/monitoring": {
+      "files": 3,
+      "lines": 2452
+    },
+    "engines/portfolio_engine/optimizers": {
+      "files": 4,
+      "lines": 2370
+    },
+    "services/monitoring": {
+      "files": 6,
+      "lines": 2188
+    },
+    "domain/analysis/fundamental_law": {
+      "files": 5,
+      "lines": 2174
+    },
+    "services/external_integrations": {
+      "files": 7,
+      "lines": 2116
+    },
+    "infrastructure/persistence/database": {
+      "files": 3,
+      "lines": 2064
+    },
+    "engines/risk_engine/var_calculators": {
+      "files": 4,
+      "lines": 1965
+    },
+    "domain/services/metrics": {
+      "files": 3,
+      "lines": 1948
+    },
+    "services/hurst_analysis": {
+      "files": 13,
+      "lines": 1932
+    },
+    "engines/data_engine/sources": {
+      "files": 6,
+      "lines": 1909
+    },
+    "services/smart_order_routing": {
+      "files": 7,
+      "lines": 1891
+    },
+    "services/metrics_database": {
+      "files": 5,
+      "lines": 1784
+    },
+    "services/compliance": {
+      "files": 5,
+      "lines": 1751
+    },
+    "sre/canary_deployment": {
+      "files": 4,
+      "lines": 1690
+    },
+    "backtesting/meta_analyzer": {
+      "files": 5,
+      "lines": 1640
+    },
+    "services/risk_scaling_application": {
+      "files": 6,
+      "lines": 1631
+    },
+    "services/momentum": {
+      "files": 8,
+      "lines": 1562
+    },
+    "domain/trading/market_making/avellaneda_stoikov": {
+      "files": 5,
+      "lines": 1523
+    },
+    "services/forex_risk": {
+      "files": 3,
+      "lines": 1519
+    },
+    "domain/value_objects": {
+      "files": 11,
+      "lines": 1480
+    },
+    "services/fifo": {
+      "files": 3,
+      "lines": 1431
+    },
+    "services/position_monitor": {
+      "files": 3,
+      "lines": 1428
+    },
+    "services/awesome_quant": {
+      "files": 5,
+      "lines": 1368
+    },
+    "sre/dead_mans_switch": {
+      "files": 3,
+      "lines": 1340
+    },
+    "application/alerting": {
+      "files": 4,
+      "lines": 1330
+    },
+    "services/portfolio_construction": {
+      "files": 5,
+      "lines": 1271
+    },
+    "services/tax_efficiency": {
+      "files": 5,
+      "lines": 1240
+    },
+    "application/scheduling": {
+      "files": 3,
+      "lines": 1224
+    },
+    "services/scheduling": {
+      "files": 3,
+      "lines": 1224
+    },
+    "domain/repositories": {
+      "files": 7,
+      "lines": 1223
+    },
+    "services/execution": {
+      "files": 4,
+      "lines": 1191
+    },
+    "sre/automation": {
+      "files": 2,
+      "lines": 1167
+    },
+    "infrastructure/data": {
+      "files": 3,
+      "lines": 1165
+    },
+    "domain/services/execution": {
+      "files": 3,
+      "lines": 1162
+    },
+    "services/security": {
+      "files": 4,
+      "lines": 1159
+    },
+    "services/tax_efficiency/engines": {
+      "files": 7,
+      "lines": 1147
+    },
+    "backtesting/shared": {
+      "files": 7,
+      "lines": 1146
+    },
+    "domain/strategies/modules/filters": {
+      "files": 7,
+      "lines": 1139
+    },
+    "services/reporting": {
+      "files": 5,
+      "lines": 1139
+    },
+    "backtesting/reports": {
+      "files": 1,
+      "lines": 1102
+    },
+    "services/position_management": {
+      "files": 5,
+      "lines": 1098
+    },
+    "services/task_queue": {
+      "files": 2,
+      "lines": 1062
+    },
+    "shared/exceptions": {
+      "files": 4,
+      "lines": 976
+    },
+    "infrastructure/middleware": {
+      "files": 4,
+      "lines": 972
+    },
+    "services/corporate_actions": {
+      "files": 2,
+      "lines": 960
+    },
+    "infrastructure/logging": {
+      "files": 4,
+      "lines": 954
+    },
+    "backtesting/drift_detection": {
+      "files": 2,
+      "lines": 938
+    },
+    "engines/portfolio_engine": {
+      "files": 3,
+      "lines": 925
+    },
+    "application/orchestration/target_optimization": {
+      "files": 4,
+      "lines": 925
+    },
+    "services/deploy_decision_orchestrator": {
+      "files": 3,
+      "lines": 904
+    },
+    "sre/alert_fatigue_prevention": {
+      "files": 2,
+      "lines": 892
+    },
+    "infrastructure/resilience": {
+      "files": 3,
+      "lines": 884
+    },
+    "domain/strategies/modules/market_detectors": {
+      "files": 5,
+      "lines": 869
+    },
+    "engines/risk_engine/drawdown_controllers": {
+      "files": 2,
+      "lines": 865
+    },
+    "engines/data_engine/validators": {
+      "files": 5,
+      "lines": 853
+    },
+    "engines/data_engine/normalizers": {
+      "files": 6,
+      "lines": 852
+    },
+    "infrastructure/persistence": {
+      "files": 4,
+      "lines": 842
+    },
+    "services/capacity_fade_validation": {
+      "files": 4,
+      "lines": 824
+    },
+    "services/profile_generator": {
+      "files": 3,
+      "lines": 818
+    },
+    "services/rate_limiting": {
+      "files": 2,
+      "lines": 789
+    },
+    "engines/data_engine": {
+      "files": 3,
+      "lines": 785
+    },
+    "infrastructure/monitoring": {
+      "files": 2,
+      "lines": 781
+    },
+    "services/momentum/indicators": {
+      "files": 2,
+      "lines": 778
+    },
+    "services/strategy_recommendation": {
+      "files": 4,
+      "lines": 776
+    },
+    "domain/factories": {
+      "files": 1,
+      "lines": 760
+    },
+    "services/reconciliation": {
+      "files": 3,
+      "lines": 759
+    },
+    "shared": {
+      "files": 2,
+      "lines": 751
+    },
+    "services/correlation": {
+      "files": 3,
+      "lines": 742
+    },
+    "domain/tax/database": {
+      "files": 1,
+      "lines": 727
+    },
+    "services/xai": {
+      "files": 3,
+      "lines": 720
+    },
+    "services/portfolio_constructor": {
+      "files": 3,
+      "lines": 681
+    },
+    "core/compliance": {
+      "files": 2,
+      "lines": 674
+    },
+    "engines/context_engine/volatility_analyzers": {
+      "files": 4,
+      "lines": 670
+    },
+    "services/configuration_persistence": {
+      "files": 4,
+      "lines": 668
+    },
+    "engines/data_engine/versioning": {
+      "files": 4,
+      "lines": 663
+    },
+    "engines/context_engine/regime_detectors": {
+      "files": 4,
+      "lines": 655
+    },
+    "services/deployment_decision": {
+      "files": 2,
+      "lines": 650
+    },
+    "shared/interfaces": {
+      "files": 2,
+      "lines": 633
+    },
+    "services/backtest_orchestration": {
+      "files": 3,
+      "lines": 606
+    },
+    "domain/strategies/optimization": {
+      "files": 2,
+      "lines": 604
+    },
+    "domain/strategies/modules": {
+      "files": 4,
+      "lines": 604
+    },
+    "domain/tax/exporters": {
+      "files": 1,
+      "lines": 595
+    },
+    "engines/event_engine": {
+      "files": 2,
+      "lines": 580
+    },
+    "services/broker_failover": {
+      "files": 2,
+      "lines": 575
+    },
+    "backtesting/acceptance": {
+      "files": 10,
+      "lines": 572
+    },
+    "services/module_parametrizer": {
+      "files": 3,
+      "lines": 568
+    },
+    "services/knowledge_graph": {
+      "files": 2,
+      "lines": 541
+    },
+    "services/strategy_recommender": {
+      "files": 3,
+      "lines": 540
+    },
+    "services/emergency_handler": {
+      "files": 2,
+      "lines": 530
+    },
+    "services/validation_engine": {
+      "files": 3,
+      "lines": 529
+    },
+    "engines/portfolio_engine/rebalancers": {
+      "files": 2,
+      "lines": 527
+    },
+    "services/strategy_stock_allocator": {
+      "files": 2,
+      "lines": 527
+    },
+    "engines/portfolio_engine/meta_learners": {
+      "files": 2,
+      "lines": 524
+    },
+    "sre/reconciliation": {
+      "files": 1,
+      "lines": 518
+    },
+    "services/validation_orchestration": {
+      "files": 2,
+      "lines": 513
+    },
+    "services/position_builder": {
+      "files": 2,
+      "lines": 512
+    },
+    "sre/data_integrity": {
+      "files": 1,
+      "lines": 497
+    },
+    "services/synthetic_data": {
+      "files": 2,
+      "lines": 454
+    },
+    "core/utils": {
+      "files": 3,
+      "lines": 453
+    },
+    "services/capital": {
+      "files": 3,
+      "lines": 446
+    },
+    "services/backtesting_orchestration": {
+      "files": 2,
+      "lines": 446
+    },
+    "sre/state_machine": {
+      "files": 1,
+      "lines": 441
+    },
+    "domain": {
+      "files": 2,
+      "lines": 437
+    },
+    "services/error_handling": {
+      "files": 2,
+      "lines": 433
+    },
+    "engines/risk_engine/exposure_managers": {
+      "files": 2,
+      "lines": 426
+    },
+    "services/news_processor": {
+      "files": 2,
+      "lines": 422
+    },
+    "engines/data_engine/cache": {
+      "files": 2,
+      "lines": 416
+    },
+    "engines/data_engine/streaming": {
+      "files": 2,
+      "lines": 415
+    },
+    "services/logging": {
+      "files": 4,
+      "lines": 406
+    },
+    "application/reconciliation": {
+      "files": 2,
+      "lines": 405
+    },
+    "infrastructure/config": {
+      "files": 3,
+      "lines": 403
+    },
+    "services/circuit_breaker": {
+      "files": 2,
+      "lines": 399
+    },
+    "domain/services/analysis": {
+      "files": 2,
+      "lines": 394
+    },
+    "services/risk/validators": {
+      "files": 4,
+      "lines": 391
+    },
+    "engines/risk_engine/risk_attribution": {
+      "files": 2,
+      "lines": 384
+    },
+    "application/routers": {
+      "files": 2,
+      "lines": 376
+    },
+    "domain/configurators": {
+      "files": 3,
+      "lines": 374
+    },
+    "app": {
+      "files": 2,
+      "lines": 369
+    },
+    "services/deployment": {
+      "files": 2,
+      "lines": 316
+    },
+    "services/parametrization": {
+      "files": 2,
+      "lines": 314
+    },
+    "engines/risk_engine/correlation_analyzers": {
+      "files": 2,
+      "lines": 312
+    },
+    "core/models": {
+      "files": 1,
+      "lines": 305
+    },
+    "engines/context_engine": {
+      "files": 2,
+      "lines": 297
+    },
+    "infrastructure/providers": {
+      "files": 2,
+      "lines": 294
+    },
+    "shared/protocols": {
+      "files": 10,
+      "lines": 280
+    },
+    "backtesting/factories": {
+      "files": 2,
+      "lines": 273
+    },
+    "domain/strategies/config": {
+      "files": 4,
+      "lines": 272
+    },
+    "infrastructure/persistence/database/models": {
+      "files": 1,
+      "lines": 268
+    },
+    "infrastructure/messaging": {
+      "files": 2,
+      "lines": 253
+    },
+    "application/reporting": {
+      "files": 2,
+      "lines": 213
+    },
+    "infrastructure/external": {
+      "files": 2,
+      "lines": 210
+    },
+    "domain/market_analysis": {
+      "files": 1,
+      "lines": 190
+    },
+    "engines/context_engine/correlation_analyzers": {
+      "files": 4,
+      "lines": 175
+    },
+    "engines/context_engine/macro_indicators": {
+      "files": 5,
+      "lines": 112
+    },
+    "domain/services/risk/validators": {
+      "files": 1,
+      "lines": 105
+    },
+    "application/interfaces": {
+      "files": 2,
+      "lines": 102
+    },
+    "infrastructure/health": {
+      "files": 2,
+      "lines": 101
+    },
+    "presentation/dto": {
+      "files": 3,
+      "lines": 72
+    },
+    "domain/analysis": {
+      "files": 1,
+      "lines": 53
+    },
+    "engines/execution_engine": {
+      "files": 1,
+      "lines": 45
+    },
+    "infrastructure/persistence/configuration": {
+      "files": 1,
+      "lines": 42
+    },
+    "domain/trading/market_making": {
+      "files": 1,
+      "lines": 37
+    },
+    "presentation/views": {
+      "files": 2,
+      "lines": 31
+    },
+    "services/risk": {
+      "files": 1,
+      "lines": 29
+    },
+    "core/protocols": {
+      "files": 1,
+      "lines": 28
+    },
+    "core/strategy_config": {
+      "files": 1,
+      "lines": 22
+    },
+    "presentation": {
+      "files": 1,
+      "lines": 19
+    },
+    "infrastructure": {
+      "files": 1,
+      "lines": 11
+    },
+    "application": {
+      "files": 1,
+      "lines": 8
+    },
+    "engines": {
+      "files": 1,
+      "lines": 6
+    },
+    "shared/constants": {
+      "files": 1,
+      "lines": 0
+    },
+    "shared/logging": {
+      "files": 1,
+      "lines": 0
+    },
+    "application/dto": {
+      "files": 1,
+      "lines": 0
+    },
+    "application/orchestration": {
+      "files": 1,
+      "lines": 0
+    },
+    "application/handlers": {
+      "files": 1,
+      "lines": 0
+    },
+    "application/validation": {
+      "files": 1,
+      "lines": 0
+    },
+    "infrastructure/brokers": {
+      "files": 1,
+      "lines": 0
+    },
+    "infrastructure/security": {
+      "files": 1,
+      "lines": 0
+    },
+    "infrastructure/repositories": {
+      "files": 1,
+      "lines": 0
+    },
+    "infrastructure/feeds": {
+      "files": 1,
+      "lines": 0
+    },
+    "infrastructure/execution": {
+      "files": 1,
+      "lines": 0
+    },
+    "infrastructure/queues": {
+      "files": 1,
+      "lines": 0
+    },
+    "domain/services/position": {
+      "files": 1,
+      "lines": 0
+    },
+    "domain/services/signals": {
+      "files": 1,
+      "lines": 0
+    },
+    "domain/services/factors": {
+      "files": 1,
+      "lines": 0
+    },
+    "domain/services/tax": {
+      "files": 1,
+      "lines": 0
+    },
+    "domain/services/portfolio": {
+      "files": 1,
+      "lines": 0
+    }
+  },
+  "file_types": {},
+  "largest_files": [
+    {
+      "file": "app/backtesting/comprehensive_backtest_runner.py",
+      "lines": 4688
+    },
+    {
+      "file": "app/shared/config/centralized_config.py",
+      "lines": 3817
+    },
+    {
+      "file": "app/core/compliance_engine.py",
+      "lines": 3674
+    },
+    {
+      "file": "app/domain/services/compliance/compliance_engine.py",
+      "lines": 3674
+    },
+    {
+      "file": "app/core/centralized_config.py",
+      "lines": 3488
+    },
+    {
+      "file": "app/presentation/dashboard/advanced_dashboard.py",
+      "lines": 2612
+    },
+    {
+      "file": "app/application/use_cases/select_strategy.py",
+      "lines": 2300
+    },
+    {
+      "file": "app/domain/strategies/learning/drift_detector.py",
+      "lines": 2163
+    },
+    {
+      "file": "app/services/strategy_stock_allocator.py",
+      "lines": 2099
+    },
+    {
+      "file": "app/domain/strategies/learning/feature_importance.py",
+      "lines": 1994
+    },
+    {
+      "file": "app/shared/config/trading_config.py",
+      "lines": 1826
+    },
+    {
+      "file": "app/backtesting/walk_forward_validator.py",
+      "lines": 1704
+    },
+    {
+      "file": "app/backtesting/profile_batch_backtester.py",
+      "lines": 1519
+    },
+    {
+      "file": "app/domain/strategies/strategy.py",
+      "lines": 1506
+    },
+    {
+      "file": "app/presentation/dashboard/main.py",
+      "lines": 1356
+    },
+    {
+      "file": "app/services/hurst_exponent_analyzer.py",
+      "lines": 1343
+    },
+    {
+      "file": "app/backtesting/metrics.py",
+      "lines": 1326
+    },
+    {
+      "file": "app/shared/performance/numba_accelerators.py",
+      "lines": 1305
+    },
+    {
+      "file": "app/backtesting/engine.py",
+      "lines": 1293
+    },
+    {
+      "file": "app/sre/monitoring/trading_metrics.py",
+      "lines": 1272
+    }
+  ]
+}

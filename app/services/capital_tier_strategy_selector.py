@@ -31,7 +31,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional, Tuple
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 from app.services.account_configuration import AccountConfiguration, AccountTier
 from app.services.deployment_validator import DeploymentStatus, DeploymentValidator
 from app.services.expensive_module_gate import ExpensiveModuleGate

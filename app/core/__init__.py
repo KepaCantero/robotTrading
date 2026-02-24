@@ -31,13 +31,13 @@ from app.core.timezone_utils import (
     to_utc,
     utc_now,
 )
-from app.core.yaml_config_updater import YAMLConfigUpdater
+from app.shared.config.yaml_config_updater import YAMLConfigUpdater
 
 # =============================================================================
 # THE ONLY COMPLIANCE ENGINE - USE THIS FOR EVERYTHING
 # =============================================================================
 try:
-    from app.core.compliance_engine import (
+    from app.domain.services.compliance.compliance_engine import (
         ComplianceEngine,
         PortfolioOptimization,
         PostTradeAnalysis,
@@ -65,7 +65,7 @@ except ImportError:
 
 # Legacy support (DEPRECATED - use ComplianceEngine instead)
 try:
-    from app.core.compliance_integration import (
+    from app.domain.services.compliance.compliance_integration import (
         ComplianceIntegrationEngine as ComplianceIntegrationEngineDeprecated,
         get_compliance_integration_engine as get_compliance_integration_engine_deprecated,
         get_execution_recommendation,

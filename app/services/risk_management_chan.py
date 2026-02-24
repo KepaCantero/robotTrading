@@ -26,7 +26,7 @@ from typing import Optional, Tuple
 import numpy as np
 import pandas as pd
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 

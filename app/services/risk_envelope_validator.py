@@ -10,7 +10,7 @@ Migration guide:
         is_valid, reason = validator.validate_trade(...)
 
     NEW:
-        from app.core.compliance_engine import ComplianceEngine
+        from app.domain.services.compliance.compliance_engine import ComplianceEngine
         engine = ComplianceEngine()
         is_valid, reason = engine.validate_risk_envelope(...)
 

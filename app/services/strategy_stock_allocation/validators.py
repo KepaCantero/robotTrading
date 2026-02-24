@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel
 
 if TYPE_CHECKING:
-    from app.core.centralized_config import StockAllocationSettings
+    from app.shared.config.centralized_config import StockAllocationSettings
 
 logger = logging.getLogger(__name__)
 

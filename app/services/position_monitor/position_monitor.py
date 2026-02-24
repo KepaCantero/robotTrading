@@ -30,7 +30,7 @@ from sqlalchemy.exc import (
     ProgrammingError,
 )
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 from app.core.decimal_utils import to_decimal, validate_price
 
 logger = logging.getLogger(__name__)

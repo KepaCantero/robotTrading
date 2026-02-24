@@ -1,0 +1,100 @@
+ 275     to_dict
+  38     async connect
+  36     validate
+  36     reset
+  30     optimize
+  30     async disconnect
+  29     async initialize
+  28         objective
+  26     fit
+  25     async dispatch
+  23 async health_check
+  22     get_required_parameters
+  22     async cancel_order
+  21     risk_check
+  21     decorator
+  20     predict
+  19     detect
+  19     async _init_database
+  18     calculate
+  18     async stop
+  18     async start
+  17     generate_signals
+  17     async health_check
+  17         async wrapper
+  16     validate_port
+  16     get_summary
+  16     get_status
+  15     async get_order_status
+  14     _generate_recommendations
+  13     validate_config
+  13     clear_cache
+  13     async optimize
+  12     score
+  12     get_statistics
+  12     construct_portfolio
+  12     _generate_signals_impl
+  11     split
+  11     from_dict
+  11     calculate_impact
+  11     async place_order
+  11     _calculate_confidence
+  10     should_rebalance
+  10     mid_price
+  10     get_strategy_type
+  10     get_stats
+  10     extract_features
+  10     async get_positions
+   9 async get_position
+   9 _get_backtesting_config
+   9     update
+   9     get_n_splits
+   9     get_history
+   9     get
+   9     execute
+   9     create
+   9     connection_string
+   9     calculate_position_size
+   9     async modify_order
+   9     async get_portfolio
+   9     async get_open_orders
+   9     async execute_order
+   9     async execute
+   9     _load_config
+   9     _calculate_var
+   9     _calculate_max_drawdown
+   8     weights_dict
+   8     train
+   8     spread
+   8     evaluate
+   8     calculate_var
+   8     async _monitor_loop
+   8     analyze
+   8     _calculate_market_impact
+   7 async get_positions
+   7     validate_symbol
+   7     validate_price_fields
+   7     validate_percentage
+   7     submit_order
+   7     reset_statistics
+   7     is_available
+   7     get_interest_rate
+   7     get_best_params
+   7     delete
+   7     clear_history
+   7     calculate_slippage
+   7     calculate_rebalance_trades
+   7     async get_position
+   7     _create_sell_signal
+   7     _create_result
+   7     _create_buy_signal
+   7     _calculate_liquidity_score
+   7     _apply_filter_logic
+   6 async get_signal_statistics
+   6 async get_asset_universe
+   6     validate_volume
+   6     validate_timestamp
+   6     validate_stop_loss
+   6     save
+   6     run_backtest
+   6     record_success

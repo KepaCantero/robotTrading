@@ -14,7 +14,7 @@ import numpy as np
 from scipy.optimize import minimize
 
 if TYPE_CHECKING:
-    from app.core.centralized_config import StockAllocationSettings
+    from app.shared.config.centralized_config import StockAllocationSettings
 
 logger = logging.getLogger(__name__)
 

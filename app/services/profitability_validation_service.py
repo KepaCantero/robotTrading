@@ -11,7 +11,7 @@ import statistics
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 from app.models.profitability_validation import (
     CostBreakdown,
     HistoricalValidation,

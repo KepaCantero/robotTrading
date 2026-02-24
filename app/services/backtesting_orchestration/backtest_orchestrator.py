@@ -27,7 +27,7 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 from app.backtesting.models import BacktestConfig, BacktestResult
-from app.core.models.investment_profile import InvestmentProfile
+from app.domain.models.investment_profile import InvestmentProfile
 from app.services.parametrization.module_parametrizer import ModuleParameterSet
 
 logger = logging.getLogger(__name__)

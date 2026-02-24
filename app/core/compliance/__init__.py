@@ -1,31 +1,24 @@
 """
-Compliance Module
-=================
+Compliance Module - Re-exports from domain layer
 
-Refactored compliance integration following SOLID principles.
+This module provides backward compatibility by re-exporting
+compliance components from their canonical location in the domain layer.
 
-Architecture:
-    - ServiceRegistry: Central registration for all 12 services
-    - PreTradeChecker: Coordinates pre-trade checks
-    - PostTradeChecker: Coordinates post-trade analysis
-    - PortfolioOptimizer: Coordinates portfolio optimization
-    - Facade: Simplified interface for clients
-
-This module addresses SOL-001 violation by separating concerns:
-    - Single Responsibility: Each class has one job
-    - Open/Closed: Easy to add new services via registry
-    - Liskov Substitution: All services implement protocols
-    - Interface Segregation: Focused protocol interfaces
-    - Dependency Inversion: Depend on abstractions (protocols)
-
-Author: Compliance Integration System
-Date: 2026-02-03
+DEPRECATED: Import directly from app.domain.services.compliance instead.
 """
 
-from app.core.compliance.portfolio_optimizer import PortfolioComplianceOptimizer
-from app.core.compliance.post_trade_checker import PostTradeComplianceChecker
-from app.core.compliance.pre_trade_checker import PreTradeComplianceChecker
-from app.core.compliance.protocols import (
+# Re-export from domain layer for backward compatibility
+from app.domain.services.compliance.results import (
+    CheckResult,
+    ComprehensivePostTradeAnalysis,
+    ComprehensivePreTradeAnalysis,
+    OptimizeResult,
+    PortfolioOptimizationResult,
+    PostTradeCheckResult,
+    PreTradeCheckResult,
+)
+
+from app.domain.services.compliance.protocols import (
     AlphaGeneratable,
     ComplianceService,
     CrossValidationService,
@@ -39,20 +32,16 @@ from app.core.compliance.protocols import (
     RiskCalculable,
     TransactionCostModel,
 )
-from app.core.compliance.results import (
-    CheckResult,
-    ComprehensivePostTradeAnalysis,
-    ComprehensivePreTradeAnalysis,
-    OptimizeResult,
-    PortfolioOptimizationResult,
-    PostTradeCheckResult,
-    PreTradeCheckResult,
-)
-from app.core.compliance.service_registry import (
+
+from app.domain.services.compliance.service_registry import (
     ComplianceServiceRegistry,
     get_service,
     get_service_registry,
 )
+
+from app.domain.services.compliance.pre_trade_checker import PreTradeComplianceChecker
+from app.domain.services.compliance.post_trade_checker import PostTradeComplianceChecker
+from app.domain.services.compliance.portfolio_optimizer import PortfolioComplianceOptimizer
 
 __all__ = [
     # Protocols

@@ -1,0 +1,3460 @@
+[
+  {
+    "file": "app/backtesting/walk_forward_validator.py",
+    "line": 190,
+    "code": "def oos_max_drawdown(self) -> float:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/walk_forward_validator.py",
+    "line": 1537,
+    "code": "def _calculate_max_drawdown(self, equity: List[float]) -> float:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/walk_forward_validator_enhanced.py",
+    "line": 383,
+    "code": "def create_rolling_windows(",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/backtesting/metrics.py",
+    "line": 336,
+    "code": "def _calculate_max_drawdown(self, equity_curve: List[Decimal]) -> Decimal:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/metrics.py",
+    "line": 423,
+    "code": "def _calculate_sortino_ratio(self, returns: List[Decimal]) -> Optional[Decimal]:",
+    "alternative": "sorted() or list.sort()",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/numba_metrics.py",
+    "line": 98,
+    "code": "def sample_std_numba(values: np.ndarray) -> float:",
+    "alternative": "numpy.std()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/backtesting/numba_metrics.py",
+    "line": 309,
+    "code": "def calculate_sortino_numba(",
+    "alternative": "sorted() or list.sort()",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/numba_metrics.py",
+    "line": 460,
+    "code": "def calculate_max_drawdown_numba(equity_curve: np.ndarray) -> float:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/numba_metrics.py",
+    "line": 479,
+    "code": "def calculate_max_drawdown_duration_numba(equity_curve: np.ndarray) -> int:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/numba_metrics.py",
+    "line": 670,
+    "code": "def calculate_rolling_volatility_numba(",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/backtesting/regime_analyzer.py",
+    "line": 379,
+    "code": "def _calculate_max_drawdown(returns: pd.Series) -> float:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/constants.py",
+    "line": 164,
+    "code": "def SCALABILITY_ALPHA_DEGRADATION_MAX_POINTS(self) -> Decimal:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/constants.py",
+    "line": 168,
+    "code": "def SCALABILITY_COMMISSION_MAX_POINTS(self) -> Decimal:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/constants.py",
+    "line": 172,
+    "code": "def SCALABILITY_STABILITY_MAX_POINTS(self) -> Decimal:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/chan_metrics.py",
+    "line": 429,
+    "code": "def _find_max_drawdown(",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/chan_metrics.py",
+    "line": 654,
+    "code": "def _calculate_max_drawdown(",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/chan_metrics.py",
+    "line": 961,
+    "code": "def _determine_recommended_strategy(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/chan_metrics.py",
+    "line": 1053,
+    "code": "def calculate_max_drawdown(",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/advanced_visualizations.py",
+    "line": 89,
+    "code": "def plot_correlation_network(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/backtesting/advanced_visualizations.py",
+    "line": 411,
+    "code": "def plot_rolling_metrics(",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/backtesting/base_engine.py",
+    "line": 477,
+    "code": "def _sort_data_by_timestamp(",
+    "alternative": "sorted() or list.sort()",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/data_split.py",
+    "line": 326,
+    "code": "def benjamini_hochberg_correction(self, p_values: List[float]) -> List[bool]:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/report_generator.py",
+    "line": 640,
+    "code": "def _analyze_correlations(self, result: BacktestResult) -> str:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/backtesting/ensemble_methods.py",
+    "line": 359,
+    "code": "def _determine_task_type(self, y: np.ndarray) -> str:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/ensemble_methods.py",
+    "line": 1029,
+    "code": "def _compute_pairwise_correlations(self, predictions: np.ndarray) -> List[float]:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/backtesting/lopez_de_prado_metrics.py",
+    "line": 368,
+    "code": "def _get_cluster_variance(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/backtesting/lopez_de_prado_metrics.py",
+    "line": 648,
+    "code": "def _calculate_weights_autocorrelation(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/backtesting/lopez_de_prado_metrics.py",
+    "line": 693,
+    "code": "def _calculate_cross_period_correlation(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/backtesting/advanced_metrics.py",
+    "line": 391,
+    "code": "def calculate_sortino_modified(",
+    "alternative": "sorted() or list.sort()",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/core/facade.py",
+    "line": 524,
+    "code": "def _get_sortino_ratio(self, result) -> float:",
+    "alternative": "sorted() or list.sort()",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/core/facade.py",
+    "line": 530,
+    "code": "def _get_max_drawdown(self, result) -> float:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/core/orchestrator.py",
+    "line": 62,
+    "code": "def MAX_POSITION_SIZE(self) -> Decimal:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/labeling/bet_sizing.py",
+    "line": 450,
+    "code": "def _adjust_for_correlation(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/backtesting/labeling/bet_sizing_meta.py",
+    "line": 636,
+    "code": "def _adjust_for_correlation(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/backtesting/labeling/triple_barrier.py",
+    "line": 155,
+    "code": "def get_barrier_labels_with_timing(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/robust_engine/performance_tracker.py",
+    "line": 441,
+    "code": "def get_rolling_metrics(",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/backtesting/robust_engine/performance_tracker.py",
+    "line": 495,
+    "code": "def _calculate_max_drawdown(self, equity_series: pd.Series) -> float:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/robust_engine/performance_tracker.py",
+    "line": 501,
+    "code": "def _max_drawdown_duration(self) -> int:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/robust_engine/performance_tracker.py",
+    "line": 513,
+    "code": "def _calculate_sortino_ratio(self, returns: pd.Series) -> Optional[float]:",
+    "alternative": "sorted() or list.sort()",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/robust_engine/look_ahead_validator.py",
+    "line": 272,
+    "code": "def _check_signal_timing(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/acceptance/verdict_determiner.py",
+    "line": 28,
+    "code": "def determine_verdict(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/engines/multi_strategy_engine.py",
+    "line": 577,
+    "code": "def _calculate_weighted_max_dd(",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/execution/slippage_model.py",
+    "line": 130,
+    "code": "def _default_max_slippage_bps():",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/execution/order_fill_simulator.py",
+    "line": 40,
+    "code": "def _default_max_participation_rate():",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/execution/order_fill_simulator.py",
+    "line": 45,
+    "code": "def _default_max_slippage_bps():",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/execution/backtest_results_processor.py",
+    "line": 163,
+    "code": "def get_percentile(",
+    "alternative": "numpy.percentile()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/backtesting/services/equity_tracker.py",
+    "line": 120,
+    "code": "def get_max_drawdown(self) -> Decimal:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/services/equity_tracker.py",
+    "line": 129,
+    "code": "def get_max_drawdown_percentage(self) -> Decimal:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/validation/drawdown_validator.py",
+    "line": 119,
+    "code": "def validate_max_drawdown(",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/validation/bias_variance_analysis.py",
+    "line": 183,
+    "code": "def decompose_bias_variance(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/backtesting/validation/bias_variance_analysis.py",
+    "line": 770,
+    "code": "def analyze_bias_variance(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/backtesting/validation/bonferroni_correction.py",
+    "line": 355,
+    "code": "def _benjamini_hochberg(self, p_values: List[float]) -> List[float]:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/validation/parameter_stability.py",
+    "line": 424,
+    "code": "def calculate_parameter_correlation(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/backtesting/validation/models.py",
+    "line": 279,
+    "code": "def is_favorable_for_mean_reversion(self) -> bool:",
+    "alternative": "numpy.mean()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/backtesting/validation/walk_forward.py",
+    "line": 182,
+    "code": "def _generate_rolling_windows(",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/backtesting/validation/strategy_validator.py",
+    "line": 139,
+    "code": "def validate_max_drawdown(self, max_dd: Decimal) -> bool:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/validation/feature_explosion_validator.py",
+    "line": 387,
+    "code": "def _calculate_max_vif(self, X: pd.DataFrame) -> float:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/validation/feature_explosion_validator.py",
+    "line": 438,
+    "code": "def _calculate_max_correlation(self, X: pd.DataFrame) -> float:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/backtesting/validation/feature_explosion_validator.py",
+    "line": 438,
+    "code": "def _calculate_max_correlation(self, X: pd.DataFrame) -> float:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/backtesting/reports/baseline_optimization_reporter.py",
+    "line": 438,
+    "code": "def _t_test_means(",
+    "alternative": "numpy.mean()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/core/auth.py",
+    "line": 910,
+    "code": "async def get_admin_user(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/core/auth.py",
+    "line": 982,
+    "code": "async def admin_endpoint(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/core/compliance_engine.py",
+    "line": 434,
+    "code": "def _determine_execution_order(self) -> List[str]:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/core/centralized_config.py",
+    "line": 3167,
+    "code": "def get_default_max_position_size() -> float:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/core/models/investment_profile.py",
+    "line": 218,
+    "code": "def determine_capital_tier(capital: Decimal) -> CapitalTier:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/security/auth.py",
+    "line": 910,
+    "code": "async def get_admin_user(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/security/auth.py",
+    "line": 982,
+    "code": "async def admin_endpoint(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/simulation/trading_costs.py",
+    "line": 355,
+    "code": "def calculate_timing_risk(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/shared/config/profile_config_loader.py",
+    "line": 157,
+    "code": "def get_min_train_samples(self) -> int:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/shared/config/profile_config_loader.py",
+    "line": 165,
+    "code": "def get_max_workers(self, cpu_count: Optional[int] = None) -> Optional[int]:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/shared/config/profile_config_loader.py",
+    "line": 335,
+    "code": "def get_max_results_in_memory(self) -> int:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/shared/config/centralized_config.py",
+    "line": 3496,
+    "code": "def get_default_max_position_size() -> float:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/shared/config/config_validator.py",
+    "line": 168,
+    "code": "def validate_max_profiles(cls, v: int) -> int:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/shared/config/strategy_config_loader.py",
+    "line": 269,
+    "code": "def get_max_position_size(self, tier: str = \"medium\") -> Decimal:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/shared/config/strategy_config_loader.py",
+    "line": 336,
+    "code": "def get_max_leverage(self, tier: str = \"medium\") -> float:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/shared/config/strategy_config_loader.py",
+    "line": 442,
+    "code": "def get_max_positions(self, tier: str = \"medium\") -> int:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/shared/utils/decimal_utils.py",
+    "line": 523,
+    "code": "def safe_mean(",
+    "alternative": "numpy.mean()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/shared/utils/decimal_utils.py",
+    "line": 559,
+    "code": "def safe_variance(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/shared/utils/decimal_utils.py",
+    "line": 599,
+    "code": "def safe_std(",
+    "alternative": "numpy.std()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/shared/performance/metrics.py",
+    "line": 156,
+    "code": "def sortino_ratio(",
+    "alternative": "sorted() or list.sort()",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/shared/performance/metrics.py",
+    "line": 214,
+    "code": "def max_drawdown(",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/shared/performance/numba_accelerators.py",
+    "line": 405,
+    "code": "def rolling_mean_numba(values: np.ndarray, window: int) -> np.ndarray:",
+    "alternative": "numpy.mean()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/shared/performance/numba_accelerators.py",
+    "line": 405,
+    "code": "def rolling_mean_numba(values: np.ndarray, window: int) -> np.ndarray:",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/shared/performance/numba_accelerators.py",
+    "line": 441,
+    "code": "def rolling_std_numba(values: np.ndarray, window: int) -> np.ndarray:",
+    "alternative": "numpy.std()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/shared/performance/numba_accelerators.py",
+    "line": 441,
+    "code": "def rolling_std_numba(values: np.ndarray, window: int) -> np.ndarray:",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/shared/performance/numba_accelerators.py",
+    "line": 479,
+    "code": "def rolling_min_numba(values: np.ndarray, window: int) -> np.ndarray:",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/shared/performance/numba_accelerators.py",
+    "line": 479,
+    "code": "def rolling_min_numba(values: np.ndarray, window: int) -> np.ndarray:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/shared/performance/numba_accelerators.py",
+    "line": 511,
+    "code": "def rolling_max_numba(values: np.ndarray, window: int) -> np.ndarray:",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/shared/performance/numba_accelerators.py",
+    "line": 511,
+    "code": "def rolling_max_numba(values: np.ndarray, window: int) -> np.ndarray:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/shared/protocols/i_trading_decision_logger.py",
+    "line": 22,
+    "code": "def get_logs_by_correlation_id(self, correlation_id: str) -> list:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/risk_engine/alert_system.py",
+    "line": 297,
+    "code": "def _check_correlation_thresholds(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/risk_engine/__init__.py",
+    "line": 393,
+    "code": "def set_correlation_analyzer(self, correlation_analyzer: Any) -> None:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/risk_engine/correlation_analyzers/correlation_analyzers.py",
+    "line": 37,
+    "code": "def analyze_correlations(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/risk_engine/correlation_analyzers/correlation_analyzers.py",
+    "line": 72,
+    "code": "def analyze_correlations(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/risk_engine/correlation_analyzers/correlation_analyzers.py",
+    "line": 136,
+    "code": "def _calculate_correlation_matrix(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/risk_engine/correlation_analyzers/correlation_analyzers.py",
+    "line": 179,
+    "code": "def _analyze_correlations(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/risk_engine/correlation_analyzers/correlation_analyzers.py",
+    "line": 205,
+    "code": "def _detect_correlation_violations(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/risk_engine/stress_testers/portfolio_variance_stress.py",
+    "line": 127,
+    "code": "def run_variance_stress_tests(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/risk_engine/stress_testers/portfolio_variance_stress.py",
+    "line": 211,
+    "code": "def _calculate_portfolio_variance(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/risk_engine/stress_testers/portfolio_variance_stress.py",
+    "line": 283,
+    "code": "def _stress_correlations(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/risk_engine/stress_testers/portfolio_variance_stress.py",
+    "line": 321,
+    "code": "def _assess_variance_increase(self, variance_increase_pct: float) -> Dict[str, Any]:",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/risk_engine/stress_testers/portfolio_variance_stress.py",
+    "line": 354,
+    "code": "def _generate_variance_stress_summary(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/risk_engine/stress_testers/portfolio_variance_stress.py",
+    "line": 430,
+    "code": "def decompose_portfolio_variance(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/risk_engine/stress_testers/portfolio_variance_stress.py",
+    "line": 538,
+    "code": "def _interpret_variance_decomposition(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/risk_engine/stress_testers/comprehensive_scenarios.py",
+    "line": 172,
+    "code": "def _load_correlation_scenarios(self) -> Dict[str, Dict[str, Any]]:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/risk_engine/stress_testers/correlation_stress.py",
+    "line": 85,
+    "code": "def run_correlation_stress_tests(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/risk_engine/stress_testers/correlation_stress.py",
+    "line": 143,
+    "code": "def _apply_correlation_scenario(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/risk_engine/stress_testers/correlation_stress.py",
+    "line": 197,
+    "code": "def _create_stressed_correlation_matrix(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/risk_engine/stress_testers/correlation_stress.py",
+    "line": 254,
+    "code": "def _calculate_portfolio_variance(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/risk_engine/stress_testers/correlation_stress.py",
+    "line": 382,
+    "code": "def calculate_correlation_breakdown_var(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/risk_engine/var_calculators/var_calculators.py",
+    "line": 55,
+    "code": "def calculate_percentile_numba(arr: np.ndarray, percentile: float) -> float:",
+    "alternative": "numpy.percentile()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/risk_engine/var_calculators/var_calculators.py",
+    "line": 86,
+    "code": "def calculate_mean_std_numba(arr: np.ndarray) -> tuple:",
+    "alternative": "numpy.mean()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/risk_engine/var_calculators/var_calculators.py",
+    "line": 86,
+    "code": "def calculate_mean_std_numba(arr: np.ndarray) -> tuple:",
+    "alternative": "numpy.std()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/risk_engine/var_calculators/ewma_var.py",
+    "line": 128,
+    "code": "def _calculate_ewma_variance(self, returns: np.ndarray) -> float:",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/risk_engine/var_calculators/ewma_var.py",
+    "line": 176,
+    "code": "def calculate_ewma_correlation(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/risk_engine/var_calculators/ewma_var.py",
+    "line": 233,
+    "code": "def _calculate_ewma_covariance(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/risk_engine/var_calculators/ewma_var.py",
+    "line": 233,
+    "code": "def _calculate_ewma_covariance(",
+    "alternative": "numpy.cov()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/risk_engine/var_calculators/ewma_var.py",
+    "line": 257,
+    "code": "def _interpret_correlation_change(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/risk_engine/drawdown_controllers/drawdown_controllers.py",
+    "line": 92,
+    "code": "def calculate_max_drawdown_numba(drawdowns: np.ndarray) -> float:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/engines/risk_engine/drawdown_controllers/drawdown_controllers.py",
+    "line": 155,
+    "code": "def calculate_rolling_max_drawdown_numba(values: np.ndarray, window: int) -> float:",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/engines/risk_engine/drawdown_controllers/drawdown_controllers.py",
+    "line": 155,
+    "code": "def calculate_rolling_max_drawdown_numba(values: np.ndarray, window: int) -> float:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/engines/risk_engine/drawdown_controllers/drawdown_controllers.py",
+    "line": 185,
+    "code": "def calculate_rolling_avg_drawdown_numba(values: np.ndarray, window: int) -> float:",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/engines/risk_engine/drawdown_controllers/drawdown_controllers.py",
+    "line": 568,
+    "code": "def _calculate_rolling_drawdown(self) -> Dict[str, Any]:",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/engines/strategy_engines/profile_regime_selector.py",
+    "line": 210,
+    "code": "def _determine_profile(self, override: Optional[str] = None) -> InvestorProfile:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/engines/strategy_engines/modular_momentum_engine.py",
+    "line": 485,
+    "code": "def _determine_signal_type(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/engines/strategy_engines/trend_following_engine.py",
+    "line": 473,
+    "code": "def _get_max_exposure(self) -> float:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/engines/context_engine/context_engine.py",
+    "line": 183,
+    "code": "def get_correlation_matrix(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/context_engine/correlation_analyzers/rolling_correlation_analyzer.py",
+    "line": 23,
+    "code": "def calculate_rolling_correlation(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/context_engine/correlation_analyzers/rolling_correlation_analyzer.py",
+    "line": 23,
+    "code": "def calculate_rolling_correlation(",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/engines/context_engine/regime_detectors/correlation_regime_detector.py",
+    "line": 47,
+    "code": "def _calculate_correlation_matrix(self, returns_matrix: np.ndarray) -> np.ndarray:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/context_engine/regime_detectors/correlation_regime_detector.py",
+    "line": 55,
+    "code": "def _calculate_pca_variance(self, returns_matrix: np.ndarray) -> float:",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/context_engine/regime_detectors/hmm_regime_detector.py",
+    "line": 230,
+    "code": "def _calculate_rolling_volatility(self, returns: np.ndarray, window: int = 20) -> np.ndarray:",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/engines/context_engine/regime_detectors/hmm_regime_detector.py",
+    "line": 251,
+    "code": "def get_regime_means(self) -> Optional[np.ndarray]:",
+    "alternative": "numpy.mean()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/data_engine/config_loader.py",
+    "line": 92,
+    "code": "def get_streaming_config(self) -> Dict[str, Any]:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/engines/portfolio_engine/stability_validator.py",
+    "line": 300,
+    "code": "def _determine_validity(self, result: PortfolioValidationResult) -> bool:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/engines/portfolio_engine/optimizers/hierarchical_risk_parity.py",
+    "line": 209,
+    "code": "def _correlation_to_distance(self, corr_matrix: np.ndarray) -> np.ndarray:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/portfolio_engine/optimizers/hierarchical_risk_parity.py",
+    "line": 462,
+    "code": "def _get_cluster_variance(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/engines/execution_engine/microstructure/market_quality_metrics.py",
+    "line": 364,
+    "code": "def _calculate_max_position_size(",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/engines/execution_engine/microstructure/tick_size_constraints.py",
+    "line": 140,
+    "code": "def _determine_tick_size(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/engines/execution_engine/microstructure/microstructure_engine.py",
+    "line": 319,
+    "code": "def _determine_execution_strategy(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/engines/execution_engine/microstructure/harris_integration.py",
+    "line": 235,
+    "code": "def calculate_timing_cost(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/engines/execution_engine/microstructure/order_book_analyzer.py",
+    "line": 350,
+    "code": "def _calculate_max_size(self, snapshot: OrderBookSnapshot) -> Decimal:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/application/orchestration/target_optimization/capital_tier_selector.py",
+    "line": 301,
+    "code": "def get_max_leverage(self, capital: Decimal) -> Decimal:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/application/orchestration/target_optimization/capital_tier_selector.py",
+    "line": 306,
+    "code": "def get_max_position_size(self, capital: Decimal) -> Decimal:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/application/orchestration/target_optimization/capital_tier_selector.py",
+    "line": 311,
+    "code": "def get_max_position_size_eur(self, capital: Decimal) -> Decimal:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/application/orchestration/target_optimization/capital_tier_selector.py",
+    "line": 316,
+    "code": "def get_max_daily_loss_eur(self, capital: Decimal) -> Decimal:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/application/use_cases/select_strategy.py",
+    "line": 1989,
+    "code": "def _estimate_mean_reversion_performance(self) -> dict[str, Decimal]:",
+    "alternative": "numpy.mean()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/infrastructure/logging/trading_decision_logger.py",
+    "line": 120,
+    "code": "def get_logs_by_correlation_id(self, correlation_id: str) -> List[dict]:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/infrastructure/logging/logging_config.py",
+    "line": 46,
+    "code": "def get_correlation_id() -> str:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/infrastructure/logging/logging_config.py",
+    "line": 62,
+    "code": "def set_correlation_id(cid: str) -> None:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/infrastructure/logging/append_only_log.py",
+    "line": 60,
+    "code": "def get_entries_by_correlation_id(self, correlation_id: str) -> List[dict]:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/ensemble/strategy_combiner.py",
+    "line": 185,
+    "code": "def _mean_variance_allocation(self, returns_data: Dict[str, np.ndarray]) -> Dict[str, float]:",
+    "alternative": "numpy.mean()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/ensemble/strategy_combiner.py",
+    "line": 185,
+    "code": "def _mean_variance_allocation(self, returns_data: Dict[str, np.ndarray]) -> Dict[str, float]:",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/ensemble/strategy_combiner.py",
+    "line": 604,
+    "code": "def _calculate_mean_correlation(",
+    "alternative": "numpy.mean()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/ensemble/strategy_combiner.py",
+    "line": 604,
+    "code": "def _calculate_mean_correlation(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/ensemble/correlation_analyzer.py",
+    "line": 72,
+    "code": "def analyze_correlations(self, returns_data: Dict[str, np.ndarray]) -> CorrelationMetrics:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/ensemble/correlation_analyzer.py",
+    "line": 147,
+    "code": "def _calculate_correlation_matrix(self, returns_data: Dict[str, np.ndarray]) -> np.ndarray:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/ensemble/correlation_analyzer.py",
+    "line": 192,
+    "code": "def _calculate_correlation_stats(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/ensemble/correlation_analyzer.py",
+    "line": 429,
+    "code": "def calculate_portfolio_correlation(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/ensemble/correlation_analyzer.py",
+    "line": 466,
+    "code": "def calculate_partial_correlation(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/ensemble/correlation_analyzer.py",
+    "line": 511,
+    "code": "def calculate_rolling_correlation(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/ensemble/correlation_analyzer.py",
+    "line": 511,
+    "code": "def calculate_rolling_correlation(",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/domain/ensemble/correlation_analyzer.py",
+    "line": 565,
+    "code": "def get_correlation_summary(self, metrics: CorrelationMetrics) -> Dict[str, Any]:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/ensemble/models.py",
+    "line": 175,
+    "code": "def dominates(self) -> bool:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/ensemble/pareto.py",
+    "line": 414,
+    "code": "def _calculate_max_drawdown(",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/ensemble/pareto.py",
+    "line": 555,
+    "code": "def _non_dominated_sort(self, population: List[ParetoSolution]) -> List[List[ParetoSolution]]:",
+    "alternative": "sorted() or list.sort()",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/ensemble/pareto.py",
+    "line": 555,
+    "code": "def _non_dominated_sort(self, population: List[ParetoSolution]) -> List[List[ParetoSolution]]:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/ensemble/pareto.py",
+    "line": 616,
+    "code": "def _dominates(self, solution1: ParetoSolution, solution2: ParetoSolution) -> bool:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/analysis/vectorization/patterns.py",
+    "line": 85,
+    "code": "def rolling_calculation() -> str:",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/domain/analysis/vectorization/patterns.py",
+    "line": 144,
+    "code": "def correlation_matrix() -> str:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/analysis/vectorization/patterns.py",
+    "line": 327,
+    "code": "def rank_percentile() -> str:",
+    "alternative": "numpy.percentile()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/analysis/vectorization/benchmark.py",
+    "line": 208,
+    "code": "def benchmark_rolling_calculation(",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/domain/analysis/vectorization/benchmark.py",
+    "line": 230,
+    "code": "def rolling_non_vectorized() -> list[float]:",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/domain/analysis/vectorization/benchmark.py",
+    "line": 238,
+    "code": "def rolling_vectorized() -> pd.Series:",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/domain/analysis/vectorization/benchmark.py",
+    "line": 266,
+    "code": "def benchmark_correlation(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/analysis/fundamental_law/ic_calculator.py",
+    "line": 377,
+    "code": "def calculate_rolling_ic(",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/domain/strategies/fx_intermarket_strategy.py",
+    "line": 585,
+    "code": "def _determine_signal_type(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/strategies/fx_intermarket_strategy.py",
+    "line": 732,
+    "code": "def update_correlations(self, as_of: datetime) -> None:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/strategies/correlation_analyzer.py",
+    "line": 103,
+    "code": "def calculate_correlation(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/strategies/correlation_analyzer.py",
+    "line": 168,
+    "code": "def calculate_fx_pair_correlation(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/strategies/correlation_analyzer.py",
+    "line": 221,
+    "code": "def calculate_intermarket_correlation(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/strategies/correlation_analyzer.py",
+    "line": 345,
+    "code": "def detect_correlation_regime_change(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/strategies/correlation_analyzer.py",
+    "line": 399,
+    "code": "def calculate_rolling_correlation(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/strategies/correlation_analyzer.py",
+    "line": 399,
+    "code": "def calculate_rolling_correlation(",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/domain/strategies/correlation_analyzer.py",
+    "line": 556,
+    "code": "def get_correlation_matrix(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/strategies/models.py",
+    "line": 577,
+    "code": "def max_position_weight(self) -> Decimal:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/strategies/covered_call.py",
+    "line": 83,
+    "code": "def max_profit(self) -> float:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/strategies/covered_call.py",
+    "line": 88,
+    "code": "def max_loss(self) -> float:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/strategies/volatility_calculator.py",
+    "line": 246,
+    "code": "def calculate_max_drawdown(",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/strategies/volatility_calculator.py",
+    "line": 274,
+    "code": "def calculate_sortino_ratio(",
+    "alternative": "sorted() or list.sort()",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/strategies/volatility_calculator.py",
+    "line": 339,
+    "code": "def calculate_correlation(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/strategies/volatility_calculator.py",
+    "line": 482,
+    "code": "def _determine_volatility_regime(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/strategies/volatility_calculator.py",
+    "line": 534,
+    "code": "def calculate_minimum_variance_weights(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/strategies/volatility_calculator.py",
+    "line": 534,
+    "code": "def calculate_minimum_variance_weights(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/strategies/volatility_calculator.py",
+    "line": 561,
+    "code": "def portfolio_variance(weights):",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/strategies/dividend_screener.py",
+    "line": 276,
+    "code": "def _calculate_preliminary_score(self, profile: DividendProfile) -> float:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/strategies/bollinger_bands.py",
+    "line": 236,
+    "code": "def is_mean_reversion_buy(",
+    "alternative": "numpy.mean()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/strategies/bollinger_bands.py",
+    "line": 279,
+    "code": "def is_mean_reversion_sell(",
+    "alternative": "numpy.mean()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/strategies/bollinger_bands.py",
+    "line": 358,
+    "code": "def calculate_bandwidth_percentile(self, bb_data: pd.DataFrame, lookback: int = 252) -> float:",
+    "alternative": "numpy.percentile()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/strategies/strategy.py",
+    "line": 777,
+    "code": "def _determine_signal_type(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/strategies/statistical_arbitrage.py",
+    "line": 435,
+    "code": "def calculate_mean_reversion_metrics(",
+    "alternative": "numpy.mean()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/strategies/crypto_screener.py",
+    "line": 286,
+    "code": "def calculate_btc_correlation_score(self, asset: CryptoAsset) -> Decimal:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/strategies/alpha_models.py",
+    "line": 262,
+    "code": "def _determine_decay_regime(self, predictive_power: Dict[int, float]) -> AlphaDecayRegime:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/strategies/low_volatility_anomaly.py",
+    "line": 460,
+    "code": "def _inverse_variance_weights(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/strategies/low_volatility_anomaly.py",
+    "line": 476,
+    "code": "def _minimum_variance_weights(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/strategies/low_volatility_anomaly.py",
+    "line": 476,
+    "code": "def _minimum_variance_weights(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/strategies/learning/drift_detector.py",
+    "line": 1517,
+    "code": "def _determine_severity(self, overfitting_score: float) -> OverfittingSeverity:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/strategies/learning/feature_importance.py",
+    "line": 1335,
+    "code": "def _calculate_target_correlations(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/strategies/learning/feature_importance.py",
+    "line": 1361,
+    "code": "def _calculate_feature_correlations(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/strategies/modules/market_detectors/volatility_detector.py",
+    "line": 70,
+    "code": "def _detect_atr_percentile(self, atr_history: List[float]) -> Dict:",
+    "alternative": "numpy.percentile()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/strategies/modules/market_detectors/volatility_detector.py",
+    "line": 111,
+    "code": "def _detect_std_dev(self, price_history: List[float]) -> Dict:",
+    "alternative": "numpy.std()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/strategies/modules/market_detectors/range_detector.py",
+    "line": 209,
+    "code": "def _rolling_mean(data: np.ndarray, window: int) -> np.ndarray:",
+    "alternative": "numpy.mean()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/strategies/modules/market_detectors/range_detector.py",
+    "line": 209,
+    "code": "def _rolling_mean(data: np.ndarray, window: int) -> np.ndarray:",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/domain/strategies/modules/market_detectors/range_detector.py",
+    "line": 223,
+    "code": "def _rolling_std(data: np.ndarray, window: int) -> np.ndarray:",
+    "alternative": "numpy.std()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/strategies/modules/market_detectors/range_detector.py",
+    "line": 223,
+    "code": "def _rolling_std(data: np.ndarray, window: int) -> np.ndarray:",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/domain/optimization/mean_variance_optimizer.py",
+    "line": 140,
+    "code": "def max_sharpe_portfolio(self) -> EfficientFrontierPoint:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/optimization/mean_variance_optimizer.py",
+    "line": 145,
+    "code": "def min_variance_portfolio(self) -> EfficientFrontierPoint:",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/optimization/mean_variance_optimizer.py",
+    "line": 145,
+    "code": "def min_variance_portfolio(self) -> EfficientFrontierPoint:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/optimization/mean_variance_optimizer.py",
+    "line": 317,
+    "code": "def max_position(self) -> float:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/optimization/mean_variance_optimizer.py",
+    "line": 553,
+    "code": "def calculate_covariance_matrix(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/optimization/mean_variance_optimizer.py",
+    "line": 553,
+    "code": "def calculate_covariance_matrix(",
+    "alternative": "numpy.cov()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/optimization/mean_variance_optimizer.py",
+    "line": 602,
+    "code": "def _shrink_covariance_matrix(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/optimization/mean_variance_optimizer.py",
+    "line": 602,
+    "code": "def _shrink_covariance_matrix(",
+    "alternative": "numpy.cov()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/optimization/mean_variance_optimizer.py",
+    "line": 662,
+    "code": "def _maximize_sharpe(",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/optimization/mean_variance_optimizer.py",
+    "line": 721,
+    "code": "def _minimize_variance(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/optimization/mean_variance_optimizer.py",
+    "line": 721,
+    "code": "def _minimize_variance(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/optimization/mean_variance_optimizer.py",
+    "line": 729,
+    "code": "def portfolio_variance(weights: NDArray[np.float64]) -> float:",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/optimization/mean_variance_optimizer.py",
+    "line": 773,
+    "code": "def portfolio_variance(weights: NDArray[np.float64]) -> float:",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/optimization/base_optimizer.py",
+    "line": 235,
+    "code": "def mean_score(self) -> float:",
+    "alternative": "numpy.mean()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/optimization/base_optimizer.py",
+    "line": 243,
+    "code": "def std_score(self) -> float:",
+    "alternative": "numpy.std()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/optimization/factory.py",
+    "line": 256,
+    "code": "def _create_mean_variance(cls, config: OptimizationConfig, **kwargs: Any) -> MeanVarianceOptimizer:",
+    "alternative": "numpy.mean()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/optimization/factory.py",
+    "line": 256,
+    "code": "def _create_mean_variance(cls, config: OptimizationConfig, **kwargs: Any) -> MeanVarianceOptimizer:",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/optimization/robustness_scorer.py",
+    "line": 341,
+    "code": "def _determine_readiness(self, score: float) -> ProductionReadiness:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/optimization/robustness_scorer.py",
+    "line": 352,
+    "code": "def _determine_risk_level(self, risk_factors: List[RiskFactor]) -> RiskLevel:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/optimization/parameter_stability_metrics.py",
+    "line": 145,
+    "code": "def calculate_variance_across_windows(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/optimization/parameter/trial.py",
+    "line": 176,
+    "code": "def get_mean_score(self) -> float:",
+    "alternative": "numpy.mean()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/optimization/parameter/trial.py",
+    "line": 189,
+    "code": "def get_std_score(self) -> float:",
+    "alternative": "numpy.std()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/optimization/parameter/trial.py",
+    "line": 323,
+    "code": "def get_mean_execution_time(self) -> float:",
+    "alternative": "numpy.mean()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/optimization/parameter/base_optimizer.py",
+    "line": 151,
+    "code": "def mean_score(self) -> float:",
+    "alternative": "numpy.mean()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/optimization/parameter/base_optimizer.py",
+    "line": 159,
+    "code": "def std_score(self) -> float:",
+    "alternative": "numpy.std()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/optimization/parameter/multi_objective.py",
+    "line": 41,
+    "code": "def dominates(self, other: \"ParetoSolution\") -> bool:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/optimization/parameter/multi_objective.py",
+    "line": 94,
+    "code": "def _non_dominated_sorting(self) -> List[List[ParetoSolution]]:",
+    "alternative": "sorted() or list.sort()",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/optimization/parameter/multi_objective.py",
+    "line": 94,
+    "code": "def _non_dominated_sorting(self) -> List[List[ParetoSolution]]:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/optimization/parameter/multi_objective.py",
+    "line": 461,
+    "code": "def find_non_dominated_solutions(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/optimization/parameter/random_search.py",
+    "line": 515,
+    "code": "def _std(self, values: List[float]) -> float:",
+    "alternative": "numpy.std()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/optimization/parameter/grid_search.py",
+    "line": 579,
+    "code": "def _std(self, values: List[float]) -> float:",
+    "alternative": "numpy.std()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/value_objects/capital.py",
+    "line": 60,
+    "code": "def get_max_exposure(self) -> Decimal:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/models/paper_trading.py",
+    "line": 481,
+    "code": "def validate_session_timing(self) -> \"PaperTradingSession\":",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/models/investment_profile.py",
+    "line": 218,
+    "code": "def determine_capital_tier(capital: Decimal) -> CapitalTier:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/models/risk_config.py",
+    "line": 141,
+    "code": "def effective_max_leverage(self) -> Decimal:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/portfolio_optimization/mean_variance_optimizer.py",
+    "line": 95,
+    "code": "def max_sharpe_portfolio(self) -> EfficientFrontierPoint:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/portfolio_optimization/mean_variance_optimizer.py",
+    "line": 100,
+    "code": "def min_variance_portfolio(self) -> EfficientFrontierPoint:",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/portfolio_optimization/mean_variance_optimizer.py",
+    "line": 100,
+    "code": "def min_variance_portfolio(self) -> EfficientFrontierPoint:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/portfolio_optimization/mean_variance_optimizer.py",
+    "line": 237,
+    "code": "def max_position(self) -> float:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/portfolio_optimization/mean_variance_optimizer.py",
+    "line": 343,
+    "code": "def calculate_covariance_matrix(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/portfolio_optimization/mean_variance_optimizer.py",
+    "line": 343,
+    "code": "def calculate_covariance_matrix(",
+    "alternative": "numpy.cov()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/portfolio_optimization/mean_variance_optimizer.py",
+    "line": 395,
+    "code": "def _shrink_covariance_matrix(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/portfolio_optimization/mean_variance_optimizer.py",
+    "line": 395,
+    "code": "def _shrink_covariance_matrix(",
+    "alternative": "numpy.cov()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/portfolio_optimization/mean_variance_optimizer.py",
+    "line": 617,
+    "code": "def max_sharpe_portfolio(",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/portfolio_optimization/mean_variance_optimizer.py",
+    "line": 709,
+    "code": "def min_variance_portfolio(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/portfolio_optimization/mean_variance_optimizer.py",
+    "line": 709,
+    "code": "def min_variance_portfolio(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/portfolio_optimization/mean_variance_optimizer.py",
+    "line": 729,
+    "code": "def portfolio_variance(weights: NDArray[np.float64]) -> float:",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/portfolio_optimization/mean_variance_optimizer.py",
+    "line": 814,
+    "code": "def regularized_variance(weights: NDArray[np.float64]) -> float:",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/portfolio_optimization/mean_variance_optimizer.py",
+    "line": 982,
+    "code": "def portfolio_variance(weights: NDArray[np.float64]) -> float:",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/portfolio_optimization/nested_clustered_optimization.py",
+    "line": 200,
+    "code": "def _correlation_to_distance(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/portfolio_optimization/nested_clustered_optimization.py",
+    "line": 235,
+    "code": "def _covariance_to_correlation(self, cov_matrix: NDArray[np.float64]) -> NDArray[np.float64]:",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/portfolio_optimization/nested_clustered_optimization.py",
+    "line": 235,
+    "code": "def _covariance_to_correlation(self, cov_matrix: NDArray[np.float64]) -> NDArray[np.float64]:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/portfolio_optimization/nested_clustered_optimization.py",
+    "line": 235,
+    "code": "def _covariance_to_correlation(self, cov_matrix: NDArray[np.float64]) -> NDArray[np.float64]:",
+    "alternative": "numpy.cov()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/portfolio_optimization/nested_clustered_optimization.py",
+    "line": 299,
+    "code": "def _cluster_kmeans(",
+    "alternative": "numpy.mean()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/portfolio_optimization/nested_clustered_optimization.py",
+    "line": 405,
+    "code": "def portfolio_variance(weights_cluster: NDArray[np.float64]) -> float:",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/portfolio_optimization/black_litterman_optimizer.py",
+    "line": 523,
+    "code": "def calculate_covariance_matrix(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/portfolio_optimization/black_litterman_optimizer.py",
+    "line": 523,
+    "code": "def calculate_covariance_matrix(",
+    "alternative": "numpy.cov()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/portfolio_optimization/black_litterman_optimizer.py",
+    "line": 572,
+    "code": "def _shrink_covariance(self, returns: NDArray[np.float64]) -> NDArray[np.float64]:",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/portfolio_optimization/black_litterman_optimizer.py",
+    "line": 572,
+    "code": "def _shrink_covariance(self, returns: NDArray[np.float64]) -> NDArray[np.float64]:",
+    "alternative": "numpy.cov()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/portfolio_optimization/black_litterman_optimizer.py",
+    "line": 815,
+    "code": "def _max_sharpe_weights(",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/portfolio/multi_asset/rebalancer.py",
+    "line": 668,
+    "code": "def _determine_plan_priority(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/portfolio/multi_asset/multi_asset_portfolio.py",
+    "line": 91,
+    "code": "def validate_max_position_size(cls, v: Decimal, info) -> Decimal:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/portfolio/multi_asset/asset_class.py",
+    "line": 299,
+    "code": "def get_percentile_return(self, percentile: float) -> Decimal:",
+    "alternative": "numpy.percentile()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/portfolio/multi_asset/asset_class.py",
+    "line": 500,
+    "code": "def validate_max_weight(cls, v: Decimal, info) -> Decimal:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/portfolio/multi_asset/asset_class.py",
+    "line": 527,
+    "code": "def validate_correlations(cls, v: Optional[Dict[str, float]]) -> Optional[Dict[str, float]]:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/portfolio/multi_asset/asset_class.py",
+    "line": 739,
+    "code": "def get_correlation_with(self, other_name: str) -> Optional[float]:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/market_analysis/microstructure/ofi/ofi_calculator.py",
+    "line": 403,
+    "code": "def calculate_ofi_std_score(self, ofi: float, ofi_history: list[float]) -> float | None:",
+    "alternative": "numpy.std()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/market_analysis/microstructure/ofi/ofi_calculator.py",
+    "line": 464,
+    "code": "def calculate_ofi_autocorrelation(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/market_analysis/microstructure/ofi/models.py",
+    "line": 466,
+    "code": "def ofi_min_must_be_negative_or_zero(cls, v: float) -> float:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/market_analysis/microstructure/ofi/tick_processor.py",
+    "line": 395,
+    "code": "def _calculate_rolling_ofi(self, window: int | None = None) -> float:",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/domain/market_analysis/microstructure/ofi/ofi_signals.py",
+    "line": 217,
+    "code": "def _generate_mean_reversion_signal(",
+    "alternative": "numpy.mean()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/market_analysis/microstructure/ofi/ofi_signals.py",
+    "line": 374,
+    "code": "def _determine_horizon(self, ofi: float, historical_ofi: list[float]) -> str:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/services/risk_calculator.py",
+    "line": 198,
+    "code": "def calculate_sortino_ratio(",
+    "alternative": "sorted() or list.sort()",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/services/risk_calculator.py",
+    "line": 378,
+    "code": "def _estimate_max_drawdown(self, weights: List[Decimal]) -> Decimal:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/services/metrics/risk_metrics.py",
+    "line": 347,
+    "code": "def rolling_volatility(",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/domain/services/metrics/risk_metrics.py",
+    "line": 430,
+    "code": "def correlation(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/metrics/risk_metrics.py",
+    "line": 458,
+    "code": "def correlation_matrix(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/metrics/risk_metrics.py",
+    "line": 847,
+    "code": "def get_correlation(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/metrics/performance_metrics.py",
+    "line": 324,
+    "code": "def sortino_ratio(",
+    "alternative": "sorted() or list.sort()",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/services/metrics/performance_metrics.py",
+    "line": 507,
+    "code": "def max_drawdown(",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/services/metrics/performance_metrics.py",
+    "line": 530,
+    "code": "def max_drawdown_analysis(",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/services/metrics/performance_metrics.py",
+    "line": 876,
+    "code": "def get_sortino_ratio(",
+    "alternative": "sorted() or list.sort()",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/services/metrics/performance_metrics.py",
+    "line": 932,
+    "code": "def get_max_drawdown(",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/services/indicators/numba_indicators.py",
+    "line": 398,
+    "code": "def _rolling_mean_numba(values: np.ndarray, window: int) -> np.ndarray:",
+    "alternative": "numpy.mean()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/indicators/numba_indicators.py",
+    "line": 398,
+    "code": "def _rolling_mean_numba(values: np.ndarray, window: int) -> np.ndarray:",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/domain/services/indicators/numba_indicators.py",
+    "line": 419,
+    "code": "def _rolling_std_numba(values: np.ndarray, window: int) -> np.ndarray:",
+    "alternative": "numpy.std()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/indicators/numba_indicators.py",
+    "line": 419,
+    "code": "def _rolling_std_numba(values: np.ndarray, window: int) -> np.ndarray:",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/domain/services/indicators/numba_indicators.py",
+    "line": 706,
+    "code": "def rolling_mean(",
+    "alternative": "numpy.mean()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/indicators/numba_indicators.py",
+    "line": 706,
+    "code": "def rolling_mean(",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/domain/services/indicators/numba_indicators.py",
+    "line": 717,
+    "code": "def rolling_std(",
+    "alternative": "numpy.std()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/indicators/numba_indicators.py",
+    "line": 717,
+    "code": "def rolling_std(",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/domain/services/compliance/compliance_engine.py",
+    "line": 434,
+    "code": "def _determine_execution_order(self) -> List[str]:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/mean_variance_optimizer.py",
+    "line": 81,
+    "code": "def get_max_sharpe_point(self) -> Tuple[int, float, float]:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/mean_variance_optimizer.py",
+    "line": 86,
+    "code": "def get_min_variance_point(self) -> Tuple[int, float, float]:",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/mean_variance_optimizer.py",
+    "line": 86,
+    "code": "def get_min_variance_point(self) -> Tuple[int, float, float]:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/mean_variance_optimizer.py",
+    "line": 135,
+    "code": "def maximize_sharpe(",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/mean_variance_optimizer.py",
+    "line": 241,
+    "code": "def minimize_variance(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/mean_variance_optimizer.py",
+    "line": 241,
+    "code": "def minimize_variance(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/mean_variance_optimizer.py",
+    "line": 477,
+    "code": "def get_global_minimum_variance(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/mean_variance_optimizer.py",
+    "line": 477,
+    "code": "def get_global_minimum_variance(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/cla.py",
+    "line": 99,
+    "code": "def get_max_sharpe_portfolio(",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/cla.py",
+    "line": 251,
+    "code": "def _solve_min_variance(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/cla.py",
+    "line": 251,
+    "code": "def _solve_min_variance(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/hrp.py",
+    "line": 238,
+    "code": "def _correlation_to_distance(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/hrp.py",
+    "line": 365,
+    "code": "def _get_cluster_variance(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/hrp.py",
+    "line": 459,
+    "code": "def inverse_variance_weights(cov_matrix: np.ndarray) -> np.ndarray:",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/nco.py",
+    "line": 180,
+    "code": "def _preprocess_covariance_matrix(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/nco.py",
+    "line": 180,
+    "code": "def _preprocess_covariance_matrix(",
+    "alternative": "numpy.cov()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/nco.py",
+    "line": 274,
+    "code": "def _correlation_to_distance(self, corr_matrix: np.ndarray) -> np.ndarray:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/nco.py",
+    "line": 308,
+    "code": "def _maximize_sharpe(",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/nco.py",
+    "line": 370,
+    "code": "def _minimize_variance(self, cov_matrix: np.ndarray) -> np.ndarray:",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/nco.py",
+    "line": 370,
+    "code": "def _minimize_variance(self, cov_matrix: np.ndarray) -> np.ndarray:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/nco.py",
+    "line": 397,
+    "code": "def _calculate_cluster_variance(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/_validation.py",
+    "line": 93,
+    "code": "def validate_covariance_matrix(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/_validation.py",
+    "line": 93,
+    "code": "def validate_covariance_matrix(",
+    "alternative": "numpy.cov()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/_validation.py",
+    "line": 273,
+    "code": "def sanitize_covariance_matrix(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/_validation.py",
+    "line": 273,
+    "code": "def sanitize_covariance_matrix(",
+    "alternative": "numpy.cov()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/denoise_correlation.py",
+    "line": 72,
+    "code": "def _calculate_max_random_eigenvalue(self, q: float, n_assets: int) -> float:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/denoise_correlation.py",
+    "line": 116,
+    "code": "def denoise_correlation(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/denoise_correlation.py",
+    "line": 213,
+    "code": "def denoise_correlation_with_std(",
+    "alternative": "numpy.std()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/denoise_correlation.py",
+    "line": 213,
+    "code": "def denoise_correlation_with_std(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/denoise_correlation.py",
+    "line": 262,
+    "code": "def _calculate_max_random_eigenvalue(",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/denoise_correlation.py",
+    "line": 287,
+    "code": "def _calculate_min_random_eigenvalue(self, q: float) -> float:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/denoise_correlation.py",
+    "line": 369,
+    "code": "def shrink_to_constant_correlation(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/covariance_calculator.py",
+    "line": 45,
+    "code": "def get_covariance(self, symbol1: str, symbol2: str) -> Decimal:",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/covariance_calculator.py",
+    "line": 45,
+    "code": "def get_covariance(self, symbol1: str, symbol2: str) -> Decimal:",
+    "alternative": "numpy.cov()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/covariance_calculator.py",
+    "line": 54,
+    "code": "def get_correlation(self, symbol1: str, symbol2: str) -> Decimal:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/covariance_calculator.py",
+    "line": 63,
+    "code": "def get_std_dev(self, symbol: str) -> Decimal:",
+    "alternative": "numpy.std()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/covariance_calculator.py",
+    "line": 111,
+    "code": "def calculate_sample_covariance(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/covariance_calculator.py",
+    "line": 111,
+    "code": "def calculate_sample_covariance(",
+    "alternative": "numpy.cov()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/covariance_calculator.py",
+    "line": 162,
+    "code": "def calculate_shrinkage_covariance(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/covariance_calculator.py",
+    "line": 162,
+    "code": "def calculate_shrinkage_covariance(",
+    "alternative": "numpy.cov()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/covariance_calculator.py",
+    "line": 221,
+    "code": "def calculate_exponential_covariance(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/covariance_calculator.py",
+    "line": 221,
+    "code": "def calculate_exponential_covariance(",
+    "alternative": "numpy.cov()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/covariance_calculator.py",
+    "line": 288,
+    "code": "def get_positive_semidefinite_covariance(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/covariance_calculator.py",
+    "line": 288,
+    "code": "def get_positive_semidefinite_covariance(",
+    "alternative": "numpy.cov()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/covariance_calculator.py",
+    "line": 361,
+    "code": "def _sanitize_covariance_matrix(self, cov_matrix: np.ndarray) -> np.ndarray:",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/covariance_calculator.py",
+    "line": 361,
+    "code": "def _sanitize_covariance_matrix(self, cov_matrix: np.ndarray) -> np.ndarray:",
+    "alternative": "numpy.cov()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/covariance_calculator.py",
+    "line": 381,
+    "code": "def _covariance_to_correlation(self, cov_matrix: np.ndarray) -> np.ndarray:",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/covariance_calculator.py",
+    "line": 381,
+    "code": "def _covariance_to_correlation(self, cov_matrix: np.ndarray) -> np.ndarray:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/covariance_calculator.py",
+    "line": 381,
+    "code": "def _covariance_to_correlation(self, cov_matrix: np.ndarray) -> np.ndarray:",
+    "alternative": "numpy.cov()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/covariance_calculator.py",
+    "line": 394,
+    "code": "def _correlation_to_covariance(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/covariance_calculator.py",
+    "line": 394,
+    "code": "def _correlation_to_covariance(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/covariance_calculator.py",
+    "line": 394,
+    "code": "def _correlation_to_covariance(",
+    "alternative": "numpy.cov()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/domain/services/risk/validators/risk_reward_validator.py",
+    "line": 82,
+    "code": "def calculate_minimum_stop(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/entities/order.py",
+    "line": 562,
+    "code": "def is_terminal(self) -> bool:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/domain/entities/portfolio.py",
+    "line": 420,
+    "code": "def get_max_concentration(self) -> tuple[str, Decimal]:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/presentation/dashboard/report_generator.py",
+    "line": 583,
+    "code": "def _estimate_max_drawdown(ret: float) -> float:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/presentation/dashboard/report_generator.py",
+    "line": 588,
+    "code": "def _calculate_sortino_estimate(ret: float, win_rate: float) -> float:",
+    "alternative": "sorted() or list.sort()",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/presentation/api/security.py",
+    "line": 543,
+    "code": "def require_admin(func: Callable) -> Callable:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/presentation/api/__init__.py",
+    "line": 23,
+    "code": "def get_correlation_id() -> str:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/presentation/api/__init__.py",
+    "line": 33,
+    "code": "def set_correlation_id(correlation_id: str) -> None:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/presentation/api/__init__.py",
+    "line": 43,
+    "code": "def generate_correlation_id() -> str:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/presentation/api/logging_utils.py",
+    "line": 18,
+    "code": "def get_correlation_id_from_request(request: Request) -> str:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/sre/error_budgets/slo_tracker.py",
+    "line": 120,
+    "code": "def duration_minutes(self) -> Optional[int]:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/sre/error_budgets/slo_tracker.py",
+    "line": 172,
+    "code": "def total_violation_minutes(self) -> int:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/sre/error_budgets/error_budget_manager.py",
+    "line": 60,
+    "code": "def duration_minutes(self) -> int:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/sre/error_budgets/error_budget_manager.py",
+    "line": 105,
+    "code": "def allowed_downtime_minutes(self) -> int:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/sre/error_budgets/error_budget_manager.py",
+    "line": 151,
+    "code": "def remaining_minutes(self) -> int:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/sre/chaos_engine/hypothesis.py",
+    "line": 419,
+    "code": "async def _determine_status(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/sre/dead_mans_switch/dead_mans_switch.py",
+    "line": 126,
+    "code": "def duration_minutes(self) -> Optional[int]:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/sre/oncall/rotation.py",
+    "line": 879,
+    "code": "async def get_upcoming_schedule(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/portfolio_analytics_service.py",
+    "line": 594,
+    "code": "def _calculate_sortino_ratio(self, returns: List[Decimal]) -> Decimal:",
+    "alternative": "sorted() or list.sort()",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/portfolio_analytics_service.py",
+    "line": 612,
+    "code": "def _calculate_max_drawdown(self, values: List[Decimal]) -> Decimal:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/portfolio_analytics_service.py",
+    "line": 728,
+    "code": "def _calculate_semi_variance(self, returns: List[Decimal]) -> Decimal:",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/portfolio_analytics_service.py",
+    "line": 833,
+    "code": "async def _calculate_average_correlation(self, portfolio: Portfolio) -> Decimal:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/strategy_stock_allocator.py",
+    "line": 649,
+    "code": "def calculate_sortino_ratio(self, returns: np.ndarray) -> Optional[float]:",
+    "alternative": "sorted() or list.sort()",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/strategy_stock_allocator.py",
+    "line": 918,
+    "code": "def score_mean_reversion(self, ticker: str, data: pd.DataFrame) -> Dict[str, Any]:",
+    "alternative": "numpy.mean()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/forex_data_service.py",
+    "line": 138,
+    "code": "def get_correlations(self, base_currency: str = \"USD\") -> Dict[str, Decimal]:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/forex_data_service.py",
+    "line": 160,
+    "code": "async def _fetch_correlations() -> Optional[Dict[str, Decimal]]:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/forex_data_service.py",
+    "line": 258,
+    "code": "def _fetch_correlations_from_api(self, base_currency: str) -> Optional[Dict[str, Decimal]]:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/execution_algorithms.py",
+    "line": 307,
+    "code": "def _calculate_timing_risk(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/execution_algorithms.py",
+    "line": 735,
+    "code": "def _calculate_timing_risk_optimized(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/dynamic_capital_reallocation.py",
+    "line": 206,
+    "code": "def calculate_rolling_metrics(",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/services/capital_viability_gate.py",
+    "line": 209,
+    "code": "def get_minimum_viable_capital(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/transaction_costs.py",
+    "line": 361,
+    "code": "def _calculate_timing_risk(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/signal_scoring_engine.py",
+    "line": 178,
+    "code": "def _calculate_timing_score(self, signal: Signal) -> float:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/numba_risk.py",
+    "line": 215,
+    "code": "def calculate_correlation_matrix_numba(returns_matrix: np.ndarray) -> np.ndarray:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/numba_risk.py",
+    "line": 265,
+    "code": "def calculate_covariance_matrix_numba(returns_matrix: np.ndarray) -> np.ndarray:",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/numba_risk.py",
+    "line": 265,
+    "code": "def calculate_covariance_matrix_numba(returns_matrix: np.ndarray) -> np.ndarray:",
+    "alternative": "numpy.cov()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/numba_risk.py",
+    "line": 303,
+    "code": "def sample_std_numba_risk(values: np.ndarray) -> float:",
+    "alternative": "numpy.std()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/deployment_validator.py",
+    "line": 328,
+    "code": "def get_minimum_capital_recommendation(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/profitability_validation_service.py",
+    "line": 174,
+    "code": "def _calculate_max_drawdown(",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/profitability_validation_service.py",
+    "line": 673,
+    "code": "def _determine_consistency_rating(self, stability_score: Decimal) -> str:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/multi_strategy_allocation.py",
+    "line": 98,
+    "code": "def calculate_rolling_returns(self, days: int = 30) -> Decimal:",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/services/portfolio_construction_narang.py",
+    "line": 362,
+    "code": "def _mean_variance(",
+    "alternative": "numpy.mean()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/portfolio_construction_narang.py",
+    "line": 362,
+    "code": "def _mean_variance(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/portfolio_construction_narang.py",
+    "line": 435,
+    "code": "def _max_sharpe(",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/portfolio_construction_narang.py",
+    "line": 504,
+    "code": "def _min_variance(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/portfolio_construction_narang.py",
+    "line": 504,
+    "code": "def _min_variance(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/optimization_chan.py",
+    "line": 602,
+    "code": "def _get_cluster_variance(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/opportunity_cost_validator.py",
+    "line": 159,
+    "code": "def get_minimum_alpha_for_trading(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/cost_analysis_service.py",
+    "line": 399,
+    "code": "def calculate_minimum_profit_edge(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/cost_analysis_service.py",
+    "line": 534,
+    "code": "def _determine_asset_class(self, symbol: str) -> str:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/slippage_analysis_service.py",
+    "line": 82,
+    "code": "def _calculate_percentile(self, current: Decimal, historical: Decimal) -> float:",
+    "alternative": "numpy.percentile()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/slippage_analysis_service.py",
+    "line": 106,
+    "code": "def _determine_volatility_regime(self, volatility: Decimal) -> MarketCondition:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/slippage_analysis_service.py",
+    "line": 169,
+    "code": "def _determine_liquidity_regime(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/slippage_analysis_service.py",
+    "line": 342,
+    "code": "def _calculate_timing_delay(self, volatility_metrics: VolatilityMetrics) -> SlippageComponent:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/slippage_analysis_service.py",
+    "line": 418,
+    "code": "def _determine_market_condition(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/factor_models.py",
+    "line": 443,
+    "code": "def get_explained_variance_ratio(self) -> np.ndarray:",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/risk_management_chan.py",
+    "line": 806,
+    "code": "def _calculate_max_drawdown(self, equity_curve: pd.Series) -> Tuple[float, int]:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/risk_management_chan.py",
+    "line": 824,
+    "code": "def _calculate_max_drawdown_from_returns(self, returns: pd.Series) -> float:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/risk_management_chan.py",
+    "line": 842,
+    "code": "def _calculate_sortino(self, returns: pd.Series, risk_free_rate: float) -> float:",
+    "alternative": "sorted() or list.sort()",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/var_position_limiter.py",
+    "line": 397,
+    "code": "def _calculate_portfolio_variance(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/var_position_limiter.py",
+    "line": 564,
+    "code": "def calculate_max_position_size(",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/hurst_exponent_analyzer.py",
+    "line": 367,
+    "code": "def calculate_hurst_variance_numba(series: np.ndarray) -> float:",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/hurst_exponent_analyzer.py",
+    "line": 484,
+    "code": "def calculate_aggregated_variance_numba(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/hurst_exponent_analyzer.py",
+    "line": 1145,
+    "code": "def calculate_rolling_hurst(",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/services/regime_detection_chan.py",
+    "line": 281,
+    "code": "def _detect_kmeans(",
+    "alternative": "numpy.mean()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/regime_detection_chan.py",
+    "line": 843,
+    "code": "def _calculate_max_drawdown(returns: pd.Series) -> float:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/advanced_risk_manager.py",
+    "line": 63,
+    "code": "def calculate_max_position_size(",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/advanced_risk_manager.py",
+    "line": 191,
+    "code": "def calculate_min_take_profit(self, entry_price: Decimal, stop_loss: Decimal) -> Decimal:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/risk_models_narang.py",
+    "line": 135,
+    "code": "def estimate_covariance_matrix(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/risk_models_narang.py",
+    "line": 135,
+    "code": "def estimate_covariance_matrix(",
+    "alternative": "numpy.cov()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/portfolio_risk_manager.py",
+    "line": 302,
+    "code": "def _determine_risk_level(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/portfolio_risk_manager.py",
+    "line": 400,
+    "code": "async def _calculate_correlations_async(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/portfolio_risk_manager.py",
+    "line": 471,
+    "code": "def _get_fallback_correlation(self, pos1: Position, pos2: Position) -> float:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/portfolio_risk_manager.py",
+    "line": 498,
+    "code": "def _calculate_correlations(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/learning_capital_gate.py",
+    "line": 271,
+    "code": "def get_minimum_capital_for_learning(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/validation_engine/validation_engine.py",
+    "line": 328,
+    "code": "def _determine_overall_status(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/strategy_stock_allocation/scorers.py",
+    "line": 199,
+    "code": "def _calculate_sortino_ratio(self, returns: np.ndarray) -> float | None:",
+    "alternative": "sorted() or list.sort()",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/strategy_stock_allocation/scorers.py",
+    "line": 451,
+    "code": "def _calculate_sortino_ratio(self, returns: np.ndarray) -> float | None:",
+    "alternative": "sorted() or list.sort()",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/strategy_stock_allocation/allocators.py",
+    "line": 111,
+    "code": "def _build_covariance_matrix(self, returns_dict: dict[str, np.ndarray]) -> np.ndarray:",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/strategy_stock_allocation/allocators.py",
+    "line": 111,
+    "code": "def _build_covariance_matrix(self, returns_dict: dict[str, np.ndarray]) -> np.ndarray:",
+    "alternative": "numpy.cov()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/strategy_stock_allocation/protocols.py",
+    "line": 107,
+    "code": "def score_mean_reversion(self, ticker: str, data: pd.DataFrame) -> dict[str, Any]:",
+    "alternative": "numpy.mean()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/strategy_stock_allocation/orchestrator.py",
+    "line": 310,
+    "code": "def _ensure_minimum_tickers_per_strategy(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/forex_risk/hedging_engine.py",
+    "line": 755,
+    "code": "def _determine_priority(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/forex_risk/tracker.py",
+    "line": 622,
+    "code": "def _determine_risk_level(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/knowledge_graph/graph_builder.py",
+    "line": 159,
+    "code": "async def create_correlation_relationships(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/reporting_generator/visualization_generator.py",
+    "line": 299,
+    "code": "def generate_rolling_metrics_chart(",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/services/reporting_generator/quantstats_integrator.py",
+    "line": 455,
+    "code": "def _calculate_sortino_ratio(self, returns: np.ndarray) -> Decimal:",
+    "alternative": "sorted() or list.sort()",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/capital/capital_phase_manager.py",
+    "line": 292,
+    "code": "def _determine_phase(self, capital: Decimal) -> CapitalPhase:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/module_parametrizer/models.py",
+    "line": 17,
+    "code": "def _get_default_max_position_size() -> Decimal:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/strategy_recommender/strategy_recommender.py",
+    "line": 265,
+    "code": "def _determine_recommendation_status(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/momentum/protocols.py",
+    "line": 134,
+    "code": "def determine_trend_direction(self, indicators: TechnicalIndicators) -> str:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/momentum/analyzer.py",
+    "line": 127,
+    "code": "def determine_trend_direction(self, indicators: TechnicalIndicators) -> str:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/live_trading/risk_gates.py",
+    "line": 426,
+    "code": "async def check_correlation_risk(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/live_trading/risk_gates.py",
+    "line": 453,
+    "code": "def set_max_position_size(self, amount: Decimal) -> None:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/live_trading/risk_gates.py",
+    "line": 458,
+    "code": "def set_max_leverage(self, leverage: Decimal) -> None:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/live_trading/risk_gates.py",
+    "line": 463,
+    "code": "def set_max_daily_loss(self, loss_pct: Decimal) -> None:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/live_trading/risk_gates.py",
+    "line": 468,
+    "code": "def set_max_drawdown(self, drawdown_pct: Decimal) -> None:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/capacity_fade_validation/capacity_fade_validator.py",
+    "line": 273,
+    "code": "def _determine_feasibility(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/portfolio_construction/portfolio_constructor.py",
+    "line": 123,
+    "code": "async def _mean_variance_optimization(",
+    "alternative": "numpy.mean()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/portfolio_construction/portfolio_constructor.py",
+    "line": 123,
+    "code": "async def _mean_variance_optimization(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/portfolio_construction/portfolio_constructor.py",
+    "line": 203,
+    "code": "async def _max_sharpe_optimization(",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/portfolio_construction/portfolio_constructor.py",
+    "line": 243,
+    "code": "async def _build_covariance_matrix(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/portfolio_construction/portfolio_constructor.py",
+    "line": 243,
+    "code": "async def _build_covariance_matrix(",
+    "alternative": "numpy.cov()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/rate_limiting/token_bucket.py",
+    "line": 75,
+    "code": "def to_per_minute(self) -> int:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/profile_generator/models.py",
+    "line": 18,
+    "code": "def _get_default_max_leverage() -> Decimal:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/profile_generator/models.py",
+    "line": 21,
+    "code": "def _get_default_max_position_size() -> Decimal:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/profile_generator/models.py",
+    "line": 24,
+    "code": "def _get_default_max_daily_loss() -> Decimal:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/profile_generator/models.py",
+    "line": 28,
+    "code": "def _get_default_max_concentration() -> Decimal:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/profile_generator/profile_generator.py",
+    "line": 357,
+    "code": "def _determine_capital_tier(self, capital: Decimal) -> CapitalTier:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/external_integrations/questdb_connector.py",
+    "line": 391,
+    "code": "def get_questdb_connector(",
+    "alternative": "numpy.std()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/correlation/analyzer.py",
+    "line": 105,
+    "code": "async def calculate_correlation_matrix(",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/correlation/analyzer.py",
+    "line": 168,
+    "code": "async def update_correlation_cache(self, symbols: List[str]) -> None:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/correlation/analyzer.py",
+    "line": 197,
+    "code": "async def get_correlation(self, symbol1: str, symbol2: str) -> float:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/correlation/analyzer.py",
+    "line": 398,
+    "code": "def _calculate_correlation(self, returns: pd.DataFrame) -> pd.DataFrame:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/correlation/analyzer.py",
+    "line": 440,
+    "code": "def _get_fallback_correlation(self, symbol1: str, symbol2: str) -> float:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/risk_scaling/sharpe_ratio_monitor.py",
+    "line": 64,
+    "code": "async def calculate_rolling_sharpe(",
+    "alternative": "pandas.rolling()",
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/services/risk_scaling/volatility_monitor.py",
+    "line": 337,
+    "code": "def calculate_atr_std_dev(",
+    "alternative": "numpy.std()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/backtest_orchestration/models.py",
+    "line": 37,
+    "code": "def _get_default_max_loss() -> Decimal:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/backtest_orchestration/backtest_orchestrator.py",
+    "line": 278,
+    "code": "def _determine_feasibility_status(self, feasibility_ratio: Decimal) -> str:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/deploy_decision_orchestrator/deploy_decision_orchestrator.py",
+    "line": 421,
+    "code": "async def _determine_status(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/deploy_decision_orchestrator/deploy_decision_orchestrator.py",
+    "line": 680,
+    "code": "async def _determine_next_steps(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/deployment/deploy_decision_orchestrator.py",
+    "line": 134,
+    "code": "async def _determine_status(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/deployment/deploy_decision_orchestrator.py",
+    "line": 264,
+    "code": "async def _determine_next_steps(self, status: str) -> List[str]:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/fifo/fifo_integrator.py",
+    "line": 205,
+    "code": "async def _determine_asset_type(self, symbol: str) -> AssetType:",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/hurst_analysis/variance_calculator.py",
+    "line": 117,
+    "code": "def _calculate_hurst_variance_numba(series: np.ndarray) -> float:",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/hurst_analysis/variance_calculator.py",
+    "line": 230,
+    "code": "def _calculate_aggregated_variance_numba(",
+    "alternative": "numpy.var()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/risk/validators/risk_reward_validator.py",
+    "line": 82,
+    "code": "def calculate_minimum_stop(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/risk_scaling_application/limit_adjuster.py",
+    "line": 371,
+    "code": "def set_max_leverage(self, leverage: Decimal) -> None:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/risk_scaling_application/limit_adjuster.py",
+    "line": 376,
+    "code": "def set_max_allocation(self, allocation_pct: Decimal) -> None:",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/logging/trading_decision_logger.py",
+    "line": 120,
+    "code": "def get_logs_by_correlation_id(self, correlation_id: str) -> List[dict]:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/logging/log_entry.py",
+    "line": 64,
+    "code": "def with_correlation_id(self, correlation_id: str) -> \"LogEntry\":",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/logging/append_only_log.py",
+    "line": 60,
+    "code": "def get_entries_by_correlation_id(self, correlation_id: str) -> List[dict]:",
+    "alternative": "numpy.corrcoef()",
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/services/strategy_recommendation/strategy_recommender.py",
+    "line": 144,
+    "code": "async def _determine_confidence(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/strategy_recommendation/strategy_recommender.py",
+    "line": 216,
+    "code": "async def _estimate_max_drawdown(",
+    "alternative": "max() built-in",
+    "severity": "LOW"
+  },
+  {
+    "file": "app/services/deployment_decision/deployment_decision_orchestrator.py",
+    "line": 387,
+    "code": "async def _determine_decision_status(",
+    "alternative": "min() built-in",
+    "severity": "LOW"
+  }
+]

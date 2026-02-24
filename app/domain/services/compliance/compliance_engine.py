@@ -3039,6 +3039,9 @@ class ComplianceEngine:
         signal: "TradeSignal",
         portfolio_value: Optional[Decimal] = None,
         price_history: Optional[pd.DataFrame] = None,
+        decision_logger: Optional[Any] = None,
+        tax_engine: Optional[Any] = None,
+        broker_connector: Optional[Any] = None,
     ) -> "TradeResult":
         """
         Execute trade with full compliance validation (ITradeExecutor protocol).
@@ -3054,17 +3057,23 @@ class ComplianceEngine:
             signal: TradeSignal from alert processing
             portfolio_value: Current portfolio value (optional, defaults to starting capital)
             price_history: Historical price data for validation (optional)
+            decision_logger: Optional injected decision logger (for DI/testing)
+            tax_engine: Optional injected tax engine (for DI/testing)
+            broker_connector: Optional injected broker connector (for DI/testing)
 
         Returns:
             TradeResult with execution details
         """
-        from app.application.orchestration.live_trading.broker_connector import BrokerConnector
-        from app.infrastructure.logging.trading_decision_logger import TradingDecisionLogger
-        from app.domain.services.tax.efficiency.engines.spain_tax_engine_impl import SpainTaxEngineImpl
+        # Use injected dependencies or create defaults (late import to avoid layer violation)
+        if decision_logger is None or tax_engine is None or broker_connector is None:
+            from app.application.orchestration.live_trading.broker_connector import BrokerConnector
+            from app.infrastructure.logging.trading_decision_logger import TradingDecisionLogger
+            from app.domain.services.tax.efficiency.engines.spain_tax_engine_impl import SpainTaxEngineImpl
 
-        # Initialize logger and tax engine
-        decision_logger = TradingDecisionLogger()
-        spain_tax = SpainTaxEngineImpl()
+        if decision_logger is None:
+            decision_logger = TradingDecisionLogger()
+        if tax_engine is None:
+            tax_engine = SpainTaxEngineImpl()
 
         # Convert signal to dict format for logger
         signal_dict = {
@@ -3173,7 +3182,7 @@ class ComplianceEngine:
             gross_pnl = Decimal("0")  # Will be updated on fill
 
             # Calculate Spain tax (IRPF)
-            spain_tax_amount = spain_tax.calculate_capital_gains_tax(gross_pnl)
+            spain_tax_amount = tax_engine.calculate_capital_gains_tax(gross_pnl)
 
             # Log execution (R15)
             decision_logger.log_execution(

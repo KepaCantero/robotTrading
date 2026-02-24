@@ -14,7 +14,7 @@ References:
     - Chan #15: Circuit breaker 5% daily loss limit
     - Hull #65: Kill switches and circuit breakers
 
-Uses centralized configuration from app.core.centralized_config.
+Uses centralized configuration from app.shared.config.centralized_config.
 """
 
 import logging
@@ -25,7 +25,7 @@ from typing import Dict, List, Optional, Tuple
 
 from fastapi import Depends
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 
 from .broker_connector import BrokerConnector, OrderSide, get_broker_connector
 

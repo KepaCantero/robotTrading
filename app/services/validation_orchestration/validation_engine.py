@@ -17,7 +17,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional
 
-from app.core.models.investment_profile import CapitalTier, InvestmentProfile
+from app.domain.models.investment_profile import CapitalTier, InvestmentProfile
 from app.services.backtesting_orchestration import ExtendedBacktestResult
 
 logger = logging.getLogger(__name__)

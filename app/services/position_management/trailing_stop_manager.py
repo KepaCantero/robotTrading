@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Optional, TYPE_CHECKING
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 
 if TYPE_CHECKING:
     pass

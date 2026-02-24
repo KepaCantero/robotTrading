@@ -12,7 +12,7 @@ Uses centralized configuration for all tolerance thresholds.
 from decimal import Decimal
 from typing import Optional
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 
 
 class DiscrepancyDetector:

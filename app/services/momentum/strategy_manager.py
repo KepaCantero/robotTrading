@@ -13,7 +13,7 @@ import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 from app.models.momentum import (
     MomentumFilter,
     MomentumSignal,

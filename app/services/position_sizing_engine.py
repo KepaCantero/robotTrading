@@ -6,7 +6,7 @@ from typing import Dict, List, Optional, Tuple, Union  # noqa: F401
 
 import numpy as np
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 

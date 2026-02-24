@@ -12,7 +12,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Set
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 from app.models.signal import Signal, SignalType
 
 logger = logging.getLogger(__name__)

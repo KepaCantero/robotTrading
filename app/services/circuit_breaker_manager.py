@@ -19,7 +19,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Set
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 from app.core.decimal_utils import to_decimal
 from app.core.timezone_utils import utc_now
 

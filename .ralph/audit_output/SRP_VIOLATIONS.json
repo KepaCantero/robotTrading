@@ -1,0 +1,2809 @@
+[
+  {
+    "file": "app/backtesting/comprehensive_backtest_runner.py",
+    "lines": 4689,
+    "classes": 2,
+    "functions": 55,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/shared/config/centralized_config.py",
+    "lines": 3818,
+    "classes": 23,
+    "functions": 82,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/core/compliance_engine.py",
+    "lines": 3675,
+    "classes": 10,
+    "functions": 101,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/services/compliance/compliance_engine.py",
+    "lines": 3675,
+    "classes": 10,
+    "functions": 101,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/core/centralized_config.py",
+    "lines": 3489,
+    "classes": 17,
+    "functions": 76,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/presentation/dashboard/advanced_dashboard.py",
+    "lines": 2613,
+    "classes": 0,
+    "functions": 11,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/application/use_cases/select_strategy.py",
+    "lines": 2301,
+    "classes": 11,
+    "functions": 49,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/learning/drift_detector.py",
+    "lines": 2164,
+    "classes": 16,
+    "functions": 69,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/strategy_stock_allocator.py",
+    "lines": 2100,
+    "classes": 4,
+    "functions": 18,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/learning/feature_importance.py",
+    "lines": 1995,
+    "classes": 12,
+    "functions": 46,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/shared/config/trading_config.py",
+    "lines": 1827,
+    "classes": 15,
+    "functions": 14,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/walk_forward_validator.py",
+    "lines": 1705,
+    "classes": 10,
+    "functions": 32,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/profile_batch_backtester.py",
+    "lines": 1520,
+    "classes": 1,
+    "functions": 26,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/strategy.py",
+    "lines": 1507,
+    "classes": 4,
+    "functions": 28,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/presentation/dashboard/main.py",
+    "lines": 1357,
+    "classes": 0,
+    "functions": 2,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/hurst_exponent_analyzer.py",
+    "lines": 1344,
+    "classes": 5,
+    "functions": 26,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/metrics.py",
+    "lines": 1327,
+    "classes": 2,
+    "functions": 28,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/shared/performance/numba_accelerators.py",
+    "lines": 1306,
+    "classes": 0,
+    "functions": 33,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/engine.py",
+    "lines": 1294,
+    "classes": 1,
+    "functions": 22,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/sre/monitoring/trading_metrics.py",
+    "lines": 1273,
+    "classes": 13,
+    "functions": 41,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/portfolio_optimization/mean_variance_optimizer.py",
+    "lines": 1265,
+    "classes": 9,
+    "functions": 32,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/engines/risk_engine/var_calculators/var_calculators.py",
+    "lines": 1262,
+    "classes": 6,
+    "functions": 23,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/fx_rates_provider.py",
+    "lines": 1254,
+    "classes": 9,
+    "functions": 58,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/engines/risk_engine/greeks_calculator.py",
+    "lines": 1252,
+    "classes": 1,
+    "functions": 28,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/ensemble_methods.py",
+    "lines": 1228,
+    "classes": 14,
+    "functions": 58,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/learning/regularization.py",
+    "lines": 1210,
+    "classes": 10,
+    "functions": 34,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/shared/performance/statsmodels_fallback.py",
+    "lines": 1205,
+    "classes": 8,
+    "functions": 24,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/api/assets.py",
+    "lines": 1168,
+    "classes": 5,
+    "functions": 17,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/presentation/api/assets.py",
+    "lines": 1168,
+    "classes": 5,
+    "functions": 17,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/services/indicators/technical_indicators.py",
+    "lines": 1161,
+    "classes": 3,
+    "functions": 24,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/core/symbol_mapper.py",
+    "lines": 1156,
+    "classes": 13,
+    "functions": 26,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/shared/utils/symbol_mapper.py",
+    "lines": 1156,
+    "classes": 13,
+    "functions": 26,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/learning/learning_updater.py",
+    "lines": 1152,
+    "classes": 7,
+    "functions": 29,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/sre/automation/toil_tracker.py",
+    "lines": 1137,
+    "classes": 8,
+    "functions": 25,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/security/input_validation.py",
+    "lines": 1128,
+    "classes": 8,
+    "functions": 27,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/infrastructure/persistence/database/repositories.py",
+    "lines": 1121,
+    "classes": 14,
+    "functions": 39,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/backtest_optimizer.py",
+    "lines": 1105,
+    "classes": 1,
+    "functions": 10,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/core/auth.py",
+    "lines": 1105,
+    "classes": 10,
+    "functions": 42,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/security/auth.py",
+    "lines": 1105,
+    "classes": 10,
+    "functions": 42,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/portfolio_analytics_service.py",
+    "lines": 1104,
+    "classes": 2,
+    "functions": 47,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/reports/baseline_optimization_reporter.py",
+    "lines": 1103,
+    "classes": 15,
+    "functions": 29,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/robust_engine/robust_backtester.py",
+    "lines": 1095,
+    "classes": 4,
+    "functions": 31,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/optimization/mean_variance_optimizer.py",
+    "lines": 1095,
+    "classes": 10,
+    "functions": 34,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/labeling/bet_sizing.py",
+    "lines": 1091,
+    "classes": 5,
+    "functions": 21,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/labeling/triple_barrier.py",
+    "lines": 1087,
+    "classes": 3,
+    "functions": 22,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/presentation/controllers/momentum.py",
+    "lines": 1086,
+    "classes": 0,
+    "functions": 19,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/walk_forward_validator_enhanced.py",
+    "lines": 1085,
+    "classes": 5,
+    "functions": 19,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/learning/transfer_learning.py",
+    "lines": 1085,
+    "classes": 4,
+    "functions": 30,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/chan_metrics.py",
+    "lines": 1069,
+    "classes": 10,
+    "functions": 51,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/profile_driven_trading/orchestrator.py",
+    "lines": 1067,
+    "classes": 1,
+    "functions": 21,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/shared/config/config_validator.py",
+    "lines": 1058,
+    "classes": 8,
+    "functions": 41,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/models/signal.py",
+    "lines": 1053,
+    "classes": 10,
+    "functions": 43,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/models/signal.py",
+    "lines": 1041,
+    "classes": 10,
+    "functions": 43,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/sre/monitoring/golden_signals.py",
+    "lines": 1041,
+    "classes": 12,
+    "functions": 40,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/market_analysis/microstructure/models.py",
+    "lines": 1036,
+    "classes": 14,
+    "functions": 28,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/lopez_de_prado_metrics.py",
+    "lines": 1032,
+    "classes": 8,
+    "functions": 30,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/market_analysis/microstructure/price_discovery.py",
+    "lines": 1031,
+    "classes": 8,
+    "functions": 24,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/task_queue/persistent_queue.py",
+    "lines": 1031,
+    "classes": 4,
+    "functions": 34,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/api/momentum.py",
+    "lines": 1024,
+    "classes": 0,
+    "functions": 19,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/presentation/api/momentum.py",
+    "lines": 1024,
+    "classes": 0,
+    "functions": 19,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/engines/portfolio_engine/optimizers/__init__.py",
+    "lines": 1009,
+    "classes": 5,
+    "functions": 26,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/presentation/dashboard/report_generator.py",
+    "lines": 1003,
+    "classes": 0,
+    "functions": 33,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/market_analysis/microstructure/liquidity.py",
+    "lines": 1000,
+    "classes": 8,
+    "functions": 22,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/position_monitor/position_monitor.py",
+    "lines": 996,
+    "classes": 4,
+    "functions": 31,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/momentum.py",
+    "lines": 995,
+    "classes": 1,
+    "functions": 17,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/stationarity_analyzer.py",
+    "lines": 989,
+    "classes": 5,
+    "functions": 17,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/market_analysis/microstructure/trading_mechanisms.py",
+    "lines": 985,
+    "classes": 11,
+    "functions": 27,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/live_trading/broker_adapters/alpaca_adapter.py",
+    "lines": 970,
+    "classes": 1,
+    "functions": 28,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/services/metrics/performance_metrics.py",
+    "lines": 964,
+    "classes": 5,
+    "functions": 24,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/execution_algorithms.py",
+    "lines": 956,
+    "classes": 7,
+    "functions": 18,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/simulation/market_mechanics.py",
+    "lines": 943,
+    "classes": 8,
+    "functions": 37,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/core/shadow_mode.py",
+    "lines": 940,
+    "classes": 6,
+    "functions": 16,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/services/shadow_mode.py",
+    "lines": 940,
+    "classes": 6,
+    "functions": 16,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/engines/strategy_engines/arbitrage_engine.py",
+    "lines": 932,
+    "classes": 1,
+    "functions": 18,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/corporate_actions/handler.py",
+    "lines": 932,
+    "classes": 3,
+    "functions": 21,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/risk_management_chan.py",
+    "lines": 931,
+    "classes": 7,
+    "functions": 24,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/simulation/microstructure.py",
+    "lines": 927,
+    "classes": 9,
+    "functions": 26,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/optimization_chan.py",
+    "lines": 918,
+    "classes": 6,
+    "functions": 18,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/engines/standard_engine.py",
+    "lines": 917,
+    "classes": 1,
+    "functions": 22,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/sre/oncall/rotation.py",
+    "lines": 917,
+    "classes": 7,
+    "functions": 27,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/labeling/concurrent_training.py",
+    "lines": 915,
+    "classes": 10,
+    "functions": 22,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/sre/oncall/escalation.py",
+    "lines": 914,
+    "classes": 8,
+    "functions": 32,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/ensemble/pareto.py",
+    "lines": 912,
+    "classes": 2,
+    "functions": 22,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/feature_engineering/fractional_differentiation.py",
+    "lines": 911,
+    "classes": 3,
+    "functions": 23,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/portfolio_optimization/black_litterman_optimizer.py",
+    "lines": 911,
+    "classes": 7,
+    "functions": 20,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/sre/oncall/handoff.py",
+    "lines": 910,
+    "classes": 8,
+    "functions": 22,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/services/metrics/risk_metrics.py",
+    "lines": 903,
+    "classes": 4,
+    "functions": 27,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/market_analysis/microstructure/order_flow.py",
+    "lines": 902,
+    "classes": 9,
+    "functions": 18,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/numba_metrics.py",
+    "lines": 900,
+    "classes": 0,
+    "functions": 24,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/test_summary.py",
+    "lines": 890,
+    "classes": 8,
+    "functions": 15,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/learning/deep_learning_engine.py",
+    "lines": 890,
+    "classes": 8,
+    "functions": 25,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/labeling/bet_sizing_meta.py",
+    "lines": 881,
+    "classes": 8,
+    "functions": 19,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/core/secret_manager.py",
+    "lines": 880,
+    "classes": 7,
+    "functions": 26,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/security/secret_manager.py",
+    "lines": 880,
+    "classes": 7,
+    "functions": 26,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/regime_detection_chan.py",
+    "lines": 877,
+    "classes": 7,
+    "functions": 24,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/engines/risk_engine/stress_testers/advanced_stress_scenarios.py",
+    "lines": 871,
+    "classes": 5,
+    "functions": 20,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/position_sizing_engine.py",
+    "lines": 869,
+    "classes": 5,
+    "functions": 13,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/fx_intermarket_strategy.py",
+    "lines": 864,
+    "classes": 2,
+    "functions": 22,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/shared/utils/decimal_utils.py",
+    "lines": 863,
+    "classes": 9,
+    "functions": 23,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/absolute_return_optimizer.py",
+    "lines": 862,
+    "classes": 11,
+    "functions": 13,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/execution_narang.py",
+    "lines": 861,
+    "classes": 14,
+    "functions": 30,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/sre/error_budgets/slo_tracker.py",
+    "lines": 857,
+    "classes": 7,
+    "functions": 27,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/strategy_stock_allocation/scorers.py",
+    "lines": 855,
+    "classes": 4,
+    "functions": 17,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/api/portfolio.py",
+    "lines": 853,
+    "classes": 2,
+    "functions": 9,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/presentation/api/portfolio.py",
+    "lines": 853,
+    "classes": 2,
+    "functions": 9,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/validation/cross_validation_methods.py",
+    "lines": 852,
+    "classes": 11,
+    "functions": 27,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/sre/alert_fatigue_prevention/alert_fatigue_preventer.py",
+    "lines": 848,
+    "classes": 7,
+    "functions": 23,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/engines/risk_engine/drawdown_controllers/drawdown_controllers.py",
+    "lines": 847,
+    "classes": 4,
+    "functions": 26,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/portfolio_constructor.py",
+    "lines": 839,
+    "classes": 1,
+    "functions": 15,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/market_analysis/microstructure/ofi/models.py",
+    "lines": 826,
+    "classes": 12,
+    "functions": 29,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/live_trading/broker_adapters/ib_adapter.py",
+    "lines": 825,
+    "classes": 5,
+    "functions": 38,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/learning/training_data_preparator.py",
+    "lines": 823,
+    "classes": 1,
+    "functions": 15,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/strategy_registry.py",
+    "lines": 817,
+    "classes": 12,
+    "functions": 38,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/portfolio/multi_asset/multi_asset_portfolio.py",
+    "lines": 817,
+    "classes": 28,
+    "functions": 18,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/profitability_validation_service.py",
+    "lines": 811,
+    "classes": 3,
+    "functions": 25,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/presentation/controllers/live_trading.py",
+    "lines": 809,
+    "classes": 0,
+    "functions": 28,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/api/live_trading.py",
+    "lines": 808,
+    "classes": 0,
+    "functions": 28,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/presentation/api/live_trading.py",
+    "lines": 808,
+    "classes": 0,
+    "functions": 28,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/presentation/api/security.py",
+    "lines": 808,
+    "classes": 4,
+    "functions": 24,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/sre/error_budgets/error_budget_manager.py",
+    "lines": 805,
+    "classes": 8,
+    "functions": 30,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/portfolio/multi_asset/asset_class.py",
+    "lines": 804,
+    "classes": 26,
+    "functions": 32,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/factor_models.py",
+    "lines": 796,
+    "classes": 7,
+    "functions": 19,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/simulation/order_book.py",
+    "lines": 795,
+    "classes": 8,
+    "functions": 35,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/model_selection.py",
+    "lines": 790,
+    "classes": 10,
+    "functions": 17,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/feature_engineering/feature_importance_uniqueness.py",
+    "lines": 790,
+    "classes": 9,
+    "functions": 16,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/validation/bias_variance_analysis.py",
+    "lines": 790,
+    "classes": 7,
+    "functions": 10,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/learning/supervised_learning_engine.py",
+    "lines": 783,
+    "classes": 3,
+    "functions": 19,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/validation/purged_kfold.py",
+    "lines": 782,
+    "classes": 4,
+    "functions": 14,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/forex_risk/hedging_engine.py",
+    "lines": 782,
+    "classes": 6,
+    "functions": 18,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/optimization/bayesian_optimizer.py",
+    "lines": 781,
+    "classes": 4,
+    "functions": 31,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/advanced_visualizations.py",
+    "lines": 779,
+    "classes": 1,
+    "functions": 9,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/backtest_executor.py",
+    "lines": 778,
+    "classes": 1,
+    "functions": 8,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/analysis/vectorization/vectorization_auditor.py",
+    "lines": 777,
+    "classes": 8,
+    "functions": 24,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/engines/strategy_engines/ensemble.py",
+    "lines": 773,
+    "classes": 4,
+    "functions": 24,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/application/services/__init__.py",
+    "lines": 773,
+    "classes": 24,
+    "functions": 38,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/multi_factor_strategy.py",
+    "lines": 772,
+    "classes": 1,
+    "functions": 19,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/sre/dead_mans_switch/dead_mans_switch.py",
+    "lines": 769,
+    "classes": 5,
+    "functions": 29,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/engines/robust_engine.py",
+    "lines": 767,
+    "classes": 4,
+    "functions": 28,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/momentum/indicators/calculator.py",
+    "lines": 765,
+    "classes": 2,
+    "functions": 15,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/factories/__init__.py",
+    "lines": 761,
+    "classes": 7,
+    "functions": 42,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/portfolio_construction_narang.py",
+    "lines": 760,
+    "classes": 7,
+    "functions": 25,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/deploy_decision_orchestrator/deploy_decision_orchestrator.py",
+    "lines": 756,
+    "classes": 1,
+    "functions": 14,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/simulation/exchange.py",
+    "lines": 755,
+    "classes": 7,
+    "functions": 25,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/fifo/modelo_721_generator.py",
+    "lines": 755,
+    "classes": 5,
+    "functions": 14,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/core/audit.py",
+    "lines": 752,
+    "classes": 3,
+    "functions": 20,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/shared/audit.py",
+    "lines": 752,
+    "classes": 3,
+    "functions": 20,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/ensemble/ensemble.py",
+    "lines": 750,
+    "classes": 2,
+    "functions": 22,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/services/indicators/numba_indicators.py",
+    "lines": 750,
+    "classes": 2,
+    "functions": 25,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/portfolio/multi_asset/rebalancer.py",
+    "lines": 747,
+    "classes": 21,
+    "functions": 22,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/sre/canary_deployment/canary_deployment.py",
+    "lines": 747,
+    "classes": 5,
+    "functions": 22,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/security/output_encoding.py",
+    "lines": 746,
+    "classes": 2,
+    "functions": 30,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/profile_driven_trading/profile_strategy_mapper.py",
+    "lines": 746,
+    "classes": 2,
+    "functions": 15,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/cost_analysis_service.py",
+    "lines": 742,
+    "classes": 9,
+    "functions": 14,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/portfolio_optimization/nested_clustered_optimization.py",
+    "lines": 738,
+    "classes": 4,
+    "functions": 16,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/api/capa2_endpoints.py",
+    "lines": 736,
+    "classes": 12,
+    "functions": 14,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/presentation/api/capa2_endpoints.py",
+    "lines": 736,
+    "classes": 12,
+    "functions": 14,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/portfolio/multi_asset/allocation.py",
+    "lines": 735,
+    "classes": 28,
+    "functions": 16,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/engines/data_engine/sources/sentiment_sources.py",
+    "lines": 734,
+    "classes": 3,
+    "functions": 20,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/covered_call_strategy.py",
+    "lines": 734,
+    "classes": 1,
+    "functions": 13,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/engines/portfolio_engine/optimizers/hierarchical_risk_parity.py",
+    "lines": 731,
+    "classes": 3,
+    "functions": 18,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/engines/execution_engine/microstructure/harris_integration.py",
+    "lines": 731,
+    "classes": 5,
+    "functions": 15,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/tax/database/fifo_schema.py",
+    "lines": 728,
+    "classes": 12,
+    "functions": 8,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/trading_error_handler.py",
+    "lines": 727,
+    "classes": 3,
+    "functions": 26,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/analysis/vectorization/patterns.py",
+    "lines": 726,
+    "classes": 2,
+    "functions": 21,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/simulation/trading_costs.py",
+    "lines": 724,
+    "classes": 8,
+    "functions": 17,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/reporting_generator/html_template_engine.py",
+    "lines": 721,
+    "classes": 5,
+    "functions": 20,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/sre/chaos_engine/stress_tester.py",
+    "lines": 720,
+    "classes": 6,
+    "functions": 17,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/presentation/controllers/capa2_endpoints.py",
+    "lines": 718,
+    "classes": 12,
+    "functions": 14,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/shared/config/compliance.py",
+    "lines": 715,
+    "classes": 2,
+    "functions": 4,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/awesome_quant_integrator.py",
+    "lines": 710,
+    "classes": 6,
+    "functions": 10,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/ensemble/strategy_combiner.py",
+    "lines": 710,
+    "classes": 2,
+    "functions": 19,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/live_trading/order_persistence.py",
+    "lines": 710,
+    "classes": 2,
+    "functions": 23,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/market_analysis/microstructure/ofi/ofi_calculator.py",
+    "lines": 708,
+    "classes": 3,
+    "functions": 19,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/live_trading/trading_audit_trail.py",
+    "lines": 708,
+    "classes": 5,
+    "functions": 25,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/report_generator.py",
+    "lines": 706,
+    "classes": 8,
+    "functions": 21,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/labeling/meta_labeling_cv.py",
+    "lines": 705,
+    "classes": 8,
+    "functions": 14,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/reporting_generator/pyfolio_integrator.py",
+    "lines": 704,
+    "classes": 6,
+    "functions": 14,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/analysis/vectorization/benchmark.py",
+    "lines": 703,
+    "classes": 2,
+    "functions": 29,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/rate_limiting/token_bucket.py",
+    "lines": 702,
+    "classes": 7,
+    "functions": 27,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/validation/cross_validation.py",
+    "lines": 701,
+    "classes": 5,
+    "functions": 12,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/engines/strategy_engines/profile_regime_selector.py",
+    "lines": 701,
+    "classes": 4,
+    "functions": 20,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/pairs_trading.py",
+    "lines": 701,
+    "classes": 5,
+    "functions": 14,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/application/scheduling/market_scheduler.py",
+    "lines": 697,
+    "classes": 5,
+    "functions": 22,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/transaction_costs.py",
+    "lines": 697,
+    "classes": 10,
+    "functions": 20,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/scheduling/market_scheduler.py",
+    "lines": 697,
+    "classes": 5,
+    "functions": 22,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/validation/regime_detector.py",
+    "lines": 696,
+    "classes": 2,
+    "functions": 13,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/dividend_strategy.py",
+    "lines": 694,
+    "classes": 1,
+    "functions": 21,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/validation/overfitting_detector.py",
+    "lines": 693,
+    "classes": 2,
+    "functions": 15,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/sre/chaos_engine/chaos_orchestrator.py",
+    "lines": 693,
+    "classes": 4,
+    "functions": 19,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/financial_ml.py",
+    "lines": 688,
+    "classes": 4,
+    "functions": 9,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/capital_tier_strategy_selector.py",
+    "lines": 688,
+    "classes": 7,
+    "functions": 15,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/shared/config/yaml_config_updater.py",
+    "lines": 687,
+    "classes": 1,
+    "functions": 15,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/security/secrets_manager.py",
+    "lines": 685,
+    "classes": 4,
+    "functions": 25,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/market_analysis/microstructure/ofi/ofi_predictor.py",
+    "lines": 685,
+    "classes": 4,
+    "functions": 16,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/forex_risk/tracker.py",
+    "lines": 685,
+    "classes": 3,
+    "functions": 17,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/fx_carry_trade_strategy.py",
+    "lines": 684,
+    "classes": 2,
+    "functions": 16,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/portfolio_risk_manager.py",
+    "lines": 680,
+    "classes": 3,
+    "functions": 22,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/learning/transformer_engine.py",
+    "lines": 676,
+    "classes": 5,
+    "functions": 16,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/bias_correctors.py",
+    "lines": 674,
+    "classes": 6,
+    "functions": 12,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/presentation/dashboard/production_dashboard.py",
+    "lines": 674,
+    "classes": 8,
+    "functions": 29,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/low_volatility_strategy.py",
+    "lines": 673,
+    "classes": 1,
+    "functions": 18,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/backtest_validator.py",
+    "lines": 671,
+    "classes": 1,
+    "functions": 7,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/sre/oncall/dashboard.py",
+    "lines": 671,
+    "classes": 6,
+    "functions": 24,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/ensemble/correlation_analyzer.py",
+    "lines": 669,
+    "classes": 2,
+    "functions": 18,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/alpha_models.py",
+    "lines": 667,
+    "classes": 9,
+    "functions": 20,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/automated_backtest.py",
+    "lines": 666,
+    "classes": 2,
+    "functions": 17,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/optimization/parameter/multi_objective.py",
+    "lines": 666,
+    "classes": 4,
+    "functions": 21,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/feature_engineering/feature_importance.py",
+    "lines": 665,
+    "classes": 8,
+    "functions": 16,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/var_position_limiter.py",
+    "lines": 661,
+    "classes": 4,
+    "functions": 17,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/engines/risk_engine/stress_testers/portfolio_variance_stress.py",
+    "lines": 660,
+    "classes": 1,
+    "functions": 13,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/optimization/parameter/bayesian_optimizer.py",
+    "lines": 660,
+    "classes": 4,
+    "functions": 22,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/robust_engine/corporate_actions.py",
+    "lines": 656,
+    "classes": 2,
+    "functions": 12,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/asset_identification.py",
+    "lines": 653,
+    "classes": 6,
+    "functions": 19,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/risk_scaling/risk_scaling_orchestrator.py",
+    "lines": 651,
+    "classes": 1,
+    "functions": 9,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/validation/cross_sectional_consistency.py",
+    "lines": 650,
+    "classes": 5,
+    "functions": 12,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/fifo/fifo_integrator.py",
+    "lines": 648,
+    "classes": 4,
+    "functions": 14,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/backtest_regime.py",
+    "lines": 647,
+    "classes": 1,
+    "functions": 5,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/labeling/meta_labeling.py",
+    "lines": 647,
+    "classes": 8,
+    "functions": 14,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/dividend_portfolio_constructor.py",
+    "lines": 647,
+    "classes": 4,
+    "functions": 14,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/entities/portfolio.py",
+    "lines": 646,
+    "classes": 2,
+    "functions": 36,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/validation/walk_forward.py",
+    "lines": 645,
+    "classes": 4,
+    "functions": 15,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/meta_analyzer/meta_analyzer.py",
+    "lines": 639,
+    "classes": 1,
+    "functions": 16,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/engines/multi_strategy_engine.py",
+    "lines": 638,
+    "classes": 3,
+    "functions": 16,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/engines/strategy_engines/pairs_engine.py",
+    "lines": 638,
+    "classes": 1,
+    "functions": 17,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/feature_engineering/fracdiff_visualizations.py",
+    "lines": 637,
+    "classes": 0,
+    "functions": 7,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/crypto_momentum_strategy.py",
+    "lines": 637,
+    "classes": 1,
+    "functions": 18,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/engines/portfolio_engine/stability_validator.py",
+    "lines": 635,
+    "classes": 4,
+    "functions": 12,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/parameter_optimization_service.py",
+    "lines": 635,
+    "classes": 2,
+    "functions": 20,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/shared/interfaces/broker_base.py",
+    "lines": 634,
+    "classes": 15,
+    "functions": 31,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/engines/strategy_engines/modular_momentum_engine.py",
+    "lines": 633,
+    "classes": 2,
+    "functions": 13,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/learning/subprocess_engine_wrapper.py",
+    "lines": 633,
+    "classes": 4,
+    "functions": 19,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/learning/reinforcement_learning_engine.py",
+    "lines": 632,
+    "classes": 3,
+    "functions": 19,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/deployment_decision/deployment_decision_orchestrator.py",
+    "lines": 632,
+    "classes": 3,
+    "functions": 17,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/infrastructure/logging/logging_config.py",
+    "lines": 631,
+    "classes": 4,
+    "functions": 14,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/execution/slippage_model.py",
+    "lines": 623,
+    "classes": 6,
+    "functions": 14,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/optimization/grid_search_optimizer.py",
+    "lines": 623,
+    "classes": 2,
+    "functions": 15,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/engines/execution_engine.py",
+    "lines": 622,
+    "classes": 1,
+    "functions": 13,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/entities/order.py",
+    "lines": 622,
+    "classes": 6,
+    "functions": 24,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/paper_trading_service.py",
+    "lines": 621,
+    "classes": 1,
+    "functions": 24,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/robust_engine/look_ahead_validator.py",
+    "lines": 619,
+    "classes": 4,
+    "functions": 10,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/metrics_database/questdb_connector.py",
+    "lines": 618,
+    "classes": 3,
+    "functions": 13,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/execution/transaction_cost.py",
+    "lines": 616,
+    "classes": 7,
+    "functions": 14,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/engines/risk_engine/risk_limits_enforcer.py",
+    "lines": 616,
+    "classes": 6,
+    "functions": 12,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/models.py",
+    "lines": 616,
+    "classes": 10,
+    "functions": 15,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/risk_models_narang.py",
+    "lines": 616,
+    "classes": 9,
+    "functions": 16,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/correlation_analyzer.py",
+    "lines": 615,
+    "classes": 5,
+    "functions": 12,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/reporting_generator/visualization_generator.py",
+    "lines": 614,
+    "classes": 3,
+    "functions": 10,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/backtesting_compliance.py",
+    "lines": 613,
+    "classes": 3,
+    "functions": 10,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/analysis/fundamental_law/fundamental_law.py",
+    "lines": 613,
+    "classes": 1,
+    "functions": 14,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/strategy_stock_allocation/orchestrator.py",
+    "lines": 612,
+    "classes": 4,
+    "functions": 9,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/mean_reversion.py",
+    "lines": 610,
+    "classes": 1,
+    "functions": 13,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/base_engine.py",
+    "lines": 608,
+    "classes": 12,
+    "functions": 25,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/validation/parameter_stability.py",
+    "lines": 607,
+    "classes": 2,
+    "functions": 17,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/live_trading/broker_adapters/alpaca_client.py",
+    "lines": 604,
+    "classes": 2,
+    "functions": 20,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/optimization/hyperparameter_optimizer.py",
+    "lines": 602,
+    "classes": 1,
+    "functions": 11,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/services/trade_executor.py",
+    "lines": 601,
+    "classes": 1,
+    "functions": 8,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/profile_generator/profile_generator.py",
+    "lines": 600,
+    "classes": 1,
+    "functions": 13,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/core/tier_mapper.py",
+    "lines": 598,
+    "classes": 3,
+    "functions": 15,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/shared/utils/tier_mapper.py",
+    "lines": 598,
+    "classes": 3,
+    "functions": 15,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/ensemble/models.py",
+    "lines": 598,
+    "classes": 10,
+    "functions": 16,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/execution/models.py",
+    "lines": 597,
+    "classes": 15,
+    "functions": 27,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/presentation/dashboard/meta_dashboard.py",
+    "lines": 597,
+    "classes": 1,
+    "functions": 16,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/execution/market_impact.py",
+    "lines": 596,
+    "classes": 5,
+    "functions": 12,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/tax/exporters/modelo_721_exporter.py",
+    "lines": 596,
+    "classes": 3,
+    "functions": 13,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/covered_call.py",
+    "lines": 595,
+    "classes": 5,
+    "functions": 19,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/market_analysis/microstructure/ofi/tick_processor.py",
+    "lines": 594,
+    "classes": 5,
+    "functions": 21,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/analysis/fundamental_law/models.py",
+    "lines": 591,
+    "classes": 5,
+    "functions": 12,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/engines/strategy_engines/base.py",
+    "lines": 590,
+    "classes": 1,
+    "functions": 27,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/core/compliance/service_registry.py",
+    "lines": 588,
+    "classes": 1,
+    "functions": 39,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/services/compliance/service_registry.py",
+    "lines": 588,
+    "classes": 1,
+    "functions": 39,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/sre/error_budgets/development_gates.py",
+    "lines": 588,
+    "classes": 6,
+    "functions": 15,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/volatility_calculator.py",
+    "lines": 587,
+    "classes": 2,
+    "functions": 17,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/optimization/parameter/grid_search.py",
+    "lines": 586,
+    "classes": 2,
+    "functions": 12,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/factor_models.py",
+    "lines": 585,
+    "classes": 10,
+    "functions": 20,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/engines/execution_engine/microstructure/adverse_selection_detector.py",
+    "lines": 583,
+    "classes": 6,
+    "functions": 12,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/learning/base_learning_engine.py",
+    "lines": 583,
+    "classes": 4,
+    "functions": 17,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/portfolio_constructor/portfolio_constructor.py",
+    "lines": 583,
+    "classes": 1,
+    "functions": 8,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/dividend_analyzer.py",
+    "lines": 582,
+    "classes": 3,
+    "functions": 19,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/advanced_risk_manager.py",
+    "lines": 582,
+    "classes": 6,
+    "functions": 25,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/statistical_arbitrage.py",
+    "lines": 579,
+    "classes": 5,
+    "functions": 12,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/learning/multitask_learning.py",
+    "lines": 579,
+    "classes": 6,
+    "functions": 15,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/optimization/parameter/base_optimizer.py",
+    "lines": 578,
+    "classes": 8,
+    "functions": 24,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/capital_scale_analyzer.py",
+    "lines": 577,
+    "classes": 3,
+    "functions": 10,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/core/facade.py",
+    "lines": 576,
+    "classes": 5,
+    "functions": 32,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/engines/risk_engine/stress_testers/comprehensive_scenarios.py",
+    "lines": 576,
+    "classes": 1,
+    "functions": 15,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/robust_engine/performance_tracker.py",
+    "lines": 574,
+    "classes": 5,
+    "functions": 13,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/risk_parity.py",
+    "lines": 574,
+    "classes": 2,
+    "functions": 11,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/services/backtesting/backtest_engine.py",
+    "lines": 572,
+    "classes": 7,
+    "functions": 17,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/core/executor.py",
+    "lines": 570,
+    "classes": 11,
+    "functions": 17,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/infrastructure/resilience/rate_limit_governor.py",
+    "lines": 570,
+    "classes": 8,
+    "functions": 29,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/infrastructure/data/feeds.py",
+    "lines": 569,
+    "classes": 4,
+    "functions": 28,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/sre/chaos_engine/hypothesis.py",
+    "lines": 569,
+    "classes": 4,
+    "functions": 16,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/robustness_tester.py",
+    "lines": 568,
+    "classes": 6,
+    "functions": 8,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/reporting_generator/reporting_generator.py",
+    "lines": 568,
+    "classes": 1,
+    "functions": 12,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/dividend_investing.py",
+    "lines": 565,
+    "classes": 4,
+    "functions": 15,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/reporting_generator/quantstats_integrator.py",
+    "lines": 565,
+    "classes": 3,
+    "functions": 18,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/quality_screen.py",
+    "lines": 564,
+    "classes": 4,
+    "functions": 15,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/shared/config/environment_config.py",
+    "lines": 561,
+    "classes": 9,
+    "functions": 24,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/sre/chaos_engine/game_days.py",
+    "lines": 561,
+    "classes": 6,
+    "functions": 16,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/learning/feature_extractor.py",
+    "lines": 560,
+    "classes": 1,
+    "functions": 7,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/position_manager.py",
+    "lines": 558,
+    "classes": 1,
+    "functions": 15,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/advanced_metrics.py",
+    "lines": 557,
+    "classes": 1,
+    "functions": 15,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/engines/data_engine/data_engine.py",
+    "lines": 554,
+    "classes": 1,
+    "functions": 12,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/infrastructure/data/real_market_data.py",
+    "lines": 554,
+    "classes": 1,
+    "functions": 18,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/market_analysis/microstructure/ofi/ofi_signals.py",
+    "lines": 554,
+    "classes": 3,
+    "functions": 14,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/presentation/dashboard/objectives_dashboard.py",
+    "lines": 553,
+    "classes": 0,
+    "functions": 10,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/engines/event_engine/tomasini_event_queue.py",
+    "lines": 551,
+    "classes": 9,
+    "functions": 22,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/low_volatility_anomaly.py",
+    "lines": 550,
+    "classes": 4,
+    "functions": 15,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/infrastructure/persistence/database/models.py",
+    "lines": 549,
+    "classes": 13,
+    "functions": 3,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/engines/execution_engine/microstructure/microstructure_engine.py",
+    "lines": 545,
+    "classes": 5,
+    "functions": 6,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/carver_robust_rules.py",
+    "lines": 545,
+    "classes": 1,
+    "functions": 13,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/live_trading/order_manager.py",
+    "lines": 545,
+    "classes": 3,
+    "functions": 17,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/multi_market_orchestrator.py",
+    "lines": 544,
+    "classes": 6,
+    "functions": 11,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/numba_risk.py",
+    "lines": 542,
+    "classes": 0,
+    "functions": 13,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/market_universe_loader.py",
+    "lines": 542,
+    "classes": 5,
+    "functions": 16,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/application/services/input_profile_router.py",
+    "lines": 540,
+    "classes": 8,
+    "functions": 7,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/robust_engine/survivorship_adjuster.py",
+    "lines": 539,
+    "classes": 2,
+    "functions": 12,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/correlation/analyzer.py",
+    "lines": 538,
+    "classes": 5,
+    "functions": 17,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/insight_generator.py",
+    "lines": 537,
+    "classes": 1,
+    "functions": 8,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/low_beta_screener.py",
+    "lines": 537,
+    "classes": 1,
+    "functions": 14,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/services/portfolio_optimization/mean_variance_optimizer.py",
+    "lines": 536,
+    "classes": 3,
+    "functions": 13,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/alerting_system/notification_channels.py",
+    "lines": 536,
+    "classes": 10,
+    "functions": 11,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/sre/dead_mans_switch/external_monitor.py",
+    "lines": 535,
+    "classes": 4,
+    "functions": 22,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/knowledge_graph/graph_builder.py",
+    "lines": 534,
+    "classes": 1,
+    "functions": 15,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/professional_reporter.py",
+    "lines": 533,
+    "classes": 6,
+    "functions": 13,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/optimization/sensitivity_analyzer.py",
+    "lines": 532,
+    "classes": 3,
+    "functions": 14,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/sre/chaos_engine/failure_injectors.py",
+    "lines": 532,
+    "classes": 11,
+    "functions": 30,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/shared/config/profile_config_loader.py",
+    "lines": 531,
+    "classes": 1,
+    "functions": 40,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/external_integrations/dagster_orchestrator.py",
+    "lines": 531,
+    "classes": 4,
+    "functions": 16,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/live_trading/trading_bridge_orchestrator.py",
+    "lines": 530,
+    "classes": 3,
+    "functions": 12,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/presentation/api/optimization.py",
+    "lines": 529,
+    "classes": 0,
+    "functions": 14,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/security/security_headers.py",
+    "lines": 528,
+    "classes": 6,
+    "functions": 23,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/shared/config/config_loader.py",
+    "lines": 527,
+    "classes": 1,
+    "functions": 18,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/services/indicators/factory.py",
+    "lines": 527,
+    "classes": 4,
+    "functions": 33,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/optimization/robustness_scorer.py",
+    "lines": 524,
+    "classes": 7,
+    "functions": 13,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/execution/order_fill_simulator.py",
+    "lines": 523,
+    "classes": 3,
+    "functions": 9,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/services/signal_generator.py",
+    "lines": 523,
+    "classes": 5,
+    "functions": 13,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/sre/error_budgets/budget_alerts.py",
+    "lines": 523,
+    "classes": 6,
+    "functions": 19,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/engines/risk_engine/alert_system.py",
+    "lines": 522,
+    "classes": 2,
+    "functions": 15,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/optimization/parameter/random_search.py",
+    "lines": 522,
+    "classes": 2,
+    "functions": 16,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/portfolio_service.py",
+    "lines": 522,
+    "classes": 2,
+    "functions": 24,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/engines/data_engine/sources/ohlcv_sources.py",
+    "lines": 520,
+    "classes": 4,
+    "functions": 19,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/data_loader.py",
+    "lines": 519,
+    "classes": 1,
+    "functions": 10,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/meta_analyzer/learning_storage.py",
+    "lines": 519,
+    "classes": 1,
+    "functions": 12,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/services/transaction_cost_model.py",
+    "lines": 519,
+    "classes": 5,
+    "functions": 13,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/sre/reconciliation/boot_reconciler.py",
+    "lines": 519,
+    "classes": 3,
+    "functions": 10,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/clustering_analyzer.py",
+    "lines": 518,
+    "classes": 1,
+    "functions": 10,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/learning/hyperparameter_tuner.py",
+    "lines": 517,
+    "classes": 5,
+    "functions": 23,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/emergency_handler/emergency_closer.py",
+    "lines": 517,
+    "classes": 3,
+    "functions": 17,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/api/signals.py",
+    "lines": 516,
+    "classes": 4,
+    "functions": 10,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/greeks_calculator.py",
+    "lines": 516,
+    "classes": 2,
+    "functions": 12,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/presentation/api/signals.py",
+    "lines": 516,
+    "classes": 4,
+    "functions": 10,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/broker_failover/manager.py",
+    "lines": 515,
+    "classes": 4,
+    "functions": 20,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/risk_scaling_application/realtime_monitor.py",
+    "lines": 515,
+    "classes": 4,
+    "functions": 11,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/live_trading/trade_persistence.py",
+    "lines": 514,
+    "classes": 5,
+    "functions": 18,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/services/circuit_breaker_manager.py",
+    "lines": 513,
+    "classes": 6,
+    "functions": 20,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/engines/strategy_engines/breakout_engine.py",
+    "lines": 510,
+    "classes": 1,
+    "functions": 8,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/application/services/risk_configurator.py",
+    "lines": 510,
+    "classes": 7,
+    "functions": 9,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/services/compliance/compliance_integration.py",
+    "lines": 508,
+    "classes": 6,
+    "functions": 14,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/shared/config/strategy_config_loader.py",
+    "lines": 507,
+    "classes": 2,
+    "functions": 27,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/engines/portfolio_engine/meta_learners/meta_learners.py",
+    "lines": 506,
+    "classes": 5,
+    "functions": 18,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/sre/canary_deployment/canary_analyzer.py",
+    "lines": 506,
+    "classes": 4,
+    "functions": 8,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/backtest_reporter.py",
+    "lines": 505,
+    "classes": 1,
+    "functions": 15,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/seasonality_analyzer.py",
+    "lines": 505,
+    "classes": 1,
+    "functions": 9,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/engines/portfolio_engine/rebalancers/rebalancers.py",
+    "lines": 505,
+    "classes": 6,
+    "functions": 19,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/core/error_handling.py",
+    "lines": 504,
+    "classes": 6,
+    "functions": 13,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/strategies/crypto_indicators.py",
+    "lines": 504,
+    "classes": 2,
+    "functions": 14,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/api/portfolio_analytics.py",
+    "lines": 503,
+    "classes": 10,
+    "functions": 10,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/presentation/api/portfolio_analytics.py",
+    "lines": 503,
+    "classes": 10,
+    "functions": 10,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/repositories/unit_of_work.py",
+    "lines": 502,
+    "classes": 10,
+    "functions": 38,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/portfolio/multi_asset/models.py",
+    "lines": 502,
+    "classes": 21,
+    "functions": 20,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/backtesting/realistic_data_generator.py",
+    "lines": 501,
+    "classes": 5,
+    "functions": 5,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/engines/execution_engine/microstructure/tick_size_constraints.py",
+    "lines": 501,
+    "classes": 3,
+    "functions": 12,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/models/momentum.py",
+    "lines": 501,
+    "classes": 9,
+    "functions": 24,
+    "issue": "Too large"
+  },
+  {
+    "file": "app/domain/optimization/parameter/trial.py",
+    "lines": 498,
+    "classes": 3,
+    "functions": 32,
+    "issue": "Too many functions"
+  },
+  {
+    "file": "app/domain/services/backtesting/transaction_costs.py",
+    "lines": 488,
+    "classes": 13,
+    "functions": 17,
+    "issue": "Too many classes"
+  },
+  {
+    "file": "app/backtesting/config_loader.py",
+    "lines": 470,
+    "classes": 15,
+    "functions": 26,
+    "issue": "Too many classes"
+  },
+  {
+    "file": "app/domain/services/backtesting/market_impact.py",
+    "lines": 468,
+    "classes": 11,
+    "functions": 14,
+    "issue": "Too many classes"
+  },
+  {
+    "file": "app/domain/models/portfolio_analytics.py",
+    "lines": 461,
+    "classes": 11,
+    "functions": 11,
+    "issue": "Too many classes"
+  },
+  {
+    "file": "app/models/portfolio_analytics.py",
+    "lines": 445,
+    "classes": 11,
+    "functions": 11,
+    "issue": "Too many classes"
+  },
+  {
+    "file": "app/services/metrics_database/models.py",
+    "lines": 434,
+    "classes": 14,
+    "functions": 14,
+    "issue": "Too many classes"
+  },
+  {
+    "file": "app/domain/contracts.py",
+    "lines": 426,
+    "classes": 11,
+    "functions": 26,
+    "issue": "Too many classes"
+  },
+  {
+    "file": "app/models/portfolio.py",
+    "lines": 420,
+    "classes": 14,
+    "functions": 31,
+    "issue": "Too many classes"
+  },
+  {
+    "file": "app/domain/models/portfolio.py",
+    "lines": 420,
+    "classes": 14,
+    "functions": 31,
+    "issue": "Too many classes"
+  },
+  {
+    "file": "app/backtesting/robust_engine/models.py",
+    "lines": 417,
+    "classes": 15,
+    "functions": 11,
+    "issue": "Too many classes"
+  },
+  {
+    "file": "app/services/risk_scaling/models.py",
+    "lines": 407,
+    "classes": 12,
+    "functions": 4,
+    "issue": "Too many classes"
+  },
+  {
+    "file": "app/services/error_handling/error_handler.py",
+    "lines": 397,
+    "classes": 13,
+    "functions": 27,
+    "issue": "Too many classes"
+  },
+  {
+    "file": "app/backtesting/execution/backtest_config_loader.py",
+    "lines": 374,
+    "classes": 11,
+    "functions": 10,
+    "issue": "Too many classes"
+  },
+  {
+    "file": "app/shared/exceptions/trading_exceptions.py",
+    "lines": 374,
+    "classes": 18,
+    "functions": 17,
+    "issue": "Too many classes"
+  },
+  {
+    "file": "app/backtesting/validation/models.py",
+    "lines": 371,
+    "classes": 13,
+    "functions": 8,
+    "issue": "Too many classes"
+  },
+  {
+    "file": "app/domain/models/optimization.py",
+    "lines": 345,
+    "classes": 15,
+    "functions": 9,
+    "issue": "Too many classes"
+  },
+  {
+    "file": "app/domain/services/compliance/protocols.py",
+    "lines": 341,
+    "classes": 12,
+    "functions": 14,
+    "issue": "Too many classes"
+  },
+  {
+    "file": "app/domain/models/assets.py",
+    "lines": 340,
+    "classes": 13,
+    "functions": 16,
+    "issue": "Too many classes"
+  },
+  {
+    "file": "app/services/alerting_system/models.py",
+    "lines": 315,
+    "classes": 13,
+    "functions": 9,
+    "issue": "Too many classes"
+  },
+  {
+    "file": "app/services/momentum/protocols.py",
+    "lines": 280,
+    "classes": 6,
+    "functions": 39,
+    "issue": "Too many functions"
+  },
+  {
+    "file": "app/infrastructure/persistence/database/models/__init__.py",
+    "lines": 269,
+    "classes": 14,
+    "functions": 3,
+    "issue": "Too many classes"
+  },
+  {
+    "file": "app/services/xai/models.py",
+    "lines": 247,
+    "classes": 18,
+    "functions": 2,
+    "issue": "Too many classes"
+  },
+  {
+    "file": "app/domain/models/profitability_validation.py",
+    "lines": 239,
+    "classes": 11,
+    "functions": 7,
+    "issue": "Too many classes"
+  },
+  {
+    "file": "app/domain/value_objects/percentage.py",
+    "lines": 211,
+    "classes": 2,
+    "functions": 32,
+    "issue": "Too many functions"
+  },
+  {
+    "file": "app/domain/value_objects/symbol.py",
+    "lines": 189,
+    "classes": 11,
+    "functions": 19,
+    "issue": "Too many classes"
+  },
+  {
+    "file": "app/shared/exceptions/exceptions.py",
+    "lines": 143,
+    "classes": 12,
+    "functions": 8,
+    "issue": "Too many classes"
+  }
+]

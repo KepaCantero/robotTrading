@@ -406,7 +406,7 @@ class CryptoDataFetcher:
         Returns:
             Fallback price in USD
         """
-        from app.core.centralized_config import get_config
+        from app.shared.config.centralized_config import get_config
 
         # Try to get from config first
         config = get_config()
