@@ -1,12 +1,12 @@
 """
 Core utilities for the algoTrading application.
 
-This package provides common utilities used across the application:
-- SubsystemConfigFactory: Factory for creating default subsystem configurations
-- safe_parse: Safe parsing utilities for external data
+This package provides common utilities used across the application.
+DEPRECATED: Import directly from app.shared.utils instead.
 """
 
-from app.core.utils.subsystem_config_factory import (
+# Re-export from shared/utils for backward compatibility
+from app.shared.utils.subsystem_config_factory import (
     SubsystemConfigFactory,
     get_subsystem_config_factory,
 )

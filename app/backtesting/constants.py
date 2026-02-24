@@ -2,7 +2,7 @@
 Backtesting Constants Configuration
 
 DEPRECATED: This file is now a thin wrapper around CentralizedConfig.
-All values are now managed in app/core/centralized_config.py::BacktestingConfig.
+All values are now managed in app/shared/config/centralized_config.py::BacktestingConfig.
 
 This file remains for backwards compatibility only.
 New code should use:
@@ -29,7 +29,7 @@ from app.shared.config.centralized_config import get_config, BacktestingConfig
 
 warnings.warn(
     "app.backtesting.constants is deprecated. "
-    "Use app.core.centralized_config.get_config().backtesting instead.",
+    "Use app.shared.config.centralized_config.get_config().backtesting instead.",
     DeprecationWarning,
     stacklevel=2
 )

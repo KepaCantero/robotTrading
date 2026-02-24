@@ -12,7 +12,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 from app.models.portfolio import (
     AssetClass,
     AssetUniverse,

@@ -560,8 +560,8 @@ ralph run .ralph/ralph_tasks/00_master_orchestrator.yml
 
 ---
 
-**Última actualización:** 2026-02-21
-**Estado:** ✅ Inventario completo - 22 tareas YAML creadas
+**Última actualización:** 2026-02-22
+**Estado:** ✅ Inventario completo - 23 tareas YAML creadas
 
 ---
 
@@ -611,6 +611,70 @@ Lograr metricas aceptables para que el profile investor sea APPROVED:
 ### Ejecucion
 ```bash
 ralph run .ralph/ralph_tasks/23_profile_backtest_metrics_fix.yml
+```
+
+---
+
+## 🔍 TAREA 24: Auditoría Estructural Completa (NUEVA - 2026-02-22)
+
+**Archivo:** `24_structural_audit.yml`
+**Estado:** ✅ CREADO
+**Prioridad:** P0 - CRITICO
+**Horas:** 20-25h
+**Depends on:** Ninguna (independiente)
+
+### Objetivo
+Auditoría estructural profunda del directorio `app/` evaluando:
+
+1. **Lógica Duplicada**
+   - Funciones/bloques con misma lógica
+   - Duplicaciones implícitas
+   - Clasificación: exacta, parcial, conceptual
+
+2. **Archivos Duplicados o Solapados**
+   - Archivos que hacen lo mismo
+   - Responsabilidades mal separadas
+   - Módulos "shadow"
+
+3. **Configuración Centralizada**
+   - Constantes centralizadas
+   - Valores hardcodeados
+
+4. **Reutilización de Librerías**
+   - Uso de STL/numpy/pandas/scipy
+   - Reinventar la rueda
+
+5. **Coherencia Arquitectónica**
+   - Separación de capas
+   - Dependencias circulares
+   - Principio SRP
+
+### HATS (6 fases)
+1. **discovery_scanner** - Cataloga estructura de archivos
+2. **duplication_detector** - Detecta lógica duplicada y archivos solapados
+3. **config_auditor** - Audita configuración centralizada
+4. **library_analyzer** - Detecta reinventos y uso de librerías
+5. **architecture_analyzer** - Analiza coherencia arquitectónica
+6. **final_reporter** - Genera reporte consolidado
+
+### Salida Esperada
+- `.ralph/outputs/STRUCTURE_STATS.json` - Estadísticas base
+- `.ralph/outputs/DUPLICATION_REPORT.json` - Duplicaciones
+- `.ralph/outputs/CONFIG_AUDIT_REPORT.json` - Config audit
+- `.ralph/outputs/LIBRARY_AUDIT_REPORT.json` - Library audit
+- `.ralph/outputs/ARCHITECTURE_AUDIT_REPORT.json` - Architecture audit
+- `.ralph/outputs/STRUCTURAL_AUDIT_FINAL_REPORT.json` - Reporte final
+- `.ralph/outputs/TASK24_EXECUTIVE_SUMMARY.md` - Resumen ejecutivo
+
+### Severidades
+- **CRITICAL**: Dependencias circulares, valores hardcodeados en trading
+- **HIGH**: Duplicaciones parciales, implementaciones manuales
+- **MEDIUM**: Duplicaciones conceptuales, imports innecesarios
+- **LOW**: Inconsistencias de estilo
+
+### Ejecucion
+```bash
+ralph run .ralph/ralph_tasks/24_structural_audit.yml
 ```
 
 ---

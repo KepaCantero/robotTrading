@@ -12,7 +12,7 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 from app.models.market_data import Quote
 from app.models.order import Order
 from app.models.paper_trading import (

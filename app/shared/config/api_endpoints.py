@@ -5,7 +5,7 @@ Centralizes all external API URLs to avoid hardcoding.
 Load from environment variables with sensible defaults.
 
 Usage:
-    from app.presentation.api.api_endpoints import APIEndpoints
+    from app.shared.config.api_endpoints import APIEndpoints
 
     url = APIEndpoints.ALPACA_PAPER
     url = APIEndpoints.get_yahoo_finance_url(symbol)

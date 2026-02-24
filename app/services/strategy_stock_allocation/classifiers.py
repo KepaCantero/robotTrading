@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 if TYPE_CHECKING:
-    from app.core.centralized_config import StockAllocationSettings
+    from app.shared.config.centralized_config import StockAllocationSettings
 
 from .calculators import HurstCalculator
 

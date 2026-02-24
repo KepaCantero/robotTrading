@@ -16,31 +16,31 @@ if TYPE_CHECKING:
 
 # Import config for default values (avoid circular import)
 def _get_default_commission() -> Decimal:
-    from app.core.centralized_config import get_config
+    from app.shared.config.centralized_config import get_config
     return Decimal("0.001")  # 0.1% default commission
 
 def _get_default_slippage() -> Decimal:
-    from app.core.centralized_config import get_config
+    from app.shared.config.centralized_config import get_config
     tt = get_config().trading_thresholds
     return tt.base_slippage / Decimal("100")  # Convert % to decimal
 
 def _get_default_stop_loss() -> Decimal:
-    from app.core.centralized_config import get_config
+    from app.shared.config.centralized_config import get_config
     tt = get_config().trading_thresholds
     return Decimal(str(tt.stop_loss_pct))
 
 def _get_default_take_profit() -> Decimal:
-    from app.core.centralized_config import get_config
+    from app.shared.config.centralized_config import get_config
     tt = get_config().trading_thresholds
     return Decimal(str(tt.take_profit_pct))
 
 def _get_default_max_loss() -> Decimal:
-    from app.core.centralized_config import get_config
+    from app.shared.config.centralized_config import get_config
     tt = get_config().trading_thresholds
     return Decimal(str(tt.circuit_breaker_daily_loss))
 
 def _get_default_position_size() -> Decimal:
-    from app.core.centralized_config import get_config
+    from app.shared.config.centralized_config import get_config
     tt = get_config().trading_thresholds
     return Decimal(str(tt.max_position_size))
 

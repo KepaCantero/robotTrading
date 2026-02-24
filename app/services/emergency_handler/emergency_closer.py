@@ -21,7 +21,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 from requests.exceptions import HTTPError
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 from app.core.timezone_utils import utc_now
 
 logger = logging.getLogger(__name__)

@@ -16,7 +16,7 @@ import logging
 from decimal import Decimal
 from typing import Dict, List, Optional
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 from app.core.decimal_utils import to_decimal
 
 from .base import TaxEngine

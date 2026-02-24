@@ -1,0 +1,46 @@
+app/backtesting/labeling/bet_sizing.py:880:    # Portfolio volatility = sqrt(sum(w_i^2 * vol_i^2))
+app/backtesting/execution/market_impact.py:447:                    X2 = float(volatility) * math.sqrt(participation_rate)  # Temporary: vol * sqrt(order_size / adv)
+app/backtesting/services/transaction_cost_model.py:391:            * Decimal(str(math.sqrt(float(participation_rate))))
+app/backtesting/services/performance_calculator.py:200:        std_dev = Decimal(str(math.sqrt(float(variance))))
+app/backtesting/services/performance_calculator.py:211:        annual_std = std_dev * Decimal(str(math.sqrt(252)))
+app/simulation/microstructure.py:452:            bid_hhi = sum((d / total_bid_vol) ** 2 for d in bid_depths) if total_bid_vol > 0 else 0
+app/simulation/microstructure.py:458:            ask_hhi = sum((d / total_ask_vol) ** 2 for d in ask_depths) if total_ask_vol > 0 else 0
+app/shared/utils/decimal_utils.py:567:    Replaces manual sum((x - mean)**2) / n calculations.
+app/shared/utils/decimal_utils.py:607:    Replaces manual variance**0.5 or math.sqrt(variance) calculations.
+app/shared/utils/decimal_utils.py:629:        # Fallback to math.sqrt for very old Python versions
+app/shared/utils/decimal_utils.py:630:        return Decimal(str(math.sqrt(float(variance_val))))
+app/shared/utils/decimal_utils.py:640:    Replaces manual value**0.5 or math.sqrt(value) for Decimals.
+app/shared/utils/decimal_utils.py:665:        return Decimal(str(math.sqrt(float(decimal_value))))
+app/shared/utils/decimal_utils.py:837:    sqrt_days = safe_decimal_sqrt(trading_days) or Decimal(str(math.sqrt(trading_days)))
+app/shared/performance/statsmodels_fallback.py:520:                nobs * (nobs + 2) * sum(ac**2 / (nobs - k) for k, ac in enumerate(autocorrs, 1))
+app/shared/performance/statsmodels_fallback.py:537:                bp_stat = nobs * sum(ac**2 for ac in autocorrs)
+app/engines/risk_engine/exposure_managers/exposure_managers.py:347:        herfindahl_index = sum(w**2 for w in weights)
+app/domain/analysis/fundamental_law/models.py:420:        sqrt_value = Decimal(str(math.sqrt(float(self.effective_breadth))))
+app/domain/analysis/fundamental_law/fundamental_law.py:393:        sqrt_value = Decimal(str(math.sqrt(float(breadth))))
+app/domain/analysis/fundamental_law/breadth_calculator.py:445:        breadth_sqrt = Decimal(str(math.sqrt(float(effective_breadth))))
+app/domain/strategies/models.py:588:        hhi = sum(pos.weight**2 for pos in self.positions)
+app/domain/strategies/greeks_calculator.py:46:    SQRT_2_PI = math.sqrt(2 * math.pi)
+app/domain/strategies/greeks_calculator.py:47:    SQRT_2 = math.sqrt(2)
+app/domain/strategies/greeks_calculator.py:170:        d2 = d1 - sigma * math.sqrt(T)
+app/domain/strategies/greeks_calculator.py:181:            gamma = (math.exp(-q * T) * N_prime_d1) / (S * sigma * math.sqrt(T))
+app/domain/strategies/greeks_calculator.py:183:                S * math.exp(-q * T) * N_prime_d1 * math.sqrt(T)
+app/domain/strategies/greeks_calculator.py:187:            theta_numerator = -(S * math.exp(-q * T) * N_prime_d1 * sigma) / (2 * math.sqrt(T))
+app/domain/strategies/greeks_calculator.py:219:        denominator = sigma * math.sqrt(T)
+app/domain/strategies/greeks_calculator.py:365:        d2 = d1 - sigma * math.sqrt(T)
+app/domain/trading/market_making/avellaneda_stoikov/as_model.py:377:    risk = abs_inventory * price * volatility * math.sqrt(time_years) * risk_multiplier
+app/presentation/dashboard/multi_strategy_utils.py:124:    summary += f"- **Total Initial Capital**: ${combined.get('total_initial_capital', 0):,.2f}\n"
+app/presentation/dashboard/multi_strategy_utils.py:125:    summary += f"- **Total Final Capital**: ${combined.get('total_final_capital', 0):,.2f}\n"
+app/presentation/dashboard/multi_strategy_utils.py:126:    summary += f"- **Total Return**: {combined.get('total_return', 0):.2f}%\n"
+app/presentation/dashboard/multi_strategy_utils.py:129:    summary += f"- **Weighted Max Drawdown**: {combined.get('weighted_max_dd', 0):.2f}%\n\n"
+app/presentation/dashboard/multi_strategy_utils.py:167:        summary += f"- **Best Performer**: {best[0]} ({best[1].get('total_return', 0):.2f}%)\n"
+app/presentation/dashboard/multi_strategy_utils.py:168:        summary += f"- **Worst Performer**: {worst[0]} ({worst[1].get('total_return', 0):.2f}%)\n"
+app/presentation/dashboard/multi_strategy_utils.py:169:        summary += f"- **Performance Variance**: {best[1].get('total_return', 0) - worst[1].get('total_return', 0):.2f}%\n"
+app/presentation/dashboard/multi_strategy_utils.py:180:            summary += "- **Risk Profile**: Conservative (max_pair_exposure: 20%, max_total_exposure: 40%)\n"
+app/presentation/dashboard/multi_strategy_utils.py:183:            summary += f"- **PnL**: ${result.get('final_capital', 0) - result.get('initial_capital', 0):,.2f}\n"
+app/presentation/dashboard/multi_strategy_utils.py:193:            summary += f"- **PnL**: ${result.get('final_capital', 0) - result.get('initial_capital', 0):,.2f}\n"
+app/presentation/dashboard/multi_strategy_utils.py:203:            summary += f"- **PnL**: ${result.get('final_capital', 0) - result.get('initial_capital', 0):,.2f}\n"
+app/services/portfolio_analytics_service.py:571:        variance = sum((r - mean_return) ** 2 for r in returns) / (len(returns) - 1)
+app/services/portfolio_analytics_service.py:808:        herfindahl = sum(w**2 for w in weights)
+app/services/capacity_fade_validation/capacity_fade_validator.py:7:Uses sqrt(capacity) model with liquidity constraints and conservative assumptions.
+app/services/risk_scaling/sharpe_ratio_monitor.py:124:        annualized_sharpe = daily_sharpe * Decimal(str(math.sqrt(annual_trading_days)))
+app/services/awesome_quant/talib_wrapper.py:310:            variance = sum((p - mean) ** 2 for p in window) / period

@@ -15,15 +15,15 @@ if TYPE_CHECKING:
 
 # Helper functions to get defaults from centralized config
 def _get_default_max_position_size() -> Decimal:
-    from app.core.centralized_config import get_config
+    from app.shared.config.centralized_config import get_config
     return Decimal(str(get_config().trading_thresholds.max_position_size))
 
 def _get_default_stop_loss() -> Decimal:
-    from app.core.centralized_config import get_config
+    from app.shared.config.centralized_config import get_config
     return Decimal(str(get_config().trading_thresholds.stop_loss_pct))
 
 def _get_default_take_profit() -> Decimal:
-    from app.core.centralized_config import get_config
+    from app.shared.config.centralized_config import get_config
     return Decimal(str(get_config().trading_thresholds.take_profit_pct))
 
 

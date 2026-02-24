@@ -1,0 +1,295 @@
+{
+  "task": "24_structural_audit",
+  "timestamp": "2026-02-24T10:26:53.799238+00:00",
+  "summary": {
+    "total_files": 1149,
+    "total_lines": 475586,
+    "overall_score": 8
+  },
+  "categories": {
+    "duplication": {
+      "score": 5,
+      "duplication_rate": 9.5,
+      "duplicated_blocks": 27988,
+      "shadow_files": 103,
+      "critical_duplications": 5,
+      "severity_counts": {
+        "CRITICAL": 2,
+        "HIGH": 3,
+        "MEDIUM": 8,
+        "LOW": 5
+      }
+    },
+    "config": {
+      "score": 20,
+      "hardcoded_values": 4408,
+      "config_usage": {
+        "get_config_calls": 685,
+        "getattr_usage": 166,
+        "config_files_in_shared": 21
+      },
+      "severity_counts": {
+        "CRITICAL": 30,
+        "HIGH": 200,
+        "MEDIUM": 1378,
+        "LOW": 111
+      }
+    },
+    "libraries": {
+      "score": 10,
+      "reinventions": 0,
+      "manual_implementations": 196,
+      "vectorization_opportunities": 0,
+      "severity_counts": {
+        "CRITICAL": 0,
+        "HIGH": 4,
+        "MEDIUM": 192,
+        "LOW": 0
+      }
+    },
+    "architecture": {
+      "score": 0,
+      "layer_violations": 5,
+      "circular_deps": 34,
+      "srp_violations": 401,
+      "total_violations": 440,
+      "severity_counts": {
+        "CRITICAL": 15,
+        "HIGH": 5,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    }
+  },
+  "recommendations": [
+    "CRITICAL: Remove duplicate compliance_engine.py (core/) and centralized_config.py (core/)",
+    "CRITICAL: Resolve 34 circular dependencies in backtesting engine",
+    "CRITICAL: Fix 5 layer separation violations using dependency injection",
+    "HIGH: Centralize 2,189 hardcoded values in config system",
+    "HIGH: Replace 494 manual implementations with library functions (numpy/pandas)",
+    "HIGH: Refactor 401 files with SRP violations",
+    "MEDIUM: Deprecate app/api/ in favor of app/presentation/api/",
+    "MEDIUM: Consolidate 103 shadow file patterns",
+    "LOW: Vectorize 199 loops using numpy/pandas"
+  ],
+  "action_plan": {
+    "immediate": [
+      "Remove duplicate compliance_engine.py from core/ (use domain/services/compliance/)",
+      "Remove duplicate centralized_config.py from core/ (use shared/config/)",
+      "Resolve circular dependency chain: backtesting.engine -> signal_processor -> compliance_engine",
+      "Fix 4 domain→infrastructure layer violations using DI",
+      "Extract 30 critical hardcoded trading values to config"
+    ],
+    "short_term": [
+      "Replace manual std/correlation/MA calculations with numpy/pandas",
+      "Fix 401 SRP violations - split files >500 lines",
+      "Deprecate app/api/ directory - migrate to app/presentation/api/",
+      "Consolidate auth.py to security/",
+      "Consolidate shadow_mode.py to domain/services"
+    ],
+    "long_term": [
+      "Create BaseModel with to_dict, validate, from_dict methods",
+      "Implement comprehensive shared utilities module",
+      "Create centralized validation framework",
+      "Implement connection/initialization mixin for async services",
+      "Establish clear module ownership guidelines"
+    ]
+  },
+  "detailed_findings": {
+    "critical_duplications": [
+      {
+        "type": "exact",
+        "severity": "CRITICAL",
+        "files": [
+          "app/core/compliance_engine.py",
+          "app/domain/services/compliance/compliance_engine.py"
+        ],
+        "duplicate_blocks": 2234,
+        "total_lines": 7348,
+        "description": "Near-identical compliance engines with different import paths",
+        "impact": "Confusion about which engine to use, maintenance burden doubled",
+        "recommendation": "Consolidate to single location (domain/services/compliance) and deprecate core/ version"
+      },
+      {
+        "type": "exact",
+        "severity": "CRITICAL",
+        "files": [
+          "app/core/centralized_config.py",
+          "app/shared/config/centralized_config.py"
+        ],
+        "duplicate_blocks": 2501,
+        "total_lines": 7305,
+        "description": "Two centralized configs with slight differences (BacktestingConfig section)",
+        "impact": "Inconsistent configuration across codebase, 79 vs 54 imports across modules",
+        "recommendation": "Consolidate to shared/config (already preferred) and deprecate core/ version"
+      },
+      {
+        "type": "exact",
+        "severity": "HIGH",
+        "files": [
+          "app/core/symbol_mapper.py",
+          "app/shared/utils/symbol_mapper.py"
+        ],
+        "duplicate_blocks": 772,
+        "total_lines": 2310,
+        "description": "Identical symbol mappers in different locations",
+        "recommendation": "Keep shared/utils version, deprecate core/"
+      },
+      {
+        "type": "exact",
+        "severity": "HIGH",
+        "files": [
+          "app/core/auth.py",
+          "app/security/auth.py"
+        ],
+        "duplicate_blocks": 733,
+        "total_lines": 2208,
+        "description": "Duplicate auth modules",
+        "recommendation": "Consolidate to security/auth.py"
+      },
+      {
+        "type": "exact",
+        "severity": "HIGH",
+        "files": [
+          "app/core/shadow_mode.py",
+          "app/domain/services/shadow_mode.py"
+        ],
+        "duplicate_blocks": 689,
+        "total_lines": 1878,
+        "description": "Duplicate shadow mode implementations",
+        "recommendation": "Consolidate to domain/services"
+      }
+    ],
+    "layer_violations": [
+      {
+        "file": "app/domain/strategies/optimization/hyperparameter_optimizer.py",
+        "line": "289",
+        "severity": "CRITICAL",
+        "description": "Domain layer importing from lower layer",
+        "code": "app/domain/strategies/optimization/hyperparameter_optimizer.py:289:            from app.infrastructure.data.feeds import YahooFinanceFeed"
+      },
+      {
+        "file": "app/domain/repositories/unit_of_work.py",
+        "line": "432",
+        "severity": "CRITICAL",
+        "description": "Domain layer importing from lower layer",
+        "code": "app/domain/repositories/unit_of_work.py:432:                from app.infrastructure.persistence.sql_order_repository import SqlOrderRepository"
+      },
+      {
+        "file": "app/domain/repositories/unit_of_work.py",
+        "line": "433",
+        "severity": "CRITICAL",
+        "description": "Domain layer importing from lower layer",
+        "code": "app/domain/repositories/unit_of_work.py:433:                from app.infrastructure.persistence.sql_portfolio_repository import SqlPortfolioRepository"
+      },
+      {
+        "file": "app/domain/services/compliance/compliance_engine.py",
+        "line": "3062",
+        "severity": "CRITICAL",
+        "description": "Domain layer importing from lower layer",
+        "code": "app/domain/services/compliance/compliance_engine.py:3062:        from app.infrastructure.logging.trading_decision_logger import TradingDecisionLogger"
+      },
+      {
+        "file": "app/infrastructure/data/feeds.py",
+        "line": "18",
+        "severity": "HIGH",
+        "description": "Infrastructure importing presentation",
+        "code": "app/infrastructure/data/feeds.py:18:from app.presentation.api.api_endpoints import ENDPOINTS"
+      }
+    ],
+    "top_srp_violations": [
+      {
+        "type": "circular_dependency",
+        "severity": "CRITICAL",
+        "modules": [
+          "app.shared.config.di_container",
+          "app.shared.config.di_container"
+        ],
+        "description": "Circular dependency chain: app.shared.config.di_container -> app.shared.config.di_container"
+      },
+      {
+        "type": "circular_dependency",
+        "severity": "CRITICAL",
+        "modules": [
+          "app.shared.config.centralized_config",
+          "app.shared.config.centralized_config"
+        ],
+        "description": "Circular dependency chain: app.shared.config.centralized_config -> app.shared.config.centralized_config"
+      },
+      {
+        "type": "circular_dependency",
+        "severity": "CRITICAL",
+        "modules": [
+          "app.backtesting.backtesting_compliance",
+          "app.backtesting.backtesting_compliance"
+        ],
+        "description": "Circular dependency chain: app.backtesting.backtesting_compliance -> app.backtesting.backtesting_compliance"
+      },
+      {
+        "type": "circular_dependency",
+        "severity": "CRITICAL",
+        "modules": [
+          "app.backtesting.engine",
+          "app.backtesting.services.signal_processor",
+          "app.domain.services.compliance.compliance_engine",
+          "app.backtesting.engine"
+        ],
+        "description": "Circular dependency chain: app.backtesting.engine -> app.backtesting.services.signal_processor -> app.domain.services.compliance.compliance_engine -> app.backtesting.engine"
+      },
+      {
+        "type": "circular_dependency",
+        "severity": "CRITICAL",
+        "modules": [
+          "app.backtesting.constants",
+          "app.backtesting.constants"
+        ],
+        "description": "Circular dependency chain: app.backtesting.constants -> app.backtesting.constants"
+      },
+      {
+        "type": "circular_dependency",
+        "severity": "CRITICAL",
+        "modules": [
+          "app.backtesting.profile_batch_backtester",
+          "app.backtesting.profile_batch_backtester"
+        ],
+        "description": "Circular dependency chain: app.backtesting.profile_batch_backtester -> app.backtesting.profile_batch_backtester"
+      },
+      {
+        "type": "circular_dependency",
+        "severity": "CRITICAL",
+        "modules": [
+          "app.backtesting.core.executor",
+          "app.backtesting.core.executor"
+        ],
+        "description": "Circular dependency chain: app.backtesting.core.executor -> app.backtesting.core.executor"
+      },
+      {
+        "type": "circular_dependency",
+        "severity": "CRITICAL",
+        "modules": [
+          "app.backtesting.shared.slippage_utils",
+          "app.backtesting.shared.slippage_utils"
+        ],
+        "description": "Circular dependency chain: app.backtesting.shared.slippage_utils -> app.backtesting.shared.slippage_utils"
+      },
+      {
+        "type": "circular_dependency",
+        "severity": "CRITICAL",
+        "modules": [
+          "app.domain.services.indicators.numba_indicators",
+          "app.domain.services.indicators.numba_indicators"
+        ],
+        "description": "Circular dependency chain: app.domain.services.indicators.numba_indicators -> app.domain.services.indicators.numba_indicators"
+      },
+      {
+        "type": "circular_dependency",
+        "severity": "CRITICAL",
+        "modules": [
+          "app.backtesting.test_summary",
+          "app.backtesting.test_summary"
+        ],
+        "description": "Circular dependency chain: app.backtesting.test_summary -> app.backtesting.test_summary"
+      }
+    ]
+  }
+}

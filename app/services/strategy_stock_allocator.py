@@ -27,7 +27,7 @@ from pydantic import BaseModel, Field
 from scipy import stats
 from scipy.optimize import minimize
 
-from app.core.centralized_config import StockAllocationSettings
+from app.shared.config.centralized_config import StockAllocationSettings
 from app.services.momentum_analysis import TechnicalIndicatorCalculator
 
 logger = logging.getLogger(__name__)
@@ -1291,7 +1291,7 @@ class StrategyStockAllocator:
         # Try to get configured pairs from strategy config first
         configured_pairs_to_evaluate = []
         try:
-            from app.core.centralized_config import get_config
+            from app.shared.config.centralized_config import get_config
 
             config = get_config()
             pairs_strategy_config = config.get_strategy_config("pairs_trading")

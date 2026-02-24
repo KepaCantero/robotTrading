@@ -19,7 +19,7 @@ from typing import Any, Optional
 import pandas as pd
 from pydantic import BaseModel, Field
 
-from app.core.centralized_config import StockAllocationSettings
+from app.shared.config.centralized_config import StockAllocationSettings
 from app.services.momentum_analysis import TechnicalIndicatorCalculator
 
 from .allocators import ERCCapitalAllocator

@@ -1,0 +1,15 @@
+duration_seconds: 2.772305
+end_date: '2021-12-31'
+final_capital: 100479.10300398733
+initial_capital: 100000.0
+losing_trades: 0
+max_drawdown: -108.195285744
+max_drawdown_pct: -0.108195285744
+sharpe_ratio: 0
+start_date: '2021-01-01'
+symbol: AAPL
+total_return: 0.47910300398733086
+total_return_pct: 47.910300398733085
+total_trades: 1
+win_rate: 100.0
+winning_trades: 1

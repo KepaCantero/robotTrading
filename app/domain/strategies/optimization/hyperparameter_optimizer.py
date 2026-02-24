@@ -38,6 +38,7 @@ class HyperparameterOptimizer:
         initial_capital: Decimal = Decimal("100000"),
         optimization_metric: str = "sharpe_ratio",  # "sharpe_ratio", "total_pnl", "win_rate"
         optimization_method: str = "grid_search",  # "grid_search", "random_search", "bayesian"
+        data_feed_provider: Optional[Any] = None,
     ):
         """
         Inicializar optimizador.
@@ -49,6 +50,7 @@ class HyperparameterOptimizer:
             initial_capital: Capital inicial
             optimization_metric: Métrica a optimizar ("sharpe_ratio", "total_pnl", "win_rate")
             optimization_method: Método de optimización ("grid_search", "random_search", "bayesian")
+            data_feed_provider: Optional injected data feed provider (for DI/testing)
         """
         self.symbol = symbol
         self.start_date = start_date
@@ -56,6 +58,7 @@ class HyperparameterOptimizer:
         self.initial_capital = initial_capital
         self.optimization_metric = optimization_metric
         self.optimization_method = optimization_method
+        self._data_feed_provider = data_feed_provider
 
         self.results: List[Dict[str, Any]] = []
         self.best_config: Optional[Dict[str, Any]] = None
@@ -285,17 +288,20 @@ class HyperparameterOptimizer:
             # Crear estrategia
             strategy = ModularMomentumStrategy(strategy_config)
 
-            # Cargar datos históricos
-            from app.infrastructure.data.feeds import YahooFinanceFeed
-            from app.domain.models.market_data import DataFeedConfig, DataFeedType
+            # Use injected data feed provider or create default (late import for DI)
+            if self._data_feed_provider is not None:
+                provider = self._data_feed_provider
+            else:
+                from app.infrastructure.data.feeds import YahooFinanceFeed
+                from app.domain.models.market_data import DataFeedConfig, DataFeedType
 
-            config = DataFeedConfig(
-                feed_type=DataFeedType.YAHOO_FINANCE,
-                api_key="",
-                rate_limit=5,
-                timeout_seconds=30,
-            )
-            provider = YahooFinanceFeed(config)
+                feed_config = DataFeedConfig(
+                    feed_type=DataFeedType.YAHOO_FINANCE,
+                    api_key="",
+                    rate_limit=5,
+                    timeout_seconds=30,
+                )
+                provider = YahooFinanceFeed(feed_config)
             # Run async method in sync context
             import asyncio
 

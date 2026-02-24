@@ -22,7 +22,7 @@ def _get_default_max_position_size() -> Decimal:
     return Decimal("5.0")  # 5% of portfolio
 
 def _get_default_max_daily_loss() -> Decimal:
-    from app.core.centralized_config import get_config
+    from app.shared.config.centralized_config import get_config
     return Decimal(str(get_config().trading_thresholds.circuit_breaker_daily_loss))
 
 def _get_default_max_concentration() -> Decimal:

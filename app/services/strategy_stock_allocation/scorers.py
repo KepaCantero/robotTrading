@@ -15,7 +15,7 @@ import pandas as pd
 from scipy import stats
 
 if TYPE_CHECKING:
-    from app.core.centralized_config import StockAllocationSettings
+    from app.shared.config.centralized_config import StockAllocationSettings
 
 from .calculators import HalfLifeCalculator, HurstCalculator
 
@@ -829,7 +829,7 @@ class WCMScoreCalculator:
     ) -> list[tuple[str, str]]:
         """Get configured pairs from strategy config."""
         try:
-            from app.core.centralized_config import get_config
+            from app.shared.config.centralized_config import get_config
 
             config_obj = get_config()
             pairs_strategy_config = config_obj.get_strategy_config("pairs_trading")

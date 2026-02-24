@@ -21,8 +21,8 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
-from app.core.compliance.results import PostTradeCheckResult
-from app.core.compliance.service_registry import get_service_registry
+from app.domain.services.compliance.results import PostTradeCheckResult
+from app.domain.services.compliance.service_registry import get_service_registry
 
 logger = logging.getLogger(__name__)
 

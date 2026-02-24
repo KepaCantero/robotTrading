@@ -18,7 +18,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, Optional
 
-from app.core.models.investment_profile import CapitalTier, InvestmentProfile
+from app.domain.models.investment_profile import CapitalTier, InvestmentProfile
 
 logger = logging.getLogger(__name__)
 

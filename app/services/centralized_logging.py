@@ -14,7 +14,7 @@ from functools import wraps
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 
 
 class LogLevel(Enum):

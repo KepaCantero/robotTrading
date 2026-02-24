@@ -32,7 +32,7 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import List, Optional, Tuple
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 from app.services.account_configuration import AccountConfiguration, AccountTier
 from app.services.capital_tier_strategy_selector import RiskProfile
 

@@ -17,7 +17,7 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
-from ...core.config_loader import YAMLConfigLoader
+from .config_loader import YAMLConfigLoader
 
 logger = logging.getLogger(__name__)
 
