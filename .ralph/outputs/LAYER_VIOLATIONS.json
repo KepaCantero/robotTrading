@@ -1,0 +1,26 @@
+[
+  {
+    "file": "app/domain/strategies/optimization/hyperparameter_optimizer.py",
+    "line": 295,
+    "code": "from app.infrastructure.data.feeds import YahooFinanceFeed",
+    "type": "domain_imports_infrastructure"
+  },
+  {
+    "file": "app/domain/repositories/unit_of_work.py",
+    "line": 432,
+    "code": "from app.infrastructure.persistence.sql_order_repository import SqlOrderRepository",
+    "type": "domain_imports_infrastructure"
+  },
+  {
+    "file": "app/domain/repositories/unit_of_work.py",
+    "line": 433,
+    "code": "from app.infrastructure.persistence.sql_portfolio_repository import SqlPortfolioRepository",
+    "type": "domain_imports_infrastructure"
+  },
+  {
+    "file": "app/domain/services/compliance/compliance_engine.py",
+    "line": 3070,
+    "code": "from app.infrastructure.logging.trading_decision_logger import TradingDecisionLogger",
+    "type": "domain_imports_infrastructure"
+  }
+]
