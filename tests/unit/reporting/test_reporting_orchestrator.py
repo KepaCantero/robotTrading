@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from app.services.reporting.reporting_orchestrator import (
+from app.application.reporting.reporting_orchestrator import (
     ReportingOrchestrator,
     get_reporting_orchestrator,
 )

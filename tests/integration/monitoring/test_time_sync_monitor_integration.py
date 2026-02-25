@@ -9,7 +9,7 @@ from datetime import datetime
 
 import pytest
 
-from app.services.monitoring.time_sync_monitor import (
+from app.infrastructure.monitoring.time_sync_monitor import (
     TimeSyncConfig,
     TimeSyncMonitor,
     get_time_sync_monitor,

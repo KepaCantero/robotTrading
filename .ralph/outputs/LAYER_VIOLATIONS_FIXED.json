@@ -1,0 +1,31 @@
+{
+  "timestamp": "2026-02-25T06:30:00Z",
+  "phase": "layer_violation_detection",
+  "findings": {
+    "domain_imports_infrastructure": {
+      "count": 3,
+      "files_analyzed": [
+        "app/domain/repositories/unit_of_work.py",
+        "app/domain/strategies/optimization/hyperparameter_optimizer.py",
+        "app/domain/services/compliance/compliance_engine.py"
+      ],
+      "notes": "All 3 use late imports (inside functions) which is the recommended pattern for dependency injection. No changes needed."
+    },
+    "infrastructure_imports_presentation": {
+      "count": 0,
+      "files_analyzed": [],
+      "notes": "No violations detected."
+    }
+  },
+  "actions_taken": {
+    "files_modified": 0,
+    "imports_converted_to_late": 0,
+    "rationale": "All existing late imports follow best practices for DI. No modifications required."
+  },
+  "summary": {
+    "total_violations_found": 3,
+    "violations_already_mitigated": 3,
+    "new_fixes_applied": 0,
+    "status": "complete"
+  }
+}

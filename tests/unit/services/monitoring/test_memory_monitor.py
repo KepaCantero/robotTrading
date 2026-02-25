@@ -11,7 +11,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from app.services.monitoring.memory_monitor import (
+from app.infrastructure.monitoring.memory_monitor import (
     MemoryAction,
     MemoryConfig,
     MemoryMonitor,

@@ -10,7 +10,7 @@ from datetime import date, time
 
 import pytest
 
-from app.services.scheduling import MarketScheduler, MarketStatus, MarketType
+from app.application.scheduling import MarketScheduler, MarketStatus, MarketType
 
 
 class TestMarketSchedulerIntegration:

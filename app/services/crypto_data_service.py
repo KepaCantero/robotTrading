@@ -17,7 +17,7 @@ from typing import Any, Dict, List, Optional
 
 from requests.exceptions import HTTPError, RequestException
 
-from app.core.reconnection_manager import ReconnectionConfig, ReconnectionManager
+from app.infrastructure.resilience.reconnection_manager import ReconnectionConfig, ReconnectionManager
 from app.core.timezone_utils import utc_now
 
 logger = logging.getLogger(__name__)

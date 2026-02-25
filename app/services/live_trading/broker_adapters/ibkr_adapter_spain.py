@@ -22,7 +22,7 @@ from typing import Any, Dict, Optional
 from ib_insync import IB, LimitOrder, MarketOrder, StopOrder, util
 from ib_insync.contract import Contract as IBContract, Stock
 
-from app.core.reconnection_manager import ReconnectionConfig, ReconnectionManager
+from app.infrastructure.resilience.reconnection_manager import ReconnectionConfig, ReconnectionManager
 from app.core.protocols import IBrokerAdapter
 from .currency_converter import CurrencyConverter, get_currency_converter
 from .ibex35_contracts import create_stock_contract, is_ibex35_symbol

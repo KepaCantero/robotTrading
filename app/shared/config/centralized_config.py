@@ -115,6 +115,20 @@ class TradingThresholds(BaseModel):
     )
     base_slippage: Decimal = Field(default=Decimal("0.1"), description="Base slippage rate (%)")
 
+    # Default spreads by asset class (TASK-24: Extracted from hardcoded values)
+    default_crypto_spread: Decimal = Field(
+        default=Decimal("0.0001"), description="Default spread for crypto assets (1 bps)"
+    )
+    default_forex_spread: Decimal = Field(
+        default=Decimal("0.0001"), description="Default spread for forex pairs (1 bps)"
+    )
+    default_stock_spread: Decimal = Field(
+        default=Decimal("0.01"), description="Default spread for stocks (1%)"
+    )
+    default_etf_spread: Decimal = Field(
+        default=Decimal("0.01"), description="Default spread for ETFs (1%)"
+    )
+
     # Additional thresholds for momentum analysis
     min_strength: float = Field(
         default=60.0, description="Minimum strength threshold for momentum analysis"

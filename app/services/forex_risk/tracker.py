@@ -20,7 +20,7 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
 from app.shared.utils.decimal_utils import calculate_percentage, safe_decimal_divide, to_decimal
-from app.core.timezone_utils import utc_now
+from app.shared.utils.timezone_utils import utc_now
 from app.domain.models.portfolio import Portfolio, Position
 
 logger = logging.getLogger(__name__)

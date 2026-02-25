@@ -1,0 +1,266 @@
+{
+  "generated_at": "2026-02-25T08:45:00Z",
+  "task": "Task 24 - SRP Violations Refactor Plan",
+  "summary": {
+    "total_large_files": 20,
+    "total_lines_to_refactor": 34781,
+    "priority_high": 4,
+    "priority_medium": 8,
+    "priority_low": 8,
+    "completed_refactors": 1
+  },
+  "files": [
+    {
+      "path": "app/backtesting/comprehensive_backtest_runner.py",
+      "lines_original": 4688,
+      "lines_current": 4521,
+      "status": "PARTIALLY_REFACTORED",
+      "priority": "HIGH",
+      "extracted_modules": [
+        {
+          "new_file": "app/backtesting/runners/regime_analyzer.py",
+          "description": "Market regime detection and analysis",
+          "lines": 180,
+          "status": "COMPLETED"
+        },
+        {
+          "new_file": "app/backtesting/runners/monte_carlo_simulator.py",
+          "description": "Monte Carlo simulation for stress testing",
+          "lines": 200,
+          "status": "COMPLETED"
+        },
+        {
+          "new_file": "app/backtesting/runners/result_aggregator.py",
+          "description": "Result aggregation and persistence",
+          "lines": 250,
+          "status": "COMPLETED"
+        }
+      ],
+      "remaining_splits": [
+        {
+          "new_file": "app/backtesting/runners/transformer_optimizer.py",
+          "description": "Transformer optimization methods",
+          "estimated_lines": 500
+        },
+        {
+          "new_file": "app/backtesting/runners/walk_forward_runner.py",
+          "description": "Walk-forward backtest logic",
+          "estimated_lines": 600
+        }
+      ]
+    },
+    {
+      "path": "app/shared/config/centralized_config.py",
+      "lines": 3831,
+      "priority": "HIGH",
+      "status": "PLANNED",
+      "recommended_splits": [
+        {
+          "new_file": "app/shared/config/params/trading_thresholds.py",
+          "description": "TradingThresholds class (lines 55-1166)",
+          "estimated_lines": 1100,
+          "classes": ["TradingThresholds"]
+        },
+        {
+          "new_file": "app/shared/config/params/strategy_config.py",
+          "description": "StrategyConfig and StockAllocationSettings",
+          "estimated_lines": 450,
+          "classes": ["StrategyConfig", "StockAllocationSettings"]
+        },
+        {
+          "new_file": "app/shared/config/params/backtest_config.py",
+          "description": "BacktestingConfig and CommissionModels",
+          "estimated_lines": 350,
+          "classes": ["BacktestingConfig", "CommissionModel", "FixedCommission", "HybridCommission", "TieredCommission"]
+        },
+        {
+          "new_file": "app/shared/config/params/infrastructure_config.py",
+          "description": "DatabaseConfig, RedisConfig, APIConfig",
+          "estimated_lines": 200,
+          "classes": ["DatabaseConfig", "RedisConfig", "APIConfig"]
+        },
+        {
+          "new_file": "app/shared/config/params/risk_config.py",
+          "description": "CurrencyHedgingConfig, ComplianceConfig, etc.",
+          "estimated_lines": 600,
+          "classes": ["CurrencyHedgingConfig", "SectorCountryDiversificationConfig", "ComplianceConfig"]
+        }
+      ]
+    },
+    {
+      "path": "app/domain/services/compliance/compliance_engine.py",
+      "lines": 3683,
+      "priority": "HIGH",
+      "status": "PLANNED",
+      "recommended_splits": [
+        {
+          "new_file": "app/domain/services/compliance/pre_trade_check.py",
+          "description": "Pre-trade compliance checks",
+          "estimated_lines": 500
+        },
+        {
+          "new_file": "app/domain/services/compliance/post_trade_analysis.py",
+          "description": "Post-trade analysis and reporting",
+          "estimated_lines": 600
+        },
+        {
+          "new_file": "app/domain/services/compliance/position_limits.py",
+          "description": "Position limit enforcement",
+          "estimated_lines": 400
+        },
+        {
+          "new_file": "app/domain/services/compliance/risk_breach_detector.py",
+          "description": "Risk breach detection and handling",
+          "estimated_lines": 500
+        },
+        {
+          "new_file": "app/domain/services/compliance/compliance_rules.py",
+          "description": "Compliance rule definitions",
+          "estimated_lines": 600
+        },
+        {
+          "new_file": "app/domain/services/compliance/compliance_reporter.py",
+          "description": "Compliance reporting and audit trail",
+          "estimated_lines": 400
+        }
+      ]
+    },
+    {
+      "path": "app/presentation/dashboard/advanced_dashboard.py",
+      "lines": 2612,
+      "priority": "HIGH",
+      "status": "PLANNED",
+      "recommended_splits": [
+        {
+          "new_file": "app/presentation/dashboard/components/performance_panel.py",
+          "description": "Performance metrics panel",
+          "estimated_lines": 400
+        },
+        {
+          "new_file": "app/presentation/dashboard/components/risk_panel.py",
+          "description": "Risk metrics panel",
+          "estimated_lines": 400
+        },
+        {
+          "new_file": "app/presentation/dashboard/components/trade_panel.py",
+          "description": "Trade execution panel",
+          "estimated_lines": 400
+        },
+        {
+          "new_file": "app/presentation/dashboard/components/chart_panel.py",
+          "description": "Charting and visualization panel",
+          "estimated_lines": 500
+        },
+        {
+          "new_file": "app/presentation/dashboard/components/alert_panel.py",
+          "description": "Alert and notification panel",
+          "estimated_lines": 300
+        }
+      ]
+    },
+    {
+      "path": "app/application/use_cases/select_strategy.py",
+      "lines": 2300,
+      "priority": "MEDIUM",
+      "status": "PLANNED",
+      "recommended_splits": [
+        {
+          "new_file": "app/application/use_cases/strategy_scorer.py",
+          "description": "Strategy scoring logic",
+          "estimated_lines": 500
+        },
+        {
+          "new_file": "app/application/use_cases/strategy_ranker.py",
+          "description": "Strategy ranking logic",
+          "estimated_lines": 400
+        },
+        {
+          "new_file": "app/application/use_cases/strategy_selector_config.py",
+          "description": "Configuration for strategy selection",
+          "estimated_lines": 300
+        }
+      ]
+    },
+    {
+      "path": "app/domain/strategies/learning/drift_detector.py",
+      "lines": 2163,
+      "priority": "MEDIUM",
+      "status": "PLANNED",
+      "recommended_splits": [
+        {
+          "new_file": "app/domain/strategies/learning/drift_statistics.py",
+          "description": "Drift statistics calculations",
+          "estimated_lines": 400
+        },
+        {
+          "new_file": "app/domain/strategies/learning/drift_alerts.py",
+          "description": "Drift alert generation",
+          "estimated_lines": 300
+        },
+        {
+          "new_file": "app/domain/strategies/learning/drift_visualization.py",
+          "description": "Drift visualization helpers",
+          "estimated_lines": 400
+        }
+      ]
+    },
+    {
+      "path": "app/services/strategy_stock_allocator.py",
+      "lines": 2099,
+      "priority": "MEDIUM",
+      "status": "PLANNED",
+      "note": "Consider consolidating with existing allocators"
+    },
+    {
+      "path": "app/domain/strategies/learning/feature_importance.py",
+      "lines": 1994,
+      "priority": "MEDIUM",
+      "status": "PLANNED",
+      "recommended_splits": [
+        {
+          "new_file": "app/domain/strategies/learning/feature_calculators.py",
+          "description": "Feature calculation functions",
+          "estimated_lines": 500
+        },
+        {
+          "new_file": "app/domain/strategies/learning/feature_selectors.py",
+          "description": "Feature selection logic",
+          "estimated_lines": 400
+        }
+      ]
+    },
+    {
+      "path": "app/shared/config/trading_config.py",
+      "lines": 1826,
+      "priority": "MEDIUM",
+      "status": "PLANNED",
+      "note": "Partially addressed by centralized_config split"
+    },
+    {
+      "path": "app/backtesting/walk_forward_validator.py",
+      "lines": 1704,
+      "priority": "MEDIUM",
+      "status": "PLANNED",
+      "recommended_splits": [
+        {
+          "new_file": "app/backtesting/validation/split_generator.py",
+          "description": "Train/test split generation",
+          "estimated_lines": 300
+        },
+        {
+          "new_file": "app/backtesting/validation/stability_checker.py",
+          "description": "Stability checking logic",
+          "estimated_lines": 400
+        }
+      ]
+    }
+  ],
+  "implementation_notes": [
+    "HIGH priority files should be refactored first as they have the most impact",
+    "Each split should maintain backward compatibility via __init__.py re-exports",
+    "Test coverage should be maintained or improved during refactoring",
+    "Consider using late imports for circular dependency prevention",
+    "Run full test suite after each file is refactored",
+    "comprehensive_backtest_runner.py: 3 modules extracted (regime_analyzer, monte_carlo_simulator, result_aggregator)"
+  ]
+}

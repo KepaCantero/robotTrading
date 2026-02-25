@@ -21,7 +21,7 @@ from app.shared.config.config_loader import (
     get_config_loader,
     load_strategy_stock_allocator_config,
 )
-from app.core.timezone_utils import (
+from app.shared.utils.timezone_utils import (
     format_market_time,
     format_utc,
     get_market_open_close_time,

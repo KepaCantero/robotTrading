@@ -7,7 +7,7 @@ Tests for compliance service registry.
 
 import threading
 
-from app.core.compliance.service_registry import (
+from app.domain.services.compliance.service_registry import (
     ComplianceServiceRegistry,
     get_service,
     get_service_registry,

@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from app.core.reconnection_manager import ReconnectionConfig, ReconnectionManager, ReconnectionStats
+from app.infrastructure.resilience.reconnection_manager import ReconnectionConfig, ReconnectionManager, ReconnectionStats
 
 
 class TestReconnectionConfig:

@@ -15,7 +15,7 @@ from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
 
 from app.shared.config.centralized_config import get_config
-from app.core.timezone_utils import utc_now
+from app.shared.utils.timezone_utils import utc_now
 
 logger = logging.getLogger(__name__)
 

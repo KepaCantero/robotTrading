@@ -8,7 +8,7 @@ from decimal import Decimal
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from app.services.execution.trading_bridge_adapter import (
+from app.domain.services.execution.trading_bridge_adapter import (
     TradingBridgeAdapter,
     get_trading_bridge_adapter,
 )

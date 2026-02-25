@@ -23,7 +23,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional, Tuple
 
-from app.core.timezone_utils import utc_now
+from app.shared.utils.timezone_utils import utc_now
 
 logger = logging.getLogger(__name__)
 
