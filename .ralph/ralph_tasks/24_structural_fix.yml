@@ -1,25 +1,27 @@
 # ============================================
 # Ralph Task 24: Reparacion Estructural Automatica - app/
 # ============================================
-# VERSION: 2.0 - DETECTA Y ARREGLA AUTOMATICAMENTE
+# VERSION: 4.0 - MAXIMA CALIDAD - ARREGLA TODO
 # PRIORIDAD: P0 (CRITICO)
-# TIEMPO: ~30-40 horas
+# TIEMPO: ~50-80 horas (completo)
 # DEPENDS ON: Ninguna (independiente)
 #
-# OBJETIVO: REPARACION ESTRUCTURAL AUTOMATICA
-# - DETECTAR y ELIMINAR archivos duplicados
+# OBJETIVO: REPARACION ESTRUCTURAL COMPLETA
+# - DETECTAR y ELIMINAR archivos duplicados (MD5 verificado)
 # - DETECTAR y CONSOLIDAR imports
 # - DETECTAR y EXTRAER valores hardcodeados a config
 # - DETECTAR y CORREGIR violaciones de arquitectura
+# - EXTRAER clases de archivos grandes (SRP)
+# - VALIDAR imports post-extraccion
 # - Generar codigo limpio y mantenible
 # ============================================================================
 
 event_loop:
   prompt_file: ".ralph/ralph_tasks/prompts/24_structural_fix.md"
   completion_promise: "STRUCTURAL_FIX_COMPLETE"
-  max_iterations: 5000
-  max_runtime_seconds: 360000  # 100 hours max
-  checkpoint_interval: 5
+  max_iterations: 10000
+  max_runtime_seconds: 720000  # 200 hours max
+  checkpoint_interval: 1        # Guardar en cada iteracion
   starting_event: "structural_fix.start"
   checkpoint_file: ".ralph/checkpoints/24_structural_fix_checkpoint.json"
 
@@ -120,13 +122,21 @@ hats:
     instructions: |
       ## DUPLICATION DETECTOR
 
-      **OBJECTIVE:** Encontrar archivos duplicados exactos (mismo nombre, mismo tamano)
+      **OBJECTIVE:** Encontrar archivos duplicados exactos (mismo nombre, mismo hash MD5)
 
       ```bash
       # Encontrar shadow files (mismo nombre, diferente ruta)
       python3 << 'PYEOF'
-      import os, json
+      import os, json, hashlib
       from collections import defaultdict
+
+      def get_file_hash(filepath):
+          """Calculate MD5 hash of file for exact duplicate detection."""
+          try:
+              with open(filepath, 'rb') as f:
+                  return hashlib.md5(f.read()).hexdigest()
+          except:
+              return None
 
       by_name = defaultdict(list)
       for root, dirs, files in os.walk("app"):
@@ -136,24 +146,28 @@ hats:
                   path = os.path.join(root, f)
                   try:
                       size = os.path.getsize(path)
-                      by_name[f].append({"path": path, "size": size})
+                      file_hash = get_file_hash(path)
+                      by_name[f].append({"path": path, "size": size, "hash": file_hash})
                   except: pass
 
-      # Encontrar duplicados exactos (mismo tamano)
+      # Encontrar duplicados exactos (mismo tamano Y mismo hash MD5)
       duplicates = []
       for name, paths in by_name.items():
           if len(paths) > 1:
               sizes = [p["size"] for p in paths]
-              if len(set(sizes)) == 1:  # Todos mismo tamano
-                  duplicates.append({
-                      "name": name,
-                      "paths": [p["path"] for p in paths],
-                      "size": paths[0]["size"]
-                  })
+              if len(set(sizes)) == 1:  # Mismo tamano
+                  hashes = [p["hash"] for p in paths if p["hash"]]
+                  if len(hashes) > 1 and len(set(hashes)) == 1:  # Mismo hash MD5
+                      duplicates.append({
+                          "name": name,
+                          "paths": [p["path"] for p in paths],
+                          "size": paths[0]["size"],
+                          "hash": hashes[0]
+                      })
 
       with open("{{OUTPUT_DIR}}/DUPLICATE_FILES.json", "w") as f:
           json.dump(duplicates, f, indent=2)
-      print(f"Found {len(duplicates)} duplicate file sets")
+      print(f"Found {len(duplicates)} duplicate file sets (verified by MD5)")
       PYEOF
       ```
 
@@ -708,9 +722,14 @@ hats:
     publishes: ["structural_fix.srp_checked", "structural_fix.blocked"]
 
     instructions: |
-      ## SRP VIOLATIONS DETECTOR
+      ## SRP VIOLATIONS DETECTOR - MAXIMA CALIDAD
 
-      **OBJECTIVE:** Detectar archivos demasiado grandes o con demasiadas responsabilidades
+      **OBJECTIVE:** Detectar TODOS los archivos que podrian beneficiarse de refactoring
+
+      ### Umbrales BAJOS para atrapar TODO:
+      - Lineas: > 300 (era 500)
+      - Clases: > 5 (era 10)
+      - Funciones: > 20 (era 30)
 
       ```python
       import os, json
@@ -728,22 +747,28 @@ hats:
                           functions = content.count("\ndef ")
                           lines = len(content.split('\n'))
 
-                          if lines > 500 or classes > 10 or functions > 30:
+                          # UMBRALES BAJOS para MAXIMA CALIDAD
+                          if lines > 300 or classes > 5 or functions > 20:
                               large_files.append({
                                   "file": filepath,
                                   "lines": lines,
                                   "classes": classes,
                                   "functions": functions,
-                                  "severity": "CRITICAL" if lines > 2000 else "HIGH" if lines > 1000 else "MEDIUM"
+                                  "severity": "CRITICAL" if lines > 1500 else "HIGH" if lines > 800 else "MEDIUM" if lines > 400 else "LOW"
                               })
                   except: pass
 
       # Ordenar por severidad y tamano
-      large_files.sort(key=lambda x: -x["lines"])
+      severity_order = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}
+      large_files.sort(key=lambda x: (severity_order.get(x["severity"], 4), -x["lines"]))
 
       with open("{{OUTPUT_DIR}}/SRP_VIOLATIONS.json", "w") as f:
           json.dump(large_files, f, indent=2)
-      print(f"Found {len(large_files)} SRP violations")
+      print(f"Found {len(large_files)} SRP violations (max quality mode)")
+      print(f"  CRITICAL: {sum(1 for f in large_files if f['severity']=='CRITICAL')}")
+      print(f"  HIGH: {sum(1 for f in large_files if f['severity']=='HIGH')}")
+      print(f"  MEDIUM: {sum(1 for f in large_files if f['severity']=='MEDIUM')}")
+      print(f"  LOW: {sum(1 for f in large_files if f['severity']=='LOW')}")
       ```
 
       ### Event:
@@ -753,226 +778,965 @@ hats:
 
   srp_fixer:
     name: "SRP Violations Fixer"
-    description: "Divide archivos grandes en modulos mas pequenos"
+    description: "Divide archivos grandes en modulos mas pequenos EXTRAYENDO CLASES COMPLETAS"
     triggers: ["structural_fix.srp_checked"]
     publishes: ["structural_fix.srp_fixed", "structural_fix.blocked"]
 
     instructions: |
-      ## SRP VIOLATIONS FIXER - AUTO SPLIT
+      ## SRP VIOLATIONS FIXER - AUTO EXTRACT CLASSES
 
-      **OBJECTIVE:** Dividir archivos grandes extrayendo clases a archivos separados
+      **CRITICAL:** DEBES EXTRAER CLASES COMPLETAS A ARCHIVOS NUEVOS, NO SOLO GENERAR PLANES
 
-      ### Acciones AUTOMATICAS:
-      1. Leer archivo grande
-      2. Extraer cada clase completa (con todos sus metodos)
-      3. Crear archivo nuevo para cada clase
-      4. Agregar imports necesarios al nuevo archivo
-      5. Actualizar archivo original para importar desde nuevos archivos
-      6. Actualizar __init__.py para re-exportar
+      ### Archivos PRIORITARIOS a refactorear:
+      1. `app/shared/config/centralized_config.py` (3831 lineas) - Extraer: TradingThresholds, StrategyConfig, StockAllocationSettings, BacktestingConfig, DatabaseConfig, RedisConfig, APIConfig, LoggingConfig, MonitoringConfig, CurrencyHedgingConfig, SectorCountryDiversificationConfig, ComplianceConfig
+      2. `app/domain/services/compliance/compliance_engine.py` (3683 lineas) - Extraer cada clase de compliance
+      3. `app/presentation/dashboard/advanced_dashboard.py` (2612 lineas) - Extraer componentes
+
+      ### Pasos OBLIGATORIOS:
+
+      **PASO 1: Crear directorio params/ para centralized_config**
+      ```bash
+      mkdir -p app/shared/config/params
+      touch app/shared/config/params/__init__.py
+      ```
+
+      **PASO 2: Extraer cada clase a su propio archivo**
+
+      Para centralized_config.py:
+      - TradingThresholds (lineas ~55-1158) -> params/trading_thresholds.py
+      - StrategyConfig (lineas ~1167-1218) -> params/strategy_config.py
+      - StockAllocationSettings (lineas ~1219-1622) -> params/strategy_config.py
+      - BacktestingConfig (lineas ~1660-1945) -> params/backtest_config.py
+      - DatabaseConfig, RedisConfig, APIConfig -> params/infrastructure_config.py
+      - LoggingConfig, MonitoringConfig -> params/infrastructure_config.py
+      - CurrencyHedgingConfig, ComplianceConfig -> params/risk_config.py
+
+      **PASO 3: Crear cada archivo con la clase extraida**
+
+      Ejemplo para trading_thresholds.py:
+      ```python
+      """
+      Trading Thresholds Configuration
+      Extracted from centralized_config.py for SRP compliance.
+      """
+      import logging
+      from decimal import Decimal
+      from typing import Dict
+      from pydantic import BaseModel, Field, field_validator
+
+      logger = logging.getLogger(__name__)
+
+      class TradingThresholds(BaseModel):
+          """Centralized trading thresholds."""
+          # ... todos los campos y validadores ...
+      ```
+
+      **PASO 4: Actualizar centralized_config.py para importar desde params/**
+      ```python
+      # SRP: Import extracted configuration modules
+      from app.shared.config.params.trading_thresholds import TradingThresholds
+      from app.shared.config.params.strategy_config import StrategyConfig, StockAllocationSettings
+      from app.shared.config.params.backtest_config import BacktestingConfig, CommissionModel
+      from app.shared.config.params.infrastructure_config import DatabaseConfig, RedisConfig, APIConfig
+      from app.shared.config.params.risk_config import CurrencyHedgingConfig, ComplianceConfig
+      ```
+
+      **PASO 5: Actualizar __init__.py de params/ para re-exportar**
+      ```python
+      from app.shared.config.params.trading_thresholds import TradingThresholds
+      from app.shared.config.params.strategy_config import StrategyConfig, StockAllocationSettings
+      # ... etc
+
+      __all__ = ["TradingThresholds", "StrategyConfig", "StockAllocationSettings", ...]
+      ```
+
+      **PASO 6: Para compliance_engine.py - crear subdirectorio y extraer**
+
+      ```bash
+      # Identificar clases en compliance_engine.py
+      grep -n "^class " app/domain/services/compliance/compliance_engine.py
+
+      # Crear archivos separados para cada clase grande
+      # Ejemplo: pre_trade_checker.py, position_limiter.py, risk_breach_detector.py
+      ```
+
+      **IMPLEMENTACION AUTOMATICA:**
 
       ```python
-      import os, json, re
-      from collections import defaultdict
+      import os, json, re, shutil
+      from pathlib import Path
 
-      with open("{{OUTPUT_DIR}}/SRP_VIOLATIONS.json") as f:
-          violations = json.load(f)
+      # Configurar paths
+      OUTPUT_DIR = ".ralph/outputs"
 
-      fixed = []
-      files_created = []
-      classes_extracted = 0
+      # Crear estructura de directorios
+      os.makedirs("app/shared/config/params", exist_ok=True)
 
-      def extract_class_content(content, class_name):
-          """Extrae una clase completa incluyendo todos sus metodos y clases anidadas."""
-          lines = content.split('\n')
-          result_lines = []
-          in_class = False
-          class_indent = 0
+      # Leer centralized_config.py original
+      with open("app/shared/config/centralized_config.py", "r") as f:
+          original_content = f.read()
+          lines = original_content.split("\n")
 
+      # Funciones de extraccion
+      def find_class_range(lines, class_name):
+          """Encuentra el rango de lineas de una clase."""
+          start = None
           for i, line in enumerate(lines):
-              # Detectar inicio de clase
-              if re.match(rf'^class {class_name}[\(:]', line):
-                  in_class = True
-                  class_indent = len(line) - len(line.lstrip())
-                  result_lines.append(line)
-                  continue
+              if re.match(rf"^class {class_name}[\(:]", line):
+                  start = i
+                  break
+          if start is None:
+              return None, None
 
-              if in_class:
-                  current_indent = len(line) - len(line.lstrip()) if line.strip() else class_indent + 1
-
-                  # Si encontramos otra clase al mismo nivel o menos, terminamos
-                  if line.strip().startswith('class ') and current_indent <= class_indent:
+          # Encontrar el final (siguiente clase o EOF)
+          class_indent = len(lines[start]) - len(lines[start].lstrip())
+          end = len(lines)
+          for i in range(start + 1, len(lines)):
+              line = lines[i]
+              if line.strip() and not line.startswith((" ", "\t", "#", "\n")):
+                  if line.startswith("class ") or line.startswith("# ="):
+                      end = i
                       break
-                  # Si encontramos una funcion al nivel 0 que no es metodo, terminamos
-                  if line.strip().startswith('def ') and current_indent == 0:
-                      break
-                  # Si llegamos al final del archivo
-                  if i == len(lines) - 1:
-                      result_lines.append(line)
-                      break
+              # Tambien detectar siguiente clase al mismo nivel
+              if re.match(r"^class ", line):
+                  end = i
+                  break
 
-                  result_lines.append(line)
+          return start, end
 
-          return '\n'.join(result_lines)
-
-      def get_imports_needed(class_content, original_file):
-          """Obtiene imports necesarios para la clase."""
+      def extract_imports(content):
+          """Extrae todos los imports del archivo."""
           imports = []
+          for line in content.split("\n"):
+              if line.startswith("import ") or line.startswith("from "):
+                  imports.append(line)
+              elif line.strip() == "" and imports:
+                  if len(imports) > 0 and not imports[-1].startswith(("import", "from")):
+                      break
+          return "\n".join(imports)
 
-          # Imports estandar que probablemente se necesitan
-          standard_imports = [
-              'from typing import',
-              'from decimal import',
-              'from datetime import',
-              'from dataclasses import',
-              'from enum import',
-              'from abc import',
-              'import logging',
-              'import json',
-              'import os',
-              'import re',
-          ]
+      def create_module_file(filepath, class_name, class_content, imports, docstring):
+          """Crea un archivo de modulo con una clase extraida."""
+          content = f'"""\n{docstring}\n"""\n\n'
+          content += imports + "\n\n"
+          content += "logger = logging.getLogger(__name__)\n\n"
+          content += class_content
 
-          # Leer imports del archivo original
-          with open(original_file, 'r') as f:
-              for line in f:
-                  for std in standard_imports:
-                      if std in line and line not in imports:
-                          imports.append(line.rstrip())
-                  if line.startswith('from app.') or line.startswith('import app.'):
-                      if 'import' in line and line not in imports:
-                          imports.append(line.rstrip())
+          with open(filepath, "w") as f:
+              f.write(content)
+          print(f"Created: {filepath}")
 
-          return imports
+      # Clases a extraer de centralized_config.py
+      classes_to_extract = {
+          "TradingThresholds": {
+              "file": "app/shared/config/params/trading_thresholds.py",
+              "docstring": "Trading Thresholds Configuration - Extracted for SRP"
+          },
+          "StrategyConfig": {
+              "file": "app/shared/config/params/strategy_config.py",
+              "docstring": "Strategy Configuration - Extracted for SRP"
+          },
+          "StockAllocationSettings": {
+              "file": "app/shared/config/params/strategy_config.py",
+              "docstring": "Stock Allocation Settings - Extracted for SRP"
+          },
+          "BacktestingConfig": {
+              "file": "app/shared/config/params/backtest_config.py",
+              "docstring": "Backtesting Configuration - Extracted for SRP"
+          },
+          "DatabaseConfig": {
+              "file": "app/shared/config/params/infrastructure_config.py",
+              "docstring": "Infrastructure Configuration - Extracted for SRP"
+          },
+          "RedisConfig": {
+              "file": "app/shared/config/params/infrastructure_config.py",
+              "docstring": "Infrastructure Configuration - Extracted for SRP"
+          },
+          "APIConfig": {
+              "file": "app/shared/config/params/infrastructure_config.py",
+              "docstring": "Infrastructure Configuration - Extracted for SRP"
+          },
+          "LoggingConfig": {
+              "file": "app/shared/config/params/infrastructure_config.py",
+              "docstring": "Infrastructure Configuration - Extracted for SRP"
+          },
+          "MonitoringConfig": {
+              "file": "app/shared/config/params/infrastructure_config.py",
+              "docstring": "Infrastructure Configuration - Extracted for SRP"
+          },
+          "CurrencyHedgingConfig": {
+              "file": "app/shared/config/params/risk_config.py",
+              "docstring": "Risk Configuration - Extracted for SRP"
+          },
+          "ComplianceConfig": {
+              "file": "app/shared/config/params/risk_config.py",
+              "docstring": "Risk Configuration - Extracted for SRP"
+          },
+          "SectorCountryDiversificationConfig": {
+              "file": "app/shared/config/params/risk_config.py",
+              "docstring": "Sector/Country Diversification Configuration - Extracted for SRP"
+          },
+          "CommissionModel": {
+              "file": "app/shared/config/params/backtest_config.py",
+              "docstring": "Commission Models - Extracted for SRP"
+          },
+          "FixedCommission": {
+              "file": "app/shared/config/params/backtest_config.py",
+              "docstring": "Commission Models - Extracted for SRP"
+          },
+          "TieredCommission": {
+              "file": "app/shared/config/params/backtest_config.py",
+              "docstring": "Commission Models - Extracted for SRP"
+          },
+          "HybridCommission": {
+              "file": "app/shared/config/params/backtest_config.py",
+              "docstring": "Commission Models - Extracted for SRP"
+          },
+          "TierBracket": {
+              "file": "app/shared/config/params/backtest_config.py",
+              "docstring": "Commission Models - Extracted for SRP"
+          }
+      }
 
-      for v in violations[:10]:  # Procesar hasta 10 archivos
-          filepath = v["file"]
-          if v["lines"] < 800:  # Solo archivos muy grandes
+      # Extraer imports base
+      base_imports = extract_imports(original_content)
+
+      # Crear archivos para cada clase
+      files_content = {}  # filepath -> content
+      extracted_classes = []
+
+      for class_name, config in classes_to_extract.items():
+          start, end = find_class_range(lines, class_name)
+          if start is None:
+              print(f"Class {class_name} not found, skipping")
               continue
 
-          try:
-              with open(filepath, 'r') as f:
-                  content = f.read()
+          class_content = "\n".join(lines[start:end])
+          filepath = config["file"]
 
-              # Identificar clases
-              classes = re.findall(r'^class (\w+)', content, re.MULTILINE)
+          if filepath not in files_content:
+              files_content[filepath] = {
+                  "docstring": config["docstring"],
+                  "classes": [],
+                  "imports": base_imports
+              }
 
-              if len(classes) <= 1:
-                  continue  # No dividir si solo hay 1 clase
+          files_content[filepath]["classes"].append((class_name, class_content))
+          extracted_classes.append(class_name)
 
-              dir_path = os.path.dirname(filepath)
-              base_name = os.path.basename(filepath).replace('.py', '')
+      # Escribir archivos
+      for filepath, data in files_content.items():
+          content = f'"""\n{data["docstring"]}\n"""\n\n'
+          content += data["imports"] + "\n\n"
+          content += "logger = logging.getLogger(__name__)\n\n"
 
-              # Mantener primera clase en original, extraer las demas
-              for cls_name in classes[1:]:
-                  class_content = extract_class_content(content, cls_name)
+          for class_name, class_content in data["classes"]:
+              content += class_content + "\n\n"
 
-                  if not class_content or len(class_content) < 50:
-                      continue
+          os.makedirs(os.path.dirname(filepath), exist_ok=True)
+          with open(filepath, "w") as f:
+              f.write(content)
+          print(f"Created: {filepath} with {len(data['classes'])} classes")
 
-                  # Crear nuevo archivo
-                  new_filename = f"{cls_name.lower()}.py"
-                  new_filepath = os.path.join(dir_path, new_filename)
+      # Crear __init__.py para params
+      init_lines = [
+          '"""',
+          'Configuration Parameters Module',
+          'Extracted from centralized_config.py for SRP compliance.',
+          'TASK-24: SRP Refactoring',
+          '"""',
+          '',
+          'from app.shared.config.params.trading_thresholds import TradingThresholds',
+          'from app.shared.config.params.strategy_config import StrategyConfig, StockAllocationSettings',
+          'from app.shared.config.params.backtest_config import (',
+          '    BacktestingConfig,',
+          '    CommissionModel,',
+          '    FixedCommission,',
+          '    HybridCommission,',
+          '    TierBracket,',
+          '    TieredCommission,',
+          ')',
+          'from app.shared.config.params.infrastructure_config import (',
+          '    DatabaseConfig, RedisConfig, APIConfig, LoggingConfig, MonitoringConfig',
+          ')',
+          'from app.shared.config.params.risk_config import (',
+          '    CurrencyHedgingConfig,',
+          '    SectorCountryDiversificationConfig,',
+          '    ComplianceConfig',
+          ')',
+          '',
+          '__all__ = [',
+          '    # Trading',
+          '    "TradingThresholds",',
+          '    # Strategy',
+          '    "StrategyConfig",',
+          '    "StockAllocationSettings",',
+          '    # Backtesting',
+          '    "BacktestingConfig",',
+          '    "CommissionModel",',
+          '    "FixedCommission",',
+          '    "HybridCommission",',
+          '    "TierBracket",',
+          '    "TieredCommission",',
+          '    # Infrastructure',
+          '    "DatabaseConfig",',
+          '    "RedisConfig",',
+          '    "APIConfig",',
+          '    "LoggingConfig",',
+          '    "MonitoringConfig",',
+          '    # Risk & Compliance',
+          '    "CurrencyHedgingConfig",',
+          '    "SectorCountryDiversificationConfig",',
+          '    "ComplianceConfig",',
+          ']',
+      ]
+      with open("app/shared/config/params/__init__.py", "w") as f:
+          f.write("\n".join(init_lines))
+      print("Created: app/shared/config/params/__init__.py")
 
-                  # Obtener imports necesarios
-                  imports = get_imports_needed(class_content, filepath)
+      # Actualizar centralized_config.py para importar desde params
+      # Mantener solo: header, Environment enum, CentralizedConfig, get_config(), Configuration
+      new_content_lines = [
+          '"""',
+          'Centralized Configuration System',
+          'TASK-10: Centralizacion de Configuracion',
+          'TASK-24: SRP Refactoring - Classes extracted to params/ module',
+          '"""',
+          '',
+          'import logging',
+          'from enum import Enum',
+          'from pathlib import Path',
+          'from typing import Any, Dict, Optional',
+          '',
+          'import yaml',
+          'from pydantic_settings import BaseSettings',
+          '',
+          '# SRP: Import extracted configuration modules',
+          'from app.shared.config.params.trading_thresholds import TradingThresholds',
+          'from app.shared.config.params.strategy_config import StrategyConfig, StockAllocationSettings',
+          'from app.shared.config.params.backtest_config import (',
+          '    BacktestingConfig, CommissionModel, FixedCommission,',
+          '    HybridCommission, TierBracket, TieredCommission',
+          ')',
+          'from app.shared.config.params.infrastructure_config import (',
+          '    DatabaseConfig, RedisConfig, APIConfig, LoggingConfig, MonitoringConfig',
+          ')',
+          'from app.shared.config.params.risk_config import (',
+          '    CurrencyHedgingConfig, SectorCountryDiversificationConfig, ComplianceConfig',
+          ')',
+          '',
+          '# Conditional import for optional signal_risk module',
+          'try:',
+          '    from app.shared.config.signal_risk import MarketMicrostructureThresholds',
+          'except ImportError:',
+          '    MarketMicrostructureThresholds = None  # type: ignore',
+          '',
+          'logger = logging.getLogger(__name__)',
+          '',
+          '',
+          'class Environment(str, Enum):',
+          '    """Environment types."""',
+          '    DEVELOPMENT = "development"',
+          '    TESTING = "testing"',
+          '    STAGING = "staging"',
+          '    PRODUCTION = "production"',
+          '',
+      ]
+      new_content = "\n".join(new_content_lines)
 
-                  # Construir contenido del nuevo archivo
-                  new_content = f'"""\n{cls_name} - Extracted from {base_name}.py\n"""\n\n'
-                  new_content += '\n'.join(imports) + '\n\n'
-                  new_content += class_content
+      # Agregar CentralizedConfig y el resto del archivo original (despues de las clases extraidas)
+      # Buscar donde empieza CentralizedConfig
+      config_start = None
+      for i, line in enumerate(lines):
+          if "class CentralizedConfig" in line:
+              config_start = i
+              break
 
-                  # Escribir nuevo archivo
-                  with open(new_filepath, 'w') as f:
-                      f.write(new_content)
+      if config_start:
+          new_content += "\n".join(lines[config_start:])
 
-                  files_created.append(new_filepath)
-                  classes_extracted += 1
+      # Guardar backup y escribir nuevo archivo
+      shutil.copy("app/shared/config/centralized_config.py", "app/shared/config/centralized_config.py.bak")
+      with open("app/shared/config/centralized_config.py", "w") as f:
+          f.write(new_content)
 
-                  # Actualizar archivo original - agregar import
-                  import_line = f"from .{cls_name.lower()} import {cls_name}\n"
-                  if import_line not in content:
-                      # Insertar despues de los imports existentes
-                      lines = content.split('\n')
-                      insert_pos = 0
-                      for i, line in enumerate(lines):
-                          if line.startswith('from ') or line.startswith('import '):
-                              insert_pos = i + 1
-                          elif line.strip() == '' and insert_pos > 0:
-                              break
-                      lines.insert(insert_pos, import_line.rstrip())
-                      content = '\n'.join(lines)
+      print(f"Updated: centralized_config.py (removed {len(extracted_classes)} extracted classes)")
 
-              # Remover clases extraidas del archivo original (simplificado)
-              # Por seguridad, solo actualizamos los imports
+      # Guardar resultados
+      results = {
+          "files_created": list(files_content.keys()) + ["app/shared/config/params/__init__.py"],
+          "classes_extracted": extracted_classes,
+          "original_backup": "app/shared/config/centralized_config.py.bak"
+      }
 
-              with open(filepath, 'w') as f:
-                  f.write(content)
+      with open(f"{OUTPUT_DIR}/SRP_FIXED.json", "w") as f:
+          json.dump(results, f, indent=2)
 
-              fixed.append({
-                  "file": filepath,
-                  "lines_before": v["lines"],
-                  "classes_extracted": len(classes) - 1,
-                  "new_files": [f for f in files_created if dir_path in f]
-              })
-
-          except Exception as e:
-              print(f"Error processing {filepath}: {e}")
-
-      # Actualizar __init__.py de los directorios afectados
-      dirs_updated = set()
-      for new_file in files_created:
-          dir_path = os.path.dirname(new_file)
-          if dir_path in dirs_updated:
-              continue
-          dirs_updated.add(dir_path)
-
-          init_file = os.path.join(dir_path, '__init__.py')
-          if os.path.exists(init_file):
-              try:
-                  with open(init_file, 'r') as f:
-                      init_content = f.read()
-
-                  # Agregar imports de nuevos archivos
-                  for nf in [f for f in files_created if os.path.dirname(f) == dir_path]:
-                      cls_name = os.path.basename(nf).replace('.py', '').replace('_', ' ').title().replace(' ', '')
-                      # Intentar inferir el nombre real de la clase
-                      with open(nf, 'r') as f:
-                          match = re.search(r'class (\w+)', f.read())
-                          if match:
-                              cls_name = match.group(1)
-
-                      import_line = f"from .{os.path.basename(nf).replace('.py', '')} import {cls_name}\n"
-                      if import_line not in init_content and cls_name not in init_content:
-                          init_content += import_line
-
-                  with open(init_file, 'w') as f:
-                      f.write(init_content)
-              except: pass
-
-      with open("{{OUTPUT_DIR}}/SRP_FIXED.json", "w") as f:
-          json.dump({
-              "files_processed": len(fixed),
-              "classes_extracted": classes_extracted,
-              "new_files_created": files_created,
-              "details": fixed
-          }, f, indent=2)
-
-      print(f"Extracted {classes_extracted} classes to {len(files_created)} new files")
-      print(f"Processed {len(fixed)} large files")
+      print(f"SRP Refactoring complete!")
+      print(f"  - Extracted {len(extracted_classes)} classes")
+      print(f"  - Created {len(files_content) + 1} new files")
       ```
 
       ### Event:
       ```bash
-      ralph emit "structural_fix.srp_fixed" "extracted=${classes_extracted}, files=${len(files_created)}"
+      ralph emit "structural_fix.srp_fixed" "status=complete"
       ```
 
   # ==========================================================================
-  # PHASE 8: FINAL REPORT
+  # PHASE 7B: COMPLIANCE ENGINE EXTRACTION
+  # ==========================================================================
+  compliance_engine_extractor:
+    name: "Compliance Engine Extractor"
+    description: "Extrae clases de compliance_engine.py a modulos separados"
+    triggers: ["structural_fix.srp_fixed"]
+    publishes: ["structural_fix.compliance_extracted", "structural_fix.blocked"]
+
+    instructions: |
+      ## COMPLIANCE ENGINE EXTRACTOR
+
+      **OBJECTIVE:** Extraer clases de compliance_engine.py (3683 lineas) a modulos separados
+
+      ### Clases a extraer:
+      - ComplianceConfig (105 lineas) -> compliance_config.py
+      - SystemAvailability (232 lineas) -> system_availability.py
+      - SystemBus (1495 lineas) -> system_bus.py
+      - ComplianceEngine se mantiene como facade importando de modulos
+
+      ```python
+      import os, json, re, shutil
+      from pathlib import Path
+
+      OUTPUT_DIR = ".ralph/outputs"
+
+      # Leer compliance_engine.py original
+      compliance_path = "app/domain/services/compliance/compliance_engine.py"
+      if not os.path.exists(compliance_path):
+          print("compliance_engine.py not found, skipping")
+          # Emit event anyway to continue pipeline
+          import subprocess
+          subprocess.run(["ralph", "emit", "structural_fix.compliance_extracted", "status=skipped"])
+          exit(0)
+
+      with open(compliance_path, "r") as f:
+          original_content = f.read()
+          lines = original_content.split("\n")
+
+      # Funciones de extraccion (reutilizadas de srp_fixer)
+      def find_class_range(lines, class_name):
+          start = None
+          for i, line in enumerate(lines):
+              if re.match(rf"^class {class_name}[\(:]", line):
+                  start = i
+                  break
+          if start is None:
+              return None, None
+          class_indent = len(lines[start]) - len(lines[start].lstrip())
+          end = len(lines)
+          for i in range(start + 1, len(lines)):
+              line = lines[i]
+              if line.strip() and not line.startswith((" ", "\t", "#", "\n")):
+                  if line.startswith("class ") or line.startswith("# ="):
+                      end = i
+                      break
+              if re.match(r"^class ", line):
+                  end = i
+                  break
+          return start, end
+
+      def extract_imports(content):
+          imports = []
+          for line in content.split("\n"):
+              if line.startswith("import ") or line.startswith("from "):
+                  imports.append(line)
+              elif line.strip() == "" and imports:
+                  if len(imports) > 0 and not imports[-1].startswith(("import", "from")):
+                      break
+          return "\n".join(imports)
+
+      # Clases a extraer de compliance_engine.py
+      classes_to_extract = {
+          "ComplianceConfig": {
+              "file": "app/domain/services/compliance/compliance_config.py",
+              "docstring": "Compliance Configuration - Extracted for SRP"
+          },
+          "SystemAvailability": {
+              "file": "app/domain/services/compliance/system_availability.py",
+              "docstring": "System Availability Checks - Extracted for SRP"
+          },
+          "SystemBus": {
+              "file": "app/domain/services/compliance/system_bus.py",
+              "docstring": "System Bus Orchestration - Extracted for SRP"
+          }
+      }
+
+      base_imports = extract_imports(original_content)
+      files_content = {}
+      extracted_classes = []
+
+      for class_name, config in classes_to_extract.items():
+          start, end = find_class_range(lines, class_name)
+          if start is None:
+              print(f"Class {class_name} not found, skipping")
+              continue
+          class_content = "\n".join(lines[start:end])
+          filepath = config["file"]
+          if filepath not in files_content:
+              files_content[filepath] = {
+                  "docstring": config["docstring"],
+                  "classes": [],
+                  "imports": base_imports
+              }
+          files_content[filepath]["classes"].append((class_name, class_content))
+          extracted_classes.append(class_name)
+
+      # Escribir archivos
+      for filepath, data in files_content.items():
+          content = f'"""\n{data["docstring"]}\n"""\n\n'
+          content += data["imports"] + "\n\n"
+          content += "logger = logging.getLogger(__name__)\n\n"
+          for class_name, class_content in data["classes"]:
+              content += class_content + "\n\n"
+          os.makedirs(os.path.dirname(filepath), exist_ok=True)
+          with open(filepath, "w") as f:
+              f.write(content)
+          print(f"Created: {filepath}")
+
+      # Actualizar compliance_engine.py para importar desde modulos extraidos
+      # Crear backup
+      shutil.copy(compliance_path, compliance_path + ".bak")
+
+      # Crear nuevo contenido con imports
+      new_header = [
+          '"""',
+          'Compliance Engine - Facade Module',
+          'TASK-24: SRP Refactoring - Classes extracted to separate modules',
+          '"""',
+          '',
+          '# Import extracted modules',
+          'from app.domain.services.compliance.compliance_config import ComplianceConfig',
+          'from app.domain.services.compliance.system_availability import SystemAvailability',
+          'from app.domain.services.compliance.system_bus import SystemBus',
+          '',
+      ]
+
+      # Encontrar donde empieza ComplianceEngine
+      engine_start = None
+      for i, line in enumerate(lines):
+          if "class ComplianceEngine" in line:
+              engine_start = i
+              break
+
+      if engine_start:
+          new_content = "\n".join(new_header) + "\n\n"
+          new_content += "\n".join(lines[engine_start:])
+          with open(compliance_path, "w") as f:
+              f.write(new_content)
+          print(f"Updated: {compliance_path}")
+
+      # Guardar resultados
+      results = {
+          "files_created": list(files_content.keys()),
+          "classes_extracted": extracted_classes,
+          "original_backup": compliance_path + ".bak"
+      }
+
+      with open(f"{OUTPUT_DIR}/COMPLIANCE_FIXED.json", "w") as f:
+          json.dump(results, f, indent=2)
+
+      print(f"Compliance Engine extraction complete!")
+      print(f"  - Extracted {len(extracted_classes)} classes")
+      print(f"  - Created {len(files_content)} new files")
+      ```
+
+      ### Event:
+      ```bash
+      ralph emit "structural_fix.compliance_extracted" "status=complete"
+      ```
+
+  # ==========================================================================
+  # PHASE 7C: IMPORT VALIDATION
+  # ==========================================================================
+  import_validator:
+    name: "Import Validator"
+    description: "Valida que todos los imports funcionan post-extraccion"
+    triggers: ["structural_fix.compliance_extracted"]
+    publishes: ["structural_fix.imports_validated", "structural_fix.blocked"]
+
+    instructions: |
+      ## IMPORT VALIDATOR
+
+      **OBJECTIVE:** Validar que todos los imports siguen funcionando despues de la extraccion
+
+      ```bash
+      python3 << 'PYEOF'
+      import sys
+      import json
+
+      errors = []
+      success_count = 0
+
+      # Test centralized_config imports
+      try:
+          from app.shared.config.centralized_config import get_config
+          print("OK: centralized_config.get_config")
+          success_count += 1
+      except Exception as e:
+          errors.append(f"centralized_config.get_config: {e}")
+
+      # Test params module imports
+      try:
+          from app.shared.config.params import TradingThresholds, StrategyConfig
+          print("OK: params.TradingThresholds, StrategyConfig")
+          success_count += 1
+      except Exception as e:
+          errors.append(f"params module: {e}")
+
+      # Test backtest config imports
+      try:
+          from app.shared.config.params import BacktestingConfig, CommissionModel
+          print("OK: params.BacktestingConfig, CommissionModel")
+          success_count += 1
+      except Exception as e:
+          errors.append(f"backtest config: {e}")
+
+      # Test infrastructure config imports
+      try:
+          from app.shared.config.params import DatabaseConfig, RedisConfig
+          print("OK: params.DatabaseConfig, RedisConfig")
+          success_count += 1
+      except Exception as e:
+          errors.append(f"infrastructure config: {e}")
+
+      # Test risk config imports
+      try:
+          from app.shared.config.params import CurrencyHedgingConfig, ComplianceConfig
+          print("OK: params.CurrencyHedgingConfig, ComplianceConfig")
+          success_count += 1
+      except Exception as e:
+          errors.append(f"risk config: {e}")
+
+      # Test compliance engine imports
+      try:
+          from app.domain.services.compliance.compliance_engine import ComplianceEngine
+          print("OK: compliance.ComplianceEngine")
+          success_count += 1
+      except Exception as e:
+          errors.append(f"compliance.ComplianceEngine: {e}")
+
+      # Guardar resultados
+      results = {
+          "success_count": success_count,
+          "error_count": len(errors),
+          "errors": errors
+      }
+
+      with open(".ralph/outputs/IMPORT_VALIDATION.json", "w") as f:
+          json.dump(results, f, indent=2)
+
+      if errors:
+          print("\nIMPORT ERRORS FOUND:")
+          for e in errors:
+              print(f"  - {e}")
+          print(f"\nValidation: FAILED ({len(errors)} errors)")
+          sys.exit(1)
+      else:
+          print(f"\nValidation: SUCCESS ({success_count} imports OK)")
+      PYEOF
+      ```
+
+      ### Event:
+      ```bash
+      ralph emit "structural_fix.imports_validated" "status=ok"
+      ```
+
+  # ==========================================================================
+  # PHASE 8: CODE REVIEW (awesome-claude-agents)
+  # ==========================================================================
+  code_review_gate:
+    name: "Code Review Gate"
+    description: "Revision de codigo con severity tagging usando patrones de awesome-claude-agents"
+    triggers: ["structural_fix.imports_validated"]
+    publishes: ["structural_fix.code_reviewed", "structural_fix.blocked"]
+
+    instructions: |
+      ## CODE REVIEW GATE - Security-Aware Review
+
+      **OBJECTIVE:** Validar que todos los cambios cumplen estandares de calidad y seguridad
+
+      ### Criterios de Review:
+      - **Security**: validacion de inputs, auth flows, encryption, CSRF/XSS/SQLi
+      - **Performance**: complejidad algoritmica, N+1 queries, memory leaks
+      - **Maintainability**: naming claro, funciones pequenas, limites de modulos
+      - **Testing**: nueva logica cubierta, edge cases, tests deterministas
+      - **Documentation**: APIs documentadas, README/CHANGELOG actualizados
+
+      ```bash
+      python3 << 'PYEOF'
+      import os, json, re
+      from datetime import datetime
+
+      OUTPUT_DIR = ".ralph/outputs"
+
+      # Cargar lista de archivos modificados
+      modified_files = []
+      try:
+          with open(f"{OUTPUT_DIR}/FILES_MODIFIED.json") as f:
+              modified_files = json.load(f)
+      except:
+          # Si no existe, escanear cambios recientes en git
+          import subprocess
+          result = subprocess.run(["git", "diff", "--name-only", "HEAD~10"], capture_output=True, text=True)
+          modified_files = [f for f in result.stdout.strip().split("\n") if f.endswith(".py")]
+
+      # Review findings
+      findings = {
+          "critical": [],
+          "major": [],
+          "minor": [],
+          "positive": []
+      }
+
+      # Patrones de problemas comunes
+      security_patterns = [
+          (r"password\s*=\s*['\"][^'\"]+['\"]", "Hardcoded password"),
+          (r"api_key\s*=\s*['\"][^'\"]+['\"]", "Hardcoded API key"),
+          (r"SECRET\s*=\s*['\"][^'\"]+['\"]", "Hardcoded secret"),
+          (r"eval\s*\(", "Use of eval() - security risk"),
+          (r"exec\s*\(", "Use of exec() - security risk"),
+          (r"__import__\s*\(", "Dynamic import - security risk"),
+      ]
+
+      performance_patterns = [
+          (r"for\s+\w+\s+in\s+\w+\.objects\.all\(\)", "Potential N+1 query"),
+          (r"\.objects\.filter\([^)]*\)\.count\(\)\s*>\s*0", "Use .exists() instead"),
+          (r"append\s*\([^)]*\)\s+in\s+for", "Consider list comprehension"),
+      ]
+
+      code_quality_patterns = [
+          (r"# TODO|# FIXME|# XXX|# HACK", "Technical debt marker"),
+          (r"print\s*\(", "Debug print statement"),
+          (r"pdb\.set_trace\(\)", "Debugger breakpoint"),
+          (r"pass\s*$", "Empty implementation"),
+      ]
+
+      # Escanear archivos
+      for filepath in modified_files:
+          if not os.path.exists(filepath):
+              continue
+          try:
+              with open(filepath, 'r') as f:
+                  content = f.read()
+                  lines = content.split('\n')
+
+                  for i, line in enumerate(lines, 1):
+                      # Security checks
+                      for pattern, message in security_patterns:
+                          if re.search(pattern, line, re.IGNORECASE):
+                              findings["critical"].append({
+                                  "file": filepath,
+                                  "line": i,
+                                  "issue": message,
+                                  "content": line.strip()[:80]
+                              })
+
+                      # Performance checks
+                      for pattern, message in performance_patterns:
+                          if re.search(pattern, line):
+                              findings["major"].append({
+                                  "file": filepath,
+                                  "line": i,
+                                  "issue": message,
+                                  "content": line.strip()[:80]
+                              })
+
+                      # Code quality checks
+                      for pattern, message in code_quality_patterns:
+                          if re.search(pattern, line):
+                              findings["minor"].append({
+                                  "file": filepath,
+                                  "line": i,
+                                  "issue": message,
+                                  "content": line.strip()[:80]
+                              })
+
+              # Positive findings
+              if "def test_" in content or "def test" in content:
+                  findings["positive"].append({
+                      "file": filepath,
+                      "note": "Has tests"
+                  })
+              if '"""' in content or "'''" in content:
+                  findings["positive"].append({
+                      "file": filepath,
+                      "note": "Has docstrings"
+                  })
+
+          except Exception as e:
+              pass
+
+      # Calcular score de review
+      critical_count = len(findings["critical"])
+      major_count = len(findings["major"])
+      minor_count = len(findings["minor"])
+
+      review_score = max(0, 100 - (critical_count * 25) - (major_count * 10) - (minor_count * 2))
+
+      # Guardar resultados
+      results = {
+          "timestamp": datetime.utcnow().isoformat(),
+          "files_reviewed": len(modified_files),
+          "findings": findings,
+          "scores": {
+              "security": max(0, 100 - critical_count * 25),
+              "performance": max(0, 100 - major_count * 10),
+              "quality": max(0, 100 - minor_count * 2),
+              "overall": review_score
+          },
+          "passed": critical_count == 0 and major_count < 5
+      }
+
+      with open(f"{OUTPUT_DIR}/CODE_REVIEW_RESULTS.json", "w") as f:
+          json.dump(results, f, indent=2)
+
+      # Report
+      print(f"Code Review Results:")
+      print(f"  Files reviewed: {len(modified_files)}")
+      print(f"  Critical issues: {critical_count}")
+      print(f"  Major issues: {major_count}")
+      print(f"  Minor issues: {minor_count}")
+      print(f"  Overall score: {review_score}%")
+      print(f"  Review passed: {results['passed']}")
+
+      if critical_count > 0:
+          print("\nCRITICAL ISSUES MUST BE FIXED:")
+          for issue in findings["critical"][:5]:
+              print(f"  - {issue['file']}:{issue['line']}: {issue['issue']}")
+      PYEOF
+      ```
+
+      ### Event:
+      ```bash
+      ralph emit "structural_fix.code_reviewed" "status=passed"
+      ```
+
+  # ==========================================================================
+  # PHASE 9: PERFORMANCE VALIDATION (awesome-claude-agents)
+  # ==========================================================================
+  performance_validator:
+    name: "Performance Validator"
+    description: "Valida que el refactoring no introdujo problemas de rendimiento"
+    triggers: ["structural_fix.code_reviewed"]
+    publishes: ["structural_fix.performance_validated", "structural_fix.blocked"]
+
+    instructions: |
+      ## PERFORMANCE VALIDATOR
+
+      **OBJECTIVE:** Validar que el refactoring no introdujo regresiones de rendimiento
+
+      ```bash
+      python3 << 'PYEOF'
+      import os, json, subprocess, time
+      from datetime import datetime
+
+      OUTPUT_DIR = ".ralph/outputs"
+
+      # Test imports performance
+      print("Testing import performance...")
+      start_time = time.time()
+      result = subprocess.run(
+          ["python3", "-c", "from app.shared.config.centralized_config import get_config"],
+          capture_output=True,
+          text=True,
+          timeout=30
+      )
+      import_time = time.time() - start_time
+
+      # Test params module imports
+      print("Testing params module imports...")
+      start_time = time.time()
+      result2 = subprocess.run(
+          ["python3", "-c", "from app.shared.config.params import TradingThresholds, StrategyConfig"],
+          capture_output=True,
+          text=True,
+          timeout=30
+      )
+      params_import_time = time.time() - start_time
+
+      # Test compliance imports
+      print("Testing compliance imports...")
+      start_time = time.time()
+      result3 = subprocess.run(
+          ["python3", "-c", "from app.domain.services.compliance.compliance_engine import ComplianceEngine"],
+          capture_output=True,
+          text=True,
+          timeout=30
+      )
+      compliance_import_time = time.time() - start_time
+
+      # Check for errors
+      import_errors = []
+      if result.returncode != 0:
+          import_errors.append(f"centralized_config: {result.stderr[:200]}")
+      if result2.returncode != 0:
+          import_errors.append(f"params: {result2.stderr[:200]}")
+      if result3.returncode != 0:
+          import_errors.append(f"compliance: {result3.stderr[:200]}")
+
+      # Performance thresholds
+      MAX_IMPORT_TIME = 5.0  # seconds
+
+      performance_issues = []
+      if import_time > MAX_IMPORT_TIME:
+          performance_issues.append(f"centralized_config import slow: {import_time:.2f}s")
+      if params_import_time > MAX_IMPORT_TIME:
+          performance_issues.append(f"params import slow: {params_import_time:.2f}s")
+      if compliance_import_time > MAX_IMPORT_TIME:
+          performance_issues.append(f"compliance import slow: {compliance_import_time:.2f}s")
+
+      # Results
+      results = {
+          "timestamp": datetime.utcnow().isoformat(),
+          "import_times": {
+              "centralized_config": round(import_time, 3),
+              "params_module": round(params_import_time, 3),
+              "compliance": round(compliance_import_time, 3)
+          },
+          "import_errors": import_errors,
+          "performance_issues": performance_issues,
+          "passed": len(import_errors) == 0 and len(performance_issues) == 0
+      }
+
+      with open(f"{OUTPUT_DIR}/PERFORMANCE_VALIDATION.json", "w") as f:
+          json.dump(results, f, indent=2)
+
+      print(f"\nPerformance Validation Results:")
+      print(f"  Import times:")
+      print(f"    centralized_config: {import_time:.3f}s")
+      print(f"    params module: {params_import_time:.3f}s")
+      print(f"    compliance: {compliance_import_time:.3f}s")
+      print(f"  Import errors: {len(import_errors)}")
+      print(f"  Performance issues: {len(performance_issues)}")
+      print(f"  Validation passed: {results['passed']}")
+
+      if import_errors:
+          print("\nIMPORT ERRORS:")
+          for err in import_errors:
+              print(f"  - {err}")
+      PYEOF
+      ```
+
+      ### Event:
+      ```bash
+      ralph emit "structural_fix.performance_validated" "status=passed"
+      ```
+
+  # ==========================================================================
+  # PHASE 10: FINAL REPORT
   # ==========================================================================
   final_reporter:
     name: "Final Reporter"
     description: "Genera reporte final con antes/despus"
-    triggers: ["structural_fix.srp_fixed"]
+    triggers: ["structural_fix.performance_validated"]
     publishes: ["structural_fix.complete"]
 
     instructions: |
@@ -993,7 +1757,12 @@ hats:
           "circular_deps_fixed": 0,
           "hardcoded_extracted": 0,
           "hardcoded_files_updated": 0,
-          "srp_plans_generated": 0
+          "srp_classes_extracted": 0,
+          "srp_files_created": 0,
+          "compliance_classes_extracted": 0,
+          "compliance_files_created": 0,
+          "import_validation_errors": 0,
+          "import_validation_success": 0
       }
 
       try:
@@ -1019,8 +1788,24 @@ hats:
       except: pass
 
       try:
-          with open("{{OUTPUT_DIR}}/SRP_REFACTOR_PLAN.json") as f:
-              results["srp_plans_generated"] = len(json.load(f))
+          with open("{{OUTPUT_DIR}}/SRP_FIXED.json") as f:
+              srp_data = json.load(f)
+              results["srp_classes_extracted"] = len(srp_data.get("classes_extracted", []))
+              results["srp_files_created"] = len(srp_data.get("files_created", []))
+      except: pass
+
+      try:
+          with open("{{OUTPUT_DIR}}/COMPLIANCE_FIXED.json") as f:
+              compliance_data = json.load(f)
+              results["compliance_classes_extracted"] = len(compliance_data.get("classes_extracted", []))
+              results["compliance_files_created"] = len(compliance_data.get("files_created", []))
+      except: pass
+
+      try:
+          with open("{{OUTPUT_DIR}}/IMPORT_VALIDATION.json") as f:
+              validation = json.load(f)
+              results["import_validation_errors"] = validation.get("error_count", 0)
+              results["import_validation_success"] = validation.get("success_count", 0)
       except: pass
 
       # Calcular score mejorado
@@ -1031,7 +1816,10 @@ hats:
           results["circular_deps_fixed"] * 3 +
           results["hardcoded_extracted"] * 2 +
           results["hardcoded_files_updated"] * 1 +
-          results["srp_plans_generated"] * 2
+          results.get("srp_classes_extracted", 0) * 2 +
+          results.get("srp_files_created", 0) * 1 +
+          results.get("compliance_classes_extracted", 0) * 2 +
+          results.get("compliance_files_created", 0) * 1
       )
       new_score = min(100, base_score + improvement)
 
@@ -1071,7 +1859,14 @@ hats:
       md += f"| Dependencias circulares resueltas | {results['circular_deps_fixed']} | +{results['circular_deps_fixed'] * 3} |\n"
       md += f"| Constantes extraidas a config | {results['hardcoded_extracted']} | +{results['hardcoded_extracted'] * 2} |\n"
       md += f"| Archivos actualizados con config | {results['hardcoded_files_updated']} | +{results['hardcoded_files_updated'] * 1} |\n"
-      md += f"| Planes de refactor SRP generados | {results['srp_plans_generated']} | +{results['srp_plans_generated'] * 2} |\n\n"
+      md += f"| Clases SRP extraidas | {results['srp_classes_extracted']} | +{results['srp_classes_extracted'] * 2} |\n"
+      md += f"| Archivos SRP creados | {results['srp_files_created']} | +{results['srp_files_created'] * 1} |\n"
+      md += f"| Clases Compliance extraidas | {results['compliance_classes_extracted']} | +{results['compliance_classes_extracted'] * 2} |\n"
+      md += f"| Archivos Compliance creados | {results['compliance_files_created']} | +{results['compliance_files_created'] * 1} |\n\n"
+      md += "---\n\n"
+      md += "## Validacion de Imports\n\n"
+      md += f"| Imports exitosos | {results['import_validation_success']} |\n"
+      md += f"| Imports con error | {results['import_validation_errors']} |\n\n"
       md += "---\n\n"
       md += "## Detalle de Constantes Extraidas\n\n"
 
@@ -1096,7 +1891,7 @@ hats:
 
       ### Event:
       ```bash
-      ralph emit "structural_fix.complete" "score_before=8, score_after=${new_score}"
+      ralph emit "structural_fix.complete" "status=success"
       ```
 
 # ============================================================================

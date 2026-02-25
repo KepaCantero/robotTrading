@@ -1,6 +1,6 @@
 {
-  "total_files": 1130,
-  "total_lines": 459657,
+  "total_files": 1111,
+  "total_lines": 447356,
   "by_directory": {
     "app": {
       "files": 2,
@@ -8,7 +8,7 @@
     },
     "backtesting": {
       "files": 48,
-      "lines": 36194
+      "lines": 36027
     },
     "backtesting/drift_detection": {
       "files": 2,
@@ -58,6 +58,10 @@
       "files": 9,
       "lines": 2741
     },
+    "backtesting/runners": {
+      "files": 4,
+      "lines": 761
+    },
     "backtesting/services": {
       "files": 17,
       "lines": 4703
@@ -71,20 +75,20 @@
       "lines": 1102
     },
     "core": {
-      "files": 3,
-      "lines": 845
+      "files": 1,
+      "lines": 114
     },
     "core/strategy_config": {
       "files": 1,
       "lines": 22
     },
     "core/utils": {
-      "files": 2,
-      "lines": 170
+      "files": 1,
+      "lines": 17
     },
     "core/compliance": {
-      "files": 2,
-      "lines": 663
+      "files": 1,
+      "lines": 76
     },
     "core/protocols": {
       "files": 1,
@@ -103,8 +107,12 @@
       "lines": 751
     },
     "shared/config": {
-      "files": 20,
-      "lines": 12242
+      "files": 21,
+      "lines": 10683
+    },
+    "shared/config/params": {
+      "files": 6,
+      "lines": 2071
     },
     "shared/constants": {
       "files": 1,
@@ -135,8 +143,8 @@
       "lines": 633
     },
     "models": {
-      "files": 3,
-      "lines": 1906
+      "files": 2,
+      "lines": 1484
     },
     "engines": {
       "files": 1,
@@ -251,8 +259,8 @@
       "lines": 580
     },
     "api": {
-      "files": 16,
-      "lines": 9225
+      "files": 1,
+      "lines": 386
     },
     "application": {
       "files": 1,
@@ -267,8 +275,8 @@
       "lines": 376
     },
     "application/alerting": {
-      "files": 4,
-      "lines": 1330
+      "files": 1,
+      "lines": 445
     },
     "application/reconciliation": {
       "files": 1,
@@ -543,8 +551,8 @@
       "lines": 0
     },
     "domain/services/compliance": {
-      "files": 9,
-      "lines": 6478
+      "files": 12,
+      "lines": 8353
     },
     "domain/services/execution": {
       "files": 3,
@@ -636,7 +644,7 @@
     },
     "services": {
       "files": 68,
-      "lines": 35723
+      "lines": 35730
     },
     "services/position_management": {
       "files": 5,
@@ -667,8 +675,8 @@
       "lines": 512
     },
     "services/reporting": {
-      "files": 5,
-      "lines": 1139
+      "files": 4,
+      "lines": 938
     },
     "services/forex_risk": {
       "files": 3,
@@ -703,8 +711,8 @@
       "lines": 454
     },
     "services/scheduling": {
-      "files": 3,
-      "lines": 1224
+      "files": 1,
+      "lines": 17
     },
     "services/module_parametrizer": {
       "files": 3,
@@ -803,8 +811,8 @@
       "lines": 904
     },
     "services/execution": {
-      "files": 4,
-      "lines": 1191
+      "files": 1,
+      "lines": 21
     },
     "services/deployment": {
       "files": 2,
@@ -827,8 +835,8 @@
       "lines": 1368
     },
     "services/monitoring": {
-      "files": 6,
-      "lines": 2188
+      "files": 4,
+      "lines": 1407
     },
     "services/hurst_analysis": {
       "files": 13,
@@ -859,8 +867,8 @@
       "lines": 1631
     },
     "services/logging": {
-      "files": 4,
-      "lines": 406
+      "files": 2,
+      "lines": 93
     },
     "services/position_monitor": {
       "files": 3,

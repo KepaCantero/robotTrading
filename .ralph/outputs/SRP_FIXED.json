@@ -1,0 +1,33 @@
+{
+  "files_created": [
+    "app/shared/config/params/trading_thresholds.py",
+    "app/shared/config/params/strategy_config.py",
+    "app/shared/config/params/backtest_config.py",
+    "app/shared/config/params/infrastructure_config.py",
+    "app/shared/config/params/risk_config.py",
+    "app/shared/config/params/__init__.py"
+  ],
+  "classes_extracted": [
+    "TradingThresholds",
+    "StrategyConfig",
+    "StockAllocationSettings",
+    "BacktestingConfig",
+    "CommissionModel",
+    "FixedCommission",
+    "HybridCommission",
+    "TierBracket",
+    "TieredCommission",
+    "DatabaseConfig",
+    "RedisConfig",
+    "APIConfig",
+    "LoggingConfig",
+    "MonitoringConfig",
+    "CurrencyHedgingConfig",
+    "SectorCountryDiversificationConfig",
+    "ComplianceConfig"
+  ],
+  "original_backup": "app/shared/config/centralized_config.py.bak",
+  "lines_reduced": 2702,
+  "original_lines": 3831,
+  "new_lines": 1129
+}

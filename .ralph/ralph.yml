@@ -1,0 +1,65 @@
+# ============================================
+# Ralph Configuration - AlgoTrading System
+# ============================================
+# PERFIL: MAXIMA CALIDAD - Arregla TODO
+# ============================================
+
+# CLI Settings
+cli:
+  backend: claude
+
+# Event Loop Configuration
+event_loop:
+  prompt_file: .ralph/ralph_tasks/prompts/00_master_orchestrator.md
+  completion_promise: "ALGOTRADING_SYSTEM_COMPLETE"
+  max_iterations: 1000          # Aumentado para refactors completos
+  max_runtime_seconds: 1209600  # 14 dias - tiempo suficiente
+  checkpoint_interval: 1        # Guardar en CADA iteracion
+  starting_event: "master.start"
+
+# Core Settings
+core:
+  specs_dir: ./specs/
+
+# PRESET: fresh-eyes para revision FORZADA de cada cambio
+hats: builtin:fresh-eyes
+
+# Default mode - non-interactive para runs largos
+default_mode: non-interactive
+
+# Session settings
+session:
+  verbose: true
+  idle_timeout: 0  # Sin timeout
+
+# Preflight checks - DESACTIVADO para no interrumpir
+preflight:
+  enabled: false
+
+# Color output
+color: auto
+
+# TUI para ver progreso
+tui:
+  enabled: true
+
+# Logging detallado
+logging:
+  level: debug
+  file: .ralph/logs/ralph.log
+  max_size: 50MB   # Logs mas grandes
+  keep: 10         # Mas historial
+
+# FEATURES
+features:
+  parallel: false  # SECUENCIAL para evitar conflictos en refactors
+
+# ============================================
+# CONFIGURACION ESPECIFICA PARA TASK 24
+# ============================================
+# Esta config asegura que:
+# 1. CADA cambio es revisado por fresh-eyes
+# 2. No se salta ningun paso
+# 3. Se guardan checkpoints frecuentes
+# 4. Logs completos para auditoria
+# 5. Tiempo suficiente para refactors completos

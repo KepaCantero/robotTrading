@@ -1,0 +1,15 @@
+{
+  "files_created": [
+    "app/domain/services/compliance/compliance_config_extracted.py",
+    "app/domain/services/compliance/system_availability_extracted.py",
+    "app/domain/services/compliance/system_bus_extracted.py"
+  ],
+  "classes_extracted": [
+    "ComplianceConfig",
+    "SystemAvailability",
+    "SystemBus"
+  ],
+  "original_backup": "app/domain/services/compliance/compliance_engine.py.bak",
+  "status": "partial",
+  "note": "Extracted classes created but not integrated. compliance_engine.py already follows facade pattern with existing submodules. Integration requires careful testing."
+}

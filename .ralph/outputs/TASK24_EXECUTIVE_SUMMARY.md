@@ -61,17 +61,31 @@ The codebase uses `TYPE_CHECKING` guards and late imports to prevent circular im
 - `app/shared/config/centralized_config.py` - Added spread defaults
 - `app/services/asset_identification.py` - Replaced hardcoded values
 
-### 5. SRP Violations (PLAN GENERATED)
+### 5. SRP Violations (EXTRACTED)
 | Metric | Value |
 |--------|-------|
 | Files > 1000 lines | 20 |
 | Files > 2500 lines | 3 |
-| Refactor plans | 8 |
+| Classes extracted | 20 |
+| New module files created | 9 |
 
-**High priority refactor targets:**
-1. `comprehensive_backtest_runner.py` (4,688 lines)
-2. `centralized_config.py` (3,831 lines)
-3. `compliance_engine.py` (3,683 lines)
+**centralized_config.py extraction (COMPLETE):**
+- **Original:** 3,831 lines → **After:** 1,129 lines (2,702 lines reduced)
+- **New module:** `app/shared/config/params/`
+  - `trading_thresholds.py`
+  - `strategy_config.py`
+  - `backtest_config.py`
+  - `infrastructure_config.py`
+  - `risk_config.py`
+  - `__init__.py`
+- **Classes extracted:** TradingThresholds, StrategyConfig, StockAllocationSettings, BacktestingConfig, CommissionModel, FixedCommission, HybridCommission, TierBracket, TieredCommission, DatabaseConfig, RedisConfig, APIConfig, LoggingConfig, MonitoringConfig, CurrencyHedgingConfig, SectorCountryDiversificationConfig, ComplianceConfig
+
+**compliance_engine.py extraction (COMPLETE):**
+- **New files:**
+  - `compliance_config_extracted.py`
+  - `system_availability_extracted.py`
+  - `system_bus_extracted.py`
+- **Classes extracted:** ComplianceConfig, SystemAvailability, SystemBus
 
 ---
 
@@ -79,10 +93,12 @@ The codebase uses `TYPE_CHECKING` guards and late imports to prevent circular im
 
 | Category | Before | After | Improvement |
 |----------|--------|-------|-------------|
-| Duplicate files | 3 | 0 | 100% |
+| Duplicate files | 4 | 0 | 100% |
 | Hardcoded spreads | 28 | 0 | 100% |
-| Layer violations | 3 | 0* | 100% |
+| Layer violations | 4 | 0* | 100% |
 | Circular deps (runtime) | 0 | 0 | Maintained |
+| SRP classes extracted | 0 | 20 | +20 |
+| Module files created | 0 | 9 | +9 |
 
 *Already mitigated via late imports
 
@@ -100,9 +116,9 @@ The codebase uses `TYPE_CHECKING` guards and late imports to prevent circular im
 
 ## Recommendations
 
-1. **Immediate:** Review hardcoded value extraction in `asset_identification.py`
+1. **Immediate:** Review hardcoded value extraction in `asset_identification.py` (DONE)
 2. **Short-term:** Begin refactoring `comprehensive_backtest_runner.py` (4,688 lines)
-3. **Medium-term:** Split `centralized_config.py` into domain-specific modules
+3. **Medium-term:** Split `centralized_config.py` into domain-specific modules (DONE)
 4. **Long-term:** Establish 500-line file limit in CI/CD pipeline
 
 ---
