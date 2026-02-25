@@ -1,0 +1,607 @@
+{
+  "wheel_reinvention": {},
+  "hardcoded_values": {
+    "magic_decimal": [
+      {
+        "file": "app/backtesting/bias_correctors.py",
+        "line": 421,
+        "value": "0.95",
+        "code": "confidence_level: float = 0.95,"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 74,
+        "value": "0.25",
+        "code": "\"max_return_std\": 0.25,  # Tightened from 0.3 - less variance allowed"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 76,
+        "value": "0.15",
+        "code": "\"max_avg_drawdown\": -0.15,  # Tightened from -0.20 - less drawdown tolerance"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 76,
+        "value": "0.20",
+        "code": "\"max_avg_drawdown\": -0.15,  # Tightened from -0.20 - less drawdown tolerance"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 79,
+        "value": "0.30",
+        "code": "\"max_degradation\": 0.30,  # Maximum 30% degradation IS->OOS"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 80,
+        "value": "0.50",
+        "code": "\"max_negative_window_pct\": 0.50,  # Max 50% negative windows before rejection"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 88,
+        "value": "0.20",
+        "code": "\"max_return_variance\": 0.20,  # Tightened from 0.25 - less variance allowed"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 88,
+        "value": "0.25",
+        "code": "\"max_return_variance\": 0.20,  # Tightened from 0.25 - less variance allowed"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 97,
+        "value": "0.15",
+        "code": "\"weight\": 0.15,"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 98,
+        "value": "0.10",
+        "code": "\"drop_percentage\": -0.10,"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 103,
+        "value": "0.20",
+        "code": "\"weight\": 0.20,"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 109,
+        "value": "0.15",
+        "code": "\"weight\": 0.15,"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 115,
+        "value": "0.15",
+        "code": "\"weight\": 0.15,"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 121,
+        "value": "0.15",
+        "code": "\"weight\": 0.15,"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 129,
+        "value": "0.30",
+        "code": "\"max_scenario_drawdown\": -0.30,"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 130,
+        "value": "0.80",
+        "code": "\"min_survival_rate\": 0.80,"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 131,
+        "value": "0.15",
+        "code": "\"max_avg_loss\": -0.15,"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 132,
+        "value": "0.70",
+        "code": "\"min_recovery_rate\": 0.70,"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 139,
+        "value": "0.20",
+        "code": "\"annual_volatility\": 0.20,"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 141,
+        "value": "0.30",
+        "code": "\"volume_noise\": 0.30,"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 146,
+        "value": "0.95",
+        "code": "\"confidence_levels\": [0.95, 0.99],"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 146,
+        "value": "0.99",
+        "code": "\"confidence_levels\": [0.95, 0.99],"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 264,
+        "value": "0.20",
+        "code": "self.annual_volatility = config.get(\"annual_volatility\", 0.20)"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 397,
+        "value": "0.10",
+        "code": "drop_pct: float = -0.10,"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 600,
+        "value": "0.20",
+        "code": "\"max_avg_drawdown\": -0.20,"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 858,
+        "value": "0.20",
+        "code": "if avg_drawdown < self.thresholds.get(\"max_avg_drawdown\", -0.20):"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 873,
+        "value": "0.30",
+        "code": "max_degradation = self.thresholds.get(\"max_degradation\", 0.30)"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 881,
+        "value": "0.50",
+        "code": "max_negative_windows = self.thresholds.get(\"max_negative_window_pct\", 0.50)"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 1018,
+        "value": "0.25",
+        "code": "\"max_return_variance\": 0.25,"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 1122,
+        "value": "0.25",
+        "code": "if return_variance > self.thresholds.get(\"max_return_variance\", 0.25):"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 1171,
+        "value": "0.30",
+        "code": "\"max_scenario_drawdown\": -0.30,"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 1172,
+        "value": "0.80",
+        "code": "\"min_survival_rate\": 0.80,"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 1173,
+        "value": "0.15",
+        "code": "\"max_avg_loss\": -0.15,"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 1174,
+        "value": "0.70",
+        "code": "\"min_recovery_rate\": 0.70,"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 1196,
+        "value": "0.10",
+        "code": "drop_pct=scenario_config.get(\"drop_percentage\", -0.10),"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 1316,
+        "value": "0.30",
+        "code": "survived = max_dd > self.thresholds.get(\"max_scenario_drawdown\", -0.30)"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 1352,
+        "value": "0.80",
+        "code": "if survival_rate < self.thresholds.get(\"min_survival_rate\", 0.80):"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 1358,
+        "value": "0.15",
+        "code": "if avg_return < self.thresholds.get(\"max_avg_loss\", -0.15):"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 1362,
+        "value": "0.70",
+        "code": "if recovery_rate < self.thresholds.get(\"min_recovery_rate\", 0.70):"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 1431,
+        "value": "0.95",
+        "code": "self.confidence_levels = config.get(\"confidence_levels\", [0.95, 0.99])"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator.py",
+        "line": 1431,
+        "value": "0.99",
+        "code": "self.confidence_levels = config.get(\"confidence_levels\", [0.95, 0.99])"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator_enhanced.py",
+        "line": 360,
+        "value": "0.30",
+        "code": "\"max_sharpe_degradation\": 0.30,  # Maximum 30% degradation"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator_enhanced.py",
+        "line": 361,
+        "value": "0.50",
+        "code": "\"max_return_degradation\": 0.50,  # Maximum 50% return degradation"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator_enhanced.py",
+        "line": 364,
+        "value": "0.25",
+        "code": "\"max_oos_drawdown\": -0.25,  # Maximum OOS drawdown"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator_enhanced.py",
+        "line": 366,
+        "value": "0.30",
+        "code": "\"max_parameter_cv\": 0.30,  # Max 30% coefficient of variation"
+      },
+      {
+        "file": "app/backtesting/walk_forward_validator_enhanced.py",
+        "line": 986,
+        "value": "0.95",
+        "code": "0.95,"
+      },
+      {
+        "file": "app/backtesting/metrics.py",
+        "line": 684,
+        "value": "0.95",
+        "code": "confidence_level: float = 0.95,"
+      },
+      {
+        "file": "app/backtesting/metrics.py",
+        "line": 694,
+        "value": "0.95",
+        "code": "confidence_level: Confidence level for interval (default: 0.95)"
+      },
+      {
+        "file": "app/backtesting/numba_metrics.py",
+        "line": 352,
+        "value": "0.95",
+        "code": "def calculate_var_numba(returns: np.ndarray, confidence_level: float = 0.95) -> float:"
+      },
+      {
+        "file": "app/backtesting/numba_metrics.py",
+        "line": 362,
+        "value": "0.95",
+        "code": "confidence_level: Confidence level (default 0.95)"
+      },
+      {
+        "file": "app/backtesting/numba_metrics.py",
+        "line": 383,
+        "value": "0.95",
+        "code": "def calculate_cvar_numba(returns: np.ndarray, confidence_level: float = 0.95) -> float:"
+      },
+      {
+        "file": "app/backtesting/numba_metrics.py",
+        "line": 393,
+        "value": "0.95",
+        "code": "confidence_level: Confidence level (default 0.95)"
+      },
+      {
+        "file": "app/backtesting/config_loader.py",
+        "line": 187,
+        "value": "0.60",
+        "code": "excellent=0.60, good=0.50, warning=0.40, critical=0.25"
+      },
+      {
+        "file": "app/backtesting/config_loader.py",
+        "line": 187,
+        "value": "0.50",
+        "code": "excellent=0.60, good=0.50, warning=0.40, critical=0.25"
+      },
+      {
+        "file": "app/backtesting/config_loader.py",
+        "line": 187,
+        "value": "0.40",
+        "code": "excellent=0.60, good=0.50, warning=0.40, critical=0.25"
+      },
+      {
+        "file": "app/backtesting/config_loader.py",
+        "line": 187,
+        "value": "0.25",
+        "code": "excellent=0.60, good=0.50, warning=0.40, critical=0.25"
+      },
+      {
+        "file": "app/backtesting/acceptance_criteria.py",
+        "line": 57,
+        "value": "0.25",
+        "code": "MAX_MAX_DRAWDOWN = -0.25  # -25%"
+      },
+      {
+        "file": "app/backtesting/acceptance_criteria.py",
+        "line": 59,
+        "value": "0.20",
+        "code": "MIN_MONTE_CARLO_P5 = -0.20  # -20% DD"
+      },
+      {
+        "file": "app/backtesting/acceptance_criteria.py",
+        "line": 63,
+        "value": "0.20",
+        "code": "MAX_COMMISSION_IMPACT = 0.20  # 20% of gross profit"
+      },
+      {
+        "file": "app/backtesting/professional_reporter.py",
+        "line": 170,
+        "value": "0.25",
+        "code": "| **Max Drawdown** | {max_dd:.2%} | {'\u2705' if abs(max_dd) < 0.25 else '\u274c'} |"
+      },
+      {
+        "file": "app/backtesting/professional_reporter.py",
+        "line": 398,
+        "value": "0.15",
+        "code": "if sharpe > 1.5 and abs(max_dd) < 0.15 and profit_factor > 1.5:"
+      },
+      {
+        "file": "app/backtesting/profile_batch_backtester.py",
+        "line": 1044,
+        "value": "0.95",
+        "code": "min_profitable_pct = mc_config.get(\"confidence_level\", 0.95)"
+      },
+      {
+        "file": "app/backtesting/profile_batch_backtester.py",
+        "line": 1051,
+        "value": "0.95",
+        "code": "min_profitable_pct = mc_config.get(\"min_profitable_pct\", 0.95)"
+      },
+      {
+        "file": "app/backtesting/profile_batch_backtester.py",
+        "line": 1055,
+        "value": "0.95",
+        "code": "min_profitable_pct = mc_config.get(\"min_profitable_pct\", 0.95)"
+      },
+      {
+        "file": "app/backtesting/profile_batch_backtester.py",
+        "line": 1145,
+        "value": "0.20",
+        "code": "max_dd = oos_config.get(\"max_drawdown\", -0.20)"
+      },
+      {
+        "file": "app/backtesting/profile_batch_backtester.py",
+        "line": 1433,
+        "value": "0.10",
+        "code": "\"take_profit\": {\"fixed_percentage\": {\"value\": best_params.get(\"take_profit\", 0.10)}},"
+      },
+      {
+        "file": "app/backtesting/insight_generator.py",
+        "line": 100,
+        "value": "0.55",
+        "code": "elif win_rate > 0.55:"
+      },
+      {
+        "file": "app/backtesting/insight_generator.py",
+        "line": 321,
+        "value": "0.45",
+        "code": "if win_rate < 0.45:"
+      },
+      {
+        "file": "app/backtesting/insight_generator.py",
+        "line": 375,
+        "value": "0.15",
+        "code": "if max_dd > -0.1 and volatility < 0.15:"
+      },
+      {
+        "file": "app/backtesting/constants.py",
+        "line": 146,
+        "value": "0.50",
+        "code": "{\"volume_max\": 50000, \"rate\": config.default_commission_rate, \"min\": Decimal(\"0.50\")},"
+      },
+      {
+        "file": "app/backtesting/constants.py",
+        "line": 147,
+        "value": "0.10",
+        "code": "{\"volume_max\": 500000, \"rate\": config.default_commission_rate / 5, \"min\": Decimal(\"0.10\")},"
+      },
+      {
+        "file": "app/backtesting/constants.py",
+        "line": 155,
+        "value": "0.50",
+        "code": "{\"volume_max\": 100000, \"rate\": config.default_commission_rate / 2, \"min\": Decimal(\"0.50\")},"
+      },
+      {
+        "file": "app/backtesting/constants.py",
+        "line": 177,
+        "value": "0.10",
+        "code": "return Decimal(\"0.10\")"
+      },
+      {
+        "file": "app/backtesting/robustness_tester.py",
+        "line": 134,
+        "value": "0.20",
+        "code": "parameter_variation_pct: float = 0.20,  # \u00b120% variation (Req #14)"
+      },
+      {
+        "file": "app/backtesting/robustness_tester.py",
+        "line": 136,
+        "value": "0.20",
+        "code": "max_return_variation: float = 0.20,  # Max 20% variation for robust (Req #14)"
+      },
+      {
+        "file": "app/backtesting/backtest_validator.py",
+        "line": 113,
+        "value": "0.70",
+        "code": "train_ratio = oos_config.get('train_ratio', 0.70)"
+      },
+      {
+        "file": "app/backtesting/backtest_validator.py",
+        "line": 114,
+        "value": "0.30",
+        "code": "acceptable_degradation = oos_config.get('acceptable_degradation_pct', 0.30)"
+      },
+      {
+        "file": "app/backtesting/backtest_validator.py",
+        "line": 115,
+        "value": "0.50",
+        "code": "concept_drift_threshold = oos_config.get('concept_drift_threshold', 0.50)"
+      },
+      {
+        "file": "app/backtesting/backtest_validator.py",
+        "line": 356,
+        "value": "0.20",
+        "code": "vol_regime_change = abs(oos_vol - in_vol) / in_vol > 0.20"
+      },
+      {
+        "file": "app/backtesting/awesome_quant_integrator.py",
+        "line": 242,
+        "value": "0.95",
+        "code": "\"var_95\": float(quantstats.stats.value_at_risk(returns, 0.95)),"
+      },
+      {
+        "file": "app/backtesting/awesome_quant_integrator.py",
+        "line": 243,
+        "value": "0.95",
+        "code": "\"cvar_95\": float(quantstats.stats.conditional_value_at_risk(returns, 0.95)),"
+      },
+      {
+        "file": "app/backtesting/awesome_quant_integrator.py",
+        "line": 326,
+        "value": "0.95",
+        "code": "\"var_95\": float(empyrical.value_at_risk(returns, 0.95)),"
+      },
+      {
+        "file": "app/backtesting/awesome_quant_integrator.py",
+        "line": 327,
+        "value": "0.95",
+        "code": "\"cvar_95\": float(empyrical.conditional_value_at_risk(returns, 0.95)),"
+      },
+      {
+        "file": "app/backtesting/clustering_analyzer.py",
+        "line": 159,
+        "value": "0.95",
+        "code": "variance_threshold: float = 0.95,"
+      },
+      {
+        "file": "app/backtesting/clustering_analyzer.py",
+        "line": 514,
+        "value": "0.25",
+        "code": "elif score > 0.25:"
+      },
+      {
+        "file": "app/backtesting/backtesting_compliance.py",
+        "line": 47,
+        "value": "0.30",
+        "code": "MAX_IS_OOS_DEGRADATION = 0.30  # M\u00e1ximo 30% degradaci\u00f3n IS->OOS"
+      },
+      {
+        "file": "app/backtesting/backtesting_compliance.py",
+        "line": 51,
+        "value": "0.95",
+        "code": "CONFIDENCE_LEVELS = [0.95, 0.99]"
+      },
+      {
+        "file": "app/backtesting/backtesting_compliance.py",
+        "line": 51,
+        "value": "0.99",
+        "code": "CONFIDENCE_LEVELS = [0.95, 0.99]"
+      },
+      {
+        "file": "app/backtesting/chan_metrics.py",
+        "line": 135,
+        "value": "0.95",
+        "code": "confidence_level: float = 0.95,"
+      },
+      {
+        "file": "app/backtesting/chan_metrics.py",
+        "line": 903,
+        "value": "0.95",
+        "code": "confidence_level: float = 0.95,"
+      },
+      {
+        "file": "app/backtesting/engine.py",
+        "line": 155,
+        "value": "0.10",
+        "code": "max_order_pct_of_volume=Decimal(\"0.10\"),  # Reject orders >10% of daily volume"
+      },
+      {
+        "file": "app/backtesting/engine.py",
+        "line": 235,
+        "value": "0.10",
+        "code": "max_order_pct_of_volume=Decimal(\"0.10\"),"
+      },
+      {
+        "file": "app/backtesting/comprehensive_backtest_runner.py",
+        "line": 942,
+        "value": "0.70",
+        "code": "train_pct = wf_config.get('train_pct', 0.70)  # 70% training"
+      },
+      {
+        "file": "app/backtesting/comprehensive_backtest_runner.py",
+        "line": 943,
+        "value": "0.30",
+        "code": "test_pct = wf_config.get('test_pct', 0.30)  # 30% test"
+      },
+      {
+        "file": "app/backtesting/comprehensive_backtest_runner.py",
+        "line": 1344,
+        "value": "0.95",
+        "code": "confidence=0.95,"
+      },
+      {
+        "file": "app/backtesting/comprehensive_backtest_runner.py",
+        "line": 1762,
+        "value": "0.60",
+        "code": "'buy_threshold': [0.60, 0.70, 0.80, 0.90],"
+      },
+      {
+        "file": "app/backtesting/comprehensive_backtest_runner.py",
+        "line": 1762,
+        "value": "0.70",
+        "code": "'buy_threshold': [0.60, 0.70, 0.80, 0.90],"
+      },
+      {
+        "file": "app/backtesting/comprehensive_backtest_runner.py",
+        "line": 1762,
+        "value": "0.80",
+        "code": "'buy_threshold': [0.60, 0.70, 0.80, 0.90],"
+      },
+      {
+        "file": "app/backtesting/comprehensive_backtest_runner.py",
+        "line": 1762,
+        "value": "0.90",
+        "code": "'buy_threshold': [0.60, 0.70, 0.80, 0.90],"
+      },
+      {
+        "file": "app/backtesting/comprehensive_backtest_runner.py",
+        "line": 1763,
+        "value": "0.10",
+        "code": "'sell_threshold': [0.10, 0.20, 0.30, 0.40],"
+      }
+    ]
+  }
+}

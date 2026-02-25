@@ -10,7 +10,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from app.models.order import Order, OrderStatus
+from app.domain.models.order import Order, OrderStatus
 
 logger = logging.getLogger(__name__)
 

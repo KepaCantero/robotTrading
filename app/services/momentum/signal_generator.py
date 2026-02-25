@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import List, Optional
 
-from app.models.momentum import (
+from app.domain.models.momentum import (
     MomentumFilter,
     MomentumSignal,
     MomentumType,

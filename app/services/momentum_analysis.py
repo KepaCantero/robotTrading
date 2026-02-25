@@ -10,7 +10,7 @@ DEPRECATED: Import from app.services.momentum instead.
 import logging
 from typing import Dict, List, Optional
 
-from app.models.momentum import (
+from app.domain.models.momentum import (
     MomentumAnalysis,
     MomentumFilter,
     MomentumSignal,

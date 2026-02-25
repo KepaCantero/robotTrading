@@ -45,7 +45,7 @@ from ib_insync.contract import Contract as IBContract
 from ib_insync.ticker import Ticker
 
 from app.core.reconnection_manager import ReconnectionConfig, ReconnectionManager
-from app.core.trading_validators import TradingValidator
+from app.domain.services.trading_validators import TradingValidator
 
 # from app.models.position import Position  # NOTE: Position model not implemented yet
 # from app.utils.exceptions import BrokerError, ConfigurationError  # NOTE: Not implemented

@@ -1,0 +1,1388 @@
+[
+  {
+    "name": "models.py",
+    "count": 35,
+    "paths": [
+      "app/backtesting/models.py",
+      "app/backtesting/robust_engine/models.py",
+      "app/backtesting/acceptance/models.py",
+      "app/backtesting/execution/models.py",
+      "app/backtesting/services/models.py",
+      "app/backtesting/validation/models.py",
+      "app/application/orchestration/target_optimization/models.py",
+      "app/infrastructure/persistence/database/models.py",
+      "app/domain/ensemble/models.py",
+      "app/domain/analysis/vectorization/models.py",
+      "app/domain/analysis/fundamental_law/models.py",
+      "app/domain/strategies/models.py",
+      "app/domain/optimization/parameter/models.py",
+      "app/domain/portfolio/multi_asset/models.py",
+      "app/domain/market_analysis/microstructure/models.py",
+      "app/domain/market_analysis/microstructure/ofi/models.py",
+      "app/domain/trading/market_making/avellaneda_stoikov/models.py",
+      "app/services/validation_engine/models.py",
+      "app/services/alerting_system/models.py",
+      "app/services/reporting_generator/models.py",
+      "app/services/portfolio_constructor/models.py",
+      "app/services/smart_order_routing/models.py",
+      "app/services/module_parametrizer/models.py",
+      "app/services/strategy_recommender/models.py",
+      "app/services/metrics_database/models.py",
+      "app/services/capacity_fade_validation/models.py",
+      "app/services/profile_generator/models.py",
+      "app/services/risk_scaling/models.py",
+      "app/services/xai/models.py",
+      "app/services/backtest_orchestration/models.py",
+      "app/services/deploy_decision_orchestrator/models.py",
+      "app/services/profile_driven_trading/models.py",
+      "app/services/hurst_analysis/models.py",
+      "app/services/configuration_persistence/models.py",
+      "app/services/risk_scaling_application/models.py"
+    ],
+    "sizes": [
+      19534,
+      14764,
+      1457,
+      17874,
+      7453,
+      13503,
+      6838,
+      24641,
+      18449,
+      11900,
+      21596,
+      23751,
+      13789,
+      16925,
+      32983,
+      29639,
+      12290,
+      2637,
+      9793,
+      4651,
+      2357,
+      12490,
+      5873,
+      2524,
+      13415,
+      4098,
+      7154,
+      14954,
+      9454,
+      7267,
+      6004,
+      11488,
+      3314,
+      4827,
+      2017
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "orchestrator.py",
+    "count": 6,
+    "paths": [
+      "app/backtesting/core/orchestrator.py",
+      "app/backtesting/profile_batch/orchestrator.py",
+      "app/services/strategy_stock_allocation/orchestrator.py",
+      "app/services/momentum/orchestrator.py",
+      "app/services/profile_driven_trading/orchestrator.py",
+      "app/services/hurst_analysis/orchestrator.py"
+    ],
+    "sizes": [
+      14970,
+      13244,
+      23596,
+      10193,
+      42569,
+      5631
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "factory.py",
+    "count": 6,
+    "paths": [
+      "app/backtesting/engines/factory.py",
+      "app/domain/strategies/factory.py",
+      "app/domain/optimization/factory.py",
+      "app/domain/services/indicators/factory.py",
+      "app/services/hurst_analysis/factory.py",
+      "app/services/tax_efficiency/engines/factory.py"
+    ],
+    "sizes": [
+      10260,
+      10827,
+      14813,
+      17667,
+      4743,
+      4072
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "portfolio.py",
+    "count": 6,
+    "paths": [
+      "app/models/portfolio.py",
+      "app/api/portfolio.py",
+      "app/domain/models/portfolio.py",
+      "app/domain/entities/portfolio.py",
+      "app/presentation/api/portfolio.py",
+      "app/presentation/controllers/portfolio.py"
+    ],
+    "sizes": [
+      15492,
+      28422,
+      15492,
+      23261,
+      28429,
+      10642
+    ],
+    "exact_duplicates": {
+      "15492": [
+        "app/models/portfolio.py",
+        "app/domain/models/portfolio.py"
+      ]
+    }
+  },
+  {
+    "name": "momentum.py",
+    "count": 6,
+    "paths": [
+      "app/api/momentum.py",
+      "app/domain/strategies/momentum.py",
+      "app/domain/models/momentum.py",
+      "app/domain/services/analysis/momentum.py",
+      "app/presentation/api/momentum.py",
+      "app/presentation/controllers/momentum.py"
+    ],
+    "sizes": [
+      43153,
+      43956,
+      19438,
+      11225,
+      43167,
+      44530
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "config_loader.py",
+    "count": 5,
+    "paths": [
+      "app/backtesting/config_loader.py",
+      "app/backtesting/core/config_loader.py",
+      "app/shared/config/config_loader.py",
+      "app/engines/data_engine/config_loader.py",
+      "app/domain/strategies/config_loader.py"
+    ],
+    "sizes": [
+      16076,
+      9443,
+      16766,
+      8487,
+      10015
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "base.py",
+    "count": 5,
+    "paths": [
+      "app/shared/config/base.py",
+      "app/engines/strategy_engines/base.py",
+      "app/engines/portfolio_engine/optimizers/base.py",
+      "app/domain/strategies/base.py",
+      "app/services/tax_efficiency/engines/base.py"
+    ],
+    "sizes": [
+      1294,
+      21714,
+      4958,
+      10381,
+      3401
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "portfolio_analytics.py",
+    "count": 5,
+    "paths": [
+      "app/models/portfolio_analytics.py",
+      "app/api/portfolio_analytics.py",
+      "app/domain/models/portfolio_analytics.py",
+      "app/presentation/api/portfolio_analytics.py",
+      "app/presentation/controllers/portfolio_analytics.py"
+    ],
+    "sizes": [
+      17378,
+      18514,
+      18093,
+      18534,
+      15640
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "cost_analysis.py",
+    "count": 5,
+    "paths": [
+      "app/models/cost_analysis.py",
+      "app/api/cost_analysis.py",
+      "app/domain/models/cost_analysis.py",
+      "app/presentation/api/cost_analysis.py",
+      "app/presentation/controllers/cost_analysis.py"
+    ],
+    "sizes": [
+      17235,
+      16054,
+      17242,
+      16054,
+      13559
+    ],
+    "exact_duplicates": {
+      "16054": [
+        "app/api/cost_analysis.py",
+        "app/presentation/api/cost_analysis.py"
+      ]
+    }
+  },
+  {
+    "name": "paper_trading.py",
+    "count": 5,
+    "paths": [
+      "app/api/paper_trading.py",
+      "app/infrastructure/providers/paper_trading.py",
+      "app/domain/models/paper_trading.py",
+      "app/presentation/api/paper_trading.py",
+      "app/presentation/controllers/paper_trading.py"
+    ],
+    "sizes": [
+      17803,
+      10149,
+      17997,
+      17815,
+      14975
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "protocols.py",
+    "count": 5,
+    "paths": [
+      "app/domain/strategies/protocols.py",
+      "app/domain/services/compliance/protocols.py",
+      "app/services/strategy_stock_allocation/protocols.py",
+      "app/services/momentum/protocols.py",
+      "app/services/hurst_analysis/protocols.py"
+    ],
+    "sizes": [
+      1856,
+      10141,
+      4022,
+      8568,
+      3062
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "deployment.py",
+    "count": 4,
+    "paths": [
+      "app/api/deployment.py",
+      "app/domain/models/deployment.py",
+      "app/presentation/api/deployment.py",
+      "app/presentation/controllers/deployment.py"
+    ],
+    "sizes": [
+      11434,
+      5353,
+      11447,
+      8876
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "profitability_validation.py",
+    "count": 4,
+    "paths": [
+      "app/api/profitability_validation.py",
+      "app/domain/models/profitability_validation.py",
+      "app/presentation/api/profitability_validation.py",
+      "app/presentation/controllers/profitability_validation.py"
+    ],
+    "sizes": [
+      16418,
+      9799,
+      16425,
+      14690
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "assets.py",
+    "count": 4,
+    "paths": [
+      "app/api/assets.py",
+      "app/domain/models/assets.py",
+      "app/presentation/api/assets.py",
+      "app/presentation/controllers/assets.py"
+    ],
+    "sizes": [
+      41576,
+      11447,
+      41583,
+      18155
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "market_data.py",
+    "count": 4,
+    "paths": [
+      "app/api/market_data.py",
+      "app/domain/models/market_data.py",
+      "app/presentation/api/market_data.py",
+      "app/presentation/controllers/market_data.py"
+    ],
+    "sizes": [
+      17540,
+      13619,
+      17551,
+      15091
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "metrics.py",
+    "count": 3,
+    "paths": [
+      "app/backtesting/metrics.py",
+      "app/backtesting/shared/metrics.py",
+      "app/shared/performance/metrics.py"
+    ],
+    "sizes": [
+      49232,
+      5939,
+      7654
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "report_generator.py",
+    "count": 3,
+    "paths": [
+      "app/backtesting/report_generator.py",
+      "app/backtesting/profile_batch/report_generator.py",
+      "app/presentation/dashboard/report_generator.py"
+    ],
+    "sizes": [
+      24585,
+      14659,
+      32161
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "performance_tracker.py",
+    "count": 3,
+    "paths": [
+      "app/backtesting/robust_engine/performance_tracker.py",
+      "app/domain/strategies/modules/performance_tracker.py",
+      "app/services/performance_tracker.py"
+    ],
+    "sizes": [
+      21184,
+      10410,
+      5356
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "drawdown_validator.py",
+    "count": 3,
+    "paths": [
+      "app/backtesting/acceptance/drawdown_validator.py",
+      "app/backtesting/validation/drawdown_validator.py",
+      "app/services/risk/validators/drawdown_validator.py"
+    ],
+    "sizes": [
+      1204,
+      9136,
+      3825
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "backtest_orchestrator.py",
+    "count": 3,
+    "paths": [
+      "app/backtesting/execution/backtest_orchestrator.py",
+      "app/services/backtest_orchestration/backtest_orchestrator.py",
+      "app/services/backtesting_orchestration/backtest_orchestrator.py"
+    ],
+    "sizes": [
+      16163,
+      13178,
+      17024
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "bayesian_optimizer.py",
+    "count": 3,
+    "paths": [
+      "app/backtesting/profile_batch/bayesian_optimizer.py",
+      "app/domain/optimization/bayesian_optimizer.py",
+      "app/domain/optimization/parameter/bayesian_optimizer.py"
+    ],
+    "sizes": [
+      7675,
+      25420,
+      21660
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "error_handler.py",
+    "count": 3,
+    "paths": [
+      "app/shared/exceptions/error_handler.py",
+      "app/presentation/api/error_handler.py",
+      "app/services/error_handling/error_handler.py"
+    ],
+    "sizes": [
+      11080,
+      12267,
+      14347
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "order.py",
+    "count": 3,
+    "paths": [
+      "app/models/order.py",
+      "app/domain/models/order.py",
+      "app/domain/entities/order.py"
+    ],
+    "sizes": [
+      13084,
+      13084,
+      20725
+    ],
+    "exact_duplicates": {
+      "13084": [
+        "app/models/order.py",
+        "app/domain/models/order.py"
+      ]
+    }
+  },
+  {
+    "name": "signals.py",
+    "count": 3,
+    "paths": [
+      "app/api/signals.py",
+      "app/presentation/api/signals.py",
+      "app/presentation/controllers/signals.py"
+    ],
+    "sizes": [
+      16249,
+      16264,
+      13947
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "live_trading.py",
+    "count": 3,
+    "paths": [
+      "app/api/live_trading.py",
+      "app/presentation/api/live_trading.py",
+      "app/presentation/controllers/live_trading.py"
+    ],
+    "sizes": [
+      29029,
+      29148,
+      29170
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "strategies.py",
+    "count": 3,
+    "paths": [
+      "app/api/strategies.py",
+      "app/presentation/api/strategies.py",
+      "app/presentation/controllers/strategies.py"
+    ],
+    "sizes": [
+      17292,
+      17299,
+      15451
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "capa2_endpoints.py",
+    "count": 3,
+    "paths": [
+      "app/api/capa2_endpoints.py",
+      "app/presentation/api/capa2_endpoints.py",
+      "app/presentation/controllers/capa2_endpoints.py"
+    ],
+    "sizes": [
+      25423,
+      25431,
+      24787
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "utils.py",
+    "count": 3,
+    "paths": [
+      "app/api/utils.py",
+      "app/presentation/api/utils.py",
+      "app/services/hurst_analysis/utils.py"
+    ],
+    "sizes": [
+      10642,
+      10660,
+      2947
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "portfolio_constructor.py",
+    "count": 3,
+    "paths": [
+      "app/domain/strategies/portfolio_constructor.py",
+      "app/services/portfolio_constructor/portfolio_constructor.py",
+      "app/services/portfolio_construction/portfolio_constructor.py"
+    ],
+    "sizes": [
+      30927,
+      23876,
+      11358
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "mean_variance_optimizer.py",
+    "count": 3,
+    "paths": [
+      "app/domain/optimization/mean_variance_optimizer.py",
+      "app/domain/portfolio_optimization/mean_variance_optimizer.py",
+      "app/domain/services/portfolio_optimization/mean_variance_optimizer.py"
+    ],
+    "sizes": [
+      38625,
+      44781,
+      16906
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "optimization.py",
+    "count": 3,
+    "paths": [
+      "app/domain/models/optimization.py",
+      "app/presentation/api/optimization.py",
+      "app/presentation/controllers/optimization.py"
+    ],
+    "sizes": [
+      13193,
+      16741,
+      13279
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "trading_error_handler.py",
+    "count": 3,
+    "paths": [
+      "app/presentation/api/trading_error_handler.py",
+      "app/presentation/controllers/trading_error_handler.py",
+      "app/services/trading_error_handler.py"
+    ],
+    "sizes": [
+      12552,
+      10942,
+      25545
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "strategy_recommender.py",
+    "count": 3,
+    "paths": [
+      "app/services/strategy_recommender/strategy_recommender.py",
+      "app/services/hurst_analysis/strategy_recommender.py",
+      "app/services/strategy_recommendation/strategy_recommender.py"
+    ],
+    "sizes": [
+      16984,
+      2592,
+      9526
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "main.py",
+    "count": 2,
+    "paths": [
+      "app/main.py",
+      "app/presentation/dashboard/main.py"
+    ],
+    "sizes": [
+      11677,
+      60706
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "data_loader.py",
+    "count": 2,
+    "paths": [
+      "app/backtesting/data_loader.py",
+      "app/presentation/dashboard/data_loader.py"
+    ],
+    "sizes": [
+      18692,
+      4787
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "overfitting_detector.py",
+    "count": 2,
+    "paths": [
+      "app/backtesting/drift_detection/overfitting_detector.py",
+      "app/backtesting/validation/overfitting_detector.py"
+    ],
+    "sizes": [
+      15873,
+      21912
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "integration.py",
+    "count": 2,
+    "paths": [
+      "app/backtesting/meta_analyzer/integration.py",
+      "app/sre/error_budgets/integration.py"
+    ],
+    "sizes": [
+      4476,
+      16848
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "dividend_handler.py",
+    "count": 2,
+    "paths": [
+      "app/backtesting/robust_engine/dividend_handler.py",
+      "app/domain/services/backtesting/dividend_handler.py"
+    ],
+    "sizes": [
+      15379,
+      12531
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "execution_engine.py",
+    "count": 2,
+    "paths": [
+      "app/backtesting/engines/execution_engine.py",
+      "app/domain/strategies/execution_engine.py"
+    ],
+    "sizes": [
+      22447,
+      11603
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "market_impact.py",
+    "count": 2,
+    "paths": [
+      "app/backtesting/execution/market_impact.py",
+      "app/domain/services/backtesting/market_impact.py"
+    ],
+    "sizes": [
+      21851,
+      13885
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "feature_importance.py",
+    "count": 2,
+    "paths": [
+      "app/backtesting/feature_engineering/feature_importance.py",
+      "app/domain/strategies/learning/feature_importance.py"
+    ],
+    "sizes": [
+      21753,
+      73924
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "profile_generator.py",
+    "count": 2,
+    "paths": [
+      "app/backtesting/profile_batch/profile_generator.py",
+      "app/services/profile_generator/profile_generator.py"
+    ],
+    "sizes": [
+      12235,
+      23588
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "position_manager.py",
+    "count": 2,
+    "paths": [
+      "app/backtesting/services/position_manager.py",
+      "app/domain/strategies/position_manager.py"
+    ],
+    "sizes": [
+      4305,
+      18360
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "timezone_utils.py",
+    "count": 2,
+    "paths": [
+      "app/core/timezone_utils.py",
+      "app/shared/utils/timezone_utils.py"
+    ],
+    "sizes": [
+      11857,
+      11977
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "reconnection_manager.py",
+    "count": 2,
+    "paths": [
+      "app/core/reconnection_manager.py",
+      "app/infrastructure/resilience/reconnection_manager.py"
+    ],
+    "sizes": [
+      11974,
+      11982
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "trading_validators.py",
+    "count": 2,
+    "paths": [
+      "app/core/trading_validators.py",
+      "app/domain/services/trading_validators.py"
+    ],
+    "sizes": [
+      11730,
+      11730
+    ],
+    "exact_duplicates": {
+      "11730": [
+        "app/core/trading_validators.py",
+        "app/domain/services/trading_validators.py"
+      ]
+    }
+  },
+  {
+    "name": "safe_parse.py",
+    "count": 2,
+    "paths": [
+      "app/core/utils/safe_parse.py",
+      "app/shared/utils/safe_parse.py"
+    ],
+    "sizes": [
+      3775,
+      3777
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "service_registry.py",
+    "count": 2,
+    "paths": [
+      "app/core/compliance/service_registry.py",
+      "app/domain/services/compliance/service_registry.py"
+    ],
+    "sizes": [
+      21310,
+      21437
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "technical_indicators.py",
+    "count": 2,
+    "paths": [
+      "app/shared/config/technical_indicators.py",
+      "app/domain/services/indicators/technical_indicators.py"
+    ],
+    "sizes": [
+      9106,
+      44216
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "signal.py",
+    "count": 2,
+    "paths": [
+      "app/models/signal.py",
+      "app/domain/models/signal.py"
+    ],
+    "sizes": [
+      40917,
+      41725
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "greeks_calculator.py",
+    "count": 2,
+    "paths": [
+      "app/engines/risk_engine/greeks_calculator.py",
+      "app/domain/strategies/greeks_calculator.py"
+    ],
+    "sizes": [
+      45601,
+      15539
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "ensemble.py",
+    "count": 2,
+    "paths": [
+      "app/engines/strategy_engines/ensemble.py",
+      "app/domain/ensemble/ensemble.py"
+    ],
+    "sizes": [
+      29584,
+      26306
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "logging_utils_examples.py",
+    "count": 2,
+    "paths": [
+      "app/api/logging_utils_examples.py",
+      "app/presentation/api/logging_utils_examples.py"
+    ],
+    "sizes": [
+      7035,
+      7061
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "middleware.py",
+    "count": 2,
+    "paths": [
+      "app/api/middleware.py",
+      "app/presentation/api/middleware.py"
+    ],
+    "sizes": [
+      13091,
+      13098
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "input_profile_router.py",
+    "count": 2,
+    "paths": [
+      "app/application/routers/input_profile_router.py",
+      "app/application/services/input_profile_router.py"
+    ],
+    "sizes": [
+      13759,
+      22461
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "rule_templates.py",
+    "count": 2,
+    "paths": [
+      "app/application/alerting/rule_templates.py",
+      "app/services/alerting_system/rule_templates.py"
+    ],
+    "sizes": [
+      15207,
+      15211
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "user_config_adapter.py",
+    "count": 2,
+    "paths": [
+      "app/application/alerting/user_config_adapter.py",
+      "app/services/alerting_system/user_config_adapter.py"
+    ],
+    "sizes": [
+      2312,
+      2306
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "metrics_driven_alerter.py",
+    "count": 2,
+    "paths": [
+      "app/application/alerting/metrics_driven_alerter.py",
+      "app/services/alerting_system/metrics_driven_alerter.py"
+    ],
+    "sizes": [
+      14316,
+      14328
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "discrepancy_detector.py",
+    "count": 2,
+    "paths": [
+      "app/application/reconciliation/discrepancy_detector.py",
+      "app/services/reconciliation/discrepancy_detector.py"
+    ],
+    "sizes": [
+      12959,
+      12959
+    ],
+    "exact_duplicates": {
+      "12959": [
+        "app/application/reconciliation/discrepancy_detector.py",
+        "app/services/reconciliation/discrepancy_detector.py"
+      ]
+    }
+  },
+  {
+    "name": "reporting_orchestrator.py",
+    "count": 2,
+    "paths": [
+      "app/application/reporting/reporting_orchestrator.py",
+      "app/services/reporting/reporting_orchestrator.py"
+    ],
+    "sizes": [
+      7348,
+      7342
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "market_scheduler.py",
+    "count": 2,
+    "paths": [
+      "app/application/scheduling/market_scheduler.py",
+      "app/services/scheduling/market_scheduler.py"
+    ],
+    "sizes": [
+      21571,
+      21563
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "examples.py",
+    "count": 2,
+    "paths": [
+      "app/application/scheduling/examples.py",
+      "app/services/scheduling/examples.py"
+    ],
+    "sizes": [
+      13967,
+      13964
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "absolute_return_optimizer.py",
+    "count": 2,
+    "paths": [
+      "app/application/orchestration/target_optimization/absolute_return_optimizer.py",
+      "app/services/absolute_return_optimizer.py"
+    ],
+    "sizes": [
+      14069,
+      33475
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "risk_configurator.py",
+    "count": 2,
+    "paths": [
+      "app/application/services/risk_configurator.py",
+      "app/domain/configurators/risk_configurator.py"
+    ],
+    "sizes": [
+      17757,
+      7096
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "time_sync_monitor.py",
+    "count": 2,
+    "paths": [
+      "app/infrastructure/monitoring/time_sync_monitor.py",
+      "app/services/monitoring/time_sync_monitor.py"
+    ],
+    "sizes": [
+      13660,
+      13652
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "memory_monitor.py",
+    "count": 2,
+    "paths": [
+      "app/infrastructure/monitoring/memory_monitor.py",
+      "app/services/monitoring/memory_monitor.py"
+    ],
+    "sizes": [
+      11805,
+      11797
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "trading_decision_logger.py",
+    "count": 2,
+    "paths": [
+      "app/infrastructure/logging/trading_decision_logger.py",
+      "app/services/logging/trading_decision_logger.py"
+    ],
+    "sizes": [
+      6304,
+      6290
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "append_only_log.py",
+    "count": 2,
+    "paths": [
+      "app/infrastructure/logging/append_only_log.py",
+      "app/services/logging/append_only_log.py"
+    ],
+    "sizes": [
+      3215,
+      3209
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "correlation_analyzer.py",
+    "count": 2,
+    "paths": [
+      "app/domain/ensemble/correlation_analyzer.py",
+      "app/domain/strategies/correlation_analyzer.py"
+    ],
+    "sizes": [
+      22818,
+      21126
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "risk_config.py",
+    "count": 2,
+    "paths": [
+      "app/domain/configurators/risk_config.py",
+      "app/domain/models/risk_config.py"
+    ],
+    "sizes": [
+      5435,
+      4144
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "factor_models.py",
+    "count": 2,
+    "paths": [
+      "app/domain/strategies/factor_models.py",
+      "app/services/factor_models.py"
+    ],
+    "sizes": [
+      17621,
+      26018
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "base_optimizer.py",
+    "count": 2,
+    "paths": [
+      "app/domain/optimization/base_optimizer.py",
+      "app/domain/optimization/parameter/base_optimizer.py"
+    ],
+    "sizes": [
+      15723,
+      18813
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "rebalancer.py",
+    "count": 2,
+    "paths": [
+      "app/domain/portfolio/multi_asset/rebalancer.py",
+      "app/domain/services/rebalancer.py"
+    ],
+    "sizes": [
+      26659,
+      13865
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "signal_generator.py",
+    "count": 2,
+    "paths": [
+      "app/domain/services/signal_generator.py",
+      "app/services/momentum/signal_generator.py"
+    ],
+    "sizes": [
+      17249,
+      8771
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "transaction_costs.py",
+    "count": 2,
+    "paths": [
+      "app/domain/services/backtesting/transaction_costs.py",
+      "app/services/transaction_costs.py"
+    ],
+    "sizes": [
+      14379,
+      23481
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "trading_bridge_adapter.py",
+    "count": 2,
+    "paths": [
+      "app/domain/services/execution/trading_bridge_adapter.py",
+      "app/services/execution/trading_bridge_adapter.py"
+    ],
+    "sizes": [
+      11352,
+      11320
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "execution_adapter.py",
+    "count": 2,
+    "paths": [
+      "app/domain/services/execution/execution_adapter.py",
+      "app/services/execution/execution_adapter.py"
+    ],
+    "sizes": [
+      11726,
+      11716
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "order_manager_adapter.py",
+    "count": 2,
+    "paths": [
+      "app/domain/services/execution/order_manager_adapter.py",
+      "app/services/execution/order_manager_adapter.py"
+    ],
+    "sizes": [
+      17340,
+      17287
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "risk_reward_validator.py",
+    "count": 2,
+    "paths": [
+      "app/domain/services/risk/validators/risk_reward_validator.py",
+      "app/services/risk/validators/risk_reward_validator.py"
+    ],
+    "sizes": [
+      2864,
+      2864
+    ],
+    "exact_duplicates": {
+      "2864": [
+        "app/domain/services/risk/validators/risk_reward_validator.py",
+        "app/services/risk/validators/risk_reward_validator.py"
+      ]
+    }
+  },
+  {
+    "name": "health.py",
+    "count": 2,
+    "paths": [
+      "app/presentation/api/health.py",
+      "app/presentation/controllers/health.py"
+    ],
+    "sizes": [
+      9652,
+      8044
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "trailing_stop_manager.py",
+    "count": 2,
+    "paths": [
+      "app/services/trailing_stop_manager.py",
+      "app/services/position_management/trailing_stop_manager.py"
+    ],
+    "sizes": [
+      4910,
+      6874
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "validation_engine.py",
+    "count": 2,
+    "paths": [
+      "app/services/validation_engine/validation_engine.py",
+      "app/services/validation_orchestration/validation_engine.py"
+    ],
+    "sizes": [
+      15587,
+      19440
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "reporting_generator.py",
+    "count": 2,
+    "paths": [
+      "app/services/reporting/reporting_generator.py",
+      "app/services/reporting_generator/reporting_generator.py"
+    ],
+    "sizes": [
+      9298,
+      20597
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "module_parametrizer.py",
+    "count": 2,
+    "paths": [
+      "app/services/module_parametrizer/module_parametrizer.py",
+      "app/services/parametrization/module_parametrizer.py"
+    ],
+    "sizes": [
+      14753,
+      10991
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "questdb_connector.py",
+    "count": 2,
+    "paths": [
+      "app/services/metrics_database/questdb_connector.py",
+      "app/services/external_integrations/questdb_connector.py"
+    ],
+    "sizes": [
+      21176,
+      12652
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "analyzer.py",
+    "count": 2,
+    "paths": [
+      "app/services/momentum/analyzer.py",
+      "app/services/correlation/analyzer.py"
+    ],
+    "sizes": [
+      6057,
+      17720
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "manager.py",
+    "count": 2,
+    "paths": [
+      "app/services/broker_failover/manager.py",
+      "app/services/compliance/manager.py"
+    ],
+    "sizes": [
+      17464,
+      13310
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "risk_adjustment_calculator.py",
+    "count": 2,
+    "paths": [
+      "app/services/risk_scaling/risk_adjustment_calculator.py",
+      "app/services/risk_scaling_application/risk_adjustment_calculator.py"
+    ],
+    "sizes": [
+      11824,
+      14328
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "limit_adjuster.py",
+    "count": 2,
+    "paths": [
+      "app/services/risk_scaling/limit_adjuster.py",
+      "app/services/risk_scaling_application/limit_adjuster.py"
+    ],
+    "sizes": [
+      18275,
+      13720
+    ],
+    "exact_duplicates": {}
+  },
+  {
+    "name": "deploy_decision_orchestrator.py",
+    "count": 2,
+    "paths": [
+      "app/services/deploy_decision_orchestrator/deploy_decision_orchestrator.py",
+      "app/services/deployment/deploy_decision_orchestrator.py"
+    ],
+    "sizes": [
+      31664,
+      11820
+    ],
+    "exact_duplicates": {}
+  }
+]

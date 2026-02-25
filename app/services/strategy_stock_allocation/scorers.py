@@ -32,7 +32,7 @@ try:
         return sm_OLS(*args, **kwargs)
 
 except ImportError:
-    from app.core.statsmodels_fallback import OLS
+    from app.shared.performance.statsmodels_fallback import OLS
 
     STATSMODELS_AVAILABLE = False
 

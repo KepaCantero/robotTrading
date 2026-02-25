@@ -10,7 +10,7 @@ from datetime import datetime
 from typing import Any, Dict, Optional
 
 from app.shared.config.centralized_config import get_config
-from app.models.signal import MarketData, SignalType
+from app.domain.models.signal import MarketData, SignalType
 
 logger = logging.getLogger(__name__)
 

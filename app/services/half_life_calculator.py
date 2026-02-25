@@ -348,7 +348,7 @@ class HalfLifeCalculator:
         Returns description of test result.
         """
         try:
-            from app.core.statsmodels_fallback import adfuller
+            from app.shared.performance.statsmodels_fallback import adfuller
 
             result = adfuller(prices, maxlag=10, regression="c")
 

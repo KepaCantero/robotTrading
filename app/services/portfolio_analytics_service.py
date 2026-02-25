@@ -14,8 +14,8 @@ from uuid import UUID
 from loguru import logger
 
 from app.shared.config.trading_config import get_config
-from app.models.portfolio import Portfolio
-from app.models.portfolio_analytics import (
+from app.domain.models.portfolio import Portfolio
+from app.domain.models.portfolio_analytics import (
     ExtendedPortfolio,
     PerformanceMetrics,
     PerformancePeriod,

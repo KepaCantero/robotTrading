@@ -1,0 +1,38 @@
+{
+  "timestamp": "2025-02-25T05:45:00Z",
+  "total_deleted": 6,
+  "fixes": [
+    {
+      "deleted_file": "app/models/portfolio.py",
+      "canonical_file": "app/domain/models/portfolio.py",
+      "imports_updated": 14
+    },
+    {
+      "deleted_file": "app/presentation/api/cost_analysis.py",
+      "canonical_file": "app/api/cost_analysis.py",
+      "imports_updated": 1
+    },
+    {
+      "deleted_file": "app/models/order.py",
+      "canonical_file": "app/domain/models/order.py",
+      "imports_updated": 5
+    },
+    {
+      "deleted_file": "app/core/trading_validators.py",
+      "canonical_file": "app/domain/services/trading_validators.py",
+      "imports_updated": 2
+    },
+    {
+      "deleted_file": "app/application/reconciliation/discrepancy_detector.py",
+      "canonical_file": "app/services/reconciliation/discrepancy_detector.py",
+      "imports_updated": 1
+    },
+    {
+      "deleted_file": "app/services/risk/validators/risk_reward_validator.py",
+      "canonical_file": "app/domain/services/risk/validators/risk_reward_validator.py",
+      "imports_updated": 2
+    }
+  ],
+  "total_imports_updated": 25,
+  "status": "COMPLETE"
+}

@@ -31,7 +31,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.shared.config import get_settings
-from app.core.database import get_db_transaction
+from app.infrastructure.persistence.database import get_db_transaction
 from app.tax.database.fifo_schema import (
     Account,
     AssetType,

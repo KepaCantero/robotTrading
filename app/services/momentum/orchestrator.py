@@ -12,7 +12,7 @@ SOLID Principles:
 import logging
 from typing import Dict, List, Optional
 
-from app.models.momentum import (
+from app.domain.models.momentum import (
     MomentumAnalysis,
     MomentumFilter,
     MomentumSignal,
@@ -111,7 +111,7 @@ class MomentumAnalysisService:
         signals = await self.signal_generator.generate_signals(symbol, indicators, timeframe)
 
         # Create analysis with signals
-        from app.models.momentum import MomentumAnalysis
+        from app.domain.models.momentum import MomentumAnalysis
 
         overall_momentum = self.analyzer.calculate_overall_momentum(signals)
         trend_direction = self.analyzer.determine_trend_direction(indicators)

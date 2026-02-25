@@ -21,7 +21,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from app.core.decimal_utils import calculate_percentage
+from app.shared.utils.decimal_utils import calculate_percentage
 
 logger = logging.getLogger(__name__)
 

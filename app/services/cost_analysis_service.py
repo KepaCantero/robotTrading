@@ -19,7 +19,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from app.backtesting.models import Trade, TradeStatus
 from app.shared.config.centralized_config import get_config
-from app.models.order import OrderType
+from app.domain.models.order import OrderType
 
 logger = logging.getLogger(__name__)
 

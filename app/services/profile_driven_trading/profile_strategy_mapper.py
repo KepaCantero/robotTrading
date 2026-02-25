@@ -27,7 +27,7 @@ import yaml
 from pydantic import BaseModel, Field, field_validator
 
 from app.shared.config.centralized_config import get_config
-from app.core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
+from app.domain.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
 from app.shared.utils.tier_mapper import TierMapper
 from app.services.multi_strategy_allocation import (
     MultiStrategyAllocationManager,

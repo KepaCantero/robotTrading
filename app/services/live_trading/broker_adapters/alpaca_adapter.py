@@ -16,7 +16,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Callable, Dict, List, Optional, Tuple  # noqa: F401
 
-from app.core.trading_validators import TradingValidator
+from app.domain.services.trading_validators import TradingValidator
 from app.services.live_trading.broker_connector import (
     BrokerAccount,
     BrokerOrder,

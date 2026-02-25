@@ -13,7 +13,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 from app.shared.config.centralized_config import get_config
-from app.models.portfolio import Portfolio, Position
+from app.domain.models.portfolio import Portfolio, Position
 
 logger = logging.getLogger(__name__)
 

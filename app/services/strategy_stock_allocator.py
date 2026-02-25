@@ -42,7 +42,7 @@ try:
         return sm_OLS(*args, **kwargs)
 
 except ImportError:
-    from app.core.statsmodels_fallback import OLS
+    from app.shared.performance.statsmodels_fallback import OLS
 
     STATSMODELS_AVAILABLE = False
 
@@ -50,7 +50,7 @@ except ImportError:
 try:
     from statsmodels.tsa.stattools import adfuller, kpss
 except ImportError:
-    from app.core.statsmodels_fallback import adfuller, kpss
+    from app.shared.performance.statsmodels_fallback import adfuller, kpss
 
 # Optional ARCH/GARCH library
 try:

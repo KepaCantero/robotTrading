@@ -14,7 +14,7 @@ from app.services.risk.validators.drawdown_validator import (
     DrawdownValidator,
     DrawdownResult
 )
-from app.services.risk.validators.risk_reward_validator import (
+from app.domain.services.risk.validators.risk_reward_validator import (
     RiskRewardValidator,
     RiskRewardResult
 )

@@ -20,7 +20,7 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request
 from requests.exceptions import HTTPError, RequestException
 
-from app.models.assets import AssetClass, AssetFilter, Exchange
+from app.domain.models.assets import AssetClass, AssetFilter, Exchange
 from app.services.asset_identification import (
     AssetIdentificationService,
     get_asset_identification_service,

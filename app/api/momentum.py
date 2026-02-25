@@ -19,7 +19,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from requests.exceptions import ConnectionError, HTTPError, RequestException
 
-from app.models.momentum import MomentumFilter, MomentumStrategy, MomentumType, Timeframe
+from app.domain.models.momentum import MomentumFilter, MomentumStrategy, MomentumType, Timeframe
 from app.services.momentum_analysis import MomentumAnalysisService, get_momentum_analysis_service
 
 router = APIRouter(prefix="/momentum", tags=["momentum"])
