@@ -29,7 +29,7 @@ except ImportError:
         PANDAS_TA_AVAILABLE = False
 
 if TYPE_CHECKING:
-    from app.models.momentum import TechnicalIndicators
+    from app.domain.models.momentum import TechnicalIndicators
 
 logger = logging.getLogger(__name__)
 
@@ -720,7 +720,7 @@ class TechnicalIndicatorCalculator:
         Returns:
             TechnicalIndicators object with all calculated values
         """
-        from app.models.momentum import TechnicalIndicators
+        from app.domain.models.momentum import TechnicalIndicators
 
         rsi = self.calculate_rsi(prices, 14)
         ema_9 = self.calculate_ema(prices, 9)

@@ -236,7 +236,7 @@ class StationarityAnalyzer:
         """
         try:
             # Use statsmodels with fallback for ADF test
-            from app.core.statsmodels_fallback import adfuller
+            from app.shared.performance.statsmodels_fallback import adfuller
 
             adf_result = adfuller(
                 series,

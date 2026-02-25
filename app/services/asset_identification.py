@@ -10,7 +10,7 @@ import logging
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from app.models.assets import (
+from app.domain.models.assets import (
     Asset,
     AssetClass,
     AssetFilter,

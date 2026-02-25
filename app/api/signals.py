@@ -22,7 +22,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from pydantic import BaseModel
 
 from app.shared.config.di_container import get_signal_scorer_service as di_get_signal_scorer_service
-from app.models.signal import MarketData, Signal, SignalType
+from app.domain.models.signal import MarketData, Signal, SignalType
 from app.services.signal_scorer import SignalScorerService
 
 from . import audit_logger, get_correlation_id

@@ -14,7 +14,7 @@ from uuid import UUID
 
 from app.shared.config.centralized_config import get_config
 from app.models.market_data import Quote
-from app.models.order import Order
+from app.domain.models.order import Order
 from app.models.paper_trading import (
     OrderSide,
     OrderType,

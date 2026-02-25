@@ -31,7 +31,7 @@ from sqlalchemy.exc import (
 )
 
 from app.shared.config.centralized_config import get_config
-from app.core.decimal_utils import to_decimal, validate_price
+from app.shared.utils.decimal_utils import to_decimal, validate_price
 
 logger = logging.getLogger(__name__)
 

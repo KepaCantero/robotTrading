@@ -13,7 +13,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from app.models.portfolio import Portfolio as BasePortfolio
+from app.domain.models.portfolio import Portfolio as BasePortfolio
 
 
 class ExtendedPortfolio(BasePortfolio):

@@ -11,7 +11,7 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from app.shared.config.centralized_config import get_config
-from app.models.signal import (
+from app.domain.models.signal import (
     MarketData,
     Signal,
     SignalPriorityQueue,

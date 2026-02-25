@@ -12,9 +12,9 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
 from app.shared.config.centralized_config import get_config
-from app.models.order import Order, OrderSide, OrderStatus, OrderType
-from app.models.portfolio import Portfolio
-from app.models.signal import Signal, SignalType, SignalSource
+from app.domain.models.order import Order, OrderSide, OrderStatus, OrderType
+from app.domain.models.portfolio import Portfolio
+from app.domain.models.signal import Signal, SignalType, SignalSource
 
 logger = logging.getLogger(__name__)
 

@@ -11,7 +11,7 @@ from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
-from app.models.portfolio import AssetClass, Portfolio, Position
+from app.domain.models.portfolio import AssetClass, Portfolio, Position
 from app.services.correlation.analyzer import CorrelationAnalyzer, CorrelationConfig
 from app.services.market_data_service import MarketDataService
 from app.services.portfolio_risk_manager import PortfolioRiskManager

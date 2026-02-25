@@ -1,0 +1,625 @@
+from app.api.logging_utils import (
+from app.api.logging_utils import log_info, log_error
+from app.application.alerting import AlertEvent, AlertSeverity
+from app.application.alerting.alert_manager import AlertManager
+from app.application.alerting.alert_rule_engine import AlertRuleEngine
+from app.application.alerting.metrics_driven_alerter import (
+from app.application.alerting.models import (
+from app.application.alerting.models import AlertEvent, AlertRule, AlertSeverity
+from app.application.alerting.models import AlertEvent, AlertRule, AlertState, ChangeRule
+from app.application.alerting.models import NotificationChannelType, NotificationTarget
+from app.application.alerting.notification_channels import NotificationDispatcher
+from app.application.alerting.rule_templates import AlertRuleTemplates
+from app.application.orchestration.live_trading.account_synchronizer import (
+from app.application.orchestration.live_trading.alert_to_trade_mapper import (
+from app.application.orchestration.live_trading.broker_connector import BrokerConnector, get_broker_connector
+from app.application.orchestration.live_trading.broker_connector import OrderSide, OrderStatus
+from app.application.orchestration.live_trading.broker_connector import OrderSide, OrderStatus, OrderType
+from app.application.orchestration.live_trading.order_manager import OrderManager, get_order_manager
+from app.application.orchestration.live_trading.risk_gates import RiskGates, get_risk_gates
+from app.application.orchestration.live_trading.trading_audit_trail import TradingAuditTrail, get_trading_audit_trail
+from app.application.orchestration.live_trading.trading_bridge_orchestrator import (
+from app.application.reconciliation.daily_reconciler import (
+from app.application.reconciliation.discrepancy_detector import DiscrepancyDetector
+from app.application.reporting.quantstats_integration import get_quantstats_integration
+from app.application.reporting.report_templates import get_report_templates
+from app.application.reporting.reporting_generator import PerformanceReport, ReportingGenerator
+from app.application.routers.input_profile_router import InputProfileRouter
+from app.application.scheduling import MarketScheduler, MarketType
+from app.application.scheduling.market_scheduler import (
+from app.application.scheduling.market_scheduler import MarketScheduler, MarketType
+from app.backtesting.acceptance import (
+from app.backtesting.acceptance_criteria import AcceptanceReport
+from app.backtesting.acceptance.models import AcceptanceReport, CriterionResult, VerdictStatus
+from app.backtesting.acceptance.models import CriterionResult
+from app.backtesting.acceptance.models import CriterionResult, VerdictStatus
+from app.backtesting.advanced_metrics import AdvancedMetricsCalculator
+from app.backtesting.backtesting_compliance import (
+from app.backtesting.base_engine import (
+from app.backtesting.capital_scale_analyzer import CapitalScaleAnalysisReport
+from app.backtesting.comprehensive_backtest_runner import ComprehensiveBacktestRunner
+from app.backtesting.core import BacktestConfigLoader, BacktestOrchestrator
+from app.backtesting.core.config_loader import BacktestConfigLoader
+from app.backtesting.core.error_handling import MutexError, TrainingError, train_with_retry
+from app.backtesting.core.error_handling import train_with_retry
+from app.backtesting.core.error_handling import train_with_retry, TrainingError, MutexError
+from app.backtesting.core.executor import BacktestExecutor
+from app.backtesting.core.executor import BacktestExecutorFactory
+from app.backtesting.core.executor import ProcessPoolBacktestExecutor, SimpleBacktestExecutor
+from app.backtesting.core.executor import SimpleBacktestExecutor
+from app.backtesting.core.facade import BacktestRunnerFacade, create_backtest_runner
+from app.backtesting.core.memory_manager import AggressiveMemoryManager
+from app.backtesting.core.orchestrator import (
+from app.backtesting.core.orchestrator import BoundedResults
+from app.backtesting.data_loader import DataLoader
+from app.backtesting.data_loader import DataLoader  # noqa: E402
+from app.backtesting.data_split import (
+from app.backtesting.engine import SimpleBacktester
+from app.backtesting.engine import SimpleBacktester  # noqa: E402
+from app.backtesting.engines.execution_engine import (
+from app.backtesting.engines.execution_engine import ExecutionBacktestEngine
+from app.backtesting.engines.factory import EngineFactory
+from app.backtesting.engines.multi_strategy_engine import MultiStrategyBacktestEngine
+from app.backtesting.engines.multi_strategy_engine import MultiStrategyBacktester
+from app.backtesting.engines.multi_strategy_engine import MultiStrategyBacktester  # noqa: E402
+from app.backtesting.engines.robust_engine import RobustBacktestEngine
+from app.backtesting.engines.standard_engine import StandardBacktestEngine
+from app.backtesting.execution_engine import (
+from app.backtesting.factories import StrategyFactory
+from app.backtesting.factories.strategy_factory import (
+from app.backtesting.liquidity_validator import LiquidityValidator
+from app.backtesting.lopez_de_prado_metrics import (
+from app.backtesting.meta_analyzer import BacktestMetaAnalyzer
+from app.backtesting.models import (
+from app.backtesting.models import BacktestConfig
+from app.backtesting.models import BacktestConfig  # noqa: E402
+from app.backtesting.models import BacktestConfig, BacktestResult
+from app.backtesting.models import BacktestConfig, BacktestResult, PerformanceMetrics
+from app.backtesting.models import BacktestConfig, PerformanceMetrics, Trade, TradeStatus
+from app.backtesting.models import BacktestConfig, Trade, TradeStatus
+from app.backtesting.models import BacktestResult
+from app.backtesting.models import PerformanceMetrics
+from app.backtesting.models import PerformanceMetrics, Trade
+from app.backtesting.models import PerformanceMetrics, Trade, TradeSide, TradeStatus
+from app.backtesting.models import Trade
+from app.backtesting.models import Trade, TradeStatus
+from app.backtesting.models import TradeStatus
+from app.backtesting.professional_reporter import ProfessionalReporter
+from app.backtesting.realistic_data_generator import MarketRegime, RealisticDataGenerator
+from app.backtesting.services import (
+from app.backtesting.services.batch_execution_service import BatchExecutionService
+from app.backtesting.services.configuration_service import ConfigurationService
+from app.backtesting.services.database_service import DatabaseService
+from app.backtesting.services.equity_tracker import EquityCurveTracker
+from app.backtesting.services.exit_monitor import ExitConditionMonitor
+from app.backtesting.services.fallback_tracker import FallbackTracker
+from app.backtesting.services.metrics_service import MetricsCalculationService
+from app.backtesting.services.models import (
+from app.backtesting.services.models import BaselineOptimizationComparison, OptimizedStrategy
+from app.backtesting.services.models import ProfileResult
+from app.backtesting.services.models import ProfileResult, ProfileResultDB
+from app.backtesting.services.performance_calculator import PerformanceMetricsCalculator
+from app.backtesting.services.pnl_calculator import ProfitAndLossCalculator
+from app.backtesting.services.position_manager import PositionManager
+from app.backtesting.services.profile_generation_service import ProfileGenerationService
+from app.backtesting.services.report_generation_service import ReportGenerationService
+from app.backtesting.services.signal_processor import SignalProcessor
+from app.backtesting.services.trade_executor import TradeExecutor
+from app.backtesting.services.transaction_cost_model import (
+from app.backtesting.shared import (
+from app.backtesting.shared.metrics import (
+from app.backtesting.shared.parameter_mapper import (
+from app.backtesting.shared.slippage_utils import apply_slippage as shared_apply_slippage
+from app.backtesting.shared.temp_config import (
+from app.backtesting.shared.trade_utils import build_trade_reason as shared_build_trade_reason
+from app.backtesting.shared.types import (
+from app.backtesting.shared.types import ConfigKeys
+from app.backtesting.shared.types import MetricKeys
+from app.backtesting.signal_diagnostic_logger import SignalDiagnosticLogger
+from app.backtesting.validation.models import (
+from app.backtesting.walk_forward_validator import ValidationWindow
+from app.backtesting.walk_forward_validator import WalkForwardValidator
+from app.core.compliance import (
+from app.core.database import Base, get_session_factory
+from app.core.database import get_db_transaction
+from app.core.decimal_utils import calculate_percentage
+from app.core.decimal_utils import calculate_percentage, safe_decimal_divide, to_decimal
+from app.core.decimal_utils import to_decimal
+from app.core.decimal_utils import to_decimal, validate_price
+from app.core.logging_config import get_correlation_id, set_correlation_id
+from app.core.models.input_profile import InputProcessor, InputProfile
+from app.core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
+from app.core.numba_accelerators import (
+from app.core.protocols import IBrokerAdapter
+from app.core.protocols import ITradeExecutor
+from app.core.protocols.i_alert_processor import IAlertProcessor
+from app.core.protocols.i_broker_adapter import IBrokerAdapter
+from app.core.protocols.i_kill_switch_monitor import IKillSwitchMonitor
+from app.core.protocols.i_post_trade_analyzer import IPostTradeAnalyzer
+from app.core.protocols.i_pre_trade_validator import IPreTradeValidator
+from app.core.protocols.i_spain_tax_engine import ISpainTaxEngine
+from app.core.protocols.i_spain_tax_engine import ISpainTaxEngine  # @skip-import si no existe
+from app.core.protocols.i_strategy_cycle_runner import IStrategyCycleRunner
+from app.core.protocols.i_trade_executor import ITradeExecutor
+from app.core.protocols.i_trading_decision_logger import ITradingDecisionLogger
+from app.core.reconnection_manager import ReconnectionConfig, ReconnectionManager
+from app.core.secure_serialization import sign_and_dump, verify_and_load
+from app.core.strategy_config import (
+from app.core.timezone_utils import (
+from app.core.timezone_utils import utc_now
+from app.core.trading_validators import TradingValidator
+from app.data.feeds import DataFeedInterface, create_data_feed
+from app.domain.analysis.fundamental_law import (
+from app.domain.analysis.fundamental_law.breadth_calculator import BreadthCalculator
+from app.domain.analysis.fundamental_law.fundamental_law import FundamentalLawCalculator
+from app.domain.analysis.fundamental_law.ic_calculator import ICCalculator
+from app.domain.analysis.fundamental_law.models import (
+from app.domain.analysis.fundamental_law.models import BreadthMetrics
+from app.domain.analysis.fundamental_law.models import FundamentalLawComponents, StrategyAnalysis
+from app.domain.analysis.vectorization import (
+from app.domain.analysis.vectorization.benchmark import BenchmarkResult, VectorizationBenchmark
+from app.domain.analysis.vectorization.benchmark import VectorizationBenchmark
+from app.domain.analysis.vectorization.models import BenchmarkResult
+from app.domain.analysis.vectorization.models import VectorizationIssue, VectorizationReport
+from app.domain.analysis.vectorization.patterns import VectorizationPatterns
+from app.domain.analysis.vectorization.vectorization_auditor import VectorizationAuditor
+from app.domain.configurators.risk_config import RiskConfig
+from app.domain.configurators.risk_configurator import RiskConfigurator
+from app.domain.ensemble.models import AllocationMethod, CombinedPortfolio, StrategyAllocation
+from app.domain.ensemble.models import CorrelationMetrics
+from app.domain.ensemble.models import EnsembleConfig, EnsembleMethod, EnsembleSignal
+from app.domain.ensemble.models import ObjectiveConfig, OptimizationObjective, ParetoSolution
+from app.domain.entities.order import Order
+from app.domain.entities.order import Order, OrderSide, OrderStatus, OrderType
+from app.domain.entities.order import Order, OrderSide, OrderType
+from app.domain.entities.portfolio import Portfolio
+from app.domain.entities.portfolio import Portfolio, Position
+from app.domain.entities.portfolio_optimization import PortfolioOptimization
+from app.domain.entities.position import Position
+from app.domain.entities.position import Position, PositionSide, PositionStatus
+from app.domain.entities.position import PositionSide
+from app.domain.entities.post_trade_analysis import PostTradeAnalysis
+from app.domain.entities.pre_trade_analysis import PreTradeAnalysis
+from app.domain.entities.trade import Trade
+from app.domain.factories import AbstractEntityFactory
+from app.domain.factories import AbstractEntityFactory, TradingEntityFactory
+from app.domain.factories import TradingEntityFactory
+from app.domain.market_analysis.microstructure import (
+from app.domain.market_analysis.microstructure.ofi import (
+from app.domain.market_analysis.microstructure.ofi.models import (
+from app.domain.market_analysis.microstructure.ofi.models import OFIConfig, OFIHorizon, OFIPrediction
+from app.domain.market_analysis.microstructure.ofi.models import OrderBookSnapshot, OrderSide, TickData
+from app.domain.market_analysis.microstructure.ofi.ofi_calculator import OFICalculator
+from app.domain.market_analysis.microstructure.ofi.ofi_calculator import OFICalculator, OFIResult
+from app.domain.market_analysis.microstructure.ofi.ofi_predictor import OFIPredictor
+from app.domain.market_analysis.microstructure.ofi.ofi_signals import OFISignalGenerator
+from app.domain.market_analysis.microstructure.ofi.tick_processor import TickLevelOFIProcessor
+from app.domain.models.assets import AssetClass, AssetFilter, Exchange
+from app.domain.models.deployment import DeploymentInput
+from app.domain.models.input_profile import (
+from app.domain.models.input_profile import (  # pylint: disable=import-self,import-error
+from app.domain.models.input_profile import InputProcessor, InputProfile
+from app.domain.models.input_profile import InputProfile
+from app.domain.models.input_profile import InputProfile, InvestmentObjective, RiskTolerance
+from app.domain.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
+from app.domain.models.input_profile import ObjectivoInversion
+from app.domain.models.input_profile import RiskTolerance
+from app.domain.models.investment_profile import CapitalTier, InvestmentProfile
+from app.domain.models.investment_profile import InvestmentProfile
+from app.domain.models.market_data import (
+from app.domain.models.market_data import Quote
+from app.domain.models.momentum import MomentumFilter, MomentumStrategy, MomentumType, Timeframe
+from app.domain.models.optimization import (
+from app.domain.models.optimization import (  # noqa: E402
+from app.domain.models.order import OrderSide, OrderType
+from app.domain.models.paper_trading import (
+from app.domain.models.portfolio import (
+from app.domain.models.portfolio import AssetClass, Portfolio, Position
+from app.domain.models.portfolio import AssetUniverse, MarketRegimeData, Position
+from app.domain.models.portfolio import MarketRegime
+from app.domain.models.portfolio import Portfolio
+from app.domain.models.portfolio import Portfolio as BasePortfolio
+from app.domain.models.portfolio import Portfolio, PortfolioProvider
+from app.domain.models.portfolio_analytics import (
+from app.domain.models.profitability_validation import (
+from app.domain.models.risk_config import RiskConfig
+from app.domain.models.signal import MarketData, Signal, SignalType
+from app.domain.models.signal import Signal
+from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
+from app.domain.models.signal import Signal, SignalType
+from app.domain.models.strategy_type import StrategyType
+from app.domain.models.system_configuration import SystemConfiguration
+from app.domain.models.tax_config import TaxConfig
+from app.domain.portfolio_optimization.black_litterman_optimizer import (
+from app.domain.portfolio_optimization.mean_variance_optimizer import (
+from app.domain.portfolio_optimization.nested_clustered_optimization import (
+from app.domain.repositories import PortfolioRepository
+from app.domain.repositories.unit_of_work import AbstractUnitOfWork
+from app.domain.services.analysis.momentum import (
+from app.domain.services.analysis.momentum import MomentumAnalysisService, get_momentum_analysis_service
+from app.domain.services.analysis.momentum import TechnicalIndicatorCalculator
+from app.domain.services.compliance.compliance_engine import ComplianceEngine
+from app.domain.services.compliance.compliance_engine import get_compliance_engine
+from app.domain.services.compliance.portfolio_optimizer import PortfolioComplianceOptimizer
+from app.domain.services.compliance.post_trade_checker import PostTradeComplianceChecker
+from app.domain.services.compliance.pre_trade_checker import PreTradeComplianceChecker
+from app.domain.services.compliance.protocols import (
+from app.domain.services.compliance.results import (
+from app.domain.services.compliance.results import OptimizeResult
+from app.domain.services.compliance.results import PostTradeCheckResult
+from app.domain.services.compliance.results import PreTradeCheckResult
+from app.domain.services.compliance.service_registry import (
+from app.domain.services.compliance.service_registry import get_service_registry
+from app.domain.services.indicators.factory import (
+from app.domain.services.indicators.factory import get_indicator_calculator
+from app.domain.services.indicators.numba_indicators import (
+from app.domain.services.indicators.technical_indicators import (
+from app.domain.services.metrics.performance_metrics import (
+from app.domain.services.metrics.risk_metrics import (
+from app.domain.services.portfolio_optimization._validation import (
+from app.domain.services.portfolio_optimization.covariance_calculator import CovarianceResult
+from app.domain.services.portfolio_optimization.mean_variance_optimizer import OptimizationResult
+from app.domain.services.portfolio.analytics import (
+from app.domain.services.portfolio.builder import PortfolioBuilder
+from app.domain.services.signals.scorer import SignalScorerService
+from app.domain.services.signals.scoring import get_signal_scoring_engine
+from app.domain.services.trading_validators import TradingValidator
+from app.domain.strategies import ExecutionEngine, StrategyConfigLoader, StrategyLogger, StrategyRegistry
+from app.domain.strategies.base import BaseStrategy
+from app.domain.strategies.factory import StrategyFactory
+from app.domain.strategies.fx_carry_trade.carry_calculator import CarryCalculator, CarryTradeOpportunity
+from app.domain.strategies.fx_carry_trade.fx_rates_provider import FXRateProvider, InMemoryFXRateProvider
+from app.domain.strategies.fx_carry_trade.models import (
+from app.domain.strategies.fx_carry_trade.models import FXCarrySignal, FXPair
+from app.domain.strategies.fx_carry_trade.models import FXPair, FXRateQuote, InterestRateQuote
+from app.domain.strategies.fx_intermarket.correlation_analyzer import CorrelationAnalyzer
+from app.domain.strategies.fx_intermarket.models import (
+from app.domain.strategies.mean_reversion import MeanReversionStrategy
+from app.domain.strategies.mean_reversion import MeanReversionStrategy  # noqa: E402
+from app.domain.strategies.momentum import MomentumStrategy
+from app.domain.strategies.momentum import MomentumStrategy  # noqa: E402
+from app.domain.strategies.momentum import MomentumStrategy as ModularMomentumStrategy
+from app.domain.strategies.momentum_modular.modules.filters import (
+from app.domain.strategies.momentum_modular.modules.market_analyzer import MarketAnalyzer
+from app.domain.strategies.momentum_modular.strategy import ModularMomentumStrategy
+from app.domain.strategies.pairs_trading import PairsTrading as PairsTradingStrategy
+from app.domain.strategies.pairs_trading import PairsTradingStrategy
+from app.domain.strategies.pairs_trading import PairsTradingStrategy  # noqa: E402
+from app.domain.trading.market_making.avellaneda_stoikov import (
+from app.domain.trading.market_making.avellaneda_stoikov.as_model import ASConfig, ASQuote, AvellanedaStoikovModel
+from app.domain.trading.market_making.avellaneda_stoikov.as_model import AvellanedaStoikovModel
+from app.domain.trading.market_making.avellaneda_stoikov.as_model import calculate_inventory_risk
+from app.domain.trading.market_making.avellaneda_stoikov.inventory_manager import (
+from app.domain.trading.market_making.avellaneda_stoikov.models import (
+from app.domain.trading.market_making.avellaneda_stoikov.models import ASConfig, ASQuote
+from app.domain.trading.market_making.avellaneda_stoikov.models import ASConfig, ASQuote, ASQuoteParams
+from app.domain.trading.market_making.avellaneda_stoikov.models import ASQuoteParams
+from app.domain.trading.market_making.avellaneda_stoikov.quote_generator import ASQuoteGenerator
+from app.domain.value_objects.capital import Capital
+from app.domain.value_objects.investment_horizon import InvestmentHorizon
+from app.domain.value_objects.money import Money
+from app.domain.value_objects.percentage import Percentage
+from app.domain.value_objects.risk_parameters import RiskParameters
+from app.domain.value_objects.tax_residence import TaxResidence
+from app.exceptions.trading_exceptions import (
+from app.exceptions.trading_exceptions import ErrorCategory
+from app.infrastructure.brokers.paper import PaperTradingService, get_paper_trading_service
+from app.infrastructure.config.user_settings import NotificationSettings, UserSettings
+from app.infrastructure.data.feeds import (
+from app.infrastructure.external.integrations.health_check_manager import get_health_check_manager
+from app.infrastructure.feeds.market_data import MarketDataService, get_market_data_service
+from app.infrastructure.health import DatabaseHealthCheckerFactory, DatabaseHealthCheckerProtocol
+from app.infrastructure.health.database_health_checker import (
+from app.infrastructure.logging.append_only_log import AppendOnlyLog
+from app.infrastructure.logging.log_entry import LogEntry
+from app.infrastructure.logging.logging_config import get_correlation_id, get_logger
+from app.infrastructure.logging.logging_config import get_correlation_id, set_correlation_id
+from app.infrastructure.logging.logging_config import get_logger
+from app.infrastructure.logging.logging_config import LogService, get_logger
+from app.infrastructure.logging.trading_decision_logger import TradingDecisionLogger
+from app.infrastructure.persistence import Base
+from app.infrastructure.persistence.configuration.configuration_persistence import (
+from app.infrastructure.persistence.configuration.configuration_repository import (
+from app.infrastructure.persistence.configuration.configuration_repository import ConfigurationRepository
+from app.infrastructure.persistence.configuration.models import (
+from app.infrastructure.persistence.database import close_database, init_database
+from app.infrastructure.persistence.models import (
+from app.infrastructure.providers.paper_trading import PaperTradingPortfolioProvider
+from app.maestro.phase_1 import (
+from app.models.assets import (
+from app.models.assets import AssetClass, AssetFilter, Exchange
+from app.models.deployment import DeploymentInput
+from app.models.market_data import (
+from app.models.market_data import DataFrequency
+from app.models.market_data import Quote
+from app.models.momentum import (
+from app.models.momentum import MomentumAnalysis, MomentumSignal, TechnicalIndicators, Timeframe
+from app.models.momentum import MomentumAnalysis, MomentumStrategy
+from app.models.momentum import MomentumFilter, MomentumStrategy, MomentumType, Timeframe
+from app.models.momentum import Timeframe
+from app.models.order import Order
+from app.models.order import Order, OrderSide, OrderStatus, OrderType
+from app.models.order import Order, OrderStatus
+from app.models.order import OrderSide, OrderType
+from app.models.order import OrderType
+from app.models.paper_trading import (
+from app.models.portfolio import (
+from app.models.portfolio import AssetClass, Portfolio, Position
+from app.models.portfolio import AssetUniverse, MarketRegimeData, Position
+from app.models.portfolio import Portfolio
+from app.models.portfolio import Portfolio as BasePortfolio
+from app.models.portfolio import Portfolio, Position
+from app.models.portfolio_analytics import (
+from app.models.profitability_validation import (
+from app.models.signal import (
+from app.models.signal import MarketData, Signal, SignalType
+from app.models.signal import MarketData, SignalType
+from app.models.signal import Signal
+from app.models.signal import Signal, SignalType
+from app.models.signal import Signal, SignalType, SignalSource
+from app.models.slippage_analysis import (
+from app.models.slippage_analysis import SlippageCalculationParams
+from app.presentation.api import AuditMiddleware
+from app.presentation.api.assets import router as assets_router
+from app.presentation.api.capa2_endpoints import router as capa2_router
+from app.presentation.api.cost_analysis import router as cost_analysis_router
+from app.presentation.api.error_handler import (
+from app.presentation.api.health import router as health_router
+from app.presentation.api.live_trading import router as live_trading_router
+from app.presentation.api.logging_utils import (
+from app.presentation.api.logging_utils import log_info, log_error
+from app.presentation.api.market_data import router as market_data_router
+from app.presentation.api.middleware import (
+from app.presentation.api.momentum import router as momentum_router
+from app.presentation.api.optimization import router as optimization_router
+from app.presentation.api.paper_trading import router as paper_trading_router
+from app.presentation.api.portfolio import router as portfolio_router
+from app.presentation.api.portfolio_analytics import router as portfolio_analytics_router
+from app.presentation.api.signals import router as signals_router
+from app.presentation.api.trading_error_handler import router as trading_error_handler_router
+from app.presentation.dashboard.advanced_dashboard import main
+from app.presentation.dashboard.comprehensive_data_loader import ComprehensiveBacktestLoader  # noqa: E402
+from app.presentation.dashboard.dashboard_data import (
+from app.presentation.dashboard.dashboard_service import DashboardService, get_dashboard_service
+from app.presentation.dashboard.multi_strategy_utils import (  # noqa: E402
+from app.presentation.dashboard.production_dashboard import (
+from app.presentation.dashboard.report_generator import (  # noqa: E402
+from app.security.csrf_protection import (
+from app.security.input_validation import (
+from app.security.output_encoding import (
+from app.security.secure_serialization import sign_and_dump, verify_and_load  # noqa: E402
+from app.security.security_headers import (
+from app.services.account_configuration import AccountConfiguration, AccountTier
+from app.services.alerting_system import AlertEvent, AlertManager
+from app.services.alerting_system import AlertEvent, AlertSeverity
+from app.services.alerting_system import AlertSeverity
+from app.services.alerting_system.alert_manager import AlertManager
+from app.services.alerting_system.alert_rule_engine import AlertRuleEngine
+from app.services.alerting_system.models import (
+from app.services.alerting_system.models import AlertEvent, AlertRule, AlertState, ChangeRule
+from app.services.alerting_system.models import NotificationChannelType, NotificationTarget
+from app.services.api_circuit_breaker import (
+from app.services.asset_identification import (
+from app.services.backtesting_orchestration import ExtendedBacktestResult
+from app.services.backtesting_orchestration.backtest_orchestrator import (
+from app.services.capacity_fade_validation import (
+from app.services.capital_tier_strategy_selector import RiskProfile
+from app.services.capital_viability_gate import CapitalViabilityValidator
+from app.services.capital.capital_phase_manager import (
+from app.services.capital.phase_config import (
+from app.services.centralized_logging import LogLevel, LogService, centralized_logger
+from app.services.circuit_breaker.daily_circuit_breaker import (
+from app.services.compliance.manager import (
+from app.services.compliance.order_pattern_analyzer import OrderPatternAnalyzer
+from app.services.compliance.pdt_tracker import Country
+from app.services.compliance.pdt_tracker import Country, PDTStatus, PDTTracker
+from app.services.compliance.pdt_tracker import PDTTracker
+from app.services.compliance.wash_sale_tracker import WashSaleTracker
+from app.services.configuration_persistence.configuration_persistence import (
+from app.services.configuration_persistence.configuration_repository import (
+from app.services.configuration_persistence.configuration_repository import ConfigurationRepository
+from app.services.configuration_persistence.models import (
+from app.services.corporate_actions.handler import (
+from app.services.correlation.analyzer import CorrelationAnalyzer, CorrelationConfig
+from app.services.cost_analysis_service import CostAnalysisResult, CostAnalysisService
+from app.services.cost_analysis_service import CostAnalysisService
+from app.services.cost_analysis_service import CostAnalysisService  # noqa: E402
+from app.services.country_diversification_validator import CountryDiversificationValidator
+from app.services.crypto_data_service import get_crypto_fetcher
+from app.services.currency_hedging_engine import CurrencyHedgingEngine
+from app.services.deploy_decision_orchestrator import get_deploy_orchestrator
+from app.services.deploy_decision_orchestrator.models import DeploymentInput
+from app.services.deployment_validator import DeploymentStatus, DeploymentValidator
+from app.services.deployment.deploy_decision_orchestrator import (
+from app.services.deployment.deploy_decision_orchestrator import DeployDecisionOrchestrator
+from app.services.dynamic_capital_reallocation import DynamicCapitalReallocationEngine
+from app.services.error_handling.error_handler import (
+from app.services.execution_cost_analyzer import ExecutionCostAnalyzer
+from app.services.execution.execution_adapter import (
+from app.services.execution.order_manager_adapter import OrderManagerAdapter
+from app.services.execution.trading_bridge_adapter import (
+from app.services.expensive_module_gate import ExpensiveModuleGate
+from app.services.external_integrations.health_check_manager import get_health_check_manager
+from app.services.forex_data_service import get_forex_fetcher
+from app.services.forex_risk.hedging_engine import (
+from app.services.forex_risk.tracker import CurrencyExposure, ForexExposureReport, ForexRiskTracker
+from app.services.hurst_analysis import utils
+from app.services.hurst_analysis.change_detector import RegimeChangeDetector
+from app.services.hurst_analysis.confidence_calculator import ConfidenceCalculator
+from app.services.hurst_analysis.factory import create_custom_analyzer, create_default_analyzer
+from app.services.hurst_analysis.historian import HistoricalDataTracker
+from app.services.hurst_analysis.models import (
+from app.services.hurst_analysis.models import HurstResult, MarketRegime, StrategyRecommendation
+from app.services.hurst_analysis.models import HurstResult, RegimeChange
+from app.services.hurst_analysis.models import MarketRegime
+from app.services.hurst_analysis.models import MarketRegime, StrategyRecommendation
+from app.services.hurst_analysis.models import RegimeChange
+from app.services.hurst_analysis.orchestrator import HurstExponentAnalyzer
+from app.services.hurst_analysis.protocols import (
+from app.services.hurst_analysis.protocols import RegimeClassifierProtocol
+from app.services.hurst_analysis.regime_classifier import RegimeClassifier
+from app.services.hurst_analysis.rs_calculator import RSMethodCalculator
+from app.services.hurst_analysis.strategy_recommender import StrategyRecommender
+from app.services.hurst_analysis.variance_calculator import (
+from app.services.learning_capital_gate import LearningCapitalGate
+from app.services.live_trading.account_synchronizer import (
+from app.services.live_trading.alert_to_trade_mapper import (
+from app.services.live_trading.broker_connector import (
+from app.services.live_trading.broker_connector import BrokerConnector, get_broker_connector
+from app.services.live_trading.broker_connector import OrderSide, OrderStatus
+from app.services.live_trading.broker_connector import OrderSide, OrderStatus, OrderType
+from app.services.live_trading.order_manager import OrderManager, get_order_manager
+from app.services.live_trading.risk_gates import RiskGates, get_risk_gates
+from app.services.live_trading.trading_audit_trail import TradingAuditTrail, get_trading_audit_trail
+from app.services.live_trading.trading_bridge_orchestrator import (
+from app.services.logging.append_only_log import AppendOnlyLog
+from app.services.logging.log_entry import LogEntry
+from app.services.logging.trading_decision_logger import TradingDecisionLogger
+from app.services.market_data_service import MarketDataService
+from app.services.market_data_service import MarketDataService, get_market_data_service
+from app.services.market_universe_loader import MarketUniverseLoader, get_market_universe_loader
+from app.services.momentum import get_momentum_analysis_service
+from app.services.momentum_analysis import MomentumAnalysisService, get_momentum_analysis_service
+from app.services.momentum_analysis import TechnicalIndicatorCalculator
+from app.services.momentum.analyzer import MomentumAnalyzer
+from app.services.momentum.data_provider import MockPriceDataProvider
+from app.services.momentum.indicators.calculator import TechnicalIndicatorCalculator
+from app.services.momentum.orchestrator import get_momentum_analysis_service
+from app.services.momentum.protocols import (
+from app.services.momentum.protocols import IndicatorCalculator, PriceDataProvider
+from app.services.momentum.protocols import StorageBackend
+from app.services.momentum.signal_generator import SignalGenerator
+from app.services.momentum.storage import InMemoryStorageBackend
+from app.services.momentum.strategy_manager import StrategyManager
+from app.services.multi_strategy_allocation import (
+from app.services.multi_strategy_allocation import MultiStrategyAllocationManager
+from app.services.paper_trading_service import PaperTradingService, get_paper_trading_service
+from app.services.parameter_optimization_service import ParameterOptimizationService  # noqa: E402
+from app.services.parametrization.module_parametrizer import ModuleParameterSet
+from app.services.portfolio_analytics_service import (
+from app.services.portfolio_config_manager import (
+from app.services.portfolio_config_manager import get_portfolio_config_manager
+from app.services.portfolio_construction.allocation_manager import (
+from app.services.portfolio_construction.allocation_recommender import (
+from app.services.portfolio_construction.portfolio_constructor import (
+from app.services.portfolio_construction.rebalancing_engine import (
+from app.services.portfolio_constructor import AllocationWeight
+from app.services.portfolio_constructor import AllocationWeight, PortfolioAllocation
+from app.services.portfolio_risk_manager import PortfolioRiskManager
+from app.services.portfolio_service import PortfolioService
+from app.services.position_management.partial_take_profit import (
+from app.services.position_management.partial_take_profit import PartialTakeProfit
+from app.services.position_management.post_trade_analyzer_impl import (
+from app.services.position_management.pyramiding_manager import (
+from app.services.position_management.pyramiding_manager import PyramidingManager
+from app.services.position_management.trailing_stop_manager import (
+from app.services.position_management.trailing_stop_manager import TrailingStopManager
+from app.services.position_sizing_engine import PositionSizingEngine
+from app.services.profile_driven_trading.profile_strategy_mapper import (
+from app.services.profile_driven_trading.profile_strategy_mapper import create_profile_mapper
+from app.services.profile_driven_trading.profile_strategy_mapper import StrategyMapping
+from app.services.profitability_validation_service import ProfitabilityValidationService
+from app.services.rate_limiting.token_bucket import (
+from app.services.reconciliation.daily_reconciler import (
+from app.services.reconciliation.discrepancy_detector import DiscrepancyDetector
+from app.services.reporting.quantstats_integration import get_quantstats_integration
+from app.services.reporting.report_templates import get_report_templates
+from app.services.reporting.reporting_generator import PerformanceReport, ReportingGenerator
+from app.services.risk_models_narang import RiskModel, get_risk_model
+from app.services.risk_scaling.drawdown_monitor import DrawdownMonitor
+from app.services.risk_scaling.limit_adjuster import get_limit_adjuster
+from app.services.risk_scaling.loss_monitor import LossMonitor, TradeResult
+from app.services.risk_scaling.models import (
+from app.services.risk_scaling.risk_adjustment_calculator import get_risk_adjustment_calculator
+from app.services.risk_scaling.sharpe_ratio_monitor import SharpeRatioMonitor
+from app.services.risk_scaling.volatility_monitor import PriceData, VolatilityMonitor
+from app.services.risk.validators.drawdown_validator import (
+from app.services.risk.validators.kelly_criterion_validator import (
+from app.services.risk.validators.risk_reward_validator import (
+from app.services.scheduling import MarketScheduler, MarketType
+from app.services.scheduling.market_scheduler import (
+from app.services.sector_diversification_validator import SectorDiversificationValidator
+from app.services.signal_evaluation_engine import SignalEvaluationEngine
+from app.services.signal_execution_engine import SignalExecutionEngine
+from app.services.signal_scorer import SignalScorerService
+from app.services.signal_scoring_engine import get_signal_scoring_engine
+from app.services.slippage_analysis_service import DynamicSlippageService
+from app.services.smart_order_routing.models import ExecutionPlan, OrderTranche, TimeWindow
+from app.services.strategy_stock_allocator import AllocationResult, StrategyStockAllocator
+from app.services.strategy_stock_allocator import StrategyStockAllocator
+from app.services.tax_efficiency.engines.base import TaxEngine
+from app.services.tax_efficiency.engines.factory import (
+from app.services.tax_efficiency.engines.modelo_720_generator import Modelo720Generator
+from app.services.tax_efficiency.engines.spain_dividend_tax import SpainDividendTaxCalculator
+from app.services.tax_efficiency.engines.spain_tax_engine import SpainTaxEngine
+from app.services.tax_efficiency.engines.spain_tax_engine_impl import SpainTaxEngineImpl
+from app.services.trading_error_handler import (
+from app.services.transaction_costs import ExecutionAlgorithm  # Enum
+from app.services.transaction_costs import MarketData, OrderSpecification, TransactionCostModel
+from app.services.transaction_costs import TransactionCostModel, get_transaction_cost_model
+from app.services.validation_orchestration.validation_engine import (
+from app.shared.audit import AuditAction, AuditLogger, get_audit_logger
+from app.shared.config import get_settings
+from app.shared.config.api_endpoints import ENDPOINTS
+from app.shared.config.base import ConfigBase
+from app.shared.config.base import ConfigBase, SettingsBase
+from app.shared.config.base import Environment, SettingsBase
+from app.shared.config.centralized_config import CentralizedConfig
+from app.shared.config.centralized_config import CentralizedConfig, get_config
+from app.shared.config.centralized_config import get_config
+from app.shared.config.centralized_config import get_config, BacktestingConfig
+from app.shared.config.centralized_config import get_config, StockAllocationSettings
+from app.shared.config.centralized_config import get_strategy_config, get_trading_threshold, get_config
+from app.shared.config.centralized_config import SectorCountryDiversificationConfig
+from app.shared.config.centralized_config import StockAllocationSettings
+from app.shared.config.compliance import ComplianceConfig, SpainTaxConfig
+from app.shared.config.config import get_settings
+from app.shared.config.config_loader import (
+from app.shared.config.di_config import initialize_container  # noqa: F401
+from app.shared.config.di_container import (
+from app.shared.config.di_container import DIContainer
+from app.shared.config.di_container import DIContainer, get_container
+from app.shared.config.di_container import get_portfolio_service as di_get_portfolio_service
+from app.shared.config.di_container import get_signal_scorer_service as di_get_signal_scorer_service
+from app.shared.config.environment_config import get_config
+from app.shared.config.infrastructure import (
+from app.shared.config.position_sizing import (
+from app.shared.config.profile_config_loader import ProfileConfigLoader
+from app.shared.config.signal_risk import (
+from app.shared.config.signal_risk import MarketMicrostructureThresholds
+from app.shared.config.strategy_config_loader import get_strategy_config  # noqa: F401
+from app.shared.config.technical_indicators import (
+from app.shared.config.trading_config import get_config
+from app.shared.config.yaml_config_updater import YAMLConfigUpdater
+from app.shared.exceptions.exceptions import AlgoTradingError
+from app.shared.exceptions.exceptions import ConfigurationError
+from app.shared.exceptions.exceptions import ConfigurationError, raise_configuration_error
+from app.shared.exceptions.exceptions import raise_database_error
+from app.shared.interfaces.broker_base import BrokerType
+from app.shared.interfaces.broker_base import Order
+from app.shared.performance.metrics import (
+from app.shared.protocols import ITradeExecutor
+from app.shared.protocols.i_alert_processor import IAlertProcessor
+from app.shared.protocols.i_broker_adapter import IBrokerAdapter
+from app.shared.protocols.i_kill_switch_monitor import IKillSwitchMonitor
+from app.shared.protocols.i_post_trade_analyzer import IPostTradeAnalyzer
+from app.shared.protocols.i_pre_trade_validator import IPreTradeValidator
+from app.shared.protocols.i_spain_tax_engine import ISpainTaxEngine
+from app.shared.protocols.i_strategy_cycle_runner import IStrategyCycleRunner
+from app.shared.protocols.i_trade_executor import ITradeExecutor
+from app.shared.protocols.i_trading_decision_logger import ITradingDecisionLogger
+from app.shared.utils.decimal_utils import round_price, to_decimal
+from app.shared.utils.decimal_utils import safe_mean
+from app.shared.utils.decimal_utils import safe_mean, safe_variance
+from app.shared.utils.decimal_utils import to_decimal
+from app.shared.utils.safe_parse import safe_parse
+from app.shared.utils.subsystem_config_factory import (
+from app.shared.utils.subsystem_config_factory import get_subsystem_config_factory
+from app.shared.utils.tier_mapper import map_profile_tier_to_config
+from app.shared.utils.tier_mapper import TierMapper
+from app.shared.utils.timezone_utils import utc_now
+from app.sre.data_integrity.sanity_layer import DataSanityLayer, SanityCheckResult
+from app.sre.state_machine.wal_persistence import OrderLog, OrderState, OrderStateMachine
+from app.strategies import ExecutionEngine, StrategyConfigLoader, StrategyLogger, StrategyRegistry
+from app.tax.database.fifo_schema import (
+from app.user_config.user_settings import NotificationSettings, UserSettings

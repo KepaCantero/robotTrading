@@ -39,7 +39,7 @@ from sqlalchemy.exc import (
 
 from app.presentation.api.assets import router as assets_router
 from app.presentation.api.capa2_endpoints import router as capa2_router
-from app.presentation.api.cost_analysis import router as cost_analysis_router
+from app.api.cost_analysis import router as cost_analysis_router
 from app.presentation.api.error_handler import (
     attribute_error_handler,
     generic_exception_handler,

@@ -10,7 +10,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-from app.models.signal import Signal, SignalType
+from app.domain.models.signal import Signal, SignalType
 
 logger = logging.getLogger(__name__)
 

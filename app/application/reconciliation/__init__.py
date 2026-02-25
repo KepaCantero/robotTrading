@@ -27,7 +27,7 @@ from app.application.reconciliation.daily_reconciler import (
     Position,
     ReconciliationResult,
 )
-from app.application.reconciliation.discrepancy_detector import DiscrepancyDetector
+from app.services.reconciliation.discrepancy_detector import DiscrepancyDetector
 
 __all__ = [
     "DailyReconciler",

@@ -13,7 +13,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from pydantic import BaseModel, Field, field_validator
 
 from app.backtesting.models import TradeStatus
-from app.models.order import OrderSide, OrderType
+from app.domain.models.order import OrderSide, OrderType
 
 
 class CostType(str, Enum):

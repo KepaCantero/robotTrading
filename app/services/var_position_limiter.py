@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 import numpy as np
 
 from app.shared.config.centralized_config import get_config
-from app.core.decimal_utils import to_decimal, validate_price
+from app.shared.utils.decimal_utils import to_decimal, validate_price
 
 if TYPE_CHECKING:
     from app.engines.risk_engine.correlation_analyzers.correlation_analyzers import (
@@ -122,7 +122,7 @@ class VaRPositionLimiter:
             correlation_analyzer: Correlation matrix analyzer
             config: VaR configuration
         """
-        from app.models.portfolio import Portfolio
+        from app.domain.models.portfolio import Portfolio
 
         self.portfolio: Portfolio = portfolio
         self.correlation_analyzer = correlation_analyzer

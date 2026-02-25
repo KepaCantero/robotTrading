@@ -12,7 +12,7 @@ SOLID Principles:
 import logging
 from typing import Dict, List, Optional
 
-from app.models.momentum import MomentumAnalysis, MomentumStrategy
+from app.domain.models.momentum import MomentumAnalysis, MomentumStrategy
 
 logger = logging.getLogger(__name__)
 

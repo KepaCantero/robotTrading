@@ -14,7 +14,7 @@ from typing import Dict, List, TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from app.shared.config.centralized_config import get_config
-from app.models.portfolio import Portfolio
+from app.domain.models.portfolio import Portfolio
 from app.services.forex_data_service import get_forex_fetcher
 
 if TYPE_CHECKING:

@@ -13,7 +13,7 @@ import logging
 from decimal import Decimal
 from typing import Dict, List
 
-from app.models.momentum import Timeframe
+from app.domain.models.momentum import Timeframe
 
 logger = logging.getLogger(__name__)
 

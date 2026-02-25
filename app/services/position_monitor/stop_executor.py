@@ -19,7 +19,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
-from app.core.decimal_utils import to_decimal
+from app.shared.utils.decimal_utils import to_decimal
 
 if TYPE_CHECKING:
     from .position_monitor import MonitoredPosition

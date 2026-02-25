@@ -32,7 +32,7 @@ from sqlalchemy.exc import (
 )
 from sqlalchemy.orm import relationship
 
-from app.core.database import Base, get_session_factory
+from app.infrastructure.persistence.database import Base, get_session_factory
 
 logger = logging.getLogger(__name__)
 

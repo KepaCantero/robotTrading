@@ -10,7 +10,7 @@ Following SOLID principles:
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Protocol, Tuple
 
-from app.models.momentum import (
+from app.domain.models.momentum import (
     MomentumAnalysis,
     MomentumFilter,
     MomentumSignal,

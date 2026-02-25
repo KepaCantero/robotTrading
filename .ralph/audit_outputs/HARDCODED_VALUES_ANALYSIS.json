@@ -1,0 +1,61 @@
+{
+  "task": "Task 24: Structural Audit - Hardcoded Values",
+  "generated_at": "2025-02-25",
+  "summary": {
+    "total_decimal_values": 2500,
+    "unique_values": 150,
+    "config_already_exists": true
+  },
+  "top_values": [
+    {"value": "Decimal(\"0.01\")", "count": 242, "meaning": "1% - thresholds, tolerances"},
+    {"value": "Decimal(\"1.0\")", "count": 237, "meaning": "Multipliers, full allocation"},
+    {"value": "Decimal(\"0.5\")", "count": 114, "meaning": "50% - half allocations"},
+    {"value": "Decimal(\"0.05\")", "count": 109, "meaning": "5% - position limits"},
+    {"value": "Decimal(\"0.10\")", "count": 82, "meaning": "10% - position limits"},
+    {"value": "Decimal(\"0.15\")", "count": 81, "meaning": "15% - drawdown limits"},
+    {"value": "Decimal(\"0.20\")", "count": 73, "meaning": "20% - exposure limits"},
+    {"value": "Decimal(\"1.5\")", "count": 61, "meaning": "Multipliers"},
+    {"value": "Decimal(\"0.1\")", "count": 61, "meaning": "10% alternative notation"},
+    {"value": "Decimal(\"0.0\")", "count": 45, "meaning": "Zero - defaults"},
+    {"value": "Decimal(\"0.25\")", "count": 43, "meaning": "25% - allocations"},
+    {"value": "Decimal(\"0.0001\")", "count": 43, "meaning": "0.01% - small tolerances"},
+    {"value": "Decimal(\"2.0\")", "count": 39, "meaning": "Multipliers"},
+    {"value": "Decimal(\"0.001\")", "count": 37, "meaning": "0.1% - small tolerances"},
+    {"value": "Decimal(\"0.8\")", "count": 36, "meaning": "80% - high thresholds"}
+  ],
+  "existing_config": {
+    "location": "app/shared/config/trading_config.py",
+    "lines": 1826,
+    "has_get_config": true,
+    "modules": [
+      "TradingThresholds",
+      "SignalThresholds",
+      "RiskManagementThresholds",
+      "CircuitBreakerThresholds",
+      "SlippageThresholds",
+      "PerformanceThresholds",
+      "MarketMicrostructureThresholds",
+      "TradingCostThresholds",
+      "PositionSizingThresholds",
+      "PortfolioAllocationThresholds"
+    ]
+  },
+  "recommendation": {
+    "action": "limited_extraction",
+    "reasons": [
+      "Config system already exists with 500+ parameters",
+      "Many values are intentional business constants",
+      "Mass extraction risks breaking working code",
+      "Values are semantically different (1% tolerance != 1% fee)"
+    ],
+    "candidates_for_extraction": [
+      {"value": "0.01", "parameter": "default_tolerance", "if_count_gt": 50},
+      {"value": "0.05", "parameter": "default_position_limit", "if_count_gt": 50}
+    ],
+    "values_to_leave": [
+      "Tier-specific percentages (micro/small/medium/large)",
+      "Strategy-specific thresholds",
+      "One-time calculation constants"
+    ]
+  }
+}
