@@ -1,0 +1,57 @@
+{
+  "timestamp": "2026-02-25T06:40:00Z",
+  "phase": "hardcoded_values_extraction",
+  "values_detected": {
+    "Decimal_0.0001_avg_spread": {
+      "occurrences": 15,
+      "file": "app/services/asset_identification.py",
+      "context": "Default spread for crypto/forex assets"
+    },
+    "Decimal_0.01_avg_spread": {
+      "occurrences": 13,
+      "file": "app/services/asset_identification.py",
+      "context": "Default spread for stock assets"
+    }
+  },
+  "config_additions": {
+    "file": "app/shared/config/centralized_config.py",
+    "new_fields": [
+      {
+        "name": "default_crypto_spread",
+        "value": "0.0001",
+        "description": "Default spread for crypto assets (1 bps)"
+      },
+      {
+        "name": "default_forex_spread",
+        "value": "0.0001",
+        "description": "Default spread for forex pairs (1 bps)"
+      },
+      {
+        "name": "default_stock_spread",
+        "value": "0.01",
+        "description": "Default spread for stocks (1%)"
+      },
+      {
+        "name": "default_etf_spread",
+        "value": "0.01",
+        "description": "Default spread for ETFs (1%)"
+      }
+    ]
+  },
+  "code_changes": {
+    "file": "app/services/asset_identification.py",
+    "changes": [
+      "Added import for get_config from centralized_config",
+      "Added module-level constants for spread defaults",
+      "Replaced 13 occurrences of Decimal('0.01') with DEFAULT_STOCK_SPREAD",
+      "Replaced 15 occurrences of Decimal('0.0001') with DEFAULT_CRYPTO_SPREAD"
+    ]
+  },
+  "summary": {
+    "hardcoded_values_found": 28,
+    "values_extracted_to_config": 4,
+    "files_modified": 2,
+    "replacements_made": 28,
+    "status": "complete"
+  }
+}

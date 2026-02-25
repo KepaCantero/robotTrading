@@ -64,6 +64,11 @@ from app.domain.strategies.momentum import MomentumStrategy as ModularMomentumSt
 
 # Portfolio management
 
+# SRP Extracted modules (Phase 6)
+from app.backtesting.runners.regime_analyzer import RegimeAnalyzer
+from app.backtesting.runners.monte_carlo_simulator import MonteCarloSimulator
+from app.backtesting.runners.result_aggregator import ResultAggregator
+
 
 class ComprehensiveBacktestRunner:
     """
@@ -149,6 +154,16 @@ class ComprehensiveBacktestRunner:
         self.backtesting_compliance = create_backtesting_compliance()
         self.compliance_results: List[BacktestingComplianceResult] = []
         logger.info("BacktestingCompliance initialized (R5, R6, R7, DATA-001)")
+
+        # SRP: Initialize extracted modules (Phase 6)
+        self.regime_analyzer = RegimeAnalyzer()
+        self.monte_carlo_simulator = MonteCarloSimulator(
+            random_state=self.raw_config.get('random_state', 42)
+        )
+        self.result_aggregator = ResultAggregator(
+            output_dir=self.output_dir,
+            output_formats=self.raw_config.get('reporting', {}).get('output_format', ['csv', 'json'])
+        )
 
         logger.info(f"ComprehensiveBacktestRunner initialized with {len(self.quotes)} quotes")
         if self.parallel_enabled:
@@ -860,8 +875,7 @@ class ComprehensiveBacktestRunner:
         """
         Crear quotes modificados con volatilidad realista para Monte Carlo.
 
-        ANTES: Usaba shock aleatorio simple np.random.normal(0, volatility_multiplier * 0.02)
-        AHORA: Usa RealisticDataGenerator con GARCH y regime switching
+        DELEGATES to MonteCarloSimulator (SRP Phase 6).
 
         Args:
             volatility_multiplier: Multiplicador de volatilidad
@@ -869,53 +883,10 @@ class ComprehensiveBacktestRunner:
         Returns:
             Lista de quotes modificados con datos realistas
         """
-        from app.backtesting.realistic_data_generator import RealisticDataGenerator
-
-        # Si no hay quotes base, crear datos nuevos
-        if not self.quotes:
-            logger.warning("No base quotes available, generating new realistic data")
-            gen = RealisticDataGenerator(
-                seed=self.config.get('random_state', 42),
-                base_price=100.0,
-                base_volume=50_000_000,
-            )
-            from datetime import datetime
-
-            start_date = datetime.now()
-            return gen.generate_realistic_quotes(
-                symbol='SYNTH',
-                n_days=252,
-                start_date=start_date,
-                use_regime_switching=True,
-            )
-
-        # Usar generador realista para crear simulaciones Monte Carlo realistas
-        gen = RealisticDataGenerator(
-            seed=self.config.get('random_state', 42),
-            base_price=float(self.quotes[0].close),
-            base_volume=int(self.quotes[0].volume) if self.quotes[0].volume else 50_000_000,
+        return self.monte_carlo_simulator.create_monte_carlo_quotes(
+            base_quotes=self.quotes,
+            volatility_multiplier=volatility_multiplier,
         )
-
-        # Generar escenario Monte Carlo con volatilidad ajustada
-        # Usamos regime VOLATILE para simulaciones Monte Carlo
-        from datetime import datetime
-
-        start_date = self.quotes[0].timestamp if self.quotes else datetime.now()
-
-        modified_quotes = gen.generate_realistic_quotes(
-            symbol=self.quotes[0].symbol if self.quotes else 'SYNTH',
-            n_days=len(self.quotes),
-            start_date=start_date,
-            use_regime_switching=True,
-            initial_regime='volatile',  # Usa régimen volátil para Monte Carlo
-        )
-
-        logger.info(
-            f"Generated {len(modified_quotes)} realistic Monte Carlo quotes "
-            f"(replacing simplistic random shocks)"
-        )
-
-        return modified_quotes
 
     def run_walk_forward_backtest(self) -> List[Dict[str, Any]]:
         """
@@ -4094,33 +4065,12 @@ class ComprehensiveBacktestRunner:
         """
         Guardar resultados a archivos.
 
+        DELEGATES to ResultAggregator (SRP Phase 6).
+
         Args:
             results: Lista de resultados
         """
-        if not results:
-            logger.warning("No results to save")
-            return
-
-        reporting_config = self.raw_config.get('reporting', {})
-        output_formats = reporting_config.get('output_format', ['csv', 'json'])
-
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-        # Guardar CSV
-        if 'csv' in output_formats:
-            csv_path = self.output_dir / f"backtest_results_{timestamp}.csv"
-            df = pd.DataFrame(results)
-            df.to_csv(csv_path, index=False)
-            logger.info(f"Results saved to CSV: {csv_path}")
-
-        # Guardar JSON
-        if 'json' in output_formats:
-            json_path = self.output_dir / f"backtest_results_{timestamp}.json"
-            import json
-
-            with open(json_path, 'w') as f:
-                json.dump(results, f, indent=2, default=str)
-            logger.info(f"Results saved to JSON: {json_path}")
+        self.result_aggregator.save_results(results, prefix="backtest_results")
 
     async def _save_weights_async(
         self, engine_type: str, strategy: Any, result_dict: Dict[str, Any]
@@ -4526,8 +4476,7 @@ class ComprehensiveBacktestRunner:
         """
         Simple regime detection based on returns and volatility.
 
-        Fallback method when advanced detectors are unavailable.
-        Classifies regimes based on return and volatility thresholds.
+        DELEGATES to RegimeAnalyzer (SRP Phase 6).
 
         Args:
             returns: Array of returns
@@ -4535,36 +4484,15 @@ class ComprehensiveBacktestRunner:
         Returns:
             Array of regime labels (0=Bear, 1=Neutral, 2=Bull)
         """
-        # Calculate rolling volatility and returns
-        window = 20
-        rolling_vol = pd.Series(returns).rolling(window).std().values
-        rolling_ret = pd.Series(returns).rolling(window).mean().values
-
-        # Thresholds for classification
-        vol_median = np.nanmedian(rolling_vol)
-        ret_median = np.nanmedian(rolling_ret)
-
-        regimes = np.ones(len(returns), dtype=int)  # Default to Neutral
-
-        for i in range(len(returns)):
-            vol = rolling_vol[i] if not np.isnan(rolling_vol[i]) else vol_median
-            ret = rolling_ret[i] if not np.isnan(rolling_ret[i]) else ret_median
-
-            # Classify based on volatility and return
-            if ret > ret_median * 1.5 and vol < vol_median * 1.2:
-                regimes[i] = 2  # Bull: high return, low vol
-            elif ret < ret_median * 0.5 and vol > vol_median * 1.2:
-                regimes[i] = 0  # Bear: low return, high vol
-            else:
-                regimes[i] = 1  # Neutral
-
-        return regimes
+        return self.regime_analyzer.detect_simple_regimes(returns)
 
     def _get_regime_name_mapping(
         self, regime_labels: np.ndarray, returns: pd.Series
     ) -> Dict[int, str]:
         """
         Map regime indices to descriptive names based on characteristics.
+
+        DELEGATES to RegimeAnalyzer (SRP Phase 6).
 
         Args:
             regime_labels: Array of regime labels
@@ -4573,37 +4501,7 @@ class ComprehensiveBacktestRunner:
         Returns:
             Dictionary mapping regime indices to names
         """
-        unique_regimes = sorted(np.unique(regime_labels))
-        regime_stats = {}
-
-        for regime in unique_regimes:
-            mask = regime_labels == regime
-            regime_returns = returns[mask]
-
-            regime_stats[regime] = {
-                'mean_return': float(regime_returns.mean()),
-                'volatility': float(regime_returns.std()),
-            }
-
-        # Sort regimes by mean return to determine Bear/Neutral/Bull
-        sorted_regimes = sorted(regime_stats.items(), key=lambda x: x[1]['mean_return'])
-
-        regime_names = {}
-        if len(sorted_regimes) == 3:
-            regime_names[sorted_regimes[0][0]] = 'Bear Market'
-            regime_names[sorted_regimes[1][0]] = 'Neutral Market'
-            regime_names[sorted_regimes[2][0]] = 'Bull Market'
-        elif len(sorted_regimes) == 2:
-            regime_names[sorted_regimes[0][0]] = 'Bear Market'
-            regime_names[sorted_regimes[1][0]] = 'Bull Market'
-        else:
-            for regime, stats in sorted_regimes:
-                if stats['mean_return'] > 0:
-                    regime_names[regime] = f'Positive_Regime_{regime}'
-                else:
-                    regime_names[regime] = f'Negative_Regime_{regime}'
-
-        return regime_names
+        return self.regime_analyzer.get_regime_name_mapping(regime_labels, returns)
 
     def _analyze_regime_transitions(
         self, regime_labels: np.ndarray, regime_names: Dict[int, str]
@@ -4611,7 +4509,7 @@ class ComprehensiveBacktestRunner:
         """
         Analyze regime transitions and build transition probability matrix.
 
-        Implements Markov chain analysis for regime switching (Tsay).
+        DELEGATES to RegimeAnalyzer (SRP Phase 6).
 
         Args:
             regime_labels: Array of regime labels
@@ -4620,69 +4518,4 @@ class ComprehensiveBacktestRunner:
         Returns:
             Dictionary with transition analysis results
         """
-        unique_regimes = sorted(np.unique(regime_labels))
-        n_regimes = len(unique_regimes)
-
-        # Build transition matrix
-        transition_matrix = np.zeros((n_regimes, n_regimes))
-        for i in range(len(regime_labels) - 1):
-            from_regime = regime_labels[i]
-            to_regime = regime_labels[i + 1]
-            from_idx = unique_regimes.index(from_regime)
-            to_idx = unique_regimes.index(to_regime)
-            transition_matrix[from_idx, to_idx] += 1
-
-        # Normalize to get probabilities
-        transition_probs = transition_matrix.copy()
-        for i in range(n_regimes):
-            row_sum = transition_matrix[i, :].sum()
-            if row_sum > 0:
-                transition_probs[i, :] /= row_sum
-
-        # Build named transition matrix
-        named_transition_probs = {}
-        for i, from_regime in enumerate(unique_regimes):
-            from_name = regime_names.get(from_regime, f"Regime_{from_regime}")
-            named_transition_probs[from_name] = {}
-            for j, to_regime in enumerate(unique_regimes):
-                to_name = regime_names.get(to_regime, f"Regime_{to_regime}")
-                named_transition_probs[from_name][to_name] = float(transition_probs[i, j])
-
-        # Analyze regime durations
-        regime_durations = {name: [] for name in regime_names.values()}
-        current_regime = regime_labels[0]
-        current_duration = 1
-
-        for i in range(1, len(regime_labels)):
-            if regime_labels[i] == current_regime:
-                current_duration += 1
-            else:
-                regime_name = regime_names.get(current_regime, f"Regime_{current_regime}")
-                if regime_name in regime_durations:
-                    regime_durations[regime_name].append(current_duration)
-                current_regime = regime_labels[i]
-                current_duration = 1
-
-        # Add last regime duration
-        regime_name = regime_names.get(current_regime, f"Regime_{current_regime}")
-        if regime_name in regime_durations:
-            regime_durations[regime_name].append(current_duration)
-
-        # Calculate duration statistics
-        duration_stats = {}
-        for regime_name, durations in regime_durations.items():
-            if durations:
-                duration_stats[regime_name] = {
-                    'mean_duration': float(np.mean(durations)),
-                    'median_duration': float(np.median(durations)),
-                    'min_duration': int(np.min(durations)),
-                    'max_duration': int(np.max(durations)),
-                    'std_duration': float(np.std(durations)),
-                    'transitions': int(len(durations)),
-                }
-
-        return {
-            'transition_matrix': transition_matrix.tolist(),
-            'transition_probabilities': named_transition_probs,
-            'duration_statistics': duration_stats,
-        }
+        return self.regime_analyzer.analyze_regime_transitions(regime_labels, regime_names)

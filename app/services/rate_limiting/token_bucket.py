@@ -29,7 +29,7 @@ from typing import Callable, Dict, List, Optional
 from requests.exceptions import HTTPError
 
 from app.shared.config.centralized_config import get_config
-from app.core.timezone_utils import utc_now
+from app.shared.utils.timezone_utils import utc_now
 
 logger = logging.getLogger(__name__)
 

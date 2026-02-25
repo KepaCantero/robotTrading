@@ -19,8 +19,15 @@ from app.domain.models.assets import (
     Exchange,
     LiquidityMetrics,
 )
+from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
+
+# Get spread defaults from centralized config
+_config = get_config()
+DEFAULT_STOCK_SPREAD = _config.trading.default_stock_spread
+DEFAULT_CRYPTO_SPREAD = _config.trading.default_crypto_spread
+DEFAULT_FOREX_SPREAD = _config.trading.default_forex_spread
 
 
 class AssetIdentificationService:
@@ -101,7 +108,7 @@ class AssetIdentificationService:
                         asset_class=AssetClass.EQUITY,
                         exchange=Exchange.NASDAQ,  # Simplified
                         avg_volume=avg_volume,
-                        avg_spread=Decimal("0.01"),
+                        avg_spread=DEFAULT_STOCK_SPREAD,
                         market_cap=Decimal(str(avg_price * 1000000000)),  # Approximation
                     )
                     equities.append(asset)
@@ -157,7 +164,7 @@ class AssetIdentificationService:
                         asset_class=AssetClass.CRYPTO,
                         exchange=Exchange.BINANCE,
                         avg_volume=avg_volume,
-                        avg_spread=Decimal("0.0001"),
+                        avg_spread=DEFAULT_CRYPTO_SPREAD,
                         market_cap=None,
                     )
                     cryptos.append(asset)
@@ -184,7 +191,7 @@ class AssetIdentificationService:
                 asset_class=AssetClass.FOREX,
                 exchange=Exchange.OANDA,
                 avg_volume=Decimal("1000000000"),
-                avg_spread=Decimal("0.0001"),
+                avg_spread=DEFAULT_CRYPTO_SPREAD,
                 market_cap=None,
             ),
             Asset(
@@ -193,7 +200,7 @@ class AssetIdentificationService:
                 asset_class=AssetClass.FOREX,
                 exchange=Exchange.OANDA,
                 avg_volume=Decimal("300000000"),
-                avg_spread=Decimal("0.0001"),
+                avg_spread=DEFAULT_CRYPTO_SPREAD,
                 market_cap=None,
             ),
             Asset(
@@ -202,7 +209,7 @@ class AssetIdentificationService:
                 asset_class=AssetClass.FOREX,
                 exchange=Exchange.OANDA,
                 avg_volume=Decimal("400000000"),
-                avg_spread=Decimal("0.0001"),
+                avg_spread=DEFAULT_CRYPTO_SPREAD,
                 market_cap=None,
             ),
             Asset(
@@ -211,7 +218,7 @@ class AssetIdentificationService:
                 asset_class=AssetClass.FOREX,
                 exchange=Exchange.OANDA,
                 avg_volume=Decimal("100000000"),
-                avg_spread=Decimal("0.0001"),
+                avg_spread=DEFAULT_CRYPTO_SPREAD,
                 market_cap=None,
             ),
             Asset(
@@ -220,7 +227,7 @@ class AssetIdentificationService:
                 asset_class=AssetClass.FOREX,
                 exchange=Exchange.OANDA,
                 avg_volume=Decimal("150000000"),
-                avg_spread=Decimal("0.0001"),
+                avg_spread=DEFAULT_CRYPTO_SPREAD,
                 market_cap=None,
             ),
             Asset(
@@ -229,7 +236,7 @@ class AssetIdentificationService:
                 asset_class=AssetClass.FOREX,
                 exchange=Exchange.OANDA,
                 avg_volume=Decimal("120000000"),
-                avg_spread=Decimal("0.0001"),
+                avg_spread=DEFAULT_CRYPTO_SPREAD,
                 market_cap=None,
             ),
             Asset(
@@ -238,7 +245,7 @@ class AssetIdentificationService:
                 asset_class=AssetClass.FOREX,
                 exchange=Exchange.OANDA,
                 avg_volume=Decimal("50000000"),
-                avg_spread=Decimal("0.0001"),
+                avg_spread=DEFAULT_CRYPTO_SPREAD,
                 market_cap=None,
             ),
             Asset(
@@ -247,7 +254,7 @@ class AssetIdentificationService:
                 asset_class=AssetClass.FOREX,
                 exchange=Exchange.OANDA,
                 avg_volume=Decimal("80000000"),
-                avg_spread=Decimal("0.0001"),
+                avg_spread=DEFAULT_CRYPTO_SPREAD,
                 market_cap=None,
             ),
             Asset(
@@ -256,7 +263,7 @@ class AssetIdentificationService:
                 asset_class=AssetClass.FOREX,
                 exchange=Exchange.OANDA,
                 avg_volume=Decimal("200000000"),
-                avg_spread=Decimal("0.0001"),
+                avg_spread=DEFAULT_CRYPTO_SPREAD,
                 market_cap=None,
             ),
             Asset(
@@ -265,7 +272,7 @@ class AssetIdentificationService:
                 asset_class=AssetClass.FOREX,
                 exchange=Exchange.OANDA,
                 avg_volume=Decimal("100000000"),
-                avg_spread=Decimal("0.0001"),
+                avg_spread=DEFAULT_CRYPTO_SPREAD,
                 market_cap=None,
             ),
         ]
@@ -289,7 +296,7 @@ class AssetIdentificationService:
                 asset_class=AssetClass.COMMODITY,
                 exchange=Exchange.CME,
                 avg_volume=Decimal("50000"),
-                avg_spread=Decimal("0.01"),
+                avg_spread=DEFAULT_STOCK_SPREAD,
                 market_cap=None,
             ),
             Asset(
@@ -298,7 +305,7 @@ class AssetIdentificationService:
                 asset_class=AssetClass.COMMODITY,
                 exchange=Exchange.CME,
                 avg_volume=Decimal("200000"),
-                avg_spread=Decimal("0.01"),
+                avg_spread=DEFAULT_STOCK_SPREAD,
                 market_cap=None,
             ),
             Asset(
@@ -316,7 +323,7 @@ class AssetIdentificationService:
                 asset_class=AssetClass.COMMODITY,
                 exchange=Exchange.CME,
                 avg_volume=Decimal("30000"),
-                avg_spread=Decimal("0.01"),
+                avg_spread=DEFAULT_STOCK_SPREAD,
                 market_cap=None,
             ),
         ]
@@ -502,7 +509,7 @@ class AssetIdentificationService:
                 asset_class=AssetClass.EQUITY,
                 exchange=Exchange.NASDAQ,
                 avg_volume=Decimal("50000000"),
-                avg_spread=Decimal("0.01"),
+                avg_spread=DEFAULT_STOCK_SPREAD,
                 market_cap=Decimal("3000000000000"),
             ),
             Asset(
@@ -511,7 +518,7 @@ class AssetIdentificationService:
                 asset_class=AssetClass.EQUITY,
                 exchange=Exchange.NASDAQ,
                 avg_volume=Decimal("30000000"),
-                avg_spread=Decimal("0.01"),
+                avg_spread=DEFAULT_STOCK_SPREAD,
                 market_cap=Decimal("2800000000000"),
             ),
             Asset(
@@ -520,7 +527,7 @@ class AssetIdentificationService:
                 asset_class=AssetClass.EQUITY,
                 exchange=Exchange.NASDAQ,
                 avg_volume=Decimal("25000000"),
-                avg_spread=Decimal("0.01"),
+                avg_spread=DEFAULT_STOCK_SPREAD,
                 market_cap=Decimal("1800000000000"),
             ),
             Asset(
@@ -529,7 +536,7 @@ class AssetIdentificationService:
                 asset_class=AssetClass.EQUITY,
                 exchange=Exchange.NASDAQ,
                 avg_volume=Decimal("20000000"),
-                avg_spread=Decimal("0.01"),
+                avg_spread=DEFAULT_STOCK_SPREAD,
                 market_cap=Decimal("1500000000000"),
             ),
             Asset(
@@ -538,7 +545,7 @@ class AssetIdentificationService:
                 asset_class=AssetClass.EQUITY,
                 exchange=Exchange.NASDAQ,
                 avg_volume=Decimal("40000000"),
-                avg_spread=Decimal("0.01"),
+                avg_spread=DEFAULT_STOCK_SPREAD,
                 market_cap=Decimal("800000000000"),
             ),
             Asset(
@@ -547,7 +554,7 @@ class AssetIdentificationService:
                 asset_class=AssetClass.EQUITY,
                 exchange=Exchange.NASDAQ,
                 avg_volume=Decimal("35000000"),
-                avg_spread=Decimal("0.01"),
+                avg_spread=DEFAULT_STOCK_SPREAD,
                 market_cap=Decimal("1200000000000"),
             ),
             Asset(
@@ -556,7 +563,7 @@ class AssetIdentificationService:
                 asset_class=AssetClass.EQUITY,
                 exchange=Exchange.NASDAQ,
                 avg_volume=Decimal("20000000"),
-                avg_spread=Decimal("0.01"),
+                avg_spread=DEFAULT_STOCK_SPREAD,
                 market_cap=Decimal("700000000000"),
             ),
             Asset(
@@ -565,7 +572,7 @@ class AssetIdentificationService:
                 asset_class=AssetClass.EQUITY,
                 exchange=Exchange.NYSE,
                 avg_volume=Decimal("15000000"),
-                avg_spread=Decimal("0.01"),
+                avg_spread=DEFAULT_STOCK_SPREAD,
                 market_cap=Decimal("800000000000"),
             ),
             Asset(
@@ -574,7 +581,7 @@ class AssetIdentificationService:
                 asset_class=AssetClass.EQUITY,
                 exchange=Exchange.NYSE,
                 avg_volume=Decimal("12000000"),
-                avg_spread=Decimal("0.01"),
+                avg_spread=DEFAULT_STOCK_SPREAD,
                 market_cap=Decimal("450000000000"),
             ),
             Asset(
@@ -583,7 +590,7 @@ class AssetIdentificationService:
                 asset_class=AssetClass.EQUITY,
                 exchange=Exchange.NYSE,
                 avg_volume=Decimal("8000000"),
-                avg_spread=Decimal("0.01"),
+                avg_spread=DEFAULT_STOCK_SPREAD,
                 market_cap=Decimal("400000000000"),
             ),
         ]
@@ -597,7 +604,7 @@ class AssetIdentificationService:
                 asset_class=AssetClass.CRYPTO,
                 exchange=Exchange.BINANCE,
                 avg_volume=Decimal("50000000000"),
-                avg_spread=Decimal("0.0001"),
+                avg_spread=DEFAULT_CRYPTO_SPREAD,
                 market_cap=Decimal("1000000000000"),
             ),
             Asset(
@@ -606,7 +613,7 @@ class AssetIdentificationService:
                 asset_class=AssetClass.CRYPTO,
                 exchange=Exchange.BINANCE,
                 avg_volume=Decimal("20000000000"),
-                avg_spread=Decimal("0.0001"),
+                avg_spread=DEFAULT_CRYPTO_SPREAD,
                 market_cap=Decimal("300000000000"),
             ),
             Asset(
@@ -615,7 +622,7 @@ class AssetIdentificationService:
                 asset_class=AssetClass.CRYPTO,
                 exchange=Exchange.BINANCE,
                 avg_volume=Decimal("1000000000"),
-                avg_spread=Decimal("0.0001"),
+                avg_spread=DEFAULT_CRYPTO_SPREAD,
                 market_cap=Decimal("50000000000"),
             ),
             Asset(
@@ -624,7 +631,7 @@ class AssetIdentificationService:
                 asset_class=AssetClass.CRYPTO,
                 exchange=Exchange.BINANCE,
                 avg_volume=Decimal("1500000000"),
-                avg_spread=Decimal("0.0001"),
+                avg_spread=DEFAULT_CRYPTO_SPREAD,
                 market_cap=Decimal("15000000000"),
             ),
             Asset(
@@ -633,7 +640,7 @@ class AssetIdentificationService:
                 asset_class=AssetClass.CRYPTO,
                 exchange=Exchange.BINANCE,
                 avg_volume=Decimal("3000000000"),
-                avg_spread=Decimal("0.0001"),
+                avg_spread=DEFAULT_CRYPTO_SPREAD,
                 market_cap=Decimal("25000000000"),
             ),
         ]

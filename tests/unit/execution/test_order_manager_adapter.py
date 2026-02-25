@@ -9,7 +9,7 @@ from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, Mock
 
 from app.core.protocols import ITradeExecutor
-from app.services.execution.order_manager_adapter import (
+from app.domain.services.execution.order_manager_adapter import (
     OrderManagerAdapter,
     get_order_manager_adapter,
 )

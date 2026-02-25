@@ -21,7 +21,7 @@ from typing import Any, Callable, Dict, List, Optional, Set
 
 from app.shared.config.centralized_config import get_config
 from app.shared.utils.decimal_utils import to_decimal
-from app.core.timezone_utils import utc_now
+from app.shared.utils.timezone_utils import utc_now
 
 logger = logging.getLogger(__name__)
 
