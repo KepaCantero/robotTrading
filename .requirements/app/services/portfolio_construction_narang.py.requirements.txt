@@ -1,0 +1,69 @@
+# Requirements Document: services/portfolio_construction_narang.py
+
+## 1. Module Overview
+Portfolio Construction - Rishi Narang "Inside the Black Box" Chapter 6
+
+This module implements the Portfolio Construction architecture from Narang's framework:
+- Portfolio optimization with constraints
+- Alpha/risk/transaction cost balance
+- Rebalancing logic
+- Multi-asset allocation
+
+Key concepts from "Inside the Black Box":
+- Portfolio construction combines alpha, risk, and transaction cost models
+- Optimization balances expected returns against risk and costs
+- Constraints ensure practical, implementable portfolios
+- Rebalancing trades off tracking error against transaction costs
+
+From Narang: "Portfolio construction is the process of translating the outputs
+of the alpha model and the risk model into a portfolio that can be traded."
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `pandas`
+- `scipy.optimize.minimize`
+- `app.services.risk_models_narang.RiskModel`
+- `app.services.risk_models_narang.get_risk_model`
+- `app.services.transaction_costs.TransactionCostModel`
+- `app.services.transaction_costs.get_transaction_cost_model`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `OptimizationMethod`: Must conform to application domain models.
+- `RebalanceTrigger`: Must conform to application domain models.
+- `AlphaView`: Must conform to application domain models.
+- `PortfolioConstraints`: Must conform to application domain models.
+- `PortfolioWeights`: Must conform to application domain models.
+- `RebalanceRecommendation`: Must conform to application domain models.
+- `PortfolioConstructor`: Must conform to application domain models.
+### Public Functions
+- `get_portfolio_constructor()`: Must return strictly typed objects.
+- `long_exposure()`: Must return strictly typed objects.
+- `short_exposure()`: Must return strictly typed objects.
+- `gross_exposure()`: Must return strictly typed objects.
+- `net_exposure()`: Must return strictly typed objects.
+- `set_risk_model()`: Must return strictly typed objects.
+- `set_cost_model()`: Must return strictly typed objects.
+- `construct_portfolio()`: Must return strictly typed objects.
+- `should_rebalance()`: Must return strictly typed objects.
+- `objective()`: Must return strictly typed objects.
+- `objective()`: Must return strictly typed objects.
+- `objective()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

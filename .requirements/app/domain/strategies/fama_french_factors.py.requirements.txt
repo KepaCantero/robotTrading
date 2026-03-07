@@ -1,0 +1,48 @@
+# Requirements Document: domain/strategies/fama_french_factors.py
+
+## 1. Module Overview
+Fama-French Factor Models Domain Service
+
+Implements Fama-French 3-factor and Carhart 4-factor models
+for analyzing returns and constructing factor portfolios.
+
+Reference: Rule 43-papers-fama-french-carhart-factors.md
+Papers:
+- Fama, E.F., & French, K.R. (1993). "Common risk factors in stock returns"
+- Carhart, M.M. (1997). "On persistence in mutual fund performance"
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `typing.Dict`
+- `numpy`
+- `pandas`
+- `scipy.stats`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `FactorReturns`: Must conform to application domain models.
+- `FactorLoadings`: Must conform to application domain models.
+- `FactorModelResult`: Must conform to application domain models.
+- `FamaFrenchModel`: Must conform to application domain models.
+- `FactorTiming`: Must conform to application domain models.
+### Public Functions
+- `three_factor()`: Must return strictly typed objects.
+- `four_factor()`: Must return strictly typed objects.
+- `predict_return()`: Must return strictly typed objects.
+- `is_market_beta_significant()`: Must return strictly typed objects.
+- `has_positive_alpha()`: Must return strictly typed objects.
+- `estimate_loadings()`: Must return strictly typed objects.
+- `construct_factor_portfolio()`: Must return strictly typed objects.
+- `calculate_expected_return()`: Must return strictly typed objects.
+- `recommend_momentum()`: Must return strictly typed objects.
+- `recommend_value()`: Must return strictly typed objects.
+- `recommend_small_cap()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

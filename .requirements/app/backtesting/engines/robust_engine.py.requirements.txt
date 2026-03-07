@@ -1,0 +1,62 @@
+# Requirements Document: backtesting/engines/robust_engine.py
+
+## 1. Module Overview
+Robust Backtest Engine.
+
+This engine provides robust backtesting for 25+ years of historical data with:
+- Memory-efficient chunking for large datasets
+- Checkpoint/resume functionality
+- Progress tracking for long backtests
+- Survivorship bias correction
+- Corporate actions handling
+- Dividend reinvestment (DRIP)
+- Look-ahead bias validation
+
+This is a refactored version of app/backtesting/robust_engine/robust_backtester.py
+that extends BaseBacktestEngine for consistency across the codebase.
+
+SINGLE SOURCE OF TRUTH: All defaults from CentralizedConfig.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `json`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.date`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `typing.Union`
+- `pandas`
+- `app.backtesting.base_engine.BaseBacktestEngine`
+- `app.backtesting.base_engine.BacktestState`
+- `app.backtesting.base_engine.EngineType`
+- `app.shared.config.centralized_config.get_config`
+- `app.backtesting.robust_engine.look_ahead_validator.LookAheadValidator`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DecimalEncoder`: Must conform to application domain models.
+- `RobustBacktestConfig`: Must conform to application domain models.
+- `RobustBacktestResult`: Must conform to application domain models.
+- `RobustBacktestEngine`: Must conform to application domain models.
+### Public Functions
+- `default()`: Must return strictly typed objects.
+- `get_engine_type()`: Must return strictly typed objects.
+- `run_backtest()`: Must return strictly typed objects.
+- `add_corporate_action()`: Must return strictly typed objects.
+- `load_corporate_actions_from_csv()`: Must return strictly typed objects.
+- `load_delisted_database()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

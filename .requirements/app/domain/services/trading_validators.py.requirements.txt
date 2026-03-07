@@ -1,0 +1,30 @@
+# Requirements Document: domain/services/trading_validators.py
+
+## 1. Module Overview
+Trading validators to prevent financial disasters.
+
+This module provides validation functions to ensure trading operations
+are safe and comply with risk management rules.
+
+Uses centralized configuration for all thresholds and parameters.
+
+## 2. Dependencies
+- `logging`
+- `decimal.Decimal`
+- `typing.Optional`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TradingValidator`: Must conform to application domain models.
+### Public Functions
+- `validate_position_size()`: Must return strictly typed objects.
+- `validate_stop_loss()`: Must return strictly typed objects.
+- `validate_trade_risk_reward()`: Must return strictly typed objects.
+- `validate_trading_hours()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

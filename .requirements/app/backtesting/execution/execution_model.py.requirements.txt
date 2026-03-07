@@ -1,0 +1,57 @@
+# Requirements Document: backtesting/execution/execution_model.py
+
+## 1. Module Overview
+Realistic Execution Model - Main Orchestration (FASE 5.2)
+
+This module provides the main execution model that coordinates all
+execution components:
+- Transaction costs
+- Slippage estimation
+- Market impact (Almgren-Chriss)
+- Order fill simulation
+- Partial fills and rejections
+
+The RealisticExecutionModel provides a simple interface for executing
+orders with realistic costs and constraints.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `market_impact.ImpactConfig`
+- `market_impact.MarketImpactModel`
+- `models.CostBreakdown`
+- `models.ExecutionResult`
+- `models.ExecutionSummary`
+- `models.MarketSnapshot`
+- `models.Order`
+- `order_fill_simulator.OrderFillSimulator`
+- `order_fill_simulator.SimulatorConfig`
+- `slippage_model.SlippageConfig`
+- `slippage_model.SlippageModel`
+- `transaction_cost.CostConfig`
+- `transaction_cost.TransactionCostCalculator`
+- `order_fill_simulator.FillConstraints`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ExecutionConfig`: Must conform to application domain models.
+- `RealisticExecutionModel`: Must conform to application domain models.
+### Public Functions
+- `to_simulator_config()`: Must return strictly typed objects.
+- `get_execution_summary()`: Must return strictly typed objects.
+- `reset_summary()`: Must return strictly typed objects.
+- `estimate_execution_cost()`: Must return strictly typed objects.
+- `validate_order_feasibility()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -89,7 +89,7 @@ class LowVolatilityStrategy(BaseStrategy):
         # Inicializar componentes
         self.screener = LowBetaScreener(self.strategy_config)
         self.calculator = VolatilityCalculator(
-            risk_free_rate= getattr(config.trading, 'max_risk_per_trade', 0.02))),
+            risk_free_rate=config.get("risk_free_rate", 0.02),
             trading_days_per_year=config.get("trading_days_per_year", 252),
         )
         self.constructor = LowVolatilityPortfolioConstructor(self.strategy_config)
@@ -122,22 +122,44 @@ class LowVolatilityStrategy(BaseStrategy):
             Configuración validada
         """
         try:
-            # Valores por defecto
+            # Valores por defecto - include ALL fields with defaults
             defaults = {
                 "name": "LowVolatilityStrategy",
                 "description": "Estrategia de baja volatilidad",
                 "version": "1.0.0",
+                # Volatility thresholds
+                "max_volatility_percentile": Decimal("0.3"),
                 "max_historical_volatility": Decimal("25.0"),
                 "max_beta": Decimal("0.8"),
-                "portfolio_size": 30,
-                "max_sector_weight": Decimal("0.35"),
-                "max_single_position": Decimal("0.06"),
+                "min_beta": Decimal("0.0"),
+                "max_downside_deviation": Decimal("0.15"),
+                "max_downside_risk": Decimal("0.20"),
+                "max_max_drawdown": Decimal("0.30"),
+                # Performance thresholds
+                "min_sharpe_ratio": Decimal("0.5"),
+                "min_sortino_ratio": Decimal("0.5"),
+                # Score thresholds
                 "min_low_vol_score": Decimal("60.0"),
                 "min_defensive_score": Decimal("50.0"),
                 "min_stability_score": Decimal("50.0"),
+                # Portfolio construction
+                "portfolio_size": 30,
+                "max_positions": 30,
+                "max_sector_weight": Decimal("0.35"),
+                "max_single_position": Decimal("0.06"),
+                # Sector preferences
+                "defensive_sector_bias": True,
+                "require_defensive_sector": False,
                 "preferred_sectors": self.DEFENSIVE_SECTORS,
                 "avoid_sectors": self.CYCLICAL_SECTORS,
                 "optimization_method": "min_variance",
+                "risk_free_rate": Decimal("0.04"),
+                "rebalance_threshold": Decimal("0.05"),
+                # Scoring weights
+                "volatility_weight": Decimal("0.4"),
+                "defensive_weight": Decimal("0.3"),
+                "stability_weight": Decimal("0.2"),
+                "quality_weight": Decimal("0.1"),
             }
 
             # Merge con config provisto

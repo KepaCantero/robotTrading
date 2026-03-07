@@ -1,0 +1,44 @@
+# Requirements Document: services/profile_generator/profile_generator.py
+
+## 1. Module Overview
+T2.1: ProfileGenerator - Maps user input to investment profiles
+
+Generates complete investment profiles based on user capital, objective, and risk tolerance.
+Uses configuration templates to create objective-aware parameter sets.
+Integrates MAESTRO PHASE 1 for absolute return optimization and feasibility validation.
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `pathlib.Path`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `yaml`
+- `app.maestro.phase_1.AbsoluteReturnTarget`
+- `app.maestro.phase_1.CapacityFadeAnalyzer`
+- `app.maestro.phase_1.CapitalTierSelector`
+- `app.maestro.phase_1.FeasibilityValidator`
+- `app.maestro.phase_1.ParameterOptimizer`
+- `app.maestro.phase_1.TargetAlphaCalculator`
+- `models.CapitalTier`
+- `models.InvestmentObjective`
+- `models.InvestmentProfile`
+- `models.ModuleConfig`
+- `models.ProfileGenerationRequest`
+- `models.ProfileGenerationResult`
+- `models.RiskProfile`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ProfileGenerator`: Must conform to application domain models.
+### Public Functions
+- `get_profile_generator()`: Must return strictly typed objects.
+- `get_generator_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

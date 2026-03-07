@@ -1,0 +1,46 @@
+# Requirements Document: presentation/controllers/portfolio.py
+
+## 1. Module Overview
+Portfolio API Endpoints
+
+FastAPI endpoints for portfolio management and monitoring.
+
+Security Compliance: DEFAULT_PERCENT_95%
+- Input validation and sanitization
+- CSRF protection for state-changing operations
+- Output encoding for XSS prevention
+- Rate limiting
+- Audit logging
+
+## 2. Dependencies
+- `__future__.annotations`
+- `asyncio`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `fastapi.APIRouter`
+- `fastapi.Depends`
+- `fastapi.HTTPException`
+- `pydantic.BaseModel`
+- `requests.exceptions.HTTPError`
+- `requests.exceptions.RequestException`
+- `app.domain.models.portfolio.AssetUniverse`
+- `app.domain.models.portfolio.MarketRegimeData`
+- `app.domain.models.portfolio.Position`
+- `app.infrastructure.providers.paper_trading.PaperTradingPortfolioProvider`
+- `app.services.portfolio_service.PortfolioService`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TradeRequest`: Must conform to application domain models.
+- `TradeResponse`: Must conform to application domain models.
+### Public Functions
+- `get_portfolio_service()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

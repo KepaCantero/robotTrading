@@ -1,0 +1,42 @@
+# Requirements Document: backtesting/realistic_data_generator.py
+
+## 1. Module Overview
+Realistic Market Data Generator for Backtesting
+
+Generates realistic market data using advanced statistical models:
+- Geometric Brownian Motion with volatility clustering (GARCH-like)
+- Markov Regime-Switching Model (bull/bear/sideways markets)
+- Volume correlated with volatility and price movements
+- Realistic OHLC generation with intraday patterns
+- Jump-diffusion for extreme events
+
+This replaces the simplistic linear/random data generation that was
+previously used, providing much more realistic test scenarios.
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `enum.Enum`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `app.shared.utils.decimal_utils.round_price`
+- `app.shared.utils.decimal_utils.to_decimal`
+- `app.domain.models.market_data.Quote`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MarketRegime`: Must conform to application domain models.
+- `RegimeParameters`: Must conform to application domain models.
+- `RealisticDataGenerator`: Must conform to application domain models.
+### Public Functions
+- `generate_realistic_quotes()`: Must return strictly typed objects.
+- `generate_monte_carlo_scenario()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

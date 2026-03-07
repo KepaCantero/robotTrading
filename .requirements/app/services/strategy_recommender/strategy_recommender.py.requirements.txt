@@ -1,0 +1,45 @@
+# Requirements Document: services/strategy_recommender/strategy_recommender.py
+
+## 1. Module Overview
+T6.1: StrategyRecommender - Strategy recommendation engine
+
+Scores and recommends strategies based on:
+1. Backtest performance metrics (Sharpe, return, drawdown)
+2. Investment objective alignment
+3. Risk-adjusted returns
+4. Improvement opportunities
+
+Uses objective-driven weighting:
+- maximizar_capital: 60% Sharpe + 30% return + 10% Sortino
+- maximizar_dividendos: 50% dividend + 30% Sharpe + 20% preservation
+- capital_preservation: 50% drawdown_inverse + 40% Sharpe + 10% return
+- balanced_growth: 40% Sharpe + 30% return + 30% drawdown_inverse
+- income_generation: 50% dividend + 30% consistency + 20% Sharpe
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `models.ObjectiveWeights`
+- `models.RecommendationSuggestion`
+- `models.StrategyRecommendation`
+- `models.StrategyRecommendationRequest`
+- `models.StrategyScore`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StrategyRecommender`: Must conform to application domain models.
+### Public Functions
+- `get_strategy_recommender()`: Must return strictly typed objects.
+- `get_recommender_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

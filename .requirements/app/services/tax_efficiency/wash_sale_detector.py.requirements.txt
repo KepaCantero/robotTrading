@@ -1,0 +1,39 @@
+# Requirements Document: services/tax_efficiency/wash_sale_detector.py
+
+## 1. Module Overview
+T15.1.2: WashSaleDetector - Wash-sale violation detection and prevention
+
+Monitors trades to detect wash-sale violations and adjusts cost basis accordingly.
+A wash sale occurs when a security is sold at a loss and a substantially identical
+security is purchased within 30 days before or after the sale.
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `Trade`: Must conform to application domain models.
+- `WashSaleViolation`: Must conform to application domain models.
+- `CostBasisAdjustment`: Must conform to application domain models.
+- `WashSaleDetector`: Must conform to application domain models.
+### Public Functions
+- `get_wash_sale_detector()`: Must return strictly typed objects.
+- `detect_wash_sale()`: Must return strictly typed objects.
+- `adjust_cost_basis()`: Must return strictly typed objects.
+- `get_compliance_window()`: Must return strictly typed objects.
+- `is_substantially_identical()`: Must return strictly typed objects.
+- `get_cost_basis_per_share()`: Must return strictly typed objects.
+- `generate_compliance_report()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

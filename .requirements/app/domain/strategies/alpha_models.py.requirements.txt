@@ -1,0 +1,65 @@
+# Requirements Document: domain/strategies/alpha_models.py
+
+## 1. Module Overview
+Alpha Models - Rishi Narang "Inside the Black Box" Chapter 3
+
+This module implements the Alpha Model architecture from Narang's framework:
+- Alpha generation framework
+- Signal generation with confidence levels
+- Alpha decay analysis
+- Multi-factor alpha models
+
+Key concepts from "Inside the Black Box":
+- Alpha models generate trading signals (direction and confidence)
+- Alpha decay measures how quickly signals lose predictive power
+- Multiple alpha sources can be combined for robustness
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `abc.ABC`
+- `abc.abstractmethod`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `pandas`
+- `app.domain.models.signal.Signal`
+- `app.domain.models.signal.SignalSource`
+- `app.domain.models.signal.SignalStrength`
+- `app.domain.models.signal.SignalType`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `AlphaType`: Must conform to application domain models.
+- `AlphaDecayRegime`: Must conform to application domain models.
+- `AlphaSignal`: Must conform to application domain models.
+- `AlphaDecayMetrics`: Must conform to application domain models.
+- `AlphaModel`: Must conform to application domain models.
+- `MomentumAlphaModel`: Must conform to application domain models.
+- `MeanReversionAlphaModel`: Must conform to application domain models.
+- `MultiFactorAlphaModel`: Must conform to application domain models.
+### Public Functions
+- `get_alpha_model()`: Must return strictly typed objects.
+- `to_signal()`: Must return strictly typed objects.
+- `generate_alpha()`: Must return strictly typed objects.
+- `generate_multi_alpha()`: Must return strictly typed objects.
+- `analyze_alpha_decay()`: Must return strictly typed objects.
+- `get_optimal_holding_period()`: Must return strictly typed objects.
+- `combine_alpha_signals()`: Must return strictly typed objects.
+- `generate_alpha()`: Must return strictly typed objects.
+- `generate_alpha()`: Must return strictly typed objects.
+- `add_sub_model()`: Must return strictly typed objects.
+- `generate_alpha()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

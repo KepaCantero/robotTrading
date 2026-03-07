@@ -1,0 +1,54 @@
+# Requirements Document: backtesting/profile_batch/orchestrator.py
+
+## 1. Module Overview
+Profile Batch Backtester Orchestrator
+
+Main orchestrator for batch backtesting with profile-driven optimization.
+Coordinates all components and manages the overall workflow.
+
+Responsibilities:
+- Orchestrate batch backtesting workflow
+- Coordinate parallel/sequential execution
+- Delegate to specialized components
+- Manage fallback metrics
+- Provide unified interface
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `threading`
+- `concurrent.futures.ProcessPoolExecutor`
+- `concurrent.futures.as_completed`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `yaml`
+- `app.shared.config.profile_config_loader.ProfileConfigLoader`
+- `app.domain.models.input_profile.InputProfile`
+- `baseline_executor.BaselineBacktestExecutor`
+- `profile_generator.ProfileGenerator`
+- `report_generator.ReportGenerator`
+- `result_aggregator.ProfileResult`
+- `result_aggregator.ResultAggregator`
+- `optimization_pipeline.OptimizationPipeline`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ProfileBatchBacktester`: Must conform to application domain models.
+### Public Functions
+- `create_profile_batch_backtester()`: Must return strictly typed objects.
+- `generate_all_profiles()`: Must return strictly typed objects.
+- `run_single_profile()`: Must return strictly typed objects.
+- `run_all_profiles()`: Must return strictly typed objects.
+- `get_best_strategy()`: Must return strictly typed objects.
+- `export_results()`: Must return strictly typed objects.
+- `generate_comparison_report()`: Must return strictly typed objects.
+- `get_fallback_metrics()`: Must return strictly typed objects.
+- `log_fallback_summary()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

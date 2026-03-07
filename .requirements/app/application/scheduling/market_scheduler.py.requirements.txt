@@ -1,0 +1,62 @@
+# Requirements Document: application/scheduling/market_scheduler.py
+
+## 1. Module Overview
+Market Scheduler - Schedule tasks based on market hours.
+
+Handles:
+- 24/7 markets (crypto, forex) - continuous operation
+- Stock markets (6.5h/day) - US: 9:30-16:00 ET, EU: 9:00-17:30 CET, Asia: 9:00-15:00 JST
+- Market holidays
+- Timezone differences (US, EU, Asia)
+- Graceful startup/shutdown
+
+Phase 3.1: 24/7 Market Scheduler
+Critical for multi-market support where crypto/forex run 24/7 but stocks
+have limited trading hours. Efficiently manages CPU usage by only running
+tasks when markets are open.
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.date`
+- `datetime.datetime`
+- `datetime.time`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `pytz`
+- `app.shared.utils.timezone_utils.utc_now`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MarketType`: Must conform to application domain models.
+- `MarketStatus`: Must conform to application domain models.
+- `MarketSchedule`: Must conform to application domain models.
+- `ScheduledTask`: Must conform to application domain models.
+- `MarketScheduler`: Must conform to application domain models.
+### Public Functions
+- `is_24_7()`: Must return strictly typed objects.
+- `schedule_task()`: Must return strictly typed objects.
+- `unschedule_task()`: Must return strictly typed objects.
+- `enable_task()`: Must return strictly typed objects.
+- `disable_task()`: Must return strictly typed objects.
+- `is_market_open()`: Must return strictly typed objects.
+- `add_holiday()`: Must return strictly typed objects.
+- `remove_holiday()`: Must return strictly typed objects.
+- `get_task_info()`: Must return strictly typed objects.
+- `list_tasks()`: Must return strictly typed objects.
+- `get_market_schedule()`: Must return strictly typed objects.
+- `is_running()`: Must return strictly typed objects.
+- `get_task_count()`: Must return strictly typed objects.
+- `get_enabled_task_count()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

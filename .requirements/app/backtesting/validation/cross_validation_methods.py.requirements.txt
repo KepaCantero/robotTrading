@@ -1,0 +1,85 @@
+# Requirements Document: backtesting/validation/cross_validation_methods.py
+
+## 1. Module Overview
+Cross-Validation Methods for Statistical Learning.
+
+This module implements comprehensive cross-validation techniques following
+Hastie, Tibshirani, and Friedman's "The Elements of Statistical Learning"
+(ESL) Chapter 7: Model Assessment and Selection.
+
+Key Methods:
+1. K-Fold Cross-Validation
+2. Leave-One-Out Cross-Validation (LOOCV)
+3. Nested Cross-Validation for hyperparameter tuning
+4. Stratified K-Fold for classification
+5. Time Series Cross-Validation
+6. Custom CV with purging and embargo for financial data
+
+Reference:
+    "The Elements of Statistical Learning" by Hastie, Tibshirani, Friedman
+    Chapter 7: Model Assessment and Selection
+    Chapter 12: Support Vector Machines and Flexible Discriminants
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.Generator`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `typing.Union`
+- `numpy`
+- `pandas`
+- `sklearn.base.BaseEstimator`
+- `sklearn.base.clone`
+- `sklearn.model_selection.KFold`
+- `sklearn.model_selection.LeaveOneOut`
+- `sklearn.model_selection.StratifiedKFold`
+- `sklearn.model_selection.KFold`
+- `sklearn.model_selection.GridSearchCV`
+- `ast`
+- `collections.Counter`
+- `time`
+- `sklearn.metrics.check_scoring`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CVMethod`: Must conform to application domain models.
+- `CVResult`: Must conform to application domain models.
+- `NestedCVResult`: Must conform to application domain models.
+- `KFoldCV`: Must conform to application domain models.
+- `LeaveOneOutCV`: Must conform to application domain models.
+- `StratifiedKFoldCV`: Must conform to application domain models.
+- `TimeSeriesSplitCV`: Must conform to application domain models.
+- `NestedCrossValidation`: Must conform to application domain models.
+- `CrossValidation`: Must conform to application domain models.
+### Public Functions
+- `cross_validate()`: Must return strictly typed objects.
+- `nested_cross_validate()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `split()`: Must return strictly typed objects.
+- `get_n_splits()`: Must return strictly typed objects.
+- `split()`: Must return strictly typed objects.
+- `get_n_splits()`: Must return strictly typed objects.
+- `split()`: Must return strictly typed objects.
+- `get_n_splits()`: Must return strictly typed objects.
+- `split()`: Must return strictly typed objects.
+- `get_n_splits()`: Must return strictly typed objects.
+- `fit()`: Must return strictly typed objects.
+- `split()`: Must return strictly typed objects.
+- `cross_validate()`: Must return strictly typed objects.
+- `get_n_splits()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

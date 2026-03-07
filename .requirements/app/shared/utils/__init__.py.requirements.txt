@@ -1,0 +1,20 @@
+# Requirements Document: shared/utils/__init__.py
+
+## 1. Module Overview
+Core utilities for the algoTrading application.
+
+This package provides common utilities used across the application:
+- SubsystemConfigFactory: Factory for creating default subsystem configurations
+- safe_parse: Safe parsing utilities for external data
+
+## 2. Dependencies
+- `app.shared.utils.subsystem_config_factory.SubsystemConfigFactory`
+- `app.shared.utils.subsystem_config_factory.get_subsystem_config_factory`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

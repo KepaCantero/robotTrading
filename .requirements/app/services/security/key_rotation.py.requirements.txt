@@ -1,0 +1,52 @@
+# Requirements Document: services/security/key_rotation.py
+
+## 1. Module Overview
+Key rotation utilities for automated credential rotation.
+
+This module provides automated key rotation with:
+- Automated key rotation scheduling
+- Graceful key transition (old key remains valid during transition)
+- Rotation audit logging
+- Notification on rotation events
+- Rollback capability for failed rotations
+
+R29: Security Hardening
+
+## 2. Dependencies
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `logging`
+- `secrets`
+- `secrets`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RotationStatus`: Must conform to application domain models.
+- `RotationSchedule`: Must conform to application domain models.
+- `RotationResult`: Must conform to application domain models.
+- `RotationError`: Must conform to application domain models.
+- `KeyRotationManager`: Must conform to application domain models.
+### Public Functions
+- `is_due()`: Must return strictly typed objects.
+- `is_in_grace_period()`: Must return strictly typed objects.
+- `schedule_rotation()`: Must return strictly typed objects.
+- `check_rotations_due()`: Must return strictly typed objects.
+- `rotate_key()`: Must return strictly typed objects.
+- `rollback_rotation()`: Must return strictly typed objects.
+- `get_rotation_schedule()`: Must return strictly typed objects.
+- `list_schedules()`: Must return strictly typed objects.
+- `get_rotation_history()`: Must return strictly typed objects.
+- `cancel_schedule()`: Must return strictly typed objects.
+- `update_schedule()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

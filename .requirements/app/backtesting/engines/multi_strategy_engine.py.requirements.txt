@@ -1,0 +1,64 @@
+# Requirements Document: backtesting/engines/multi_strategy_engine.py
+
+## 1. Module Overview
+Multi-Strategy Backtest Engine.
+
+This engine provides multi-strategy backtesting with:
+- Capital allocation per strategy
+- StrategyStockAllocator for intelligent stock assignment
+- Dynamic capital reallocation
+- BacktestingCompliance integration (R5, R6, R7, DATA-001)
+
+This is a refactored version of app/backtesting/multi_strategy_engine.py that
+extends BaseBacktestEngine for consistency across the codebase.
+
+SINGLE SOURCE OF TRUTH: All defaults from CentralizedConfig.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `collections.defaultdict`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Union`
+- `pandas`
+- `app.backtesting.base_engine.BaseBacktestEngine`
+- `app.backtesting.base_engine.BacktestState`
+- `app.backtesting.base_engine.EngineType`
+- `app.backtesting.models.BacktestConfig`
+- `app.backtesting.models.BacktestResult`
+- `app.backtesting.models.PerformanceMetrics`
+- `app.backtesting.signal_diagnostic_logger.SignalDiagnosticLogger`
+- `app.backtesting.backtesting_compliance.BacktestingCompliance`
+- `app.backtesting.backtesting_compliance.BacktestingComplianceResult`
+- `app.backtesting.backtesting_compliance.create_backtesting_compliance`
+- `app.shared.config.centralized_config.get_config`
+- `app.shared.config.centralized_config.StockAllocationSettings`
+- `app.domain.models.market_data.Quote`
+- `app.services.dynamic_capital_reallocation.DynamicCapitalReallocationEngine`
+- `app.services.multi_strategy_allocation.MultiStrategyAllocationManager`
+- `app.services.portfolio_config_manager.PortfolioConfigManager`
+- `app.services.portfolio_config_manager.get_portfolio_config_manager`
+- `app.services.strategy_stock_allocator.StrategyStockAllocator`
+- `app.domain.strategies.base.BaseStrategy`
+- `app.backtesting.engines.standard_engine.StandardBacktestEngine`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MultiStrategyConfig`: Must conform to application domain models.
+- `MultiStrategyResult`: Must conform to application domain models.
+- `MultiStrategyBacktestEngine`: Must conform to application domain models.
+### Public Functions
+- `get_engine_type()`: Must return strictly typed objects.
+- `run_backtest()`: Must return strictly typed objects.
+- `get_allocation_summary()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

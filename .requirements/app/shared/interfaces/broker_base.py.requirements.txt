@@ -1,0 +1,64 @@
+# Requirements Document: shared/interfaces/broker_base.py
+
+## 1. Module Overview
+FICHERO 0: Interfaz Abstracta Universal para Brokers
+
+Este archivo define el contrato que TODOS los brokers deben cumplir.
+Antes de escribir binance_adapter.py, degiro_adapter.py, o cualquier broker,
+DEBES implementar esta interfaz.
+
+Por qué es CRÍTICO:
+1. Normalización: Binance usa "BTCUSDT", OANDA usa "BTC_USD", IBKR usa "IBKR:BTC"
+2. Testing: Puedes crear MockBroker para testing sin riesgo
+3. SRE: WAL y BootReconciler dependen de esta interfaz
+4. Tax: FIFO necesita normalización de símbolos
+
+Author: SRE Feedback Integration
+Date: 2025-01-25
+
+## 2. Dependencies
+- `abc.ABC`
+- `abc.abstractmethod`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BrokerType`: Must conform to application domain models.
+- `OrderSide`: Must conform to application domain models.
+- `OrderType`: Must conform to application domain models.
+- `OrderStatus`: Must conform to application domain models.
+- `Balance`: Must conform to application domain models.
+- `Ticker`: Must conform to application domain models.
+- `Order`: Must conform to application domain models.
+- `OrderResult`: Must conform to application domain models.
+- `Position`: Must conform to application domain models.
+- `BrokerConfig`: Must conform to application domain models.
+- `BrokerError`: Must conform to application domain models.
+- `RateLimitError`: Must conform to application domain models.
+- `ConnectionError`: Must conform to application domain models.
+- `OrderRejectedError`: Must conform to application domain models.
+- `IBroker`: Must conform to application domain models.
+### Public Functions
+- `validate_order()`: Must return strictly typed objects.
+- `normalize_symbol()`: Must return strictly typed objects.
+- `market_value()`: Must return strictly typed objects.
+- `get_broker_type()`: Must return strictly typed objects.
+- `get_broker_name()`: Must return strictly typed objects.
+- `is_connected()`: Must return strictly typed objects.
+- `map_internal_to_broker()`: Must return strictly typed objects.
+- `map_broker_to_internal()`: Must return strictly typed objects.
+- `get_rate_limit_stats()`: Must return strictly typed objects.
+- `is_shadow_mode_enabled()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

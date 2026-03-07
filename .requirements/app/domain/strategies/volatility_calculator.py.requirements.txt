@@ -1,0 +1,58 @@
+# Requirements Document: domain/strategies/volatility_calculator.py
+
+## 1. Module Overview
+Volatility Calculator - Cálculo de Métricas de Volatilidad
+
+Implementa cálculo de:
+- Volatilidad histórica (20, 60, 252 días)
+- Beta (respecto al mercado)
+- Downside risk (semi-deviation)
+- Maximum drawdown
+- Sortino ratio
+- Sharpe ratio
+- Correlación con el mercado
+- Volatilidad idiosincrática
+
+SOLID Principles:
+- Single Responsibility: Solo cálculo de métricas
+- Open/Closed: Extensible con nuevas métricas
+- Dependency Inversion: Depende de abstracciones (models)
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.date`
+- `decimal.Decimal`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `scipy.stats`
+- `models.VolatilityMetrics`
+- `models.VolatilityRegime`
+- `scipy.optimize.minimize`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ReturnSeries`: Must conform to application domain models.
+- `VolatilityCalculator`: Must conform to application domain models.
+### Public Functions
+- `calculate_all_metrics()`: Must return strictly typed objects.
+- `calculate_historical_volatility()`: Must return strictly typed objects.
+- `calculate_beta()`: Must return strictly typed objects.
+- `calculate_downside_risk()`: Must return strictly typed objects.
+- `calculate_max_drawdown()`: Must return strictly typed objects.
+- `calculate_sortino_ratio()`: Must return strictly typed objects.
+- `calculate_sharpe_ratio()`: Must return strictly typed objects.
+- `calculate_correlation()`: Must return strictly typed objects.
+- `calculate_idiosyncratic_volatility()`: Must return strictly typed objects.
+- `calculate_moments()`: Must return strictly typed objects.
+- `calculate_portfolio_volatility()`: Must return strictly typed objects.
+- `calculate_minimum_variance_weights()`: Must return strictly typed objects.
+- `portfolio_variance()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

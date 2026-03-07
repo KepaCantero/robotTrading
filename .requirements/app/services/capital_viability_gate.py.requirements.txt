@@ -1,0 +1,35 @@
+# Requirements Document: services/capital_viability_gate.py
+
+## 1. Module Overview
+PHASE 0 - Capital Viability Gate (T0.1.1)
+
+Validates if a profit goal is mathematically achievable given:
+- Capital available
+- Tax rate
+- Commission per trade
+- Expected alpha per signal
+
+This is a MANDATORY gate before any trading begins.
+If profit goal is unreachable, system disables trading and recommends action.
+
+Uses centralized configuration for all thresholds.
+
+## 2. Dependencies
+- `logging`
+- `decimal.Decimal`
+- `typing.Dict`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CapitalViabilityValidator`: Must conform to application domain models.
+### Public Functions
+- `validate_profit_goal()`: Must return strictly typed objects.
+- `get_minimum_viable_capital()`: Must return strictly typed objects.
+- `log_viability_check()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

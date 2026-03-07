@@ -1,0 +1,34 @@
+# Requirements Document: application/services/portfolio_service_v2.py
+
+## 1. Module Overview
+Portfolio Service - Refactored with Dependency Injection
+
+This version demonstrates proper dependency injection following SOLID principles:
+- SRP: Single responsibility (portfolio management only)
+- DIP: Dependencies injected, not created internally
+- OCP: Open for extension via interfaces
+- ISP: Small, focused interface
+
+Reference: Rule 03-solid-principles.md, Rule 05-architecture.md
+
+## 2. Dependencies
+- `logging`
+- `decimal.Decimal`
+- `typing.Optional`
+- `app.shared.config.di_container.DIContainer`
+- `app.domain.entities.portfolio.Portfolio`
+- `app.domain.factories.AbstractEntityFactory`
+- `app.domain.repositories.PortfolioRepository`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PortfolioServiceV2`: Must conform to application domain models.
+### Public Functions
+- `create_portfolio_service()`: Must return strictly typed objects.
+- `get_dependency_summary()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

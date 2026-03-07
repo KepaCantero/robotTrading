@@ -1,0 +1,56 @@
+# Requirements Document: backtesting/validation/regime_detector.py
+
+## 1. Module Overview
+Market regime detection module (FASE 5.3).
+
+This module implements market regime detection using multiple methods including
+trend analysis, volatility analysis, and Hidden Markov Models (optional).
+
+Key Features:
+- Bull/Bear/Neutral market classification
+- Volatility regime detection (Low/Normal/High)
+- Trend vs Range-bound market detection
+- Regime transition probability matrix
+- Expected duration calculation for each regime
+- Regime-aware strategy recommendations
+
+References:
+    - AUDIT_PLAN_COMPLETO.md - FASE 5.3: Validation
+    - "Expected Returns" - Antti Ilmanen
+    - "Advances in Financial Machine Learning" - Marcos López de Prado
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `datetime.date`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `pandas`
+- `scipy.signal.argrelextrema`
+- `models.MarketRegime`
+- `models.RegimeConfig`
+- `models.RegimeTransitionMatrix`
+- `models.RegimeType`
+- `models.TrendRegime`
+- `models.VolatilityRegime`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RegimeDetector`: Must conform to application domain models.
+### Public Functions
+- `detect_regime_from_data()`: Must return strictly typed objects.
+- `classify_market_state()`: Must return strictly typed objects.
+- `detect_regime()`: Must return strictly typed objects.
+- `detect_regime_history()`: Must return strictly typed objects.
+- `calculate_transition_matrix()`: Must return strictly typed objects.
+- `get_regime_aware_recommendation()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

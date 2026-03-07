@@ -1,0 +1,64 @@
+# Requirements Document: backtesting/lopez_de_prado_metrics.py
+
+## 1. Module Overview
+López de Prado - Machine Learning for Asset Managers Implementation
+
+This module implements advanced metrics and methodologies from Marcos López de Prado's book
+"Machine Learning for Asset Managers" (2020).
+
+Key Features:
+1. Sharpe Ratio Combination Methods
+2. Portfolio Stability Validation
+3. Turnover-Adjusted Performance Metrics
+4. Portfolio Concentration Metrics
+5. Hierarchical Risk Parity (HRP) support
+6. Spectral Risk Measures
+
+Reference:
+    López de Prado, M. (2020). Machine Learning for Asset Managers.
+    Cambridge University Press.
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `scipy.stats`
+- `scipy.cluster.hierarchy`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SharpeCombinationResult`: Must conform to application domain models.
+- `PortfolioStabilityMetrics`: Must conform to application domain models.
+- `TurnoverAdjustedMetrics`: Must conform to application domain models.
+- `ConcentrationMetrics`: Must conform to application domain models.
+- `SharpeRatioCombinator`: Must conform to application domain models.
+- `PortfolioStabilityValidator`: Must conform to application domain models.
+- `TurnoverAdjustedCalculator`: Must conform to application domain models.
+- `ConcentrationAnalyzer`: Must conform to application domain models.
+### Public Functions
+- `create_lopez_de_prado_suite()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `combine_sharpes_optimal()`: Must return strictly typed objects.
+- `combine_sharpes_hierarchical()`: Must return strictly typed objects.
+- `combine_sharpes_spectral()`: Must return strictly typed objects.
+- `test_sharpe_significance()`: Must return strictly typed objects.
+- `validate_stability()`: Must return strictly typed objects.
+- `calculate_turnover_adjusted_sharpe()`: Must return strictly typed objects.
+- `analyze_concentration()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

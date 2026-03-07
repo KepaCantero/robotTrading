@@ -1,0 +1,50 @@
+# Requirements Document: services/risk_scaling/loss_monitor.py
+
+## 1. Module Overview
+PHASE 3: Loss Monitor - Consecutive Loss Detection & Reduction
+
+Tracks consecutive losses and applies position reduction scaling.
+Each additional loss reduces position size until 3+ wins reset the streak.
+
+Logic:
+- 0 consecutive losses → scale = 1.0x
+- 1 loss → scale = 0.9x (10% reduction)
+- 2 losses → scale = 0.8x (20% reduction)
+- 3 losses → scale = 0.6x (40% reduction)
+- 4+ losses → scale = 0.5x (50% reduction, max reduction)
+
+Reset: When 3+ winning trades occur in a row
+
+Uses centralized configuration for all thresholds and scaling factors.
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `decimal.ROUND_HALF_UP`
+- `decimal.Decimal`
+- `typing.List`
+- `typing.Optional`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TradeResult`: Must conform to application domain models.
+- `LossMonitor`: Must conform to application domain models.
+### Public Functions
+- `is_winning()`: Must return strictly typed objects.
+- `is_losing()`: Must return strictly typed objects.
+- `detect_consecutive_losses()`: Must return strictly typed objects.
+- `calculate_loss_scale()`: Must return strictly typed objects.
+- `should_reset_loss_counter()`: Must return strictly typed objects.
+- `get_loss_streak_info()`: Must return strictly typed objects.
+- `calculate_win_rate()`: Must return strictly typed objects.
+- `calculate_average_win_loss_ratio()`: Must return strictly typed objects.
+- `suggest_position_adjustment()`: Must return strictly typed objects.
+- `detect_performance_transition()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

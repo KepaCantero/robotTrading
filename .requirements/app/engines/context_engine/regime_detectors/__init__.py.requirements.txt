@@ -1,0 +1,19 @@
+# Requirements Document: engines/context_engine/regime_detectors/__init__.py
+
+## 1. Module Overview
+Regime Detectors - Detectores avanzados de régimen de mercado.
+
+Incluye:
+- HMM (Hidden Markov Models)
+- Clustering (KMeans, DBSCAN)
+- Análisis de correlaciones dinámicas
+
+## 2. Dependencies
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

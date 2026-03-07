@@ -1,0 +1,97 @@
+# Requirements Document: domain/strategies/learning/feature_importance.py
+
+## 1. Module Overview
+FeatureImportance - Sistema completo de análisis de importancia de features.
+
+[TASK-4.2-FEATURE-IMPORTANCE] Enhanced feature importance system for ML models in trading.
+
+Incluye:
+1. SHAP values para modelos supervisados (tree-based y neural networks)
+2. Attention weights para transformers
+3. Feature selection automático basado en importancia
+4. Permutation importance (model-agnostic)
+5. Built-in model importance extraction
+6. Correlation analysis (target and feature-feature)
+7. Feature stability tracking over time
+8. Comprehensive analysis facade
+9. YAML configuration support
+
+## 2. Dependencies
+- `logging`
+- `os`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `enum.Enum`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `shap`
+- `sklearn.ensemble.RandomForestClassifier`
+- `sklearn.ensemble.RandomForestRegressor`
+- `sklearn.feature_selection.RFE`
+- `sklearn.feature_selection.SelectFromModel`
+- `sklearn.feature_selection.SelectKBest`
+- `sklearn.feature_selection.mutual_info_classif`
+- `sklearn.feature_selection.mutual_info_regression`
+- `sklearn.inspection.permutation_importance`
+- `sklearn.metrics.f_classif`
+- `sklearn.metrics.f_regression`
+- `scipy.stats`
+- `time`
+- `yaml`
+- `torch`
+- `torch.nn`
+- `torch`
+- `torch.nn`
+- `scipy.stats`
+- `sklearn.feature_selection.mutual_info_classif`
+- `sklearn.feature_selection.mutual_info_regression`
+- `scipy.stats`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ImportanceCategory`: Must conform to application domain models.
+- `FeatureImportanceResult`: Must conform to application domain models.
+- `ComprehensiveImportanceReport`: Must conform to application domain models.
+- `SHAPAnalyzer`: Must conform to application domain models.
+- `AttentionWeightsAnalyzer`: Must conform to application domain models.
+- `FeatureSelector`: Must conform to application domain models.
+- `FeatureImportanceAnalyzer`: Must conform to application domain models.
+- `PermutationImportanceAnalyzer`: Must conform to application domain models.
+- `BuiltInImportanceAnalyzer`: Must conform to application domain models.
+- `CorrelationAnalyzer`: Must conform to application domain models.
+- `FeatureStabilityTracker`: Must conform to application domain models.
+- `ComprehensiveFeatureAnalyzer`: Must conform to application domain models.
+### Public Functions
+- `load_feature_importance_config()`: Must return strictly typed objects.
+- `get_default_feature_importance_config()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `explain_model()`: Must return strictly typed objects.
+- `explain_prediction()`: Must return strictly typed objects.
+- `extract_attention_weights()`: Must return strictly typed objects.
+- `select_features()`: Must return strictly typed objects.
+- `analyze()`: Must return strictly typed objects.
+- `calculate_importance()`: Must return strictly typed objects.
+- `calculate_importance()`: Must return strictly typed objects.
+- `get_importance_type()`: Must return strictly typed objects.
+- `analyze()`: Must return strictly typed objects.
+- `record_importance()`: Must return strictly typed objects.
+- `analyze_stability()`: Must return strictly typed objects.
+- `get_importance_change()`: Must return strictly typed objects.
+- `reset()`: Must return strictly typed objects.
+- `analyze()`: Must return strictly typed objects.
+- `get_top_features()`: Must return strictly typed objects.
+- `reset()`: Must return strictly typed objects.
+- `attention_hook()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

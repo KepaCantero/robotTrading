@@ -1,0 +1,40 @@
+# Requirements Document: backtesting/data_split.py
+
+## 1. Module Overview
+Train/Validation/Test Split for Backtesting
+
+Prevents overfitting and data snooping by properly splitting time-series data.
+
+Now includes Purged K-Fold with Embargo cross-validation as described in:
+"Advances in Financial Machine Learning" by Marcos López de Prado
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `app.backtesting.validation.purged_kfold.PurgedKFold`
+- `app.backtesting.validation.purged_kfold.PurgedKFold`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DataSplit`: Must conform to application domain models.
+- `TrainValTestSplitter`: Must conform to application domain models.
+- `MultipleTestingCorrector`: Must conform to application domain models.
+### Public Functions
+- `validate_out_of_sample_performance()`: Must return strictly typed objects.
+- `split_data()`: Must return strictly typed objects.
+- `walk_forward_split()`: Must return strictly typed objects.
+- `purged_kfold_split()`: Must return strictly typed objects.
+- `purged_kfold_split_with_validation()`: Must return strictly typed objects.
+- `bonferroni_correction()`: Must return strictly typed objects.
+- `benjamini_hochberg_correction()`: Must return strictly typed objects.
+- `holm_bonferroni_correction()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,44 @@
+# Requirements Document: shared/config/params/backtest_config.py
+
+## 1. Module Overview
+Backtesting Configuration
+
+Extracted from centralized_config.py for SRP compliance.
+Contains BacktestingConfig and CommissionModels.
+
+TASK-10: Centralización de Configuración
+TASK-24: SRP Refactoring
+
+## 2. Dependencies
+- `logging`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Literal`
+- `typing.Optional`
+- `pydantic.BaseModel`
+- `pydantic.Field`
+- `pydantic.field_validator`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CommissionModel`: Must conform to application domain models.
+- `FixedCommission`: Must conform to application domain models.
+- `HybridCommission`: Must conform to application domain models.
+- `TierBracket`: Must conform to application domain models.
+- `TieredCommission`: Must conform to application domain models.
+- `BacktestingConfig`: Must conform to application domain models.
+### Public Functions
+- `get_backtesting_constants()`: Must return strictly typed objects.
+- `validate_slippage_bps()`: Must return strictly typed objects.
+- `validate_commission()`: Must return strictly typed objects.
+- `get_slippage_pct()`: Must return strictly typed objects.
+- `get_commission_for_capital()`: Must return strictly typed objects.
+- `get_position_limit_for_capital()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

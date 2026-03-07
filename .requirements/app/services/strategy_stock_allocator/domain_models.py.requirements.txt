@@ -1,0 +1,43 @@
+# Requirements Document: services/strategy_stock_allocator/domain_models.py
+
+## 1. Module Overview
+Domain Models for Strategy Stock Allocation
+
+This module contains pure domain models for stock allocation,
+following Clean Architecture principles with no infrastructure dependencies.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StrategyType`: Must conform to application domain models.
+- `StockCategory`: Must conform to application domain models.
+- `StockMetrics`: Must conform to application domain models.
+- `PairMetrics`: Must conform to application domain models.
+- `AllocationResult`: Must conform to application domain models.
+- `AllocationConfig`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `get_total_allocated_capital()`: Must return strictly typed objects.
+- `get_allocation_count()`: Must return strictly typed objects.
+- `get_pairs_count()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `get_reservable_capital()`: Must return strictly typed objects.
+- `get_allocatable_capital()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

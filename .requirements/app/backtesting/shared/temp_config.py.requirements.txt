@@ -1,0 +1,41 @@
+# Requirements Document: backtesting/shared/temp_config.py
+
+## 1. Module Overview
+Temp Config Manager - Context manager for temporary YAML config files.
+
+Eliminates 8+ duplicate implementations across:
+- profile_batch_backtester.py (2 implementations)
+- bayesian_optimizer.py
+- baseline_executor.py
+- optimization_validators.py (3 implementations)
+- And more...
+
+Provides automatic cleanup with context manager pattern.
+
+## 2. Dependencies
+- `logging`
+- `contextlib.contextmanager`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Generator`
+- `typing.Optional`
+- `uuid.uuid4`
+- `yaml`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TempConfigManager`: Must conform to application domain models.
+- `TempConfigFactory`: Must conform to application domain models.
+### Public Functions
+- `temp_config_file()`: Must return strictly typed objects.
+- `cleanup_orphaned_temp_files()`: Must return strictly typed objects.
+- `create_backtest_config()`: Must return strictly typed objects.
+- `create_optimization_config()`: Must return strictly typed objects.
+- `create_validation_config()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

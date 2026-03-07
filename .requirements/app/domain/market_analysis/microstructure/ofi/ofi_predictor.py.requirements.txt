@@ -1,0 +1,56 @@
+# Requirements Document: domain/market_analysis/microstructure/ofi/ofi_predictor.py
+
+## 1. Module Overview
+Order Flow Imbalance (OFI) Predictor for Price Movements.
+
+This module implements prediction models that use OFI to predict future
+price movements, following the methodology in:
+
+- Cont, R., & Kukanov, A. (2017) "Order Flow Imbalance and Price Movement"
+- Hasbrouck, J. (1991) "Measuring the Information Content of Stock Trades"
+- Aldridge, I. (2013) "High-Frequency Trading"
+
+The predictor implements multiple approaches:
+1. Linear regression: OFI → future returns
+2. Logistic regression: OFI → direction (up/down)
+3. Threshold-based: OFI > threshold → signal
+4. Momentum-based: OFI momentum → direction
+5. Mean reversion: Extreme OFI → reversal
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `datetime.timezone`
+- `decimal.Decimal`
+- `numpy`
+- `numpy.linalg.LinAlgError`
+- `sklearn.linear_model.LinearRegression`
+- `sklearn.linear_model.LogisticRegression`
+- `sklearn.preprocessing.StandardScaler`
+- `app.domain.market_analysis.microstructure.ofi.models.OFIConfig`
+- `app.domain.market_analysis.microstructure.ofi.models.OFIHorizon`
+- `app.domain.market_analysis.microstructure.ofi.models.OFIPrediction`
+- `scipy.stats.norm`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ModelNotTrainedError`: Must conform to application domain models.
+- `InvalidDataError`: Must conform to application domain models.
+- `PredictionError`: Must conform to application domain models.
+- `OFIPredictor`: Must conform to application domain models.
+### Public Functions
+- `predict_direction()`: Must return strictly typed objects.
+- `train_model()`: Must return strictly typed objects.
+- `predict_with_model()`: Must return strictly typed objects.
+- `predict_direction_with_model()`: Must return strictly typed objects.
+- `get_model_confidence()`: Must return strictly typed objects.
+- `calculate_prediction_intervals()`: Must return strictly typed objects.
+- `detect_regime_change()`: Must return strictly typed objects.
+- `get_feature_importance()`: Must return strictly typed objects.
+- `reset_model()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

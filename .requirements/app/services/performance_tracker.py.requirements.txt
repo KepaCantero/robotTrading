@@ -1,0 +1,36 @@
+# Requirements Document: services/performance_tracker.py
+
+## 1. Module Overview
+TASK-MET-RUNTIME-1: Runtime Performance Tracking Service.
+
+Tracks performance metrics per cycle to monitor system efficiency and identify bottlenecks.
+
+## 2. Dependencies
+- `logging`
+- `time`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CycleMetrics`: Must conform to application domain models.
+- `PerformanceTracker`: Must conform to application domain models.
+### Public Functions
+- `get_performance_tracker()`: Must return strictly typed objects.
+- `finish()`: Must return strictly typed objects.
+- `start_cycle()`: Must return strictly typed objects.
+- `end_cycle()`: Must return strictly typed objects.
+- `track_signal_generated()`: Must return strictly typed objects.
+- `track_trade_executed()`: Must return strictly typed objects.
+- `track_error()`: Must return strictly typed objects.
+- `track_warning()`: Must return strictly typed objects.
+- `get_performance_summary()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

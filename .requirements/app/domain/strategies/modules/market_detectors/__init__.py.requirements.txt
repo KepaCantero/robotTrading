@@ -1,0 +1,19 @@
+# Requirements Document: domain/strategies/modules/market_detectors/__init__.py
+
+## 1. Module Overview
+Módulos detectores de régimen de mercado.
+Cada tipo de detección es un módulo independiente.
+
+## 2. Dependencies
+- `base_detector.BaseMarketDetector`
+- `range_detector.RangeDetector`
+- `trend_detector.TrendDetector`
+- `volatility_detector.VolatilityDetector`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

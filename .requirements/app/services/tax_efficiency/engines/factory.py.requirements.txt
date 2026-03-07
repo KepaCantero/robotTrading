@@ -1,0 +1,34 @@
+# Requirements Document: services/tax_efficiency/engines/factory.py
+
+## 1. Module Overview
+Tax Engine Factory - Creates appropriate tax engine based on residence.
+
+Supports multiple tax jurisdictions:
+- ES: Spain
+- US: United States
+- UK: United Kingdom
+- DE: Germany
+- FR: France
+
+This factory provides a clean interface for getting the appropriate
+tax engine based on the investor's country of tax residence.
+
+## 2. Dependencies
+- `logging`
+- `typing.Dict`
+- `typing.Optional`
+- `app.services.tax_efficiency.engines.base.TaxEngine`
+- `app.services.tax_efficiency.engines.spain_tax_engine.SpainTaxEngine`
+
+## 3. Core Components (Contracts)
+### Public Functions
+- `get_tax_engine()`: Must return strictly typed objects.
+- `register_tax_engine()`: Must return strictly typed objects.
+- `get_supported_countries()`: Must return strictly typed objects.
+- `is_country_supported()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,32 @@
+# Requirements Document: services/profile_driven_trading/signal_integrator.py
+
+## 1. Module Overview
+Signal Integrator - Multi-source trading signal integration.
+
+Combines trading signals from multiple sources (RL, momentum, mean reversion)
+using confidence-weighted voting and produces a unified signal set.
+
+## 2. Dependencies
+- `logging`
+- `typing.Dict`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `models.SignalSet`
+- `collections.Counter`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SignalIntegrator`: Must conform to application domain models.
+### Public Functions
+- `combine_signals()`: Must return strictly typed objects.
+- `check_consensus()`: Must return strictly typed objects.
+- `get_signal_quality_score()`: Must return strictly typed objects.
+- `filter_by_quality()`: Must return strictly typed objects.
+- `generate_signal_report()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

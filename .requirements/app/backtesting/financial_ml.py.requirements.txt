@@ -1,0 +1,69 @@
+# Requirements Document: backtesting/financial_ml.py
+
+## 1. Module Overview
+Financial ML Integration Module
+
+Comprehensive integration of all López de Prado Financial ML methods
+for the AlgoTrading system.
+
+This module provides a unified interface to:
+1. Fractional Differentiation for stationary features
+2. Triple Barrier Method for dynamic labeling
+3. Purged K-Fold CV for robust validation
+4. Meta-labeling for position sizing
+5. Bet sizing from meta-labels
+6. Feature Importance (MDI, MDA, SFI)
+
+Reference:
+    "Advances in Financial Machine Learning" by Marcos López de Prado
+
+Example:
+    >>> from app.backtesting.financial_ml import FinancialMLPipeline
+    >>> pipeline = FinancialMLPipeline()
+    >>> result = pipeline.fit_predict(X, y, prices)
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `typing.Union`
+- `numpy`
+- `pandas`
+- `feature_engineering.FeatureImportanceConfig`
+- `feature_engineering.FinancialMLFeatureImportance`
+- `feature_engineering.FractionalDifferentiation`
+- `feature_engineering.ImportanceResult`
+- `labeling.BetSizing`
+- `labeling.BetSizingConfig`
+- `labeling.MetaLabeling`
+- `labeling.MetaLabelingConfig`
+- `labeling.TripleBarrierConfig`
+- `labeling.TripleBarrierLabeler`
+- `validation.purged_kfold_splits`
+- `sklearn.ensemble.RandomForestClassifier`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `FinancialMLConfig`: Must conform to application domain models.
+- `FinancialMLResult`: Must conform to application domain models.
+- `FinancialMLPipeline`: Must conform to application domain models.
+### Public Functions
+- `apply_financial_ml()`: Must return strictly typed objects.
+- `calculate_lopez_de_prado_features()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `fit()`: Must return strictly typed objects.
+- `predict()`: Must return strictly typed objects.
+- `fit_predict()`: Must return strictly typed objects.
+- `cross_validate()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

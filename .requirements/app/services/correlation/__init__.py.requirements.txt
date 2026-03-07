@@ -1,0 +1,27 @@
+# Requirements Document: services/correlation/__init__.py
+
+## 1. Module Overview
+Real-Time Correlation Matrix Service - Phase 2.4
+
+This module provides real-time correlation calculation from historical prices,
+replacing simulated correlation (0.3 if same sector) with actual correlation
+calculated from historical price movements.
+
+Key Features:
+- Calculate correlation matrix from historical returns (60-day lookback)
+- Update correlation every hour
+- Cache for performance
+- Use in portfolio risk calculations
+- Fallback to simulated if data unavailable
+
+## 2. Dependencies
+- `app.services.correlation.analyzer.CorrelationAnalyzer`
+- `app.services.correlation.analyzer.CorrelationConfig`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

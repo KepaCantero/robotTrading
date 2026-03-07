@@ -1,0 +1,62 @@
+# Requirements Document: domain/services/analysis/momentum.py
+
+## 1. Module Overview
+Momentum Analysis Module - Backward Compatibility Layer
+
+This module provides backward compatibility for code that imports
+TechnicalIndicatorCalculator from app.domain.services.analysis.momentum.
+
+All indicator calculations are now provided by the consolidated
+app.domain.services.indicators module.
+
+Usage (existing code, no changes needed):
+    from app.domain.services.analysis.momentum import TechnicalIndicatorCalculator
+
+    calculator = TechnicalIndicatorCalculator()
+    rsi = calculator.calculate_rsi(prices, period=14)
+
+Recommended (new code):
+    from app.domain.services.indicators import get_indicator_calculator
+
+    indicators = get_indicator_calculator()
+    rsi = indicators.rsi(prices, period=14)
+
+## 2. Dependencies
+- `logging`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `typing.Union`
+- `numpy`
+- `pandas`
+- `app.domain.services.indicators.technical_indicators.TechnicalIndicators`
+- `app.domain.services.indicators.technical_indicators.IndicatorResult`
+- `app.domain.services.indicators.factory.get_indicator_calculator`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TechnicalIndicatorCalculator`: Must conform to application domain models.
+### Public Functions
+- `indicators()`: Must return strictly typed objects.
+- `calculate_rsi()`: Must return strictly typed objects.
+- `calculate_ema()`: Must return strictly typed objects.
+- `calculate_sma()`: Must return strictly typed objects.
+- `calculate_macd()`: Must return strictly typed objects.
+- `calculate_atr()`: Must return strictly typed objects.
+- `calculate_bollinger_bands()`: Must return strictly typed objects.
+- `calculate_roc()`: Must return strictly typed objects.
+- `calculate_stochastic()`: Must return strictly typed objects.
+- `calculate_stochastic_rsi()`: Must return strictly typed objects.
+- `calculate_adx()`: Must return strictly typed objects.
+- `calculate_cci()`: Must return strictly typed objects.
+- `calculate_obv()`: Must return strictly typed objects.
+- `calculate_williams_r()`: Must return strictly typed objects.
+- `calculate_all_indicators()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

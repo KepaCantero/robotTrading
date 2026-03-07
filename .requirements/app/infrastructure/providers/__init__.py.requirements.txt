@@ -1,0 +1,17 @@
+# Requirements Document: infrastructure/providers/__init__.py
+
+## 1. Module Overview
+Portfolio providers.
+
+This module exports portfolio providers for different brokers and trading modes.
+
+## 2. Dependencies
+- `paper_trading.PaperTradingPortfolioProvider`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

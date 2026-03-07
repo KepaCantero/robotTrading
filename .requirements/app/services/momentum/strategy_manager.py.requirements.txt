@@ -1,0 +1,39 @@
+# Requirements Document: services/momentum/strategy_manager.py
+
+## 1. Module Overview
+Strategy manager component.
+
+SOLID Principles:
+- SRP: Only manages momentum strategies
+- OCP: Extensible through new strategy types
+- LSP: Implements StrategyManager protocol
+- ISP: Focused on strategy CRUD operations
+- DIP: Depends on StorageBackend protocol
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `app.shared.config.centralized_config.get_config`
+- `app.domain.models.momentum.MomentumFilter`
+- `app.domain.models.momentum.MomentumSignal`
+- `app.domain.models.momentum.MomentumStrategy`
+- `app.domain.models.momentum.MomentumType`
+- `app.domain.models.momentum.Timeframe`
+- `app.services.momentum.protocols.StorageBackend`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StrategyManager`: Must conform to application domain models.
+### Public Functions
+- `initialize_default_strategies()`: Must return strictly typed objects.
+- `get_all_strategies()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

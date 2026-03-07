@@ -1,0 +1,21 @@
+# Requirements Document: engines/context_engine/macro_indicators/yield_curve_analyzer.py
+
+## 1. Module Overview
+YieldCurveAnalyzer - Analizador de yield curve (simplificado).
+
+## 2. Dependencies
+- `logging`
+- `typing.Any`
+- `typing.Dict`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `YieldCurveAnalyzer`: Must conform to application domain models.
+### Public Functions
+- `get_yield_curve()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

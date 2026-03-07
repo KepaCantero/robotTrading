@@ -1,0 +1,66 @@
+# Requirements Document: backtesting/numba_metrics.py
+
+## 1. Module Overview
+Numba-Accelerated Backtest Metrics Calculator
+
+CRITICAL: All performance-critical metrics calculations MUST use Numba JIT compilation.
+NO fallbacks. NO exceptions. Numba is REQUIRED.
+
+This module provides Numba-optimized implementations of all backtesting metrics:
+- Return calculations (CAGR, cumulative returns, etc.)
+- Risk metrics (Sharpe, Sortino, VaR, CVaR, etc.)
+- Drawdown analysis (max drawdown, drawdown duration, etc.)
+- Trade statistics (win rate, profit factor, etc.)
+
+Performance Improvements:
+- Sharpe Ratio: 50-100x faster
+- Sortino Ratio: 40-90x faster
+- Max Drawdown: 60-120x faster
+- VaR/CVaR: 30-80x faster
+- Win Rate: 20-50x faster
+- Profit Factor: 25-60x faster
+
+Author: Performance Optimization Team
+Date: 2026-01-28
+Version: 2.0.0 - MANDATORY NUMBA ENFORCEMENT
+Compliance: Rule 19, Rule 23 - High Performance Python
+
+## 2. Dependencies
+- `logging`
+- `typing.Tuple`
+- `numpy`
+- `numba.__version__`
+- `numba.jit`
+
+## 3. Core Components (Contracts)
+### Public Functions
+- `validate_numeric_array()`: Must return strictly typed objects.
+- `sample_std_numba()`: Must return strictly typed objects.
+- `calculate_returns_numba()`: Must return strictly typed objects.
+- `calculate_cumulative_returns_numba()`: Must return strictly typed objects.
+- `calculate_cagr_numba()`: Must return strictly typed objects.
+- `calculate_log_returns_numba()`: Must return strictly typed objects.
+- `calculate_sharpe_numba()`: Must return strictly typed objects.
+- `calculate_sortino_numba()`: Must return strictly typed objects.
+- `calculate_var_numba()`: Must return strictly typed objects.
+- `calculate_cvar_numba()`: Must return strictly typed objects.
+- `calculate_drawdown_series_numba()`: Must return strictly typed objects.
+- `calculate_max_drawdown_numba()`: Must return strictly typed objects.
+- `calculate_max_drawdown_duration_numba()`: Must return strictly typed objects.
+- `calculate_win_rate_numba()`: Must return strictly typed objects.
+- `calculate_profit_factor_numba()`: Must return strictly typed objects.
+- `calculate_avg_win_loss_numba()`: Must return strictly typed objects.
+- `calculate_expectancy_numba()`: Must return strictly typed objects.
+- `calculate_volatility_numba()`: Must return strictly typed objects.
+- `calculate_rolling_volatility_numba()`: Must return strictly typed objects.
+- `calculate_calmar_ratio_numba()`: Must return strictly typed objects.
+- `calculate_information_ratio_numba()`: Must return strictly typed objects.
+- `calculate_skewness_numba()`: Must return strictly typed objects.
+- `calculate_kurtosis_numba()`: Must return strictly typed objects.
+- `get_numba_metrics_info()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

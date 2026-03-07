@@ -1,0 +1,68 @@
+# Requirements Document: domain/market_analysis/microstructure/ofi/models.py
+
+## 1. Module Overview
+Data models for Order Flow Imbalance (OFI) module.
+
+This module defines all Pydantic and dataclass models used throughout the OFI
+module, ensuring type safety and validation.
+
+## 2. Dependencies
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `datetime.timezone`
+- `decimal.Decimal`
+- `enum.Enum`
+- `numpy`
+- `pydantic.BaseModel`
+- `pydantic.ConfigDict`
+- `pydantic.Field`
+- `pydantic.field_validator`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ModelValidationError`: Must conform to application domain models.
+- `OFIHorizon`: Must conform to application domain models.
+- `OrderSide`: Must conform to application domain models.
+- `OrderBookSnapshot`: Must conform to application domain models.
+- `TickData`: Must conform to application domain models.
+- `OFIConfig`: Must conform to application domain models.
+- `OFISignalConfig`: Must conform to application domain models.
+- `OFIPrediction`: Must conform to application domain models.
+- `OFISignal`: Must conform to application domain models.
+- `CumulativeOFI`: Must conform to application domain models.
+- `OFIStatistics`: Must conform to application domain models.
+### Public Functions
+- `best_bid()`: Must return strictly typed objects.
+- `best_ask()`: Must return strictly typed objects.
+- `mid_price()`: Must return strictly typed objects.
+- `bid_volume()`: Must return strictly typed objects.
+- `ask_volume()`: Must return strictly typed objects.
+- `total_volume()`: Must return strictly typed objects.
+- `spread()`: Must return strictly typed objects.
+- `spread_bps()`: Must return strictly typed objects.
+- `depth_imbalance()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `notional_value()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `sell_threshold_must_be_negative()`: Must return strictly typed objects.
+- `ofi_min_must_be_negative_or_zero()`: Must return strictly typed objects.
+- `bearish_threshold_must_be_negative()`: Must return strictly typed objects.
+- `sell_threshold_must_be_negative()`: Must return strictly typed objects.
+- `validate_direction()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `validate_action()`: Must return strictly typed objects.
+- `is_tradeable()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `update()`: Must return strictly typed objects.
+- `z_score()`: Must return strictly typed objects.
+- `is_extreme_high()`: Must return strictly typed objects.
+- `is_extreme_low()`: Must return strictly typed objects.
+- `reset()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

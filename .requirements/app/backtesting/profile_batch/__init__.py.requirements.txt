@@ -1,0 +1,48 @@
+# Requirements Document: backtesting/profile_batch/__init__.py
+
+## 1. Module Overview
+Profile Batch Backtesting Module
+
+This module provides refactored components for batch backtesting with profile-driven
+strategy optimization. The architecture follows the Single Responsibility Principle
+with separate classes for each concern:
+
+- ProfileGenerator: Creates backtest profile combinations
+- BaselineBacktestExecutor: Executes single backtests
+- BayesianOptimizer: Hyperparameter optimization with Optuna
+- WalkForwardValidator: Time-series cross-validation
+- MonteCarloSimulator: Monte Carlo simulations
+- OutOfSampleValidator: Out-of-sample testing
+- OptimizationPipeline: Orchestrates optimization workflows
+- ResultAggregator: Aggregates and analyzes results
+- ReportGenerator: Generates HTML reports
+- ProfileBatchBacktester: Main orchestrator
+
+Usage:
+    ```python
+    from app.backtesting.profile_batch import ProfileBatchBacktester
+
+    backtester = ProfileBatchBacktester("config/profile_batch_backtest.yaml")
+    profiles = backtester.generate_all_profiles()
+    results = backtester.run_all_profiles(parallel=True)
+    ```
+
+## 2. Dependencies
+- `baseline_executor.BaselineBacktestExecutor`
+- `bayesian_optimizer.BayesianOptimizer`
+- `optimization_pipeline.OptimizationPipeline`
+- `optimization_validators.MonteCarloSimulator`
+- `optimization_validators.OutOfSampleValidator`
+- `optimization_validators.WalkForwardValidator`
+- `orchestrator.ProfileBatchBacktester`
+- `profile_generator.ProfileGenerator`
+- `report_generator.ReportGenerator`
+- `result_aggregator.ResultAggregator`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,51 @@
+# Requirements Document: services/backtesting_orchestration/backtest_orchestrator.py
+
+## 1. Module Overview
+T4.1: BacktestOrchestrator - Parametrized Backtest Execution
+
+Executes backtests with parameters from ModuleParametrizer and calculates
+feasibility_ratio for deployment decisions in T10.1.
+
+Key Responsibility:
+- Accept ModuleParameterSet from T3.1
+- Execute backtest with those parameters
+- Calculate feasibility_ratio = (backtest_return / required_return)
+- Return BacktestResult with feasibility metrics
+
+Feasibility Ratio Formula:
+  required_return = (target_euros_per_month / capital) * 12
+  feasibility_ratio = annualized_return / required_return
+
+  Example: €800/month, €250k capital
+    required_return = (800/250000) * 12 = 3.84%
+    If backtest yields 5.2%: feasibility_ratio = 5.2% / 3.84% = 1.35 ✅
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Optional`
+- `pydantic.BaseModel`
+- `pydantic.Field`
+- `app.backtesting.models.BacktestConfig`
+- `app.backtesting.models.BacktestResult`
+- `app.domain.models.investment_profile.InvestmentProfile`
+- `app.services.parametrization.module_parametrizer.ModuleParameterSet`
+- `random`
+- `os`
+- `tempfile`
+- `yaml`
+- `app.backtesting.comprehensive_backtest_runner.ComprehensiveBacktestRunner`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `FeasibilityMetrics`: Must conform to application domain models.
+- `ExtendedBacktestResult`: Must conform to application domain models.
+- `BacktestOrchestrator`: Must conform to application domain models.
+- `Config`: Must conform to application domain models.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

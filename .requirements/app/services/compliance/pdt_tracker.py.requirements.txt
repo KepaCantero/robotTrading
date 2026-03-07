@@ -1,0 +1,53 @@
+# Requirements Document: services/compliance/pdt_tracker.py
+
+## 1. Module Overview
+Pattern Day Trader (PDT) Rule Tracker for USA Accounts.
+
+FINRA PDT Rule:
+- Account must have >= $25,000 equity to day trade
+- Maximum 3 day trades in 5-business-day rolling period
+- Day trade = opening and closing same position same day
+- Violation results in restricted account
+
+IMPORTANT: Spain and most other countries do NOT have PDT rules.
+This tracker only enforces PDT for USA accounts.
+
+Reference:
+    https://www.finra.org/rules-guidance/rulebooks
+    Rule 4210 (Margin Requirements)
+
+## 2. Dependencies
+- `logging`
+- `collections.defaultdict`
+- `dataclasses.dataclass`
+- `datetime.date`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `app.shared.utils.timezone_utils.utc_now`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `Country`: Must conform to application domain models.
+- `DayTradeRecord`: Must conform to application domain models.
+- `PDTStatus`: Must conform to application domain models.
+- `PDTTracker`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `check_pdt_limit()`: Must return strictly typed objects.
+- `record_trade()`: Must return strictly typed objects.
+- `get_status()`: Must return strictly typed objects.
+- `get_day_trades()`: Must return strictly typed objects.
+- `reset()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,49 @@
+# Requirements Document: shared/config/config.py
+
+## 1. Module Overview
+Configuration management for AlgoTrading MVP.
+
+This module provides centralized configuration management using Pydantic BaseSettings
+to load environment variables from .env files and provide type-safe configuration.
+
+## 2. Dependencies
+- `logging`
+- `os`
+- `typing.List`
+- `typing.Optional`
+- `pydantic.ConfigDict`
+- `pydantic.Field`
+- `pydantic.ValidationInfo`
+- `pydantic.field_validator`
+- `pydantic_settings.BaseSettings`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `Settings`: Must conform to application domain models.
+### Public Functions
+- `get_global_settings()`: Must return strictly typed objects.
+- `get_settings()`: Must return strictly typed objects.
+- `get_database_url()`: Must return strictly typed objects.
+- `get_redis_url()`: Must return strictly typed objects.
+- `get_secret_key()`: Must return strictly typed objects.
+- `is_debug_mode()`: Must return strictly typed objects.
+- `get_cors_config()`: Must return strictly typed objects.
+- `get_celery_config()`: Must return strictly typed objects.
+- `validate_log_level()`: Must return strictly typed objects.
+- `validate_secret_key()`: Must return strictly typed objects.
+- `parse_cors_origins()`: Must return strictly typed objects.
+- `parse_cors_methods()`: Must return strictly typed objects.
+- `parse_cors_headers()`: Must return strictly typed objects.
+- `parse_celery_content()`: Must return strictly typed objects.
+- `get_database_url_sync()`: Must return strictly typed objects.
+- `get_database_url_async()`: Must return strictly typed objects.
+- `is_production()`: Must return strictly typed objects.
+- `is_development()`: Must return strictly typed objects.
+- `get_cors_config()`: Must return strictly typed objects.
+- `get_celery_config()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

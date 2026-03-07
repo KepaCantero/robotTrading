@@ -1,0 +1,22 @@
+# Requirements Document: services/momentum/indicators/__init__.py
+
+## 1. Module Overview
+Technical indicator calculators.
+
+Each calculator has a single responsibility:
+- SRP: One indicator per calculator class
+- OCP: Extensible through new calculator implementations
+- LSP: All calculators implement IndicatorCalculator protocol
+- ISP: Focused interfaces for specific indicator types
+- DIP: Depend on IndicatorCalculator protocol
+
+## 2. Dependencies
+- `app.services.momentum.indicators.calculator.TechnicalIndicatorCalculator`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

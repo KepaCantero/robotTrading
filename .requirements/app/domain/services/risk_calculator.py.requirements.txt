@@ -1,0 +1,38 @@
+# Requirements Document: domain/services/risk_calculator.py
+
+## 1. Module Overview
+Risk Calculator Domain Service - Risk metrics calculations
+
+RiskCalculator provides domain logic for calculating risk metrics
+for portfolios and positions.
+
+Reference: Rule 05-architecture.md, Rule 03-solid-principles.md
+
+## 2. Dependencies
+- `__future__.annotations`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `numpy`
+- `app.domain.entities.portfolio.Portfolio`
+- `app.domain.entities.position.Position`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RiskMetrics`: Must conform to application domain models.
+- `RiskCalculator`: Must conform to application domain models.
+### Public Functions
+- `calculate_portfolio_risk()`: Must return strictly typed objects.
+- `calculate_position_risk()`: Must return strictly typed objects.
+- `calculate_sharpe_ratio()`: Must return strictly typed objects.
+- `calculate_sortino_ratio()`: Must return strictly typed objects.
+- `calculate_beta()`: Must return strictly typed objects.
+- `get_risk_summary()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

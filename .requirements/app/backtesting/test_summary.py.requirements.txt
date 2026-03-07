@@ -1,0 +1,102 @@
+# Requirements Document: backtesting/test_summary.py
+
+## 1. Module Overview
+Test Summary Report Generator for Backtesting Tests
+
+This module provides comprehensive test summary reporting for backtesting tests.
+It captures test metadata, input data, configuration, output metrics, and validation
+results in both JSON (machine-readable) and human-readable formats.
+
+Example Usage:
+    ```python
+    from app.backtesting.test_summary import TestSummaryReporter, TestMetadata
+
+    # Create reporter
+    reporter = TestSummaryReporter()
+
+    # Create test metadata
+    metadata = TestMetadata(
+        test_name="test_backtest_basic",
+        test_description="Basic backtest with GBM data",
+        test_file="test_backtest_basic.py",
+        test_type="integration"
+    )
+
+    # Add input data
+    reporter.add_input_data(
+        symbols=["AAPL"],
+        date_range=(datetime(2023, 1, 1), datetime(2023, 12, 31)),
+        data_points=500,
+        market_regime="bullish",
+        data_source="GBM simulation (drift=5%, vol=20%)"
+    )
+
+    # Add configuration
+    reporter.add_config(
+        initial_capital=Decimal("100000"),
+        commission=Decimal("1.0"),
+        slippage=Decimal("0.1"),
+        strategy="SMA Crossover"
+    )
+
+    # Add results
+    reporter.add_results(
+        final_capital=Decimal("115000"),
+        total_pnl=Decimal("15000"),
+        sharpe_ratio=Decimal("1.5"),
+        max_drawdown=Decimal("-0.08"),
+        win_rate=Decimal("60.0"),
+        total_trades=50
+    )
+
+    # Mark as passed with reason
+    reporter.mark_passed("All metrics within acceptable ranges")
+
+    # Generate and save reports
+    reporter.save_reports()
+    ```
+
+## 2. Dependencies
+- `json`
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `typing.Union`
+- `pydantic.BaseModel`
+- `pydantic.Field`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TestMetadata`: Must conform to application domain models.
+- `InputDataSummary`: Must conform to application domain models.
+- `TestConfig`: Must conform to application domain models.
+- `OutputMetrics`: Must conform to application domain models.
+- `ValidationCriteria`: Must conform to application domain models.
+- `TestSummaryReport`: Must conform to application domain models.
+- `TestSummaryReporter`: Must conform to application domain models.
+### Public Functions
+- `create_backtest_summary()`: Must return strictly typed objects.
+- `add_input_data()`: Must return strictly typed objects.
+- `add_config()`: Must return strictly typed objects.
+- `add_results()`: Must return strictly typed objects.
+- `add_validation_criteria()`: Must return strictly typed objects.
+- `add_warning()`: Must return strictly typed objects.
+- `add_anomaly()`: Must return strictly typed objects.
+- `add_note()`: Must return strictly typed objects.
+- `add_attachment()`: Must return strictly typed objects.
+- `mark_passed()`: Must return strictly typed objects.
+- `mark_failed()`: Must return strictly typed objects.
+- `generate_report()`: Must return strictly typed objects.
+- `save_reports()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

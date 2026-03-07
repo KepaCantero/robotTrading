@@ -1,0 +1,68 @@
+# Requirements Document: domain/portfolio_optimization/black_litterman_optimizer.py
+
+## 1. Module Overview
+Black-Litterman Portfolio Optimization Implementation.
+
+This module implements the Black-Litterman model for portfolio optimization,
+which combines market equilibrium returns with investor views to produce
+more stable and intuitive portfolio allocations.
+
+Key Features:
+- Equilibrium returns from market capitalization weights (Rule 66)
+- Combine equilibrium with investor views (P and Q matrices)
+- Confidence parameter (tau) for view uncertainty
+- Formula: E[R] = [(τΣ)^(-1) + P'Ω^(-1)P]^(-1) * [(τΣ)^(-1)Π + P'Ω^(-1)Q]
+- Ledoit-Wolf shrinkage for covariance stability (Rule 74)
+- Support for absolute and relative views
+- Proper type hints using modern Python 3.10+ syntax
+
+Reference:
+    Black, F. and Litterman, R. (1992). "Global Portfolio Optimization".
+    Financial Analysts Journal, 48(5), pp. 28-43.
+    https://doi.org/10.2469/faj.v48.n5.28
+
+Implementation based on:
+    - The original Black-Litterman paper (1992)
+    - Idzorek's method for view confidence
+    - Walters' "The Black-Litterman Model in Detail" (2014)
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `enum.Enum`
+- `numpy`
+- `numpy.typing.NDArray`
+- `scipy.optimize.minimize`
+- `app.shared.config.centralized_config.get_config`
+- `sklearn.covariance.LedoitWolf`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ViewType`: Must conform to application domain models.
+- `InvestorView`: Must conform to application domain models.
+- `BlackLittermanConfig`: Must conform to application domain models.
+- `BlackLittermanResult`: Must conform to application domain models.
+- `EquilibriumReturns`: Must conform to application domain models.
+- `ViewMatrix`: Must conform to application domain models.
+- `BlackLittermanOptimizer`: Must conform to application domain models.
+### Public Functions
+- `compute_black_litterman_weights()`: Must return strictly typed objects.
+- `weights_dict()`: Must return strictly typed objects.
+- `get_view_summary()`: Must return strictly typed objects.
+- `from_market_caps()`: Must return strictly typed objects.
+- `from_weights()`: Must return strictly typed objects.
+- `build_pick_matrix()`: Must return strictly typed objects.
+- `build_q_vector()`: Must return strictly typed objects.
+- `build_omega_matrix()`: Must return strictly typed objects.
+- `calculate_covariance_matrix()`: Must return strictly typed objects.
+- `calculate_equilibrium_returns()`: Must return strictly typed objects.
+- `calculate_bl_returns()`: Must return strictly typed objects.
+- `optimize()`: Must return strictly typed objects.
+- `negative_sharpe()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,18 @@
+# Requirements Document: infrastructure/external/__init__.py
+
+## 1. Module Overview
+Infrastructure External - External service integrations.
+
+This package contains implementations for integrating with external
+services and APIs.
+
+## 2. Dependencies
+- `backtest_presenter_impl.BacktestPresenterImpl`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

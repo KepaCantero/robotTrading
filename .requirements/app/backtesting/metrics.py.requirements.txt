@@ -1,0 +1,72 @@
+# Requirements Document: backtesting/metrics.py
+
+## 1. Module Overview
+Performance Metrics Calculator for Backtesting
+
+Calculates comprehensive performance metrics including:
+- CAGR, Sharpe ratio, Sortino ratio
+- Max Drawdown, Win Rate, Profit Factor
+- Risk-adjusted returns and trade statistics
+- López de Prado advanced metrics (stability, concentration, turnover-adjusted Sharpe)
+
+Reference:
+    López de Prado, M. (2020). Machine Learning for Asset Managers.
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `app.shared.config.centralized_config.get_config`
+- `app.shared.utils.decimal_utils.safe_mean`
+- `app.backtesting.advanced_metrics.AdvancedMetricsCalculator`
+- `app.backtesting.lopez_de_prado_metrics.ConcentrationAnalyzer`
+- `app.backtesting.lopez_de_prado_metrics.ConcentrationMetrics`
+- `app.backtesting.lopez_de_prado_metrics.PortfolioStabilityMetrics`
+- `app.backtesting.lopez_de_prado_metrics.PortfolioStabilityValidator`
+- `app.backtesting.lopez_de_prado_metrics.SharpeCombinationResult`
+- `app.backtesting.lopez_de_prado_metrics.SharpeRatioCombinator`
+- `app.backtesting.lopez_de_prado_metrics.TurnoverAdjustedCalculator`
+- `app.backtesting.lopez_de_prado_metrics.TurnoverAdjustedMetrics`
+- `app.backtesting.models.PerformanceMetrics`
+- `app.backtesting.models.Trade`
+- `empyrical`
+- `numpy`
+- `scipy.stats`
+- `sklearn.metrics.f1_score`
+- `sklearn.metrics.matthews_corrcoef`
+- `sklearn.metrics.auc`
+- `sklearn.metrics.balanced_accuracy_score`
+- `sklearn.metrics.confusion_matrix`
+- `sklearn.metrics.precision_recall_curve`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MetricsCalculator`: Must conform to application domain models.
+- `LopezDePradoMetricsCalculator`: Must conform to application domain models.
+### Public Functions
+- `calculate_profit_factor()`: Must return strictly typed objects.
+- `calculate_expectancy()`: Must return strictly typed objects.
+- `calculate_expectancy_with_confidence()`: Must return strictly typed objects.
+- `calculate_f1_score()`: Must return strictly typed objects.
+- `calculate_matthews_corrcoef()`: Must return strictly typed objects.
+- `calculate_classification_metrics_imbalanced()`: Must return strictly typed objects.
+- `calculate_imbalanced_metrics_from_trades()`: Must return strictly typed objects.
+- `create_lopez_de_prado_calculator()`: Must return strictly typed objects.
+- `calculate_all_metrics()`: Must return strictly typed objects.
+- `calculate_cagr()`: Must return strictly typed objects.
+- `combine_strategy_sharpes()`: Must return strictly typed objects.
+- `validate_portfolio_stability()`: Must return strictly typed objects.
+- `calculate_turnover_adjusted_metrics()`: Must return strictly typed objects.
+- `analyze_portfolio_concentration()`: Must return strictly typed objects.
+- `generate_comprehensive_report()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

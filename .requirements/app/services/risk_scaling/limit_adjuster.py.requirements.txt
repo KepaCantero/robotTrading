@@ -1,0 +1,37 @@
+# Requirements Document: services/risk_scaling/limit_adjuster.py
+
+## 1. Module Overview
+T8.1.2: LimitAdjuster - Adjust trading limits dynamically
+
+Manages stop losses, margin requirements, position limits, and daily loss limits
+based on market conditions and portfolio state.
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.Optional`
+- `typing.Tuple`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TradingLimits`: Must conform to application domain models.
+- `LimitAdjuster`: Must conform to application domain models.
+### Public Functions
+- `get_limit_adjuster()`: Must return strictly typed objects.
+- `get_base_limits()`: Must return strictly typed objects.
+- `adjust_limits_for_volatility()`: Must return strictly typed objects.
+- `adjust_limits_for_drawdown()`: Must return strictly typed objects.
+- `calculate_dynamic_stop_loss()`: Must return strictly typed objects.
+- `is_within_daily_limit()`: Must return strictly typed objects.
+- `is_within_leverage_limit()`: Must return strictly typed objects.
+- `is_within_position_size_limit()`: Must return strictly typed objects.
+- `get_comprehensive_limits()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,21 @@
+# Requirements Document: services/strategy_recommender/__init__.py
+
+## 1. Module Overview
+T6.1: StrategyRecommender - Objective-driven strategy recommendation
+
+## 2. Dependencies
+- `models.ObjectiveWeights`
+- `models.RecommendationSuggestion`
+- `models.StrategyRecommendation`
+- `models.StrategyRecommendationRequest`
+- `models.StrategyScore`
+- `strategy_recommender.StrategyRecommender`
+- `strategy_recommender.get_strategy_recommender`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

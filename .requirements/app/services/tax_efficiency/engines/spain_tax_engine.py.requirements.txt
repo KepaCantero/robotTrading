@@ -1,0 +1,46 @@
+# Requirements Document: services/tax_efficiency/engines/spain_tax_engine.py
+
+## 1. Module Overview
+Spain Tax Engine - Spain-specific tax calculation.
+
+Spain tax rules:
+- Progressive capital gains: 19% / 21% / 23%
+- No distinction between LT/ST gains
+- Dividends taxed same as capital gains
+- No wash sale rule
+- EU dividends: 0% withholding tax
+- Modelo 720: €50k foreign assets reporting threshold
+
+Uses centralized configuration from SpainTaxConfig.
+
+## 2. Dependencies
+- `logging`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `app.shared.config.centralized_config.get_config`
+- `app.shared.utils.decimal_utils.to_decimal`
+- `base.TaxEngine`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SpainTaxEngine`: Must conform to application domain models.
+### Public Functions
+- `calculate_capital_gains_tax()`: Must return strictly typed objects.
+- `calculate_dividend_tax()`: Must return strictly typed objects.
+- `applies_wash_sale()`: Must return strictly typed objects.
+- `get_tax_rate_by_gain()`: Must return strictly typed objects.
+- `calculate_tax_with_deductions()`: Must return strictly typed objects.
+- `get_withholding_tax_rate()`: Must return strictly typed objects.
+- `calculate_total_tax_liability()`: Must return strictly typed objects.
+- `get_tax_brackets()`: Must return strictly typed objects.
+- `check_modelo_720_threshold()`: Must return strictly typed objects.
+- `calculate_compensated_tax()`: Must return strictly typed objects.
+- `estimate_annual_tax()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

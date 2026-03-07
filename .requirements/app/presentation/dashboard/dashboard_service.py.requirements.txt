@@ -1,0 +1,37 @@
+# Requirements Document: presentation/dashboard/dashboard_service.py
+
+## 1. Module Overview
+Dashboard service for collecting and aggregating trading data.
+
+Provides methods to fetch current positions, performance metrics,
+and system status for dashboard display.
+
+## 2. Dependencies
+- `asyncio`
+- `datetime.datetime`
+- `datetime.timezone`
+- `decimal.Decimal`
+- `typing.List`
+- `typing.Dict`
+- `typing.Any`
+- `typing.Optional`
+- `app.presentation.dashboard.dashboard_data.DashboardSnapshot`
+- `app.presentation.dashboard.dashboard_data.DashboardPerformanceMetrics`
+- `app.presentation.dashboard.dashboard_data.PositionSummary`
+- `app.presentation.dashboard.dashboard_data.SystemStatus`
+- `app.domain.services.compliance.compliance_engine.get_compliance_engine`
+- `app.application.alerting.NotificationDispatcher`
+- `app.application.orchestration.live_trading.broker_connector.get_broker_connector`
+- `app.application.orchestration.live_trading.trading_bridge_orchestrator.get_trading_bridge_orchestrator`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DashboardService`: Must conform to application domain models.
+### Public Functions
+- `get_dashboard_service()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

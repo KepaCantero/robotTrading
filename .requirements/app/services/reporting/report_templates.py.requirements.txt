@@ -1,0 +1,26 @@
+# Requirements Document: services/reporting/report_templates.py
+
+## 1. Module Overview
+T9.1.1: ReportTemplates - HTML report templates for performance reporting
+
+Provides professional HTML templates for strategy performance reports.
+
+## 2. Dependencies
+- `logging`
+- `typing.Dict`
+- `typing.Optional`
+- `datetime.datetime`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ReportTemplates`: Must conform to application domain models.
+### Public Functions
+- `get_report_templates()`: Must return strictly typed objects.
+- `generate_performance_report_html()`: Must return strictly typed objects.
+- `generate_simple_summary_html()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

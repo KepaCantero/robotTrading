@@ -1,0 +1,34 @@
+# Requirements Document: backtesting/drift_detection/overfitting_detector.py
+
+## 1. Module Overview
+Overfitting Detector - Detects overfitting in machine learning models
+
+This module provides methods for detecting overfitting through
+cross-validation analysis, learning curves, and performance gaps.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `domain.value_objects.backtest_result.BacktestResultValue`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `OverfittingResult`: Must conform to application domain models.
+- `OverfittingDetector`: Must conform to application domain models.
+### Public Functions
+- `detect_from_results()`: Must return strictly typed objects.
+- `detect_from_cv_scores()`: Must return strictly typed objects.
+- `calculate_learning_curve_gap()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

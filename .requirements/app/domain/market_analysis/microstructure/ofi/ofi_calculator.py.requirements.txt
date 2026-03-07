@@ -1,0 +1,59 @@
+# Requirements Document: domain/market_analysis/microstructure/ofi/ofi_calculator.py
+
+## 1. Module Overview
+Order Flow Imbalance (OFI) Calculator.
+
+This module implements OFI calculations from order book data following
+the methodology in Cont & Kukanov (2017) and related literature.
+
+OFI measures the imbalance between buy and sell order flow and is a
+strong predictor of short-term price movements.
+
+References:
+- Cont, R., & Kukanov, A. (2017) "Order Flow Imbalance and Price Movement"
+- Aldridge, I. (2013) "High-Frequency Trading"
+
+## 2. Dependencies
+- `logging`
+- `collections.deque`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `datetime.timezone`
+- `decimal.Decimal`
+- `typing.Optional`
+- `numpy`
+- `app.domain.market_analysis.microstructure.ofi.models.CumulativeOFI`
+- `app.domain.market_analysis.microstructure.ofi.models.OFIConfig`
+- `app.domain.market_analysis.microstructure.ofi.models.OFIStatistics`
+- `app.domain.market_analysis.microstructure.ofi.models.OrderBookSnapshot`
+- `scipy.stats.kurtosis`
+- `scipy.stats.skew`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `InvalidPriceError`: Must conform to application domain models.
+- `OFIResult`: Must conform to application domain models.
+- `OFICalculator`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+- `calculate_ofi()`: Must return strictly typed objects.
+- `calculate_top_level_ofi()`: Must return strictly typed objects.
+- `calculate_cumulative_ofi()`: Must return strictly typed objects.
+- `calculate_ofi_momentum()`: Must return strictly typed objects.
+- `calculate_ofi_velocity()`: Must return strictly typed objects.
+- `calculate_smoothed_ofi()`: Must return strictly typed objects.
+- `calculate_ofi_std_score()`: Must return strictly typed objects.
+- `detect_ofi_regime()`: Must return strictly typed objects.
+- `calculate_ofi_autocorrelation()`: Must return strictly typed objects.
+- `calculate_ofi_statistics()`: Must return strictly typed objects.
+- `get_cofi_tracker()`: Must return strictly typed objects.
+- `update_cofi()`: Must return strictly typed objects.
+- `get_ofi_history()`: Must return strictly typed objects.
+- `reset_history()`: Must return strictly typed objects.
+- `calculate_predictive_power()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

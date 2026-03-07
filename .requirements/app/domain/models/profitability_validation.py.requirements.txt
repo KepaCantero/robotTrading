@@ -1,0 +1,48 @@
+# Requirements Document: domain/models/profitability_validation.py
+
+## 1. Module Overview
+Modelos Pydantic para validación de rentabilidad de estrategias.
+
+Este módulo define los modelos de datos para validar que las estrategias
+generen rentabilidad neta positiva después de todos los costos operativos.
+
+## 2. Dependencies
+- `datetime.date`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `pydantic.BaseModel`
+- `pydantic.Field`
+- `pydantic.field_validator`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ValidationStatus`: Must conform to application domain models.
+- `ProfitabilityMetric`: Must conform to application domain models.
+- `CostBreakdown`: Must conform to application domain models.
+- `ProfitabilityMetrics`: Must conform to application domain models.
+- `ValidationCriteria`: Must conform to application domain models.
+- `ProfitabilityValidation`: Must conform to application domain models.
+- `ValidationRequest`: Must conform to application domain models.
+- `ValidationResponse`: Must conform to application domain models.
+- `StrategyComparison`: Must conform to application domain models.
+- `HistoricalValidation`: Must conform to application domain models.
+- `ValidationReport`: Must conform to application domain models.
+### Public Functions
+- `total_costs()`: Must return strictly typed objects.
+- `validate_positive_amount()`: Must return strictly typed objects.
+- `validate_percentage()`: Must return strictly typed objects.
+- `validate_ratio()`: Must return strictly typed objects.
+- `validate_percentage()`: Must return strictly typed objects.
+- `validate_positive_capital()`: Must return strictly typed objects.
+- `validate_positive_capital()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

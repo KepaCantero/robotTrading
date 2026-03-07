@@ -1,0 +1,105 @@
+# Requirements Document: domain/optimization/mean_variance_optimizer.py
+
+## 1. Module Overview
+Mean-Variance Optimizer - Consolidated Implementation.
+
+This module provides a unified Mean-Variance (Markowitz) portfolio optimization
+implementation that combines the best features from:
+- app/domain/services/portfolio_optimization/mean_variance_optimizer.py
+- app/domain/portfolio_optimization/mean_variance_optimizer.py
+
+Reference: Markowitz, H. (1952). "Portfolio Selection". Journal of Finance.
+
+Features:
+- Maximize Sharpe ratio optimization
+- Minimize variance optimization
+- Target return optimization
+- Efficient frontier computation
+- L2 regularization for stability
+- Ledoit-Wolf shrinkage for covariance estimation
+- Risk parity fallback
+- Diversification constraints
+
+Usage:
+    ```python
+    from app.domain.optimization.mean_variance_optimizer import MeanVarianceOptimizer
+    from app.domain.optimization.base_optimizer import OptimizationConfig
+
+    optimizer = MeanVarianceOptimizer(
+        risk_free_rate=0.02,  # or use get_config().backtesting.default_risk_free_rate
+        max_position=0.20,
+    )
+
+    # Optimize for max Sharpe
+    result = optimizer.optimize(returns, method="max_sharpe")
+
+    # Get efficient frontier
+    frontier = optimizer.compute_efficient_frontier(returns)
+    ```
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `numpy.typing.NDArray`
+- `scipy.optimize.minimize`
+- `app.shared.config.centralized_config.CentralizedConfig`
+- `app.shared.config.centralized_config.get_config`
+- `base_optimizer.BaseOptimizer`
+- `base_optimizer.OptimizationConfig`
+- `base_optimizer.OptimizationResult`
+- `base_optimizer.OptimizationStatus`
+- `base_optimizer.OptimizerType`
+- `base_optimizer.TrialResult`
+- `sklearn.covariance.LedoitWolf`
+- `sklearn.covariance.OAS`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `OptimizationMethod`: Must conform to application domain models.
+- `ShrinkageMethod`: Must conform to application domain models.
+- `PortfolioOptimizationResult`: Must conform to application domain models.
+- `EfficientFrontierPoint`: Must conform to application domain models.
+- `EfficientFrontier`: Must conform to application domain models.
+- `CovarianceResult`: Must conform to application domain models.
+- `InputValidationError`: Must conform to application domain models.
+- `OptimizationError`: Must conform to application domain models.
+- `MeanVarianceOptimizer`: Must conform to application domain models.
+### Public Functions
+- `weights_dict()`: Must return strictly typed objects.
+- `get_allocation()`: Must return strictly typed objects.
+- `max_sharpe_portfolio()`: Must return strictly typed objects.
+- `min_variance_portfolio()`: Must return strictly typed objects.
+- `to_arrays()`: Must return strictly typed objects.
+- `get_optimizer_type()`: Must return strictly typed objects.
+- `get_best_params()`: Must return strictly typed objects.
+- `get_history()`: Must return strictly typed objects.
+- `lookback_days()`: Must return strictly typed objects.
+- `max_position()`: Must return strictly typed objects.
+- `risk_free_rate()`: Must return strictly typed objects.
+- `regularization_gamma()`: Must return strictly typed objects.
+- `optimize_portfolio()`: Must return strictly typed objects.
+- `sanitize_inputs()`: Must return strictly typed objects.
+- `calculate_expected_returns()`: Must return strictly typed objects.
+- `calculate_covariance_matrix()`: Must return strictly typed objects.
+- `compute_efficient_frontier()`: Must return strictly typed objects.
+- `check_false_diversification()`: Must return strictly typed objects.
+- `check_rebalance_trigger()`: Must return strictly typed objects.
+- `negative_sharpe()`: Must return strictly typed objects.
+- `portfolio_variance()`: Must return strictly typed objects.
+- `portfolio_variance()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,39 @@
+# Requirements Document: domain/strategies/time_series_momentum.py
+
+## 1. Module Overview
+Time-Series Momentum Strategy Domain Service
+
+Implements time-series momentum (trend following) where
+individual assets are traded based on their own past performance.
+
+Reference: Rule 11-gray-vogel-quantitative-momentum.md
+Paper: Moskowitz, O., & Grinblatt, M. (1999). "Do Industries Explain
+       Momentum Profits?"
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TrendState`: Must conform to application domain models.
+- `TimeSeriesSignal`: Must conform to application domain models.
+- `TimeSeriesMomentum`: Must conform to application domain models.
+### Public Functions
+- `is_long()`: Must return strictly typed objects.
+- `is_short()`: Must return strictly typed objects.
+- `generate_signal()`: Must return strictly typed objects.
+- `calculate_portfolio_signals()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

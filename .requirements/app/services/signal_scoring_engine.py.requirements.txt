@@ -1,0 +1,51 @@
+# Requirements Document: services/signal_scoring_engine.py
+
+## 1. Module Overview
+TASK-SC-1 to SC-5: Signal Scoring and Cooldown Engine.
+
+Implements comprehensive signal scoring system with cooldown periods,
+compound scoring, priority ranking, and portfolio signal filtering.
+
+Uses centralized configuration for all thresholds and parameters.
+
+## 2. Dependencies
+- `logging`
+- `collections.defaultdict`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Set`
+- `app.shared.config.centralized_config.get_config`
+- `app.domain.models.signal.Signal`
+- `app.domain.models.signal.SignalType`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SignalCooldownManager`: Must conform to application domain models.
+- `SignalCompoundScoreCalculator`: Must conform to application domain models.
+- `SignalPriorityRanker`: Must conform to application domain models.
+- `PortfolioSignalFilter`: Must conform to application domain models.
+- `SignalScoringEngine`: Must conform to application domain models.
+### Public Functions
+- `get_signal_scoring_engine()`: Must return strictly typed objects.
+- `set_cooldown()`: Must return strictly typed objects.
+- `is_in_cooldown()`: Must return strictly typed objects.
+- `reset_cooldown()`: Must return strictly typed objects.
+- `calculate_compound_score()`: Must return strictly typed objects.
+- `get_priority()`: Must return strictly typed objects.
+- `rank_signals()`: Must return strictly typed objects.
+- `filter_signals()`: Must return strictly typed objects.
+- `add_position()`: Must return strictly typed objects.
+- `remove_position()`: Must return strictly typed objects.
+- `process_signals()`: Must return strictly typed objects.
+- `get_scoring_stats()`: Must return strictly typed objects.
+- `priority_key()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

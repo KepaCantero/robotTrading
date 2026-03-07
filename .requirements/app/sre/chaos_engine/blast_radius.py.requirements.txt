@@ -1,0 +1,51 @@
+# Requirements Document: sre/chaos_engine/blast_radius.py
+
+## 1. Module Overview
+Blast Radius Controller - Limits Failure Impact (SRE Rule 20)
+
+Controls the scope of chaos experiments to prevent widespread outages:
+- Isolates failures to specific segments
+- Prevents cascading failures
+- Enables safe experimentation
+- Automatic containment
+
+Usage:
+    controller = BlastRadiusController()
+    await controller.apply_controls({
+        "scope": "single_region",
+        "regions": ["us-west-2"],
+        "percentage": 10
+    })
+
+## 2. Dependencies
+- `__future__.annotations`
+- `asyncio`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `aiosqlite`
+- `app.shared.utils.safe_parse.safe_parse`
+- `pathlib.Path`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BlastRadiusScope`: Must conform to application domain models.
+- `BlastRadiusConfig`: Must conform to application domain models.
+- `ContainmentState`: Must conform to application domain models.
+- `BlastRadiusController`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

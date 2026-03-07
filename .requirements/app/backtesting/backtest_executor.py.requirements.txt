@@ -1,0 +1,55 @@
+# Requirements Document: backtesting/backtest_executor.py
+
+## 1. Module Overview
+Backtest Executor Module - Core backtest execution logic.
+
+Extracted from comprehensive_backtest_runner.py for Single Responsibility.
+Handles execution of various backtest types:
+- Baseline backtests
+- Learning engine backtests
+- Monte Carlo simulations
+- Walk-forward validation
+
+Architecture:
+- Uses SimpleBacktestExecutor for sequential execution
+- Uses ProcessPoolBacktestExecutor for parallel execution
+- Integrates with AggressiveMemoryManager for results
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `math`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `pandas`
+- `app.backtesting.core.executor.SimpleBacktestExecutor`
+- `app.backtesting.core.error_handling.train_with_retry`
+- `app.backtesting.core.error_handling.TrainingError`
+- `app.backtesting.core.error_handling.MutexError`
+- `app.backtesting.core.memory_manager.AggressiveMemoryManager`
+- `app.backtesting.models.BacktestConfig`
+- `app.backtesting.models.BacktestResult`
+- `app.domain.strategies.momentum_modular.strategy.ModularMomentumStrategy`
+- `app.backtesting.realistic_data_generator.RealisticDataGenerator`
+- `app.backtesting.core.executor.ProcessPoolBacktestExecutor`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BacktestExecutor`: Must conform to application domain models.
+### Public Functions
+- `run_baseline_backtest()`: Must return strictly typed objects.
+- `run_learning_engines_backtest()`: Must return strictly typed objects.
+- `run_monte_carlo_backtest()`: Must return strictly typed objects.
+- `run_walk_forward_backtest()`: Must return strictly typed objects.
+- `run_backtest_with_quotes()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

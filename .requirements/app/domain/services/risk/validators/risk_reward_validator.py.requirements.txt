@@ -1,0 +1,26 @@
+# Requirements Document: domain/services/risk/validators/risk_reward_validator.py
+
+## 1. Module Overview
+Risk:Reward Validator (R4)
+
+Valida que la relación riesgo:retorno sea mínimo 2:1
+Uses centralized configuration for minimum R:R ratio.
+
+## 2. Dependencies
+- `decimal.Decimal`
+- `dataclasses.dataclass`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RiskRewardResult`: Must conform to application domain models.
+- `RiskRewardValidator`: Must conform to application domain models.
+### Public Functions
+- `validate()`: Must return strictly typed objects.
+- `calculate_minimum_stop()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

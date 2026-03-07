@@ -1,0 +1,44 @@
+# Requirements Document: backtesting/profile_batch/profile_generator.py
+
+## 1. Module Overview
+Profile Generator Module
+
+Generates backtest profile combinations for batch testing.
+Handles profile creation, configuration mapping, and tier conversions.
+
+Responsibilities:
+- Generate profile combinations (objectives × risks × tiers × horizons)
+- Map profiles to backtest configurations
+- Handle tier mapping conversions
+- Load investment horizons from config
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `decimal.Decimal`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Union`
+- `yaml`
+- `app.domain.models.input_profile.InputProfile`
+- `app.domain.models.input_profile.ObjectivoInversion`
+- `app.domain.models.input_profile.RiskTolerance`
+- `app.shared.utils.tier_mapper.map_profile_tier_to_config`
+- `app.services.profile_driven_trading.profile_strategy_mapper.create_profile_mapper`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ProfileGenerator`: Must conform to application domain models.
+### Public Functions
+- `generate_all_profiles()`: Must return strictly typed objects.
+- `get_capital_tier_key()`: Must return strictly typed objects.
+- `create_profile_config()`: Must return strictly typed objects.
+- `create_profile_id()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

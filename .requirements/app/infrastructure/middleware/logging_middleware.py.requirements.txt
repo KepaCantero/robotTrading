@@ -1,0 +1,38 @@
+# Requirements Document: infrastructure/middleware/logging_middleware.py
+
+## 1. Module Overview
+FastAPI Logging Integration
+TASK-3: Configuración de logging centralizado
+
+## 2. Dependencies
+- `time`
+- `uuid`
+- `typing.Callable`
+- `fastapi.Request`
+- `fastapi.Response`
+- `starlette.middleware.base.BaseHTTPMiddleware`
+- `starlette.types.ASGIApp`
+- `app.infrastructure.logging.logging_config.LogService`
+- `app.infrastructure.logging.logging_config.get_logger`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `LoggingMiddleware`: Must conform to application domain models.
+- `TradingLoggingMiddleware`: Must conform to application domain models.
+- `PortfolioLoggingMiddleware`: Must conform to application domain models.
+- `MarketDataLoggingMiddleware`: Must conform to application domain models.
+### Public Functions
+- `log_trading_performance()`: Must return strictly typed objects.
+- `log_portfolio_performance()`: Must return strictly typed objects.
+- `log_market_data_performance()`: Must return strictly typed objects.
+- `log_fastapi_performance()`: Must return strictly typed objects.
+- `decorator()`: Must return strictly typed objects.
+- `decorator()`: Must return strictly typed objects.
+- `decorator()`: Must return strictly typed objects.
+- `decorator()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

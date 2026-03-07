@@ -38,7 +38,7 @@ from sqlalchemy.exc import (
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-from app.core.secure_serialization import sign_and_dump, verify_and_load
+from app.security.secure_serialization import sign_and_dump, verify_and_load
 
 logger = logging.getLogger(__name__)
 

@@ -1,0 +1,42 @@
+# Requirements Document: infrastructure/middleware/error_middleware.py
+
+## 1. Module Overview
+Error Handling Middleware for FastAPI
+TASK-4: Sistema de manejo de errores unificado
+
+REFACTORED: Uses lazy imports to avoid circular dependencies.
+The centralized_logging and error_handler modules are imported only when needed.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `time`
+- `uuid`
+- `typing.TYPE_CHECKING`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Optional`
+- `fastapi.Request`
+- `fastapi.Response`
+- `fastapi.responses.JSONResponse`
+- `starlette.middleware.base.BaseHTTPMiddleware`
+- `app.services.centralized_logging.LogLevel`
+- `app.services.centralized_logging.LogService`
+- `app.services.centralized_logging.centralized_logger`
+- `app.services.centralized_logging.LogLevel`
+- `app.services.centralized_logging.LogService`
+- `app.exceptions.error_handler.error_handler`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ErrorHandlingMiddleware`: Must conform to application domain models.
+- `RequestContextMiddleware`: Must conform to application domain models.
+- `SecurityHeadersMiddleware`: Must conform to application domain models.
+- `RateLimitingMiddleware`: Must conform to application domain models.
+- `HealthCheckMiddleware`: Must conform to application domain models.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

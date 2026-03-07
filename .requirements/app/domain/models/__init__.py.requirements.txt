@@ -1,0 +1,40 @@
+# Requirements Document: domain/models/__init__.py
+
+## 1. Module Overview
+Portfolio, Signal, and Asset models and interfaces.
+
+This module exports the core portfolio, signal, and asset models and interfaces for the AlgoTrading system.
+
+## 2. Dependencies
+- `portfolio.AssetClass`
+- `portfolio.AssetUniverse`
+- `portfolio.CircuitBreaker`
+- `portfolio.CircuitBreakerState`
+- `portfolio.MarketRegime`
+- `portfolio.MarketRegimeData`
+- `portfolio.Portfolio`
+- `portfolio.PortfolioProvider`
+- `portfolio.Position`
+- `portfolio.TradingClientInterface`
+- `signal.MarketData`
+- `signal.Signal`
+- `signal.SignalPriorityQueue`
+- `signal.SignalScorer`
+- `signal.SignalSource`
+- `signal.SignalStrength`
+- `signal.SignalType`
+- `momentum.MomentumAnalysis`
+- `momentum.MomentumFilter`
+- `momentum.MomentumSignal`
+- `momentum.MomentumStrategy`
+- `momentum.MomentumType`
+- `momentum.TechnicalIndicators`
+- `momentum.Timeframe`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

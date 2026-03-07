@@ -1,0 +1,53 @@
+# Requirements Document: engines/risk_engine/greeks_calculator.py
+
+## 1. Module Overview
+Options Greeks Calculator - Hull Chapters 17 and 19
+
+Implements comprehensive Greeks calculation for options risk management.
+
+Greeks measure the sensitivity of option prices to various factors:
+- Delta (Δ): Price sensitivity to underlying price changes
+- Gamma (Γ): Delta sensitivity to underlying price changes (convexity)
+- Theta (Θ): Time sensitivity (time decay)
+- Vega (ν): Volatility sensitivity
+- Rho (ρ): Interest rate sensitivity
+
+Higher-order Greeks:
+- Vanna: Delta sensitivity to volatility
+- Vomma: Vega sensitivity to volatility (volga)
+- Charm: Delta sensitivity to time
+- Veta: Vega sensitivity to time
+
+Reference:
+- Hull, Options, Futures, and Other Derivatives, Chapters 17-19
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `scipy.stats.norm`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `GreeksCalculator`: Must conform to application domain models.
+### Public Functions
+- `get_greeks_calculator()`: Must return strictly typed objects.
+- `calculate_all_greeks()`: Must return strictly typed objects.
+- `calculate_portfolio_greeks()`: Must return strictly typed objects.
+- `calculate_delta_hedge_ratio()`: Must return strictly typed objects.
+- `validate_greeks_consistency()`: Must return strictly typed objects.
+- `validate_greeks_risk_limits()`: Must return strictly typed objects.
+- `calculate_greeks_sensitivity_analysis()`: Must return strictly typed objects.
+- `validate_put_call_parity()`: Must return strictly typed objects.
+- `calculate_greeks_implied_values()`: Must return strictly typed objects.
+- `validate_greeks_market_prices()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

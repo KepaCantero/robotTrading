@@ -1,0 +1,43 @@
+# Requirements Document: infrastructure/persistence/file_backtest_repository.py
+
+## 1. Module Overview
+File-Based Backtest Repository Implementation
+
+A file-system based implementation of the backtest repository for
+persisting backtest results to disk.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `json`
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `pathlib.Path`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `domain.entities.backtest.Backtest`
+- `domain.entities.backtest.BacktestStatus`
+- `domain.entities.backtest.BacktestType`
+- `domain.repositories.backtest_repository.BacktestRepository`
+- `domain.value_objects.backtest_config.BacktestConfigValue`
+- `domain.value_objects.backtest_result.BacktestResultValue`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `FileBacktestRepository`: Must conform to application domain models.
+### Public Functions
+- `save()`: Must return strictly typed objects.
+- `find_by_id()`: Must return strictly typed objects.
+- `find_by_status()`: Must return strictly typed objects.
+- `find_by_type()`: Must return strictly typed objects.
+- `find_all()`: Must return strictly typed objects.
+- `delete()`: Must return strictly typed objects.
+- `count_by_status()`: Must return strictly typed objects.
+- `get_recent_completed()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

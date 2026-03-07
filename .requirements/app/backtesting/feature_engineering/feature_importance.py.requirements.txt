@@ -1,0 +1,73 @@
+# Requirements Document: backtesting/feature_engineering/feature_importance.py
+
+## 1. Module Overview
+Feature Importance Methods for Financial ML
+
+Based on Marcos López de Prado's "Advances in Financial Machine Learning", Chapter 8.
+
+This module implements three key feature importance methods:
+
+1. MDI (Mean Decrease Impurity):
+   - Built-in feature importance from tree-based models
+   - Measures total reduction in impurity from each feature
+   - Fast but biased towards high-cardinality features
+
+2. MDA (Mean Decrease Accuracy):
+   - Permutation importance
+   - Measures decrease in accuracy when feature is shuffled
+   - More reliable but computationally expensive
+   - Model-agnostic
+
+3. SFI (Single Feature Importance):
+   - Trains separate model for each feature
+   - Measures accuracy of single-feature models
+   - Most robust but very computationally expensive
+
+Key Concepts:
+- MDI is fast but biased
+- MDA is unbiased but slower
+- SFI is most robust but slowest
+- Use multiple methods for robust feature selection
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Union`
+- `numpy`
+- `pandas`
+- `sklearn.ensemble.RandomForestClassifier`
+- `sklearn.metrics.f1_score`
+- `sklearn.ensemble.RandomForestRegressor`
+- `sklearn.metrics.roc_auc_score`
+- `sklearn.metrics.r2_score`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `FeatureImportanceConfig`: Must conform to application domain models.
+- `ImportanceResult`: Must conform to application domain models.
+- `FeatureImportanceMDI`: Must conform to application domain models.
+- `FeatureImportanceMDA`: Must conform to application domain models.
+- `FeatureImportanceSFI`: Must conform to application domain models.
+- `FinancialMLFeatureImportance`: Must conform to application domain models.
+### Public Functions
+- `calculate_feature_importance()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `get_top_features()`: Must return strictly typed objects.
+- `get_low_importance_features()`: Must return strictly typed objects.
+- `calculate()`: Must return strictly typed objects.
+- `calculate()`: Must return strictly typed objects.
+- `calculate()`: Must return strictly typed objects.
+- `calculate_importance()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

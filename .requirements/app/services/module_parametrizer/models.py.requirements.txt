@@ -1,0 +1,37 @@
+# Requirements Document: services/module_parametrizer/models.py
+
+## 1. Module Overview
+T3.1: Module Parametrizer Models
+
+Dataclasses for module-level parameter generation and configuration.
+Uses centralized configuration for default values.
+
+## 2. Dependencies
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.TYPE_CHECKING`
+- `app.shared.config.centralized_config.get_config`
+- `app.shared.config.centralized_config.get_config`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ParameterizationPreset`: Must conform to application domain models.
+- `ModuleParameterConfig`: Must conform to application domain models.
+- `ModuleParameterSet`: Must conform to application domain models.
+- `ParameterizationRequest`: Must conform to application domain models.
+- `ParameterizationResult`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

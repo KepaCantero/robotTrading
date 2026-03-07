@@ -1,0 +1,54 @@
+# Requirements Document: engines/portfolio_engine/optimizers/hierarchical_risk_parity.py
+
+## 1. Module Overview
+Hierarchical Risk Parity (HRP) - López de Prado (2016).
+
+Implements the HRP algorithm from Marcos López de Prado's
+"Machine Learning for Asset Managers" and "Advances in Financial Machine Learning".
+
+Key advantages over Markowitz:
+- No matrix inversion required (more robust)
+- No extreme weights
+- More stable out-of-sample performance
+- Uses hierarchical clustering + recursive bisection
+
+Algorithm steps:
+1. Calculate correlation-based distance matrix
+2. Perform hierarchical clustering (single, average, or ward linkage)
+3. Quasi-diagonalization: reorder covariance matrix by cluster hierarchy
+4. Recursive bisection: allocate capital based on inverse variance
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `scipy.cluster.hierarchy.cophenet`
+- `scipy.cluster.hierarchy.dendrogram`
+- `scipy.cluster.hierarchy.linkage`
+- `scipy.spatial.distance.pdist`
+- `scipy.spatial.distance.squareform`
+- `scipy.cluster.hierarchy.leaves_list`
+- `matplotlib.pyplot`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `HierarchicalRiskParity`: Must conform to application domain models.
+- `HRPOptimizer`: Must conform to application domain models.
+### Public Functions
+- `compute_hrp_weights()`: Must return strictly typed objects.
+- `plot_hrp_dendrogram()`: Must return strictly typed objects.
+- `get_weights()`: Must return strictly typed objects.
+- `get_cluster_tree()`: Must return strictly typed objects.
+- `get_dendrogram_data()`: Must return strictly typed objects.
+- `get_metrics()`: Must return strictly typed objects.
+- `optimize()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

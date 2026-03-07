@@ -1,0 +1,53 @@
+# Requirements Document: services/api_circuit_breaker.py
+
+## 1. Module Overview
+API Circuit Breaker - Resilience pattern for API calls.
+
+Implements the circuit breaker pattern to prevent cascading failures
+when calling external APIs. Tracks error rates and automatically
+opens/closes circuits based on configurable thresholds.
+
+Uses centralized configuration for all thresholds.
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `app.shared.config.centralized_config.get_config`
+- `app.shared.utils.timezone_utils.utc_now`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CircuitBreakerType`: Must conform to application domain models.
+- `CircuitState`: Must conform to application domain models.
+- `CircuitBreaker`: Must conform to application domain models.
+- `CircuitBreakerManager`: Must conform to application domain models.
+### Public Functions
+- `is_open()`: Must return strictly typed objects.
+- `record_success()`: Must return strictly typed objects.
+- `record_failure()`: Must return strictly typed objects.
+- `reset()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `add_circuit_breaker()`: Must return strictly typed objects.
+- `is_breaker_open()`: Must return strictly typed objects.
+- `record_success()`: Must return strictly typed objects.
+- `record_error()`: Must return strictly typed objects.
+- `get_all_breaker_statuses()`: Must return strictly typed objects.
+- `reset_breaker()`: Must return strictly typed objects.
+- `reset_all_breakers()`: Must return strictly typed objects.
+- `clear_history()`: Must return strictly typed objects.
+- `get_manager_statistics()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

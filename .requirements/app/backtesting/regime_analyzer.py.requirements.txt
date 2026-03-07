@@ -1,0 +1,38 @@
+# Requirements Document: backtesting/regime_analyzer.py
+
+## 1. Module Overview
+Regime Detection & Analysis - Market regime identification and performance analysis.
+
+Provides:
+- K-Means regime detection (Bull/Neutral/Bear)
+- Regime transition analysis and probabilities
+- Performance metrics by regime
+- Walk-forward robustness testing
+
+## 2. Dependencies
+- `logging`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `numpy`
+- `pandas`
+- `sklearn.cluster.KMeans`
+- `sklearn.preprocessing.StandardScaler`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RegimeAnalyzer`: Must conform to application domain models.
+### Public Functions
+- `detect_regimes()`: Must return strictly typed objects.
+- `analyze_regime_performance()`: Must return strictly typed objects.
+- `regime_transition_analysis()`: Must return strictly typed objects.
+- `out_of_sample_regime_robustness()`: Must return strictly typed objects.
+- `get_regime_names()`: Must return strictly typed objects.
+- `get_regime_labels()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

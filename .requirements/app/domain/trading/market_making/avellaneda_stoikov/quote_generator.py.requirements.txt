@@ -1,0 +1,31 @@
+# Requirements Document: domain/trading/market_making/avellaneda_stoikov/quote_generator.py
+
+## 1. Module Overview
+Quote Generator for Avellaneda-Stoikov Market Making.
+
+This module provides the quote generator that combines the AS model with
+practical constraints like inventory limits, spread limits, and quote enabling/disabling.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `decimal.Decimal`
+- `typing.Optional`
+- `app.domain.trading.market_making.avellaneda_stoikov.as_model.AvellanedaStoikovModel`
+- `app.domain.trading.market_making.avellaneda_stoikov.models.ASConfig`
+- `app.domain.trading.market_making.avellaneda_stoikov.models.ASQuote`
+- `app.domain.trading.market_making.avellaneda_stoikov.models.ASQuoteParams`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ASQuoteGenerator`: Must conform to application domain models.
+### Public Functions
+- `generate_quotes()`: Must return strictly typed objects.
+- `generate_quotes_batch()`: Must return strictly typed objects.
+- `update_config()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

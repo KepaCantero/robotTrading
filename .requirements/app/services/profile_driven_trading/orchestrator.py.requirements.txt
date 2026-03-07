@@ -1,0 +1,61 @@
+# Requirements Document: services/profile_driven_trading/orchestrator.py
+
+## 1. Module Overview
+Profile-Driven Trading Orchestrator - Main implementation.
+
+Orchestrates the complete trading lifecycle from investor profile to trade execution.
+This is the main entry point for the profile-driven trading system.
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `pandas`
+- `models.ExecutionResult`
+- `models.OrchestratorConfig`
+- `models.RiskValidationResult`
+- `models.SignalSet`
+- `models.StageType`
+- `models.TradingResult`
+- `signal_integrator.SignalIntegrator`
+- `workflow_manager.WorkflowManager`
+- `numpy`
+- `app.services.profile_generator.models.InvestmentObjective`
+- `app.services.profile_generator.models.ProfileGenerationRequest`
+- `app.services.profile_generator.models.RiskProfile`
+- `app.data.real_market_data.RealMarketDataFetcher`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `numpy`
+- `app.services.profile_generator.profile_generator.ProfileGenerator`
+- `app.services.market_universe_orchestrator.MarketUniverseOrchestrator`
+- `app.services.strategy_stock_allocator.StrategyStockAllocator`
+- `app.services.tax_efficiency.tax_optimized_builder.TaxOptimizedPortfolioBuilder`
+- `app.services.live_trading.broker_connector.get_broker_connector`
+- `app.services.live_trading.risk_gates.RiskGates`
+- `app.services.backtest_orchestration.backtest_orchestrator.BacktestOrchestrator`
+- `app.services.live_trading.trading_bridge_orchestrator.TradingBridgeOrchestrator`
+- `random`
+- `random`
+- `app.services.backtest_orchestration.models.BacktestOrchestrationRequest`
+- `app.strategies.momentum_modular.learning.reinforcement_learning_engine.ReinforcementLearningEngine`
+- `random`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ProfileDrivenTradingOrchestrator`: Must conform to application domain models.
+### Public Functions
+- `get_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,79 @@
+# Requirements Document: domain/portfolio_optimization/mean_variance_optimizer.py
+
+## 1. Module Overview
+Markowitz Mean-Variance Portfolio Optimization Implementation.
+
+This module implements the Modern Portfolio Theory (MPT) by Harry Markowitz (1952),
+providing mean-variance optimization for portfolio construction.
+
+Key Features:
+- Covariance matrix calculation with 252-day lookback (Rule 66)
+- Mean-Variance Optimization (Rule 67)
+- Long-only constraints (Rule 68): 0 <= weight <= 1
+- Sum constraint validation (Rule 69): sum(weights) = 1.0
+- Diversification enforcement (Rule 70): Max 20% per asset
+- Efficient frontier calculation (Rule 71): 20+ points
+- Max Sharpe Portfolio (Rule 72): Default optimization target
+- L2 Regularization (Rule 73): gamma=0.01
+- Ledoit-Wolf shrinkage (Rule 74): Robust covariance estimation
+
+Reference:
+    Markowitz, H. (1952). "Portfolio Selection". Journal of Finance.
+    https://doi.org/10.1111/j.1540-6261.1952.tb01525.x
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `enum.Enum`
+- `typing.TYPE_CHECKING`
+- `numpy`
+- `numpy.typing.NDArray`
+- `scipy.optimize.minimize`
+- `app.shared.config.centralized_config.get_config`
+- `sklearn.covariance.LedoitWolf`
+- `sklearn.covariance.OAS`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `OptimizationMethod`: Must conform to application domain models.
+- `ShrinkageMethod`: Must conform to application domain models.
+- `OptimizationResult`: Must conform to application domain models.
+- `EfficientFrontierPoint`: Must conform to application domain models.
+- `EfficientFrontier`: Must conform to application domain models.
+- `InputValidationError`: Must conform to application domain models.
+- `OptimizationError`: Must conform to application domain models.
+- `MeanVarianceOptimizer`: Must conform to application domain models.
+### Public Functions
+- `weights_dict()`: Must return strictly typed objects.
+- `max_sharpe_portfolio()`: Must return strictly typed objects.
+- `min_variance_portfolio()`: Must return strictly typed objects.
+- `to_arrays()`: Must return strictly typed objects.
+- `lookback_days()`: Must return strictly typed objects.
+- `max_position()`: Must return strictly typed objects.
+- `risk_free_rate()`: Must return strictly typed objects.
+- `regularization_gamma()`: Must return strictly typed objects.
+- `sanitize_inputs()`: Must return strictly typed objects.
+- `calculate_expected_returns()`: Must return strictly typed objects.
+- `calculate_covariance_matrix()`: Must return strictly typed objects.
+- `validate_sum_constraint()`: Must return strictly typed objects.
+- `apply_long_only_constraint()`: Must return strictly typed objects.
+- `apply_diversification_constraint()`: Must return strictly typed objects.
+- `max_sharpe_portfolio()`: Must return strictly typed objects.
+- `min_variance_portfolio()`: Must return strictly typed objects.
+- `regularized_mvo()`: Must return strictly typed objects.
+- `calculate_efficient_frontier()`: Must return strictly typed objects.
+- `check_false_diversification()`: Must return strictly typed objects.
+- `risk_parity_fallback()`: Must return strictly typed objects.
+- `optimize()`: Must return strictly typed objects.
+- `check_rebalance_trigger()`: Must return strictly typed objects.
+- `negative_sharpe()`: Must return strictly typed objects.
+- `portfolio_variance()`: Must return strictly typed objects.
+- `regularized_variance()`: Must return strictly typed objects.
+- `portfolio_variance()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -16,11 +16,11 @@ Reference:
 - Factor investing approach (Berkin & Swedroe)
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -613,3 +613,392 @@ class FactorRebalanceRecommendation:
     trades_required: List[tuple[str, Decimal, Decimal]]  # (symbol, current, target)
     estimated_cost: Decimal
     expected_benefit: Decimal
+
+
+# =============================================================================
+# DIVIDEND STRATEGY MODELS
+# =============================================================================
+
+
+class DividendSafety(str, Enum):
+    """Dividend safety rating."""
+
+    SAFE = "safe"
+    MODERATE = "moderate"
+    AT_RISK = "at_risk"
+    HIGH_RISK = "high_risk"
+    UNSUSTAINABLE = "unsustainable"
+
+
+@dataclass
+class DividendProfile:
+    """Profile of a dividend-paying stock."""
+
+    symbol: str
+    company_name: str
+    dividend_yield: Decimal
+    annual_dividend: Decimal
+    payout_ratio: Decimal
+    dividend_growth_rate: Decimal
+    years_of_growth: int
+    ex_dividend_date: Optional[datetime] = None
+    payment_date: Optional[datetime] = None
+    safety_rating: DividendSafety = DividendSafety.MODERATE
+    quality_score: Decimal = Decimal("0")
+
+
+@dataclass
+class DividendStock:
+    """Extended dividend stock information."""
+
+    profile: DividendProfile
+    price: Decimal
+    market_cap: Decimal
+    sector: str
+    pe_ratio: Decimal
+    eps: Decimal
+    free_cash_flow: Decimal
+    total_debt: Decimal
+    fcf_coverage: Decimal  # FCF / Dividend
+
+
+class DividendStrategyConfig(BaseModel):
+    """Configuration for dividend strategy."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    # Strategy identification
+    name: str = Field(default="DividendStrategy", description="Strategy name")
+    description: str = Field(default="Dividend investing strategy", description="Strategy description")
+    version: str = Field(default="1.0.0", description="Strategy version")
+
+    # Dividend yield thresholds
+    min_yield: Decimal = Field(default=Decimal("2.0"), description="Minimum dividend yield (%)")
+    max_yield: Decimal = Field(default=Decimal("8.0"), description="Maximum dividend yield (%)")
+    min_dividend_yield: Decimal = Field(default=Decimal("2.0"), description="Minimum dividend yield (alias)")
+    max_dividend_yield: Decimal = Field(default=Decimal("8.0"), description="Maximum dividend yield (alias)")
+
+    # Payout and coverage
+    max_payout_ratio: Decimal = Field(default=Decimal("75.0"), description="Maximum payout ratio (%)")
+    min_fcf_coverage: Decimal = Field(default=Decimal("1.5"), description="Minimum FCF coverage")
+    min_years_of_growth: int = Field(default=3, description="Minimum years of dividend growth")
+    min_years_consecutive: int = Field(default=3, description="Minimum consecutive years of dividend payments")
+
+    # Portfolio construction
+    max_positions: int = Field(default=25, description="Maximum positions in portfolio")
+    portfolio_size: int = Field(default=25, description="Target portfolio size")
+    max_sector_weight: Decimal = Field(default=Decimal("0.30"), description="Maximum sector weight")
+    max_single_position: Decimal = Field(default=Decimal("0.05"), description="Maximum single position")
+    sector_diversification: bool = Field(default=True, description="Enable sector diversification")
+
+    # Quality thresholds
+    min_quality_score: Decimal = Field(default=Decimal("60.0"), description="Minimum quality score")
+    min_sustainability_score: Decimal = Field(default=Decimal("50.0"), description="Minimum sustainability score")
+
+    # Dividend capture settings
+    enable_dividend_capture: bool = Field(default=False, description="Enable dividend capture mode")
+    min_days_before_ex_dividend: int = Field(default=3, description="Min days before ex-dividend to buy")
+    min_dividend_growth: Decimal = Field(default=Decimal("5.0"), description="Minimum dividend growth rate (%)")
+    min_market_cap: Decimal = Field(default=Decimal("1000000000"), description="Minimum market cap for dividend stocks")
+    require_profitable: bool = Field(default=True, description="Require profitable companies")
+    require_positive_fcf: bool = Field(default=True, description="Require positive free cash flow")
+    min_dividend_safety: str = Field(default="moderate", description="Minimum dividend safety rating")
+    excluded_sectors: List[str] = Field(default_factory=list, description="Sectors to exclude")
+    exclude_reits: bool = Field(default=False, description="Exclude REITs from screening")
+    exclude_mlps: bool = Field(default=False, description="Exclude MLPs from screening")
+    max_pe_ratio: Optional[Decimal] = Field(default=Decimal("25.0"), description="Maximum P/E ratio")
+    max_pb_ratio: Optional[Decimal] = Field(default=Decimal("3.0"), description="Maximum P/B ratio")
+    max_beta: Optional[Decimal] = Field(default=Decimal("1.2"), description="Maximum beta")
+    # Scoring weights
+    yield_weight: Decimal = Field(default=Decimal("0.3"), description="Yield score weight")
+    growth_weight: Decimal = Field(default=Decimal("0.25"), description="Growth score weight")
+    sustainability_weight: Decimal = Field(default=Decimal("0.25"), description="Sustainability score weight")
+    value_weight: Decimal = Field(default=Decimal("0.2"), description="Value score weight")
+
+    # Rebalancing
+    rebalance_threshold: Decimal = Field(default=Decimal("0.05"), description="Rebalance threshold")
+    rebalance_frequency_days: int = Field(default=90, description="Rebalance frequency in days")
+
+
+@dataclass
+class ExDividendDate:
+    """Ex-dividend date information."""
+
+    symbol: str
+    ex_date: datetime
+    payment_date: datetime
+    record_date: datetime
+    declared_date: datetime
+    dividend_amount: Decimal
+    frequency: str  # quarterly, annual, etc.
+
+
+# =============================================================================
+# LOW VOLATILITY STRATEGY MODELS
+# =============================================================================
+
+
+class VolatilityRegime(str, Enum):
+    """Volatility regime classification."""
+
+    LOW = "low"
+    NORMAL = "normal"
+    ELEVATED = "elevated"
+    HIGH = "high"
+    EXTREME = "extreme"
+
+
+@dataclass
+class VolatilityMetrics:
+    """Comprehensive volatility metrics for a stock."""
+
+    symbol: str = ""
+    average_volatility: Decimal = Decimal("0.15")  # Average daily volatility (%)
+    annualized_volatility: Decimal = Decimal("0.20")  # Annualized volatility (%)
+    beta: Decimal = Decimal("1.0")  # Market beta
+    downside_risk: Decimal = Decimal("0.10")  # Downside deviation
+    max_drawdown: Decimal = Decimal("0.10")  # Maximum drawdown (%)
+    sortino_ratio: Decimal = Decimal("1.0")  # Sortino ratio
+    volatility_regime: VolatilityRegime = VolatilityRegime.NORMAL  # Current regime
+    calculated_at: Optional[datetime] = None
+
+    def __post_init__(self):
+        # Ensure all fields are properly initialized
+        if self.average_volatility is None:
+            self.average_volatility = Decimal("0.15")
+        if self.annualized_volatility is None:
+            self.annualized_volatility = Decimal("0.20")
+        if self.beta is None:
+            self.beta = Decimal("1.0")
+        if self.downside_risk is None:
+            self.downside_risk = Decimal("0.10")
+        if self.max_drawdown is None:
+            self.max_drawdown = Decimal("0.10")
+        if self.sortino_ratio is None:
+            self.sortino_ratio = Decimal("1.0")
+
+
+@dataclass
+class LowVolatilityProfile:
+    """Profile of a low volatility stock."""
+
+    symbol: str
+    company_name: str = ""
+    sector: str = ""
+    current_price: Optional[Decimal] = None
+    daily_volatility: Decimal = Decimal("0")
+    annualized_volatility: Decimal = Decimal("0")
+    beta: Decimal = Decimal("1.0")
+    downside_deviation: Decimal = Decimal("0")
+    max_drawdown: Decimal = Decimal("0")
+    sharpe_ratio: Decimal = Decimal("0")
+    sortino_ratio: Decimal = Decimal("0")
+    percentile_rank: Decimal = Decimal("0.5")  # Volatility rank (0-1)
+    volatility_metrics: Optional[VolatilityMetrics] = None
+    low_vol_score: Optional[Decimal] = None
+    defensive_score: Optional[Decimal] = None
+    stability_score: Optional[Decimal] = None
+    overall_score: Optional[Decimal] = None
+    is_defensive_stock: bool = False
+
+    def __post_init__(self):
+        """Initialize volatility_metrics with default values if not provided."""
+        if self.volatility_metrics is None:
+            self.volatility_metrics = VolatilityMetrics(
+                symbol=self.symbol,
+                average_volatility=self.daily_volatility,
+                annualized_volatility=self.annualized_volatility,
+                beta=self.beta,
+                downside_risk=self.downside_deviation,
+                max_drawdown=self.max_drawdown,
+                sortino_ratio=self.sortino_ratio,
+            )
+
+
+@dataclass
+class LowVolatilityStock:
+    """Extended low volatility stock information."""
+
+    profile: LowVolatilityProfile
+    price: Decimal
+    market_cap: Decimal
+    dividend_yield: Decimal
+    pe_ratio: Decimal
+    is_defensive_sector: bool = False
+
+
+class LowVolatilityStrategyConfig(BaseModel):
+    """Configuration for low volatility strategy."""
+
+    model_config = ConfigDict(extra="ignore")  # Allow extra fields for flexibility
+
+    # Strategy identification
+    name: str = Field(default="LowVolatilityStrategy", description="Strategy name")
+    description: str = Field(default="Low volatility strategy", description="Strategy description")
+    version: str = Field(default="1.0.0", description="Strategy version")
+
+    # Volatility thresholds
+    max_volatility_percentile: Decimal = Field(
+        default=Decimal("0.3"), description="Maximum volatility percentile (0-1)"
+    )
+    max_historical_volatility: Decimal = Field(
+        default=Decimal("25.0"), description="Maximum historical volatility (%)"
+    )
+    max_beta: Decimal = Field(default=Decimal("0.8"), description="Maximum beta")
+    min_beta: Decimal = Field(default=Decimal("0.0"), description="Minimum beta")
+    max_downside_deviation: Decimal = Field(
+        default=Decimal("0.15"), description="Maximum downside deviation"
+    )
+    max_downside_risk: Decimal = Field(
+        default=Decimal("0.20"), description="Maximum downside risk"
+    )
+    max_max_drawdown: Decimal = Field(
+        default=Decimal("0.30"), description="Maximum drawdown limit"
+    )
+    target_volatility: Optional[Decimal] = Field(
+        default=None, description="Target portfolio volatility"
+    )
+
+    # Performance thresholds
+    min_sharpe_ratio: Decimal = Field(default=Decimal("0.5"), description="Minimum Sharpe ratio")
+    min_sortino_ratio: Optional[Decimal] = Field(
+        default=None, description="Minimum Sortino ratio"
+    )
+
+    # Score thresholds
+    min_low_vol_score: Decimal = Field(default=Decimal("60.0"), description="Minimum low vol score")
+    min_defensive_score: Decimal = Field(default=Decimal("50.0"), description="Minimum defensive score")
+    min_stability_score: Decimal = Field(default=Decimal("50.0"), description="Minimum stability score")
+
+    # Portfolio construction
+    portfolio_size: int = Field(default=30, description="Number of positions in portfolio")
+    max_positions: int = Field(default=30, description="Maximum positions in portfolio")
+    max_sector_weight: Decimal = Field(
+        default=Decimal("0.35"), description="Maximum weight per sector"
+    )
+    max_single_position: Decimal = Field(
+        default=Decimal("0.06"), description="Maximum weight per position"
+    )
+
+    # Sector preferences
+    defensive_sector_bias: bool = Field(default=True, description="Bias toward defensive sectors")
+    require_defensive_sector: bool = Field(default=False, description="Require stocks to be in defensive sectors")
+    preferred_sectors: List[str] = Field(
+        default_factory=lambda: ["Utilities", "Consumer Staples", "Healthcare", "Real Estate"],
+        description="Preferred defensive sectors"
+    )
+    avoid_sectors: List[str] = Field(
+        default_factory=lambda: ["Technology", "Biotechnology", "Energy", "Materials"],
+        description="Sectors to avoid"
+    )
+
+    # Optimization settings
+    optimization_method: str = Field(default="min_variance", description="Optimization method")
+    risk_free_rate: Decimal = Field(default=Decimal("0.04"), description="Risk-free rate")
+
+    # Rebalancing
+    rebalance_threshold: Decimal = Field(
+        default=Decimal("0.05"), description="Rebalance threshold"
+    )
+
+    # Universe settings
+    min_market_cap: Optional[Decimal] = Field(
+        default=None, description="Minimum market cap"
+    )
+
+    # Scoring weights
+    volatility_weight: Decimal = Field(default=Decimal("0.4"), description="Volatility score weight")
+    defensive_weight: Decimal = Field(default=Decimal("0.3"), description="Defensive score weight")
+    stability_weight: Decimal = Field(default=Decimal("0.2"), description="Stability score weight")
+    quality_weight: Decimal = Field(default=Decimal("0.1"), description="Quality score weight")
+
+
+# =============================================================================
+# SCREENING CRITERIA MODELS
+# =============================================================================
+
+
+class DividendScreeningCriteria(BaseModel):
+    """Screening criteria for dividend stocks."""
+
+    model_config = ConfigDict(extra="ignore")  # Allow extra fields for flexibility
+
+    min_market_cap: Decimal = Field(default=Decimal("1000000000"), description="Minimum market cap")
+    min_dividend_yield: Decimal = Field(default=Decimal("2.0"), description="Minimum dividend yield (%)")
+    max_dividend_yield: Decimal = Field(default=Decimal("10.0"), description="Maximum dividend yield (%)")
+    max_payout_ratio: Decimal = Field(default=Decimal("75.0"), description="Maximum payout ratio (%)")
+    min_years_of_growth: int = Field(default=3, description="Minimum years of dividend growth")
+    min_fcf_coverage: Decimal = Field(default=Decimal("1.5"), description="Minimum FCF coverage")
+    exclude_sectors: List[str] = Field(default_factory=list, description="Sectors to exclude")
+    excluded_sectors: List[str] = Field(default_factory=list, description="Sectors to exclude (alias)")
+    min_yield: Decimal = Field(default=Decimal("2.0"), description="Minimum yield")
+    max_yield: Decimal = Field(default=Decimal("10.0"), description="Maximum yield")
+    max_payout: Decimal = Field(default=Decimal("75.0"), description="Maximum payout")
+    min_growth: Optional[Decimal] = Field(default=None, description="Minimum growth")
+    min_years: int = Field(default=3, description="Minimum years")
+    min_quality: Decimal = Field(default=Decimal("50.0"), description="Minimum quality score")
+    min_sustainability: Decimal = Field(default=Decimal("50.0"), description="Minimum sustainability score")
+    require_profitable: bool = Field(default=True, description="Require profitable companies")
+    require_positive_fcf: bool = Field(default=True, description="Require positive FCF")
+    min_safety: str = Field(default="moderate", description="Minimum safety rating")
+
+
+class LowVolatilityScreeningCriteria(BaseModel):
+    """Screening criteria for low volatility stocks."""
+
+    model_config = ConfigDict(extra="ignore")  # Allow extra fields for flexibility
+
+    min_market_cap: Optional[Decimal] = Field(default=Decimal("1000000000"), description="Minimum market cap")
+    max_volatility_percentile: Decimal = Field(
+        default=Decimal("0.3"), description="Maximum volatility percentile (0-1)"
+    )
+    max_volatility: Decimal = Field(default=Decimal("25.0"), description="Maximum volatility")
+    max_beta: Decimal = Field(default=Decimal("0.8"), description="Maximum beta")
+    min_beta: Decimal = Field(default=Decimal("0.0"), description="Minimum beta")
+    max_downside_risk: Decimal = Field(default=Decimal("0.20"), description="Maximum downside risk")
+    max_downside_deviation: Decimal = Field(
+        default=Decimal("0.15"), description="Maximum downside deviation"
+    )
+    max_drawdown: Decimal = Field(default=Decimal("0.30"), description="Maximum drawdown")
+    min_sortino: Optional[Decimal] = Field(default=None, description="Minimum Sortino ratio")
+    min_sharpe_ratio: Decimal = Field(default=Decimal("0.0"), description="Minimum Sharpe ratio")
+    min_avg_volume: Decimal = Field(default=Decimal("500000"), description="Minimum average volume")
+    min_low_vol_score: Decimal = Field(default=Decimal("60.0"), description="Minimum low vol score")
+    min_defensive_score: Decimal = Field(default=Decimal("50.0"), description="Minimum defensive score")
+    min_stability_score: Decimal = Field(default=Decimal("50.0"), description="Minimum stability score")
+    preferred_sectors: List[str] = Field(
+        default_factory=lambda: ["Utilities", "Consumer Staples", "Healthcare", "Real Estate"],
+        description="Preferred defensive sectors"
+    )
+    avoid_sectors: List[str] = Field(
+        default_factory=list,
+        description="Sectors to avoid"
+    )
+    require_defensive: bool = Field(default=False, description="Require defensive sector")
+
+
+# =============================================================================
+# GENERIC SCREENING RESULT
+# =============================================================================
+
+
+class SectorDefensiveLevel(str, Enum):
+    """Sector defensive level classification."""
+
+    HIGHLY_DEFENSIVE = "highly_defensive"  # Utilities, Consumer Staples
+    DEFENSIVE = "defensive"  # Healthcare, Real Estate
+    NEUTRAL = "neutral"  # Industrials, Financials, Communication Services
+    CYCLICAL = "cyclical"  # Technology, Communication Services
+    HIGHLY_CYCLICAL = "highly_cyclical"  # Consumer Discretionary
+    SENSITIVE = "sensitive"  # Energy, Materials
+
+
+@dataclass
+class ScreeningResult:
+    """Generic result of a screening operation."""
+
+    passed: bool
+    symbol: str
+    score: Decimal
+    reasons: List[str]
+    details: Dict[str, Any] = field(default_factory=dict)

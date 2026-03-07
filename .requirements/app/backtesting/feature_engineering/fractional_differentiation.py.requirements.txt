@@ -1,0 +1,67 @@
+# Requirements Document: backtesting/feature_engineering/fractional_differentiation.py
+
+## 1. Module Overview
+Fractional Differentiation (Fixed Window) Implementation - OPTIMIZED with Numba JIT
+
+Based on López de Prado, "Advances in Financial Machine Learning", Chapter 3, Section 3.4.
+
+PERFORMANCE OPTIMIZATIONS (95% Compliance Target):
+- All numerical functions use Numba JIT compilation
+- 50-100x speedup on fractional differentiation operations
+- Vectorized operations where possible
+- Memory-efficient implementation
+
+Key Concepts:
+- Integer differentiation (d=1) creates stationarity but destroys all memory
+- Fractional differentiation (0<d<1) achieves stationarity with minimal memory loss
+- Fixed window method expands the window until stationarity is achieved
+
+Author: Advanced Financial Machine Learning Implementation
+Version: 3.0.0 - NUMBA OPTIMIZED
+
+## 2. Dependencies
+- `warnings`
+- `typing.Dict`
+- `typing.List`
+- `typing.Tuple`
+- `typing.Union`
+- `numpy`
+- `pandas`
+- `numba`
+- `numba.jit`
+- `numba.njit`
+- `numba.prange`
+- `statsmodels.tsa.stattools.adfuller`
+- `app.shared.performance.statsmodels_fallback.adfuller`
+- `logging`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `FractionalDifferentiation`: Must conform to application domain models.
+- `FractionalDiffTransformer`: Must conform to application domain models.
+### Public Functions
+- `calculate_weights_numba()`: Must return strictly typed objects.
+- `fractional_diff_fast_numba()`: Must return strictly typed objects.
+- `fractional_diff_parallel_numba()`: Must return strictly typed objects.
+- `calculate_adfuller_on_diff_series()`: Must return strictly typed objects.
+- `apply_frac_diff_to_dataframe()`: Must return strictly typed objects.
+- `get_weights()`: Must return strictly typed objects.
+- `fractional_diff()`: Must return strictly typed objects.
+- `find_optimal_d()`: Must return strictly typed objects.
+- `adfuller()`: Must return strictly typed objects.
+- `get_weights()`: Must return strictly typed objects.
+- `fractional_diff()`: Must return strictly typed objects.
+- `fractional_diff_ffd()`: Must return strictly typed objects.
+- `find_optimal_d()`: Must return strictly typed objects.
+- `calculate_memory_loss()`: Must return strictly typed objects.
+- `compare_d_values()`: Must return strictly typed objects.
+- `fit()`: Must return strictly typed objects.
+- `transform()`: Must return strictly typed objects.
+- `fit_transform()`: Must return strictly typed objects.
+- `get_feature_names_out()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,65 @@
+# Requirements Document: backtesting/backtest_optimizer.py
+
+## 1. Module Overview
+Backtest Optimizer Module - Optimization logic during backtests.
+
+Extracted from comprehensive_backtest_runner.py for Single Responsibility.
+Handles parameter optimization strategies:
+- Grid Search optimization
+- Optuna Bayesian optimization
+- Transformer-based optimization
+- Ablation studies
+
+Architecture:
+- Proper train/validation/test splits
+- Multiple testing correction (Bonferroni)
+- Parallel execution support
+
+## 2. Dependencies
+- `__future__.annotations`
+- `copy`
+- `logging`
+- `tempfile`
+- `concurrent.futures.ProcessPoolExecutor`
+- `concurrent.futures.as_completed`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `itertools.product`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `pandas`
+- `app.backtesting.core.executor.SimpleBacktestExecutor`
+- `app.backtesting.core.error_handling.train_with_retry`
+- `app.backtesting.core.memory_manager.AggressiveMemoryManager`
+- `app.backtesting.data_split.DataSplit`
+- `app.backtesting.data_split.MultipleTestingCorrector`
+- `app.backtesting.data_split.TrainValTestSplitter`
+- `app.backtesting.data_split.validate_out_of_sample_performance`
+- `app.backtesting.models.BacktestConfig`
+- `app.domain.strategies.momentum_modular.strategy.ModularMomentumStrategy`
+- `optuna`
+- `optuna.samplers.TPESampler`
+- `optuna.pruners.MedianPruner`
+- `yaml`
+- `os`
+- `app.backtesting.comprehensive_backtest_runner.ComprehensiveBacktestRunner`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BacktestOptimizer`: Must conform to application domain models.
+### Public Functions
+- `run_grid_search_backtest()`: Must return strictly typed objects.
+- `run_optuna_optimization()`: Must return strictly typed objects.
+- `run_ablation_backtest()`: Must return strictly typed objects.
+- `optimize_transformer_parameters()`: Must return strictly typed objects.
+- `objective()`: Must return strictly typed objects.
+- `evaluate_param_set()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

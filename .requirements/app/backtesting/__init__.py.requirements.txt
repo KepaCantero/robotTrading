@@ -1,0 +1,80 @@
+# Requirements Document: backtesting/__init__.py
+
+## 1. Module Overview
+Backtesting module for AlgoTrading system.
+
+This module provides backtesting capabilities for trading strategies,
+including historical data simulation, performance metrics calculation,
+and strategy evaluation.
+
+Includes:
+- SimpleBacktester: Basic backtesting engine
+- RobustBacktester: Advanced engine for 25+ year backtests with bias correction
+- Walk-forward validation (WalkForwardValidator, TomasiniWalkForwardValidator)
+- Monte Carlo simulation
+- Stress testing
+- BacktestingCompliance: Validacion de reglas R5, R6, R7, DATA-001
+
+NEW: Unified Engine Hierarchy (app.backtesting.engines)
+- BaseBacktestEngine: Abstract base class for all engines
+- StandardBacktestEngine: Single-strategy backtest with compliance
+- ExecutionBacktestEngine: Pessimistic execution (look-ahead bias prevention)
+- MultiStrategyBacktestEngine: Multi-strategy with capital allocation
+- RobustBacktestEngine: Long-term backtests with checkpointing
+- EngineFactory: Factory for creating engines by type
+
+COMPLIANCE: Todos los backtests deben usar BacktestingCompliance para validar
+las reglas de backtesting segun .ralph/rules/rules_mapping.yml:
+- R5: Walk-Forward Analysis
+- R6: Overfitting Prevention (ratio < 1:30)
+- R7: Monte Carlo para riesgo
+- DATA-001: Purged Cross-Validation
+
+## 2. Dependencies
+- `backtesting_compliance.BacktestingCompliance`
+- `backtesting_compliance.BacktestingComplianceResult`
+- `backtesting_compliance.ComplianceViolation`
+- `backtesting_compliance.create_backtesting_compliance`
+- `backtesting_compliance.validate_backtest_quick`
+- `engine.BacktestResult`
+- `engine.SimpleBacktester`
+- `models.BacktestConfig`
+- `models.PerformanceMetrics`
+- `models.Trade`
+- `models.TradeSide`
+- `models.TradeStatus`
+- `robust_engine.CorporateActionHandler`
+- `robust_engine.CorporateActionType`
+- `robust_engine.DividendHandler`
+- `robust_engine.DripConfig`
+- `robust_engine.PerformanceTracker`
+- `robust_engine.RobustBacktestConfig`
+- `robust_engine.RobustBacktester`
+- `robust_engine.RobustBacktestResult`
+- `robust_engine.SurvivorshipAdjuster`
+- `walk_forward_validator.ComprehensiveValidator`
+- `walk_forward_validator.CrossValidationTemporal`
+- `walk_forward_validator.MonteCarloSimulator`
+- `walk_forward_validator.StressTester`
+- `walk_forward_validator.SyntheticDataGenerator`
+- `walk_forward_validator.ValidationReport`
+- `walk_forward_validator.WalkForwardValidator`
+- `walk_forward_validator.load_validation_config`
+- `walk_forward_validator_enhanced.ParameterHistory`
+- `walk_forward_validator_enhanced.ParameterStabilityMetrics`
+- `walk_forward_validator_enhanced.TomasiniWalkForwardResult`
+- `walk_forward_validator_enhanced.TomasiniWalkForwardValidator`
+- `app.backtesting.base_engine.BaseBacktestEngine`
+- `app.backtesting.base_engine.BacktestState`
+- `app.backtesting.base_engine.EngineType`
+- `app.backtesting.base_engine.ExecutionType`
+- `app.backtesting.base_engine.ExecutionResult`
+- `app.backtesting.base_engine.Position`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

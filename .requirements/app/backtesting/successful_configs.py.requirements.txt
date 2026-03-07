@@ -1,0 +1,38 @@
+# Requirements Document: backtesting/successful_configs.py
+
+## 1. Module Overview
+Módulo para gestionar configuraciones exitosas de backtests.
+
+Permite:
+- Guardar configuraciones que han demostrado buena performance
+- Cargar configuraciones guardadas para reutilizar
+- Comparar configuraciones por métricas
+- Gestionar historial de configuraciones exitosas
+
+## 2. Dependencies
+- `json`
+- `logging`
+- `datetime.datetime`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Union`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SuccessfulConfigManager`: Must conform to application domain models.
+### Public Functions
+- `save_config()`: Must return strictly typed objects.
+- `load_config()`: Must return strictly typed objects.
+- `list_configs()`: Must return strictly typed objects.
+- `delete_config()`: Must return strictly typed objects.
+- `get_config_for_runner()`: Must return strictly typed objects.
+- `compare_configs()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

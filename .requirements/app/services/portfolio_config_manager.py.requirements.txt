@@ -1,0 +1,44 @@
+# Requirements Document: services/portfolio_config_manager.py
+
+## 1. Module Overview
+Portfolio Configuration Manager.
+
+Manages automated sector allocation, market type filtering, and strategy
+capital allocation based on portfolio.yaml configuration.
+
+## 2. Dependencies
+- `logging`
+- `decimal.Decimal`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Set`
+- `yaml`
+- `app.services.multi_strategy_allocation.MultiStrategyAllocationManager`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SectorFilter`: Must conform to application domain models.
+- `PortfolioConfigManager`: Must conform to application domain models.
+### Public Functions
+- `get_portfolio_config_manager()`: Must return strictly typed objects.
+- `symbol_belongs_to_sector()`: Must return strictly typed objects.
+- `filter_symbols_by_sector()`: Must return strictly typed objects.
+- `load_config()`: Must return strictly typed objects.
+- `get_strategy_sectors()`: Must return strictly typed objects.
+- `get_strategy_market_types()`: Must return strictly typed objects.
+- `get_strategy_symbols()`: Must return strictly typed objects.
+- `should_filter_symbol()`: Must return strictly typed objects.
+- `get_allocation_manager()`: Must return strictly typed objects.
+- `get_rebalancing_config()`: Must return strictly typed objects.
+- `get_reporting_config()`: Must return strictly typed objects.
+- `update_total_capital()`: Must return strictly typed objects.
+- `get_enabled_strategies()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

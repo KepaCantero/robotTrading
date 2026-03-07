@@ -1,0 +1,45 @@
+# Requirements Document: domain/strategies/low_beta_screener.py
+
+## 1. Module Overview
+Low Beta Screener - Filtrado de Acciones por Volatilidad
+
+Implementa screening de acciones basado en:
+- Volatilidad histórica máxima
+- Beta máximo
+- Riesgo downside
+- Sortino ratio mínimo
+- Máximo drawdown tolerado
+- Sectores defensivos
+- Scores de baja volatilidad
+
+SOLID Principles:
+- Single Responsibility: Solo se encarga de screening
+- Open/Closed: Extensible con nuevos filtros
+- Dependency Inversion: Depende de abstracciones (models)
+
+## 2. Dependencies
+- `logging`
+- `time`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `models.LowVolatilityProfile`
+- `models.LowVolatilityScreeningCriteria`
+- `models.LowVolatilityStock`
+- `models.LowVolatilityStrategyConfig`
+- `models.ScreeningResult`
+- `models.SectorDefensiveLevel`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `LowBetaScreener`: Must conform to application domain models.
+### Public Functions
+- `screen()`: Must return strictly typed objects.
+- `get_sector_defensive_level()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

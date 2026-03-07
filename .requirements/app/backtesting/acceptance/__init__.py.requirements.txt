@@ -1,0 +1,29 @@
+# Requirements Document: backtesting/acceptance/__init__.py
+
+## 1. Module Overview
+Acceptance Criteria Validation Services.
+
+This module contains specialized validator services that follow the
+Single Responsibility Principle (SOL-001). Each validator handles
+one specific criterion or concern for strategy acceptance.
+
+## 2. Dependencies
+- `benchmark_validator.BenchmarkComparisonValidator`
+- `drawdown_validator.DrawdownValidator`
+- `models.AcceptanceReport`
+- `models.CriterionResult`
+- `models.VerdictStatus`
+- `monte_carlo_validator.MonteCarloValidator`
+- `profit_factor_validator.ProfitFactorValidator`
+- `rejection_checker.RejectionCriteriaChecker`
+- `scoring_service.ScoringService`
+- `sharpe_validator.SharpeValidator`
+- `verdict_determiner.VerdictDeterminer`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

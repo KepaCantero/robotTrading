@@ -1,0 +1,34 @@
+# Requirements Document: services/external_integrations/questdb_connector.py
+
+## 1. Module Overview
+T17.1.1: QuestDBConnector - Time-series database integration
+
+QuestDB is a high-performance time-series database for storing market data,
+trades, and performance metrics. Uses ILP (Influx Line Protocol) for high-throughput writes.
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `aiohttp`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TimeSeriesData`: Must conform to application domain models.
+- `TradeRecord`: Must conform to application domain models.
+- `QuestDBConnector`: Must conform to application domain models.
+### Public Functions
+- `get_questdb_connector()`: Must return strictly typed objects.
+- `get_connection_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

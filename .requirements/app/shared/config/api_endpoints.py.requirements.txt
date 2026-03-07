@@ -1,0 +1,35 @@
+# Requirements Document: shared/config/api_endpoints.py
+
+## 1. Module Overview
+API Endpoints Configuration
+
+Centralizes all external API URLs to avoid hardcoding.
+Load from environment variables with sensible defaults.
+
+Usage:
+    from app.shared.config.api_endpoints import APIEndpoints
+
+    url = APIEndpoints.ALPACA_PAPER
+    url = APIEndpoints.get_yahoo_finance_url(symbol)
+
+## 2. Dependencies
+- `os`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `typing.Dict`
+- `typing.Optional`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `APIEndpoints`: Must conform to application domain models.
+### Public Functions
+- `get_yahoo_finance_url()`: Must return strictly typed objects.
+- `get_boe_exchange_rate_url()`: Must return strictly typed objects.
+- `get_ecb_exchange_rate_url()`: Must return strictly typed objects.
+- `from_env()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

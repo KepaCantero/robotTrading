@@ -1,0 +1,59 @@
+# Requirements Document: backtesting/validation/cross_validation.py
+
+## 1. Module Overview
+Purged Cross-Validation for Financial Time Series (López de Prado Chapter 4).
+
+Prevents look-ahead bias by purging training samples that overlap with test period
+based on event timestamps and their exit times (t1).
+
+Key Concepts:
+- Purge: Remove training samples that overlap with test period
+- Embargo: Add buffer period after test set using t1 (exit times)
+- Event-aware: Uses actual event lifetimes (t1) rather than fixed windows
+
+This implementation differs from standard PurgedKFold by:
+1. Using event-based embargo (t1 exit times from triple barrier)
+2. Accounting for overlapping samples based on actual event durations
+3. Following López de Prado's Chapter 4 methodology more closely
+
+Reference:
+    "Advances in Financial Machine Learning" by Marcos López de Prado
+    Chapter 4, Section 4.4-4.5: Cross-Validation in Finance
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Generator`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `typing.Union`
+- `numpy`
+- `pandas`
+- `sklearn.model_selection.KFold`
+- `sklearn.metrics.accuracy_score`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PurgedCVConfig`: Must conform to application domain models.
+- `PurgedSplitResult`: Must conform to application domain models.
+- `PurgedKFold`: Must conform to application domain models.
+- `PurgedTimeSeriesSplit`: Must conform to application domain models.
+### Public Functions
+- `cv_score()`: Must return strictly typed objects.
+- `get_purged_cv()`: Must return strictly typed objects.
+- `split()`: Must return strictly typed objects.
+- `get_n_splits()`: Must return strictly typed objects.
+- `get_split_summary()`: Must return strictly typed objects.
+- `validate_no_leakage()`: Must return strictly typed objects.
+- `split()`: Must return strictly typed objects.
+- `get_n_splits()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

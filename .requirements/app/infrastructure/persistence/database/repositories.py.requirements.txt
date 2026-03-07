@@ -1,0 +1,94 @@
+# Requirements Document: infrastructure/persistence/database/repositories.py
+
+## 1. Module Overview
+Repository Pattern Implementation for Database Access
+TASK-6: Configuración de base de datos
+
+## 2. Dependencies
+- `__future__.annotations`
+- `uuid`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Generic`
+- `typing.TypeVar`
+- `sqlalchemy.and_`
+- `sqlalchemy.func`
+- `sqlalchemy.exc.DatabaseError`
+- `sqlalchemy.exc.DataError`
+- `sqlalchemy.exc.IntegrityError`
+- `sqlalchemy.exc.OperationalError`
+- `sqlalchemy.exc.ProgrammingError`
+- `sqlalchemy.orm.Session`
+- `structlog.get_logger`
+- `app.shared.exceptions.exceptions.raise_database_error`
+- `app.infrastructure.persistence.models.Asset`
+- `app.infrastructure.persistence.models.Backtest`
+- `app.infrastructure.persistence.models.MarketData`
+- `app.infrastructure.persistence.models.Portfolio`
+- `app.infrastructure.persistence.models.Position`
+- `app.infrastructure.persistence.models.RiskMetrics`
+- `app.infrastructure.persistence.models.Signal`
+- `app.infrastructure.persistence.models.SystemLog`
+- `app.infrastructure.persistence.models.Trade`
+- `app.infrastructure.persistence.models.User`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BaseRepository`: Must conform to application domain models.
+- `UserRepository`: Must conform to application domain models.
+- `PortfolioRepository`: Must conform to application domain models.
+- `AssetRepository`: Must conform to application domain models.
+- `PositionRepository`: Must conform to application domain models.
+- `TradeRepository`: Must conform to application domain models.
+- `MarketDataRepository`: Must conform to application domain models.
+- `SignalRepository`: Must conform to application domain models.
+- `BacktestRepository`: Must conform to application domain models.
+- `RiskMetricsRepository`: Must conform to application domain models.
+- `SystemLogRepository`: Must conform to application domain models.
+### Public Functions
+- `create()`: Must return strictly typed objects.
+- `get_by_id()`: Must return strictly typed objects.
+- `get_all()`: Must return strictly typed objects.
+- `update()`: Must return strictly typed objects.
+- `delete()`: Must return strictly typed objects.
+- `count()`: Must return strictly typed objects.
+- `get_by_username()`: Must return strictly typed objects.
+- `get_by_email()`: Must return strictly typed objects.
+- `get_active_users()`: Must return strictly typed objects.
+- `get_by_user()`: Must return strictly typed objects.
+- `get_active_by_user()`: Must return strictly typed objects.
+- `update_total_value()`: Must return strictly typed objects.
+- `get_by_symbol()`: Must return strictly typed objects.
+- `get_by_asset_class()`: Must return strictly typed objects.
+- `get_active_assets()`: Must return strictly typed objects.
+- `search_by_name()`: Must return strictly typed objects.
+- `get_by_portfolio()`: Must return strictly typed objects.
+- `get_by_portfolio_and_asset()`: Must return strictly typed objects.
+- `get_non_zero_positions()`: Must return strictly typed objects.
+- `update_position_price()`: Must return strictly typed objects.
+- `get_by_portfolio()`: Must return strictly typed objects.
+- `get_by_asset()`: Must return strictly typed objects.
+- `get_by_date_range()`: Must return strictly typed objects.
+- `get_trade_summary()`: Must return strictly typed objects.
+- `get_by_asset_and_date_range()`: Must return strictly typed objects.
+- `get_latest_price()`: Must return strictly typed objects.
+- `bulk_insert()`: Must return strictly typed objects.
+- `get_by_strategy()`: Must return strictly typed objects.
+- `get_by_asset()`: Must return strictly typed objects.
+- `get_recent_signals()`: Must return strictly typed objects.
+- `get_by_portfolio()`: Must return strictly typed objects.
+- `get_by_strategy()`: Must return strictly typed objects.
+- `get_completed_backtests()`: Must return strictly typed objects.
+- `get_latest_by_portfolio()`: Must return strictly typed objects.
+- `get_by_date_range()`: Must return strictly typed objects.
+- `get_by_level()`: Must return strictly typed objects.
+- `get_by_service()`: Must return strictly typed objects.
+- `get_recent_logs()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,54 @@
+# Requirements Document: shared/performance/statsmodels_fallback.py
+
+## 1. Module Overview
+Fallback implementations for statsmodels functions using scipy/numpy.
+
+This module provides fallback implementations when statsmodels is not available.
+It implements the most commonly used statistical tests from statsmodels using
+scipy, numpy, and pandas.
+
+All fallback implementations log warnings to indicate they are being used.
+
+## 2. Dependencies
+- `logging`
+- `warnings`
+- `typing.Dict`
+- `typing.Optional`
+- `typing.Tuple`
+- `typing.Union`
+- `numpy`
+- `pandas`
+- `contextlib`
+- `scipy.stats.chi2`
+- `matplotlib.pyplot`
+- `scipy.stats.f`
+- `scipy.stats.f`
+- `scipy.stats.t`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `OLS`: Must conform to application domain models.
+- `AutoReg`: Must conform to application domain models.
+- `AutoRegResults`: Must conform to application domain models.
+- `DecomposeResult`: Must conform to application domain models.
+- `CointResult`: Must conform to application domain models.
+### Public Functions
+- `adfuller()`: Must return strictly typed objects.
+- `coint()`: Must return strictly typed objects.
+- `seasonal_decompose()`: Must return strictly typed objects.
+- `acorr_ljungbox()`: Must return strictly typed objects.
+- `pacf()`: Must return strictly typed objects.
+- `grangercausalitytests()`: Must return strictly typed objects.
+- `kpss()`: Must return strictly typed objects.
+- `fit()`: Must return strictly typed objects.
+- `summary()`: Must return strictly typed objects.
+- `fit()`: Must return strictly typed objects.
+- `summary()`: Must return strictly typed objects.
+- `predict()`: Must return strictly typed objects.
+- `plot()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

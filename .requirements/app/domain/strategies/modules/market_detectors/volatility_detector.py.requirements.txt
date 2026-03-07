@@ -1,0 +1,24 @@
+# Requirements Document: domain/strategies/modules/market_detectors/volatility_detector.py
+
+## 1. Module Overview
+VolatilityDetector - Módulo independiente para detectar régimen de volatilidad.
+
+## 2. Dependencies
+- `bisect`
+- `logging`
+- `typing.Dict`
+- `typing.List`
+- `base_detector.BaseMarketDetector`
+- `numpy`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `VolatilityDetector`: Must conform to application domain models.
+### Public Functions
+- `detect()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

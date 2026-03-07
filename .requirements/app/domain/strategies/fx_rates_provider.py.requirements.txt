@@ -1,0 +1,91 @@
+# Requirements Document: domain/strategies/fx_rates_provider.py
+
+## 1. Module Overview
+FX Rate Provider for Carry Trade Strategy.
+
+This module defines the provider interface and implementations for accessing
+FX market data including spot rates, forward rates, and interest rates.
+
+The provider abstraction allows for multiple data sources:
+- In-memory provider for testing and backtesting
+- API-based providers for live trading (future extension)
+- Database providers for historical analysis (future extension)
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `time`
+- `abc.abstractmethod`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.date`
+- `decimal.Decimal`
+- `typing.Optional`
+- `typing.Protocol`
+- `app.shared.config.centralized_config.get_config`
+- `app.domain.strategies.fx_carry_trade.models.FXPair`
+- `app.domain.strategies.fx_carry_trade.models.FXRateQuote`
+- `app.domain.strategies.fx_carry_trade.models.InterestRateQuote`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `FXDataSource`: Must conform to application domain models.
+- `FXInterestRateProviderProtocol`: Must conform to application domain models.
+- `FXRateProvider`: Must conform to application domain models.
+- `InMemoryFXRateProvider`: Must conform to application domain models.
+- `CompositeFXRateProvider`: Must conform to application domain models.
+- `MockFXDataSource`: Must conform to application domain models.
+- `CachedFXRateProvider`: Must conform to application domain models.
+- `FXRateProviderImpl`: Must conform to application domain models.
+- `FXInterestRateProviderImpl`: Must conform to application domain models.
+### Public Functions
+- `get_rate()`: Must return strictly typed objects.
+- `get_forward_points()`: Must return strictly typed objects.
+- `get_interest_rate()`: Must return strictly typed objects.
+- `get_quote()`: Must return strictly typed objects.
+- `get_spot_rate()`: Must return strictly typed objects.
+- `get_forward_rate()`: Must return strictly typed objects.
+- `get_interest_rate()`: Must return strictly typed objects.
+- `get_available_pairs()`: Must return strictly typed objects.
+- `get_available_currencies()`: Must return strictly typed objects.
+- `spot_rates()`: Must return strictly typed objects.
+- `forward_rates()`: Must return strictly typed objects.
+- `interest_rates()`: Must return strictly typed objects.
+- `add_spot_rate()`: Must return strictly typed objects.
+- `add_forward_rate()`: Must return strictly typed objects.
+- `add_interest_rate()`: Must return strictly typed objects.
+- `get_spot_rate()`: Must return strictly typed objects.
+- `get_forward_rate()`: Must return strictly typed objects.
+- `get_interest_rate()`: Must return strictly typed objects.
+- `get_available_pairs()`: Must return strictly typed objects.
+- `get_available_currencies()`: Must return strictly typed objects.
+- `get_rate_quote()`: Must return strictly typed objects.
+- `get_fx_summary()`: Must return strictly typed objects.
+- `get_interest_rate_summary()`: Must return strictly typed objects.
+- `clear_data()`: Must return strictly typed objects.
+- `get_spot_rate()`: Must return strictly typed objects.
+- `get_forward_rate()`: Must return strictly typed objects.
+- `get_interest_rate()`: Must return strictly typed objects.
+- `get_available_pairs()`: Must return strictly typed objects.
+- `get_available_currencies()`: Must return strictly typed objects.
+- `get_rate()`: Must return strictly typed objects.
+- `get_forward_points()`: Must return strictly typed objects.
+- `get_interest_rate()`: Must return strictly typed objects.
+- `get_spot_rate()`: Must return strictly typed objects.
+- `get_forward_rate()`: Must return strictly typed objects.
+- `get_interest_rate()`: Must return strictly typed objects.
+- `get_available_pairs()`: Must return strictly typed objects.
+- `get_available_currencies()`: Must return strictly typed objects.
+- `clear_cache()`: Must return strictly typed objects.
+- `get_spot_rate()`: Must return strictly typed objects.
+- `get_forward_rate()`: Must return strictly typed objects.
+- `get_interest_rate()`: Must return strictly typed objects.
+- `get_available_pairs()`: Must return strictly typed objects.
+- `get_available_currencies()`: Must return strictly typed objects.
+- `get_quote()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

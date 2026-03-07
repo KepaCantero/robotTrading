@@ -1,0 +1,60 @@
+# Requirements Document: domain/trading/market_making/avellaneda_stoikov/as_model.py
+
+## 1. Module Overview
+Avellaneda-Stoikov Market Making Model.
+
+This module implements the core Avellaneda-Stoikov model for optimal market making.
+The model calculates reservation prices and optimal spreads that account for
+inventory risk and adverse selection.
+
+Key Equations:
+
+1. Reservation Price (inventory-adjusted mid):
+   r(s) = s - (γ * σ² / k) * q * (T - t) / T
+
+   Where:
+   - s: Current mid price
+   - γ (gamma): Risk aversion parameter
+   - σ (sigma): Volatility
+   - k: Order book depth parameter
+   - q: Current inventory
+   - T: Total time horizon
+   - t: Current time
+
+2. Optimal Spread:
+   δ* = (γ * σ² / k) * (T - t) + (2/γ) * ln(1 + γ/2)
+
+   Components:
+   - Inventory risk: (γ * σ² / k) * (T - t)
+   - Adverse selection: (2/γ) * ln(1 + γ/2)
+
+3. Bid/Ask Quotes:
+   - Bid: r(s) - δ*/2
+   - Ask: r(s) + δ*/2
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `math`
+- `decimal.Decimal`
+- `app.domain.trading.market_making.avellaneda_stoikov.models.ASConfig`
+- `app.domain.trading.market_making.avellaneda_stoikov.models.ASQuote`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `AvellanedaStoikovModel`: Must conform to application domain models.
+### Public Functions
+- `calculate_inventory_risk()`: Must return strictly typed objects.
+- `calculate_reservation_price()`: Must return strictly typed objects.
+- `calculate_optimal_spread()`: Must return strictly typed objects.
+- `calculate_inventory_skew()`: Must return strictly typed objects.
+- `calculate_quotes()`: Must return strictly typed objects.
+- `get_model_state()`: Must return strictly typed objects.
+- `update_volatility()`: Must return strictly typed objects.
+- `update_risk_aversion()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

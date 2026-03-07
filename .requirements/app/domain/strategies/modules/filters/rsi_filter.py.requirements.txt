@@ -1,0 +1,40 @@
+# Requirements Document: domain/strategies/modules/filters/rsi_filter.py
+
+## 1. Module Overview
+RSIFilter - Filtro de momentum relativo usando RSI.
+
+Standard RSI Strategy (CORRECTED):
+- BUY when RSI crosses ABOVE buy_threshold (oversold reversal confirmation, typically > 30)
+- SELL when RSI crosses BELOW sell_threshold (overbought reversal confirmation, typically < 70)
+
+CORRECTED LOGIC:
+- Track previous RSI value
+- BUY signal: previous_rsi <= buy_threshold AND current_rsi > buy_threshold (crossover above)
+- SELL signal: previous_rsi >= sell_threshold AND current_rsi < sell_threshold (crossover below)
+- FALLBACK (no history): use stricter threshold (buy_threshold - 2) to be more conservative
+
+Configuration:
+This filter now uses centralized configuration from config/indicators.yaml:
+- RSI thresholds (30, 70, 45, 55) are loaded from config
+- Adaptive thresholds for market regimes are loaded from config
+- Period settings are loaded from config
+
+## 2. Dependencies
+- `logging`
+- `typing.Dict`
+- `typing.Optional`
+- `base_filter.BaseFilter`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RSIFilter`: Must conform to application domain models.
+### Public Functions
+- `clear_rsi_history()`: Must return strictly typed objects.
+- `get_rsi_history()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

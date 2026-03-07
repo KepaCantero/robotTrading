@@ -1,0 +1,32 @@
+# Requirements Document: services/hurst_analysis/historian.py
+
+## 1. Module Overview
+Historical data tracker for Hurst exponent values.
+
+This module implements the Single Responsibility Principle by focusing
+solely on tracking historical Hurst exponent values for regime change detection.
+
+The tracker maintains a rolling history for each symbol to support
+regime change detection and analysis.
+
+## 2. Dependencies
+- `logging`
+- `collections.defaultdict`
+- `datetime.datetime`
+- `typing.Final`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `HistoricalDataTracker`: Must conform to application domain models.
+### Public Functions
+- `store()`: Must return strictly typed objects.
+- `get_history()`: Must return strictly typed objects.
+- `get_all_symbols()`: Must return strictly typed objects.
+- `clear_history()`: Must return strictly typed objects.
+- `clear_all()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

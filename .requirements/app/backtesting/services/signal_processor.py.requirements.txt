@@ -1,0 +1,35 @@
+# Requirements Document: backtesting/services/signal_processor.py
+
+## 1. Module Overview
+Signal Processor service for backtesting.
+
+This service is responsible for validating trading signals and deciding
+whether to execute them based on risk checks and profitability validation.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `app.backtesting.models.BacktestConfig`
+- `app.domain.services.compliance.compliance_engine.ComplianceEngine`
+- `app.domain.models.signal.Signal`
+- `app.domain.models.signal.SignalType`
+- `app.domain.services.trading_validators.TradingValidator`
+- `app.backtesting.engine.get_price`
+- `app.backtesting.engine.get_price`
+- `app.backtesting.engine.get_price`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SignalProcessor`: Must conform to application domain models.
+### Public Functions
+- `process_signal()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

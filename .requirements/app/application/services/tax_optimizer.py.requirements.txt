@@ -1,0 +1,42 @@
+# Requirements Document: application/services/tax_optimizer.py
+
+## 1. Module Overview
+Tax Optimization Service
+
+Provides tax optimization based on tax residence.
+Implements different tax strategies for different jurisdictions.
+
+Reference: Rule 46-lopez-de-prado-machine-learning-asset-managers.md
+Reference: Tax optimization for algorithmic trading
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.date`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `enum.Enum`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TaxMethod`: Must conform to application domain models.
+- `TaxJurisdiction`: Must conform to application domain models.
+- `TaxLot`: Must conform to application domain models.
+- `TaxCalculation`: Must conform to application domain models.
+- `TaxOptimizer`: Must conform to application domain models.
+### Public Functions
+- `is_long_term()`: Must return strictly typed objects.
+- `realized_pnl()`: Must return strictly typed objects.
+- `configure_for_residence()`: Must return strictly typed objects.
+- `calculate_tax_liability()`: Must return strictly typed objects.
+- `find_tax_loss_harvesting_opportunities()`: Must return strictly typed objects.
+- `should_harvest_loss()`: Must return strictly typed objects.
+- `optimize_dividend_tax()`: Must return strictly typed objects.
+- `calculate_after_tax_return()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,55 @@
+# Requirements Document: backtesting/survivorship_bias_corrector.py
+
+## 1. Module Overview
+Survivorship Bias Correction for Backtesting
+
+This module implements survivorship bias correction as described in
+Ernest Chan's "Algorithmic Trading" (Chapter 3).
+
+Survivorship bias occurs when backtesting only includes currently
+traded stocks, ignoring those that were delisted, bankrupt, or merged.
+This leads to inflated performance estimates.
+
+Key Features:
+- Delisted stock simulation
+- Point-in-time universe reconstruction
+- Bankruptcy adjustment factors
+- Merger/acquisition handling
+
+Reference:
+    "Algorithmic Trading" by Ernest P. Chan
+    Chapter 3: Backtesting
+    Section: Survivorship Bias
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `pathlib.Path`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `pandas`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DelistedStockInfo`: Must conform to application domain models.
+- `SurvivorshipAdjustment`: Must conform to application domain models.
+- `SurvivorshipBiasCorrector`: Must conform to application domain models.
+### Public Functions
+- `adjust_backtest_for_survivorship()`: Must return strictly typed objects.
+- `calculate_survivorship_bias()`: Must return strictly typed objects.
+- `adjust_returns_for_survivorship()`: Must return strictly typed objects.
+- `simulate_delisted_stocks()`: Must return strictly typed objects.
+- `load_delisting_data()`: Must return strictly typed objects.
+- `create_point_in_time_universe()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

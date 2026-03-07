@@ -1,0 +1,45 @@
+# Requirements Document: services/risk_scaling_application/limit_adjuster.py
+
+## 1. Module Overview
+T8.1 LimitAdjuster - Position size and leverage limit enforcement
+
+Manages position sizing constraints based on scaling adjustments.
+
+Responsibilities:
+- Adjust position limits based on scaling factors
+- Validate limit breaches
+- Apply leverage adjustments
+- Enforce hard stops
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `app.services.portfolio_constructor.AllocationWeight`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `AdjustedLimit`: Must conform to application domain models.
+- `LimitBreach`: Must conform to application domain models.
+- `LimitAdjuster`: Must conform to application domain models.
+### Public Functions
+- `get_limit_adjuster()`: Must return strictly typed objects.
+- `adjust_position_limits()`: Must return strictly typed objects.
+- `detect_limit_breaches()`: Must return strictly typed objects.
+- `apply_leverage_adjustment()`: Must return strictly typed objects.
+- `validate_position_within_limits()`: Must return strictly typed objects.
+- `validate_leverage_within_limits()`: Must return strictly typed objects.
+- `enforce_hard_stops()`: Must return strictly typed objects.
+- `set_position_limit()`: Must return strictly typed objects.
+- `set_max_leverage()`: Must return strictly typed objects.
+- `set_max_allocation()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

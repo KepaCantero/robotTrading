@@ -1,0 +1,37 @@
+# Requirements Document: backtesting/meta_analyzer/audit_trail.py
+
+## 1. Module Overview
+AuditTrail - Auditoría completa y reproducibilidad de backtests.
+
+Permite:
+- Generar hash único por configuración y versión
+- Registrar metadatos de ejecución
+- Verificar reproducibilidad
+
+## 2. Dependencies
+- `hashlib`
+- `json`
+- `logging`
+- `subprocess`
+- `datetime.datetime`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `aiofiles`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `AuditTrail`: Must conform to application domain models.
+### Public Functions
+- `generate_hash()`: Must return strictly typed objects.
+- `save_audit_record_sync()`: Must return strictly typed objects.
+- `verify_reproducibility()`: Must return strictly typed objects.
+- `list_audit_records()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

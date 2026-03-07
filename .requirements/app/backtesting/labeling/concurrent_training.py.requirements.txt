@@ -1,0 +1,98 @@
+# Requirements Document: backtesting/labeling/concurrent_training.py
+
+## 1. Module Overview
+Concurrent Model Training for Financial ML
+
+Based on Marcos López de Prado's "Advances in Financial Machine Learning", Chapter 4 & 7.
+
+This module implements concurrent training of multiple models with proper
+handling of sample uniqueness and model ensembling.
+
+Key Concepts:
+1. Concurrent Training: Train multiple models in parallel
+2. Uniqueness-Weighted Ensembling: Weight models by sample uniqueness
+3. Sequential Model Training: Train models sequentially with purged data
+4. Ensemble Methods: Combine predictions from multiple models
+
+Why Concurrent Training:
+- Faster model development
+- Robustness through model diversity
+- Better handling of non-stationary data
+- Reduced overfitting through ensembling
+
+Ensemble Strategies:
+1. Simple Average: Equal weight to all models
+2. Weighted Average: Weight by performance or uniqueness
+3. Stacking: Use meta-model to combine predictions
+4. Voting: Majority vote for classification
+
+Example:
+    >>> from sklearn.ensemble import RandomForestClassifier
+    >>> from sklearn.linear_model import LogisticRegression
+    >>>
+    >>> models = {
+    ...     'rf': RandomForestClassifier(),
+    ...     'lr': LogisticRegression(),
+    ... }
+    >>>
+    >>> # Train concurrently
+    >>> trainer = ConcurrentModelTrainer()
+    >>> results = trainer.train_models_concurrent(
+    ...     models, X_train, y_train, events, labels
+    ... )
+    >>>
+    >>> # Ensemble predictions
+    >>> ensemble_pred = results.ensemble_predict(X_test)
+
+Note on ASYNC-001 (NOT APPLIED):
+    This module uses ProcessPoolExecutor for true parallelism across CPU cores,
+    which is appropriate for CPU-bound ML model training. Async/await would not
+    provide benefits here since the training operations are CPU-bound, not I/O-bound.
+    ProcessPoolExecutor correctly utilizes multiprocessing to avoid Python's GIL.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `concurrent.futures.ProcessPoolExecutor`
+- `concurrent.futures.as_completed`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `typing.Union`
+- `numpy`
+- `pandas`
+- `triple_barrier.calculate_sample_weights_uniqueness`
+- `time`
+- `sklearn.linear_model.LogisticRegression`
+- `meta_labeling_cv.PurgedKFold`
+- `sklearn.ensemble.RandomForestClassifier`
+- `sklearn.linear_model.LogisticRegression`
+- `xgboost.XGBClassifier`
+- `sklearn.ensemble.RandomForestClassifier`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ConcurrentTrainingError`: Must conform to application domain models.
+- `ModelTrainingError`: Must conform to application domain models.
+- `EnsembleError`: Must conform to application domain models.
+- `ConcurrentTrainingConfig`: Must conform to application domain models.
+- `ModelResult`: Must conform to application domain models.
+- `EnsembleResult`: Must conform to application domain models.
+- `ConcurrentModelTrainer`: Must conform to application domain models.
+- `SequentialModelTrainer`: Must conform to application domain models.
+### Public Functions
+- `train_models_concurrent()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `train_models_concurrent()`: Must return strictly typed objects.
+- `train_models_sequential()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

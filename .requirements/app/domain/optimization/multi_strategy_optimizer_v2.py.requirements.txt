@@ -1,0 +1,41 @@
+# Requirements Document: domain/optimization/multi_strategy_optimizer_v2.py
+
+## 1. Module Overview
+Multi-Strategy Automated Optimization System.
+
+Uses Optuna for hyperparameter optimization of multi-strategy backtesting.
+Includes walk-forward validation and Monte Carlo resampling.
+
+## 2. Dependencies
+- `csv`
+- `json`
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `optuna`
+- `app.backtesting.data_loader.DataLoader`
+- `app.backtesting.engines.multi_strategy_engine.MultiStrategyBacktester`
+- `app.domain.models.market_data.Quote`
+- `app.services.multi_strategy_allocation.MultiStrategyAllocationManager`
+- `app.services.portfolio_config_manager.get_portfolio_config_manager`
+- `app.domain.strategies.mean_reversion.MeanReversionStrategy`
+- `app.domain.strategies.momentum.MomentumStrategy`
+- `app.domain.strategies.pairs_trading.PairsTradingStrategy`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MultiStrategyOptimizerV2`: Must conform to application domain models.
+### Public Functions
+- `objective_function()`: Must return strictly typed objects.
+- `run_optimization()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

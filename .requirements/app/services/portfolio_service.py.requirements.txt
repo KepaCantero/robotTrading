@@ -1,0 +1,55 @@
+# Requirements Document: services/portfolio_service.py
+
+## 1. Module Overview
+Refactored Portfolio Service - TASK-15: Refactorización de Servicios
+
+Este módulo implementa el servicio de portafolio refactorizado,
+utilizando el gestor centralizado de circuit breakers y el gestor de riesgos.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `app.shared.config.centralized_config.get_config`
+- `app.domain.models.portfolio.AssetClass`
+- `app.domain.models.portfolio.AssetUniverse`
+- `app.domain.models.portfolio.MarketRegime`
+- `app.domain.models.portfolio.MarketRegimeData`
+- `app.domain.models.portfolio.Portfolio`
+- `app.domain.models.portfolio.PortfolioProvider`
+- `app.domain.models.portfolio.Position`
+- `app.services.api_circuit_breaker.CircuitBreakerManager`
+- `app.services.api_circuit_breaker.CircuitBreakerType`
+- `app.services.country_diversification_validator.CountryDiversificationValidator`
+- `app.services.currency_hedging_engine.CurrencyHedgingEngine`
+- `app.services.portfolio_risk_manager.PortfolioRiskManager`
+- `app.services.sector_diversification_validator.SectorDiversificationValidator`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PortfolioService`: Must conform to application domain models.
+### Public Functions
+- `get_service_statistics()`: Must return strictly typed objects.
+- `get_circuit_breaker_status()`: Must return strictly typed objects.
+- `get_risk_assessment()`: Must return strictly typed objects.
+- `reset_circuit_breakers()`: Must return strictly typed objects.
+- `reset_statistics()`: Must return strictly typed objects.
+- `reset_circuit_breaker()`: Must return strictly typed objects.
+- `get_portfolio_summary()`: Must return strictly typed objects.
+- `get_unhedged_currency_exposure()`: Must return strictly typed objects.
+- `get_hedging_statistics()`: Must return strictly typed objects.
+- `get_sector_allocation()`: Must return strictly typed objects.
+- `get_country_allocation()`: Must return strictly typed objects.
+- `get_diversification_status()`: Must return strictly typed objects.
+- `suggest_rebalancing()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,39 @@
+# Requirements Document: backtesting/services/__init__.py
+
+## 1. Module Overview
+Profile Batch Backtesting Services
+
+This package contains service classes extracted from ProfileBatchBacktester
+following the Single Responsibility Principle.
+
+Services:
+- ConfigurationService: Load and validate configurations
+- ProfileGenerationService: Generate profile combinations
+- BatchExecutionService: Execute batch tests (parallel/sequential)
+- DatabaseService: Store and query results
+- MetricsCalculationService: Calculate improvements and comparisons
+- FallbackTracker: Track fallback metrics thread-safely
+- ReportGenerationService: Generate HTML reports and exports
+- models: Data models for database and in-memory results
+
+## 2. Dependencies
+- `__future__.annotations`
+- `app.backtesting.services.batch_execution_service.BatchExecutionService`
+- `app.backtesting.services.configuration_service.ConfigurationService`
+- `app.backtesting.services.database_service.DatabaseService`
+- `app.backtesting.services.fallback_tracker.FallbackTracker`
+- `app.backtesting.services.metrics_service.MetricsCalculationService`
+- `app.backtesting.services.models.BaselineOptimizationComparison`
+- `app.backtesting.services.models.OptimizedStrategy`
+- `app.backtesting.services.models.ProfileResult`
+- `app.backtesting.services.models.ProfileResultDB`
+- `app.backtesting.services.profile_generation_service.ProfileGenerationService`
+- `app.backtesting.services.report_generation_service.ReportGenerationService`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

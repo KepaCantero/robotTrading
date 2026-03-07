@@ -1,0 +1,54 @@
+# Requirements Document: domain/strategies/position_manager.py
+
+## 1. Module Overview
+Position Manager - Gestión de Posiciones Covered Call
+
+Implementa gestión completa de posiciones covered call:
+- Apertura de nuevas posiciones
+- Monitoreo de posiciones existentes
+- Cierre de posiciones
+- Cálculo de P&L
+- Evaluación de probabilidad de assignment
+
+SOLID Principles:
+- Single Responsibility: Solo gestión de posiciones, no análisis
+- Open/Closed: Extensible con nuevos tipos de gestión
+
+## 2. Dependencies
+- `logging`
+- `datetime.date`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `greeks_calculator.GreeksCalculator`
+- `models.AssignmentProbability`
+- `models.CallOption`
+- `models.CoveredCallConfig`
+- `models.CoveredCallPosition`
+- `models.RollDecision`
+- `models.RollType`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PositionManager`: Must conform to application domain models.
+### Public Functions
+- `open_position()`: Must return strictly typed objects.
+- `update_position()`: Must return strictly typed objects.
+- `close_position()`: Must return strictly typed objects.
+- `should_roll_position()`: Must return strictly typed objects.
+- `get_position()`: Must return strictly typed objects.
+- `get_all_positions()`: Must return strictly typed objects.
+- `get_positions_by_symbol()`: Must return strictly typed objects.
+- `get_expiring_positions()`: Must return strictly typed objects.
+- `get_itm_positions()`: Must return strictly typed objects.
+- `calculate_portfolio_pnl()`: Must return strictly typed objects.
+- `get_position_metrics()`: Must return strictly typed objects.
+- `record_assignment()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

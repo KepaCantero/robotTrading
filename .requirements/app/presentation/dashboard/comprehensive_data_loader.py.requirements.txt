@@ -1,0 +1,40 @@
+# Requirements Document: presentation/dashboard/comprehensive_data_loader.py
+
+## 1. Module Overview
+Data Loader para Comprehensive Backtest Results
+
+Carga resultados de comprehensive_backtest para el dashboard principal.
+
+## 2. Dependencies
+- `json`
+- `logging`
+- `datetime.datetime`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `pandas`
+- `pathlib.Path`
+- `ast`
+- `ast`
+- `ast`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ComprehensiveBacktestLoader`: Must conform to application domain models.
+### Public Functions
+- `load_all_results()`: Must return strictly typed objects.
+- `load_latest_results()`: Must return strictly typed objects.
+- `load_as_dataframe()`: Must return strictly typed objects.
+- `get_results_by_type()`: Must return strictly typed objects.
+- `get_best_result()`: Must return strictly typed objects.
+- `get_summary_stats()`: Must return strictly typed objects.
+- `load_meta_analysis_results()`: Must return strictly typed objects.
+- `get_meta_analysis_summary()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

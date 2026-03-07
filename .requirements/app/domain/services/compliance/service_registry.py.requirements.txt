@@ -1,0 +1,75 @@
+# Requirements Document: domain/services/compliance/service_registry.py
+
+## 1. Module Overview
+Compliance Service Registry
+============================
+
+Central registration point for all 12 compliance services.
+Implements lazy initialization and thread-safe singleton pattern.
+
+Services Registered:
+1.  Ernest Chan (Rule 1)      - Regime Detection, Execution, Optimization
+2.  Narang (Rule 2)           - Alpha Models, Risk Models, Transaction Costs
+3.  López de Prado (Rule 3)   - Meta-Labeling, Purged CV
+4.  Harris (Rule 6)           - Microstructure, Order Book Analysis
+5.  O'Hara (Rule 7)           - Order Flow, Liquidity, Price Discovery
+6.  Hull (Rule 13)            - Greeks, VaR, Stress Testing
+7.  Google SRE (Rule 20)      - Golden Signals, Trading Metrics
+
+Author: Compliance Integration System
+Date: 2026-02-03
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `threading`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.Optional`
+- `app.services.regime_detection_chan.get_regime_detector`
+- `app.domain.services.execution.algorithms.get_execution_algorithm`
+- `app.domain.services.execution.algorithms.get_execution_algorithm`
+- `app.domain.services.execution.algorithms.get_execution_algorithm`
+- `app.domain.services.execution.algorithms.get_execution_algorithm`
+- `app.services.optimization_chan.get_portfolio_optimizer`
+- `app.domain.strategies.alpha_models.get_alpha_model`
+- `app.services.risk_models_narang.get_risk_model`
+- `app.services.transaction_costs.get_transaction_cost_model`
+- `app.services.portfolio_construction_narang.get_portfolio_constructor`
+- `app.services.execution_narang.get_execution_engine`
+- `app.backtesting.labeling.meta_labeling.get_meta_labeling`
+- `app.backtesting.validation.cross_validation.PurgedKFold`
+- `app.engines.execution_engine.microstructure.harris_integration.get_harris_integrator`
+- `app.engines.execution_engine.microstructure.order_book_analyzer.get_order_book_analyzer`
+- `app.engines.execution_engine.microstructure.dark_pool_router.get_dark_pool_router`
+- `app.domain.market_analysis.microstructure.order_flow.get_order_flow_analyzer`
+- `app.domain.market_analysis.microstructure.liquidity.get_liquidity_analyzer`
+- `app.domain.market_analysis.microstructure.price_discovery.get_price_discovery_analyzer`
+- `app.domain.market_analysis.microstructure.trading_mechanisms.get_call_auction`
+- `app.engines.risk_engine.var_calculators.var_calculators.HistoricalVaRCalculator`
+- `app.engines.risk_engine.greeks_calculator.get_greeks_calculator`
+- `app.engines.risk_engine.stress_testers.advanced_stress_scenarios.get_advanced_stress_tester`
+- `app.sre.monitoring.golden_signals.get_golden_signals_monitor`
+- `app.sre.monitoring.trading_metrics.get_trading_metrics_monitor`
+- `app.sre.automation.toil_tracker.get_toil_tracker`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ComplianceServiceRegistry`: Must conform to application domain models.
+### Public Functions
+- `get_service_registry()`: Must return strictly typed objects.
+- `get_service()`: Must return strictly typed objects.
+- `getInstance()`: Must return strictly typed objects.
+- `resetInstance()`: Must return strictly typed objects.
+- `register_service()`: Must return strictly typed objects.
+- `get_service()`: Must return strictly typed objects.
+- `is_available()`: Must return strictly typed objects.
+- `get_all_services()`: Must return strictly typed objects.
+- `get_availability_report()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

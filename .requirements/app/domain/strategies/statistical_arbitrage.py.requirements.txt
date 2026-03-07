@@ -1,0 +1,47 @@
+# Requirements Document: domain/strategies/statistical_arbitrage.py
+
+## 1. Module Overview
+Statistical Arbitrage Strategy Domain Service
+
+Implements mean reversion strategies based on statistical analysis
+of price deviations from fundamental values.
+
+Reference: Rule 11-gray-vogel-quantitative-momentum.md (mean reversion concepts)
+Paper: Balakrishnan, D., et al. (2018). "Machine Learning for Statistical Arbitrage"
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `statsmodels.tsa.stattools.adfuller`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ReversionState`: Must conform to application domain models.
+- `ZScoreSignal`: Must conform to application domain models.
+- `BollingerBandSignal`: Must conform to application domain models.
+- `MeanReversionMetrics`: Must conform to application domain models.
+- `StatisticalArbitrage`: Must conform to application domain models.
+### Public Functions
+- `is_long()`: Must return strictly typed objects.
+- `is_short()`: Must return strictly typed objects.
+- `generate_zscore_signal()`: Must return strictly typed objects.
+- `generate_bollinger_signal()`: Must return strictly typed objects.
+- `calculate_half_life()`: Must return strictly typed objects.
+- `test_stationarity()`: Must return strictly typed objects.
+- `calculate_mean_reversion_metrics()`: Must return strictly typed objects.
+- `should_trade()`: Must return strictly typed objects.
+- `calculate_position_size()`: Must return strictly typed objects.
+- `generate_portfolio_signals()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

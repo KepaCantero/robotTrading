@@ -1,0 +1,57 @@
+# Requirements Document: shared/config/di_container.py
+
+## 1. Module Overview
+Dependency Injection Container
+
+This module provides a simple dependency injection container for managing
+application dependencies and their lifecycles.
+
+Reference: Rule 05-architecture.md, Rule 11-enterprise-architecture.md
+
+## 2. Dependencies
+- `inspect`
+- `typing.TYPE_CHECKING`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.Optional`
+- `typing.Type`
+- `typing.TypeVar`
+- `app.domain.strategies.ExecutionEngine`
+- `app.domain.strategies.StrategyConfigLoader`
+- `app.domain.strategies.StrategyLogger`
+- `app.domain.strategies.StrategyRegistry`
+- `app.infrastructure.providers.paper_trading.PaperTradingPortfolioProvider`
+- `app.services.portfolio_service.PortfolioService`
+- `app.domain.services.signals.scorer.SignalScorerService`
+- `app.domain.strategies.StrategyRegistry`
+- `app.domain.strategies.StrategyConfigLoader`
+- `app.domain.strategies.StrategyLogger`
+- `app.domain.strategies.ExecutionEngine`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DIContainer`: Must conform to application domain models.
+### Public Functions
+- `get_container()`: Must return strictly typed objects.
+- `reset_container()`: Must return strictly typed objects.
+- `get_portfolio_service()`: Must return strictly typed objects.
+- `reset_portfolio_service()`: Must return strictly typed objects.
+- `get_signal_scorer_service()`: Must return strictly typed objects.
+- `reset_signal_scorer_service()`: Must return strictly typed objects.
+- `get_strategy_registry()`: Must return strictly typed objects.
+- `get_strategy_config_loader()`: Must return strictly typed objects.
+- `get_strategy_logger()`: Must return strictly typed objects.
+- `get_execution_engine()`: Must return strictly typed objects.
+- `reset_strategy_services()`: Must return strictly typed objects.
+- `register_singleton()`: Must return strictly typed objects.
+- `register_transient()`: Must return strictly typed objects.
+- `register_factory()`: Must return strictly typed objects.
+- `get()`: Must return strictly typed objects.
+- `get_optional()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

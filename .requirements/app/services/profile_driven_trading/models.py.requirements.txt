@@ -1,0 +1,45 @@
+# Requirements Document: services/profile_driven_trading/models.py
+
+## 1. Module Overview
+Data models for Profile-Driven Trading Orchestrator.
+
+Defines configuration, results, and intermediate data structures used
+throughout the trading lifecycle.
+
+## 2. Dependencies
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StageType`: Must conform to application domain models.
+- `OrchestratorConfig`: Must conform to application domain models.
+- `StageResult`: Must conform to application domain models.
+- `SignalSet`: Must conform to application domain models.
+- `RiskValidationResult`: Must conform to application domain models.
+- `ExecutionResult`: Must conform to application domain models.
+- `TradingResult`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+- `add_signal()`: Must return strictly typed objects.
+- `get_summary()`: Must return strictly typed objects.
+- `get_summary()`: Must return strictly typed objects.
+- `get_summary()`: Must return strictly typed objects.
+- `get_stage_result()`: Must return strictly typed objects.
+- `get_successful_stages()`: Must return strictly typed objects.
+- `get_failed_stages()`: Must return strictly typed objects.
+- `get_summary()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,36 @@
+# Requirements Document: backtesting/services/batch_execution_service.py
+
+## 1. Module Overview
+Batch Execution Service
+
+Handles execution of batch backtesting runs in parallel or sequential mode.
+
+Responsibilities:
+- Run profiles in parallel using ProcessPoolExecutor
+- Run profiles sequentially
+- Worker function for parallel execution
+- Batch result storage coordination
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `concurrent.futures.ProcessPoolExecutor`
+- `concurrent.futures.as_completed`
+- `pathlib.Path`
+- `typing.TYPE_CHECKING`
+- `typing.Dict`
+- `typing.List`
+- `app.backtesting.services.models.ProfileResult`
+- `app.backtesting.profile_batch_backtester.ProfileBatchBacktester`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BatchExecutionService`: Must conform to application domain models.
+### Public Functions
+- `run_all_profiles()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,36 @@
+# Requirements Document: domain/repositories/backtest_repository.py
+
+## 1. Module Overview
+Backtest Repository Interface - Abstract contract for backtest persistence
+
+This interface defines the contract for backtest data access without
+specifying the implementation. Implementations are in the infrastructure layer.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `abc.ABC`
+- `abc.abstractmethod`
+- `typing.List`
+- `typing.Optional`
+- `entities.backtest.Backtest`
+- `entities.backtest.BacktestStatus`
+- `entities.backtest.BacktestType`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BacktestRepository`: Must conform to application domain models.
+### Public Functions
+- `save()`: Must return strictly typed objects.
+- `find_by_id()`: Must return strictly typed objects.
+- `find_by_status()`: Must return strictly typed objects.
+- `find_by_type()`: Must return strictly typed objects.
+- `find_all()`: Must return strictly typed objects.
+- `delete()`: Must return strictly typed objects.
+- `count_by_status()`: Must return strictly typed objects.
+- `get_recent_completed()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

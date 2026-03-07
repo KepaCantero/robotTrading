@@ -1,0 +1,42 @@
+# Requirements Document: domain/services/compliance/pre_trade_checker.py
+
+## 1. Module Overview
+Pre-Trade Compliance Checker
+=============================
+
+Coordinates all pre-trade compliance checks across multiple services.
+
+Responsibilities:
+- Collect pre-trade checks from all available services
+- Aggregate results
+- Provide unified decision on whether to execute
+- Generate execution recommendations
+
+Author: Compliance Integration System
+Date: 2026-02-03
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `pandas`
+- `app.domain.services.compliance.results.PreTradeCheckResult`
+- `app.domain.services.compliance.service_registry.get_service_registry`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PreTradeComplianceChecker`: Must conform to application domain models.
+### Public Functions
+- `check_signal()`: Must return strictly typed objects.
+- `get_available_checks()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

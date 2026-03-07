@@ -1,0 +1,56 @@
+# Requirements Document: engines/data_engine/data_engine.py
+
+## 1. Module Overview
+DataEngine - Engine principal unificado de gestión de datos.
+
+Proporciona API unificada para:
+- OHLCV de múltiples fuentes
+- Datos fundamentales
+- Sentimiento
+- Opciones
+- Normalización automática
+- Limpieza de datos
+- Versionado
+
+## 2. Dependencies
+- `__future__.annotations`
+- `numpy`
+- `asyncio`
+- `logging`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `cache.distributed_cache.DistributedCache`
+- `config_loader.DataEngineConfigLoader`
+- `normalizers.unified_normalizer.UnifiedNormalizer`
+- `sources.base_source.BaseDataSource`
+- `sources.fundamental_sources.AlphaVantageFundamentalSource`
+- `sources.fundamental_sources.FinancialModelingPrepSource`
+- `sources.ohlcv_sources.AlpacaSource`
+- `sources.ohlcv_sources.BinanceSource`
+- `sources.ohlcv_sources.IBKRSource`
+- `sources.ohlcv_sources.PolygonSource`
+- `sources.options_sources.OptionsVolatilitySource`
+- `sources.sentiment_sources.NewsSentimentSource`
+- `sources.sentiment_sources.RedditSentimentSource`
+- `sources.sentiment_sources.TwitterSentimentSource`
+- `streaming.websocket_streaming.WebSocketStreamingManager`
+- `validators.data_cleaning_pipeline.DataCleaningPipeline`
+- `versioning.data_lineage.DataLineageTracker`
+- `versioning.schema_versioner.SchemaVersioner`
+- `versioning.version_manager.DataVersionManager`
+- `os`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DataEngine`: Must conform to application domain models.
+### Public Functions
+- `get_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

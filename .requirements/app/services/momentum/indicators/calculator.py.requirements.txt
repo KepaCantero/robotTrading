@@ -1,0 +1,51 @@
+# Requirements Document: services/momentum/indicators/calculator.py
+
+## 1. Module Overview
+Technical indicator calculator using pandas-ta library with fallback.
+
+SOLID Principles:
+- SRP: Only calculates technical indicators
+- OCP: Extensible through new indicator methods
+- LSP: Substitutable with any IndicatorCalculator implementation
+- ISP: Focused on indicator calculations only
+- DIP: Implements IndicatorCalculator protocol
+
+## 2. Dependencies
+- `logging`
+- `decimal.Decimal`
+- `typing.TYPE_CHECKING`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `pandas`
+- `pandas_ta`
+- `app.domain.models.momentum.TechnicalIndicators`
+- `app.domain.models.momentum.TechnicalIndicators`
+- `pandas_ta_classic`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TechnicalIndicatorCalculator`: Must conform to application domain models.
+### Public Functions
+- `calculate_rsi()`: Must return strictly typed objects.
+- `calculate_ema()`: Must return strictly typed objects.
+- `calculate_macd()`: Must return strictly typed objects.
+- `calculate_roc()`: Must return strictly typed objects.
+- `calculate_stochastic_rsi()`: Must return strictly typed objects.
+- `calculate_atr()`: Must return strictly typed objects.
+- `calculate_adx()`: Must return strictly typed objects.
+- `calculate_obv()`: Must return strictly typed objects.
+- `calculate_volume_sma()`: Must return strictly typed objects.
+- `calculate_vwap()`: Must return strictly typed objects.
+- `calculate_zscore()`: Must return strictly typed objects.
+- `calculate_volatility()`: Must return strictly typed objects.
+- `calculate_expectancy()`: Must return strictly typed objects.
+- `detect_macd_divergence()`: Must return strictly typed objects.
+- `calculate_all_indicators()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

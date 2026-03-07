@@ -1,0 +1,57 @@
+# Requirements Document: services/live_trading/broker_connector.py
+
+## 1. Module Overview
+T16.1.1: BrokerConnector - Broker API integration
+
+Handles connections to broker APIs (Interactive Brokers, Alpaca, IBKR, etc.)
+Abstracts broker-specific APIs into unified interface.
+
+Uses adapter pattern to support multiple brokers:
+- AlpacaAdapter: Alpaca broker integration
+- PaperAdapter: Paper trading for testing/simulation
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `app.infrastructure.resilience.reconnection_manager.ReconnectionConfig`
+- `app.infrastructure.resilience.reconnection_manager.ReconnectionManager`
+- `uuid`
+- `broker_adapters.alpaca_adapter.AlpacaAdapter`
+- `broker_adapters.paper_adapter.PaperAdapter`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BrokerType`: Must conform to application domain models.
+- `OrderStatus`: Must conform to application domain models.
+- `OrderType`: Must conform to application domain models.
+- `OrderSide`: Must conform to application domain models.
+- `BrokerAccount`: Must conform to application domain models.
+- `BrokerPosition`: Must conform to application domain models.
+- `BrokerOrder`: Must conform to application domain models.
+- `BrokerConnector`: Must conform to application domain models.
+### Public Functions
+- `get_broker_connector()`: Must return strictly typed objects.
+- `account()`: Must return strictly typed objects.
+- `positions()`: Must return strictly typed objects.
+- `orders()`: Must return strictly typed objects.
+- `is_connected()`: Must return strictly typed objects.
+- `get_connection_stats()`: Must return strictly typed objects.
+- `get_broker_type()`: Must return strictly typed objects.
+- `is_paper_trading()`: Must return strictly typed objects.
+- `on_attempt()`: Must return strictly typed objects.
+- `on_success()`: Must return strictly typed objects.
+- `on_failure()`: Must return strictly typed objects.
+- `alert_callback()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

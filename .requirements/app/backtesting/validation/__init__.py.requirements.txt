@@ -1,0 +1,124 @@
+# Requirements Document: backtesting/validation/__init__.py
+
+## 1. Module Overview
+Validation module for financial backtesting (FASE 5.3).
+
+This module implements advanced validation techniques specifically designed for
+financial time series to prevent look-ahead bias, detect overfitting, and ensure
+robust strategy performance.
+
+Key Components:
+- WalkForwardValidator: Rolling window walk-forward validation
+- OverfittingDetector: IS vs OS comparison with degradation analysis
+- RegimeDetector: Market regime detection (bull/bear/volatility/trend)
+- ParameterStabilityAnalyzer: Parameter drift and stability analysis
+- PurgedKFold: K-Fold CV with purging and embargo (López de Prado Chapter 4)
+- PurgedTimeSeriesSplit: Time series split with purging and embargo
+- CrossValidation: Event-based purged CV with t1 (exit times) support
+- BonferroniCorrection: Multiple testing correction (Ernest Chan)
+- CrossSectionalConsistency: Ilmanen's cross-sectional validation
+- BiasVarianceAnalysis: Hastie's bias-variance decomposition
+- FeatureExplosionValidator: Feature explosion detection
+- Utility functions for purged cross-validation
+
+References:
+    - AUDIT_PLAN_COMPLETO.md - FASE 5.3: Validation
+    - "Advances in Financial Machine Learning" by Marcos López de Prado (Chapter 4)
+    - "Quantitative Trading" by Ernest P. Chan (Chapter 2)
+    - "Expected Returns" by Antti Ilmanen
+    - "The Elements of Statistical Learning" by Hastie, Tibshirani, Friedman
+    - "A Reality Check for Data Snooping" by Halbert White
+
+## 2. Dependencies
+- `bias_variance_analysis.BiasVarianceAnalyzer`
+- `bias_variance_analysis.BiasVarianceResult`
+- `bias_variance_analysis.LearningCurveResult`
+- `bias_variance_analysis.ModelComplexityLevel`
+- `bias_variance_analysis.StabilityTestResult`
+- `bias_variance_analysis.analyze_bias_variance`
+- `bonferroni_correction.BonferroniCorrector`
+- `bonferroni_correction.HypothesisTest`
+- `bonferroni_correction.MultipleTestResult`
+- `bonferroni_correction.ParameterTestResult`
+- `bonferroni_correction.correct_for_multiple_testing`
+- `bonferroni_correction.is_strategy_significant`
+- `cross_sectional_consistency.ConsistencyLevel`
+- `cross_sectional_consistency.CrossSectionalConsistencyChecker`
+- `cross_sectional_consistency.CrossSectionalResult`
+- `cross_sectional_consistency.DecileAnalysisResult`
+- `cross_sectional_consistency.validate_cross_sectional_consistency`
+- `cross_validation.PurgedCVConfig`
+- `cross_validation.PurgedKFold`
+- `cross_validation.PurgedSplitResult`
+- `cross_validation.PurgedTimeSeriesSplit`
+- `cross_validation.cv_score`
+- `cross_validation_methods.CrossValidation`
+- `cross_validation_methods.CVMethod`
+- `cross_validation_methods.CVResult`
+- `cross_validation_methods.KFoldCV`
+- `cross_validation_methods.LeaveOneOutCV`
+- `cross_validation_methods.NestedCrossValidation`
+- `cross_validation_methods.NestedCVResult`
+- `cross_validation_methods.StratifiedKFoldCV`
+- `cross_validation_methods.TimeSeriesSplitCV`
+- `cross_validation_methods.cross_validate`
+- `cross_validation_methods.nested_cross_validate`
+- `feature_explosion_validator.FeatureExplosionLevel`
+- `feature_explosion_validator.FeatureExplosionResult`
+- `feature_explosion_validator.FeatureExplosionValidator`
+- `feature_explosion_validator.MulticollinearityResult`
+- `feature_explosion_validator.analyze_multicollinearity`
+- `feature_explosion_validator.validate_feature_explosion`
+- `models.MarketRegime`
+- `models.OverfittingLevel`
+- `models.OverfittingMetrics`
+- `models.ParameterStabilityResult`
+- `models.PeriodResult`
+- `models.RegimeConfig`
+- `models.RegimeTransitionMatrix`
+- `models.RegimeType`
+- `models.StabilityLevel`
+- `models.TrendRegime`
+- `models.VolatilityRegime`
+- `models.WalkForwardConfig`
+- `models.WalkForwardResult`
+- `overfitting_detector.OverfittingDetector`
+- `overfitting_detector.analyze_parameter_stability`
+- `overfitting_detector.calculate_overfitting_metrics`
+- `overfitting_detector.calculate_stability_score`
+- `overfitting_detector.classify_stability`
+- `overfitting_detector.detect_parameter_drift`
+- `overfitting_detector.generate_stability_recommendation`
+- `parameter_stability.ParameterStabilityAnalyzer`
+- `parameter_stability.calculate_parameter_stability`
+- `parameter_stability.detect_parameter_drift_simple`
+- `parameter_stability.filter_stable_parameters`
+- `parameter_stability.rank_parameters_by_stability`
+- `purged_kfold.PurgedKFold`
+- `purged_kfold.PurgedKFoldConfig`
+- `purged_kfold.PurgedSplit`
+- `purged_kfold.PurgedTimeSeriesSplit`
+- `purged_kfold.apply_embargo`
+- `purged_kfold.cross_validate_with_purging`
+- `purged_kfold.get_embargo_indices`
+- `purged_kfold.get_purge_indices`
+- `purged_kfold.purged_kfold_splits`
+- `regime_detector.RegimeDetector`
+- `regime_detector.classify_market_state`
+- `regime_detector.detect_regime_from_data`
+- `walk_forward.RollingWindowOptimizer`
+- `walk_forward.WalkForwardValidator`
+- `walk_forward.calculate_consistency_score`
+- `walk_forward.calculate_degradation`
+- `pnl_validator.PnLValidator`
+- `pnl_validator.PnLValidationError`
+- `drawdown_validator.DrawdownValidator`
+- `drawdown_validator.DrawdownValidationError`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,31 @@
+# Requirements Document: domain/models/risk_config.py
+
+## 1. Module Overview
+Risk Configuration model.
+
+Defines risk parameters based on user risk tolerance.
+References John Hull's risk management principles.
+
+Reference:
+- John Hull: Risk Management (13-john-hull-risk-management.md)
+
+## 2. Dependencies
+- `decimal.Decimal`
+- `typing.Optional`
+- `pydantic.BaseModel`
+- `pydantic.ConfigDict`
+- `pydantic.Field`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RiskConfig`: Must conform to application domain models.
+### Public Functions
+- `is_conservative()`: Must return strictly typed objects.
+- `is_aggressive()`: Must return strictly typed objects.
+- `effective_max_leverage()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

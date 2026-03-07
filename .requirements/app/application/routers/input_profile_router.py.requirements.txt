@@ -1,0 +1,44 @@
+# Requirements Document: application/routers/input_profile_router.py
+
+## 1. Module Overview
+Input Profile Router - Maps InputProfile to strategies and configurations.
+
+This module implements Brecha #1 from AUDIT_PLAN_COMPLETO.md section 4.1:
+Automatic strategy selection based on investment objective.
+
+The router maps:
+- objetivo_inversion -> StrategyType (momentum, dividend, low_volatility, etc.)
+- risk_tolerance -> RiskConfig (drawdown limits, position sizing, leverage)
+- tax_residence -> TaxConfig (tax rates, optimization preferences)
+
+Reference papers:
+- Gray & Vogel: Quantitative Momentum (11-gray-vogel)
+- Berkin & Swedroe: Factor-Based Investing (30-berkin-swedroe)
+- Markowitz: Portfolio Selection (48-papers-markowitz)
+- Fama-French: Factor Models (43-papers-fama-french)
+- Kissell: Portfolio Management (42-kissell)
+
+## 2. Dependencies
+- `decimal.Decimal`
+- `typing.Optional`
+- `structlog`
+- `app.domain.models.input_profile.InputProfile`
+- `app.domain.models.input_profile.ObjectivoInversion`
+- `app.domain.models.input_profile.RiskTolerance`
+- `app.domain.models.input_profile.TaxResidence`
+- `app.domain.models.risk_config.RiskConfig`
+- `app.domain.models.strategy_type.StrategyType`
+- `app.domain.models.system_configuration.SystemConfiguration`
+- `app.domain.models.tax_config.TaxConfig`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `InputProfileRouter`: Must conform to application domain models.
+### Public Functions
+- `validate_configuration()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

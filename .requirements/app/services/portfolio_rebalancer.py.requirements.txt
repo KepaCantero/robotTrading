@@ -1,0 +1,39 @@
+# Requirements Document: services/portfolio_rebalancer.py
+
+## 1. Module Overview
+TASK-REB-1 and REB-2: Portfolio Rebalancing System.
+
+Implements:
+- Monthly rebalancing to maintain target allocations (TASK-REB-1)
+- Dynamic capital adjustments for strategies with negative streaks (TASK-REB-2)
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RebalancingTarget`: Must conform to application domain models.
+- `DynamicCapitalAdjuster`: Must conform to application domain models.
+- `PortfolioRebalancer`: Must conform to application domain models.
+### Public Functions
+- `get_portfolio_rebalancer()`: Must return strictly typed objects.
+- `needs_rebalance()`: Must return strictly typed objects.
+- `update_last_rebalance()`: Must return strictly typed objects.
+- `calculate_adjusted_weight()`: Must return strictly typed objects.
+- `should_reduce_allocation()`: Must return strictly typed objects.
+- `set_target_allocation()`: Must return strictly typed objects.
+- `calculate_rebalance_needs()`: Must return strictly typed objects.
+- `apply_rebalancing()`: Must return strictly typed objects.
+- `get_rebalance_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

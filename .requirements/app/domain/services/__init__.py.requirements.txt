@@ -1,0 +1,31 @@
+# Requirements Document: domain/services/__init__.py
+
+## 1. Module Overview
+Domain Services - Business logic services
+
+Domain services contain business logic that doesn't naturally fit
+within entities or value objects.
+
+## 2. Dependencies
+- `rebalancer.RebalanceConfig`
+- `rebalancer.RebalancePlan`
+- `rebalancer.Rebalancer`
+- `rebalancer.RebalanceTrade`
+- `risk_calculator.RiskCalculator`
+- `risk_calculator.RiskMetrics`
+- `signal_generator.IndicatorValues`
+- `signal_generator.Signal`
+- `signal_generator.SignalGenerator`
+- `signal_generator.SignalStrength`
+- `signal_generator.SignalType`
+- `tax_calculator.TaxCalculator`
+- `tax_calculator.TaxLiability`
+- `tax_calculator.TaxLot`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

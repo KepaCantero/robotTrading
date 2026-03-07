@@ -1,0 +1,47 @@
+# Requirements Document: domain/market_analysis/microstructure/ofi/ofi_signals.py
+
+## 1. Module Overview
+Order Flow Imbalance (OFI) Signal Generator.
+
+This module generates trading signals from Order Flow Imbalance calculations.
+Signals are generated based on OFI thresholds, confidence scores, and
+additional filters for mean reversion and momentum.
+
+References:
+- Cont, R., & Kukanov, A. (2017) "Order Flow Imbalance and Price Movement"
+- Aldridge, I. (2013) "High-Frequency Trading"
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `app.domain.market_analysis.microstructure.ofi.models.CumulativeOFI`
+- `app.domain.market_analysis.microstructure.ofi.models.OFIPrediction`
+- `app.domain.market_analysis.microstructure.ofi.models.OFISignal`
+- `app.domain.market_analysis.microstructure.ofi.models.OFISignalConfig`
+- `app.domain.market_analysis.microstructure.ofi.models.OrderBookSnapshot`
+- `app.domain.market_analysis.microstructure.ofi.ofi_calculator.OFICalculator`
+- `app.domain.market_analysis.microstructure.ofi.ofi_calculator.OFIResult`
+- `app.domain.market_analysis.microstructure.ofi.ofi_predictor.OFIPredictor`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SignalGenerationError`: Must conform to application domain models.
+- `InvalidOFIError`: Must conform to application domain models.
+- `OFISignalGenerator`: Must conform to application domain models.
+### Public Functions
+- `generate_signal()`: Must return strictly typed objects.
+- `generate_batch_signals()`: Must return strictly typed objects.
+- `filter_signals()`: Must return strictly typed objects.
+- `rank_signals()`: Must return strictly typed objects.
+- `validate_signal()`: Must return strictly typed objects.
+- `get_signal_summary()`: Must return strictly typed objects.
+- `update_config()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

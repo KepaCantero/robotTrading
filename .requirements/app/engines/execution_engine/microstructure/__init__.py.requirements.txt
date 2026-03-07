@@ -1,0 +1,61 @@
+# Requirements Document: engines/execution_engine/microstructure/__init__.py
+
+## 1. Module Overview
+Market Microstructure Analysis Module
+
+This module implements advanced market microstructure analysis following:
+- Larry Harris "Trading and Exchanges" (Rule 6)
+- Maureen O'Hara "Market Microstructure Theory" (Rule 7)
+
+Components:
+- Order book depth analysis
+- Bid-ask bounce removal
+- Almgren-Chriss market impact model
+- Adverse selection detection (VPIN, order flow toxicity)
+- Market quality metrics
+- Tick size constraints
+- Dark pool logic
+
+## 2. Dependencies
+- `adverse_selection_detector.AdverseSelectionDetector`
+- `adverse_selection_detector.AdverseSelectionResult`
+- `adverse_selection_detector.OrderFlowToxicity`
+- `adverse_selection_detector.OrderToxicityResult`
+- `adverse_selection_detector.VPINCalculator`
+- `adverse_selection_detector.VPINResult`
+- `adverse_selection_detector.get_adverse_selection_detector`
+- `adverse_selection_detector.get_order_flow_toxicity`
+- `adverse_selection_detector.get_vpin_calculator`
+- `almgren_chriss_model.AlmgrenChrissModel`
+- `almgren_chriss_model.MarketImpactEstimate`
+- `almgren_chriss_model.OptimalExecutionSchedule`
+- `almgren_chriss_model.get_almgren_chriss_model`
+- `bid_ask_bounce_removal.BidAskBounceRemover`
+- `bid_ask_bounce_removal.BounceAnalysisResult`
+- `bid_ask_bounce_removal.get_bid_ask_bounce_remover`
+- `dark_pool_router.DarkPoolDecision`
+- `dark_pool_router.DarkPoolRouter`
+- `dark_pool_router.get_dark_pool_router`
+- `market_quality_metrics.MarketQualityCalculator`
+- `market_quality_metrics.MarketQualityMetrics`
+- `market_quality_metrics.get_market_quality_metrics`
+- `microstructure_engine.ExecutionPlan`
+- `microstructure_engine.MarketMicrostructureEngine`
+- `microstructure_engine.MicrostructureAnalysisResult`
+- `microstructure_engine.get_market_microstructure_engine`
+- `order_book_analyzer.BookAnalysisResult`
+- `order_book_analyzer.OrderBookAnalyzer`
+- `order_book_analyzer.OrderBookLevel`
+- `order_book_analyzer.OrderBookSnapshot`
+- `order_book_analyzer.get_order_book_analyzer`
+- `tick_size_constraints.TickSizeAnalysis`
+- `tick_size_constraints.TickSizeConstraints`
+- `tick_size_constraints.get_tick_size_constraints`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

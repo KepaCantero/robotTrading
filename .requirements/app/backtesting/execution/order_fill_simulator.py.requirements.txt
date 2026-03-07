@@ -1,0 +1,56 @@
+# Requirements Document: backtesting/execution/order_fill_simulator.py
+
+## 1. Module Overview
+Order Fill Simulator for Realistic Execution (FASE 5.2)
+
+This module simulates realistic order fills by combining:
+- Transaction costs (commission, fees)
+- Slippage estimation
+- Market impact (Almgren-Chriss)
+- Partial fills
+- Order rejection (liquidity constraints)
+
+The simulator provides a realistic estimate of actual execution
+results for backtesting.
+
+SINGLE SOURCE OF TRUTH: Base values from CentralizedConfig.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `app.shared.config.centralized_config.get_config`
+- `market_impact.ImpactConfig`
+- `market_impact.MarketImpactModel`
+- `models.FillReason`
+- `models.FillResult`
+- `models.MarketSnapshot`
+- `models.Order`
+- `models.OrderSide`
+- `slippage_model.SlippageConfig`
+- `slippage_model.SlippageModel`
+- `transaction_cost.CostConfig`
+- `transaction_cost.TransactionCost`
+- `transaction_cost.TransactionCostCalculator`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `FillConstraints`: Must conform to application domain models.
+- `SimulatorConfig`: Must conform to application domain models.
+- `OrderFillSimulator`: Must conform to application domain models.
+### Public Functions
+- `simulate_fill()`: Must return strictly typed objects.
+- `simulate_fill_sequence()`: Must return strictly typed objects.
+- `estimate_fill_probability()`: Must return strictly typed objects.
+- `get_cost_breakdown()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

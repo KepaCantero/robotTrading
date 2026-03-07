@@ -1,0 +1,60 @@
+# Requirements Document: domain/entities/order.py
+
+## 1. Module Overview
+Order Entity - Trading order representation with comprehensive state machine.
+
+Implements Tomasini's order state machine methodology from "Trading Systems":
+- Comprehensive order lifecycle management
+- State transitions with validation
+- Event-driven order processing
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `datetime.timezone`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `OrderSide`: Must conform to application domain models.
+- `OrderType`: Must conform to application domain models.
+- `OrderStatus`: Must conform to application domain models.
+- `OrderEvent`: Must conform to application domain models.
+- `OrderFill`: Must conform to application domain models.
+- `Order`: Must conform to application domain models.
+### Public Functions
+- `validate()`: Must return strictly typed objects.
+- `submit()`: Must return strictly typed objects.
+- `acknowledge()`: Must return strictly typed objects.
+- `fill()`: Must return strictly typed objects.
+- `request_cancel()`: Must return strictly typed objects.
+- `confirm_cancel()`: Must return strictly typed objects.
+- `reject()`: Must return strictly typed objects.
+- `suspend()`: Must return strictly typed objects.
+- `unsuspend()`: Must return strictly typed objects.
+- `expire()`: Must return strictly typed objects.
+- `is_filled()`: Must return strictly typed objects.
+- `is_partially_filled()`: Must return strictly typed objects.
+- `is_pending()`: Must return strictly typed objects.
+- `is_terminal()`: Must return strictly typed objects.
+- `is_active()`: Must return strictly typed objects.
+- `get_remaining_quantity()`: Must return strictly typed objects.
+- `get_fill_rate()`: Must return strictly typed objects.
+- `get_total_fees()`: Must return strictly typed objects.
+- `get_age_seconds()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

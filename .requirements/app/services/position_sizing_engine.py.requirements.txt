@@ -1,0 +1,44 @@
+# Requirements Document: services/position_sizing_engine.py
+
+## 1. Module Overview
+No module docstring provided.
+
+## 2. Dependencies
+- `logging`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `typing.Union`
+- `numpy`
+- `app.shared.config.centralized_config.get_config`
+- `app.shared.config.strategy_config_loader.get_strategy_config`
+- `math`
+- `app.backtesting.labeling.bet_sizing.calculate_bet_sizes_ml`
+- `app.backtesting.labeling.bet_sizing.calculate_bet_sizes_with_meta_model`
+- `app.backtesting.labeling.meta_labeling.apply_meta_labeling`
+- `app.backtesting.labeling.bet_sizing.BetSizing`
+- `app.backtesting.labeling.meta_labeling.MetaLabeling`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PositionSizingEngine`: Must conform to application domain models.
+- `MetaLabelingPositionSizer`: Must conform to application domain models.
+- `PositionSizingEngineWithMetaLabeling`: Must conform to application domain models.
+### Public Functions
+- `calculate_stop_loss_price()`: Must return strictly typed objects.
+- `calculate_position_size_from_atr()`: Must return strictly typed objects.
+- `calculate_kelly_position_size()`: Must return strictly typed objects.
+- `calculate_kelly_from_backtest()`: Must return strictly typed objects.
+- `calculate_position_size()`: Must return strictly typed objects.
+- `calculate_position_size_with_meta_model()`: Must return strictly typed objects.
+- `fit_meta_model()`: Must return strictly typed objects.
+- `calculate_meta_labeling_sizes()`: Must return strictly typed objects.
+- `calculate_hybrid_sizes()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

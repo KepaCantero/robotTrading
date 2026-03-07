@@ -1,0 +1,42 @@
+# Requirements Document: domain/strategies/greeks_calculator.py
+
+## 1. Module Overview
+Greeks Calculator - Black-Scholes Option Pricing and Greeks
+
+Implementa cálculo de Greeks usando el modelo Black-Scholes-Merton:
+- Delta: Sensibilidad del precio de la opción al precio del subyacente
+- Gamma: Sensibilidad de delta al precio del subyacente (convexidad)
+- Theta: Sensibilidad del precio de la opción al paso del tiempo
+- Vega: Sensibilidad del precio de la opción a la volatilidad
+- Rho: Sensibilidad del precio de la opción a la tasa de interés
+
+SOLID Principles:
+- Single Responsibility: Solo cálculo de Greeks, no gestión de posiciones
+- Open/Closed: Extensible con nuevos modelos de pricing
+
+## 2. Dependencies
+- `logging`
+- `math`
+- `decimal.Decimal`
+- `typing.Optional`
+- `models.CallOption`
+- `models.OptionGreeks`
+- `models.AssignmentProbability`
+- `models.AssignmentProbability`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BlackScholesGreeks`: Must conform to application domain models.
+- `GreeksCalculator`: Must conform to application domain models.
+### Public Functions
+- `calculate_greeks()`: Must return strictly typed objects.
+- `calculate_implied_volatility()`: Must return strictly typed objects.
+- `estimate_assignment_probability()`: Must return strictly typed objects.
+- `calculate()`: Must return strictly typed objects.
+- `estimate_probability()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

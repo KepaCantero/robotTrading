@@ -1,0 +1,62 @@
+# Requirements Document: services/transaction_costs.py
+
+## 1. Module Overview
+Transaction Cost Models - Rishi Narang "Inside the Black Box" Chapter 5
+
+This module implements the Transaction Cost Model architecture from Narang's framework:
+- Commission models
+- Market impact models
+- Slippage estimation
+- Total cost of ownership analysis
+
+Key concepts from "Inside the Black Box":
+- Transaction costs are a critical component of strategy profitability
+- Total transaction cost = commission + spread + market impact + timing cost
+- Market impact follows a square-root law (Almgren-Chriss model)
+- Execution algorithms can minimize costs for large orders
+
+From Narang: "Transaction costs are the enemy of the quantitative trader.
+Every dollar spent on commissions, market impact, or slippage is a dollar
+that cannot be retained as profit."
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CostComponent`: Must conform to application domain models.
+- `MarketImpactModel`: Must conform to application domain models.
+- `ExecutionAlgorithm`: Must conform to application domain models.
+- `MarketData`: Must conform to application domain models.
+- `OrderSpecification`: Must conform to application domain models.
+- `CostBreakdown`: Must conform to application domain models.
+- `CostAnalysis`: Must conform to application domain models.
+- `TransactionCostModel`: Must conform to application domain models.
+- `CommissionModel`: Must conform to application domain models.
+- `AlmgrenChrissModel`: Must conform to application domain models.
+### Public Functions
+- `get_transaction_cost_model()`: Must return strictly typed objects.
+- `spread()`: Must return strictly typed objects.
+- `mid_price()`: Must return strictly typed objects.
+- `calculate_transaction_costs()`: Must return strictly typed objects.
+- `validate_order_type()`: Must return strictly typed objects.
+- `recommend_execution_algorithm()`: Must return strictly typed objects.
+- `analyze_cost_impact()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

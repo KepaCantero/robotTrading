@@ -1,0 +1,53 @@
+# Requirements Document: services/circuit_breaker_manager.py
+
+## 1. Module Overview
+Circuit Breaker Manager V2 - Detects market halts and stops trading.
+
+Protects against:
+- Market-wide circuit breakers (Level 1: 7%, Level 2: 13%, Level 3: 20%)
+- Single-stock trading halts
+- Extreme volatility events
+- Technical issues
+
+This is a CRITICAL component for production trading.
+Uses centralized configuration for all thresholds.
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Set`
+- `app.shared.config.centralized_config.get_config`
+- `app.shared.utils.decimal_utils.to_decimal`
+- `app.shared.utils.timezone_utils.utc_now`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CircuitBreakerLevel`: Must conform to application domain models.
+- `TradingStatus`: Must conform to application domain models.
+- `MarketState`: Must conform to application domain models.
+- `CircuitBreakerEvent`: Must conform to application domain models.
+- `CircuitBreakerConfig`: Must conform to application domain models.
+- `CircuitBreakerManager`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `get_market_state()`: Must return strictly typed objects.
+- `get_halted_symbols()`: Must return strictly typed objects.
+- `get_events()`: Must return strictly typed objects.
+- `is_trading_paused()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

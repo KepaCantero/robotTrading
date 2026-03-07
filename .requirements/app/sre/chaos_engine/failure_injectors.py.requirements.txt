@@ -1,0 +1,57 @@
+# Requirements Document: sre/chaos_engine/failure_injectors.py
+
+## 1. Module Overview
+Failure Injectors - Controlled Failure Injection for Chaos Engineering
+
+Implements various failure injection mechanisms:
+- Pod Killer: Randomly terminates pods/containers
+- Network Delay: Injects network latency
+- Error Injector: Injects application errors
+- Latency Injector: Adds processing delays
+- Resource Starver: Limits CPU/memory
+
+Safety:
+- All injectors implement rollback
+- Blast radius control
+- Automatic cleanup on failure
+
+## 2. Dependencies
+- `__future__.annotations`
+- `asyncio`
+- `logging`
+- `random`
+- `signal`
+- `subprocess`
+- `abc.ABC`
+- `abc.abstractmethod`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `psutil`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `InjectionType`: Must conform to application domain models.
+- `InjectionConfig`: Must conform to application domain models.
+- `FailureInjector`: Must conform to application domain models.
+- `PodKiller`: Must conform to application domain models.
+- `NetworkDelayInjector`: Must conform to application domain models.
+- `ErrorInjector`: Must conform to application domain models.
+- `LatencyInjector`: Must conform to application domain models.
+- `ResourceStarver`: Must conform to application domain models.
+- `FailureInjectorFactory`: Must conform to application domain models.
+### Public Functions
+- `is_active()`: Must return strictly typed objects.
+- `create()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

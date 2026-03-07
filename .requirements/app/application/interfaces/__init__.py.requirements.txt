@@ -1,0 +1,18 @@
+# Requirements Document: application/interfaces/__init__.py
+
+## 1. Module Overview
+Application Interfaces - Contracts for presentation layer.
+
+Interfaces define the contracts for presenting data to the UI layer,
+following the Humble Object pattern to keep presentation logic testable.
+
+## 2. Dependencies
+- `backtest_presenter.BacktestPresenter`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

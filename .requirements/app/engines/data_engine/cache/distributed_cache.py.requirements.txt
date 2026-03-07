@@ -1,0 +1,53 @@
+# Requirements Document: engines/data_engine/cache/distributed_cache.py
+
+## 1. Module Overview
+Distributed Cache - Sistema de cache distribuido con Redis y PostgreSQL.
+
+Proporciona:
+- Cache rápido con Redis (TTL, expiración automática) - REQUIRED
+- Persistencia con PostgreSQL (datos históricos, metadata) - REQUIRED
+- Cache en memoria como respaldo temporal
+
+REQUIREMENTS:
+- redis>=5.0.0 (OPTIONAL - will use in-memory fallback if not available)
+- sqlalchemy>=2.0.0 must be installed
+
+## 2. Dependencies
+- `asyncio`
+- `json`
+- `logging`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `sqlalchemy.Column`
+- `sqlalchemy.DateTime`
+- `sqlalchemy.Index`
+- `sqlalchemy.LargeBinary`
+- `sqlalchemy.String`
+- `sqlalchemy.Text`
+- `sqlalchemy.create_engine`
+- `sqlalchemy.exc.DatabaseError`
+- `sqlalchemy.exc.DataError`
+- `sqlalchemy.exc.IntegrityError`
+- `sqlalchemy.exc.OperationalError`
+- `sqlalchemy.exc.ProgrammingError`
+- `sqlalchemy.ext.declarative.declarative_base`
+- `sqlalchemy.orm.sessionmaker`
+- `app.security.secure_serialization.sign_and_dump`
+- `app.security.secure_serialization.verify_and_load`
+- `redis.asyncio`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CacheEntry`: Must conform to application domain models.
+- `DistributedCache`: Must conform to application domain models.
+### Public Functions
+- `get_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

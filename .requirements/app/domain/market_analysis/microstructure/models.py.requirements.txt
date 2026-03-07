@@ -1,0 +1,84 @@
+# Requirements Document: domain/market_analysis/microstructure/models.py
+
+## 1. Module Overview
+Market Microstructure Models Module
+
+This module implements the foundational market microstructure models from
+Maureen O'Hara's "Market Microstructure Theory" and related literature.
+
+Key Models Implemented:
+1. Glosten-Milgrom (1985): Sequential trade model with adverse selection
+2. Kyle (1985): Strategic trading and market depth
+3. Madhavan-Richardson-Rooms (1997): Order flow and price dynamics
+4. Roll (1984): Bid-ask spread and serial covariance
+5. Stoll (2000): Spread decomposition
+
+These models form the theoretical foundation for understanding how
+information is incorporated into market prices through trading.
+
+References:
+- O'Hara, M. (1995) "Market Microstructure Theory"
+- Glosten, L.R., & Milgrom, P.R. (1985) "Bid, Ask and Transaction Prices"
+- Kyle, A.S. (1985) "Continuous Auctions and Insider Trading"
+- Madhavan, A., Richardson, M., & Roomans, M. (1997) "Why Do Stock Prices Move?"
+
+## 2. Dependencies
+- `__future__.annotations`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `typing.Union`
+- `numpy`
+- `pandas`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ModelType`: Must conform to application domain models.
+- `InformationEvent`: Must conform to application domain models.
+- `ModelParameters`: Must conform to application domain models.
+- `GlostenMilgromResult`: Must conform to application domain models.
+- `KyleModelResult`: Must conform to application domain models.
+- `OrderFlowImpactResult`: Must conform to application domain models.
+- `RollSpreadResult`: Must conform to application domain models.
+- `StollDecompositionResult`: Must conform to application domain models.
+- `GlostenMilgromModel`: Must conform to application domain models.
+- `KyleModel`: Must conform to application domain models.
+- `MadhavanRichardsonModel`: Must conform to application domain models.
+- `RollSpreadEstimator`: Must conform to application domain models.
+- `StollSpreadDecomposer`: Must conform to application domain models.
+- `MicrostructureModelComparator`: Must conform to application domain models.
+### Public Functions
+- `get_glosten_milgrom_model()`: Must return strictly typed objects.
+- `get_kyle_model()`: Must return strictly typed objects.
+- `get_madhavanh_richardson_model()`: Must return strictly typed objects.
+- `get_roll_estimator()`: Must return strictly typed objects.
+- `get_stoll_decomposer()`: Must return strictly typed objects.
+- `get_model_comparator()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `calculate_equilibrium_spread()`: Must return strictly typed objects.
+- `simulate_trade_sequence()`: Must return strictly typed objects.
+- `calculate_spread_components()`: Must return strictly typed objects.
+- `calculate_market_depth()`: Must return strictly typed objects.
+- `calculate_optimal_informed_trading()`: Must return strictly typed objects.
+- `simulate_kyle_equilibrium()`: Must return strictly typed objects.
+- `estimate_order_flow_impact()`: Must return strictly typed objects.
+- `estimate_spread()`: Must return strictly typed objects.
+- `decompose_spread()`: Must return strictly typed objects.
+- `analyze_market()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

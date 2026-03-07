@@ -1,0 +1,39 @@
+# Requirements Document: services/portfolio_risk_manager.py
+
+## 1. Module Overview
+Portfolio Risk Manager - TASK-15: Refactorización de Servicios
+
+Este módulo implementa el gestor de riesgos del portafolio, separando la lógica
+de gestión de riesgo de los servicios de portafolio.
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `app.shared.config.centralized_config.get_config`
+- `app.domain.models.portfolio.Portfolio`
+- `app.domain.models.portfolio.Position`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RiskLevel`: Must conform to application domain models.
+- `RiskViolation`: Must conform to application domain models.
+- `PortfolioRiskManager`: Must conform to application domain models.
+### Public Functions
+- `assess_portfolio_risk()`: Must return strictly typed objects.
+- `get_risk_statistics()`: Must return strictly typed objects.
+- `get_recent_violations()`: Must return strictly typed objects.
+- `clear_history()`: Must return strictly typed objects.
+- `reset_statistics()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

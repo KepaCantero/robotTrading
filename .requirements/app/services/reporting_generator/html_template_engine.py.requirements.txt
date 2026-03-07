@@ -1,0 +1,37 @@
+# Requirements Document: services/reporting_generator/html_template_engine.py
+
+## 1. Module Overview
+T9.1 PHASE 3: HTMLTemplateEngine - Jinja2-based HTML report generation
+
+Creates professional HTML reports from performance data using Jinja2 templates.
+Supports customizable branding, layouts, and content sections for flexible
+report generation and delivery.
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BrandingConfig`: Must conform to application domain models.
+- `ReportSection`: Must conform to application domain models.
+- `ReportConfig`: Must conform to application domain models.
+- `HTMLReport`: Must conform to application domain models.
+- `HTMLTemplateEngine`: Must conform to application domain models.
+### Public Functions
+- `get_html_template_engine()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `render_report()`: Must return strictly typed objects.
+- `get_engine_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

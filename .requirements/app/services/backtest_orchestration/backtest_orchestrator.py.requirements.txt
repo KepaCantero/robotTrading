@@ -1,0 +1,38 @@
+# Requirements Document: services/backtest_orchestration/backtest_orchestrator.py
+
+## 1. Module Overview
+T4.1: BacktestOrchestrator - Backtesting execution and orchestration
+
+Orchestrates the execution of backtests for parametrized strategies.
+Wraps existing backtesting infrastructure (SimpleBacktester, ComprehensiveBacktestRunner)
+and provides standardized interface for the parametrization pipeline.
+
+Calculates feasibility_ratio: achieved_return / required_return
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `models.BacktestConfig`
+- `models.BacktestMetrics`
+- `models.BacktestOrchestrationRequest`
+- `models.BacktestOrchestrationResult`
+- `models.BacktestResult`
+- `models.BacktestStatus`
+- `app.backtesting.models.BacktestConfig`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BacktestOrchestrator`: Must conform to application domain models.
+### Public Functions
+- `get_backtest_orchestrator()`: Must return strictly typed objects.
+- `get_orchestrator_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

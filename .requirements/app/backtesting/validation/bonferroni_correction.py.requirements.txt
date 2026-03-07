@@ -1,0 +1,52 @@
+# Requirements Document: backtesting/validation/bonferroni_correction.py
+
+## 1. Module Overview
+Bonferroni Correction for Multiple Hypothesis Testing
+
+This module implements Bonferroni correction as described in Ernest Chan's
+"Quantitative Trading" (Chapter 2).
+
+When testing multiple strategies or parameters simultaneously, the chance of
+false positives (Type I errors) increases. Bonferroni correction adjusts
+significance levels to maintain the overall error rate.
+
+Key Features:
+- Family-wise error rate control
+- Adjusted p-value calculation
+- Holm-Bonferroni method (less conservative)
+- False discovery rate estimation
+
+Reference:
+    "Quantitative Trading" by Ernest P. Chan
+    Chapter 2: Basic Statistical Strategies
+    Section: Multiple Testing
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `scipy.stats`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `HypothesisTest`: Must conform to application domain models.
+- `MultipleTestResult`: Must conform to application domain models.
+- `ParameterTestResult`: Must conform to application domain models.
+- `BonferroniCorrector`: Must conform to application domain models.
+### Public Functions
+- `correct_for_multiple_testing()`: Must return strictly typed objects.
+- `is_strategy_significant()`: Must return strictly typed objects.
+- `correct_p_values()`: Must return strictly typed objects.
+- `test_strategy_significance()`: Must return strictly typed objects.
+- `test_parameter_combinations()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

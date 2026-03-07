@@ -1,0 +1,51 @@
+# Requirements Document: services/strategy_stock_allocation/orchestrator.py
+
+## 1. Module Overview
+Main orchestrator for stock allocation across trading strategies.
+
+Coordinates all components of the allocation pipeline:
+- Stock filtering
+- Statistical calculations
+- Strategy scoring
+- Capital allocation
+- Validation
+- Output generation
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `collections.defaultdict`
+- `typing.Any`
+- `typing.Optional`
+- `pandas`
+- `pydantic.BaseModel`
+- `pydantic.Field`
+- `app.shared.config.centralized_config.StockAllocationSettings`
+- `app.services.momentum_analysis.TechnicalIndicatorCalculator`
+- `allocators.ERCCapitalAllocator`
+- `calculators.HalfLifeCalculator`
+- `calculators.HurstCalculator`
+- `calculators.StationarityTester`
+- `classifiers.RegimeClassifier`
+- `filters.StockFilter`
+- `output.OutputGenerator`
+- `scorers.MeanReversionScorer`
+- `scorers.MomentumScorer`
+- `scorers.PairsTradingScorer`
+- `scorers.WCMScoreCalculator`
+- `validators.AllocationValidator`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StockMetrics`: Must conform to application domain models.
+- `PairMetrics`: Must conform to application domain models.
+- `AllocationResult`: Must conform to application domain models.
+- `StrategyStockAllocator`: Must conform to application domain models.
+### Public Functions
+- `allocate()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,37 @@
+# Requirements Document: services/monitoring/prometheus_collector.py
+
+## 1. Module Overview
+FASE 2: PrometheusMetricsCollector - Real-time metrics collection and exposure
+
+Prometheus integration for collecting, tracking, and exposing trading metrics.
+Includes counters, gauges, histograms, and summary metrics for comprehensive monitoring.
+
+## 2. Dependencies
+- `logging`
+- `time`
+- `datetime.datetime`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MetricType`: Must conform to application domain models.
+- `PrometheusMetric`: Must conform to application domain models.
+- `PrometheusMetricsCollector`: Must conform to application domain models.
+### Public Functions
+- `get_prometheus_collector()`: Must return strictly typed objects.
+- `set_gauge()`: Must return strictly typed objects.
+- `increment_counter()`: Must return strictly typed objects.
+- `observe_histogram()`: Must return strictly typed objects.
+- `get_metric_value()`: Must return strictly typed objects.
+- `export_prometheus_format()`: Must return strictly typed objects.
+- `get_metrics_summary()`: Must return strictly typed objects.
+- `reset_metrics()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

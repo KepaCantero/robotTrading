@@ -1,0 +1,40 @@
+# Requirements Document: backtesting/services/exit_monitor.py
+
+## 1. Module Overview
+Exit Condition Monitor service for backtesting.
+
+This service is responsible for monitoring stop-loss and take-profit
+conditions and triggering position closures when they are hit.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Callable`
+- `typing.List`
+- `typing.Optional`
+- `app.backtesting.models.BacktestConfig`
+- `app.backtesting.models.Trade`
+- `app.backtesting.models.TradeStatus`
+- `app.backtesting.services.position_manager.PositionManager`
+- `app.backtesting.engine.get_price`
+- `app.backtesting.engine.get_price`
+- `app.backtesting.engine.get_price`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ExitConditionMonitor`: Must conform to application domain models.
+### Public Functions
+- `check_exit_conditions()`: Must return strictly typed objects.
+- `check_all_symbols_exit_conditions()`: Must return strictly typed objects.
+- `calculate_stop_loss_price()`: Must return strictly typed objects.
+- `calculate_take_profit_price()`: Must return strictly typed objects.
+- `is_stop_loss_hit()`: Must return strictly typed objects.
+- `is_take_profit_hit()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

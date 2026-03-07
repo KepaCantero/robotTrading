@@ -1,0 +1,65 @@
+# Requirements Document: sre/data_integrity/sanity_layer.py
+
+## 1. Module Overview
+Data Sanity Layer - Prevents "Flash Crash" Problem
+
+CRITICAL SRE COMPONENT: Validates market data before executing orders.
+
+The Problem:
+- Data provider sends erroneous price (e.g., spike to zero due to API error)
+- System reads "Price: $0.00", stop-loss triggers instantly
+- Sells everything at the worst possible moment
+- This is a catastrophic failure scenario
+
+The Solution:
+- Multi-layer sanity checks before executing any order
+- Validate against recent prices (deviation filter)
+- Cross-check with second data source for anomalies
+- Detect stale/frozen data feeds
+- Reject prices that don't make sense
+
+This layer sits BETWEEN data providers and trading logic.
+All price data must pass through this validation.
+
+Usage:
+    sanity_layer = DataSanityLayer(
+        primary_source=alpaca_client,
+        secondary_source=yahoo_client,
+        cache=redis_client
+    )
+
+    # Validate price before using it
+    if await sanity_layer.validate_price("AAPL", Decimal("150.00")):
+        await execute_stop_loss(...)
+    else:
+        logger.error("Price sanity check failed - NOT executing")
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `statistics`
+- `collections.deque`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `datetime.timezone`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `aiosqlite`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SanityCheckResult`: Must conform to application domain models.
+- `PriceValidation`: Must conform to application domain models.
+- `DataSanityLayer`: Must conform to application domain models.
+- `SafeStopLossExecutor`: Must conform to application domain models.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

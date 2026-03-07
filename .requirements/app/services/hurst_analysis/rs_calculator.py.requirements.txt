@@ -1,0 +1,28 @@
+# Requirements Document: services/hurst_analysis/rs_calculator.py
+
+## 1. Module Overview
+R/S (Rescaled Range) Method Calculator for Hurst Exponent.
+
+This module implements the classic R/S analysis method for calculating
+the Hurst exponent. It uses Numba JIT compilation for 50-100x speedup.
+
+Single Responsibility: Only performs R/S-based Hurst calculation.
+Open/Closed: Extensible through HurstCalculator protocol.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `numpy`
+- `numba.jit`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RSMethodCalculator`: Must conform to application domain models.
+### Public Functions
+- `calculate()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

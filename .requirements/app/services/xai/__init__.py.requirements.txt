@@ -1,0 +1,33 @@
+# Requirements Document: services/xai/__init__.py
+
+## 1. Module Overview
+FASE 6.1: Explainable AI (XAI) - SHAP, LIME, Feature Importance.
+
+## 2. Dependencies
+- `explainer.FeatureImportanceCalculator`
+- `explainer.LIMEExplainer`
+- `explainer.SHAPExplainer`
+- `explainer.get_importance_calculator`
+- `explainer.get_lime_explainer`
+- `explainer.get_shap_explainer`
+- `models.ExplainabilityConfig`
+- `models.FeatureImportance`
+- `models.FeatureImportanceReport`
+- `models.ICEExplanation`
+- `models.InterpretationReport`
+- `models.LIMEExplanation`
+- `models.LIMEFeature`
+- `models.PartialDependence`
+- `models.PDPExplanation`
+- `models.PredictionExplanation`
+- `models.SHAPExplanation`
+- `models.SHAPSummaryPlot`
+- `models.SHAPValue`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

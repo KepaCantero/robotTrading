@@ -1,0 +1,40 @@
+# Requirements Document: domain/services/rebalancer.py
+
+## 1. Module Overview
+Rebalancer Domain Service - Portfolio rebalancing logic
+
+Rebalancer provides domain logic for rebalancing portfolios
+to target weights and managing drift.
+
+Reference: Rule 05-architecture.md, Rule 03-solid-principles.md
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `app.domain.entities.portfolio.Portfolio`
+- `app.domain.value_objects.percentage.Percentage`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RebalanceTrade`: Must conform to application domain models.
+- `RebalancePlan`: Must conform to application domain models.
+- `RebalanceConfig`: Must conform to application domain models.
+- `Rebalancer`: Must conform to application domain models.
+### Public Functions
+- `has_trades()`: Must return strictly typed objects.
+- `calculate_drift()`: Must return strictly typed objects.
+- `create_rebalance_plan()`: Must return strictly typed objects.
+- `optimize_rebalance_order()`: Must return strictly typed objects.
+- `validate_rebalance_plan()`: Must return strictly typed objects.
+- `get_rebalance_summary()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

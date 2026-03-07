@@ -1,0 +1,56 @@
+# Requirements Document: backtesting/robust_engine/models.py
+
+## 1. Module Overview
+Data models for the Robust Backtesting Engine.
+
+This module defines all data structures used throughout the robust backtesting
+system including corporate actions, dividend tracking, survivorship data, and
+checkpointing structures.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.date`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `uuid.UUID`
+- `uuid.uuid4`
+- `dataclasses.field`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CorporateActionType`: Must conform to application domain models.
+- `DelistingReason`: Must conform to application domain models.
+- `CorporateAction`: Must conform to application domain models.
+- `StockSplit`: Must conform to application domain models.
+- `Merger`: Must conform to application domain models.
+- `SpinOff`: Must conform to application domain models.
+- `DividendPayment`: Must conform to application domain models.
+- `DelistedStock`: Must conform to application domain models.
+- `DelistedReturnData`: Must conform to application domain models.
+- `BacktestCheckpoint`: Must conform to application domain models.
+- `ProgressUpdate`: Must conform to application domain models.
+- `DividendAction`: Must conform to application domain models.
+- `DividendTracker`: Must conform to application domain models.
+- `DripConfig`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+- `from_dict()`: Must return strictly typed objects.
+- `progress_percentage()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `add_dividend()`: Must return strictly typed objects.
+- `calculate_yield()`: Must return strictly typed objects.
+- `set_original_investment()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

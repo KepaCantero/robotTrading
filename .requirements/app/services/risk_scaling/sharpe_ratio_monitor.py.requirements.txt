@@ -1,0 +1,46 @@
+# Requirements Document: services/risk_scaling/sharpe_ratio_monitor.py
+
+## 1. Module Overview
+PHASE 3: Sharpe Ratio Monitor - Performance-Based Capital Allocation
+
+Monitors rolling Sharpe ratio to allocate capital based on performance.
+Strong performance (Sharpe > 1.5) → maintain full allocation (1.0x)
+Weak performance (Sharpe < 0.5) → reduce allocation (0.5x)
+Negative returns → minimal allocation (0.2x)
+
+Formula:
+- Sharpe = (mean_return - risk_free_rate) / std_return
+- Annualized = Sharpe * sqrt(252)
+- Scaling based on performance brackets
+
+Uses centralized configuration for trading calendar constants.
+
+## 2. Dependencies
+- `logging`
+- `math`
+- `statistics`
+- `datetime.datetime`
+- `decimal.ROUND_HALF_UP`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SharpeRatioMonitor`: Must conform to application domain models.
+### Public Functions
+- `calculate_sharpe_scale()`: Must return strictly typed objects.
+- `is_sharpe_declining()`: Must return strictly typed objects.
+- `get_sharpe_interpretation()`: Must return strictly typed objects.
+- `calculate_information_ratio()`: Must return strictly typed objects.
+- `detect_performance_regime_shift()`: Must return strictly typed objects.
+- `suggest_capital_adjustment()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

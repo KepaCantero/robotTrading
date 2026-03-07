@@ -1,0 +1,64 @@
+# Requirements Document: domain/optimization/parameter/base_optimizer.py
+
+## 1. Module Overview
+Base optimizer class and common utilities.
+
+Provides the abstract base class for all optimizers and shared functionality.
+
+## 2. Dependencies
+- `logging`
+- `abc.ABC`
+- `abc.abstractmethod`
+- `concurrent.futures.ProcessPoolExecutor`
+- `concurrent.futures.as_completed`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `models.ParameterGrid`
+- `trial.TrialContext`
+- `trial.TrialHistory`
+- `trial.TrialResult`
+- `trial.TrialStatus`
+- `trial.create_trial_id`
+- `os`
+- `statistics`
+- `json`
+- `json`
+- `os`
+- `random`
+- `asyncio`
+- `inspect`
+- `os`
+- `json`
+- `json`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `OptimizationConfig`: Must conform to application domain models.
+- `OptimizationResult`: Must conform to application domain models.
+- `BaseOptimizer`: Must conform to application domain models.
+### Public Functions
+- `n_parallel_jobs()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `best_trial()`: Must return strictly typed objects.
+- `success_rate()`: Must return strictly typed objects.
+- `mean_score()`: Must return strictly typed objects.
+- `std_score()`: Must return strictly typed objects.
+- `get_score_ranking()`: Must return strictly typed objects.
+- `get_top_n()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `save()`: Must return strictly typed objects.
+- `load()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,60 @@
+# Requirements Document: services/momentum/protocols.py
+
+## 1. Module Overview
+Protocol interfaces for momentum analysis services.
+
+Following SOLID principles:
+- Interface Segregation: Small, focused protocols
+- Dependency Inversion: Depend on abstractions
+- Open/Closed: Extensible through protocol implementations
+
+## 2. Dependencies
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Protocol`
+- `typing.Tuple`
+- `app.domain.models.momentum.MomentumAnalysis`
+- `app.domain.models.momentum.MomentumFilter`
+- `app.domain.models.momentum.MomentumSignal`
+- `app.domain.models.momentum.MomentumStrategy`
+- `app.domain.models.momentum.TechnicalIndicators`
+- `app.domain.models.momentum.Timeframe`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `IndicatorCalculator`: Must conform to application domain models.
+- `MomentumAnalyzer`: Must conform to application domain models.
+- `SignalGenerator`: Must conform to application domain models.
+- `StrategyManager`: Must conform to application domain models.
+- `StorageBackend`: Must conform to application domain models.
+- `PriceDataProvider`: Must conform to application domain models.
+### Public Functions
+- `calculate_rsi()`: Must return strictly typed objects.
+- `calculate_ema()`: Must return strictly typed objects.
+- `calculate_macd()`: Must return strictly typed objects.
+- `calculate_roc()`: Must return strictly typed objects.
+- `calculate_stochastic_rsi()`: Must return strictly typed objects.
+- `calculate_atr()`: Must return strictly typed objects.
+- `calculate_adx()`: Must return strictly typed objects.
+- `calculate_volume_sma()`: Must return strictly typed objects.
+- `calculate_vwap()`: Must return strictly typed objects.
+- `calculate_zscore()`: Must return strictly typed objects.
+- `calculate_volatility()`: Must return strictly typed objects.
+- `calculate_expectancy()`: Must return strictly typed objects.
+- `detect_macd_divergence()`: Must return strictly typed objects.
+- `calculate_all_indicators()`: Must return strictly typed objects.
+- `calculate_overall_momentum()`: Must return strictly typed objects.
+- `determine_trend_direction()`: Must return strictly typed objects.
+- `assess_risk_level()`: Must return strictly typed objects.
+- `assess_volatility_level()`: Must return strictly typed objects.
+- `filter_signals()`: Must return strictly typed objects.
+- `initialize_default_strategies()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,57 @@
+# Requirements Document: domain/strategies/carver_robust_rules.py
+
+## 1. Module Overview
+Carver Robust Rules Strategy - Robert Carver's Systematic Trading methodology.
+
+Implements simple, robust trading rules following Robert Carver's "Systematic Trading" principles:
+- Simple robust rules that work across multiple markets
+- Fixed timestamp trading for execution
+- Handcrafted portfolio weights
+- Decay factors for smooth transitions
+
+Key principles from "Systematic Trading" by Robert Carver:
+1. Use simple rules that are robust across different market conditions
+2. Execute at fixed timestamps to reduce timing luck
+3. Handcraft portfolio weights based on risk characteristics
+4. Use decay factors to smooth portfolio transitions
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `collections.deque`
+- `datetime.datetime`
+- `datetime.time`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `app.shared.config.centralized_config.get_strategy_config`
+- `app.shared.config.centralized_config.get_trading_threshold`
+- `app.shared.config.centralized_config.get_config`
+- `app.domain.models.market_data.Quote`
+- `app.domain.models.portfolio.Portfolio`
+- `app.domain.models.signal.Signal`
+- `app.domain.models.signal.SignalSource`
+- `app.domain.models.signal.SignalStrength`
+- `app.domain.models.signal.SignalType`
+- `app.domain.services.analysis.momentum.TechnicalIndicatorCalculator`
+- `app.application.scheduling.market_scheduler.MarketScheduler`
+- `app.application.scheduling.market_scheduler.MarketType`
+- `base.BaseStrategy`
+- `numpy`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CarverRobustRulesStrategy`: Must conform to application domain models.
+### Public Functions
+- `set_market_scheduler()`: Must return strictly typed objects.
+- `get_required_parameters()`: Must return strictly typed objects.
+- `generate_signals()`: Must return strictly typed objects.
+- `risk_check()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

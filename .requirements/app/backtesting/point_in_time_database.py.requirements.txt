@@ -1,0 +1,54 @@
+# Requirements Document: backtesting/point_in_time_database.py
+
+## 1. Module Overview
+Point-in-Time Database for Backtesting
+
+This module implements point-in-time (PIT) data handling as described in
+Ernest Chan's "Algorithmic Trading" (Chapter 3).
+
+Point-in-time data ensures that backtests only use information that would
+have been available at each point in time, preventing look-ahead bias.
+
+Key Features:
+- Historical universe reconstruction
+- Time-sensitive data queries
+- Corporate actions adjustment
+- Look-ahead prevention
+
+Reference:
+    "Algorithmic Trading" by Ernest P. Chan
+    Chapter 3: Backtesting
+    Section: Point-in-Time Data
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `pandas`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `HistoricalConstituent`: Must conform to application domain models.
+- `PITDataSnapshot`: Must conform to application domain models.
+- `CorporateAction`: Must conform to application domain models.
+- `PointInTimeDatabase`: Must conform to application domain models.
+### Public Functions
+- `create_pit_database_from_csv()`: Must return strictly typed objects.
+- `get_universe_at_date()`: Must return strictly typed objects.
+- `get_data_as_of_date()`: Must return strictly typed objects.
+- `apply_corporate_actions()`: Must return strictly typed objects.
+- `create_pit_snapshot()`: Must return strictly typed objects.
+- `validate_no_look_ahead()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

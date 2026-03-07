@@ -1,0 +1,45 @@
+# Requirements Document: domain/strategies/execution_engine.py
+
+## 1. Module Overview
+ExecutionEngine - Motor de ejecución centralizado.
+
+Coordina la ejecución de estrategias activas, generación de señales,
+validación de riesgo y ejecución de órdenes.
+
+SOL-005/DP-004: Uses Protocol-based dependency injection for testability.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `app.domain.models.market_data.Quote`
+- `app.domain.models.portfolio.Portfolio`
+- `app.domain.models.signal.Signal`
+- `protocols.StrategyLoggerProto`
+- `protocols.StrategyRegistryProto`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ExecutionEngine`: Must conform to application domain models.
+### Public Functions
+- `start()`: Must return strictly typed objects.
+- `stop()`: Must return strictly typed objects.
+- `run_cycle()`: Must return strictly typed objects.
+- `execute_signal()`: Must return strictly typed objects.
+- `execute_signals()`: Must return strictly typed objects.
+- `get_execution_stats()`: Must return strictly typed objects.
+- `reset_stats()`: Must return strictly typed objects.
+- `validate_market_data()`: Must return strictly typed objects.
+- `validate_portfolio()`: Must return strictly typed objects.
+- `run_cycle_with_validation()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

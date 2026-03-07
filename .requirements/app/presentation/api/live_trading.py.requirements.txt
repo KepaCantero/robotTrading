@@ -1,0 +1,49 @@
+# Requirements Document: presentation/api/live_trading.py
+
+## 1. Module Overview
+Live Trading API Router - Complete REST API for live trading bridge operations.
+
+Endpoints:
+  - Bridge lifecycle management (start/stop)
+  - Order management (place, cancel, query)
+  - Account/position queries
+  - Risk validation
+  - Execution history
+  - Audit trail and compliance reporting
+  - Trading statistics and metrics
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `typing.Optional`
+- `fastapi.APIRouter`
+- `fastapi.Depends`
+- `fastapi.HTTPException`
+- `fastapi.Query`
+- `requests.exceptions.ConnectionError`
+- `requests.exceptions.HTTPError`
+- `requests.exceptions.RequestException`
+- `app.application.orchestration.live_trading.account_synchronizer.AccountSynchronizer`
+- `app.application.orchestration.live_trading.account_synchronizer.get_account_synchronizer`
+- `app.application.orchestration.live_trading.alert_to_trade_mapper.AlertToTradeMapper`
+- `app.application.orchestration.live_trading.alert_to_trade_mapper.get_alert_to_trade_mapper`
+- `app.application.orchestration.live_trading.broker_connector.BrokerConnector`
+- `app.application.orchestration.live_trading.broker_connector.get_broker_connector`
+- `app.application.orchestration.live_trading.order_manager.OrderManager`
+- `app.application.orchestration.live_trading.order_manager.get_order_manager`
+- `app.application.orchestration.live_trading.risk_gates.RiskGates`
+- `app.application.orchestration.live_trading.risk_gates.get_risk_gates`
+- `app.application.orchestration.live_trading.trading_audit_trail.TradingAuditTrail`
+- `app.application.orchestration.live_trading.trading_audit_trail.get_trading_audit_trail`
+- `app.application.orchestration.live_trading.trading_bridge_orchestrator.TradingBridgeOrchestrator`
+- `app.application.orchestration.live_trading.trading_bridge_orchestrator.get_trading_bridge_orchestrator`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

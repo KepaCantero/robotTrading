@@ -1,0 +1,64 @@
+# Requirements Document: backtesting/base_engine.py
+
+## 1. Module Overview
+Abstract Base Backtest Engine.
+
+This module defines the abstract base class for all backtest engines,
+providing a unified interface and shared functionality to reduce code
+duplication across the 4 existing engines:
+- engine.py (BacktestEngine)
+- execution_engine.py (PessimisticExecutionEngine)
+- multi_strategy_engine.py (MultiStrategyBacktester)
+- robust_engine/robust_backtester.py (RobustBacktester)
+
+SINGLE SOURCE OF TRUTH: All defaults from CentralizedConfig.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `abc.ABC`
+- `abc.abstractmethod`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `datetime.date`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `typing.TypeVar`
+- `typing.Generic`
+- `typing.Union`
+- `uuid.uuid4`
+- `pydantic.BaseModel`
+- `app.backtesting.models.BacktestConfig`
+- `app.backtesting.models.BacktestResult`
+- `app.backtesting.models.PerformanceMetrics`
+- `app.backtesting.models.Trade`
+- `app.backtesting.models.TradeStatus`
+- `app.shared.config.centralized_config.get_config`
+- `app.backtesting.shared.slippage_utils.apply_slippage`
+- `app.backtesting.shared.trade_utils.build_trade_reason`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ExecutionType`: Must conform to application domain models.
+- `EngineType`: Must conform to application domain models.
+- `Position`: Must conform to application domain models.
+- `ExecutionResult`: Must conform to application domain models.
+- `BacktestState`: Must conform to application domain models.
+- `BaseBacktestEngine`: Must conform to application domain models.
+### Public Functions
+- `reset()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `run_backtest()`: Must return strictly typed objects.
+- `get_engine_type()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

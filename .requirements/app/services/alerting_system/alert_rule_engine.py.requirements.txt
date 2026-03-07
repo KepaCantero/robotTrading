@@ -1,0 +1,45 @@
+# Requirements Document: services/alerting_system/alert_rule_engine.py
+
+## 1. Module Overview
+T18.2: Alert Rule Engine - Rule evaluation and composition
+
+Evaluates alert rules against incoming metrics with support for:
+- Threshold-based rules (>, <, >=, <=, ==, !=)
+- Change rules (percentage change over time window)
+- Rule composition (AND/OR logic)
+- Severity assignment
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `models.AlertEvaluationContext`
+- `models.AlertEvent`
+- `models.AlertRule`
+- `models.AlertSeverity`
+- `models.AlertState`
+- `models.ChangeRule`
+- `models.LogicOperator`
+- `models.ThresholdRule`
+- `uuid.uuid4`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `AlertRuleEngine`: Must conform to application domain models.
+### Public Functions
+- `register_rule()`: Must return strictly typed objects.
+- `unregister_rule()`: Must return strictly typed objects.
+- `evaluate_rule()`: Must return strictly typed objects.
+- `evaluate_all_rules()`: Must return strictly typed objects.
+- `get_evaluation_stats()`: Must return strictly typed objects.
+- `clear_evaluation_history()`: Must return strictly typed objects.
+- `get_rules_summary()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

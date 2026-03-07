@@ -1,0 +1,59 @@
+# Requirements Document: services/rate_limiting/__init__.py
+
+## 1. Module Overview
+Broker API Rate Limiting Module - Phase 3.4
+
+This module provides rate limiting functionality for broker API calls to prevent
+hitting broker API limits during 24/7 trading operations.
+
+Features:
+- Token bucket rate limiting per broker
+- Priority queue (close position > query price)
+- Exponential backoff on 429 errors
+- Rate limit monitoring and alerts
+- Configurable limits per broker
+
+Supported Brokers:
+- IBKR (Interactive Brokers): 50-100 req/s
+- Alpaca: 200 req/min
+- Polygon: 5 req/s
+- Binance: 10 req/s
+
+Usage:
+    from app.services.rate_limiting import (
+        BrokerType,
+        TokenBucketRateLimiter,
+        RateLimitManager,
+        get_rate_limit_manager,
+    )
+
+    # Get the global rate limit manager
+    manager = get_rate_limit_manager()
+
+    # Get a limiter for a specific broker
+    limiter = manager.get_limiter(BrokerType.IBKR)
+
+    # Acquire tokens before making API calls
+    await limiter.acquire()
+
+    # Or use with backoff for resilience
+    await limiter.acquire_with_backoff()
+
+## 2. Dependencies
+- `app.services.rate_limiting.token_bucket.BROKER_RATE_LIMITS`
+- `app.services.rate_limiting.token_bucket.BrokerType`
+- `app.services.rate_limiting.token_bucket.RateLimit`
+- `app.services.rate_limiting.token_bucket.RateLimitManager`
+- `app.services.rate_limiting.token_bucket.RequestPriority`
+- `app.services.rate_limiting.token_bucket.TokenBucketRateLimiter`
+- `app.services.rate_limiting.token_bucket.TokenBucketState`
+
+## 3. Core Components (Contracts)
+### Public Functions
+- `get_rate_limit_manager()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

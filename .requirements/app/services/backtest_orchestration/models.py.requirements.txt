@@ -1,0 +1,42 @@
+# Requirements Document: services/backtest_orchestration/models.py
+
+## 1. Module Overview
+T4.1: BacktestOrchestrator Models
+
+Dataclasses for backtesting orchestration, execution, and result handling.
+Uses centralized configuration for default values.
+
+## 2. Dependencies
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.date`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.TYPE_CHECKING`
+- `app.shared.config.centralized_config.get_config`
+- `app.shared.config.centralized_config.get_config`
+- `app.shared.config.centralized_config.get_config`
+- `app.shared.config.centralized_config.get_config`
+- `app.shared.config.centralized_config.get_config`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BacktestStatus`: Must conform to application domain models.
+- `BacktestConfig`: Must conform to application domain models.
+- `BacktestMetrics`: Must conform to application domain models.
+- `BacktestResult`: Must conform to application domain models.
+- `BacktestOrchestrationRequest`: Must conform to application domain models.
+- `BacktestOrchestrationResult`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

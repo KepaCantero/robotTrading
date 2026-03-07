@@ -1,0 +1,54 @@
+# Requirements Document: backtesting/bias_correctors.py
+
+## 1. Module Overview
+Bias Correctors for Backtesting
+
+This module implements Ernest Chan's methodologies for eliminating biases
+in backtesting, ensuring realistic performance estimates.
+
+Key Concepts from Ernest Chan:
+1. Look-ahead bias prevention
+2. Survivorship bias correction
+3. Correct handling of dividends and splits
+4. Point-in-time data requirements
+
+Reference:
+    "Algorithmic Trading" by Ernest P. Chan (2013)
+    Chapter 3: Backtesting
+    Section: Common Pitfalls and Biases
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `pandas`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BiasDetectionResult`: Must conform to application domain models.
+- `CorporateAction`: Must conform to application domain models.
+- `PointInTimeData`: Must conform to application domain models.
+- `LookAheadBiasCorrector`: Must conform to application domain models.
+- `DividendAndSplitAdjuster`: Must conform to application domain models.
+- `BacktestValidator`: Must conform to application domain models.
+### Public Functions
+- `create_bias_correction_pipeline()`: Must return strictly typed objects.
+- `validate_no_lookahead()`: Must return strictly typed objects.
+- `apply_stock_split()`: Must return strictly typed objects.
+- `calculate_total_return()`: Must return strictly typed objects.
+- `reconstruct_adjusted_prices()`: Must return strictly typed objects.
+- `validate_backtest()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,51 @@
+# Requirements Document: services/security/api_key_manager.py
+
+## 1. Module Overview
+API Key Manager for managing broker API keys and credentials.
+
+This module provides secure storage and management of API keys with:
+- Encrypted storage at rest
+- Key validation and format checking
+- Key expiration tracking
+- Scoped key permissions (read-only, trading, admin)
+- Audit logging for key access
+
+R29: Security Hardening
+
+## 2. Dependencies
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `uuid`
+- `logging`
+- `cryptography.fernet.Fernet`
+- `os`
+- `datetime.timedelta`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `KeyPermission`: Must conform to application domain models.
+- `ApiKey`: Must conform to application domain models.
+- `KeyValidationError`: Must conform to application domain models.
+- `ApiKeyManager`: Must conform to application domain models.
+### Public Functions
+- `is_expired()`: Must return strictly typed objects.
+- `add_key()`: Must return strictly typed objects.
+- `get_key()`: Must return strictly typed objects.
+- `get_key_by_name()`: Must return strictly typed objects.
+- `validate_key()`: Must return strictly typed objects.
+- `revoke_key()`: Must return strictly typed objects.
+- `list_keys()`: Must return strictly typed objects.
+- `update_last_used()`: Must return strictly typed objects.
+- `check_expiration()`: Must return strictly typed objects.
+- `get_decrypted_key()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

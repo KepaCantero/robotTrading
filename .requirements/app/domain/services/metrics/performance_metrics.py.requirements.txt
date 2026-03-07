@@ -1,0 +1,68 @@
+# Requirements Document: domain/services/metrics/performance_metrics.py
+
+## 1. Module Overview
+Performance Metrics Calculator
+
+Centralized implementation of performance metrics, consolidating:
+- Sharpe ratio (from metrics.py, chan_metrics.py, bias_correctors.py, risk_calculator.py)
+- Sortino ratio (from metrics.py, chan_metrics.py, risk_calculator.py, advanced_metrics.py)
+- Calmar ratio (from chan_metrics.py, advanced_metrics.py)
+- Omega ratio (from advanced_metrics.py)
+- Max drawdown (from metrics.py, chan_metrics.py, risk_calculator.py)
+- Ulcer index (from advanced_metrics.py)
+
+Uses quantstats/empyrical as backend when available for industry-standard calculations.
+
+Reference:
+    - Lopez de Prado, M. (2020). Machine Learning for Asset Managers.
+    - Chan, E.P. (2013). Algorithmic Trading.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `typing.Union`
+- `numpy`
+- `pandas`
+- `app.shared.config.centralized_config.CentralizedConfig`
+- `app.shared.config.centralized_config.get_config`
+- `empyrical`
+- `quantstats`
+- `scipy.stats`
+- `scipy.stats`
+- `scipy.stats`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SharpeRatioResult`: Must conform to application domain models.
+- `DrawdownResult`: Must conform to application domain models.
+- `PerformanceResult`: Must conform to application domain models.
+- `PerformanceMetricsCalculator`: Must conform to application domain models.
+### Public Functions
+- `get_sharpe_ratio()`: Must return strictly typed objects.
+- `get_sortino_ratio()`: Must return strictly typed objects.
+- `get_calmar_ratio()`: Must return strictly typed objects.
+- `get_omega_ratio()`: Must return strictly typed objects.
+- `get_max_drawdown()`: Must return strictly typed objects.
+- `get_ulcer_index()`: Must return strictly typed objects.
+- `sharpe_ratio()`: Must return strictly typed objects.
+- `sharpe_ratio_with_confidence()`: Must return strictly typed objects.
+- `sortino_ratio()`: Must return strictly typed objects.
+- `calmar_ratio()`: Must return strictly typed objects.
+- `omega_ratio()`: Must return strictly typed objects.
+- `max_drawdown()`: Must return strictly typed objects.
+- `max_drawdown_analysis()`: Must return strictly typed objects.
+- `ulcer_index()`: Must return strictly typed objects.
+- `cagr()`: Must return strictly typed objects.
+- `volatility()`: Must return strictly typed objects.
+- `calculate_all()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,29 @@
+# Requirements Document: presentation/controllers/deployment.py
+
+## 1. Module Overview
+Deployment decision API endpoints.
+
+Provides REST API for validating strategies, making deployment decisions,
+and accessing deployment status information.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `datetime.datetime`
+- `typing.Dict`
+- `fastapi.APIRouter`
+- `fastapi.HTTPException`
+- `fastapi.Query`
+- `requests.exceptions.HTTPError`
+- `requests.exceptions.RequestException`
+- `app.services.deploy_decision_orchestrator.get_deploy_orchestrator`
+- `app.services.deploy_decision_orchestrator.models.DeploymentInput`
+- `app.infrastructure.external.integrations.health_check_manager.get_health_check_manager`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,37 @@
+# Requirements Document: presentation/controllers/profitability_validation.py
+
+## 1. Module Overview
+API endpoints para validación de rentabilidad de estrategias.
+
+Este módulo proporciona endpoints REST para validar que las estrategias
+generen rentabilidad neta positiva después de todos los costos operativos.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `decimal.Decimal`
+- `typing.List`
+- `fastapi.APIRouter`
+- `fastapi.Depends`
+- `fastapi.HTTPException`
+- `fastapi.Query`
+- `fastapi.responses.JSONResponse`
+- `requests.exceptions.HTTPError`
+- `requests.exceptions.RequestException`
+- `app.shared.config.centralized_config.get_config`
+- `app.domain.models.profitability_validation.HistoricalValidation`
+- `app.domain.models.profitability_validation.ProfitabilityValidation`
+- `app.domain.models.profitability_validation.StrategyComparison`
+- `app.domain.models.profitability_validation.ValidationCriteria`
+- `app.domain.models.profitability_validation.ValidationReport`
+- `app.domain.models.profitability_validation.ValidationRequest`
+- `app.domain.models.profitability_validation.ValidationResponse`
+- `app.services.profitability_validation_service.ProfitabilityValidationService`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

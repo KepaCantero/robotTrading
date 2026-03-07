@@ -1,0 +1,30 @@
+# Requirements Document: services/awesome_quant/qlib_connector.py
+
+## 1. Module Overview
+FASE 4.1: QlibConnector - Microsoft Qlib quantitative finance library integration
+
+Qlib provides comprehensive quantitative data downloading, preprocessing, and analysis.
+Integrates market data, financial factors, and machine learning utilities.
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `QlibConnector`: Must conform to application domain models.
+### Public Functions
+- `get_qlib_connector()`: Must return strictly typed objects.
+- `get_factor_list()`: Must return strictly typed objects.
+- `get_connector_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

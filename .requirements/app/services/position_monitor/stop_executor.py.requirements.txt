@@ -1,0 +1,42 @@
+# Requirements Document: services/position_monitor/stop_executor.py
+
+## 1. Module Overview
+Stop Executor - Executes stop-loss and take-profit orders.
+
+Handles the actual order execution when stops are triggered.
+
+This is a CRITICAL component for production trading. When a stop-loss or
+take-profit is triggered, the executor must:
+1. Place the order immediately
+2. Handle broker errors gracefully
+3. Log all execution details
+4. Return detailed execution results
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `datetime.timezone`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.TYPE_CHECKING`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `app.shared.utils.decimal_utils.to_decimal`
+- `position_monitor.MonitoredPosition`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StopType`: Must conform to application domain models.
+- `StopExecutionResult`: Must conform to application domain models.
+- `StopExecutor`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,36 @@
+# Requirements Document: services/tax_efficiency/engines/spain_tax_engine_impl.py
+
+## 1. Module Overview
+Spain Tax Engine - Implementation for Spanish tax resident
+
+Implements:
+- IRPF-001: Progressive capital gains 19/21/23%
+- DIV-001: EU dividends 0% vs Non-EU 19%
+- MOD720-001: Modelo 720 reporting > €50k foreign assets
+- LOSS-CF-001: Loss carryforward max 4 years
+
+## 2. Dependencies
+- `typing.Optional`
+- `decimal.Decimal`
+- `datetime.datetime`
+- `datetime.date`
+- `app.core.protocols.i_spain_tax_engine.ISpainTaxEngine`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SpainTaxEngineImpl`: Must conform to application domain models.
+### Public Functions
+- `calculate_capital_gains_tax()`: Must return strictly typed objects.
+- `calculate_dividend_tax()`: Must return strictly typed objects.
+- `is_eu_country()`: Must return strictly typed objects.
+- `check_modelo_720_threshold()`: Must return strictly typed objects.
+- `generate_modelo_720_report()`: Must return strictly typed objects.
+- `record_loss()`: Must return strictly typed objects.
+- `get_available_losses()`: Must return strictly typed objects.
+- `apply_loss_carryforward()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

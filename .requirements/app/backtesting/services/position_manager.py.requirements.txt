@@ -1,0 +1,37 @@
+# Requirements Document: backtesting/services/position_manager.py
+
+## 1. Module Overview
+Position Manager service for backtesting.
+
+This service is responsible for tracking and managing open positions
+during backtesting. It acts as a pure state holder with no external
+dependencies.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PositionManager`: Must conform to application domain models.
+### Public Functions
+- `get_position()`: Must return strictly typed objects.
+- `update_position()`: Must return strictly typed objects.
+- `set_position()`: Must return strictly typed objects.
+- `close_position()`: Must return strictly typed objects.
+- `has_open_position()`: Must return strictly typed objects.
+- `get_all_positions()`: Must return strictly typed objects.
+- `get_symbols_with_positions()`: Must return strictly typed objects.
+- `clear_all_positions()`: Must return strictly typed objects.
+- `get_total_position_count()`: Must return strictly typed objects.
+- `get_total_position_value()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

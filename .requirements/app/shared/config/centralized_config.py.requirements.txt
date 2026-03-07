@@ -1,0 +1,126 @@
+# Requirements Document: shared/config/centralized_config.py
+
+## 1. Module Overview
+Centralized Configuration System
+TASK-10: Centralización de Configuración
+
+This module provides a centralized configuration system that eliminates
+magic values scattered throughout the codebase and centralizes all
+thresholds and parameters.
+
+SECTIONS:
+    1. Enums & Constants
+    2. Trading Configuration (TradingThresholds, StrategyConfig, StockAllocationSettings)
+    3. Infrastructure Configuration (DatabaseConfig, RedisConfig, APIConfig)
+    4. Monitoring & Logging (LoggingConfig, MonitoringConfig)
+    5. Risk & Compliance (CurrencyHedgingConfig, SectorCountryDiversificationConfig, ComplianceConfig)
+    6. Main Configuration (CentralizedConfig)
+    7. Helper Functions (get_config, etc.)
+    8. Legacy/Utility (Configuration wrapper class)
+
+## 2. Dependencies
+- `logging`
+- `decimal.Decimal`
+- `enum.Enum`
+- `pathlib.Path`
+- `typing.TYPE_CHECKING`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `yaml`
+- `pydantic.BaseModel`
+- `pydantic.Field`
+- `pydantic.field_validator`
+- `pydantic.model_validator`
+- `pydantic_settings.BaseSettings`
+- `app.shared.config.signal_risk.MarketMicrostructureThresholds`
+- `app.shared.config.params.trading_thresholds.TradingThresholds`
+- `app.shared.config.params.strategy_config.StrategyConfig`
+- `app.shared.config.params.strategy_config.StockAllocationSettings`
+- `app.shared.config.params.backtest_config.BacktestingConfig`
+- `app.shared.config.params.backtest_config.CommissionModel`
+- `app.shared.config.params.backtest_config.FixedCommission`
+- `app.shared.config.params.backtest_config.HybridCommission`
+- `app.shared.config.params.backtest_config.TierBracket`
+- `app.shared.config.params.backtest_config.TieredCommission`
+- `app.shared.config.params.infrastructure_config.APIConfig`
+- `app.shared.config.params.infrastructure_config.DatabaseConfig`
+- `app.shared.config.params.infrastructure_config.LoggingConfig`
+- `app.shared.config.params.infrastructure_config.MonitoringConfig`
+- `app.shared.config.params.infrastructure_config.RedisConfig`
+- `app.shared.config.params.risk_config.ComplianceConfig`
+- `app.shared.config.params.risk_config.CurrencyHedgingConfig`
+- `app.shared.config.params.risk_config.SectorCountryDiversificationConfig`
+- `app.domain.strategies.config.DividendStrategyConfig`
+- `app.domain.strategies.config.FXCarryTradeStrategyConfig`
+- `app.domain.strategies.config.MomentumModularConfig`
+- `app.shared.config.config_loader.load_strategy_stock_allocator_config`
+- `json`
+- `os`
+- `time`
+- `threading`
+- `datetime.datetime`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `Environment`: Must conform to application domain models.
+- `CentralizedConfig`: Must conform to application domain models.
+- `Configuration`: Must conform to application domain models.
+### Public Functions
+- `get_config()`: Must return strictly typed objects.
+- `get_trading_threshold()`: Must return strictly typed objects.
+- `get_strategy_config()`: Must return strictly typed objects.
+- `get_compliance_config()`: Must return strictly typed objects.
+- `get_strategy_stock_allocator_config()`: Must return strictly typed objects.
+- `reload_config()`: Must return strictly typed objects.
+- `set_config()`: Must return strictly typed objects.
+- `validate_config()`: Must return strictly typed objects.
+- `get_config_summary()`: Must return strictly typed objects.
+- `validate_configuration()`: Must return strictly typed objects.
+- `update_strategy_config()`: Must return strictly typed objects.
+- `find_magic_values()`: Must return strictly typed objects.
+- `migrate_magic_values()`: Must return strictly typed objects.
+- `load_config_from_yaml()`: Must return strictly typed objects.
+- `load_config_from_json()`: Must return strictly typed objects.
+- `validate_atr_multipliers()`: Must return strictly typed objects.
+- `validate_risk_percentages()`: Must return strictly typed objects.
+- `validate_trading_symbols()`: Must return strictly typed objects.
+- `validate_dates()`: Must return strictly typed objects.
+- `validate_config_object()`: Must return strictly typed objects.
+- `merge_configs()`: Must return strictly typed objects.
+- `get_default_atr_multiplier()`: Must return strictly typed objects.
+- `get_default_risk_per_trade()`: Must return strictly typed objects.
+- `get_default_max_position_size()`: Must return strictly typed objects.
+- `get_default_stop_distance_pct()`: Must return strictly typed objects.
+- `get_config_cached_after_load()`: Must return strictly typed objects.
+- `get_config_cache_invalidated_on_change()`: Must return strictly typed objects.
+- `get_atr_multiplier_positive_property()`: Must return strictly typed objects.
+- `get_risk_percentage_bounds_property()`: Must return strictly typed objects.
+- `get_symbols_list_property()`: Must return strictly typed objects.
+- `get_date_order_property()`: Must return strictly typed objects.
+- `update_atr_multiplier()`: Must return strictly typed objects.
+- `update_nested_value()`: Must return strictly typed objects.
+- `concurrent_read_access()`: Must return strictly typed objects.
+- `full_config_workflow()`: Must return strictly typed objects.
+- `config_with_validation()`: Must return strictly typed objects.
+- `get_strategy_config()`: Must return strictly typed objects.
+- `trading_thresholds()`: Must return strictly typed objects.
+- `get_trading_threshold()`: Must return strictly typed objects.
+- `update_strategy_config()`: Must return strictly typed objects.
+- `validate_configuration()`: Must return strictly typed objects.
+- `get_config_summary()`: Must return strictly typed objects.
+- `get()`: Must return strictly typed objects.
+- `set()`: Must return strictly typed objects.
+- `get_atr_multiplier()`: Must return strictly typed objects.
+- `set_atr_multiplier()`: Must return strictly typed objects.
+- `get_risk_config()`: Must return strictly typed objects.
+- `get_trading_symbols()`: Must return strictly typed objects.
+- `get_backtest_dates()`: Must return strictly typed objects.
+- `read_config()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

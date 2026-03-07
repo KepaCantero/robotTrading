@@ -1,0 +1,73 @@
+# Requirements Document: services/strategy_stock_allocator.py
+
+## 1. Module Overview
+Strategy Stock Allocator Module
+
+Selección, clasificación y asignación dinámica de acciones a estrategias:
+- Momentum
+- Mean Reversion
+- Pairs Trading
+
+Implementa arquitectura profesional, verificable y auditable con:
+- Centralización de configuración y trazabilidad
+- Integridad total de datos
+- Validación estadística rigurosa
+- Gestión de riesgo optimizada (ERC / Risk Parity)
+- Registro completo de decisiones
+- Cobertura de pruebas exhaustiva
+
+## 2. Dependencies
+- `logging`
+- `collections.defaultdict`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `pandas`
+- `pydantic.BaseModel`
+- `pydantic.Field`
+- `scipy.stats`
+- `scipy.optimize.minimize`
+- `app.shared.config.centralized_config.StockAllocationSettings`
+- `app.services.momentum_analysis.TechnicalIndicatorCalculator`
+- `statsmodels.regression.linear_model.OLS`
+- `statsmodels.tsa.stattools.adfuller`
+- `statsmodels.tsa.stattools.kpss`
+- `arch.arch_model`
+- `app.shared.performance.statsmodels_fallback.OLS`
+- `app.shared.performance.statsmodels_fallback.adfuller`
+- `app.shared.performance.statsmodels_fallback.kpss`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StockMetrics`: Must conform to application domain models.
+- `PairMetrics`: Must conform to application domain models.
+- `AllocationResult`: Must conform to application domain models.
+- `StrategyStockAllocator`: Must conform to application domain models.
+### Public Functions
+- `OLS()`: Must return strictly typed objects.
+- `filter_stocks()`: Must return strictly typed objects.
+- `calculate_hurst_exponent()`: Must return strictly typed objects.
+- `classify_market_regime()`: Must return strictly typed objects.
+- `test_stationarity()`: Must return strictly typed objects.
+- `calculate_half_life()`: Must return strictly typed objects.
+- `calculate_sortino_ratio()`: Must return strictly typed objects.
+- `calculate_garch_volatility()`: Must return strictly typed objects.
+- `score_momentum()`: Must return strictly typed objects.
+- `score_mean_reversion()`: Must return strictly typed objects.
+- `score_pairs_trading()`: Must return strictly typed objects.
+- `calculate_wcm_scores()`: Must return strictly typed objects.
+- `allocate_capital_ERC()`: Must return strictly typed objects.
+- `validate_assignment()`: Must return strictly typed objects.
+- `generate_output()`: Must return strictly typed objects.
+- `allocate()`: Must return strictly typed objects.
+- `objective()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

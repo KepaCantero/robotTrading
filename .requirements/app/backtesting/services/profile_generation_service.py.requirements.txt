@@ -1,0 +1,35 @@
+# Requirements Document: backtesting/services/profile_generation_service.py
+
+## 1. Module Overview
+Profile Generation Service
+
+Handles generation of investor profile combinations for batch testing.
+
+Responsibilities:
+- Generate all profile combinations (objectives × risk × tier × horizon)
+- Map capital tiers to configuration keys
+- Handle profile creation logic
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `app.domain.models.input_profile.InputProfile`
+- `app.domain.models.input_profile.ObjectivoInversion`
+- `app.domain.models.input_profile.RiskTolerance`
+- `app.shared.utils.tier_mapper.map_profile_tier_to_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ProfileGenerationService`: Must conform to application domain models.
+### Public Functions
+- `generate_all_profiles()`: Must return strictly typed objects.
+- `get_capital_tier_key()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

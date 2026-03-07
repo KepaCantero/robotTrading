@@ -1,0 +1,60 @@
+# Requirements Document: presentation/api/security.py
+
+## 1. Module Overview
+Security utilities for API endpoints.
+
+This module provides decorators and middleware for:
+- Rate limiting (in-memory, suitable for single-instance deployments)
+- Authentication/authorization (placeholder for future JWT integration)
+- Audit logging for sensitive operations
+
+GAP Fixes:
+- API-005: Added security decorators (rate_limit, require_auth, audit_log)
+
+## 2. Dependencies
+- `__future__.annotations`
+- `asyncio`
+- `logging`
+- `time`
+- `traceback`
+- `collections.defaultdict`
+- `datetime.datetime`
+- `functools.wraps`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `fastapi.HTTPException`
+- `fastapi.Request`
+- `fastapi.Response`
+- `fastapi.status`
+- `starlette.middleware.base.BaseHTTPMiddleware`
+- `starlette.types.ASGIApp`
+- `audit_logger`
+- `get_correlation_id`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RateLimiter`: Must conform to application domain models.
+- `RateLimitMiddleware`: Must conform to application domain models.
+- `SecurityConfig`: Must conform to application domain models.
+- `SecurityHeadersMiddleware`: Must conform to application domain models.
+### Public Functions
+- `get_rate_limiter()`: Must return strictly typed objects.
+- `rate_limit()`: Must return strictly typed objects.
+- `get_user_from_request()`: Must return strictly typed objects.
+- `require_auth()`: Must return strictly typed objects.
+- `require_admin()`: Must return strictly typed objects.
+- `audit_log()`: Must return strictly typed objects.
+- `get_cors_config()`: Must return strictly typed objects.
+- `decorator()`: Must return strictly typed objects.
+- `decorator()`: Must return strictly typed objects.
+- `decorator()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [ ] Must not expose external secrets.
+- [x] Exceptions must be handled.

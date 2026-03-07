@@ -1,0 +1,45 @@
+# Requirements Document: backtesting/factories/strategy_factory.py
+
+## 1. Module Overview
+Strategy Factory Module for Backtesting
+
+This module provides centralized strategy creation and configuration,
+extracting this responsibility from ComprehensiveBacktestRunner to reduce
+God Object anti-pattern.
+
+Responsibilities:
+- Create strategy instances from configuration
+- Extract strategy parameters
+- Get strategy metadata (name, thresholds)
+
+This follows the Factory pattern for better separation of concerns.
+
+## 2. Dependencies
+- `logging`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `app.domain.strategies.mean_reversion.MeanReversionStrategy`
+- `app.domain.strategies.momentum.MomentumStrategy`
+- `app.domain.strategies.pairs_trading.PairsTrading`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StrategyFactory`: Must conform to application domain models.
+### Public Functions
+- `create_strategy_from_config()`: Must return strictly typed objects.
+- `get_strategy_metadata()`: Must return strictly typed objects.
+- `create_strategy()`: Must return strictly typed objects.
+- `get_strategy_name()`: Must return strictly typed objects.
+- `extract_thresholds()`: Must return strictly typed objects.
+- `create_baseline_config()`: Must return strictly typed objects.
+- `create_multi_strategy_configs()`: Must return strictly typed objects.
+- `list_available_strategies()`: Must return strictly typed objects.
+- `validate_config()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

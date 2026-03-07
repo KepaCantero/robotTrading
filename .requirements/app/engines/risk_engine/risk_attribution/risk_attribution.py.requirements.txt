@@ -1,0 +1,34 @@
+# Requirements Document: engines/risk_engine/risk_attribution/risk_attribution.py
+
+## 1. Module Overview
+Risk Attribution
+
+Implementa risk attribution:
+- Descomponer riesgo por fuente (estrategia, activo, factor)
+- Factor risk models (Fama-French, APT)
+
+## 2. Dependencies
+- `logging`
+- `abc.ABC`
+- `abc.abstractmethod`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `app.domain.models.portfolio.Portfolio`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BaseRiskAttributor`: Must conform to application domain models.
+- `RiskAttributor`: Must conform to application domain models.
+### Public Functions
+- `attribute_risk()`: Must return strictly typed objects.
+- `attribute_risk()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

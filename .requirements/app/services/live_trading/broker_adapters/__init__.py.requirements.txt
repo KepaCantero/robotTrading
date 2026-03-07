@@ -1,0 +1,38 @@
+# Requirements Document: services/live_trading/broker_adapters/__init__.py
+
+## 1. Module Overview
+Broker Adapters - Implementation-specific broker connectors.
+
+This package provides concrete implementations for different brokers.
+Each adapter implements the BrokerConnector interface for a specific broker.
+
+Available Adapters:
+- AlpacaAdapter: Alpaca broker integration
+- PaperAdapter: Paper trading for testing/simulation
+- IBAdapter: Interactive Brokers integration (legacy)
+- IBKRSpainAdapter: Interactive Brokers for Spain (implements IBrokerAdapter Protocol)
+- CurrencyConverter: EUR/USD currency conversion
+- (Future) TradierAdapter: Tradier broker integration
+
+## 2. Dependencies
+- `alpaca_adapter.AlpacaAdapter`
+- `currency_converter.CurrencyConverter`
+- `currency_converter.get_currency_converter`
+- `ib_adapter.IBAdapter`
+- `ib_adapter.IBConnection`
+- `ib_adapter.get_ib_adapter`
+- `ibex35_contracts.create_index_contract`
+- `ibex35_contracts.create_stock_contract`
+- `ibex35_contracts.get_ibex35_symbols`
+- `ibex35_contracts.is_ibex35_symbol`
+- `ibkr_adapter_spain.IBKRSpainAdapter`
+- `ibkr_adapter_spain.get_ibkr_spain_adapter`
+- `paper_adapter.PaperAdapter`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

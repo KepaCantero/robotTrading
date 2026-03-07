@@ -1,0 +1,42 @@
+# Requirements Document: domain/strategies/crypto_screener.py
+
+## 1. Module Overview
+Crypto Asset Screener
+
+This module provides screening functionality for cryptocurrency assets,
+filtering by market cap, liquidity, exchange listing, and volatility.
+
+Crypto markets differ significantly from traditional markets:
+- 24/7 trading with continuous price discovery
+- Higher volatility and lower liquidity in smaller cap tokens
+- Bitcoin dominance affects most altcoins
+- Exchange listings affect liquidity and accessibility
+
+## 2. Dependencies
+- `logging`
+- `time`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `models.CryptoAsset`
+- `models.CryptoAssetType`
+- `models.CryptoExchange`
+- `models.CryptoScreeningResult`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CryptoScreener`: Must conform to application domain models.
+### Public Functions
+- `screen()`: Must return strictly typed objects.
+- `calculate_liquidity_score()`: Must return strictly typed objects.
+- `verify_listing()`: Must return strictly typed objects.
+- `calculate_btc_correlation_score()`: Must return strictly typed objects.
+- `get_screening_summary()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

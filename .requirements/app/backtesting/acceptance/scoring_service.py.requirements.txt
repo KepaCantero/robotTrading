@@ -1,0 +1,24 @@
+# Requirements Document: backtesting/acceptance/scoring_service.py
+
+## 1. Module Overview
+Scoring Service for Backtesting Acceptance Criteria.
+
+Calculates overall score from validation criteria.
+Follows Single Responsibility Principle (SOL-001).
+
+## 2. Dependencies
+- `dataclasses.dataclass`
+- `typing.List`
+- `app.backtesting.acceptance.models.CriterionResult`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ScoringService`: Must conform to application domain models.
+### Public Functions
+- `calculate_score()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

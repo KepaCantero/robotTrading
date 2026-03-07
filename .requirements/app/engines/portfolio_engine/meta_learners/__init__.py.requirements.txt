@@ -1,0 +1,20 @@
+# Requirements Document: engines/portfolio_engine/meta_learners/__init__.py
+
+## 1. Module Overview
+Meta-learners Module
+
+Exporta todos los meta-learners disponibles.
+
+## 2. Dependencies
+- `meta_learners.BaseMetaLearner`
+- `meta_learners.EnsembleMetaLearner`
+- `meta_learners.HistoricalPerformanceLearner`
+- `meta_learners.ReinforcementLearningLearner`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

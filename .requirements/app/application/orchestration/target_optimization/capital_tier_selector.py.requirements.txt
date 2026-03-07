@@ -1,0 +1,43 @@
+# Requirements Document: application/orchestration/target_optimization/capital_tier_selector.py
+
+## 1. Module Overview
+T1.1: Capital Tier Strategy Selector
+
+Dynamically selects strategy configuration based on available capital:
+- Determines capital tier (MICRO/SMALL/MEDIUM/LARGE)
+- Activates appropriate strategy features
+- Scales risk profile by tier
+- Configures leverage limits
+
+## 2. Dependencies
+- `logging`
+- `decimal.Decimal`
+- `typing.Optional`
+- `models.CapitalTier`
+- `models.CapitalTierResult`
+- `models.RiskProfile`
+- `models.StrategyFeatures`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CapitalTierSelector`: Must conform to application domain models.
+- `StrategyFeatureGatekeeper`: Must conform to application domain models.
+- `RiskProfileScaler`: Must conform to application domain models.
+### Public Functions
+- `detect_tier()`: Must return strictly typed objects.
+- `get_tier_config()`: Must return strictly typed objects.
+- `select_strategy()`: Must return strictly typed objects.
+- `activate_features()`: Must return strictly typed objects.
+- `can_use_feature()`: Must return strictly typed objects.
+- `scale_risk_profile()`: Must return strictly typed objects.
+- `get_risk_level()`: Must return strictly typed objects.
+- `get_max_leverage()`: Must return strictly typed objects.
+- `get_max_position_size()`: Must return strictly typed objects.
+- `get_max_position_size_eur()`: Must return strictly typed objects.
+- `get_max_daily_loss_eur()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

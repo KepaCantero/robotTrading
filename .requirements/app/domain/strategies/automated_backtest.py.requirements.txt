@@ -1,0 +1,51 @@
+# Requirements Document: domain/strategies/automated_backtest.py
+
+## 1. Module Overview
+Automated Backtest System - Backtest automatizado con ablation y learning engines.
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `pandas`
+- `app.backtesting.data_loader.DataLoader`
+- `app.backtesting.engine.SimpleBacktester`
+- `app.domain.models.market_data.Quote`
+- `app.domain.services.portfolio.builder.PortfolioBuilder`
+- `app.services.portfolio_config_manager.get_portfolio_config_manager`
+- `app.backtesting.models.BacktestConfig`
+- `app.domain.strategies.momentum_modular.strategy.ModularMomentumStrategy`
+- `app.backtesting.engine.SimpleBacktester`
+- `app.backtesting.models.BacktestConfig`
+- `app.domain.strategies.momentum_modular.learning.training_data_preparator.TrainingDataPreparator`
+- `app.domain.strategies.momentum_modular.strategy.ModularMomentumStrategy`
+- `yaml`
+- `yaml`
+- `app.backtesting.models.BacktestConfig`
+- `app.backtesting.models.BacktestConfig`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PortfolioAnalyzer`: Must conform to application domain models.
+- `AutomatedBacktestRunner`: Must conform to application domain models.
+### Public Functions
+- `run_automated_backtest()`: Must return strictly typed objects.
+- `select_best_stock()`: Must return strictly typed objects.
+- `run_baseline_backtest()`: Must return strictly typed objects.
+- `run_ablation_study()`: Must return strictly typed objects.
+- `run_learning_engines_backtest()`: Must return strictly typed objects.
+- `generate_summary_report()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

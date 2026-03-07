@@ -1,0 +1,56 @@
+# Requirements Document: domain/ensemble/models.py
+
+## 1. Module Overview
+Data models for ensemble methods.
+
+This module defines Pydantic models for ensemble configuration,
+Pareto front solutions, and portfolio combination metrics.
+
+## 2. Dependencies
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `pydantic.BaseModel`
+- `pydantic.ConfigDict`
+- `pydantic.Field`
+- `pydantic.field_validator`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `OptimizationObjective`: Must conform to application domain models.
+- `ObjectiveConfig`: Must conform to application domain models.
+- `ParetoSolution`: Must conform to application domain models.
+- `EnsembleMethod`: Must conform to application domain models.
+- `EnsembleConfig`: Must conform to application domain models.
+- `EnsembleSignal`: Must conform to application domain models.
+- `AllocationMethod`: Must conform to application domain models.
+- `StrategyAllocation`: Must conform to application domain models.
+- `CombinedPortfolio`: Must conform to application domain models.
+- `CorrelationMetrics`: Must conform to application domain models.
+### Public Functions
+- `validate_weights()`: Must return strictly typed objects.
+- `validate_objectives_match_weights()`: Must return strictly typed objects.
+- `validate_strategy_weights()`: Must return strictly typed objects.
+- `dominates()`: Must return strictly typed objects.
+- `is_diverse()`: Must return strictly typed objects.
+- `validate_strategy_weights()`: Must return strictly typed objects.
+- `is_actionable()`: Must return strictly typed objects.
+- `has_consensus()`: Must return strictly typed objects.
+- `drift()`: Must return strictly typed objects.
+- `needs_rebalance()`: Must return strictly typed objects.
+- `is_well_diversified()`: Must return strictly typed objects.
+- `is_efficient()`: Must return strictly typed objects.
+- `has_redundancy()`: Must return strictly typed objects.
+- `is_well_conditioned()`: Must return strictly typed objects.
+- `diversification_quality()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

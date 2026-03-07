@@ -1,0 +1,20 @@
+# Requirements Document: presentation/dto/requests.py
+
+## 1. Module Overview
+Request DTOs for Presentation Layer
+
+## 2. Dependencies
+- `decimal.Decimal`
+- `pydantic.BaseModel`
+- `pydantic.Field`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CreatePortfolioRequest`: Must conform to application domain models.
+- `ExecuteStrategyRequest`: Must conform to application domain models.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

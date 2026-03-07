@@ -1,0 +1,36 @@
+# Requirements Document: backtesting/runners/monte_carlo_simulator.py
+
+## 1. Module Overview
+Monte Carlo Simulator Module
+
+Extracted from comprehensive_backtest_runner.py for SRP compliance.
+
+Provides Monte Carlo simulation functionality for backtesting:
+- Realistic data generation with GARCH and regime switching
+- Volatility-adjusted quote generation
+- Scenario simulation for stress testing
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `app.backtesting.realistic_data_generator.RealisticDataGenerator`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MonteCarloSimulator`: Must conform to application domain models.
+### Public Functions
+- `generate_monte_carlo_quotes()`: Must return strictly typed objects.
+- `create_monte_carlo_quotes()`: Must return strictly typed objects.
+- `generate_volatility_scenarios()`: Must return strictly typed objects.
+- `calculate_monte_carlo_statistics()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

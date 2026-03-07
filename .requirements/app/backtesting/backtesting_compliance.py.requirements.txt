@@ -1,0 +1,58 @@
+# Requirements Document: backtesting/backtesting_compliance.py
+
+## 1. Module Overview
+Backtesting Compliance Module - Reglas R5, R6, R7, DATA-001
+
+Este módulo implementa las validaciones específicas de backtesting según
+las reglas definidas en .ralph/rules/rules_mapping.yml:
+
+- R5: Walk-Forward Analysis - Validación con ventanas temporales
+- R6: Overfitting Prevention - Ratio parámetros/observaciones < 1:30
+- R7: Monte Carlo Simulation - Stress testing con simulaciones
+- DATA-001: Purged Cross-Validation - CV sin data leakage
+
+Uso:
+    from app.backtesting.backtesting_compliance import BacktestingCompliance
+
+    compliance = BacktestingCompliance()
+    result = compliance.validate_backtest(
+        backtest_results=results,
+        n_parameters=10,
+        n_observations=500
+    )
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ComplianceViolation`: Must conform to application domain models.
+- `BacktestingComplianceResult`: Must conform to application domain models.
+- `BacktestingCompliance`: Must conform to application domain models.
+### Public Functions
+- `create_backtesting_compliance()`: Must return strictly typed objects.
+- `validate_backtest_quick()`: Must return strictly typed objects.
+- `add_violation()`: Must return strictly typed objects.
+- `get_summary()`: Must return strictly typed objects.
+- `check_overfitting()`: Must return strictly typed objects.
+- `check_walk_forward()`: Must return strictly typed objects.
+- `check_monte_carlo()`: Must return strictly typed objects.
+- `check_purged_cv()`: Must return strictly typed objects.
+- `validate_backtest()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

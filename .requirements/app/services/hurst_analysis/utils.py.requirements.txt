@@ -1,0 +1,30 @@
+# Requirements Document: services/hurst_analysis/utils.py
+
+## 1. Module Overview
+Utility functions for Hurst Analysis module.
+
+This module contains helper functions used across the hurst_analysis package.
+Following the Single Responsibility Principle, these utilities are focused
+on specific tasks like data conversion and preparation.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `numpy`
+- `pandas`
+- `app.services.hurst_analysis.models.HurstResult`
+- `app.services.hurst_analysis.models.MarketRegime`
+- `app.services.hurst_analysis.models.StrategyRecommendation`
+
+## 3. Core Components (Contracts)
+### Public Functions
+- `to_numpy_array()`: Must return strictly typed objects.
+- `calculate_log_returns()`: Must return strictly typed objects.
+- `create_default_result()`: Must return strictly typed objects.
+- `clean_and_validate_series()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

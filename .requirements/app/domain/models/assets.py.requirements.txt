@@ -1,0 +1,52 @@
+# Requirements Document: domain/models/assets.py
+
+## 1. Module Overview
+Asset models for AlgoTrading system.
+
+This module defines the data models for assets, liquidity metrics,
+and asset universe management.
+
+## 2. Dependencies
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `pydantic.BaseModel`
+- `pydantic.Field`
+- `pydantic.field_validator`
+- `math`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `AssetClass`: Must conform to application domain models.
+- `Exchange`: Must conform to application domain models.
+- `Asset`: Must conform to application domain models.
+- `AssetUniverse`: Must conform to application domain models.
+- `LiquidityMetrics`: Must conform to application domain models.
+- `AssetRanking`: Must conform to application domain models.
+- `AssetFilter`: Must conform to application domain models.
+### Public Functions
+- `validate_symbol()`: Must return strictly typed objects.
+- `validate_name()`: Must return strictly typed objects.
+- `volume_score()`: Must return strictly typed objects.
+- `spread_score()`: Must return strictly typed objects.
+- `combined_liquidity_score()`: Must return strictly typed objects.
+- `add_asset()`: Must return strictly typed objects.
+- `remove_asset()`: Must return strictly typed objects.
+- `get_top_liquid_assets()`: Must return strictly typed objects.
+- `get_asset_by_symbol()`: Must return strictly typed objects.
+- `update_asset_liquidity()`: Must return strictly typed objects.
+- `validate_symbol()`: Must return strictly typed objects.
+- `add_ranking()`: Must return strictly typed objects.
+- `get_top_ranked()`: Must return strictly typed objects.
+- `matches()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

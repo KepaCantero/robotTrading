@@ -1,0 +1,56 @@
+# Requirements Document: services/profile_driven_trading/__init__.py
+
+## 1. Module Overview
+Profile-Driven Trading Algorithm Orchestrator
+
+This module orchestrates the complete trading lifecycle from investor profile to trade execution.
+It integrates all components of the algorithmic trading system into a unified workflow.
+
+Main Components:
+- ProfileDrivenTradingOrchestrator: Main orchestrator class
+- WorkflowManager: Pipeline execution and state management
+- SignalIntegrator: Multi-source signal integration
+- Models: Data classes for configuration and results
+
+Usage:
+    from app.services.profile_driven_trading import (
+        ProfileDrivenTradingOrchestrator,
+        OrchestratorConfig,
+        TradingResult,
+    )
+
+    config = OrchestratorConfig(
+        enable_rl_signals=True,
+        enable_tax_optimization=True,
+        enable_backtest_validation=True,
+        enable_risk_gates=True,
+        auto_execute_trades=False,  # Dry-run by default
+    )
+
+    orchestrator = ProfileDrivenTradingOrchestrator(config)
+    result = await orchestrator.execute_trading_lifecycle(input_profile)
+
+## 2. Dependencies
+- `models.ExecutionResult`
+- `models.OrchestratorConfig`
+- `models.RiskValidationResult`
+- `models.StageResult`
+- `models.TradingResult`
+- `orchestrator.ProfileDrivenTradingOrchestrator`
+- `profile_strategy_mapper.ProfileStrategyMapper`
+- `profile_strategy_mapper.StrategyMapping`
+- `profile_strategy_mapper.create_profile_mapper`
+- `profile_strategy_mapper.get_capital_tier`
+- `profile_strategy_mapper.map_profile_to_strategies`
+- `signal_integrator.SignalIntegrator`
+- `signal_integrator.SignalSet`
+- `workflow_manager.PipelineResult`
+- `workflow_manager.WorkflowManager`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

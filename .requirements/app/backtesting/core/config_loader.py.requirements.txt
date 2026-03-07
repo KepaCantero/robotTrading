@@ -1,0 +1,43 @@
+# Requirements Document: backtesting/core/config_loader.py
+
+## 1. Module Overview
+Configuration loader for backtesting system.
+
+This module provides centralized configuration loading from YAML files,
+with support for backtest configuration, strategy parameters, and execution settings.
+
+## 2. Dependencies
+- `logging`
+- `decimal.Decimal`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `yaml`
+- `app.backtesting.models.BacktestConfig`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ConfigValidationError`: Must conform to application domain models.
+- `BacktestConfigLoader`: Must conform to application domain models.
+### Public Functions
+- `raw_config()`: Must return strictly typed objects.
+- `get_section()`: Must return strictly typed objects.
+- `get_backtest_config()`: Must return strictly typed objects.
+- `get_strategy_config()`: Must return strictly typed objects.
+- `get_execution_config()`: Must return strictly typed objects.
+- `get_modules_config()`: Must return strictly typed objects.
+- `get_learning_engines_config()`: Must return strictly typed objects.
+- `get_parallelization_config()`: Must return strictly typed objects.
+- `get_reporting_config()`: Must return strictly typed objects.
+- `get_meta_analysis_config()`: Must return strictly typed objects.
+- `get_input_config()`: Must return strictly typed objects.
+- `get_backtests_config()`: Must return strictly typed objects.
+- `reload()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

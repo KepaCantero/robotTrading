@@ -1,0 +1,41 @@
+# Requirements Document: domain/value_objects/percentage.py
+
+## 1. Module Overview
+Percentage Value Object - Immutable percentage representation
+
+Percentage is a value object representing a percentage with validation
+and arithmetic operations.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `typing.Any`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `Percentage`: Must conform to application domain models.
+- `Weight`: Must conform to application domain models.
+### Public Functions
+- `from_decimal()`: Must return strictly typed objects.
+- `from_float()`: Must return strictly typed objects.
+- `from_percent()`: Must return strictly typed objects.
+- `zero()`: Must return strictly typed objects.
+- `as_decimal()`: Must return strictly typed objects.
+- `as_float()`: Must return strictly typed objects.
+- `add()`: Must return strictly typed objects.
+- `subtract()`: Must return strictly typed objects.
+- `multiply()`: Must return strictly typed objects.
+- `apply_to()`: Must return strictly typed objects.
+- `is_zero()`: Must return strictly typed objects.
+- `is_positive()`: Must return strictly typed objects.
+- `from_percent()`: Must return strictly typed objects.
+- `from_decimal()`: Must return strictly typed objects.
+- `as_percentage()`: Must return strictly typed objects.
+- `is_valid_for_portfolio()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

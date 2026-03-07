@@ -1,0 +1,79 @@
+# Requirements Document: services/live_trading/broker_adapters/ib_adapter.py
+
+## 1. Module Overview
+Interactive Brokers Adapter for AlgoTrading
+
+This module provides a complete interface to Interactive Brokers TWS/IB Gateway
+for live trading operations.
+
+Features:
+- Async connection management with auto-reconnect
+- Real-time market data streaming
+- Order placement (Market, Limit, Stop, Stop-Limit)
+- Position tracking
+- Account summary
+- Error handling and recovery
+
+Usage:
+    from app.services.live_trading.broker_adapters.ib_adapter import IBAdapter, IBConnection
+
+    # Create connection
+    ib = IBConnection()
+    await ib.connect()
+
+    # Get market data
+    data = await ib.get_market_data()
+
+    # Place order
+    result = await ib.place_order(
+        side='BUY',
+        quantity=1000,
+        stop_loss=1.08,
+        take_profit=1.12
+    )
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `os`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `ib_insync.IB`
+- `ib_insync.LimitOrder`
+- `ib_insync.MarketOrder`
+- `ib_insync.StopOrder`
+- `ib_insync.util`
+- `ib_insync.contract.Contract`
+- `ib_insync.ticker.Ticker`
+- `app.infrastructure.resilience.reconnection_manager.ReconnectionConfig`
+- `app.infrastructure.resilience.reconnection_manager.ReconnectionManager`
+- `app.domain.services.trading_validators.TradingValidator`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BrokerError`: Must conform to application domain models.
+- `ConfigurationError`: Must conform to application domain models.
+- `IBConnection`: Must conform to application domain models.
+- `IBAdapter`: Must conform to application domain models.
+### Public Functions
+- `get_ib_adapter()`: Must return strictly typed objects.
+- `get_connection_stats()`: Must return strictly typed objects.
+- `is_connected_property()`: Must return strictly typed objects.
+- `on_attempt()`: Must return strictly typed objects.
+- `on_success()`: Must return strictly typed objects.
+- `on_failure()`: Must return strictly typed objects.
+- `alert_callback()`: Must return strictly typed objects.
+- `on_ticker_update()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

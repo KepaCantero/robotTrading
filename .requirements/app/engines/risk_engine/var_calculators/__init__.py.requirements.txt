@@ -1,0 +1,21 @@
+# Requirements Document: engines/risk_engine/var_calculators/__init__.py
+
+## 1. Module Overview
+VaR Calculators Module
+
+Exporta todos los calculadores de VaR disponibles.
+
+## 2. Dependencies
+- `var_calculators.BaseVaRCalculator`
+- `var_calculators.GARCHVaRCalculator`
+- `var_calculators.HistoricalVaRCalculator`
+- `var_calculators.MonteCarloVaRCalculator`
+- `var_calculators.ParametricVaRCalculator`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,55 @@
+# Requirements Document: engines/strategy_engines/modular_momentum_engine.py
+
+## 1. Module Overview
+ModularMomentumStrategyEngine - Engine de estrategia de momentum modular.
+
+Refactorización de ModularMomentumStrategy como Strategy Engine con:
+- Arquitectura modular de filtros
+- Integración mejorada con Learning Engines (usando BaseStrategyEngine)
+- Feature extraction estandarizado
+- Soporte para callbacks
+- Métricas mejoradas
+
+## 2. Dependencies
+- `logging`
+- `collections.deque`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Sequence`
+- `numpy`
+- `app.domain.models.market_data.Quote`
+- `app.domain.models.portfolio.Portfolio`
+- `app.domain.models.signal.Signal`
+- `app.domain.models.signal.SignalSource`
+- `app.domain.models.signal.SignalStrength`
+- `app.domain.models.signal.SignalType`
+- `app.domain.services.analysis.momentum.TechnicalIndicatorCalculator`
+- `app.domain.strategies.momentum_modular.modules.filters.ATRFilter`
+- `app.domain.strategies.momentum_modular.modules.filters.EMAFilter`
+- `app.domain.strategies.momentum_modular.modules.filters.MomentumFilter`
+- `app.domain.strategies.momentum_modular.modules.filters.RSIFilter`
+- `app.domain.strategies.momentum_modular.modules.filters.StochRSIFilter`
+- `app.domain.strategies.momentum_modular.modules.filters.VolumeFilter`
+- `app.domain.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer`
+- `base.BaseStrategyEngine`
+- `app.domain.strategies.momentum_modular.learning.feature_extractor.FeatureExtractor`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ModularMomentumStrategyEngine`: Must conform to application domain models.
+### Public Functions
+- `get_strategy_type()`: Must return strictly typed objects.
+- `extract_features()`: Must return strictly typed objects.
+- `get_required_parameters()`: Must return strictly typed objects.
+- `risk_check()`: Must return strictly typed objects.
+- `apply_learning_adjustments()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

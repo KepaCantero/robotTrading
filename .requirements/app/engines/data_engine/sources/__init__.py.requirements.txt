@@ -1,0 +1,31 @@
+# Requirements Document: engines/data_engine/sources/__init__.py
+
+## 1. Module Overview
+Data Sources - Implementaciones de fuentes de datos.
+
+Fuentes soportadas:
+- OHLCV: IBKR, Binance, Alpaca, Polygon, Yahoo Finance, Alpha Vantage
+- Fundamentales: Financial Modeling Prep, Alpha Vantage
+- Sentimiento: Twitter API, Reddit API, News APIs
+- Opciones: Volatility surfaces
+
+## 2. Dependencies
+- `base_source.BaseDataSource`
+- `fundamental_sources.AlphaVantageFundamentalSource`
+- `fundamental_sources.FinancialModelingPrepSource`
+- `ohlcv_sources.AlpacaSource`
+- `ohlcv_sources.BinanceSource`
+- `ohlcv_sources.IBKRSource`
+- `ohlcv_sources.PolygonSource`
+- `options_sources.OptionsVolatilitySource`
+- `sentiment_sources.NewsSentimentSource`
+- `sentiment_sources.RedditSentimentSource`
+- `sentiment_sources.TwitterSentimentSource`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

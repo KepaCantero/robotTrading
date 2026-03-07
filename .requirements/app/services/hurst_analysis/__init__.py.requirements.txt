@@ -1,0 +1,61 @@
+# Requirements Document: services/hurst_analysis/__init__.py
+
+## 1. Module Overview
+Hurst Analysis Module
+
+A refactored, SOLID-compliant module for Hurst Exponent analysis and market regime detection.
+
+This module follows SOLID principles:
+- Single Responsibility: Each class has one reason to change
+- Open/Closed: Extensible through protocols/interfaces
+- Liskov Substitution: All calculators are substitutable
+- Interface Segregation: Focused, minimal interfaces
+- Dependency Inversion: Depend on abstractions, not concrete implementations
+
+Architecture:
+    Protocols: Abstract interfaces for all components
+    Calculators: Separate implementations for each calculation method
+    Services: Business logic components (classifier, recommender, etc.)
+    Orchestrator: Coordinates all components
+
+Example:
+    >>> from app.services.hurst_analysis import HurstExponentAnalyzer, create_default_analyzer
+    >>> analyzer = create_default_analyzer()
+    >>> result = analyzer.analyze(price_series)
+    >>> print(f"Hurst: {result.hurst_exponent:.3f}")
+
+Author: Algorithmic Trading Team
+Date: 2026-01-30
+Version: 3.0.0 - SOLID Refactored
+Compliance: SOLID Principles, Type Hints (Strict), Clean Architecture
+
+## 2. Dependencies
+- `app.services.hurst_analysis.change_detector.RegimeChangeDetector`
+- `app.services.hurst_analysis.confidence_calculator.ConfidenceCalculator`
+- `app.services.hurst_analysis.factory.create_custom_analyzer`
+- `app.services.hurst_analysis.factory.create_default_analyzer`
+- `app.services.hurst_analysis.historian.HistoricalDataTracker`
+- `app.services.hurst_analysis.models.HurstResult`
+- `app.services.hurst_analysis.models.MarketRegime`
+- `app.services.hurst_analysis.models.RegimeChange`
+- `app.services.hurst_analysis.models.StrategyRecommendation`
+- `app.services.hurst_analysis.orchestrator.HurstExponentAnalyzer`
+- `app.services.hurst_analysis.protocols.ChangeDetectorProtocol`
+- `app.services.hurst_analysis.protocols.ConfidenceCalculatorProtocol`
+- `app.services.hurst_analysis.protocols.HistoricalTrackerProtocol`
+- `app.services.hurst_analysis.protocols.HurstCalculator`
+- `app.services.hurst_analysis.protocols.RegimeClassifierProtocol`
+- `app.services.hurst_analysis.protocols.StrategyRecommenderProtocol`
+- `app.services.hurst_analysis.regime_classifier.RegimeClassifier`
+- `app.services.hurst_analysis.rs_calculator.RSMethodCalculator`
+- `app.services.hurst_analysis.strategy_recommender.StrategyRecommender`
+- `app.services.hurst_analysis.variance_calculator.AggregatedVarianceCalculator`
+- `app.services.hurst_analysis.variance_calculator.VarianceMethodCalculator`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

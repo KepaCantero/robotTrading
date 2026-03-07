@@ -1,0 +1,57 @@
+# Requirements Document: services/centralized_logging.py
+
+## 1. Module Overview
+Centralized Logging Service for AlgoTrading
+TASK-3: Configuración de logging centralizado
+
+## 2. Dependencies
+- `json`
+- `logging`
+- `os`
+- `contextlib.contextmanager`
+- `dataclasses.asdict`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `enum.Enum`
+- `functools.wraps`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `LogLevel`: Must conform to application domain models.
+- `LogService`: Must conform to application domain models.
+- `LogEntry`: Must conform to application domain models.
+- `CentralizedLogger`: Must conform to application domain models.
+### Public Functions
+- `log_performance()`: Must return strictly typed objects.
+- `log_async_performance()`: Must return strictly typed objects.
+- `log_trading_signal()`: Must return strictly typed objects.
+- `log_trade_execution()`: Must return strictly typed objects.
+- `log_portfolio_update()`: Must return strictly typed objects.
+- `log_market_data()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `log()`: Must return strictly typed objects.
+- `debug()`: Must return strictly typed objects.
+- `info()`: Must return strictly typed objects.
+- `warning()`: Must return strictly typed objects.
+- `error()`: Must return strictly typed objects.
+- `critical()`: Must return strictly typed objects.
+- `log_performance()`: Must return strictly typed objects.
+- `performance_timer()`: Must return strictly typed objects.
+- `log_trading_signal()`: Must return strictly typed objects.
+- `log_trade_execution()`: Must return strictly typed objects.
+- `log_portfolio_update()`: Must return strictly typed objects.
+- `log_market_data()`: Must return strictly typed objects.
+- `decorator()`: Must return strictly typed objects.
+- `decorator()`: Must return strictly typed objects.
+- `wrapper()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

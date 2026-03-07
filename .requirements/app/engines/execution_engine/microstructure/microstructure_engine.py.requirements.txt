@@ -1,0 +1,63 @@
+# Requirements Document: engines/execution_engine/microstructure/microstructure_engine.py
+
+## 1. Module Overview
+Market Microstructure Analysis Engine
+
+Main orchestrator for market microstructure analysis following:
+- Larry Harris "Trading and Exchanges" (Rule 6)
+- Maureen O'Hara "Market Microstructure Theory" (Rule 7)
+
+This engine integrates all microstructure components:
+- Order book analysis
+- Bid-ask bounce removal
+- Market impact modeling (Almgren-Chriss)
+- Adverse selection detection
+- Market quality metrics
+- Tick size constraints
+- Dark pool routing
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `pandas`
+- `adverse_selection_detector.AdverseSelectionResult`
+- `adverse_selection_detector.get_adverse_selection_detector`
+- `adverse_selection_detector.get_order_flow_toxicity`
+- `adverse_selection_detector.get_vpin_calculator`
+- `almgren_chriss_model.MarketImpactEstimate`
+- `almgren_chriss_model.get_almgren_chriss_model`
+- `bid_ask_bounce_removal.BounceAnalysisResult`
+- `bid_ask_bounce_removal.get_bid_ask_bounce_remover`
+- `dark_pool_router.DarkPoolDecision`
+- `dark_pool_router.get_dark_pool_router`
+- `market_quality_metrics.MarketQualityMetrics`
+- `market_quality_metrics.get_market_quality_metrics`
+- `order_book_analyzer.BookAnalysisResult`
+- `order_book_analyzer.OrderBookSnapshot`
+- `order_book_analyzer.get_order_book_analyzer`
+- `tick_size_constraints.TickSizeAnalysis`
+- `tick_size_constraints.get_tick_size_constraints`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MicrostructureAnalysisResult`: Must conform to application domain models.
+- `ExecutionPlan`: Must conform to application domain models.
+- `MarketMicrostructureEngine`: Must conform to application domain models.
+### Public Functions
+- `get_market_microstructure_engine()`: Must return strictly typed objects.
+- `analyze_market_microstructure()`: Must return strictly typed objects.
+- `create_execution_plan()`: Must return strictly typed objects.
+- `get_market_microstructure_report()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

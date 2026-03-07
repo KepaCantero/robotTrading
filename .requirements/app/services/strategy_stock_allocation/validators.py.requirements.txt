@@ -1,0 +1,28 @@
+# Requirements Document: services/strategy_stock_allocation/validators.py
+
+## 1. Module Overview
+Validation modules for stock allocation.
+
+Provides validation for allocation results ensuring
+capital totals, limits, and constraints are satisfied.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `collections.defaultdict`
+- `typing.TYPE_CHECKING`
+- `pydantic.BaseModel`
+- `app.shared.config.centralized_config.StockAllocationSettings`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StockMetrics`: Must conform to application domain models.
+- `AllocationValidator`: Must conform to application domain models.
+### Public Functions
+- `validate()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

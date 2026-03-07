@@ -1,0 +1,43 @@
+# Requirements Document: services/signal_scorer.py
+
+## 1. Module Overview
+Refactored Signal Scorer Service - TASK-15: Refactorización de Servicios
+
+Este módulo implementa el servicio de scoring de señales refactorizado,
+utilizando los nuevos motores especializados.
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `app.shared.config.centralized_config.get_config`
+- `app.domain.models.signal.MarketData`
+- `app.domain.models.signal.Signal`
+- `app.domain.models.signal.SignalPriorityQueue`
+- `app.domain.models.signal.SignalScorer`
+- `app.domain.models.signal.SignalSource`
+- `app.domain.models.signal.SignalStrength`
+- `app.domain.models.signal.SignalType`
+- `app.services.portfolio_service.PortfolioService`
+- `app.services.position_sizing_engine.PositionSizingEngine`
+- `app.services.signal_evaluation_engine.SignalEvaluationEngine`
+- `app.services.signal_execution_engine.SignalExecutionEngine`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SignalScorerService`: Must conform to application domain models.
+### Public Functions
+- `update_thresholds()`: Must return strictly typed objects.
+- `reset_statistics()`: Must return strictly typed objects.
+- `update_position_size_limit()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,29 @@
+# Requirements Document: engines/context_engine/regime_detectors/correlation_regime_detector.py
+
+## 1. Module Overview
+CorrelationRegimeDetector - Detección de régimen basada en correlaciones dinámicas.
+
+Usa análisis de correlaciones para detectar cambios de régimen.
+
+## 2. Dependencies
+- `logging`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `pandas`
+- `sklearn.decomposition.PCA`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CorrelationRegimeDetector`: Must conform to application domain models.
+### Public Functions
+- `detect()`: Must return strictly typed objects.
+- `set_baseline()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

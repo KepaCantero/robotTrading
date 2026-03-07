@@ -1,0 +1,50 @@
+# Requirements Document: domain/models/input_profile.py
+
+## 1. Module Overview
+T1.1: InputProfile - User Input Validation & Parsing
+
+Parse user inputs (capital, objective_inversion) into structured InputProfile.
+Entry point for the parametrization framework.
+
+Capabilities:
+- Validate user inputs (capital, objective)
+- Type conversion (JSON → Pydantic models)
+- Constraint checking (capital limits, risk tolerance consistency)
+- Clear error messages for invalid inputs
+
+## 2. Dependencies
+- `logging`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.Optional`
+- `uuid.uuid4`
+- `pydantic.BaseModel`
+- `pydantic.ConfigDict`
+- `pydantic.Field`
+- `pydantic.field_validator`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ObjectivoInversion`: Must conform to application domain models.
+- `RiskTolerance`: Must conform to application domain models.
+- `TaxResidence`: Must conform to application domain models.
+- `InputProfile`: Must conform to application domain models.
+- `InputProcessor`: Must conform to application domain models.
+### Public Functions
+- `validate_capital()`: Must return strictly typed objects.
+- `validate_objetivo()`: Must return strictly typed objects.
+- `validate_horizon()`: Must return strictly typed objects.
+- `validate_risk_tolerance()`: Must return strictly typed objects.
+- `capital_flag()`: Must return strictly typed objects.
+- `is_large_account()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `process_input()`: Must return strictly typed objects.
+- `validate_consistency()`: Must return strictly typed objects.
+- `get_stats()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,38 @@
+# Requirements Document: services/strategy_stock_allocation/protocols.py
+
+## 1. Module Overview
+Protocol definitions for the strategy stock allocation module.
+
+Defines interfaces for dependency injection and adherence to the Dependency
+Inversion Principle (DIP) from SOLID.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `typing.Any`
+- `typing.Protocol`
+- `numpy`
+- `pandas`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StockFilterProtocol`: Must conform to application domain models.
+- `CalculatorProtocol`: Must conform to application domain models.
+- `RegimeClassifierProtocol`: Must conform to application domain models.
+- `ScorerProtocol`: Must conform to application domain models.
+- `AllocatorProtocol`: Must conform to application domain models.
+### Public Functions
+- `filter_stocks()`: Must return strictly typed objects.
+- `calculate_hurst_exponent()`: Must return strictly typed objects.
+- `calculate_half_life()`: Must return strictly typed objects.
+- `test_stationarity()`: Must return strictly typed objects.
+- `classify_market_regime()`: Must return strictly typed objects.
+- `score_momentum()`: Must return strictly typed objects.
+- `score_mean_reversion()`: Must return strictly typed objects.
+- `score_pairs_trading()`: Must return strictly typed objects.
+- `allocate_capital()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

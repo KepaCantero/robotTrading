@@ -1,0 +1,35 @@
+# Requirements Document: services/market_universe_orchestrator.py
+
+## 1. Module Overview
+Market Universe Orchestrator - Centralizado para obtener, filtrar y pasar data a StrategyStockAllocator.
+
+Este componente orquestra el flujo completo:
+1. Obtiene tickers de mercados reales (S&P 500, IBEX 35, Crypto)
+2. Descarga datos OHLCV
+3. Filtra por liquidez y volatilidad
+4. Pasa data filtrada a StrategyStockAllocator
+
+Author: AlgoTrading System
+Created: 2025-01-23
+
+## 2. Dependencies
+- `logging`
+- `typing.Dict`
+- `typing.Optional`
+- `pandas`
+- `app.services.market_universe_loader.MarketUniverseLoader`
+- `app.services.market_universe_loader.get_market_universe_loader`
+- `app.services.strategy_stock_allocator.AllocationResult`
+- `app.services.strategy_stock_allocator.StrategyStockAllocator`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MarketUniverseOrchestrator`: Must conform to application domain models.
+### Public Functions
+- `get_market_universe_orchestrator()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

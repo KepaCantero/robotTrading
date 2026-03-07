@@ -1,0 +1,47 @@
+# Requirements Document: services/trading_error_handler.py
+
+## 1. Module Overview
+Trading Error Handler Unificado
+TASK-14: Unificación de Error Handling
+
+Este módulo proporciona un manejo unificado de errores específicos del trading,
+integrando con el sistema existente de manejo de errores.
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `datetime.datetime`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.Optional`
+- `app.shared.config.centralized_config.get_config`
+- `app.exceptions.trading_exceptions.AlgoTradingError`
+- `app.exceptions.trading_exceptions.ErrorCategory`
+- `app.exceptions.trading_exceptions.ErrorSeverity`
+- `app.exceptions.trading_exceptions.NetworkError`
+- `app.exceptions.trading_exceptions.PerformanceError`
+- `app.exceptions.trading_exceptions.RiskManagementError`
+- `app.exceptions.trading_exceptions.SystemError`
+- `app.exceptions.trading_exceptions.ValidationError`
+- `app.services.centralized_logging.LogLevel`
+- `app.services.centralized_logging.LogService`
+- `app.services.centralized_logging.centralized_logger`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ErrorAction`: Must conform to application domain models.
+- `ErrorContext`: Must conform to application domain models.
+- `TradingErrorHandler`: Must conform to application domain models.
+### Public Functions
+- `get_error_statistics()`: Must return strictly typed objects.
+- `reset_circuit_breaker()`: Must return strictly typed objects.
+- `get_error_statistics()`: Must return strictly typed objects.
+- `reset_circuit_breaker()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

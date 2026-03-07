@@ -1,0 +1,40 @@
+# Requirements Document: services/risk_scaling/__init__.py
+
+## 1. Module Overview
+PHASE 3: Dynamic Risk Scaling Service
+
+Coordinates intelligent risk scaling across multiple dimensions:
+- Volatility-based sizing (ATR)
+- Performance-based allocation (Sharpe ratio)
+- Loss-based reduction (consecutive losses)
+- Drawdown protection (circuit breakers)
+
+Components:
+- DynamicRiskScaler: Main orchestrator
+- VolatilityMonitor: ATR-based scaling (0.5x-1.5x)
+- SharpeRatioMonitor: Performance-based scaling (0.2x-1.0x)
+- LossMonitor: Consecutive loss detection (0.5x-1.0x)
+- DrawdownMonitor: Circuit breaker protection (0.0x-1.0x)
+- RiskScalingOrchestrator: Integration coordinator
+- RiskScalingMonitor: Dashboard/API
+
+## 2. Dependencies
+- `models.AdjustedPositionSizes`
+- `models.AdjustedSignal`
+- `models.AlertSubscription`
+- `models.RiskAlert`
+- `models.RiskAlertType`
+- `models.RiskLevel`
+- `models.RiskScalingFactors`
+- `models.RiskScalingReport`
+- `models.RiskScalingSnapshot`
+- `models.RiskScalingState`
+- `models.RiskScalingStatus`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

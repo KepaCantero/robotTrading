@@ -1,0 +1,44 @@
+# Requirements Document: domain/entities/backtest.py
+
+## 1. Module Overview
+Backtest Entity - Core business object for backtesting operations
+
+This entity represents a backtest with its configuration, execution state,
+and results. It contains pure business logic without infrastructure concerns.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `dataclasses`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `datetime.timezone`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Optional`
+- `value_objects.backtest_config.BacktestConfigValue`
+- `value_objects.backtest_result.BacktestResultValue`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BacktestStatus`: Must conform to application domain models.
+- `BacktestType`: Must conform to application domain models.
+- `Backtest`: Must conform to application domain models.
+### Public Functions
+- `start()`: Must return strictly typed objects.
+- `complete()`: Must return strictly typed objects.
+- `fail()`: Must return strictly typed objects.
+- `cancel()`: Must return strictly typed objects.
+- `get_duration()`: Must return strictly typed objects.
+- `is_running()`: Must return strictly typed objects.
+- `is_completed()`: Must return strictly typed objects.
+- `is_failed()`: Must return strictly typed objects.
+- `get_roi()`: Must return strictly typed objects.
+- `get_sharpe_ratio()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

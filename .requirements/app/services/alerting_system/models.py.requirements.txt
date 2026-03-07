@@ -1,0 +1,49 @@
+# Requirements Document: services/alerting_system/models.py
+
+## 1. Module Overview
+T18.2: Advanced Alerting System Models
+
+Data models for alert rules, events, and notification targets.
+
+## 2. Dependencies
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `AlertSeverity`: Must conform to application domain models.
+- `AlertState`: Must conform to application domain models.
+- `ComparisonOperator`: Must conform to application domain models.
+- `LogicOperator`: Must conform to application domain models.
+- `NotificationChannelType`: Must conform to application domain models.
+- `NotificationTarget`: Must conform to application domain models.
+- `ThresholdRule`: Must conform to application domain models.
+- `ChangeRule`: Must conform to application domain models.
+- `AlertRule`: Must conform to application domain models.
+- `AlertEvent`: Must conform to application domain models.
+- `AlertHistory`: Must conform to application domain models.
+- `AlertEvaluationContext`: Must conform to application domain models.
+- `NotificationPayload`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+- `evaluate()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `calculate_change_percent()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

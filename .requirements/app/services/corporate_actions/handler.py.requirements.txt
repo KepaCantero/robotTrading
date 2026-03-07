@@ -1,0 +1,59 @@
+# Requirements Document: services/corporate_actions/handler.py
+
+## 1. Module Overview
+Corporate Actions Handler - Handle stock splits, dividends, mergers, delistings.
+
+Corporate actions can significantly affect positions:
+- Stock splits: Quantity adjusted, entry price adjusted
+- Dividends: Cash received, baseline price adjusted
+- Mergers: Position converted to acquiring company
+- Delistings: Position needs to be closed
+- Spin-offs: New shares received
+- Rights offerings: Rights issued to shareholders
+
+This module integrates with:
+- Broker adapters (IBKR, Alpaca, etc.)
+- Position monitoring
+- Portfolio management
+- Tax calculations (FIFO)
+
+Phase 2.6: Corporate Actions Handler for multi-day position support.
+
+Author: Algorithmic Trading System
+Date: 2026-01-25
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.date`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `app.core.timezone_utils.utc_now`
+- `app.core.interfaces.broker_base.Order`
+- `app.core.interfaces.broker_base.OrderSide`
+- `app.core.interfaces.broker_base.OrderType`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CorporateActionType`: Must conform to application domain models.
+- `CorporateAction`: Must conform to application domain models.
+- `CorporateActionsHandler`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+- `get_processed_actions()`: Must return strictly typed objects.
+- `get_action_for_symbol()`: Must return strictly typed objects.
+- `get_action_by_type()`: Must return strictly typed objects.
+- `get_stats()`: Must return strictly typed objects.
+- `clear_history()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

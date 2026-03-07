@@ -1,0 +1,28 @@
+# Requirements Document: backtesting/runners/__init__.py
+
+## 1. Module Overview
+Backtesting Runners Module
+
+Extracted from comprehensive_backtest_runner.py for SRP compliance.
+
+Provides modular components for backtesting:
+- RegimeAnalyzer: Market regime detection and analysis
+- MonteCarloSimulator: Monte Carlo simulation for stress testing
+- ResultAggregator: Result aggregation and persistence
+
+## 2. Dependencies
+- `app.backtesting.runners.regime_analyzer.RegimeAnalyzer`
+- `app.backtesting.runners.regime_analyzer.detect_regimes`
+- `app.backtesting.runners.monte_carlo_simulator.MonteCarloSimulator`
+- `app.backtesting.runners.monte_carlo_simulator.generate_monte_carlo_quotes`
+- `app.backtesting.runners.result_aggregator.ResultAggregator`
+- `app.backtesting.runners.result_aggregator.aggregate_results`
+- `app.backtesting.runners.result_aggregator.save_results`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

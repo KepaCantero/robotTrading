@@ -1,0 +1,97 @@
+# Requirements Document: domain/strategies/learning/regularization.py
+
+## 1. Module Overview
+Regularization Techniques for Statistical Learning.
+
+This module implements comprehensive regularization methods following
+Hastie, Tibshirani, and Friedman's "The Elements of Statistical Learning"
+(ESL) Chapter 3: Linear Methods for Regression and Chapter 11: Regularization.
+
+Key Techniques:
+1. L1 Regularization (Lasso) - Sparse solutions, feature selection
+2. L2 Regularization (Ridge) - Shrinkage, multicollinearity handling
+3. Elastic Net - Combination of L1 and L2
+4. Adaptive Lasso - Weighted L1 penalty
+5. Group Lasso - Structured sparsity
+6. Regularization path tracking
+
+Reference:
+    "The Elements of Statistical Learning" by Hastie, Tibshirani, Friedman
+    Chapter 3: Linear Methods for Regression
+    Chapter 11: Regularization and Reproducing Kernel Hilbert Spaces
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `typing.Union`
+- `numpy`
+- `pandas`
+- `sklearn.linear_model.ElasticNet`
+- `sklearn.linear_model.Lasso`
+- `sklearn.linear_model.LassoCV`
+- `sklearn.linear_model.Ridge`
+- `sklearn.linear_model.RidgeCV`
+- `sklearn.utils.validation.check_array`
+- `sklearn.utils.validation.check_is_fitted`
+- `sklearn.model_selection.train_test_split`
+- `sklearn.model_selection.train_test_split`
+- `sklearn.model_selection.train_test_split`
+- `sklearn.model_selection.train_test_split`
+- `sklearn.model_selection.train_test_split`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RegularizationType`: Must conform to application domain models.
+- `RegularizationResult`: Must conform to application domain models.
+- `RegularizationPathPoint`: Must conform to application domain models.
+- `RegularizationPath`: Must conform to application domain models.
+- `L1Regularization`: Must conform to application domain models.
+- `L2Regularization`: Must conform to application domain models.
+- `ElasticNetRegularization`: Must conform to application domain models.
+- `AdaptiveLasso`: Must conform to application domain models.
+- `RegularizationAnalyzer`: Must conform to application domain models.
+### Public Functions
+- `optimize_regularization()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `fit()`: Must return strictly typed objects.
+- `predict()`: Must return strictly typed objects.
+- `score()`: Must return strictly typed objects.
+- `get_coefficients()`: Must return strictly typed objects.
+- `get_intercept()`: Must return strictly typed objects.
+- `get_sparsity_mask()`: Must return strictly typed objects.
+- `get_selected_features()`: Must return strictly typed objects.
+- `fit()`: Must return strictly typed objects.
+- `predict()`: Must return strictly typed objects.
+- `score()`: Must return strictly typed objects.
+- `get_coefficients()`: Must return strictly typed objects.
+- `get_intercept()`: Must return strictly typed objects.
+- `fit()`: Must return strictly typed objects.
+- `predict()`: Must return strictly typed objects.
+- `score()`: Must return strictly typed objects.
+- `get_coefficients()`: Must return strictly typed objects.
+- `get_intercept()`: Must return strictly typed objects.
+- `get_sparsity_mask()`: Must return strictly typed objects.
+- `fit()`: Must return strictly typed objects.
+- `predict()`: Must return strictly typed objects.
+- `get_coefficients()`: Must return strictly typed objects.
+- `analyze_l1_regularization()`: Must return strictly typed objects.
+- `analyze_l2_regularization()`: Must return strictly typed objects.
+- `analyze_elastic_net()`: Must return strictly typed objects.
+- `compute_regularization_path()`: Must return strictly typed objects.
+- `compare_regularization_methods()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

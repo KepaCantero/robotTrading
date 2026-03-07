@@ -1,0 +1,40 @@
+# Requirements Document: domain/services/portfolio_optimization/denoise_correlation.py
+
+## 1. Module Overview
+De-noising Correlation Matrix - Random Matrix Theory (RMT)
+
+Implements López de Prado's correlation matrix de-noising method
+using Random Matrix Theory to remove noise from correlation matrices.
+
+Reference: Rule 03-lopez-de-prado-advances-financial-ml.md
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `app.domain.services.portfolio_optimization._validation.is_square_matrix`
+- `app.domain.services.portfolio_optimization._validation.is_symmetric`
+- `app.domain.services.portfolio_optimization._validation.log_optimization_failure`
+- `scipy.stats.gaussian_kde`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DenoisedResult`: Must conform to application domain models.
+- `CorrelationDenoiser`: Must conform to application domain models.
+### Public Functions
+- `noise_ratio()`: Must return strictly typed objects.
+- `denoise_correlation()`: Must return strictly typed objects.
+- `denoise_correlation_with_std()`: Must return strictly typed objects.
+- `fit_kde()`: Must return strictly typed objects.
+- `get_number_of_signal_factors()`: Must return strictly typed objects.
+- `shrink_to_constant_correlation()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

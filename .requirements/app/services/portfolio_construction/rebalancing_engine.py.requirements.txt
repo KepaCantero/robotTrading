@@ -1,0 +1,33 @@
+# Requirements Document: services/portfolio_construction/rebalancing_engine.py
+
+## 1. Module Overview
+T18.1.2: RebalancingEngine - Dynamic portfolio rebalancing
+
+Executes periodic and threshold-based portfolio rebalancing with cost tracking.
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RebalancingFrequency`: Must conform to application domain models.
+- `RebalancingTrade`: Must conform to application domain models.
+- `RebalancingEvent`: Must conform to application domain models.
+- `RebalancingEngine`: Must conform to application domain models.
+### Public Functions
+- `get_rebalancing_engine()`: Must return strictly typed objects.
+- `get_engine_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

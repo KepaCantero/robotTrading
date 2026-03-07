@@ -1,0 +1,60 @@
+# Requirements Document: domain/trading/market_making/avellaneda_stoikov/__init__.py
+
+## 1. Module Overview
+Avellaneda-Stoikov Market Making Model
+
+This module implements the Avellaneda-Stoikov model for high-frequency market making.
+The model provides optimal bid/ask quotes that account for inventory risk and volatility.
+
+Key Features:
+- Reservation price calculation with inventory adjustment
+- Optimal spread calculation balancing risk and profit
+- Dynamic quote generation
+- Inventory management and risk control
+
+Mathematical Foundation:
+
+1. Reservation Price (inventory-adjusted mid):
+   r(s) = s - (γ * σ² / k) * q * (T - t) / T
+
+   Where:
+   - s: Current mid price
+   - γ (gamma): Risk aversion parameter
+   - σ (sigma): Volatility of the asset
+   - k: Order book depth parameter
+   - q: Current inventory (positive = long, negative = short)
+   - T: Total time horizon
+   - t: Current time
+
+2. Optimal Spread:
+   δ* = (γ * σ² / k) * (T - t) + (2/γ) * ln(1 + γ/2)
+
+   The spread has two components:
+   - Inventory risk term: Increases with time remaining and volatility
+   - Adverse selection term: Constant for given risk aversion
+
+3. Bid/Ask Quotes:
+   - Bid: r(s) - δ*/2
+   - Ask: r(s) + δ*/2
+
+References:
+- Avellaneda, M. & Stoikov, S. (2008) "High-frequency trading in a limit order book"
+- Guéant, O., Lehalle, C.A. & Fernandez-Tapia, J. (2013) "Dealing with inventory risk"
+
+## 2. Dependencies
+- `app.domain.trading.market_making.avellaneda_stoikov.as_model.ASConfig`
+- `app.domain.trading.market_making.avellaneda_stoikov.as_model.ASQuote`
+- `app.domain.trading.market_making.avellaneda_stoikov.as_model.AvellanedaStoikovModel`
+- `app.domain.trading.market_making.avellaneda_stoikov.inventory_manager.InventoryConfig`
+- `app.domain.trading.market_making.avellaneda_stoikov.inventory_manager.InventoryManager`
+- `app.domain.trading.market_making.avellaneda_stoikov.inventory_manager.InventoryState`
+- `app.domain.trading.market_making.avellaneda_stoikov.models.ASQuoteParams`
+- `app.domain.trading.market_making.avellaneda_stoikov.quote_generator.ASQuoteGenerator`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

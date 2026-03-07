@@ -1,0 +1,74 @@
+# Requirements Document: domain/market_analysis/microstructure/price_discovery.py
+
+## 1. Module Overview
+Price Discovery and Information Aggregation Module
+
+This module implements price discovery models and information aggregation concepts
+from Maureen O'Hara's "Market Microstructure Theory" (Chapter 7-8).
+
+Key Concepts:
+- Price formation models
+- Information aggregation in market prices
+- Efficient price discovery measurement
+- Price adjustment dynamics
+- Market efficiency testing
+
+References:
+- O'Hara, M. (1995) "Market Microstructure Theory", Chapters 7-8
+- Hasbrouck, J. (1995) "One Security, Many Markets"
+- Hasbrouck, J. (1991) "Measuring the Information Content of Stock Trades"
+- Madhavan, A. (2000) "Market Microstructure: A Survey"
+
+## 2. Dependencies
+- `__future__.annotations`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Tuple`
+- `numpy`
+- `pandas`
+- `statsmodels.tsa.stattools.adfuller`
+- `statsmodels.tsa.stattools.coint`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PriceDiscoveryModel`: Must conform to application domain models.
+- `MarketEfficiency`: Must conform to application domain models.
+- `PriceDiscoveryMetrics`: Must conform to application domain models.
+- `EfficientPriceEstimate`: Must conform to application domain models.
+- `InformationFlowMetrics`: Must conform to application domain models.
+- `MarketIntegrationMetrics`: Must conform to application domain models.
+- `PriceDiscoveryAnalyzer`: Must conform to application domain models.
+- `PriceDiscoveryMonitor`: Must conform to application domain models.
+### Public Functions
+- `get_price_discovery_analyzer()`: Must return strictly typed objects.
+- `get_price_discovery_monitor()`: Must return strictly typed objects.
+- `coint()`: Must return strictly typed objects.
+- `adfuller()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `estimate_efficient_price_roll()`: Must return strictly typed objects.
+- `calculate_information_share_hasbrouck()`: Must return strictly typed objects.
+- `measure_price_adjustment_speed()`: Must return strictly typed objects.
+- `calculate_pricing_error()`: Must return strictly typed objects.
+- `test_market_efficiency()`: Must return strictly typed objects.
+- `analyze_information_flow()`: Must return strictly typed objects.
+- `compare_markets_price_discovery()`: Must return strictly typed objects.
+- `calculate_discovery_quality_score()`: Must return strictly typed objects.
+- `generate_price_discovery_report()`: Must return strictly typed objects.
+- `check_discovery_quality()`: Must return strictly typed objects.
+- `get_discovery_trend()`: Must return strictly typed objects.
+- `coint()`: Must return strictly typed objects.
+- `adfuller()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

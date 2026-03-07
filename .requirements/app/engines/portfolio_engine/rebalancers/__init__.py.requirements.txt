@@ -1,0 +1,22 @@
+# Requirements Document: engines/portfolio_engine/rebalancers/__init__.py
+
+## 1. Module Overview
+Portfolio Rebalancers Module
+
+Exporta todos los rebalanceadores disponibles.
+
+## 2. Dependencies
+- `rebalancers.BaseRebalancer`
+- `rebalancers.HybridRebalancer`
+- `rebalancers.ThresholdRebalancer`
+- `rebalancers.TimeBasedRebalancer`
+- `rebalancers.TransactionCostAwareRebalancer`
+- `rebalancers.VolatilityTargetingRebalancer`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,49 @@
+# Requirements Document: domain/strategies/option_screener.py
+
+## 1. Module Overview
+Option Screener - Filtrado de Opciones Óptimas para Covered Calls
+
+Implementa screening de opciones call para encontrar las mejores oportunidades
+de venta de opciones cubiertas.
+
+Criterios de screening:
+- Días al vencimiento (DTE): 30-45 días óptimo para theta decay
+- Moneyness: 2-5% OTM para balance entre riesgo y premio
+- Prima mínima: 1% del precio del subyacente
+- Liquidez: open interest y volumen mínimos
+- IV rank: evitar IV extremadamente alta (IV crush post-earnings)
+- Evitar earnings
+
+SOLID Principles:
+- Single Responsibility: Solo screening, no gestión de posiciones
+- Open/Closed: Extensible con nuevos criterios
+
+## 2. Dependencies
+- `logging`
+- `time`
+- `decimal.Decimal`
+- `typing.List`
+- `typing.Optional`
+- `greeks_calculator.GreeksCalculator`
+- `models.AssignmentProbability`
+- `models.CallOption`
+- `models.Moneyness`
+- `models.OptionScreenerResult`
+- `models.OptionScreeningCriteria`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `OptionScreener`: Must conform to application domain models.
+### Public Functions
+- `screen()`: Must return strictly typed objects.
+- `score_option()`: Must return strictly typed objects.
+- `get_best_option()`: Must return strictly typed objects.
+- `filter_by_moneyness()`: Must return strictly typed objects.
+- `filter_by_dte()`: Must return strictly typed objects.
+- `filter_by_premium()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

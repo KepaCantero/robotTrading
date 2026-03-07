@@ -1,0 +1,40 @@
+# Requirements Document: domain/ensemble/correlation_analyzer.py
+
+## 1. Module Overview
+Correlation Analyzer for Strategy Relationship Analysis.
+
+This module provides tools for analyzing correlations between trading
+strategies to identify redundancy and improve diversification.
+
+## 2. Dependencies
+- `logging`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `app.domain.ensemble.models.CorrelationMetrics`
+- `scipy.stats.spearmanr`
+- `scipy.stats.kendalltau`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CorrelationAnalyzer`: Must conform to application domain models.
+### Public Functions
+- `analyze_correlations()`: Must return strictly typed objects.
+- `get_most_correlated_pair()`: Must return strictly typed objects.
+- `get_least_correlated_pair()`: Must return strictly typed objects.
+- `suggest_strategy_removal()`: Must return strictly typed objects.
+- `calculate_portfolio_correlation()`: Must return strictly typed objects.
+- `calculate_partial_correlation()`: Must return strictly typed objects.
+- `calculate_rolling_correlation()`: Must return strictly typed objects.
+- `get_correlation_summary()`: Must return strictly typed objects.
+- `test_stability()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

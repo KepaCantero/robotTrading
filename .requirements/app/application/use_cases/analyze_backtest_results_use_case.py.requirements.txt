@@ -1,0 +1,30 @@
+# Requirements Document: application/use_cases/analyze_backtest_results_use_case.py
+
+## 1. Module Overview
+Analyze Backtest Results Use Case - Application layer for result analysis
+
+This use case provides analysis capabilities for backtest results,
+including performance metrics, risk assessment, and comparison.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `numpy`
+- `decimal.Decimal`
+- `typing.Any`
+- `structlog`
+- `domain.repositories.backtest_repository.BacktestRepository`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `AnalyzeBacktestResultsUseCase`: Must conform to application domain models.
+### Public Functions
+- `get_performance_summary()`: Must return strictly typed objects.
+- `compare_backtests()`: Must return strictly typed objects.
+- `get_risk_metrics()`: Must return strictly typed objects.
+- `assess_acceptable_risk()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

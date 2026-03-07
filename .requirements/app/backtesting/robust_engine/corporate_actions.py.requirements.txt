@@ -1,0 +1,59 @@
+# Requirements Document: backtesting/robust_engine/corporate_actions.py
+
+## 1. Module Overview
+Corporate Actions Handler for Robust Backtesting Engine.
+
+This module handles all corporate actions that affect backtesting accuracy:
+- Stock splits and reverse splits
+- Mergers and acquisitions
+- Spin-offs
+- Tender offers
+- Special dividends
+
+Proper handling of corporate actions is critical for accurate backtesting,
+especially over 25+ year periods where these events are common.
+
+Reference:
+    - Ernie Chan, "Algorithmic Trading" - Chapter on Corporate Actions
+    - "Quantitative Trading" by Ernest Chan - Section on Data Adjustments
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.date`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `pandas`
+- `models.CorporateAction`
+- `models.Merger`
+- `models.SpinOff`
+- `models.StockSplit`
+- `datetime.timedelta`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PositionAdjustment`: Must conform to application domain models.
+- `CorporateActionHandler`: Must conform to application domain models.
+### Public Functions
+- `add_split()`: Must return strictly typed objects.
+- `add_merger()`: Must return strictly typed objects.
+- `add_spinoff()`: Must return strictly typed objects.
+- `handle_split()`: Must return strictly typed objects.
+- `handle_merger()`: Must return strictly typed objects.
+- `handle_spinoff()`: Must return strictly typed objects.
+- `adjust_history_for_splits()`: Must return strictly typed objects.
+- `get_adjustment_factor()`: Must return strictly typed objects.
+- `get_pending_actions()`: Must return strictly typed objects.
+- `load_actions_from_csv()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

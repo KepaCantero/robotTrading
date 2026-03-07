@@ -1,0 +1,22 @@
+# Requirements Document: presentation/views/dashboard_views.py
+
+## 1. Module Overview
+Dashboard Views - Dashboard UI components
+
+## 2. Dependencies
+- `typing.Dict`
+- `typing.List`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DashboardViews`: Must conform to application domain models.
+### Public Functions
+- `render_portfolio_summary()`: Must return strictly typed objects.
+- `render_strategy_signals()`: Must return strictly typed objects.
+- `render_risk_metrics()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

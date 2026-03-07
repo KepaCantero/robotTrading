@@ -1,0 +1,39 @@
+# Requirements Document: domain/services/tax_calculator.py
+
+## 1. Module Overview
+Tax Calculator Domain Service - Tax calculations for trades
+
+TaxCalculator provides domain logic for calculating tax liabilities
+based on tax residence and trade characteristics.
+
+Reference: Rule 05-architecture.md
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.List`
+- `app.domain.entities.position.Position`
+- `app.domain.entities.trade.Trade`
+- `app.domain.value_objects.tax_residence.TaxResidence`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TaxLiability`: Must conform to application domain models.
+- `TaxLot`: Must conform to application domain models.
+- `TaxCalculator`: Must conform to application domain models.
+### Public Functions
+- `calculate_trade_tax()`: Must return strictly typed objects.
+- `calculate_period_tax()`: Must return strictly typed objects.
+- `calculate_dividend_tax()`: Must return strictly typed objects.
+- `create_tax_lots_from_position()`: Must return strictly typed objects.
+- `optimize_tax_loss_harvesting()`: Must return strictly typed objects.
+- `estimate_year_end_tax()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

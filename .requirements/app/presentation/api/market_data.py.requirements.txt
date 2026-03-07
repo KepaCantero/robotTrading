@@ -1,0 +1,64 @@
+# Requirements Document: presentation/api/market_data.py
+
+## 1. Module Overview
+Market Data API Endpoints
+
+This module provides FastAPI endpoints for market data management,
+including quotes, historical data, and feed configuration.
+
+GAP Fixes:
+- API-002: Added structured logging with correlation IDs
+- API-005: FIXED - Added security decorators (rate_limit, require_auth, audit_log)
+- API-009: Added audit logging
+- API-010: Added timeout configuration
+
+## 2. Dependencies
+- `__future__.annotations`
+- `asyncio`
+- `logging`
+- `traceback`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `uuid.UUID`
+- `fastapi.APIRouter`
+- `fastapi.Depends`
+- `fastapi.HTTPException`
+- `fastapi.Path`
+- `fastapi.Query`
+- `fastapi.Request`
+- `pydantic.BaseModel`
+- `pydantic.Field`
+- `requests.exceptions.ConnectionError`
+- `requests.exceptions.HTTPError`
+- `requests.exceptions.RequestException`
+- `app.domain.models.market_data.DataFeedConfig`
+- `app.domain.models.market_data.DataFeedType`
+- `app.domain.models.market_data.DataFrequency`
+- `app.domain.models.market_data.HistoricalData`
+- `app.domain.models.market_data.Quote`
+- `app.infrastructure.feeds.market_data.MarketDataService`
+- `app.infrastructure.feeds.market_data.get_market_data_service`
+- `audit_logger`
+- `get_correlation_id`
+- `security.audit_log`
+- `security.rate_limit`
+- `security.require_auth`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `QuoteResponse`: Must conform to application domain models.
+- `HistoricalDataResponse`: Must conform to application domain models.
+- `FeedConfigResponse`: Must conform to application domain models.
+- `FeedConfigsResponse`: Must conform to application domain models.
+- `ServiceStatusResponse`: Must conform to application domain models.
+- `CreateFeedConfigRequest`: Must conform to application domain models.
+- `SubscribeRequest`: Must conform to application domain models.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,51 @@
+# Requirements Document: engines/portfolio_engine/rebalancers/rebalancers.py
+
+## 1. Module Overview
+Portfolio Rebalancers
+
+Implementa diferentes estrategias de rebalanceo dinámico:
+- Threshold-based rebalancing
+- Time-based rebalancing
+- Volatility-targeting rebalancing
+- Transaction cost-aware rebalancing
+
+## 2. Dependencies
+- `logging`
+- `abc.ABC`
+- `abc.abstractmethod`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BaseRebalancer`: Must conform to application domain models.
+- `ThresholdRebalancer`: Must conform to application domain models.
+- `TimeBasedRebalancer`: Must conform to application domain models.
+- `VolatilityTargetingRebalancer`: Must conform to application domain models.
+- `TransactionCostAwareRebalancer`: Must conform to application domain models.
+- `HybridRebalancer`: Must conform to application domain models.
+### Public Functions
+- `should_rebalance()`: Must return strictly typed objects.
+- `calculate_rebalance_trades()`: Must return strictly typed objects.
+- `should_rebalance()`: Must return strictly typed objects.
+- `calculate_rebalance_trades()`: Must return strictly typed objects.
+- `should_rebalance()`: Must return strictly typed objects.
+- `calculate_rebalance_trades()`: Must return strictly typed objects.
+- `should_rebalance()`: Must return strictly typed objects.
+- `calculate_rebalance_trades()`: Must return strictly typed objects.
+- `should_rebalance()`: Must return strictly typed objects.
+- `calculate_rebalance_trades()`: Must return strictly typed objects.
+- `should_rebalance()`: Must return strictly typed objects.
+- `calculate_rebalance_trades()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,57 @@
+# Requirements Document: engines/strategy_engines/ensemble.py
+
+## 1. Module Overview
+Strategy Ensemble System - Sistema de composición de estrategias.
+
+Implementa ensembles de estrategias para combinar señales de múltiples engines:
+- WeightedEnsemble: Combina señales con pesos dinámicos
+- RegimeBasedSelector: Selecciona estrategia según régimen de mercado
+- VotingEnsemble: Combina señales por votación mayoritaria
+
+Características principales:
+- Pesos dinámicos basados en performance histórica
+- Adaptación automática a régimen de mercado
+- Combinación inteligente de señales
+- Gestión de conflictos entre estrategias
+
+## 2. Dependencies
+- `logging`
+- `abc.abstractmethod`
+- `collections.defaultdict`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Sequence`
+- `typing.Tuple`
+- `numpy`
+- `app.domain.models.market_data.Quote`
+- `app.domain.models.signal.Signal`
+- `app.domain.models.signal.SignalSource`
+- `app.domain.models.signal.SignalStrength`
+- `app.domain.models.signal.SignalType`
+- `base.BaseStrategyEngine`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BaseStrategyEnsemble`: Must conform to application domain models.
+- `WeightedEnsemble`: Must conform to application domain models.
+- `RegimeBasedSelector`: Must conform to application domain models.
+- `VotingEnsemble`: Must conform to application domain models.
+### Public Functions
+- `add_strategy()`: Must return strictly typed objects.
+- `remove_strategy()`: Must return strictly typed objects.
+- `get_strategy_type()`: Must return strictly typed objects.
+- `extract_features()`: Must return strictly typed objects.
+- `get_required_parameters()`: Must return strictly typed objects.
+- `risk_check()`: Must return strictly typed objects.
+- `update_strategy_performance()`: Must return strictly typed objects.
+- `get_current_regime()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

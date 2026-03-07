@@ -1,0 +1,22 @@
+# Requirements Document: application/use_cases/create_portfolio_use_case.py
+
+## 1. Module Overview
+Create Portfolio Use Case - Create a new portfolio
+
+## 2. Dependencies
+- `decimal.Decimal`
+- `typing.Optional`
+- `app.domain.entities.portfolio.Portfolio`
+- `app.domain.factories.TradingEntityFactory`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CreatePortfolioUseCase`: Must conform to application domain models.
+### Public Functions
+- `execute()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

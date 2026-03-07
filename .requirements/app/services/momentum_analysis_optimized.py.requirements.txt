@@ -1,0 +1,59 @@
+# Requirements Document: services/momentum_analysis_optimized.py
+
+## 1. Module Overview
+Momentum strategy service with Numba JIT optimizations.
+
+This is an optimized version that uses Numba JIT compilation for 10-100x speedup.
+All technical indicators are optimized with Numba @jit(nopython=True, cache=True).
+
+PERFORMANCE OPTIMIZATIONS:
+- RSI: 50-100x faster
+- EMA: 50-80x faster
+- MACD: 40-80x faster
+- ATR: 50-100x faster
+- Stochastic: 45-90x faster
+- Statistical metrics: 40-120x faster
+
+## 2. Dependencies
+- `logging`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `pandas`
+- `app.core.numba_accelerators.calculate_atr`
+- `app.core.numba_accelerators.calculate_bollinger_bands`
+- `app.core.numba_accelerators.calculate_cvar`
+- `app.core.numba_accelerators.calculate_ema`
+- `app.core.numba_accelerators.calculate_kurtosis`
+- `app.core.numba_accelerators.calculate_macd`
+- `app.core.numba_accelerators.calculate_rsi`
+- `app.core.numba_accelerators.calculate_skewness`
+- `app.core.numba_accelerators.calculate_stochastic`
+- `app.core.numba_accelerators.calculate_var`
+- `app.core.numba_accelerators.get_numba_info`
+- `pandas_ta`
+- `scipy.stats`
+- `scipy.stats`
+- `pandas_ta_classic`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TechnicalIndicatorCalculatorOptimized`: Must conform to application domain models.
+### Public Functions
+- `calculate_rsi()`: Must return strictly typed objects.
+- `calculate_ema()`: Must return strictly typed objects.
+- `calculate_macd()`: Must return strictly typed objects.
+- `calculate_atr()`: Must return strictly typed objects.
+- `calculate_bollinger_bands()`: Must return strictly typed objects.
+- `calculate_stochastic()`: Must return strictly typed objects.
+- `calculate_skewness()`: Must return strictly typed objects.
+- `calculate_kurtosis()`: Must return strictly typed objects.
+- `calculate_var()`: Must return strictly typed objects.
+- `calculate_cvar()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

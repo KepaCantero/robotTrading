@@ -1,0 +1,29 @@
+# Requirements Document: services/metrics_database/__init__.py
+
+## 1. Module Overview
+T18.1: Real-Time Metrics Database Package
+
+Provides high-performance time-series metrics storage and querying with:
+- Async QuestDB connector for persistence
+- Centralized metrics collection from multiple sources
+- Flexible query engine with caching and aggregations
+
+## 2. Dependencies
+- `metrics_collector.MetricsCollector`
+- `metrics_query_engine.MetricsQueryEngine`
+- `models.AggregatedMetrics`
+- `models.AggregationType`
+- `models.MetricPoint`
+- `models.MetricsCollectionResult`
+- `models.MetricsStorageStats`
+- `models.MetricType`
+- `models.TimeSeriesQuery`
+- `questdb_connector.QuestDBConnector`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

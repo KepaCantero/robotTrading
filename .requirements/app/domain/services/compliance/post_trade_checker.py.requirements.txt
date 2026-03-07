@@ -1,0 +1,45 @@
+# Requirements Document: domain/services/compliance/post_trade_checker.py
+
+## 1. Module Overview
+Post-Trade Compliance Checker
+==============================
+
+Coordinates all post-trade compliance analysis across multiple services.
+
+Responsibilities:
+- Collect post-trade analysis from all available services
+- Aggregate execution quality metrics
+- Calculate implementation shortfall
+- Track SLO compliance
+
+Author: Compliance Integration System
+Date: 2026-02-03
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `app.domain.services.compliance.results.PostTradeCheckResult`
+- `app.domain.services.compliance.service_registry.get_service_registry`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PostTradeComplianceChecker`: Must conform to application domain models.
+### Public Functions
+- `check_trade()`: Must return strictly typed objects.
+- `track_slo_compliance()`: Must return strictly typed objects.
+- `get_available_analyses()`: Must return strictly typed objects.
+- `calculate_implementation_shortfall()`: Must return strictly typed objects.
+- `calculate_effective_spread()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

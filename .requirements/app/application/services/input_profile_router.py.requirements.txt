@@ -1,0 +1,43 @@
+# Requirements Document: application/services/input_profile_router.py
+
+## 1. Module Overview
+InputProfile Router - Maps InputProfile to System Configuration
+
+This service routes the InputProfile to the appropriate strategy,
+risk configuration, and system settings.
+
+This is a CRITICAL component for autonomous system operation.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `app.shared.config.centralized_config.get_config`
+- `app.domain.models.input_profile.InputProfile`
+- `app.domain.models.input_profile.InvestmentObjective`
+- `app.domain.models.input_profile.RiskTolerance`
+- `app.domain.value_objects.investment_horizon.InvestmentHorizon`
+- `app.domain.value_objects.tax_residence.TaxResidence`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StrategyType`: Must conform to application domain models.
+- `OptimizationType`: Must conform to application domain models.
+- `RebalancingFrequency`: Must conform to application domain models.
+- `RiskConfig`: Must conform to application domain models.
+- `OptimizationConfig`: Must conform to application domain models.
+- `TaxConfig`: Must conform to application domain models.
+- `SystemConfiguration`: Must conform to application domain models.
+- `InputProfileRouter`: Must conform to application domain models.
+### Public Functions
+- `get_strategy_config()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,29 @@
+# Requirements Document: services/correlation/example_usage.py
+
+## 1. Module Overview
+Example Usage of Real-Time Correlation Analyzer - Phase 2.4
+
+This example demonstrates how to use the CorrelationAnalyzer
+to calculate real correlation from historical prices.
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `decimal.Decimal`
+- `app.domain.models.portfolio.AssetClass`
+- `app.domain.models.portfolio.Portfolio`
+- `app.domain.models.portfolio.Position`
+- `app.services.correlation.analyzer.CorrelationAnalyzer`
+- `app.services.correlation.analyzer.CorrelationConfig`
+- `app.services.market_data_service.MarketDataService`
+- `app.services.portfolio_risk_manager.PortfolioRiskManager`
+
+## 3. Core Components (Contracts)
+### Public Functions
+- `example_with_portfolio_risk_manager()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

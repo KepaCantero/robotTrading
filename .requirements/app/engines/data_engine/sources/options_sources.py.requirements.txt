@@ -1,0 +1,29 @@
+# Requirements Document: engines/data_engine/sources/options_sources.py
+
+## 1. Module Overview
+Options Sources - Fuentes de datos de opciones.
+
+Fuentes soportadas:
+- Volatility surfaces (Polygon, IBKR, etc.)
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `aiohttp`
+- `base_source.BaseDataSource`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `OptionsVolatilitySource`: Must conform to application domain models.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [ ] Must not expose external secrets.
+- [x] Exceptions must be handled.

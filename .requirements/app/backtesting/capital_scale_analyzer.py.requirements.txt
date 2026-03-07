@@ -1,0 +1,54 @@
+# Requirements Document: backtesting/capital_scale_analyzer.py
+
+## 1. Module Overview
+Capital Scale Analyzer for Professional Backtesting System (Req #1)
+
+Analyzes strategy performance across multiple capital levels to detect:
+- Scalability issues
+- Liquidity constraints (2% ADV rule)
+- Commission impact degradation
+- Alpha degradation across capital levels
+
+Capital Levels: €1K, €5K, €10K, €50K, €100K
+
+SINGLE SOURCE OF TRUTH: All values from CentralizedConfig.
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `app.shared.config.centralized_config.get_config`
+- `app.backtesting.services.transaction_cost_model.BrokerType`
+- `app.backtesting.services.transaction_cost_model.TransactionCostModel`
+- `app.backtesting.engine.SimpleBacktester`
+- `app.backtesting.models.BacktestConfig`
+- `app.backtesting.models.BacktestResult`
+- `app.backtesting.models.PerformanceMetrics`
+- `app.domain.models.market_data.Quote`
+- `app.backtesting.constants.CapitalScaleConstants`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CapitalLevelResult`: Must conform to application domain models.
+- `CapitalScaleAnalysisReport`: Must conform to application domain models.
+- `CapitalScaleAnalyzer`: Must conform to application domain models.
+### Public Functions
+- `calculate_commission_for_level()`: Must return strictly typed objects.
+- `apply_adv_limit()`: Must return strictly typed objects.
+- `simulate_single_capital_level()`: Must return strictly typed objects.
+- `analyze_capital_scaling()`: Must return strictly typed objects.
+- `generate_summary_table()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

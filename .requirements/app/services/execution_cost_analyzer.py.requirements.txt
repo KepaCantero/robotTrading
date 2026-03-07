@@ -1,0 +1,39 @@
+# Requirements Document: services/execution_cost_analyzer.py
+
+## 1. Module Overview
+PHASE 0 - Execution Cost Analyzer (T0.1.2)
+
+Monitors execution costs (commission + slippage) and detects:
+1. Commission/slippage dominance: When cost > expected alpha
+2. Cost regime shifts: When volatility changes slippage expectations
+3. Real-time trade rejection: Prevents uneconomical trades
+
+This gate prevents systematic capital erosion from execution costs
+that exceed strategy alpha, especially on small accounts.
+
+## 2. Dependencies
+- `logging`
+- `collections.deque`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ExecutionCostAnalyzer`: Must conform to application domain models.
+### Public Functions
+- `add_trade_slippage()`: Must return strictly typed objects.
+- `get_current_slippage_estimate()`: Must return strictly typed objects.
+- `detect_cost_regime()`: Must return strictly typed objects.
+- `should_execute_trade()`: Must return strictly typed objects.
+- `get_slippage_stats()`: Must return strictly typed objects.
+- `detect_cost_regime_shift()`: Must return strictly typed objects.
+- `log_trade_decision()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

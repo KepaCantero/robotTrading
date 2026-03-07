@@ -1,0 +1,45 @@
+# Requirements Document: infrastructure/persistence/database.py
+
+## 1. Module Overview
+Database configuration and session management for AlgoTrading MVP.
+
+This module provides async PostgreSQL database connection using SQLAlchemy 2.0
+with asyncpg driver, including session management and connection pooling.
+
+## 2. Dependencies
+- `logging`
+- `contextlib.asynccontextmanager`
+- `contextlib.contextmanager`
+- `typing.AsyncGenerator`
+- `typing.Optional`
+- `sqlalchemy.MetaData`
+- `sqlalchemy.exc.ArgumentError`
+- `sqlalchemy.exc.DatabaseError`
+- `sqlalchemy.exc.DisconnectionError`
+- `sqlalchemy.exc.IntegrityError`
+- `sqlalchemy.exc.OperationalError`
+- `sqlalchemy.exc.TimeoutError`
+- `sqlalchemy.ext.asyncio.AsyncEngine`
+- `sqlalchemy.ext.asyncio.AsyncSession`
+- `sqlalchemy.ext.asyncio.async_sessionmaker`
+- `sqlalchemy.ext.asyncio.create_async_engine`
+- `sqlalchemy.orm.DeclarativeBase`
+- `sqlalchemy.orm.Session`
+- `sqlalchemy.orm.sessionmaker`
+- `sqlalchemy.pool.NullPool`
+- `sqlalchemy.pool.QueuePool`
+- `config.get_settings`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `Base`: Must conform to application domain models.
+### Public Functions
+- `get_database_engine()`: Must return strictly typed objects.
+- `get_session_factory()`: Must return strictly typed objects.
+- `get_sync_db()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

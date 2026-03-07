@@ -1,0 +1,30 @@
+# Requirements Document: services/strategy_recommender/models.py
+
+## 1. Module Overview
+T6.1: StrategyRecommender - Models
+
+Data models for strategy recommendation requests and results.
+
+## 2. Dependencies
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Literal`
+- `typing.Optional`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ObjectiveWeights`: Must conform to application domain models.
+- `StrategyScore`: Must conform to application domain models.
+- `RecommendationSuggestion`: Must conform to application domain models.
+- `StrategyRecommendationRequest`: Must conform to application domain models.
+- `StrategyRecommendation`: Must conform to application domain models.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

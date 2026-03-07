@@ -1,0 +1,41 @@
+# Requirements Document: services/validation_orchestration/validation_engine.py
+
+## 1. Module Overview
+T5.1: ValidationEngine - Validate backtest results against PHASE 0 gates
+
+Validates ExtendedBacktestResult from T4.1 against all PHASE 0 capital viability gates:
+1. Capital Viability Gate: Ensures capital is sufficient
+2. Execution Cost Analyzer: Checks execution costs are affordable
+3. Opportunity Cost Validator: Compares strategy vs passive
+4. Learning Capital Gate: Validates ML infrastructure cost
+5. Expensive Module Gate: Ensures modules fit capital tier
+
+Returns ValidationReport with detailed gate status and recommendations.
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `app.domain.models.investment_profile.CapitalTier`
+- `app.domain.models.investment_profile.InvestmentProfile`
+- `app.services.backtesting_orchestration.ExtendedBacktestResult`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `GateStatus`: Must conform to application domain models.
+- `GateResult`: Must conform to application domain models.
+- `ValidationReport`: Must conform to application domain models.
+- `ValidationEngine`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

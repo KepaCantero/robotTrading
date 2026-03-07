@@ -1,0 +1,31 @@
+# Requirements Document: services/corporate_actions/__init__.py
+
+## 1. Module Overview
+Corporate Actions Handler Package
+
+This package handles corporate events that affect positions:
+- Stock splits: Quantity and entry price adjustment
+- Dividends: Cash received and baseline price adjustment
+- Mergers: Position conversion to acquiring company
+- Delistings: Position closure
+- Spin-offs: New shares received
+- Rights offerings: Rights issued to shareholders
+- Symbol changes: Symbol updates
+
+Phase 2.6: Corporate Actions Handler for multi-day position support.
+
+Author: Algorithmic Trading System
+Date: 2026-01-25
+
+## 2. Dependencies
+- `app.services.corporate_actions.handler.CorporateAction`
+- `app.services.corporate_actions.handler.CorporateActionsHandler`
+- `app.services.corporate_actions.handler.CorporateActionType`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

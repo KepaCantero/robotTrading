@@ -1,0 +1,31 @@
+# Requirements Document: services/reporting_generator/reporting_generator.py
+
+## 1. Module Overview
+T9.1: ReportingGenerator - Generate comprehensive performance reports
+
+Creates HTML reports with performance metrics, visualizations, and recommendations.
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `models.AllocationSnapshot`
+- `models.PerformanceReport`
+- `models.ReportGenerationRequest`
+- `models.StrategyMetrics`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ReportingGenerator`: Must conform to application domain models.
+### Public Functions
+- `get_reporting_generator()`: Must return strictly typed objects.
+- `get_generator_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,27 @@
+# Requirements Document: services/news_processor/__init__.py
+
+## 1. Module Overview
+News Processor Service - Event-driven news processing.
+
+Phase 3.3: Real-time news processing and sentiment analysis.
+
+Components:
+- NewsEventHandler: Process news events in real-time
+- Webhook subscription for Marketaux API
+- Fallback to polling if webhook fails
+- Trade triggers on significant news
+- News sentiment cache
+
+## 2. Dependencies
+- `event_handler.NewsEvent`
+- `event_handler.NewsEventHandler`
+- `event_handler.NewsEventType`
+- `event_handler.SentimentUpdate`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

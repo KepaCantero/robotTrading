@@ -1,0 +1,47 @@
+# Requirements Document: engines/strategy_engines/pairs_engine.py
+
+## 1. Module Overview
+PairsTradingStrategyEngine - Engine de estrategia de pairs trading.
+
+Refactorización de PairsTradingStrategy como Strategy Engine con:
+- Integración con Learning Engines
+- Feature extraction estandarizado (spread, cointegración, correlación)
+- Soporte para callbacks
+- Métricas mejoradas
+
+## 2. Dependencies
+- `logging`
+- `collections.defaultdict`
+- `collections.deque`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Sequence`
+- `numpy`
+- `scipy.stats`
+- `app.shared.config.centralized_config.get_config`
+- `app.domain.models.market_data.Quote`
+- `app.domain.models.portfolio.Portfolio`
+- `app.domain.models.signal.Signal`
+- `app.domain.models.signal.SignalSource`
+- `app.domain.models.signal.SignalStrength`
+- `app.domain.models.signal.SignalType`
+- `base.BaseStrategyEngine`
+- `app.shared.performance.statsmodels_fallback.adfuller`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PairsTradingStrategyEngine`: Must conform to application domain models.
+### Public Functions
+- `get_strategy_type()`: Must return strictly typed objects.
+- `extract_features()`: Must return strictly typed objects.
+- `get_required_parameters()`: Must return strictly typed objects.
+- `risk_check()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,69 @@
+# Requirements Document: services/rate_limiting/token_bucket.py
+
+## 1. Module Overview
+Rate Limiter - Token bucket algorithm for rate limiting.
+
+Protects against hitting broker API rate limits:
+- IBKR: 50-100 req/s
+- Alpaca: 200 req/min
+- Interactive Brokers has different limits for different endpoints
+
+Uses token bucket algorithm for smooth rate limiting.
+
+Phase 3.4: Broker API Rate Limiting for 24/7 Operation
+- Token bucket rate limiting per broker
+- Priority queue (close position > query price)
+- Exponential backoff on 429 errors
+- Rate limit monitoring and alerts
+- Configurable limits per broker
+
+Uses centralized configuration for all rate limits and backoff parameters.
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `time`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `enum.Enum`
+- `enum.IntEnum`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `requests.exceptions.HTTPError`
+- `app.shared.config.centralized_config.get_config`
+- `app.shared.utils.timezone_utils.utc_now`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BrokerType`: Must conform to application domain models.
+- `RequestPriority`: Must conform to application domain models.
+- `RateLimit`: Must conform to application domain models.
+- `TokenBucketState`: Must conform to application domain models.
+- `RateLimitStatistics`: Must conform to application domain models.
+- `TokenBucketRateLimiter`: Must conform to application domain models.
+- `RateLimitManager`: Must conform to application domain models.
+### Public Functions
+- `to_per_minute()`: Must return strictly typed objects.
+- `to_per_hour()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `throttle_rate()`: Must return strictly typed objects.
+- `average_wait_time()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `get_available_tokens()`: Must return strictly typed objects.
+- `get_utilization()`: Must return strictly typed objects.
+- `get_statistics()`: Must return strictly typed objects.
+- `reset()`: Must return strictly typed objects.
+- `get_limiter()`: Must return strictly typed objects.
+- `remove_limiter()`: Must return strictly typed objects.
+- `reset_limiter()`: Must return strictly typed objects.
+- `reset_all()`: Must return strictly typed objects.
+- `get_all_statistics()`: Must return strictly typed objects.
+- `get_summary()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

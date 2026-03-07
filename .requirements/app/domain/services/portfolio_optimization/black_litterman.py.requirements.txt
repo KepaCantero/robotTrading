@@ -1,0 +1,42 @@
+# Requirements Document: domain/services/portfolio_optimization/black_litterman.py
+
+## 1. Module Overview
+Black-Litterman Portfolio Optimization
+
+Implements the Black-Litterman model for combining investor views
+with market equilibrium returns.
+
+Reference: Rule 48-papers-markowitz (Related methods)
+Paper: Black, F., & Litterman, R. (1992). "Global Portfolio Optimization"
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `scipy.optimize.minimize`
+- `app.domain.services.portfolio_optimization._validation.TRADING_DAYS`
+- `app.domain.services.portfolio_optimization._validation.log_optimization_failure`
+- `app.domain.services.portfolio_optimization._validation.validate_covariance_matrix`
+- `app.domain.services.portfolio_optimization.mean_variance_optimizer.OptimizationResult`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `View`: Must conform to application domain models.
+- `BlackLittermanResult`: Must conform to application domain models.
+- `BlackLittermanOptimizer`: Must conform to application domain models.
+### Public Functions
+- `create_relative_view()`: Must return strictly typed objects.
+- `weights_dict()`: Must return strictly typed objects.
+- `optimize()`: Must return strictly typed objects.
+- `objective()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

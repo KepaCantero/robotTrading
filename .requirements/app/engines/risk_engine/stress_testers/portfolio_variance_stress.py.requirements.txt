@@ -1,0 +1,41 @@
+# Requirements Document: engines/risk_engine/stress_testers/portfolio_variance_stress.py
+
+## 1. Module Overview
+Portfolio Variance Stress Testing - Hull Chapter 20
+
+Implements comprehensive portfolio variance stress testing to understand
+how portfolio risk changes under extreme market conditions.
+
+Key features:
+1. Variance decomposition by risk factor
+2. Stress scenarios for correlation breakdown
+3. Volatility spike scenarios
+4. Concentration stress testing
+5. Leverage stress scenarios
+6. Multi-dimensional stress analysis
+
+Reference: Hull, Options, Futures, and Other Derivatives, Chapter 20
+
+## 2. Dependencies
+- `logging`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `app.domain.models.portfolio.Portfolio`
+- `datetime.datetime`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PortfolioVarianceStressTester`: Must conform to application domain models.
+### Public Functions
+- `run_variance_stress_tests()`: Must return strictly typed objects.
+- `decompose_portfolio_variance()`: Must return strictly typed objects.
+- `calculate_concentration_stress()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,61 @@
+# Requirements Document: services/optimization_chan.py
+
+## 1. Module Overview
+Ernest Chan - Quantitative Trading: Portfolio Optimization Implementation
+
+This module implements portfolio optimization methods as described in Ernest Chan's
+"Quantitative Trading: How to Build Your Own Algorithmic Trading Business".
+
+Key Concepts:
+- Mean-Variance Optimization (Markowitz)
+- Risk Parity Implementation (Equal Risk Contribution)
+- Hierarchical Risk Parity (HRP)
+- Maximum Diversification Portfolio
+- Minimum Variance Portfolio
+- Target Volatility Portfolio
+- CVaR (Conditional Value at Risk) Optimization
+
+Based on:
+- Markowitz, H. (1952). Portfolio Selection.
+- Maillard, S., Roncalli, T., & Teiletche, J. (2010). The properties of equally weighted risk contributions.
+- Lopez de Prado, M. (2016). Building diversified portfolios that outperform out of sample.
+
+Author: Algorithmic Trading System
+Date: 2026-01-28
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `pandas`
+- `scipy.cluster.hierarchy.dendrogram`
+- `scipy.cluster.hierarchy.linkage`
+- `scipy.optimize.minimize`
+- `scipy.spatial.distance.squareform`
+- `cvxpy`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `OptimizationResult`: Must conform to application domain models.
+- `MeanVarianceOptimizer`: Must conform to application domain models.
+- `RiskParityOptimizer`: Must conform to application domain models.
+- `HierarchicalRiskParityOptimizer`: Must conform to application domain models.
+- `MaximumDiversificationOptimizer`: Must conform to application domain models.
+- `CVaROptimizer`: Must conform to application domain models.
+### Public Functions
+- `optimize_portfolio()`: Must return strictly typed objects.
+- `optimize()`: Must return strictly typed objects.
+- `optimize()`: Must return strictly typed objects.
+- `optimize()`: Must return strictly typed objects.
+- `optimize()`: Must return strictly typed objects.
+- `optimize()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

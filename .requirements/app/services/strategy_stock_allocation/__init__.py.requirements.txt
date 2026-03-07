@@ -1,0 +1,44 @@
+# Requirements Document: services/strategy_stock_allocation/__init__.py
+
+## 1. Module Overview
+Strategy Stock Allocation Module
+
+A refactored, SOLID-compliant module for stock allocation across trading strategies.
+This module provides a clean separation of concerns with dedicated classes for:
+
+- Stock filtering and validation
+- Statistical calculations (Hurst, half-life, stationarity)
+- Market regime classification
+- Strategy scoring (momentum, mean reversion, pairs trading)
+- Capital allocation (ERC/Risk Parity)
+- Validation and output generation
+
+Main orchestrator: StrategyStockAllocator
+
+## 2. Dependencies
+- `__future__.annotations`
+- `allocators.ERCCapitalAllocator`
+- `calculators.HalfLifeCalculator`
+- `calculators.HurstCalculator`
+- `calculators.StationarityTester`
+- `classifiers.RegimeClassifier`
+- `filters.StockFilter`
+- `orchestrator.StrategyStockAllocator`
+- `output.OutputGenerator`
+- `protocols.AllocatorProtocol`
+- `protocols.CalculatorProtocol`
+- `protocols.ScorerProtocol`
+- `protocols.StockFilterProtocol`
+- `scorers.MeanReversionScorer`
+- `scorers.MomentumScorer`
+- `scorers.PairsTradingScorer`
+- `scorers.WCMScoreCalculator`
+- `validators.AllocationValidator`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

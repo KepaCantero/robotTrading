@@ -1,0 +1,34 @@
+# Requirements Document: domain/value_objects/tax_residence.py
+
+## 1. Module Overview
+Tax Residence Value Object - Tax configuration for investors
+
+TaxResidence represents the tax jurisdiction and configuration
+for an investor, critical for multi-market trading.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Optional`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RegulatoryRegion`: Must conform to application domain models.
+- `TaxResidence`: Must conform to application domain models.
+### Public Functions
+- `is_eu_resident()`: Must return strictly typed objects.
+- `is_us_resident()`: Must return strictly typed objects.
+- `has_tax_treaty_with_us()`: Must return strictly typed objects.
+- `get_capital_gains_rate()`: Must return strictly typed objects.
+- `get_withholding_tax_rate()`: Must return strictly typed objects.
+- `spain()`: Must return strictly typed objects.
+- `usa()`: Must return strictly typed objects.
+- `uk()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

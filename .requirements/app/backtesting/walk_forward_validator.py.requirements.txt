@@ -1,0 +1,79 @@
+# Requirements Document: backtesting/walk_forward_validator.py
+
+## 1. Module Overview
+Walk-Forward Validation & Stress Testing System (Task 3.5)
+
+Comprehensive validation system including:
+- Walk-forward validation with configurable windows
+- Temporal cross-validation
+- Stress testing with synthetic data generation
+- Monte Carlo simulations
+
+COMPLIANCE: Integrado con BacktestingCompliance para validar:
+- R5: Walk-Forward Analysis
+- R6: Overfitting Prevention
+- R7: Monte Carlo para riesgo
+- DATA-001: Purged Cross-Validation
+
+## 2. Dependencies
+- `json`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `yaml`
+- `app.backtesting.engine.SimpleBacktester`
+- `app.backtesting.models.BacktestConfig`
+- `app.backtesting.realistic_data_generator.MarketRegime`
+- `app.backtesting.realistic_data_generator.RealisticDataGenerator`
+- `app.backtesting.backtesting_compliance.BacktestingCompliance`
+- `app.backtesting.backtesting_compliance.BacktestingComplianceResult`
+- `app.backtesting.backtesting_compliance.create_backtesting_compliance`
+- `app.domain.models.market_data.Quote`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ValidationWindow`: Must conform to application domain models.
+- `StressScenarioResult`: Must conform to application domain models.
+- `ValidationReport`: Must conform to application domain models.
+- `SyntheticDataGenerator`: Must conform to application domain models.
+- `WalkForwardValidator`: Must conform to application domain models.
+- `CrossValidationTemporal`: Must conform to application domain models.
+- `StressTester`: Must conform to application domain models.
+- `MonteCarloSimulator`: Must conform to application domain models.
+- `ComprehensiveValidator`: Must conform to application domain models.
+### Public Functions
+- `load_validation_config()`: Must return strictly typed objects.
+- `get_default_config()`: Must return strictly typed objects.
+- `oos_total_return()`: Must return strictly typed objects.
+- `oos_sharpe_ratio()`: Must return strictly typed objects.
+- `oos_max_drawdown()`: Must return strictly typed objects.
+- `generate_gbm_prices()`: Must return strictly typed objects.
+- `generate_ou_prices()`: Must return strictly typed objects.
+- `generate_jump_diffusion_prices()`: Must return strictly typed objects.
+- `generate_flash_crash_scenario()`: Must return strictly typed objects.
+- `generate_high_volatility_scenario()`: Must return strictly typed objects.
+- `generate_trending_scenario()`: Must return strictly typed objects.
+- `generate_gap_scenario()`: Must return strictly typed objects.
+- `create_windows()`: Must return strictly typed objects.
+- `validate_strategy()`: Must return strictly typed objects.
+- `validate_compliance()`: Must return strictly typed objects.
+- `create_folds()`: Must return strictly typed objects.
+- `cross_validate()`: Must return strictly typed objects.
+- `run_stress_tests()`: Must return strictly typed objects.
+- `run_simulation()`: Must return strictly typed objects.
+- `run_full_validation()`: Must return strictly typed objects.
+- `save_report()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

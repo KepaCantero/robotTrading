@@ -1,0 +1,50 @@
+# Requirements Document: services/news_processor/event_handler.py
+
+## 1. Module Overview
+News Event Processor - Process news events in real-time.
+
+Handles:
+- Webhook subscription for news
+- Real-time sentiment updates
+- Trade triggers on significant news
+- News sentiment cache
+- Fallback to polling if webhook fails
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Set`
+- `app.core.timezone_utils.utc_now`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `NewsEventType`: Must conform to application domain models.
+- `NewsEvent`: Must conform to application domain models.
+- `SentimentUpdate`: Must conform to application domain models.
+- `NewsEventHandler`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `should_trigger_trade()`: Must return strictly typed objects.
+- `get_sentiment()`: Must return strictly typed objects.
+- `get_recent_events()`: Must return strictly typed objects.
+- `is_running()`: Must return strictly typed objects.
+- `get_subscribed_symbols()`: Must return strictly typed objects.
+- `clear_cache()`: Must return strictly typed objects.
+- `get_cache_stats()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

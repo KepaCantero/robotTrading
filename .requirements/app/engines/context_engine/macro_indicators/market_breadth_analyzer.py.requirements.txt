@@ -1,0 +1,22 @@
+# Requirements Document: engines/context_engine/macro_indicators/market_breadth_analyzer.py
+
+## 1. Module Overview
+MarketBreadthAnalyzer - Analizador de market breadth (simplificado).
+
+## 2. Dependencies
+- `logging`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MarketBreadthAnalyzer`: Must conform to application domain models.
+### Public Functions
+- `analyze_breadth()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

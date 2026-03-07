@@ -1,0 +1,66 @@
+# Requirements Document: domain/repositories/unit_of_work.py
+
+## 1. Module Overview
+Unit of Work Pattern - Transaction management following Percival's Architecture Patterns with Python
+
+This module implements the Unit of Work pattern as described in
+"Architecture Patterns with Python" (Cosmic Python) by Percival & Gregory.
+
+Key concepts:
+- Tracks changes to entities during a business transaction
+- Commits all changes as a single atomic operation
+- Provides rollback capability
+- Manages repository lifecycle
+- Ensures consistency across aggregates
+
+Reference: Chapter 7, "Unit of Work Pattern"
+
+The Unit of Work pattern is especially valuable for:
+1. Maintaining consistency across multiple aggregates
+2. Coordinating transactions across repositories
+3. Implementing the "drop and recreate" optimization
+4. Managing database connections and transactions
+5. Supporting test scenarios with rollback
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `abc.ABC`
+- `abc.abstractmethod`
+- `contextlib.asynccontextmanager`
+- `dataclasses.dataclass`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Type`
+- `typing.TypeVar`
+- `base_repository.AbstractRepository`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TrackedEntity`: Must conform to application domain models.
+- `AbstractUnitOfWork`: Must conform to application domain models.
+- `GenericUnitOfWork`: Must conform to application domain models.
+- `UnitOfWorkError`: Must conform to application domain models.
+- `AlreadyCommittedError`: Must conform to application domain models.
+- `NotActiveError`: Must conform to application domain models.
+- `TradingUnitOfWork`: Must conform to application domain models.
+### Public Functions
+- `commit()`: Must return strictly typed objects.
+- `rollback()`: Must return strictly typed objects.
+- `collect_new_events()`: Must return strictly typed objects.
+- `register_repository()`: Must return strictly typed objects.
+- `track_entity()`: Must return strictly typed objects.
+- `commit()`: Must return strictly typed objects.
+- `rollback()`: Must return strictly typed objects.
+- `collect_new_events()`: Must return strictly typed objects.
+- `mark_dirty()`: Must return strictly typed objects.
+- `mark_deleted()`: Must return strictly typed objects.
+- `collect_new_events()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

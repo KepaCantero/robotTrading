@@ -1,0 +1,105 @@
+# Requirements Document: engines/risk_engine/__init__.py
+
+## 1. Module Overview
+Risk Engine - Base Engine (Hull Chapters 18-20)
+
+Engine principal para gestion de riesgos que extiende PortfolioRiskManager.
+Implementa recomendaciones de Hull para gestion de riesgos avanzada:
+
+Value at Risk (VaR) Methods:
+- Historical VaR: Non-parametric using empirical distribution
+- Parametric VaR: Assumes normal distribution with variance-covariance
+- Monte Carlo VaR: Simulated scenarios
+- Conditional VaR (Expected Shortfall): Average loss beyond VaR
+- Component VaR: Risk contribution by position (NEW)
+- EWMA VaR: Exponentially weighted moving average (NEW)
+
+Options Greeks (Chapters 17-19):
+- Delta, Gamma, Theta, Vega, Rho
+- Higher-order Greeks: Vanna, Vomma, Charm, Veta
+- Portfolio-level Greeks aggregation
+- Delta hedging calculations
+
+Stress Testing (Chapter 20):
+- Historical scenarios (2008, COVID, etc.)
+- Monte Carlo stress scenarios
+- Correlation breakdown scenarios (NEW)
+- Correlation stress testing (NEW)
+
+Risk Limits Enforcement:
+- Automatic position reduction when VaR exceeded
+- Portfolio heatmaps by risk factor
+- Risk attribution by asset class
+- Dynamic position sizing
+
+GARCH Volatility Modeling:
+- GARCH(1,1) for conditional volatility
+- EWMA volatility estimation
+- Volatility forecasting
+
+Reference:
+- Hull, Options, Futures, and Other Derivatives, Chapters 17-20
+
+REFACTORED: Uses TYPE_CHECKING and lazy imports to avoid circular dependencies.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `abc.ABC`
+- `abc.abstractmethod`
+- `datetime.datetime`
+- `typing.TYPE_CHECKING`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Protocol`
+- `typing.runtime_checkable`
+- `alert_system.AlertSystem`
+- `correlation_analyzers.CorrelationAnalyzer`
+- `drawdown_controllers.DrawdownController`
+- `exposure_managers.ExposureManager`
+- `greeks_calculator.GreeksCalculator`
+- `risk_attribution.RiskAttributor`
+- `risk_limits_enforcer.RiskLimitsEnforcer`
+- `stress_testers.StressTester`
+- `stress_testers.comprehensive_scenarios.ComprehensiveStressScenarios`
+- `stress_testers.correlation_stress.CorrelationStressTester`
+- `stress_testers.portfolio_variance_stress.PortfolioVarianceStressTester`
+- `var_calculators.component_var.ComponentVaRCalculator`
+- `var_calculators.ewma_var.EWMAVaRCalculator`
+- `app.domain.models.portfolio.Portfolio`
+- `app.domain.services.risk.portfolio.PortfolioRiskManager`
+- `app.domain.models.portfolio.Portfolio`
+- `app.domain.services.risk.portfolio.PortfolioRiskManager`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PortfolioProtocol`: Must conform to application domain models.
+- `BaseRiskEngine`: Must conform to application domain models.
+- `RiskEngine`: Must conform to application domain models.
+- `_PortfolioPlaceholder`: Must conform to application domain models.
+- `_PortfolioRiskManagerPlaceholder`: Must conform to application domain models.
+### Public Functions
+- `portfolio_id()`: Must return strictly typed objects.
+- `capital()`: Must return strictly typed objects.
+- `initialize()`: Must return strictly typed objects.
+- `assess_risk()`: Must return strictly typed objects.
+- `risk_manager()`: Must return strictly typed objects.
+- `initialize()`: Must return strictly typed objects.
+- `assess_risk()`: Must return strictly typed objects.
+- `set_var_calculator()`: Must return strictly typed objects.
+- `set_stress_tester()`: Must return strictly typed objects.
+- `set_exposure_manager()`: Must return strictly typed objects.
+- `set_drawdown_controller()`: Must return strictly typed objects.
+- `set_correlation_analyzer()`: Must return strictly typed objects.
+- `set_risk_attributor()`: Must return strictly typed objects.
+- `set_alert_system()`: Must return strictly typed objects.
+- `get_status()`: Must return strictly typed objects.
+- `assess_portfolio_risk()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,36 @@
+# Requirements Document: services/tax_efficiency/engines/__init__.py
+
+## 1. Module Overview
+Tax Engines - Country-specific tax calculation implementations.
+
+This module provides tax engines for different jurisdictions, each
+implementing the TaxEngine interface with country-specific tax rules.
+
+Available engines:
+- SpainTaxEngine: Progressive 19/21/23% rates, no LT/ST distinction
+- More engines can be added as needed (US, UK, DE, FR, etc.)
+
+Usage:
+    from app.services.tax_efficiency.engines import get_tax_engine
+
+    engine = get_tax_engine("ES")  # Spain
+    tax = engine.calculate_capital_gains_tax(Decimal("10000"))
+
+## 2. Dependencies
+- `app.services.tax_efficiency.engines.base.TaxEngine`
+- `app.services.tax_efficiency.engines.factory.get_supported_countries`
+- `app.services.tax_efficiency.engines.factory.get_tax_engine`
+- `app.services.tax_efficiency.engines.factory.is_country_supported`
+- `app.services.tax_efficiency.engines.factory.register_tax_engine`
+- `app.services.tax_efficiency.engines.spain_tax_engine.SpainTaxEngine`
+- `app.services.tax_efficiency.engines.spain_tax_engine_impl.SpainTaxEngineImpl`
+- `app.services.tax_efficiency.engines.modelo_720_generator.Modelo720Generator`
+- `app.services.tax_efficiency.engines.spain_dividend_tax.SpainDividendTaxCalculator`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

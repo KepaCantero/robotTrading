@@ -1,0 +1,43 @@
+# Requirements Document: services/signal_execution_engine.py
+
+## 1. Module Overview
+Signal Execution Engine - TASK-15: Refactorización de Servicios
+
+Este módulo implementa el motor de ejecución de señales, separando la lógica
+de ejecución de la evaluación y gestión de señales.
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `app.shared.config.centralized_config.get_config`
+- `app.domain.models.order.Order`
+- `app.domain.models.order.OrderSide`
+- `app.domain.models.order.OrderStatus`
+- `app.domain.models.order.OrderType`
+- `app.domain.models.portfolio.Portfolio`
+- `app.domain.models.signal.Signal`
+- `app.domain.models.signal.SignalType`
+- `app.domain.models.signal.SignalSource`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SignalExecutionEngine`: Must conform to application domain models.
+### Public Functions
+- `get_execution_statistics()`: Must return strictly typed objects.
+- `get_recent_executions()`: Must return strictly typed objects.
+- `get_executions_by_symbol()`: Must return strictly typed objects.
+- `clear_history()`: Must return strictly typed objects.
+- `reset_statistics()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

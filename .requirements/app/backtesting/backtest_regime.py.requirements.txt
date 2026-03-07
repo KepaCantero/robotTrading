@@ -1,0 +1,45 @@
+# Requirements Document: backtesting/backtest_regime.py
+
+## 1. Module Overview
+Backtest Regime Module - Regime-based backtest analysis.
+
+Extracted from comprehensive_backtest_runner.py for Single Responsibility.
+Handles regime-based backtest execution:
+- Regime detection (HMM, Clustering, Simple)
+- Per-regime performance analysis
+- Regime transition analysis
+- Robustness assessment
+
+Architecture:
+- Implements Lopez de Prado and Tsay regime analysis
+- Supports multiple detection methods
+- Markov chain transition analysis
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `pandas`
+- `app.backtesting.core.executor.SimpleBacktestExecutor`
+- `app.backtesting.core.memory_manager.AggressiveMemoryManager`
+- `app.backtesting.models.BacktestConfig`
+- `app.domain.strategies.momentum_modular.strategy.ModularMomentumStrategy`
+- `app.engines.context_engine.regime_detectors.hmm_regime_detector.HMMRegimeDetector`
+- `app.engines.context_engine.regime_detectors.clustering_regime_detector.ClusteringRegimeDetector`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BacktestRegimeAnalyzer`: Must conform to application domain models.
+### Public Functions
+- `run_regime_test_backtest()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

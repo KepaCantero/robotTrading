@@ -1,0 +1,27 @@
+# Requirements Document: services/live_trading/broker_adapters/ibex35_contracts.py
+
+## 1. Module Overview
+IBEX35 Contract Helpers for Spanish Stocks
+
+Provides contract creation utilities for trading Spanish stocks and indices
+through Interactive Brokers.
+
+## 2. Dependencies
+- `typing.List`
+- `ib_insync.contract.Contract`
+- `ib_insync.contract.Stock`
+- `ib_insync.contract.Index`
+
+## 3. Core Components (Contracts)
+### Public Functions
+- `create_stock_contract()`: Must return strictly typed objects.
+- `create_index_contract()`: Must return strictly typed objects.
+- `get_ibex35_symbols()`: Must return strictly typed objects.
+- `is_ibex35_symbol()`: Must return strictly typed objects.
+- `get_spanish_exchange_suffix()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

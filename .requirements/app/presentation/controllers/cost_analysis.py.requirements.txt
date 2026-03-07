@@ -1,0 +1,32 @@
+# Requirements Document: presentation/controllers/cost_analysis.py
+
+## 1. Module Overview
+Cost Analysis API endpoints.
+
+This module provides FastAPI endpoints for cost analysis functionality
+including cost breakdown, profitability validation, and Cost Impact Ratio (CIR) analysis.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `fastapi.APIRouter`
+- `fastapi.Depends`
+- `fastapi.HTTPException`
+- `app.backtesting.models.Trade`
+- `app.backtesting.models.TradeStatus`
+- `app.services.cost_analysis_service.CostAnalysisResult`
+- `app.services.cost_analysis_service.CostAnalysisService`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Functions
+- `get_cost_analysis_service()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

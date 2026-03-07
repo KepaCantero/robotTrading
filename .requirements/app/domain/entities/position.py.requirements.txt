@@ -1,0 +1,55 @@
+# Requirements Document: domain/entities/position.py
+
+## 1. Module Overview
+Position Entity - Represents a holding in a portfolio
+
+A Position represents a single asset holding with entry/exit information,
+profit/loss calculations, and risk metrics.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `datetime.timezone`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Optional`
+- `app.domain.value_objects.money.Money`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PositionSide`: Must conform to application domain models.
+- `PositionStatus`: Must conform to application domain models.
+- `Position`: Must conform to application domain models.
+### Public Functions
+- `avg_price()`: Must return strictly typed objects.
+- `get_pnl()`: Must return strictly typed objects.
+- `get_quantity()`: Must return strictly typed objects.
+- `get_current_price()`: Must return strictly typed objects.
+- `get_value()`: Must return strictly typed objects.
+- `get_cost_basis()`: Must return strictly typed objects.
+- `get_unrealized_pnl_amount()`: Must return strictly typed objects.
+- `get_unrealized_pnl()`: Must return strictly typed objects.
+- `get_realized_pnl_amount()`: Must return strictly typed objects.
+- `get_realized_pnl()`: Must return strictly typed objects.
+- `get_pnl_percent()`: Must return strictly typed objects.
+- `update_price()`: Must return strictly typed objects.
+- `add_shares()`: Must return strictly typed objects.
+- `remove_shares()`: Must return strictly typed objects.
+- `is_stop_loss_hit()`: Must return strictly typed objects.
+- `is_take_profit_hit()`: Must return strictly typed objects.
+- `get_risk_reward_ratio()`: Must return strictly typed objects.
+- `get_age_days()`: Must return strictly typed objects.
+- `is_open()`: Must return strictly typed objects.
+- `is_closed()`: Must return strictly typed objects.
+- `is_profitable()`: Must return strictly typed objects.
+- `create_long()`: Must return strictly typed objects.
+- `create_short()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

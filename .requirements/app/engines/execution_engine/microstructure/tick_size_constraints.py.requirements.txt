@@ -1,0 +1,43 @@
+# Requirements Document: engines/execution_engine/microstructure/tick_size_constraints.py
+
+## 1. Module Overview
+Tick Size Constraints
+
+Implements Harris Rule 6.9 and O'Hara Rule 7.8: Handle tick size constraints.
+
+Tick size impacts:
+- Bid-ask spread (minimum spread = 1 tick)
+- Price granularity
+- Liquidity provision
+- Market quality
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `pandas`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TickSizeAnalysis`: Must conform to application domain models.
+- `TickConstraintsResult`: Must conform to application domain models.
+- `TickSizeConstraints`: Must conform to application domain models.
+### Public Functions
+- `get_tick_size_constraints()`: Must return strictly typed objects.
+- `get_tick_size()`: Must return strictly typed objects.
+- `round_to_tick()`: Must return strictly typed objects.
+- `adjust_limit_price()`: Must return strictly typed objects.
+- `analyze_tick_regime()`: Must return strictly typed objects.
+- `calculate_tick_constraints()`: Must return strictly typed objects.
+- `get_optimal_tick_size()`: Must return strictly typed objects.
+- `validate_price_ticks()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,51 @@
+# Requirements Document: domain/strategies/learning/hyperparameter_tuner.py
+
+## 1. Module Overview
+HyperparameterTuner - Sistema de optimización automática de hiperparámetros.
+
+Incluye:
+1. Bayesian optimization con Optuna
+2. Early stopping adaptativo
+3. Resource-aware tuning (GPU/CPU constraints)
+
+## 2. Dependencies
+- `logging`
+- `time`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `optuna`
+- `torch`
+- `optuna.visualization`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `EarlyStoppingAdaptive`: Must conform to application domain models.
+- `ResourceAwareTuner`: Must conform to application domain models.
+- `HyperparameterTuner`: Must conform to application domain models.
+- `LearningEngineTuner`: Must conform to application domain models.
+### Public Functions
+- `reset()`: Must return strictly typed objects.
+- `get_best_score()`: Must return strictly typed objects.
+- `get_best_epoch()`: Must return strictly typed objects.
+- `should_continue()`: Must return strictly typed objects.
+- `start_tuning()`: Must return strictly typed objects.
+- `record_trial()`: Must return strictly typed objects.
+- `get_remaining_time()`: Must return strictly typed objects.
+- `get_resource_info()`: Must return strictly typed objects.
+- `set_training_callback()`: Must return strictly typed objects.
+- `optimize()`: Must return strictly typed objects.
+- `get_best_params()`: Must return strictly typed objects.
+- `get_trial_history()`: Must return strictly typed objects.
+- `visualize_optimization()`: Must return strictly typed objects.
+- `tune()`: Must return strictly typed objects.
+- `objective()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,51 @@
+# Requirements Document: backtesting/robust_engine/look_ahead_validator.py
+
+## 1. Module Overview
+Look-Ahead Bias Validator for Robust Backtesting Engine.
+
+This module implements comprehensive validation to detect and prevent look-ahead
+bias in backtesting, a critical issue emphasized by Ernest Chan in "Algorithmic
+Trading" (Chapter 3).
+
+Look-ahead bias occurs when a backtest uses information that would not have
+been available at the time of trading, leading to unrealistically optimistic
+results.
+
+Key Features:
+- Signal timing validation
+- Future data leakage detection
+- Data gap analysis
+- Indicator computation validation
+- Comprehensive reporting
+
+Reference:
+    AUDIT_PLAN_COMPLETO - FASE 5.1: Look-Ahead Bias Prevention
+    "Algorithmic Trading" by Ernest P. Chan - Chapter 3
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `typing.Any`
+- `numpy`
+- `pandas`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ValidationResult`: Must conform to application domain models.
+- `TimingIssue`: Must conform to application domain models.
+- `DataGapInfo`: Must conform to application domain models.
+- `LookAheadValidator`: Must conform to application domain models.
+### Public Functions
+- `validate_backtest()`: Must return strictly typed objects.
+- `validate_indicator()`: Must return strictly typed objects.
+- `get_validation_report()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

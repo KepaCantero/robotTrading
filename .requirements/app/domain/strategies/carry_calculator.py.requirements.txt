@@ -1,0 +1,55 @@
+# Requirements Document: domain/strategies/carry_calculator.py
+
+## 1. Module Overview
+Carry Trade Calculator for FX Strategy.
+
+This module implements the core carry trade calculations based on Antti
+Ilmanen's methodology from "Expected Returns" - Rule 12.9:
+
+    carry = (r_base - r_quote) - ((F - S) / S)
+
+Where:
+    - r_base: Interest rate of base currency
+    - r_quote: Interest rate of quote currency
+    - F: Forward rate
+    - S: Spot rate
+
+The module provides:
+- Forward premium calculation
+- Carry calculation
+- Signal generation with tanh saturation
+- Signal filtering and ranking
+- Opportunity identification
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `math`
+- `dataclasses.dataclass`
+- `datetime.date`
+- `decimal.Decimal`
+- `typing.TYPE_CHECKING`
+- `app.domain.strategies.fx_carry_trade.models.FXCarrySignal`
+- `app.domain.strategies.fx_carry_trade.models.FXPair`
+- `collections.abc.Mapping`
+- `app.domain.strategies.fx_carry_trade.fx_rates_provider.FXRateProvider`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CarryTradeOpportunity`: Must conform to application domain models.
+- `CarryCalculator`: Must conform to application domain models.
+### Public Functions
+- `is_actionable()`: Must return strictly typed objects.
+- `calculate_forward_premium()`: Must return strictly typed objects.
+- `calculate_carry()`: Must return strictly typed objects.
+- `calculate_signal()`: Must return strictly typed objects.
+- `calculate_signal_full()`: Must return strictly typed objects.
+- `filter_signals()`: Must return strictly typed objects.
+- `rank_signals()`: Must return strictly typed objects.
+- `calculate_signals_from_provider()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

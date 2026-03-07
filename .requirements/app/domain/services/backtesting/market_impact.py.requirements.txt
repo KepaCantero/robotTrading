@@ -1,0 +1,55 @@
+# Requirements Document: domain/services/backtesting/market_impact.py
+
+## 1. Module Overview
+Market Impact Calculator
+
+Implements market impact models for large orders:
+- Temporary impact (price recovery during execution)
+- Permanent impact (persistent price change)
+- Almgren-Chriss model
+- Square-root impact model
+
+Reference: Rule 44-almgren-chriss-optimal-execution.md
+Paper: Almgren, R., & Chriss, N. (2001) "Optimal Execution of Portfolio Transactions"
+
+## 2. Dependencies
+- `__future__.annotations`
+- `abc.ABC`
+- `abc.abstractmethod`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ImpactModelType`: Must conform to application domain models.
+- `ImpactParameters`: Must conform to application domain models.
+- `TemporaryImpact`: Must conform to application domain models.
+- `PermanentImpact`: Must conform to application domain models.
+- `MarketImpactResult`: Must conform to application domain models.
+- `MarketImpactModel`: Must conform to application domain models.
+- `AlmgrenChristModel`: Must conform to application domain models.
+- `SquareRootImpactModel`: Must conform to application domain models.
+- `LinearImpactModel`: Must conform to application domain models.
+- `MarketImpactCalculator`: Must conform to application domain models.
+### Public Functions
+- `recover_after_hours()`: Must return strictly typed objects.
+- `impact_percentage()`: Must return strictly typed objects.
+- `calculate_impact()`: Must return strictly typed objects.
+- `calculate_impact()`: Must return strictly typed objects.
+- `calculate_impact()`: Must return strictly typed objects.
+- `calculate_impact()`: Must return strictly typed objects.
+- `calculate_impact()`: Must return strictly typed objects.
+- `estimate_optimal_execution_size()`: Must return strictly typed objects.
+- `calculate_impact_curve()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

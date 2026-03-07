@@ -1,0 +1,37 @@
+# Requirements Document: infrastructure/persistence/in_memory_backtest_repository.py
+
+## 1. Module Overview
+In-Memory Backtest Repository Implementation
+
+A simple in-memory implementation of the backtest repository for testing
+and development. Production implementations would use databases.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `domain.entities.backtest.Backtest`
+- `domain.entities.backtest.BacktestStatus`
+- `domain.entities.backtest.BacktestType`
+- `domain.repositories.backtest_repository.BacktestRepository`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `InMemoryBacktestRepository`: Must conform to application domain models.
+### Public Functions
+- `save()`: Must return strictly typed objects.
+- `find_by_id()`: Must return strictly typed objects.
+- `find_by_status()`: Must return strictly typed objects.
+- `find_by_type()`: Must return strictly typed objects.
+- `find_all()`: Must return strictly typed objects.
+- `delete()`: Must return strictly typed objects.
+- `count_by_status()`: Must return strictly typed objects.
+- `get_recent_completed()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

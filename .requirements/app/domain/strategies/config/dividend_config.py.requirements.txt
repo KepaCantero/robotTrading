@@ -1,0 +1,21 @@
+# Requirements Document: domain/strategies/config/dividend_config.py
+
+## 1. Module Overview
+Dividend Strategy Configuration
+
+This module contains all configuration parameters for the dividend strategy.
+Centralized from dividend/dividend_strategy.py hardcoded values.
+
+## 2. Dependencies
+- `pydantic.BaseModel`
+- `pydantic.Field`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DividendStrategyConfig`: Must conform to application domain models.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

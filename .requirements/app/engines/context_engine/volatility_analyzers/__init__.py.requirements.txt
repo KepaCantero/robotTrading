@@ -1,0 +1,19 @@
+# Requirements Document: engines/context_engine/volatility_analyzers/__init__.py
+
+## 1. Module Overview
+Volatility Analyzers - Analizadores avanzados de volatilidad.
+
+Incluye:
+- Detección de cambios estructurales (CUSUM, Chow test)
+- Regímenes de volatilidad
+- Volatility clustering (GARCH models)
+
+## 2. Dependencies
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

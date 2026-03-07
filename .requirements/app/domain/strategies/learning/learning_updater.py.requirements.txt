@@ -1,0 +1,75 @@
+# Requirements Document: domain/strategies/learning/learning_updater.py
+
+## 1. Module Overview
+LearningEngineUpdater - Sistema de reentrenamiento automático para learning engines.
+
+Integra:
+- Detección de drift [TASK-4.2-DRIFT] para reentrenamiento inteligente
+- Análisis de Feature Importance [TASK-4.2-FEATURE-IMPORTANCE]
+- Transfer Learning [TASK-4.2-TRANSFER-LEARNING] para fine-tuning de modelos pre-entrenados
+
+Características:
+- Detección de concept drift (PSI, KS test, ADWIN)
+- Detección de feature drift a nivel individual
+- Detección de overfitting (train/val gap)
+- Triggers automáticos de reentrenamiento basados en drift
+- Feature importance analysis con 6 métodos (SHAP, Permutation, Built-in, Correlation, Attention, Stability)
+- Recomendaciones automáticas de feature engineering
+- Transfer Learning: Fine-tuning de modelos pre-entrenados por régimen de mercado
+- Registro automático de modelos entrenados para transferencia futura
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `base_learning_engine.BaseLearningEngine`
+- `drift_detector.AutoRetrainingTrigger`
+- `drift_detector.ComprehensiveDriftDetector`
+- `drift_detector.ComprehensiveDriftReport`
+- `drift_detector.OverfittingDetector`
+- `drift_detector.load_drift_config`
+- `feature_importance.ComprehensiveFeatureAnalyzer`
+- `feature_importance.load_feature_importance_config`
+- `training_data_preparator.TrainingDataPreparator`
+- `transfer_learning.TransferLearningManager`
+- `pathlib.Path`
+- `app.domain.models.market_data.Quote`
+- `yaml`
+- `sklearn`
+- `sklearn.ensemble.RandomForestClassifier`
+- `tensorflow`
+- `gym`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `LearningEngineUpdater`: Must conform to application domain models.
+### Public Functions
+- `load_transfer_learning_config()`: Must return strictly typed objects.
+- `should_retrain()`: Must return strictly typed objects.
+- `check_drift()`: Must return strictly typed objects.
+- `set_reference_data()`: Must return strictly typed objects.
+- `record_training_metrics()`: Must return strictly typed objects.
+- `get_drift_history()`: Must return strictly typed objects.
+- `get_drift_summary()`: Must return strictly typed objects.
+- `add_trade_result()`: Must return strictly typed objects.
+- `add_market_data()`: Must return strictly typed objects.
+- `retrain_if_needed()`: Must return strictly typed objects.
+- `get_last_feature_importance_analysis()`: Must return strictly typed objects.
+- `get_feature_importance_history()`: Must return strictly typed objects.
+- `get_feature_importance_summary()`: Must return strictly typed objects.
+- `get_last_transfer_operation()`: Must return strictly typed objects.
+- `get_transfer_history()`: Must return strictly typed objects.
+- `get_available_pretrained_models()`: Must return strictly typed objects.
+- `get_transfer_learning_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,40 @@
+# Requirements Document: infrastructure/config/user_settings.py
+
+## 1. Module Overview
+User Settings Model
+
+Defines the user-specific configuration model.
+
+## 2. Dependencies
+- `decimal.Decimal`
+- `enum.Enum`
+- `pathlib.Path`
+- `typing.List`
+- `typing.Optional`
+- `pydantic.BaseModel`
+- `pydantic.Field`
+- `pydantic.field_validator`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BrokerType`: Must conform to application domain models.
+- `OrderTypePreference`: Must conform to application domain models.
+- `TradingProfile`: Must conform to application domain models.
+- `NotificationSettings`: Must conform to application domain models.
+- `BrokerSettings`: Must conform to application domain models.
+- `OrderPreferences`: Must conform to application domain models.
+- `TradingHours`: Must conform to application domain models.
+- `RiskLimits`: Must conform to application domain models.
+- `SymbolUniverse`: Must conform to application domain models.
+- `UserSettings`: Must conform to application domain models.
+### Public Functions
+- `validate_log_level()`: Must return strictly typed objects.
+- `get_allowed_symbols()`: Must return strictly typed objects.
+- `is_symbol_allowed()`: Must return strictly typed objects.
+- `is_paper_trading()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

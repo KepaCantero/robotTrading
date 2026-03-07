@@ -1,0 +1,31 @@
+# Requirements Document: infrastructure/logging/trading_decision_logger.py
+
+## 1. Module Overview
+Trading Decision Logger - R15, R28
+
+Logger append-only con correlation ID para todas las decisiones de trading.
+
+## 2. Dependencies
+- `datetime.datetime`
+- `typing.List`
+- `typing.Optional`
+- `app.infrastructure.logging.log_entry.LogEntry`
+- `app.infrastructure.logging.append_only_log.AppendOnlyLog`
+- `app.shared.protocols.i_trading_decision_logger.ITradingDecisionLogger`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TradingDecisionLogger`: Must conform to application domain models.
+- `ITradingDecisionLogger`: Must conform to application domain models.
+### Public Functions
+- `log_signal()`: Must return strictly typed objects.
+- `log_execution()`: Must return strictly typed objects.
+- `log_validation_result()`: Must return strictly typed objects.
+- `get_logs_by_correlation_id()`: Must return strictly typed objects.
+- `export_for_hacienda()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

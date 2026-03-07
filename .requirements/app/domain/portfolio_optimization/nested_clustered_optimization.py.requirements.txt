@@ -1,0 +1,56 @@
+# Requirements Document: domain/portfolio_optimization/nested_clustered_optimization.py
+
+## 1. Module Overview
+Nested Clustered Optimization (NCO) - López de Prado (2019)
+
+This module implements the Nested Clustered Optimization (NCO) methodology
+developed by Marcos López de Prado. NCO addresses the limitations of
+traditional mean-variance optimization by:
+
+1. Clustering assets based on correlation distance
+2. Optimizing within each cluster separately
+3. Allocating capital across clusters based on risk contribution
+
+Reference:
+    López de Prado, M. (2019). "Machine Learning for Asset Managers"
+    Chapter 16: Nested Clustered Optimization (NCO)
+
+Key concepts:
+    - Correlation distance: d[i,j] = sqrt(0.5 * (1 - corr[i,j]))
+    - Within-cluster optimization: Optimize weights for assets in same cluster
+    - Cross-cluster allocation: Allocate capital to clusters based on inverse volatility
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `enum.Enum`
+- `typing.TYPE_CHECKING`
+- `typing.Any`
+- `numpy`
+- `scipy.optimize.minimize`
+- `sklearn.cluster.DBSCAN`
+- `sklearn.cluster.KMeans`
+- `app.shared.config.centralized_config.get_config`
+- `numpy.typing.NDArray`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ClusteringMethod`: Must conform to application domain models.
+- `NCOConfig`: Must conform to application domain models.
+- `NCOResult`: Must conform to application domain models.
+- `NestedClusteredOptimization`: Must conform to application domain models.
+### Public Functions
+- `compute_nco_weights()`: Must return strictly typed objects.
+- `get_weight_dict()`: Must return strictly typed objects.
+- `get_cluster_summary()`: Must return strictly typed objects.
+- `is_diversified()`: Must return strictly typed objects.
+- `get_weights()`: Must return strictly typed objects.
+- `get_distance_matrix()`: Must return strictly typed objects.
+- `portfolio_variance()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

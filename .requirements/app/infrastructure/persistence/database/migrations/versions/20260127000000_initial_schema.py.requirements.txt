@@ -1,0 +1,30 @@
+# Requirements Document: infrastructure/persistence/database/migrations/versions/20260127000000_initial_schema.py
+
+## 1. Module Overview
+Initial database schema for AlgoTrading Platform
+
+This migration creates all core tables for the algorithmic trading system,
+including user management, portfolios, trades, market data, backtesting,
+and FIFO tax tracking.
+
+Revision ID: 0001
+Revises:
+Create Date: 2026-01-27
+
+## 2. Dependencies
+- `typing.Sequence`
+- `typing.Union`
+- `sqlalchemy`
+- `sqlalchemy.dialects.postgresql`
+- `alembic.op`
+
+## 3. Core Components (Contracts)
+### Public Functions
+- `upgrade()`: Must return strictly typed objects.
+- `downgrade()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

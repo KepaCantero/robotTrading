@@ -1,0 +1,41 @@
+# Requirements Document: shared/config/params/strategy_config.py
+
+## 1. Module Overview
+Strategy Configuration
+
+Extracted from centralized_config.py for SRP compliance.
+Contains StrategyConfig and StockAllocationSettings.
+
+TASK-10: Centralización de Configuración
+TASK-24: SRP Refactoring
+
+## 2. Dependencies
+- `logging`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `pydantic.BaseModel`
+- `pydantic.Field`
+- `pydantic.field_validator`
+- `pydantic.model_validator`
+- `pydantic_settings.BaseSettings`
+- `app.shared.config.config_loader.load_strategy_stock_allocator_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StrategyConfig`: Must conform to application domain models.
+- `StockAllocationSettings`: Must conform to application domain models.
+### Public Functions
+- `validate_percentage()`: Must return strictly typed objects.
+- `validate_weight()`: Must return strictly typed objects.
+- `validate_optional_percentage()`: Must return strictly typed objects.
+- `validate_weights_sum()`: Must return strictly typed objects.
+- `validate_tolerance()`: Must return strictly typed objects.
+- `validate_exposure()`: Must return strictly typed objects.
+- `from_yaml()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

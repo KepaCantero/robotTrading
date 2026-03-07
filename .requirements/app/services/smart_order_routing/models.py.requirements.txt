@@ -1,0 +1,56 @@
+# Requirements Document: services/smart_order_routing/models.py
+
+## 1. Module Overview
+PHASE 2 T2.1 - Data Models for Smart Order Routing
+
+Core data structures for execution planning, monitoring, and cost analysis.
+All models use Pydantic for validation with strict mode and type checking.
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `uuid.uuid4`
+- `pydantic.BaseModel`
+- `pydantic.ConfigDict`
+- `pydantic.Field`
+- `pydantic.field_validator`
+- `pydantic.model_validator`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TimeWindow`: Must conform to application domain models.
+- `OrderTranche`: Must conform to application domain models.
+- `ExecutionPlan`: Must conform to application domain models.
+- `MarketImpactEstimate`: Must conform to application domain models.
+- `ExecutionMonitoring`: Must conform to application domain models.
+- `CommissionTier`: Must conform to application domain models.
+### Public Functions
+- `validate_status()`: Must return strictly typed objects.
+- `validate_actual_size()`: Must return strictly typed objects.
+- `is_filled()`: Must return strictly typed objects.
+- `is_partially_filled()`: Must return strictly typed objects.
+- `validate_strategy()`: Must return strictly typed objects.
+- `validate_plan_consistency()`: Must return strictly typed objects.
+- `validate()`: Must return strictly typed objects.
+- `validate_slippage_realistic()`: Must return strictly typed objects.
+- `cost_overrun()`: Must return strictly typed objects.
+- `cost_overrun_pct()`: Must return strictly typed objects.
+- `is_within_budget()`: Must return strictly typed objects.
+- `progress_pct()`: Must return strictly typed objects.
+- `execution_duration()`: Must return strictly typed objects.
+- `validate()`: Must return strictly typed objects.
+- `log_cost_overrun_alert()`: Must return strictly typed objects.
+- `validate_volume_range()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

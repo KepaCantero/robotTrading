@@ -1,0 +1,72 @@
+# Requirements Document: domain/market_analysis/microstructure/trading_mechanisms.py
+
+## 1. Module Overview
+Trading Mechanisms Module
+
+This module implements different trading mechanism models from Maureen O'Hara's
+"Market Microstructure Theory" (Chapter 2-3).
+
+Key Concepts:
+- Dealer markets and inventory management
+- Auction mechanisms (single and double auctions)
+- Continuous trading dynamics
+- Market design comparison
+- Execution quality across mechanisms
+
+References:
+- O'Hara, M. (1995) "Market Microstructure Theory", Chapters 2-3
+- Madhavan, A. (1992) "Trading Mechanisms in Securities Markets"
+- Domowitz, I. (1990) "The Structure of Trading Discrete Markets"
+
+## 2. Dependencies
+- `__future__.annotations`
+- `heapq`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MarketMechanism`: Must conform to application domain models.
+- `AuctionType`: Must conform to application domain models.
+- `OrderPriority`: Must conform to application domain models.
+- `LimitOrder`: Must conform to application domain models.
+- `AuctionResult`: Must conform to application domain models.
+- `DealerInventoryState`: Must conform to application domain models.
+- `ExecutionQuality`: Must conform to application domain models.
+- `CallAuction`: Must conform to application domain models.
+- `ContinuousDoubleAuction`: Must conform to application domain models.
+- `DealerMarket`: Must conform to application domain models.
+- `TradingMechanismComparator`: Must conform to application domain models.
+### Public Functions
+- `get_call_auction()`: Must return strictly typed objects.
+- `get_continuous_double_auction()`: Must return strictly typed objects.
+- `get_dealer_market()`: Must return strictly typed objects.
+- `get_mechanism_comparator()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `submit_order()`: Must return strictly typed objects.
+- `calculate_clearing_price()`: Must return strictly typed objects.
+- `execute_auction()`: Must return strictly typed objects.
+- `submit_limit_order()`: Must return strictly typed objects.
+- `submit_market_order()`: Must return strictly typed objects.
+- `get_market_state()`: Must return strictly typed objects.
+- `calculate_optimal_quotes()`: Must return strictly typed objects.
+- `execute_trade()`: Must return strictly typed objects.
+- `get_inventory_state()`: Must return strictly typed objects.
+- `calculate_execution_quality()`: Must return strictly typed objects.
+- `compare_mechanisms()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

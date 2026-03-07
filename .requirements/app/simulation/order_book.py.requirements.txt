@@ -1,0 +1,79 @@
+# Requirements Document: simulation/order_book.py
+
+## 1. Module Overview
+Order Book Simulation - Larry Harris's Limit Order Book Dynamics
+
+This module implements the limit order book simulation as described in Harris,
+Chapter 3: "Orders and Order Properties" and Chapter 4: "Market Structure."
+
+Key concepts implemented:
+1. Limit order book with price-time priority
+2. Order queue simulation at each price level
+3. Price formation through order interaction
+4. Depth and liquidity metrics
+5. Order book dynamics and evolution
+
+Reference:
+    Harris, L. (2003). Trading and Exchanges, Chapters 3-4.
+
+## 2. Dependencies
+- `logging`
+- `uuid`
+- `collections.deque`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `bisect`
+- `bisect`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `OrderSide`: Must conform to application domain models.
+- `OrderType`: Must conform to application domain models.
+- `OrderStatus`: Must conform to application domain models.
+- `Order`: Must conform to application domain models.
+- `PriceLevel`: Must conform to application domain models.
+- `Trade`: Must conform to application domain models.
+- `OrderBookSnapshot`: Must conform to application domain models.
+- `LimitOrderBook`: Must conform to application domain models.
+### Public Functions
+- `create_limit_order_book()`: Must return strictly typed objects.
+- `remaining_quantity()`: Must return strictly typed objects.
+- `fill()`: Must return strictly typed objects.
+- `cancel()`: Must return strictly typed objects.
+- `is_buy()`: Must return strictly typed objects.
+- `is_sell()`: Must return strictly typed objects.
+- `is_active()`: Must return strictly typed objects.
+- `is_marketable()`: Must return strictly typed objects.
+- `add_order()`: Must return strictly typed objects.
+- `remove_order()`: Must return strictly typed objects.
+- `get_quantity()`: Must return strictly typed objects.
+- `get_order_count()`: Must return strictly typed objects.
+- `is_empty()`: Must return strictly typed objects.
+- `is_empty()`: Must return strictly typed objects.
+- `bids()`: Must return strictly typed objects.
+- `asks()`: Must return strictly typed objects.
+- `best_bid()`: Must return strictly typed objects.
+- `best_ask()`: Must return strictly typed objects.
+- `spread()`: Must return strictly typed objects.
+- `mid_price()`: Must return strictly typed objects.
+- `trades()`: Must return strictly typed objects.
+- `get_snapshot()`: Must return strictly typed objects.
+- `submit_order()`: Must return strictly typed objects.
+- `cancel_order()`: Must return strictly typed objects.
+- `get_order()`: Must return strictly typed objects.
+- `get_market_depth()`: Must return strictly typed objects.
+- `get_liquidity_metrics()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,44 @@
+# Requirements Document: domain/services/signal_generator.py
+
+## 1. Module Overview
+Signal Generator Domain Service - Trading signal generation
+
+SignalGenerator provides domain logic for generating trading signals
+based on various strategies and indicators.
+
+Reference: Rule 05-architecture.md, Rule 03-solid-principles.md
+
+## 2. Dependencies
+- `__future__.annotations`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SignalType`: Must conform to application domain models.
+- `SignalStrength`: Must conform to application domain models.
+- `Signal`: Must conform to application domain models.
+- `IndicatorValues`: Must conform to application domain models.
+- `SignalGenerator`: Must conform to application domain models.
+### Public Functions
+- `is_buy()`: Must return strictly typed objects.
+- `is_sell()`: Must return strictly typed objects.
+- `is_actionable()`: Must return strictly typed objects.
+- `generate_ma_crossover_signal()`: Must return strictly typed objects.
+- `generate_rsi_signal()`: Must return strictly typed objects.
+- `generate_bollinger_signal()`: Must return strictly typed objects.
+- `generate_macd_signal()`: Must return strictly typed objects.
+- `combine_signals()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

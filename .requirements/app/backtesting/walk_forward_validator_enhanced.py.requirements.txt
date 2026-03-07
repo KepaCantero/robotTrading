@@ -1,0 +1,97 @@
+# Requirements Document: backtesting/walk_forward_validator_enhanced.py
+
+## 1. Module Overview
+Tomasini-Compliant Walk-Forward Validation
+
+This module implements Tomasini & Jaekle's walk-forward optimization methodology
+from "Designing Trading Systems" (Chapter 8).
+
+Key improvements over standard walk-forward:
+1. Rolling window optimization with adaptive sizing
+2. Parameter stability tracking across windows
+3. Out-of-sample step size = 50% of training window (Tomasini recommendation)
+4. Market regime-aware window adjustment
+5. IS/OOS consistency ratio with confidence intervals
+6. Parameter stability metrics
+7. Robustness scoring across market conditions
+
+Tomasini's Key Principles:
+- Step size should be 50% of training window (balances stability vs adaptability)
+- Track parameter evolution to detect overfitting
+- Use rolling windows, not anchored windows
+- Minimum 5 complete cycles for statistical significance
+- Regime-aware validation prevents false positives
+
+Performance Considerations (PERF-001):
+- This module does NOT use numba JIT compilation because:
+  1. The computational bottleneck is in SimpleBacktester, not here
+  2. The main operations (window creation, parameter tracking) are not performance-critical
+  3. Metrics calculations should use app.backtesting.numba_metrics for hot paths
+- If performance optimization is needed, consider:
+  - Using numba_metrics.calculate_sharpe_numba() for Sharpe ratio calculations
+  - Using numba_metrics.calculate_max_drawdown_numba() for drawdown analysis
+  - Parallelizing window processing with concurrent.futures
+
+Concurrency Design (PERF-006):
+- This module uses SYNCHRONOUS execution (not async/await) by design
+- This is a CPU-bound workload, not I/O-bound:
+  - No external I/O operations (no database, network, file I/O, or API calls)
+  - Primary work: grid search optimization, backtesting loops, NumPy/SciPy calculations
+  - Async/await provides NO benefit for CPU-bound workloads (limited by Python's GIL)
+- For true parallelization of CPU-intensive operations, use multiprocessing:
+  - ProcessPoolExecutor for parallel window processing
+  - multiprocessing.Pool for parameter grid search
+  - Do NOT convert to async/await - it would add complexity without performance benefit
+
+Domain Design (DOM-001):
+- This module uses dataclasses (ParameterHistory, ParameterStabilityMetrics, etc.)
+  instead of domain value objects for serialization simplicity
+- The to_dict() methods return plain dictionaries for JSON serialization
+- In a future refactor, consider converting these to proper domain value objects:
+  * ParameterHistory -> value object with validation
+  * ParameterStabilityMetrics -> value object with business rules
+  * TomasiniWindowResult -> entity with invariants
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `scipy.stats`
+- `app.backtesting.engine.SimpleBacktester`
+- `app.backtesting.models.BacktestConfig`
+- `app.domain.models.market_data.Quote`
+- `app.engines.context_engine.regime_detectors.clustering_regime_detector.ClusteringRegimeDetector`
+- `itertools.product`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ParameterHistory`: Must conform to application domain models.
+- `ParameterStabilityMetrics`: Must conform to application domain models.
+- `TomasiniWindowResult`: Must conform to application domain models.
+- `TomasiniWalkForwardResult`: Must conform to application domain models.
+- `TomasiniWalkForwardValidator`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `create_rolling_windows()`: Must return strictly typed objects.
+- `detect_regime()`: Must return strictly typed objects.
+- `optimize_parameters()`: Must return strictly typed objects.
+- `calculate_window_metrics()`: Must return strictly typed objects.
+- `validate_strategy()`: Must return strictly typed objects.
+- `calculate_parameter_stability()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

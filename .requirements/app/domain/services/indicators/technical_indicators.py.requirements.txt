@@ -1,0 +1,64 @@
+# Requirements Document: domain/services/indicators/technical_indicators.py
+
+## 1. Module Overview
+Technical Indicators - Unified Implementation with Pandas-TA Backend
+
+This module provides a unified interface for calculating technical indicators
+using pandas-ta as the primary backend with optional Numba JIT compilation
+for performance-critical calculations.
+
+Supported Indicators:
+- RSI (Relative Strength Index)
+- EMA (Exponential Moving Average)
+- SMA (Simple Moving Average)
+- MACD (Moving Average Convergence Divergence)
+- ATR (Average True Range)
+- Bollinger Bands
+- ADX (Average Directional Index)
+- Stochastic Oscillator
+- CCI (Commodity Channel Index)
+- OBV (On-Balance Volume)
+- Williams %R
+- ROC (Rate of Change)
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `typing.Union`
+- `numpy`
+- `pandas`
+- `pandas_ta`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `IndicatorResult`: Must conform to application domain models.
+- `TechnicalIndicators`: Must conform to application domain models.
+### Public Functions
+- `is_valid()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `rsi()`: Must return strictly typed objects.
+- `ema()`: Must return strictly typed objects.
+- `sma()`: Must return strictly typed objects.
+- `macd()`: Must return strictly typed objects.
+- `atr()`: Must return strictly typed objects.
+- `bollinger_bands()`: Must return strictly typed objects.
+- `adx()`: Must return strictly typed objects.
+- `stochastic()`: Must return strictly typed objects.
+- `stochrsi()`: Must return strictly typed objects.
+- `cci()`: Must return strictly typed objects.
+- `obv()`: Must return strictly typed objects.
+- `williams_r()`: Must return strictly typed objects.
+- `roc()`: Must return strictly typed objects.
+- `calculate_all()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,26 @@
+# Requirements Document: domain/strategies/modules/market_detectors/range_detector.py
+
+## 1. Module Overview
+RangeDetector - Módulo independiente para detectar mercados en rango.
+
+VECTORIZADO: Usa numpy para todos los cálculos. Sin bucles Python.
+
+## 2. Dependencies
+- `logging`
+- `typing.Dict`
+- `typing.List`
+- `typing.Union`
+- `numpy`
+- `base_detector.BaseMarketDetector`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RangeDetector`: Must conform to application domain models.
+### Public Functions
+- `detect()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

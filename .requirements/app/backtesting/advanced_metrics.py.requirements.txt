@@ -1,0 +1,48 @@
+# Requirements Document: backtesting/advanced_metrics.py
+
+## 1. Module Overview
+Advanced Financial Metrics Calculator - PHASE 4 MODULE 7
+
+Calculates sophisticated financial metrics including:
+- Calmar Ratio: Risk-adjusted return relative to max drawdown
+- Omega Ratio: Probability-weighted downside/upside
+- Ulcer Index: Duration-weighted drawdown penalty
+- Annualized Volatility: Return standard deviation
+- Recovery Factor: Profit relative to drawdown
+- Skewness & Kurtosis: Return distribution shape
+- Value at Risk (VaR) & Conditional VaR (CVaR): Tail risk metrics
+
+## 2. Dependencies
+- `logging`
+- `decimal.Decimal`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `scipy.stats`
+- `app.shared.config.centralized_config.CentralizedConfig`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `AdvancedMetricsCalculator`: Must conform to application domain models.
+### Public Functions
+- `calculate_calmar_ratio()`: Must return strictly typed objects.
+- `calculate_omega_ratio()`: Must return strictly typed objects.
+- `calculate_ulcer_index()`: Must return strictly typed objects.
+- `calculate_annualized_volatility()`: Must return strictly typed objects.
+- `calculate_recovery_factor()`: Must return strictly typed objects.
+- `calculate_profit_factor()`: Must return strictly typed objects.
+- `calculate_skewness()`: Must return strictly typed objects.
+- `calculate_kurtosis()`: Must return strictly typed objects.
+- `calculate_var()`: Must return strictly typed objects.
+- `calculate_cvar()`: Must return strictly typed objects.
+- `calculate_sortino_modified()`: Must return strictly typed objects.
+- `calculate_tail_ratio()`: Must return strictly typed objects.
+- `calculate_sqn()`: Must return strictly typed objects.
+- `calculate_all_advanced_metrics()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

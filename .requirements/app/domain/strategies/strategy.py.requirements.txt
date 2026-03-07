@@ -1,0 +1,59 @@
+# Requirements Document: domain/strategies/strategy.py
+
+## 1. Module Overview
+ModularMomentumStrategy - Estrategia de momentum completamente modular con learning engines integrado.
+
+## 2. Dependencies
+- `logging`
+- `collections.deque`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.TYPE_CHECKING`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `app.shared.config.centralized_config.get_config`
+- `app.domain.models.market_data.Quote`
+- `app.domain.models.portfolio.Portfolio`
+- `app.domain.models.signal.Signal`
+- `app.domain.models.signal.SignalSource`
+- `app.domain.models.signal.SignalStrength`
+- `app.domain.models.signal.SignalType`
+- `app.domain.services.analysis.momentum.TechnicalIndicatorCalculator`
+- `app.domain.strategies.base.BaseStrategy`
+- `modules.filters.ATRFilter`
+- `modules.filters.EMAFilter`
+- `modules.filters.MomentumFilter`
+- `modules.filters.RSIFilter`
+- `modules.filters.StochRSIFilter`
+- `modules.filters.VolumeFilter`
+- `modules.market_analyzer.MarketAnalyzer`
+- `numpy`
+- `os`
+- `learning.supervised_learning_engine.SupervisedLearningEngine`
+- `bisect`
+- `learning.feature_extractor.FeatureExtractor`
+- `learning.subprocess_engine_wrapper.SubprocessLearningEngineWrapper`
+- `learning.feature_extractor.FeatureExtractor`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StrategyConfig`: Must conform to application domain models.
+- `RateLimitedLogger`: Must conform to application domain models.
+- `ModularMomentumStrategy`: Must conform to application domain models.
+### Public Functions
+- `warning()`: Must return strictly typed objects.
+- `generate_signals()`: Must return strictly typed objects.
+- `add_trade_result()`: Must return strictly typed objects.
+- `risk_check()`: Must return strictly typed objects.
+- `get_required_parameters()`: Must return strictly typed objects.
+- `get_position_size()`: Must return strictly typed objects.
+- `ema()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

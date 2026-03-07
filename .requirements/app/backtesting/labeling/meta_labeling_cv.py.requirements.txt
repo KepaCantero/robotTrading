@@ -1,0 +1,88 @@
+# Requirements Document: backtesting/labeling/meta_labeling_cv.py
+
+## 1. Module Overview
+Meta-Labeling Cross-Validation for Financial ML
+
+Based on Marcos López de Prado's "Advances in Financial Machine Learning", Chapter 4.
+
+This module implements purged and embargoed cross-validation specifically designed
+for meta-labeling applications in financial machine learning.
+
+Key Concepts:
+- Purged CV: Remove training samples that overlap with test period
+- Embargo: Additional buffer after test period to prevent leakage
+- Meta-labeling CV: Special handling for two-stage models
+- Sequential Bootstrap: CV that respects time-series nature of data
+
+Why Special CV is Needed for Meta-Labeling:
+1. Labels overlap in time (trades have different durations)
+2. Features may contain look-ahead bias if not careful
+3. Meta-model depends on primary model predictions
+4. Standard CV leads to unrealistic performance estimates
+
+The Purged K-Fold CV:
+- Removes training samples that overlap with test set
+- Adds embargo period after each test fold
+- Ensures test set is truly out-of-sample
+- Prevents information leakage from overlapping labels
+
+Example:
+    >>> from sklearn.ensemble import RandomForestClassifier
+    >>> primary_model = RandomForestClassifier()
+    >>> meta_model = RandomForestClassifier()
+    >>>
+    >>> # Generate meta-labeling CV splits
+    >>> cv = PurgedKFold(n_folds=5, embargo_pct=0.01)
+    >>>
+    >>> for train_idx, test_idx in cv.split(X, events, barriers):
+    ...     # Train primary model
+    ...     primary_model.fit(X[train_idx], y[train_idx])
+    ...     primary_pred = primary_model.predict(X[train_idx])
+    ...
+    ...     # Generate meta-labels
+    ...     meta_labels = (primary_pred == y[train_idx]).astype(int)
+    ...
+    ...     # Train meta-model
+    ...     X_meta = np.column_stack([X[train_idx], primary_pred])
+    ...     meta_model.fit(X_meta, meta_labels)
+    ...
+    ...     # Evaluate on test set
+    ...     test_pred = meta_model.predict(X[test_idx])
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `typing.Union`
+- `numpy`
+- `pandas`
+- `sklearn.metrics.f1_score`
+- `sklearn.metrics.roc_auc_score`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CVConfig`: Must conform to application domain models.
+- `CVResult`: Must conform to application domain models.
+- `PurgedKFold`: Must conform to application domain models.
+- `MetaLabelingCV`: Must conform to application domain models.
+- `SequentialBootstrap`: Must conform to application domain models.
+### Public Functions
+- `cv_score_meta_labeling()`: Must return strictly typed objects.
+- `calculate_purge_embargo_sizes()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `split()`: Must return strictly typed objects.
+- `cross_validate()`: Must return strictly typed objects.
+- `split()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

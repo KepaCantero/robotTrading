@@ -1,0 +1,52 @@
+# Requirements Document: backtesting/services/trade_executor.py
+
+## 1. Module Overview
+Trade Executor service for backtesting.
+
+This service is responsible for executing buy and sell trades with all
+necessary validations including liquidity, position sizing, and cost calculations.
+
+BUG #3 FIX: Now uses TransactionCostModel for realistic costs instead of
+simple percentage-based commission.
+
+SINGLE SOURCE OF TRUTH: Uses shared utilities for slippage and trade reason.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Optional`
+- `uuid.uuid4`
+- `app.backtesting.models.BacktestConfig`
+- `app.backtesting.models.Trade`
+- `app.backtesting.models.TradeStatus`
+- `app.backtesting.services.pnl_calculator.ProfitAndLossCalculator`
+- `app.backtesting.services.position_manager.PositionManager`
+- `app.backtesting.services.transaction_cost_model.BrokerType`
+- `app.backtesting.services.transaction_cost_model.OrderType`
+- `app.backtesting.services.transaction_cost_model.TransactionCostModel`
+- `app.backtesting.services.transaction_cost_model.TransactionCostResult`
+- `app.backtesting.shared.slippage_utils.apply_slippage`
+- `app.backtesting.shared.trade_utils.build_trade_reason`
+- `app.domain.models.signal.Signal`
+- `app.backtesting.liquidity_validator.LiquidityValidator`
+- `app.domain.services.trading_validators.TradingValidator`
+- `app.backtesting.engine.get_price`
+- `app.backtesting.engine.get_price`
+- `decimal.InvalidOperation`
+- `decimal.InvalidOperation`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TradeExecutor`: Must conform to application domain models.
+### Public Functions
+- `execute_buy_signal()`: Must return strictly typed objects.
+- `execute_sell_signal()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

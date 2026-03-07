@@ -1,0 +1,32 @@
+# Requirements Document: engines/data_engine/validators/outlier_detector.py
+
+## 1. Module Overview
+OutlierDetector - Detección de outliers en datos de mercado.
+
+Métodos soportados:
+- IQR (Interquartile Range)
+- Z-score
+- Isolation Forest
+
+## 2. Dependencies
+- `logging`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `sklearn.ensemble.IsolationForest`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `OutlierDetector`: Must conform to application domain models.
+### Public Functions
+- `detect()`: Must return strictly typed objects.
+- `detect_in_ohlcv()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

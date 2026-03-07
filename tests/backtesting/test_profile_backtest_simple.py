@@ -21,7 +21,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from app.core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
+from app.domain.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
 
 print("=" * 80)
 print("PROFILE INVESTOR BACKTEST - TODOS LOS TIPOS")

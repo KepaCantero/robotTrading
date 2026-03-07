@@ -1,0 +1,31 @@
+# Requirements Document: services/configuration_persistence/models.py
+
+## 1. Module Overview
+T11.1: ConfigurationPersistence - Models for configuration storage and retrieval
+
+Persists strategy configurations to in-memory store with optional persistence.
+
+## 2. Dependencies
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `pydantic.BaseModel`
+- `pydantic.Field`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StrategyConfiguration`: Must conform to application domain models.
+- `ConfigurationSaveRequest`: Must conform to application domain models.
+- `ConfigurationLoadRequest`: Must conform to application domain models.
+- `ConfigurationLoadResponse`: Must conform to application domain models.
+- `ConfigurationListResponse`: Must conform to application domain models.
+- `VersionedConfiguration`: Must conform to application domain models.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,31 @@
+# Requirements Document: domain/value_objects/investment_horizon.py
+
+## 1. Module Overview
+Investment Horizon Value Object - Time period for investments
+
+InvestmentHorizon represents the time period of an investment with validation.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `dataclasses.dataclass`
+- `enum.Enum`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `HorizonCategory`: Must conform to application domain models.
+- `InvestmentHorizon`: Must conform to application domain models.
+### Public Functions
+- `years()`: Must return strictly typed objects.
+- `category()`: Must return strictly typed objects.
+- `is_short_term()`: Must return strictly typed objects.
+- `is_long_term()`: Must return strictly typed objects.
+- `allows_high_risk()`: Must return strictly typed objects.
+- `allows_very_high_risk()`: Must return strictly typed objects.
+- `from_months()`: Must return strictly typed objects.
+- `from_years()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

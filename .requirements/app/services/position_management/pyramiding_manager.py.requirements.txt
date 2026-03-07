@@ -1,0 +1,43 @@
+# Requirements Document: services/position_management/pyramiding_manager.py
+
+## 1. Module Overview
+Pyramiding Manager - R13: Pyramiding - Añadir a Ganadores
+
+Implementa añadir posiciones solo a trades ganadores, nunca a perdedoras.
+
+R13 Rules:
+- Solo añadir si P&L > 0 (posición ganadora)
+- Máximo 2 adiciones
+- Primera adición: 50% del tamaño inicial
+- Segunda adición: 25% del tamaño inicial
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `typing.List`
+- `typing.Optional`
+- `datetime.datetime`
+- `datetime.datetime`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PyramidingAddition`: Must conform to application domain models.
+- `PyramidingResult`: Must conform to application domain models.
+- `PyramidingManager`: Must conform to application domain models.
+### Public Functions
+- `can_add_position()`: Must return strictly typed objects.
+- `get_addition_size()`: Must return strictly typed objects.
+- `add_position()`: Must return strictly typed objects.
+- `get_addition_history()`: Must return strictly typed objects.
+- `get_total_added()`: Must return strictly typed objects.
+- `reset()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `from_dict()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

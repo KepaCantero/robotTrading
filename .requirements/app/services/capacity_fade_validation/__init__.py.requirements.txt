@@ -1,0 +1,34 @@
+# Requirements Document: services/capacity_fade_validation/__init__.py
+
+## 1. Module Overview
+T4.1 Priority 5: Capacity Fade Validation
+
+Validates that strategy alpha is sustainable as capital scales to target level (€250k).
+
+Key Components:
+- HistoricalCapacityAnalyzer: Analyzes backtest performance degradation with capital size
+- LiquidityHeadroom: Calculates daily volume constraints
+- AlphaDecayEstimator: Projects alpha at target capital using sqrt(capacity) model
+- CapacityFadeValidator: Orchestrates validation and gates infeasible strategies
+
+Models:
+- CapacityFadeAnalysis: Analysis results with fade ratio and feasibility
+- LiquidityReport: Position sizing constraints based on daily volume
+- FeasibilityGate: Final approval decision (APPROVED/CONDITIONAL/REJECTED)
+
+## 2. Dependencies
+- `capacity_fade_validator.CapacityFadeValidator`
+- `models.CapacityFadeAnalysis`
+- `models.CapacityFadeRequest`
+- `models.CapacityFadeResponse`
+- `models.FeasibilityDecision`
+- `models.FeasibilityGate`
+- `models.LiquidityReport`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

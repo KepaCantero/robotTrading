@@ -1,0 +1,97 @@
+# Requirements Document: application/services/__init__.py
+
+## 1. Module Overview
+Service Layer Pattern - Application services following Percival's Architecture Patterns with Python
+
+This module implements the Service Layer pattern as described in
+"Architecture Patterns with Python" (Cosmic Python) by Percival & Gregory.
+
+Key concepts:
+- Application services orchestrate business use cases
+- Coordinate between domain entities and repositories
+- Implement transaction boundaries
+- Handle cross-cutting concerns (logging, validation)
+- No business logic (delegates to domain entities)
+
+Reference: Chapter 11, "Service Layer"
+
+The Service Layer pattern is especially valuable for:
+1. Encapsulating use case logic
+2. Coordinating multiple aggregates
+3. Managing transactions
+4. Separating concerns from domain layer
+5. Providing API for higher layers
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `abc.ABC`
+- `abc.abstractmethod`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.Generic`
+- `typing.List`
+- `typing.Optional`
+- `typing.TypeVar`
+- `app.domain.entities.order.Order`
+- `app.domain.entities.order.OrderSide`
+- `app.domain.entities.order.OrderType`
+- `app.domain.entities.portfolio.Portfolio`
+- `app.domain.entities.portfolio.Position`
+- `app.domain.repositories.unit_of_work.AbstractUnitOfWork`
+- `input_profile_router.InputProfileRouter`
+- `input_profile_router.OptimizationConfig`
+- `input_profile_router.OptimizationType`
+- `input_profile_router.RebalancingFrequency`
+- `input_profile_router.RiskConfig`
+- `input_profile_router.StrategyType`
+- `input_profile_router.SystemConfiguration`
+- `input_profile_router.TaxConfig`
+- `risk_configurator.DrawdownMetrics`
+- `risk_configurator.RiskBudget`
+- `risk_configurator.RiskConfigurator`
+- `risk_configurator.RiskLimit`
+- `risk_configurator.RiskLimitType`
+- `risk_configurator.StressTestScenario`
+- `risk_configurator.VaRResult`
+- `tax_optimizer.TaxCalculation`
+- `tax_optimizer.TaxJurisdiction`
+- `tax_optimizer.TaxLot`
+- `tax_optimizer.TaxMethod`
+- `tax_optimizer.TaxOptimizer`
+- `app.domain.value_objects.capital.Capital`
+- `app.domain.value_objects.risk_parameters.RiskParameters`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `Command`: Must conform to application domain models.
+- `Query`: Must conform to application domain models.
+- `CommandHandler`: Must conform to application domain models.
+- `ApplicationService`: Must conform to application domain models.
+- `CreateOrderCommand`: Must conform to application domain models.
+- `SubmitOrderCommand`: Must conform to application domain models.
+- `CancelOrderCommand`: Must conform to application domain models.
+- `GetOrderQuery`: Must conform to application domain models.
+- `GetPortfolioOrdersQuery`: Must conform to application domain models.
+- `OrderApplicationService`: Must conform to application domain models.
+- `PortfolioApplicationService`: Must conform to application domain models.
+- `ServiceOrchestrator`: Must conform to application domain models.
+- `ValidationError`: Must conform to application domain models.
+- `BusinessRuleError`: Must conform to application domain models.
+- `NotFoundError`: Must conform to application domain models.
+### Public Functions
+- `validate()`: Must return strictly typed objects.
+- `validate()`: Must return strictly typed objects.
+- `validate()`: Must return strictly typed objects.
+- `validate()`: Must return strictly typed objects.
+- `register_service()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,103 @@
+# Requirements Document: domain/strategies/learning/drift_detector.py
+
+## 1. Module Overview
+DriftDetector - Sistema de detección de concept drift y data drift [TASK-4.2-DRIFT]
+
+Detecta:
+1. Concept drift: Cambios en la distribución de datos (KS test, PSI, ADWIN, MMD)
+2. Feature drift: Cambios en features individuales
+3. Prediction drift: Cambios en distribución de predicciones
+4. Overfitting: Gap entre train/val, learning curves
+5. Auto-retraining triggers: Decide cuándo reentrenar modelos
+
+Detectores implementados:
+- KS Test (Kolmogorov-Smirnov): Compara distribuciones
+- PSI (Population Stability Index): Estándar en finanzas
+- ADWIN (Adaptive Windowing): Para streaming data
+- MMD (Maximum Mean Discrepancy): Compara en RKHS
+
+## 2. Dependencies
+- `logging`
+- `collections.deque`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `enum.Enum`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `yaml`
+- `scipy.stats.ks_2samp`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DriftSeverity`: Must conform to application domain models.
+- `DriftResult`: Must conform to application domain models.
+- `FeatureDriftReport`: Must conform to application domain models.
+- `ComprehensiveDriftReport`: Must conform to application domain models.
+- `PSIDetector`: Must conform to application domain models.
+- `ADWINDetector`: Must conform to application domain models.
+- `ConceptDriftDetector`: Must conform to application domain models.
+- `FeatureDriftMonitor`: Must conform to application domain models.
+- `OverfittingSeverity`: Must conform to application domain models.
+- `OverfittingMetrics`: Must conform to application domain models.
+- `OverfittingResult`: Must conform to application domain models.
+- `OverfittingReport`: Must conform to application domain models.
+- `OverfittingDetector`: Must conform to application domain models.
+- `AdvancedOverfittingDetector`: Must conform to application domain models.
+- `ComprehensiveDriftDetector`: Must conform to application domain models.
+- `AutoRetrainingTrigger`: Must conform to application domain models.
+### Public Functions
+- `load_drift_config()`: Must return strictly typed objects.
+- `get_default_drift_config()`: Must return strictly typed objects.
+- `load_overfitting_config()`: Must return strictly typed objects.
+- `get_default_overfitting_config()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `calculate_psi()`: Must return strictly typed objects.
+- `detect()`: Must return strictly typed objects.
+- `add_element()`: Must return strictly typed objects.
+- `detect()`: Must return strictly typed objects.
+- `reset()`: Must return strictly typed objects.
+- `update_reference()`: Must return strictly typed objects.
+- `detect_drift_ks()`: Must return strictly typed objects.
+- `detect_drift_mmd()`: Must return strictly typed objects.
+- `detect()`: Must return strictly typed objects.
+- `detect_drift()`: Must return strictly typed objects.
+- `get_drift_history()`: Must return strictly typed objects.
+- `initialize_features()`: Must return strictly typed objects.
+- `set_reference()`: Must return strictly typed objects.
+- `detect_feature_drift()`: Must return strictly typed objects.
+- `generalization_gap()`: Must return strictly typed objects.
+- `gap_ratio()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `update_metrics()`: Must return strictly typed objects.
+- `detect_overfitting()`: Must return strictly typed objects.
+- `get_learning_curves()`: Must return strictly typed objects.
+- `update_metrics()`: Must return strictly typed objects.
+- `add_cv_scores()`: Must return strictly typed objects.
+- `detect_overfitting()`: Must return strictly typed objects.
+- `get_learning_curves()`: Must return strictly typed objects.
+- `generate_report()`: Must return strictly typed objects.
+- `reset()`: Must return strictly typed objects.
+- `set_reference()`: Must return strictly typed objects.
+- `update_reference()`: Must return strictly typed objects.
+- `detect()`: Must return strictly typed objects.
+- `record_retrain()`: Must return strictly typed objects.
+- `reset()`: Must return strictly typed objects.
+- `should_retrain()`: Must return strictly typed objects.
+- `record_retrain()`: Must return strictly typed objects.
+- `record_performance()`: Must return strictly typed objects.
+- `record_drift()`: Must return strictly typed objects.
+- `record_overfitting()`: Must return strictly typed objects.
+- `get_retrain_history()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

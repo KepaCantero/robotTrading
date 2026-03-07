@@ -1,0 +1,51 @@
+# Requirements Document: presentation/api/signals.py
+
+## 1. Module Overview
+Signal Management API Endpoints
+
+FastAPI endpoints for signal scoring, evaluation, and management.
+
+GAP Fixes:
+- API-002: Added structured logging with correlation IDs
+- API-009: Added audit logging for signal operations
+- API-005: TODO: Rate limiting requires JWT infrastructure
+
+## 2. Dependencies
+- `__future__.annotations`
+- `asyncio`
+- `logging`
+- `traceback`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `fastapi.APIRouter`
+- `fastapi.BackgroundTasks`
+- `fastapi.Depends`
+- `fastapi.HTTPException`
+- `fastapi.Request`
+- `pydantic.BaseModel`
+- `app.shared.config.di_container.get_signal_scorer_service`
+- `app.domain.models.signal.MarketData`
+- `app.domain.models.signal.Signal`
+- `app.domain.models.signal.SignalType`
+- `app.domain.services.signals.scorer.SignalScorerService`
+- `audit_logger`
+- `get_correlation_id`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MarketDataRequest`: Must conform to application domain models.
+- `SignalEvaluationRequest`: Must conform to application domain models.
+- `SignalResponse`: Must conform to application domain models.
+- `SignalStatisticsResponse`: Must conform to application domain models.
+### Public Functions
+- `get_signal_scorer_service()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

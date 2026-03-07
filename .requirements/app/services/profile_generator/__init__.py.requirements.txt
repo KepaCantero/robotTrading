@@ -1,0 +1,25 @@
+# Requirements Document: services/profile_generator/__init__.py
+
+## 1. Module Overview
+T2.1: ProfileGenerator - Maps user input to investment profiles
+
+Generates investment profiles based on user capital, objective, and risk tolerance.
+
+## 2. Dependencies
+- `models.CapitalTier`
+- `models.InvestmentObjective`
+- `models.InvestmentProfile`
+- `models.ModuleConfig`
+- `models.ProfileGenerationRequest`
+- `models.ProfileGenerationResult`
+- `models.RiskProfile`
+- `profile_generator.ProfileGenerator`
+- `profile_generator.get_profile_generator`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

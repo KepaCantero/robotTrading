@@ -1,0 +1,62 @@
+# Requirements Document: domain/strategies/portfolio_constructor.py
+
+## 1. Module Overview
+Factor Portfolio Constructor - Build Factor-Tilted Portfolios
+
+This module implements portfolio construction using factor tilt optimization.
+The goal is to build a diversified portfolio with targeted factor exposures
+while controlling risk and turnover.
+
+Key features:
+- Factor tilt optimization (target specific factor exposures)
+- Sector neutrality constraints
+- Position size limits and diversification
+- Risk-aware optimization
+
+SOLID Principles:
+- Single Responsibility: Only portfolio construction, not factor calculation
+- Open/Closed: Extensible with new optimization objectives
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `scipy.optimize.Bounds`
+- `scipy.optimize.minimize`
+- `factor_calculator.get_default_factor_premiums`
+- `factor_models.FactorModelManager`
+- `models.FactorOptimizationResult`
+- `models.FactorPortfolio`
+- `models.FactorPosition`
+- `models.FactorProfile`
+- `models.FactorRebalanceRecommendation`
+- `models.FactorStrategyConfig`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `FactorPortfolioConstructor`: Must conform to application domain models.
+- `LowVolatilityPosition`: Must conform to application domain models.
+- `LowVolatilityPortfolio`: Must conform to application domain models.
+- `LowVolatilityPortfolioConstructor`: Must conform to application domain models.
+### Public Functions
+- `construct_portfolio()`: Must return strictly typed objects.
+- `rebalance()`: Must return strictly typed objects.
+- `analyze_drift()`: Must return strictly typed objects.
+- `get_portfolio_metrics()`: Must return strictly typed objects.
+- `construct_portfolio()`: Must return strictly typed objects.
+- `rebalance()`: Must return strictly typed objects.
+- `analyze_drift()`: Must return strictly typed objects.
+- `objective()`: Must return strictly typed objects.
+- `sector_constraint()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

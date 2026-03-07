@@ -1,0 +1,37 @@
+# Requirements Document: services/profile_generator/models.py
+
+## 1. Module Overview
+T2.1: Investment Profile Models
+
+Dataclasses for investment profiles and related structures.
+Uses centralized configuration for default values.
+
+## 2. Dependencies
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.TYPE_CHECKING`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CapitalTier`: Must conform to application domain models.
+- `InvestmentObjective`: Must conform to application domain models.
+- `RiskProfile`: Must conform to application domain models.
+- `ModuleConfig`: Must conform to application domain models.
+- `InvestmentProfile`: Must conform to application domain models.
+- `ProfileGenerationRequest`: Must conform to application domain models.
+- `ProfileGenerationResult`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

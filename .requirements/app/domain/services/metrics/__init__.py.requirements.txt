@@ -1,0 +1,67 @@
+# Requirements Document: domain/services/metrics/__init__.py
+
+## 1. Module Overview
+Centralized Metrics Module
+
+This module provides a unified interface for all risk and performance metrics calculations.
+It consolidates multiple implementations that were scattered across the codebase:
+
+ORIGINAL LOCATIONS (to be deprecated):
+- /app/backtesting/bias_correctors.py - Sharpe ratio in BacktestValidator
+- /app/backtesting/metrics.py - Main MetricsCalculator with Sharpe, Sortino, etc.
+- /app/backtesting/numba_metrics.py - Numba-accelerated versions
+- /app/backtesting/chan_metrics.py - Ernest Chan methodologies
+- /app/backtesting/advanced_metrics.py - Calmar, Omega, VaR, CVaR, etc.
+- /app/backtesting/lopez_de_prado_metrics.py - Lopez de Prado methodologies
+- /app/domain/services/risk_calculator.py - RiskCalculator with VaR, beta, etc.
+
+USAGE:
+    from app.domain.services.metrics import (
+        PerformanceMetricsCalculator,
+        RiskMetricsCalculator,
+        get_sharpe_ratio,
+        get_var,
+    )
+
+    # Using the unified calculator
+    calc = PerformanceMetricsCalculator()
+    sharpe = calc.sharpe_ratio(returns)
+
+    # Using convenience functions
+    sharpe = get_sharpe_ratio(returns, risk_free_rate=0.02)  # or use CentralizedConfig.backtesting.default_risk_free_rate
+
+ARCHITECTURE:
+    - performance_metrics.py: Sharpe, Sortino, Calmar, Omega, etc.
+    - risk_metrics.py: VaR, CVaR, Beta, Volatility, Correlation
+    - numba_metrics.py: Numba-accelerated versions (preserved)
+    - lopez_de_prado.py: Advanced Lopez de Prado methodologies
+    - chan_metrics.py: Ernest Chan methodologies
+
+Reference:
+    - Lopez de Prado, M. (2020). Machine Learning for Asset Managers.
+    - Chan, E.P. (2013). Algorithmic Trading.
+
+## 2. Dependencies
+- `app.domain.services.metrics.performance_metrics.PerformanceMetricsCalculator`
+- `app.domain.services.metrics.performance_metrics.get_sharpe_ratio`
+- `app.domain.services.metrics.performance_metrics.get_sortino_ratio`
+- `app.domain.services.metrics.performance_metrics.get_calmar_ratio`
+- `app.domain.services.metrics.performance_metrics.get_omega_ratio`
+- `app.domain.services.metrics.performance_metrics.get_max_drawdown`
+- `app.domain.services.metrics.performance_metrics.get_ulcer_index`
+- `app.domain.services.metrics.risk_metrics.RiskMetricsCalculator`
+- `app.domain.services.metrics.risk_metrics.get_var`
+- `app.domain.services.metrics.risk_metrics.get_cvar`
+- `app.domain.services.metrics.risk_metrics.get_volatility`
+- `app.domain.services.metrics.risk_metrics.get_beta`
+- `app.domain.services.metrics.risk_metrics.get_correlation`
+- `app.domain.services.metrics.risk_metrics.get_tracking_error`
+- `app.domain.services.metrics.risk_metrics.get_information_ratio`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

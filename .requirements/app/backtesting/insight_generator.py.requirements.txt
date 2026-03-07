@@ -1,0 +1,38 @@
+# Requirements Document: backtesting/insight_generator.py
+
+## 1. Module Overview
+Insight Generation & Reporting - Template-based insights and alerts.
+
+Provides:
+- Statistical insight generation
+- Risk warning system
+- Actionable recommendations
+- Comprehensive markdown reporting
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `InsightGenerator`: Must conform to application domain models.
+### Public Functions
+- `generate_statistical_insights()`: Must return strictly typed objects.
+- `generate_risk_warnings()`: Must return strictly typed objects.
+- `generate_recommendations()`: Must return strictly typed objects.
+- `format_markdown_report()`: Must return strictly typed objects.
+- `get_insights()`: Must return strictly typed objects.
+- `get_warnings()`: Must return strictly typed objects.
+- `get_recommendations()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,46 @@
+# Requirements Document: services/dynamic_capital_reallocation.py
+
+## 1. Module Overview
+Dynamic Capital Reallocation Engine
+
+Implements dynamic capital reallocation based on rolling performance metrics:
+- Rolling Sharpe ratio (30-day window)
+- Rolling return/drawdown ratio
+- Volatility-adjusted performance
+- Automatic rebalancing every N days (configurable)
+
+Based on diagnosis: Multi-strategy system needs adaptive capital allocation
+instead of static weights.
+
+Uses centralized configuration for all thresholds and parameters.
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PerformanceMetrics`: Must conform to application domain models.
+- `DynamicCapitalReallocationEngine`: Must conform to application domain models.
+### Public Functions
+- `return_drawdown_ratio()`: Must return strictly typed objects.
+- `composite_score()`: Must return strictly typed objects.
+- `update_strategy_performance()`: Must return strictly typed objects.
+- `record_performance()`: Must return strictly typed objects.
+- `calculate_rolling_metrics()`: Must return strictly typed objects.
+- `should_rebalance()`: Must return strictly typed objects.
+- `calculate_new_allocations()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

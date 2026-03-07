@@ -63,7 +63,7 @@ class VolatilityCalculator:
 
     def __init__(
         self,
-        risk_free_rate: Decimal = getattr(config.trading, 'max_risk_per_trade', 0.02)"),
+        risk_free_rate: Decimal = Decimal("0.02"),
         trading_days_per_year: int = 252,
     ):
         """

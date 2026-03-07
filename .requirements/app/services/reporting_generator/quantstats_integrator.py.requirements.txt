@@ -1,0 +1,41 @@
+# Requirements Document: services/reporting_generator/quantstats_integrator.py
+
+## 1. Module Overview
+T9.1 QuantStatsIntegrator - Advanced metrics calculation wrapper
+
+Wraps quantstats library to calculate advanced performance metrics beyond basic set.
+
+Responsibilities:
+- Calculate advanced statistical metrics (Calmar, Stability, Tail Ratio)
+- Generate statistics reports with full metric coverage
+- Provide stability and risk analysis
+- Metric aggregation and formatting
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `scipy.stats`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `AdvancedMetrics`: Must conform to application domain models.
+- `StatisticsReport`: Must conform to application domain models.
+- `QuantStatsIntegrator`: Must conform to application domain models.
+### Public Functions
+- `get_quantstats_integrator()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `calculate_advanced_metrics()`: Must return strictly typed objects.
+- `generate_statistics_report()`: Must return strictly typed objects.
+- `get_integrator_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

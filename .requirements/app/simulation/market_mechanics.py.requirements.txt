@@ -1,0 +1,81 @@
+# Requirements Document: simulation/market_mechanics.py
+
+## 1. Module Overview
+Market Mechanics - Larry Harris's Auction and Trading Session Models
+
+This module implements the market mechanics described in Harris, Chapter 4:
+"Market Structure" and Chapter 5: "Market Quality."
+
+Key concepts implemented:
+1. Call auction mechanics (opening/closing auctions)
+2. Continuous double auction
+3. Trading session management
+4. Market phases (pre-market, opening, continuous, closing, post-market)
+5. Price discovery in auctions
+6. Volume and time-weighted average prices
+
+Reference:
+    Harris, L. (2003). Trading and Exchanges, Chapters 4-5.
+
+## 2. Dependencies
+- `logging`
+- `uuid`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `datetime.time`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `order_book.LimitOrderBook`
+- `order_book.Order`
+- `order_book.OrderType`
+- `order_book.Trade`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `AuctionType`: Must conform to application domain models.
+- `MarketPhase`: Must conform to application domain models.
+- `AuctionResult`: Must conform to application domain models.
+- `TradingSession`: Must conform to application domain models.
+- `PhaseTransition`: Must conform to application domain models.
+- `AuctionMechanism`: Must conform to application domain models.
+- `ContinuousTrading`: Must conform to application domain models.
+- `MarketMechanicsEngine`: Must conform to application domain models.
+### Public Functions
+- `create_market_mechanics_engine()`: Must return strictly typed objects.
+- `is_matched()`: Must return strictly typed objects.
+- `surplus()`: Must return strictly typed objects.
+- `submit_order()`: Must return strictly typed objects.
+- `get_auction_indicative_price()`: Must return strictly typed objects.
+- `get_auction_indicative_volume()`: Must return strictly typed objects.
+- `get_order_imbalance()`: Must return strictly typed objects.
+- `execute_auction()`: Must return strictly typed objects.
+- `is_active()`: Must return strictly typed objects.
+- `start()`: Must return strictly typed objects.
+- `stop()`: Must return strictly typed objects.
+- `submit_order()`: Must return strictly typed objects.
+- `cancel_order()`: Must return strictly typed objects.
+- `get_best_bid()`: Must return strictly typed objects.
+- `get_best_ask()`: Must return strictly typed objects.
+- `get_spread()`: Must return strictly typed objects.
+- `get_mid_price()`: Must return strictly typed objects.
+- `calculate_vwap()`: Must return strictly typed objects.
+- `calculate_twap()`: Must return strictly typed objects.
+- `current_phase()`: Must return strictly typed objects.
+- `phase_history()`: Must return strictly typed objects.
+- `transition_to()`: Must return strictly typed objects.
+- `submit_order()`: Must return strictly typed objects.
+- `execute_opening_auction()`: Must return strictly typed objects.
+- `execute_closing_auction()`: Must return strictly typed objects.
+- `get_market_snapshot()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

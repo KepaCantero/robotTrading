@@ -1,0 +1,58 @@
+# Requirements Document: services/market_universe_loader.py
+
+## 1. Module Overview
+Market Universe Loader - AAA Grade (OPTIMIZED)
+
+Dynamically fetches stock/crypto universes from real markets using yfinance.
+Downloads OHLCV data and filters by liquidity/volatility before passing to StrategyStockAllocator.
+
+OPTIMIZATIONS:
+- Automatic retry with exponential backoff
+- Circuit breaker pattern for failing requests
+- LRU cache with size limits
+- Adaptive batch sizing
+- Comprehensive error handling
+- Request deduplication
+- Connection pooling
+
+Features:
+- S&P 500, NASDAQ 100, IBEX 35, DOW JONES constituents
+- Top cryptocurrencies by market cap
+- Parallel data downloading with rate limiting
+- Liquidity and volatility filtering
+- Automatic retry with exponential backoff
+- Comprehensive caching
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `random`
+- `time`
+- `collections.OrderedDict`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RetryConfig`: Must conform to application domain models.
+- `CircuitBreakerState`: Must conform to application domain models.
+- `CircuitBreaker`: Must conform to application domain models.
+- `LRUCache`: Must conform to application domain models.
+- `MarketUniverseLoader`: Must conform to application domain models.
+### Public Functions
+- `get_market_universe_loader()`: Must return strictly typed objects.
+- `is_open()`: Must return strictly typed objects.
+- `record_success()`: Must return strictly typed objects.
+- `record_failure()`: Must return strictly typed objects.
+- `get()`: Must return strictly typed objects.
+- `put()`: Must return strictly typed objects.
+- `invalidate()`: Must return strictly typed objects.
+- `clear()`: Must return strictly typed objects.
+- `get_stats()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

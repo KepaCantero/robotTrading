@@ -1,0 +1,67 @@
+# Requirements Document: backtesting/execution/market_impact.py
+
+## 1. Module Overview
+Market Impact Model - Almgren-Chriss Implementation (FASE 5.2)
+
+This module implements the Almgren-Chriss market impact model for
+realistic execution simulation.
+
+The Almgren-Chriss model decomposes market impact into:
+1. Permanent impact: Price shift that persists after execution
+2. Temporary impact: Price movement during execution that recovers
+
+Key equations:
+- Permanent impact: γ * (X / ADV)
+- Temporary impact: η * σ * sqrt(X / ADV)
+- Total impact: permanent + temporary
+
+Where:
+- γ: Permanent impact coefficient
+- η: Temporary impact coefficient
+- X: Order size
+- ADV: Average daily volume
+- σ: Volatility
+
+Reference:
+    Almgren, R., & Chriss, N. (2001). "Optimal Execution of
+    Portfolio Transactions." Journal of Risk, 3(2), 5-39.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `math`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ImpactType`: Must conform to application domain models.
+- `AlmgrenChrissConfig`: Must conform to application domain models.
+- `MarketImpact`: Must conform to application domain models.
+- `ImpactConfig`: Must conform to application domain models.
+- `MarketImpactModel`: Must conform to application domain models.
+### Public Functions
+- `temporary_price_adjustment()`: Must return strictly typed objects.
+- `permanent_price_adjustment()`: Must return strictly typed objects.
+- `total_price_adjustment()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_almgren_chriss_config()`: Must return strictly typed objects.
+- `calculate_permanent_impact()`: Must return strictly typed objects.
+- `calculate_temporary_impact()`: Must return strictly typed objects.
+- `calculate_impact()`: Must return strictly typed objects.
+- `calibrate_coefficients()`: Must return strictly typed objects.
+- `estimate_impact_range()`: Must return strictly typed objects.
+- `get_participation_rate_limit()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

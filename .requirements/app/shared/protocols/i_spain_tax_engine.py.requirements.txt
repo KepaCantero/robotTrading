@@ -1,0 +1,24 @@
+# Requirements Document: shared/protocols/i_spain_tax_engine.py
+
+## 1. Module Overview
+Spain tax protocols (IRPF, Dividendos, Modelo 720)
+
+## 2. Dependencies
+- `typing.Protocol`
+- `decimal.Decimal`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ISpainTaxEngine`: Must conform to application domain models.
+### Public Functions
+- `calculate_capital_gains_tax()`: Must return strictly typed objects.
+- `calculate_dividend_tax()`: Must return strictly typed objects.
+- `is_eu_country()`: Must return strictly typed objects.
+- `check_modelo_720_threshold()`: Must return strictly typed objects.
+- `generate_modelo_720_report()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

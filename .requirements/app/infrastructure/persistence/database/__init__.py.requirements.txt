@@ -1,0 +1,60 @@
+# Requirements Document: infrastructure/persistence/database/__init__.py
+
+## 1. Module Overview
+Database Configuration and Setup
+TASK-6: Configuración de base de datos
+
+## 2. Dependencies
+- `contextlib`
+- `logging`
+- `typing.AsyncGenerator`
+- `typing.Optional`
+- `sqlalchemy.MetaData`
+- `sqlalchemy.create_engine`
+- `sqlalchemy.event`
+- `sqlalchemy.text`
+- `sqlalchemy.exc.DatabaseError`
+- `sqlalchemy.exc.DataError`
+- `sqlalchemy.exc.IntegrityError`
+- `sqlalchemy.exc.OperationalError`
+- `sqlalchemy.exc.ProgrammingError`
+- `sqlalchemy.ext.asyncio.AsyncSession`
+- `sqlalchemy.ext.asyncio.async_sessionmaker`
+- `sqlalchemy.ext.asyncio.create_async_engine`
+- `sqlalchemy.ext.declarative.declarative_base`
+- `sqlalchemy.orm.Session`
+- `sqlalchemy.orm.sessionmaker`
+- `sqlalchemy.pool.QueuePool`
+- `app.shared.config.environment_config.get_config`
+- `app.shared.exceptions.exceptions.raise_database_error`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DatabaseManager`: Must conform to application domain models.
+- `DatabaseSession`: Must conform to application domain models.
+### Public Functions
+- `get_sync_db()`: Must return strictly typed objects.
+- `initialize_database()`: Must return strictly typed objects.
+- `initialize_database_async()`: Must return strictly typed objects.
+- `check_database_health()`: Must return strictly typed objects.
+- `get_database_url()`: Must return strictly typed objects.
+- `get_database_config()`: Must return strictly typed objects.
+- `database_transaction()`: Must return strictly typed objects.
+- `async_database_transaction()`: Must return strictly typed objects.
+- `initialize_sync_engine()`: Must return strictly typed objects.
+- `initialize_async_engine()`: Must return strictly typed objects.
+- `create_tables()`: Must return strictly typed objects.
+- `drop_tables()`: Must return strictly typed objects.
+- `get_sync_session()`: Must return strictly typed objects.
+- `get_async_session()`: Must return strictly typed objects.
+- `close_connections()`: Must return strictly typed objects.
+- `wrapper()`: Must return strictly typed objects.
+- `set_sqlite_pragma()`: Must return strictly typed objects.
+- `receive_checkout()`: Must return strictly typed objects.
+- `receive_checkin()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

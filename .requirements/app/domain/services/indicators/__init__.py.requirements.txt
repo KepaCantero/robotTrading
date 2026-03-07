@@ -1,0 +1,39 @@
+# Requirements Document: domain/services/indicators/__init__.py
+
+## 1. Module Overview
+Consolidated Technical Indicators Module
+
+This module provides a unified interface for all technical indicators used
+throughout the application. It consolidates implementations from:
+- app/core/numba_accelerators.py
+- app/domain/strategies/crypto_indicators.py
+- app/domain/strategies/strategy.py
+
+Usage:
+    from app.domain.services.indicators import (
+        TechnicalIndicators,
+        get_indicator_calculator,
+    )
+
+    # Use pandas backend (default)
+    indicators = get_indicator_calculator(backend='pandas')
+    rsi = indicators.rsi(df['close'], period=14)
+
+    # Use numba backend for high-frequency calculations
+    indicators = get_indicator_calculator(backend='numba')
+    rsi = indicators.rsi(prices_list, period=14)
+
+## 2. Dependencies
+- `app.domain.services.indicators.technical_indicators.TechnicalIndicators`
+- `app.domain.services.indicators.technical_indicators.IndicatorResult`
+- `app.domain.services.indicators.factory.get_indicator_calculator`
+- `app.domain.services.indicators.factory.get_available_backends`
+- `app.domain.services.indicators.factory.IndicatorBackend`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,16 @@
+# Requirements Document: services/logging/__init__.py
+
+## 1. Module Overview
+Logging module - re-exports from infrastructure layer for backward compatibility.
+
+## 2. Dependencies
+- `app.infrastructure.logging.trading_decision_logger.TradingDecisionLogger`
+- `app.infrastructure.logging.append_only_log.AppendOnlyLog`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,58 @@
+# Requirements Document: simulation/__init__.py
+
+## 1. Module Overview
+Simulation Module - Market Microstructure and Exchange Simulation
+
+This module implements Larry Harris's "Trading and Exchanges" market microstructure theories,
+including order book simulation, market mechanics, trading costs, and exchange behavior.
+
+Components:
+- Order Book Simulation: Limit order book dynamics, price formation, queue simulation
+- Market Mechanics: Auction mechanics, continuous trading, opening/closing auctions
+- Exchange Simulation: Order matching engine, trade execution
+- Trading Costs: Bid-ask spread impact, market impact modeling, timing risk
+- Market Microstructure: Order flow analysis, market depth, liquidity provision
+
+Reference:
+    Harris, L. (2003). Trading and Exchanges: Market Microstructure for Practitioners.
+
+## 2. Dependencies
+- `exchange.Exchange`
+- `exchange.ExecutionQuality`
+- `exchange.MarketMakerStrategy`
+- `exchange.OrderMatchingEngine`
+- `exchange.SpreadStrategy`
+- `exchange.TradeExecution`
+- `market_mechanics.AuctionMechanism`
+- `market_mechanics.AuctionResult`
+- `market_mechanics.AuctionType`
+- `market_mechanics.ContinuousTrading`
+- `market_mechanics.MarketPhase`
+- `market_mechanics.TradingSession`
+- `microstructure.LiquidityProvider`
+- `microstructure.MarketDepthAnalyzer`
+- `microstructure.MarketMicrostructureMetrics`
+- `microstructure.OrderFlowAnalyzer`
+- `microstructure.OrderImbalance`
+- `microstructure.PriceImpactFunction`
+- `order_book.LimitOrderBook`
+- `order_book.Order`
+- `order_book.OrderBookSnapshot`
+- `order_book.OrderSide`
+- `order_book.OrderType`
+- `order_book.PriceLevel`
+- `order_book.Trade`
+- `trading_costs.BidAskSpreadAnalyzer`
+- `trading_costs.CostBreakdown`
+- `trading_costs.ExecutionQualityMetrics`
+- `trading_costs.MarketImpactModel`
+- `trading_costs.TimingRiskCalculator`
+- `trading_costs.TradingCostAnalyzer`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

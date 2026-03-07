@@ -1,0 +1,26 @@
+# Requirements Document: services/strategy_recommendation/__init__.py
+
+## 1. Module Overview
+T19.1: Strategy Recommendation System - Intelligent strategy selection and ranking
+
+Provides:
+- StrategyScorer: Scores strategies based on performance metrics and objectives
+- StrategyRanker: Ranks multiple strategies for comparison
+- StrategyRecommender: Generates personalized strategy recommendations
+
+## 2. Dependencies
+- `strategy_ranker.StrategyRanker`
+- `strategy_ranker.get_strategy_ranker`
+- `strategy_recommender.StrategyRecommendation`
+- `strategy_recommender.StrategyRecommender`
+- `strategy_recommender.get_strategy_recommender`
+- `strategy_scorer.StrategyScorer`
+- `strategy_scorer.get_strategy_scorer`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,76 @@
+# Requirements Document: services/absolute_return_optimizer.py
+
+## 1. Module Overview
+PHASE 1 T1.2 - Absolute Return Optimizer
+
+Transforms profit targets (€800/month) into optimized trading parameters.
+
+This service is the bridge between strategic goals (T1.2) and operational execution.
+
+Workflow:
+1. Accept profit target (€800/month) and expected monthly alpha from backtesting
+2. Calculate required alpha working backwards from profit goal
+3. Estimate capacity fade (alpha decay as capital increases)
+4. Scale position sizing and leverage to achieve target within risk constraints
+5. Validate feasibility and return optimized parameters
+
+Architecture:
+Orchestrates 5 specialist components:
+- AlphaTargetCalculator: €800 goal → required alpha
+- CapacityFadeAnalyzer: Estimate alpha decay with capital
+- ParameterScaler: Adjust position sizing for target
+- ReturnDistributionValidator: Statistical feasibility check
+- MonthlyProfitForecaster: P&L projections and confidence intervals
+
+Integration Points:
+- Consumes: CapitalTierStrategySelector outputs (RiskProfile, StrategySelection)
+- Uses: AccountConfiguration for tier definitions
+- Calls: DeploymentValidator for final safety gates
+- Respects: Risk limits as hard constraints (not optional)
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `decimal.Decimal`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `app.shared.config.centralized_config.get_config`
+- `app.services.account_configuration.AccountConfiguration`
+- `app.services.account_configuration.AccountTier`
+- `app.services.capital_tier_strategy_selector.RiskProfile`
+- `math`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `AlphaTarget`: Must conform to application domain models.
+- `CapacityFadeEstimate`: Must conform to application domain models.
+- `OptimizedParameters`: Must conform to application domain models.
+- `MonthlyProfitForecast`: Must conform to application domain models.
+- `FeasibilityReport`: Must conform to application domain models.
+- `AlphaTargetCalculator`: Must conform to application domain models.
+- `CapacityFadeAnalyzer`: Must conform to application domain models.
+- `ParameterScaler`: Must conform to application domain models.
+- `ReturnDistributionValidator`: Must conform to application domain models.
+- `MonthlyProfitForecaster`: Must conform to application domain models.
+- `AbsoluteReturnOptimizer`: Must conform to application domain models.
+### Public Functions
+- `validate()`: Must return strictly typed objects.
+- `validate()`: Must return strictly typed objects.
+- `validate()`: Must return strictly typed objects.
+- `validate()`: Must return strictly typed objects.
+- `calculate_required_alpha()`: Must return strictly typed objects.
+- `estimate_capacity_fade()`: Must return strictly typed objects.
+- `scale_for_target()`: Must return strictly typed objects.
+- `validate_achievability()`: Must return strictly typed objects.
+- `forecast_profit()`: Must return strictly typed objects.
+- `optimize_for_target()`: Must return strictly typed objects.
+- `validate_feasibility()`: Must return strictly typed objects.
+- `forecast_monthly_profit()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

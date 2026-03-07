@@ -1,0 +1,32 @@
+# Requirements Document: services/tax_efficiency/__init__.py
+
+## 1. Module Overview
+T15.1: Tax Efficiency System - Capital gains tracking and tax-loss harvesting
+
+Provides:
+- TaxLossHarvester: Identify and execute tax-loss harvesting
+- WashSaleDetector: Detect and prevent wash-sale violations
+- CapitalGainTracker: Track ST/LT gains and calculate tax liability
+- TaxOptimizedPortfolioBuilder: Integrated tax-aware portfolio optimization
+- Tax Engines: Country-specific tax calculations (Spain, US, UK, etc.)
+
+## 2. Dependencies
+- `capital_gain_tracker.CapitalGainTracker`
+- `capital_gain_tracker.get_capital_gain_tracker`
+- `engines.SpainTaxEngine`
+- `engines.get_tax_engine`
+- `engines.is_country_supported`
+- `tax_loss_harvester.TaxLossHarvester`
+- `tax_loss_harvester.get_tax_loss_harvester`
+- `tax_optimized_builder.TaxOptimizedPortfolioBuilder`
+- `tax_optimized_builder.get_tax_optimized_builder`
+- `wash_sale_detector.WashSaleDetector`
+- `wash_sale_detector.get_wash_sale_detector`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

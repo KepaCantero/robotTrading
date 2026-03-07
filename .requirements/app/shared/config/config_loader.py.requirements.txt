@@ -1,0 +1,41 @@
+# Requirements Document: shared/config/config_loader.py
+
+## 1. Module Overview
+YAML Configuration Loader
+
+Loads configurations from YAML files with validation and fallback to default values.
+
+## 2. Dependencies
+- `os`
+- `threading`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `structlog`
+- `yaml`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `YAMLConfigLoader`: Must conform to application domain models.
+### Public Functions
+- `get_config_loader()`: Must return strictly typed objects.
+- `load_strategy_stock_allocator_config()`: Must return strictly typed objects.
+- `load_momentum_filters_config()`: Must return strictly typed objects.
+- `load_market_detectors_config()`: Must return strictly typed objects.
+- `load_strategy_defaults_config()`: Must return strictly typed objects.
+- `load_learning_parameters_config()`: Must return strictly typed objects.
+- `get_filter_config()`: Must return strictly typed objects.
+- `get_detector_config()`: Must return strictly typed objects.
+- `get_strategy_config()`: Must return strictly typed objects.
+- `load()`: Must return strictly typed objects.
+- `get_nested()`: Must return strictly typed objects.
+- `load_with_tier_override()`: Must return strictly typed objects.
+- `get_strategy_stock_allocator_config()`: Must return strictly typed objects.
+- `clear_cache()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

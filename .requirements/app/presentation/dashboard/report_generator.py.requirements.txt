@@ -1,0 +1,30 @@
+# Requirements Document: presentation/dashboard/report_generator.py
+
+## 1. Module Overview
+Report Generator for Backtest Results
+
+Automatically generates documentation for backtest results.
+
+## 2. Dependencies
+- `json`
+- `statistics`
+- `datetime.datetime`
+- `pathlib.Path`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `pandas`
+- `app.presentation.dashboard.multi_strategy_utils.generate_multi_strategy_summary_text`
+
+## 3. Core Components (Contracts)
+### Public Functions
+- `save_backtest_result()`: Must return strictly typed objects.
+- `generate_report_markdown()`: Must return strictly typed objects.
+- `update_summary_index()`: Must return strictly typed objects.
+- `generate_backend_test_summary()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

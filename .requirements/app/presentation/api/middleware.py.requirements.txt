@@ -1,0 +1,45 @@
+# Requirements Document: presentation/api/middleware.py
+
+## 1. Module Overview
+Authentication and security middleware for AlgoTrading API.
+
+Provides middleware for:
+1. Authentication for sensitive operations (API-006)
+2. Correlation ID tracking (API-006)
+3. Request validation and security headers
+
+GAP Fixes:
+- API-006: Added authentication for deployment operations
+- API-006: Added authentication for strategy operations
+- API-006: Added authentication for optimization write operations
+- API-006: Added correlation ID tracking for all requests
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `uuid`
+- `typing.Callable`
+- `typing.Optional`
+- `typing.Set`
+- `fastapi.HTTPException`
+- `fastapi.Request`
+- `fastapi.Response`
+- `fastapi.status`
+- `starlette.middleware.base.BaseHTTPMiddleware`
+- `starlette.types.ASGIApp`
+- `app.shared.config.config.get_settings`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `AuthMiddleware`: Must conform to application domain models.
+- `CorrelationIdMiddleware`: Must conform to application domain models.
+- `SecurityHeadersMiddleware`: Must conform to application domain models.
+- `RequestLoggingMiddleware`: Must conform to application domain models.
+### Public Functions
+- `valid_api_keys()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [ ] Must not expose external secrets.
+- [x] Exceptions must be handled.

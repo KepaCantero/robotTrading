@@ -1,0 +1,57 @@
+# Requirements Document: domain/services/backtesting/transaction_costs.py
+
+## 1. Module Overview
+Transaction Cost Models
+
+Implements various transaction cost models for realistic backtesting:
+- Linear cost model (per-share commission)
+- Piecewise linear cost model (volume discounts)
+- Market impact models (Almgren-Chriss, etc.)
+
+Reference: Rule 44-almgren-chriss-optimal-execution.md
+Paper: Almgren, R., & Chriss, N. (2001) "Optimal Execution of Portfolio Transactions"
+
+## 2. Dependencies
+- `__future__.annotations`
+- `abc.ABC`
+- `abc.abstractmethod`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CostModelType`: Must conform to application domain models.
+- `CostBreakdown`: Must conform to application domain models.
+- `TransactionCostModel`: Must conform to application domain models.
+- `LinearCostModel`: Must conform to application domain models.
+- `PiecewiseLinearCostModel`: Must conform to application domain models.
+- `MarketImpactModel`: Must conform to application domain models.
+- `AlmgrenChristModel`: Must conform to application domain models.
+- `SquareRootImpactModel`: Must conform to application domain models.
+- `ImpactParameters`: Must conform to application domain models.
+- `TemporaryImpact`: Must conform to application domain models.
+- `PermanentImpact`: Must conform to application domain models.
+### Public Functions
+- `cost_as_percentage()`: Must return strictly typed objects.
+- `calculate_cost()`: Must return strictly typed objects.
+- `estimate_total_cost()`: Must return strictly typed objects.
+- `calculate_cost()`: Must return strictly typed objects.
+- `estimate_total_cost()`: Must return strictly typed objects.
+- `calculate_cost()`: Must return strictly typed objects.
+- `estimate_total_cost()`: Must return strictly typed objects.
+- `calculate_impact()`: Must return strictly typed objects.
+- `calculate_impact()`: Must return strictly typed objects.
+- `calculate_permanent_impact()`: Must return strictly typed objects.
+- `calculate_temporary_impact()`: Must return strictly typed objects.
+- `calculate_impact()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

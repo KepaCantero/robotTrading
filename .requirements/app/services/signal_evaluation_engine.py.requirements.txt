@@ -1,0 +1,32 @@
+# Requirements Document: services/signal_evaluation_engine.py
+
+## 1. Module Overview
+Signal Evaluation Engine - TASK-15: Refactorización de Servicios
+
+Este módulo implementa el motor de evaluación de señales, separando la lógica
+de evaluación de la gestión de señales y ejecución.
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `app.shared.config.centralized_config.get_config`
+- `app.domain.models.signal.MarketData`
+- `app.domain.models.signal.SignalType`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SignalEvaluationEngine`: Must conform to application domain models.
+### Public Functions
+- `evaluate_signal_quality()`: Must return strictly typed objects.
+- `get_evaluation_statistics()`: Must return strictly typed objects.
+- `update_thresholds()`: Must return strictly typed objects.
+- `reset_statistics()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

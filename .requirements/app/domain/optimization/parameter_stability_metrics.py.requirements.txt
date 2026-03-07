@@ -1,0 +1,57 @@
+# Requirements Document: domain/optimization/parameter_stability_metrics.py
+
+## 1. Module Overview
+Parameter Stability Metrics (TASK-6.1 Phase 2)
+
+Tracks how consistently a parameter performs across time periods/folds/regimes.
+Core concept: Stable parameters should have consistent optimal values across windows.
+
+Key Metrics:
+- Variance across walk-forward windows
+- Convergence speed detection
+- Stability scoring (0-100)
+- Parameter plateau width
+
+Stable = parameter value doesn't change much across windows (low variance)
+Unstable = parameter value bounces around across windows (high variance, curve-fitted)
+
+## 2. Dependencies
+- `json`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `typing.Union`
+- `numpy`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `WindowOptimalValue`: Must conform to application domain models.
+- `ParameterStabilityResult`: Must conform to application domain models.
+- `StabilityReport`: Must conform to application domain models.
+- `ParameterStabilityMetrics`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_json()`: Must return strictly typed objects.
+- `calculate_variance_across_windows()`: Must return strictly typed objects.
+- `calculate_convergence_speed()`: Must return strictly typed objects.
+- `calculate_stability_score()`: Must return strictly typed objects.
+- `analyze_parameter_stability()`: Must return strictly typed objects.
+- `get_parameter_plateau_width()`: Must return strictly typed objects.
+- `rank_parameters_by_stability()`: Must return strictly typed objects.
+- `detect_unstable_parameters()`: Must return strictly typed objects.
+- `recommend_parameter_simplification()`: Must return strictly typed objects.
+- `print_stability_report()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,47 @@
+# Requirements Document: engines/portfolio_engine/meta_learners/meta_learners.py
+
+## 1. Module Overview
+Meta-learners for Portfolio Allocation
+
+Implementa meta-learning para optimizar asignación de capital entre estrategias:
+- Reinforcement learning para portfolio management
+- Historical performance-based allocation
+- Aprendizaje de pesos óptimos entre estrategias
+
+## 2. Dependencies
+- `logging`
+- `abc.ABC`
+- `abc.abstractmethod`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `torch`
+- `torch.nn`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BaseMetaLearner`: Must conform to application domain models.
+- `HistoricalPerformanceLearner`: Must conform to application domain models.
+- `ReinforcementLearningLearner`: Must conform to application domain models.
+- `EnsembleMetaLearner`: Must conform to application domain models.
+- `AllocationNetwork`: Must conform to application domain models.
+### Public Functions
+- `learn_weights()`: Must return strictly typed objects.
+- `update()`: Must return strictly typed objects.
+- `learn_weights()`: Must return strictly typed objects.
+- `update()`: Must return strictly typed objects.
+- `learn_weights()`: Must return strictly typed objects.
+- `update()`: Must return strictly typed objects.
+- `learn_weights()`: Must return strictly typed objects.
+- `update()`: Must return strictly typed objects.
+- `forward()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,21 @@
+# Requirements Document: services/portfolio_constructor/__init__.py
+
+## 1. Module Overview
+T7.1: PortfolioConstructor - Portfolio construction and optimization
+
+## 2. Dependencies
+- `models.AllocationWeight`
+- `models.PortfolioAllocation`
+- `models.PortfolioConstructionRequest`
+- `models.RiskAdjustedPortfolio`
+- `models.RiskScalingRequest`
+- `portfolio_constructor.PortfolioConstructor`
+- `portfolio_constructor.get_portfolio_constructor`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

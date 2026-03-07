@@ -1,0 +1,19 @@
+# Requirements Document: services/synthetic_data/__init__.py
+
+## 1. Module Overview
+FASE 6.2: Synthetic Data Generation - GAN-based training data augmentation.
+
+## 2. Dependencies
+- `gan_generator.GANConfig`
+- `gan_generator.SyntheticDataGenerator`
+- `gan_generator.TimeSeriesGANGenerator`
+- `gan_generator.get_gan_generator`
+- `gan_generator.get_ts_gan_generator`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

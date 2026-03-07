@@ -1,0 +1,44 @@
+# Requirements Document: domain/strategies/crypto_portfolio.py
+
+## 1. Module Overview
+Crypto Portfolio Constructor
+
+This module provides portfolio construction functionality for cryptocurrency
+momentum strategies, with specific considerations for crypto markets:
+
+- Bitcoin as core holding (40-60%)
+- Altcoins for alpha (40-60%)
+- Position sizing based on liquidity
+- Volatility targeting
+- Risk management for extreme moves
+
+## 2. Dependencies
+- `logging`
+- `datetime.date`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `models.CryptoAsset`
+- `models.CryptoAssetType`
+- `models.CryptoMomentumConfig`
+- `models.CryptoMomentumScore`
+- `models.CryptoPortfolio`
+- `models.CryptoPosition`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CryptoPortfolioConstructor`: Must conform to application domain models.
+### Public Functions
+- `construct_portfolio()`: Must return strictly typed objects.
+- `calculate_position_size()`: Must return strictly typed objects.
+- `rebalance_portfolio()`: Must return strictly typed objects.
+- `get_portfolio_summary()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

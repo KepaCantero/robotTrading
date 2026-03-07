@@ -1,0 +1,46 @@
+# Requirements Document: engines/execution_engine/microstructure/almgren_chriss_model.py
+
+## 1. Module Overview
+Almgren-Chriss Market Impact Model
+
+Implements Harris Rule 6.4: Market impact model using Almgren-Chriss framework.
+
+The Almgren-Chriss model decomposes market impact into:
+1. Permanent impact: Price displacement that persists after execution
+2. Temporary impact: Price displacement during execution that recovers
+
+Reference:
+Almgren, R., & Chriss, N. (2001). "Optimal Execution of Portfolio Transactions"
+Journal of Risk, 3(2), 5-39.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `pandas`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ImpactComponent`: Must conform to application domain models.
+- `MarketImpactEstimate`: Must conform to application domain models.
+- `OptimalExecutionSchedule`: Must conform to application domain models.
+- `AlmgrenChrissModel`: Must conform to application domain models.
+### Public Functions
+- `get_almgren_chriss_model()`: Must return strictly typed objects.
+- `estimate_impact()`: Must return strictly typed objects.
+- `calculate_optimal_schedule()`: Must return strictly typed objects.
+- `compare_execution_strategies()`: Must return strictly typed objects.
+- `calibrate_parameters()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,34 @@
+# Requirements Document: services/reconciliation/daily_reconciler.py
+
+## 1. Module Overview
+Daily Reconciliation Service
+
+R16: Reconciliación Diaria - Reconcilia posición del sistema vs broker DÍARIAMENTE
+
+This module provides daily reconciliation between broker positions and internal records
+to detect discrepancies and ensure data consistency.
+
+## 2. Dependencies
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.date`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Optional`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `Position`: Must conform to application domain models.
+- `ReconciliationResult`: Must conform to application domain models.
+- `DailyReconciler`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `generate_reconciliation_report()`: Must return strictly typed objects.
+- `get_position_delta()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

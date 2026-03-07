@@ -1,0 +1,45 @@
+# Requirements Document: services/strategy_stock_allocation/scorers.py
+
+## 1. Module Overview
+Strategy scoring modules.
+
+Provides specialized scorers for Momentum, Mean Reversion, and
+Pairs Trading strategies following Single Responsibility Principle.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `typing.TYPE_CHECKING`
+- `typing.Any`
+- `numpy`
+- `pandas`
+- `scipy.stats`
+- `calculators.HalfLifeCalculator`
+- `calculators.HurstCalculator`
+- `app.shared.config.centralized_config.StockAllocationSettings`
+- `statsmodels.regression.linear_model.OLS`
+- `statsmodels.tsa.stattools.adfuller`
+- `arch.arch_model`
+- `app.shared.performance.statsmodels_fallback.OLS`
+- `warnings`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MomentumScorer`: Must conform to application domain models.
+- `MeanReversionScorer`: Must conform to application domain models.
+- `PairsTradingScorer`: Must conform to application domain models.
+- `WCMScoreCalculator`: Must conform to application domain models.
+### Public Functions
+- `OLS()`: Must return strictly typed objects.
+- `score()`: Must return strictly typed objects.
+- `score()`: Must return strictly typed objects.
+- `score()`: Must return strictly typed objects.
+- `calculate_all()`: Must return strictly typed objects.
+- `adfuller()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

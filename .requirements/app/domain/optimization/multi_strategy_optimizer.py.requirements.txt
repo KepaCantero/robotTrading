@@ -1,0 +1,38 @@
+# Requirements Document: domain/optimization/multi_strategy_optimizer.py
+
+## 1. Module Overview
+Multi-Strategy Parameter Optimization System.
+
+Optimizes parameters for all strategies simultaneously using Optuna,
+considering capital allocation and maximizing combined Sharpe ratio.
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `optuna`
+- `app.backtesting.data_loader.DataLoader`
+- `app.backtesting.engines.multi_strategy_engine.MultiStrategyBacktester`
+- `app.services.multi_strategy_allocation.MultiStrategyAllocationManager`
+- `app.domain.strategies.factory.StrategyFactory`
+- `app.domain.strategies.mean_reversion.MeanReversionStrategy`
+- `app.domain.strategies.momentum.MomentumStrategy`
+- `app.domain.strategies.pairs_trading.PairsTradingStrategy`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MultiStrategyOptimizer`: Must conform to application domain models.
+### Public Functions
+- `optimize()`: Must return strictly typed objects.
+- `get_best_config()`: Must return strictly typed objects.
+- `run_backtest_with_best_params()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

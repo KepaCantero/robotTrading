@@ -1,0 +1,27 @@
+# Requirements Document: backtesting/core/__init__.py
+
+## 1. Module Overview
+Core backtesting modules.
+
+This package contains the foundational components for the backtesting system:
+- Config loading and validation
+- Execution orchestration
+- Result management
+
+## 2. Dependencies
+- `app.backtesting.core.config_loader.BacktestConfigLoader`
+- `app.backtesting.core.executor.BacktestExecutor`
+- `app.backtesting.core.facade.BacktestRunnerFacade`
+- `app.backtesting.core.facade.create_backtest_runner`
+- `app.backtesting.core.orchestrator.BacktestDefaults`
+- `app.backtesting.core.orchestrator.BacktestOrchestrator`
+- `app.backtesting.core.orchestrator.BoundedResults`
+- `app.backtesting.core.orchestrator.OrchestrationResult`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

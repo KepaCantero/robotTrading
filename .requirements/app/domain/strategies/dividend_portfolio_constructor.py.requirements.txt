@@ -1,0 +1,43 @@
+# Requirements Document: domain/strategies/dividend_portfolio_constructor.py
+
+## 1. Module Overview
+Dividend Portfolio Constructor - Construcción de Portafolio Optimizado
+
+Implementa construcción de portafolio de dividendos con:
+- Diversificación sectorial
+- Optimización de pesos
+- Respeto a límites de concentración
+- Maximización de yield ajustado por riesgo
+
+SOLID Principles:
+- Single Responsibility: Solo construcción de portafolios
+- Open/Closed: Extensible con nuevos métodos de optimización
+- Dependency Inversion: Depende de abstracciones (models)
+
+## 2. Dependencies
+- `logging`
+- `collections.defaultdict`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `models.DividendStock`
+- `models.DividendStrategyConfig`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DividendPortfolioConfig`: Must conform to application domain models.
+- `PortfolioPosition`: Must conform to application domain models.
+- `DividendPortfolio`: Must conform to application domain models.
+- `DividendPortfolioConstructor`: Must conform to application domain models.
+### Public Functions
+- `construct_portfolio()`: Must return strictly typed objects.
+- `rebalance()`: Must return strictly typed objects.
+- `analyze_drift()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

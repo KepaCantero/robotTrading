@@ -1,0 +1,43 @@
+# Requirements Document: presentation/api/__init__.py
+
+## 1. Module Overview
+Portfolio, Signal, and Asset API endpoints.
+
+This module exports FastAPI routers for portfolio, signal, and asset management.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `time`
+- `uuid`
+- `contextvars.ContextVar`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.Optional`
+- `fastapi.Request`
+- `fastapi.Response`
+- `starlette.middleware.base.BaseHTTPMiddleware`
+- `starlette.types.ASGIApp`
+- `traceback`
+- `traceback`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `AuditLogger`: Must conform to application domain models.
+- `AuditMiddleware`: Must conform to application domain models.
+### Public Functions
+- `get_correlation_id()`: Must return strictly typed objects.
+- `set_correlation_id()`: Must return strictly typed objects.
+- `generate_correlation_id()`: Must return strictly typed objects.
+- `log_endpoint_error()`: Must return strictly typed objects.
+- `log_request()`: Must return strictly typed objects.
+- `log_response()`: Must return strictly typed objects.
+- `log_error()`: Must return strictly typed objects.
+- `log_action()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,45 @@
+# Requirements Document: domain/services/portfolio_optimization/covariance_calculator.py
+
+## 1. Module Overview
+Covariance Calculator Domain Service - Covariance and correlation matrices
+
+CovarianceCalculator provides domain logic for calculating covariance
+and correlation matrices for portfolio optimization.
+
+Reference: Rule 48-papers-markowitz (Markowitz Portfolio Selection)
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `app.domain.services.portfolio_optimization._validation.MIN_VARIANCE_THRESHOLD`
+- `app.domain.services.portfolio_optimization._validation.TRADING_DAYS`
+- `app.domain.services.portfolio_optimization._validation.enforce_positive_semidefinite`
+- `app.domain.services.portfolio_optimization._validation.is_positive_semidefinite`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CovarianceResult`: Must conform to application domain models.
+- `CovarianceCalculator`: Must conform to application domain models.
+### Public Functions
+- `get_covariance()`: Must return strictly typed objects.
+- `get_correlation()`: Must return strictly typed objects.
+- `get_std_dev()`: Must return strictly typed objects.
+- `calculate_sample_covariance()`: Must return strictly typed objects.
+- `calculate_shrinkage_covariance()`: Must return strictly typed objects.
+- `calculate_exponential_covariance()`: Must return strictly typed objects.
+- `get_positive_semidefinite_covariance()`: Must return strictly typed objects.
+- `get_risk_contribution()`: Must return strictly typed objects.
+- `get_effective_number_bets()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

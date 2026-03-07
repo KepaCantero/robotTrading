@@ -1,0 +1,40 @@
+# Requirements Document: domain/analysis/vectorization/models.py
+
+## 1. Module Overview
+Data models for vectorization verification.
+
+This module defines the core data structures used throughout the vectorization
+verification system, including issues, reports, and benchmark results.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `decimal.Decimal`
+- `typing.Any`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `VectorizationIssue`: Must conform to application domain models.
+- `VectorizationReport`: Must conform to application domain models.
+- `BenchmarkResult`: Must conform to application domain models.
+- `CodeSnippet`: Must conform to application domain models.
+### Public Functions
+- `get_severity_weight()`: Must return strictly typed objects.
+- `get_display_summary()`: Must return strictly typed objects.
+- `get_grade()`: Must return strictly typed objects.
+- `get_summary()`: Must return strictly typed objects.
+- `get_top_issues()`: Must return strictly typed objects.
+- `is_compliant()`: Must return strictly typed objects.
+- `get_summary()`: Must return strictly typed objects.
+- `get_performance_grade()`: Must return strictly typed objects.
+- `is_significant_speedup()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `get_relative_path()`: Must return strictly typed objects.
+- `get_formatted_display()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

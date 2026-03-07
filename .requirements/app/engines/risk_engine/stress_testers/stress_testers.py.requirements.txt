@@ -1,0 +1,36 @@
+# Requirements Document: engines/risk_engine/stress_testers/stress_testers.py
+
+## 1. Module Overview
+Stress Testers
+
+Implementa diferentes tipos de stress testing:
+- Historical scenarios
+- Monte Carlo scenarios
+- Custom scenarios
+
+## 2. Dependencies
+- `logging`
+- `abc.ABC`
+- `abc.abstractmethod`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `app.domain.models.portfolio.Portfolio`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BaseStressTester`: Must conform to application domain models.
+- `StressTester`: Must conform to application domain models.
+### Public Functions
+- `run_stress_test()`: Must return strictly typed objects.
+- `run_stress_tests()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

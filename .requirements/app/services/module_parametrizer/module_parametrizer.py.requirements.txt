@@ -1,0 +1,40 @@
+# Requirements Document: services/module_parametrizer/module_parametrizer.py
+
+## 1. Module Overview
+T3.1: ModuleParametrizer - Parametrizes trading modules for strategies
+
+Applies investment profile parameters to 17+ trading modules based on:
+- Capital tier (micro, small, medium, large)
+- Investment objective (5 types)
+- Risk profile (conservative, moderate, aggressive)
+
+Implements capital-tier-aware gating to disable expensive/complex modules
+for accounts with insufficient capital.
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `pathlib.Path`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `yaml`
+- `models.ModuleParameterConfig`
+- `models.ModuleParameterSet`
+- `models.ParameterizationPreset`
+- `models.ParameterizationRequest`
+- `models.ParameterizationResult`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ModuleParametrizer`: Must conform to application domain models.
+### Public Functions
+- `get_module_parametrizer()`: Must return strictly typed objects.
+- `get_parametrizer_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

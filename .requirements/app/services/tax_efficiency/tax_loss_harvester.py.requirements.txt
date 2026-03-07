@@ -1,0 +1,36 @@
+# Requirements Document: services/tax_efficiency/tax_loss_harvester.py
+
+## 1. Module Overview
+T15.1.1: TaxLossHarvester - Tax-loss harvesting implementation
+
+Identifies positions with unrealized losses eligible for tax harvesting,
+calculates tax benefits, and suggests replacement positions to maintain
+portfolio exposure while locking in losses.
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `HarvestablePosition`: Must conform to application domain models.
+- `ReplacementPosition`: Must conform to application domain models.
+- `HarvestingOpportunity`: Must conform to application domain models.
+- `TaxLossHarvester`: Must conform to application domain models.
+### Public Functions
+- `get_tax_loss_harvester()`: Must return strictly typed objects.
+- `identify_harvestable_positions()`: Must return strictly typed objects.
+- `calculate_tax_benefit()`: Must return strictly typed objects.
+- `suggest_replacement_position()`: Must return strictly typed objects.
+- `estimate_annual_tax_benefit()`: Must return strictly typed objects.
+- `create_harvesting_opportunity()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

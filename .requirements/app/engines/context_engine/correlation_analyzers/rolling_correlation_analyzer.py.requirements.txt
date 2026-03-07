@@ -1,0 +1,27 @@
+# Requirements Document: engines/context_engine/correlation_analyzers/rolling_correlation_analyzer.py
+
+## 1. Module Overview
+RollingCorrelationAnalyzer - Analizador de correlaciones rolling window.
+
+Calcula matrices de correlación en ventanas móviles.
+
+## 2. Dependencies
+- `logging`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `pandas`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RollingCorrelationAnalyzer`: Must conform to application domain models.
+### Public Functions
+- `calculate_rolling_correlation()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

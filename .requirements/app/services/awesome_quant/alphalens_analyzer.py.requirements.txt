@@ -1,0 +1,32 @@
+# Requirements Document: services/awesome_quant/alphalens_analyzer.py
+
+## 1. Module Overview
+FASE 4.3: AlphalsensAnalyzer - Alphalens factor analysis integration
+
+Alphalens provides comprehensive factor analysis tools for evaluating
+alpha generation sources and factor performance.
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `requests.exceptions.HTTPError`
+- `requests.exceptions.RequestException`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `AlphalsensAnalyzer`: Must conform to application domain models.
+### Public Functions
+- `get_alphalens_analyzer()`: Must return strictly typed objects.
+- `get_factor_statistics()`: Must return strictly typed objects.
+- `get_all_analyses()`: Must return strictly typed objects.
+- `get_analyzer_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

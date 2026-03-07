@@ -1,0 +1,27 @@
+# Requirements Document: domain/value_objects/risk_parameters.py
+
+## 1. Module Overview
+Risk Parameters Value Object - Risk management constraints
+
+Risk parameters define the risk limits and constraints for
+portfolio and position management.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RiskParameters`: Must conform to application domain models.
+### Public Functions
+- `get_stop_loss_price()`: Must return strictly typed objects.
+- `get_take_profit_price()`: Must return strictly typed objects.
+- `validate_risk_reward()`: Must return strictly typed objects.
+- `for_tier()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

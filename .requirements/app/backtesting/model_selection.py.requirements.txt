@@ -1,0 +1,79 @@
+# Requirements Document: backtesting/model_selection.py
+
+## 1. Module Overview
+Model Selection Criteria for Statistical Learning.
+
+This module implements comprehensive model selection criteria following
+Hastie, Tibshirani, and Friedman's "The Elements of Statistical Learning"
+(ESL) Chapter 7: Model Assessment and Selection.
+
+Key Criteria:
+1. AIC (Akaike Information Criterion)
+2. BIC (Bayesian Information Criterion)
+3. Adjusted R-squared
+4. Mallow's Cp
+5. Cross-Validation estimates
+6. Generalized Cross-Validation (GCV)
+
+Reference:
+    "The Elements of Statistical Learning" by Hastie, Tibshirani, Friedman
+    Chapter 7: Model Assessment and Selection
+    Chapter 9: Generalized Linear Models and Regression Splines
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `typing.Union`
+- `numpy`
+- `pandas`
+- `sklearn.base.BaseEstimator`
+- `sklearn.base.clone`
+- `sklearn.metrics.mean_squared_error`
+- `sklearn.metrics.r2_score`
+- `sklearn.model_selection.cross_val_score`
+- `sklearn.utils.validation.check_array`
+- `sklearn.utils.validation.check_is_fitted`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CriterionType`: Must conform to application domain models.
+- `ModelCriterionResult`: Must conform to application domain models.
+- `ModelComparisonResult`: Must conform to application domain models.
+- `AICCalculator`: Must conform to application domain models.
+- `BICCalculator`: Must conform to application domain models.
+- `AdjustedR2Calculator`: Must conform to application domain models.
+- `MallowCpCalculator`: Must conform to application domain models.
+- `GCVCalculator`: Must conform to application domain models.
+- `ModelSelector`: Must conform to application domain models.
+### Public Functions
+- `select_model_by_aic()`: Must return strictly typed objects.
+- `select_model_by_bic()`: Must return strictly typed objects.
+- `compute_criteria()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `calculate()`: Must return strictly typed objects.
+- `calculate_with_likelihood()`: Must return strictly typed objects.
+- `calculate()`: Must return strictly typed objects.
+- `calculate_with_likelihood()`: Must return strictly typed objects.
+- `calculate()`: Must return strictly typed objects.
+- `calculate()`: Must return strictly typed objects.
+- `calculate()`: Must return strictly typed objects.
+- `evaluate_model()`: Must return strictly typed objects.
+- `compare_models()`: Must return strictly typed objects.
+- `select_best_model()`: Must return strictly typed objects.
+- `compute_information_criteria()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

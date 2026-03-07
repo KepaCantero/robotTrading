@@ -1,0 +1,36 @@
+# Requirements Document: backtesting/services/pnl_calculator.py
+
+## 1. Module Overview
+Profit and Loss Calculator service for backtesting.
+
+This service is responsible for calculating trade profitability
+including average entry prices, commission costs, and P&L percentages.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `numpy`
+- `logging`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `app.backtesting.models.BacktestConfig`
+- `app.backtesting.models.Trade`
+- `app.backtesting.models.TradeStatus`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ProfitAndLossCalculator`: Must conform to application domain models.
+### Public Functions
+- `calculate_sell_pnl()`: Must return strictly typed objects.
+- `calculate_close_position_pnl()`: Must return strictly typed objects.
+- `calculate_average_entry_price()`: Must return strictly typed objects.
+- `calculate_round_trip_commission()`: Must return strictly typed objects.
+- `calculate_commission_ratio()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

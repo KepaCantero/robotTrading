@@ -1,0 +1,25 @@
+# Requirements Document: services/tax_efficiency/engines/modelo_720_generator.py
+
+## 1. Module Overview
+Modelo 720 Report Generator
+
+Genera reportes para el Modelo 720 (declaración de bienes en el extranjero)
+
+## 2. Dependencies
+- `typing.dict`
+- `decimal.Decimal`
+- `datetime.datetime`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `Modelo720Generator`: Must conform to application domain models.
+### Public Functions
+- `add_stock()`: Must return strictly typed objects.
+- `add_fund()`: Must return strictly typed objects.
+- `generate_report()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

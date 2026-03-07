@@ -1,0 +1,20 @@
+# Requirements Document: engines/data_engine/validators/__init__.py
+
+## 1. Module Overview
+Data Validators - Pipeline de validación y limpieza de datos.
+
+Incluye:
+- Detección de outliers (IQR, Z-score, Isolation Forest)
+- Interpolación de gaps
+- Validación de calidad (checksums, rangos válidos)
+- Data quality metrics
+
+## 2. Dependencies
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

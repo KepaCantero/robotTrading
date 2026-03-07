@@ -1,0 +1,51 @@
+# Requirements Document: services/multi_market_orchestrator.py
+
+## 1. Module Overview
+Multi-Market Trading Orchestrator - Orquestador de trading multi-mercado.
+
+Coordina trading simultáneo en:
+- Stocks (US, EU, Asia)
+- Forex (pares de divisas)
+- Crypto (BTC, ETH, altcoins)
+- Dividends (acciones de alto dividendo)
+
+Features:
+- Asignación dinámica de capital por mercado
+- Selección de estrategia según condiciones
+- Sentiment analysis con Marketaux API
+- Consideraciones fiscales España/EU
+- Currency hedging para EUR-based investors
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `app.services.crypto_data_service.get_crypto_fetcher`
+- `app.services.forex_data_service.get_forex_fetcher`
+- `app.engines.data_engine.sources.sentiment_sources.NewsSentimentSource`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MarketType`: Must conform to application domain models.
+- `MarketRegime`: Must conform to application domain models.
+- `StrategyType`: Must conform to application domain models.
+- `MarketAllocation`: Must conform to application domain models.
+- `MarketSignal`: Must conform to application domain models.
+- `MultiMarketOrchestrator`: Must conform to application domain models.
+### Public Functions
+- `get_orchestrator()`: Must return strictly typed objects.
+- `reset_orchestrator()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [ ] Must not expose external secrets.
+- [x] Exceptions must be handled.

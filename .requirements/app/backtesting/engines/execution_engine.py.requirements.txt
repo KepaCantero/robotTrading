@@ -1,0 +1,56 @@
+# Requirements Document: backtesting/engines/execution_engine.py
+
+## 1. Module Overview
+Pessimistic Execution Backtest Engine.
+
+This engine implements realistic order execution that eliminates Look-Ahead Bias:
+- Signal generated at close t, executed at open t+1
+- Pessimistic Execution: SL executes before TP in same bar
+- Slippage applied to execution prices
+
+This is a refactored version of app/backtesting/execution_engine.py that
+extends BaseBacktestEngine for consistency across the codebase.
+
+SINGLE SOURCE OF TRUTH: All values from CentralizedConfig.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `typing.Union`
+- `app.backtesting.base_engine.BaseBacktestEngine`
+- `app.backtesting.base_engine.BacktestState`
+- `app.backtesting.base_engine.EngineType`
+- `app.backtesting.base_engine.ExecutionType`
+- `app.backtesting.base_engine.ExecutionResult`
+- `app.backtesting.base_engine.Position`
+- `app.backtesting.models.BacktestConfig`
+- `app.backtesting.models.BacktestResult`
+- `app.backtesting.services.transaction_cost_model.BrokerType`
+- `app.backtesting.services.transaction_cost_model.TransactionCostModel`
+- `app.domain.models.market_data.Quote`
+- `app.backtesting.models.PerformanceMetrics`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ExecutionBacktestEngine`: Must conform to application domain models.
+### Public Functions
+- `create_position_with_stops()`: Must return strictly typed objects.
+- `get_engine_type()`: Must return strictly typed objects.
+- `run_backtest()`: Must return strictly typed objects.
+- `execute_entry_order()`: Must return strictly typed objects.
+- `process_intra_bar_execution()`: Must return strictly typed objects.
+- `compare_vs_optimistic()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

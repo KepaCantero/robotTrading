@@ -1,0 +1,26 @@
+# Requirements Document: services/backtest_orchestration/__init__.py
+
+## 1. Module Overview
+T4.1: BacktestOrchestrator - Backtesting orchestration and execution
+
+Orchestrates backtesting for parametrized trading strategies.
+Calculates feasibility_ratio for deployment decisions.
+Integrates with existing backtesting infrastructure.
+
+## 2. Dependencies
+- `backtest_orchestrator.BacktestOrchestrator`
+- `backtest_orchestrator.get_backtest_orchestrator`
+- `models.BacktestConfig`
+- `models.BacktestMetrics`
+- `models.BacktestOrchestrationRequest`
+- `models.BacktestOrchestrationResult`
+- `models.BacktestResult`
+- `models.BacktestStatus`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

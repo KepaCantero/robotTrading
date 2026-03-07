@@ -1,0 +1,49 @@
+# Requirements Document: engines/context_engine/context_engine.py
+
+## 1. Module Overview
+ContextEngine - Engine principal de análisis de contexto de mercado.
+
+Proporciona API unificada para:
+- Detección de régimen (HMM, clustering, correlaciones)
+- Análisis de volatilidad (GARCH, regímenes)
+- Correlaciones dinámicas
+- Indicadores macro
+- Cache de resultados
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `correlation_analyzers.correlation_network_analyzer.CorrelationNetworkAnalyzer`
+- `correlation_analyzers.dcc_garch_analyzer.DCCGARCHAnalyzer`
+- `correlation_analyzers.rolling_correlation_analyzer.RollingCorrelationAnalyzer`
+- `macro_indicators.market_breadth_analyzer.MarketBreadthAnalyzer`
+- `macro_indicators.sector_rotation_detector.SectorRotationDetector`
+- `macro_indicators.vix_analyzer.VIXAnalyzer`
+- `macro_indicators.yield_curve_analyzer.YieldCurveAnalyzer`
+- `regime_detectors.clustering_regime_detector.ClusteringRegimeDetector`
+- `regime_detectors.correlation_regime_detector.CorrelationRegimeDetector`
+- `regime_detectors.hmm_regime_detector.HMMRegimeDetector`
+- `volatility_analyzers.garch_analyzer.GARCHAnalyzer`
+- `volatility_analyzers.structural_change_detector.StructuralChangeDetector`
+- `volatility_analyzers.volatility_regime_detector.VolatilityRegimeDetector`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ContextEngine`: Must conform to application domain models.
+### Public Functions
+- `get_current_regime()`: Must return strictly typed objects.
+- `get_volatility_regime()`: Must return strictly typed objects.
+- `get_correlation_matrix()`: Must return strictly typed objects.
+- `get_context_summary()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,27 @@
+# Requirements Document: services/portfolio_constructor/models.py
+
+## 1. Module Overview
+T7.1: PortfolioConstructor Models
+
+Data structures for portfolio construction and allocation.
+
+## 2. Dependencies
+- `decimal.Decimal`
+- `typing.List`
+- `typing.Optional`
+- `pydantic.BaseModel`
+- `pydantic.Field`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PortfolioConstructionRequest`: Must conform to application domain models.
+- `AllocationWeight`: Must conform to application domain models.
+- `PortfolioAllocation`: Must conform to application domain models.
+- `RiskScalingRequest`: Must conform to application domain models.
+- `RiskAdjustedPortfolio`: Must conform to application domain models.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

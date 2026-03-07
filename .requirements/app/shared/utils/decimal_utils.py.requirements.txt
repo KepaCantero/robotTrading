@@ -1,0 +1,57 @@
+# Requirements Document: shared/utils/decimal_utils.py
+
+## 1. Module Overview
+Decimal Utilities for Financial Calculations
+
+This module provides utility functions for handling Decimal arithmetic
+in financial calculations to ensure precision and avoid floating-point errors.
+
+Key principles:
+- All prices and quantities must use Decimal type
+- No float arithmetic for financial calculations
+- Safe conversion from external data sources
+
+## 2. Dependencies
+- `logging`
+- `math`
+- `numbers`
+- `decimal.ROUND_HALF_UP`
+- `decimal.Decimal`
+- `decimal.InvalidOperation`
+- `decimal.getcontext`
+- `typing.List`
+- `typing.Optional`
+- `typing.Sequence`
+- `typing.Union`
+
+## 3. Core Components (Contracts)
+### Public Functions
+- `to_decimal()`: Must return strictly typed objects.
+- `to_decimal_required()`: Must return strictly typed objects.
+- `safe_decimal_divide()`: Must return strictly typed objects.
+- `validate_price()`: Must return strictly typed objects.
+- `validate_quantity()`: Must return strictly typed objects.
+- `round_decimal()`: Must return strictly typed objects.
+- `format_currency()`: Must return strictly typed objects.
+- `calculate_percentage()`: Must return strictly typed objects.
+- `round_to_currency_precision()`: Must return strictly typed objects.
+- `get_price_precision()`: Must return strictly typed objects.
+- `round_price()`: Must return strictly typed objects.
+- `validate_price_for_asset_class()`: Must return strictly typed objects.
+- `safe_mean()`: Must return strictly typed objects.
+- `safe_variance()`: Must return strictly typed objects.
+- `safe_std()`: Must return strictly typed objects.
+- `safe_decimal_sqrt()`: Must return strictly typed objects.
+- `to_bps()`: Must return strictly typed objects.
+- `from_bps()`: Must return strictly typed objects.
+- `to_bps_float()`: Must return strictly typed objects.
+- `from_bps_float()`: Must return strictly typed objects.
+- `spread_to_bps()`: Must return strictly typed objects.
+- `annualize_volatility()`: Must return strictly typed objects.
+- `annualize_returns()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

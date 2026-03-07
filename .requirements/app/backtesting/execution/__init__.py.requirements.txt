@@ -1,0 +1,79 @@
+# Requirements Document: backtesting/execution/__init__.py
+
+## 1. Module Overview
+Realistic Execution Model for Backtesting (FASE 5.2)
+
+This module provides comprehensive execution modeling including:
+- Realistic transaction costs (US equity fee structure)
+- Advanced slippage modeling
+- Market impact (Almgren-Chriss model)
+- Order fill simulation with partial fills
+- Time-of-day impact modeling
+
+Components:
+- TransactionCostCalculator: US equity fee structure (SEC, FINRA, exchange fees)
+- SlippageModel: Size and volatility-based slippage
+- MarketImpactModel: Almgren-Chriss permanent and temporary impact
+- OrderFillSimulator: Realistic order fill simulation
+- RealisticExecutionModel: Main execution model coordinating all components
+
+Usage:
+    from app.backtesting.execution import (
+        RealisticExecutionModel,
+        ExecutionConfig,
+        TransactionCostCalculator,
+        SlippageModel,
+        MarketImpactModel,
+    )
+
+    # Configure execution model
+    config = ExecutionConfig(
+        cost_config=CostConfig(
+            commission_per_share=Decimal("0.005"),
+            sec_fee_rate=Decimal("0.0000078"),
+            finra_taf_rate=Decimal("0.000145"),
+        ),
+        slippage_config=SlippageConfig(
+            base_slippage_bps=Decimal("5"),
+            vol_multiplier=Decimal("2"),
+        ),
+        impact_config=ImpactConfig(
+            temporary_coef=Decimal("0.1"),
+            permanent_coef=Decimal("0.05"),
+        ),
+    )
+
+    execution_model = RealisticExecutionModel(config)
+    result = await execution_model.execute_order(signal, market_data)
+
+## 2. Dependencies
+- `execution_model.CostConfig`
+- `execution_model.ExecutionConfig`
+- `execution_model.ImpactConfig`
+- `execution_model.RealisticExecutionModel`
+- `execution_model.SlippageConfig`
+- `market_impact.AlmgrenChrissConfig`
+- `market_impact.MarketImpact`
+- `market_impact.MarketImpactModel`
+- `models.CostBreakdown`
+- `models.ExecutionResult`
+- `models.ExecutionSummary`
+- `order_fill_simulator.FillReason`
+- `order_fill_simulator.FillResult`
+- `order_fill_simulator.MarketSnapshot`
+- `order_fill_simulator.Order`
+- `order_fill_simulator.OrderFillSimulator`
+- `slippage_model.SlippageEstimate`
+- `slippage_model.SlippageModel`
+- `slippage_model.TimeOfDayImpact`
+- `transaction_cost.US_EQUITY_FEES`
+- `transaction_cost.TransactionCost`
+- `transaction_cost.TransactionCostCalculator`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

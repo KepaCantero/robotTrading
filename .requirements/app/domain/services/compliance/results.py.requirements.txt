@@ -1,0 +1,43 @@
+# Requirements Document: domain/services/compliance/results.py
+
+## 1. Module Overview
+Compliance Check Results Data Classes
+======================================
+
+Defines the data structures for compliance check results.
+These are shared across all coordinators and services.
+
+Author: Compliance Integration System
+Date: 2026-02-03
+
+## 2. Dependencies
+- `__future__.annotations`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CheckResult`: Must conform to application domain models.
+- `PreTradeCheckResult`: Must conform to application domain models.
+- `PostTradeCheckResult`: Must conform to application domain models.
+- `OptimizeResult`: Must conform to application domain models.
+- `ComprehensivePreTradeAnalysis`: Must conform to application domain models.
+- `ComprehensivePostTradeAnalysis`: Must conform to application domain models.
+- `PortfolioOptimizationResult`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

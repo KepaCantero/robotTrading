@@ -1,0 +1,34 @@
+# Requirements Document: backtesting/validation/pnl_validator.py
+
+## 1. Module Overview
+P&L Validator for backtesting results.
+
+Validates profit and loss calculations to ensure accuracy
+and detect potential issues in backtesting results.
+
+## 2. Dependencies
+- `logging`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `app.backtesting.models.Trade`
+- `app.backtesting.models.TradeStatus`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PnLValidationError`: Must conform to application domain models.
+- `PnLValidator`: Must conform to application domain models.
+### Public Functions
+- `validate_trade_pnl()`: Must return strictly typed objects.
+- `validate_trades_pnl()`: Must return strictly typed objects.
+- `validate_total_pnl()`: Must return strictly typed objects.
+- `validate_commission()`: Must return strictly typed objects.
+- `validate_pnl_consistency()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,84 @@
+# Requirements Document: domain/strategies/models.py
+
+## 1. Module Overview
+Multi-Factor Strategy Data Models
+
+This module defines Pydantic models for the multi-factor strategy implementing
+the Fama-French 5-factor model plus Momentum factor.
+
+Models include:
+- FactorScores: Individual factor scores for each stock
+- FactorProfile: Complete factor profile with all metrics
+- FactorStrategyConfig: Strategy configuration
+- FactorPortfolio: Factor-tilted portfolio representation
+
+Reference:
+- Fama-French 5-Factor Model: Market, Size, Value, Profitability, Investment
+- Momentum factor (Carhart extension)
+- Factor investing approach (Berkin & Swedroe)
+
+## 2. Dependencies
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `pydantic.BaseModel`
+- `pydantic.ConfigDict`
+- `pydantic.Field`
+- `pydantic.model_validator`
+- `app.shared.config.centralized_config.get_config`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `FactorType`: Must conform to application domain models.
+- `FactorTiltDirection`: Must conform to application domain models.
+- `FactorTilt`: Must conform to application domain models.
+- `FactorScores`: Must conform to application domain models.
+- `FactorProfile`: Must conform to application domain models.
+- `FactorStrategyConfig`: Must conform to application domain models.
+- `FactorPosition`: Must conform to application domain models.
+- `FactorPortfolio`: Must conform to application domain models.
+- `FactorOptimizationResult`: Must conform to application domain models.
+- `FactorRebalanceRecommendation`: Must conform to application domain models.
+- `DividendSafety`: Must conform to application domain models.
+- `DividendProfile`: Must conform to application domain models.
+- `DividendStock`: Must conform to application domain models.
+- `DividendStrategyConfig`: Must conform to application domain models.
+- `ExDividendDate`: Must conform to application domain models.
+- `VolatilityRegime`: Must conform to application domain models.
+- `VolatilityMetrics`: Must conform to application domain models.
+- `LowVolatilityProfile`: Must conform to application domain models.
+- `LowVolatilityStock`: Must conform to application domain models.
+- `LowVolatilityStrategyConfig`: Must conform to application domain models.
+- `DividendScreeningCriteria`: Must conform to application domain models.
+- `LowVolatilityScreeningCriteria`: Must conform to application domain models.
+- `SectorDefensiveLevel`: Must conform to application domain models.
+- `ScreeningResult`: Must conform to application domain models.
+### Public Functions
+- `momentum_excluding_last_month()`: Must return strictly typed objects.
+- `is_value_stock()`: Must return strictly typed objects.
+- `is_small_cap()`: Must return strictly typed objects.
+- `is_profitable()`: Must return strictly typed objects.
+- `is_conservative_investor()`: Must return strictly typed objects.
+- `is_winner()`: Must return strictly typed objects.
+- `validate_weights_sum()`: Must return strictly typed objects.
+- `validate_tilt_ranges()`: Must return strictly typed objects.
+- `get_factor_tilts()`: Must return strictly typed objects.
+- `get_config_description()`: Must return strictly typed objects.
+- `positions_count()`: Must return strictly typed objects.
+- `invested_capital()`: Must return strictly typed objects.
+- `is_diversified()`: Must return strictly typed objects.
+- `max_position_weight()`: Must return strictly typed objects.
+- `herfindahl_index()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

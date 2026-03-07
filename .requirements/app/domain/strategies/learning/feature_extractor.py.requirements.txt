@@ -1,0 +1,27 @@
+# Requirements Document: domain/strategies/learning/feature_extractor.py
+
+## 1. Module Overview
+FeatureExtractor - Extrae features completas para learning engines.
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `pandas`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `FeatureExtractor`: Must conform to application domain models.
+### Public Functions
+- `extract_complete_features()`: Must return strictly typed objects.
+- `extract_sequence_features()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,55 @@
+# Requirements Document: services/circuit_breaker/daily_circuit_breaker.py
+
+## 1. Module Overview
+Daily Circuit Breaker for Trading Strategy Risk Management (FASE 5 Task 2)
+
+This module implements daily loss-based circuit breaking per Chan (2013) and Hull (2018):
+- Tracks daily P&L in real-time
+- Halts trading when -5% daily threshold is reached
+- Resets at the start of the next trading day
+
+This is a CRITICAL risk control component for backtesting and live trading.
+
+Reference:
+    Chan, E. (2013). "Algorithmic Trading." Chapter 15
+    Hull, J. (2018). "Risk Management and Financial Institutions." Chapter 65
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.date`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `app.shared.config.centralized_config.get_config`
+- `app.shared.utils.timezone_utils.utc_now`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DailyBreakerStatus`: Must conform to application domain models.
+- `DailyBreakerEvent`: Must conform to application domain models.
+- `DailyBreakerState`: Must conform to application domain models.
+- `DailyCircuitBreaker`: Must conform to application domain models.
+### Public Functions
+- `create_daily_breaker()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `is_trading_halted()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `reset_for_trading_day()`: Must return strictly typed objects.
+- `update_pnl()`: Must return strictly typed objects.
+- `is_trading_halted()`: Must return strictly typed objects.
+- `get_state()`: Must return strictly typed objects.
+- `get_event_history()`: Must return strictly typed objects.
+- `can_trade()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,40 @@
+# Requirements Document: services/account_configuration.py
+
+## 1. Module Overview
+PHASE 0 - Account Configuration (T0.4)
+
+Provides pre-configured settings and recommendations for different account
+capital tiers. Each tier has optimal settings for position sizing, risk
+management, and feature enablement.
+
+Tiers:
+- Micro (<$15k): Conservative, minimal features, small positions
+- Small ($15k-$50k): Cautious, selective feature enabling
+- Medium ($50k-$250k): Balanced, most features enabled
+- Large ($250k+): Aggressive, all features available
+
+## 2. Dependencies
+- `logging`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `AccountTier`: Must conform to application domain models.
+- `AccountConfiguration`: Must conform to application domain models.
+### Public Functions
+- `get_tier()`: Must return strictly typed objects.
+- `get_configuration()`: Must return strictly typed objects.
+- `get_all_tier_recommendations()`: Must return strictly typed objects.
+- `validate_position_size()`: Must return strictly typed objects.
+- `get_tier_upgrade_capital()`: Must return strictly typed objects.
+- `get_safe_trading_limits()`: Must return strictly typed objects.
+- `is_feature_recommended()`: Must return strictly typed objects.
+- `log_configuration()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

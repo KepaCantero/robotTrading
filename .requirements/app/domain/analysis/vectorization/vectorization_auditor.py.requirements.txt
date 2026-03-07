@@ -1,0 +1,48 @@
+# Requirements Document: domain/analysis/vectorization/vectorization_auditor.py
+
+## 1. Module Overview
+Vectorization auditor for detecting non-vectorized code patterns.
+
+This module provides tools to audit Python code for non-vectorized patterns
+that can significantly impact performance in numerical computing and trading
+systems. It uses AST (Abstract Syntax Tree) analysis to detect problematic
+patterns without executing the code.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `ast`
+- `time`
+- `decimal.Decimal`
+- `pathlib.Path`
+- `app.domain.analysis.vectorization.models.VectorizationIssue`
+- `app.domain.analysis.vectorization.models.VectorizationReport`
+- `app.domain.analysis.vectorization.patterns.VectorizationPatterns`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `VectorizationAuditor`: Must conform to application domain models.
+- `ForLoopVisitor`: Must conform to application domain models.
+- `ApplyVisitor`: Must conform to application domain models.
+- `IterrowsVisitor`: Must conform to application domain models.
+- `ListCompVisitor`: Must conform to application domain models.
+- `EnumerateVisitor`: Must conform to application domain models.
+- `RangeLenVisitor`: Must conform to application domain models.
+- `WhileLoopVisitor`: Must conform to application domain models.
+### Public Functions
+- `audit_file()`: Must return strictly typed objects.
+- `audit_directory()`: Must return strictly typed objects.
+- `calculate_score()`: Must return strictly typed objects.
+- `audit_code_snippet()`: Must return strictly typed objects.
+- `visit_For()`: Must return strictly typed objects.
+- `visit_Call()`: Must return strictly typed objects.
+- `visit_Call()`: Must return strictly typed objects.
+- `visit_ListComp()`: Must return strictly typed objects.
+- `visit_For()`: Must return strictly typed objects.
+- `visit_For()`: Must return strictly typed objects.
+- `visit_While()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

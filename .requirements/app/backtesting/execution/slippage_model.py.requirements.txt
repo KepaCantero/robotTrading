@@ -1,0 +1,51 @@
+# Requirements Document: backtesting/execution/slippage_model.py
+
+## 1. Module Overview
+Slippage Model for Realistic Execution Simulation (FASE 5.2)
+
+This module implements advanced slippage modeling based on:
+- Order size as percentage of Average Daily Volume (ADV)
+- Current volatility (VIX, historical vol)
+- Bid-ask spread
+- Time-of-day impact (worse at open/close)
+- Market capitalization (large caps have less slippage)
+
+Reference: Realistic slippage modeling for algorithmic trading
+
+SINGLE SOURCE OF TRUTH: Base values from CentralizedConfig.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.Optional`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TimeOfDay`: Must conform to application domain models.
+- `MarketCapCategory`: Must conform to application domain models.
+- `TimeOfDayImpact`: Must conform to application domain models.
+- `SlippageConfig`: Must conform to application domain models.
+- `SlippageEstimate`: Must conform to application domain models.
+- `SlippageModel`: Must conform to application domain models.
+### Public Functions
+- `total_impact_bps()`: Must return strictly typed objects.
+- `total_impact_dollars()`: Must return strictly typed objects.
+- `classify_market_cap()`: Must return strictly typed objects.
+- `calculate_base_slippage()`: Must return strictly typed objects.
+- `calculate_adv_impact()`: Must return strictly typed objects.
+- `calculate_volatility_impact()`: Must return strictly typed objects.
+- `calculate_time_of_day_impact()`: Must return strictly typed objects.
+- `calculate_spread_impact()`: Must return strictly typed objects.
+- `estimate_slippage()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,35 @@
+# Requirements Document: domain/strategies/protocols.py
+
+## 1. Module Overview
+Protocols for Strategy Registry and Logger - Dependency Inversion.
+
+These Protocols enable SOL-005 (Dependency Inversion Principle) and DP-004
+(Dependency Injection) by allowing ExecutionEngine to depend on abstractions
+rather than concrete classes. This improves testability and maintainability.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Optional`
+- `typing.Protocol`
+- `app.domain.models.signal.Signal`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StrategyRegistryProto`: Must conform to application domain models.
+- `StrategyLoggerProto`: Must conform to application domain models.
+### Public Functions
+- `active_strategy()`: Must return strictly typed objects.
+- `get_active_strategy()`: Must return strictly typed objects.
+- `log_signal_generated()`: Must return strictly typed objects.
+- `log_signal_rejected()`: Must return strictly typed objects.
+- `log_signal_executed()`: Must return strictly typed objects.
+- `log_strategy_error()`: Must return strictly typed objects.
+- `log_execution_error()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

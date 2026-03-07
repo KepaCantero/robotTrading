@@ -1,0 +1,54 @@
+# Requirements Document: domain/models/paper_trading.py
+
+## 1. Module Overview
+Paper Trading Models for Analytic Mode
+
+This module defines models for paper trading simulation, virtual portfolio management,
+and trade execution simulation for the algorithmic trading system.
+
+## 2. Dependencies
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `uuid.UUID`
+- `uuid.uuid4`
+- `pydantic.BaseModel`
+- `pydantic.Field`
+- `pydantic.field_validator`
+- `pydantic.model_validator`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PaperTradingMode`: Must conform to application domain models.
+- `TradeStatus`: Must conform to application domain models.
+- `OrderSide`: Must conform to application domain models.
+- `OrderType`: Must conform to application domain models.
+- `PaperTrade`: Must conform to application domain models.
+- `PaperPosition`: Must conform to application domain models.
+- `PaperPortfolio`: Must conform to application domain models.
+- `PaperTradingConfig`: Must conform to application domain models.
+- `PaperTradingSession`: Must conform to application domain models.
+### Public Functions
+- `validate_positive_fields()`: Must return strictly typed objects.
+- `validate_filled_quantity()`: Must return strictly typed objects.
+- `validate_trade_consistency()`: Must return strictly typed objects.
+- `validate_price_fields()`: Must return strictly typed objects.
+- `validate_value_fields()`: Must return strictly typed objects.
+- `calculate_metrics()`: Must return strictly typed objects.
+- `recalculate_metrics()`: Must return strictly typed objects.
+- `validate_cash_fields()`: Must return strictly typed objects.
+- `validate_rate_fields()`: Must return strictly typed objects.
+- `calculate_portfolio_metrics()`: Must return strictly typed objects.
+- `validate_initial_cash()`: Must return strictly typed objects.
+- `validate_session_pnl()`: Must return strictly typed objects.
+- `validate_session_timing()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.
