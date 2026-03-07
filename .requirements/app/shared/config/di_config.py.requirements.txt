@@ -1,0 +1,27 @@
+# Requirements Document: shared/config/di_config.py
+
+## 1. Module Overview
+Dependency Injection Configuration
+
+This module configures the DI container with all application dependencies.
+It follows the Dependency Inversion Principle - high-level modules depend
+on abstractions, not concrete implementations.
+
+Reference: Rule 05-architecture.md, Rule 11-enterprise-architecture.md
+
+## 2. Dependencies
+- `app.shared.config.di_container.DIContainer`
+- `app.shared.config.di_container.get_container`
+- `app.domain.factories.AbstractEntityFactory`
+- `app.domain.factories.TradingEntityFactory`
+
+## 3. Core Components (Contracts)
+### Public Functions
+- `configure_container()`: Must return strictly typed objects.
+- `initialize_container()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

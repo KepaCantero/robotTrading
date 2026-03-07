@@ -1,0 +1,26 @@
+# Requirements Document: core/protocols/__init__.py
+
+## 1. Module Overview
+Protocol interfaces for SOLID architecture
+
+This module contains all Protocol interfaces used throughout
+the application for dependency inversion and interface segregation.
+
+## 2. Dependencies
+- `app.core.protocols.i_pre_trade_validator.IPreTradeValidator`
+- `app.core.protocols.i_trade_executor.ITradeExecutor`
+- `app.core.protocols.i_post_trade_analyzer.IPostTradeAnalyzer`
+- `app.core.protocols.i_broker_adapter.IBrokerAdapter`
+- `app.core.protocols.i_spain_tax_engine.ISpainTaxEngine`
+- `app.core.protocols.i_trading_decision_logger.ITradingDecisionLogger`
+- `app.core.protocols.i_kill_switch_monitor.IKillSwitchMonitor`
+- `app.core.protocols.i_alert_processor.IAlertProcessor`
+- `app.core.protocols.i_strategy_cycle_runner.IStrategyCycleRunner`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

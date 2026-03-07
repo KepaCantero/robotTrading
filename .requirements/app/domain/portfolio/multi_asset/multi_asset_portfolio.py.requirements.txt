@@ -1,0 +1,52 @@
+# Requirements Document: domain/portfolio/multi_asset/multi_asset_portfolio.py
+
+## 1. Module Overview
+Multi-Asset Portfolio Manager.
+
+This module provides the main portfolio management functionality for multi-asset
+portfolios, including construction, rebalancing, and risk management.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `pandas`
+- `pydantic.BaseModel`
+- `pydantic.ConfigDict`
+- `pydantic.Field`
+- `pydantic.field_validator`
+- `asset_class.AssetClass`
+- `asset_class.AssetClassConfig`
+- `asset_class.AssetClassType`
+- `models.MultiAssetAllocation`
+- `models.MultiAssetPortfolio`
+- `models.PortfolioMetrics`
+- `models.RiskTolerance`
+- `models.Trade`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MultiAssetConfig`: Must conform to application domain models.
+- `PortfolioConstructionResult`: Must conform to application domain models.
+- `RebalanceResult`: Must conform to application domain models.
+- `MultiAssetPortfolioManager`: Must conform to application domain models.
+### Public Functions
+- `validate_max_position_size()`: Must return strictly typed objects.
+- `validate_asset_classes()`: Must return strictly typed objects.
+- `construct_portfolio()`: Must return strictly typed objects.
+- `rebalance()`: Must return strictly typed objects.
+- `calculate_risk_contributions()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

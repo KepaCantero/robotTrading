@@ -1,0 +1,60 @@
+# Requirements Document: backtesting/robust_engine/pit_database.py
+
+## 1. Module Overview
+Point-in-Time Database Client for Robust Backtesting Engine.
+
+This module provides a high-level client wrapper for the PointInTimeDatabase
+that integrates seamlessly with the RobustBacktester.
+
+The PIT database ensures that backtests only use information that would have
+been available at each point in time, preventing look-ahead bias as described
+in Ernest Chan's "Algorithmic Trading" (Chapter 3).
+
+Key Features:
+- Clean API for time-aware data queries
+- Automatic caching for performance
+- Integration with look-ahead bias validation
+- Support for universe reconstruction
+
+Reference:
+    AUDIT_PLAN_COMPLETO - FASE 5.1: Point-in-Time Data
+    "Algorithmic Trading" by Ernest P. Chan - Chapter 3
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.date`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `pandas`
+- `point_in_time_database.CorporateAction`
+- `point_in_time_database.PITDataSnapshot`
+- `point_in_time_database.PointInTimeDatabase`
+- `survivorship_adjuster.SurvivorshipAdjuster`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PITUniverseQuery`: Must conform to application domain models.
+- `PITDataQuery`: Must conform to application domain models.
+- `PITDatabaseClient`: Must conform to application domain models.
+### Public Functions
+- `get_universe_as_of()`: Must return strictly typed objects.
+- `get_ohlcv_as_of()`: Must return strictly typed objects.
+- `validate_no_look_ahead()`: Must return strictly typed objects.
+- `get_snapshot_as_of()`: Must return strictly typed objects.
+- `create_point_in_time_universe()`: Must return strictly typed objects.
+- `get_corporate_actions()`: Must return strictly typed objects.
+- `get_cache_statistics()`: Must return strictly typed objects.
+- `clear_cache()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

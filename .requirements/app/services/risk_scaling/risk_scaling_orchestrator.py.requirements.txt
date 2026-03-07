@@ -1,0 +1,58 @@
+# Requirements Document: services/risk_scaling/risk_scaling_orchestrator.py
+
+## 1. Module Overview
+PHASE 3: Risk Scaling Orchestrator - Integration of All Risk Monitors (Hull Chapter 18)
+
+Orchestrates all 4 risk scaling monitors into a unified risk management system.
+Coordinates scaling decisions and integrates with SignalExecutionEngine,
+PositionSizingEngine, and other portfolio management systems.
+
+Now integrated with Hull-compliant risk management:
+- Component VaR for risk budgeting
+- EWMA VaR for dynamic volatility adjustment
+- Risk limits enforcement with automatic position reduction
+- Correlation stress testing for diversification monitoring
+
+Key Formula:
+combined_scale = volatility_scale × sharpe_scale × loss_scale × drawdown_scale
+
+Enhanced with VaR-based scaling:
+var_adjusted_scale = combined_scale × (1 - VaR_utilization)
+
+Reference: Hull, Options, Futures, and Other Derivatives, Chapter 18
+
+## 2. Dependencies
+- `logging`
+- `decimal.ROUND_HALF_UP`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `app.services.risk_scaling.drawdown_monitor.DrawdownMonitor`
+- `app.services.risk_scaling.loss_monitor.LossMonitor`
+- `app.services.risk_scaling.loss_monitor.TradeResult`
+- `app.services.risk_scaling.models.AdjustedSignal`
+- `app.services.risk_scaling.models.RiskAlert`
+- `app.services.risk_scaling.models.RiskAlertType`
+- `app.services.risk_scaling.models.RiskLevel`
+- `app.services.risk_scaling.models.RiskScalingFactors`
+- `app.services.risk_scaling.models.RiskScalingReport`
+- `app.services.risk_scaling.models.RiskScalingSnapshot`
+- `app.services.risk_scaling.models.RiskScalingState`
+- `app.services.risk_scaling.sharpe_ratio_monitor.SharpeRatioMonitor`
+- `app.services.risk_scaling.volatility_monitor.PriceData`
+- `app.services.risk_scaling.volatility_monitor.VolatilityMonitor`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RiskScalingOrchestrator`: Must conform to application domain models.
+### Public Functions
+- `generate_scaling_report()`: Must return strictly typed objects.
+- `calculate_position_size()`: Must return strictly typed objects.
+- `calculate_position_size_from_volatility()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

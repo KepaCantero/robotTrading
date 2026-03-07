@@ -1,0 +1,60 @@
+# Requirements Document: domain/tax/exporters/modelo_721_exporter.py
+
+## 1. Module Overview
+Modelo 721 CSV Exporter for Spanish Tax Compliance
+
+CRITICAL TAX COMPONENT: Generates CSV exports compatible with Coinpanda/Koinly.
+
+Spain Tax Requirements (Modelo 720/721):
+- Hacienda wants records, not just calculations
+- With 1000+ crypto trades/year, manual filing is impossible
+- December 31 balance snapshot at official BOE/BCE exchange rate
+- CSV format compatible with popular tax tools (don't reinvent the wheel)
+
+Modelo 721 Requirements:
+- All virtual currency transactions
+- Balance at December 31 (Euros, at official exchange rate)
+- Acquisition and disposal dates
+- Cost basis and proceeds
+- Capital gains/losses
+
+This module generates CSV exports that can be imported into:
+- Coinpanda (https://coinpanda.io)
+- Koinly (https://koinly.io)
+- Other tax software
+
+Usage:
+    exporter = Modelo721Exporter(fifo_db_path="...")
+    await exporter.generate_annual_export(2024)
+    # Output: modelo_721_2024.csv
+
+The CSV can then be imported into tax software for final filing.
+
+## 2. Dependencies
+- `asyncio`
+- `csv`
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.date`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `pathlib.Path`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `aiohttp`
+- `aiosqlite`
+- `requests.exceptions.HTTPError`
+- `requests.exceptions.RequestException`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `Transaction`: Must conform to application domain models.
+- `BalanceSnapshot`: Must conform to application domain models.
+- `Modelo721Exporter`: Must conform to application domain models.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

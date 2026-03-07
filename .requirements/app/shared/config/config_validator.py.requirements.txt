@@ -1,0 +1,78 @@
+# Requirements Document: shared/config/config_validator.py
+
+## 1. Module Overview
+Configuration Validator Module
+Phase 4.2: Production Config Management
+
+This module provides validation for YAML configuration files and environment
+variables to ensure production readiness.
+
+## 2. Dependencies
+- `datetime`
+- `logging`
+- `os`
+- `re`
+- `sys`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `yaml`
+- `pydantic.BaseModel`
+- `pydantic.Field`
+- `pydantic.ValidationError`
+- `pydantic.field_validator`
+- `argparse`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ProfileOptimizationConfigValidator`: Must conform to application domain models.
+- `BatchBacktestConfigValidator`: Must conform to application domain models.
+- `ValidationErrorDetail`: Must conform to application domain models.
+- `ValidationResult`: Must conform to application domain models.
+- `DatabaseConfigValidator`: Must conform to application domain models.
+- `RiskConfigValidator`: Must conform to application domain models.
+- `CircuitBreakerValidator`: Must conform to application domain models.
+- `ConfigValidator`: Must conform to application domain models.
+### Public Functions
+- `main()`: Must return strictly typed objects.
+- `validate_test_size()`: Must return strictly typed objects.
+- `validate_cv_folds()`: Must return strictly typed objects.
+- `validate_worker_multiplier()`: Must return strictly typed objects.
+- `validate_positive_thresholds()`: Must return strictly typed objects.
+- `validate_drawdown()`: Must return strictly typed objects.
+- `validate_database_url()`: Must return strictly typed objects.
+- `validate_non_empty_dict()`: Must return strictly typed objects.
+- `validate_symbols()`: Must return strictly typed objects.
+- `validate_date_format()`: Must return strictly typed objects.
+- `validate_n_trials()`: Must return strictly typed objects.
+- `validate_max_profiles()`: Must return strictly typed objects.
+- `add_error()`: Must return strictly typed objects.
+- `add_warning()`: Must return strictly typed objects.
+- `print_summary()`: Must return strictly typed objects.
+- `validate_backup_interval()`: Must return strictly typed objects.
+- `validate_retention()`: Must return strictly typed objects.
+- `validate_percentages()`: Must return strictly typed objects.
+- `validate_leverage()`: Must return strictly typed objects.
+- `validate_thresholds()`: Must return strictly typed objects.
+- `validate_yaml_syntax()`: Must return strictly typed objects.
+- `validate_environment_value()`: Must return strictly typed objects.
+- `validate_debug_mode()`: Must return strictly typed objects.
+- `validate_required_sections()`: Must return strictly typed objects.
+- `validate_placeholders()`: Must return strictly typed objects.
+- `validate_environment_variables()`: Must return strictly typed objects.
+- `validate_database_config()`: Must return strictly typed objects.
+- `validate_risk_config()`: Must return strictly typed objects.
+- `validate_circuit_breaker_config()`: Must return strictly typed objects.
+- `validate_production_config()`: Must return strictly typed objects.
+- `validate_profile_optimization_config()`: Must return strictly typed objects.
+- `validate_batch_backtest_config()`: Must return strictly typed objects.
+- `check_dict()`: Must return strictly typed objects.
+- `extract()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

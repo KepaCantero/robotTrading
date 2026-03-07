@@ -1,0 +1,28 @@
+# Requirements Document: services/external_integrations/__init__.py
+
+## 1. Module Overview
+T17.1: External Integrations - Integration with external data and orchestration platforms
+
+Provides:
+- QuestDBConnector: Time-series database for high-frequency data storage
+- DagsterOrchestrator: Workflow orchestration and scheduling
+- MLflowTracker: ML model tracking and experimentation
+- ZiplineIntegrator: Advanced backtesting framework
+
+## 2. Dependencies
+- `dagster_orchestrator.DagsterOrchestrator`
+- `dagster_orchestrator.get_dagster_orchestrator`
+- `mlflow_tracker.MLflowTracker`
+- `mlflow_tracker.get_mlflow_tracker`
+- `questdb_connector.QuestDBConnector`
+- `questdb_connector.get_questdb_connector`
+- `zipline_integrator.ZiplineIntegrator`
+- `zipline_integrator.get_zipline_integrator`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

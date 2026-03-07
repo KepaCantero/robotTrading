@@ -1,0 +1,43 @@
+# Requirements Document: domain/strategies/dividend_screener.py
+
+## 1. Module Overview
+Dividend Screener - Filtrado de Acciones por Métricas de Dividendos
+
+Implementa screening de acciones basado en:
+- Dividend yield mínimo y máximo
+- Payout ratio
+- Dividend growth rate
+- Years of consecutive increases
+- Market cap
+- Quality scores
+
+SOLID Principles:
+- Single Responsibility: Solo se encarga de screening
+- Open/Closed: Extensible con nuevos filtros
+- Dependency Inversion: Depende de abstracciones (models)
+
+## 2. Dependencies
+- `logging`
+- `time`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `app.shared.config.centralized_config.get_config`
+- `models.DividendProfile`
+- `models.DividendSafety`
+- `models.DividendScreeningCriteria`
+- `models.DividendStock`
+- `models.DividendStrategyConfig`
+- `models.ScreeningResult`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DividendScreener`: Must conform to application domain models.
+### Public Functions
+- `screen()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

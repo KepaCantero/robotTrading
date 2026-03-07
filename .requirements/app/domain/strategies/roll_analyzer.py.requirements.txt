@@ -1,0 +1,49 @@
+# Requirements Document: domain/strategies/roll_analyzer.py
+
+## 1. Module Overview
+Roll Analyzer - Análisis de Oportunidades de Rolling
+
+Implementa análisis de oportunidades de rolling para posiciones covered call:
+- Identificar cuándo hacer roll
+- Calcular beneficio esperado del roll
+- Comparar opciones de roll (up, down, out)
+- Optimizar strike y expiry del roll
+
+El rolling permite:
+1. Extender la duración de la estrategia
+2. Ajustarse a movimientos del mercado
+3. Generar prima adicional
+4. Gestionar riesgo de assignment
+
+SOLID Principles:
+- Single Responsibility: Solo análisis de rolling, no ejecución
+- Open/Closed: Extensible con nuevas estrategias de roll
+
+## 2. Dependencies
+- `logging`
+- `datetime.date`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `greeks_calculator.GreeksCalculator`
+- `models.AssignmentProbability`
+- `models.CallOption`
+- `models.CoveredCallPosition`
+- `models.RollOpportunity`
+- `models.RollType`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RollAnalyzer`: Must conform to application domain models.
+### Public Functions
+- `analyze_roll_opportunities()`: Must return strictly typed objects.
+- `should_roll()`: Must return strictly typed objects.
+- `calculate_roll_metrics()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

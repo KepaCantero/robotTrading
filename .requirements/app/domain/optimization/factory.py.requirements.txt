@@ -1,0 +1,65 @@
+# Requirements Document: domain/optimization/factory.py
+
+## 1. Module Overview
+Optimizer Factory - Creates optimizers by type.
+
+This module provides a factory for creating optimizers based on type,
+configuration, and use case.
+
+Usage:
+    ```python
+    from app.domain.optimization.factory import OptimizerFactory
+    from app.domain.optimization.base_optimizer import OptimizationConfig
+
+    # Create a Bayesian optimizer
+    optimizer = OptimizerFactory.create("bayesian", max_iterations=100)
+
+    # Create with full config
+    config = OptimizationConfig(maximize=True, metric="sharpe_ratio")
+    optimizer = OptimizerFactory.create("bayesian", config=config)
+
+    # Create portfolio optimizer
+    portfolio_optimizer = OptimizerFactory.create("mean_variance", risk_free_rate=0.02)
+    ```
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Type`
+- `typing.Union`
+- `numpy`
+- `numpy.typing.NDArray`
+- `app.shared.config.centralized_config.get_config`
+- `base_optimizer.BaseOptimizer`
+- `base_optimizer.OptimizationConfig`
+- `base_optimizer.OptimizerType`
+- `bayesian_optimizer.BayesianOptimizer`
+- `bayesian_optimizer.SearchSpace`
+- `grid_search_optimizer.GridSearchOptimizer`
+- `grid_search_optimizer.GridSearchOptimizerCV`
+- `mean_variance_optimizer.MeanVarianceOptimizer`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `OptimizerFactory`: Must conform to application domain models.
+### Public Functions
+- `create_optimizer()`: Must return strictly typed objects.
+- `create_portfolio_optimizer()`: Must return strictly typed objects.
+- `create_backtest_optimizer()`: Must return strictly typed objects.
+- `register()`: Must return strictly typed objects.
+- `create()`: Must return strictly typed objects.
+- `get_available_types()`: Must return strictly typed objects.
+- `get_recommended_type()`: Must return strictly typed objects.
+- `create_for_portfolio()`: Must return strictly typed objects.
+- `create_for_backtest()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

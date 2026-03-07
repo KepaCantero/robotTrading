@@ -1,0 +1,20 @@
+# Requirements Document: engines/context_engine/macro_indicators/__init__.py
+
+## 1. Module Overview
+Macro Indicators - Indicadores macroeconómicos.
+
+Incluye:
+- VIX
+- Yield curve
+- Sector rotation
+- Market breadth indicators
+
+## 2. Dependencies
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

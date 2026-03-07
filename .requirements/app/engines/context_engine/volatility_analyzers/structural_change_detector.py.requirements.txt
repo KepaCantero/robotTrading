@@ -1,0 +1,30 @@
+# Requirements Document: engines/context_engine/volatility_analyzers/structural_change_detector.py
+
+## 1. Module Overview
+StructuralChangeDetector - Detección de cambios estructurales.
+
+Implementa CUSUM y Chow test para detectar cambios estructurales en series temporales.
+
+## 2. Dependencies
+- `logging`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `scipy.stats`
+- `statsmodels.stats.diagnostic.breaks_cusumolsresid`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StructuralChangeDetector`: Must conform to application domain models.
+### Public Functions
+- `detect_cusum()`: Must return strictly typed objects.
+- `detect_chow_test()`: Must return strictly typed objects.
+- `detect()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

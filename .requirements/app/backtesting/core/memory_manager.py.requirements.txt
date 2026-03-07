@@ -1,0 +1,47 @@
+# Requirements Document: backtesting/core/memory_manager.py
+
+## 1. Module Overview
+Aggressive Memory Manager for Backtesting Operations.
+
+This module provides memory management utilities to prevent memory leaks
+and excessive memory usage during long-running backtesting operations.
+
+FIXES (Phase 4):
+- Proper deep cleanup of nested references
+- Single GC pass instead of multiple
+- Automatic monitoring in add methods
+- Weak references for BacktestResult objects
+
+## 2. Dependencies
+- `__future__.annotations`
+- `gc`
+- `logging`
+- `threading`
+- `weakref`
+- `collections.deque`
+- `typing.TypedDict`
+- `psutil`
+- `app.backtesting.models.BacktestResult`
+- `threading`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BacktestResultDict`: Must conform to application domain models.
+- `MemoryPressureError`: Must conform to application domain models.
+- `AggressiveMemoryManager`: Must conform to application domain models.
+### Public Functions
+- `add_result()`: Must return strictly typed objects.
+- `add_backtest_object()`: Must return strictly typed objects.
+- `get_results()`: Must return strictly typed objects.
+- `get_backtest_objects()`: Must return strictly typed objects.
+- `clear_all()`: Must return strictly typed objects.
+- `check_memory_pressure()`: Must return strictly typed objects.
+- `get_memory_usage_mb()`: Must return strictly typed objects.
+- `get_stats()`: Must return strictly typed objects.
+- `cleanup_callback()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,54 @@
+# Requirements Document: domain/services/backtesting/dividend_handler.py
+
+## 1. Module Overview
+Dividend Handler
+
+Handles dividend payments and reinvestment in backtesting:
+- Track dividend payments
+- Calculate dividend yield
+- Reinvest dividends (DRIP)
+- Handle special dividends
+- Tax treatment of dividends
+
+Reference: Rule 11-lopez-de-prado-advances-in-financial-machine-learning.md
+- Dividends significantly affect total return
+- DRIP can compound returns significantly
+
+## 2. Dependencies
+- `__future__.annotations`
+- `dataclasses.dataclass`
+- `datetime.date`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DividendType`: Must conform to application domain models.
+- `DividendReinvestmentStrategy`: Must conform to application domain models.
+- `DividendPayment`: Must conform to application domain models.
+- `DividendReinvestment`: Must conform to application domain models.
+- `DividendHandler`: Must conform to application domain models.
+### Public Functions
+- `annualized_amount()`: Must return strictly typed objects.
+- `add_dividend()`: Must return strictly typed objects.
+- `get_dividend()`: Must return strictly typed objects.
+- `calculate_dividend_yield()`: Must return strictly typed objects.
+- `process_dividend_payment()`: Must return strictly typed objects.
+- `calculate_annual_dividend_income()`: Must return strictly typed objects.
+- `calculate_portfolio_dividend_yield()`: Must return strictly typed objects.
+- `estimate_next_dividend_date()`: Must return strictly typed objects.
+- `get_dividend_history()`: Must return strictly typed objects.
+- `calculate_dividend_growth_rate()`: Must return strictly typed objects.
+- `get_total_reinvested()`: Must return strictly typed objects.
+- `get_total_shares_from_reinvestment()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

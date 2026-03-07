@@ -1,0 +1,72 @@
+# Requirements Document: backtesting/execution/models.py
+
+## 1. Module Overview
+Data models for the Execution Model (FASE 5.2)
+
+This module defines all data models used throughout the execution system,
+including orders, fills, market snapshots, and execution results.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `datetime.time`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `pydantic.BaseModel`
+- `pydantic.Field`
+- `pydantic.field_validator`
+- `pydantic.model_validator`
+- `dataclasses.dataclass`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `OrderSide`: Must conform to application domain models.
+- `OrderType`: Must conform to application domain models.
+- `OrderStatus`: Must conform to application domain models.
+- `TimeOfDay`: Must conform to application domain models.
+- `FillReason`: Must conform to application domain models.
+- `MarketSnapshot`: Must conform to application domain models.
+- `Order`: Must conform to application domain models.
+- `CostBreakdown`: Must conform to application domain models.
+- `FillResult`: Must conform to application domain models.
+- `ExecutionResult`: Must conform to application domain models.
+- `ExecutionSummary`: Must conform to application domain models.
+- `Field`: Must conform to application domain models.
+- `BaseModel`: Must conform to application domain models.
+### Public Functions
+- `spread()`: Must return strictly typed objects.
+- `spread_bps()`: Must return strictly typed objects.
+- `mid_price()`: Must return strictly typed objects.
+- `get_time_of_day()`: Must return strictly typed objects.
+- `remaining_quantity()`: Must return strictly typed objects.
+- `is_fully_filled()`: Must return strictly typed objects.
+- `is_active()`: Must return strictly typed objects.
+- `estimated_value()`: Must return strictly typed objects.
+- `validate()`: Must return strictly typed objects.
+- `total_regulatory_fees()`: Must return strictly typed objects.
+- `total_execution_costs()`: Must return strictly typed objects.
+- `total_cost()`: Must return strictly typed objects.
+- `fill_value()`: Must return strictly typed objects.
+- `effective_cost_bps()`: Must return strictly typed objects.
+- `net_profit_loss()`: Must return strictly typed objects.
+- `total_fill_value()`: Must return strictly typed objects.
+- `total_cost_bps()`: Must return strictly typed objects.
+- `execution_duration_seconds()`: Must return strictly typed objects.
+- `add_execution()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `field_validator()`: Must return strictly typed objects.
+- `model_validator()`: Must return strictly typed objects.
+- `model_dump()`: Must return strictly typed objects.
+- `decorator()`: Must return strictly typed objects.
+- `decorator()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

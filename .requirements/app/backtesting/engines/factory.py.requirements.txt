@@ -1,0 +1,59 @@
+# Requirements Document: backtesting/engines/factory.py
+
+## 1. Module Overview
+Engine Factory for Backtest Engines.
+
+This module provides a factory for creating backtest engines,
+making it easy to instantiate the correct engine type based on
+configuration or parameters.
+
+Usage:
+    from app.backtesting.engines import EngineFactory, EngineType
+
+    # Create a standard engine
+    engine = EngineFactory.create(
+        engine_type=EngineType.STANDARD,
+        config=my_config,
+        strategy=my_strategy,
+    )
+
+    # Or use the convenience methods
+    engine = EngineFactory.create_standard(config, strategy)
+
+## 2. Dependencies
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `typing.Type`
+- `typing.TypeVar`
+- `app.backtesting.base_engine.BaseBacktestEngine`
+- `app.backtesting.base_engine.EngineType`
+- `app.backtesting.models.BacktestConfig`
+- `app.backtesting.base_engine.ExecutionType`
+- `app.backtesting.engines.standard_engine.StandardBacktestEngine`
+- `app.backtesting.engines.execution_engine.ExecutionBacktestEngine`
+- `app.backtesting.engines.multi_strategy_engine.MultiStrategyBacktestEngine`
+- `app.backtesting.engines.robust_engine.RobustBacktestEngine`
+- `app.backtesting.engines.standard_engine.StandardBacktestEngine`
+- `app.backtesting.engines.execution_engine.ExecutionBacktestEngine`
+- `app.backtesting.engines.multi_strategy_engine.MultiStrategyBacktestEngine`
+- `app.backtesting.engines.robust_engine.RobustBacktestEngine`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `EngineFactory`: Must conform to application domain models.
+### Public Functions
+- `register()`: Must return strictly typed objects.
+- `create()`: Must return strictly typed objects.
+- `create_standard()`: Must return strictly typed objects.
+- `create_execution()`: Must return strictly typed objects.
+- `create_multi_strategy()`: Must return strictly typed objects.
+- `create_robust()`: Must return strictly typed objects.
+- `get_supported_types()`: Must return strictly typed objects.
+- `get_engine_class()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

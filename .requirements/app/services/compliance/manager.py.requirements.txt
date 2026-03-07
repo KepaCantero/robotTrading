@@ -1,0 +1,78 @@
+# Requirements Document: services/compliance/manager.py
+
+## 1. Module Overview
+Compliance Manager - Centralized compliance tracking.
+
+Manages all regulatory compliance requirements:
+- PDT rule enforcement (USA)
+- Wash sale tracking (USA)
+- Order pattern analysis
+- Geographic restrictions
+- KYC verification
+
+This is the main interface for compliance checking in the trading system.
+
+Usage:
+    from app.services.compliance import ComplianceManager, Country, TradeRecord
+
+    # Create compliance manager for Spain
+    compliance = ComplianceManager(country=Country.ES)
+
+    # Check if trade is allowed
+    trade = TradeRecord(
+        symbol="AAPL",
+        side="BUY",
+        quantity=Decimal("100"),
+        price=Decimal("150"),
+        trade_date=date.today(),
+    )
+
+    allowed, violations = compliance.check_trade_allowed(
+        trade=trade,
+        account_equity=Decimal("100000"),
+    )
+
+    if not allowed:
+        logger.warning(f"Trade rejected: {violations}")
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.date`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `app.services.compliance.order_pattern_analyzer.OrderPatternAnalyzer`
+- `app.services.compliance.pdt_tracker.Country`
+- `app.services.compliance.pdt_tracker.PDTStatus`
+- `app.services.compliance.pdt_tracker.PDTTracker`
+- `app.services.compliance.wash_sale_tracker.WashSaleTracker`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TradeRecord`: Must conform to application domain models.
+- `ComplianceViolation`: Must conform to application domain models.
+- `ComplianceReport`: Must conform to application domain models.
+- `ComplianceManager`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `check_trade_allowed()`: Must return strictly typed objects.
+- `record_trade()`: Must return strictly typed objects.
+- `generate_report()`: Must return strictly typed objects.
+- `can_day_trade()`: Must return strictly typed objects.
+- `get_day_trades_remaining()`: Must return strictly typed objects.
+- `get_violations()`: Must return strictly typed objects.
+- `clear_violations()`: Must return strictly typed objects.
+- `update_equity()`: Must return strictly typed objects.
+- `reset()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,63 @@
+# Requirements Document: domain/portfolio/multi_asset/models.py
+
+## 1. Module Overview
+Data models for Multi-Asset Portfolio Management.
+
+This module defines the core data structures used throughout the multi-asset
+portfolio system, including portfolio definitions, allocations, metrics, and trades.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `pandas`
+- `pydantic.BaseModel`
+- `pydantic.ConfigDict`
+- `pydantic.Field`
+- `pydantic.field_validator`
+- `app.shared.config.centralized_config.get_config`
+- `numpy`
+- `asset_class.AssetClass`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RiskTolerance`: Must conform to application domain models.
+- `RebalanceFrequency`: Must conform to application domain models.
+- `AllocationStrategy`: Must conform to application domain models.
+- `PortfolioMetrics`: Must conform to application domain models.
+- `MultiAssetAllocation`: Must conform to application domain models.
+- `MultiAssetPortfolio`: Must conform to application domain models.
+### Public Functions
+- `validate_non_negative()`: Must return strictly typed objects.
+- `validate_drawdown()`: Must return strictly typed objects.
+- `total_weight()`: Must return strictly typed objects.
+- `asset_symbols()`: Must return strictly typed objects.
+- `get_asset_weight()`: Must return strictly typed objects.
+- `get_absolute_weight()`: Must return strictly typed objects.
+- `validate()`: Must return strictly typed objects.
+- `get_asset_class_weights()`: Must return strictly typed objects.
+- `get_all_assets()`: Must return strictly typed objects.
+- `get_total_allocation()`: Must return strictly typed objects.
+- `get_asset_class_for_symbol()`: Must return strictly typed objects.
+- `get_portfolio_allocations()`: Must return strictly typed objects.
+- `calculate_total_weights()`: Must return strictly typed objects.
+- `validate()`: Must return strictly typed objects.
+- `needs_rebalancing()`: Must return strictly typed objects.
+- `get_asset_class_allocation()`: Must return strictly typed objects.
+- `add_allocation()`: Must return strictly typed objects.
+- `remove_allocation()`: Must return strictly typed objects.
+- `calculate_portfolio_metrics()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,61 @@
+# Requirements Document: backtesting/validation/models.py
+
+## 1. Module Overview
+Data models for the Validation module (FASE 5.3).
+
+This module defines all data structures for walk-forward validation,
+overfitting detection, regime detection, and parameter stability analysis.
+
+References:
+    - AUDIT_PLAN_COMPLETO.md - FASE 5.3: Validation
+    - "Advances in Financial Machine Learning" - Marcos López de Prado
+    - "Expected Returns" - Antti Ilmanen
+
+## 2. Dependencies
+- `__future__.annotations`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.date`
+- `datetime.datetime`
+- `datetime.timezone`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `uuid.UUID`
+- `uuid.uuid4`
+- `dataclasses.field`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `OverfittingLevel`: Must conform to application domain models.
+- `StabilityLevel`: Must conform to application domain models.
+- `RegimeType`: Must conform to application domain models.
+- `VolatilityRegime`: Must conform to application domain models.
+- `TrendRegime`: Must conform to application domain models.
+- `WalkForwardConfig`: Must conform to application domain models.
+- `PeriodResult`: Must conform to application domain models.
+- `WalkForwardResult`: Must conform to application domain models.
+- `OverfittingMetrics`: Must conform to application domain models.
+- `MarketRegime`: Must conform to application domain models.
+- `RegimeConfig`: Must conform to application domain models.
+- `ParameterStabilityResult`: Must conform to application domain models.
+- `RegimeTransitionMatrix`: Must conform to application domain models.
+### Public Functions
+- `get_degradation_summary()`: Must return strictly typed objects.
+- `is_overfitted()`: Must return strictly typed objects.
+- `description()`: Must return strictly typed objects.
+- `is_favorable_for_trend_following()`: Must return strictly typed objects.
+- `is_favorable_for_mean_reversion()`: Must return strictly typed objects.
+- `is_stable()`: Must return strictly typed objects.
+- `get_transition_probability()`: Must return strictly typed objects.
+- `get_expected_duration()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

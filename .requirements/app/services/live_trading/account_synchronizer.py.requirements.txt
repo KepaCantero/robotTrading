@@ -1,0 +1,46 @@
+# Requirements Document: services/live_trading/account_synchronizer.py
+
+## 1. Module Overview
+T16.1.4: AccountSynchronizer - Portfolio reconciliation and balance sync
+
+Synchronizes local portfolio state with broker account:
+- Balance reconciliation
+- Position verification
+- Cash tracking
+- Margin utilization monitoring
+
+MEMORY: Uses deque with maxlen to prevent unbounded memory growth.
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `collections.deque`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `typing.Deque`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `fastapi.Depends`
+- `broker_connector.BrokerAccount`
+- `broker_connector.BrokerConnector`
+- `broker_connector.BrokerPosition`
+- `broker_connector.get_broker_connector`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PortfolioSnapshot`: Must conform to application domain models.
+- `Reconciliation`: Must conform to application domain models.
+- `AccountSynchronizer`: Must conform to application domain models.
+### Public Functions
+- `get_account_synchronizer()`: Must return strictly typed objects.
+- `get_sync_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

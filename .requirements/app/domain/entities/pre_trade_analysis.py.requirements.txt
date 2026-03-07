@@ -1,0 +1,31 @@
+# Requirements Document: domain/entities/pre_trade_analysis.py
+
+## 1. Module Overview
+Pre-Trade Analysis Entity - Domain Layer
+
+This entity represents a complete pre-trade analysis from all systems.
+It's a pure domain entity with no infrastructure dependencies.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PreTradeAnalysis`: Must conform to application domain models.
+### Public Functions
+- `get_execution_summary()`: Must return strictly typed objects.
+- `get_risk_summary()`: Must return strictly typed objects.
+- `get_compliance_summary()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

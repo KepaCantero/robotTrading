@@ -1,0 +1,62 @@
+# Requirements Document: services/fifo/fifo_integrator.py
+
+## 1. Module Overview
+FIFO Integrator - Live Trading Integration Service
+
+Integrates FIFO tax lot tracking with the live trading system.
+Records all trades in FIFO database, creates lots for BUY orders,
+and closes lots in FIFO order on SELL orders.
+
+This is a CRITICAL component for Spain tax compliance (Modelo 721).
+
+Key Features:
+- Automatic trade recording on execution
+- Lot creation for each BUY
+- Lot closure in FIFO order on SELL
+- Accurate cost basis calculation
+- Open lots tracking
+- Multi-exchange support
+
+Author: Claude (FIFO Database Integration - Phase 2.1)
+Date: 2026-01-25
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `uuid.UUID`
+- `uuid.uuid4`
+- `sqlalchemy.select`
+- `sqlalchemy.ext.asyncio.AsyncSession`
+- `app.shared.config.get_settings`
+- `app.infrastructure.persistence.database.get_db_transaction`
+- `app.tax.database.fifo_schema.Account`
+- `app.tax.database.fifo_schema.AssetType`
+- `app.tax.database.fifo_schema.ExchangeType`
+- `app.tax.database.fifo_schema.FIFOProcessor`
+- `app.tax.database.fifo_schema.Lot`
+- `app.tax.database.fifo_schema.LotStatus`
+- `app.tax.database.fifo_schema.Transaction`
+- `app.tax.database.fifo_schema.TransactionType`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `Trade`: Must conform to application domain models.
+- `Position`: Must conform to application domain models.
+- `LotInfo`: Must conform to application domain models.
+- `FIFOIntegrator`: Must conform to application domain models.
+### Public Functions
+- `get_fifo_integrator()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

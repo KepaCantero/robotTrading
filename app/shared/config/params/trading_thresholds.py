@@ -31,6 +31,16 @@ class TradingThresholds(BaseModel):
     rsi_oversold: float = Field(default=30.0, description="RSI oversold threshold")
     rsi_overbought: float = Field(default=70.0, description="RSI overbought threshold")
 
+    # History lengths for technical indicators
+    default_price_history_length: int = Field(default=200, description="Default price history length for indicators")
+    rsi_history_length: int = Field(default=14, description="RSI calculation period")
+    atr_history_length: int = Field(default=14, description="ATR calculation period")
+
+    # ATR filter settings
+    min_atr_threshold: float = Field(default=0.5, description="Minimum ATR threshold for volatility filter")
+    atr_filter_enabled: bool = Field(default=True, description="Enable ATR volatility filter")
+    use_relative_atr: bool = Field(default=True, description="Use relative ATR (ATR/price)")
+
     # Position sizing
     max_position_size: float = Field(default=0.1, description="Maximum position size (0-1)")
     min_position_size: float = Field(default=0.01, description="Minimum position size (0-1)")
@@ -255,6 +265,67 @@ class TradingThresholds(BaseModel):
     )
     trailing_stop_r3_trailing_pct: float = Field(
         default=0.5, ge=0.3, le=0.8, description="Trailing stop percentage at R3"
+    )
+
+    # Mean Reversion parameters
+    min_z_score_default: float = Field(
+        default=-2.0, description="Default minimum z-score for mean reversion entry"
+    )
+    max_z_score_default: float = Field(
+        default=2.0, description="Default maximum z-score for mean reversion exit"
+    )
+
+    # Dividend strategy parameters
+    dividend_min_yield: float = Field(
+        default=0.02, description="Minimum dividend yield for dividend strategy"
+    )
+    dividend_max_payout_ratio: float = Field(
+        default=0.75, description="Maximum payout ratio for dividend stocks"
+    )
+
+    # Mean Reversion strategy parameters
+    min_z_score_default: float = Field(
+        default=-2.0, description="Default minimum z-score for mean reversion entry"
+    )
+    max_z_score_default: float = Field(
+        default=2.0, description="Default maximum z-score for mean reversion exit"
+    )
+    mean_reversion_max_exposure: float = Field(
+        default=0.30, description="Maximum total exposure for mean reversion strategy"
+    )
+    mean_reversion_simulated_std_dev: float = Field(
+        default=0.02, description="Simulated standard deviation for mean reversion testing"
+    )
+    mean_reversion_simulated_volatility: float = Field(
+        default=0.15, description="Simulated volatility for mean reversion testing"
+    )
+    z_score_entry_multiplier: float = Field(
+        default=1.0, description="Multiplier for z-score entry threshold"
+    )
+    z_score_modified_threshold: float = Field(
+        default=0.5, description="Modified threshold for additional z-score checks"
+    )
+    mean_reversion_default_confidence: float = Field(
+        default=70.0, description="Default confidence for mean reversion signals"
+    )
+    mean_reversion_default_liquidity: float = Field(
+        default=80.0, description="Default liquidity score for mean reversion signals"
+    )
+    mean_reversion_default_priority: float = Field(
+        default=60.0, description="Default priority score for mean reversion signals"
+    )
+
+    # Multi-factor strategy parameters
+    multi_factor_history_length: int = Field(
+        default=252, description="History length for multi-factor strategy calculations"
+    )
+    dividend: Dict[str, float] = Field(
+        default_factory=lambda: {
+            "min_yield": 0.02,
+            "max_yield": 0.08,
+            "min_payout": 0.75,
+        },
+        description="Dividend strategy parameters"
     )
 
     @field_validator(

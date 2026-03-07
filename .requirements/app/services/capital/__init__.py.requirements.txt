@@ -1,0 +1,22 @@
+# Requirements Document: services/capital/__init__.py
+
+## 1. Module Overview
+Capital Phase Management Services (R25, R26, R27)
+
+This module provides dynamic risk management based on capital phases.
+
+## 2. Dependencies
+- `app.services.capital.capital_phase_manager.CapitalPhaseEvent`
+- `app.services.capital.capital_phase_manager.CapitalPhaseManager`
+- `app.services.capital.phase_config.PHASE_CONFIGS`
+- `app.services.capital.phase_config.PHASE_THRESHOLDS`
+- `app.services.capital.phase_config.CapitalPhase`
+- `app.services.capital.phase_config.PhaseRiskParameters`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

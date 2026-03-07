@@ -1,0 +1,41 @@
+# Requirements Document: services/reporting_generator/visualization_generator.py
+
+## 1. Module Overview
+T9.1 PHASE 4: AdvancedVisualizationGenerator - Plotly-based interactive charts
+
+Generates professional interactive visualizations for performance reports using Plotly.
+Charts are optimized for HTML embedding and interactive exploration.
+
+## 2. Dependencies
+- `json`
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PlotlyChart`: Must conform to application domain models.
+- `ChartMetadata`: Must conform to application domain models.
+- `AdvancedVisualizationGenerator`: Must conform to application domain models.
+### Public Functions
+- `get_visualization_generator()`: Must return strictly typed objects.
+- `to_json()`: Must return strictly typed objects.
+- `to_html_div()`: Must return strictly typed objects.
+- `generate_cumulative_returns_chart()`: Must return strictly typed objects.
+- `generate_drawdown_waterfall()`: Must return strictly typed objects.
+- `generate_rolling_metrics_chart()`: Must return strictly typed objects.
+- `generate_heatmap_monthly_returns()`: Must return strictly typed objects.
+- `generate_factor_exposures_chart()`: Must return strictly typed objects.
+- `get_generator_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

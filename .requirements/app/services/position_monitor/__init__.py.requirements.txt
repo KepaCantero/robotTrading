@@ -1,0 +1,34 @@
+# Requirements Document: services/position_monitor/__init__.py
+
+## 1. Module Overview
+Position Monitor Service - Continuous position monitoring and risk management.
+
+Monitors all open positions and executes stop-loss/take-profit orders automatically.
+This is a CRITICAL component for production trading.
+
+Criticality: LIFE-THREATENING - System executes trades then forgets positions exist.
+No stop-loss execution in production.
+
+This service:
+- Checks positions every second
+- Executes stop-loss automatically when hit
+- Executes take-profit automatically when hit
+- Survives process restart (reads from DB)
+- Handles broker disconnections gracefully
+
+## 2. Dependencies
+- `position_monitor.MonitoredPosition`
+- `position_monitor.PositionMonitor`
+- `position_monitor.PositionMonitorConfig`
+- `position_monitor.PositionStatus`
+- `stop_executor.StopExecutionResult`
+- `stop_executor.StopExecutor`
+- `stop_executor.StopType`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

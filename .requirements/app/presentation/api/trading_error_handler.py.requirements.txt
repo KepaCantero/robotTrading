@@ -1,0 +1,56 @@
+# Requirements Document: presentation/api/trading_error_handler.py
+
+## 1. Module Overview
+Trading Error Handler API
+TASK-14: Unificación de Error Handling
+
+API endpoints para gestionar el manejo unificado de errores del trading.
+
+GAP Fixes:
+- API-002: Added structured logging with correlation IDs
+- API-004: TODO: Test coverage requires creating test files
+- API-005: FIXED - Added security decorators (rate_limit, require_auth, audit_log)
+
+## 2. Dependencies
+- `logging`
+- `traceback`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `fastapi.APIRouter`
+- `fastapi.HTTPException`
+- `fastapi.Request`
+- `fastapi.status`
+- `pydantic.BaseModel`
+- `pydantic.Field`
+- `requests.exceptions.HTTPError`
+- `requests.exceptions.RequestException`
+- `app.exceptions.trading_exceptions.ErrorCategory`
+- `app.services.trading_error_handler.ErrorAction`
+- `app.services.trading_error_handler.ErrorContext`
+- `app.services.trading_error_handler.get_error_statistics`
+- `app.services.trading_error_handler.handle_trading_error`
+- `app.services.trading_error_handler.reset_circuit_breaker`
+- `app.services.trading_error_handler.trading_error_handler`
+- `audit_logger`
+- `get_correlation_id`
+- `security.audit_log`
+- `security.rate_limit`
+- `security.require_auth`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ErrorHandlingRequest`: Must conform to application domain models.
+- `ErrorHandlingResponse`: Must conform to application domain models.
+- `CircuitBreakerStatus`: Must conform to application domain models.
+- `ErrorStatistics`: Must conform to application domain models.
+- `CircuitBreakerResetRequest`: Must conform to application domain models.
+- `MockError`: Must conform to application domain models.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

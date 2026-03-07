@@ -1,0 +1,49 @@
+# Requirements Document: domain/optimization/parameter/random_search.py
+
+## 1. Module Overview
+Random Search Optimizer - FASE 6.1
+
+Implements random parameter sampling from parameter space with:
+- Linear and log scale support
+- Continuous and categorical parameters
+- More efficient than grid for high dimensions
+
+## 2. Dependencies
+- `logging`
+- `random`
+- `datetime.datetime`
+- `math.exp`
+- `math.log`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `numpy`
+- `tqdm.tqdm`
+- `base_optimizer.BaseOptimizer`
+- `base_optimizer.OptimizationConfig`
+- `base_optimizer.OptimizationResult`
+- `models.ParameterGrid`
+- `models.ParameterRange`
+- `models.ParameterScale`
+- `models.ParameterType`
+- `trial.TrialHistory`
+- `trial.TrialResult`
+- `trial.TrialStatus`
+- `trial.create_trial_id`
+- `math`
+- `statistics`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RandomSearchOptimizer`: Must conform to application domain models.
+- `RandomSearchOptimizerCV`: Must conform to application domain models.
+### Public Functions
+- `get_sampled_params()`: Must return strictly typed objects.
+- `get_unique_sample_count()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

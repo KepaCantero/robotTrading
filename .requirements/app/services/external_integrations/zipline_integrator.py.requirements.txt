@@ -1,0 +1,32 @@
+# Requirements Document: services/external_integrations/zipline_integrator.py
+
+## 1. Module Overview
+T17.1.4: ZiplineIntegrator - Advanced backtesting framework integration
+
+Zipline-Reloaded for sophisticated backtesting with realistic order execution.
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BacktestConfig`: Must conform to application domain models.
+- `BacktestResult`: Must conform to application domain models.
+- `ZiplineOrder`: Must conform to application domain models.
+- `ZiplineIntegrator`: Must conform to application domain models.
+### Public Functions
+- `get_zipline_integrator()`: Must return strictly typed objects.
+- `get_integration_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,43 @@
+# Requirements Document: domain/analysis/vectorization/patterns.py
+
+## 1. Module Overview
+Common vectorization patterns and solutions.
+
+This module provides a library of common anti-patterns found in numerical
+computing code and their vectorized alternatives. It serves as both a
+reference and a suggestion generator for the vectorization auditor.
+
+## 2. Dependencies
+- `__future__.annotations`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `VectorizationPatterns`: Must conform to application domain models.
+### Public Functions
+- `elementwise_operation()`: Must return strictly typed objects.
+- `filtering()`: Must return strictly typed objects.
+- `rolling_calculation()`: Must return strictly typed objects.
+- `groupby_aggregation()`: Must return strictly typed objects.
+- `correlation_matrix()`: Must return strictly typed objects.
+- `conditional_assignment()`: Must return strictly typed objects.
+- `exponential_weighted()`: Must return strictly typed objects.
+- `percentage_change()`: Must return strictly typed objects.
+- `cumulative_operations()`: Must return strictly typed objects.
+- `shift_lag()`: Must return strictly typed objects.
+- `rank_percentile()`: Must return strictly typed objects.
+- `distance_matrix()`: Must return strictly typed objects.
+- `interpolation()`: Must return strictly typed objects.
+- `difference_operations()`: Must return strictly typed objects.
+- `value_counts_mode()`: Must return strictly typed objects.
+- `outer_product()`: Must return strictly typed objects.
+- `datetime_operations()`: Must return strictly typed objects.
+- `get_all_patterns()`: Must return strictly typed objects.
+- `get_suggestion_for_issue()`: Must return strictly typed objects.
+- `get_trading_specific_examples()`: Must return strictly typed objects.
+- `get_performance_comparison()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

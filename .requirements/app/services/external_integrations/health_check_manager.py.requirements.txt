@@ -1,0 +1,39 @@
+# Requirements Document: services/external_integrations/health_check_manager.py
+
+## 1. Module Overview
+Health check management for external integrations.
+
+Monitors the health of external services (QuestDB, Dagster, MLFlow, Zipline)
+and provides status information.
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `datetime.datetime`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `pydantic.BaseModel`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `HealthStatus`: Must conform to application domain models.
+- `ServiceHealth`: Must conform to application domain models.
+- `HealthCheckConfig`: Must conform to application domain models.
+- `HealthCheckManager`: Must conform to application domain models.
+### Public Functions
+- `get_health_check_manager()`: Must return strictly typed objects.
+- `register_service()`: Must return strictly typed objects.
+- `get_service_health()`: Must return strictly typed objects.
+- `get_all_health_status()`: Must return strictly typed objects.
+- `is_service_healthy()`: Must return strictly typed objects.
+- `get_unhealthy_services()`: Must return strictly typed objects.
+- `get_degraded_services()`: Must return strictly typed objects.
+- `reset_service_failures()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

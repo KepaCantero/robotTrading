@@ -1,0 +1,37 @@
+# Requirements Document: infrastructure/resilience/reconnection_manager.py
+
+## 1. Module Overview
+Reconnection Manager - Manages reconnection with exponential backoff.
+
+Essential for 24/7 operation where network glitches are common.
+
+Uses centralized configuration for all timeout and backoff parameters.
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `random`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.Optional`
+- `app.shared.config.centralized_config.get_config`
+- `app.shared.utils.timezone_utils.utc_now`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ReconnectionConfig`: Must conform to application domain models.
+- `ReconnectionStats`: Must conform to application domain models.
+- `ReconnectionManager`: Must conform to application domain models.
+### Public Functions
+- `success_rate()`: Must return strictly typed objects.
+- `calculate_backoff()`: Must return strictly typed objects.
+- `get_stats()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

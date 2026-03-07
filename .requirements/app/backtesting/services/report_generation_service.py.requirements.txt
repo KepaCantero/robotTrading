@@ -1,0 +1,41 @@
+# Requirements Document: backtesting/services/report_generation_service.py
+
+## 1. Module Overview
+Report Generation Service
+
+Handles generation of HTML reports and export of results to various formats.
+
+Responsibilities:
+- Generate HTML comparison reports
+- Generate batch summaries
+- Export results to JSON, CSV, Excel
+- Format and visualize results
+
+## 2. Dependencies
+- `__future__.annotations`
+- `json`
+- `logging`
+- `datetime.datetime`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `numpy`
+- `pandas`
+- `jinja2.Template`
+- `app.backtesting.services.models.ProfileResult`
+- `app.domain.models.input_profile.ObjectivoInversion`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ReportGenerationService`: Must conform to application domain models.
+### Public Functions
+- `generate_comparison_report()`: Must return strictly typed objects.
+- `generate_batch_summary()`: Must return strictly typed objects.
+- `export_results()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

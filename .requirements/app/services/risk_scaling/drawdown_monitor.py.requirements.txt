@@ -1,0 +1,49 @@
+# Requirements Document: services/risk_scaling/drawdown_monitor.py
+
+## 1. Module Overview
+PHASE 3: Drawdown Monitor - Capital Preservation via Circuit Breakers
+
+Monitors maximum drawdown and applies circuit breaker logic.
+Protects capital by halting trading if drawdown exceeds limits.
+
+Logic:
+- 0-5% drawdown → scale = 1.0x (normal)
+- 5-10% drawdown → scale = 0.8x (caution)
+- 10-15% drawdown → scale = 0.5x (warning)
+- > 15% drawdown → scale = 0.0x (halt trading - circuit breaker)
+
+Reset: When equity reaches new all-time high
+
+Uses centralized configuration for all thresholds and scaling factors.
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `decimal.ROUND_HALF_UP`
+- `decimal.Decimal`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `EquityPoint`: Must conform to application domain models.
+- `DrawdownMonitor`: Must conform to application domain models.
+### Public Functions
+- `calculate_drawdown()`: Must return strictly typed objects.
+- `calculate_drawdown_scale()`: Must return strictly typed objects.
+- `should_halt_trading()`: Must return strictly typed objects.
+- `has_recovered()`: Must return strictly typed objects.
+- `get_drawdown_level()`: Must return strictly typed objects.
+- `get_drawdown_timeline()`: Must return strictly typed objects.
+- `calculate_underwater_duration()`: Must return strictly typed objects.
+- `suggest_drawdown_action()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

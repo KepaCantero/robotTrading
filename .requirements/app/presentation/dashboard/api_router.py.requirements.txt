@@ -1,0 +1,38 @@
+# Requirements Document: presentation/dashboard/api_router.py
+
+## 1. Module Overview
+Production Dashboard API Router.
+
+Provides FastAPI endpoints for the production dashboard including:
+- REST API for metrics, positions, alerts, and historical data
+- WebSocket endpoint for real-time updates
+- Alert management endpoints
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `pathlib.Path`
+- `typing.Dict`
+- `typing.List`
+- `fastapi.APIRouter`
+- `fastapi.Depends`
+- `fastapi.HTTPException`
+- `fastapi.WebSocket`
+- `fastapi.WebSocketDisconnect`
+- `fastapi.responses.HTMLResponse`
+- `app.presentation.dashboard.production_dashboard.AlertHistoryItem`
+- `app.presentation.dashboard.production_dashboard.DashboardMetrics`
+- `app.presentation.dashboard.production_dashboard.HistoricalDataPoint`
+- `app.presentation.dashboard.production_dashboard.PositionMetric`
+- `app.presentation.dashboard.production_dashboard.ProductionDashboard`
+- `app.presentation.dashboard.production_dashboard.get_production_dashboard`
+
+## 3. Core Components (Contracts)
+### Public Functions
+- `get_dashboard()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

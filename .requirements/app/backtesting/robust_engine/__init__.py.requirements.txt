@@ -1,0 +1,74 @@
+# Requirements Document: backtesting/robust_engine/__init__.py
+
+## 1. Module Overview
+Robust Backtesting Engine (FASE 5.1)
+
+This module provides a production-grade backtesting engine capable of handling
+25+ years of historical data with proper bias corrections and corporate actions handling.
+
+Key Features:
+- Efficient handling of large datasets (25+ years)
+- Survivorship bias correction
+- Corporate actions handling (splits, M&A, spin-offs)
+- Dividend reinvestment (DRIP)
+- Checkpoint/resume functionality
+- Progress tracking for long backtests
+- Comprehensive performance metrics
+
+Based on AUDIT_PLAN_COMPLETO requirements for professional backtesting.
+
+Example:
+    ```python
+    from app.backtesting.robust_engine import RobustBacktester, RobustBacktestConfig
+
+    config = RobustBacktestConfig(
+        initial_capital=Decimal("100000"),
+        start_date=date(1999, 1, 1),
+        end_date=date(2024, 12, 31),
+        enable_dividend_reinvestment=True,
+        enable_survivorship_correction=True,
+    )
+
+    backtester = RobustBacktester(config)
+    result = await backtester.run_backtest(strategy, years=25)
+    ```
+
+## 2. Dependencies
+- `corporate_actions.CorporateActionHandler`
+- `dividend_handler.DividendAction`
+- `dividend_handler.DividendHandler`
+- `dividend_handler.DividendTracker`
+- `dividend_handler.DripConfig`
+- `look_ahead_validator.LookAheadValidator`
+- `look_ahead_validator.ValidationResult`
+- `models.BacktestCheckpoint`
+- `models.CorporateAction`
+- `models.CorporateActionType`
+- `models.DelistedReturnData`
+- `models.DividendPayment`
+- `models.Merger`
+- `models.ProgressUpdate`
+- `models.SpinOff`
+- `models.StockSplit`
+- `app.backtesting.models.PerformanceMetrics`
+- `performance_tracker.PerformanceTracker`
+- `performance_tracker.RegimeAnalysis`
+- `performance_tracker.RollingMetrics`
+- `performance_tracker.YearlyBreakdown`
+- `pit_database.PITDatabaseClient`
+- `robust_backtester.CheckpointData`
+- `robust_backtester.RobustBacktestConfig`
+- `robust_backtester.RobustBacktester`
+- `robust_backtester.RobustBacktestResult`
+- `survivorship_adjuster.DelistedStock`
+- `survivorship_adjuster.DelistingReason`
+- `survivorship_adjuster.SurvivorshipAdjuster`
+- `survivorship_adjuster.SurvivorshipFreeResult`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

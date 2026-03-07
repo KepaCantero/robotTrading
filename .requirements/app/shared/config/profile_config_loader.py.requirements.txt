@@ -1,0 +1,73 @@
+# Requirements Document: shared/config/profile_config_loader.py
+
+## 1. Module Overview
+Profile Configuration Loader for Backtesting and Strategy Parameters
+
+Centralized loader for accessing all backtesting and strategy parameters
+from the profile_optimization.yaml configuration file.
+
+This module provides:
+- Loading of profile optimization configuration
+- Profile-specific overrides (conservative, balanced, aggressive, etc.)
+- Tier-specific overrides (micro, small, medium, large)
+- Parameter validation
+- Default value handling
+- Convenience methods for common parameter access patterns
+
+## 2. Dependencies
+- `logging`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Union`
+- `config_loader.YAMLConfigLoader`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ProfileConfigLoader`: Must conform to application domain models.
+### Public Functions
+- `get_profile_config_loader()`: Must return strictly typed objects.
+- `get_common_params()`: Must return strictly typed objects.
+- `get_model_params()`: Must return strictly typed objects.
+- `get_threshold_ranges()`: Must return strictly typed objects.
+- `get_rl_config()`: Must return strictly typed objects.
+- `clear_loader_cache()`: Must return strictly typed objects.
+- `config()`: Must return strictly typed objects.
+- `get()`: Must return strictly typed objects.
+- `get_random_state()`: Must return strictly typed objects.
+- `get_test_size()`: Must return strictly typed objects.
+- `get_cv_folds()`: Must return strictly typed objects.
+- `get_min_train_samples()`: Must return strictly typed objects.
+- `get_max_workers()`: Must return strictly typed objects.
+- `get_batch_size()`: Must return strictly typed objects.
+- `get_task_timeout()`: Must return strictly typed objects.
+- `get_model_params()`: Must return strictly typed objects.
+- `get_random_forest_params()`: Must return strictly typed objects.
+- `get_xgboost_params()`: Must return strictly typed objects.
+- `get_lightgbm_params()`: Must return strictly typed objects.
+- `get_rl_environment_config()`: Must return strictly typed objects.
+- `get_rl_reward_config()`: Must return strictly typed objects.
+- `get_rl_algorithm_params()`: Must return strictly typed objects.
+- `get_rl_training_params()`: Must return strictly typed objects.
+- `get_rl_network_config()`: Must return strictly typed objects.
+- `get_threshold_config()`: Must return strictly typed objects.
+- `get_optimization_method()`: Must return strictly typed objects.
+- `get_optimization_scoring()`: Must return strictly typed objects.
+- `get_walk_forward_config()`: Must return strictly typed objects.
+- `get_monte_carlo_config()`: Must return strictly typed objects.
+- `get_validation_thresholds()`: Must return strictly typed objects.
+- `get_output_directory()`: Must return strictly typed objects.
+- `get_report_metrics()`: Must return strictly typed objects.
+- `get_visualization_config()`: Must return strictly typed objects.
+- `get_memory_config()`: Must return strictly typed objects.
+- `get_max_results_in_memory()`: Must return strictly typed objects.
+- `validate_parameter_range()`: Must return strictly typed objects.
+- `get_parameter_range()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

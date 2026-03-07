@@ -1,0 +1,40 @@
+# Requirements Document: shared/exceptions/trading_exceptions.py
+
+## 1. Module Overview
+Custom Exceptions for AlgoTrading
+TASK-4: Sistema de manejo de errores unificado
+
+## 2. Dependencies
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ErrorSeverity`: Must conform to application domain models.
+- `ErrorCategory`: Must conform to application domain models.
+- `AlgoTradingError`: Must conform to application domain models.
+- `ValidationError`: Must conform to application domain models.
+- `BusinessLogicError`: Must conform to application domain models.
+- `ExternalAPIError`: Must conform to application domain models.
+- `AlgoTradingDatabaseError`: Must conform to application domain models.
+- `NetworkError`: Must conform to application domain models.
+- `ConfigurationError`: Must conform to application domain models.
+- `SecurityError`: Must conform to application domain models.
+- `PerformanceError`: Must conform to application domain models.
+- `SystemError`: Must conform to application domain models.
+- `TradingError`: Must conform to application domain models.
+- `SignalError`: Must conform to application domain models.
+- `PortfolioError`: Must conform to application domain models.
+- `RiskManagementError`: Must conform to application domain models.
+- `MarketDataError`: Must conform to application domain models.
+- `BrokerError`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

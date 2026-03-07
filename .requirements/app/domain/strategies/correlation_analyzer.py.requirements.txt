@@ -1,0 +1,49 @@
+# Requirements Document: domain/strategies/correlation_analyzer.py
+
+## 1. Module Overview
+Correlation Analyzer for FX Intermarket Strategy.
+
+This module provides statistical correlation analysis capabilities for
+identifying and measuring relationships between FX pairs and external assets.
+
+Uses scipy.stats for correlation calculations and statistical testing.
+
+Key features:
+- Pearson correlation with p-value calculation
+- Rolling correlation analysis
+- Correlation regime change detection
+- Significance testing
+- Correlation matrix generation
+
+References:
+    scipy.stats.pearsonr: Pearson correlation coefficient and p-value
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `decimal.Decimal`
+- `numpy`
+- `pandas`
+- `scipy.stats`
+- `app.domain.strategies.fx_intermarket.models.AssetClass`
+- `app.domain.strategies.fx_intermarket.models.FXCorrelationPair`
+- `app.domain.strategies.fx_intermarket.models.IntermarketRelationship`
+- `app.domain.strategies.fx_intermarket.models.RelationshipType`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CorrelationAnalyzer`: Must conform to application domain models.
+### Public Functions
+- `calculate_correlation()`: Must return strictly typed objects.
+- `calculate_fx_pair_correlation()`: Must return strictly typed objects.
+- `calculate_intermarket_correlation()`: Must return strictly typed objects.
+- `detect_correlation_regime_change()`: Must return strictly typed objects.
+- `calculate_rolling_correlation()`: Must return strictly typed objects.
+- `identify_significant_relationships()`: Must return strictly typed objects.
+- `get_correlation_matrix()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

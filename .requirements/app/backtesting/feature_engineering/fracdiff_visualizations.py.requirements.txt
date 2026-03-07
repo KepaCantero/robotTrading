@@ -1,0 +1,36 @@
+# Requirements Document: backtesting/feature_engineering/fracdiff_visualizations.py
+
+## 1. Module Overview
+Visualization utilities for Fractional Differentiation analysis.
+
+This module provides plotting functions to visualize the effects of fractional
+differentiation on time series data, including memory preservation and stationarity.
+
+## 2. Dependencies
+- `logging`
+- `warnings`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `matplotlib.pyplot`
+- `numpy`
+- `pandas`
+- `seaborn`
+- `fractional_differentiation.FractionalDifferentiation`
+- `app.shared.performance.statsmodels_fallback.adfuller`
+
+## 3. Core Components (Contracts)
+### Public Functions
+- `plot_frac_diff_comparison()`: Must return strictly typed objects.
+- `plot_weights()`: Must return strictly typed objects.
+- `plot_memory_preservation()`: Must return strictly typed objects.
+- `plot_stationarity_test()`: Must return strictly typed objects.
+- `plot_optimal_d_search()`: Must return strictly typed objects.
+- `plot_multi_feature_analysis()`: Must return strictly typed objects.
+- `create_summary_report()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

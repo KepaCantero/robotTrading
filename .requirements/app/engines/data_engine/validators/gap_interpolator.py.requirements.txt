@@ -1,0 +1,31 @@
+# Requirements Document: engines/data_engine/validators/gap_interpolator.py
+
+## 1. Module Overview
+GapInterpolator - Interpolación de gaps en datos de mercado.
+
+Métodos soportados:
+- Forward fill
+- Backward fill
+- Linear interpolation
+- Spline interpolation
+
+## 2. Dependencies
+- `logging`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `pandas`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `GapInterpolator`: Must conform to application domain models.
+### Public Functions
+- `interpolate()`: Must return strictly typed objects.
+- `detect_gaps()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

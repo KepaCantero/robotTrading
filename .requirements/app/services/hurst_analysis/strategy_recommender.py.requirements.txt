@@ -1,0 +1,30 @@
+# Requirements Document: services/hurst_analysis/strategy_recommender.py
+
+## 1. Module Overview
+Trading strategy recommender based on market regime.
+
+This module implements the Single Responsibility Principle by focusing
+solely on recommending trading strategies based on market regime
+and Hurst exponent values.
+
+Strategy mapping:
+- H << 0.5: Strong mean reversion (use mean reversion strategies)
+- H ≈ 0.5: Random walk (use neutral/market-making strategies)
+- H >> 0.5: Strong trend (use trend following strategies)
+
+## 2. Dependencies
+- `logging`
+- `app.services.hurst_analysis.models.MarketRegime`
+- `app.services.hurst_analysis.models.StrategyRecommendation`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StrategyRecommender`: Must conform to application domain models.
+### Public Functions
+- `recommend()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

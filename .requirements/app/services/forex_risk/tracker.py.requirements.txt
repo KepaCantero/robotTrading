@@ -1,0 +1,50 @@
+# Requirements Document: services/forex_risk/tracker.py
+
+## 1. Module Overview
+Forex Risk Tracker - Track FX exposure for EUR-based investors.
+
+Spain residents trading US stocks have EUR/USD currency risk.
+This tracker calculates exposure and suggests hedges.
+
+Key features:
+- Calculate FX exposure by currency
+- Calculate unhedged exposure
+- Currency hedging recommendations
+- Forward contract cost calculation
+- Multi-currency P&L tracking
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `app.shared.utils.decimal_utils.calculate_percentage`
+- `app.shared.utils.decimal_utils.safe_decimal_divide`
+- `app.shared.utils.decimal_utils.to_decimal`
+- `app.shared.utils.timezone_utils.utc_now`
+- `app.domain.models.portfolio.Portfolio`
+- `app.domain.models.portfolio.Position`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CurrencyExposure`: Must conform to application domain models.
+- `ForexExposureReport`: Must conform to application domain models.
+- `ForexRiskTracker`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+- `from_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `calculate_unhedged_exposure()`: Must return strictly typed objects.
+- `clear_rate_cache()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

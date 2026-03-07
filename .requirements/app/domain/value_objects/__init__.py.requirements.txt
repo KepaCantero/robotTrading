@@ -1,0 +1,29 @@
+# Requirements Document: domain/value_objects/__init__.py
+
+## 1. Module Overview
+Value Objects - Immutable values without identity.
+
+Value Objects are defined by their attributes rather than identity.
+They are immutable and can be freely shared.
+
+## 2. Dependencies
+- `capital.Capital`
+- `investment_horizon.HorizonCategory`
+- `investment_horizon.InvestmentHorizon`
+- `money.Money`
+- `percentage.Percentage`
+- `percentage.Weight`
+- `risk_parameters.RiskParameters`
+- `symbol.AssetClass`
+- `symbol.Exchange`
+- `symbol.Symbol`
+- `tax_residence.RegulatoryRegion`
+- `tax_residence.TaxResidence`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

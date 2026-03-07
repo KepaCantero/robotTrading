@@ -1,0 +1,18 @@
+# Requirements Document: services/scheduling/__init__.py
+
+## 1. Module Overview
+Scheduling module - re-exports from application layer for backward compatibility.
+
+## 2. Dependencies
+- `app.application.scheduling.market_scheduler.MarketSchedule`
+- `app.application.scheduling.market_scheduler.MarketScheduler`
+- `app.application.scheduling.market_scheduler.MarketStatus`
+- `app.application.scheduling.market_scheduler.MarketType`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

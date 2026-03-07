@@ -1,0 +1,50 @@
+# Requirements Document: services/profitability_validation_service.py
+
+## 1. Module Overview
+Servicio de validación de rentabilidad para estrategias de trading.
+
+Este servicio valida que las estrategias generen rentabilidad neta positiva
+después de todos los costos operativos, incluyendo comisiones, slippage,
+market impact e infraestructura.
+
+## 2. Dependencies
+- `logging`
+- `statistics`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `app.shared.config.centralized_config.get_config`
+- `app.models.profitability_validation.CostBreakdown`
+- `app.models.profitability_validation.HistoricalValidation`
+- `app.models.profitability_validation.ProfitabilityMetrics`
+- `app.models.profitability_validation.ProfitabilityValidation`
+- `app.models.profitability_validation.StrategyComparison`
+- `app.models.profitability_validation.ValidationCriteria`
+- `app.models.profitability_validation.ValidationReport`
+- `app.models.profitability_validation.ValidationRequest`
+- `app.models.profitability_validation.ValidationResponse`
+- `app.models.profitability_validation.ValidationStatus`
+- `app.services.cost_analysis_service.CostAnalysisService`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ProfitabilityCalculator`: Must conform to application domain models.
+- `ProfitabilityValidator`: Must conform to application domain models.
+- `ProfitabilityValidationService`: Must conform to application domain models.
+### Public Functions
+- `calculate_metrics()`: Must return strictly typed objects.
+- `validate_profitability()`: Must return strictly typed objects.
+- `generate_recommendation()`: Must return strictly typed objects.
+- `validate_strategy_profitability()`: Must return strictly typed objects.
+- `compare_strategies()`: Must return strictly typed objects.
+- `analyze_historical_performance()`: Must return strictly typed objects.
+- `generate_validation_report()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

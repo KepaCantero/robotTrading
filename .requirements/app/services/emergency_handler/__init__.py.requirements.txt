@@ -1,0 +1,20 @@
+# Requirements Document: services/emergency_handler/__init__.py
+
+## 1. Module Overview
+Emergency Handler - Closes all positions on critical system failures.
+
+This is a CRITICAL component for production trading that protects against
+catastrophic losses when the system fails unexpectedly.
+
+## 2. Dependencies
+- `emergency_closer.EmergencyCloser`
+- `emergency_closer.EmergencyCloseResult`
+- `emergency_closer.EmergencyTrigger`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

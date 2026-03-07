@@ -1,0 +1,200 @@
+# Requirements Document: domain/services/compliance/compliance_engine.py
+
+## 1. Module Overview
+THE Compliance Engine - UNIFIED SINGLE ENGINE
+=============================================
+
+This is the ONLY engine that should be used in the entire system.
+
+TIMEOUT HANDLING (ASYNC-005):
+This module is a synchronous façade that orchestrates 17 subsystems.
+Timeout handling is delegated to individual subsystems:
+- HarrisIntegrator: Handles its own timeouts for market data calls
+- AlphaModel: Computational (no external I/O)
+- RegimeDetector: Computational (no external I/O)
+- Other subsystems: Handle their own timeouts as appropriate
+
+When async refactoring is implemented (ASYNC-001), timeout parameters
+will be added at the façade level using asyncio.wait_for().
+It integrates:
+- ALL existing functionality that was being used
+- ALL 12 compliance rule systems
+
+NO OTHER ENGINES SHOULD BE USED DIRECTLY.
+EVERYTHING GOES THROUGH THIS ENGINE.
+
+Systems Integrated:
+1.  Ernest Chan (Rule 1)      - Factor Models, Portfolio Optimization, Regime Detection, Execution
+2.  Narang (Rule 2)           - Alpha Models, Risk Models, Transaction Costs, Portfolio Construction
+3.  López de Prado (Rule 3)   - Sample Weights, Purged CV, Meta-Labeling, MCC Metrics
+4.  Tomasini (Rule 4)         - Trading Systems Architecture
+5.  Hastie (Rule 5)           - Statistical Learning
+6.  Harris (Rule 6)           - Order Book, Bid-Ask Bounce, Market Impact, Dark Pools
+7.  O'Hara (Rule 7)           - Order Flow, Liquidity, Price Discovery, Trading Mechanisms
+8.  Percival (Rule 8)         - Architecture Patterns
+9.  Hull (Rule 13)           - Greeks Validation, VaR Backtesting, Stress Scenarios
+10. Google SRE (Rule 20)     - Golden Signals, Trading Metrics, Toil Tracking, On-Call
+11. Beck TDD (Rule 21)       - Test-Driven Development patterns
+12. Martin Clean Arch (Rule 18) - Clean Architecture compliance
+
+Author: Compliance Integration System
+Date: 2026-01-28
+Version: 2.0 - THE ONLY ENGINE
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `sys`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `pandas`
+- `empyrical`
+- `pydantic.BaseModel`
+- `pydantic.Field`
+- `pydantic.field_validator`
+- `app.domain.entities.portfolio_optimization.PortfolioOptimization`
+- `app.domain.entities.post_trade_analysis.PostTradeAnalysis`
+- `app.domain.entities.pre_trade_analysis.PreTradeAnalysis`
+- `app.shared.utils.subsystem_config_factory.get_subsystem_config_factory`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `decimal.ROUND_HALF_UP`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.application.alerting.AlertSeverity`
+- `app.application.orchestration.live_trading.broker_connector.BrokerConnector`
+- `app.application.orchestration.live_trading.broker_connector.BrokerConnector`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `typing.List`
+- `hashlib`
+- `json`
+- `app.application.orchestration.live_trading.broker_connector.OrderSide`
+- `app.application.orchestration.live_trading.broker_connector.OrderType`
+- `dataclasses.dataclass`
+- `math`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `importlib.util.find_spec`
+- `importlib.util.find_spec`
+- `importlib.util.find_spec`
+- `importlib.util.find_spec`
+- `importlib.util.find_spec`
+- `importlib.util.find_spec`
+- `importlib.util.find_spec`
+- `importlib.util.find_spec`
+- `importlib.util.find_spec`
+- `importlib.util.find_spec`
+- `importlib.util.find_spec`
+- `importlib.util.find_spec`
+- `importlib.util.find_spec`
+- `importlib.util.find_spec`
+- `importlib.util.find_spec`
+- `importlib.util.find_spec`
+- `importlib.util.find_spec`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_strategy_stock_allocator_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `statsmodels.tsa.stattools.adfuller`
+- `scipy.stats`
+- `decimal.InvalidOperation`
+- `decimal.DivisionByZero`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_strategy_stock_allocator_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_strategy_stock_allocator_config`
+- `app.shared.config.centralized_config.get_strategy_stock_allocator_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.services.optimization_chan.get_portfolio_optimizer`
+- `app.application.orchestration.live_trading.alert_to_trade_mapper.get_alert_to_trade_mapper`
+- `app.application.alerting.AlertSeverity`
+- `app.application.orchestration.live_trading.broker_connector.BrokerConnector`
+- `app.infrastructure.logging.trading_decision_logger.TradingDecisionLogger`
+- `app.domain.services.tax.efficiency.engines.spain_tax_engine_impl.SpainTaxEngineImpl`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `dataclasses.dataclass`
+- `app.backtesting.engine.BacktestEngine`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `math`
+- `app.services.live_trading.broker_connector.BrokerConnector`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.services.live_trading.broker_adapters.paper_adapter.PaperAdapter`
+- `app.engines.risk_engine.RiskEngine`
+- `app.engines.portfolio_engine.PortfolioEngine`
+- `app.engines.data_engine.DataEngine`
+- `app.engines.context_engine.ContextEngine`
+- `app.engines.execution_engine.microstructure.get_market_microstructure_engine`
+- `app.services.execution_algorithms.get_execution_algorithm`
+- `app.services.regime_detection_chan.get_regime_detector`
+- `app.services.portfolio_construction_narang.get_portfolio_constructor`
+- `app.domain.strategies.alpha_models.get_alpha_model`
+- `app.backtesting.labeling.meta_labeling.get_meta_labeling`
+- `app.backtesting.validation.cross_validation.PurgedKFold`
+- `app.engines.execution_engine.microstructure.harris_integration.get_harris_integrator`
+- `app.domain.market_analysis.microstructure.liquidity.get_liquidity_analyzer`
+- `app.domain.market_analysis.microstructure.order_flow.get_order_flow_analyzer`
+- `app.engines.risk_engine.var_calculators.var_calculators.calculate_var`
+- `app.sre.monitoring.golden_signals.get_golden_signals_monitor`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ComplianceConfig`: Must conform to application domain models.
+- `SystemAvailability`: Must conform to application domain models.
+- `SystemBus`: Must conform to application domain models.
+- `ComplianceEngine`: Must conform to application domain models.
+- `CycleResult`: Must conform to application domain models.
+- `TradeResult`: Must conform to application domain models.
+- `TradeResult`: Must conform to application domain models.
+### Public Functions
+- `get_compliance_engine()`: Must return strictly typed objects.
+- `quick_check()`: Must return strictly typed objects.
+- `get_execution_plan()`: Must return strictly typed objects.
+- `kill_switch_must_be_negative()`: Must return strictly typed objects.
+- `get_availability()`: Must return strictly typed objects.
+- `is_available()`: Must return strictly typed objects.
+- `get_summary()`: Must return strictly typed objects.
+- `execute_pre_trade_analysis()`: Must return strictly typed objects.
+- `check_kill_switch()`: Must return strictly typed objects.
+- `track_daily_pnl()`: Must return strictly typed objects.
+- `reset_daily_tracking()`: Must return strictly typed objects.
+- `set_starting_capital()`: Must return strictly typed objects.
+- `get_daily_pnl_summary()`: Must return strictly typed objects.
+- `calculate_position_size()`: Must return strictly typed objects.
+- `validate_risk_envelope()`: Must return strictly typed objects.
+- `get_risk_envelope_exposures()`: Must return strictly typed objects.
+- `analyze_pre_trade()`: Must return strictly typed objects.
+- `analyze_post_trade()`: Must return strictly typed objects.
+- `optimize_portfolio()`: Must return strictly typed objects.
+- `track_order_submission()`: Must return strictly typed objects.
+- `track_order_completion()`: Must return strictly typed objects.
+- `get_slo_metrics()`: Must return strictly typed objects.
+- `get_system_status()`: Must return strictly typed objects.
+- `get_priority()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,44 @@
+# Requirements Document: engines/risk_engine/stress_testers/correlation_stress.py
+
+## 1. Module Overview
+Correlation Stress Testing - Hull Chapter 20
+
+Implements correlation breakdown scenarios and stress testing.
+
+Correlation risk is critical because:
+1. Correlations tend toward 1.0 during market crises (contagion)
+2. Diversification benefits disappear when needed most
+3. Portfolio VaR can be severely underestimated in stress scenarios
+
+Scenarios implemented:
+- Correlation breakdown: All correlations → 1.0
+- Sector contagion: Within-sector correlations spike
+- Flight to quality: Risk assets correlate, safe havens decorrelate
+- Asymmetric stress: Correlations increase only for negative returns
+
+Reference: Hull, Options, Futures, and Other Derivatives, Chapter 20
+
+## 2. Dependencies
+- `logging`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `app.domain.models.portfolio.Portfolio`
+- `scipy.stats`
+- `scipy.stats`
+- `datetime.datetime`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CorrelationStressTester`: Must conform to application domain models.
+### Public Functions
+- `run_correlation_stress_tests()`: Must return strictly typed objects.
+- `calculate_correlation_breakdown_var()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

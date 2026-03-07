@@ -1,0 +1,76 @@
+# Requirements Document: domain/services/indicators/factory.py
+
+## 1. Module Overview
+Indicator Factory Module
+
+This module provides a factory function to get the appropriate indicator
+calculator based on the desired backend (pandas or numba).
+
+Usage:
+    from app.domain.services.indicators import get_indicator_calculator
+
+    # Get pandas-based calculator (default, more features)
+    indicators = get_indicator_calculator(backend='pandas')
+
+    # Get numba-based calculator (faster, for high-frequency)
+    indicators = get_indicator_calculator(backend='numba')
+
+    # Auto-select based on data size
+    indicators = get_indicator_calculator(backend='auto')
+
+## 2. Dependencies
+- `logging`
+- `enum.Enum`
+- `typing.Optional`
+- `typing.Union`
+- `typing.Protocol`
+- `typing.runtime_checkable`
+- `numpy`
+- `pandas`
+- `app.domain.services.indicators.technical_indicators.TechnicalIndicators`
+- `app.domain.services.indicators.technical_indicators.IndicatorResult`
+- `app.domain.services.indicators.numba_indicators.NumbaIndicators`
+- `app.domain.services.indicators.numba_indicators.NUMBA_AVAILABLE`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `IndicatorBackend`: Must conform to application domain models.
+- `IndicatorCalculator`: Must conform to application domain models.
+- `UnifiedIndicatorCalculator`: Must conform to application domain models.
+### Public Functions
+- `get_indicator_calculator()`: Must return strictly typed objects.
+- `get_available_backends()`: Must return strictly typed objects.
+- `calculate_rsi()`: Must return strictly typed objects.
+- `calculate_ema()`: Must return strictly typed objects.
+- `calculate_sma()`: Must return strictly typed objects.
+- `calculate_macd()`: Must return strictly typed objects.
+- `calculate_atr()`: Must return strictly typed objects.
+- `calculate_bollinger_bands()`: Must return strictly typed objects.
+- `rsi()`: Must return strictly typed objects.
+- `ema()`: Must return strictly typed objects.
+- `sma()`: Must return strictly typed objects.
+- `macd()`: Must return strictly typed objects.
+- `atr()`: Must return strictly typed objects.
+- `bollinger_bands()`: Must return strictly typed objects.
+- `stochastic()`: Must return strictly typed objects.
+- `pandas()`: Must return strictly typed objects.
+- `numba()`: Must return strictly typed objects.
+- `rsi()`: Must return strictly typed objects.
+- `ema()`: Must return strictly typed objects.
+- `sma()`: Must return strictly typed objects.
+- `macd()`: Must return strictly typed objects.
+- `atr()`: Must return strictly typed objects.
+- `bollinger_bands()`: Must return strictly typed objects.
+- `adx()`: Must return strictly typed objects.
+- `stochastic()`: Must return strictly typed objects.
+- `cci()`: Must return strictly typed objects.
+- `obv()`: Must return strictly typed objects.
+- `williams_r()`: Must return strictly typed objects.
+- `roc()`: Must return strictly typed objects.
+- `calculate_all()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

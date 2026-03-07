@@ -1,0 +1,56 @@
+# Requirements Document: sre/state_machine/wal_persistence.py
+
+## 1. Module Overview
+Write-Ahead Logging (WAL) for Order State Machine
+
+This module implements WAL persistence to prevent "orphaned positions" -
+a critical SRE issue where the broker has a position open but the system
+doesn't know about it due to crashes between broker ACK and database save.
+
+CRITICAL: Order state MUST be saved to database BEFORE sending to broker.
+This ensures that on restart, we can reconcile any orphaned positions.
+
+Example:
+    # BAD: Order lost if crash occurs here
+    result = await broker.submit(order)
+    await db.save_order(result)  # Never executes if crash
+
+    # GOOD: Order saved before broker call
+    await wal.write(OrderLog(state="SUBMITTING", order_id=order.id))
+    result = await broker.submit(order)
+    await wal.write(OrderLog(state="ACK_RECEIVED", ...))
+
+## 2. Dependencies
+- `asyncio`
+- `json`
+- `logging`
+- `dataclasses.asdict`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `datetime.timezone`
+- `decimal.Decimal`
+- `enum.Enum`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `aiofiles`
+- `aiosqlite`
+- `uuid`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `OrderState`: Must conform to application domain models.
+- `OrderLog`: Must conform to application domain models.
+- `OrderStateMachine`: Must conform to application domain models.
+- `WALOrderManager`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+- `from_dict()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

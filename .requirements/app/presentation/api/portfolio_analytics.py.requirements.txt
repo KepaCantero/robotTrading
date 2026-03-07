@@ -1,0 +1,66 @@
+# Requirements Document: presentation/api/portfolio_analytics.py
+
+## 1. Module Overview
+Portfolio Analytics API Endpoints
+
+This module provides FastAPI endpoints for portfolio analytics including
+performance metrics, risk analysis, and portfolio management features.
+
+GAP Fixes:
+- API-005: FIXED - Added security decorators (rate_limit, require_auth, audit_log)
+
+## 2. Dependencies
+- `__future__.annotations`
+- `asyncio`
+- `logging`
+- `traceback`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `uuid.UUID`
+- `fastapi.APIRouter`
+- `fastapi.Depends`
+- `fastapi.Query`
+- `fastapi.Request`
+- `pydantic.BaseModel`
+- `pydantic.Field`
+- `app.domain.models.portfolio_analytics.ExtendedPortfolio`
+- `app.domain.models.portfolio_analytics.PerformanceMetrics`
+- `app.domain.models.portfolio_analytics.PerformancePeriod`
+- `app.domain.models.portfolio_analytics.PortfolioAllocation`
+- `app.domain.models.portfolio_analytics.PortfolioAnalytics`
+- `app.domain.models.portfolio_analytics.PortfolioComparison`
+- `app.domain.models.portfolio_analytics.PortfolioRebalance`
+- `app.domain.models.portfolio_analytics.RiskMetrics`
+- `app.domain.services.portfolio.analytics.PortfolioAnalyticsService`
+- `app.domain.services.portfolio.analytics.get_portfolio_analytics_service`
+- `audit_logger`
+- `get_correlation_id`
+- `security.audit_log`
+- `security.rate_limit`
+- `security.require_auth`
+- `app.domain.models.portfolio.AssetClass`
+- `app.domain.models.portfolio.Position`
+- `app.domain.models.portfolio_analytics.PortfolioAllocation`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PerformanceMetricsRequest`: Must conform to application domain models.
+- `PerformanceMetricsResponse`: Must conform to application domain models.
+- `RiskMetricsResponse`: Must conform to application domain models.
+- `PortfolioAnalyticsResponse`: Must conform to application domain models.
+- `PortfolioAllocationResponse`: Must conform to application domain models.
+- `RebalanceRequest`: Must conform to application domain models.
+- `RebalanceResponse`: Must conform to application domain models.
+- `PortfolioComparisonRequest`: Must conform to application domain models.
+- `PortfolioComparisonResponse`: Must conform to application domain models.
+- `AnalyticsSummaryResponse`: Must conform to application domain models.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

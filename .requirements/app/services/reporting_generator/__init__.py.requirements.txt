@@ -1,0 +1,51 @@
+# Requirements Document: services/reporting_generator/__init__.py
+
+## 1. Module Overview
+T9.1: ReportingGenerator - Comprehensive performance report generation
+
+## 2. Dependencies
+- `delivery_manager.DeliveryChannel`
+- `delivery_manager.DeliveryResult`
+- `delivery_manager.EmailConfig`
+- `delivery_manager.ExportConfig`
+- `delivery_manager.ExportFormat`
+- `delivery_manager.ExportResult`
+- `delivery_manager.ReportDeliveryManager`
+- `delivery_manager.S3Config`
+- `delivery_manager.get_delivery_manager`
+- `html_template_engine.BrandingConfig`
+- `html_template_engine.HTMLReport`
+- `html_template_engine.HTMLTemplateEngine`
+- `html_template_engine.ReportConfig`
+- `html_template_engine.ReportSection`
+- `html_template_engine.get_html_template_engine`
+- `models.AllocationSnapshot`
+- `models.PerformanceMetric`
+- `models.PerformanceReport`
+- `models.ReportGenerationRequest`
+- `models.StrategyMetrics`
+- `pyfolio_integrator.CapacityFade`
+- `pyfolio_integrator.FactorAnalysis`
+- `pyfolio_integrator.FactorExposure`
+- `pyfolio_integrator.PositionConcentration`
+- `pyfolio_integrator.PyFolioIntegrator`
+- `pyfolio_integrator.Tearsheet`
+- `pyfolio_integrator.get_pyfolio_integrator`
+- `quantstats_integrator.AdvancedMetrics`
+- `quantstats_integrator.QuantStatsIntegrator`
+- `quantstats_integrator.StatisticsReport`
+- `quantstats_integrator.get_quantstats_integrator`
+- `reporting_generator.ReportingGenerator`
+- `reporting_generator.get_reporting_generator`
+- `visualization_generator.AdvancedVisualizationGenerator`
+- `visualization_generator.ChartMetadata`
+- `visualization_generator.PlotlyChart`
+- `visualization_generator.get_visualization_generator`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

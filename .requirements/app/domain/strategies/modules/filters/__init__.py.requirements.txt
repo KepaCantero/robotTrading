@@ -1,0 +1,20 @@
+# Requirements Document: domain/strategies/modules/filters/__init__.py
+
+## 1. Module Overview
+Filtros modulares individuales para la estrategia de momentum.
+
+## 2. Dependencies
+- `atr_filter.ATRFilter`
+- `ema_filter.EMAFilter`
+- `momentum_filter.MomentumFilter`
+- `rsi_filter.RSIFilter`
+- `stoch_rsi_filter.StochRSIFilter`
+- `volume_filter.VolumeFilter`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

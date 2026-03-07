@@ -1,0 +1,28 @@
+# Requirements Document: services/strategy_recommendation/strategy_scorer.py
+
+## 1. Module Overview
+T19.1.1: StrategyScorer - Scores strategies based on performance metrics and objectives
+
+Calculates composite scores using objective-weighted metrics.
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.Optional`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StrategyMetrics`: Must conform to application domain models.
+- `StrategyScore`: Must conform to application domain models.
+- `StrategyScorer`: Must conform to application domain models.
+### Public Functions
+- `get_strategy_scorer()`: Must return strictly typed objects.
+- `get_scorer_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,57 @@
+# Requirements Document: backtesting/shared/__init__.py
+
+## 1. Module Overview
+Shared utilities for backtesting module.
+
+This module consolidates duplicated code from across the backtesting package:
+
+- metrics.py: Eliminates 6+ implementations of _get_empty_metrics
+- parameter_mapper.py: Eliminates 4+ implementations of parameter mapping
+- temp_config.py: Eliminates 8+ implementations of temp file creation
+- types.py: Consolidates type aliases from 4+ files
+
+Usage:
+    from app.backtesting.shared import (
+        MetricsFactory,
+        get_empty_metrics,
+        ParameterMappingService,
+        map_params_to_config,
+        TempConfigManager,
+        temp_config_file,
+        ConfigDict,
+        MetricsDict,
+    )
+
+    # Get empty metrics
+    metrics = get_empty_metrics()
+
+    # Map optimization params to config
+    config = map_params_to_config(params, base_config)
+
+    # Use temp config with automatic cleanup
+    with temp_config_file(config, output_dir) as temp_path:
+        runner = ComprehensiveBacktestRunner(str(temp_path))
+        results = runner.run_baseline_backtest()
+
+## 2. Dependencies
+- `app.backtesting.shared.metrics.MetricsFactory`
+- `app.backtesting.shared.metrics.get_empty_metrics`
+- `app.backtesting.shared.parameter_mapper.ParameterMappingService`
+- `app.backtesting.shared.parameter_mapper.map_params_to_config`
+- `app.backtesting.shared.temp_config.TempConfigFactory`
+- `app.backtesting.shared.temp_config.TempConfigManager`
+- `app.backtesting.shared.temp_config.cleanup_orphaned_temp_files`
+- `app.backtesting.shared.temp_config.temp_config_file`
+- `app.backtesting.shared.types.ConfigDict`
+- `app.backtesting.shared.types.ConfigKeys`
+- `app.backtesting.shared.types.MetricKeys`
+- `app.backtesting.shared.types.MetricsDict`
+- `app.backtesting.shared.types.ParameterDict`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

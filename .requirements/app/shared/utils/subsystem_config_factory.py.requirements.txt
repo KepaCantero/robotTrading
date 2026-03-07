@@ -1,0 +1,45 @@
+# Requirements Document: shared/utils/subsystem_config_factory.py
+
+## 1. Module Overview
+Subsystem Configuration Factory.
+
+Provides default configurations for all subsystems used by ComplianceEngine.
+Follows the Factory pattern to centralize config creation and ensure
+consistent defaults across the application.
+
+Usage:
+    from app.shared.utils.subsystem_config_factory import SubsystemConfigFactory
+
+    factory = SubsystemConfigFactory()
+    backtest_config = factory.get_backtest_config()
+    risk_config = factory.get_risk_engine_config()
+
+## 2. Dependencies
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `pydantic.BaseModel`
+- `app.shared.config.centralized_config.get_config`
+- `app.backtesting.models.BacktestConfig`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SubsystemConfigFactory`: Must conform to application domain models.
+### Public Functions
+- `get_subsystem_config_factory()`: Must return strictly typed objects.
+- `get_backtest_config()`: Must return strictly typed objects.
+- `get_risk_engine_config()`: Must return strictly typed objects.
+- `get_portfolio_engine_config()`: Must return strictly typed objects.
+- `get_alpha_model_config()`: Must return strictly typed objects.
+- `get_portfolio_constructor_config()`: Must return strictly typed objects.
+- `get_regime_detector_config()`: Must return strictly typed objects.
+- `get_execution_algorithm_config()`: Must return strictly typed objects.
+- `get_live_trading_config()`: Must return strictly typed objects.
+- `get_config()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

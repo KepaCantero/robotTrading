@@ -1,0 +1,37 @@
+# Requirements Document: engines/portfolio_engine/optimizers/handcrafted_optimizer.py
+
+## 1. Module Overview
+Handcrafted Weights Optimizer - Robert Carver's methodology.
+
+Implements handcrafted portfolio weights following Carver's "Systematic Trading":
+- Weights based on instrument risk characteristics
+- Volatility targeting
+- Instrument diversification constraints
+- Simple, robust allocation rules
+
+From "Systematic Trading" by Robert Carver:
+"Handcrafting is the process of manually setting portfolio weights based on
+risk characteristics rather than optimizing algorithms. It's more robust and
+interpretable than complex optimization methods."
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `numpy`
+- `base.BaseOptimizer`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `HandcraftedWeightsOptimizer`: Must conform to application domain models.
+### Public Functions
+- `create_handcrafted_weights()`: Must return strictly typed objects.
+- `optimize()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

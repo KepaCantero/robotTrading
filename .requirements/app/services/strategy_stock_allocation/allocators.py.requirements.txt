@@ -1,0 +1,28 @@
+# Requirements Document: services/strategy_stock_allocation/allocators.py
+
+## 1. Module Overview
+Capital allocation modules.
+
+Provides ERC (Equal Risk Contribution) / Risk Parity capital allocation
+following Single Responsibility Principle.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `typing.TYPE_CHECKING`
+- `numpy`
+- `scipy.optimize.minimize`
+- `app.shared.config.centralized_config.StockAllocationSettings`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ERCCapitalAllocator`: Must conform to application domain models.
+### Public Functions
+- `allocate()`: Must return strictly typed objects.
+- `objective()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

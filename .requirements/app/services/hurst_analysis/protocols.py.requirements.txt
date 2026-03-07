@@ -1,0 +1,45 @@
+# Requirements Document: services/hurst_analysis/protocols.py
+
+## 1. Module Overview
+Protocol interfaces for Hurst Analysis components.
+
+This module defines all Protocol interfaces used throughout the hurst_analysis module.
+Following the Interface Segregation Principle (ISP), each protocol is focused and minimal.
+Following the Dependency Inversion Principle (DIP), high-level modules depend on these
+abstractions rather than concrete implementations.
+
+All protocols use structural subtyping (duck typing) - any class implementing
+the required methods automatically satisfies the protocol.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `datetime.datetime`
+- `typing.TYPE_CHECKING`
+- `typing.Protocol`
+- `numpy`
+- `app.services.hurst_analysis.models.MarketRegime`
+- `app.services.hurst_analysis.models.RegimeChange`
+- `app.services.hurst_analysis.models.StrategyRecommendation`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `HurstCalculator`: Must conform to application domain models.
+- `RegimeClassifierProtocol`: Must conform to application domain models.
+- `StrategyRecommenderProtocol`: Must conform to application domain models.
+- `ConfidenceCalculatorProtocol`: Must conform to application domain models.
+- `HistoricalTrackerProtocol`: Must conform to application domain models.
+- `ChangeDetectorProtocol`: Must conform to application domain models.
+### Public Functions
+- `calculate()`: Must return strictly typed objects.
+- `classify()`: Must return strictly typed objects.
+- `recommend()`: Must return strictly typed objects.
+- `calculate_confidence()`: Must return strictly typed objects.
+- `store()`: Must return strictly typed objects.
+- `get_history()`: Must return strictly typed objects.
+- `detect_change()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

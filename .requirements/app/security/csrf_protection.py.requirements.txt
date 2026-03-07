@@ -1,0 +1,54 @@
+# Requirements Document: security/csrf_protection.py
+
+## 1. Module Overview
+CSRF Protection Module
+
+Provides comprehensive CSRF (Cross-Site Request Forgery) protection:
+- CSRF token generation and validation
+- SameSite cookie policy enforcement
+- Double-submit cookie pattern
+- Per-request token validation
+- Token rotation
+
+Security Compliance: 95%
+- OWASP CSRF protection
+- Double-submit cookie pattern
+- Secure token generation
+
+## 2. Dependencies
+- `hashlib`
+- `hmac`
+- `logging`
+- `secrets`
+- `time`
+- `typing.Optional`
+- `fastapi.HTTPException`
+- `fastapi.Request`
+- `fastapi.Response`
+- `base64`
+- `os`
+- `base64`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CSRFTokenManager`: Must conform to application domain models.
+- `DoubleSubmitCookieCSRF`: Must conform to application domain models.
+- `SameSiteCookieMiddleware`: Must conform to application domain models.
+### Public Functions
+- `get_csrf_token_manager()`: Must return strictly typed objects.
+- `get_csrf_protection()`: Must return strictly typed objects.
+- `require_csrf()`: Must return strictly typed objects.
+- `generate_csrf_token()`: Must return strictly typed objects.
+- `validate_csrf_token()`: Must return strictly typed objects.
+- `generate_token()`: Must return strictly typed objects.
+- `validate_token()`: Must return strictly typed objects.
+- `rotate_token()`: Must return strictly typed objects.
+- `generate_token_for_request()`: Must return strictly typed objects.
+- `validate_request()`: Must return strictly typed objects.
+- `get_token_for_frontend()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,57 @@
+# Requirements Document: backtesting/core/facade.py
+
+## 1. Module Overview
+Facade for backtesting operations.
+
+This module provides a simplified interface to the backtesting system,
+hiding complexity and providing a clean API for running backtests.
+
+## 2. Dependencies
+- `logging`
+- `time`
+- `datetime.datetime`
+- `datetime.timezone`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Protocol`
+- `typing.TypeVar`
+- `typing.Union`
+- `pandas`
+- `app.backtesting.core.config_loader.BacktestConfigLoader`
+- `app.backtesting.core.executor.BacktestExecutorFactory`
+- `app.backtesting.core.orchestrator.BoundedResults`
+- `app.backtesting.data_loader.DataLoader`
+- `app.domain.services.portfolio.builder.PortfolioBuilder`
+- `app.services.portfolio_config_manager.get_portfolio_config_manager`
+- `itertools`
+- `itertools`
+- `app.backtesting.core.error_handling.BacktestResultError`
+- `app.backtesting.models.BacktestResult`
+- `json`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StrategyProtocol`: Must conform to application domain models.
+- `DataLoaderProtocol`: Must conform to application domain models.
+- `BacktestRunnerFacade`: Must conform to application domain models.
+### Public Functions
+- `create_backtest_runner()`: Must return strictly typed objects.
+- `generate_signals()`: Must return strictly typed objects.
+- `name()`: Must return strictly typed objects.
+- `run_baseline()`: Must return strictly typed objects.
+- `run_strategy_test()`: Must return strictly typed objects.
+- `run_parameter_sweep()`: Must return strictly typed objects.
+- `get_results()`: Must return strictly typed objects.
+- `save_results()`: Must return strictly typed objects.
+- `get_best_result()`: Must return strictly typed objects.
+- `clear_results()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

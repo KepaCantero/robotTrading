@@ -1,0 +1,60 @@
+# Requirements Document: domain/models/portfolio_analytics.py
+
+## 1. Module Overview
+Enhanced Portfolio Management Models
+
+This module defines enhanced models for portfolio management including
+performance metrics, risk analysis, and portfolio analytics.
+
+NOTE: For canonical PerformanceMetrics used in backtesting, use app.backtesting.models.PerformanceMetrics
+This module contains PortfolioPerformanceRecord which is a specialized model for portfolio persistence.
+
+## 2. Dependencies
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `uuid.UUID`
+- `uuid.uuid4`
+- `pydantic.BaseModel`
+- `pydantic.Field`
+- `pydantic.field_validator`
+- `pydantic.model_validator`
+- `app.domain.models.portfolio.Portfolio`
+- `app.shared.config.centralized_config.get_config`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ExtendedPortfolio`: Must conform to application domain models.
+- `PortfolioStatus`: Must conform to application domain models.
+- `RiskLevel`: Must conform to application domain models.
+- `PerformancePeriod`: Must conform to application domain models.
+- `PortfolioPerformanceRecord`: Must conform to application domain models.
+- `RiskMetrics`: Must conform to application domain models.
+- `PortfolioAnalytics`: Must conform to application domain models.
+- `PortfolioAllocation`: Must conform to application domain models.
+- `PortfolioRebalance`: Must conform to application domain models.
+- `PortfolioComparison`: Must conform to application domain models.
+### Public Functions
+- `validate_portfolio_consistency()`: Must return strictly typed objects.
+- `equity_value()`: Must return strictly typed objects.
+- `validate_percentage_fields()`: Must return strictly typed objects.
+- `validate_value_fields()`: Must return strictly typed objects.
+- `validate_metrics_consistency()`: Must return strictly typed objects.
+- `validate_volatility_fields()`: Must return strictly typed objects.
+- `validate_score_fields()`: Must return strictly typed objects.
+- `validate_allocation_fields()`: Must return strictly typed objects.
+- `validate_allocation_sum()`: Must return strictly typed objects.
+- `validate_impact_fields()`: Must return strictly typed objects.
+- `validate_comparison_data()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

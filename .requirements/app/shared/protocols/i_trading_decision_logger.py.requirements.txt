@@ -1,0 +1,23 @@
+# Requirements Document: shared/protocols/i_trading_decision_logger.py
+
+## 1. Module Overview
+Logging protocols (R15, R28)
+
+## 2. Dependencies
+- `typing.Protocol`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ITradingDecisionLogger`: Must conform to application domain models.
+### Public Functions
+- `log_signal()`: Must return strictly typed objects.
+- `log_execution()`: Must return strictly typed objects.
+- `log_validation_result()`: Must return strictly typed objects.
+- `get_logs_by_correlation_id()`: Must return strictly typed objects.
+- `export_for_hacienda()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

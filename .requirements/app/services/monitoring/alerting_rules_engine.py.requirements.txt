@@ -1,0 +1,52 @@
+# Requirements Document: services/monitoring/alerting_rules_engine.py
+
+## 1. Module Overview
+FASE 2: AlertingRulesEngine - Real-time alert rule evaluation and management
+
+Prometheus-based alerting with configurable rules for trading system monitoring.
+Supports threshold-based, anomaly-based, and composite alerts with webhook delivery.
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `aiohttp`
+- `requests.exceptions.HTTPError`
+- `requests.exceptions.RequestException`
+- `sqlalchemy.exc.DatabaseError`
+- `sqlalchemy.exc.DataError`
+- `sqlalchemy.exc.IntegrityError`
+- `sqlalchemy.exc.OperationalError`
+- `sqlalchemy.exc.ProgrammingError`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `AlertSeverity`: Must conform to application domain models.
+- `AlertConditionType`: Must conform to application domain models.
+- `AlertRule`: Must conform to application domain models.
+- `Alert`: Must conform to application domain models.
+- `AlertingRulesEngine`: Must conform to application domain models.
+### Public Functions
+- `get_alerting_engine()`: Must return strictly typed objects.
+- `reset_alerting_engine()`: Must return strictly typed objects.
+- `create_rule()`: Must return strictly typed objects.
+- `delete_rule()`: Must return strictly typed objects.
+- `enable_rule()`: Must return strictly typed objects.
+- `disable_rule()`: Must return strictly typed objects.
+- `get_active_alerts()`: Must return strictly typed objects.
+- `get_recent_alerts()`: Must return strictly typed objects.
+- `get_alerts_by_severity()`: Must return strictly typed objects.
+- `get_rules_summary()`: Must return strictly typed objects.
+- `reset()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

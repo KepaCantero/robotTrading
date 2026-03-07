@@ -1,0 +1,37 @@
+# Requirements Document: services/position_management/post_trade_analyzer_impl.py
+
+## 1. Module Overview
+Post Trade Analyzer Implementation - Implements IPostTradeAnalyzer Protocol
+
+Implementa el Protocol IPostTradeAnalyzer con gestión de trailing stops,
+take profits parciales, y pyramiding.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `decimal.Decimal`
+- `typing.TYPE_CHECKING`
+- `typing.Optional`
+- `app.core.protocols.i_post_trade_analyzer.IPostTradeAnalyzer`
+- `app.services.position_management.partial_take_profit.PartialTakeProfit`
+- `app.services.position_management.pyramiding_manager.PyramidingManager`
+- `app.services.position_management.trailing_stop_manager.TrailingStopManager`
+- `app.domain.entities.position.Position`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PositionState`: Must conform to application domain models.
+- `TradeSignal`: Must conform to application domain models.
+- `PostTradeAnalyzerImpl`: Must conform to application domain models.
+### Public Functions
+- `register_position()`: Must return strictly typed objects.
+- `unregister_position()`: Must return strictly typed objects.
+- `get_position_state()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

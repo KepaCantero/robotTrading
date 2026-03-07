@@ -1,0 +1,40 @@
+# Requirements Document: domain/trading/market_making/avellaneda_stoikov/models.py
+
+## 1. Module Overview
+Data models for Avellaneda-Stoikov market making.
+
+This module defines the Pydantic data models used throughout the AS model implementation.
+All models use Decimal for financial precision and include comprehensive validation.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Optional`
+- `pydantic.Field`
+- `pydantic.field_validator`
+- `pydantic.dataclasses.dataclass`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ASConfig`: Must conform to application domain models.
+- `ASQuoteParams`: Must conform to application domain models.
+- `ASQuote`: Must conform to application domain models.
+- `InventoryConfig`: Must conform to application domain models.
+- `InventoryState`: Must conform to application domain models.
+### Public Functions
+- `validate_time_horizon()`: Must return strictly typed objects.
+- `get_full_spread_bps()`: Must return strictly typed objects.
+- `get_spread_value()`: Must return strictly typed objects.
+- `is_inventory_neutral()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `get_inventory_utilization()`: Must return strictly typed objects.
+- `needs_inventory_reduction()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,55 @@
+# Requirements Document: services/compliance/order_pattern_analyzer.py
+
+## 1. Module Overview
+Order Pattern Analyzer for Regulatory Compliance.
+
+Detects manipulative trading patterns that violate regulations:
+- Layering: Multiple orders at same price to create false appearance
+- Spoofing: Orders with intent to cancel before execution
+- Excessive cancellation: High order-to-trade ratio
+- Marking the close: Trading near close to influence closing price
+- Momentum ignition: Rapid trading to trigger price movements
+
+These patterns are prohibited under:
+- USA: Dodd-Frank Act, SEC Rule 610
+- EU: MiFID II Article 15 (market abuse)
+- Spain: CNMV regulations
+
+Reference:
+    https://www.sec.gov/marketstructure
+    https://www.esma.europa.eu/
+
+## 2. Dependencies
+- `logging`
+- `collections.deque`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Deque`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `app.core.timezone_utils.utc_now`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `OrderRecord`: Must conform to application domain models.
+- `PatternAlert`: Must conform to application domain models.
+- `OrderPatternAnalyzer`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `analyze_order()`: Must return strictly typed objects.
+- `record_order()`: Must return strictly typed objects.
+- `record_cancellation()`: Must return strictly typed objects.
+- `record_fill()`: Must return strictly typed objects.
+- `get_order_to_trade_ratio()`: Must return strictly typed objects.
+- `get_alerts()`: Must return strictly typed objects.
+- `reset()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

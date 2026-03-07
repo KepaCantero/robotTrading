@@ -1,0 +1,50 @@
+# Requirements Document: services/live_trading/alert_to_trade_mapper.py
+
+## 1. Module Overview
+T18.3.1: AlertToTradeMapper - Maps alerts to trading actions
+
+Translates alert triggers into trading actions based on rules:
+- Alert severity → Position size
+- Alert type → Order type and direction
+- Symbol-specific rules
+- Risk-adjusted quantities
+
+Uses centralized configuration for all thresholds and parameters.
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.TYPE_CHECKING`
+- `app.shared.config.centralized_config.get_config`
+- `app.services.alerting_system.AlertSeverity`
+- `broker_connector.OrderSide`
+- `broker_connector.OrderType`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TradeSignalType`: Must conform to application domain models.
+- `AlertToTradeRule`: Must conform to application domain models.
+- `TradeSignal`: Must conform to application domain models.
+- `AlertToTradeMapper`: Must conform to application domain models.
+### Public Functions
+- `get_alert_to_trade_mapper()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `register_rule()`: Must return strictly typed objects.
+- `unregister_rule()`: Must return strictly typed objects.
+- `map_alert_to_signal()`: Must return strictly typed objects.
+- `get_signal()`: Must return strictly typed objects.
+- `get_pending_signals()`: Must return strictly typed objects.
+- `get_signal_statistics()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

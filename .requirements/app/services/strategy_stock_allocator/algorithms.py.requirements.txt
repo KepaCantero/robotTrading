@@ -1,0 +1,35 @@
+# Requirements Document: services/strategy_stock_allocator/algorithms.py
+
+## 1. Module Overview
+Stock Allocation Algorithms - Pure business logic for allocation
+
+This module contains pure algorithms for stock classification,
+scoring, and allocation without external dependencies.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `decimal.Decimal`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `domain_models.StockCategory`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StockClassifier`: Must conform to application domain models.
+- `MomentumScorer`: Must conform to application domain models.
+- `MeanReversionScorer`: Must conform to application domain models.
+- `PairsTradingScorer`: Must conform to application domain models.
+### Public Functions
+- `classify()`: Must return strictly typed objects.
+- `score()`: Must return strictly typed objects.
+- `score()`: Must return strictly typed objects.
+- `score_pair()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

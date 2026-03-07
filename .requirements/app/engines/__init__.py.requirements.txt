@@ -1,0 +1,17 @@
+# Requirements Document: engines/__init__.py
+
+## 1. Module Overview
+Engines - Motor centralizado de estrategias, learning y portfolio.
+
+Este paquete contiene los "engines" refactorizados que proporcionan
+interfaces más limpias y modulares para el sistema de trading.
+
+## 2. Dependencies
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

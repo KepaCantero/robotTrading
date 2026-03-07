@@ -1,0 +1,37 @@
+# Requirements Document: shared/config/signal_risk.py
+
+## 1. Module Overview
+Signal and Risk Configuration Module
+
+Contains configuration for signal thresholds, risk management,
+circuit breakers, and related parameters.
+
+## 2. Dependencies
+- `decimal.Decimal`
+- `typing.Dict`
+- `pydantic.BaseModel`
+- `pydantic.Field`
+- `pydantic.field_validator`
+- `app.shared.config.base.ConfigBase`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SignalThresholds`: Must conform to application domain models.
+- `RiskManagementThresholds`: Must conform to application domain models.
+- `CircuitBreakerThresholds`: Must conform to application domain models.
+- `SlippageThresholds`: Must conform to application domain models.
+- `TradingCostThresholds`: Must conform to application domain models.
+- `PerformanceThresholds`: Must conform to application domain models.
+- `MarketMicrostructureThresholds`: Must conform to application domain models.
+### Public Functions
+- `validate_0_100_range()`: Must return strictly typed objects.
+- `validate_stop_loss()`: Must return strictly typed objects.
+- `validate_percentage_0_1()`: Must return strictly typed objects.
+- `validate_percentage_0_1()`: Must return strictly typed objects.
+- `validate_decimal_percentage()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

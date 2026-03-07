@@ -1,0 +1,70 @@
+# Requirements Document: domain/models/signal.py
+
+## 1. Module Overview
+Signal Models and Scoring System
+
+This module defines signal models, scoring algorithms, and priority queue management
+for the algorithmic trading system.
+
+## 2. Dependencies
+- `heapq`
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `pydantic.BaseModel`
+- `pydantic.ConfigDict`
+- `pydantic.Field`
+- `pydantic.field_validator`
+- `pydantic.model_validator`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SignalType`: Must conform to application domain models.
+- `SignalStrength`: Must conform to application domain models.
+- `SignalSource`: Must conform to application domain models.
+- `MarketData`: Must conform to application domain models.
+- `Signal`: Must conform to application domain models.
+- `SignalScorer`: Must conform to application domain models.
+- `SignalPriorityQueue`: Must conform to application domain models.
+### Public Functions
+- `mid_price()`: Must return strictly typed objects.
+- `spread_percentage()`: Must return strictly typed objects.
+- `validate_score_fields()`: Must return strictly typed objects.
+- `validate_price()`: Must return strictly typed objects.
+- `validate_volume()`: Must return strictly typed objects.
+- `validate_timestamp()`: Must return strictly typed objects.
+- `validate_signal_consistency()`: Must return strictly typed objects.
+- `combined_score()`: Must return strictly typed objects.
+- `is_actionable()`: Must return strictly typed objects.
+- `is_high_priority()`: Must return strictly typed objects.
+- `calculate_confidence_score()`: Must return strictly typed objects.
+- `calculate_liquidity_score()`: Must return strictly typed objects.
+- `calculate_priority_score()`: Must return strictly typed objects.
+- `add_signal()`: Must return strictly typed objects.
+- `is_empty()`: Must return strictly typed objects.
+- `get_next_signal()`: Must return strictly typed objects.
+- `get_highest_priority_signal()`: Must return strictly typed objects.
+- `peek_next_signal()`: Must return strictly typed objects.
+- `get_signals_by_symbol()`: Must return strictly typed objects.
+- `clear_signals()`: Must return strictly typed objects.
+- `get_queue_size()`: Must return strictly typed objects.
+- `get_queue_summary()`: Must return strictly typed objects.
+- `calculate_confidence_score()`: Must return strictly typed objects.
+- `calculate_liquidity_score()`: Must return strictly typed objects.
+- `calculate_priority_score()`: Must return strictly typed objects.
+- `score_signal()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

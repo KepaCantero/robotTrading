@@ -1,0 +1,92 @@
+# Requirements Document: security/auth.py
+
+## 1. Module Overview
+Authentication and Authorization Module for API Endpoints
+
+This module provides:
+- API key authentication dependencies
+- JWT token authentication dependencies
+- Role-based authorization decorators
+- Current user extraction helpers
+- Audit logging for auth events
+- Account lockout protection
+
+SEC-001: No hardcoded credentials - uses environment variables
+SEC-002: Secure token validation
+SEC-003: Role-based access control
+SEC-005: Audit logging for auth attempts
+
+## 2. Dependencies
+- `hashlib`
+- `hmac`
+- `logging`
+- `os`
+- `threading`
+- `time`
+- `collections.defaultdict`
+- `contextlib.contextmanager`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `typing.TypedDict`
+- `fastapi.Depends`
+- `fastapi.HTTPException`
+- `fastapi.Security`
+- `fastapi.status`
+- `fastapi.security.APIKeyHeader`
+- `fastapi.security.HTTPAuthorizationCredentials`
+- `fastapi.security.HTTPBearer`
+- `app.shared.audit.AuditAction`
+- `app.shared.audit.AuditLogger`
+- `app.shared.audit.get_audit_logger`
+- `app.shared.config.environment_config.get_config`
+- `jwt`
+- `jwt`
+- `jwt`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `UserRoles`: Must conform to application domain models.
+- `UserDict`: Must conform to application domain models.
+- `APIKeyDict`: Must conform to application domain models.
+- `FailedAttemptsDict`: Must conform to application domain models.
+- `LockoutsDict`: Must conform to application domain models.
+- `RateLimitsDict`: Must conform to application domain models.
+- `User`: Must conform to application domain models.
+- `UserStore`: Must conform to application domain models.
+- `JWTTokenManager`: Must conform to application domain models.
+- `AuthAttemptTracker`: Must conform to application domain models.
+### Public Functions
+- `get_user_store()`: Must return strictly typed objects.
+- `get_token_manager()`: Must return strictly typed objects.
+- `get_attempt_tracker()`: Must return strictly typed objects.
+- `require_roles()`: Must return strictly typed objects.
+- `require_permissions()`: Must return strictly typed objects.
+- `get_user_id()`: Must return strictly typed objects.
+- `get_username()`: Must return strictly typed objects.
+- `create_access_token_for_user()`: Must return strictly typed objects.
+- `verify_token_and_get_user()`: Must return strictly typed objects.
+- `has_permission()`: Must return strictly typed objects.
+- `has_role()`: Must return strictly typed objects.
+- `can_trade()`: Must return strictly typed objects.
+- `can_deploy()`: Must return strictly typed objects.
+- `verify_api_key()`: Must return strictly typed objects.
+- `get_user()`: Must return strictly typed objects.
+- `get_user_by_id()`: Must return strictly typed objects.
+- `create_access_token()`: Must return strictly typed objects.
+- `verify_token()`: Must return strictly typed objects.
+- `decode_token()`: Must return strictly typed objects.
+- `record_failed_attempt()`: Must return strictly typed objects.
+- `record_successful_attempt()`: Must return strictly typed objects.
+- `is_locked_out()`: Must return strictly typed objects.
+- `check_rate_limit()`: Must return strictly typed objects.
+- `cleanup()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

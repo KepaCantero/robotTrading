@@ -1,0 +1,33 @@
+# Requirements Document: infrastructure/persistence/database/migrations/versions/20260127000001_fifo_tax_tracking.py
+
+## 1. Module Overview
+Add FIFO tax tracking for Modelo 721 (Spain tax compliance)
+
+This migration adds tables for tracking cryptocurrency and asset trades
+for Spanish tax compliance (Modelo 721 - cryptocurrency reporting).
+
+NOTE: This migration uses PostgreSQL-specific features (JSONB, timezone-aware datetimes).
+For SQLite compatibility in development, this migration is optional and can be skipped.
+
+Revision ID: 0002
+Revises: 0001
+Create Date: 2026-01-27
+
+## 2. Dependencies
+- `logging`
+- `typing.Sequence`
+- `typing.Union`
+- `sqlalchemy`
+- `sqlalchemy.dialects.postgresql`
+- `alembic.op`
+
+## 3. Core Components (Contracts)
+### Public Functions
+- `upgrade()`: Must return strictly typed objects.
+- `downgrade()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

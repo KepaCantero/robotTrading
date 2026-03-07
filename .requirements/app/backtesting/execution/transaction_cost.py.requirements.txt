@@ -1,0 +1,56 @@
+# Requirements Document: backtesting/execution/transaction_cost.py
+
+## 1. Module Overview
+Transaction Cost Calculator for US Equity Trading (FASE 5.2)
+
+This module implements realistic transaction cost calculation for US equity trading,
+including:
+- Per-share commission
+- SEC fees (Section 31 fee)
+- FINRA Trading Activity Fee (TAF)
+- Exchange fees
+- Minimum commission
+- Tiered commission structures
+
+Reference: US equity trading fee structure as of 2024
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `FeeType`: Must conform to application domain models.
+- `CommissionType`: Must conform to application domain models.
+- `FeeConfig`: Must conform to application domain models.
+- `CommissionTier`: Must conform to application domain models.
+- `TransactionCost`: Must conform to application domain models.
+- `CostConfig`: Must conform to application domain models.
+- `TransactionCostCalculator`: Must conform to application domain models.
+### Public Functions
+- `regulatory_fees()`: Must return strictly typed objects.
+- `execution_fees()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `calculate_commission()`: Must return strictly typed objects.
+- `calculate_sec_fee()`: Must return strictly typed objects.
+- `calculate_finra_taf()`: Must return strictly typed objects.
+- `calculate_exchange_fee()`: Must return strictly typed objects.
+- `calculate_platform_fee()`: Must return strictly typed objects.
+- `calculate_cost()`: Must return strictly typed objects.
+- `estimate_cost_range()`: Must return strictly typed objects.
+- `get_cost_as_bps()`: Must return strictly typed objects.
+- `get_effective_cost()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

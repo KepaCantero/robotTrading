@@ -1,0 +1,28 @@
+# Requirements Document: presentation/dashboard/data_loader.py
+
+## 1. Module Overview
+Data Loader for Dashboard
+
+Loads data from backtesting results and paper trading logs.
+
+## 2. Dependencies
+- `json`
+- `logging`
+- `pathlib.Path`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `re`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DashboardDataLoader`: Must conform to application domain models.
+### Public Functions
+- `load_backtest_results()`: Must return strictly typed objects.
+- `list_strategies()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,43 @@
+# Requirements Document: domain/strategies/base.py
+
+## 1. Module Overview
+BaseStrategy - Clase base abstracta para todas las estrategias de trading.
+
+Implementa la interfaz común que todas las estrategias deben seguir,
+permitiendo hot-swapping y gestión dinámica de estrategias.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `abc.ABC`
+- `abc.abstractmethod`
+- `datetime.datetime`
+- `datetime.timezone`
+- `decimal.ROUND_HALF_UP`
+- `decimal.Decimal`
+- `typing.Any`
+- `app.shared.config.centralized_config.get_config`
+- `app.domain.models.market_data.Quote`
+- `app.domain.models.portfolio.Portfolio`
+- `app.domain.models.signal.Signal`
+- `app.domain.models.signal.SignalType`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BaseStrategy`: Must conform to application domain models.
+### Public Functions
+- `generate_signals()`: Must return strictly typed objects.
+- `risk_check()`: Must return strictly typed objects.
+- `get_parameters()`: Must return strictly typed objects.
+- `update_parameters()`: Must return strictly typed objects.
+- `validate_config()`: Must return strictly typed objects.
+- `get_required_parameters()`: Must return strictly typed objects.
+- `get_position_size()`: Must return strictly typed objects.
+- `get_stop_loss_price()`: Must return strictly typed objects.
+- `get_take_profit_price()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

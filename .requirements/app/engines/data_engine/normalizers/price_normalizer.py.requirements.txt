@@ -1,0 +1,30 @@
+# Requirements Document: engines/data_engine/normalizers/price_normalizer.py
+
+## 1. Module Overview
+PriceNormalizer - Normalización de precios.
+
+Maneja ajustes por splits, dividendos y corporate actions.
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PriceNormalizer`: Must conform to application domain models.
+### Public Functions
+- `normalize()`: Must return strictly typed objects.
+- `register_corporate_action()`: Must return strictly typed objects.
+- `normalize_batch()`: Must return strictly typed objects.
+- `get_split_date()`: Must return strictly typed objects.
+- `get_dividend_date()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

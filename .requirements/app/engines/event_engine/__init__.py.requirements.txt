@@ -1,0 +1,27 @@
+# Requirements Document: engines/event_engine/__init__.py
+
+## 1. Module Overview
+Event Engine - Tomasini's event-driven architecture.
+
+This module implements the event queue pattern from Tomasini's "Trading Systems":
+- Event queue for sequential processing
+- Event-driven order lifecycle management
+- Priority queue for time-sensitive events
+
+## 2. Dependencies
+- `tomasini_event_queue.Event`
+- `tomasini_event_queue.EventHandler`
+- `tomasini_event_queue.EventPriority`
+- `tomasini_event_queue.EventType`
+- `tomasini_event_queue.OrderEventHandler`
+- `tomasini_event_queue.OrderFillHandler`
+- `tomasini_event_queue.OrderSubmitHandler`
+- `tomasini_event_queue.TomasiniEventQueue`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

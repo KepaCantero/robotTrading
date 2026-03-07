@@ -1,0 +1,47 @@
+# Requirements Document: domain/optimization/sensitivity_analyzer.py
+
+## 1. Module Overview
+Sensitivity Analysis Framework (TASK-6.1 Phase 1)
+
+Measures how performance metrics change when varying each parameter.
+Core capability: elasticity analysis to identify critical vs robust parameters.
+
+Elasticity = % change in Sharpe / % change in parameter
+- Elasticity > 2.0: CRITICAL parameter (small changes = big impact)
+- Elasticity 0.5-2.0: NORMAL parameter (balanced sensitivity)
+- Elasticity < 0.5: ROBUST parameter (insensitive to changes)
+
+## 2. Dependencies
+- `json`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `typing.Union`
+- `numpy`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SensitivityResult`: Must conform to application domain models.
+- `SensitivityReport`: Must conform to application domain models.
+- `SensitivityAnalyzer`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_json()`: Must return strictly typed objects.
+- `analyze_parameter_sensitivity()`: Must return strictly typed objects.
+- `get_sensitivity_summary()`: Must return strictly typed objects.
+- `print_sensitivity_report()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,43 @@
+# Requirements Document: domain/services/compliance/portfolio_optimizer.py
+
+## 1. Module Overview
+Portfolio Compliance Optimizer
+===============================
+
+Coordinates portfolio optimization across multiple services.
+
+Responsibilities:
+- Collect optimization results from available services
+- Combine regime-aware optimization
+- Apply risk constraints
+- Generate optimal portfolio weights
+
+Author: Compliance Integration System
+Date: 2026-02-03
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `pandas`
+- `app.domain.services.compliance.results.OptimizeResult`
+- `app.domain.services.compliance.service_registry.get_service_registry`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PortfolioComplianceOptimizer`: Must conform to application domain models.
+### Public Functions
+- `optimize_portfolio()`: Must return strictly typed objects.
+- `get_available_optimizers()`: Must return strictly typed objects.
+- `calculate_portfolio_metrics()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

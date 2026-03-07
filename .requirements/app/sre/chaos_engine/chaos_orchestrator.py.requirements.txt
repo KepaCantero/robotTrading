@@ -1,0 +1,64 @@
+# Requirements Document: sre/chaos_engine/chaos_orchestrator.py
+
+## 1. Module Overview
+Chaos Orchestrator - Coordinates Chaos Engineering Experiments
+
+Implements Google SRE chaos engineering practices:
+- Hypothesis-driven experimentation
+- Controlled failure injection
+- Automated validation
+- Blast radius control
+- Rollback automation
+
+Usage:
+    orchestrator = ChaosOrchestrator(
+        failure_injectors=[pod_killer, delay_injector],
+        blast_radius_controller=blast_controller,
+        metrics_collector=metrics
+    )
+
+    experiment = await orchestrator.run_experiment(
+        name="pod-kill-resilience",
+        hypothesis="System remains available when random pods are killed",
+        injectors=["pod_killer"],
+        duration_minutes=30
+    )
+
+## 2. Dependencies
+- `__future__.annotations`
+- `asyncio`
+- `logging`
+- `uuid`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `aiosqlite`
+- `app.shared.utils.safe_parse.safe_parse`
+- `blast_radius.BlastRadiusController`
+- `hypothesis.ChaosHypothesis`
+- `hypothesis.HypothesisStatus`
+- `hypothesis.HypothesisValidator`
+- `hypothesis.ValidationResult`
+- `pathlib.Path`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ExperimentStatus`: Must conform to application domain models.
+- `ChaosExperiment`: Must conform to application domain models.
+- `ChaosConfig`: Must conform to application domain models.
+- `ChaosOrchestrator`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

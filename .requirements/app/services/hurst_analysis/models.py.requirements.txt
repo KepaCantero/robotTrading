@@ -1,0 +1,27 @@
+# Requirements Document: services/hurst_analysis/models.py
+
+## 1. Module Overview
+Data models for Hurst Exponent analysis.
+
+This module contains all data classes and enums used throughout
+the hurst_analysis module. All models are immutable value objects
+following the Single Responsibility Principle.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `enum.Enum`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MarketRegime`: Must conform to application domain models.
+- `StrategyRecommendation`: Must conform to application domain models.
+- `HurstResult`: Must conform to application domain models.
+- `RegimeChange`: Must conform to application domain models.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

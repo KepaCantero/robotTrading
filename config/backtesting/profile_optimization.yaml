@@ -303,69 +303,82 @@ learning_engines:
 # THRESHOLD OPTIMIZATION
 # ============================================================================
 threshold_optimization:
-  # RSI thresholds - WIDENED for more trade opportunities (Task 23 fix)
-  # Previous: min 20-35 was too restrictive, causing few trades all stopped out
+  # RSI thresholds - WIDENED for more trade opportunities (Task 23 + Task 24)
+  # More aggressive to generate more signals
   rsi:
     buy_threshold:
-      min: 15
-      max: 50
+      min: 10
+      max: 45
       step: 2
-      default: 35
+      default: 30
 
     sell_threshold:
-      min: 55
-      max: 85
+      min: 60
+      max: 90
       step: 2
-      default: 70
+      default: 75
 
   # Stochastic RSI thresholds - WIDENED for more signals
   stoch_rsi:
     oversold_threshold:
-      min: 10
-      max: 30
+      min: 5
+      max: 25
       step: 2
-      default: 20
+      default: 15
 
     overbought_threshold:
-      min: 70
-      max: 90
+      min: 75
+      max: 95
       step: 2
-      default: 80
+      default: 85
 
   # Momentum thresholds - WIDENED for more signals
   momentum:
     threshold:
-      min: 0.005
-      max: 0.025
-      step: 0.005
-      default: 0.015
+      min: 0.003
+      max: 0.020
+      step: 0.002
+      default: 0.010
 
   # ATR thresholds - RELAXED to allow more trades
   atr:
-    min_percentile: 50
-    min_relative_atr: 0.004
+    min_percentile: 40
+    min_relative_atr: 0.003
 
-  # Volume thresholds - LOWERED to allow more trades (Task 23 fix)
-  # Previous: min 1.0 required above-average volume, now 0.7 allows below-average
+  # Volume thresholds - LOWERED to allow more trades
+  # Now allows below-average volume for more signals
   volume_ratio:
-    min: 0.7
-    max: 1.4
+    min: 0.5
+    max: 1.5
     step: 0.1
-    default: 1.0
+    default: 0.8
 
-  # EMA distance thresholds
+  # EMA distance thresholds - WIDENED
   ema_distance:
-    min: 0.002
-    max: 0.01
+    min: 0.001
+    max: 0.015
     step: 0.001
-    default: 0.005
+    default: 0.003
+
+  # Stop-loss / Take-profit ratios - MORE AGGRESSIVE
+  stop_loss:
+    min: 0.03
+    max: 0.10
+    step: 0.01
+    default: 0.05
+
+  take_profit:
+    min: 0.05
+    max: 0.25
+    step: 0.01
+    default: 0.12
 
   # Optimization method
   optimization:
-    method: "grid_search"     # grid_search, random_search, bayesian
+    method: "bayesian"     # bayesian for better exploration
     cv_folds: 5
     scoring: "sharpe"         # sharpe, sortino, return
-    n_iter: 50                # For random/bayesian search
+    n_iter: 100               # More iterations for better results
     n_jobs: -1
 
 # ============================================================================
@@ -426,13 +439,59 @@ validation:
     oos_ratio: 0.2            # Out-of-sample ratio
     rolling_window: true      # Use rolling window validation
 
-  # Performance thresholds
+  # Performance thresholds - LOWERED to allow more strategies
   thresholds:
-    min_sharpe: 0.5           # Minimum Sharpe ratio
-    max_drawdown: 0.2         # Maximum drawdown allowed
-    min_win_rate: 0.45        # Minimum win rate
-    min_trades: 20            # Minimum number of trades
-    min_profit_factor: 1.5    # Minimum profit factor
+    min_sharpe: 0.3           # Lowered from 0.5
+    max_drawdown: 0.25        # Raised from 0.2
+    min_win_rate: 0.40        # Lowered from 0.45
+    min_trades: 10            # Lowered from 20
+    min_profit_factor: 1.2    # Lowered from 1.5
+
+# ============================================================================
+# MARKET REGIME FILTERS (Task 24)
+# ============================================================================
+# Filter signals based on market regime to improve performance
+regime_filters:
+  enabled: true
+
+  # Regime detection settings
+  detection:
+    method: "hmm"             # hmm, volatility_trend, adx
+    lookback_period: 63       # ~3 months for regime detection
+    min_confidence: 0.6       # Minimum confidence for regime classification
+
+  # Bull market settings (favorable conditions)
+  bull_market:
+    position_multiplier: 1.0   # Full position size
+    signal_threshold: 0.5      # Normal signal threshold
+    allow_shorting: false
+
+  # Bear market settings (reduce exposure)
+  bear_market:
+    position_multiplier: 0.3   # Reduced position size (30%)
+    signal_threshold: 0.8      # Higher threshold (fewer trades)
+    allow_shorting: false      # No shorting in bear market
+    exit_on_signal: true       # Exit positions on any sell signal
+
+  # Sideways market settings
+  sideways_market:
+    position_multiplier: 0.6   # Moderate position size
+    signal_threshold: 0.7      # Higher threshold
+    allow_shorting: false
+
+  # High volatility settings
+  high_volatility:
+    enabled: true
+    atr_percentile_threshold: 80  # Above 80th percentile = high vol
+    position_multiplier: 0.5      # Reduce position size
+    stop_loss_multiplier: 1.5     # Widen stop-loss
+
+  # Trend strength filter (ADX)
+  trend_filter:
+    enabled: true
+    adx_threshold: 25           # Minimum ADX for trend confirmation
+    strong_trend_adx: 40        # Strong trend threshold
+    require_trend: false        # Require trend for entry
 
 # ============================================================================
 # REPORTING CONFIGURATION

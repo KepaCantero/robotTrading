@@ -1,0 +1,50 @@
+# Requirements Document: backtesting/services/models.py
+
+## 1. Module Overview
+Data Models for Profile Batch Backtesting
+
+This module contains all data models used by the profile batch backtesting
+services and the main orchestrator.
+
+Models:
+- ProfileResultDB: SQLAlchemy model for database persistence
+- BaselineOptimizationComparison: Comparison between baseline and optimized results
+- OptimizedStrategy: Result of optimization pipeline
+- ProfileResult: Complete result for a single profile
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Union`
+- `sqlalchemy.JSON`
+- `sqlalchemy.Boolean`
+- `sqlalchemy.Column`
+- `sqlalchemy.DateTime`
+- `sqlalchemy.Float`
+- `sqlalchemy.Integer`
+- `sqlalchemy.String`
+- `sqlalchemy.ext.declarative.declarative_base`
+- `app.domain.models.input_profile.InputProfile`
+- `app.services.profile_driven_trading.profile_strategy_mapper.StrategyMapping`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ProfileResultDB`: Must conform to application domain models.
+- `BaselineOptimizationComparison`: Must conform to application domain models.
+- `OptimizedStrategy`: Must conform to application domain models.
+- `ProfileResult`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

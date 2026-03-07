@@ -1,0 +1,73 @@
+# Requirements Document: domain/portfolio/multi_asset/asset_class.py
+
+## 1. Module Overview
+Asset Class Definitions and Configuration.
+
+This module defines the asset class types, their characteristics, and the data structures
+used to represent and analyze different asset classes in a multi-asset portfolio.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `pandas`
+- `pydantic.BaseModel`
+- `pydantic.ConfigDict`
+- `pydantic.Field`
+- `pydantic.field_validator`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RebalanceFrequency`: Must conform to application domain models.
+- `AssetClassType`: Must conform to application domain models.
+- `AssetClassReturns`: Must conform to application domain models.
+- `AssetClassMetrics`: Must conform to application domain models.
+- `AssetClassConfig`: Must conform to application domain models.
+- `AssetClass`: Must conform to application domain models.
+### Public Functions
+- `get_trading_hours()`: Must return strictly typed objects.
+- `get_settlement_period()`: Must return strictly typed objects.
+- `get_typical_volatility()`: Must return strictly typed objects.
+- `get_typical_return()`: Must return strictly typed objects.
+- `n_observations()`: Must return strictly typed objects.
+- `annualized_return()`: Must return strictly typed objects.
+- `annualized_volatility()`: Must return strictly typed objects.
+- `sharpe_ratio()`: Must return strictly typed objects.
+- `skewness()`: Must return strictly typed objects.
+- `kurtosis()`: Must return strictly typed objects.
+- `get_percentile_return()`: Must return strictly typed objects.
+- `get_var()`: Must return strictly typed objects.
+- `get_cvar()`: Must return strictly typed objects.
+- `validate()`: Must return strictly typed objects.
+- `risk_return_ratio()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `validate_max_weight()`: Must return strictly typed objects.
+- `validate_symbols()`: Must return strictly typed objects.
+- `validate_correlations()`: Must return strictly typed objects.
+- `validate()`: Must return strictly typed objects.
+- `risk_return_ratio()`: Must return strictly typed objects.
+- `calculate_sharpe_ratio()`: Must return strictly typed objects.
+- `sharpe_ratio()`: Must return strictly typed objects.
+- `to_config()`: Must return strictly typed objects.
+- `from_config()`: Must return strictly typed objects.
+- `get_correlation_with()`: Must return strictly typed objects.
+- `is_within_weight_bounds()`: Must return strictly typed objects.
+- `calculate_position_size()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,59 @@
+# Requirements Document: backtesting/labeling/bet_sizing.py
+
+## 1. Module Overview
+Bet Sizing Implementation for Financial ML
+
+Based on Marcos López de Prado's "Advances in Financial Machine Learning", Chapter 10.
+
+Bet sizing determines how much to invest in each trading opportunity.
+This is critical for risk management and maximizing risk-adjusted returns.
+
+Key Concepts:
+- Kelly Criterion: Optimal bet size for maximizing long-term growth
+- Meta-labeling: Use ML predictions to size bets
+- Risk Parity: Size bets based on risk contribution
+- Drawdown Constraints: Limit position sizes based on drawdown
+- Expected Value: Size based on the expected value of each trade
+- Bet Sizing with ML: Use meta-model probabilities for position sizing
+
+Methods:
+1. Kelly Criterion: f* = (bp - q) / b
+2. Probability Scaling: Size based on prediction probability
+3. Risk Parity: Equalize risk contribution across positions
+4. Concentration Limit: Cap maximum exposure
+5. ML-based Sizing: Use meta-labeling model output for bet sizing
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `numpy`
+- `math`
+- `math`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BetSizingConfig`: Must conform to application domain models.
+- `BetSizingResult`: Must conform to application domain models.
+- `BetSizing`: Must conform to application domain models.
+### Public Functions
+- `calculate_bet_sizes()`: Must return strictly typed objects.
+- `calculate_bet_sizes_ml()`: Must return strictly typed objects.
+- `calculate_bet_sizes_with_discrete_allocation()`: Must return strictly typed objects.
+- `calculate_bet_sizes_with_risk_target()`: Must return strictly typed objects.
+- `calculate_bet_sizes_expected_value()`: Must return strictly typed objects.
+- `calculate_kelly_criterion()`: Must return strictly typed objects.
+- `calculate_bet_sizes_with_meta_model()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `calculate_sizes()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

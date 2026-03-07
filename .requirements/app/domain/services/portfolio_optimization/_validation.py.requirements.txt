@@ -1,0 +1,34 @@
+# Requirements Document: domain/services/portfolio_optimization/_validation.py
+
+## 1. Module Overview
+Shared validation utilities for portfolio optimization.
+
+Provides common validation functions for covariance matrices,
+input sanitization, and logging across all optimization modules.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `traceback`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+
+## 3. Core Components (Contracts)
+### Public Functions
+- `is_square_matrix()`: Must return strictly typed objects.
+- `is_symmetric()`: Must return strictly typed objects.
+- `is_positive_semidefinite()`: Must return strictly typed objects.
+- `validate_covariance_matrix()`: Must return strictly typed objects.
+- `enforce_positive_semidefinite()`: Must return strictly typed objects.
+- `sanitize_input_returns()`: Must return strictly typed objects.
+- `validate_weights_sum_to_one()`: Must return strictly typed objects.
+- `log_optimization_failure()`: Must return strictly typed objects.
+- `sanitize_covariance_matrix()`: Must return strictly typed objects.
+- `get_condition_number()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

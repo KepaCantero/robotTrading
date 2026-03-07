@@ -1,0 +1,58 @@
+# Requirements Document: sre/oncall/__init__.py
+
+## 1. Module Overview
+On-Call Procedures System - SRE Compliance (SRE Rule 24)
+
+Comprehensive on-call management system implementing Google SRE best practices:
+- Rotation management with fair scheduling
+- Escalation policies with clear paths
+- Shift handoff procedures with knowledge transfer
+- On-call status dashboard for visibility
+- Comprehensive runbook library
+- Sustainable on-call practices
+- On-call burden tracking
+- Well-being support
+
+Target: 95% compliance with SRE on-call standards
+
+Components:
+- rotation: On-call rotation management
+- escalation: Escalation policies and paths
+- handoff: Shift handoff procedures
+- dashboard: On-call status dashboard
+- runbooks: Operational procedures library
+
+Usage:
+    from app.sre.oncall import OncallManager
+
+    manager = OncallManager()
+    await manager.initialize()
+
+    # Get current on-call engineer
+    current = await manager.get_current_oncall()
+
+    # Escalate if needed
+    await manager.escalate_incident(incident_id, severity="critical")
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dashboard.OncallDashboard`
+- `dashboard.OncallMetrics`
+- `dashboard.OncallStatus`
+- `escalation.EscalationLevel`
+- `escalation.EscalationManager`
+- `escalation.EscalationPath`
+- `escalation.EscalationPolicy`
+- `handoff.HandoffManager`
+- `handoff.HandoffSession`
+- `rotation.OncallRotation`
+- `rotation.RotationConfig`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

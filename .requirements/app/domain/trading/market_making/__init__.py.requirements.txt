@@ -1,0 +1,35 @@
+# Requirements Document: domain/trading/market_making/__init__.py
+
+## 1. Module Overview
+Market Making Module
+
+This module provides market making strategies and models for algorithmic trading.
+It implements high-frequency market making techniques including the Avellaneda-Stoikov
+model and related inventory management approaches.
+
+Key Components:
+- AvellanedaStoikov: Optimal market making with inventory risk management
+- Quote generation: Dynamic bid/ask quote calculation
+- Inventory management: Position and risk control
+
+References:
+- Avellaneda, M. & Stoikov, S. (2008) "High-frequency trading in a limit order book"
+- Guéant, O., Lehalle, C.A. & Fernandez-Tapia, J. (2013) "Dealing with inventory risk"
+
+## 2. Dependencies
+- `app.domain.trading.market_making.avellaneda_stoikov.ASConfig`
+- `app.domain.trading.market_making.avellaneda_stoikov.ASQuote`
+- `app.domain.trading.market_making.avellaneda_stoikov.ASQuoteGenerator`
+- `app.domain.trading.market_making.avellaneda_stoikov.ASQuoteParams`
+- `app.domain.trading.market_making.avellaneda_stoikov.AvellanedaStoikovModel`
+- `app.domain.trading.market_making.avellaneda_stoikov.InventoryConfig`
+- `app.domain.trading.market_making.avellaneda_stoikov.InventoryManager`
+- `app.domain.trading.market_making.avellaneda_stoikov.InventoryState`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,64 @@
+# Requirements Document: backtesting/chan_metrics.py
+
+## 1. Module Overview
+Performance Metrics - Ernest Chan Methodologies
+
+This module implements Ernest Chan's performance metrics from
+"Algorithmic Trading: A Practitioner's Guide".
+
+Key Concepts:
+1. Sharpe ratio optimization
+2. Maximum drawdown analysis
+3. Calmar ratio calculation
+4. Return distribution analysis
+5. Strategy comparison metrics
+
+Reference:
+    "Algorithmic Trading" by Ernest P. Chan (2013)
+    Chapter 3: Backtesting
+    Chapter 8: Risk and Performance Metrics
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `typing.Union`
+- `numpy`
+- `pandas`
+- `app.shared.config.centralized_config.CentralizedConfig`
+- `app.shared.config.centralized_config.get_config`
+- `scipy.stats`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SharpeRatioResult`: Must conform to application domain models.
+- `DrawdownResult`: Must conform to application domain models.
+- `CalmarRatioResult`: Must conform to application domain models.
+- `ReturnDistributionMetrics`: Must conform to application domain models.
+- `StrategyComparisonResult`: Must conform to application domain models.
+- `ChanSharpeRatioCalculator`: Must conform to application domain models.
+- `ChanDrawdownAnalyzer`: Must conform to application domain models.
+- `ChanCalmarRatioCalculator`: Must conform to application domain models.
+- `ChanReturnDistributionAnalyzer`: Must conform to application domain models.
+- `ChanStrategyComparator`: Must conform to application domain models.
+### Public Functions
+- `calculate_sharpe_ratio()`: Must return strictly typed objects.
+- `calculate_max_drawdown()`: Must return strictly typed objects.
+- `calculate_calmar_ratio()`: Must return strictly typed objects.
+- `calculate_sharpe_ratio()`: Must return strictly typed objects.
+- `analyze_drawdown()`: Must return strictly typed objects.
+- `calculate_calmar_ratio()`: Must return strictly typed objects.
+- `analyze_return_distribution()`: Must return strictly typed objects.
+- `compare_strategies()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

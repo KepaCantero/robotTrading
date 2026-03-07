@@ -1,0 +1,47 @@
+# Requirements Document: domain/models/investment_profile.py
+
+## 1. Module Overview
+T2.1: InvestmentProfile - Investment Strategy Profile Generated from User Input
+
+Maps user InputProfile → InvestmentProfile with dynamically generated strategy parameters.
+
+Capabilities:
+- Maps capital tier (micro|small|medium|large) to user capital
+- Applies objective-specific parameter mappings
+- Selects modules based on capital & objective
+- Determines leverage & risk scaling factors
+
+## 2. Dependencies
+- `logging`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `uuid.uuid4`
+- `pydantic.BaseModel`
+- `pydantic.ConfigDict`
+- `pydantic.Field`
+- `pydantic.field_validator`
+- `app.domain.models.input_profile.InputProfile`
+- `app.domain.models.input_profile.ObjectivoInversion`
+- `app.domain.models.input_profile.RiskTolerance`
+- `os`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CapitalTier`: Must conform to application domain models.
+- `InvestmentProfile`: Must conform to application domain models.
+- `ProfileGenerator`: Must conform to application domain models.
+### Public Functions
+- `validate_capital_tier()`: Must return strictly typed objects.
+- `validate_objetivo()`: Must return strictly typed objects.
+- `validate_risk_tolerance()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `determine_capital_tier()`: Must return strictly typed objects.
+- `generate()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,42 @@
+# Requirements Document: backtesting/drift_detection/drift_detectors.py
+
+## 1. Module Overview
+Drift Detectors - Statistical methods for detecting concept and data drift
+
+This module implements various statistical tests for detecting distribution
+shifts in machine learning models and financial time series.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `collections.deque`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `numpy`
+- `scipy.stats.ks_2samp`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DriftType`: Must conform to application domain models.
+- `DriftResult`: Must conform to application domain models.
+- `KSDriftDetector`: Must conform to application domain models.
+- `PSIDriftDetector`: Must conform to application domain models.
+- `ADWINDriftDetector`: Must conform to application domain models.
+- `MMDDriftDetector`: Must conform to application domain models.
+### Public Functions
+- `detect()`: Must return strictly typed objects.
+- `detect()`: Must return strictly typed objects.
+- `detect()`: Must return strictly typed objects.
+- `detect()`: Must return strictly typed objects.
+- `rbf_kernel()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

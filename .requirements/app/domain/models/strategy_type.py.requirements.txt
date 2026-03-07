@@ -1,0 +1,31 @@
+# Requirements Document: domain/models/strategy_type.py
+
+## 1. Module Overview
+Strategy Type enumeration for trading strategies.
+
+Maps investment objectives to specific strategy implementations based on
+academic research and trading literature.
+
+References:
+- Gray & Vogel: Quantitative Momentum (11-gray-vogel-quantitative-momentum.md)
+- Berkin & Swedroe: Factor-Based Investing (30-berkin-swedroe-factor-based-investing.md)
+- Markowitz: Portfolio Selection (48-papers-markowitz-portfolio-selection.md)
+- Fama-French: Factor Models (43-papers-fama-french-carhart-factors.md)
+- Kissell: Portfolio Management (42-kissell-algorithmic-trading-portfolio-management.md)
+
+## 2. Dependencies
+- `enum.Enum`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StrategyType`: Must conform to application domain models.
+### Public Functions
+- `description()`: Must return strictly typed objects.
+- `requires_leverage()`: Must return strictly typed objects.
+- `is_defensive()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

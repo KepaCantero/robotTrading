@@ -1,0 +1,17 @@
+# Requirements Document: services/parametrization/__init__.py
+
+## 1. Module Overview
+Parametrization Framework - Module Parameter Generation (T3.1)
+
+Module parameter generation from InvestmentProfile, mapping investment objectives
+and capital tiers to strategy-specific parameters for 17+ trading modules.
+
+## 2. Dependencies
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

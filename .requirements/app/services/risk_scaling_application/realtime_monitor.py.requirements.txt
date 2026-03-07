@@ -1,0 +1,49 @@
+# Requirements Document: services/risk_scaling_application/realtime_monitor.py
+
+## 1. Module Overview
+T8.1 RealTimeMonitor - Real-time position monitoring and breach detection
+
+Monitors currently scaled positions and detects limit breaches in real-time.
+
+Responsibilities:
+- Monitor scaled position changes
+- Detect dynamic limit breaches
+- Generate adjustment alerts
+- Track monitoring statistics
+- Provide feedback loop for scaling adjustments
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `limit_adjuster.AdjustedLimit`
+- `limit_adjuster.LimitBreach`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PositionSnapshot`: Must conform to application domain models.
+- `MonitoringAlert`: Must conform to application domain models.
+- `MonitoringReport`: Must conform to application domain models.
+- `RealTimeMonitor`: Must conform to application domain models.
+### Public Functions
+- `get_realtime_monitor()`: Must return strictly typed objects.
+- `add_alert()`: Must return strictly typed objects.
+- `update_positions()`: Must return strictly typed objects.
+- `detect_new_breaches()`: Must return strictly typed objects.
+- `detect_recovery()`: Must return strictly typed objects.
+- `recommend_scaling_adjustment()`: Must return strictly typed objects.
+- `generate_monitoring_report()`: Must return strictly typed objects.
+- `get_monitor_status()`: Must return strictly typed objects.
+- `reset_history()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

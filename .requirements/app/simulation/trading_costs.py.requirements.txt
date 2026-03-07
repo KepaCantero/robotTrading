@@ -1,0 +1,61 @@
+# Requirements Document: simulation/trading_costs.py
+
+## 1. Module Overview
+Trading Costs Analysis - Larry Harris's Trading Cost Framework
+
+This module implements the trading costs analysis framework from Harris,
+Chapter 8: "Trading Costs" and Chapter 9: "Trading Cost Evaluation."
+
+Key concepts implemented:
+1. Bid-ask spread impact
+2. Market impact modeling
+3. Timing risk
+4. Execution cost breakdown
+5. Cost-benefit analysis of trading decisions
+
+Reference:
+    Harris, L. (2003). Trading and Exchanges, Chapters 8-9.
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CostComponent`: Must conform to application domain models.
+- `ImpactModel`: Must conform to application domain models.
+- `CostBreakdown`: Must conform to application domain models.
+- `ExecutionQualityMetrics`: Must conform to application domain models.
+- `MarketImpactModel`: Must conform to application domain models.
+- `BidAskSpreadAnalyzer`: Must conform to application domain models.
+- `TimingRiskCalculator`: Must conform to application domain models.
+- `TradingCostAnalyzer`: Must conform to application domain models.
+### Public Functions
+- `create_trading_cost_analyzer()`: Must return strictly typed objects.
+- `cost_percentage()`: Must return strictly typed objects.
+- `excellent_execution()`: Must return strictly typed objects.
+- `poor_execution()`: Must return strictly typed objects.
+- `calculate_impact()`: Must return strictly typed objects.
+- `add_spread_observation()`: Must return strictly typed objects.
+- `get_average_spread()`: Must return strictly typed objects.
+- `get_spread_statistics()`: Must return strictly typed objects.
+- `estimate_adverse_selection_cost()`: Must return strictly typed objects.
+- `calculate_timing_risk()`: Must return strictly typed objects.
+- `calculate_implicit_cost()`: Must return strictly typed objects.
+- `analyze_execution()`: Must return strictly typed objects.
+- `evaluate_execution_quality()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

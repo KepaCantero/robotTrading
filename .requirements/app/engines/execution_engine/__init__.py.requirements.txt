@@ -1,0 +1,45 @@
+# Requirements Document: engines/execution_engine/__init__.py
+
+## 1. Module Overview
+Execution Engine Module
+
+This module provides market microstructure analysis and execution capabilities.
+The main implementation is in the microstructure subdirectory.
+
+Components:
+- MarketMicrostructureEngine: Main orchestrator for microstructure analysis
+- Order book analysis and depth metrics
+- Bid-ask bounce detection and removal
+- Almgren-Chriss market impact modeling
+- Adverse selection detection (VPIN, order flow toxicity)
+- Market quality metrics
+- Tick size constraints
+- Dark pool routing logic
+
+Compliance:
+- Larry Harris "Trading and Exchanges" (Rule 6)
+- Maureen O'Hara "Market Microstructure Theory" (Rule 7)
+
+Example:
+    from app.engines.execution_engine.microstructure import get_market_microstructure_engine
+
+    engine = get_market_microstructure_engine()
+    result = engine.analyze_market_microstructure(
+        symbol="AAPL",
+        order_book=order_book_snapshot,
+        trade_data=trades_df,
+    )
+
+## 2. Dependencies
+- `microstructure.ExecutionPlan`
+- `microstructure.MarketMicrostructureEngine`
+- `microstructure.MicrostructureAnalysisResult`
+- `microstructure.get_market_microstructure_engine`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

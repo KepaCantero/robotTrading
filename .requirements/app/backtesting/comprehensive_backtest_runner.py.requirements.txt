@@ -1,0 +1,104 @@
+# Requirements Document: backtesting/comprehensive_backtest_runner.py
+
+## 1. Module Overview
+Comprehensive Backtest Runner - Modernized Architecture
+Sistema completo de backtesting automatizado y configurable
+
+Integración Fase 3: Migración a nueva arquitectura modular
+- Eliminadas variables de entorno (reemplazado por ProcessPoolBacktestExecutor)
+- Logging minimal (sin emojis)
+- AggressiveMemoryManager para manejo de memoria
+- train_with_retry para manejo robusto de errores
+- BacktestDefaults para valores centralizados
+- Monte Carlo unificado con BacktestOrchestrator
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `math`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `pandas`
+- `app.backtesting.core.BacktestConfigLoader`
+- `app.backtesting.core.BacktestOrchestrator`
+- `app.backtesting.core.error_handling.MutexError`
+- `app.backtesting.core.error_handling.TrainingError`
+- `app.backtesting.core.error_handling.train_with_retry`
+- `app.backtesting.core.executor.ProcessPoolBacktestExecutor`
+- `app.backtesting.core.executor.SimpleBacktestExecutor`
+- `app.backtesting.core.memory_manager.AggressiveMemoryManager`
+- `app.backtesting.backtesting_compliance.BacktestingCompliance`
+- `app.backtesting.backtesting_compliance.BacktestingComplianceResult`
+- `app.backtesting.backtesting_compliance.create_backtesting_compliance`
+- `app.backtesting.data_loader.DataLoader`
+- `app.backtesting.data_split.MultipleTestingCorrector`
+- `app.backtesting.data_split.TrainValTestSplitter`
+- `app.backtesting.data_split.validate_out_of_sample_performance`
+- `app.backtesting.factories.StrategyFactory`
+- `app.backtesting.models.BacktestConfig`
+- `app.backtesting.models.BacktestResult`
+- `app.backtesting.engines.multi_strategy_engine.MultiStrategyBacktester`
+- `app.domain.strategies.momentum.MomentumStrategy`
+- `app.backtesting.runners.regime_analyzer.RegimeAnalyzer`
+- `app.backtesting.runners.monte_carlo_simulator.MonteCarloSimulator`
+- `app.backtesting.runners.result_aggregator.ResultAggregator`
+- `platform`
+- `concurrent.futures.ProcessPoolExecutor`
+- `concurrent.futures.as_completed`
+- `itertools.product`
+- `optuna`
+- `optuna.samplers.TPESampler`
+- `optuna.pruners.MedianPruner`
+- `copy`
+- `app.shared.performance.statsmodels_fallback.adfuller`
+- `app.domain.models.input_profile.InputProfile`
+- `app.domain.models.input_profile.ObjectivoInversion`
+- `app.domain.models.input_profile.RiskTolerance`
+- `app.backtesting.data_split.DataSplit`
+- `app.backtesting.meta_analyzer.integrate_meta_analyzer_with_runner`
+- `app.backtesting.data_split.DataSplit`
+- `app.backtesting.data_split.DataSplit`
+- `app.services.profile_driven_trading.profile_strategy_mapper.ProfileStrategyMapper`
+- `json`
+- `tempfile`
+- `yaml`
+- `os`
+- `app.engines.context_engine.regime_detectors.hmm_regime_detector.HMMRegimeDetector`
+- `app.engines.context_engine.regime_detectors.clustering_regime_detector.ClusteringRegimeDetector`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ComprehensiveBacktestRunner`: Must conform to application domain models.
+### Public Functions
+- `run_all_backtests()`: Must return strictly typed objects.
+- `run_specific_backtests()`: Must return strictly typed objects.
+- `run_baseline_backtest()`: Must return strictly typed objects.
+- `run_learning_engines_backtest()`: Must return strictly typed objects.
+- `run_monte_carlo_backtest()`: Must return strictly typed objects.
+- `run_walk_forward_backtest()`: Must return strictly typed objects.
+- `run_transformer_optimization_backtest()`: Must return strictly typed objects.
+- `run_ablation_backtest()`: Must return strictly typed objects.
+- `run_grid_search_backtest()`: Must return strictly typed objects.
+- `run_optuna_optimization()`: Must return strictly typed objects.
+- `run_out_of_sample_backtest()`: Must return strictly typed objects.
+- `run_multi_strategy_backtest()`: Must return strictly typed objects.
+- `run_regime_test_backtest()`: Must return strictly typed objects.
+- `optimize_with_validation()`: Must return strictly typed objects.
+- `get_results()`: Must return strictly typed objects.
+- `get_memory_stats()`: Must return strictly typed objects.
+- `objective()`: Must return strictly typed objects.
+- `triple_barrier_labels()`: Must return strictly typed objects.
+- `evaluate_param_set()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

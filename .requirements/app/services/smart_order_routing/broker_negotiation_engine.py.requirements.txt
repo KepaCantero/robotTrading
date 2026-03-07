@@ -1,0 +1,27 @@
+# Requirements Document: services/smart_order_routing/broker_negotiation_engine.py
+
+## 1. Module Overview
+T2.1.1 - Broker Negotiation Engine
+
+Negotiates commission rates based on account volume and asset class.
+Implements tiered commission structure: retail → semi_pro → pro → institutional
+
+## 2. Dependencies
+- `logging`
+- `decimal.Decimal`
+- `typing.Dict`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BrokerNegotiationEngine`: Must conform to application domain models.
+### Public Functions
+- `get_broker_negotiation_engine()`: Must return strictly typed objects.
+- `get_rate_for_volume()`: Must return strictly typed objects.
+- `get_all_tiers()`: Must return strictly typed objects.
+- `estimate_commission_savings()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

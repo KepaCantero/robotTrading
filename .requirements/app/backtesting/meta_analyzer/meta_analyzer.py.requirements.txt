@@ -1,0 +1,46 @@
+# Requirements Document: backtesting/meta_analyzer/meta_analyzer.py
+
+## 1. Module Overview
+BacktestMetaAnalyzer - Análisis metacognitivo de resultados de backtests.
+
+Permite:
+- Análisis de patrones de rendimiento
+- Detección de correlaciones y comportamientos
+- Clusterización de resultados
+- Sugerencias de combinaciones óptimas
+
+## 2. Dependencies
+- `asyncio`
+- `json`
+- `logging`
+- `threading`
+- `concurrent.futures.ThreadPoolExecutor`
+- `concurrent.futures.as_completed`
+- `datetime.datetime`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `pandas`
+- `sklearn.cluster.KMeans`
+- `matplotlib.pyplot`
+- `seaborn`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BacktestMetaAnalyzer`: Must conform to application domain models.
+### Public Functions
+- `analyze_performance()`: Must return strictly typed objects.
+- `detect_clusters()`: Must return strictly typed objects.
+- `suggest_optimal_combinations()`: Must return strictly typed objects.
+- `export_report()`: Must return strictly typed objects.
+- `analyze_cpu()`: Must return strictly typed objects.
+- `cluster_cpu()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

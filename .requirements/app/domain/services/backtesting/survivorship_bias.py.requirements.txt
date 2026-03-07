@@ -1,0 +1,58 @@
+# Requirements Document: domain/services/backtesting/survivorship_bias.py
+
+## 1. Module Overview
+Survivorship Bias Correction
+
+Handles survivorship bias in backtesting by:
+- Tracking delisted stocks
+- Adjusting returns for delisting events
+- Including failed companies in historical data
+- Properly handling corporate actions
+
+Reference: Rule 11-lopez-de-prado-advances-in-financial-machine-learning.md
+- Survivorship bias leads to overestimation of returns
+- Must include delisted securities in backtesting
+
+## 2. Dependencies
+- `__future__.annotations`
+- `dataclasses.dataclass`
+- `datetime.date`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `pandas`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DelistingReason`: Must conform to application domain models.
+- `CorporateActionType`: Must conform to application domain models.
+- `DelistingEvent`: Must conform to application domain models.
+- `CorporateAction`: Must conform to application domain models.
+- `DelistingAdjustment`: Must conform to application domain models.
+- `SurvivorshipBiasCorrector`: Must conform to application domain models.
+### Public Functions
+- `is_bailout()`: Must return strictly typed objects.
+- `total_loss()`: Must return strictly typed objects.
+- `adjust_price()`: Must return strictly typed objects.
+- `adjust_quantity()`: Must return strictly typed objects.
+- `add_delisting()`: Must return strictly typed objects.
+- `add_corporate_action()`: Must return strictly typed objects.
+- `get_delisting()`: Must return strictly typed objects.
+- `get_corporate_actions()`: Must return strictly typed objects.
+- `check_delisting_date()`: Must return strictly typed objects.
+- `adjust_returns_for_delisting()`: Must return strictly typed objects.
+- `adjust_price_series()`: Must return strictly typed objects.
+- `get_current_symbol()`: Must return strictly typed objects.
+- `calculate_universe_including_delisted()`: Must return strictly typed objects.
+- `handle_spinoff()`: Must return strictly typed objects.
+- `get_adjusted_close()`: Must return strictly typed objects.
+- `calculate_survivorship_bias()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

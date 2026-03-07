@@ -1,0 +1,38 @@
+# Requirements Document: backtesting/signal_diagnostic_logger.py
+
+## 1. Module Overview
+Signal Diagnostic Logger for Multi-Strategy Backtesting.
+
+Tracks detailed information about signal generation, rejection reasons,
+and strategy-level metrics for diagnostic purposes.
+
+## 2. Dependencies
+- `json`
+- `logging`
+- `collections.defaultdict`
+- `datetime.datetime`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.DefaultDict`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SignalDiagnosticLogger`: Must conform to application domain models.
+### Public Functions
+- `log_signal_candidate()`: Must return strictly typed objects.
+- `log_signal_rejected()`: Must return strictly typed objects.
+- `log_signal_executed()`: Must return strictly typed objects.
+- `get_strategy_summary()`: Must return strictly typed objects.
+- `get_all_summaries()`: Must return strictly typed objects.
+- `save_diagnostic_report()`: Must return strictly typed objects.
+- `print_summary()`: Must return strictly typed objects.
+- `reset()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

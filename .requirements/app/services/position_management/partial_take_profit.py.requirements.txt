@@ -1,0 +1,40 @@
+# Requirements Document: services/position_management/partial_take_profit.py
+
+## 1. Module Overview
+Partial Take Profit Manager - R12: Take Profit Parcial
+
+Implementa take profit parcial en múltiples niveles de R-múltiplos.
+
+R12 Rules:
+- Cerrar 50% en 2R (move to breakeven)
+- Cerrar 25% en 3R (trailing stop)
+- Cerrar 25% en 5R (ninguna acción)
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ProfitTarget`: Must conform to application domain models.
+- `TakeProfitAction`: Must conform to application domain models.
+- `PartialTakeProfit`: Must conform to application domain models.
+### Public Functions
+- `check_targets()`: Must return strictly typed objects.
+- `reset()`: Must return strictly typed objects.
+- `get_executed_targets()`: Must return strictly typed objects.
+- `get_remaining_targets()`: Must return strictly typed objects.
+- `is_complete()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `from_dict()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

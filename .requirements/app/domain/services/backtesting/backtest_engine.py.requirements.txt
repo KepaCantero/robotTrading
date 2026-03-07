@@ -1,0 +1,69 @@
+# Requirements Document: domain/services/backtesting/backtest_engine.py
+
+## 1. Module Overview
+Robust Backtesting Engine
+
+Implements institutional-grade backtesting with:
+- Realistic transaction costs
+- Slippage modeling
+- Market impact
+- Multi-year simulation
+- Survivorship bias correction
+- Corporate actions handling
+- Dividend reinvestment
+
+Reference: López de Prado (2018) "Advances in Financial Machine Learning"
+- PnL distribution analysis
+- Backtesting overfitting detection
+- Harrah's bias prevention
+
+## 2. Dependencies
+- `__future__.annotations`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.date`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `uuid`
+- `numpy`
+- `numpy.typing.NDArray`
+- `app.backtesting.models.PerformanceMetrics`
+- `app.backtesting.models.Trade`
+- `app.backtesting.models.TradeSide`
+- `app.backtesting.models.TradeStatus`
+- `app.shared.config.centralized_config.get_config`
+- `scipy.stats`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `OrderSide`: Must conform to application domain models.
+- `OrderType`: Must conform to application domain models.
+- `OrderStatus`: Must conform to application domain models.
+- `BacktestConfig`: Must conform to application domain models.
+- `BacktestResult`: Must conform to application domain models.
+- `BacktestEngine`: Must conform to application domain models.
+### Public Functions
+- `total_trades()`: Must return strictly typed objects.
+- `reset()`: Must return strictly typed objects.
+- `cash()`: Must return strictly typed objects.
+- `positions()`: Must return strictly typed objects.
+- `equity()`: Must return strictly typed objects.
+- `get_position_value()`: Must return strictly typed objects.
+- `update_prices()`: Must return strictly typed objects.
+- `execute_order()`: Must return strictly typed objects.
+- `handle_dividend()`: Must return strictly typed objects.
+- `close_all_positions()`: Must return strictly typed objects.
+- `calculate_metrics()`: Must return strictly typed objects.
+- `get_result()`: Must return strictly typed objects.
+- `to_decimal()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

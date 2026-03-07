@@ -1,0 +1,75 @@
+# Requirements Document: services/position_monitor/position_monitor.py
+
+## 1. Module Overview
+Position Monitor - Continuously monitors open positions and executes stops.
+
+This is the most critical component for production trading:
+- Checks positions every second
+- Executes stop-loss automatically when hit
+- Executes take-profit automatically when hit
+- Survives process restart (reads from DB)
+- Handles broker disconnections gracefully
+
+CRITICALITY: LIFE-THREATENING - System executes trades then forgets positions exist.
+No stop-loss execution in production.
+
+## 2. Dependencies
+- `asyncio`
+- `json`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `datetime.timezone`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `requests.exceptions.HTTPError`
+- `sqlalchemy.exc.DatabaseError`
+- `sqlalchemy.exc.DataError`
+- `sqlalchemy.exc.IntegrityError`
+- `sqlalchemy.exc.OperationalError`
+- `sqlalchemy.exc.ProgrammingError`
+- `app.shared.config.centralized_config.get_config`
+- `app.shared.utils.decimal_utils.to_decimal`
+- `app.shared.utils.decimal_utils.validate_price`
+- `app.database.get_sync_db`
+- `stop_executor`
+- `stop_executor`
+- `app.database.get_sync_db`
+- `app.database.models.PositionState`
+- `app.database.models.PositionState`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PositionStatus`: Must conform to application domain models.
+- `MonitoredPosition`: Must conform to application domain models.
+- `PositionMonitorConfig`: Must conform to application domain models.
+- `PositionMonitor`: Must conform to application domain models.
+### Public Functions
+- `should_trigger_stop_loss()`: Must return strictly typed objects.
+- `should_trigger_take_profit()`: Must return strictly typed objects.
+- `calculate_stop_loss_price()`: Must return strictly typed objects.
+- `calculate_take_profit_price()`: Must return strictly typed objects.
+- `update_current_price()`: Must return strictly typed objects.
+- `calculate_pnl()`: Must return strictly typed objects.
+- `calculate_pnl_percentage()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `from_dict()`: Must return strictly typed objects.
+- `get_monitored_positions()`: Must return strictly typed objects.
+- `get_active_positions()`: Must return strictly typed objects.
+- `get_position()`: Must return strictly typed objects.
+- `get_positions_by_symbol()`: Must return strictly typed objects.
+- `get_audit_log()`: Must return strictly typed objects.
+- `get_statistics()`: Must return strictly typed objects.
+- `get_position_summary()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

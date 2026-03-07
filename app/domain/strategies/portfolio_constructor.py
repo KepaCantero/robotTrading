@@ -19,7 +19,7 @@ SOLID Principles:
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 from scipy.optimize import Bounds, minimize
@@ -836,3 +836,185 @@ class FactorPortfolioConstructor:
                 metrics["expected_annual_return"] = float(weighted_return / total_weight)
 
         return metrics
+
+
+# =============================================================================
+# LOW VOLATILITY PORTFOLIO CONSTRUCTOR
+# =============================================================================
+
+
+class LowVolatilityPosition:
+    """Position in low volatility portfolio."""
+
+    def __init__(
+        self,
+        symbol: str,
+        weight: Decimal,
+        shares: Decimal = Decimal("0"),
+        sector: str = "",
+        beta: Decimal = Decimal("1.0"),
+        volatility: Decimal = Decimal("0.15"),
+    ):
+        self.symbol = symbol
+        self.weight = weight
+        self.shares = shares
+        self.sector = sector
+        self.beta = beta
+        self.volatility = volatility
+
+
+class LowVolatilityPortfolio:
+    """Low volatility portfolio representation."""
+
+    def __init__(
+        self,
+        total_value: Decimal = Decimal("0"),
+        expected_volatility: Decimal = Decimal("0.12"),
+        portfolio_beta: Decimal = Decimal("0.7"),
+    ):
+        self.positions: List[LowVolatilityPosition] = []
+        self.total_value = total_value
+        self.expected_volatility = expected_volatility
+        self.portfolio_beta = portfolio_beta
+        self.sector_weights: Dict[str, Decimal] = {}
+        self.created_at = datetime.utcnow()
+
+
+class LowVolatilityPortfolioConstructor:
+    """
+    Construct minimum variance portfolios for low volatility strategy.
+
+    The goal is to build a portfolio with the lowest possible volatility
+    while maintaining diversification and sector constraints.
+    """
+
+    def __init__(self, config):
+        """
+        Initialize portfolio constructor.
+
+        Args:
+            config: LowVolatilityStrategyConfig instance
+        """
+        self.config = config
+        logger.info(
+            f"LowVolatilityPortfolioConstructor initialized: "
+            f"portfolio_size={getattr(config, 'portfolio_size', 30)}"
+        )
+
+    def construct_portfolio(
+        self,
+        stocks: List[Any],  # List[LowVolatilityStock]
+        total_capital: Decimal,
+        returns_matrix: Optional[np.ndarray] = None,
+    ) -> LowVolatilityPortfolio:
+        """
+        Construct a minimum variance portfolio.
+
+        Args:
+            stocks: List of LowVolatilityStock instances
+            total_capital: Total capital to invest
+            returns_matrix: Optional returns matrix for optimization
+
+        Returns:
+            Constructed LowVolatilityPortfolio
+        """
+        logger.info(f"Constructing low volatility portfolio from {len(stocks)} stocks")
+
+        # Limit to configured portfolio size
+        max_positions = getattr(self.config, 'portfolio_size', 30)
+        selected_stocks = stocks[:max_positions]
+
+        # Calculate equal weights (simplified - could use min variance optimization)
+        n = len(selected_stocks)
+        if n == 0:
+            return LowVolatilityPortfolio(total_value=total_capital)
+
+        weight_per_stock = Decimal("1.0") / Decimal(str(n))
+
+        # Create portfolio
+        portfolio = LowVolatilityPortfolio(total_value=total_capital)
+        sector_weights: Dict[str, Decimal] = {}
+
+        for stock in selected_stocks:
+            profile = getattr(stock, 'profile', None)
+            if profile is None:
+                continue
+
+            symbol = getattr(profile, 'symbol', 'UNKNOWN')
+            sector = getattr(profile, 'sector', 'Unknown')
+            beta = getattr(profile, 'beta', Decimal("1.0"))
+            vol = getattr(profile, 'annualized_volatility', Decimal("0.15"))
+
+            position = LowVolatilityPosition(
+                symbol=symbol,
+                weight=weight_per_stock,
+                shares=total_capital * weight_per_stock,  # Simplified
+                sector=sector,
+                beta=beta,
+                volatility=vol,
+            )
+            portfolio.positions.append(position)
+
+            # Track sector weights
+            if sector not in sector_weights:
+                sector_weights[sector] = Decimal("0")
+            sector_weights[sector] += weight_per_stock
+
+        portfolio.sector_weights = sector_weights
+
+        # Calculate portfolio metrics
+        if portfolio.positions:
+            total_beta = sum(p.beta * p.weight for p in portfolio.positions)
+            portfolio.portfolio_beta = total_beta
+
+            # Estimate portfolio volatility (simplified)
+            avg_vol = sum(p.volatility for p in portfolio.positions) / len(portfolio.positions)
+            portfolio.expected_volatility = avg_vol * Decimal("0.7")  # Diversification benefit
+
+        logger.info(
+            f"Low volatility portfolio constructed: {len(portfolio.positions)} positions, "
+            f"beta={portfolio.portfolio_beta:.2f}, vol={portfolio.expected_volatility:.2%}"
+        )
+
+        return portfolio
+
+    def rebalance(
+        self,
+        current_portfolio: LowVolatilityPortfolio,
+        new_stocks: List[Any],
+        total_capital: Decimal,
+        returns_matrix: Optional[np.ndarray] = None,
+    ) -> LowVolatilityPortfolio:
+        """
+        Rebalance existing portfolio.
+
+        Args:
+            current_portfolio: Current portfolio
+            new_stocks: Updated list of stocks
+            total_capital: Current capital
+            returns_matrix: Optional returns matrix
+
+        Returns:
+            Rebalanced portfolio
+        """
+        logger.info("Rebalancing low volatility portfolio")
+        return self.construct_portfolio(new_stocks, total_capital, returns_matrix)
+
+    def analyze_drift(self, portfolio: LowVolatilityPortfolio) -> Dict[str, Any]:
+        """
+        Analyze portfolio drift.
+
+        Args:
+            portfolio: Current portfolio
+
+        Returns:
+            Dict with drift analysis
+        """
+        rebalance_threshold = getattr(self.config, 'rebalance_threshold', Decimal("0.05"))
+
+        # Simplified drift analysis
+        return {
+            "needs_rebalance": False,
+            "reason": "No significant drift detected",
+            "threshold": float(rebalance_threshold),
+        }

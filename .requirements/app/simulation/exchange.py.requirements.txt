@@ -1,0 +1,75 @@
+# Requirements Document: simulation/exchange.py
+
+## 1. Module Overview
+Exchange Simulation - Order Matching and Trade Execution
+
+This module implements the exchange simulation as described in Harris,
+Chapter 4: "Market Structure" and Chapter 6: "Dealer Markets."
+
+Key concepts implemented:
+1. Order matching engine with price-time priority
+2. Trade execution with quality metrics
+3. Market maker strategies
+4. Spread optimization
+5. Execution quality analysis
+
+Reference:
+    Harris, L. (2003). Trading and Exchanges, Chapters 4-6.
+
+## 2. Dependencies
+- `logging`
+- `uuid`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `market_mechanics.MarketMechanicsEngine`
+- `order_book.LimitOrderBook`
+- `order_book.Order`
+- `order_book.OrderSide`
+- `order_book.OrderStatus`
+- `order_book.OrderType`
+- `order_book.Trade`
+- `random`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `OrderMatchingAlgorithm`: Must conform to application domain models.
+- `SpreadStrategy`: Must conform to application domain models.
+- `ExecutionQuality`: Must conform to application domain models.
+- `TradeExecution`: Must conform to application domain models.
+- `OrderMatchingEngine`: Must conform to application domain models.
+- `MarketMakerStrategy`: Must conform to application domain models.
+- `Exchange`: Must conform to application domain models.
+### Public Functions
+- `create_exchange()`: Must return strictly typed objects.
+- `total_cost()`: Must return strictly typed objects.
+- `cost_bps()`: Must return strictly typed objects.
+- `executions()`: Must return strictly typed objects.
+- `submit_order()`: Must return strictly typed objects.
+- `cancel_order()`: Must return strictly typed objects.
+- `get_execution_quality()`: Must return strictly typed objects.
+- `current_position()`: Must return strictly typed objects.
+- `calculate_spread()`: Must return strictly typed objects.
+- `update_position()`: Must return strictly typed objects.
+- `should_quote()`: Must return strictly typed objects.
+- `get_quote_size()`: Must return strictly typed objects.
+- `best_bid()`: Must return strictly typed objects.
+- `best_ask()`: Must return strictly typed objects.
+- `spread()`: Must return strictly typed objects.
+- `mid_price()`: Must return strictly typed objects.
+- `submit_order()`: Must return strictly typed objects.
+- `get_market_maker_quotes()`: Must return strictly typed objects.
+- `get_execution_statistics()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

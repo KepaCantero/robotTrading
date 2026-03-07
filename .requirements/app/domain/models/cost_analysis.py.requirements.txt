@@ -1,0 +1,51 @@
+# Requirements Document: domain/models/cost_analysis.py
+
+## 1. Module Overview
+Cost Analysis Models.
+
+This module defines Pydantic models for cost analysis functionality
+including cost breakdown, profitability validation, and Cost Impact Ratio (CIR) analysis.
+
+## 2. Dependencies
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `pydantic.BaseModel`
+- `pydantic.Field`
+- `pydantic.field_validator`
+- `app.backtesting.models.TradeStatus`
+- `app.domain.models.order.OrderSide`
+- `app.domain.models.order.OrderType`
+- `app.shared.config.centralized_config.get_config`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CostType`: Must conform to application domain models.
+- `CostBreakdownModel`: Must conform to application domain models.
+- `CostAnalysisResultModel`: Must conform to application domain models.
+- `TradeCostAnalysisRequest`: Must conform to application domain models.
+- `StrategyCostAnalysisRequest`: Must conform to application domain models.
+- `ProfitabilityValidationRequest`: Must conform to application domain models.
+- `CostParametersModel`: Must conform to application domain models.
+- `CostAnalysisResponse`: Must conform to application domain models.
+- `ProfitabilityValidationResponse`: Must conform to application domain models.
+### Public Functions
+- `validate_total_cost()`: Must return strictly typed objects.
+- `validate_cost_percentage()`: Must return strictly typed objects.
+- `validate_total_costs()`: Must return strictly typed objects.
+- `validate_net_profit()`: Must return strictly typed objects.
+- `validate_cost_impact_ratio()`: Must return strictly typed objects.
+- `validate_commission_rates()`: Must return strictly typed objects.
+- `validate_slippage_rates()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

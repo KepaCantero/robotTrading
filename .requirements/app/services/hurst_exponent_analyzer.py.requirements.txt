@@ -1,0 +1,88 @@
+# Requirements Document: services/hurst_exponent_analyzer.py
+
+## 1. Module Overview
+Hurst Exponent Analyzer for Market Regime Detection
+
+This module implements Hurst Exponent calculation using R/S (Rescaled Range) analysis
+to determine whether a time series is trending, mean-reverting, or random walk.
+
+Based on Ernest Chan's Algorithmic Trading (Rule 2.2):
+- H = 0.5: Random walk (Geometric Brownian Motion)
+- H < 0.5: Mean-reverting (suitable for mean reversion strategies)
+- H > 0.5: Trending (suitable for trend following strategies)
+
+CRITICAL: NUMBA IS REQUIRED DEPENDENCY - NO FALLBACKS
+- This module REQUIRES Numba to be installed
+- NO fallback to pure Python - fails fast if Numba not available
+- 100% Numba JIT acceleration on all performance-critical functions
+- Expected speedup: 50-100x vs pure Python
+
+PERFORMANCE OPTIMIZATIONS (Rule 19 - High Performance Python):
+- Uses Numba JIT compilation for 50-100x speedup on R/S calculations
+- Efficient memory management for large time series
+- Parallel processing for multiple time scales
+
+STATISTICAL VALIDATION (Rule 3 - López de Prado):
+- Implements proper R/S analysis methodology
+- Confidence intervals via bootstrapping
+- Statistical significance testing
+- Multiple time scale analysis
+
+TIME SERIES BEST PRACTICES (Rule 32 - Tsay):
+- Pre-whitening to remove autocorrelation
+- Stationarity checks
+- Proper handling of non-stationary series
+
+Author: Algorithmic Trading Team
+Date: 2026-01-28
+Version: 2.0.0 - NO FALLBACKS (Numba Required)
+Compliance: Ernest Chan Rule 2.2, Rule 19, Rule 3, Rule 32
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `typing.Union`
+- `numba`
+- `numpy`
+- `pandas`
+- `numba.jit`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MarketRegime`: Must conform to application domain models.
+- `StrategyRecommendation`: Must conform to application domain models.
+- `HurstResult`: Must conform to application domain models.
+- `RegimeChange`: Must conform to application domain models.
+- `HurstExponentAnalyzer`: Must conform to application domain models.
+### Public Functions
+- `calculate_rs_numba()`: Must return strictly typed objects.
+- `calculate_cumulative_deviation_numba()`: Must return strictly typed objects.
+- `calculate_rs_for_window_numba()`: Must return strictly typed objects.
+- `calculate_hurst_rs_numba()`: Must return strictly typed objects.
+- `calculate_hurst_variance_numba()`: Must return strictly typed objects.
+- `calculate_aggregated_variance_numba()`: Must return strictly typed objects.
+- `calculate_hurst_exponent()`: Must return strictly typed objects.
+- `classify_regime()`: Must return strictly typed objects.
+- `recommend_strategy_from_hurst()`: Must return strictly typed objects.
+- `get_analyzer_info()`: Must return strictly typed objects.
+- `analyze()`: Must return strictly typed objects.
+- `detect_regime_change()`: Must return strictly typed objects.
+- `monitor_multiple_symbols()`: Must return strictly typed objects.
+- `get_historical_hurst()`: Must return strictly typed objects.
+- `calculate_hurst_exponent()`: Must return strictly typed objects.
+- `classify_regime()`: Must return strictly typed objects.
+- `get_strategy_recommendation()`: Must return strictly typed objects.
+- `calculate_rolling_hurst()`: Must return strictly typed objects.
+- `detect_regime_changes()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

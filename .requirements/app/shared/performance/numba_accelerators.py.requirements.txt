@@ -1,0 +1,70 @@
+# Requirements Document: shared/performance/numba_accelerators.py
+
+## 1. Module Overview
+Numba JIT Accelerators for Computational Hotspots
+
+This module provides Numba-optimized versions of critical computational functions
+identified in the performance audit. All functions use @numba.jit(nopython=True, cache=True)
+for 10-100x speedup on numerical computations.
+
+Expected Performance Improvements:
+- RSI Calculation: 50-100x faster
+- MACD Calculation: 30-80x faster
+- ATR Calculation: 40-90x faster
+- Rolling Statistics: 20-60x faster
+- Array Operations: 10-50x faster
+- Statistical Metrics: 25-75x faster
+
+Author: Performance Optimization Team
+Date: 2025-01-28
+Version: 1.0.0
+
+## 2. Dependencies
+- `logging`
+- `typing.Optional`
+- `typing.Tuple`
+- `numba`
+- `numpy`
+- `numba.jit`
+
+## 3. Core Components (Contracts)
+### Public Functions
+- `calculate_rsi_numba()`: Must return strictly typed objects.
+- `calculate_rsi_array_numba()`: Must return strictly typed objects.
+- `calculate_ema_numba()`: Must return strictly typed objects.
+- `calculate_ema_single_numba()`: Must return strictly typed objects.
+- `calculate_macd_numba()`: Must return strictly typed objects.
+- `calculate_atr_numba()`: Must return strictly typed objects.
+- `calculate_atr_single_numba()`: Must return strictly typed objects.
+- `rolling_mean_numba()`: Must return strictly typed objects.
+- `rolling_std_numba()`: Must return strictly typed objects.
+- `rolling_min_numba()`: Must return strictly typed objects.
+- `rolling_max_numba()`: Must return strictly typed objects.
+- `calculate_bollinger_bands_numba()`: Must return strictly typed objects.
+- `calculate_stochastic_numba()`: Must return strictly typed objects.
+- `calculate_skewness_numba()`: Must return strictly typed objects.
+- `calculate_kurtosis_numba()`: Must return strictly typed objects.
+- `calculate_var_numba()`: Must return strictly typed objects.
+- `calculate_cvar_numba()`: Must return strictly typed objects.
+- `array_differences_numba()`: Must return strictly typed objects.
+- `cumulative_returns_numba()`: Must return strictly typed objects.
+- `drawdown_series_numba()`: Must return strictly typed objects.
+- `calculate_transition_matrix_numba()`: Must return strictly typed objects.
+- `generate_benchmark_curve_numba()`: Must return strictly typed objects.
+- `calculate_rsi()`: Must return strictly typed objects.
+- `calculate_ema()`: Must return strictly typed objects.
+- `calculate_macd()`: Must return strictly typed objects.
+- `calculate_atr()`: Must return strictly typed objects.
+- `calculate_bollinger_bands()`: Must return strictly typed objects.
+- `calculate_stochastic()`: Must return strictly typed objects.
+- `calculate_skewness()`: Must return strictly typed objects.
+- `calculate_kurtosis()`: Must return strictly typed objects.
+- `calculate_var()`: Must return strictly typed objects.
+- `calculate_cvar()`: Must return strictly typed objects.
+- `get_numba_info()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

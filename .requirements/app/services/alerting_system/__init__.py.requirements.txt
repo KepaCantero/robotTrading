@@ -1,0 +1,45 @@
+# Requirements Document: services/alerting_system/__init__.py
+
+## 1. Module Overview
+T18.2: Advanced Alerting System Package
+
+Provides rule-based alerting with webhook/email/Slack/Discord/Telegram integration:
+- Alert rule engine for metric evaluation
+- Alert manager for state machine and deduplication
+- Notification dispatcher for multi-channel delivery
+- Metrics-driven alerter for continuous rule evaluation
+- Alerting orchestrator for lifecycle management
+
+## 2. Dependencies
+- `alert_manager.AlertManager`
+- `alert_rule_engine.AlertRuleEngine`
+- `app.application.alerting.alerting_orchestrator.AlertingHealth`
+- `app.application.alerting.alerting_orchestrator.AlertingOrchestrator`
+- `app.application.alerting.alerting_orchestrator.AlertingStatistics`
+- `metrics_driven_alerter.MetricQueryConfig`
+- `metrics_driven_alerter.MetricsDrivenAlerter`
+- `models.AlertEvent`
+- `models.AlertHistory`
+- `models.AlertRule`
+- `models.AlertSeverity`
+- `models.AlertState`
+- `models.ChangeRule`
+- `models.ComparisonOperator`
+- `models.LogicOperator`
+- `models.NotificationChannelType`
+- `models.NotificationTarget`
+- `models.ThresholdRule`
+- `notification_channels.NotificationDispatcher`
+- `notification_channels.TelegramChannel`
+- `rule_templates.AlertRuleTemplates`
+
+## 3. Core Components (Contracts)
+### Public Functions
+- `get_alerting_orchestrator()`: Must return strictly typed objects.
+- `reset_alerting_orchestrator()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

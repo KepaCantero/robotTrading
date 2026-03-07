@@ -1,0 +1,52 @@
+# Requirements Document: backtesting/services/transaction_cost_model.py
+
+## 1. Module Overview
+Transaction Cost Model for Realistic Backtesting.
+
+This module implements a comprehensive transaction cost model based on
+real-world broker costs, primarily Interactive Brokers (IBKR).
+
+BUG #3 FIX: Transaction costs were severely underestimated.
+- Commission: Was 0.1% flat, now uses IBKR's actual pricing
+- Slippage: Was not properly modeled, now uses market impact model
+- Spread: Was missing, now includes bid-ask spread impact
+
+References:
+- IBKR Commission Structure: https://www.interactivebrokers.com/en/pricing/commissions-home.php
+- Almgren-Chriss Market Impact Model
+- Kissell Research Group implementation patterns
+
+SINGLE SOURCE OF TRUTH: All values are sourced from CentralizedConfig.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `decimal.Decimal`
+- `decimal.ROUND_HALF_UP`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `app.shared.config.centralized_config.get_config`
+- `math`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BrokerType`: Must conform to application domain models.
+- `OrderType`: Must conform to application domain models.
+- `BrokerConfig`: Must conform to application domain models.
+- `TransactionCostResult`: Must conform to application domain models.
+- `TransactionCostModel`: Must conform to application domain models.
+### Public Functions
+- `estimate_transaction_costs()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `calculate_costs()`: Must return strictly typed objects.
+- `get_round_trip_cost_estimate()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

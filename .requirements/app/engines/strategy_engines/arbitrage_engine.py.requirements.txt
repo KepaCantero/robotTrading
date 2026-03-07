@@ -1,0 +1,56 @@
+# Requirements Document: engines/strategy_engines/arbitrage_engine.py
+
+## 1. Module Overview
+ArbitrageStrategyEngine - Engine de estrategia de arbitraje.
+
+Implementa estrategias de arbitraje incluyendo:
+- Arbitraje estadistico (statistical arbitrage)
+- Spread trading (diferencias de precio entre activos relacionados)
+- Carry trades (diferencias en tasas de interes/rendimiento)
+
+Caracteristicas principales:
+- Deteccion de desviaciones de precio vs valor justo
+- Calculo de spreads y z-scores dinamicos
+- Soporte para multiples pares/grupos de activos
+- Integracion con Learning Engines para ajustes dinamicos
+- Gestion de riesgo especifica para arbitraje
+
+## 2. Dependencies
+- `logging`
+- `collections.defaultdict`
+- `collections.deque`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Sequence`
+- `numpy`
+- `app.shared.config.centralized_config.get_config`
+- `app.domain.models.market_data.Quote`
+- `app.domain.models.portfolio.Portfolio`
+- `app.domain.models.signal.Signal`
+- `app.domain.models.signal.SignalSource`
+- `app.domain.models.signal.SignalStrength`
+- `app.domain.models.signal.SignalType`
+- `app.domain.services.analysis.momentum.TechnicalIndicatorCalculator`
+- `base.BaseStrategyEngine`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ArbitrageStrategyEngine`: Must conform to application domain models.
+### Public Functions
+- `get_strategy_type()`: Must return strictly typed objects.
+- `extract_features()`: Must return strictly typed objects.
+- `set_yield_data()`: Must return strictly typed objects.
+- `set_funding_rate()`: Must return strictly typed objects.
+- `get_required_parameters()`: Must return strictly typed objects.
+- `risk_check()`: Must return strictly typed objects.
+- `get_active_arbitrage_positions()`: Must return strictly typed objects.
+- `get_spread_statistics()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

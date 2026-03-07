@@ -1,0 +1,59 @@
+# Requirements Document: backtesting/validation/overfitting_detector.py
+
+## 1. Module Overview
+Overfitting detection module (FASE 5.3).
+
+This module implements comprehensive overfitting detection using multiple
+methods including IS vs OS comparison, parameter stability analysis, White's
+reality check, and MCS test.
+
+Key Features:
+- IS vs OS Sharpe ratio degradation analysis
+- Return degradation metrics
+- Parameter stability scoring
+- White's reality check for data snooping
+- MCS (Multiple Comparison Systems) test
+- Actionable recommendations based on overfitting level
+
+References:
+    - AUDIT_PLAN_COMPLETO.md - FASE 5.3: Validation
+    - "A Reality Check for Data Snooping" - Halbert White
+    - "Advances in Financial Machine Learning" - Marcos López de Prado
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `pandas`
+- `app.backtesting.validation.models.OverfittingLevel`
+- `app.backtesting.validation.models.OverfittingMetrics`
+- `app.backtesting.validation.models.ParameterStabilityResult`
+- `app.backtesting.validation.models.PeriodResult`
+- `app.backtesting.validation.models.StabilityLevel`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `OverfittingDetector`: Must conform to application domain models.
+### Public Functions
+- `analyze_parameter_stability()`: Must return strictly typed objects.
+- `calculate_stability_score()`: Must return strictly typed objects.
+- `classify_stability()`: Must return strictly typed objects.
+- `detect_parameter_drift()`: Must return strictly typed objects.
+- `generate_stability_recommendation()`: Must return strictly typed objects.
+- `calculate_overfitting_metrics()`: Must return strictly typed objects.
+- `detect()`: Must return strictly typed objects.
+- `calculate_degradation()`: Must return strictly typed objects.
+- `whites_reality_check()`: Must return strictly typed objects.
+- `mcs_test()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

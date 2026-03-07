@@ -1,0 +1,57 @@
+# Requirements Document: services/advanced_risk_manager.py
+
+## 1. Module Overview
+TASK-RM-1 to RM-5: Advanced Risk Management System.
+
+Implements comprehensive risk controls:
+- Risk per Trade <2% (TASK-RM-1)
+- Risk/Reward Ratio ≥1:3 (TASK-RM-2)
+- Max Exposure per Strategy (TASK-RM-3)
+- Max Drawdown Limit 15% (TASK-RM-4)
+- Circuit Breakers 3-5 Stops (TASK-RM-5)
+
+## 2. Dependencies
+- `logging`
+- `collections.defaultdict`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `app.shared.config.centralized_config.get_config`
+- `app.domain.models.portfolio.Portfolio`
+- `app.domain.models.signal.Signal`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TradeRiskLimiter`: Must conform to application domain models.
+- `RiskRewardValidator`: Must conform to application domain models.
+- `StrategyExposureLimiter`: Must conform to application domain models.
+- `DrawdownMonitor`: Must conform to application domain models.
+- `CircuitBreaker`: Must conform to application domain models.
+- `AdvancedRiskManager`: Must conform to application domain models.
+### Public Functions
+- `get_advanced_risk_manager()`: Must return strictly typed objects.
+- `calculate_max_position_size()`: Must return strictly typed objects.
+- `validate_trade_risk()`: Must return strictly typed objects.
+- `validate_risk_reward()`: Must return strictly typed objects.
+- `calculate_min_take_profit()`: Must return strictly typed objects.
+- `calculate_strategy_exposure()`: Must return strictly typed objects.
+- `validate_exposure()`: Must return strictly typed objects.
+- `update_equity()`: Must return strictly typed objects.
+- `check_drawdown()`: Must return strictly typed objects.
+- `reset()`: Must return strictly typed objects.
+- `record_stop_loss()`: Must return strictly typed objects.
+- `reset_stops()`: Must return strictly typed objects.
+- `is_strategy_paused()`: Must return strictly typed objects.
+- `get_consecutive_stops()`: Must return strictly typed objects.
+- `validate_trade()`: Must return strictly typed objects.
+- `calculate_safe_position_size()`: Must return strictly typed objects.
+- `record_trade_result()`: Must return strictly typed objects.
+- `get_risk_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

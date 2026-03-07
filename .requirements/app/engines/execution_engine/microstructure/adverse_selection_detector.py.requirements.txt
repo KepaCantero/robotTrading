@@ -1,0 +1,46 @@
+# Requirements Document: engines/execution_engine/microstructure/adverse_selection_detector.py
+
+## 1. Module Overview
+Adverse Selection Detection
+
+Implements O'Hara Rule 7.2: Detect adverse selection in trading.
+
+Adverse selection occurs when you consistently trade against better-informed
+counterparties, leading to losses.
+
+This module implements:
+1. VPIN (Volume-Synchronized PIN) - Probability of Informed Trading
+2. Order Flow Toxicity - Easley et al. model
+3. Post-trade price movement analysis
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `typing.Optional`
+- `numpy`
+- `pandas`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `VPINResult`: Must conform to application domain models.
+- `OrderToxicityResult`: Must conform to application domain models.
+- `AdverseSelectionResult`: Must conform to application domain models.
+- `VPINCalculator`: Must conform to application domain models.
+- `OrderFlowToxicity`: Must conform to application domain models.
+- `AdverseSelectionDetector`: Must conform to application domain models.
+### Public Functions
+- `get_vpin_calculator()`: Must return strictly typed objects.
+- `get_order_flow_toxicity()`: Must return strictly typed objects.
+- `get_adverse_selection_detector()`: Must return strictly typed objects.
+- `calculate_vpin()`: Must return strictly typed objects.
+- `calculate_vpin_history()`: Must return strictly typed objects.
+- `calculate_toxicity()`: Must return strictly typed objects.
+- `detect_toxic_periods()`: Must return strictly typed objects.
+- `detect_adverse_selection()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

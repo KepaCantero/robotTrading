@@ -1,0 +1,48 @@
+# Requirements Document: engines/portfolio_engine/__init__.py
+
+## 1. Module Overview
+Portfolio Engine - Base Engine
+
+Engine principal para gestión de portfolios que refactoriza y extiende PortfolioService.
+Proporciona interfaz clara para:
+- Asignación de capital
+- Optimización de portfolio
+- Rebalanceo dinámico
+- Integración con múltiples brokers
+
+## 2. Dependencies
+- `logging`
+- `abc.ABC`
+- `abc.abstractmethod`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `app.domain.models.portfolio.Portfolio`
+- `app.domain.models.portfolio.PortfolioProvider`
+- `app.services.portfolio_service.PortfolioService`
+- `app.infrastructure.providers.paper_trading.PaperTradingPortfolioProvider`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BasePortfolioEngine`: Must conform to application domain models.
+- `PortfolioEngine`: Must conform to application domain models.
+### Public Functions
+- `initialize()`: Must return strictly typed objects.
+- `process()`: Must return strictly typed objects.
+- `health_check()`: Must return strictly typed objects.
+- `initialize()`: Must return strictly typed objects.
+- `process()`: Must return strictly typed objects.
+- `set_optimizer()`: Must return strictly typed objects.
+- `set_rebalancer()`: Must return strictly typed objects.
+- `set_meta_learner()`: Must return strictly typed objects.
+- `get_allocation_by_asset_class()`: Must return strictly typed objects.
+- `get_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,70 @@
+# Requirements Document: sre/automation/toil_tracker.py
+
+## 1. Module Overview
+Toil Tracking System for SRE (Google SRE Chapter 1).
+
+Toil = "Manual, repetitive work that could be automated."
+Target: Reduce toil to <50% of total work.
+
+This module implements comprehensive toil tracking following Google SRE principles:
+- Track all operational work (toil vs. engineering)
+- Calculate toil percentage over time windows
+- Identify top sources of toil
+- Generate automation opportunity reports
+- Monitor progress toward toil reduction goals
+
+Key Concepts:
+- Toil: Manual, repetitive operational work (tickets, on-call, deployment, etc.)
+- Engineering: Sustainable work that reduces future toil
+- Target: Toil should be <50% of total work time
+
+## 2. Dependencies
+- `__future__.annotations`
+- `asyncio`
+- `json`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `enum.Enum`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `aiosqlite`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ToilCategory`: Must conform to application domain models.
+- `AutomationPotential`: Must conform to application domain models.
+- `ToilEntry`: Must conform to application domain models.
+- `ToilMetrics`: Must conform to application domain models.
+- `AutomationOpportunity`: Must conform to application domain models.
+- `ToilReport`: Must conform to application domain models.
+- `ToilConfig`: Must conform to application domain models.
+- `ToilTracker`: Must conform to application domain models.
+### Public Functions
+- `get_toil_tracker()`: Must return strictly typed objects.
+- `is_toil()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `log_work()`: Must return strictly typed objects.
+- `calculate_toil_percentage()`: Must return strictly typed objects.
+- `get_top_toil_sources()`: Must return strictly typed objects.
+- `get_top_toil_tasks()`: Must return strictly typed objects.
+- `generate_automation_opportunities()`: Must return strictly typed objects.
+- `get_engineer_breakdown()`: Must return strictly typed objects.
+- `get_trend_data()`: Must return strictly typed objects.
+- `export_to_json()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,31 @@
+# Requirements Document: engines/data_engine/normalizers/corporate_actions_handler.py
+
+## 1. Module Overview
+CorporateActionsHandler - Manejo de corporate actions.
+
+Detecta y aplica splits, dividendos, y otras corporate actions.
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CorporateActionsHandler`: Must conform to application domain models.
+### Public Functions
+- `register_split()`: Must return strictly typed objects.
+- `register_dividend()`: Must return strictly typed objects.
+- `get_actions()`: Must return strictly typed objects.
+- `detect_split_from_price_jump()`: Must return strictly typed objects.
+- `apply_adjustments_to_prices()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

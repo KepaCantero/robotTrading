@@ -1,0 +1,30 @@
+# Requirements Document: services/external_integrations/retry_manager.py
+
+## 1. Module Overview
+Retry management for external integrations.
+
+Implements exponential backoff with jitter and automatic retry logic
+for transient failures from external services (QuestDB, Dagster, MLFlow, Zipline).
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `random`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Optional`
+- `typing.TypeVar`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RetryConfig`: Must conform to application domain models.
+- `RetryManager`: Must conform to application domain models.
+### Public Functions
+- `get_retry_manager()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

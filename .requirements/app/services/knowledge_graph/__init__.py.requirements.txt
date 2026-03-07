@@ -1,0 +1,16 @@
+# Requirements Document: services/knowledge_graph/__init__.py
+
+## 1. Module Overview
+FASE 6.3: Knowledge Graph - Neo4j integration for trading relationships.
+
+## 2. Dependencies
+- `graph_builder.KnowledgeGraphBuilder`
+- `graph_builder.get_knowledge_graph_builder`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

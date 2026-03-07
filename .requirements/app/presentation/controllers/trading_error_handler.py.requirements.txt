@@ -1,0 +1,44 @@
+# Requirements Document: presentation/controllers/trading_error_handler.py
+
+## 1. Module Overview
+Trading Error Handler API
+TASK-DEFAULT_VALUE_14: Unificación de Error Handling
+
+API endpoints para gestionar el manejo unificado de errores del trading.
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `fastapi.APIRouter`
+- `fastapi.HTTPException`
+- `fastapi.status`
+- `pydantic.BaseModel`
+- `pydantic.Field`
+- `requests.exceptions.HTTPError`
+- `requests.exceptions.RequestException`
+- `app.exceptions.trading_exceptions.ErrorCategory`
+- `app.services.trading_error_handler.ErrorAction`
+- `app.services.trading_error_handler.ErrorContext`
+- `app.services.trading_error_handler.get_error_statistics`
+- `app.services.trading_error_handler.handle_trading_error`
+- `app.services.trading_error_handler.reset_circuit_breaker`
+- `app.services.trading_error_handler.trading_error_handler`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ErrorHandlingRequest`: Must conform to application domain models.
+- `ErrorHandlingResponse`: Must conform to application domain models.
+- `CircuitBreakerStatus`: Must conform to application domain models.
+- `ErrorStatistics`: Must conform to application domain models.
+- `CircuitBreakerResetRequest`: Must conform to application domain models.
+- `MockError`: Must conform to application domain models.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

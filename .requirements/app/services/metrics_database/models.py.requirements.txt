@@ -1,0 +1,58 @@
+# Requirements Document: services/metrics_database/models.py
+
+## 1. Module Overview
+T18.1: Real-Time Metrics Database Models
+
+Data models for time-series metrics storage and querying.
+
+## 2. Dependencies
+- `asyncio`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `os`
+- `warnings`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MetricType`: Must conform to application domain models.
+- `AggregationType`: Must conform to application domain models.
+- `MetricPoint`: Must conform to application domain models.
+- `TimeSeriesQuery`: Must conform to application domain models.
+- `AggregatedMetrics`: Must conform to application domain models.
+- `MetricsCollectionResult`: Must conform to application domain models.
+- `MetricsStorageStats`: Must conform to application domain models.
+- `MetricStatistics`: Must conform to application domain models.
+- `CandlePoint`: Must conform to application domain models.
+- `CachedResult`: Must conform to application domain models.
+- `CollectorSource`: Must conform to application domain models.
+- `QuestDBConfig`: Must conform to application domain models.
+- `MetricsCollectorConfig`: Must conform to application domain models.
+- `MetricsQueryEngineConfig`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+- `validate()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `success_rate()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `is_expired()`: Must return strictly typed objects.
+- `connection_string()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

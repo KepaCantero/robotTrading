@@ -1,0 +1,46 @@
+# Requirements Document: services/xai/models.py
+
+## 1. Module Overview
+FASE 6.1: XAI Models - Data structures for explainability results
+
+Defines Pydantic models for SHAP, LIME, and feature importance explanations.
+
+## 2. Dependencies
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `pydantic.BaseModel`
+- `pydantic.Field`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SHAPValue`: Must conform to application domain models.
+- `SHAPExplanation`: Must conform to application domain models.
+- `SHAPSummaryPlot`: Must conform to application domain models.
+- `LIMEFeature`: Must conform to application domain models.
+- `LIMEExplanation`: Must conform to application domain models.
+- `FeatureImportance`: Must conform to application domain models.
+- `FeatureImportanceReport`: Must conform to application domain models.
+- `PredictionExplanation`: Must conform to application domain models.
+- `PartialDependence`: Must conform to application domain models.
+- `PDPExplanation`: Must conform to application domain models.
+- `ICEExplanation`: Must conform to application domain models.
+- `InterpretationReport`: Must conform to application domain models.
+- `ExplainabilityConfig`: Must conform to application domain models.
+- `Config`: Must conform to application domain models.
+- `Config`: Must conform to application domain models.
+- `Config`: Must conform to application domain models.
+- `Config`: Must conform to application domain models.
+- `Config`: Must conform to application domain models.
+### Public Functions
+- `get_top_features()`: Must return strictly typed objects.
+- `get_top_features()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

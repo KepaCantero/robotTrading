@@ -1,0 +1,45 @@
+# Requirements Document: application/services/risk_configurator.py
+
+## 1. Module Overview
+Risk Configuration Service
+
+Provides risk management configuration based on risk tolerance.
+Implements VaR, Expected Shortfall, and drawdown controls.
+
+Reference: Rule 13-john-hull-risk-management.md
+Paper: Artzner, et al. (1999). "Coherent Measures of Risk"
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RiskLimitType`: Must conform to application domain models.
+- `StressTestScenario`: Must conform to application domain models.
+- `RiskLimit`: Must conform to application domain models.
+- `VaRResult`: Must conform to application domain models.
+- `DrawdownMetrics`: Must conform to application domain models.
+- `RiskBudget`: Must conform to application domain models.
+- `RiskConfigurator`: Must conform to application domain models.
+### Public Functions
+- `configure_risk_limits()`: Must return strictly typed objects.
+- `calculate_var()`: Must return strictly typed objects.
+- `calculate_drawdown_metrics()`: Must return strictly typed objects.
+- `check_risk_limits()`: Must return strictly typed objects.
+- `allocate_risk_budget()`: Must return strictly typed objects.
+- `run_stress_test()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

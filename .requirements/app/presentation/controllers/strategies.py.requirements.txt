@@ -1,0 +1,44 @@
+# Requirements Document: presentation/controllers/strategies.py
+
+## 1. Module Overview
+API endpoints para gestión de estrategias - TASK-DEFAULT_VALUE_31
+
+Proporciona endpoints REST para gestionar el sistema de estrategias múltiples,
+incluyendo carga, activación, métricas y configuración.
+
+## 2. Dependencies
+- `logging`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `fastapi.APIRouter`
+- `fastapi.Depends`
+- `fastapi.HTTPException`
+- `fastapi.status`
+- `pydantic.BaseModel`
+- `app.domain.strategies.ExecutionEngine`
+- `app.domain.strategies.StrategyConfigLoader`
+- `app.domain.strategies.StrategyLogger`
+- `app.domain.strategies.StrategyRegistry`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StrategyConfigRequest`: Must conform to application domain models.
+- `StrategyLoadRequest`: Must conform to application domain models.
+- `StrategyActivateRequest`: Must conform to application domain models.
+- `StrategyUpdateRequest`: Must conform to application domain models.
+- `StrategyResponse`: Must conform to application domain models.
+- `StrategyMetricsResponse`: Must conform to application domain models.
+- `ExecutionStatsResponse`: Must conform to application domain models.
+### Public Functions
+- `get_strategy_registry()`: Must return strictly typed objects.
+- `get_config_loader()`: Must return strictly typed objects.
+- `get_strategy_logger()`: Must return strictly typed objects.
+- `get_execution_engine()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

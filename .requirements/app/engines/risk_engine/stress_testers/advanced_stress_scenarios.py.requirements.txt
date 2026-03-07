@@ -1,0 +1,43 @@
+# Requirements Document: engines/risk_engine/stress_testers/advanced_stress_scenarios.py
+
+## 1. Module Overview
+Advanced Stress Testing Scenarios - Hull Chapter 20
+
+Implements specialized stress testing scenarios for:
+1. Liquidity Risk Scenarios
+2. Counterparty Risk Scenarios
+3. Operational Risk Scenarios
+4. Systemic Risk Scenarios
+5. Contagion Risk Scenarios
+
+Reference: Hull, Risk Management and Financial Institutions, Chapter 20
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `app.domain.models.portfolio.Portfolio`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `LiquidityRiskStressTester`: Must conform to application domain models.
+- `CounterpartyRiskStressTester`: Must conform to application domain models.
+- `OperationalRiskStressTester`: Must conform to application domain models.
+- `AdvancedStressTestOrchestrator`: Must conform to application domain models.
+### Public Functions
+- `get_advanced_stress_tester()`: Must return strictly typed objects.
+- `calculate_liquidity_adjusted_var()`: Must return strictly typed objects.
+- `run_liquidity_stress_tests()`: Must return strictly typed objects.
+- `calculate_counterparty_exposure()`: Must return strictly typed objects.
+- `calculate_operational_risk_impact()`: Must return strictly typed objects.
+- `run_comprehensive_advanced_stress_tests()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

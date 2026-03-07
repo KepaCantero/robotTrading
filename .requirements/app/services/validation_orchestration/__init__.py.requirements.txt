@@ -1,0 +1,20 @@
+# Requirements Document: services/validation_orchestration/__init__.py
+
+## 1. Module Overview
+Validation Orchestration Services - T5.1
+
+Validates backtest results against PHASE 0 capital viability gates.
+
+## 2. Dependencies
+- `app.services.validation_orchestration.validation_engine.GateResult`
+- `app.services.validation_orchestration.validation_engine.GateStatus`
+- `app.services.validation_orchestration.validation_engine.ValidationEngine`
+- `app.services.validation_orchestration.validation_engine.ValidationReport`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

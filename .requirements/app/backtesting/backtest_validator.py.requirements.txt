@@ -1,0 +1,56 @@
+# Requirements Document: backtesting/backtest_validator.py
+
+## 1. Module Overview
+Backtest Validator Module - Validation logic for backtests.
+
+Extracted from comprehensive_backtest_runner.py for Single Responsibility.
+Handles validation of backtest results:
+- Out-of-sample validation
+- Compliance validation (R5, R6, R7, DATA-001)
+- Performance degradation analysis
+- Stationarity tests (ADF)
+- Triple barrier labeling
+- Meta-labeling
+
+Architecture:
+- Implements Lopez de Prado and Tsay validation rules
+- Proper train/test splits without look-ahead bias
+- Concept drift detection
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `pandas`
+- `app.backtesting.core.executor.SimpleBacktestExecutor`
+- `app.backtesting.core.error_handling.train_with_retry`
+- `app.backtesting.core.memory_manager.AggressiveMemoryManager`
+- `app.backtesting.backtesting_compliance.BacktestingCompliance`
+- `app.backtesting.backtesting_compliance.BacktestingComplianceResult`
+- `app.backtesting.backtesting_compliance.create_backtesting_compliance`
+- `app.backtesting.models.BacktestConfig`
+- `app.domain.strategies.momentum_modular.strategy.ModularMomentumStrategy`
+- `app.shared.performance.statsmodels_fallback.adfuller`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BacktestValidator`: Must conform to application domain models.
+### Public Functions
+- `run_out_of_sample_backtest()`: Must return strictly typed objects.
+- `run_compliance_validation()`: Must return strictly typed objects.
+- `count_optimizable_parameters()`: Must return strictly typed objects.
+- `extract_walk_forward_results()`: Must return strictly typed objects.
+- `apply_meta_labeling()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

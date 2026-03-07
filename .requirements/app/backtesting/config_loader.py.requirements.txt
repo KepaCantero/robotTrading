@@ -1,0 +1,93 @@
+# Requirements Document: backtesting/config_loader.py
+
+## 1. Module Overview
+Configuration Loader for Meta-Analyzer
+
+Loads and manages YAML configuration for all meta-analysis components.
+Provides configuration access throughout the backtesting analysis pipeline.
+
+Design Note: Plain Dict Return Type
+------------------------------------
+This class intentionally returns Dict[str, Any] instead of value objects.
+This is a deliberate design choice for the following reasons:
+
+1. **Configuration is not a domain entity**: Configuration data represents
+   external settings/parameters, not domain concepts like Money, Portfolio, or Order.
+
+2. **Dynamic structure requirements**: The meta-analyzer configuration needs
+   to support arbitrary nested structures (metric_thresholds.sharpe_ratio.excellent)
+   that would require excessive boilerplate with value objects.
+
+3. **Read-only access pattern**: This class provides read-only access to loaded
+   configuration. All mutation happens through YAML file edits, not through
+   the API, reducing the need for value object encapsulation.
+
+4. **Downstream conversion**: When configuration values are used in domain
+   operations, they ARE converted to value objects (e.g., Decimal for monetary
+   values) by the consuming classes (BacktestConfig, strategies, etc.).
+
+5. **Compatibility**: Many existing components expect dict-based configuration
+   for compatibility with YAML serialization/deserialization.
+
+See: BacktestConfigLoader (core/config_loader.py) for an example where
+configuration IS converted to a typed value object (BacktestConfig) with
+proper Decimal validation.
+
+## 2. Dependencies
+- `logging`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `yaml`
+- `pydantic.BaseModel`
+- `pydantic.ConfigDict`
+- `pydantic.Field`
+- `pydantic.field_validator`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MetricThresholdConfig`: Must conform to application domain models.
+- `RollingWindowsConfig`: Must conform to application domain models.
+- `SeasonalityConfig`: Must conform to application domain models.
+- `RegimeDetectionConfig`: Must conform to application domain models.
+- `AnalysisConfig`: Must conform to application domain models.
+- `StaticPlotsConfig`: Must conform to application domain models.
+- `InteractiveConfig`: Must conform to application domain models.
+- `VisualizationConfig`: Must conform to application domain models.
+- `ReportingConfig`: Must conform to application domain models.
+- `LoggingConfig`: Must conform to application domain models.
+- `AdvancedConfig`: Must conform to application domain models.
+- `MetaAnalyzerConfig`: Must conform to application domain models.
+- `ConfigLoader`: Must conform to application domain models.
+### Public Functions
+- `get_config()`: Must return strictly typed objects.
+- `reset_config()`: Must return strictly typed objects.
+- `validate_positive_thresholds()`: Must return strictly typed objects.
+- `validate_logging_level()`: Must return strictly typed objects.
+- `validate_config()`: Must return strictly typed objects.
+- `get()`: Must return strictly typed objects.
+- `get_section()`: Must return strictly typed objects.
+- `get_metric_thresholds()`: Must return strictly typed objects.
+- `get_analysis_config()`: Must return strictly typed objects.
+- `get_visualization_config()`: Must return strictly typed objects.
+- `get_reporting_config()`: Must return strictly typed objects.
+- `get_alerts_config()`: Must return strictly typed objects.
+- `get_regime_detection_config()`: Must return strictly typed objects.
+- `get_seasonality_config()`: Must return strictly typed objects.
+- `get_clustering_config()`: Must return strictly typed objects.
+- `get_walk_forward_config()`: Must return strictly typed objects.
+- `get_alert_threshold()`: Must return strictly typed objects.
+- `is_enabled()`: Must return strictly typed objects.
+- `get_random_state()`: Must return strictly typed objects.
+- `get_logging_level()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `reload()`: Must return strictly typed objects.
+- `validate_config()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

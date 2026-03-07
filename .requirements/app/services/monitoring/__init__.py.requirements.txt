@@ -1,0 +1,36 @@
+# Requirements Document: services/monitoring/__init__.py
+
+## 1. Module Overview
+Monitoring and observability services (FASE 2).
+
+## 2. Dependencies
+- `alerting_rules_engine.AlertConditionType`
+- `alerting_rules_engine.AlertingRulesEngine`
+- `alerting_rules_engine.AlertRule`
+- `alerting_rules_engine.AlertSeverity`
+- `alerting_rules_engine.get_alerting_engine`
+- `alerting_rules_engine.reset_alerting_engine`
+- `memory_monitor.MemoryAction`
+- `memory_monitor.MemoryConfig`
+- `memory_monitor.MemoryMonitor`
+- `memory_monitor.MemorySnapshot`
+- `memory_monitor.get_memory_monitor`
+- `memory_monitor.reset_memory_monitor`
+- `metrics_exporter.MetricsExporter`
+- `metrics_exporter.get_metrics_exporter`
+- `prometheus_collector.MetricType`
+- `prometheus_collector.PrometheusMetricsCollector`
+- `prometheus_collector.get_prometheus_collector`
+- `time_sync_monitor.TimeSyncConfig`
+- `time_sync_monitor.TimeSyncMonitor`
+- `time_sync_monitor.TimeSyncStatus`
+- `time_sync_monitor.get_time_sync_monitor`
+- `time_sync_monitor.reset_time_sync_monitor`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

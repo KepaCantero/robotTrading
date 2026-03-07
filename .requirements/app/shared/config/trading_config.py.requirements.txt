@@ -1,0 +1,87 @@
+# Requirements Document: shared/config/trading_config.py
+
+## 1. Module Overview
+Modular Trading Configuration System
+
+This module provides a centralized, modular configuration system for trading.
+It aggregates configuration from the modular components.
+
+Usage:
+    from app.shared.config.trading_config import get_config, CentralizedConfig
+
+    config = get_config()
+    print(config.trading.min_signal_strength)
+    print(config.compliance.MIN_LIQUIDITY_SCORE)
+
+Backward Compatibility:
+    The centralized_config.py file imports from this module to maintain
+    compatibility with existing code.
+
+## 2. Dependencies
+- `logging`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `yaml`
+- `pydantic.Field`
+- `app.shared.config.base.Environment`
+- `app.shared.config.base.SettingsBase`
+- `decimal.Decimal`
+- `typing.Dict`
+- `app.shared.config.compliance.ComplianceConfig`
+- `app.shared.config.compliance.SpainTaxConfig`
+- `app.shared.config.infrastructure.APIConfig`
+- `app.shared.config.infrastructure.DatabaseConfig`
+- `app.shared.config.infrastructure.LoggingConfig`
+- `app.shared.config.infrastructure.MonitoringConfig`
+- `app.shared.config.infrastructure.RedisConfig`
+- `app.shared.config.position_sizing.AccountConfiguration`
+- `app.shared.config.position_sizing.PortfolioAllocationThresholds`
+- `app.shared.config.position_sizing.PositionSizingThresholds`
+- `app.shared.config.signal_risk.CircuitBreakerThresholds`
+- `app.shared.config.signal_risk.MarketMicrostructureThresholds`
+- `app.shared.config.signal_risk.PerformanceThresholds`
+- `app.shared.config.signal_risk.RiskManagementThresholds`
+- `app.shared.config.signal_risk.SignalThresholds`
+- `app.shared.config.signal_risk.SlippageThresholds`
+- `app.shared.config.signal_risk.TradingCostThresholds`
+- `app.shared.config.technical_indicators.ConversionMultipliers`
+- `app.shared.config.technical_indicators.CoveredCallThresholds`
+- `app.shared.config.technical_indicators.DividendThresholds`
+- `app.shared.config.technical_indicators.FXCarryTradeThresholds`
+- `app.shared.config.technical_indicators.FundamentalAnalysisThresholds`
+- `app.shared.config.technical_indicators.PerformanceMetrics`
+- `app.shared.config.technical_indicators.TechnicalIndicatorThresholds`
+- `app.shared.config.technical_indicators.WindowSizes`
+- `app.core.strategy_config.DividendStrategyConfig`
+- `app.core.strategy_config.FXCarryTradeStrategyConfig`
+- `app.core.strategy_config.MomentumModularConfig`
+- `pydantic.BaseModel`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TradingThresholds`: Must conform to application domain models.
+- `StrategyConfig`: Must conform to application domain models.
+- `CurrencyHedgingConfig`: Must conform to application domain models.
+- `SectorCountryDiversificationConfig`: Must conform to application domain models.
+- `CentralizedConfig`: Must conform to application domain models.
+### Public Functions
+- `get_config()`: Must return strictly typed objects.
+- `set_config()`: Must return strictly typed objects.
+- `reload_config()`: Must return strictly typed objects.
+- `get_trading_threshold()`: Must return strictly typed objects.
+- `get_strategy_config()`: Must return strictly typed objects.
+- `get_compliance_config()`: Must return strictly typed objects.
+- `get_spain_tax_config()`: Must return strictly typed objects.
+- `get_strategy_config()`: Must return strictly typed objects.
+- `get_trading_threshold()`: Must return strictly typed objects.
+- `update_strategy_config()`: Must return strictly typed objects.
+- `validate_configuration()`: Must return strictly typed objects.
+- `get_config_summary()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

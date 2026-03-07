@@ -1,0 +1,30 @@
+# Requirements Document: services/position_management/__init__.py
+
+## 1. Module Overview
+Position Management Services
+
+Implementación de gestión de posiciones post-trade:
+- R11: Trailing Stop Dinámico
+- R12: Take Profit Parcial
+- R13: Pyramiding (solo ganadores)
+
+## 2. Dependencies
+- `app.services.position_management.partial_take_profit.PartialTakeProfit`
+- `app.services.position_management.partial_take_profit.ProfitTarget`
+- `app.services.position_management.partial_take_profit.TakeProfitAction`
+- `app.services.position_management.post_trade_analyzer_impl.PostTradeAnalyzerImpl`
+- `app.services.position_management.post_trade_analyzer_impl.PositionState`
+- `app.services.position_management.post_trade_analyzer_impl.TradeSignal`
+- `app.services.position_management.pyramiding_manager.PyramidingAddition`
+- `app.services.position_management.pyramiding_manager.PyramidingManager`
+- `app.services.position_management.pyramiding_manager.PyramidingResult`
+- `app.services.position_management.trailing_stop_manager.TrailingStopManager`
+- `app.services.position_management.trailing_stop_manager.TrailingStopResult`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

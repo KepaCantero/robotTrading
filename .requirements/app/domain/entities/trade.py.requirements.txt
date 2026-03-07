@@ -1,0 +1,53 @@
+# Requirements Document: domain/entities/trade.py
+
+## 1. Module Overview
+Trade Entity - Represents a completed trade
+
+A Trade represents a completed transaction with entry and exit information,
+profit/loss, and trade metadata.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `datetime.timezone`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Optional`
+- `app.domain.entities.position.PositionSide`
+- `app.domain.value_objects.money.Money`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TradeStatus`: Must conform to application domain models.
+- `TradeType`: Must conform to application domain models.
+- `ExitReason`: Must conform to application domain models.
+- `Trade`: Must conform to application domain models.
+### Public Functions
+- `get_gross_pnl()`: Must return strictly typed objects.
+- `get_net_pnl()`: Must return strictly typed objects.
+- `get_pnl_percent()`: Must return strictly typed objects.
+- `get_total_cost()`: Must return strictly typed objects.
+- `get_holding_period_days()`: Must return strictly typed objects.
+- `get_holding_period_hours()`: Must return strictly typed objects.
+- `get_risk_reward_ratio()`: Must return strictly typed objects.
+- `get_actual_r_reward()`: Must return strictly typed objects.
+- `is_profitable()`: Must return strictly typed objects.
+- `is_winner()`: Must return strictly typed objects.
+- `is_loser()`: Must return strictly typed objects.
+- `is_break_even()`: Must return strictly typed objects.
+- `is_open()`: Must return strictly typed objects.
+- `is_closed()`: Must return strictly typed objects.
+- `is_long()`: Must return strictly typed objects.
+- `is_short()`: Must return strictly typed objects.
+- `from_position()`: Must return strictly typed objects.
+- `create_long()`: Must return strictly typed objects.
+- `create_short()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

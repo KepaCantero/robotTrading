@@ -1,0 +1,47 @@
+# Requirements Document: services/forex_data_service.py
+
+## 1. Module Overview
+Forex Data Service - TASK-5.5-CURRENCY-HEDGING
+
+Provides forex exchange rate data, correlations, and caching for currency hedging.
+Integrates with OANDA/FXCM brokers and includes fallback defaults.
+Includes reconnection with exponential backoff for 24/7 forex markets.
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `requests.exceptions.HTTPError`
+- `requests.exceptions.RequestException`
+- `app.infrastructure.resilience.reconnection_manager.ReconnectionConfig`
+- `app.infrastructure.resilience.reconnection_manager.ReconnectionManager`
+- `app.shared.utils.timezone_utils.utc_now`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ForexDataFetcher`: Must conform to application domain models.
+### Public Functions
+- `get_forex_fetcher()`: Must return strictly typed objects.
+- `reset_forex_fetcher()`: Must return strictly typed objects.
+- `get_available_pairs()`: Must return strictly typed objects.
+- `get_correlations()`: Must return strictly typed objects.
+- `get_current_rates()`: Must return strictly typed objects.
+- `get_bid_ask_spread()`: Must return strictly typed objects.
+- `invalidate_cache()`: Must return strictly typed objects.
+- `get_connection_stats()`: Must return strictly typed objects.
+- `on_attempt()`: Must return strictly typed objects.
+- `on_success()`: Must return strictly typed objects.
+- `on_failure()`: Must return strictly typed objects.
+- `alert_callback()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

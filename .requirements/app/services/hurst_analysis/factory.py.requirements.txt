@@ -1,0 +1,36 @@
+# Requirements Document: services/hurst_analysis/factory.py
+
+## 1. Module Overview
+Factory functions for creating Hurst Analysis components.
+
+This module provides convenient factory functions for creating configured
+instances of Hurst analysis components with sensible defaults.
+
+## 2. Dependencies
+- `logging`
+- `app.services.hurst_analysis.change_detector.RegimeChangeDetector`
+- `app.services.hurst_analysis.confidence_calculator.ConfidenceCalculator`
+- `app.services.hurst_analysis.historian.HistoricalDataTracker`
+- `app.services.hurst_analysis.orchestrator.HurstExponentAnalyzer`
+- `app.services.hurst_analysis.protocols.ChangeDetectorProtocol`
+- `app.services.hurst_analysis.protocols.ConfidenceCalculatorProtocol`
+- `app.services.hurst_analysis.protocols.HistoricalTrackerProtocol`
+- `app.services.hurst_analysis.protocols.HurstCalculator`
+- `app.services.hurst_analysis.protocols.RegimeClassifierProtocol`
+- `app.services.hurst_analysis.protocols.StrategyRecommenderProtocol`
+- `app.services.hurst_analysis.regime_classifier.RegimeClassifier`
+- `app.services.hurst_analysis.rs_calculator.RSMethodCalculator`
+- `app.services.hurst_analysis.strategy_recommender.StrategyRecommender`
+- `app.services.hurst_analysis.variance_calculator.VarianceMethodCalculator`
+- `app.services.hurst_analysis.variance_calculator.AggregatedVarianceCalculator`
+
+## 3. Core Components (Contracts)
+### Public Functions
+- `create_default_analyzer()`: Must return strictly typed objects.
+- `create_custom_analyzer()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

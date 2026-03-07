@@ -1,0 +1,68 @@
+# Requirements Document: domain/market_analysis/microstructure/order_flow.py
+
+## 1. Module Overview
+Order Flow and Information Analysis Module
+
+This module implements order flow modeling and information asymmetry concepts
+from Maureen O'Hara's "Market Microstructure Theory" (Chapter 3-4).
+
+Key Concepts:
+- Order flow modeling and prediction
+- Information asymmetry measurement
+- Adverse selection risk assessment
+- Informed vs uninformed trader behavior
+
+References:
+- O'Hara, M. (1995) "Market Microstructure Theory", Chapters 3-4
+- Glosten, L.R., & Milgrom, P.R. (1985) "Bid, Ask and Transaction Prices"
+- Easley, D., et al. (1996) "Liquidity, Information, and Infrequently Traded Stocks"
+
+## 2. Dependencies
+- `__future__.annotations`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `typing.Union`
+- `numpy`
+- `pandas`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `OrderType`: Must conform to application domain models.
+- `OrderSide`: Must conform to application domain models.
+- `TraderType`: Must conform to application domain models.
+- `Order`: Must conform to application domain models.
+- `OrderFlowSnapshot`: Must conform to application domain models.
+- `InformationAsymmetryMetrics`: Must conform to application domain models.
+- `OrderFlowForecast`: Must conform to application domain models.
+- `OrderFlowAnalyzer`: Must conform to application domain models.
+- `OrderFlowSimulator`: Must conform to application domain models.
+### Public Functions
+- `get_order_flow_analyzer()`: Must return strictly typed objects.
+- `get_order_flow_simulator()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `add_order()`: Must return strictly typed objects.
+- `calculate_order_imbalance()`: Must return strictly typed objects.
+- `estimate_order_flow_toxicity()`: Must return strictly typed objects.
+- `calculate_probability_of_informed_trading()`: Must return strictly typed objects.
+- `detect_informed_trading()`: Must return strictly typed objects.
+- `measure_adverse_selection_cost()`: Must return strictly typed objects.
+- `forecast_order_flow()`: Must return strictly typed objects.
+- `calculate_information_content()`: Must return strictly typed objects.
+- `generate_order_flow_report()`: Must return strictly typed objects.
+- `generate_order_flow()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

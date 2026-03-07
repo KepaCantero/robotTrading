@@ -1,0 +1,31 @@
+# Requirements Document: services/portfolio_construction/allocation_manager.py
+
+## 1. Module Overview
+T18.1.1: AllocationManager - Portfolio allocation tracking and management
+
+Manages current portfolio allocations, tracks deviations, and maintains allocation history.
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `AllocationSnapshot`: Must conform to application domain models.
+- `AllocationMetrics`: Must conform to application domain models.
+- `AllocationManager`: Must conform to application domain models.
+### Public Functions
+- `get_allocation_manager()`: Must return strictly typed objects.
+- `get_management_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

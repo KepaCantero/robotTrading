@@ -1,0 +1,45 @@
+# Requirements Document: engines/risk_engine/var_calculators/component_var.py
+
+## 1. Module Overview
+Component VaR Calculator - Hull Chapter 18
+
+Implements Component VaR (CVaR) which measures the contribution of each
+position to total portfolio VaR. This is critical for:
+
+1. Risk budgeting - allocating risk across positions
+2. Position limits - setting VaR-based limits
+3. Performance attribution - risk-adjusted returns by position
+4. Concentration limits - identifying over-concentrated risks
+
+Formula:
+Component VaR_i = VaR_portfolio * Beta_i * w_i
+
+Where:
+- Beta_i = Covariance(r_i, r_p) / Variance(r_p)
+- w_i = weight of position i in portfolio
+- Sum of all Component VaRs = Portfolio VaR
+
+Reference: Hull, Options, Futures, and Other Derivatives, Chapter 18
+
+## 2. Dependencies
+- `logging`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `app.domain.models.portfolio.Portfolio`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ComponentVaRCalculator`: Must conform to application domain models.
+### Public Functions
+- `calculate_component_var()`: Must return strictly typed objects.
+- `calculate_incremental_var()`: Must return strictly typed objects.
+- `generate_risk_budget_report()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

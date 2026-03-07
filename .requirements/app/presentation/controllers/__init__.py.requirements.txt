@@ -1,0 +1,19 @@
+# Requirements Document: presentation/controllers/__init__.py
+
+## 1. Module Overview
+API Controllers - FastAPI routers and endpoints
+
+This module contains all API controllers for the application.
+
+## 2. Dependencies
+- `dashboard_controller.router`
+- `portfolio_controller.router`
+- `strategy_controller.router`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,102 @@
+# Requirements Document: application/use_cases/select_strategy.py
+
+## 1. Module Overview
+Select Strategy Use Case - FASE 6.6
+
+This use case orchestrates intelligent strategy selection based on:
+- User investment profile
+- Market regime detection
+- Bayesian optimization
+- Walk-forward validation
+- Performance scoring
+
+The StrategySelector analyzes and ranks strategies to recommend the most
+suitable configuration for a given investment profile and market conditions.
+
+References:
+    - /rules/05-architecture.md - Clean Architecture principles
+    - /rules/02-type-hints.md - Type hint requirements
+    - /rules/04-solid.md - SOLID principles
+    - AUDIT_PLAN_COMPLETO.md - FASE 6: Strategy Selection
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `collections.abc.Callable`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Protocol`
+- `typing.TypeVar`
+- `typing.Union`
+- `pandas.DataFrame`
+- `typing_extensions.TypeAlias`
+- `backtesting.validation.models.WalkForwardConfig`
+- `backtesting.validation.walk_forward.WalkForwardValidator`
+- `core.models.input_profile.InputProfile`
+- `core.models.input_profile.ObjectivoInversion`
+- `core.models.input_profile.RiskTolerance`
+- `core.config.base.get_config`
+- `optimization.parameter.base_optimizer.OptimizationConfig`
+- `optimization.parameter.bayesian_optimizer.BayesianOptimizer`
+- `optimization.parameter.models.ParameterGrid`
+- `optimization.parameter.models.ParameterRange`
+- `optimization.parameter.models.ParameterType`
+- `services.profile_driven_trading.profile_strategy_mapper.ProfileStrategyMapper`
+- `services.profile_driven_trading.profile_strategy_mapper.StrategyMapping`
+- `asyncio`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `app.domain.models.signal.Signal`
+- `app.domain.models.signal.SignalSource`
+- `app.domain.models.signal.SignalStrength`
+- `app.domain.models.signal.SignalType`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `app.domain.models.order.MarketData`
+- `app.domain.strategies.registry.StrategyRegistry`
+- `pandas`
+- `decimal.Decimal`
+- `backtesting.engine.SimpleBacktester`
+- `backtesting.models.BacktestConfig`
+- `strategies.registry.StrategyRegistry`
+- `decimal.Decimal`
+- `backtesting.engine.SimpleBacktester`
+- `backtesting.models.BacktestConfig`
+- `strategies.registry.StrategyRegistry`
+- `pandas`
+- `pandas`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StrategyProtocol`: Must conform to application domain models.
+- `StrategyFactoryType`: Must conform to application domain models.
+- `WalkForwardResultProtocol`: Must conform to application domain models.
+- `StrategyConfiguration`: Must conform to application domain models.
+- `StrategySelectionCriteria`: Must conform to application domain models.
+- `StrategySelectionResult`: Must conform to application domain models.
+- `StrategySelector`: Must conform to application domain models.
+- `SelectStrategyUseCase`: Must conform to application domain models.
+### Public Functions
+- `generate_signals()`: Must return strictly typed objects.
+- `get_parameters()`: Must return strictly typed objects.
+- `get_degradation_summary()`: Must return strictly typed objects.
+- `os_performance()`: Must return strictly typed objects.
+- `is_performance()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `validate()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `select_strategy()`: Must return strictly typed objects.
+- `execute()`: Must return strictly typed objects.
+- `get_strategy_recommendations()`: Must return strictly typed objects.
+- `objective()`: Must return strictly typed objects.
+- `objective()`: Must return strictly typed objects.
+- `strategy_factory()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,48 @@
+# Requirements Document: backtesting/profile_batch/optimization_validators.py
+
+## 1. Module Overview
+Optimization Validators Module
+
+Provides validation components for the optimization pipeline:
+- Walk-forward validation
+- Monte Carlo simulation
+- Out-of-sample validation
+
+Responsibilities:
+- Perform walk-forward validation for robustness
+- Execute Monte Carlo simulations
+- Run out-of-sample validation
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `uuid`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Union`
+- `numpy`
+- `pandas`
+- `yaml`
+- `app.backtesting.comprehensive_backtest_runner.ComprehensiveBacktestRunner`
+- `app.backtesting.shared.MetricsDict`
+- `app.backtesting.shared.TempConfigManager`
+- `app.backtesting.shared.get_empty_metrics`
+- `app.shared.config.profile_config_loader.ProfileConfigLoader`
+- `app.domain.models.input_profile.InputProfile`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `WalkForwardValidator`: Must conform to application domain models.
+- `MonteCarloSimulator`: Must conform to application domain models.
+- `OutOfSampleValidator`: Must conform to application domain models.
+### Public Functions
+- `validate()`: Must return strictly typed objects.
+- `simulate()`: Must return strictly typed objects.
+- `validate()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

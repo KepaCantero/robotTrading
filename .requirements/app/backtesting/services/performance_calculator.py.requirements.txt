@@ -1,0 +1,37 @@
+# Requirements Document: backtesting/services/performance_calculator.py
+
+## 1. Module Overview
+Performance Metrics Calculator service for backtesting.
+
+This service is responsible for calculating comprehensive performance
+metrics including Sharpe ratio, win rate, and drawdown statistics.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `math`
+- `decimal.Decimal`
+- `typing.List`
+- `typing.Optional`
+- `app.backtesting.models.BacktestConfig`
+- `app.backtesting.models.PerformanceMetrics`
+- `app.backtesting.models.Trade`
+- `app.backtesting.models.TradeStatus`
+- `app.shared.config.centralized_config.get_config`
+- `app.shared.utils.decimal_utils.safe_mean`
+- `app.shared.utils.decimal_utils.safe_variance`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PerformanceMetricsCalculator`: Must conform to application domain models.
+### Public Functions
+- `calculate_performance_metrics()`: Must return strictly typed objects.
+- `calculate_win_rate()`: Must return strictly typed objects.
+- `calculate_profit_factor()`: Must return strictly typed objects.
+- `calculate_expectancy()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

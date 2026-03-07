@@ -1,0 +1,45 @@
+# Requirements Document: services/risk_scaling/models.py
+
+## 1. Module Overview
+PHASE 3 - Data Models for Dynamic Risk Scaling
+
+Core data structures for risk scaling system with Pydantic validation.
+Handles scaling factors, state management, alerts, and reporting.
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `uuid.uuid4`
+- `pydantic.BaseModel`
+- `pydantic.ConfigDict`
+- `pydantic.Field`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RiskAlertType`: Must conform to application domain models.
+- `RiskLevel`: Must conform to application domain models.
+- `RiskScalingFactors`: Must conform to application domain models.
+- `RiskScalingSnapshot`: Must conform to application domain models.
+- `RiskAlert`: Must conform to application domain models.
+- `RiskScalingState`: Must conform to application domain models.
+- `AdjustedPositionSizes`: Must conform to application domain models.
+- `Signal`: Must conform to application domain models.
+- `AdjustedSignal`: Must conform to application domain models.
+- `RiskScalingStatus`: Must conform to application domain models.
+- `AlertSubscription`: Must conform to application domain models.
+- `RiskScalingReport`: Must conform to application domain models.
+### Public Functions
+- `combined_scale()`: Must return strictly typed objects.
+- `is_extreme()`: Must return strictly typed objects.
+- `is_halted()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,22 @@
+# Requirements Document: application/scheduling/examples.py
+
+## 1. Module Overview
+Market Scheduler Usage Examples
+
+This file demonstrates how to use the MarketScheduler for multi-market
+algorithmic trading operations.
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `datetime.date`
+- `app.application.scheduling.MarketScheduler`
+- `app.application.scheduling.MarketType`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

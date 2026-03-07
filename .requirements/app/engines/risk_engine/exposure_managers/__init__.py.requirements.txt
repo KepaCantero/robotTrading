@@ -1,0 +1,17 @@
+# Requirements Document: engines/risk_engine/exposure_managers/__init__.py
+
+## 1. Module Overview
+Exposure Managers Module
+
+Exporta todos los exposure managers disponibles.
+
+## 2. Dependencies
+- `exposure_managers.ExposureManager`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

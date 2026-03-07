@@ -1,0 +1,40 @@
+# Requirements Document: application/orchestration/target_optimization/__init__.py
+
+## 1. Module Overview
+PHASE 1: Capital-Tier Aware Strategy Orchestration
+
+T1.1: Capital Tier Strategy Selector
+- CapitalTierSelector: Map capital → tier, strategy, features
+- StrategyFeatureGatekeeper: Activate/deactivate features by tier
+- RiskProfileScaler: Scale risk parameters by capital
+
+T1.2: Absolute Return Optimizer
+- TargetAlphaCalculator: Convert EUR targets → required alpha %
+- CapacityFadeAnalyzer: Estimate alpha decay at scale
+- ParameterOptimizer: Optimize position sizing, leverage
+- FeasibilityValidator: Validate target feasibility
+
+## 2. Dependencies
+- `absolute_return_optimizer.CapacityFadeAnalyzer`
+- `absolute_return_optimizer.FeasibilityValidator`
+- `absolute_return_optimizer.ParameterOptimizer`
+- `absolute_return_optimizer.TargetAlphaCalculator`
+- `capital_tier_selector.CapitalTierSelector`
+- `capital_tier_selector.RiskProfileScaler`
+- `capital_tier_selector.StrategyFeatureGatekeeper`
+- `models.AbsoluteReturnTarget`
+- `models.AbsoluteReturnValidation`
+- `models.CapitalTier`
+- `models.CapitalTierConfig`
+- `models.CapitalTierResult`
+- `models.CapitalTierThresholds`
+- `models.RiskProfile`
+- `models.StrategyFeatures`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

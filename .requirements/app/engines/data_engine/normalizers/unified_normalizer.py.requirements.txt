@@ -1,0 +1,29 @@
+# Requirements Document: engines/data_engine/normalizers/unified_normalizer.py
+
+## 1. Module Overview
+UnifiedNormalizer - Normalizador unificado que combina todos los normalizadores.
+
+## 2. Dependencies
+- `logging`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `corporate_actions_handler.CorporateActionsHandler`
+- `price_normalizer.PriceNormalizer`
+- `symbol_normalizer.SymbolNormalizer`
+- `timestamp_normalizer.TimestampNormalizer`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `UnifiedNormalizer`: Must conform to application domain models.
+### Public Functions
+- `normalize_ohlcv_data()`: Must return strictly typed objects.
+- `normalize_quote()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

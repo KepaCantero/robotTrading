@@ -1,0 +1,60 @@
+# Requirements Document: engines/strategy_engines/profile_regime_selector.py
+
+## 1. Module Overview
+Profile-Based Regime Selector - Selector de estrategia basado en perfil de inversor.
+
+Implementa un selector adaptativo que ajusta estrategias y parametros segun:
+- Perfil de capital (SURVIVAL, GROWTH, OPTIMIZATION)
+- Regimen de mercado (usando Hurst exponent y half-life)
+- Factores de calidad y momentum
+
+Basado en reglas de:
+- Ernest Chan: Hurst exponent, half-life, 2% max risk
+- Robert Carver: Volatility targeting 15%, diversification
+- Gray & Vogel: Multi-window momentum, skip-month momentum
+- Berkin & Swedroe: Quality screening, factor-based
+- Realistic Retail Rules: Capital phases
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Sequence`
+- `typing.Tuple`
+- `numpy`
+- `numpy.linalg.LinAlgError`
+- `app.domain.models.market_data.Quote`
+- `app.domain.models.signal.Signal`
+- `base.BaseStrategyEngine`
+- `app.domain.models.signal.SignalSource`
+- `app.domain.models.signal.SignalStrength`
+- `app.domain.models.signal.SignalType`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `InvestorProfile`: Must conform to application domain models.
+- `MarketRegime`: Must conform to application domain models.
+- `ProfileConfig`: Must conform to application domain models.
+- `ProfileBasedRegimeSelector`: Must conform to application domain models.
+### Public Functions
+- `add_strategy()`: Must return strictly typed objects.
+- `get_strategy_type()`: Must return strictly typed objects.
+- `extract_features()`: Must return strictly typed objects.
+- `get_required_parameters()`: Must return strictly typed objects.
+- `risk_check()`: Must return strictly typed objects.
+- `update_trade_result()`: Must return strictly typed objects.
+- `get_current_regime()`: Must return strictly typed objects.
+- `get_profile_config()`: Must return strictly typed objects.
+- `get_strategy_weights()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,52 @@
+# Requirements Document: services/live_trading/broker_adapters/ibkr_adapter_spain.py
+
+## 1. Module Overview
+Interactive Brokers Adapter for Spain
+
+This adapter implements the IBrokerAdapter Protocol for Spanish traders.
+It provides EUR currency support, IBEX35 stock trading, and follows
+the Protocol interface exactly.
+
+Protocol Compliance:
+- connect() -> bool
+- disconnect() -> bool
+- place_order(order: dict) -> str
+- cancel_order(order_id: str) -> bool
+- get_account() -> dict
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `ib_insync.IB`
+- `ib_insync.LimitOrder`
+- `ib_insync.MarketOrder`
+- `ib_insync.StopOrder`
+- `ib_insync.util`
+- `ib_insync.contract.Contract`
+- `ib_insync.contract.Stock`
+- `app.infrastructure.resilience.reconnection_manager.ReconnectionConfig`
+- `app.infrastructure.resilience.reconnection_manager.ReconnectionManager`
+- `app.core.protocols.IBrokerAdapter`
+- `currency_converter.CurrencyConverter`
+- `currency_converter.get_currency_converter`
+- `ibex35_contracts.create_stock_contract`
+- `ibex35_contracts.is_ibex35_symbol`
+- `os`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `IBKRSpainAdapter`: Must conform to application domain models.
+### Public Functions
+- `get_ibkr_spain_adapter()`: Must return strictly typed objects.
+- `is_connected()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

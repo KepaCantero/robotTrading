@@ -1,0 +1,44 @@
+# Requirements Document: domain/strategies/dividend_analyzer.py
+
+## 1. Module Overview
+Dividend Analyzer - Análisis de Sostenibilidad y Calidad de Dividendos
+
+Implementa análisis profundo de:
+- Calidad del dividendo (combinación de múltiple factores)
+- Sostenibilidad (capacidad de mantener/incrementar dividendo)
+- Payout ratio analysis
+- Dividend growth rate calculation
+- Dividend safety scoring
+
+SOLID Principles:
+- Single Responsibility: Solo análisis, no screening ni construcción
+- Open/Closed: Extensible con nuevas métricas
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `models.DividendProfile`
+- `models.DividendSafety`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DividendQualityScore`: Must conform to application domain models.
+- `DividendSustainabilityMetrics`: Must conform to application domain models.
+- `DividendAnalyzer`: Must conform to application domain models.
+### Public Functions
+- `analyze_quality()`: Must return strictly typed objects.
+- `analyze_sustainability()`: Must return strictly typed objects.
+- `analyze_yield_on_cost()`: Must return strictly typed objects.
+- `project_dividend_income()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

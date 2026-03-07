@@ -1,0 +1,58 @@
+# Requirements Document: shared/audit.py
+
+## 1. Module Overview
+Audit Logging Module for API Endpoints
+
+This module provides:
+- Structured audit logging for sensitive operations
+- Action tracking for trades, deployments, and configuration changes
+- User action recording for compliance
+
+AUDIT-001: All sensitive operations are logged
+AUDIT-002: Audit logs include user context, timestamp, and action details
+AUDIT-003: Audit logs are written to a separate, immutable log file
+
+## 2. Dependencies
+- `threading`
+- `contextlib.contextmanager`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `enum.Enum`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `fastapi.Request`
+- `app.infrastructure.logging.logging_config.get_correlation_id`
+- `app.infrastructure.logging.logging_config.get_logger`
+- `logging`
+- `logging.handlers.RotatingFileHandler`
+- `json`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `AuditAction`: Must conform to application domain models.
+- `AuditLogger`: Must conform to application domain models.
+- `AuditContext`: Must conform to application domain models.
+### Public Functions
+- `get_audit_logger()`: Must return strictly typed objects.
+- `audit_context()`: Must return strictly typed objects.
+- `log_trade_execution()`: Must return strictly typed objects.
+- `log_deployment_decision()`: Must return strictly typed objects.
+- `cleanup_audit_logs()`: Must return strictly typed objects.
+- `get_audit_log_info()`: Must return strictly typed objects.
+- `cleanup_old_logs()`: Must return strictly typed objects.
+- `get_log_size_info()`: Must return strictly typed objects.
+- `log()`: Must return strictly typed objects.
+- `log_trade()`: Must return strictly typed objects.
+- `log_deployment()`: Must return strictly typed objects.
+- `log_portfolio()`: Must return strictly typed objects.
+- `from_request()`: Must return strictly typed objects.
+- `mark_success()`: Must return strictly typed objects.
+- `mark_failure()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

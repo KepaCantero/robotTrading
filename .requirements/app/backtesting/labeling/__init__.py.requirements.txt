@@ -1,0 +1,70 @@
+# Requirements Document: backtesting/labeling/__init__.py
+
+## 1. Module Overview
+Financial ML Labeling module for AlgoTrading system.
+
+This module provides advanced labeling techniques for machine learning in finance,
+following the methodologies from Marcos López de Prado's "Advances in Financial Machine Learning".
+
+Key components:
+- Triple Barrier Method: Dynamic labeling based on price barriers
+- Sample weights by uniqueness: Weight samples by their uniqueness (López de Prado Chapter 4)
+- Meta-labeling: Secondary labeling for position sizing
+- Bet Sizing with ML: Position sizing based on meta-model probabilities
+- F1/MCC metrics: Metrics for imbalanced data classification
+- Volatility-adjusted barriers: Dynamic barrier adjustment based on market conditions
+
+## 2. Dependencies
+- `bet_sizing.BetSizing`
+- `bet_sizing.BetSizingConfig`
+- `bet_sizing.BetSizingResult`
+- `bet_sizing.calculate_bet_sizes`
+- `bet_sizing.calculate_bet_sizes_expected_value`
+- `bet_sizing.calculate_bet_sizes_ml`
+- `bet_sizing.calculate_bet_sizes_with_discrete_allocation`
+- `bet_sizing.calculate_bet_sizes_with_meta_model`
+- `bet_sizing.calculate_bet_sizes_with_risk_target`
+- `bet_sizing_meta.MetaBetSizingConfig`
+- `bet_sizing_meta.MetaBetSizingResult`
+- `bet_sizing_meta.MetaLabelingBetSizing`
+- `bet_sizing_meta.calculate_bet_sizes_with_meta_labeling`
+- `bet_sizing_meta.calculate_expected_value_with_meta_probabilities`
+- `bet_sizing_meta.calculate_kelly_with_meta_probabilities`
+- `concurrent_training.ConcurrentModelTrainer`
+- `concurrent_training.ConcurrentTrainingConfig`
+- `concurrent_training.EnsembleResult`
+- `concurrent_training.ModelResult`
+- `concurrent_training.SequentialModelTrainer`
+- `concurrent_training.train_models_concurrent`
+- `meta_labeling.MetaLabeling`
+- `meta_labeling.MetaLabelingConfig`
+- `meta_labeling.MetaLabelingResult`
+- `meta_labeling.apply_meta_labeling`
+- `meta_labeling.calculate_meta_labels`
+- `meta_labeling.snv_to_signal`
+- `meta_labeling_cv.CVConfig`
+- `meta_labeling_cv.CVResult`
+- `meta_labeling_cv.MetaLabelingCV`
+- `meta_labeling_cv.PurgedKFold`
+- `meta_labeling_cv.SequentialBootstrap`
+- `meta_labeling_cv.calculate_purge_embargo_sizes`
+- `meta_labeling_cv.cv_score_meta_labeling`
+- `triple_barrier.TripleBarrierConfig`
+- `triple_barrier.TripleBarrierLabeler`
+- `triple_barrier.calculate_dynamic_barriers`
+- `triple_barrier.calculate_sample_weights`
+- `triple_barrier.calculate_sample_weights_td`
+- `triple_barrier.calculate_sample_weights_uniqueness`
+- `triple_barrier.get_vertical_barriers`
+- `triple_barrier.meta_labeling`
+- `triple_barrier.plot_triple_barrier`
+- `triple_barrier.purged_cv_split`
+- `triple_barrier.triple_barrier_method`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,40 @@
+# Requirements Document: services/deploy_decision_orchestrator/deploy_decision_orchestrator.py
+
+## 1. Module Overview
+T10.1: DeployDecisionOrchestrator - Master deployment decision orchestration
+
+Synthesizes outputs from all services:
+1. BacktestOrchestrator (feasibility ratio)
+2. ValidationEngine (validation results)
+3. StrategyRecommender (recommendation score)
+4. PortfolioConstructor (portfolio metrics)
+
+Makes final APPROVED/CONDITIONAL/REJECTED decision.
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `app.services.capacity_fade_validation.CapacityFadeRequest`
+- `app.services.capacity_fade_validation.CapacityFadeValidator`
+- `app.services.capacity_fade_validation.FeasibilityDecision`
+- `models.DeploymentDecision`
+- `models.DeploymentInput`
+- `models.DeploymentRationale`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DeployDecisionOrchestrator`: Must conform to application domain models.
+### Public Functions
+- `get_deploy_orchestrator()`: Must return strictly typed objects.
+- `get_orchestrator_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

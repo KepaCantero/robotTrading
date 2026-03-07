@@ -1,0 +1,45 @@
+# Requirements Document: services/deployment_validator.py
+
+## 1. Module Overview
+PHASE 0 - Deployment Validator (T0.4)
+
+Orchestrates all capital gates before live deployment. Ensures that accounts
+meet minimum safety standards across all dimensions (capital viability, execution
+cost, learning viability, and module expense) before any live trading.
+
+The deployment validator combines:
+1. Capital viability gate: Can the account sustain the profit goal?
+2. Execution cost analyzer: Are execution costs reasonable?
+3. Learning capital gate: Is learning infrastructure economically justified?
+4. Expensive module gate: Are expensive ML modules justified by account size?
+5. Safety checklist: Are all pre-deployment checks satisfied?
+6. Deployment gates: Final authorization before going live
+
+Economics principle: Fail-fast by default. Better to reject trading on underfunded
+accounts than to slowly bleed capital on infrastructure costs that exceed returns.
+
+## 2. Dependencies
+- `logging`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.Tuple`
+- `app.services.capital_viability_gate.CapitalViabilityValidator`
+- `app.services.execution_cost_analyzer.ExecutionCostAnalyzer`
+- `app.services.expensive_module_gate.ExpensiveModuleGate`
+- `app.services.learning_capital_gate.LearningCapitalGate`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DeploymentStatus`: Must conform to application domain models.
+- `DeploymentValidator`: Must conform to application domain models.
+### Public Functions
+- `validate_for_deployment()`: Must return strictly typed objects.
+- `get_deployment_readiness_score()`: Must return strictly typed objects.
+- `get_minimum_capital_recommendation()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

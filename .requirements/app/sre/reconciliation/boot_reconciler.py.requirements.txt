@@ -1,0 +1,49 @@
+# Requirements Document: sre/reconciliation/boot_reconciler.py
+
+## 1. Module Overview
+Boot-up Reconciliation System
+
+CRITICAL SRE COMPONENT: Prevents "blind operation" after system restart.
+
+The Problem:
+- If system crashes between broker ACK and database save, you have an
+  "orphaned position" - the broker has it open but your system doesn't know
+- On restart, the system would operate "blind" - thinking it has no positions
+- Any stop-loss or risk management would NOT apply to orphaned positions
+
+The Solution:
+- FIRST step on startup: Ask broker "What positions do you have open?"
+- Compare broker's reality with local database
+- Identify orphaned positions (broker has, we don't) and phantom positions
+- Take IMMEDIATE action to protect orphaned positions
+
+Usage:
+    reconciler = BootReconciler(broker_client, db_connection)
+    await reconciler.reconcile_on_startup()
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `datetime.timezone`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `aiosqlite`
+- `requests.exceptions.HTTPError`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ReconciliationAction`: Must conform to application domain models.
+- `PositionDiscrepancy`: Must conform to application domain models.
+- `BootReconciler`: Must conform to application domain models.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

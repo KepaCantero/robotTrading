@@ -1,0 +1,41 @@
+# Requirements Document: backtesting/profile_batch/report_generator.py
+
+## 1. Module Overview
+Report Generator Module
+
+Generates HTML reports for batch backtesting results.
+Handles report creation and data export.
+
+Responsibilities:
+- Generate HTML comparison reports
+- Export results to JSON, CSV, Excel
+- Create batch summaries
+- Format and visualize results
+
+## 2. Dependencies
+- `__future__.annotations`
+- `json`
+- `logging`
+- `datetime.datetime`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `numpy`
+- `pandas`
+- `jinja2.Template`
+- `app.domain.models.input_profile.ObjectivoInversion`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ReportGenerator`: Must conform to application domain models.
+### Public Functions
+- `generate_comparison_report()`: Must return strictly typed objects.
+- `generate_batch_summary()`: Must return strictly typed objects.
+- `export_results()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

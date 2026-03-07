@@ -1,0 +1,30 @@
+# Requirements Document: shared/config/technical_indicators.py
+
+## 1. Module Overview
+Technical Indicators Configuration Module
+
+Contains configuration for technical indicators, windows,
+and analysis parameters.
+
+## 2. Dependencies
+- `decimal.Decimal`
+- `pydantic.BaseModel`
+- `pydantic.Field`
+- `app.shared.config.base.ConfigBase`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TechnicalIndicatorThresholds`: Must conform to application domain models.
+- `WindowSizes`: Must conform to application domain models.
+- `ConversionMultipliers`: Must conform to application domain models.
+- `PerformanceMetrics`: Must conform to application domain models.
+- `FundamentalAnalysisThresholds`: Must conform to application domain models.
+- `DividendThresholds`: Must conform to application domain models.
+- `FXCarryTradeThresholds`: Must conform to application domain models.
+- `CoveredCallThresholds`: Must conform to application domain models.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

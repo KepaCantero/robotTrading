@@ -1,0 +1,18 @@
+# Requirements Document: services/reporting/__init__.py
+
+## 1. Module Overview
+Reporting Services - T9.1
+
+Generates performance reports and analysis summaries.
+
+## 2. Dependencies
+- `app.services.reporting.reporting_generator.PerformanceReport`
+- `app.services.reporting.reporting_generator.ReportingGenerator`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

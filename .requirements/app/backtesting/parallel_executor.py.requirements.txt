@@ -1,0 +1,38 @@
+# Requirements Document: backtesting/parallel_executor.py
+
+## 1. Module Overview
+Parallel Executor - Sistema de ejecución paralela para backtests.
+
+Permite paralelizar:
+- Monte Carlo simulations
+- Grid Search combinations
+- Learning Engines tests
+- Ablation tests
+
+## 2. Dependencies
+- `logging`
+- `multiprocessing`
+- `concurrent.futures.ProcessPoolExecutor`
+- `concurrent.futures.ThreadPoolExecutor`
+- `concurrent.futures.as_completed`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ParallelExecutor`: Must conform to application domain models.
+### Public Functions
+- `create_parallel_executor()`: Must return strictly typed objects.
+- `run_parallel()`: Must return strictly typed objects.
+- `run_monte_carlo_parallel()`: Must return strictly typed objects.
+- `run_grid_search_parallel()`: Must return strictly typed objects.
+- `run_learning_engines_parallel()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

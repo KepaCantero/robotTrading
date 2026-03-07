@@ -1,0 +1,23 @@
+# Requirements Document: backtesting/acceptance/drawdown_validator.py
+
+## 1. Module Overview
+Max Drawdown Validator Service.
+
+Validates the Maximum Drawdown criterion for strategy acceptance.
+Follows Single Responsibility Principle (SOL-001).
+
+## 2. Dependencies
+- `dataclasses.dataclass`
+- `app.backtesting.acceptance.models.CriterionResult`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DrawdownValidator`: Must conform to application domain models.
+### Public Functions
+- `validate()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

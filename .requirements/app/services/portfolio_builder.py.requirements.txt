@@ -1,0 +1,34 @@
+# Requirements Document: services/portfolio_builder.py
+
+## 1. Module Overview
+Portfolio Builder Service.
+
+Builds a diversified portfolio based on portfolio configuration with multiple symbols
+from different sectors, allocated according to strategy percentages.
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Set`
+- `app.backtesting.data_loader.DataLoader`
+- `app.models.market_data.Quote`
+- `app.services.portfolio_config_manager.PortfolioConfigManager`
+- `app.services.portfolio_config_manager.get_portfolio_config_manager`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PortfolioBuilder`: Must conform to application domain models.
+### Public Functions
+- `get_strategy_symbols_mapping()`: Must return strictly typed objects.
+- `get_portfolio_summary()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

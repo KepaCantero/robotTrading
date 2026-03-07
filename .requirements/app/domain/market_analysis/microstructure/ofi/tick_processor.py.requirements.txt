@@ -1,0 +1,59 @@
+# Requirements Document: domain/market_analysis/microstructure/ofi/tick_processor.py
+
+## 1. Module Overview
+Tick-Level Order Flow Imbalance Processor.
+
+This module processes tick-level data for OFI calculation, distinguishing
+between aggressive trades (market orders) and passive limit orders.
+
+At the tick level:
+- Market buy (hits ask): +quantity to OFI
+- Market sell (hits bid): -quantity to OFI
+- Limit orders: Update order book, recalculate OFI
+
+References:
+- Hasbrouck, J. (1991) "Measuring the Information Content of Stock Trades"
+- Johnson, B. (2010) "Algorithmic Trading & DMA"
+
+## 2. Dependencies
+- `logging`
+- `collections.deque`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Optional`
+- `numpy`
+- `app.domain.market_analysis.microstructure.ofi.models.OrderBookSnapshot`
+- `app.domain.market_analysis.microstructure.ofi.models.OrderSide`
+- `app.domain.market_analysis.microstructure.ofi.models.TickData`
+- `app.domain.market_analysis.microstructure.ofi.ofi_calculator.OFICalculator`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `InvalidPriceError`: Must conform to application domain models.
+- `TickOFIResult`: Must conform to application domain models.
+- `OrderBookLevel`: Must conform to application domain models.
+- `OrderBookState`: Must conform to application domain models.
+- `TickLevelOFIProcessor`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+- `update_bid()`: Must return strictly typed objects.
+- `update_ask()`: Must return strictly typed objects.
+- `get_best_bid()`: Must return strictly typed objects.
+- `get_best_ask()`: Must return strictly typed objects.
+- `to_snapshot()`: Must return strictly typed objects.
+- `get_depth()`: Must return strictly typed objects.
+- `process_tick()`: Must return strictly typed objects.
+- `calculate_tick_ofi()`: Must return strictly typed objects.
+- `update_order_book()`: Must return strictly typed objects.
+- `get_aggressive_flow_ratio()`: Must return strictly typed objects.
+- `detect_aggressive_surge()`: Must return strictly typed objects.
+- `reset()`: Must return strictly typed objects.
+- `get_statistics()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,41 @@
+# Requirements Document: domain/services/portfolio_optimization/cla.py
+
+## 1. Module Overview
+Critical Line Algorithm (CLA) - Efficient Frontier Computation
+
+Implements the Critical Line Algorithm for computing the efficient frontier
+and finding optimal corner portfolios.
+
+Reference: Rule 48-papers-markowitz (Markowitz related)
+Paper: Markowitz, H. (1956). "The Optimization of a Quadratic Function
+       Subject to Linear Constraints"
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `app.domain.services.portfolio_optimization._validation.log_optimization_failure`
+- `app.domain.services.portfolio_optimization._validation.validate_covariance_matrix`
+- `scipy.optimize.minimize`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CornerPortfolio`: Must conform to application domain models.
+- `EfficientFrontierCLA`: Must conform to application domain models.
+- `CriticalLineAlgorithm`: Must conform to application domain models.
+### Public Functions
+- `compute_turnover()`: Must return strictly typed objects.
+- `risk()`: Must return strictly typed objects.
+- `get_portfolio_for_return()`: Must return strictly typed objects.
+- `get_max_sharpe_portfolio()`: Must return strictly typed objects.
+- `compute_efficient_frontier()`: Must return strictly typed objects.
+- `objective()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

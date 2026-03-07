@@ -1,0 +1,68 @@
+# Requirements Document: services/live_trading/trading_audit_trail.py
+
+## 1. Module Overview
+T18.3.4: TradingAuditTrail - Compliance and audit logging
+
+Comprehensive audit trail for all alert-triggered trades:
+- Immutable event logging
+- Trade justification tracking
+- Risk validation records
+- Execution evidence
+- Compliance reporting
+
+PRODUCTION: SQLite persistence for MiFID II compliance.
+MEMORY: Uses deque with maxlen to prevent unbounded memory growth.
+UTC: All timestamps are timezone-aware UTC.
+
+## 2. Dependencies
+- `json`
+- `logging`
+- `sqlite3`
+- `threading`
+- `collections.deque`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `datetime.timezone`
+- `decimal.Decimal`
+- `enum.Enum`
+- `pathlib.Path`
+- `typing.Deque`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `AuditEventType`: Must conform to application domain models.
+- `AuditEvent`: Must conform to application domain models.
+- `ComplianceReport`: Must conform to application domain models.
+- `AuditPersistence`: Must conform to application domain models.
+- `TradingAuditTrail`: Must conform to application domain models.
+### Public Functions
+- `utc_now()`: Must return strictly typed objects.
+- `get_audit_persistence()`: Must return strictly typed objects.
+- `get_trading_audit_trail()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `save_event()`: Must return strictly typed objects.
+- `get_events()`: Must return strictly typed objects.
+- `get_event_count()`: Must return strictly typed objects.
+- `get_non_compliant_events()`: Must return strictly typed objects.
+- `close()`: Must return strictly typed objects.
+- `log_event()`: Must return strictly typed objects.
+- `get_event()`: Must return strictly typed objects.
+- `get_events_for_alert()`: Must return strictly typed objects.
+- `get_events_for_order()`: Must return strictly typed objects.
+- `get_events_by_type()`: Must return strictly typed objects.
+- `get_non_compliant_events()`: Must return strictly typed objects.
+- `get_recent_events()`: Must return strictly typed objects.
+- `generate_compliance_report()`: Must return strictly typed objects.
+- `get_audit_statistics()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

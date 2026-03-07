@@ -1,0 +1,58 @@
+# Requirements Document: backtesting/core/orchestrator.py
+
+## 1. Module Overview
+Orchestrator for backtesting operations.
+
+This module provides coordination and orchestration for backtesting operations,
+including result management, parallel execution, and test coordination.
+
+SINGLE SOURCE OF TRUTH: All defaults from CentralizedConfig.
+
+## 2. Dependencies
+- `logging`
+- `collections.deque`
+- `decimal.Decimal`
+- `threading.Lock`
+- `typing.TYPE_CHECKING`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `app.backtesting.models.BacktestConfig`
+- `app.backtesting.models.BacktestResult`
+- `app.shared.config.centralized_config.get_config`
+- `app.backtesting.core.executor.BacktestExecutor`
+- `app.backtesting.core.executor.BacktestExecutorFactory`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BacktestDefaults`: Must conform to application domain models.
+- `BoundedResults`: Must conform to application domain models.
+- `OrchestrationResult`: Must conform to application domain models.
+- `BacktestOrchestrator`: Must conform to application domain models.
+### Public Functions
+- `COMMISSION()`: Must return strictly typed objects.
+- `SLIPPAGE()`: Must return strictly typed objects.
+- `INITIAL_CAPITAL()`: Must return strictly typed objects.
+- `MAX_POSITION_SIZE()`: Must return strictly typed objects.
+- `RISK_FREE_RATE()`: Must return strictly typed objects.
+- `STOP_LOSS_PERCENTAGE()`: Must return strictly typed objects.
+- `TAKE_PROFIT_PERCENTAGE()`: Must return strictly typed objects.
+- `add()`: Must return strictly typed objects.
+- `extend()`: Must return strictly typed objects.
+- `get_all()`: Must return strictly typed objects.
+- `get_latest()`: Must return strictly typed objects.
+- `clear()`: Must return strictly typed objects.
+- `summary()`: Must return strictly typed objects.
+- `get_best_result()`: Must return strictly typed objects.
+- `filter_results()`: Must return strictly typed objects.
+- `run_all()`: Must return strictly typed objects.
+- `execution_count()`: Must return strictly typed objects.
+- `get_metric()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

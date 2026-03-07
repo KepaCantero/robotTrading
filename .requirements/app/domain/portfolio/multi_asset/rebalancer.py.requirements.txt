@@ -1,0 +1,52 @@
+# Requirements Document: domain/portfolio/multi_asset/rebalancer.py
+
+## 1. Module Overview
+Multi-Asset Portfolio Rebalancing.
+
+This module provides comprehensive rebalancing functionality for multi-asset
+portfolios, including trade calculation, prioritization, and cost estimation.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `asset_class.AssetClass`
+- `asset_class.AssetClassType`
+- `models.MultiAssetAllocation`
+- `models.MultiAssetPortfolio`
+- `models.Trade`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RebalancePriority`: Must conform to application domain models.
+- `CostEstimate`: Must conform to application domain models.
+- `RebalanceTrade`: Must conform to application domain models.
+- `RebalancePlan`: Must conform to application domain models.
+- `MultiAssetRebalancer`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+- `to_trade()`: Must return strictly typed objects.
+- `is_buy()`: Must return strictly typed objects.
+- `is_sell()`: Must return strictly typed objects.
+- `n_trades()`: Must return strictly typed objects.
+- `total_value_to_trade()`: Must return strictly typed objects.
+- `buys()`: Must return strictly typed objects.
+- `sells()`: Must return strictly typed objects.
+- `net_cash_flow()`: Must return strictly typed objects.
+- `create_rebalance_plan()`: Must return strictly typed objects.
+- `prioritize_trades()`: Must return strictly typed objects.
+- `estimate_costs()`: Must return strictly typed objects.
+- `calculate_rebalance_trades()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

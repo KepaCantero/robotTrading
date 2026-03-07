@@ -1,0 +1,49 @@
+# Requirements Document: services/alerting_system/metrics_driven_alerter.py
+
+## 1. Module Overview
+T18.2: Advanced Alerting System - Metrics-Driven Alerter
+
+Component that queries metrics from T18.1 and evaluates alert rules.
+Provides the bridge between real-time metrics and rule-based alerting.
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `uuid.uuid4`
+- `app.services.alerting_system.alert_manager.AlertManager`
+- `app.services.alerting_system.alert_rule_engine.AlertRuleEngine`
+- `app.services.alerting_system.models.AlertEvent`
+- `app.services.alerting_system.models.AlertRule`
+- `app.services.alerting_system.models.AlertState`
+- `app.services.alerting_system.models.ChangeRule`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MetricQueryConfig`: Must conform to application domain models.
+- `EvaluationStatistics`: Must conform to application domain models.
+- `MetricsDrivenAlerter`: Must conform to application domain models.
+### Public Functions
+- `add_evaluation()`: Must return strictly typed objects.
+- `reset()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `register_metric_alert_rule()`: Must return strictly typed objects.
+- `register_rules()`: Must return strictly typed objects.
+- `get_evaluation_statistics()`: Must return strictly typed objects.
+- `get_registered_rules()`: Must return strictly typed objects.
+- `get_rule_count()`: Must return strictly typed objects.
+- `get_enabled_rule_count()`: Must return strictly typed objects.
+- `is_evaluating()`: Must return strictly typed objects.
+- `reset_statistics()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,46 @@
+# Requirements Document: domain/strategies/factory.py
+
+## 1. Module Overview
+StrategyFactory - Factory para crear estrategias dinámicamente.
+
+Implementa el patrón Factory para la creación dinámica de estrategias,
+permitiendo registro y creación de estrategias sin modificar código.
+
+## 2. Dependencies
+- `logging`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Type`
+- `base.BaseStrategy`
+- `mean_reversion.MeanReversionStrategy`
+- `momentum.MomentumStrategy`
+- `pairs_trading.PairsTradingStrategy`
+- `app.engines.strategy_engines.ArbitrageStrategyEngine`
+- `app.engines.strategy_engines.BreakoutStrategyEngine`
+- `app.engines.strategy_engines.MeanReversionStrategyEngine`
+- `app.engines.strategy_engines.MomentumStrategyEngine`
+- `app.engines.strategy_engines.PairsTradingStrategyEngine`
+- `app.engines.strategy_engines.TrendFollowingStrategyEngine`
+- `app.engines.strategy_engines.RegimeBasedSelector`
+- `app.engines.strategy_engines.VotingEnsemble`
+- `app.engines.strategy_engines.WeightedEnsemble`
+- `crypto_momentum.crypto_momentum_strategy.CryptoMomentumStrategy`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StrategyFactory`: Must conform to application domain models.
+### Public Functions
+- `register_strategy()`: Must return strictly typed objects.
+- `create_strategy()`: Must return strictly typed objects.
+- `list_available_strategies()`: Must return strictly typed objects.
+- `get_strategy_info()`: Must return strictly typed objects.
+- `unregister_strategy()`: Must return strictly typed objects.
+- `create_ensemble()`: Must return strictly typed objects.
+- `reload_strategies()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

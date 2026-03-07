@@ -1,0 +1,25 @@
+# Requirements Document: domain/strategies/modules/market_analyzer.py
+
+## 1. Module Overview
+MarketAnalyzer - Orquesta módulos detectores de régimen de mercado.
+
+## 2. Dependencies
+- `logging`
+- `collections.deque`
+- `typing.Dict`
+- `typing.List`
+- `market_detectors.range_detector.RangeDetector`
+- `market_detectors.trend_detector.TrendDetector`
+- `market_detectors.volatility_detector.VolatilityDetector`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MarketAnalyzer`: Must conform to application domain models.
+### Public Functions
+- `analyze()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

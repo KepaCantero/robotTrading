@@ -1,0 +1,20 @@
+# Requirements Document: engines/risk_engine/drawdown_controllers/__init__.py
+
+## 1. Module Overview
+Drawdown Controllers Module
+
+Exporta todos los drawdown controllers disponibles.
+
+## 2. Dependencies
+- `drawdown_controllers.BaseDrawdownController`
+- `drawdown_controllers.CircuitBreakerController`
+- `drawdown_controllers.DrawdownController`
+- `drawdown_controllers.PeakDrawdownController`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,43 @@
+# Requirements Document: presentation/api/deployment.py
+
+## 1. Module Overview
+Deployment decision API endpoints.
+
+Provides REST API for validating strategies, making deployment decisions,
+and accessing deployment status information.
+
+GAP Fixes:
+- API-002: Added structured logging with correlation IDs
+- API-005: FIXED - Added security decorators (rate_limit, require_auth, audit_log)
+- API-006: Added correlation ID tracking
+- API-009: Added audit logging
+
+## 2. Dependencies
+- `__future__.annotations`
+- `asyncio`
+- `logging`
+- `traceback`
+- `datetime.datetime`
+- `typing.Dict`
+- `fastapi.APIRouter`
+- `fastapi.HTTPException`
+- `fastapi.Query`
+- `fastapi.Request`
+- `requests.exceptions.HTTPError`
+- `requests.exceptions.RequestException`
+- `app.domain.models.deployment.DeploymentInput`
+- `app.services.deploy_decision_orchestrator.get_deploy_orchestrator`
+- `app.infrastructure.external.integrations.health_check_manager.get_health_check_manager`
+- `audit_logger`
+- `get_correlation_id`
+- `security.audit_log`
+- `security.rate_limit`
+- `security.require_auth`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

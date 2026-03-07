@@ -1,0 +1,36 @@
+# Requirements Document: engines/risk_engine/exposure_managers/exposure_managers.py
+
+## 1. Module Overview
+Exposure Managers
+
+Implementa gestión de exposición:
+- Exposure limits por activo, sector, estrategia
+- Leverage monitoring
+- Concentration risk (Herfindahl index)
+
+## 2. Dependencies
+- `logging`
+- `abc.ABC`
+- `abc.abstractmethod`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `app.domain.models.portfolio.Portfolio`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BaseExposureManager`: Must conform to application domain models.
+- `ExposureManager`: Must conform to application domain models.
+### Public Functions
+- `analyze_exposure()`: Must return strictly typed objects.
+- `analyze_exposure()`: Must return strictly typed objects.
+- `get_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

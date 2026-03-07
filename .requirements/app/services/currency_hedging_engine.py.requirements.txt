@@ -1,0 +1,37 @@
+# Requirements Document: services/currency_hedging_engine.py
+
+## 1. Module Overview
+Currency Hedging Engine - TASK-5.5-CURRENCY-HEDGING
+
+Calculates hedge recommendations, ratios, and costs for multi-currency portfolios.
+Provides core hedging logic independent of portfolio service.
+Uses centralized configuration for thresholds and parameters.
+
+## 2. Dependencies
+- `logging`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.TYPE_CHECKING`
+- `pydantic.BaseModel`
+- `pydantic.Field`
+- `app.shared.config.centralized_config.get_config`
+- `app.domain.models.portfolio.Portfolio`
+- `app.services.forex_data_service.get_forex_fetcher`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `HedgeUrgency`: Must conform to application domain models.
+- `HedgeRecommendation`: Must conform to application domain models.
+- `CurrencyHedgingEngine`: Must conform to application domain models.
+### Public Functions
+- `calculate_currency_exposure()`: Must return strictly typed objects.
+- `calculate_hedge_recommendations()`: Must return strictly typed objects.
+- `get_statistics()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

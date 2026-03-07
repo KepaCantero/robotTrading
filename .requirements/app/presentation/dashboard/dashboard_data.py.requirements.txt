@@ -1,0 +1,38 @@
+# Requirements Document: presentation/dashboard/dashboard_data.py
+
+## 1. Module Overview
+Dashboard data models.
+
+Defines the data structures used by the dashboard to display
+trading information.
+
+NOTE: For canonical PerformanceMetrics, use app.backtesting.models.PerformanceMetrics
+This module contains DashboardPerformanceMetrics which is dashboard-specific.
+
+## 2. Dependencies
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.List`
+- `typing.Optional`
+- `typing.Dict`
+- `typing.Any`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PositionSummary`: Must conform to application domain models.
+- `DashboardPerformanceMetrics`: Must conform to application domain models.
+- `SystemStatus`: Must conform to application domain models.
+- `DashboardSnapshot`: Must conform to application domain models.
+### Public Functions
+- `to_display_dict()`: Must return strictly typed objects.
+- `to_display_dict()`: Must return strictly typed objects.
+- `to_display_dict()`: Must return strictly typed objects.
+- `to_display_dict()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

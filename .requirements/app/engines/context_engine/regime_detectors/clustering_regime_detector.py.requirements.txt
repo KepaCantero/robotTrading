@@ -1,0 +1,30 @@
+# Requirements Document: engines/context_engine/regime_detectors/clustering_regime_detector.py
+
+## 1. Module Overview
+ClusteringRegimeDetector - Detección de régimen usando clustering.
+
+Usa KMeans y DBSCAN para identificar regímenes basados en features de mercado.
+
+## 2. Dependencies
+- `logging`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `numpy`
+- `sklearn.cluster.DBSCAN`
+- `sklearn.cluster.KMeans`
+- `sklearn.decomposition.PCA`
+- `sklearn.preprocessing.StandardScaler`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ClusteringRegimeDetector`: Must conform to application domain models.
+### Public Functions
+- `fit()`: Must return strictly typed objects.
+- `detect()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

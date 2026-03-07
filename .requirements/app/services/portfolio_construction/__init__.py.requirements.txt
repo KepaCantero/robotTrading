@@ -1,0 +1,35 @@
+# Requirements Document: services/portfolio_construction/__init__.py
+
+## 1. Module Overview
+Portfolio Construction & Optimization - T7.1 (PortfolioConstructor) + T18.1 Extensions
+
+Provides:
+- T7.1: PortfolioConstructor - Mean-variance and risk parity optimization
+- T18.1.1: AllocationManager - Portfolio allocation tracking and management
+- T18.1.2: RebalancingEngine - Dynamic rebalancing based on thresholds
+- T18.1.3: AllocationRecommender - Smart allocation recommendations
+
+## 2. Dependencies
+- `app.services.portfolio_construction.allocation_manager.AllocationManager`
+- `app.services.portfolio_construction.allocation_manager.AllocationMetrics`
+- `app.services.portfolio_construction.allocation_manager.AllocationSnapshot`
+- `app.services.portfolio_construction.allocation_manager.get_allocation_manager`
+- `app.services.portfolio_construction.allocation_recommender.AllocationRecommendation`
+- `app.services.portfolio_construction.allocation_recommender.AllocationRecommender`
+- `app.services.portfolio_construction.allocation_recommender.get_allocation_recommender`
+- `app.services.portfolio_construction.portfolio_constructor.OptimizationMethod`
+- `app.services.portfolio_construction.portfolio_constructor.PortfolioAllocation`
+- `app.services.portfolio_construction.portfolio_constructor.PortfolioConstructor`
+- `app.services.portfolio_construction.rebalancing_engine.RebalancingEngine`
+- `app.services.portfolio_construction.rebalancing_engine.RebalancingEvent`
+- `app.services.portfolio_construction.rebalancing_engine.RebalancingFrequency`
+- `app.services.portfolio_construction.rebalancing_engine.RebalancingTrade`
+- `app.services.portfolio_construction.rebalancing_engine.get_rebalancing_engine`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

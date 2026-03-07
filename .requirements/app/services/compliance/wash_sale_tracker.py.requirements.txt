@@ -1,0 +1,52 @@
+# Requirements Document: services/compliance/wash_sale_tracker.py
+
+## 1. Module Overview
+Wash Sale Tracker for USA Accounts.
+
+USA Wash Sale Rule (IRC Section 1091):
+- Sell security at loss
+- Buy substantially identical security within 30 days before or after
+- Loss is disallowed for tax purposes
+- Disallowed loss added to new position's basis
+
+IMPORTANT: Spain does NOT have wash sale rules.
+Losses are fully deductible in the year realized.
+
+Reference:
+    https://www.irs.gov/publications/p550
+    Publication 550 - Investment Income and Expenses
+
+## 2. Dependencies
+- `logging`
+- `collections.deque`
+- `dataclasses.dataclass`
+- `datetime.date`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `typing.Deque`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `app.services.compliance.pdt_tracker.Country`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `WashSale`: Must conform to application domain models.
+- `PositionRecord`: Must conform to application domain models.
+- `WashSaleTracker`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `is_wash_sale()`: Must return strictly typed objects.
+- `record_trade()`: Must return strictly typed objects.
+- `check_wash_sale_impact()`: Must return strictly typed objects.
+- `get_wash_sales()`: Must return strictly typed objects.
+- `get_wash_sale_summary()`: Must return strictly typed objects.
+- `reset()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,31 @@
+# Requirements Document: services/task_queue/__init__.py
+
+## 1. Module Overview
+Async Task Queue Service for AlgoTrading System.
+
+This module provides a persistent task queue system for 24/7 operation that:
+- Persists tasks to database
+- Reprocesses pending tasks on restart
+- Handles task expiration
+- Supports priority queue
+- Has dead letter queue for failures
+- Implements retry with exponential backoff
+
+The task queue is designed to replace direct asyncio.create_task() usage with
+a more robust, persistent solution that survives system restarts.
+
+## 2. Dependencies
+- `persistent_queue.PersistentTaskQueue`
+- `persistent_queue.Task`
+- `persistent_queue.TaskPriority`
+- `persistent_queue.TaskStatus`
+- `persistent_queue.create_task`
+- `persistent_queue.exponential_backoff`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,42 @@
+# Requirements Document: domain/strategies/config_loader.py
+
+## 1. Module Overview
+StrategyConfigLoader - Cargador de configuración de estrategias.
+
+Permite cargar configuración de estrategias desde archivos YAML/JSON,
+validar la configuración y proporcionar acceso a parámetros específicos.
+
+## 2. Dependencies
+- `json`
+- `logging`
+- `datetime.datetime`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `yaml`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StrategyConfigLoader`: Must conform to application domain models.
+### Public Functions
+- `load_config()`: Must return strictly typed objects.
+- `save_config()`: Must return strictly typed objects.
+- `get_active_strategies()`: Must return strictly typed objects.
+- `get_strategy_config()`: Must return strictly typed objects.
+- `get_backtesting_strategies()`: Must return strictly typed objects.
+- `get_paper_trading_strategy()`: Must return strictly typed objects.
+- `get_logging_config()`: Must return strictly typed objects.
+- `validate_config()`: Must return strictly typed objects.
+- `add_strategy_config()`: Must return strictly typed objects.
+- `remove_strategy_config()`: Must return strictly typed objects.
+- `update_strategy_config()`: Must return strictly typed objects.
+- `reload_config()`: Must return strictly typed objects.
+- `get_config_summary()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

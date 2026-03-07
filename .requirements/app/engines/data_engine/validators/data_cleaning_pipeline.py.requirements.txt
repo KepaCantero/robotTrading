@@ -1,0 +1,31 @@
+# Requirements Document: engines/data_engine/validators/data_cleaning_pipeline.py
+
+## 1. Module Overview
+DataCleaningPipeline - Pipeline completo de limpieza de datos.
+
+Combina:
+- Outlier detection
+- Gap interpolation
+- Quality validation
+
+## 2. Dependencies
+- `logging`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `gap_interpolator.GapInterpolator`
+- `outlier_detector.OutlierDetector`
+- `quality_validator.QualityValidator`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DataCleaningPipeline`: Must conform to application domain models.
+### Public Functions
+- `clean()`: Must return strictly typed objects.
+- `clean_single()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

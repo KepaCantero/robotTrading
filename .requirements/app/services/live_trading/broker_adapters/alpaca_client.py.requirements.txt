@@ -1,0 +1,42 @@
+# Requirements Document: services/live_trading/broker_adapters/alpaca_client.py
+
+## 1. Module Overview
+Alpaca API Client - Low-level Alpaca broker API wrapper.
+
+Handles:
+- Authentication with Alpaca API
+- REST API calls (orders, positions, account)
+- WebSocket streaming for real-time quotes
+- Error handling and retry logic
+- Rate limit compliance
+
+## 2. Dependencies
+- `asyncio`
+- `json`
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `websockets`
+- `requests.exceptions.HTTPError`
+- `alpaca_trade_api.REST`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `AlpacaClientError`: Must conform to application domain models.
+- `AlpacaClient`: Must conform to application domain models.
+### Public Functions
+- `register_quote_handler()`: Must return strictly typed objects.
+- `register_trade_handler()`: Must return strictly typed objects.
+- `register_order_handler()`: Must return strictly typed objects.
+- `register_error_handler()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

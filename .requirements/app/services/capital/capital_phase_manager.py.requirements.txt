@@ -1,0 +1,41 @@
+# Requirements Document: services/capital/capital_phase_manager.py
+
+## 1. Module Overview
+Capital Phase Manager (R25, R26, R27)
+
+This module manages dynamic risk adjustment based on capital phases.
+As the account grows, risk parameters are automatically adjusted.
+
+Rules:
+- R25: Survival phase (€1k-€10k) - Conservative risk
+- R26: Growth phase (€10k-€50k) - Moderate risk
+- R27: Optimization phase (€50k+) - Aggressive risk with leverage
+
+## 2. Dependencies
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `app.services.capital.phase_config.PHASE_CONFIGS`
+- `app.services.capital.phase_config.PHASE_THRESHOLDS`
+- `app.services.capital.phase_config.CapitalPhase`
+- `app.services.capital.phase_config.PhaseRiskParameters`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CapitalPhaseEvent`: Must conform to application domain models.
+- `CapitalPhaseManager`: Must conform to application domain models.
+### Public Functions
+- `update_capital()`: Must return strictly typed objects.
+- `get_current_phase()`: Must return strictly typed objects.
+- `get_current_capital()`: Must return strictly typed objects.
+- `get_risk_parameters()`: Must return strictly typed objects.
+- `can_increase_position_size()`: Must return strictly typed objects.
+- `get_phase_summary()`: Must return strictly typed objects.
+- `get_phase_history()`: Must return strictly typed objects.
+- `get_capital_progress()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

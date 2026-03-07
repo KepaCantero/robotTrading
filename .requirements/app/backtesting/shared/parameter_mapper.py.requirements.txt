@@ -1,0 +1,39 @@
+# Requirements Document: backtesting/shared/parameter_mapper.py
+
+## 1. Module Overview
+Parameter Mapping Service - Maps optimization parameters to nested config structure.
+
+Eliminates 4+ duplicate implementations across:
+- profile_batch_backtester.py (140 lines)
+- bayesian_optimizer.py (115 lines)
+- optimization_validators.py (3 simplified versions)
+
+This service handles the mapping between flat optimization parameters
+and the nested YAML configuration structure used by strategies.
+
+## 2. Dependencies
+- `copy`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `app.backtesting.shared.types.ConfigKeys`
+- `logging`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ParameterMappingService`: Must conform to application domain models.
+### Public Functions
+- `map_params_to_config()`: Must return strictly typed objects.
+- `map_params_to_strategy_config()`: Must return strictly typed objects.
+- `map_rsi_threshold()`: Must return strictly typed objects.
+- `map_ema_periods()`: Must return strictly typed objects.
+- `map_volume_threshold()`: Must return strictly typed objects.
+- `map_risk_params()`: Must return strictly typed objects.
+- `convert_to_yaml_updater_format()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

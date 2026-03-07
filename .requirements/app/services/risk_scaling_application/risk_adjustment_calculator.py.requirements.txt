@@ -1,0 +1,41 @@
+# Requirements Document: services/risk_scaling_application/risk_adjustment_calculator.py
+
+## 1. Module Overview
+T8.1 RiskAdjustmentCalculator - Risk adjustment calculations
+
+Extracted from RiskScalingApplication to provide calculation logic.
+
+Responsibilities:
+- Calculate individual adjustment factors (regime, volatility, drawdown)
+- Compute adjusted allocations
+- Calculate scaling factors
+- Estimate return impacts
+
+## 2. Dependencies
+- `logging`
+- `decimal.Decimal`
+- `typing.List`
+- `typing.Tuple`
+- `app.services.portfolio_constructor.AllocationWeight`
+- `models.AdjustedAllocationWeight`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RiskAdjustmentCalculator`: Must conform to application domain models.
+### Public Functions
+- `get_risk_adjustment_calculator()`: Must return strictly typed objects.
+- `calculate_regime_adjustment()`: Must return strictly typed objects.
+- `calculate_volatility_adjustment()`: Must return strictly typed objects.
+- `calculate_drawdown_adjustment()`: Must return strictly typed objects.
+- `calculate_allocation_adjustment()`: Must return strictly typed objects.
+- `calculate_adjusted_allocations()`: Must return strictly typed objects.
+- `calculate_overall_scaling_factor()`: Must return strictly typed objects.
+- `calculate_loss_streak_adjustment()`: Must return strictly typed objects.
+- `calculate_return_adjustment()`: Must return strictly typed objects.
+- `build_adjustment_rationale()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

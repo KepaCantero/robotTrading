@@ -1,0 +1,48 @@
+# Requirements Document: engines/execution_engine/microstructure/order_book_analyzer.py
+
+## 1. Module Overview
+Order Book Depth Analyzer
+
+Implements Harris Rule 6.1: Analyze order book before executing orders.
+
+This module provides comprehensive order book analysis including:
+- Bid-ask spread calculation
+- Book imbalance (buying vs selling pressure)
+- Effective spread for specific order sizes
+- Liquidity depth analysis
+- Slope analysis for market impact prediction
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `pandas`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `OrderBookLevel`: Must conform to application domain models.
+- `OrderBookSnapshot`: Must conform to application domain models.
+- `BookAnalysisResult`: Must conform to application domain models.
+- `OrderBookAnalyzer`: Must conform to application domain models.
+### Public Functions
+- `get_order_book_analyzer()`: Must return strictly typed objects.
+- `best_bid()`: Must return strictly typed objects.
+- `best_ask()`: Must return strictly typed objects.
+- `mid_price()`: Must return strictly typed objects.
+- `spread()`: Must return strictly typed objects.
+- `spread_bps()`: Must return strictly typed objects.
+- `analyze_order_book()`: Must return strictly typed objects.
+- `detect_liquidity_regime()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

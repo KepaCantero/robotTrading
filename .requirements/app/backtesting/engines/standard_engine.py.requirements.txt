@@ -1,0 +1,67 @@
+# Requirements Document: backtesting/engines/standard_engine.py
+
+## 1. Module Overview
+Standard Backtest Engine.
+
+This engine provides standard single-strategy backtesting with:
+- Comprehensive compliance integration
+- Service-based architecture (PositionManager, TradeExecutor, etc.)
+- Risk envelope validation
+- Learning engine support
+
+This is a refactored version of app/backtesting/engine.py that
+extends BaseBacktestEngine for consistency across the codebase.
+
+SINGLE SOURCE OF TRUTH: All defaults from CentralizedConfig.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `decimal.InvalidOperation`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `typing.Union`
+- `uuid.uuid4`
+- `pandas`
+- `app.backtesting.base_engine.BaseBacktestEngine`
+- `app.backtesting.base_engine.BacktestState`
+- `app.backtesting.base_engine.EngineType`
+- `app.backtesting.models.BacktestConfig`
+- `app.backtesting.models.BacktestResult`
+- `app.backtesting.models.PerformanceMetrics`
+- `app.backtesting.models.Trade`
+- `app.backtesting.models.TradeStatus`
+- `app.backtesting.liquidity_validator.LiquidityValidator`
+- `app.backtesting.services.equity_tracker.EquityCurveTracker`
+- `app.backtesting.services.exit_monitor.ExitConditionMonitor`
+- `app.backtesting.services.performance_calculator.PerformanceMetricsCalculator`
+- `app.backtesting.services.pnl_calculator.ProfitAndLossCalculator`
+- `app.backtesting.services.position_manager.PositionManager`
+- `app.backtesting.services.signal_processor.SignalProcessor`
+- `app.backtesting.services.trade_executor.TradeExecutor`
+- `app.domain.models.portfolio.AssetClass`
+- `app.domain.models.portfolio.Portfolio`
+- `app.domain.models.portfolio.Position`
+- `app.domain.models.signal.Signal`
+- `app.domain.services.compliance.compliance_engine.ComplianceEngine`
+- `app.domain.services.trading_validators.TradingValidator`
+- `app.domain.strategies.momentum_modular.learning.learning_updater.LearningEngineUpdater`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StandardBacktestEngine`: Must conform to application domain models.
+### Public Functions
+- `get_engine_type()`: Must return strictly typed objects.
+- `run_backtest()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

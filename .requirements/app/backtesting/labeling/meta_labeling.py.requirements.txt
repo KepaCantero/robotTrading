@@ -1,0 +1,63 @@
+# Requirements Document: backtesting/labeling/meta_labeling.py
+
+## 1. Module Overview
+Meta-Labeling Implementation for Financial ML
+
+Based on Marcos López de Prado's "Advances in Financial Machine Learning", Chapter 3.
+
+Meta-labeling is a two-stage ML approach:
+1. Primary Model: Predicts signal direction (buy/sell)
+2. Meta Model: Predicts whether the primary model will be correct
+
+This allows us to:
+- Separate signal direction from position sizing
+- Use meta-labels for bet sizing
+- Improve risk-adjusted returns
+- Reduce false positive rate
+
+Key Concepts:
+- Primary labels: Original trading signals (-1, 0, 1)
+- Meta labels: Binary (1 if primary was correct, 0 otherwise)
+- Bet sizing: Position size based on meta-model probability
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `typing.Union`
+- `numpy`
+- `pandas`
+- `sklearn.ensemble.RandomForestClassifier`
+- `xgboost.XGBClassifier`
+- `lightgbm.LGBMClassifier`
+- `sklearn.linear_model.LogisticRegression`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MetaLabelingError`: Must conform to application domain models.
+- `ModelNotFittedError`: Must conform to application domain models.
+- `DataValidationError`: Must conform to application domain models.
+- `BetSizingValidationError`: Must conform to application domain models.
+- `MetaLabelingConfig`: Must conform to application domain models.
+- `MetaLabelingResult`: Must conform to application domain models.
+- `MetaLabeling`: Must conform to application domain models.
+### Public Functions
+- `apply_meta_labeling()`: Must return strictly typed objects.
+- `calculate_meta_labels()`: Must return strictly typed objects.
+- `snv_to_signal()`: Must return strictly typed objects.
+- `get_meta_labeling()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `fit()`: Must return strictly typed objects.
+- `predict()`: Must return strictly typed objects.
+- `fit_predict()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,47 @@
+# Requirements Document: services/reporting_generator/pyfolio_integrator.py
+
+## 1. Module Overview
+T9.1 PHASE 2: PyFolioIntegrator - Advanced risk decomposition and tearsheet generation
+
+Wraps pyfolio library for comprehensive performance analysis including factor exposure,
+position concentration, and capacity fade metrics. Provides tearsheet generation and
+risk decomposition capabilities.
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `scipy.stats`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `FactorExposure`: Must conform to application domain models.
+- `FactorAnalysis`: Must conform to application domain models.
+- `PositionConcentration`: Must conform to application domain models.
+- `CapacityFade`: Must conform to application domain models.
+- `Tearsheet`: Must conform to application domain models.
+- `PyFolioIntegrator`: Must conform to application domain models.
+### Public Functions
+- `get_pyfolio_integrator()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `generate_tearsheet()`: Must return strictly typed objects.
+- `analyze_factor_exposure()`: Must return strictly typed objects.
+- `calculate_position_concentration()`: Must return strictly typed objects.
+- `analyze_capacity_fade()`: Must return strictly typed objects.
+- `get_integrator_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

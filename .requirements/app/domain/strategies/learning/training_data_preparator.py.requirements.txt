@@ -1,0 +1,37 @@
+# Requirements Document: domain/strategies/learning/training_data_preparator.py
+
+## 1. Module Overview
+TrainingDataPreparator - Prepara datos de entrenamiento completos para learning engines.
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `pandas`
+- `app.backtesting.models.Trade`
+- `app.backtesting.models.TradeStatus`
+- `app.domain.models.market_data.Quote`
+- `pandas_ta`
+- `pandas_ta_classic`
+- `app.domain.strategies.momentum_modular.learning.feature_extractor.FeatureExtractor`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TrainingDataPreparator`: Must conform to application domain models.
+### Public Functions
+- `prepare_supervised_training_data()`: Must return strictly typed objects.
+- `prepare_deep_learning_training_data()`: Must return strictly typed objects.
+- `prepare_reinforcement_learning_data()`: Must return strictly typed objects.
+- `get_attr()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

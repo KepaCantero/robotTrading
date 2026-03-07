@@ -1,0 +1,56 @@
+# Requirements Document: domain/strategies/learning/deep_learning_engine.py
+
+## 1. Module Overview
+DeepLearningEngine - Det parte patrones complejos con LSTM, GRU o Transformers.
+
+## 2. Dependencies
+- `logging`
+- `os`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `numpy`
+- `app.security.secure_serialization.sign_and_dump`
+- `app.security.secure_serialization.verify_and_load`
+- `base_learning_engine.BaseLearningEngine`
+- `torch`
+- `torch.nn`
+- `torch.optim`
+- `torch.utils.data.DataLoader`
+- `torch.utils.data.Dataset`
+- `multiprocessing`
+- `torch.utils.data.DataLoader`
+- `torch.utils.data.Dataset`
+- `numpy`
+- `numpy`
+- `app.domain.strategies.momentum_modular.learning.deep_learning_engine.DeepLearningEngine`
+- `tempfile`
+- `torch`
+- `numpy`
+- `numpy`
+- `os`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DeepLearningEngine`: Must conform to application domain models.
+- `TimeSeriesDataset`: Must conform to application domain models.
+- `LSTMModel`: Must conform to application domain models.
+- `GRUModel`: Must conform to application domain models.
+- `AttentionLSTMModel`: Must conform to application domain models.
+- `TransformerModel`: Must conform to application domain models.
+- `TimeSeriesDatasetEval`: Must conform to application domain models.
+- `TimeSeriesDatasetVal`: Must conform to application domain models.
+### Public Functions
+- `train()`: Must return strictly typed objects.
+- `predict()`: Must return strictly typed objects.
+- `evaluate()`: Must return strictly typed objects.
+- `forward()`: Must return strictly typed objects.
+- `forward()`: Must return strictly typed objects.
+- `forward()`: Must return strictly typed objects.
+- `forward()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

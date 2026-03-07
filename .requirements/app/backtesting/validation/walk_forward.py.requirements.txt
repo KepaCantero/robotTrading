@@ -1,0 +1,56 @@
+# Requirements Document: backtesting/validation/walk_forward.py
+
+## 1. Module Overview
+Walk-forward validation implementation (FASE 5.3).
+
+This module implements rolling window walk-forward validation for robust
+strategy testing, preventing look-ahead bias while measuring true out-of-sample
+performance.
+
+Key Features:
+- Rolling window optimization with configurable train/test periods
+- Multiple IS/OS periods for robust validation
+- Aggregate IS vs OS metrics with degradation analysis
+- Consistency scoring across periods
+- Actionable recommendations based on validation results
+
+References:
+    - AUDIT_PLAN_COMPLETO.md - FASE 5.3: Validation
+    - "Advances in Financial Machine Learning" - Marcos López de Prado
+    - "Expected Returns" - Antti Ilmanen
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `pandas`
+- `app.shared.config.centralized_config.get_config`
+- `models.PeriodResult`
+- `models.WalkForwardConfig`
+- `models.WalkForwardResult`
+- `typing.ParamSpec`
+- `typing_extensions.ParamSpec`
+- `itertools`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `WalkForwardValidator`: Must conform to application domain models.
+- `RollingWindowOptimizer`: Must conform to application domain models.
+### Public Functions
+- `calculate_degradation()`: Must return strictly typed objects.
+- `calculate_consistency_score()`: Must return strictly typed objects.
+- `validate()`: Must return strictly typed objects.
+- `optimize()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

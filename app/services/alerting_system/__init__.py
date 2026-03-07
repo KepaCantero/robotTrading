@@ -11,7 +11,7 @@ Provides rule-based alerting with webhook/email/Slack/Discord/Telegram integrati
 
 from .alert_manager import AlertManager
 from .alert_rule_engine import AlertRuleEngine
-from .alerting_orchestrator import AlertingHealth, AlertingOrchestrator, AlertingStatistics
+from app.application.alerting.alerting_orchestrator import AlertingHealth, AlertingOrchestrator, AlertingStatistics
 from .metrics_driven_alerter import MetricQueryConfig, MetricsDrivenAlerter
 from .models import (
     AlertEvent,

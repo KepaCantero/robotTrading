@@ -1,0 +1,38 @@
+# Requirements Document: services/metrics_database/questdb_connector.py
+
+## 1. Module Overview
+T18.1: QuestDB Connector - Async client for time-series metrics storage
+
+Provides high-performance async interface to QuestDB for storing and querying metrics.
+Handles connection pooling, bulk operations, and error handling.
+
+## 2. Dependencies
+- `asyncio`
+- `json`
+- `logging`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `models.AggregatedMetrics`
+- `models.AggregationType`
+- `models.MetricPoint`
+- `models.MetricsStorageStats`
+- `models.MetricType`
+- `models.TimeSeriesQuery`
+- `os`
+- `warnings`
+- `asyncpg`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `_InMemoryPool`: Must conform to application domain models.
+- `QuestDBConnector`: Must conform to application domain models.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

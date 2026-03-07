@@ -1,0 +1,53 @@
+# Requirements Document: backtesting/robust_engine/performance_tracker.py
+
+## 1. Module Overview
+Performance Tracker for Robust Backtesting Engine.
+
+This module provides comprehensive performance tracking for long-term
+backtests over 25+ year periods.
+
+Features:
+- Year-by-year performance breakdown
+- Rolling metrics (3-year, 5-year, 10-year)
+- Regime analysis (bull/bear markets)
+- Drawdown analysis with recovery periods
+- Risk-adjusted returns (Sharpe, Sortino, Calmar)
+- Win rate and profit factor statistics
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.date`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `pandas`
+- `scipy.stats`
+- `app.backtesting.models.PerformanceMetrics`
+- `app.shared.config.centralized_config.CentralizedConfig`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `YearlyBreakdown`: Must conform to application domain models.
+- `RollingMetrics`: Must conform to application domain models.
+- `RegimeAnalysis`: Must conform to application domain models.
+- `PerformanceTracker`: Must conform to application domain models.
+### Public Functions
+- `update()`: Must return strictly typed objects.
+- `calculate_metrics()`: Must return strictly typed objects.
+- `get_yearly_breakdown()`: Must return strictly typed objects.
+- `get_rolling_metrics()`: Must return strictly typed objects.
+- `to_decimal()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

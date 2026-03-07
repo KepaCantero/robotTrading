@@ -1,0 +1,27 @@
+# Requirements Document: presentation/dashboard/__init__.py
+
+## 1. Module Overview
+Dashboard module for algo trading monitoring.
+
+Provides data models and services for displaying real-time trading
+performance, positions, and system status in a terminal-based dashboard.
+
+NOTE: For canonical PerformanceMetrics, use app.backtesting.models.PerformanceMetrics
+This module exports DashboardPerformanceMetrics (aliased as PerformanceMetrics for backward compatibility).
+
+## 2. Dependencies
+- `app.presentation.dashboard.dashboard_data.DashboardSnapshot`
+- `app.presentation.dashboard.dashboard_data.DashboardPerformanceMetrics`
+- `app.presentation.dashboard.dashboard_data.PositionSummary`
+- `app.presentation.dashboard.dashboard_data.PerformanceMetrics`
+- `app.presentation.dashboard.dashboard_data.SystemStatus`
+- `app.presentation.dashboard.dashboard_service.DashboardService`
+- `app.presentation.dashboard.dashboard_service.get_dashboard_service`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

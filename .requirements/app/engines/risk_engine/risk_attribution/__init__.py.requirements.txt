@@ -1,0 +1,17 @@
+# Requirements Document: engines/risk_engine/risk_attribution/__init__.py
+
+## 1. Module Overview
+Risk Attribution Module
+
+Exporta todos los risk attributors disponibles.
+
+## 2. Dependencies
+- `risk_attribution.RiskAttributor`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

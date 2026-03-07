@@ -1,0 +1,31 @@
+# Requirements Document: services/hurst_analysis/variance_calculator.py
+
+## 1. Module Overview
+Variance-based Hurst Exponent calculators.
+
+This module implements alternative Hurst exponent calculation methods based on
+variance scaling properties. Includes both the variance of residuals method
+and the aggregated variance method.
+
+Single Responsibility: Each class performs one specific calculation method.
+Open/Closed: Extensible through HurstCalculator protocol.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `numpy`
+- `numba.jit`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `VarianceMethodCalculator`: Must conform to application domain models.
+- `AggregatedVarianceCalculator`: Must conform to application domain models.
+### Public Functions
+- `calculate()`: Must return strictly typed objects.
+- `calculate()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

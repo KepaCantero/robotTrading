@@ -1,0 +1,19 @@
+# Requirements Document: shared/protocols/i_pre_trade_validator.py
+
+## 1. Module Overview
+Pre-trade validation protocols (R1, R2, R4)
+
+## 2. Dependencies
+- `typing.Protocol`
+- `typing.Optional`
+- `decimal.Decimal`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `IPreTradeValidator`: Must conform to application domain models.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

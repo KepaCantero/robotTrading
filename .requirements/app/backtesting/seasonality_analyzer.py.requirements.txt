@@ -1,0 +1,44 @@
+# Requirements Document: backtesting/seasonality_analyzer.py
+
+## 1. Module Overview
+Seasonality Analyzer - PHASE 4 MODULE 7 PHASE 2
+
+Analyzes seasonal patterns in strategy returns:
+- Monthly return patterns and performance
+- Quarterly return analysis
+- Seasonal decomposition (additive/multiplicative)
+- Best/worst month identification
+- Seasonality strength index
+- Markdown report generation
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `pandas`
+- `statsmodels.tsa.seasonal.seasonal_decompose`
+- `statsmodels.tsa.seasonal.seasonal_decompose`
+- `app.shared.performance.statsmodels_fallback.seasonal_decompose`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SeasonalityAnalyzer`: Must conform to application domain models.
+### Public Functions
+- `seasonal_decompose()`: Must return strictly typed objects.
+- `analyze_monthly_returns()`: Must return strictly typed objects.
+- `analyze_quarterly_returns()`: Must return strictly typed objects.
+- `get_best_worst_months()`: Must return strictly typed objects.
+- `get_seasonality_strength()`: Must return strictly typed objects.
+- `decompose_returns()`: Must return strictly typed objects.
+- `generate_seasonality_report()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

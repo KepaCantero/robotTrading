@@ -1,0 +1,40 @@
+# Requirements Document: services/market_data_service.py
+
+## 1. Module Overview
+Market Data Service with Caching
+
+This module provides a centralized service for managing market data feeds,
+caching, and real-time data subscriptions.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `asyncio`
+- `logging`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `uuid.UUID`
+- `app.data.feeds.DataFeedInterface`
+- `app.data.feeds.create_data_feed`
+- `app.models.market_data.DataFeedConfig`
+- `app.models.market_data.DataFeedType`
+- `app.models.market_data.DataFrequency`
+- `app.models.market_data.HistoricalData`
+- `app.models.market_data.MarketDataCache`
+- `app.models.market_data.MarketDataSubscription`
+- `app.models.market_data.Quote`
+- `app.services.market_universe_loader.MarketUniverseLoader`
+- `app.models.market_data.DataFeedType`
+- `app.models.market_data.MarketDataStatus`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MarketDataService`: Must conform to application domain models.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

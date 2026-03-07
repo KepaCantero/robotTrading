@@ -1,0 +1,43 @@
+# Requirements Document: services/hurst_analysis/orchestrator.py
+
+## 1. Module Overview
+Hurst Exponent Analyzer - Main Orchestrator.
+
+This module implements the main orchestrator that coordinates all components
+for Hurst exponent analysis. It follows SOLID principles:
+
+- Single Responsibility: Only orchestrates, doesn't implement business logic
+- Open/Closed: Extensible through dependency injection
+- Liskov Substitution: Any calculator/classifier/recommender can be substituted
+- Interface Segregation: Depends only on needed protocols
+- Dependency Inversion: Depends on abstractions, not concrete implementations
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `datetime.datetime`
+- `pandas`
+- `app.services.hurst_analysis.utils`
+- `app.services.hurst_analysis.models.HurstResult`
+- `app.services.hurst_analysis.models.RegimeChange`
+- `app.services.hurst_analysis.protocols.ChangeDetectorProtocol`
+- `app.services.hurst_analysis.protocols.ConfidenceCalculatorProtocol`
+- `app.services.hurst_analysis.protocols.HistoricalTrackerProtocol`
+- `app.services.hurst_analysis.protocols.HurstCalculator`
+- `app.services.hurst_analysis.protocols.RegimeClassifierProtocol`
+- `app.services.hurst_analysis.protocols.StrategyRecommenderProtocol`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `HurstExponentAnalyzer`: Must conform to application domain models.
+### Public Functions
+- `analyze()`: Must return strictly typed objects.
+- `detect_regime_change()`: Must return strictly typed objects.
+- `monitor_multiple_symbols()`: Must return strictly typed objects.
+- `get_historical_hurst()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,57 @@
+# Requirements Document: services/var_position_limiter.py
+
+## 1. Module Overview
+VaR Position Limiter - Limit positions based on portfolio VaR.
+
+Prevents exceeding risk limits by validating new positions
+against portfolio Value-at-Risk calculations.
+
+This module implements Phase 2.5 of the risk management system,
+providing VaR-based position limits that use real correlation
+matrices from Phase 2.4.
+
+Uses centralized configuration for all thresholds and parameters.
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `datetime.timezone`
+- `decimal.Decimal`
+- `typing.TYPE_CHECKING`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `app.shared.config.centralized_config.get_config`
+- `app.shared.utils.decimal_utils.to_decimal`
+- `app.shared.utils.decimal_utils.validate_price`
+- `app.engines.risk_engine.correlation_analyzers.correlation_analyzers.CorrelationAnalyzer`
+- `app.domain.models.portfolio.Portfolio`
+- `scipy.stats.norm`
+- `scipy.stats.norm`
+- `pandas`
+- `scipy.stats.norm`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `VaRConfig`: Must conform to application domain models.
+- `ValidationResult`: Must conform to application domain models.
+- `VaRMetrics`: Must conform to application domain models.
+- `VaRPositionLimiter`: Must conform to application domain models.
+### Public Functions
+- `get_var_position_limiter()`: Must return strictly typed objects.
+- `validate_position_with_var()`: Must return strictly typed objects.
+- `calculate_portfolio_var()`: Must return strictly typed objects.
+- `calculate_var_with_position()`: Must return strictly typed objects.
+- `get_var_utilization()`: Must return strictly typed objects.
+- `get_var_metrics()`: Must return strictly typed objects.
+- `calculate_max_position_size()`: Must return strictly typed objects.
+- `update_volatility_cache()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

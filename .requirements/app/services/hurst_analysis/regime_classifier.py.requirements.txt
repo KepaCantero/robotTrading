@@ -1,0 +1,28 @@
+# Requirements Document: services/hurst_analysis/regime_classifier.py
+
+## 1. Module Overview
+Market regime classifier based on Hurst exponent.
+
+This module implements the Single Responsibility Principle by focusing
+solely on classifying market regimes based on Hurst exponent values.
+
+According to Ernest Chan (Algorithmic Trading, Rule 2.2):
+- H < 0.5: Mean-reverting (anti-persistent)
+- H ≈ 0.5: Random walk (efficient market)
+- H > 0.5: Trending (persistent)
+
+## 2. Dependencies
+- `logging`
+- `app.services.hurst_analysis.models.MarketRegime`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RegimeClassifier`: Must conform to application domain models.
+### Public Functions
+- `classify()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

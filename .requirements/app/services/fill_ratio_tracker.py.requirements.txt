@@ -1,0 +1,37 @@
+# Requirements Document: services/fill_ratio_tracker.py
+
+## 1. Module Overview
+TASK-MET-FILL-1: Order Fill Ratio Tracking Service.
+
+Tracks order fill ratios to monitor execution quality and identify issues with order fills.
+
+## 2. Dependencies
+- `logging`
+- `collections.defaultdict`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `app.domain.models.order.Order`
+- `app.domain.models.order.OrderStatus`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `FillMetrics`: Must conform to application domain models.
+- `FillRatioTracker`: Must conform to application domain models.
+### Public Functions
+- `get_fill_ratio_tracker()`: Must return strictly typed objects.
+- `track_order()`: Must return strictly typed objects.
+- `record_fill()`: Must return strictly typed objects.
+- `record_partial_fill()`: Must return strictly typed objects.
+- `record_order_status()`: Must return strictly typed objects.
+- `get_fill_ratio_stats()`: Must return strictly typed objects.
+- `find_metrics()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,54 @@
+# Requirements Document: presentation/api/portfolio.py
+
+## 1. Module Overview
+Portfolio API Endpoints
+
+FastAPI endpoints for portfolio management and monitoring.
+
+Security Compliance: 95%
+- Input validation and sanitization
+- CSRF protection for state-changing operations
+- Output encoding for XSS prevention
+- Rate limiting
+- Audit logging
+
+GAP Fixes:
+- API-002: Added structured logging with correlation IDs
+- API-009: ✅ FIXED - Added circuit breaker state logging and comprehensive audit logging
+- API-010: ✅ FIXED - Added timeout configuration (10s) to all async operations
+
+## 2. Dependencies
+- `__future__.annotations`
+- `asyncio`
+- `logging`
+- `traceback`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `fastapi.APIRouter`
+- `fastapi.Depends`
+- `fastapi.HTTPException`
+- `fastapi.Request`
+- `pydantic.BaseModel`
+- `requests.exceptions.HTTPError`
+- `requests.exceptions.RequestException`
+- `app.shared.config.di_container.get_portfolio_service`
+- `app.domain.models.portfolio.AssetUniverse`
+- `app.domain.models.portfolio.MarketRegimeData`
+- `app.domain.models.portfolio.Position`
+- `app.services.portfolio_service.PortfolioService`
+- `audit_logger`
+- `get_correlation_id`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TradeRequest`: Must conform to application domain models.
+- `TradeResponse`: Must conform to application domain models.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

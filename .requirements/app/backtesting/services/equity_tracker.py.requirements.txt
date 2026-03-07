@@ -1,0 +1,37 @@
+# Requirements Document: backtesting/services/equity_tracker.py
+
+## 1. Module Overview
+Equity Curve Tracker service for backtesting.
+
+This service is responsible for tracking portfolio value over time
+and calculating drawdown metrics.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Tuple`
+- `app.backtesting.services.position_manager.PositionManager`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `EquityCurveTracker`: Must conform to application domain models.
+### Public Functions
+- `update_equity_curve()`: Must return strictly typed objects.
+- `get_equity_curve()`: Must return strictly typed objects.
+- `get_max_drawdown()`: Must return strictly typed objects.
+- `get_max_drawdown_percentage()`: Must return strictly typed objects.
+- `get_peak_equity()`: Must return strictly typed objects.
+- `get_current_portfolio_value()`: Must return strictly typed objects.
+- `reset()`: Must return strictly typed objects.
+- `calculate_returns()`: Must return strictly typed objects.
+- `get_total_return()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,24 @@
+# Requirements Document: services/alerting_system/telegram_helper.py
+
+## 1. Module Overview
+Telegram Bot Helper
+
+Helper utilities for setting up and testing Telegram bot integration.
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `typing.Optional`
+- `httpx`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TelegramBotHelper`: Must conform to application domain models.
+### Public Functions
+- `get_setup_instructions()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [ ] Must not expose external secrets.
+- [x] Exceptions must be handled.

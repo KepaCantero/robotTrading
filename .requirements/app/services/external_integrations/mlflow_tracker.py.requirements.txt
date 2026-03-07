@@ -1,0 +1,37 @@
+# Requirements Document: services/external_integrations/mlflow_tracker.py
+
+## 1. Module Overview
+T17.1.3: MLflowTracker - ML experiment tracking and model management
+
+MLflow for tracking model training, metrics, and versioning.
+Upgraded to use real MLflow server for production-grade experiment tracking.
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `urllib.parse.urljoin`
+- `aiohttp`
+- `requests.exceptions.HTTPError`
+- `requests.exceptions.RequestException`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MLModel`: Must conform to application domain models.
+- `Experiment`: Must conform to application domain models.
+- `MLflowTracker`: Must conform to application domain models.
+### Public Functions
+- `get_mlflow_tracker()`: Must return strictly typed objects.
+- `get_tracking_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

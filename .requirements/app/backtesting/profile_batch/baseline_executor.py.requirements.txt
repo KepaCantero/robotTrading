@@ -1,0 +1,41 @@
+# Requirements Document: backtesting/profile_batch/baseline_executor.py
+
+## 1. Module Overview
+Baseline Backtest Executor Module
+
+Executes baseline backtests with default parameters.
+Handles both single-strategy and multi-strategy execution modes.
+
+Responsibilities:
+- Run baseline backtests with default parameters
+- Execute multi-strategy backtests
+- Aggregate multi-strategy results
+- Handle temporary config file creation/cleanup
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Union`
+- `yaml`
+- `app.backtesting.comprehensive_backtest_runner.ComprehensiveBacktestRunner`
+- `app.backtesting.shared.MetricsDict`
+- `app.backtesting.shared.TempConfigManager`
+- `app.backtesting.shared.get_empty_metrics`
+- `app.domain.models.input_profile.InputProfile`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BaselineBacktestExecutor`: Must conform to application domain models.
+### Public Functions
+- `run_baseline()`: Must return strictly typed objects.
+- `aggregate_multi_strategy_results()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

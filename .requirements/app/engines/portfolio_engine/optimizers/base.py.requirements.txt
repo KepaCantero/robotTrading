@@ -1,0 +1,39 @@
+# Requirements Document: engines/portfolio_engine/optimizers/base.py
+
+## 1. Module Overview
+Base Optimizer Module
+
+Defines the abstract base class for all portfolio optimizers.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `abc.ABC`
+- `abc.abstractmethod`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `numpy`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BaseOptimizer`: Must conform to application domain models.
+- `MarkowitzOptimizer`: Must conform to application domain models.
+- `RiskParityOptimizer`: Must conform to application domain models.
+- `BlackLittermanOptimizer`: Must conform to application domain models.
+- `KellyCriterionOptimizer`: Must conform to application domain models.
+### Public Functions
+- `optimize()`: Must return strictly typed objects.
+- `validate_weights()`: Must return strictly typed objects.
+- `get_status()`: Must return strictly typed objects.
+- `optimize()`: Must return strictly typed objects.
+- `optimize()`: Must return strictly typed objects.
+- `optimize()`: Must return strictly typed objects.
+- `optimize()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

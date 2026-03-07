@@ -1,0 +1,38 @@
+# Requirements Document: services/reconciliation/__init__.py
+
+## 1. Module Overview
+Reconciliation Services
+
+R16: Reconciliación Diaria - Daily position reconciliation between broker and internal system
+
+This module provides services for detecting and reconciling discrepancies between
+broker positions and internal database records.
+
+Classes:
+    DailyReconciler: Main reconciler for daily position comparison
+    DiscrepancyDetector: Detector for specific types of discrepancies
+    Position: Data class for position information
+    ReconciliationResult: Result data class for reconciliation reports
+
+Usage:
+    from app.services.reconciliation import DailyReconciler, DiscrepancyDetector, Position
+
+    reconciler = DailyReconciler()
+    result = await reconciler.reconcile_positions(
+        broker_positions=[...],
+        internal_positions=[...]
+    )
+
+## 2. Dependencies
+- `app.services.reconciliation.daily_reconciler.DailyReconciler`
+- `app.services.reconciliation.daily_reconciler.Position`
+- `app.services.reconciliation.daily_reconciler.ReconciliationResult`
+- `app.services.reconciliation.discrepancy_detector.DiscrepancyDetector`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

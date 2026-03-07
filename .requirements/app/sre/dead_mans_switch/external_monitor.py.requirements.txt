@@ -1,0 +1,44 @@
+# Requirements Document: sre/dead_mans_switch/external_monitor.py
+
+## 1. Module Overview
+External Monitor - Third-Party Health Check Monitoring
+
+Provides external monitoring service for dead man's switch.
+Can be hosted separately from the main service for independence.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `asyncio`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `enum.Enum`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `aiosqlite`
+- `aiohttp`
+- `aiohttp`
+- `aiohttp`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `AlertChannel`: Must conform to application domain models.
+- `MonitorConfig`: Must conform to application domain models.
+- `HealthCheckResult`: Must conform to application domain models.
+- `ExternalMonitor`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `is_running()`: Must return strictly typed objects.
+- `consecutive_failures()`: Must return strictly typed objects.
+- `get_summary()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

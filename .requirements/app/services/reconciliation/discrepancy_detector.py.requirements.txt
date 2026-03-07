@@ -1,0 +1,33 @@
+# Requirements Document: services/reconciliation/discrepancy_detector.py
+
+## 1. Module Overview
+Discrepancy Detector Service
+
+R16: Reconciliación Diaria - Component for detecting position discrepancies
+
+This module provides specialized detection of position, price, and value discrepancies
+between broker and internal records.
+
+Uses centralized configuration for all tolerance thresholds.
+
+## 2. Dependencies
+- `decimal.Decimal`
+- `typing.Optional`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DiscrepancyDetector`: Must conform to application domain models.
+### Public Functions
+- `detect_position_mismatch()`: Must return strictly typed objects.
+- `detect_price_mismatch()`: Must return strictly typed objects.
+- `detect_value_mismatch()`: Must return strictly typed objects.
+- `detect_missing_positions()`: Must return strictly typed objects.
+- `detect_all_discrepancies()`: Must return strictly typed objects.
+- `get_severity_counts()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

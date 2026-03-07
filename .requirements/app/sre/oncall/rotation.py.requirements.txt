@@ -1,0 +1,63 @@
+# Requirements Document: sre/oncall/rotation.py
+
+## 1. Module Overview
+On-Call Rotation Management - SRE Rule 24
+
+Implements fair and sustainable on-call rotation scheduling:
+- Weekly rotation schedule
+- Fair distribution of on-call burden
+- Holiday and time-off handling
+- Backup on-call assignment
+- Rotation conflict detection
+- On-call swap management
+- Calendar integration
+- Notification system
+
+Domain Model (Cosmic Python - Rule 16):
+- OncallEngineer: Domain entity for on-call personnel
+- RotationSchedule: Value object for schedule configuration
+- RotationSlot: Value object for scheduled slots
+
+## 2. Dependencies
+- `__future__.annotations`
+- `asyncio`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `enum.Enum`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `aiosqlite`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RotationType`: Must conform to application domain models.
+- `OncallStatus`: Must conform to application domain models.
+- `TimeSlot`: Must conform to application domain models.
+- `OncallEngineer`: Must conform to application domain models.
+- `RotationSlot`: Must conform to application domain models.
+- `RotationConfig`: Must conform to application domain models.
+- `OncallRotation`: Must conform to application domain models.
+### Public Functions
+- `duration_hours()`: Must return strictly typed objects.
+- `duration_days()`: Must return strictly typed objects.
+- `overlaps()`: Must return strictly typed objects.
+- `contains()`: Must return strictly typed objects.
+- `is_available_during()`: Must return strictly typed objects.
+- `can_be_oncall()`: Must return strictly typed objects.
+- `get_oncall_burden()`: Must return strictly typed objects.
+- `assign_oncall()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

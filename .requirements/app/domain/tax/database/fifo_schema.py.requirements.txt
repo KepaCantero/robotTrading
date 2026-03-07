@@ -1,0 +1,68 @@
+# Requirements Document: domain/tax/database/fifo_schema.py
+
+## 1. Module Overview
+FIFO Trading Database Schema - Spain Tax Compliance (Modelo 721)
+
+CRITICAL FOR SPAIN RESIDENTS:
+- Modelo 720: Foreign assets > €50k
+- Modelo 721: Cryptocurrency holdings (ANY amount)
+- FIFO tracking: MANDATORY for Hacienda
+- Multi-exchange tracking: Binance, Coinbase, Kraken, Ledger, etc.
+
+Architecture:
+- PostgreSQL for relational data (trades, lots)
+- TimescaleDB extension for time-series (prices, balances)
+- Immutable audit trail (Hacienda puede auditar)
+
+Phase 0.3: Timezone Awareness
+- All timestamps use timezone-aware datetime
+- Exchange timezone tracking (for Phase 3 implementation)
+
+Author: Claude (Multi-Market Expansion)
+Date: 2025-01-25
+Status: DESIGN PHASE - Not implemented
+
+## 2. Dependencies
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `datetime.timezone`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `uuid.UUID`
+- `uuid.uuid4`
+- `sqlalchemy`
+- `sqlalchemy.dialects.postgresql.JSONB`
+- `sqlalchemy.dialects.postgresql.UUID`
+- `sqlalchemy.ext.declarative.declarative_base`
+- `sqlalchemy.ext.hybrid.hybrid_property`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `AssetType`: Must conform to application domain models.
+- `ExchangeType`: Must conform to application domain models.
+- `TransactionType`: Must conform to application domain models.
+- `LotStatus`: Must conform to application domain models.
+- `Account`: Must conform to application domain models.
+- `Transaction`: Must conform to application domain models.
+- `Lot`: Must conform to application domain models.
+- `BalanceSnapshot`: Must conform to application domain models.
+- `TaxReport`: Must conform to application domain models.
+- `FIFOCalculation`: Must conform to application domain models.
+- `FIFOProcessor`: Must conform to application domain models.
+- `Modelo721Generator`: Must conform to application domain models.
+### Public Functions
+- `cost_basis()`: Must return strictly typed objects.
+- `is_long_term()`: Must return strictly typed objects.
+- `process_buy()`: Must return strictly typed objects.
+- `process_sell()`: Must return strictly typed objects.
+- `process_transfer()`: Must return strictly typed objects.
+- `generate_annual_report()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

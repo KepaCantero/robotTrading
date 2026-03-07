@@ -1,0 +1,53 @@
+# Requirements Document: domain/strategies/covered_call.py
+
+## 1. Module Overview
+Covered Call Strategy Domain Service
+
+Implements covered call strategy for income generation.
+Sells call options against owned stock positions to generate premium income.
+
+Reference: Rule 42-kissell-algorithmic-trading-portfolio-management.md
+Paper: Kissell, M., & Posament, S. (2017). "Options Trading and Hedging"
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CallSignal`: Must conform to application domain models.
+- `OptionData`: Must conform to application domain models.
+- `CoveredCallPosition`: Must conform to application domain models.
+- `CoveredCallPortfolio`: Must conform to application domain models.
+- `CoveredCallStrategy`: Must conform to application domain models.
+### Public Functions
+- `is_itm()`: Must return strictly typed objects.
+- `is_otm()`: Must return strictly typed objects.
+- `time_value()`: Must return strictly typed objects.
+- `break_even_price()`: Must return strictly typed objects.
+- `max_profit()`: Must return strictly typed objects.
+- `max_loss()`: Must return strictly typed objects.
+- `assignment_probability()`: Must return strictly typed objects.
+- `annualized_yield()`: Must return strictly typed objects.
+- `capital_at_risk()`: Must return strictly typed objects.
+- `select_optimal_call()`: Must return strictly typed objects.
+- `generate_signal()`: Must return strictly typed objects.
+- `calculate_position_size()`: Must return strictly typed objects.
+- `calculate_expected_return()`: Must return strictly typed objects.
+- `create_covered_call_position()`: Must return strictly typed objects.
+- `manage_position()`: Must return strictly typed objects.
+- `calculate_portfolio_metrics()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

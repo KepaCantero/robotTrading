@@ -1,0 +1,29 @@
+# Requirements Document: presentation/api/logging_utils_examples.py
+
+## 1. Module Overview
+Example: How to use correlation ID logging utilities in API endpoints.
+
+This file demonstrates the proper usage of the logging utilities for request tracking.
+
+## 2. Dependencies
+- `fastapi.APIRouter`
+- `fastapi.HTTPException`
+- `fastapi.Request`
+- `pydantic.BaseModel`
+- `app.presentation.api.logging_utils.get_correlation_id_from_request`
+- `app.presentation.api.logging_utils.log_debug`
+- `app.presentation.api.logging_utils.log_error`
+- `app.presentation.api.logging_utils.log_info`
+- `app.presentation.api.logging_utils.log_warning`
+- `app.presentation.api.logging_utils.log_with_context`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ExampleRequest`: Must conform to application domain models.
+- `ExampleResponse`: Must conform to application domain models.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

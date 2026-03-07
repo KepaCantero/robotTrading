@@ -1,0 +1,45 @@
+# Requirements Document: domain/services/portfolio_optimization/risk_parity.py
+
+## 1. Module Overview
+Risk Parity Portfolio Optimization
+
+Implements Risk Parity and related allocation methods that equalize
+risk contribution across assets.
+
+Reference: Rule 48-papers-markowitz (Related methods)
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `scipy.optimize.minimize`
+- `app.domain.services.portfolio_optimization._validation.MIN_VARIANCE_THRESHOLD`
+- `app.domain.services.portfolio_optimization._validation.log_optimization_failure`
+- `app.domain.services.portfolio_optimization._validation.sanitize_covariance_matrix`
+- `app.domain.services.portfolio_optimization._validation.validate_covariance_matrix`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RiskParityResult`: Must conform to application domain models.
+- `RiskParityOptimizer`: Must conform to application domain models.
+### Public Functions
+- `cluster_based_risk_parity()`: Must return strictly typed objects.
+- `weights_dict()`: Must return strictly typed objects.
+- `risk_parity_error()`: Must return strictly typed objects.
+- `optimize()`: Must return strictly typed objects.
+- `inverse_volatility()`: Must return strictly typed objects.
+- `equal_weight()`: Must return strictly typed objects.
+- `diversified_risk_parity()`: Must return strictly typed objects.
+- `get_diversification_ratio()`: Must return strictly typed objects.
+- `objective()`: Must return strictly typed objects.
+- `objective()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

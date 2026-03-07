@@ -1,0 +1,37 @@
+# Requirements Document: backtesting/shared/metrics.py
+
+## 1. Module Overview
+Metrics Factory - Consolidated metrics creation and manipulation.
+
+Eliminates 6+ duplicate implementations of _get_empty_metrics across:
+- profile_batch_backtester.py
+- bayesian_optimizer.py
+- baseline_executor.py
+- optimization_validators.py (3 copies in same file!)
+
+## 2. Dependencies
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Union`
+- `app.backtesting.shared.types.MetricKeys`
+- `logging`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MetricsFactory`: Must conform to application domain models.
+### Public Functions
+- `get_empty_metrics()`: Must return strictly typed objects.
+- `get_empty_metrics()`: Must return strictly typed objects.
+- `get_empty_optimization_result()`: Must return strictly typed objects.
+- `get_empty_validation_result()`: Must return strictly typed objects.
+- `calculate_improvement()`: Must return strictly typed objects.
+- `safe_extract_first()`: Must return strictly typed objects.
+- `aggregate_metrics()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,17 @@
+# Requirements Document: engines/risk_engine/correlation_analyzers/__init__.py
+
+## 1. Module Overview
+Correlation Analyzers Module
+
+Exporta todos los correlation analyzers disponibles.
+
+## 2. Dependencies
+- `correlation_analyzers.CorrelationAnalyzer`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

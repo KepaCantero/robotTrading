@@ -1,0 +1,36 @@
+# Requirements Document: services/portfolio_constructor/portfolio_constructor.py
+
+## 1. Module Overview
+T7.1: PortfolioConstructor - Portfolio optimization and construction
+
+Uses multiple strategies for portfolio allocation:
+1. Equal-weight: Baseline, simple allocation
+2. Risk-parity: Weight by inverse volatility (requires historical data)
+3. Efficient frontier: Maximize Sharpe ratio (requires expected returns/covariance)
+
+Fallback chain: Try efficient frontier → risk parity → equal weight
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `models.AllocationWeight`
+- `models.PortfolioAllocation`
+- `models.PortfolioConstructionRequest`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PortfolioConstructor`: Must conform to application domain models.
+### Public Functions
+- `get_portfolio_constructor()`: Must return strictly typed objects.
+- `get_constructor_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

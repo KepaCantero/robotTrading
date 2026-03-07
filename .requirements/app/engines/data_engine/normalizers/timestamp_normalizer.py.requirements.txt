@@ -1,0 +1,28 @@
+# Requirements Document: engines/data_engine/normalizers/timestamp_normalizer.py
+
+## 1. Module Overview
+TimestampNormalizer - Normalización de timestamps.
+
+Convierte timestamps de diferentes formatos y timezones a UTC estándar.
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `datetime.timezone`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `pytz`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TimestampNormalizer`: Must conform to application domain models.
+### Public Functions
+- `normalize()`: Must return strictly typed objects.
+- `normalize_batch()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

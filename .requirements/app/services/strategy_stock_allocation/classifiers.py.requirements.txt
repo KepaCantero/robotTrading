@@ -1,0 +1,27 @@
+# Requirements Document: services/strategy_stock_allocation/classifiers.py
+
+## 1. Module Overview
+Market regime classification module.
+
+Classifies market regimes based on Hurst exponent analysis
+across different time horizons.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `typing.TYPE_CHECKING`
+- `numpy`
+- `calculators.HurstCalculator`
+- `app.shared.config.centralized_config.StockAllocationSettings`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RegimeClassifier`: Must conform to application domain models.
+### Public Functions
+- `classify()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

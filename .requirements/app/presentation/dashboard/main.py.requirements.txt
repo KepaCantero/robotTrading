@@ -1,0 +1,55 @@
+# Requirements Document: presentation/dashboard/main.py
+
+## 1. Module Overview
+Streamlit Dashboard for AlgoTrading Backtesting Analysis
+
+This module provides an interactive dashboard for:
+- Executing backtests on specific modules/configurations
+- Visualizing equity curves and trade logs
+- Comparing multiple module performance
+- Analyzing decision-making processes
+
+## 2. Dependencies
+- `asyncio`
+- `json`
+- `logging`
+- `sys`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `pathlib.Path`
+- `pandas`
+- `plotly.express`
+- `plotly.graph_objects`
+- `streamlit`
+- `streamlit.session_state`
+- `app.backtesting.data_loader.DataLoader`
+- `app.backtesting.engine.SimpleBacktester`
+- `app.backtesting.models.BacktestConfig`
+- `app.backtesting.engines.multi_strategy_engine.MultiStrategyBacktester`
+- `app.presentation.dashboard.comprehensive_data_loader.ComprehensiveBacktestLoader`
+- `app.presentation.dashboard.multi_strategy_utils.generate_multi_strategy_summary_text`
+- `app.presentation.dashboard.multi_strategy_utils.save_multi_strategy_results`
+- `app.presentation.dashboard.report_generator.generate_backend_test_summary`
+- `app.presentation.dashboard.report_generator.save_backtest_result`
+- `app.domain.strategies.mean_reversion.MeanReversionStrategy`
+- `app.domain.strategies.momentum.MomentumStrategy`
+- `app.domain.strategies.pairs_trading.PairsTradingStrategy`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `app.domain.services.portfolio.builder.PortfolioBuilder`
+- `app.services.portfolio_config_manager.get_portfolio_config_manager`
+- `json`
+- `app.backtesting.models.BacktestResult`
+- `app.backtesting.models.PerformanceMetrics`
+- `app.backtesting.models.Trade`
+
+## 3. Core Components (Contracts)
+### Public Functions
+- `style_row()`: Must return strictly typed objects.
+- `style_comparison()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

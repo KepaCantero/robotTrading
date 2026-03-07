@@ -1,0 +1,40 @@
+# Requirements Document: domain/services/portfolio_optimization/__init__.py
+
+## 1. Module Overview
+Portfolio Optimization Domain Services
+
+This module contains domain services for portfolio optimization
+following modern portfolio theory and advanced methods.
+
+## 2. Dependencies
+- `black_litterman.BlackLittermanOptimizer`
+- `black_litterman.BlackLittermanResult`
+- `black_litterman.View`
+- `black_litterman.create_relative_view`
+- `cla.CornerPortfolio`
+- `cla.CriticalLineAlgorithm`
+- `cla.EfficientFrontierCLA`
+- `cla.compute_turnover`
+- `covariance_calculator.CovarianceCalculator`
+- `covariance_calculator.CovarianceResult`
+- `denoise_correlation.CorrelationDenoiser`
+- `denoise_correlation.DenoisedResult`
+- `hrp.HierarchicalRiskParity`
+- `hrp.HRPResult`
+- `hrp.inverse_variance_weights`
+- `mean_variance_optimizer.EfficientFrontier`
+- `mean_variance_optimizer.MeanVarianceOptimizer`
+- `mean_variance_optimizer.OptimizationResult`
+- `nco.NCOResult`
+- `nco.NestedClusteredOptimizer`
+- `nco.get_nco_with_multiple_n`
+- `risk_parity.RiskParityOptimizer`
+- `risk_parity.RiskParityResult`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

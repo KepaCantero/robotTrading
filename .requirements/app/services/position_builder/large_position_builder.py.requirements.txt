@@ -1,0 +1,42 @@
+# Requirements Document: services/position_builder/large_position_builder.py
+
+## 1. Module Overview
+T2.2 - Large Position Builder
+
+Builds large positions (€50k+) intelligently using intraday tranches.
+
+Strategy:
+- Divide position into 3-5 tranches over 4-6 hours
+- Avoid volatility peaks (opening, lunch, close)
+- Increase size in later windows (better price discovery)
+- Integrate with SmartOrderRouter for cost optimization
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `app.services.smart_order_routing.models.ExecutionPlan`
+- `app.services.smart_order_routing.models.OrderTranche`
+- `app.services.smart_order_routing.models.TimeWindow`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `IntraDayExecutionScheduler`: Must conform to application domain models.
+- `LargePositionBuilder`: Must conform to application domain models.
+### Public Functions
+- `get_large_position_builder()`: Must return strictly typed objects.
+- `find_good_windows()`: Must return strictly typed objects.
+- `time_window_to_datetime()`: Must return strictly typed objects.
+- `is_in_volatile_period()`: Must return strictly typed objects.
+- `calculate_position_impact()`: Must return strictly typed objects.
+- `estimate_build_duration()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

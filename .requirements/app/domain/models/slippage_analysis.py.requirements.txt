@@ -1,0 +1,51 @@
+# Requirements Document: domain/models/slippage_analysis.py
+
+## 1. Module Overview
+Slippage Analysis Models
+TASK-11: Análisis Dinámico de Slippage
+
+Implementa cálculo dinámico de slippage basado en volatilidad del mercado y liquidez,
+no solo 0.1% fijo.
+
+## 2. Dependencies
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.List`
+- `typing.Optional`
+- `pydantic.BaseModel`
+- `pydantic.Field`
+- `pydantic.field_validator`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SlippageType`: Must conform to application domain models.
+- `MarketCondition`: Must conform to application domain models.
+- `SlippageComponent`: Must conform to application domain models.
+- `VolatilityMetrics`: Must conform to application domain models.
+- `LiquidityMetrics`: Must conform to application domain models.
+- `OrderSizeImpact`: Must conform to application domain models.
+- `DynamicSlippageAnalysis`: Must conform to application domain models.
+- `SlippageCalculationParams`: Must conform to application domain models.
+- `SlippageHistory`: Must conform to application domain models.
+### Public Functions
+- `validate_slippage_value()`: Must return strictly typed objects.
+- `validate_volatility()`: Must return strictly typed objects.
+- `validate_spread()`: Must return strictly typed objects.
+- `validate_market_cap_ratio()`: Must return strictly typed objects.
+- `validate_total_slippage()`: Must return strictly typed objects.
+- `get_slippage_by_type()`: Must return strictly typed objects.
+- `get_adjusted_price()`: Must return strictly typed objects.
+- `get_slippage_cost()`: Must return strictly typed objects.
+- `validate_extreme_threshold()`: Must return strictly typed objects.
+- `add_analysis()`: Must return strictly typed objects.
+- `get_latest_analysis()`: Must return strictly typed objects.
+- `get_average_slippage()`: Must return strictly typed objects.
+- `get_slippage_trend()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

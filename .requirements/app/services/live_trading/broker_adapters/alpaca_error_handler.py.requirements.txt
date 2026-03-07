@@ -1,0 +1,52 @@
+# Requirements Document: services/live_trading/broker_adapters/alpaca_error_handler.py
+
+## 1. Module Overview
+Error handling and recovery for Alpaca broker integration.
+
+Implements:
+- Detailed error classification (transient vs permanent)
+- Circuit breaker pattern for API calls
+- Retry logic with exponential backoff
+- Position sync recovery
+- Error recovery callbacks
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `enum.Enum`
+- `typing.Callable`
+- `typing.Optional`
+- `re`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ErrorType`: Must conform to application domain models.
+- `ErrorRecoveryStrategy`: Must conform to application domain models.
+- `AlpacaErrorClassifier`: Must conform to application domain models.
+- `CircuitBreaker`: Must conform to application domain models.
+- `RetryConfig`: Must conform to application domain models.
+- `PositionSyncRecovery`: Must conform to application domain models.
+- `ErrorRecoveryManager`: Must conform to application domain models.
+### Public Functions
+- `classify()`: Must return strictly typed objects.
+- `get_strategy()`: Must return strictly typed objects.
+- `is_retryable()`: Must return strictly typed objects.
+- `record_success()`: Must return strictly typed objects.
+- `record_failure()`: Must return strictly typed objects.
+- `is_available()`: Must return strictly typed objects.
+- `get_delay()`: Must return strictly typed objects.
+- `record_sync_success()`: Must return strictly typed objects.
+- `record_sync_failure()`: Must return strictly typed objects.
+- `should_retry()`: Must return strictly typed objects.
+- `is_stale()`: Must return strictly typed objects.
+- `should_allow_request()`: Must return strictly typed objects.
+- `handle_request_failure()`: Must return strictly typed objects.
+- `handle_request_success()`: Must return strictly typed objects.
+- `get_retry_delay()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

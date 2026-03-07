@@ -1,0 +1,59 @@
+# Requirements Document: services/live_trading/risk_gates.py
+
+## 1. Module Overview
+T16.1.3: RiskGates - Pre-trade risk validation
+
+Validates orders against risk limits before execution:
+- Position size limits
+- Leverage limits
+- Maximum drawdown limits
+- Daily loss limits (Chan #15: 5% daily loss circuit breaker)
+- Concentration limits
+
+
+
+References:
+    - Chan #15: Circuit breaker 5% daily loss limit
+    - Hull #65: Kill switches and circuit breakers
+
+Uses centralized configuration from app.shared.config.centralized_config.
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `fastapi.Depends`
+- `app.shared.config.centralized_config.get_config`
+- `broker_connector.BrokerConnector`
+- `broker_connector.OrderSide`
+- `broker_connector.get_broker_connector`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RiskLevel`: Must conform to application domain models.
+- `RiskLimit`: Must conform to application domain models.
+- `RiskCheckResult`: Must conform to application domain models.
+- `RiskGates`: Must conform to application domain models.
+### Public Functions
+- `get_risk_gates()`: Must return strictly typed objects.
+- `reset_circuit_breaker()`: Must return strictly typed objects.
+- `update_daily_pnl()`: Must return strictly typed objects.
+- `check_daily_loss_limit()`: Must return strictly typed objects.
+- `halt_trading()`: Must return strictly typed objects.
+- `set_start_of_day_capital()`: Must return strictly typed objects.
+- `set_max_position_size()`: Must return strictly typed objects.
+- `set_max_leverage()`: Must return strictly typed objects.
+- `set_max_daily_loss()`: Must return strictly typed objects.
+- `set_max_drawdown()`: Must return strictly typed objects.
+- `get_current_drawdown()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

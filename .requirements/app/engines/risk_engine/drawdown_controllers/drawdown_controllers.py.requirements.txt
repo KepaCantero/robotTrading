@@ -1,0 +1,63 @@
+# Requirements Document: engines/risk_engine/drawdown_controllers/drawdown_controllers.py
+
+## 1. Module Overview
+Drawdown Controllers - NUMBA OPTIMIZED
+
+Implementa control dinámico de drawdowns con aceleración Numba JIT:
+- Rolling maximum drawdown tracking (50-100x speedup)
+- Circuit breakers por drawdown (20-40x speedup)
+- Recovery protocols después de drawdowns (vectorized)
+
+PERFORMANCE OPTIMIZATIONS (95% Compliance Target):
+- All numerical functions use Numba JIT compilation
+- Vectorized operations for peak/drawdown calculations
+- Memory-efficient implementations
+- Parallel processing for multi-portfolio analysis
+
+Author: Risk Management Team
+Version: 2.0.0 - NUMBA OPTIMIZED
+
+## 2. Dependencies
+- `logging`
+- `abc.ABC`
+- `abc.abstractmethod`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numba`
+- `numpy`
+- `numba.jit`
+- `app.domain.models.portfolio.Portfolio`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BaseDrawdownController`: Must conform to application domain models.
+- `CircuitBreakerController`: Must conform to application domain models.
+- `PeakDrawdownController`: Must conform to application domain models.
+- `DrawdownController`: Must conform to application domain models.
+### Public Functions
+- `calculate_running_peak_numba()`: Must return strictly typed objects.
+- `calculate_drawdown_from_peaks_numba()`: Must return strictly typed objects.
+- `calculate_max_drawdown_numba()`: Must return strictly typed objects.
+- `calculate_drawdown_duration_numba()`: Must return strictly typed objects.
+- `calculate_rolling_max_drawdown_numba()`: Must return strictly typed objects.
+- `calculate_rolling_avg_drawdown_numba()`: Must return strictly typed objects.
+- `convert_decimal_array_to_float()`: Must return strictly typed objects.
+- `calculate_drawdown()`: Must return strictly typed objects.
+- `get_drawdown_controller_info()`: Must return strictly typed objects.
+- `assess_drawdown()`: Must return strictly typed objects.
+- `assess_drawdown()`: Must return strictly typed objects.
+- `assess_drawdown()`: Must return strictly typed objects.
+- `assess_drawdown()`: Must return strictly typed objects.
+- `reset_circuit_breaker()`: Must return strictly typed objects.
+- `get_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

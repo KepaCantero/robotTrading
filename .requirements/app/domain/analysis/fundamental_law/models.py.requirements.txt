@@ -1,0 +1,46 @@
+# Requirements Document: domain/analysis/fundamental_law/models.py
+
+## 1. Module Overview
+Data Models for Fundamental Law of Active Management
+
+This module defines the data models and types used throughout the
+fundamental law analysis components.
+
+Reference:
+    Grinold, R., & Kahn, R. (2000). "Active Portfolio Management"
+    McGraw-Hill, 2nd Edition.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `decimal.Decimal`
+- `app.shared.config.centralized_config.get_config`
+- `app.shared.config.centralized_config.get_config`
+- `math`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `FundamentalLawComponents`: Must conform to application domain models.
+- `ICMetrics`: Must conform to application domain models.
+- `BreadthMetrics`: Must conform to application domain models.
+- `StrategyAnalysis`: Must conform to application domain models.
+### Public Functions
+- `validate()`: Must return strictly typed objects.
+- `get_theoretical_ir()`: Must return strictly typed objects.
+- `get_efficiency_gap()`: Must return strictly typed objects.
+- `is_significant()`: Must return strictly typed objects.
+- `get_skill_level()`: Must return strictly typed objects.
+- `get_skill_level_config()`: Must return strictly typed objects.
+- `get_signal_persistence()`: Must return strictly typed objects.
+- `get_breadth_category()`: Must return strictly typed objects.
+- `get_breadth_sqrt()`: Must return strictly typed objects.
+- `get_improvement_plan()`: Must return strictly typed objects.
+- `get_summary()`: Must return strictly typed objects.
+- `get_ir_decomposition()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

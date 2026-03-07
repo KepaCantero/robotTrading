@@ -1,0 +1,36 @@
+# Requirements Document: services/momentum/signal_generator.py
+
+## 1. Module Overview
+Signal generator component.
+
+SOLID Principles:
+- SRP: Only generates trading signals
+- OCP: Extensible through new signal types
+- LSP: Implements SignalGenerator protocol
+- ISP: Focused on signal generation operations
+- DIP: Depends on MomentumAnalyzer protocol
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `typing.List`
+- `typing.Optional`
+- `app.domain.models.momentum.MomentumFilter`
+- `app.domain.models.momentum.MomentumSignal`
+- `app.domain.models.momentum.MomentumType`
+- `app.domain.models.momentum.TechnicalIndicators`
+- `app.domain.models.momentum.Timeframe`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SignalGenerator`: Must conform to application domain models.
+### Public Functions
+- `filter_signals()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

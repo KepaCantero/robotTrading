@@ -1,0 +1,28 @@
+# Requirements Document: domain/models/deployment.py
+
+## 1. Module Overview
+Deployment Models - For PHASE 4 End-to-End Pipeline Integration
+
+Models for the complete deployment decision pipeline:
+T4.1 (Capacity Fade) → T8.1 (Risk Scaling) → T9.1 (Reporting) → T10.1 (DeployDecisionOrchestrator)
+
+TODO: Complete implementation in PHASE 4
+
+## 2. Dependencies
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.List`
+- `typing.Optional`
+- `pydantic.BaseModel`
+- `pydantic.Field`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DeploymentInput`: Must conform to application domain models.
+- `DeploymentDecision`: Must conform to application domain models.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

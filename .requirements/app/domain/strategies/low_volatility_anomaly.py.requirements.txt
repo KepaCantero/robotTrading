@@ -1,0 +1,47 @@
+# Requirements Document: domain/strategies/low_volatility_anomaly.py
+
+## 1. Module Overview
+Low Volatility Anomaly Strategy Domain Service
+
+Implements the low volatility anomaly strategy which exploits
+the empirical finding that low-volatility stocks tend to deliver
+higher risk-adjusted returns than high-volatility stocks.
+
+Reference: Rule 11-gray-vogel-quantitative-momentum.md (low vol concepts)
+Paper: Baker, M., et al. (2011). "Betas vs. Fama-French Factors"
+Paper: Blitz, D., & van Vliet, P. (2007). "The Volatility Effect"
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Tuple`
+- `numpy`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `VolatilityCategory`: Must conform to application domain models.
+- `VolatilityMetrics`: Must conform to application domain models.
+- `LowVolatilityPortfolio`: Must conform to application domain models.
+- `LowVolatilityAnomaly`: Must conform to application domain models.
+### Public Functions
+- `volatility_category()`: Must return strictly typed objects.
+- `is_low_volatility()`: Must return strictly typed objects.
+- `risk_adjusted_score()`: Must return strictly typed objects.
+- `is_low_vol_portfolio()`: Must return strictly typed objects.
+- `get_volatility_breakdown()`: Must return strictly typed objects.
+- `calculate_volatility_metrics()`: Must return strictly typed objects.
+- `screen_low_volatility_stocks()`: Must return strictly typed objects.
+- `rank_low_volatility_stocks()`: Must return strictly typed objects.
+- `construct_portfolio()`: Must return strictly typed objects.
+- `calculate_volatility_premium()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

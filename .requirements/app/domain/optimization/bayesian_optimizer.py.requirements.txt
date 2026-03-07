@@ -1,0 +1,98 @@
+# Requirements Document: domain/optimization/bayesian_optimizer.py
+
+## 1. Module Overview
+Bayesian Optimizer - Consolidated Implementation.
+
+This module provides a unified Bayesian optimization implementation that combines
+the best features from:
+- app/domain/optimization/parameter/bayesian_optimizer.py (parameter optimization)
+- app/backtesting/profile_batch/bayesian_optimizer.py (profile-based optimization)
+
+Features:
+- TPE (Tree-structured Parzen Estimator) sampler via Optuna
+- Multiple pruner options (median, hyperband, successive halving)
+- Multi-objective optimization support
+- Efficient for expensive evaluations
+- Trial pruning for efficiency
+- Automatic hyperparameter suggestion based on type
+
+Usage:
+    ```python
+    from app.domain.optimization.bayesian_optimizer import BayesianOptimizer
+    from app.domain.optimization.base_optimizer import OptimizationConfig
+
+    config = OptimizationConfig(
+        max_iterations=100,
+        metric="sharpe_ratio",
+        maximize=True,
+    )
+
+    optimizer = BayesianOptimizer(
+        config,
+        n_trials=100,
+        pruner="median",
+        sampler="tpe",
+    )
+
+    result = await optimizer.optimize(objective_func, param_grid)
+    ```
+
+## 2. Dependencies
+- `__future__.annotations`
+- `asyncio`
+- `logging`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `typing.Union`
+- `numpy`
+- `base_optimizer.BaseOptimizer`
+- `base_optimizer.OptimizationConfig`
+- `base_optimizer.OptimizationResult`
+- `base_optimizer.OptimizationStatus`
+- `base_optimizer.OptimizerType`
+- `base_optimizer.TrialResult`
+- `optuna`
+- `optuna.pruners.HyperbandPruner`
+- `optuna.pruners.MedianPruner`
+- `optuna.pruners.SuccessiveHalvingPruner`
+- `optuna.samplers.CmaEsSampler`
+- `optuna.samplers.RandomSampler`
+- `optuna.samplers.TPESampler`
+- `random`
+- `tqdm.tqdm`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ParameterType`: Must conform to application domain models.
+- `SearchSpace`: Must conform to application domain models.
+- `BayesianOptimizer`: Must conform to application domain models.
+- `MultiObjectiveBayesianOptimizer`: Must conform to application domain models.
+### Public Functions
+- `add_continuous()`: Must return strictly typed objects.
+- `add_integer()`: Must return strictly typed objects.
+- `add_categorical()`: Must return strictly typed objects.
+- `add_discrete()`: Must return strictly typed objects.
+- `get_parameter_names()`: Must return strictly typed objects.
+- `get_parameter_def()`: Must return strictly typed objects.
+- `from_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `get_optimizer_type()`: Must return strictly typed objects.
+- `get_best_params()`: Must return strictly typed objects.
+- `get_history()`: Must return strictly typed objects.
+- `get_optimizer_type()`: Must return strictly typed objects.
+- `get_best_params()`: Must return strictly typed objects.
+- `get_history()`: Must return strictly typed objects.
+- `optuna_objective()`: Must return strictly typed objects.
+- `optuna_objective()`: Must return strictly typed objects.
+- `callback()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

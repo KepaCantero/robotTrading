@@ -1,0 +1,41 @@
+# Requirements Document: services/position_management/trailing_stop_manager.py
+
+## 1. Module Overview
+Trailing Stop Manager - R11: Trailing Stop Dinámico
+
+Implementa trailing stops dinámicos que se ajustan con el beneficio
+según R-múltiplos.
+
+R11 Rules:
+- Mover a break-even en 2R
+- Trailing stop 50% del beneficio en 3R
+- Trailing stop 1.5% desde máximo en 1R
+
+Uses centralized configuration for default trailing percentage.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `decimal.Decimal`
+- `typing.Optional`
+- `typing.TYPE_CHECKING`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TrailingStopResult`: Must conform to application domain models.
+- `TrailingStopManager`: Must conform to application domain models.
+### Public Functions
+- `update()`: Must return strictly typed objects.
+- `get_current_stop()`: Must return strictly typed objects.
+- `reset()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `from_dict()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

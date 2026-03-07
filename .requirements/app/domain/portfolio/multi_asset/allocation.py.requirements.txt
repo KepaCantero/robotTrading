@@ -1,0 +1,46 @@
+# Requirements Document: domain/portfolio/multi_asset/allocation.py
+
+## 1. Module Overview
+Multi-Asset Allocation Strategies.
+
+This module provides various allocation strategies for distributing capital
+across different asset classes in a multi-asset portfolio.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `numpy`
+- `pandas`
+- `app.shared.config.centralized_config.get_config`
+- `asset_class.AssetClass`
+- `asset_class.AssetClassType`
+- `models.AllocationStrategy`
+- `models.RiskTolerance`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MarketRegime`: Must conform to application domain models.
+- `StrategicAllocationParams`: Must conform to application domain models.
+- `TacticalAllocationParams`: Must conform to application domain models.
+- `RiskParityAllocationParams`: Must conform to application domain models.
+- `AllocationResult`: Must conform to application domain models.
+- `MultiAssetAllocator`: Must conform to application domain models.
+### Public Functions
+- `strategic_allocation()`: Must return strictly typed objects.
+- `tactical_allocation()`: Must return strictly typed objects.
+- `risk_parity_allocation()`: Must return strictly typed objects.
+- `momentum_allocation()`: Must return strictly typed objects.
+- `equal_weight_allocation()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

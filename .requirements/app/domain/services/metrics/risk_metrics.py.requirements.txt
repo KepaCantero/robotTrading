@@ -1,0 +1,67 @@
+# Requirements Document: domain/services/metrics/risk_metrics.py
+
+## 1. Module Overview
+Risk Metrics Calculator
+
+Centralized implementation of risk metrics, consolidating:
+- Value at Risk (VaR) - from advanced_metrics.py, risk_calculator.py, numba_metrics.py
+- Conditional VaR (CVaR) - from advanced_metrics.py, numba_metrics.py
+- Volatility - from advanced_metrics.py, risk_calculator.py, numba_metrics.py
+- Beta - from risk_calculator.py
+- Correlation - from various sources
+- Tracking Error - from chan_metrics.py
+- Information Ratio - from chan_metrics.py, numba_metrics.py
+
+Reference:
+    - Lopez de Prado, M. (2020). Machine Learning for Asset Managers.
+    - Chan, E.P. (2013). Algorithmic Trading.
+    - Jorion, P. (2006). Value at Risk.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `typing.Union`
+- `numpy`
+- `pandas`
+- `app.shared.config.centralized_config.get_config`
+- `scipy.stats`
+- `scipy.stats`
+- `scipy.stats`
+- `scipy.stats`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `VaRResult`: Must conform to application domain models.
+- `RiskMetricsResult`: Must conform to application domain models.
+- `RiskMetricsCalculator`: Must conform to application domain models.
+### Public Functions
+- `get_var()`: Must return strictly typed objects.
+- `get_cvar()`: Must return strictly typed objects.
+- `get_volatility()`: Must return strictly typed objects.
+- `get_beta()`: Must return strictly typed objects.
+- `get_correlation()`: Must return strictly typed objects.
+- `get_tracking_error()`: Must return strictly typed objects.
+- `get_information_ratio()`: Must return strictly typed objects.
+- `var()`: Must return strictly typed objects.
+- `var_comprehensive()`: Must return strictly typed objects.
+- `cvar()`: Must return strictly typed objects.
+- `volatility()`: Must return strictly typed objects.
+- `rolling_volatility()`: Must return strictly typed objects.
+- `beta()`: Must return strictly typed objects.
+- `correlation()`: Must return strictly typed objects.
+- `correlation_matrix()`: Must return strictly typed objects.
+- `tracking_error()`: Must return strictly typed objects.
+- `information_ratio()`: Must return strictly typed objects.
+- `upside_capture()`: Must return strictly typed objects.
+- `downside_capture()`: Must return strictly typed objects.
+- `calculate_all()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

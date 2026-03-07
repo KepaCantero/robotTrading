@@ -1,0 +1,58 @@
+# Requirements Document: domain/services/compliance/protocols.py
+
+## 1. Module Overview
+Compliance Service Protocol Interfaces
+======================================
+
+Defines the protocol interfaces for all compliance services.
+This enables Dependency Inversion Principle - high-level modules depend on abstractions.
+
+Author: Compliance Integration System
+Date: 2026-02-03
+
+## 2. Dependencies
+- `__future__.annotations`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Protocol`
+- `pandas`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ComplianceService`: Must conform to application domain models.
+- `PreTradeCheckable`: Must conform to application domain models.
+- `PostTradeCheckable`: Must conform to application domain models.
+- `Optimizable`: Must conform to application domain models.
+- `RegimeDetectable`: Must conform to application domain models.
+- `AlphaGeneratable`: Must conform to application domain models.
+- `RiskCalculable`: Must conform to application domain models.
+- `LiquidityAnalyzable`: Must conform to application domain models.
+- `ExecutionAlgorithm`: Must conform to application domain models.
+- `TransactionCostModel`: Must conform to application domain models.
+- `MetaLabelingService`: Must conform to application domain models.
+- `CrossValidationService`: Must conform to application domain models.
+### Public Functions
+- `is_available()`: Must return strictly typed objects.
+- `get_service_name()`: Must return strictly typed objects.
+- `initialize()`: Must return strictly typed objects.
+- `check_pre_trade()`: Must return strictly typed objects.
+- `check_post_trade()`: Must return strictly typed objects.
+- `optimize_portfolio()`: Must return strictly typed objects.
+- `detect_regime()`: Must return strictly typed objects.
+- `generate_alpha()`: Must return strictly typed objects.
+- `calculate_risk_metrics()`: Must return strictly typed objects.
+- `analyze_liquidity()`: Must return strictly typed objects.
+- `get_execution_params()`: Must return strictly typed objects.
+- `estimate_costs()`: Must return strictly typed objects.
+- `apply_meta_labels()`: Must return strictly typed objects.
+- `get_splits()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

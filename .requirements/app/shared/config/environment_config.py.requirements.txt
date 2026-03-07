@@ -1,0 +1,61 @@
+# Requirements Document: shared/config/environment_config.py
+
+## 1. Module Overview
+Centralized Configuration System
+TASK-5: Configuración de variables de entorno
+
+## 2. Dependencies
+- `logging`
+- `os`
+- `enum.Enum`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `pydantic.Field`
+- `pydantic.field_validator`
+- `pydantic_settings.BaseSettings`
+- `app.shared.exceptions.exceptions.ConfigurationError`
+- `app.shared.exceptions.exceptions.raise_configuration_error`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `Environment`: Must conform to application domain models.
+- `LogLevel`: Must conform to application domain models.
+- `DatabaseConfig`: Must conform to application domain models.
+- `RedisConfig`: Must conform to application domain models.
+- `APIConfig`: Must conform to application domain models.
+- `TradingConfig`: Must conform to application domain models.
+- `LoggingConfig`: Must conform to application domain models.
+- `MonitoringConfig`: Must conform to application domain models.
+- `CentralizedConfig`: Must conform to application domain models.
+### Public Functions
+- `get_config()`: Must return strictly typed objects.
+- `reload_config()`: Must return strictly typed objects.
+- `set_config()`: Must return strictly typed objects.
+- `load_config_from_file()`: Must return strictly typed objects.
+- `get_settings()`: Must return strictly typed objects.
+- `create_config_for_environment()`: Must return strictly typed objects.
+- `validate_port()`: Must return strictly typed objects.
+- `validate_pool_size()`: Must return strictly typed objects.
+- `connection_string()`: Must return strictly typed objects.
+- `validate_port()`: Must return strictly typed objects.
+- `connection_string()`: Must return strictly typed objects.
+- `validate_port()`: Must return strictly typed objects.
+- `validate_secret_key()`: Must return strictly typed objects.
+- `validate_position_size()`: Must return strictly typed objects.
+- `validate_daily_loss()`: Must return strictly typed objects.
+- `validate_stop_loss()`: Must return strictly typed objects.
+- `validate_file_size()`: Must return strictly typed objects.
+- `validate_port()`: Must return strictly typed objects.
+- `get_config_dict()`: Must return strictly typed objects.
+- `is_production()`: Must return strictly typed objects.
+- `is_development()`: Must return strictly typed objects.
+- `is_testing()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

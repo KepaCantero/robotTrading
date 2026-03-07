@@ -1,0 +1,70 @@
+# Requirements Document: domain/strategies/dividend_strategy.py
+
+## 1. Module Overview
+Dividend Strategy - Estrategia Principal de Inversión en Dividendos
+
+Estrategia completa de inversión en dividendos que hereda de BaseStrategy
+e implementa la lógica de generación de señales basada en análisis de dividendos.
+
+Objetivo: MAXIMIZAR_DIVIDENDOS
+- Alto yield sostenible
+- Crecimiento de dividendos
+- Payout ratio saludable
+- Diversificación sectorial
+
+SOLID Principles:
+- Single Responsibility: Solo coordinar componentes
+- Open/Closed: Extensible sin modificar
+- Liskov Substitution: Compatible con BaseStrategy
+- Interface Segregation: Interfaces mínimas
+- Dependency Inversion: Depende de abstracciones
+
+## 2. Dependencies
+- `logging`
+- `collections.deque`
+- `datetime.date`
+- `decimal.Decimal`
+- `typing.TYPE_CHECKING`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `app.shared.config.centralized_config.get_config`
+- `app.domain.models.market_data.Quote`
+- `app.domain.models.portfolio.Portfolio`
+- `app.domain.models.signal.Signal`
+- `app.domain.models.signal.SignalSource`
+- `app.domain.models.signal.SignalStrength`
+- `app.domain.models.signal.SignalType`
+- `app.domain.strategies.base.BaseStrategy`
+- `dividend_analyzer.DividendAnalyzer`
+- `dividend_portfolio_constructor.DividendPortfolio`
+- `dividend_portfolio_constructor.DividendPortfolioConstructor`
+- `dividend_screener.DividendScreener`
+- `models.DividendProfile`
+- `models.DividendStock`
+- `models.DividendStrategyConfig`
+- `models.ExDividendDate`
+- `math`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DividendStrategy`: Must conform to application domain models.
+### Public Functions
+- `generate_signals()`: Must return strictly typed objects.
+- `risk_check()`: Must return strictly typed objects.
+- `get_required_parameters()`: Must return strictly typed objects.
+- `validate_config()`: Must return strictly typed objects.
+- `set_universe()`: Must return strictly typed objects.
+- `construct_portfolio()`: Must return strictly typed objects.
+- `rebalance_portfolio()`: Must return strictly typed objects.
+- `analyze_portfolio_drift()`: Must return strictly typed objects.
+- `get_portfolio_metrics()`: Must return strictly typed objects.
+- `update_dividend_calendar()`: Must return strictly typed objects.
+- `record_dividend_payment()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,30 @@
+# Requirements Document: services/risk/validators/drawdown_validator.py
+
+## 1. Module Overview
+Drawdown Validator (R2)
+
+Valida que el drawdown no exceda 15% (kill switch)
+
+## 2. Dependencies
+- `typing.Optional`
+- `decimal.Decimal`
+- `datetime.datetime`
+- `dataclasses.dataclass`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DrawdownResult`: Must conform to application domain models.
+- `DrawdownValidator`: Must conform to application domain models.
+### Public Functions
+- `update_equity()`: Must return strictly typed objects.
+- `validate()`: Must return strictly typed objects.
+- `get_current_drawdown()`: Must return strictly typed objects.
+- `activate_kill_switch()`: Must return strictly typed objects.
+- `deactivate_kill_switch()`: Must return strictly typed objects.
+- `is_kill_switch_active()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

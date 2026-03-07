@@ -1,0 +1,48 @@
+# Requirements Document: domain/services/portfolio_optimization/mean_variance_optimizer.py
+
+## 1. Module Overview
+Mean-Variance Optimizer - Markowitz Portfolio Optimization
+
+Implements Markowitz Mean-Variance Optimization for portfolio construction.
+
+Reference: Rule 48-papers-markowitz (Markowitz Portfolio Selection)
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Tuple`
+- `numpy`
+- `scipy.optimize.minimize`
+- `app.domain.services.portfolio_optimization._validation.TRADING_DAYS`
+- `app.domain.services.portfolio_optimization._validation.log_optimization_failure`
+- `app.domain.services.portfolio_optimization._validation.validate_covariance_matrix`
+- `app.domain.services.portfolio_optimization.covariance_calculator.CovarianceResult`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `OptimizationResult`: Must conform to application domain models.
+- `EfficientFrontier`: Must conform to application domain models.
+- `MeanVarianceOptimizer`: Must conform to application domain models.
+### Public Functions
+- `weights_dict()`: Must return strictly typed objects.
+- `get_allocation()`: Must return strictly typed objects.
+- `get_max_sharpe_point()`: Must return strictly typed objects.
+- `get_min_variance_point()`: Must return strictly typed objects.
+- `maximize_sharpe()`: Must return strictly typed objects.
+- `minimize_variance()`: Must return strictly typed objects.
+- `target_return()`: Must return strictly typed objects.
+- `compute_efficient_frontier()`: Must return strictly typed objects.
+- `get_global_minimum_variance()`: Must return strictly typed objects.
+- `objective()`: Must return strictly typed objects.
+- `objective()`: Must return strictly typed objects.
+- `objective()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

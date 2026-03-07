@@ -1,0 +1,45 @@
+# Requirements Document: backtesting/backtest_multi_strategy.py
+
+## 1. Module Overview
+Backtest Multi-Strategy Module - Multi-strategy backtest execution.
+
+Extracted from comprehensive_backtest_runner.py for Single Responsibility.
+Handles multi-strategy backtest execution:
+- Profile to strategy mapping
+- Capital allocation
+- Concurrent strategy execution
+- Portfolio-level metrics
+
+Architecture:
+- Integrates with ProfileStrategyMapper
+- Uses MultiStrategyBacktester for execution
+- Supports dynamic reallocation
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `app.backtesting.core.memory_manager.AggressiveMemoryManager`
+- `app.backtesting.models.BacktestConfig`
+- `app.backtesting.engines.multi_strategy_engine.MultiStrategyBacktester`
+- `app.backtesting.factories.StrategyFactory`
+- `app.domain.models.input_profile.InputProfile`
+- `app.domain.models.input_profile.ObjectivoInversion`
+- `app.domain.models.input_profile.RiskTolerance`
+- `app.services.profile_driven_trading.profile_strategy_mapper.ProfileStrategyMapper`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BacktestMultiStrategyRunner`: Must conform to application domain models.
+### Public Functions
+- `run_multi_strategy_backtest()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,71 @@
+# Requirements Document: domain/services/compliance/compliance_integration.py
+
+## 1. Module Overview
+Unified Compliance Integration Module (Refactored)
+===================================================
+
+Simplified facade that delegates to specialized coordinators.
+This addresses SOL-001 violation by separating concerns.
+
+Architecture:
+    ComplianceIntegrationFacade (Facade)
+    ├── ServiceRegistry (Service Locator)
+    ├── PreTradeComplianceChecker (Pre-trade coordinator)
+    ├── PostTradeComplianceChecker (Post-trade coordinator)
+    └── PortfolioComplianceOptimizer (Optimization coordinator)
+
+Benefits:
+    - Single Responsibility: Each coordinator has one job
+    - Lazy Initialization: Services created only when needed
+    - Thread-Safe: Concurrent access supported
+    - Extensible: Easy to add new services
+    - Testable: Each coordinator independently testable
+
+Author: Compliance Integration System
+Date: 2026-02-03
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `pandas`
+- `app.core.compliance.ComprehensivePostTradeAnalysis`
+- `app.core.compliance.ComprehensivePreTradeAnalysis`
+- `app.core.compliance.PortfolioComplianceOptimizer`
+- `app.core.compliance.PortfolioOptimizationResult`
+- `app.core.compliance.PostTradeComplianceChecker`
+- `app.core.compliance.PreTradeComplianceChecker`
+- `app.core.compliance.get_service_registry`
+- `sys`
+- `app.engines.execution_engine.microstructure.order_book_analyzer.OrderBookSnapshot`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ComplianceIntegrationFacade`: Must conform to application domain models.
+- `ComplianceIntegrationEngine`: Must conform to application domain models.
+### Public Functions
+- `get_compliance_integration_engine()`: Must return strictly typed objects.
+- `quick_pre_trade_check()`: Must return strictly typed objects.
+- `get_execution_recommendation()`: Must return strictly typed objects.
+- `getInstance()`: Must return strictly typed objects.
+- `pre_trade_checker()`: Must return strictly typed objects.
+- `post_trade_checker()`: Must return strictly typed objects.
+- `portfolio_optimizer()`: Must return strictly typed objects.
+- `comprehensive_pre_trade_check()`: Must return strictly typed objects.
+- `comprehensive_post_trade_analysis()`: Must return strictly typed objects.
+- `optimize_portfolio_comprehensive()`: Must return strictly typed objects.
+- `track_slo_compliance()`: Must return strictly typed objects.
+- `get_system_availability()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

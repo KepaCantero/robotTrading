@@ -1,0 +1,33 @@
+# Requirements Document: services/tax_efficiency/tax_optimized_builder.py
+
+## 1. Module Overview
+T15.1.4: TaxOptimizedPortfolioBuilder - Integrated tax-aware portfolio optimization
+
+Combines TaxLossHarvester, WashSaleDetector, and CapitalGainTracker to create
+tax-efficient portfolio allocations.
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `capital_gain_tracker.get_capital_gain_tracker`
+- `tax_loss_harvester.get_tax_loss_harvester`
+- `wash_sale_detector.get_wash_sale_detector`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TaxOptimizedAllocation`: Must conform to application domain models.
+- `TaxOptimizedPortfolioBuilder`: Must conform to application domain models.
+### Public Functions
+- `get_tax_optimized_builder()`: Must return strictly typed objects.
+- `calculate_after_tax_return()`: Must return strictly typed objects.
+- `get_tax_report()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,36 @@
+# Requirements Document: domain/ensemble/strategy_combiner.py
+
+## 1. Module Overview
+Strategy Combiner for Portfolio Weight Allocation.
+
+This module implements various methods for combining trading strategies
+into a portfolio with optimal weight allocations.
+
+## 2. Dependencies
+- `logging`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `app.domain.ensemble.models.AllocationMethod`
+- `app.domain.ensemble.models.CombinedPortfolio`
+- `app.domain.ensemble.models.StrategyAllocation`
+- `app.domain.models.portfolio.MarketRegime`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StrategyCombiner`: Must conform to application domain models.
+### Public Functions
+- `calculate_allocation()`: Must return strictly typed objects.
+- `calculate_portfolio_metrics()`: Must return strictly typed objects.
+- `needs_rebalancing()`: Must return strictly typed objects.
+- `rebalance()`: Must return strictly typed objects.
+- `get_allocation_summary()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

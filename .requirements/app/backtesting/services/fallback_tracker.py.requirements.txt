@@ -1,0 +1,32 @@
+# Requirements Document: backtesting/services/fallback_tracker.py
+
+## 1. Module Overview
+Fallback Tracker Service
+
+Thread-safe tracking of fallback metrics when configuration loaders
+or strategy mappers fail and the system falls back to default values.
+
+Responsibilities:
+- Thread-safe fallback counter incrementing
+- Fallback metrics retrieval
+- Fallback summary logging with interpretation
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `threading`
+- `typing.Dict`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `FallbackTracker`: Must conform to application domain models.
+### Public Functions
+- `increment_fallback_counter()`: Must return strictly typed objects.
+- `get_fallback_metrics()`: Must return strictly typed objects.
+- `log_fallback_summary()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

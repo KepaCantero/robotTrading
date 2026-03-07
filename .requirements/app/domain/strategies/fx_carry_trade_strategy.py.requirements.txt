@@ -1,0 +1,56 @@
+# Requirements Document: domain/strategies/fx_carry_trade_strategy.py
+
+## 1. Module Overview
+FX Carry Trade Strategy Implementation.
+
+This module implements the FX Carry Trade strategy based on Antti Ilmanen's
+methodology from "Expected Returns" - Rule 12.9.
+
+The strategy exploits interest rate differentials between currency pairs by:
+1. Borrowing in low-interest-rate currencies (funding currencies)
+2. Investing in high-interest-rate currencies (target currencies)
+3. Managing risk through position sizing and stop-loss
+
+Reference:
+    Ilmanen, Antti. "Expected Returns: An Investor's Guide"
+    Rule 12.9: Carry trade implementation
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.date`
+- `decimal.Decimal`
+- `typing.Any`
+- `app.shared.config.centralized_config.get_config`
+- `app.domain.strategies.base.BaseStrategy`
+- `app.domain.strategies.fx_carry_trade.carry_calculator.CarryCalculator`
+- `app.domain.strategies.fx_carry_trade.carry_calculator.CarryTradeOpportunity`
+- `app.domain.strategies.fx_carry_trade.fx_rates_provider.FXRateProvider`
+- `app.domain.strategies.fx_carry_trade.fx_rates_provider.InMemoryFXRateProvider`
+- `app.domain.strategies.fx_carry_trade.models.FXCarryPosition`
+- `app.domain.strategies.fx_carry_trade.models.FXCarrySignal`
+- `app.domain.strategies.fx_carry_trade.models.FXCarryTradeConfig`
+- `app.domain.strategies.fx_carry_trade.models.FXPair`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `FXCarryTradeState`: Must conform to application domain models.
+- `FXCarryTradeStrategy`: Must conform to application domain models.
+### Public Functions
+- `generate_signals()`: Must return strictly typed objects.
+- `analyze_opportunities()`: Must return strictly typed objects.
+- `execute_signal()`: Must return strictly typed objects.
+- `update_positions()`: Must return strictly typed objects.
+- `close_position()`: Must return strictly typed objects.
+- `check_exit_conditions()`: Must return strictly typed objects.
+- `risk_check()`: Must return strictly typed objects.
+- `get_required_parameters()`: Must return strictly typed objects.
+- `get_portfolio_summary()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

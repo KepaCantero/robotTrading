@@ -1,0 +1,41 @@
+# Requirements Document: services/validation_engine/validation_engine.py
+
+## 1. Module Overview
+T5.1: ValidationEngine - Validation orchestration
+
+Integrates PHASE 0 validators (CapitalViability, ExpensiveModuleGate, LearningCapitalGate)
+and orchestrates comprehensive validation of parametrized strategies.
+
+Validates:
+1. Capital viability (profit goals achievable)
+2. Module viability (expensive modules gated by capital)
+3. Learning viability (learning infrastructure economically justified)
+4. Feasibility ratio (backtest metrics meet targets)
+5. Risk metrics (Sharpe, drawdown within acceptable ranges)
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `models.CapitalViabilityAnalysis`
+- `models.FeasibilityAnalysis`
+- `models.LearningViabilityAnalysis`
+- `models.ModuleViabilityAnalysis`
+- `models.ValidationRequest`
+- `models.ValidationResult`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ValidationEngine`: Must conform to application domain models.
+### Public Functions
+- `get_validation_engine()`: Must return strictly typed objects.
+- `get_validation_engine_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

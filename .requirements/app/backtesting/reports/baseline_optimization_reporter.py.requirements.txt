@@ -1,0 +1,50 @@
+# Requirements Document: backtesting/reports/baseline_optimization_reporter.py
+
+## 1. Module Overview
+Baseline vs Optimization Comparison Reporter
+
+Generates professional comparison reports between baseline and optimized strategies.
+Produces HTML reports with interactive Plotly charts and detailed analysis.
+
+Key Features:
+- Side-by-side metric comparison
+- Statistical significance testing
+- Parameter impact analysis
+- Interactive visualizations
+- Implementation recommendations
+
+## 2. Dependencies
+- `json`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `jinja2.Template`
+- `app.domain.models.input_profile.InputProfile`
+- `scipy.stats`
+- `weasyprint.HTML`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ComparisonMetrics`: Must conform to application domain models.
+- `ParameterChange`: Must conform to application domain models.
+- `StatisticalTest`: Must conform to application domain models.
+- `Recommendation`: Must conform to application domain models.
+- `BaselineOptimizationReporter`: Must conform to application domain models.
+### Public Functions
+- `generate_report()`: Must return strictly typed objects.
+- `save_report()`: Must return strictly typed objects.
+- `generate_pdf()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

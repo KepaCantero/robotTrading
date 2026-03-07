@@ -1,0 +1,71 @@
+# Requirements Document: backtesting/constants.py
+
+## 1. Module Overview
+Backtesting Constants Configuration
+
+DEPRECATED: This file is now a thin wrapper around CentralizedConfig.
+All values are now managed in app/shared/config/centralized_config.py::BacktestingConfig.
+
+This file remains for backwards compatibility only.
+New code should use:
+    from app.shared.config.centralized_config import get_config
+    config = get_config()
+    slippage = config.backtesting.base_slippage_bps
+
+Migration Guide:
+    OLD: from app.backtesting.constants import BACKTESTING_CONSTANTS
+    NEW: from app.shared.config.centralized_config import get_config
+         backtesting_config = get_config().backtesting
+
+## 2. Dependencies
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `warnings`
+- `app.shared.config.centralized_config.get_config`
+- `app.shared.config.centralized_config.BacktestingConfig`
+- `typing.TypedDict`
+- `typing.Union`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `FixedCommissionModel`: Must conform to application domain models.
+- `HybridCommissionModel`: Must conform to application domain models.
+- `TierBracket`: Must conform to application domain models.
+- `TieredCommissionModel`: Must conform to application domain models.
+- `CapitalScaleConstants`: Must conform to application domain models.
+- `ExecutionEngineConstants`: Must conform to application domain models.
+- `BacktestingConstants`: Must conform to application domain models.
+### Public Functions
+- `get_default_capital_levels()`: Must return strictly typed objects.
+- `get_commission_models()`: Must return strictly typed objects.
+- `get_base_slippage_bps()`: Must return strictly typed objects.
+- `get_adv_limit_pct()`: Must return strictly typed objects.
+- `DEFAULT_CAPITAL_LEVELS()`: Must return strictly typed objects.
+- `ADV_LIMIT_PCT_DEFAULT()`: Must return strictly typed objects.
+- `ADV_FILL_RATIO_REJECT_THRESHOLD()`: Must return strictly typed objects.
+- `COMMISSION_IMPACT_WARNING_THRESHOLD()`: Must return strictly typed objects.
+- `COMMISSION_IMPACT_CRITICAL_THRESHOLD()`: Must return strictly typed objects.
+- `COMMISSION_IMPACT_OPTIMAL_THRESHOLD()`: Must return strictly typed objects.
+- `ALPHA_DEGRADATION_THRESHOLD()`: Must return strictly typed objects.
+- `COMMISSION_MODELS()`: Must return strictly typed objects.
+- `SCALABILITY_ALPHA_DEGRADATION_MAX_POINTS()`: Must return strictly typed objects.
+- `SCALABILITY_COMMISSION_MAX_POINTS()`: Must return strictly typed objects.
+- `SCALABILITY_STABILITY_MAX_POINTS()`: Must return strictly typed objects.
+- `COMMISSION_IMPACT_EXCELLENT_THRESHOLD()`: Must return strictly typed objects.
+- `COMMISSION_IMPACT_GOOD_THRESHOLD()`: Must return strictly typed objects.
+- `COMMISSION_IMPACT_POOR_THRESHOLD()`: Must return strictly typed objects.
+- `WIN_RATE_STABILITY_PENALTY_FACTOR()`: Must return strictly typed objects.
+- `BASE_SLIPPAGE_BPS()`: Must return strictly typed objects.
+- `OPTIMISTIC_SLIPPAGE_BPS()`: Must return strictly typed objects.
+- `STOP_SLIPPAGE_MULTIPLIER()`: Must return strictly typed objects.
+- `VOLATILITY_MULTIPLIER()`: Must return strictly typed objects.
+- `ENABLE_NEXT_DAY_EXECUTION()`: Must return strictly typed objects.
+- `capital_scale()`: Must return strictly typed objects.
+- `execution()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

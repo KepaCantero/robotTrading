@@ -1,0 +1,56 @@
+# Requirements Document: services/stationarity_analyzer.py
+
+## 1. Module Overview
+Stationarity and Cointegration Analyzer
+
+This module implements Ernest Chan's methodologies from "Algorithmic Trading: A Practitioner's Guide"
+for analyzing stationarity and cointegration in financial time series.
+
+Key Concepts from Ernest Chan:
+1. Stationarity testing using Augmented Dickey-Fuller (ADF) test
+2. Cointegration testing for pair trading strategies
+3. Half-life of mean reversion
+4. Hurst exponent for trend/stationarity detection
+5. Optimal lookback periods for mean reversion
+
+Reference:
+    "Algorithmic Trading" by Ernest P. Chan (2013)
+    Chapter 2: Stationarity and Cointegration
+    Chapter 6: Mean Reversion Strategies
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `typing.Union`
+- `numpy`
+- `pandas`
+- `app.shared.performance.statsmodels_fallback.adfuller`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StationarityTestResult`: Must conform to application domain models.
+- `CointegrationTestResult`: Must conform to application domain models.
+- `MeanReversionParameters`: Must conform to application domain models.
+- `StationarityAnalyzer`: Must conform to application domain models.
+- `CointegrationAnalyzer`: Must conform to application domain models.
+### Public Functions
+- `find_cointegrated_pairs()`: Must return strictly typed objects.
+- `test_stationarity()`: Must return strictly typed objects.
+- `calculate_half_life()`: Must return strictly typed objects.
+- `calculate_hurst_exponent()`: Must return strictly typed objects.
+- `find_optimal_lookback()`: Must return strictly typed objects.
+- `test_cointegration()`: Must return strictly typed objects.
+- `calculate_optimal_position_sizes()`: Must return strictly typed objects.
+- `calculate_entry_exit_thresholds()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

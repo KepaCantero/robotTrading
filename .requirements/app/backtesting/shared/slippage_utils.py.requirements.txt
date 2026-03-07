@@ -1,0 +1,30 @@
+# Requirements Document: backtesting/shared/slippage_utils.py
+
+## 1. Module Overview
+Slippage Utility Functions
+
+Centralized slippage calculations for backtesting.
+This eliminates duplicated slippage logic across multiple files.
+
+Usage:
+    from app.backtesting.shared.slippage_utils import apply_slippage
+
+    adjusted_price = apply_slippage(price, is_buy=True)
+
+## 2. Dependencies
+- `decimal.Decimal`
+- `typing.Optional`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Functions
+- `apply_slippage()`: Must return strictly typed objects.
+- `calculate_slippage_pct()`: Must return strictly typed objects.
+- `get_base_slippage_bps()`: Must return strictly typed objects.
+- `get_slippage_for_capital()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

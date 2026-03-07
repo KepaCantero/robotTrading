@@ -1,0 +1,35 @@
+# Requirements Document: services/synthetic_data/gan_generator.py
+
+## 1. Module Overview
+FASE 6.2: GAN-based Synthetic Data Generator
+
+Generates synthetic trading data using Generative Adversarial Networks (GANs)
+for training data augmentation and backtesting.
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `requests.exceptions.HTTPError`
+- `requests.exceptions.RequestException`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `GANConfig`: Must conform to application domain models.
+- `SyntheticDataGenerator`: Must conform to application domain models.
+- `TimeSeriesGANGenerator`: Must conform to application domain models.
+### Public Functions
+- `get_gan_generator()`: Must return strictly typed objects.
+- `get_ts_gan_generator()`: Must return strictly typed objects.
+- `get_generator_status()`: Must return strictly typed objects.
+- `get_generator_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,57 @@
+# Requirements Document: backtesting/validation/purged_kfold.py
+
+## 1. Module Overview
+Purged K-Fold with Embargo Cross-Validation
+
+Implementation of López de Prado's cross-validation method for financial time series.
+This prevents look-ahead bias and information leakage in backtesting.
+
+Key Concepts:
+- Purge: Remove training samples that overlap with test period
+- Embargo: Add buffer period after test set to prevent information leakage
+- K-Fold: Split data into K folds for robust validation
+
+Reference:
+    "Advances in Financial Machine Learning" by Marcos López de Prado
+    Chapter 3, Section 3.6: Cross-Validation in Finance
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `typing.Union`
+- `numpy`
+- `pandas`
+- `sklearn.model_selection.KFold`
+- `sklearn.metrics.accuracy_score`
+- `sklearn.metrics.r2_score`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PurgedKFoldConfig`: Must conform to application domain models.
+- `PurgedSplit`: Must conform to application domain models.
+- `PurgedKFold`: Must conform to application domain models.
+- `PurgedTimeSeriesSplit`: Must conform to application domain models.
+### Public Functions
+- `get_purge_indices()`: Must return strictly typed objects.
+- `get_embargo_indices()`: Must return strictly typed objects.
+- `apply_embargo()`: Must return strictly typed objects.
+- `purged_kfold_splits()`: Must return strictly typed objects.
+- `cross_validate_with_purging()`: Must return strictly typed objects.
+- `split()`: Must return strictly typed objects.
+- `get_n_splits()`: Must return strictly typed objects.
+- `validate_no_leakage()`: Must return strictly typed objects.
+- `get_split_summary()`: Must return strictly typed objects.
+- `split()`: Must return strictly typed objects.
+- `get_n_splits()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

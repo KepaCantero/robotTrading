@@ -1,0 +1,45 @@
+# Requirements Document: services/slippage_analysis_service.py
+
+## 1. Module Overview
+Dynamic Slippage Analysis Service
+TASK-11: Análisis Dinámico de Slippage
+
+Servicio para calcular slippage dinámico basado en volatilidad del mercado y liquidez.
+
+## 2. Dependencies
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `app.shared.config.centralized_config.get_config`
+- `app.models.market_data.Quote`
+- `app.models.slippage_analysis.DynamicSlippageAnalysis`
+- `app.models.slippage_analysis.LiquidityMetrics`
+- `app.models.slippage_analysis.MarketCondition`
+- `app.models.slippage_analysis.OrderSizeImpact`
+- `app.models.slippage_analysis.SlippageCalculationParams`
+- `app.models.slippage_analysis.SlippageComponent`
+- `app.models.slippage_analysis.SlippageHistory`
+- `app.models.slippage_analysis.SlippageType`
+- `app.models.slippage_analysis.VolatilityMetrics`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `VolatilityCalculator`: Must conform to application domain models.
+- `LiquidityCalculator`: Must conform to application domain models.
+- `OrderSizeCalculator`: Must conform to application domain models.
+- `DynamicSlippageService`: Must conform to application domain models.
+### Public Functions
+- `calculate_volatility()`: Must return strictly typed objects.
+- `calculate_liquidity()`: Must return strictly typed objects.
+- `calculate_order_impact()`: Must return strictly typed objects.
+- `calculate_dynamic_slippage()`: Must return strictly typed objects.
+- `get_slippage_history()`: Must return strictly typed objects.
+- `get_average_slippage()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,27 @@
+# Requirements Document: services/logging/log_entry.py
+
+## 1. Module Overview
+Log Entry - Inmutable append-only log entry
+
+Cada entrada es inmutable y se añade al log append-only.
+
+## 2. Dependencies
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Optional`
+- `uuid`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `LogEntry`: Must conform to application domain models.
+### Public Functions
+- `create()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `with_correlation_id()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

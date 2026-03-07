@@ -1,0 +1,46 @@
+# Requirements Document: backtesting/validation/strategy_validator.py
+
+## 1. Module Overview
+Strategy Validator Module (FASE 5 Task 1)
+
+This module provides validation for trading strategies based on key performance
+metrics as specified by Chan (Algorithmic Trading, 2013):
+
+- Sharpe Ratio >= 1.0 (Chan #8)
+- Maximum Drawdown <= 25% (Chan #10)
+
+These are critical acceptance criteria for any viable trading strategy.
+
+Reference:
+    Chan, E. (2013). "Algorithmic Trading: Winning Strategies and Their
+    Rationale." Wiley, Chapters 8, 10.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ValidationLevel`: Must conform to application domain models.
+- `ValidationResult`: Must conform to application domain models.
+- `StrategyValidator`: Must conform to application domain models.
+### Public Functions
+- `validate_strategy()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `validate_sharpe_ratio()`: Must return strictly typed objects.
+- `validate_max_drawdown()`: Must return strictly typed objects.
+- `validate()`: Must return strictly typed objects.
+- `validate_backtest_result()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

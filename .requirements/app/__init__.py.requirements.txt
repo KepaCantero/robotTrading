@@ -1,0 +1,24 @@
+# Requirements Document: __init__.py
+
+## 1. Module Overview
+AlgoTrading MVP - Algorithmic Trading System
+
+A comprehensive algorithmic trading system built with Python 3.11+, FastAPI,
+PostgreSQL, Redis, and Celery for high-performance trading operations.
+
+Author: AlgoTrading MVP Team
+Version: 1.0.0
+License: MIT
+
+## 2. Dependencies
+- `app.shared.config.di_config.initialize_container`
+
+## 3. Core Components (Contracts)
+### Public Functions
+- `get_di_container()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

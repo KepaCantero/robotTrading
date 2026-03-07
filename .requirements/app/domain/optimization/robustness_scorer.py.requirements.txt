@@ -1,0 +1,54 @@
+# Requirements Document: domain/optimization/robustness_scorer.py
+
+## 1. Module Overview
+Robustness Scorer (TASK-6.1 Phase 3)
+
+Composite production readiness metric (0-100) answering: "Is this deployable?"
+
+Scoring Formula:
+- Consistency (30%): % windows passing performance thresholds (min 60% profitable)
+- Stability (25%): Parameter variance across windows (low = stable)
+- Sensitivity (20%): Elasticity measure (low elasticity = robust)
+- Overfitting Penalty (15%): In-sample vs out-of-sample degradation
+- Regime Robustness (10%): Performance across different market regimes
+
+Overall Score >= 80: PASS (Safe for production)
+Overall Score 60-79: WARN (Conditional - monitor closely)
+Overall Score < 60: FAIL (Too risky - needs improvement)
+
+## 2. Dependencies
+- `json`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `enum.Enum`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ProductionReadiness`: Must conform to application domain models.
+- `RiskLevel`: Must conform to application domain models.
+- `RiskFactor`: Must conform to application domain models.
+- `RobustnessScoreDetail`: Must conform to application domain models.
+- `RobustnessResult`: Must conform to application domain models.
+- `RobustnessReport`: Must conform to application domain models.
+- `RobustnessScorer`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_json()`: Must return strictly typed objects.
+- `calculate_robustness_score()`: Must return strictly typed objects.
+- `batch_score_parameters()`: Must return strictly typed objects.
+- `print_robustness_report()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

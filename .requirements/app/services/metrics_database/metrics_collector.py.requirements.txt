@@ -1,0 +1,39 @@
+# Requirements Document: services/metrics_database/metrics_collector.py
+
+## 1. Module Overview
+T18.1: Metrics Collector - Centralized metrics collection from all monitors
+
+Collects metrics from:
+- Risk Scaling Monitor
+- Portfolio Analytics Service
+- Performance Tracker
+- Execution Cost Monitor
+- Fill Ratio Tracker
+- Any custom metric sources
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `models.MetricPoint`
+- `models.MetricsCollectionResult`
+- `models.MetricType`
+- `questdb_connector.QuestDBConnector`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MetricsCollector`: Must conform to application domain models.
+### Public Functions
+- `register_metric_source()`: Must return strictly typed objects.
+- `add_metric()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

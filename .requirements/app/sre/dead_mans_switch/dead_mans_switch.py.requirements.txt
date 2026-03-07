@@ -1,0 +1,57 @@
+# Requirements Document: sre/dead_mans_switch/dead_mans_switch.py
+
+## 1. Module Overview
+Dead Man's Switch - Health Check Monitoring
+
+Implements a dead man's switch that requires periodic health check pings.
+If pings are missed, triggers alerts and automatic recovery actions.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `asyncio`
+- `logging`
+- `os`
+- `signal`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `enum.Enum`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `aiosqlite`
+- `app.shared.utils.safe_parse.safe_parse`
+- `uuid`
+- `aiohttp`
+- `subprocess`
+- `shlex`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SwitchStatus`: Must conform to application domain models.
+- `HealthCheckConfig`: Must conform to application domain models.
+- `HeartbeatRecord`: Must conform to application domain models.
+- `IncidentRecord`: Must conform to application domain models.
+- `DeadMansSwitch`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `duration_minutes()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `set_trigger_callback()`: Must return strictly typed objects.
+- `set_recover_callback()`: Must return strictly typed objects.
+- `set_degraded_callback()`: Must return strictly typed objects.
+- `status()`: Must return strictly typed objects.
+- `last_ping()`: Must return strictly typed objects.
+- `current_incident()`: Must return strictly typed objects.
+- `get_summary()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

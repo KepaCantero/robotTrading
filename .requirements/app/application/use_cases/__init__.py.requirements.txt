@@ -1,0 +1,27 @@
+# Requirements Document: application/use_cases/__init__.py
+
+## 1. Module Overview
+Application Use Cases - Orchestrate business logic.
+
+Use cases contain application-specific business rules and orchestrate
+the flow of data to and from entities.
+
+## 2. Dependencies
+- `analyze_backtest_results_use_case.AnalyzeBacktestResultsUseCase`
+- `create_portfolio_use_case.CreatePortfolioUseCase`
+- `execute_strategy_use_case.ExecuteStrategyUseCase`
+- `rebalance_portfolio_use_case.RebalancePortfolioUseCase`
+- `run_backtest_use_case.RunBacktestUseCase`
+- `select_strategy.SelectStrategyUseCase`
+- `select_strategy.StrategyConfiguration`
+- `select_strategy.StrategySelectionCriteria`
+- `select_strategy.StrategySelectionResult`
+- `select_strategy.StrategySelector`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

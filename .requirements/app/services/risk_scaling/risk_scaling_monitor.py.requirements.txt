@@ -1,0 +1,43 @@
+# Requirements Document: services/risk_scaling/risk_scaling_monitor.py
+
+## 1. Module Overview
+PHASE 3: Risk Scaling Monitor - Dashboard & API Interface
+
+Provides real-time monitoring, alerting, and reporting for risk scaling system.
+Interfaces between core risk scaling logic and user-facing dashboards/APIs.
+
+Capabilities:
+- Real-time risk scaling status
+- Historical tracking and trends
+- Alert generation and subscription
+- Performance reporting
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `app.services.risk_scaling.models.AlertSubscription`
+- `app.services.risk_scaling.models.RiskAlert`
+- `app.services.risk_scaling.models.RiskAlertType`
+- `app.services.risk_scaling.models.RiskLevel`
+- `app.services.risk_scaling.models.RiskScalingReport`
+- `app.services.risk_scaling.models.RiskScalingSnapshot`
+- `app.services.risk_scaling.models.RiskScalingState`
+- `app.services.risk_scaling.models.RiskScalingStatus`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RiskScalingMonitor`: Must conform to application domain models.
+### Public Functions
+- `store_state()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

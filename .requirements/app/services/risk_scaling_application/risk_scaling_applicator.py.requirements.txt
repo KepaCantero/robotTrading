@@ -1,0 +1,49 @@
+# Requirements Document: services/risk_scaling_application/risk_scaling_applicator.py
+
+## 1. Module Overview
+T8.1: RiskScalingApplication - Conditional risk scaling
+
+Applies risk scaling based on:
+1. Market regime (bull/sideways/bear)
+2. Volatility level (low/normal/high)
+3. Current drawdown vs max acceptable drawdown
+
+Risk scaling rules:
+- Bear market: Reduce allocation to high-volatility modules
+- High volatility: Decrease position sizes
+- High drawdown: More conservative positioning
+
+Fallback: If PHASE 3 not available, returns base portfolio unchanged.
+
+Architecture:
+- RiskScalingApplication: Main orchestrator (delegator pattern)
+- RiskAdjustmentCalculator: Calculation logic (extracted component)
+- Singleton pattern for dependency injection
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `limit_adjuster.LimitAdjuster`
+- `numpy`
+- `models.RiskAdjustedPortfolio`
+- `models.RiskScalingRequest`
+- `realtime_monitor.RealTimeMonitor`
+- `risk_adjustment_calculator.RiskAdjustmentCalculator`
+- `risk_adjustment_calculator.get_risk_adjustment_calculator`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RiskScalingApplication`: Must conform to application domain models.
+### Public Functions
+- `get_risk_scaler()`: Must return strictly typed objects.
+- `get_scaler_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

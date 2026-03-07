@@ -1,0 +1,35 @@
+# Requirements Document: engines/data_engine/config_loader.py
+
+## 1. Module Overview
+DataEngine Config Loader - Cargador de configuración desde YAML.
+
+Garantiza que todos los parámetros provengan de configuración,
+eliminando números mágicos del código.
+
+## 2. Dependencies
+- `logging`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `yaml`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DataEngineConfigLoader`: Must conform to application domain models.
+### Public Functions
+- `get_cache_config()`: Must return strictly typed objects.
+- `get_streaming_config()`: Must return strictly typed objects.
+- `get_source_config()`: Must return strictly typed objects.
+- `get_ibkr_config()`: Must return strictly typed objects.
+- `get_api_config()`: Must return strictly typed objects.
+- `get_sentiment_config()`: Must return strictly typed objects.
+- `get_normalization_config()`: Must return strictly typed objects.
+- `get_cleaning_config()`: Must return strictly typed objects.
+- `get_versioning_config()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

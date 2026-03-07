@@ -1,0 +1,37 @@
+# Requirements Document: engines/context_engine/regime_detectors/hmm_regime_detector.py
+
+## 1. Module Overview
+HMMRegimeDetector - Detección de régimen usando Hidden Markov Models.
+
+Usa HMM para detectar regímenes de mercado (bull, bear, sideways).
+
+## 2. Dependencies
+- `logging`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `sklearn.preprocessing.StandardScaler`
+- `hmmlearn.hmm`
+- `sklearn.mixture.GaussianMixture`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `HMMRegimeDetector`: Must conform to application domain models.
+- `HMMFallback`: Must conform to application domain models.
+- `hmm`: Must conform to application domain models.
+### Public Functions
+- `fit()`: Must return strictly typed objects.
+- `detect()`: Must return strictly typed objects.
+- `get_transition_matrix()`: Must return strictly typed objects.
+- `get_regime_means()`: Must return strictly typed objects.
+- `fit()`: Must return strictly typed objects.
+- `predict()`: Must return strictly typed objects.
+- `score_samples()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

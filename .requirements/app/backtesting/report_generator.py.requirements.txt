@@ -1,0 +1,43 @@
+# Requirements Document: backtesting/report_generator.py
+
+## 1. Module Overview
+Professional Backtest Report Generator.
+
+Creates comprehensive, auditable backtest reports with:
+- Executive Summary
+- Technical Analysis
+- Risk Metrics
+- Performance Attribution
+- Recommendations for Improvement
+
+## 2. Dependencies
+- `json`
+- `logging`
+- `time`
+- `datetime.datetime`
+- `pathlib.Path`
+- `typing.Dict`
+- `typing.Optional`
+- `typing.TypedDict`
+- `app.backtesting.models.BacktestConfig`
+- `app.backtesting.models.BacktestResult`
+- `app.backtesting.models.PerformanceMetrics`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PeriodInfoDict`: Must conform to application domain models.
+- `ConfigInfoDict`: Must conform to application domain models.
+- `ReturnsDict`: Must conform to application domain models.
+- `PerformanceDict`: Must conform to application domain models.
+- `RiskDict`: Must conform to application domain models.
+- `DetailedMetrics`: Must conform to application domain models.
+- `RecommendationDict`: Must conform to application domain models.
+- `BacktestReportGenerator`: Must conform to application domain models.
+### Public Functions
+- `generate_comprehensive_report()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

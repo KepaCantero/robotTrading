@@ -1,0 +1,44 @@
+# Requirements Document: core/compliance/__init__.py
+
+## 1. Module Overview
+Compliance Module - Re-exports from domain layer
+
+This module provides backward compatibility by re-exporting
+compliance components from their canonical location in the domain layer.
+
+DEPRECATED: Import directly from app.domain.services.compliance instead.
+
+## 2. Dependencies
+- `app.domain.services.compliance.results.CheckResult`
+- `app.domain.services.compliance.results.ComprehensivePostTradeAnalysis`
+- `app.domain.services.compliance.results.ComprehensivePreTradeAnalysis`
+- `app.domain.services.compliance.results.OptimizeResult`
+- `app.domain.services.compliance.results.PortfolioOptimizationResult`
+- `app.domain.services.compliance.results.PostTradeCheckResult`
+- `app.domain.services.compliance.results.PreTradeCheckResult`
+- `app.domain.services.compliance.protocols.AlphaGeneratable`
+- `app.domain.services.compliance.protocols.ComplianceService`
+- `app.domain.services.compliance.protocols.CrossValidationService`
+- `app.domain.services.compliance.protocols.ExecutionAlgorithm`
+- `app.domain.services.compliance.protocols.LiquidityAnalyzable`
+- `app.domain.services.compliance.protocols.MetaLabelingService`
+- `app.domain.services.compliance.protocols.Optimizable`
+- `app.domain.services.compliance.protocols.PostTradeCheckable`
+- `app.domain.services.compliance.protocols.PreTradeCheckable`
+- `app.domain.services.compliance.protocols.RegimeDetectable`
+- `app.domain.services.compliance.protocols.RiskCalculable`
+- `app.domain.services.compliance.protocols.TransactionCostModel`
+- `app.domain.services.compliance.service_registry.ComplianceServiceRegistry`
+- `app.domain.services.compliance.service_registry.get_service`
+- `app.domain.services.compliance.service_registry.get_service_registry`
+- `app.domain.services.compliance.pre_trade_checker.PreTradeComplianceChecker`
+- `app.domain.services.compliance.post_trade_checker.PostTradeComplianceChecker`
+- `app.domain.services.compliance.portfolio_optimizer.PortfolioComplianceOptimizer`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

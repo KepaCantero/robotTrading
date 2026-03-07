@@ -1,0 +1,46 @@
+# Requirements Document: backtesting/services/database_service.py
+
+## 1. Module Overview
+Database Service
+
+Handles database operations for profile batch backtesting results.
+
+Responsibilities:
+- Store profile results in database
+- Query results by objective/risk/tier
+- Handle database errors gracefully
+- Manage database sessions
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `threading`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `uuid.uuid4`
+- `sqlalchemy.create_engine`
+- `sqlalchemy.exc.DatabaseError`
+- `sqlalchemy.exc.DataError`
+- `sqlalchemy.exc.IntegrityError`
+- `sqlalchemy.exc.OperationalError`
+- `sqlalchemy.exc.ProgrammingError`
+- `sqlalchemy.orm.sessionmaker`
+- `app.backtesting.services.models.ProfileResult`
+- `app.backtesting.services.models.ProfileResultDB`
+- `app.domain.models.input_profile.InputProfile`
+- `app.shared.utils.tier_mapper.map_profile_tier_to_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DatabaseService`: Must conform to application domain models.
+### Public Functions
+- `store_result()`: Must return strictly typed objects.
+- `batch_store_results()`: Must return strictly typed objects.
+- `get_best_strategy()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

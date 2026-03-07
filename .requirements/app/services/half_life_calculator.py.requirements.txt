@@ -1,0 +1,55 @@
+# Requirements Document: services/half_life_calculator.py
+
+## 1. Module Overview
+Half-Life Calculator for Mean Reversion Strategies
+
+This module implements Ornstein-Uhlenbeck half-life calculation as described
+in Ernest Chan's "Quantitative Trading" (Chapter 2).
+
+Half-life measures the expected time for a mean-reverting process to return
+to its mean. It's critical for:
+- Position sizing (shorter half-life = larger positions)
+- Stop loss timing
+- Strategy selection
+- Risk management
+
+Key Features:
+- Ornstein-Uhlenbeck process fitting
+- Half-life calculation with confidence intervals
+- Mean reversion speed estimation
+- Statistical significance testing
+
+Reference:
+    "Quantitative Trading" by Ernest P. Chan
+    Chapter 2: Basic Statistical Strategies
+    Section: Mean Reversion
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `pandas`
+- `scipy.stats`
+- `app.shared.performance.statsmodels_fallback.adfuller`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `HalfLifeResult`: Must conform to application domain models.
+- `OUProcessParams`: Must conform to application domain models.
+- `HalfLifeCalculator`: Must conform to application domain models.
+### Public Functions
+- `calculate_half_life()`: Must return strictly typed objects.
+- `calculate_half_life()`: Must return strictly typed objects.
+- `compare_half_lives()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

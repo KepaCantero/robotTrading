@@ -1,0 +1,45 @@
+# Requirements Document: domain/strategies/quality_screen.py
+
+## 1. Module Overview
+Quality Investing Strategy Domain Service
+
+Implements quality-based stock selection based on fundamental metrics
+that identify high-quality, profitable companies.
+
+Reference: Berkin & Swedroe concepts on quality investing
+Paper: Novy-Marx, R. (2013). "The Other Side of Value: Gross Profitability Premium"
+
+## 2. Dependencies
+- `__future__.annotations`
+- `dataclasses.dataclass`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Tuple`
+- `numpy`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `QualitySignal`: Must conform to application domain models.
+- `QualityMetrics`: Must conform to application domain models.
+- `QualityPortfolio`: Must conform to application domain models.
+- `QualityInvesting`: Must conform to application domain models.
+### Public Functions
+- `profitability_score()`: Must return strictly typed objects.
+- `financial_health_score()`: Must return strictly typed objects.
+- `overall_quality_score()`: Must return strictly typed objects.
+- `quality_category()`: Must return strictly typed objects.
+- `is_quality_stock()`: Must return strictly typed objects.
+- `quality_grade()`: Must return strictly typed objects.
+- `screen_quality_stocks()`: Must return strictly typed objects.
+- `rank_quality_stocks()`: Must return strictly typed objects.
+- `construct_portfolio()`: Must return strictly typed objects.
+- `generate_signal()`: Must return strictly typed objects.
+- `calculate_gross_profitability_premium()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

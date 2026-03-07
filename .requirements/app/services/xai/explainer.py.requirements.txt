@@ -1,0 +1,36 @@
+# Requirements Document: services/xai/explainer.py
+
+## 1. Module Overview
+FASE 6.1: XAI Explainer - SHAP and LIME integration for model interpretability
+
+Provides methods to explain model predictions using SHAP and LIME techniques.
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `requests.exceptions.HTTPError`
+- `requests.exceptions.RequestException`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SHAPExplainer`: Must conform to application domain models.
+- `LIMEExplainer`: Must conform to application domain models.
+- `FeatureImportanceCalculator`: Must conform to application domain models.
+### Public Functions
+- `get_shap_explainer()`: Must return strictly typed objects.
+- `get_lime_explainer()`: Must return strictly typed objects.
+- `get_importance_calculator()`: Must return strictly typed objects.
+- `get_explainer_status()`: Must return strictly typed objects.
+- `get_explainer_status()`: Must return strictly typed objects.
+- `get_calculator_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

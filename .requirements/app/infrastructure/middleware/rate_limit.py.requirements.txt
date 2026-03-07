@@ -1,0 +1,50 @@
+# Requirements Document: infrastructure/middleware/rate_limit.py
+
+## 1. Module Overview
+API Rate Limiting Middleware
+
+This module provides rate limiting for FastAPI endpoints using
+a token bucket algorithm with in-memory storage.
+
+For production use with multiple workers, consider using Redis-backed
+rate limiting.
+
+SEC-004: Rate limiting to prevent abuse
+SEC-005: Per-IP and per-user rate limiting
+
+## 2. Dependencies
+- `asyncio`
+- `time`
+- `collections.defaultdict`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.Optional`
+- `typing.Tuple`
+- `fastapi.HTTPException`
+- `fastapi.Request`
+- `fastapi.Response`
+- `fastapi.responses.JSONResponse`
+- `starlette.middleware.base.BaseHTTPMiddleware`
+- `app.infrastructure.logging.logging_config.get_logger`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RateLimitConfig`: Must conform to application domain models.
+- `TokenBucket`: Must conform to application domain models.
+- `InMemoryRateLimiter`: Must conform to application domain models.
+- `RateLimitMiddleware`: Must conform to application domain models.
+- `RateLimitDecorator`: Must conform to application domain models.
+### Public Functions
+- `rate_limit()`: Must return strictly typed objects.
+- `consume()`: Must return strictly typed objects.
+- `wait_time()`: Must return strictly typed objects.
+- `get_rate_limit_headers()`: Must return strictly typed objects.
+- `decorator()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,40 @@
+# Requirements Document: services/tax_efficiency/capital_gain_tracker.py
+
+## 1. Module Overview
+T15.1.3: CapitalGainTracker - Tracks realized and unrealized capital gains/losses
+
+Classifies gains as short-term (<1 year) or long-term (≥1 year) and calculates
+tax liability based on investor's tax bracket.
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `GainLossRecord`: Must conform to application domain models.
+- `PositionGainLoss`: Must conform to application domain models.
+- `TaxLotReport`: Must conform to application domain models.
+- `CapitalGainTracker`: Must conform to application domain models.
+### Public Functions
+- `get_capital_gain_tracker()`: Must return strictly typed objects.
+- `record_position_purchase()`: Must return strictly typed objects.
+- `record_position_sale()`: Must return strictly typed objects.
+- `calculate_unrealized_gains()`: Must return strictly typed objects.
+- `get_short_term_gains()`: Must return strictly typed objects.
+- `get_short_term_losses()`: Must return strictly typed objects.
+- `get_long_term_gains()`: Must return strictly typed objects.
+- `get_long_term_losses()`: Must return strictly typed objects.
+- `project_annual_tax()`: Must return strictly typed objects.
+- `generate_tax_lot_report()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

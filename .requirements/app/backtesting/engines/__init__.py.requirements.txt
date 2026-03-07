@@ -1,0 +1,48 @@
+# Requirements Document: backtesting/engines/__init__.py
+
+## 1. Module Overview
+Unified Backtest Engines Package.
+
+This package provides a unified hierarchy of backtest engines:
+- BaseBacktestEngine: Abstract base class (in parent directory)
+- StandardBacktestEngine: Standard single-strategy backtest
+- ExecutionBacktestEngine: Pessimistic execution engine
+- MultiStrategyBacktestEngine: Multi-strategy with capital allocation
+- RobustBacktestEngine: Long-term robust backtest with checkpointing
+
+Usage:
+    from app.backtesting.engines import (
+        StandardBacktestEngine,
+        ExecutionBacktestEngine,
+        MultiStrategyBacktestEngine,
+        RobustBacktestEngine,
+        EngineFactory,
+    )
+
+    # Using factory
+    engine = EngineFactory.create(
+        engine_type=EngineType.STANDARD,
+        config=my_config,
+    )
+    result = engine.run_backtest(market_data, signals)
+
+## 2. Dependencies
+- `app.backtesting.base_engine.BaseBacktestEngine`
+- `app.backtesting.base_engine.BacktestState`
+- `app.backtesting.base_engine.EngineType`
+- `app.backtesting.base_engine.ExecutionType`
+- `app.backtesting.base_engine.ExecutionResult`
+- `app.backtesting.base_engine.Position`
+- `app.backtesting.engines.standard_engine.StandardBacktestEngine`
+- `app.backtesting.engines.execution_engine.ExecutionBacktestEngine`
+- `app.backtesting.engines.multi_strategy_engine.MultiStrategyBacktestEngine`
+- `app.backtesting.engines.robust_engine.RobustBacktestEngine`
+- `app.backtesting.engines.factory.EngineFactory`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

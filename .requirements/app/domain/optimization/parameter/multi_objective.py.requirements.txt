@@ -1,0 +1,56 @@
+# Requirements Document: domain/optimization/parameter/multi_objective.py
+
+## 1. Module Overview
+Multi-Objective Optimization - FASE 6.1 Extension
+
+Provides multi-objective optimization capabilities:
+- Pareto front calculation
+- Non-dominated sorting
+- Crowding distance for diversity
+- Weighted criteria selection
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `base_optimizer.OptimizationConfig`
+- `base_optimizer.OptimizationResult`
+- `models.ParameterGrid`
+- `trial.TrialHistory`
+- `random_search.RandomSearchOptimizer`
+- `random_search.RandomSearchOptimizer`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ParetoSolution`: Must conform to application domain models.
+- `ParetoFront`: Must conform to application domain models.
+- `MultiObjectiveOptimizer`: Must conform to application domain models.
+- `ScalarizationOptimizer`: Must conform to application domain models.
+### Public Functions
+- `find_non_dominated_solutions()`: Must return strictly typed objects.
+- `calculate_hypervolume()`: Must return strictly typed objects.
+- `dominates()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `calculate_crowding_distance()`: Must return strictly typed objects.
+- `get_pareto_front()`: Must return strictly typed objects.
+- `get_best_by_objective()`: Must return strictly typed objects.
+- `get_best_by_weighted_criteria()`: Must return strictly typed objects.
+- `get_knee_point()`: Must return strictly typed objects.
+- `get_diverse_solutions()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `scalarize()`: Must return strictly typed objects.
+- `combined_objective()`: Must return strictly typed objects.
+- `scalarized_objective()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

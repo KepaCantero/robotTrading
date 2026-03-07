@@ -1,0 +1,46 @@
+# Requirements Document: domain/strategies/learning/transformer_engine.py
+
+## 1. Module Overview
+TransformerEngine - Usa Transformers para optimización de parámetros y predicción de series de tiempo.
+
+## 2. Dependencies
+- `logging`
+- `os`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `base_learning_engine.BaseLearningEngine`
+- `torch`
+- `torch.nn`
+- `torch.optim`
+- `torch.utils.data.DataLoader`
+- `torch.utils.data.Dataset`
+- `torch.utils.data.DataLoader`
+- `torch.utils.data.Dataset`
+- `numpy`
+- `torch.utils.data.DataLoader`
+- `torch.utils.data.Dataset`
+- `numpy`
+- `numpy`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TransformerEngine`: Must conform to application domain models.
+- `TransformerDataset`: Must conform to application domain models.
+- `TransformerDatasetEval`: Must conform to application domain models.
+- `TransformerModel`: Must conform to application domain models.
+- `TransformerDatasetVal`: Must conform to application domain models.
+### Public Functions
+- `train()`: Must return strictly typed objects.
+- `predict()`: Must return strictly typed objects.
+- `evaluate()`: Must return strictly typed objects.
+- `forward()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

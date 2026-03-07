@@ -1,0 +1,47 @@
+# Requirements Document: backtesting/awesome_quant_integrator.py
+
+## 1. Module Overview
+AWESOME-QUANT Integration Module - Advanced Metrics from quantstats, empyrical, pyfolio
+
+Provides comprehensive financial metrics using AWESOME-QUANT libraries:
+- quantstats: Advanced performance analytics
+- empyrical: Risk and performance metrics
+- pyfolio: Portfolio analysis and tear sheets
+
+## 2. Dependencies
+- `logging`
+- `typing.Dict`
+- `typing.Optional`
+- `typing.TypedDict`
+- `numpy`
+- `pandas`
+- `app.shared.config.centralized_config.CentralizedConfig`
+- `app.shared.config.centralized_config.get_config`
+- `quantstats`
+- `empyrical`
+- `pyfolio`
+- `scipy.stats.kurtosis`
+- `scipy.stats.skew`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `QuantstatsMetrics`: Must conform to application domain models.
+- `EmpyricalMetrics`: Must conform to application domain models.
+- `PyfolioMetrics`: Must conform to application domain models.
+- `AwesomeQuantMetricsDict`: Must conform to application domain models.
+- `FallbackMetrics`: Must conform to application domain models.
+- `AwesomeQuantIntegrator`: Must conform to application domain models.
+### Public Functions
+- `calculate_quantstats_metrics()`: Must return strictly typed objects.
+- `calculate_empyrical_metrics()`: Must return strictly typed objects.
+- `calculate_pyfolio_metrics()`: Must return strictly typed objects.
+- `calculate_all_awesome_quant_metrics()`: Must return strictly typed objects.
+- `get_unified_metrics()`: Must return strictly typed objects.
+- `is_available()`: Must return strictly typed objects.
+- `get_available_libraries()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

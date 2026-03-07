@@ -1,0 +1,58 @@
+# Requirements Document: domain/strategies/learning/base_learning_engine.py
+
+## 1. Module Overview
+BaseLearningEngine - Clase base abstracta para todos los motores de aprendizaje.
+
+Enhanced with:
+- Time stability tracking (Ilmanen)
+- Learning curve analysis (Hastie)
+- Feature explosion validation (Ilmanen)
+- Bias-variance monitoring (Hastie)
+
+## 2. Dependencies
+- `json`
+- `logging`
+- `os`
+- `abc.ABC`
+- `abc.abstractmethod`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `joblib`
+- `numpy`
+- `pickle`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StabilityStatus`: Must conform to application domain models.
+- `TrainingSnapshot`: Must conform to application domain models.
+- `StabilityReport`: Must conform to application domain models.
+- `BaseLearningEngine`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `train()`: Must return strictly typed objects.
+- `predict()`: Must return strictly typed objects.
+- `explain()`: Must return strictly typed objects.
+- `evaluate()`: Must return strictly typed objects.
+- `save_model()`: Must return strictly typed objects.
+- `load_model()`: Must return strictly typed objects.
+- `is_ready()`: Must return strictly typed objects.
+- `record_training_snapshot()`: Must return strictly typed objects.
+- `analyze_stability()`: Must return strictly typed objects.
+- `check_feature_explosion()`: Must return strictly typed objects.
+- `get_learning_curve_analysis()`: Must return strictly typed objects.
+- `get_training_history()`: Must return strictly typed objects.
+- `clear_history()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

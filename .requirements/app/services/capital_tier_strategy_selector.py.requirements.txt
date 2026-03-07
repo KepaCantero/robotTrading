@@ -1,0 +1,69 @@
+# Requirements Document: services/capital_tier_strategy_selector.py
+
+## 1. Module Overview
+PHASE 1 T1.1 - Capital Tier Strategy Selector
+
+Maps account capital → optimal strategy configuration, risk profile, and feature enablement.
+
+This service is the single source of truth for capital tier-based decisions:
+- Which strategies to use
+- Which ML modules to enable
+- What risk profile to apply
+- How to configure learning infrastructure
+
+Architecture:
+Integrates with:
+- AccountConfiguration: Tier definitions and base recommendations
+- DeploymentValidator: Safety gating and validation
+- StrategyFactory/Registry: Strategy instantiation
+- ExpensiveModuleGate: ML feature gating
+- LearningCapitalGate: Learning viability checking
+- RiskEngine: Risk configuration
+
+Design Principles:
+1. Single Source of Truth: Capital tier is THE source of truth
+2. Conservative Defaults: Disable features when in doubt (fail-safe)
+3. Graceful Degradation: System works even if features disabled
+4. Audit Trail: Every decision logged with reasoning
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `app.shared.config.centralized_config.get_config`
+- `app.services.account_configuration.AccountConfiguration`
+- `app.services.account_configuration.AccountTier`
+- `app.services.deployment_validator.DeploymentStatus`
+- `app.services.deployment_validator.DeploymentValidator`
+- `app.services.expensive_module_gate.ExpensiveModuleGate`
+- `app.services.learning_capital_gate.LearningCapitalGate`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `EnsembleType`: Must conform to application domain models.
+- `PositionSizingStrategy`: Must conform to application domain models.
+- `StrategySelection`: Must conform to application domain models.
+- `RiskProfile`: Must conform to application domain models.
+- `StrategyCapabilities`: Must conform to application domain models.
+- `DeploymentReport`: Must conform to application domain models.
+- `CapitalTierStrategySelector`: Must conform to application domain models.
+### Public Functions
+- `get_selector()`: Must return strictly typed objects.
+- `validate()`: Must return strictly typed objects.
+- `select_strategies()`: Must return strictly typed objects.
+- `get_risk_profile()`: Must return strictly typed objects.
+- `get_enabled_features()`: Must return strictly typed objects.
+- `validate_deployment()`: Must return strictly typed objects.
+- `get_tier_info()`: Must return strictly typed objects.
+- `get_upgrade_path()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

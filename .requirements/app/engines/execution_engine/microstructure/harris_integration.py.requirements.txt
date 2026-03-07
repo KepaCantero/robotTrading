@@ -1,0 +1,75 @@
+# Requirements Document: engines/execution_engine/microstructure/harris_integration.py
+
+## 1. Module Overview
+Harris Trading Integration Module
+
+Integrates all 10 Harris "Trading and Exchanges" rules into:
+- Backtesting
+- Live Trading
+- Paper Trading
+
+This module provides a unified interface for microstructure-aware trading.
+
+Rules Implemented:
+6.1  Order Book Depth Analysis
+6.2  Bid-Ask Bounce Removal
+6.3  Timing Cost Monitoring
+6.4  Almgren-Chriss Market Impact
+6.5  Quote Stuffing Detection
+6.6  Limit Order Optimization
+6.7  Dark Pool Routing
+6.8  Liquidity Validation
+6.9  Tick Size Adjustment
+6.10 PFOF Evaluation
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `pandas`
+- `app.shared.config.centralized_config.get_config`
+- `almgren_chriss_model.MarketImpactEstimate`
+- `almgren_chriss_model.get_almgren_chriss_model`
+- `bid_ask_bounce_removal.get_bid_ask_bounce_remover`
+- `dark_pool_router.DarkPoolDecision`
+- `dark_pool_router.get_dark_pool_router`
+- `microstructure_engine.get_market_microstructure_engine`
+- `order_book_analyzer.OrderBookSnapshot`
+- `order_book_analyzer.get_order_book_analyzer`
+- `tick_size_constraints.get_tick_size_constraints`
+- `math`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PreTradeCheckResult`: Must conform to application domain models.
+- `PostTradeAnalysis`: Must conform to application domain models.
+- `HarrisMicrostructureIntegrator`: Must conform to application domain models.
+### Public Functions
+- `get_harris_integrator()`: Must return strictly typed objects.
+- `analyze_order_book_depth()`: Must return strictly typed objects.
+- `remove_bid_ask_bounce()`: Must return strictly typed objects.
+- `record_signal_time()`: Must return strictly typed objects.
+- `calculate_timing_cost()`: Must return strictly typed objects.
+- `estimate_market_impact()`: Must return strictly typed objects.
+- `detect_quote_stuffing()`: Must return strictly typed objects.
+- `calculate_optimal_limit_price()`: Must return strictly typed objects.
+- `should_use_dark_pool()`: Must return strictly typed objects.
+- `validate_liquidity_assumption()`: Must return strictly typed objects.
+- `evaluate_execution_quality()`: Must return strictly typed objects.
+- `pre_trade_check()`: Must return strictly typed objects.
+- `analyze_execution()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

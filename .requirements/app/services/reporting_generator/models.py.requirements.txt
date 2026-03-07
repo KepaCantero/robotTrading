@@ -1,0 +1,30 @@
+# Requirements Document: services/reporting_generator/models.py
+
+## 1. Module Overview
+T9.1: ReportingGenerator - Models for performance reporting
+
+Generates comprehensive performance reports with visualizations and metrics.
+
+## 2. Dependencies
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `pydantic.BaseModel`
+- `pydantic.Field`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PerformanceMetric`: Must conform to application domain models.
+- `StrategyMetrics`: Must conform to application domain models.
+- `AllocationSnapshot`: Must conform to application domain models.
+- `ReportGenerationRequest`: Must conform to application domain models.
+- `PerformanceReport`: Must conform to application domain models.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,29 @@
+# Requirements Document: domain/entities/post_trade_analysis.py
+
+## 1. Module Overview
+Post-Trade Analysis Entity - Domain Layer
+
+This entity represents a complete post-trade analysis from all systems.
+It's a pure domain entity with no infrastructure dependencies.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PostTradeAnalysis`: Must conform to application domain models.
+### Public Functions
+- `get_cost_summary()`: Must return strictly typed objects.
+- `get_quality_summary()`: Must return strictly typed objects.
+- `get_slo_summary()`: Must return strictly typed objects.
+- `is_high_quality_execution()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

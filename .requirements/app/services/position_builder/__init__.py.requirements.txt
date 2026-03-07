@@ -1,0 +1,22 @@
+# Requirements Document: services/position_builder/__init__.py
+
+## 1. Module Overview
+PHASE 2 T2.2 - Large Position Builder
+
+Intelligent position building for large orders (€50k+) using intraday tranches.
+
+Components:
+- LargePositionBuilder: Main orchestrator for position building
+- IntraDayExecutionScheduler: Schedules optimal execution times
+
+## 2. Dependencies
+- `large_position_builder.LargePositionBuilder`
+- `large_position_builder.get_large_position_builder`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,81 @@
+# Requirements Document: services/execution_narang.py
+
+## 1. Module Overview
+Execution Algorithms - Rishi Narang "Inside the Black Box" Chapter 7
+
+This module implements the Execution algorithms from Narang's framework:
+- Order routing
+- Execution algorithms (VWAP, TWAP, POV, etc.)
+- Market impact minimization
+- Execution quality analysis
+
+Key concepts from "Inside the Black Box":
+- Execution is where theoretical alpha becomes realized P&L
+- Execution algorithms minimize market impact for large orders
+- Choice of algorithm depends on order size, urgency, and market conditions
+- Execution quality should be monitored and continuously improved
+
+From Narang: "Execution is the process of trading the portfolio determined
+by the portfolio construction model. The goal is to minimize the cost of
+trading while achieving the desired portfolio position."
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `abc.ABC`
+- `abc.abstractmethod`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `app.services.transaction_costs.ExecutionAlgorithm`
+- `app.services.transaction_costs.MarketData`
+- `app.services.transaction_costs.OrderSpecification`
+- `app.services.transaction_costs.TransactionCostModel`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `OrderStatus`: Must conform to application domain models.
+- `OrderType`: Must conform to application domain models.
+- `TimeInForce`: Must conform to application domain models.
+- `OrderSide`: Must conform to application domain models.
+- `ChildOrder`: Must conform to application domain models.
+- `ExecutionReport`: Must conform to application domain models.
+- `IntradayVolumeProfile`: Must conform to application domain models.
+- `ExecutionAlgoBase`: Must conform to application domain models.
+- `VWAPExecution`: Must conform to application domain models.
+- `TWAPExecution`: Must conform to application domain models.
+- `POVExecution`: Must conform to application domain models.
+- `MarketExecution`: Must conform to application domain models.
+- `ExecutionEngine`: Must conform to application domain models.
+### Public Functions
+- `get_execution_engine()`: Must return strictly typed objects.
+- `generate_child_orders()`: Must return strictly typed objects.
+- `should_update_child_orders()`: Must return strictly typed objects.
+- `calculate_implementation_shortfall()`: Must return strictly typed objects.
+- `generate_child_orders()`: Must return strictly typed objects.
+- `should_update_child_orders()`: Must return strictly typed objects.
+- `generate_child_orders()`: Must return strictly typed objects.
+- `should_update_child_orders()`: Must return strictly typed objects.
+- `generate_child_orders()`: Must return strictly typed objects.
+- `should_update_child_orders()`: Must return strictly typed objects.
+- `generate_child_orders()`: Must return strictly typed objects.
+- `should_update_child_orders()`: Must return strictly typed objects.
+- `set_cost_model()`: Must return strictly typed objects.
+- `select_execution_algorithm()`: Must return strictly typed objects.
+- `execute_order()`: Must return strictly typed objects.
+- `analyze_execution_quality()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

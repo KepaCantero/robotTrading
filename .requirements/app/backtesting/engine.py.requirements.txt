@@ -1,0 +1,57 @@
+# Requirements Document: backtesting/engine.py
+
+## 1. Module Overview
+Backtesting engine for AlgoTrading system.
+
+This module provides the core backtesting functionality including
+historical data simulation, trade execution, and performance metrics calculation.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `decimal.InvalidOperation`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `uuid.uuid4`
+- `app.backtesting.liquidity_validator.LiquidityValidator`
+- `app.backtesting.models.BacktestConfig`
+- `app.backtesting.models.BacktestResult`
+- `app.backtesting.models.PerformanceMetrics`
+- `app.backtesting.models.Trade`
+- `app.backtesting.models.TradeStatus`
+- `app.backtesting.services.equity_tracker.EquityCurveTracker`
+- `app.backtesting.services.exit_monitor.ExitConditionMonitor`
+- `app.backtesting.services.performance_calculator.PerformanceMetricsCalculator`
+- `app.backtesting.services.pnl_calculator.ProfitAndLossCalculator`
+- `app.backtesting.services.position_manager.PositionManager`
+- `app.backtesting.services.signal_processor.SignalProcessor`
+- `app.backtesting.services.trade_executor.TradeExecutor`
+- `app.backtesting.shared.slippage_utils.apply_slippage`
+- `app.backtesting.shared.trade_utils.build_trade_reason`
+- `app.domain.services.compliance.compliance_engine.ComplianceEngine`
+- `app.domain.services.trading_validators.TradingValidator`
+- `app.domain.models.portfolio.AssetClass`
+- `app.domain.models.portfolio.Portfolio`
+- `app.domain.models.portfolio.Position`
+- `app.domain.models.signal.Signal`
+- `app.services.dynamic_capital_reallocation.DynamicCapitalReallocationEngine`
+- `pandas`
+- `datetime.timedelta`
+- `app.domain.strategies.momentum_modular.learning.learning_updater.LearningEngineUpdater`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BacktestEngine`: Must conform to application domain models.
+### Public Functions
+- `get_price()`: Must return strictly typed objects.
+- `run_backtest()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

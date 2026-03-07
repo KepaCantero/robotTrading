@@ -1,0 +1,80 @@
+# Requirements Document: shared/utils/symbol_mapper.py
+
+## 1. Module Overview
+Symbol Mapper - Centralized Symbol Mapping for Multi-Broker FIFO Tax Compliance
+
+CRITICAL for FIFO tax compliance because different brokers use different symbol formats:
+- Binance: BTCUSDT, ETHUSDT
+- OANDA: BTC_USD, ETH_USD
+- IBKR: IBKR:BTC, IBKR:ETH
+- Degiro: Various formats
+
+This component ensures that:
+1. All brokers normalize to a single internal symbol format
+2. FIFO calculations work across multiple brokers
+3. Modelo 721 tax reporting is accurate
+4. Transaction safety is maintained for audit purposes
+
+Architecture:
+- Centralized mapping database with transaction safety
+- Two-way conversion: internal_symbol <-> broker_symbol
+- Multi-broker support with validation
+- Integration with IBroker interface and FIFO system
+- Comprehensive audit logging for tax compliance
+
+Author: Backend Developer (SRE Integration)
+Date: 2026-01-25
+Status: PRODUCTION - Critical for Tax Compliance
+
+## 2. Dependencies
+- `logging`
+- `re`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `uuid.UUID`
+- `uuid.uuid4`
+- `sqlalchemy.ext.asyncio.AsyncSession`
+- `app.shared.interfaces.broker_base.BrokerType`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MappingStatus`: Must conform to application domain models.
+- `SymbolMappingError`: Must conform to application domain models.
+- `AmbiguousSymbolError`: Must conform to application domain models.
+- `UnknownSymbolError`: Must conform to application domain models.
+- `ValidationError`: Must conform to application domain models.
+- `SymbolMapping`: Must conform to application domain models.
+- `BrokerMappingTables`: Must conform to application domain models.
+- `SymbolValidator`: Must conform to application domain models.
+- `SymbolMapper`: Must conform to application domain models.
+- `SymbolMapperMixin`: Must conform to application domain models.
+### Public Functions
+- `create_symbol_mapper()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `get_default_mapping()`: Must return strictly typed objects.
+- `get_all_broker_symbols()`: Must return strictly typed objects.
+- `validate_internal_symbol()`: Must return strictly typed objects.
+- `validate_broker_symbol()`: Must return strictly typed objects.
+- `extract_internal_from_broker()`: Must return strictly typed objects.
+- `map_internal_to_broker()`: Must return strictly typed objects.
+- `map_broker_to_internal()`: Must return strictly typed objects.
+- `get_all_brokers_for_symbol()`: Must return strictly typed objects.
+- `validate_mapping()`: Must return strictly typed objects.
+- `get_supported_brokers()`: Must return strictly typed objects.
+- `get_statistics()`: Must return strictly typed objects.
+- `clear_cache()`: Must return strictly typed objects.
+- `map_to_broker()`: Must return strictly typed objects.
+- `map_from_broker()`: Must return strictly typed objects.
+- `validate_symbol_mapping()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

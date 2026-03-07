@@ -1,0 +1,26 @@
+# Requirements Document: core/strategy_config/__init__.py
+
+## 1. Module Overview
+Strategy Configuration Module
+
+This package provides modular configuration for individual trading strategies.
+Each strategy has its own config class that can be imported independently.
+
+Usage:
+    from app.core.strategy_config import MomentumModularConfig, DividendStrategyConfig
+
+    momentum_cfg = MomentumModularConfig()
+    print(momentum_cfg.bear_market_strength_threshold)
+
+## 2. Dependencies
+- `momentum_config.MomentumModularConfig`
+- `dividend_config.DividendStrategyConfig`
+- `fx_carry_config.FXCarryTradeStrategyConfig`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,33 @@
+# Requirements Document: services/sector_diversification_validator.py
+
+## 1. Module Overview
+Sector Diversification Validator - TASK-5.6-SECTOR-COUNTRY-DIVERSIFICATION
+
+Validates sector concentration constraints and generates rebalancing recommendations.
+
+## 2. Dependencies
+- `logging`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `app.shared.config.centralized_config.SectorCountryDiversificationConfig`
+- `app.domain.models.portfolio.Portfolio`
+- `app.domain.models.portfolio.Position`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SectorDiversificationValidator`: Must conform to application domain models.
+### Public Functions
+- `validate_sector_limits()`: Must return strictly typed objects.
+- `validate_new_position_sector()`: Must return strictly typed objects.
+- `get_sector_rebalancing_suggestions()`: Must return strictly typed objects.
+- `get_sector_statistics()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

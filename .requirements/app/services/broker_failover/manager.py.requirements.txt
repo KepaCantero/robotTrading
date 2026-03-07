@@ -1,0 +1,50 @@
+# Requirements Document: services/broker_failover/manager.py
+
+## 1. Module Overview
+Broker Failover Manager - Manage multiple broker connections with failover.
+
+Provides:
+- Automatic failover to secondary broker
+- Health checks every minute
+- Position sync across brokers
+- Configurable failover triggers
+- Alert on failover
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `app.shared.utils.timezone_utils.utc_now`
+- `app.services.live_trading.broker_connector.OrderSide`
+- `app.services.live_trading.broker_connector.OrderType`
+- `app.services.live_trading.broker_connector.BrokerPosition`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BrokerHealth`: Must conform to application domain models.
+- `BrokerConfig`: Must conform to application domain models.
+- `BrokerState`: Must conform to application domain models.
+- `BrokerFailoverManager`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+- `get_active_broker()`: Must return strictly typed objects.
+- `get_active_broker_name()`: Must return strictly typed objects.
+- `get_broker_states()`: Must return strictly typed objects.
+- `get_statistics()`: Must return strictly typed objects.
+- `get_health_report()`: Must return strictly typed objects.
+- `enable_broker()`: Must return strictly typed objects.
+- `disable_broker()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

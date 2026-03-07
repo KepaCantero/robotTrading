@@ -1,0 +1,48 @@
+# Requirements Document: core/__init__.py
+
+## 1. Module Overview
+Core module for AlgoTrading MVP.
+
+This module contains core functionality including configuration,
+database connections, and shared utilities.
+
+Phase 0.3: Added timezone utilities for consistent timezone handling
+across all multi-market operations (stocks, forex, crypto).
+
+Compliance Integration (2026-01-28): Added THE ONLY Compliance Engine.
+USE ComplianceEngine FOR EVERYTHING.
+
+## 2. Dependencies
+- `logging`
+- `app.shared.config.config_loader.YAMLConfigLoader`
+- `app.shared.config.config_loader.get_config_loader`
+- `app.shared.config.config_loader.load_strategy_stock_allocator_config`
+- `app.shared.utils.timezone_utils.format_market_time`
+- `app.shared.utils.timezone_utils.format_utc`
+- `app.shared.utils.timezone_utils.get_market_open_close_time`
+- `app.shared.utils.timezone_utils.get_market_timezone`
+- `app.shared.utils.timezone_utils.is_market_open`
+- `app.shared.utils.timezone_utils.to_market_time`
+- `app.shared.utils.timezone_utils.to_utc`
+- `app.shared.utils.timezone_utils.utc_now`
+- `app.shared.config.yaml_config_updater.YAMLConfigUpdater`
+- `app.domain.services.compliance.compliance_engine.ComplianceEngine`
+- `app.domain.services.compliance.compliance_engine.PortfolioOptimization`
+- `app.domain.services.compliance.compliance_engine.PostTradeAnalysis`
+- `app.domain.services.compliance.compliance_engine.PreTradeAnalysis`
+- `app.domain.services.compliance.compliance_engine.SystemAvailability`
+- `app.domain.services.compliance.compliance_engine.get_compliance_engine`
+- `app.domain.services.compliance.compliance_engine.get_execution_plan`
+- `app.domain.services.compliance.compliance_engine.quick_check`
+- `app.domain.services.compliance.compliance_integration.ComplianceIntegrationEngine`
+- `app.domain.services.compliance.compliance_integration.get_compliance_integration_engine`
+- `app.domain.services.compliance.compliance_integration.get_execution_recommendation`
+- `app.domain.services.compliance.compliance_integration.quick_pre_trade_check`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

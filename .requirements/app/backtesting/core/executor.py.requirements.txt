@@ -1,0 +1,56 @@
+# Requirements Document: backtesting/core/executor.py
+
+## 1. Module Overview
+Base executor for backtesting operations.
+
+This module provides abstract base classes for backtest execution,
+following the Template Method pattern for extensible backtesting strategies.
+
+Updated in Phase 2 with complete type hints and improved error handling.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `abc.ABC`
+- `abc.abstractmethod`
+- `concurrent.futures.ThreadPoolExecutor`
+- `concurrent.futures.as_completed`
+- `multiprocessing.Process`
+- `multiprocessing.Queue`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Literal`
+- `typing.Optional`
+- `typing.Type`
+- `typing.Union`
+- `app.backtesting.models.BacktestConfig`
+- `app.backtesting.models.BacktestResult`
+- `app.backtesting.engine.SimpleBacktester`
+- `app.backtesting.engine.SimpleBacktester`
+- `app.backtesting.core.executor._run_backtest_process`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BacktestExecutor`: Must conform to application domain models.
+- `SimpleBacktestExecutor`: Must conform to application domain models.
+- `ParallelBacktestExecutor`: Must conform to application domain models.
+- `ProcessPoolBacktestExecutor`: Must conform to application domain models.
+- `BacktestExecutorFactory`: Must conform to application domain models.
+### Public Functions
+- `execute()`: Must return strictly typed objects.
+- `validate_inputs()`: Must return strictly typed objects.
+- `execution_count()`: Must return strictly typed objects.
+- `execute()`: Must return strictly typed objects.
+- `execute_batch()`: Must return strictly typed objects.
+- `execute()`: Must return strictly typed objects.
+- `execute()`: Must return strictly typed objects.
+- `create()`: Must return strictly typed objects.
+- `register_executor()`: Must return strictly typed objects.
+- `run_single()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

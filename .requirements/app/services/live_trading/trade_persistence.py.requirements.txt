@@ -1,0 +1,55 @@
+# Requirements Document: services/live_trading/trade_persistence.py
+
+## 1. Module Overview
+T18.3: Live Trading Bridge - Trade Persistence Layer
+
+Provides database abstraction for orders, trades, and positions.
+Implements SQLAlchemy ORM models and database operations for persistent storage.
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `uuid.uuid4`
+- `sqlalchemy.JSON`
+- `sqlalchemy.Column`
+- `sqlalchemy.DateTime`
+- `sqlalchemy.ForeignKey`
+- `sqlalchemy.Index`
+- `sqlalchemy.Numeric`
+- `sqlalchemy.String`
+- `sqlalchemy.and_`
+- `sqlalchemy.desc`
+- `sqlalchemy.select`
+- `sqlalchemy.exc.DatabaseError`
+- `sqlalchemy.exc.DataError`
+- `sqlalchemy.exc.IntegrityError`
+- `sqlalchemy.exc.OperationalError`
+- `sqlalchemy.exc.ProgrammingError`
+- `sqlalchemy.orm.relationship`
+- `app.infrastructure.persistence.database.Base`
+- `app.infrastructure.persistence.database.get_session_factory`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `OrderRecord`: Must conform to application domain models.
+- `TradeRecord`: Must conform to application domain models.
+- `PositionHistory`: Must conform to application domain models.
+- `TradeStatistics`: Must conform to application domain models.
+- `TradePersistenceManager`: Must conform to application domain models.
+### Public Functions
+- `get_trade_persistence_manager()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,60 @@
+# Requirements Document: backtesting/robust_engine/survivorship_adjuster.py
+
+## 1. Module Overview
+Survivorship Bias Adjuster for Robust Backtesting Engine.
+
+This module implements survivorship bias correction for accurate long-term
+backtesting over 25+ year periods.
+
+Survivorship bias occurs when backtesting only includes currently traded stocks,
+ignoring those that were delisted, bankrupt, or merged. This significantly
+inflates backtest returns.
+
+Features:
+- Delisted stock database integration
+- Point-in-time universe reconstruction
+- Survivorship-free return calculation
+- Bankruptcy recovery rate adjustments
+- Merger/acquisition handling
+
+Reference:
+    - Ernest Chan, "Algorithmic Trading" - Chapter 3
+    - "The Long and Short of Survivorship Bias" by Clifford Asness
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `collections.defaultdict`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.date`
+- `decimal.Decimal`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `pandas`
+- `models.DelistedStock`
+- `models.DelistingReason`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SurvivorshipFreeResult`: Must conform to application domain models.
+- `SurvivorshipAdjuster`: Must conform to application domain models.
+### Public Functions
+- `load_delisted_database()`: Must return strictly typed objects.
+- `add_delisted_stock()`: Must return strictly typed objects.
+- `get_adjusted_universe()`: Must return strictly typed objects.
+- `calculate_survivorship_free_returns()`: Must return strictly typed objects.
+- `create_point_in_time_universe()`: Must return strictly typed objects.
+- `get_delisting_events()`: Must return strictly typed objects.
+- `calculate_universe_statistics()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

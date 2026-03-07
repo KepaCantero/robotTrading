@@ -1,0 +1,47 @@
+# Requirements Document: infrastructure/persistence/database/models/__init__.py
+
+## 1. Module Overview
+Database models for position monitoring and other features.
+
+This module re-exports all models from the parent models.py module
+to maintain backward compatibility with existing imports.
+
+REFACTORED: Uses TYPE_CHECKING and lazy imports to avoid circular dependencies.
+Instead of dynamic importlib, we use deferred imports in functions.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `typing.TYPE_CHECKING`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.TypeVar`
+- `typing.Protocol`
+- `typing.runtime_checkable`
+- `sqlalchemy.orm.DeclarativeBase`
+- `sys`
+- `pathlib.Path`
+- `models`
+- `importlib.util`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `UserModelProtocol`: Must conform to application domain models.
+- `APIKeyModelProtocol`: Must conform to application domain models.
+- `PortfolioModelProtocol`: Must conform to application domain models.
+- `AssetModelProtocol`: Must conform to application domain models.
+- `PositionModelProtocol`: Must conform to application domain models.
+- `TradeModelProtocol`: Must conform to application domain models.
+- `MarketDataModelProtocol`: Must conform to application domain models.
+- `SignalModelProtocol`: Must conform to application domain models.
+- `BacktestModelProtocol`: Must conform to application domain models.
+- `RiskMetricsModelProtocol`: Must conform to application domain models.
+- `SystemLogModelProtocol`: Must conform to application domain models.
+- `PositionStateModelProtocol`: Must conform to application domain models.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

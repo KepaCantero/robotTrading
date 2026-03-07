@@ -1,0 +1,62 @@
+# Requirements Document: domain/strategies/factor_models.py
+
+## 1. Module Overview
+Factor Models - Fama-French 5-Factor + Momentum Implementation
+
+This module implements the Fama-French factor models:
+1. Fama-French 3-Factor: Market, Size, Value
+2. Fama-French 5-Factor: Market, Size, Value, Profitability, Investment
+3. Carhart 4-Factor: FF3 + Momentum
+4. FF5 + Momentum: Complete 6-factor model
+
+Reference papers:
+- Fama & French (1993): "Common risk factors in the returns on stocks and bonds"
+- Fama & French (2015): "A five-factor asset pricing model"
+- Carhart (1997): "On persistence in mutual fund performance"
+
+SOLID Principles:
+- Single Responsibility: Only factor model implementations
+- Open/Closed: Extensible with new factor models
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `typing.Dict`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `factor_calculator.FactorCalculator`
+- `models.FactorScores`
+- `scipy.stats.f`
+- `scipy.stats.norm`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `FactorModelResult`: Must conform to application domain models.
+- `BaseFactorModel`: Must conform to application domain models.
+- `CAPMModel`: Must conform to application domain models.
+- `FF3FactorModel`: Must conform to application domain models.
+- `FF5FactorModel`: Must conform to application domain models.
+- `Carhart4FactorModel`: Must conform to application domain models.
+- `FF6FactorModel`: Must conform to application domain models.
+- `SimpleOLSResult`: Must conform to application domain models.
+- `FactorModelManager`: Must conform to application domain models.
+### Public Functions
+- `sm_add_constant()`: Must return strictly typed objects.
+- `fit()`: Must return strictly typed objects.
+- `predict()`: Must return strictly typed objects.
+- `fit()`: Must return strictly typed objects.
+- `fit()`: Must return strictly typed objects.
+- `fit()`: Must return strictly typed objects.
+- `fit()`: Must return strictly typed objects.
+- `fit()`: Must return strictly typed objects.
+- `fit_model()`: Must return strictly typed objects.
+- `compare_models()`: Must return strictly typed objects.
+- `get_best_model()`: Must return strictly typed objects.
+- `calculate_factor_exposures_from_scores()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

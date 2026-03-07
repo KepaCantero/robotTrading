@@ -1,0 +1,30 @@
+# Requirements Document: engines/strategy_engines/__init__.py
+
+## 1. Module Overview
+Strategy Engines - Motores de estrategias refactorizados.
+
+Este módulo contiene los engines de estrategias que extienden BaseStrategy
+con funcionalidades adicionales para integración con Learning Engines,
+composición de estrategias, y feature extraction estandarizado.
+
+## 2. Dependencies
+- `arbitrage_engine.ArbitrageStrategyEngine`
+- `base.BaseStrategyEngine`
+- `breakout_engine.BreakoutStrategyEngine`
+- `ensemble.BaseStrategyEnsemble`
+- `ensemble.RegimeBasedSelector`
+- `ensemble.VotingEnsemble`
+- `ensemble.WeightedEnsemble`
+- `mean_reversion_engine.MeanReversionStrategyEngine`
+- `modular_momentum_engine.ModularMomentumStrategyEngine`
+- `momentum_engine.MomentumStrategyEngine`
+- `pairs_engine.PairsTradingStrategyEngine`
+- `trend_following_engine.TrendFollowingStrategyEngine`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

@@ -1,0 +1,38 @@
+# Requirements Document: presentation/dashboard/objectives_dashboard.py
+
+## 1. Module Overview
+🎯 Dashboard de Objetivos de Backtesting
+Enfocado en validación de métricas y cumplimiento de límites
+
+## 2. Dependencies
+- `streamlit`
+- `os`
+- `sys`
+- `pathlib.Path`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `logging`
+- `app.presentation.dashboard.comprehensive_data_loader.ComprehensiveBacktestLoader`
+- `pandas`
+- `plotly.express`
+
+## 3. Core Components (Contracts)
+### Public Functions
+- `evaluate_objective()`: Must return strictly typed objects.
+- `render_objective_card()`: Must return strictly typed objects.
+- `get_metric_value()`: Must return strictly typed objects.
+- `load_results()`: Must return strictly typed objects.
+- `show_objectives_summary()`: Must return strictly typed objects.
+- `show_test_type_results()`: Must return strictly typed objects.
+- `show_best_strategies()`: Must return strictly typed objects.
+- `show_objective_comparison()`: Must return strictly typed objects.
+- `main()`: Must return strictly typed objects.
+- `evaluate_row()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

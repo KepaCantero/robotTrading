@@ -1,0 +1,62 @@
+# Requirements Document: backtesting/labeling/triple_barrier.py
+
+## 1. Module Overview
+Triple Barrier Method for Financial ML Labeling.
+
+Implementation based on Marcos López de Prado's "Advances in Financial Machine Learning", Chapter 3.
+
+The Triple Barrier Method addresses the shortcomings of fixed-time horizon labeling by:
+1. Using horizontal barriers (profit taking and stop loss)
+2. Using a vertical barrier (time limit)
+3. Labeling based on which barrier is hit first
+
+This provides more meaningful labels for ML that account for:
+- Volatility (wider stops for volatile assets)
+- Risk-reward ratios
+- Realistic trading scenarios
+
+## 2. Dependencies
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `pandas`
+- `numba.jit`
+- `matplotlib.pyplot`
+- `arch.arch_model`
+- `sklearn.model_selection.KFold`
+- `warnings`
+- `warnings`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TripleBarrierConfig`: Must conform to application domain models.
+- `TripleBarrierLabeler`: Must conform to application domain models.
+### Public Functions
+- `get_barrier_labels()`: Must return strictly typed objects.
+- `get_barrier_labels_with_timing()`: Must return strictly typed objects.
+- `calculate_dynamic_barriers()`: Must return strictly typed objects.
+- `get_vertical_barriers()`: Must return strictly typed objects.
+- `plot_triple_barrier()`: Must return strictly typed objects.
+- `meta_labeling()`: Must return strictly typed objects.
+- `calculate_sample_weights()`: Must return strictly typed objects.
+- `calculate_sample_weights_uniqueness()`: Must return strictly typed objects.
+- `calculate_sample_weights_td()`: Must return strictly typed objects.
+- `purged_cv_split()`: Must return strictly typed objects.
+- `triple_barrier_method()`: Must return strictly typed objects.
+- `fit()`: Must return strictly typed objects.
+- `transform()`: Must return strictly typed objects.
+- `fit_transform()`: Must return strictly typed objects.
+- `get_label_distribution()`: Must return strictly typed objects.
+- `get_average_holding_period()`: Must return strictly typed objects.
+- `get_bin_labels()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

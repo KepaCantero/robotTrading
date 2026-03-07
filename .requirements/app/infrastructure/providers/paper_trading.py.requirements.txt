@@ -1,0 +1,36 @@
+# Requirements Document: infrastructure/providers/paper_trading.py
+
+## 1. Module Overview
+Paper Trading Portfolio Provider
+
+This module implements a paper trading portfolio provider for testing
+and simulation without real broker connections.
+
+## 2. Dependencies
+- `random`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `app.shared.config.centralized_config.get_config`
+- `app.domain.models.portfolio.AssetClass`
+- `app.domain.models.portfolio.AssetUniverse`
+- `app.domain.models.portfolio.MarketRegime`
+- `app.domain.models.portfolio.MarketRegimeData`
+- `app.domain.models.portfolio.Portfolio`
+- `app.domain.models.portfolio.Position`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PaperTradingPortfolioProvider`: Must conform to application domain models.
+### Public Functions
+- `get_supported_symbols()`: Must return strictly typed objects.
+- `is_symbol_supported()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

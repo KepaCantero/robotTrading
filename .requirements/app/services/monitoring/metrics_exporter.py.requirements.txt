@@ -1,0 +1,40 @@
+# Requirements Document: services/monitoring/metrics_exporter.py
+
+## 1. Module Overview
+FASE 2: MetricsExporter - Export metrics to Prometheus and external systems
+
+Handles metrics export in multiple formats (Prometheus, JSON, CSV) and
+supports real-time streaming to monitoring backends.
+
+## 2. Dependencies
+- `asyncio`
+- `json`
+- `logging`
+- `datetime.datetime`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `aiohttp`
+- `requests.exceptions.HTTPError`
+- `requests.exceptions.RequestException`
+- `sqlalchemy.exc.DatabaseError`
+- `sqlalchemy.exc.DataError`
+- `sqlalchemy.exc.IntegrityError`
+- `sqlalchemy.exc.OperationalError`
+- `sqlalchemy.exc.ProgrammingError`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MetricsExporter`: Must conform to application domain models.
+### Public Functions
+- `get_metrics_exporter()`: Must return strictly typed objects.
+- `export_json()`: Must return strictly typed objects.
+- `export_csv()`: Must return strictly typed objects.
+- `export_prometheus_text()`: Must return strictly typed objects.
+- `get_export_history()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

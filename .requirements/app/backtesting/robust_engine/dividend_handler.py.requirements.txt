@@ -1,0 +1,61 @@
+# Requirements Document: backtesting/robust_engine/dividend_handler.py
+
+## 1. Module Overview
+Dividend Handler for Robust Backtesting Engine.
+
+This module handles dividend processing and Dividend Reinvestment Plans (DRIP)
+for accurate long-term backtesting.
+
+Proper dividend handling is critical for accurate total return calculations,
+especially over 25+ year periods where reinvested dividends can significantly
+impact returns due to compounding.
+
+Features:
+- Cash dividend tracking
+- Dividend reinvestment (DRIP)
+- Yield on cost calculation
+- Tax-aware dividend handling
+- Fractional share support
+
+Reference:
+    - "The Future for Investors" by Jeremy Siegel - Chapter on Dividends
+    - "The Dividend Investor" by Don Peters
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `collections.defaultdict`
+- `datetime.date`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `pandas`
+- `models.DividendAction`
+- `models.DividendTracker`
+- `models.DripConfig`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DividendHandler`: Must conform to application domain models.
+### Public Functions
+- `handle_dividend()`: Must return strictly typed objects.
+- `reinvest_dividend()`: Must return strictly typed objects.
+- `get_reinvestment_shares()`: Must return strictly typed objects.
+- `calculate_yield_on_cost()`: Must return strictly typed objects.
+- `calculate_current_yield()`: Must return strictly typed objects.
+- `get_total_dividends_received()`: Must return strictly typed objects.
+- `get_total_dividends_reinvested()`: Must return strictly typed objects.
+- `get_dividend_history()`: Must return strictly typed objects.
+- `calculate_portfolio_dividend_yield()`: Must return strictly typed objects.
+- `get_annual_dividend_income()`: Must return strictly typed objects.
+- `get_dividend_statistics()`: Must return strictly typed objects.
+- `process_dividend_stream()`: Must return strictly typed objects.
+- `reset()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

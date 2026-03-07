@@ -1,0 +1,44 @@
+# Requirements Document: engines/risk_engine/stress_testers/comprehensive_scenarios.py
+
+## 1. Module Overview
+Comprehensive Stress Testing Scenarios - Hull Chapter 20
+
+Implements advanced stress testing scenarios beyond basic historical scenarios.
+
+Scenarios include:
+1. Market crash scenarios (Black Monday, 2008, COVID, etc.)
+2. Volatility spike scenarios (VIX explosion)
+3. Correlation breakdown scenarios
+4. Liquidity crisis scenarios
+5. Sector rotation scenarios
+6. Interest rate shock scenarios
+7. Currency crisis scenarios
+8. Commodity shock scenarios
+9. Geopolitical event scenarios
+10. Combination stress scenarios
+
+Reference: Hull, Options, Futures, and Other Derivatives, Chapter 20
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `app.domain.models.portfolio.Portfolio`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ComprehensiveStressScenarios`: Must conform to application domain models.
+### Public Functions
+- `run_comprehensive_stress_tests()`: Must return strictly typed objects.
+- `get_scenario_description()`: Must return strictly typed objects.
+- `list_available_scenarios()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,76 @@
+# Requirements Document: shared/config/strategy_config_loader.py
+
+## 1. Module Overview
+Strategy Configuration Loader
+Centralized loader for accessing strategy, risk, and capital tier configuration.
+
+This module provides:
+- Loading of indicator thresholds (RSI, MA, ATR, etc.)
+- Loading of risk management parameters (stop loss, take profit, position sizing)
+- Loading of capital tier configurations
+- Type-safe access to configuration values
+- Fallback values for missing configuration
+- Convenience methods for common parameter access
+
+Usage:
+    from app.shared.config.strategy_config_loader import get_strategy_config
+
+    config = get_strategy_config()
+
+    # Get RSI thresholds
+    rsi_period = config.get_rsi_period()
+    rsi_oversold = config.get_rsi_threshold('extreme_low')
+    rsi_overbought = config.get_rsi_threshold('extreme_high')
+
+    # Get position sizing
+    max_position = config.get_max_position_size(tier='medium')
+    default_position = config.get_default_position_size(tier='medium')
+
+    # Get risk parameters
+    stop_loss = config.get_stop_loss(strategy='momentum')
+    take_profit = config.get_take_profit(strategy='momentum')
+
+## 2. Dependencies
+- `logging`
+- `decimal.Decimal`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `typing.Union`
+- `yaml`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StrategyConfigLoader`: Must conform to application domain models.
+### Public Functions
+- `get_strategy_config()`: Must return strictly typed objects.
+- `reload_strategy_config()`: Must return strictly typed objects.
+- `get_indicator_config()`: Must return strictly typed objects.
+- `get_rsi_period()`: Must return strictly typed objects.
+- `get_rsi_threshold()`: Must return strictly typed objects.
+- `get_rsi_adaptive_threshold()`: Must return strictly typed objects.
+- `get_ma_period()`: Must return strictly typed objects.
+- `get_atr_period()`: Must return strictly typed objects.
+- `get_atr_multiplier()`: Must return strictly typed objects.
+- `get_risk_config()`: Must return strictly typed objects.
+- `get_position_sizing()`: Must return strictly typed objects.
+- `get_max_position_size()`: Must return strictly typed objects.
+- `get_stop_loss()`: Must return strictly typed objects.
+- `get_take_profit()`: Must return strictly typed objects.
+- `get_risk_reward_ratio()`: Must return strictly typed objects.
+- `get_max_leverage()`: Must return strictly typed objects.
+- `get_tier_config()`: Must return strictly typed objects.
+- `get_tier_thresholds()`: Must return strictly typed objects.
+- `get_tier_from_capital()`: Must return strictly typed objects.
+- `get_tier_config_value()`: Must return strictly typed objects.
+- `get_max_positions()`: Must return strictly typed objects.
+- `get_enabled_strategies()`: Must return strictly typed objects.
+- `reload_config()`: Must return strictly typed objects.
+- `get_all_config()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

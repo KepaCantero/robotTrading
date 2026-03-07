@@ -1,0 +1,41 @@
+# Requirements Document: backtesting/services/metrics_service.py
+
+## 1. Module Overview
+Metrics Calculation Service
+
+Handles calculation of improvements, comparisons, and evaluations
+for baseline vs optimized strategy results.
+
+Responsibilities:
+- Calculate improvement metrics (sharpe, return, drawdown, win_rate)
+- Generate baseline vs optimization comparisons
+- Calculate parameter importance from optimization history
+- Evaluate readiness for paper trading
+- Generate recommendations
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `pandas`
+- `app.backtesting.services.models.BaselineOptimizationComparison`
+- `app.backtesting.services.models.OptimizedStrategy`
+- `app.domain.models.input_profile.InputProfile`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MetricsCalculationService`: Must conform to application domain models.
+### Public Functions
+- `calculate_improvements()`: Must return strictly typed objects.
+- `generate_comparison()`: Must return strictly typed objects.
+- `calculate_parameter_importance()`: Must return strictly typed objects.
+- `evaluate_readiness()`: Must return strictly typed objects.
+- `generate_recommendation()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

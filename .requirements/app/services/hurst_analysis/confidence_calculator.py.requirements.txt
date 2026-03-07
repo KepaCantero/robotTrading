@@ -1,0 +1,27 @@
+# Requirements Document: services/hurst_analysis/confidence_calculator.py
+
+## 1. Module Overview
+Confidence calculator for Hurst exponent estimates.
+
+This module implements the Single Responsibility Principle by focusing
+solely on calculating confidence levels for Hurst exponent estimates.
+
+In production, this should use bootstrapping for proper confidence intervals
+following López de Prado's methods (Rule 3). The current implementation
+uses a simplified approach based on sample size and distance from random walk.
+
+## 2. Dependencies
+- `logging`
+- `numpy`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ConfidenceCalculator`: Must conform to application domain models.
+### Public Functions
+- `calculate_confidence()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

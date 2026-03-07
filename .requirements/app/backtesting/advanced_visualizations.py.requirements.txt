@@ -1,0 +1,50 @@
+# Requirements Document: backtesting/advanced_visualizations.py
+
+## 1. Module Overview
+Advanced Visualizations - Comprehensive visualization suite for backtest analysis.
+
+Provides:
+- Correlation networks (networkx)
+- Parallel coordinates plots (plotly)
+- 3D scatter plots
+- Underwater drawdown analysis
+- Rolling metrics visualization
+- Regime performance analysis
+- Seasonality heatmaps
+
+## 2. Dependencies
+- `logging`
+- `pathlib.Path`
+- `typing.TYPE_CHECKING`
+- `typing.Dict`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `pandas`
+- `matplotlib.figure.Figure`
+- `networkx`
+- `matplotlib.pyplot`
+- `seaborn`
+- `matplotlib.dates.DateFormatter`
+- `plotly.graph_objects`
+- `plotly.subplots.make_subplots`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `AdvancedVisualizer`: Must conform to application domain models.
+### Public Functions
+- `plot_correlation_network()`: Must return strictly typed objects.
+- `plot_parallel_coordinates()`: Must return strictly typed objects.
+- `plot_3d_scatter()`: Must return strictly typed objects.
+- `plot_underwater_drawdown()`: Must return strictly typed objects.
+- `plot_rolling_metrics()`: Must return strictly typed objects.
+- `plot_regime_performance()`: Must return strictly typed objects.
+- `plot_seasonality_heatmap()`: Must return strictly typed objects.
+- `generate_interactive_dashboard()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

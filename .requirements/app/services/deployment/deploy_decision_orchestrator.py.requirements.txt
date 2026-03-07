@@ -1,0 +1,27 @@
+# Requirements Document: services/deployment/deploy_decision_orchestrator.py
+
+## 1. Module Overview
+T10.1: DeployDecisionOrchestrator - Master deployment decision orchestrator
+
+Synthesizes all components (validation, backtest, recommendation, portfolio)
+into a final APPROVED|CONDITIONAL|REJECTED deployment decision.
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `dataclasses.dataclass`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `datetime.datetime`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DeploymentDecision`: Must conform to application domain models.
+- `DeployDecisionOrchestrator`: Must conform to application domain models.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

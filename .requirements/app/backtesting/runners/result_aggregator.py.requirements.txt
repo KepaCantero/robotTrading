@@ -1,0 +1,41 @@
+# Requirements Document: backtesting/runners/result_aggregator.py
+
+## 1. Module Overview
+Result Aggregator Module
+
+Extracted from comprehensive_backtest_runner.py for SRP compliance.
+
+Provides result aggregation and persistence functionality for backtesting:
+- Saving results to CSV and JSON
+- Aggregating statistics across multiple backtests
+- Weight persistence for learning engines
+
+## 2. Dependencies
+- `json`
+- `logging`
+- `datetime.datetime`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `pandas`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ResultAggregator`: Must conform to application domain models.
+### Public Functions
+- `save_results()`: Must return strictly typed objects.
+- `aggregate_results()`: Must return strictly typed objects.
+- `save_results()`: Must return strictly typed objects.
+- `aggregate_statistics()`: Must return strictly typed objects.
+- `extract_best_results()`: Must return strictly typed objects.
+- `generate_summary_report()`: Must return strictly typed objects.
+- `get_metric()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

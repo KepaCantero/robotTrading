@@ -1,0 +1,65 @@
+# Requirements Document: domain/strategies/learning/__init__.py
+
+## 1. Module Overview
+LearningEngine - Sistema modular de aprendizaje híbrido para estrategias de trading.
+
+## 2. Dependencies
+- `base_learning_engine.BaseLearningEngine`
+- `subprocess_engine_wrapper.SubprocessLearningEngineWrapper`
+- `drift_detector.AdvancedOverfittingDetector`
+- `drift_detector.ADWINDetector`
+- `drift_detector.AutoRetrainingTrigger`
+- `drift_detector.ComprehensiveDriftDetector`
+- `drift_detector.ComprehensiveDriftReport`
+- `drift_detector.ConceptDriftDetector`
+- `drift_detector.DriftResult`
+- `drift_detector.DriftSeverity`
+- `drift_detector.FeatureDriftMonitor`
+- `drift_detector.FeatureDriftReport`
+- `drift_detector.OverfittingDetector`
+- `drift_detector.OverfittingMetrics`
+- `drift_detector.OverfittingReport`
+- `drift_detector.OverfittingResult`
+- `drift_detector.OverfittingSeverity`
+- `drift_detector.PSIDetector`
+- `drift_detector.get_default_drift_config`
+- `drift_detector.get_default_overfitting_config`
+- `drift_detector.load_drift_config`
+- `drift_detector.load_overfitting_config`
+- `feature_importance.SHAP_AVAILABLE`
+- `feature_importance.SKLEARN_FEATURE_SELECTION_AVAILABLE`
+- `feature_importance.AttentionWeightsAnalyzer`
+- `feature_importance.BuiltInImportanceAnalyzer`
+- `feature_importance.ComprehensiveFeatureAnalyzer`
+- `feature_importance.ComprehensiveImportanceReport`
+- `feature_importance.CorrelationAnalyzer`
+- `feature_importance.FeatureImportanceAnalyzer`
+- `feature_importance.FeatureImportanceResult`
+- `feature_importance.FeatureSelector`
+- `feature_importance.FeatureStabilityTracker`
+- `feature_importance.ImportanceCategory`
+- `feature_importance.PermutationImportanceAnalyzer`
+- `feature_importance.SHAPAnalyzer`
+- `feature_importance.get_default_feature_importance_config`
+- `feature_importance.load_feature_importance_config`
+- `hyperparameter_tuner.EarlyStoppingAdaptive`
+- `hyperparameter_tuner.HyperparameterTuner`
+- `hyperparameter_tuner.LearningEngineTuner`
+- `hyperparameter_tuner.ResourceAwareTuner`
+- `multitask_learning.MultiObjectiveOptimizer`
+- `multitask_learning.MultiTaskLearningEngine`
+- `multitask_learning.MultiTaskModel`
+- `multitask_learning.SharedBackbone`
+- `multitask_learning.TaskHead`
+- `transfer_learning.FineTuner`
+- `transfer_learning.KnowledgeDistiller`
+- `transfer_learning.ModelRegistry`
+- `transfer_learning.TransferLearningManager`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

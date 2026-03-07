@@ -1,0 +1,47 @@
+# Requirements Document: services/multi_strategy_allocation.py
+
+## 1. Module Overview
+TASK-PA-1, PA-2, PORT-SEL-1: Multi-Strategy Portfolio Allocation System.
+
+Implements dynamic capital allocation across multiple strategies:
+- Momentum (50%)
+- Mean Reversion (25%)
+- Pairs Trading (25%)
+
+With dynamic rebalancing based on rolling 30-day performance.
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StrategyCapitalAllocation`: Must conform to application domain models.
+- `MultiStrategyAllocationManager`: Must conform to application domain models.
+- `DynamicPortfolioSelector`: Must conform to application domain models.
+### Public Functions
+- `get_multi_strategy_manager()`: Must return strictly typed objects.
+- `get_dynamic_selector()`: Must return strictly typed objects.
+- `allocate()`: Must return strictly typed objects.
+- `update_weight()`: Must return strictly typed objects.
+- `add_performance_data()`: Must return strictly typed objects.
+- `calculate_rolling_returns()`: Must return strictly typed objects.
+- `allocate_capital()`: Must return strictly typed objects.
+- `get_allocation_for_strategy()`: Must return strictly typed objects.
+- `update_total_capital()`: Must return strictly typed objects.
+- `update_strategy_performance()`: Must return strictly typed objects.
+- `rebalance_allocations()`: Must return strictly typed objects.
+- `should_rebalance()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

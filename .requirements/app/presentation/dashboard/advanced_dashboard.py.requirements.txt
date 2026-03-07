@@ -1,0 +1,60 @@
+# Requirements Document: presentation/dashboard/advanced_dashboard.py
+
+## 1. Module Overview
+Advanced Visual Dashboard for AlgoTrading Backtesting
+Dashboard mejorado con diseño atractivo, indicadores colorizados y configuración visual
+
+NOTE: This file has high cyclomatic complexity due to Streamlit UI elements.
+This is expected and acceptable for dashboard code.
+
+## 2. Dependencies
+- `streamlit`
+- `os`
+- `sys`
+- `pathlib.Path`
+- `logging`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `typing.Tuple`
+- `app.presentation.dashboard.comprehensive_data_loader.ComprehensiveBacktestLoader`
+- `yaml`
+- `plotly.express`
+- `plotly.graph_objects`
+- `plotly.subplots.make_subplots`
+- `pandas`
+- `app.infrastructure.logging.logging_config.setup_file_logging`
+- `traceback`
+- `app.backtesting.successful_configs.SuccessfulConfigManager`
+- `ast`
+- `yaml`
+- `ast`
+- `ast`
+- `ast`
+- `ast`
+- `app.backtesting.comprehensive_backtest_runner.ComprehensiveBacktestRunner`
+- `ast`
+- `ast`
+- `ast`
+
+## 3. Core Components (Contracts)
+### Public Functions
+- `load_thresholds()`: Must return strictly typed objects.
+- `get_metric_color()`: Must return strictly typed objects.
+- `render_metric_card()`: Must return strictly typed objects.
+- `get_integration_test_objectives()`: Must return strictly typed objects.
+- `evaluate_objective()`: Must return strictly typed objects.
+- `evaluate_all_objectives()`: Must return strictly typed objects.
+- `extract_strategy_config()`: Must return strictly typed objects.
+- `main()`: Must return strictly typed objects.
+- `check_valid_before_after()`: Must return strictly typed objects.
+- `has_valid_metrics()`: Must return strictly typed objects.
+- `improvement_color()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

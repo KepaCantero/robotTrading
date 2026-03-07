@@ -1,0 +1,67 @@
+# Requirements Document: domain/market_analysis/microstructure/liquidity.py
+
+## 1. Module Overview
+Market Depth and Liquidity Analysis Module
+
+This module implements market depth measurement and liquidity estimation concepts
+from Maureen O'Hara's "Market Microstructure Theory" (Chapter 5-6).
+
+Key Concepts:
+- Market depth measurement and interpretation
+- Liquidity estimation across different dimensions
+- Spread component analysis (order processing, inventory, adverse selection)
+- Liquidity risk assessment
+
+References:
+- O'Hara, M. (1995) "Market Microstructure Theory", Chapters 5-6
+- Stoll, H.R. (2000) "Friction"
+- Kyle, A.S. (1985) "Continuous Auctions and Insider Trading"
+
+## 2. Dependencies
+- `__future__.annotations`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+- `typing.Tuple`
+- `numpy`
+- `pandas`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `LiquidityDimension`: Must conform to application domain models.
+- `SpreadComponent`: Must conform to application domain models.
+- `LiquidityMetrics`: Must conform to application domain models.
+- `SpreadDecomposition`: Must conform to application domain models.
+- `DepthProfile`: Must conform to application domain models.
+- `LiquidityRisk`: Must conform to application domain models.
+- `LiquidityAnalyzer`: Must conform to application domain models.
+- `LiquidityMonitor`: Must conform to application domain models.
+### Public Functions
+- `get_liquidity_analyzer()`: Must return strictly typed objects.
+- `get_liquidity_monitor()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `measure_market_depth()`: Must return strictly typed objects.
+- `calculate_liquidity_score()`: Must return strictly typed objects.
+- `classify_liquidity_regime()`: Must return strictly typed objects.
+- `decompose_spread()`: Must return strictly typed objects.
+- `calculate_effective_spread()`: Must return strictly typed objects.
+- `measure_market_resilience()`: Must return strictly typed objects.
+- `assess_liquidity_risk()`: Must return strictly typed objects.
+- `calculate_liquidity_metrics()`: Must return strictly typed objects.
+- `get_liquidity_trend()`: Must return strictly typed objects.
+- `generate_liquidity_report()`: Must return strictly typed objects.
+- `check_liquidity_alert()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

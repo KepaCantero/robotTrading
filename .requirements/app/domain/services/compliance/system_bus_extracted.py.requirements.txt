@@ -1,0 +1,54 @@
+# Requirements Document: domain/services/compliance/system_bus_extracted.py
+
+## 1. Module Overview
+System Bus Orchestration
+Extracted from compliance_engine.py for SRP compliance.
+TASK-24: SRP Refactoring
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `typing.Optional`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_strategy_stock_allocator_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `statsmodels.tsa.stattools.adfuller`
+- `scipy.stats`
+- `decimal.InvalidOperation`
+- `decimal.DivisionByZero`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_strategy_stock_allocator_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_strategy_stock_allocator_config`
+- `app.shared.config.centralized_config.get_strategy_stock_allocator_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `app.shared.config.centralized_config.get_compliance_config`
+- `math`
+- `app.shared.config.centralized_config.get_compliance_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SystemBus`: Must conform to application domain models.
+### Public Functions
+- `execute_pre_trade_analysis()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

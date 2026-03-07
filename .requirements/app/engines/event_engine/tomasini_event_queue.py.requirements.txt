@@ -1,0 +1,52 @@
+# Requirements Document: engines/event_engine/tomasini_event_queue.py
+
+## 1. Module Overview
+Tomasini Event Queue - Event-driven order processing following "Trading Systems" methodology.
+
+Implements Tomasini's event queue pattern from "Trading Systems":
+- Event queue for sequential processing
+- Event-driven architecture for order lifecycle
+- Priority queue for time-sensitive events
+- Thread-safe async processing
+
+## 2. Dependencies
+- `__future__.annotations`
+- `numpy`
+- `asyncio`
+- `logging`
+- `uuid`
+- `collections.deque`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `enum.Enum`
+- `enum.IntEnum`
+- `typing.Any`
+- `typing.Awaitable`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `app.domain.entities.order.Order`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `EventPriority`: Must conform to application domain models.
+- `EventType`: Must conform to application domain models.
+- `Event`: Must conform to application domain models.
+- `EventHandler`: Must conform to application domain models.
+- `TomasiniEventQueue`: Must conform to application domain models.
+- `OrderEventHandler`: Must conform to application domain models.
+- `OrderSubmitHandler`: Must conform to application domain models.
+- `OrderFillHandler`: Must conform to application domain models.
+### Public Functions
+- `register_handler()`: Must return strictly typed objects.
+- `get_stats()`: Must return strictly typed objects.
+- `get_history()`: Must return strictly typed objects.
+- `is_processing()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

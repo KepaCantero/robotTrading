@@ -1,0 +1,39 @@
+# Requirements Document: backtesting/liquidity_validator.py
+
+## 1. Module Overview
+Liquidity Validation for Realistic Order Execution
+
+Validates that orders can be filled based on actual market volume and
+implements realistic partial fill scenarios.
+
+This module addresses HIGH PRIORITY #1 from the audit report:
+- Volume-based rejection (>10% of daily volume)
+- Warning for large orders (>5% of daily volume)
+- Partial fills for orders that exceed available liquidity
+- Market impact calculation
+
+SINGLE SOURCE OF TRUTH: All values from CentralizedConfig.
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `typing.Optional`
+- `typing.Tuple`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `FillResult`: Must conform to application domain models.
+- `LiquidityValidator`: Must conform to application domain models.
+### Public Functions
+- `validate_order()`: Must return strictly typed objects.
+- `simulate_fill()`: Must return strictly typed objects.
+- `calculate_market_impact()`: Must return strictly typed objects.
+- `get_liquidity_metrics()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

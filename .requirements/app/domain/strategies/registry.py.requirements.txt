@@ -1,0 +1,39 @@
+# Requirements Document: domain/strategies/registry.py
+
+## 1. Module Overview
+StrategyRegistry - Registro centralizado de estrategias disponibles.
+
+Gestiona el ciclo de vida de las estrategias, incluyendo carga, descarga,
+activación y hot-swapping de estrategias.
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `base.BaseStrategy`
+- `factory.StrategyFactory`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `StrategyRegistry`: Must conform to application domain models.
+### Public Functions
+- `load_strategy()`: Must return strictly typed objects.
+- `unload_strategy()`: Must return strictly typed objects.
+- `get_strategy()`: Must return strictly typed objects.
+- `set_active_strategy()`: Must return strictly typed objects.
+- `get_active_strategy()`: Must return strictly typed objects.
+- `list_loaded_strategies()`: Must return strictly typed objects.
+- `list_available_strategies()`: Must return strictly typed objects.
+- `get_strategy_status()`: Must return strictly typed objects.
+- `get_all_strategies_status()`: Must return strictly typed objects.
+- `reload_strategy()`: Must return strictly typed objects.
+- `clear_all_strategies()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

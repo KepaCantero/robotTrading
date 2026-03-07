@@ -1,0 +1,46 @@
+# Requirements Document: domain/trading/market_making/avellaneda_stoikov/inventory_manager.py
+
+## 1. Module Overview
+Inventory Manager for Avellaneda-Stoikov Market Making.
+
+This module manages inventory risk and provides controls for position management
+in market making strategies.
+
+Key Features:
+- Calculate inventory risk metrics
+- Determine when to reduce positions
+- Calculate dynamic target inventory
+- Adjust quotes to manage inventory
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `math`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Optional`
+- `app.shared.config.centralized_config.get_config`
+- `app.domain.trading.market_making.avellaneda_stoikov.as_model.calculate_inventory_risk`
+- `app.domain.trading.market_making.avellaneda_stoikov.models.ASConfig`
+- `app.domain.trading.market_making.avellaneda_stoikov.models.ASQuote`
+- `app.domain.trading.market_making.avellaneda_stoikov.models.InventoryConfig`
+- `app.domain.trading.market_making.avellaneda_stoikov.models.InventoryState`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `InventoryThresholds`: Must conform to application domain models.
+- `InventoryManager`: Must conform to application domain models.
+### Public Functions
+- `get_inventory_state()`: Must return strictly typed objects.
+- `should_reduce_inventory()`: Must return strictly typed objects.
+- `calculate_target_inventory()`: Must return strictly typed objects.
+- `adjust_quotes_for_inventory()`: Must return strictly typed objects.
+- `get_inventory_action()`: Must return strictly typed objects.
+- `calculate_position_size()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

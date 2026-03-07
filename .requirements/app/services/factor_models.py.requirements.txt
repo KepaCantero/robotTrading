@@ -1,0 +1,60 @@
+# Requirements Document: services/factor_models.py
+
+## 1. Module Overview
+Ernest Chan - Quantitative Trading: Factor Models Implementation
+
+This module implements factor-based trading strategies as described in Ernest Chan's
+"Quantitative Trading: How to Build Your Own Algorithmic Trading Business".
+
+Key Concepts:
+- Fama-French multi-factor models (Fama-French 3-factor, 5-factor)
+- APT (Arbitrage Pricing Theory) implementation
+- Factor exposure calculation and analysis
+- Statistical arbitrage using factor models
+- Risk management using factor-neutral portfolios
+
+Author: Algorithmic Trading System
+Date: 2026-01-28
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `typing.Dict`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `pandas`
+- `scipy.stats`
+- `sklearn.decomposition.PCA`
+- `sklearn.decomposition.FastICA`
+- `scipy.optimize.minimize`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `FactorReturns`: Must conform to application domain models.
+- `FactorLoadings`: Must conform to application domain models.
+- `FactorModelResult`: Must conform to application domain models.
+- `FamaFrenchFactorModel`: Must conform to application domain models.
+- `APTModel`: Must conform to application domain models.
+- `StatisticalArbitrage`: Must conform to application domain models.
+### Public Functions
+- `calculate_factor_exposure()`: Must return strictly typed objects.
+- `create_factor_portfolio()`: Must return strictly typed objects.
+- `get_factor_model()`: Must return strictly typed objects.
+- `fit()`: Must return strictly typed objects.
+- `predict()`: Must return strictly typed objects.
+- `fit()`: Must return strictly typed objects.
+- `get_factor_loadings()`: Must return strictly typed objects.
+- `get_factor_returns()`: Must return strictly typed objects.
+- `get_explained_variance_ratio()`: Must return strictly typed objects.
+- `predict_portfolio_risk()`: Must return strictly typed objects.
+- `calculate_residuals()`: Must return strictly typed objects.
+- `generate_signals()`: Must return strictly typed objects.
+- `construct_factor_neutral_portfolio()`: Must return strictly typed objects.
+- `objective()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

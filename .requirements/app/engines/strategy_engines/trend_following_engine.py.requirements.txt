@@ -1,0 +1,48 @@
+# Requirements Document: engines/strategy_engines/trend_following_engine.py
+
+## 1. Module Overview
+TrendFollowingStrategyEngine - Engine de estrategia de seguimiento de tendencia.
+
+Detecta y sigue tendencias usando ADX (fuerza de tendencia) y MACD (dirección de tendencia).
+
+Características principales:
+- Usa ADX para detectar fuerza de tendencia (>25 = tendencia fuerte).
+- Usa MACD para confirmar dirección (cruce de líneas, histograma positivo/negativo).
+- Requiere confirmación por volumen (ratio vs volumen medio reciente).
+- Integra métricas básicas (confidence, liquidity_score, priority_score).
+- Extiende BaseStrategyEngine para futura integración con Learning Engines.
+
+## 2. Dependencies
+- `logging`
+- `collections.deque`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Sequence`
+- `app.shared.config.centralized_config.get_config`
+- `app.domain.models.market_data.Quote`
+- `app.domain.models.portfolio.Portfolio`
+- `app.domain.models.signal.Signal`
+- `app.domain.models.signal.SignalSource`
+- `app.domain.models.signal.SignalStrength`
+- `app.domain.models.signal.SignalType`
+- `app.domain.services.analysis.momentum.TechnicalIndicatorCalculator`
+- `app.domain.services.signals.scoring.get_signal_scoring_engine`
+- `base.BaseStrategyEngine`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TrendFollowingStrategyEngine`: Must conform to application domain models.
+### Public Functions
+- `get_strategy_type()`: Must return strictly typed objects.
+- `extract_features()`: Must return strictly typed objects.
+- `get_required_parameters()`: Must return strictly typed objects.
+- `risk_check()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

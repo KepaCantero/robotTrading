@@ -1,0 +1,47 @@
+# Requirements Document: domain/analysis/fundamental_law/ic_calculator.py
+
+## 1. Module Overview
+Information Coefficient Calculator
+
+This module implements the calculation and analysis of the Information
+Coefficient (IC), which measures the correlation between forecasted
+returns and actual realized returns.
+
+The IC is a key measure of forecasting skill:
+- IC > 0.05: Excellent skill
+- IC 0.03-0.05: Good skill
+- IC 0.01-0.03: Fair skill
+- IC < 0.01: Poor skill
+
+Reference:
+    Grinold, R., & Kahn, R. (2000). "Active Portfolio Management"
+    Chapter 9: The Information Ratio
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `decimal.Decimal`
+- `typing.TYPE_CHECKING`
+- `numpy`
+- `pandas`
+- `scipy.stats`
+- `app.shared.utils.decimal_utils.to_decimal`
+- `app.domain.analysis.fundamental_law.models.ICMetrics`
+- `app.domain.analysis.fundamental_law.models.ICMetrics`
+- `app.domain.analysis.fundamental_law.models.ICMetrics`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ICCalculator`: Must conform to application domain models.
+### Public Functions
+- `calculate_ic()`: Must return strictly typed objects.
+- `calculate_ic_decay()`: Must return strictly typed objects.
+- `test_significance()`: Must return strictly typed objects.
+- `calculate_confidence_interval()`: Must return strictly typed objects.
+- `calculate_rolling_ic()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

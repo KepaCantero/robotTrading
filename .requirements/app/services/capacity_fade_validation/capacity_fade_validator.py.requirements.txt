@@ -1,0 +1,34 @@
+# Requirements Document: services/capacity_fade_validation/capacity_fade_validator.py
+
+## 1. Module Overview
+T4.1 Capacity Fade Validator - Main Orchestrator
+
+Coordinates all components to validate strategy capacity and feasibility.
+
+Validates that strategy alpha is sustainable as capital scales to target level (€250k).
+Uses sqrt(capacity) model with liquidity constraints and conservative assumptions.
+
+## 2. Dependencies
+- `logging`
+- `decimal.Decimal`
+- `typing.Optional`
+- `analyzers.AlphaDecayEstimator`
+- `analyzers.HistoricalCapacityAnalyzer`
+- `analyzers.LiquidityHeadroom`
+- `models.CapacityFadeAnalysis`
+- `models.CapacityFadeRequest`
+- `models.CapacityFadeResponse`
+- `models.FeasibilityDecision`
+- `models.FeasibilityGate`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CapacityFadeValidator`: Must conform to application domain models.
+### Public Functions
+- `get_capacity_fade_validator()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

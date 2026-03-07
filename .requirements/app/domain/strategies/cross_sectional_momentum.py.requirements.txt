@@ -1,0 +1,42 @@
+# Requirements Document: domain/strategies/cross_sectional_momentum.py
+
+## 1. Module Overview
+Cross-Sectional Momentum Strategy Domain Service
+
+Implements cross-sectional momentum (relative strength) where
+assets are ranked based on past performance and top performers
+are selected.
+
+Reference: Rule 11-gray-vogel-quantitative-momentum.md
+Paper: Jegadeesh, N., & Titman, S. (1993). "Returns to Buying Winners
+       and Selling Losers: Implications for Stock Market Efficiency"
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `enum.Enum`
+- `typing.Dict`
+- `numpy`
+- `pandas`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MomentumSignal`: Must conform to application domain models.
+- `MomentumAsset`: Must conform to application domain models.
+- `MomentumPortfolio`: Must conform to application domain models.
+- `CrossSectionalMomentum`: Must conform to application domain models.
+- `MomentumMetrics`: Must conform to application domain models.
+### Public Functions
+- `net_exposure()`: Must return strictly typed objects.
+- `gross_exposure()`: Must return strictly typed objects.
+- `get_weights_dict()`: Must return strictly typed objects.
+- `calculate_momentum_scores()`: Must return strictly typed objects.
+- `construct_portfolio()`: Must return strictly typed objects.
+- `should_rebalance()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

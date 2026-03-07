@@ -1,0 +1,25 @@
+# Requirements Document: engines/data_engine/normalizers/__init__.py
+
+## 1. Module Overview
+Data Normalizers - Sistema de normalización unificado.
+
+Normaliza datos de diferentes fuentes a formato estándar:
+- Timestamps (UTC, timezone handling)
+- Símbolos (normalización de formato)
+- Precios (ajustes por splits, dividendos)
+- Corporate actions handling
+
+## 2. Dependencies
+- `corporate_actions_handler.CorporateActionsHandler`
+- `price_normalizer.PriceNormalizer`
+- `symbol_normalizer.SymbolNormalizer`
+- `timestamp_normalizer.TimestampNormalizer`
+- `unified_normalizer.UnifiedNormalizer`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

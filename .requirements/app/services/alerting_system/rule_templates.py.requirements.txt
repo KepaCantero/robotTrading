@@ -1,0 +1,48 @@
+# Requirements Document: services/alerting_system/rule_templates.py
+
+## 1. Module Overview
+T18.2: Advanced Alerting System - Rule Templates
+
+Pre-configured alert rule templates for common monitoring scenarios.
+These templates provide sensible defaults for:
+- Portfolio risk thresholds
+- Execution quality metrics
+- System performance
+- Market regime alerts
+
+## 2. Dependencies
+- `decimal.Decimal`
+- `typing.List`
+- `app.services.alerting_system.models.AlertRule`
+- `app.services.alerting_system.models.AlertSeverity`
+- `app.services.alerting_system.models.ChangeRule`
+- `app.services.alerting_system.models.ComparisonOperator`
+- `app.services.alerting_system.models.LogicOperator`
+- `app.services.alerting_system.models.ThresholdRule`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `AlertRuleTemplates`: Must conform to application domain models.
+### Public Functions
+- `portfolio_drawdown_warning()`: Must return strictly typed objects.
+- `portfolio_drawdown_critical()`: Must return strictly typed objects.
+- `portfolio_drawdown_halt()`: Must return strictly typed objects.
+- `volatility_spike()`: Must return strictly typed objects.
+- `cost_overrun_warning()`: Must return strictly typed objects.
+- `cost_overrun_critical()`: Must return strictly typed objects.
+- `fill_ratio_low()`: Must return strictly typed objects.
+- `sharpe_ratio_deterioration()`: Must return strictly typed objects.
+- `consecutive_losses_warning()`: Must return strictly typed objects.
+- `consecutive_losses_critical()`: Must return strictly typed objects.
+- `latency_spike()`: Must return strictly typed objects.
+- `error_rate_high()`: Must return strictly typed objects.
+- `get_all_default_templates()`: Must return strictly typed objects.
+- `get_template_by_id()`: Must return strictly typed objects.
+- `get_templates_by_category()`: Must return strictly typed objects.
+- `get_critical_templates()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

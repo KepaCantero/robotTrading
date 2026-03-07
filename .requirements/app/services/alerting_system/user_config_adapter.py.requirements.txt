@@ -1,0 +1,22 @@
+# Requirements Document: services/alerting_system/user_config_adapter.py
+
+## 1. Module Overview
+Adapter to convert UserSettings to Alerting System configuration.
+
+## 2. Dependencies
+- `os`
+- `typing.List`
+- `app.services.alerting_system.models.NotificationChannelType`
+- `app.services.alerting_system.models.NotificationTarget`
+- `app.user_config.user_settings.NotificationSettings`
+- `app.user_config.user_settings.UserSettings`
+
+## 3. Core Components (Contracts)
+### Public Functions
+- `user_settings_to_notification_targets()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

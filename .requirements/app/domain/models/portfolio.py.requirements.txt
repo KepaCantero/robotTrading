@@ -1,0 +1,65 @@
+# Requirements Document: domain/models/portfolio.py
+
+## 1. Module Overview
+Portfolio Provider Interface and Models
+
+This module defines the core interfaces and models for portfolio management
+across different brokers (IBKR, Binance, Paper Trading).
+
+## 2. Dependencies
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.List`
+- `typing.Optional`
+- `typing.Protocol`
+- `pydantic.BaseModel`
+- `pydantic.ConfigDict`
+- `pydantic.Field`
+- `pydantic.field_validator`
+- `pydantic.model_validator`
+- `app.shared.config.centralized_config.get_config`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `HedgingMetadata`: Must conform to application domain models.
+- `AssetClass`: Must conform to application domain models.
+- `Position`: Must conform to application domain models.
+- `Portfolio`: Must conform to application domain models.
+- `MarketRegime`: Must conform to application domain models.
+- `MarketRegimeData`: Must conform to application domain models.
+- `AssetUniverse`: Must conform to application domain models.
+- `CircuitBreakerState`: Must conform to application domain models.
+- `CircuitBreaker`: Must conform to application domain models.
+- `PortfolioProvider`: Must conform to application domain models.
+- `TradingClientInterface`: Must conform to application domain models.
+### Public Functions
+- `validate_hedge_cost()`: Must return strictly typed objects.
+- `validate_quantity()`: Must return strictly typed objects.
+- `validate_prices()`: Must return strictly typed objects.
+- `validate_pnl()`: Must return strictly typed objects.
+- `validate_position_consistency()`: Must return strictly typed objects.
+- `market_value()`: Must return strictly typed objects.
+- `cost_basis()`: Must return strictly typed objects.
+- `total_pnl()`: Must return strictly typed objects.
+- `pnl_percentage()`: Must return strictly typed objects.
+- `validate_cash()`: Must return strictly typed objects.
+- `total_equity()`: Must return strictly typed objects.
+- `total_value()`: Must return strictly typed objects.
+- `total_pnl()`: Must return strictly typed objects.
+- `total_pnl_percentage()`: Must return strictly typed objects.
+- `positions_by_asset_class()`: Must return strictly typed objects.
+- `is_supported()`: Must return strictly typed objects.
+- `should_trigger()`: Must return strictly typed objects.
+- `should_close()`: Must return strictly typed objects.
+- `reset()`: Must return strictly typed objects.
+- `record_error()`: Must return strictly typed objects.
+- `record_success()`: Must return strictly typed objects.
+- `should_trip()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,72 @@
+# Requirements Document: shared/utils/tier_mapper.py
+
+## 1. Module Overview
+Unified Tier Mapping System
+
+This module provides a centralized, consistent mapping between different tier
+naming conventions used across the algorithmic trading system.
+
+PROBLEM:
+The system uses THREE different tier systems:
+1. InputProfile.capital_flag: "small", "medium", "large" (English, 3 tiers)
+2. investment_profiles.yaml: "micro", "small", "medium", "large" (English, 4 tiers)
+3. Config expectations: "bajo", "medio", "alto" (Spanish, 3 tiers)
+
+SOLUTION:
+This module provides:
+- Unified tier mapping between all systems
+- Capital-based tier determination
+- Validation and consistency checking
+- Comprehensive documentation
+- Integration with centralized capital_tiers.yaml configuration
+
+Configuration:
+Capital thresholds are now loaded from config/capital_tiers.yaml.
+
+Usage:
+    from app.shared.utils.tier_mapper import TierMapper, get_tier, normalize_tier
+
+    # Get tier from capital amount
+    tier = get_tier(Decimal("100000"))  # Returns "medium"
+
+    # Normalize tier name to standard format
+    normalized = normalize_tier("small")  # Returns "small"
+
+    # Map between different systems
+    spanish_tier = TierMapper.to_spanish("medium")  # Returns "medio"
+    yaml_tier = TierMapper.to_yaml_tier("medium")  # Returns "medium"
+
+## 2. Dependencies
+- `logging`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.Optional`
+- `typing.Tuple`
+- `app.shared.config.strategy_config_loader.get_strategy_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TierSystem`: Must conform to application domain models.
+- `TierMapper`: Must conform to application domain models.
+### Public Functions
+- `get_tier()`: Must return strictly typed objects.
+- `normalize_tier()`: Must return strictly typed objects.
+- `map_profile_tier_to_config()`: Must return strictly typed objects.
+- `validate_tier_mapping()`: Must return strictly typed objects.
+- `get_thresholds()`: Must return strictly typed objects.
+- `get_tier_from_capital()`: Must return strictly typed objects.
+- `get_capital_flag_tier()`: Must return strictly typed objects.
+- `to_yaml_tier()`: Must return strictly typed objects.
+- `to_spanish()`: Must return strictly typed objects.
+- `to_capital_flag()`: Must return strictly typed objects.
+- `detect_system()`: Must return strictly typed objects.
+- `is_valid_tier()`: Must return strictly typed objects.
+- `list_all_valid_tiers()`: Must return strictly typed objects.
+- `validate_consistency()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

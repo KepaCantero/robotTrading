@@ -1,0 +1,46 @@
+# Requirements Document: services/momentum/orchestrator.py
+
+## 1. Module Overview
+Momentum analysis orchestrator.
+
+SOLID Principles:
+- SRP: Only orchestrates momentum analysis workflow
+- OCP: Extensible through new component implementations
+- LSP: All components are substitutable via protocols
+- ISP: Focused on orchestration operations
+- DIP: Depends on protocol abstractions, not concrete implementations
+
+## 2. Dependencies
+- `logging`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `app.domain.models.momentum.MomentumAnalysis`
+- `app.domain.models.momentum.MomentumFilter`
+- `app.domain.models.momentum.MomentumSignal`
+- `app.domain.models.momentum.MomentumStrategy`
+- `app.domain.models.momentum.Timeframe`
+- `app.services.momentum.analyzer.MomentumAnalyzer`
+- `app.services.momentum.data_provider.MockPriceDataProvider`
+- `app.services.momentum.indicators.calculator.TechnicalIndicatorCalculator`
+- `app.services.momentum.protocols.IndicatorCalculator`
+- `app.services.momentum.protocols.MomentumAnalyzer`
+- `app.services.momentum.protocols.PriceDataProvider`
+- `app.services.momentum.protocols.SignalGenerator`
+- `app.services.momentum.protocols.StrategyManager`
+- `app.services.momentum.signal_generator.SignalGenerator`
+- `app.services.momentum.storage.InMemoryStorageBackend`
+- `app.services.momentum.strategy_manager.StrategyManager`
+- `app.domain.models.momentum.MomentumAnalysis`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MomentumAnalysisService`: Must conform to application domain models.
+### Public Functions
+- `get_momentum_analysis_service()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

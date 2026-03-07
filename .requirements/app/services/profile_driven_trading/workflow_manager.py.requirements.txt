@@ -1,0 +1,37 @@
+# Requirements Document: services/profile_driven_trading/workflow_manager.py
+
+## 1. Module Overview
+Workflow Manager - Pipeline execution and state management.
+
+Handles the execution of the trading pipeline stages with proper error handling,
+state tracking, and rollback capabilities.
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `models.StageResult`
+- `models.StageType`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PipelineResult`: Must conform to application domain models.
+- `WorkflowManager`: Must conform to application domain models.
+### Public Functions
+- `get_stage_by_type()`: Must return strictly typed objects.
+- `get_current_state()`: Must return strictly typed objects.
+- `reset_state()`: Must return strictly typed objects.
+- `get_execution_statistics()`: Must return strictly typed objects.
+- `create_rollback_checkpoint()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

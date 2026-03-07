@@ -1,0 +1,32 @@
+# Requirements Document: services/knowledge_graph/graph_builder.py
+
+## 1. Module Overview
+FASE 6.3: Knowledge Graph Builder - Neo4j integration
+
+Builds and manages knowledge graphs for trading strategy relationships,
+market correlations, and trading pattern discovery.
+
+Rule 28 Compliant: Uses environment variables for credentials.
+
+## 2. Dependencies
+- `logging`
+- `os`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `requests.exceptions.HTTPError`
+- `requests.exceptions.RequestException`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `KnowledgeGraphBuilder`: Must conform to application domain models.
+### Public Functions
+- `get_knowledge_graph_builder()`: Must return strictly typed objects.
+- `get_builder_status()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

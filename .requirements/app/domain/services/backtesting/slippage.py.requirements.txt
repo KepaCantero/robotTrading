@@ -1,0 +1,51 @@
+# Requirements Document: domain/services/backtesting/slippage.py
+
+## 1. Module Overview
+Slippage Models
+
+Implements various slippage models for realistic backtesting:
+- Linear slippage (proportional to volume)
+- Percentage slippage (fixed percentage)
+- Volatility-adjusted slippage
+- Time-weighted slippage
+
+Reference: Rule 62-johnson-algorithmic-trading-dma.md
+Paper: Johnson, B. (2010) "Algorithmic Trading & DMA"
+
+## 2. Dependencies
+- `__future__.annotations`
+- `abc.ABC`
+- `abc.abstractmethod`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `datetime.time`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Optional`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `SlippageType`: Must conform to application domain models.
+- `SlippageResult`: Must conform to application domain models.
+- `SlippageModel`: Must conform to application domain models.
+- `LinearSlippageModel`: Must conform to application domain models.
+- `PercentageSlippageModel`: Must conform to application domain models.
+- `VolatilityAdjustedSlippage`: Must conform to application domain models.
+- `TimeWeightedSlippageModel`: Must conform to application domain models.
+- `SpreadAwareSlippageConfig`: Must conform to application domain models.
+- `SpreadAwareSlippageModel`: Must conform to application domain models.
+### Public Functions
+- `adverse()`: Must return strictly typed objects.
+- `calculate_slippage()`: Must return strictly typed objects.
+- `calculate_slippage()`: Must return strictly typed objects.
+- `calculate_slippage()`: Must return strictly typed objects.
+- `calculate_slippage()`: Must return strictly typed objects.
+- `calculate_slippage()`: Must return strictly typed objects.
+- `calculate_slippage()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

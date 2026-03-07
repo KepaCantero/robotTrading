@@ -1,0 +1,61 @@
+# Requirements Document: services/live_trading/order_persistence.py
+
+## 1. Module Overview
+Order Persistence Layer - SQLite-based order storage
+
+Provides persistent storage for orders across system restarts.
+Critical for production trading to ensure no orders are lost.
+
+PRODUCTION FEATURES:
+- WAL mode for better concurrent reads
+- Busy timeout for retries
+- UTC timestamps for consistency
+- Connection reuse with thread safety
+
+## 2. Dependencies
+- `json`
+- `logging`
+- `sqlite3`
+- `threading`
+- `contextlib.contextmanager`
+- `datetime.datetime`
+- `datetime.timezone`
+- `decimal.Decimal`
+- `pathlib.Path`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `sqlalchemy.exc.DatabaseError`
+- `sqlalchemy.exc.DataError`
+- `sqlalchemy.exc.IntegrityError`
+- `sqlalchemy.exc.OperationalError`
+- `sqlalchemy.exc.ProgrammingError`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `DecimalEncoder`: Must conform to application domain models.
+- `OrderPersistence`: Must conform to application domain models.
+### Public Functions
+- `utc_now()`: Must return strictly typed objects.
+- `decimal_decoder()`: Must return strictly typed objects.
+- `get_order_persistence()`: Must return strictly typed objects.
+- `default()`: Must return strictly typed objects.
+- `save_order()`: Must return strictly typed objects.
+- `get_order()`: Must return strictly typed objects.
+- `get_pending_orders()`: Must return strictly typed objects.
+- `get_executed_orders()`: Must return strictly typed objects.
+- `get_order_history()`: Must return strictly typed objects.
+- `mark_order_executed()`: Must return strictly typed objects.
+- `save_execution()`: Must return strictly typed objects.
+- `get_executions()`: Must return strictly typed objects.
+- `save_error()`: Must return strictly typed objects.
+- `get_errors()`: Must return strictly typed objects.
+- `cleanup_old_orders()`: Must return strictly typed objects.
+- `get_stats()`: Must return strictly typed objects.
+- `close()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

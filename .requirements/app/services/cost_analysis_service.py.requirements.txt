@@ -1,0 +1,48 @@
+# Requirements Document: services/cost_analysis_service.py
+
+## 1. Module Overview
+Cost Analysis Service for AlgoTrading system.
+
+This module provides comprehensive cost analysis functionality including
+transaction costs, slippage analysis, infrastructure costs, and profitability validation.
+
+Uses centralized configuration for trading calendar constants.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `numpy`
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `decimal.ROUND_HALF_UP`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `app.backtesting.models.Trade`
+- `app.backtesting.models.TradeStatus`
+- `app.shared.config.centralized_config.get_config`
+- `app.domain.models.order.OrderType`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `CostType`: Must conform to application domain models.
+- `CostBreakdown`: Must conform to application domain models.
+- `CostAnalysisResult`: Must conform to application domain models.
+- `CostAnalysisService`: Must conform to application domain models.
+### Public Functions
+- `analyze_trade_costs()`: Must return strictly typed objects.
+- `analyze_strategy_costs()`: Must return strictly typed objects.
+- `validate_profitability()`: Must return strictly typed objects.
+- `validate_commission_impact_ratio()`: Must return strictly typed objects.
+- `calculate_minimum_profit_edge()`: Must return strictly typed objects.
+- `optimize_for_costs()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

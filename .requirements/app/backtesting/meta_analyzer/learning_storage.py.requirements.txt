@@ -1,0 +1,40 @@
+# Requirements Document: backtesting/meta_analyzer/learning_storage.py
+
+## 1. Module Overview
+LearningEngineStorage - Persistencia de pesos de modelos para aprendizaje incremental.
+
+Permite guardar y cargar pesos de learning engines para:
+- Continuar entrenamiento
+- Compartir modelos entre tests
+- Aprendizaje incremental
+
+## 2. Dependencies
+- `json`
+- `logging`
+- `datetime.datetime`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `aiofiles`
+- `joblib`
+- `msgpack`
+- `torch`
+- `pickle`
+- `io`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `LearningEngineStorage`: Must conform to application domain models.
+### Public Functions
+- `save_weights()`: Must return strictly typed objects.
+- `load_weights()`: Must return strictly typed objects.
+- `list_available_weights()`: Must return strictly typed objects.
+- `delete_weights()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

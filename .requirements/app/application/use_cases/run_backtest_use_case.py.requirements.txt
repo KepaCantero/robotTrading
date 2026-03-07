@@ -1,0 +1,44 @@
+# Requirements Document: application/use_cases/run_backtest_use_case.py
+
+## 1. Module Overview
+Run Backtest Use Case - Application layer for executing backtests
+
+This use case orchestrates the flow of data to and from entities,
+and directs those entities to use their enterprise-wide business rules.
+It's part of the application layer in Clean Architecture.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `uuid`
+- `datetime.datetime`
+- `typing.Optional`
+- `core.exceptions.BacktestError`
+- `core.exceptions.ValidationError`
+- `domain.entities.backtest.Backtest`
+- `domain.entities.backtest.BacktestStatus`
+- `domain.repositories.backtest_repository.BacktestRepository`
+- `domain.value_objects.backtest_config.BacktestConfigValue`
+- `domain.value_objects.backtest_result.BacktestResultValue`
+- `backtesting.core.executor.BacktestExecutorFactory`
+- `backtesting.core.executor.BacktestExecutor`
+- `backtesting.models.BacktestConfig`
+- `backtesting.engine.SimpleBacktester`
+- `decimal.Decimal`
+- `backtesting.models.BacktestResult`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RunBacktestUseCase`: Must conform to application domain models.
+### Public Functions
+- `execute()`: Must return strictly typed objects.
+- `execute_batch()`: Must return strictly typed objects.
+- `get_backtest()`: Must return strictly typed objects.
+- `get_backtests_by_status()`: Must return strictly typed objects.
+- `get_recent_backtests()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

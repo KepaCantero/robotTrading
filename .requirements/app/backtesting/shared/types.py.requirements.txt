@@ -1,0 +1,24 @@
+# Requirements Document: backtesting/shared/types.py
+
+## 1. Module Overview
+Shared type definitions for backtesting module.
+
+Consolidates type aliases that were duplicated across multiple files.
+
+## 2. Dependencies
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Union`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MetricKeys`: Must conform to application domain models.
+- `ConfigKeys`: Must conform to application domain models.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

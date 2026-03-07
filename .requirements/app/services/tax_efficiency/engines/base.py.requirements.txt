@@ -1,0 +1,34 @@
+# Requirements Document: services/tax_efficiency/engines/base.py
+
+## 1. Module Overview
+Base Tax Engine - Abstract interface for country-specific tax calculations.
+
+This module defines the abstract base class that all tax engine implementations
+must follow. It provides a consistent interface for tax calculations across
+different jurisdictions.
+
+## 2. Dependencies
+- `logging`
+- `abc.ABC`
+- `abc.abstractmethod`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TaxEngine`: Must conform to application domain models.
+### Public Functions
+- `calculate_capital_gains_tax()`: Must return strictly typed objects.
+- `calculate_dividend_tax()`: Must return strictly typed objects.
+- `applies_wash_sale()`: Must return strictly typed objects.
+- `get_tax_summary()`: Must return strictly typed objects.
+- `get_withholding_tax_rate()`: Must return strictly typed objects.
+- `get_tax_brackets()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

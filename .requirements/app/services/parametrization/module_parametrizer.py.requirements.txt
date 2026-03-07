@@ -1,0 +1,45 @@
+# Requirements Document: services/parametrization/module_parametrizer.py
+
+## 1. Module Overview
+T3.1: ModuleParametrizer - Generate module-specific parameters from InvestmentProfile
+
+Maps InvestmentProfile (capital tier, objective, risk tolerance) to module-specific
+parameters for all enabled trading modules.
+
+The parametrizer:
+1. Takes InvestmentProfile with enabled_modules
+2. Loads module configuration for each enabled module
+3. Applies tier-specific parameter adjustments
+4. Integrates objective-specific variations
+5. Returns ModuleParameterSet with all module parameters
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `app.domain.models.investment_profile.CapitalTier`
+- `app.domain.models.investment_profile.InvestmentProfile`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ModuleType`: Must conform to application domain models.
+- `ModuleParameters`: Must conform to application domain models.
+- `ModuleParameterSet`: Must conform to application domain models.
+- `ModuleParametrizer`: Must conform to application domain models.
+### Public Functions
+- `to_dict()`: Must return strictly typed objects.
+- `add_module()`: Must return strictly typed objects.
+- `get_module()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `generate()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

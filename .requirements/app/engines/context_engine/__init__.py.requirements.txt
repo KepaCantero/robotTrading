@@ -1,0 +1,22 @@
+# Requirements Document: engines/context_engine/__init__.py
+
+## 1. Module Overview
+Context Engine - Sistema completo de análisis de contexto de mercado.
+
+Proporciona:
+- Detección avanzada de régimen (HMM, clustering)
+- Análisis de volatilidad adaptativa (GARCH, CUSUM)
+- Detección de correlaciones dinámicas
+- Contexto macroeconómico
+- API unificada de contexto
+
+## 2. Dependencies
+- `context_engine.ContextEngine`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

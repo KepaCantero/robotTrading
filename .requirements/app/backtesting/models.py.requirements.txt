@@ -1,0 +1,50 @@
+# Requirements Document: backtesting/models.py
+
+## 1. Module Overview
+Backtesting models for AlgoTrading system.
+
+This module defines the data models for backtesting operations,
+including trade records, performance metrics, and backtest configuration.
+
+REQUIREMENT: pydantic>=2.0 is a hard dependency for this module.
+The fallback pattern has been removed to ensure consistent validation behavior.
+
+## 2. Dependencies
+- `datetime.datetime`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `pydantic.BaseModel`
+- `pydantic.Field`
+- `pydantic.field_validator`
+- `pydantic.model_validator`
+- `app.shared.config.centralized_config.CentralizedConfig`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TradeSide`: Must conform to application domain models.
+- `TradeStatus`: Must conform to application domain models.
+- `Trade`: Must conform to application domain models.
+- `PerformanceMetrics`: Must conform to application domain models.
+- `BacktestConfig`: Must conform to application domain models.
+- `BacktestResult`: Must conform to application domain models.
+- `Config`: Must conform to application domain models.
+### Public Functions
+- `validate_side()`: Must return strictly typed objects.
+- `validate_trade_logic()`: Must return strictly typed objects.
+- `is_buy()`: Must return strictly typed objects.
+- `is_sell()`: Must return strictly typed objects.
+- `notional_value()`: Must return strictly typed objects.
+- `total_cost()`: Must return strictly typed objects.
+- `validate_metrics_consistency()`: Must return strictly typed objects.
+- `validate_slippage()`: Must return strictly typed objects.
+- `validate_config_logic()`: Must return strictly typed objects.
+- `validate_result_consistency()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

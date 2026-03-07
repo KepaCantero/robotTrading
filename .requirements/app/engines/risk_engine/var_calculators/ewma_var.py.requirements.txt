@@ -1,0 +1,47 @@
+# Requirements Document: engines/risk_engine/var_calculators/ewma_var.py
+
+## 1. Module Overview
+EWMA VaR Calculator - Hull Chapter 18
+
+Implements Exponentially Weighted Moving Average (EWMA) for VaR calculation.
+
+EWMA gives more weight to recent observations and less to older ones,
+making it more responsive to changing market conditions than simple
+historical VaR or equally-weighted parametric VaR.
+
+Key advantages:
+1. Volatility clustering - captures periods of high/low volatility
+2. Asymmetric response - responds faster to increased volatility
+3. RiskMetrics methodology - industry standard for short-term VaR
+
+Formula:
+σ²_t = λ * σ²_{t-1} + (1-λ) * r²_{t-1}
+
+Where λ (lambda) is the decay factor:
+- λ = 0.94 for daily data (RiskMetrics standard)
+- λ = 0.97 for monthly data
+
+Reference: Hull, Options, Futures, and Other Derivatives, Chapter 18
+
+## 2. Dependencies
+- `logging`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `scipy.stats`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `EWMAVaRCalculator`: Must conform to application domain models.
+### Public Functions
+- `calculate_ewma_var()`: Must return strictly typed objects.
+- `calculate_ewma_correlation()`: Must return strictly typed objects.
+- `forecast_volatility()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

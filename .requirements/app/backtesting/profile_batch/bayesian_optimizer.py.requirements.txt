@@ -1,0 +1,40 @@
+# Requirements Document: backtesting/profile_batch/bayesian_optimizer.py
+
+## 1. Module Overview
+Bayesian Optimizer Module
+
+Performs Bayesian optimization using Optuna for hyperparameter tuning.
+
+Responsibilities:
+- Run Bayesian optimization with Optuna
+- Optimize strategy parameters
+- Track optimization history
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `optuna`
+- `yaml`
+- `app.backtesting.comprehensive_backtest_runner.ComprehensiveBacktestRunner`
+- `app.backtesting.shared.MetricsFactory`
+- `app.backtesting.shared.ParameterMappingService`
+- `app.backtesting.shared.TempConfigManager`
+- `app.backtesting.shared.get_empty_metrics`
+- `app.shared.config.profile_config_loader.ProfileConfigLoader`
+- `app.domain.models.input_profile.InputProfile`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BayesianOptimizer`: Must conform to application domain models.
+### Public Functions
+- `optimize()`: Must return strictly typed objects.
+- `objective()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

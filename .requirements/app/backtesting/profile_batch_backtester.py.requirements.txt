@@ -1,0 +1,111 @@
+# Requirements Document: backtesting/profile_batch_backtester.py
+
+## 1. Module Overview
+Profile Batch Backtester - Orchestrates batch testing with baseline AND optimization reporting.
+
+This module implements comprehensive batch backtesting for investor profiles with:
+- Baseline backtesting (default parameters)
+- Bayesian optimization (Optuna)
+- Walk-forward validation
+- Monte Carlo simulation
+- Out-of-sample testing
+- Statistical comparison and reporting
+
+REFACTORED VERSION - Uses service layer for better separation of concerns.
+
+COMPLIANCE: Integrado con BacktestingCompliance para validar:
+- R5: Walk-Forward Analysis
+- R6: Overfitting Prevention
+- R7: Monte Carlo para riesgo
+- DATA-001: Purged Cross-Validation
+
+Usage:
+    ```python
+    from app.backtesting.profile_batch_backtester import ProfileBatchBacktester
+    from app.domain.models.input_profile import InputProfile
+
+    # Create backtester
+    backtester = ProfileBatchBacktester(config_path="config/profile_batch_backtest.yaml")
+
+    # Generate all profiles (180 combinations)
+    profiles = backtester.generate_all_profiles()
+
+    # Run all profiles with parallel execution
+    results = backtester.run_all_profiles(parallel=True, max_workers=20)
+
+    # Get best strategy for specific objective
+    best_config = backtester.get_best_strategy(
+        objective="maximizar_capital",
+        tier="medio",
+        risk="alto"
+    )
+
+    # Generate comparison report
+    report_html = backtester.generate_comparison_report()
+
+    # Export results
+    backtester.export_results(format="json")
+    ```
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Union`
+- `uuid.uuid4`
+- `numpy`
+- `optuna`
+- `pandas`
+- `yaml`
+- `app.backtesting.comprehensive_backtest_runner.ComprehensiveBacktestRunner`
+- `app.backtesting.professional_reporter.ProfessionalReporter`
+- `app.backtesting.services.BatchExecutionService`
+- `app.backtesting.services.ConfigurationService`
+- `app.backtesting.services.DatabaseService`
+- `app.backtesting.services.FallbackTracker`
+- `app.backtesting.services.MetricsCalculationService`
+- `app.backtesting.services.OptimizedStrategy`
+- `app.backtesting.services.ProfileGenerationService`
+- `app.backtesting.services.ProfileResult`
+- `app.backtesting.services.ReportGenerationService`
+- `app.backtesting.shared.ConfigDict`
+- `app.backtesting.shared.MetricsDict`
+- `app.backtesting.shared.MetricsFactory`
+- `app.backtesting.shared.ParameterDict`
+- `app.backtesting.shared.ParameterMappingService`
+- `app.backtesting.shared.TempConfigManager`
+- `app.backtesting.shared.get_empty_metrics`
+- `app.backtesting.backtesting_compliance.BacktestingCompliance`
+- `app.backtesting.backtesting_compliance.BacktestingComplianceResult`
+- `app.backtesting.backtesting_compliance.create_backtesting_compliance`
+- `app.shared.config.profile_config_loader.ProfileConfigLoader`
+- `app.domain.models.input_profile.InputProfile`
+- `app.services.profile_driven_trading.profile_strategy_mapper.StrategyMapping`
+- `app.services.profile_driven_trading.profile_strategy_mapper.create_profile_mapper`
+- `app.shared.config.yaml_config_updater.YAMLConfigUpdater`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ProfileBatchBacktester`: Must conform to application domain models.
+### Public Functions
+- `create_profile_batch_backtester()`: Must return strictly typed objects.
+- `get_fallback_metrics()`: Must return strictly typed objects.
+- `log_fallback_summary()`: Must return strictly typed objects.
+- `generate_all_profiles()`: Must return strictly typed objects.
+- `run_all_profiles()`: Must return strictly typed objects.
+- `run_single_profile()`: Must return strictly typed objects.
+- `get_best_strategy()`: Must return strictly typed objects.
+- `generate_comparison_report()`: Must return strictly typed objects.
+- `export_results()`: Must return strictly typed objects.
+- `objective()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,37 @@
+# Requirements Document: backtesting/universe_manager.py
+
+## 1. Module Overview
+Backtesting Universe with Survivorship Bias Adjustment
+
+Includes delisted, bankrupt, and failed companies to prevent
+survivorship bias in backtesting results.
+
+Survivorship bias occurs when backtesting only includes currently active
+companies, ignoring those that failed. This inflates performance metrics
+because failed companies are systematically excluded from historical data.
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `UniverseManager`: Must conform to application domain models.
+### Public Functions
+- `get_universe()`: Must return strictly typed objects.
+- `filter_by_market_cap()`: Must return strictly typed objects.
+- `calculate_survivorship_bias()`: Must return strictly typed objects.
+- `get_sector_diversification()`: Must return strictly typed objects.
+- `get_universe_statistics()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

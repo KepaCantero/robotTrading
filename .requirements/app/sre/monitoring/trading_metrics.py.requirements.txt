@@ -1,0 +1,87 @@
+# Requirements Document: sre/monitoring/trading_metrics.py
+
+## 1. Module Overview
+Trading-Specific Metrics Monitoring for Algorithmic Trading SRE.
+
+This module provides comprehensive monitoring of trading-specific metrics
+essential for maintaining high availability and performance in algorithmic
+trading systems. It extends Google SRE's golden signals with financial metrics
+critical to trading operations.
+
+Financial SRE Metrics:
+- Order execution latency (time from signal to fill)
+- Fill rate (percentage of orders successfully filled)
+- Slippage (execution price vs expected price in basis points)
+- Position sync health (broker vs internal position reconciliation)
+- Strategy health score (aggregate strategy performance indicator)
+- Market data latency (quote freshness and delay)
+- Execution quality metrics
+- Risk limit compliance
+
+References:
+- Financial SRE patterns for trading systems
+- Algorithmic trading reliability engineering
+- FIX protocol performance metrics
+- Tomasini's trading systems monitoring
+
+## 2. Dependencies
+- `__future__.annotations`
+- `numpy`
+- `asyncio`
+- `logging`
+- `collections.deque`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `enum.Enum`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.Optional`
+- `aiosqlite`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TradingHealthStatus`: Must conform to application domain models.
+- `OrderExecutionPhase`: Must conform to application domain models.
+- `OrderExecutionMetrics`: Must conform to application domain models.
+- `SlippageMetrics`: Must conform to application domain models.
+- `PositionSyncMetrics`: Must conform to application domain models.
+- `MarketDataMetrics`: Must conform to application domain models.
+- `StrategyHealthMetrics`: Must conform to application domain models.
+- `RiskLimitMetrics`: Must conform to application domain models.
+- `TradingMetrics`: Must conform to application domain models.
+- `OrderRecord`: Must conform to application domain models.
+- `TradingMetricsConfig`: Must conform to application domain models.
+- `TradingMetricsMonitor`: Must conform to application domain models.
+### Public Functions
+- `get_trading_metrics_monitor()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `get_latency_ms()`: Must return strictly typed objects.
+- `get_slippage_bps()`: Must return strictly typed objects.
+- `record_order()`: Must return strictly typed objects.
+- `update_order_fill()`: Must return strictly typed objects.
+- `update_order_rejection()`: Must return strictly typed objects.
+- `update_order_cancellation()`: Must return strictly typed objects.
+- `update_internal_position()`: Must return strictly typed objects.
+- `update_broker_position()`: Must return strictly typed objects.
+- `update_market_data_timestamp()`: Must return strictly typed objects.
+- `update_strategy_health()`: Must return strictly typed objects.
+- `update_risk_limit()`: Must return strictly typed objects.
+- `calculate_fill_rate()`: Must return strictly typed objects.
+- `calculate_slippage()`: Must return strictly typed objects.
+- `check_position_sync()`: Must return strictly typed objects.
+- `evaluate_trading_health()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

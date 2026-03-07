@@ -1,0 +1,40 @@
+# Requirements Document: presentation/dashboard/meta_dashboard.py
+
+## 1. Module Overview
+Meta Dashboard - Control de Misión Quant
+
+Dashboard avanzado con:
+- Análisis metacognitivo de estrategias
+- Colores dinámicos según salud del sistema
+- Análisis de patrones y recomendaciones automáticas
+- Visualización de regímenes de mercado
+- Indicadores avanzados (Stability Index, Learning Retention, etc.)
+
+## 2. Dependencies
+- `logging`
+- `pathlib.Path`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `numpy`
+- `pandas`
+- `plotly.express`
+- `plotly.graph_objects`
+- `streamlit`
+- `sklearn.metrics.silhouette_score`
+- `app.backtesting.meta_analyzer.BacktestMetaAnalyzer`
+- `yaml`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `MetaDashboard`: Must conform to application domain models.
+### Public Functions
+- `color_for_metric()`: Must return strictly typed objects.
+- `emoji_for_metric()`: Must return strictly typed objects.
+- `render_dashboard()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

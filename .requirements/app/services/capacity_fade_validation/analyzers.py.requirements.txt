@@ -1,0 +1,32 @@
+# Requirements Document: services/capacity_fade_validation/analyzers.py
+
+## 1. Module Overview
+T4.1 Capacity Fade Validation - Analyzer Components
+
+Sub-components for capacity fade analysis:
+- HistoricalCapacityAnalyzer: Analyzes backtest performance at different capital levels
+- LiquidityHeadroom: Calculates daily volume constraints
+- AlphaDecayEstimator: Projects alpha at target capital using decay models
+
+## 2. Dependencies
+- `logging`
+- `decimal.Decimal`
+- `typing.Dict`
+- `models.LiquidityReport`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `HistoricalCapacityAnalyzer`: Must conform to application domain models.
+- `LiquidityHeadroom`: Must conform to application domain models.
+- `AlphaDecayEstimator`: Must conform to application domain models.
+### Public Functions
+- `analyze_capacity_impact()`: Must return strictly typed objects.
+- `calculate_headroom()`: Must return strictly typed objects.
+- `estimate_alpha_at_scale()`: Must return strictly typed objects.
+- `calculate_required_alpha()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

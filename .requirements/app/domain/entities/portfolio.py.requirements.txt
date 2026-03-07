@@ -1,0 +1,73 @@
+# Requirements Document: domain/entities/portfolio.py
+
+## 1. Module Overview
+Portfolio Entity - Core business object
+
+A Portfolio represents a collection of positions with associated
+capital, risk parameters, and trading constraints.
+
+Reference: Rule 05-architecture.md, Rule 03-solid-principles.md
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `datetime.timezone`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Iterator`
+- `typing.List`
+- `typing.Optional`
+- `app.shared.config.centralized_config.get_config`
+- `app.domain.entities.position.Position`
+- `app.domain.entities.position.PositionSide`
+- `app.domain.entities.position.PositionStatus`
+- `app.domain.value_objects.capital.Capital`
+- `app.domain.value_objects.money.Money`
+- `app.domain.value_objects.risk_parameters.RiskParameters`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PortfolioStatus`: Must conform to application domain models.
+- `Portfolio`: Must conform to application domain models.
+### Public Functions
+- `set_audit_logger()`: Must return strictly typed objects.
+- `add_position()`: Must return strictly typed objects.
+- `remove_position()`: Must return strictly typed objects.
+- `update_position_price()`: Must return strictly typed objects.
+- `get_position()`: Must return strictly typed objects.
+- `get_open_positions()`: Must return strictly typed objects.
+- `get_closed_positions()`: Must return strictly typed objects.
+- `iterate_positions()`: Must return strictly typed objects.
+- `get_total_value()`: Must return strictly typed objects.
+- `get_cash()`: Must return strictly typed objects.
+- `get_positions_value()`: Must return strictly typed objects.
+- `get_total_pnl()`: Must return strictly typed objects.
+- `get_unrealized_pnl()`: Must return strictly typed objects.
+- `get_realized_pnl()`: Must return strictly typed objects.
+- `get_total_return_percent()`: Must return strictly typed objects.
+- `get_exposure()`: Must return strictly typed objects.
+- `get_gross_exposure()`: Must return strictly typed objects.
+- `get_portfolio_beta()`: Must return strictly typed objects.
+- `is_risk_limit_exceeded()`: Must return strictly typed objects.
+- `get_concentration()`: Must return strictly typed objects.
+- `get_max_concentration()`: Must return strictly typed objects.
+- `is_position_size_allowed()`: Must return strictly typed objects.
+- `can_add_position()`: Must return strictly typed objects.
+- `freeze()`: Must return strictly typed objects.
+- `unfreeze()`: Must return strictly typed objects.
+- `suspend()`: Must return strictly typed objects.
+- `activate()`: Must return strictly typed objects.
+- `close()`: Must return strictly typed objects.
+- `create()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

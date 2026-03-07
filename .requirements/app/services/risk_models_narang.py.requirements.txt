@@ -1,0 +1,66 @@
+# Requirements Document: services/risk_models_narang.py
+
+## 1. Module Overview
+Risk Models - Rishi Narang "Inside the Black Box" Chapter 4
+
+This module implements the Risk Model architecture from Narang's framework:
+- Factor risk models
+- Covariance estimation
+- Risk forecasting
+- Risk constraints application
+
+Key concepts from "Inside the Black Box":
+- Risk models manage exposures and constraints
+- Factor models decompose risk into systematic and idiosyncratic components
+- Risk forecasting helps in position sizing and portfolio construction
+- Risk constraints prevent excessive factor exposures
+
+From Narang: "The risk model is responsible for ensuring that the portfolio
+does not take on more risk than is intended, whether in aggregate or in
+specific dimensions such as sectors, countries, or factors."
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `pandas`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RiskFactorType`: Must conform to application domain models.
+- `RiskModelType`: Must conform to application domain models.
+- `RiskFactor`: Must conform to application domain models.
+- `RiskBudget`: Must conform to application domain models.
+- `RiskMetrics`: Must conform to application domain models.
+- `RiskConstraint`: Must conform to application domain models.
+- `RiskModel`: Must conform to application domain models.
+- `FactorRiskModel`: Must conform to application domain models.
+- `CovarianceRiskModel`: Must conform to application domain models.
+### Public Functions
+- `get_risk_model()`: Must return strictly typed objects.
+- `add_risk_factor()`: Must return strictly typed objects.
+- `add_constraint()`: Must return strictly typed objects.
+- `estimate_covariance_matrix()`: Must return strictly typed objects.
+- `calculate_factor_exposures()`: Must return strictly typed objects.
+- `forecast_risk()`: Must return strictly typed objects.
+- `apply_risk_constraints()`: Must return strictly typed objects.
+- `apply_factor_constraints()`: Must return strictly typed objects.
+- `calculate_risk_budget()`: Must return strictly typed objects.
+- `validate_portfolio_risk()`: Must return strictly typed objects.
+- `estimate_factor_returns()`: Must return strictly typed objects.
+- `calculate_specific_risk()`: Must return strictly typed objects.
+- `forecast_risk()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,42 @@
+# Requirements Document: engines/execution_engine/microstructure/dark_pool_router.py
+
+## 1. Module Overview
+Dark Pool Router
+
+Implements Harris Rule 6.7: Dark pool usage for large orders.
+
+Dark pools are useful for:
+- Hiding order flow (avoid front-running)
+- Executing large orders without moving the market
+- Reducing market impact for sizeable orders
+
+But have drawbacks:
+- Poor price discovery
+- Potential information leakage
+- Higher costs for smaller orders
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Dict`
+- `typing.List`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ExecutionVenue`: Must conform to application domain models.
+- `DarkPoolDecision`: Must conform to application domain models.
+- `DarkPoolRouter`: Must conform to application domain models.
+### Public Functions
+- `get_dark_pool_router()`: Must return strictly typed objects.
+- `should_use_dark_pool()`: Must return strictly typed objects.
+- `compare_execution_venues()`: Must return strictly typed objects.
+- `optimize_dark_pool_split()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

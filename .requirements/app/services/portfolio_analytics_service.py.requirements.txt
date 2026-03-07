@@ -1,0 +1,41 @@
+# Requirements Document: services/portfolio_analytics_service.py
+
+## 1. Module Overview
+Portfolio Analytics Service
+
+This service provides comprehensive portfolio analytics including performance
+metrics calculation, risk analysis, and portfolio management features.
+
+## 2. Dependencies
+- `statistics`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `decimal.Decimal`
+- `typing.List`
+- `typing.Optional`
+- `uuid.UUID`
+- `loguru.logger`
+- `app.shared.config.trading_config.get_config`
+- `app.domain.models.portfolio.Portfolio`
+- `app.domain.models.portfolio_analytics.ExtendedPortfolio`
+- `app.domain.models.portfolio_analytics.PerformanceMetrics`
+- `app.domain.models.portfolio_analytics.PerformancePeriod`
+- `app.domain.models.portfolio_analytics.PortfolioAllocation`
+- `app.domain.models.portfolio_analytics.PortfolioAnalytics`
+- `app.domain.models.portfolio_analytics.PortfolioComparison`
+- `app.domain.models.portfolio_analytics.PortfolioRebalance`
+- `app.domain.models.portfolio_analytics.RiskLevel`
+- `app.domain.models.portfolio_analytics.RiskMetrics`
+- `app.services.market_data_service.MarketDataService`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PortfolioAnalyticsService`: Must conform to application domain models.
+### Public Functions
+- `get_portfolio_analytics_service()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

@@ -1,0 +1,50 @@
+# Requirements Document: domain/strategies/factor_calculator.py
+
+## 1. Module Overview
+Factor Calculator - Compute Fama-French Factor Scores
+
+This module implements the calculation of individual factor scores for stocks
+based on the Fama-French 5-factor model plus Momentum.
+
+Factors:
+1. Value (HML): High book-to-market ratio
+2. Size (SMB): Small market cap
+3. Profitability (RMW): High operating profitability
+4. Investment (CMA): Conservative investment (low asset growth)
+5. Momentum (WML): Past winners continue to win
+
+Reference:
+- Fama, E. F., & French, K. R. (2015). "A five-factor asset pricing model"
+- Carhart, M. M. (1997). "On persistence in mutual fund performance"
+
+SOLID Principles:
+- Single Responsibility: Only factor calculations, no portfolio construction
+- Open/Closed: Extensible with new factors
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `scipy.stats`
+- `models.FactorProfile`
+- `models.FactorScores`
+- `math`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `FactorCalculator`: Must conform to application domain models.
+### Public Functions
+- `get_default_factor_premiums()`: Must return strictly typed objects.
+- `calculate_factor_scores()`: Must return strictly typed objects.
+- `get_factor_statistics()`: Must return strictly typed objects.
+- `calculate_predicted_returns()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

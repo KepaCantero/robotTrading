@@ -1,0 +1,62 @@
+# Requirements Document: domain/optimization/parameter/bayesian_optimizer.py
+
+## 1. Module Overview
+Bayesian Optimizer using Optuna - FASE 6.1
+
+Implements Bayesian optimization with:
+- TPE (Tree-structured Parzen Estimator) sampler
+- Median pruner for early stopping
+- Multi-objective support
+- Efficient for expensive evaluations
+
+## 2. Dependencies
+- `logging`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Tuple`
+- `tqdm.tqdm`
+- `base_optimizer.BaseOptimizer`
+- `base_optimizer.OptimizationConfig`
+- `base_optimizer.OptimizationResult`
+- `models.ParameterGrid`
+- `models.ParameterRange`
+- `models.ParameterScale`
+- `models.ParameterType`
+- `trial.TrialHistory`
+- `trial.TrialResult`
+- `trial.TrialStatus`
+- `optuna`
+- `optuna.pruners.HyperbandPruner`
+- `optuna.pruners.MedianPruner`
+- `optuna.pruners.SuccessiveHalvingPruner`
+- `optuna.samplers.CmaEsSampler`
+- `optuna.samplers.RandomSampler`
+- `optuna.samplers.TPESampler`
+- `optuna.study.Study`
+- `multi_objective.ParetoFront`
+- `multi_objective.ParetoSolution`
+- `random_search.RandomSearchOptimizer`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BayesianOptimizer`: Must conform to application domain models.
+- `MultiObjectiveBayesianOptimizer`: Must conform to application domain models.
+- `ParetoSolution`: Must conform to application domain models.
+- `ParetoFront`: Must conform to application domain models.
+### Public Functions
+- `get_best_solution()`: Must return strictly typed objects.
+- `get_solution_by_criteria()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `optuna_objective()`: Must return strictly typed objects.
+- `optuna_objective()`: Must return strictly typed objects.
+- `callback()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

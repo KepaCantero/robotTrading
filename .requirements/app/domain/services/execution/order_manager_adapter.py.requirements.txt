@@ -1,0 +1,46 @@
+# Requirements Document: domain/services/execution/order_manager_adapter.py
+
+## 1. Module Overview
+Order Manager Adapter for Task 11 - Order Manager Integration
+
+This adapter bridges OrderManager with the ITradeExecutor protocol used by
+ComplianceEngine, enabling live trading order management in the system.
+
+Purpose: Integrate OrderManager with ComplianceEngine for live trading.
+Connects order lifecycle management (placement, tracking, cancellation) with
+the compliance coordinator layer.
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `decimal.Decimal`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `app.shared.protocols.ITradeExecutor`
+- `app.application.orchestration.live_trading.broker_connector.OrderSide`
+- `app.application.orchestration.live_trading.broker_connector.OrderStatus`
+- `app.application.orchestration.live_trading.broker_connector.OrderType`
+- `app.application.orchestration.live_trading.order_manager.OrderManager`
+- `app.application.orchestration.live_trading.order_manager.get_order_manager`
+- `app.application.orchestration.live_trading.alert_to_trade_mapper.TradeSignal`
+- `app.application.orchestration.live_trading.alert_to_trade_mapper.TradeSignalType`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `OrderManagerAdapter`: Must conform to application domain models.
+- `TradeResult`: Must conform to application domain models.
+### Public Functions
+- `get_order_manager_adapter()`: Must return strictly typed objects.
+- `get_order_id_for_signal()`: Must return strictly typed objects.
+- `get_mapping_stats()`: Must return strictly typed objects.
+- `reset()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

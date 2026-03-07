@@ -42,13 +42,13 @@ presets:
     risk_adjustment: 1.2 # Más conservador (reduce tamaño de posición 20%)
 
   balanced:
-    combination_mode: "MAJORITY" # Mayoría de filtros (>= 50%)
-    min_confidence: 0.60
+    combination_mode: "MAJORITY" # FIX: Changed back from ANY to reduce false signals
+    min_confidence: 0.55 # FIX: Raised from 0.50 for better signal quality
     risk_adjustment: 1.0
 
   aggressive:
-    combination_mode: "MAJORITY" # Mayoría, pero thresholds más relajados
-    min_confidence: 0.50
+    combination_mode: "ANY" # ITERATION 12: Changed to ANY for more signal generation
+    min_confidence: 0.45 # ITERATION 12: Lowered for more signals (still above random)
     risk_adjustment: 0.85 # Permite posiciones 15% más grandes
 
 # MÓDULOS DE FILTRO
@@ -89,9 +89,9 @@ modules:
   # Standard RSI Strategy:
   # - BUY when RSI <= buy_threshold (oversold condition, typically <= 30)
   # - SELL when RSI >= sell_threshold (overbought condition, typically >= 70)
-  # DISABLED: Testing if RSI is blocking profitable signals (Iteration 9)
+  # RE-ENABLED: Iteration 11 - Critical for signal quality
   rsi_filter:
-    enabled: false
+    enabled: true
     priority: "high"
 
     active_in_contexts:
@@ -105,31 +105,31 @@ modules:
       period: 14
 
     # FIXED: Thresholds adaptativos según contexto - NOW USING SINGLE THRESHOLDS
-    # FIX: Lowered buy_thresholds for more BUY signals
+    # FIX: Standard RSI thresholds for proper signal quality
     adaptive_thresholds:
       trend_up:
-        buy_threshold: 40   # FIX: Lowered from 45
-        sell_threshold: 80  # Raised from 70
+        buy_threshold: 35   # Oversold in uptrend - good entry
+        sell_threshold: 70  # Standard overbought
 
       trend_down:
-        buy_threshold: 25   # Lowered from 30
-        sell_threshold: 55  # Raised from 50
+        buy_threshold: 30   # More oversold required in downtrend
+        sell_threshold: 65  # Sell earlier in downtrend
 
       range:
         buy_threshold: 30   # Standard oversold
         sell_threshold: 70  # Standard overbought
 
       high_vol:
-        buy_threshold: 30   # Lowered from 35
-        sell_threshold: 70  # Raised from 65
+        buy_threshold: 30   # Standard oversold
+        sell_threshold: 70  # Standard overbought
 
   # STOCHASTIC RSI FILTER
   # Standard StochRSI Strategy:
   # - BUY when StochRSI K <= oversold_threshold (typically <= 20)
   # - SELL when StochRSI K >= overbought_threshold (typically >= 80)
-  # DISABLED: Testing if RSI-related filters are blocking profitable signals (Iteration 9)
+  # RE-ENABLED: Iteration 11 - Additional momentum confirmation
   stoch_rsi_filter:
-    enabled: false
+    enabled: true
     priority: "medium"
 
     active_in_contexts:

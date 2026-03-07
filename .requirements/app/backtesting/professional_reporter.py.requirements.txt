@@ -1,0 +1,44 @@
+# Requirements Document: backtesting/professional_reporter.py
+
+## 1. Module Overview
+Professional Reporter for Backtesting System (Req #16)
+
+Generates professional reports including:
+- Executive Summary (PDF - 1 page)
+- Complete Interactive Report (HTML)
+- Performance, Risk, Trades, and Robustness tabs
+
+## 2. Dependencies
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.TypedDict`
+- `typing.Union`
+- `numpy`
+- `app.backtesting.acceptance_criteria.AcceptanceReport`
+- `app.backtesting.capital_scale_analyzer.CapitalScaleAnalysisReport`
+- `app.backtesting.models.BacktestResult`
+- `app.backtesting.walk_forward_validator.ValidationWindow`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ChartDataDict`: Must conform to application domain models.
+- `ChartDict`: Must conform to application domain models.
+- `ReportSectionCharts`: Must conform to application domain models.
+- `ReportSection`: Must conform to application domain models.
+- `ProfessionalReport`: Must conform to application domain models.
+- `ProfessionalReporter`: Must conform to application domain models.
+### Public Functions
+- `generate_executive_summary()`: Must return strictly typed objects.
+- `generate_complete_report()`: Must return strictly typed objects.
+- `export_to_html()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

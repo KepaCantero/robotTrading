@@ -1,0 +1,65 @@
+# Requirements Document: domain/strategies/learning/subprocess_engine_wrapper.py
+
+## 1. Module Overview
+SubprocessLearningEngineWrapper - Wrapper to run learning engines in subprocess.
+
+This solves the macOS mutex.cc blocking issue where PyTorch and stable-baselines3
+cause deadlocks when used with multiprocessing's default 'spawn' start method.
+
+The wrapper:
+1. Detects if running on macOS
+2. If macOS, runs heavy operations (train, predict) in a subprocess
+3. Communicates results via multiprocessing.Queue
+
+This allows Deep Learning, Transformer, and Reinforcement Learning engines
+to work on macOS without blocking.
+
+FIX: Added proper initialization handshake, config sanitization, and better
+timeout handling to prevent hangs.
+
+## 2. Dependencies
+- `logging`
+- `multiprocessing`
+- `platform`
+- `sys`
+- `traceback`
+- `dataclasses.dataclass`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.Optional`
+- `typing.Tuple`
+- `numpy`
+- `os`
+- `copy`
+- `deep_learning_engine.DeepLearningEngine`
+- `transformer_engine.TransformerEngine`
+- `pickle`
+- `deep_learning_engine.DeepLearningEngine`
+- `reinforcement_learning_engine.ReinforcementLearningEngine`
+- `transformer_engine.TransformerEngine`
+- `reinforcement_learning_engine.ReinforcementLearningEngine`
+- `pickle`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `EngineOperation`: Must conform to application domain models.
+- `SubprocessRequest`: Must conform to application domain models.
+- `SubprocessResponse`: Must conform to application domain models.
+- `SubprocessLearningEngineWrapper`: Must conform to application domain models.
+### Public Functions
+- `train()`: Must return strictly typed objects.
+- `predict()`: Must return strictly typed objects.
+- `evaluate()`: Must return strictly typed objects.
+- `load_model()`: Must return strictly typed objects.
+- `save_model()`: Must return strictly typed objects.
+- `is_ready()`: Must return strictly typed objects.
+- `explain()`: Must return strictly typed objects.
+- `shutdown()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

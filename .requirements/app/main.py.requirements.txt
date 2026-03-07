@@ -1,0 +1,70 @@
+# Requirements Document: main.py
+
+## 1. Module Overview
+No module docstring provided.
+
+## 2. Dependencies
+- `logging`
+- `os`
+- `platform`
+- `sys`
+- `contextlib.asynccontextmanager`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Dict`
+- `uvicorn`
+- `fastapi.FastAPI`
+- `fastapi.HTTPException`
+- `fastapi.middleware.cors.CORSMiddleware`
+- `fastapi.responses.JSONResponse`
+- `app.presentation.api.AuditMiddleware`
+- `asyncio`
+- `sqlalchemy.exc.DatabaseError`
+- `sqlalchemy.exc.DataError`
+- `sqlalchemy.exc.IntegrityError`
+- `sqlalchemy.exc.OperationalError`
+- `sqlalchemy.exc.ProgrammingError`
+- `app.presentation.api.assets.router`
+- `app.presentation.api.capa2_endpoints.router`
+- `app.api.cost_analysis.router`
+- `app.presentation.api.error_handler.attribute_error_handler`
+- `app.presentation.api.error_handler.generic_exception_handler`
+- `app.presentation.api.error_handler.http_exception_handler`
+- `app.presentation.api.error_handler.index_error_handler`
+- `app.presentation.api.error_handler.key_error_handler`
+- `app.presentation.api.error_handler.pydantic_validation_exception_handler`
+- `app.presentation.api.error_handler.starlette_http_exception_handler`
+- `app.presentation.api.error_handler.type_error_handler`
+- `app.presentation.api.error_handler.validation_exception_handler`
+- `app.presentation.api.error_handler.value_error_handler`
+- `app.presentation.api.health.router`
+- `app.presentation.api.live_trading.router`
+- `app.presentation.api.market_data.router`
+- `app.presentation.api.middleware.AuthMiddleware`
+- `app.presentation.api.middleware.CorrelationIdMiddleware`
+- `app.presentation.api.middleware.RequestLoggingMiddleware`
+- `app.presentation.api.middleware.SecurityHeadersMiddleware`
+- `app.presentation.api.momentum.router`
+- `app.presentation.api.optimization.router`
+- `app.presentation.api.paper_trading.router`
+- `app.presentation.api.portfolio.router`
+- `app.presentation.api.portfolio_analytics.router`
+- `app.presentation.api.signals.router`
+- `app.presentation.api.trading_error_handler.router`
+- `app.shared.config.config.get_settings`
+- `app.infrastructure.persistence.database.close_database`
+- `app.infrastructure.persistence.database.init_database`
+- `fastapi.exceptions.RequestValidationError`
+- `pydantic.ValidationError`
+- `starlette.exceptions.HTTPException`
+- `app.shared.performance.numba_enforcer.enforce_numba_available`
+
+## 3. Core Components (Contracts)
+### Public Functions
+- `get_app_settings()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

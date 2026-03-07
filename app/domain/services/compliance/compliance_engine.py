@@ -2251,12 +2251,12 @@ class ComplianceEngine:
                 return BacktestEngine(config=config)
 
             elif name == "live_trading":
-                from app.application.orchestration.live_trading.broker_connector import BrokerConnector
+                from app.services.live_trading.broker_connector import BrokerConnector
 
                 return BrokerConnector()  # Has default broker_type
 
             elif name == "paper_trading":
-                from app.application.orchestration.live_trading.broker_adapters.paper_adapter import PaperAdapter
+                from app.services.live_trading.broker_adapters.paper_adapter import PaperAdapter
 
                 return PaperAdapter()  # pylint: disable=no-value-for-parameter
 
@@ -2299,7 +2299,7 @@ class ComplianceEngine:
             # -------------------------------------------------------------------------
 
             elif name == "ernest_chan":
-                from app.domain.services.execution.algorithms import get_execution_algorithm
+                from app.services.execution_algorithms import get_execution_algorithm
                 from app.services.regime_detection_chan import get_regime_detector
 
                 return {

@@ -1,0 +1,45 @@
+# Requirements Document: domain/analysis/fundamental_law/breadth_calculator.py
+
+## 1. Module Overview
+Breadth Calculator
+
+This module implements the calculation of strategy breadth, which measures
+the number of independent betting opportunities per year.
+
+Breadth is a critical component of the Fundamental Law:
+    IR = IC × √BR
+
+Higher breadth allows strategies with lower IC to achieve good IR.
+
+Reference:
+    Grinold, R., & Kahn, R. (2000). "Active Portfolio Management"
+    Chapter 9: The Information Ratio
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `decimal.Decimal`
+- `numpy`
+- `pandas`
+- `app.domain.analysis.fundamental_law.models.BreadthMetrics`
+- `app.shared.utils.decimal_utils.to_decimal`
+- `app.domain.analysis.fundamental_law.models.BreadthMetrics`
+- `app.domain.analysis.fundamental_law.models.BreadthMetrics`
+- `math`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `BreadthCalculator`: Must conform to application domain models.
+### Public Functions
+- `calculate_breadth()`: Must return strictly typed objects.
+- `calculate_independence_factor()`: Must return strictly typed objects.
+- `calculate_from_returns()`: Must return strictly typed objects.
+- `estimate_required_breadth()`: Must return strictly typed objects.
+- `calculate_optimal_breadth()`: Must return strictly typed objects.
+- `decompose_breadth()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

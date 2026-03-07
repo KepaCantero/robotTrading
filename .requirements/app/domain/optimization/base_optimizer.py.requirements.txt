@@ -1,0 +1,72 @@
+# Requirements Document: domain/optimization/base_optimizer.py
+
+## 1. Module Overview
+Base Optimizer - Abstract base class for all optimizers.
+
+This module provides the unified interface for all optimization algorithms
+in the system, including parameter optimizers and portfolio optimizers.
+
+Hierarchy:
+    BaseOptimizer (abstract)
+    ├── ParameterOptimizer (abstract) - for strategy parameter optimization
+    │   ├── BayesianOptimizer
+    │   ├── GridSearchOptimizer
+    │   └── RandomSearchOptimizer
+    └── PortfolioOptimizer (abstract) - for portfolio weight optimization
+        └── MeanVarianceOptimizer
+
+Usage:
+    from app.domain.optimization.base_optimizer import (
+        BaseOptimizer,
+        OptimizationConfig,
+        OptimizationResult,
+    )
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `abc.ABC`
+- `abc.abstractmethod`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.TypeVar`
+- `typing.Generic`
+- `numpy`
+- `numpy.typing.NDArray`
+- `os`
+- `random`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `OptimizerType`: Must conform to application domain models.
+- `OptimizationStatus`: Must conform to application domain models.
+- `OptimizationConfig`: Must conform to application domain models.
+- `TrialResult`: Must conform to application domain models.
+- `OptimizationResult`: Must conform to application domain models.
+- `BaseOptimizer`: Must conform to application domain models.
+### Public Functions
+- `n_parallel_jobs()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `is_success()`: Must return strictly typed objects.
+- `duration_seconds()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `success_rate()`: Must return strictly typed objects.
+- `mean_score()`: Must return strictly typed objects.
+- `std_score()`: Must return strictly typed objects.
+- `get_top_n()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `get_best_params()`: Must return strictly typed objects.
+- `get_history()`: Must return strictly typed objects.
+- `get_optimizer_type()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

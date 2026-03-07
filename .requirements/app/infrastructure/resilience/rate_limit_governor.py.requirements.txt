@@ -1,0 +1,56 @@
+# Requirements Document: infrastructure/resilience/rate_limit_governor.py
+
+## 1. Module Overview
+Rate Limit Governor - Token Bucket Algorithm + WebSocket First Strategy
+
+CRÍTICO para evitar baneos de IP en Crypto brokers (Binance, Kraken, etc.)
+
+Problema:
+- Binance: 1200 requests/minuto = 20/segundo
+- Kraken: Mucho más agresivo
+- Si excedes el límite → IP baneada 24 horas
+
+Solución:
+1. Token Bucket Algorithm: Garantiza que nunca excedes X requests/segundo
+2. WebSocket First Strategy: Usa WebSocket para datos en tiempo real (no consume REST rate limits)
+3. Adaptive Rate Limiting: Ajusta dinámicamente según respuestas del broker
+
+Author: SRE Feedback Integration
+Date: 2025-01-25
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `time`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Callable`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `aiohttp`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `RateLimitError`: Must conform to application domain models.
+- `RateLimitStrategy`: Must conform to application domain models.
+- `RateLimitConfig`: Must conform to application domain models.
+- `TokenBucketState`: Must conform to application domain models.
+- `TokenBucketAlgorithm`: Must conform to application domain models.
+- `WebSocketFirstStrategy`: Must conform to application domain models.
+- `AdaptiveRateLimiter`: Must conform to application domain models.
+- `RateLimitGovernor`: Must conform to application domain models.
+### Public Functions
+- `rate_limit()`: Must return strictly typed objects.
+- `get_stats()`: Must return strictly typed objects.
+- `get_stats()`: Must return strictly typed objects.
+- `is_websocket_connected()`: Must return strictly typed objects.
+- `decorator()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

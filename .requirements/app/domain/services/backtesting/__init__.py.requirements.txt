@@ -1,0 +1,53 @@
+# Requirements Document: domain/services/backtesting/__init__.py
+
+## 1. Module Overview
+Robust Backtesting Module
+
+Implements institutional-grade backtesting with realistic assumptions.
+Handles survivorship bias, corporate actions, transaction costs, slippage,
+and market impact for accurate strategy evaluation.
+
+Reference: Rule 11-lopez-de-prado-advances-in-financial-machine-learning.md
+- Backtesting overfitting detection
+- PnL distribution analysis
+- Harrah's bias and look-ahead bias prevention
+
+## 2. Dependencies
+- `__future__.annotations`
+- `backtest_engine.BacktestConfig`
+- `backtest_engine.BacktestEngine`
+- `backtest_engine.BacktestResult`
+- `backtest_engine.OrderSide`
+- `backtest_engine.OrderStatus`
+- `backtest_engine.OrderType`
+- `app.backtesting.models.PerformanceMetrics`
+- `app.backtesting.models.Trade`
+- `app.backtesting.models.TradeSide`
+- `app.backtesting.models.TradeStatus`
+- `dividend_handler.DividendHandler`
+- `dividend_handler.DividendPayment`
+- `dividend_handler.DividendReinvestmentStrategy`
+- `market_impact.ImpactParameters`
+- `market_impact.MarketImpactCalculator`
+- `market_impact.PermanentImpact`
+- `market_impact.TemporaryImpact`
+- `slippage.LinearSlippageModel`
+- `slippage.PercentageSlippageModel`
+- `slippage.SlippageModel`
+- `slippage.VolatilityAdjustedSlippage`
+- `survivorship_bias.CorporateAction`
+- `survivorship_bias.DelistingEvent`
+- `survivorship_bias.SurvivorshipBiasCorrector`
+- `transaction_costs.AlmgrenChristModel`
+- `transaction_costs.LinearCostModel`
+- `transaction_costs.MarketImpactModel`
+- `transaction_costs.PiecewiseLinearCostModel`
+- `transaction_costs.TransactionCostModel`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

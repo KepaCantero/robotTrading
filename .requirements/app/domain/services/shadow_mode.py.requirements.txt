@@ -1,0 +1,104 @@
+# Requirements Document: domain/services/shadow_mode.py
+
+## 1. Module Overview
+Shadow Mode - CRITICAL Component for Safe Production Testing
+
+This module implements Shadow Mode, which allows the bot to test strategies in
+production with the REAL API without actually executing trades.
+
+What is Shadow Mode?
+--------------------
+Shadow Mode is DIFFERENT from paper trading:
+- Paper Trading: Simulated API, simulated execution
+- Shadow Mode: REAL API, intercepts execution, records to WAL, simulates ACK
+
+How it Works:
+-------------
+1. Bot thinks it's trading in production with real API
+2. ShadowModeExecutor intercepts place_order calls
+3. Records order to WAL (exactly like real execution)
+4. Simulates ACK_RECEIVED response
+5. Does NOT actually send order to broker
+6. Logs with SHADOW prefix for audit trail
+
+Why This is Critical:
+---------------------
+- Test strategies with real market conditions
+- Validate API integration without risk
+- Compare shadow vs real execution performance
+- Safe ramp-up from testing to production
+- Detect slippage and execution issues
+
+Usage:
+    shadow_executor = ShadowModeExecutor(
+        broker_client=real_broker,
+        wal_manager=wal_manager,
+        sanity_layer=sanity_layer
+    )
+
+    # Execute order in shadow mode
+    result = await shadow_executor.execute_order_shadow(
+        symbol="AAPL",
+        side="BUY",
+        quantity=Decimal("100"),
+        price=Decimal("150.00")
+    )
+
+    # Compare shadow vs real performance
+    comparison = await shadow_executor.compare_shadow_vs_real()
+
+Integration Points:
+-------------------
+- IBroker interface (app/core/interfaces/broker_base.py)
+- WAL persistence (app/sre/state_machine/wal_persistence.py)
+- Boot Reconciler (app/sre/reconciliation/boot_reconciler.py)
+- Data Sanity Layer (app/sre/data_integrity/sanity_layer.py)
+
+Author: SRE Architecture
+Date: 2025-01-25
+
+## 2. Dependencies
+- `asyncio`
+- `logging`
+- `uuid`
+- `collections.defaultdict`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `datetime.timedelta`
+- `datetime.timezone`
+- `decimal.Decimal`
+- `enum.Enum`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `numpy`
+- `app.shared.interfaces.broker_base.Order`
+- `app.sre.data_integrity.sanity_layer.DataSanityLayer`
+- `app.sre.data_integrity.sanity_layer.SanityCheckResult`
+- `app.sre.state_machine.wal_persistence.OrderLog`
+- `app.sre.state_machine.wal_persistence.OrderState`
+- `app.sre.state_machine.wal_persistence.OrderStateMachine`
+- `os`
+- `random`
+- `json`
+- `aiofiles`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `ShadowModeType`: Must conform to application domain models.
+- `ShadowModeConfig`: Must conform to application domain models.
+- `ShadowExecutionResult`: Must conform to application domain models.
+- `ShadowRealComparison`: Must conform to application domain models.
+- `ShadowModeExecutor`: Must conform to application domain models.
+- `ShadowModeAwareBroker`: Must conform to application domain models.
+### Public Functions
+- `detect_shadow_mode_from_env()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

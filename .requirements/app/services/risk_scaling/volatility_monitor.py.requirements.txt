@@ -1,0 +1,47 @@
+# Requirements Document: services/risk_scaling/volatility_monitor.py
+
+## 1. Module Overview
+PHASE 3: Volatility Monitor - ATR-Based Position Scaling
+
+Monitors Average True Range (ATR) to scale positions based on volatility.
+Lower volatility → larger positions (up to 1.5x)
+Higher volatility → smaller positions (down to 0.5x)
+
+Formula:
+- ATR = Average of True Range over 14 periods
+- True Range = max(high-low, |high-close_prev|, |low-close_prev|)
+- Volatility Scale = base_scale / (current_ATR / average_ATR)
+
+Uses centralized configuration for all thresholds and parameters.
+
+## 2. Dependencies
+- `logging`
+- `statistics`
+- `dataclasses.dataclass`
+- `datetime.datetime`
+- `decimal.ROUND_HALF_UP`
+- `decimal.Decimal`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `PriceData`: Must conform to application domain models.
+- `VolatilityMonitor`: Must conform to application domain models.
+### Public Functions
+- `true_range()`: Must return strictly typed objects.
+- `calculate_atr()`: Must return strictly typed objects.
+- `calculate_average_atr()`: Must return strictly typed objects.
+- `calculate_volatility_scale()`: Must return strictly typed objects.
+- `is_volatility_spike()`: Must return strictly typed objects.
+- `get_volatility_regime()`: Must return strictly typed objects.
+- `get_recent_volatility_spikes()`: Must return strictly typed objects.
+- `calculate_atr_std_dev()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

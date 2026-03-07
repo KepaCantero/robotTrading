@@ -1,0 +1,84 @@
+# Requirements Document: backtesting/feature_engineering/feature_importance_uniqueness.py
+
+## 1. Module Overview
+Feature Importance with Sample Uniqueness for Financial ML
+
+Based on Marcos López de Prado's "Advances in Financial Machine Learning", Chapter 8.
+
+This module implements feature importance methods that account for sample uniqueness,
+which is critical in financial ML where observations are not independent due to:
+1. Overlapping time windows (labels have different durations)
+2. Correlated features (multicollinearity)
+3. Clustered observations (regime-dependent behavior)
+
+Key Innovations:
+1. MDI with Sample Weights: Weight feature importance by sample uniqueness
+2. MDA with Uniqueness Correction: Adjust permutation importance for overlaps
+3. SFI with Sequential Bootstrap: Single feature importance with proper CV
+4. Feature Importance Clustering: Group correlated features
+
+Why Uniqueness Matters:
+- Standard feature importance assumes i.i.d. samples
+- Financial data has overlapping labels (not independent)
+- Samples with high overlap should have lower weight
+- Uniqueness-weighted importance prevents overfitting to common patterns
+
+The Average Uniqueness:
+Each sample has a "uniqueness" score based on how many other samples
+it overlaps with. High overlap = low uniqueness = lower weight.
+
+Example:
+    >>> from sklearn.ensemble import RandomForestClassifier
+    >>> model = RandomForestClassifier()
+    >>> model.fit(X, y, sample_weight=uniqueness_weights)
+    >>>
+    >>> # Calculate uniqueness-weighted MDI
+    >>> importance = calculate_mdi_with_uniqueness(
+    ...     model, X, y, events, labels, uniqueness_weights
+    ... )
+    >>>
+    >>> # Calculate MDA with uniqueness correction
+    >>> mda = calculate_mda_with_uniqueness(
+    ...     model, X, y, events, labels
+    ... )
+
+## 2. Dependencies
+- `__future__.annotations`
+- `logging`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `datetime.datetime`
+- `typing.Any`
+- `typing.Dict`
+- `typing.List`
+- `typing.Optional`
+- `typing.Union`
+- `numpy`
+- `pandas`
+- `sklearn.metrics.f1_score`
+- `sklearn.metrics.roc_auc_score`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `UniquenessConfig`: Must conform to application domain models.
+- `UniquenessResult`: Must conform to application domain models.
+- `UniquenessCalculator`: Must conform to application domain models.
+- `MDIWithUniqueness`: Must conform to application domain models.
+- `MDAWithUniqueness`: Must conform to application domain models.
+- `FeatureClusterer`: Must conform to application domain models.
+- `FinancialMLFeatureImportanceWithUniqueness`: Must conform to application domain models.
+### Public Functions
+- `calculate_feature_importance_with_uniqueness()`: Must return strictly typed objects.
+- `to_dict()`: Must return strictly typed objects.
+- `calculate_average_uniqueness()`: Must return strictly typed objects.
+- `calculate_concurrent_uniqueness()`: Must return strictly typed objects.
+- `calculate()`: Must return strictly typed objects.
+- `calculate()`: Must return strictly typed objects.
+- `cluster_features()`: Must return strictly typed objects.
+- `calculate_importance()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [x] Exceptions must be handled.

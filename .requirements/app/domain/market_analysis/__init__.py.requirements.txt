@@ -1,0 +1,102 @@
+# Requirements Document: domain/market_analysis/__init__.py
+
+## 1. Module Overview
+Market Analysis Module
+
+This module provides comprehensive market analysis tools including:
+- Market microstructure analysis
+- Order Flow Imbalance (OFI) analysis
+- Price discovery mechanisms
+- Liquidity analysis
+
+Components:
+-----------
+- microstructure/: Market microstructure theory implementation
+  - OFI: Order Flow Imbalance analysis
+
+## 2. Dependencies
+- `app.domain.market_analysis.microstructure.OrderType`
+- `app.domain.market_analysis.microstructure.OrderSide`
+- `app.domain.market_analysis.microstructure.TraderType`
+- `app.domain.market_analysis.microstructure.Order`
+- `app.domain.market_analysis.microstructure.OrderFlowSnapshot`
+- `app.domain.market_analysis.microstructure.InformationAsymmetryMetrics`
+- `app.domain.market_analysis.microstructure.OrderFlowForecast`
+- `app.domain.market_analysis.microstructure.OrderFlowAnalyzer`
+- `app.domain.market_analysis.microstructure.OrderFlowSimulator`
+- `app.domain.market_analysis.microstructure.get_order_flow_analyzer`
+- `app.domain.market_analysis.microstructure.get_order_flow_simulator`
+- `app.domain.market_analysis.microstructure.LiquidityDimension`
+- `app.domain.market_analysis.microstructure.SpreadComponent`
+- `app.domain.market_analysis.microstructure.LiquidityMetrics`
+- `app.domain.market_analysis.microstructure.SpreadDecomposition`
+- `app.domain.market_analysis.microstructure.DepthProfile`
+- `app.domain.market_analysis.microstructure.LiquidityRisk`
+- `app.domain.market_analysis.microstructure.LiquidityAnalyzer`
+- `app.domain.market_analysis.microstructure.LiquidityMonitor`
+- `app.domain.market_analysis.microstructure.get_liquidity_analyzer`
+- `app.domain.market_analysis.microstructure.get_liquidity_monitor`
+- `app.domain.market_analysis.microstructure.PriceDiscoveryModel`
+- `app.domain.market_analysis.microstructure.MarketEfficiency`
+- `app.domain.market_analysis.microstructure.PriceDiscoveryMetrics`
+- `app.domain.market_analysis.microstructure.EfficientPriceEstimate`
+- `app.domain.market_analysis.microstructure.InformationFlowMetrics`
+- `app.domain.market_analysis.microstructure.MarketIntegrationMetrics`
+- `app.domain.market_analysis.microstructure.PriceDiscoveryAnalyzer`
+- `app.domain.market_analysis.microstructure.PriceDiscoveryMonitor`
+- `app.domain.market_analysis.microstructure.get_price_discovery_analyzer`
+- `app.domain.market_analysis.microstructure.get_price_discovery_monitor`
+- `app.domain.market_analysis.microstructure.MarketMechanism`
+- `app.domain.market_analysis.microstructure.AuctionType`
+- `app.domain.market_analysis.microstructure.OrderPriority`
+- `app.domain.market_analysis.microstructure.LimitOrder`
+- `app.domain.market_analysis.microstructure.AuctionResult`
+- `app.domain.market_analysis.microstructure.DealerInventoryState`
+- `app.domain.market_analysis.microstructure.ExecutionQuality`
+- `app.domain.market_analysis.microstructure.CallAuction`
+- `app.domain.market_analysis.microstructure.ContinuousDoubleAuction`
+- `app.domain.market_analysis.microstructure.DealerMarket`
+- `app.domain.market_analysis.microstructure.TradingMechanismComparator`
+- `app.domain.market_analysis.microstructure.get_call_auction`
+- `app.domain.market_analysis.microstructure.get_continuous_double_auction`
+- `app.domain.market_analysis.microstructure.get_dealer_market`
+- `app.domain.market_analysis.microstructure.get_mechanism_comparator`
+- `app.domain.market_analysis.microstructure.ModelType`
+- `app.domain.market_analysis.microstructure.InformationEvent`
+- `app.domain.market_analysis.microstructure.ModelParameters`
+- `app.domain.market_analysis.microstructure.GlostenMilgromResult`
+- `app.domain.market_analysis.microstructure.KyleModelResult`
+- `app.domain.market_analysis.microstructure.OrderFlowImpactResult`
+- `app.domain.market_analysis.microstructure.RollSpreadResult`
+- `app.domain.market_analysis.microstructure.StollDecompositionResult`
+- `app.domain.market_analysis.microstructure.GlostenMilgromModel`
+- `app.domain.market_analysis.microstructure.KyleModel`
+- `app.domain.market_analysis.microstructure.MadhavanRichardsonModel`
+- `app.domain.market_analysis.microstructure.RollSpreadEstimator`
+- `app.domain.market_analysis.microstructure.StollSpreadDecomposer`
+- `app.domain.market_analysis.microstructure.MicrostructureModelComparator`
+- `app.domain.market_analysis.microstructure.get_glosten_milgrom_model`
+- `app.domain.market_analysis.microstructure.get_kyle_model`
+- `app.domain.market_analysis.microstructure.get_madhavanh_richardson_model`
+- `app.domain.market_analysis.microstructure.get_roll_estimator`
+- `app.domain.market_analysis.microstructure.get_stoll_decomposer`
+- `app.domain.market_analysis.microstructure.get_model_comparator`
+- `app.domain.market_analysis.microstructure.ofi.OrderBookSnapshot`
+- `app.domain.market_analysis.microstructure.ofi.TickData`
+- `app.domain.market_analysis.microstructure.ofi.OFIConfig`
+- `app.domain.market_analysis.microstructure.ofi.OFISignalConfig`
+- `app.domain.market_analysis.microstructure.ofi.OFIPrediction`
+- `app.domain.market_analysis.microstructure.ofi.OFISignal`
+- `app.domain.market_analysis.microstructure.ofi.CumulativeOFI`
+- `app.domain.market_analysis.microstructure.ofi.OFICalculator`
+- `app.domain.market_analysis.microstructure.ofi.OFIPredictor`
+- `app.domain.market_analysis.microstructure.ofi.OFISignalGenerator`
+- `app.domain.market_analysis.microstructure.ofi.TickLevelOFIProcessor`
+
+## 3. Core Components (Contracts)
+
+## 4. Execution Requirements (Compliance Rules)
+- [ ] Must execute without syntax errors.
+- [ ] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.

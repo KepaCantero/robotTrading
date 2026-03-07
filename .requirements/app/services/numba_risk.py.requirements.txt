@@ -1,0 +1,55 @@
+# Requirements Document: services/numba_risk.py
+
+## 1. Module Overview
+Numba-Accelerated Risk Calculators
+
+CRITICAL: All performance-critical risk calculations MUST use Numba JIT compilation.
+NO fallbacks. NO exceptions. Numba is REQUIRED.
+
+This module provides Numba-optimized implementations of all risk calculations:
+- VaR (Value at Risk) - Historical, Parametric, Monte Carlo
+- CVaR (Conditional VaR) - Expected Shortfall
+- Portfolio risk metrics
+- Correlation matrices
+- Covariance matrices
+- Risk decomposition
+
+Performance Improvements:
+- VaR Calculation: 30-80x faster
+- CVaR Calculation: 25-60x faster
+- Correlation Matrix: 40-100x faster
+- Covariance Matrix: 35-90x faster
+- Portfolio VaR: 50-120x faster
+
+Author: Performance Optimization Team
+Date: 2026-01-28
+Version: 2.0.0 - MANDATORY NUMBA ENFORCEMENT
+Compliance: Rule 19, Rule 23 - High Performance Python
+
+## 2. Dependencies
+- `logging`
+- `numba`
+- `numpy`
+- `numba.jit`
+
+## 3. Core Components (Contracts)
+### Public Functions
+- `calculate_historical_var_numba()`: Must return strictly typed objects.
+- `calculate_parametric_var_numba()`: Must return strictly typed objects.
+- `calculate_portfolio_var_numba()`: Must return strictly typed objects.
+- `calculate_historical_cvar_numba()`: Must return strictly typed objects.
+- `calculate_correlation_matrix_numba()`: Must return strictly typed objects.
+- `calculate_covariance_matrix_numba()`: Must return strictly typed objects.
+- `sample_std_numba_risk()`: Must return strictly typed objects.
+- `calculate_portfolio_volatility_numba()`: Must return strictly typed objects.
+- `calculate_portfolio_beta_numba()`: Must return strictly typed objects.
+- `calculate_tracking_error_numba()`: Must return strictly typed objects.
+- `calculate_marginal_var_numba()`: Must return strictly typed objects.
+- `calculate_component_var_numba()`: Must return strictly typed objects.
+- `get_numba_risk_info()`: Must return strictly typed objects.
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must contain explicit structured logging or print interception.
+- [x] Must not expose external secrets.
+- [ ] Exceptions must be handled.
