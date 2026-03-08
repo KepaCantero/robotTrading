@@ -30,8 +30,8 @@ from app.backtesting.walk_forward_validator import (
     get_default_config,
     load_validation_config,
 )
-from app.core.decimal_utils import round_price
-from app.models.market_data import Quote
+from app.shared.utils.decimal_utils import round_price
+from app.domain.models.market_data import Quote
 
 # ============================================================================
 # Fixtures

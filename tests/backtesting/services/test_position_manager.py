@@ -6,11 +6,17 @@ Tests position tracking, updates, queries, and edge cases.
 
 from decimal import Decimal
 
+import pytest
+
 from app.backtesting.services.position_manager import PositionManager
+from tests.backtesting.conftest import DEFAULT_SYMBOL
 
 
 class TestPositionManager:
     """Test suite for PositionManager service."""
+
+    # For unittest-style tests
+    default_symbol = DEFAULT_SYMBOL
 
     def test_initialization(self):
         """Test PositionManager initializes with empty positions."""
@@ -18,65 +24,65 @@ class TestPositionManager:
         assert manager.positions == {}
         assert manager.get_total_position_count() == 0
 
-    def test_get_position_no_position(self):
+    def test_get_position_no_position(self, default_symbol):
         """Test getting position when none exists returns 0."""
         manager = PositionManager()
-        position = manager.get_position("AAPL")
+        position = manager.get_position(default_symbol)
         assert position == Decimal("0")
 
-    def test_get_position_existing(self):
+    def test_get_position_existing(self, default_symbol):
         """Test getting existing position."""
         manager = PositionManager()
-        manager.positions["AAPL"] = Decimal("100")
+        manager.positions[default_symbol] = Decimal("100")
 
-        position = manager.get_position("AAPL")
+        position = manager.get_position(default_symbol)
         assert position == Decimal("100")
 
-    def test_update_position_new_symbol(self):
+    def test_update_position_new_symbol(self, default_symbol):
         """Test updating position for new symbol."""
         manager = PositionManager()
 
-        new_position = manager.update_position("AAPL", Decimal("100"))
+        new_position = manager.update_position(default_symbol, Decimal("100"))
 
         assert new_position == Decimal("100")
-        assert manager.get_position("AAPL") == Decimal("100")
+        assert manager.get_position(default_symbol) == Decimal("100")
 
-    def test_update_position_add_to_existing(self):
+    def test_update_position_add_to_existing(self, default_symbol):
         """Test adding to existing position."""
         manager = PositionManager()
-        manager.positions["AAPL"] = Decimal("50")
+        manager.positions[default_symbol] = Decimal("50")
 
-        new_position = manager.update_position("AAPL", Decimal("50"))
+        new_position = manager.update_position(default_symbol, Decimal("50"))
 
         assert new_position == Decimal("100")
-        assert manager.get_position("AAPL") == Decimal("100")
+        assert manager.get_position(default_symbol) == Decimal("100")
 
-    def test_update_position_reduce_partial(self):
+    def test_update_position_reduce_partial(self, default_symbol):
         """Test reducing position partially."""
         manager = PositionManager()
-        manager.positions["AAPL"] = Decimal("100")
+        manager.positions[default_symbol] = Decimal("100")
 
-        new_position = manager.update_position("AAPL", Decimal("-30"))
+        new_position = manager.update_position(default_symbol, Decimal("-30"))
 
         assert new_position == Decimal("70")
-        assert manager.get_position("AAPL") == Decimal("70")
+        assert manager.get_position(default_symbol) == Decimal("70")
 
-    def test_update_position_close_full(self):
+    def test_update_position_close_full(self, default_symbol):
         """Test closing full position sets to 0."""
         manager = PositionManager()
-        manager.positions["AAPL"] = Decimal("100")
+        manager.positions[default_symbol] = Decimal("100")
 
-        new_position = manager.update_position("AAPL", Decimal("-100"))
+        new_position = manager.update_position(default_symbol, Decimal("-100"))
 
         assert new_position == Decimal("0")
-        assert manager.get_position("AAPL") == Decimal("0")
+        assert manager.get_position(default_symbol) == Decimal("0")
 
-    def test_update_position_overclose_sets_to_zero(self):
+    def test_update_position_overclose_sets_to_zero(self, default_symbol):
         """Test overclosing position sets to negative value."""
         manager = PositionManager()
-        manager.positions["AAPL"] = Decimal("100")
+        manager.positions[default_symbol] = Decimal("100")
 
-        new_position = manager.update_position("AAPL", Decimal("-150"))
+        new_position = manager.update_position(default_symbol, Decimal("-150"))
 
         # The implementation allows negative positions (short selling)
         # Actually, looking at the implementation more closely:
@@ -84,96 +90,96 @@ class TestPositionManager:
         # So it SHOULD be set to 0, but returns new_position which is -50
         # This is a quirk of the implementation - it stores 0 but returns -50
         assert new_position == Decimal("-50")  # The actual return value
-        assert manager.get_position("AAPL") == Decimal("0")  # The stored value
+        assert manager.get_position(default_symbol) == Decimal("0")  # The stored value
 
-    def test_set_position_positive(self):
+    def test_set_position_positive(self, default_symbol):
         """Test setting position to positive value."""
         manager = PositionManager()
 
-        manager.set_position("AAPL", Decimal("200"))
+        manager.set_position(default_symbol, Decimal("200"))
 
-        assert manager.get_position("AAPL") == Decimal("200")
+        assert manager.get_position(default_symbol) == Decimal("200")
 
-    def test_set_position_zero(self):
+    def test_set_position_zero(self, default_symbol):
         """Test setting position to zero."""
         manager = PositionManager()
-        manager.positions["AAPL"] = Decimal("100")
+        manager.positions[default_symbol] = Decimal("100")
 
-        manager.set_position("AAPL", Decimal("0"))
+        manager.set_position(default_symbol, Decimal("0"))
 
-        assert manager.get_position("AAPL") == Decimal("0")
+        assert manager.get_position(default_symbol) == Decimal("0")
 
-    def test_set_position_negative(self):
+    def test_set_position_negative(self, default_symbol):
         """Test setting position to negative sets to 0."""
         manager = PositionManager()
-        manager.positions["AAPL"] = Decimal("100")
+        manager.positions[default_symbol] = Decimal("100")
 
-        manager.set_position("AAPL", Decimal("-50"))
+        manager.set_position(default_symbol, Decimal("-50"))
 
-        assert manager.get_position("AAPL") == Decimal("0")
+        assert manager.get_position(default_symbol) == Decimal("0")
 
-    def test_close_position(self):
+    def test_close_position(self, default_symbol):
         """Test closing position."""
         manager = PositionManager()
-        manager.positions["AAPL"] = Decimal("100")
+        manager.positions[default_symbol] = Decimal("100")
 
-        previous = manager.close_position("AAPL")
+        previous = manager.close_position(default_symbol)
 
         assert previous == Decimal("100")
-        assert manager.get_position("AAPL") == Decimal("0")
+        assert manager.get_position(default_symbol) == Decimal("0")
 
-    def test_close_position_no_position(self):
+    def test_close_position_no_position(self, default_symbol):
         """Test closing non-existent position."""
         manager = PositionManager()
 
-        previous = manager.close_position("AAPL")
+        previous = manager.close_position(default_symbol)
 
         assert previous == Decimal("0")
-        assert manager.get_position("AAPL") == Decimal("0")
+        assert manager.get_position(default_symbol) == Decimal("0")
 
-    def test_has_open_position_true(self):
+    def test_has_open_position_true(self, default_symbol):
         """Test has_open_position returns True when position exists."""
         manager = PositionManager()
-        manager.positions["AAPL"] = Decimal("100")
+        manager.positions[default_symbol] = Decimal("100")
 
-        assert manager.has_open_position("AAPL") is True
+        assert manager.has_open_position(default_symbol) is True
 
-    def test_has_open_position_false(self):
+    def test_has_open_position_false(self, default_symbol):
         """Test has_open_position returns False when no position."""
         manager = PositionManager()
 
-        assert manager.has_open_position("AAPL") is False
+        assert manager.has_open_position(default_symbol) is False
 
-    def test_has_open_position_zero_quantity(self):
+    def test_has_open_position_zero_quantity(self, default_symbol):
         """Test has_open_position returns False for zero quantity."""
         manager = PositionManager()
-        manager.positions["AAPL"] = Decimal("0")
+        manager.positions[default_symbol] = Decimal("0")
 
-        assert manager.has_open_position("AAPL") is False
+        assert manager.has_open_position(default_symbol) is False
 
-    def test_get_all_positions(self):
+    def test_get_all_positions(self, default_symbol):
         """Test getting all positions returns copy."""
         manager = PositionManager()
-        manager.positions["AAPL"] = Decimal("100")
+        manager.positions[default_symbol] = Decimal("100")
         manager.positions["MSFT"] = Decimal("50")
 
         all_positions = manager.get_all_positions()
 
-        assert all_positions == {"AAPL": Decimal("100"), "MSFT": Decimal("50")}
+        assert all_positions == {default_symbol: Decimal("100"), "MSFT": Decimal("50")}
         # Verify it's a copy
-        all_positions["AAPL"] = Decimal("999")
-        assert manager.get_position("AAPL") == Decimal("100")
+        all_positions[default_symbol] = Decimal("999")
+        assert manager.get_position(default_symbol) == Decimal("100")
 
-    def test_get_symbols_with_positions(self):
+    def test_get_symbols_with_positions(self, default_symbol):
         """Test getting symbols with open positions."""
         manager = PositionManager()
-        manager.positions["AAPL"] = Decimal("100")
+        manager.positions[default_symbol] = Decimal("100")
         manager.positions["MSFT"] = Decimal("50")
         manager.positions["GOOGL"] = Decimal("0")
 
         symbols = manager.get_symbols_with_positions()
 
-        assert set(symbols) == {"AAPL", "MSFT"}
+        assert set(symbols) == {default_symbol, "MSFT"}
         assert "GOOGL" not in symbols
 
     def test_get_symbols_with_positions_empty(self):
@@ -184,22 +190,22 @@ class TestPositionManager:
 
         assert symbols == []
 
-    def test_clear_all_positions(self):
+    def test_clear_all_positions(self, default_symbol):
         """Test clearing all positions."""
         manager = PositionManager()
-        manager.positions["AAPL"] = Decimal("100")
+        manager.positions[default_symbol] = Decimal("100")
         manager.positions["MSFT"] = Decimal("50")
 
         manager.clear_all_positions()
 
-        assert manager.get_position("AAPL") == Decimal("0")
+        assert manager.get_position(default_symbol) == Decimal("0")
         assert manager.get_position("MSFT") == Decimal("0")
         assert manager.get_total_position_count() == 0
 
-    def test_get_total_position_count(self):
+    def test_get_total_position_count(self, default_symbol):
         """Test getting total position count."""
         manager = PositionManager()
-        manager.positions["AAPL"] = Decimal("100")
+        manager.positions[default_symbol] = Decimal("100")
         manager.positions["MSFT"] = Decimal("50")
         manager.positions["GOOGL"] = Decimal("0")
 
@@ -215,14 +221,14 @@ class TestPositionManager:
 
         assert count == 0
 
-    def test_get_total_position_value(self):
+    def test_get_total_position_value(self, default_symbol):
         """Test calculating total position value."""
         manager = PositionManager()
-        manager.positions["AAPL"] = Decimal("100")
+        manager.positions[default_symbol] = Decimal("100")
         manager.positions["MSFT"] = Decimal("50")
 
         def price_func(symbol):
-            prices = {"AAPL": Decimal("150"), "MSFT": Decimal("300")}
+            prices = {default_symbol: Decimal("150"), "MSFT": Decimal("300")}
             return prices.get(symbol)
 
         total_value = manager.get_total_position_value(price_func)
@@ -240,25 +246,25 @@ class TestPositionManager:
 
         assert total_value == Decimal("0")
 
-    def test_get_total_position_value_missing_price(self):
+    def test_get_total_position_value_missing_price(self, default_symbol):
         """Test calculating total position value with missing price."""
         manager = PositionManager()
-        manager.positions["AAPL"] = Decimal("100")
+        manager.positions[default_symbol] = Decimal("100")
         manager.positions["MSFT"] = Decimal("50")
 
         def price_func(symbol):
-            prices = {"AAPL": Decimal("150")}
+            prices = {default_symbol: Decimal("150")}
             return prices.get(symbol)  # MSFT returns None
 
         total_value = manager.get_total_position_value(price_func)
 
-        # Should only include AAPL since MSFT price is None
+        # Should only include default_symbol since MSFT price is None
         assert total_value == Decimal("15000")  # 100 * 150
 
-    def test_get_total_position_value_zero_quantity_ignored(self):
+    def test_get_total_position_value_zero_quantity_ignored(self, default_symbol):
         """Test zero quantity positions ignored in value calculation."""
         manager = PositionManager()
-        manager.positions["AAPL"] = Decimal("100")
+        manager.positions[default_symbol] = Decimal("100")
         manager.positions["MSFT"] = Decimal("0")
 
         def price_func(symbol):
@@ -266,24 +272,24 @@ class TestPositionManager:
 
         total_value = manager.get_total_position_value(price_func)
 
-        assert total_value == Decimal("10000")  # Only AAPL counted
+        assert total_value == Decimal("10000")  # Only default_symbol counted
 
-    def test_multiple_symbols_independent_tracking(self):
+    def test_multiple_symbols_independent_tracking(self, default_symbol):
         """Test that multiple symbols are tracked independently."""
         manager = PositionManager()
 
-        manager.update_position("AAPL", Decimal("100"))
+        manager.update_position(default_symbol, Decimal("100"))
         manager.update_position("MSFT", Decimal("50"))
         manager.update_position("GOOGL", Decimal("25"))
 
-        assert manager.get_position("AAPL") == Decimal("100")
+        assert manager.get_position(default_symbol) == Decimal("100")
         assert manager.get_position("MSFT") == Decimal("50")
         assert manager.get_position("GOOGL") == Decimal("25")
         assert manager.get_total_position_count() == 3
 
         manager.close_position("MSFT")
 
-        assert manager.get_position("AAPL") == Decimal("100")
+        assert manager.get_position(default_symbol) == Decimal("100")
         assert manager.get_position("MSFT") == Decimal("0")
         assert manager.get_position("GOOGL") == Decimal("25")
         assert manager.get_total_position_count() == 2

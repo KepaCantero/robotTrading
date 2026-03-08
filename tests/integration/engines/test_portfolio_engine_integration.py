@@ -38,7 +38,7 @@ from app.engines.portfolio_engine.rebalancers import (  # noqa: E402
     TransactionCostAwareRebalancer,
     VolatilityTargetingRebalancer,
 )
-from app.models.portfolio import AssetClass, Portfolio, Position  # noqa: E402
+from app.domain.models.portfolio import AssetClass, Portfolio, Position  # noqa: E402
 from app.providers.paper_trading import PaperTradingPortfolioProvider  # noqa: E402
 
 logging.basicConfig(

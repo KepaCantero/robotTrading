@@ -13,7 +13,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.models.portfolio import AssetClass, HedgingMetadata, Portfolio, Position
+from app.domain.models.portfolio import AssetClass, HedgingMetadata, Portfolio, Position
 from app.services.currency_hedging_engine import (
     CurrencyHedgingEngine,
     HedgeRecommendation,

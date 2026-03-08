@@ -38,8 +38,8 @@ from app.backtesting.models import (
     TradeStatus,
 )
 from app.backtesting.test_summary import TestSummaryReporter
-from app.core.decimal_utils import round_price
-from app.models.market_data import Quote
+from app.shared.utils.decimal_utils import round_price
+from app.domain.models.market_data import Quote
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 # Set reproducible seed

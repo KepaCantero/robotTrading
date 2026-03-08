@@ -8,7 +8,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.core.decimal_utils import (
+from app.shared.utils.decimal_utils import (
     calculate_percentage,
     format_currency,
     round_decimal,

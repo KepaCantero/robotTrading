@@ -11,7 +11,7 @@ from decimal import Decimal
 import pytest
 
 from app.core.centralized_config import SectorCountryDiversificationConfig, get_config
-from app.models.portfolio import AssetClass, Portfolio, Position
+from app.domain.models.portfolio import AssetClass, Portfolio, Position
 from app.providers.paper_trading import PaperTradingPortfolioProvider
 from app.services.country_diversification_validator import CountryDiversificationValidator
 from app.services.portfolio_service import PortfolioService

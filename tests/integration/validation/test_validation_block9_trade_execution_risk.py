@@ -14,8 +14,8 @@ from decimal import Decimal
 
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig
-from app.models.market_data import Quote
-from app.models.portfolio import AssetClass, Portfolio, Position
+from app.domain.models.market_data import Quote
+from app.domain.models.portfolio import AssetClass, Portfolio, Position
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.strategies.momentum import MomentumStrategy
 

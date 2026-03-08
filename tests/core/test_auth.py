@@ -20,7 +20,7 @@ from unittest.mock import Mock
 import pytest
 from fastapi import HTTPException, status
 
-from app.core.audit import AuditLogger
+from app.shared.audit import AuditLogger
 from app.core.auth import (  # TypedDict classes; Main classes; Singleton getters; Dependencies; Utilities
     APIKeyDict,
     AuthAttemptTracker,

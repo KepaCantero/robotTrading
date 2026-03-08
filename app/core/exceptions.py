@@ -122,3 +122,9 @@ class ConnectionError(AlgoTradingError):
     """Exception raised for connection errors."""
 
     pass
+
+
+class AlgoTradingDatabaseError(AlgoTradingError):
+    """Exception raised for database errors."""
+
+    pass

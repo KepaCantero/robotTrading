@@ -201,7 +201,7 @@ class TestSymbolUppercaseConversion:
     @pytest.mark.asyncio
     async def test_get_position_converts_symbol_to_uppercase(self, client):
         """Test get_position converts symbol to uppercase."""
-        from app.models.portfolio import AssetClass, Position
+        from app.domain.models.portfolio import AssetClass, Position
 
         mock_position = Position(
             symbol="AAPL",

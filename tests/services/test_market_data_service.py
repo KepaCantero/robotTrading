@@ -15,7 +15,7 @@ from uuid import UUID
 
 import pytest
 
-from app.models.market_data import DataFeedConfig, DataFeedType, DataFrequency, Quote
+from app.domain.models.market_data import DataFeedConfig, DataFeedType, DataFrequency, Quote
 from app.services.market_data_service import MarketDataService
 
 

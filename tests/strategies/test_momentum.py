@@ -15,8 +15,8 @@ from uuid import uuid4
 
 import pytest
 
-from app.models.market_data import Quote
-from app.models.portfolio import Portfolio
+from app.domain.models.market_data import Quote
+from app.domain.models.portfolio import Portfolio
 from app.models.signal import SignalSource, SignalType
 from app.services.momentum_analysis import TechnicalIndicatorCalculator
 from app.strategies.momentum import MomentumStrategy

@@ -37,8 +37,8 @@ from app.backtesting.models import BacktestConfig, BacktestResult, TradeStatus
 from app.backtesting.professional_reporter import ProfessionalReport, ProfessionalReporter
 from app.backtesting.robustness_tester import ParameterSensitivityResult, RobustnessTester
 from app.backtesting.walk_forward_validator import WalkForwardValidator
-from app.core.decimal_utils import round_price
-from app.models.market_data import Quote
+from app.shared.utils.decimal_utils import round_price
+from app.domain.models.market_data import Quote
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 # ============================================================================
@@ -819,9 +819,9 @@ class TestEdgeCases:
                     abs(result.performance.sharpe_ratio) < 10
                 ), "Sharpe magnitude should be reasonable"
 
-    def test_edge_case_division_by_zero(self):
+    def test_edge_case_division_by_zero(self, default_symbol):
         """Test case: Gross loss = 0 (profit factor undefined)."""
-        quotes = generate_realistic_quotes(days=100)
+        quotes = generate_realistic_quotes(symbol=default_symbol, days=100)
 
         # Only buy signals (no sells = no losses)
         signals = [
@@ -854,9 +854,9 @@ class TestEdgeCases:
         # Profit factor might be undefined (None or 0)
         assert result.performance is not None, "Should handle missing loss trades gracefully"
 
-    def test_edge_case_gap_down(self):
+    def test_edge_case_gap_down(self, default_symbol):
         """Test case: Price jumps from 100 to 90 (gap down)."""
-        quotes = generate_realistic_quotes(days=100)
+        quotes = generate_realistic_quotes(symbol=default_symbol, days=100)
 
         # Create gap down at day 50
         gap_day = 50

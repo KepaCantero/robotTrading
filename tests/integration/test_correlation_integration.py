@@ -12,8 +12,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from app.models.market_data import DataFeedType, DataFrequency, HistoricalData
-from app.models.portfolio import AssetClass, Portfolio, Position
+from app.domain.models.market_data import DataFeedType, DataFrequency, HistoricalData
+from app.domain.models.portfolio import AssetClass, Portfolio, Position
 from app.services.correlation.analyzer import CorrelationAnalyzer, CorrelationConfig
 from app.services.portfolio_risk_manager import PortfolioRiskManager
 

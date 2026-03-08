@@ -32,7 +32,7 @@ from typing import Dict, List, Optional
 import numpy as np
 import pytest
 
-from app.models.market_data import Quote
+from app.domain.models.market_data import Quote
 from app.services.circuit_breaker_manager import (
     CircuitBreakerConfig,
     CircuitBreakerLevel,

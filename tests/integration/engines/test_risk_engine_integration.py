@@ -37,7 +37,7 @@ from app.engines.risk_engine.var_calculators import (  # noqa: E402
     MonteCarloVaRCalculator,
     ParametricVaRCalculator,
 )
-from app.models.portfolio import AssetClass, Portfolio, Position  # noqa: E402
+from app.domain.models.portfolio import AssetClass, Portfolio, Position  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
