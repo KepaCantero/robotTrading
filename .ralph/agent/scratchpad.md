@@ -26,7 +26,7 @@
 - [x] 2.4 Decision Logger - Append-only (FULLY IMPLEMENTED)
 
 #### FASE 3: CONFIGURACIÓN
-- [ ] 3.1 Central Config - Hardcoded values
+- [x] 3.1 Central Config - Hardcoded values (229 centralized parameters)
 
 #### FASE 4: QA
 - [ ] 4.1 QA Validation - Linting
@@ -299,4 +299,56 @@
 **CHECKPOINT PASSED - Decision Logger Fully Implemented**
 
 ### Next Iteration Should:
-- Continue FASE 3.1: Central Config - Hardcoded values
+- Continue FASE 4.1: QA Validation - Linting
+
+### Iteration 8 (2026-03-08)
+- FASE 3.1 COMPLETED - Central Config Hardcoded Values:
+
+**Centralized Configuration Expansion:**
+- Total TradingThresholds parameters: 229
+- New parameters added: ~140
+
+**Categories of Parameters Added:**
+
+| Category | Parameters | Purpose |
+|----------|------------|---------|
+| Learning | 2 | learning_min_capital, learning_max_cost_ratio |
+| Capital Tier | 4 | tier_default_position_size, tier_*_max_drawdown |
+| Capital Viability | 3 | capital_viability_alpha_threshold, etc. |
+| Reconnection | 9 | reconnection_max_attempts, delays, timeouts |
+| Position Monitor | 5 | position_monitor_check_interval, etc. |
+| Transaction Costs | 4 | bps_multiplier, tx_*_fees |
+| Execution | 2 | execution_history_max_size, simulated_latency_ms |
+| Order Limits | 3 | max_order_quantity_shares, price, timestamp_age |
+| Drawdown Monitor | 6 | drawdown_* thresholds and scales |
+| Trailing Stop | 1 | trailing_stop_default_pct |
+| Currency Hedging | 5 | currency_*_max, exposure, costs |
+| Volatility Monitor | 2 | volatility_atr_period, lookback_periods |
+| Annual Trading | 3 | annual_trading_days, percentage_multiplier |
+| Dynamic Realloc | 6 | dynamic_realloc_* parameters |
+| Emergency Handler | 2 | emergency_*_timeout |
+| Kelly Criterion | 4 | kelly_* parameters |
+| Rate Limiting | 14 | rate_limit_* for Alpaca, Polygon, IBKR, Binance |
+| Circuit Breaker | 5 | circuit_breaker_* extended config |
+| Loss Monitor | 5 | loss_monitor_* parameters |
+| Liquidity | 7 | liquidity_* weights and normalization |
+| Order Size | 4 | order_size_* thresholds and multipliers |
+| Performance | 5 | poor/weak/moderate/strong thresholds |
+| FX | 5 | fx_* interest rates and factors |
+| Pairs Trading | 1 | pairs_correlation_min |
+| Dividend | 2 | dividend_score_good/excellent |
+| Stop Loss | 2 | default_stop_loss_pct, max_stop_distance_pct |
+
+**File Modified:**
+- app/shared/config/params/trading_thresholds.py (229 total fields)
+
+**Verification:**
+```python
+from app.shared.config.params.trading_thresholds import TradingThresholds
+tt = TradingThresholds()
+print(tt.learning_min_capital)  # 10000.0
+print(tt.reconnection_max_attempts)  # 5
+print(len(tt.model_dump()))  # 229
+```
+
+**CHECKPOINT PASSED - Central Config Expanded**

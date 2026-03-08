@@ -425,6 +425,439 @@ class TradingThresholds(BaseModel):
             raise ValueError("Decimal percentage values must be between 0 and 100")
         return v
 
+    # Learning Configuration (FASE 3.1 - Centralized Config)
+    learning_min_capital: float = Field(
+        default=10000.0, description="Minimum capital for learning engine to be economically viable"
+    )
+    learning_max_cost_ratio: float = Field(
+        default=0.30, ge=0.0, le=1.0, description="Maximum acceptable learning cost as ratio of alpha"
+    )
+
+    # Capital Tier Configuration (FASE 3.1 - Centralized Config)
+    tier_default_position_size: float = Field(
+        default=0.10, ge=0.01, le=0.25, description="Default position size % for capital tier"
+    )
+    tier_default_max_daily_loss: float = Field(
+        default=0.03, ge=0.01, le=0.10, description="Default max daily loss % for capital tier"
+    )
+    tier_micro_max_drawdown: float = Field(
+        default=0.10, ge=0.05, le=0.20, description="Max drawdown for micro tier accounts"
+    )
+    tier_small_max_drawdown: float = Field(
+        default=0.15, ge=0.10, le=0.25, description="Max drawdown for small tier accounts"
+    )
+
+    # Capital Viability Configuration (FASE 3.1 - Centralized Config)
+    capital_viability_alpha_threshold: float = Field(
+        default=0.15, ge=0.05, le=0.30, description="Alpha threshold for capital viability"
+    )
+    capital_viability_min_achievable: float = Field(
+        default=0.01, ge=0.005, le=0.05, description="Minimum achievable alpha for capital viability"
+    )
+    capital_viability_max_achievable: float = Field(
+        default=0.30, ge=0.10, le=0.50, description="Maximum achievable alpha for capital viability"
+    )
+
+    # Reconnection Configuration (FASE 3.1 - Centralized Config)
+    reconnection_max_attempts: int = Field(
+        default=5, ge=1, le=20, description="Maximum reconnection attempts"
+    )
+    reconnection_base_delay_seconds: float = Field(
+        default=1.0, ge=0.1, le=10.0, description="Base delay for reconnection attempts"
+    )
+    reconnection_max_delay_seconds: float = Field(
+        default=60.0, ge=10.0, le=300.0, description="Maximum delay for reconnection attempts"
+    )
+    reconnection_exponential_base: float = Field(
+        default=2.0, ge=1.5, le=3.0, description="Exponential backoff base"
+    )
+    reconnection_jitter_factor: float = Field(
+        default=0.1, ge=0.0, le=0.5, description="Jitter factor for reconnection delays"
+    )
+    reconnection_alert_after_attempts: int = Field(
+        default=3, ge=1, le=10, description="Alert after N failed reconnection attempts"
+    )
+    reconnection_default_timeout: float = Field(
+        default=30.0, ge=5.0, le=120.0, description="Default timeout for reconnection"
+    )
+    reconnection_maintain_delay: float = Field(
+        default=5.0, ge=1.0, le=30.0, description="Maintain delay for reconnection"
+    )
+    reconnection_health_check_interval: float = Field(
+        default=60.0, ge=10.0, le=300.0, description="Health check interval in seconds"
+    )
+
+    # Position Monitor Configuration (FASE 3.1 - Centralized Config)
+    position_monitor_check_interval: float = Field(
+        default=5.0, ge=1.0, le=60.0, description="Position monitor check interval in seconds"
+    )
+    position_monitor_max_retries: int = Field(
+        default=3, ge=1, le=10, description="Maximum price fetch retries"
+    )
+    position_monitor_price_fetch_timeout: float = Field(
+        default=10.0, ge=1.0, le=30.0, description="Price fetch timeout in seconds"
+    )
+    position_monitor_state_sync_interval: float = Field(
+        default=30.0, ge=5.0, le=120.0, description="State sync interval in seconds"
+    )
+    position_monitor_stop_execution_timeout: float = Field(
+        default=60.0, ge=10.0, le=300.0, description="Stop execution timeout in seconds"
+    )
+
+    # Transaction Cost Configuration (FASE 3.1 - Centralized Config)
+    bps_multiplier: float = Field(
+        default=10000.0, description="Basis points multiplier (1 bps = 0.0001)"
+    )
+    tx_market_order_slippage_pct: float = Field(
+        default=0.001, ge=0.0001, le=0.01, description="Market order slippage percentage"
+    )
+    tx_sec_fee_per_share: float = Field(
+        default=0.0000278, ge=0.0, le=0.001, description="SEC fee per share"
+    )
+    tx_trading_fee_per_share: float = Field(
+        default=0.000166, ge=0.0, le=0.001, description="Trading activity fee per share"
+    )
+
+    # Execution Configuration (FASE 3.1 - Centralized Config)
+    execution_history_max_size: int = Field(
+        default=1000, ge=100, le=10000, description="Maximum execution history size"
+    )
+    simulated_latency_ms: float = Field(
+        default=50.0, ge=0.0, le=500.0, description="Simulated latency in milliseconds"
+    )
+
+    # Order Limits Configuration (FASE 3.1 - Centralized Config)
+    max_order_quantity_shares: int = Field(
+        default=100000, ge=1000, le=1000000, description="Maximum order quantity in shares"
+    )
+    max_order_price_usd: float = Field(
+        default=10000.0, ge=100.0, le=100000.0, description="Maximum order price in USD"
+    )
+    max_order_timestamp_age_days: int = Field(
+        default=1, ge=1, le=7, description="Maximum order timestamp age in days"
+    )
+
+    # Drawdown Monitor Configuration (FASE 3.1 - Centralized Config)
+    drawdown_max_limit: float = Field(
+        default=0.15, ge=0.05, le=0.25, description="Maximum drawdown limit"
+    )
+    drawdown_caution_threshold: float = Field(
+        default=0.05, ge=0.02, le=0.10, description="Drawdown caution threshold"
+    )
+    drawdown_warning_threshold: float = Field(
+        default=0.10, ge=0.05, le=0.15, description="Drawdown warning threshold"
+    )
+    drawdown_caution_scale: float = Field(
+        default=0.8, ge=0.5, le=1.0, description="Position scale at caution level"
+    )
+    drawdown_warning_scale: float = Field(
+        default=0.5, ge=0.25, le=0.75, description="Position scale at warning level"
+    )
+    drawdown_halt_scale: float = Field(
+        default=0.0, ge=0.0, le=0.25, description="Position scale at halt level"
+    )
+
+    # Trailing Stop Configuration (FASE 3.1 - Centralized Config)
+    trailing_stop_default_pct: float = Field(
+        default=0.02, ge=0.01, le=0.10, description="Default trailing stop percentage"
+    )
+
+    # Currency Hedging Configuration (FASE 3.1 - Centralized Config)
+    currency_single_max: float = Field(
+        default=0.30, ge=0.10, le=0.50, description="Maximum single currency exposure"
+    )
+    currency_total_max: float = Field(
+        default=0.50, ge=0.30, le=0.80, description="Maximum total FX exposure"
+    )
+    currency_min_exposure: float = Field(
+        default=0.05, ge=0.01, le=0.10, description="Minimum exposure for hedging consideration"
+    )
+    currency_max_cost_bps: float = Field(
+        default=20.0, ge=5.0, le=50.0, description="Maximum hedging cost in basis points"
+    )
+    currency_partial_hedge_pct: float = Field(
+        default=0.50, ge=0.25, le=0.75, description="Partial hedge percentage"
+    )
+
+    # Volatility Monitor Configuration (FASE 3.1 - Centralized Config)
+    volatility_atr_period: int = Field(
+        default=14, ge=5, le=30, description="ATR period for volatility monitoring"
+    )
+    volatility_lookback_periods: int = Field(
+        default=30, ge=10, le=60, description="Lookback periods for volatility monitoring"
+    )
+
+    # Annual Trading Configuration (FASE 3.1 - Centralized Config)
+    annual_trading_days: int = Field(
+        default=252, ge=200, le=260, description="Number of trading days per year"
+    )
+    annual_trading_days_const: int = Field(
+        default=252, ge=200, le=260, description="Annual trading days constant"
+    )
+    percentage_multiplier: float = Field(
+        default=100.0, description="Percentage multiplier (1% = 0.01 * 100)"
+    )
+
+    # Opportunity Cost Configuration (FASE 3.1 - Centralized Config)
+    opportunity_risk_free_rate: float = Field(
+        default=0.05, ge=0.0, le=0.15, description="Risk-free rate for opportunity cost calculations"
+    )
+
+    # Dynamic Reallocation Configuration (FASE 3.1 - Centralized Config)
+    dynamic_realloc_rebalance_days: int = Field(
+        default=30, ge=7, le=90, description="Rebalance frequency in days"
+    )
+    dynamic_realloc_rolling_window: int = Field(
+        default=90, ge=30, le=180, description="Rolling window for reallocation calculations"
+    )
+    dynamic_realloc_min_weight: float = Field(
+        default=0.05, ge=0.01, le=0.15, description="Minimum strategy weight"
+    )
+    dynamic_realloc_max_weight: float = Field(
+        default=0.60, ge=0.30, le=0.80, description="Maximum strategy weight"
+    )
+    dynamic_realloc_volatility_target: float = Field(
+        default=0.15, ge=0.05, le=0.30, description="Target volatility for reallocation"
+    )
+    dynamic_realloc_min_trades: int = Field(
+        default=10, ge=5, le=30, description="Minimum trades for reallocation consideration"
+    )
+
+    # Emergency Handler Configuration (FASE 3.1 - Centralized Config)
+    emergency_confirmation_timeout: float = Field(
+        default=30.0, ge=10.0, le=60.0, description="Emergency confirmation timeout in seconds"
+    )
+    emergency_position_close_timeout: float = Field(
+        default=60.0, ge=30.0, le=120.0, description="Emergency position close timeout in seconds"
+    )
+
+    # Spread Configuration (FASE 3.1 - Centralized Config)
+    spread_skew_base: float = Field(
+        default=0.5, ge=0.0, le=1.0, description="Base spread skew factor"
+    )
+
+    # Kelly Criterion Configuration (FASE 3.1 - Centralized Config)
+    kelly_fallback_fraction: float = Field(
+        default=0.25, ge=0.10, le=0.50, description="Fallback Kelly fraction when calculation fails"
+    )
+    kelly_half_multiplier: float = Field(
+        default=0.5, ge=0.25, le=0.75, description="Half-Kelly multiplier"
+    )
+    kelly_max_position_pct: float = Field(
+        default=0.25, ge=0.10, le=0.40, description="Maximum position from Kelly calculation"
+    )
+    kelly_min_positive_threshold: float = Field(
+        default=0.01, ge=0.001, le=0.05, description="Minimum positive threshold for Kelly"
+    )
+
+    # Rate Limiting Configuration (FASE 3.1 - Centralized Config)
+    rate_limit_max_retries: int = Field(
+        default=3, ge=1, le=10, description="Maximum rate limit retries"
+    )
+    rate_limit_initial_backoff: float = Field(
+        default=1.0, ge=0.5, le=5.0, description="Initial backoff in seconds"
+    )
+    rate_limit_backoff_jitter_pct: float = Field(
+        default=0.1, ge=0.0, le=0.3, description="Backoff jitter percentage"
+    )
+    rate_limit_default_timeout: float = Field(
+        default=30.0, ge=5.0, le=60.0, description="Default rate limit timeout"
+    )
+    rate_limit_alert_threshold: float = Field(
+        default=0.8, ge=0.5, le=0.95, description="Alert when rate limit usage exceeds threshold"
+    )
+    rate_limit_alpaca_requests_per_second: float = Field(
+        default=200.0, ge=10.0, le=500.0, description="Alpaca requests per second limit"
+    )
+    rate_limit_alpaca_burst_capacity: int = Field(
+        default=400, ge=50, le=1000, description="Alpaca burst capacity"
+    )
+    rate_limit_polygon_requests_per_second: float = Field(
+        default=5.0, ge=1.0, le=20.0, description="Polygon requests per second limit"
+    )
+    rate_limit_polygon_burst_capacity: int = Field(
+        default=10, ge=5, le=50, description="Polygon burst capacity"
+    )
+    rate_limit_ibkr_requests_per_second: float = Field(
+        default=50.0, ge=10.0, le=100.0, description="IBKR requests per second limit"
+    )
+    rate_limit_ibkr_burst_capacity: int = Field(
+        default=100, ge=20, le=200, description="IBKR burst capacity"
+    )
+    rate_limit_binance_requests_per_second: float = Field(
+        default=50.0, ge=10.0, le=120.0, description="Binance requests per second limit"
+    )
+    rate_limit_binance_burst_capacity: int = Field(
+        default=1200, ge=100, le=3000, description="Binance burst capacity"
+    )
+
+    # Circuit Breaker Extended Configuration (FASE 3.1 - Centralized Config)
+    circuit_breaker_recovery_timeout: int = Field(
+        default=300, ge=60, le=900, description="Circuit breaker recovery timeout in seconds"
+    )
+    circuit_breaker_failure_threshold: int = Field(
+        default=5, ge=3, le=10, description="Failure threshold for circuit breaker"
+    )
+    circuit_breaker_vix_high: float = Field(
+        default=25.0, ge=20.0, le=30.0, description="VIX high threshold for circuit breaker"
+    )
+    circuit_breaker_vix_extreme: float = Field(
+        default=35.0, ge=30.0, le=50.0, description="VIX extreme threshold for circuit breaker"
+    )
+    circuit_breaker_stock_volatility: float = Field(
+        default=0.05, ge=0.02, le=0.10, description="Stock volatility threshold for circuit breaker"
+    )
+
+    # Loss Monitor Configuration (FASE 3.1 - Centralized Config)
+    loss_monitor_lookback_trades: int = Field(
+        default=20, ge=5, le=50, description="Lookback trades for loss monitoring"
+    )
+    loss_monitor_reset_threshold: int = Field(
+        default=3, ge=1, le=5, description="Reset threshold for loss monitor"
+    )
+    loss_monitor_window_trades: int = Field(
+        default=10, ge=5, le=20, description="Window trades for loss monitoring"
+    )
+    loss_monitor_scale_max_reduction: float = Field(
+        default=0.5, ge=0.25, le=0.75, description="Maximum scale reduction from loss monitor"
+    )
+    consecutive_losses_threshold: int = Field(
+        default=5, ge=3, le=10, description="Consecutive losses threshold for alert"
+    )
+
+    # Liquidity Configuration (FASE 3.1 - Centralized Config)
+    liquidity_max_spread_percent: float = Field(
+        default=0.05, ge=0.01, le=0.10, description="Maximum spread percentage for liquidity"
+    )
+    liquidity_volume_weight: float = Field(
+        default=0.4, ge=0.1, le=0.6, description="Weight for volume in liquidity score"
+    )
+    liquidity_depth_weight: float = Field(
+        default=0.3, ge=0.1, le=0.5, description="Weight for depth in liquidity score"
+    )
+    liquidity_spread_weight: float = Field(
+        default=0.3, ge=0.1, le=0.5, description="Weight for spread in liquidity score"
+    )
+    liquidity_volume_normalization: float = Field(
+        default=1000000.0, description="Volume normalization factor"
+    )
+    liquidity_depth_normalization: float = Field(
+        default=100000.0, description="Depth normalization factor"
+    )
+    liquidity_stress_multiplier: float = Field(
+        default=2.0, ge=1.0, le=3.0, description="Stress multiplier for liquidity calculations"
+    )
+
+    # Order Size Configuration (FASE 3.1 - Centralized Config)
+    order_size_tiny_threshold: float = Field(
+        default=0.01, ge=0.001, le=0.02, description="Tiny order size threshold"
+    )
+    order_size_small_threshold: float = Field(
+        default=0.05, ge=0.02, le=0.10, description="Small order size threshold"
+    )
+    order_size_small_multiplier: float = Field(
+        default=1.5, ge=1.0, le=2.0, description="Small order slippage multiplier"
+    )
+    order_size_large_multiplier: float = Field(
+        default=2.0, ge=1.5, le=3.0, description="Large order slippage multiplier"
+    )
+
+    # Performance Thresholds (FASE 3.1 - Centralized Config)
+    poor_performance_threshold: float = Field(
+        default=-0.10, le=-0.05, description="Poor performance threshold"
+    )
+    moderate_performance_reduction: float = Field(
+        default=0.8, ge=0.5, le=1.0, description="Moderate performance scale factor"
+    )
+    strong_performance_reduction: float = Field(
+        default=0.6, ge=0.4, le=0.8, description="Strong performance scale factor"
+    )
+    weak_performance_threshold: float = Field(
+        default=-0.05, le=-0.02, description="Weak performance threshold"
+    )
+    max_reduction_factor: float = Field(
+        default=0.5, ge=0.25, le=0.75, description="Maximum reduction factor"
+    )
+
+    # P-Value Configuration (FASE 3.1 - Centralized Config)
+    p_value_significance: float = Field(
+        default=0.05, ge=0.01, le=0.10, description="P-value significance threshold"
+    )
+
+    # Alert Configuration (FASE 3.1 - Centralized Config)
+    alert_limit_price_offset: float = Field(
+        default=0.01, ge=0.001, le=0.05, description="Alert limit price offset"
+    )
+
+    # Volume Configuration (FASE 3.1 - Centralized Config)
+    strong_volume_multiplier: float = Field(
+        default=2.0, ge=1.5, le=3.0, description="Strong volume multiplier"
+    )
+
+    # Valuation Configuration (FASE 3.1 - Centralized Config)
+    valuation_ratio_cheap: float = Field(
+        default=0.8, ge=0.6, le=1.0, description="Valuation ratio cheap threshold"
+    )
+    valuation_ratio_fair: float = Field(
+        default=1.2, ge=1.0, le=1.5, description="Valuation ratio fair threshold"
+    )
+
+    # FX Configuration (FASE 3.1 - Centralized Config)
+    fx_default_interest_rate: float = Field(
+        default=0.05, ge=0.0, le=0.15, description="Default FX interest rate"
+    )
+    fx_daily_variation_factor: float = Field(
+        default=0.01, ge=0.001, le=0.05, description="FX daily variation factor"
+    )
+    fx_long_term_variation_factor: float = Field(
+        default=0.10, ge=0.05, le=0.20, description="FX long-term variation factor"
+    )
+    fx_months_per_year: int = Field(
+        default=12, ge=12, le=12, description="Months per year for FX calculations"
+    )
+    fx_quantization_precision: int = Field(
+        default=4, ge=2, le=6, description="FX quantization precision (decimal places)"
+    )
+
+    # Volatility Trend Configuration (FASE 3.1 - Centralized Config)
+    volatility_trend_increasing_threshold: float = Field(
+        default=1.2, ge=1.0, le=1.5, description="Volatility trend increasing threshold"
+    )
+    volatility_trend_decreasing_threshold: float = Field(
+        default=0.8, ge=0.5, le=1.0, description="Volatility trend decreasing threshold"
+    )
+
+    # Covered Call Configuration (FASE 3.1 - Centralized Config)
+    covered_call_otm_multiplier: float = Field(
+        default=1.1, ge=1.0, le=1.3, description="Covered call OTM multiplier"
+    )
+
+    # Pairs Trading Configuration (FASE 3.1 - Centralized Config)
+    pairs_correlation_min: float = Field(
+        default=0.7, ge=0.5, le=0.9, description="Minimum correlation for pairs trading"
+    )
+
+    # Dividend Score Configuration (FASE 3.1 - Centralized Config)
+    dividend_score_good: float = Field(
+        default=60.0, ge=40.0, le=80.0, description="Good dividend score threshold"
+    )
+    dividend_score_excellent: float = Field(
+        default=80.0, ge=60.0, le=100.0, description="Excellent dividend score threshold"
+    )
+
+    # Stop Loss Configuration (FASE 3.1 - Centralized Config)
+    default_stop_loss_pct: float = Field(
+        default=0.08, ge=0.02, le=0.15, description="Default stop loss percentage"
+    )
+    max_stop_distance_pct: float = Field(
+        default=0.15, ge=0.05, le=0.25, description="Maximum stop distance percentage"
+    )
+
+    # Risk Per Trade Configuration (FASE 3.1 - Centralized Config)
+    risk_per_trade_default: float = Field(
+        default=0.02, ge=0.005, le=0.05, description="Default risk per trade percentage"
+    )
+
     @field_validator(
         "min_signal_strength",
         "min_signal_confidence",
