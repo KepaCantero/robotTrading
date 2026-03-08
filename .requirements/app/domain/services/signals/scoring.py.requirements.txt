@@ -1,0 +1,25 @@
+# Requirements Document: domain/services/signals/scoring.py
+
+## 1. Module Overview
+Signal Scoring Module
+
+Re-exports from app.services for backward compatibility.
+Provides signal scoring engine for evaluating trading signals.
+
+Author: AlgoTrading MVP Team
+Version: 1.0.0
+
+## 2. Dependencies
+- `app.services.signal_scoring_engine.get_signal_scoring_engine`
+
+## 3. Core Components (Contracts)
+### Public Functions
+- `get_signal_scoring_engine()`: Returns the signal scoring engine instance.
+
+### Exports
+- `get_signal_scoring_engine`: Signal scoring engine accessor
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must not expose external secrets.
+- [x] Must handle imports gracefully.

@@ -1,0 +1,25 @@
+# Requirements Document: core/config/__init__.py
+
+## 1. Module Overview
+Core Configuration Package
+
+Re-exports from app.shared.config for backward compatibility.
+Provides centralized configuration access for the entire application.
+
+Author: AlgoTrading MVP Team
+Version: 1.0.0
+
+## 2. Dependencies
+- `app.shared.config.centralized_config.get_config`
+
+## 3. Core Components (Contracts)
+### Public Functions
+- `get_config()`: Returns the centralized configuration instance.
+
+### Exports
+- `get_config`: Configuration accessor function
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors.
+- [x] Must not expose external secrets.
+- [x] Must handle imports gracefully.
