@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from app.models.market_data import DataFeedType, DataFrequency, HistoricalData
+from app.domain.models.market_data import DataFeedType, DataFrequency, HistoricalData
 from app.services.correlation.analyzer import (
     CorrelationAnalyzer,
     CorrelationCache,

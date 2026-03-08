@@ -1399,7 +1399,7 @@ class ModularMomentumStrategy(BaseStrategy):
         recent_lows = lows[-period:]
         recent_prices = prices[-period:]
 
-        tp_list = [(h + l + c) / 3 for h, l, c in zip(recent_highs, recent_lows, recent_prices)]
+        tp_list = [(h + lo + c) / 3 for h, lo, c in zip(recent_highs, recent_lows, recent_prices)]
         tp_sma = np.mean(tp_list)
         mean_deviation = np.mean([abs(tp - tp_sma) for tp in tp_list])
 

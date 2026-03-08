@@ -12,7 +12,7 @@ import pytest
 from app.engines.risk_engine.stress_testers.portfolio_variance_stress import (
     PortfolioVarianceStressTester,
 )
-from app.models.portfolio import Portfolio
+from app.domain.models.portfolio import Portfolio
 
 
 class TestPortfolioVarianceStressTester:

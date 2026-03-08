@@ -83,13 +83,13 @@ def sample_trades() -> List[Trade]:
 
 
 @pytest.fixture
-def winning_trades() -> List[Trade]:
+def winning_trades(default_symbol) -> List[Trade]:
     """Create only winning trades."""
     base_time = datetime(2024, 1, 1)
     return [
         Trade(
             trade_id=f"WIN{i:03d}",
-            symbol="AAPL",
+            symbol=default_symbol,
             side="buy",
             quantity=Decimal("100"),
             entry_price=Decimal("150.00"),
@@ -104,13 +104,13 @@ def winning_trades() -> List[Trade]:
 
 
 @pytest.fixture
-def losing_trades() -> List[Trade]:
+def losing_trades(default_symbol) -> List[Trade]:
     """Create only losing trades."""
     base_time = datetime(2024, 1, 1)
     return [
         Trade(
             trade_id=f"LOSS{i:03d}",
-            symbol="AAPL",
+            symbol=default_symbol,
             side="buy",
             quantity=Decimal("100"),
             entry_price=Decimal("155.00"),
@@ -188,13 +188,13 @@ class TestCalculateAllMetrics:
         assert metrics.losing_trades == 2
         assert metrics.win_rate == Decimal("50")
 
-    def test_calculate_metrics_filters_open_trades(self, calculator):
+    def test_calculate_metrics_filters_open_trades(self, calculator, default_symbol):
         """Test that only closed trades are included in metrics."""
         base_time = datetime(2024, 1, 1)
         trades = [
             Trade(
                 trade_id="T001",
-                symbol="AAPL",
+                symbol=default_symbol,
                 side="buy",
                 quantity=Decimal("100"),
                 entry_price=Decimal("150"),
@@ -342,14 +342,14 @@ class TestWinRateCalculation:
         # 2 winning out of 4 = 50%
         assert metrics.win_rate == Decimal("50")
 
-    def test_win_rate_is_capped_at_100(self, calculator):
+    def test_win_rate_is_capped_at_100(self, calculator, default_symbol):
         """Test that win rate never exceeds 100% due to rounding."""
         base_time = datetime(2024, 1, 1)
         # Create trades that might result in rounding issues
         trades = [
             Trade(
                 trade_id=f"T{i:03d}",
-                symbol="AAPL",
+                symbol=default_symbol,
                 side="buy",
                 quantity=Decimal("100"),
                 entry_price=Decimal("150"),
@@ -428,13 +428,13 @@ class TestExpectancyCalculation:
 
         assert expectancy > 0
 
-    def test_expectancy_with_negative_edge(self):
+    def test_expectancy_with_negative_edge(self, default_symbol):
         """Test expectancy with unprofitable strategy."""
         base_time = datetime(2024, 1, 1)
         wins = [
             Trade(
                 trade_id="W001",
-                symbol="AAPL",
+                symbol=default_symbol,
                 side="buy",
                 quantity=Decimal("100"),
                 entry_price=Decimal("150"),
@@ -448,7 +448,7 @@ class TestExpectancyCalculation:
         losses = [
             Trade(
                 trade_id=f"L00{i}",
-                symbol="AAPL",
+                symbol=default_symbol,
                 side="buy",
                 quantity=Decimal("100"),
                 entry_price=Decimal("150"),
@@ -486,14 +486,14 @@ class TestExpectancyCalculation:
 class TestDrawdownCalculation:
     """Test suite for drawdown calculation."""
 
-    def test_max_drawdown_with_profitable_trades(self, calculator):
+    def test_max_drawdown_with_profitable_trades(self, calculator, default_symbol):
         """Test max drawdown calculation with profitable equity curve."""
         base_time = datetime(2024, 1, 1)
         # Create trades that result in a growing equity curve
         trades = [
             Trade(
                 trade_id=f"T{i:03d}",
-                symbol="AAPL",
+                symbol=default_symbol,
                 side="buy",
                 quantity=Decimal("100"),
                 entry_price=Decimal("150"),
@@ -517,14 +517,14 @@ class TestDrawdownCalculation:
         # Should have minimal or zero drawdown
         assert metrics.max_drawdown <= Decimal("0")
 
-    def test_max_drawdown_with_losing_sequence(self, calculator):
+    def test_max_drawdown_with_losing_sequence(self, calculator, default_symbol):
         """Test max drawdown with losing trades at start."""
         base_time = datetime(2024, 1, 1)
         trades = [
             # First 5 trades lose
             Trade(
                 trade_id=f"LOSS{i:03d}",
-                symbol="AAPL",
+                symbol=default_symbol,
                 side="buy",
                 quantity=Decimal("100"),
                 entry_price=Decimal("155"),
@@ -539,7 +539,7 @@ class TestDrawdownCalculation:
             # Then 5 trades win
             Trade(
                 trade_id=f"WIN{i:03d}",
-                symbol="AAPL",
+                symbol=default_symbol,
                 side="buy",
                 quantity=Decimal("100"),
                 entry_price=Decimal("150"),
@@ -563,14 +563,14 @@ class TestDrawdownCalculation:
         # Should have negative drawdown
         assert metrics.max_drawdown < Decimal("0")
 
-    def test_max_drawdown_never_exceeds_initial_capital(self, calculator):
+    def test_max_drawdown_never_exceeds_initial_capital(self, calculator, default_symbol):
         """Test that max drawdown is bounded by initial capital."""
         base_time = datetime(2024, 1, 1)
         # Create extreme losing scenario
         trades = [
             Trade(
                 trade_id=f"T{i:03d}",
-                symbol="AAPL",
+                symbol=default_symbol,
                 side="buy",
                 quantity=Decimal("1000"),
                 entry_price=Decimal("100"),
@@ -801,13 +801,13 @@ class TestTradeDuration:
         # All trades are 1 day
         assert metrics.avg_trade_duration == Decimal("1")
 
-    def test_average_trade_duration_with_varying_durations(self, calculator):
+    def test_average_trade_duration_with_varying_durations(self, calculator, default_symbol):
         """Test average trade duration with varying hold times."""
         base_time = datetime(2024, 1, 1)
         trades = [
             Trade(
                 trade_id=f"T{i:03d}",
-                symbol="AAPL",
+                symbol=default_symbol,
                 side="buy",
                 quantity=Decimal("100"),
                 entry_price=Decimal("150"),
@@ -861,7 +861,7 @@ class TestMetricsCalculatorProperties:
         num_trades=st.integers(min_value=1, max_value=100),
     )
     @settings(max_examples=50, suppress_health_check=[HealthCheck.function_scoped_fixture])
-    def test_win_rate_always_between_0_and_100(self, calculator, initial_capital, num_trades):
+    def test_win_rate_always_between_0_and_100(self, calculator, default_symbol, initial_capital, num_trades):
         """Property: Win rate should always be between 0 and 100."""
         base_time = datetime(2024, 1, 1)
         trades = []
@@ -871,7 +871,7 @@ class TestMetricsCalculatorProperties:
             trades.append(
                 Trade(
                     trade_id=f"T{i:03d}",
-                    symbol="AAPL",
+                    symbol=default_symbol,
                     side="buy",
                     quantity=Decimal("100"),
                     entry_price=Decimal("150"),
@@ -920,7 +920,7 @@ class TestMetricsCalculatorProperties:
         num_losing=st.integers(min_value=0, max_value=50),
     )
     @settings(max_examples=30, suppress_health_check=[HealthCheck.function_scoped_fixture])
-    def test_total_trades_equals_sum_of_wins_and_losses(self, calculator, num_winning, num_losing):
+    def test_total_trades_equals_sum_of_wins_and_losses(self, calculator, default_symbol, num_winning, num_losing):
         """Property: Total trades should equal wins + losses."""
         base_time = datetime(2024, 1, 1)
         trades = []
@@ -930,7 +930,7 @@ class TestMetricsCalculatorProperties:
             trades.append(
                 Trade(
                     trade_id=f"W{i:03d}",
-                    symbol="AAPL",
+                    symbol=default_symbol,
                     side="buy",
                     quantity=Decimal("100"),
                     entry_price=Decimal("150"),
@@ -947,7 +947,7 @@ class TestMetricsCalculatorProperties:
             trades.append(
                 Trade(
                     trade_id=f"L{i:03d}",
-                    symbol="AAPL",
+                    symbol=default_symbol,
                     side="buy",
                     quantity=Decimal("100"),
                     entry_price=Decimal("155"),
@@ -980,13 +980,13 @@ class TestMetricsCalculatorProperties:
 class TestEdgeCases:
     """Test suite for edge cases and boundary conditions."""
 
-    def test_zero_pnl_trade(self, calculator):
+    def test_zero_pnl_trade(self, calculator, default_symbol):
         """Test handling of trades with zero P&L."""
         base_time = datetime(2024, 1, 1)
         trades = [
             Trade(
                 trade_id="T001",
-                symbol="AAPL",
+                symbol=default_symbol,
                 side="buy",
                 quantity=Decimal("100"),
                 entry_price=Decimal("150"),
@@ -1010,13 +1010,13 @@ class TestEdgeCases:
         assert metrics.total_trades == 1
         assert metrics.losing_trades == 1
 
-    def test_very_small_pnl_values(self, calculator):
+    def test_very_small_pnl_values(self, calculator, default_symbol):
         """Test handling of very small P&L values."""
         base_time = datetime(2024, 1, 1)
         trades = [
             Trade(
                 trade_id="T001",
-                symbol="AAPL",
+                symbol=default_symbol,
                 side="buy",
                 quantity=Decimal("1"),
                 entry_price=Decimal("150"),
@@ -1038,13 +1038,13 @@ class TestEdgeCases:
 
         assert metrics.total_pnl == Decimal("0.01")
 
-    def test_trades_with_none_pnl(self, calculator):
+    def test_trades_with_none_pnl(self, calculator, default_symbol):
         """Test trades with None P&L are handled correctly."""
         base_time = datetime(2024, 1, 1)
         trades = [
             Trade(
                 trade_id="T001",
-                symbol="AAPL",
+                symbol=default_symbol,
                 side="buy",
                 quantity=Decimal("100"),
                 entry_price=Decimal("150"),
@@ -1067,13 +1067,13 @@ class TestEdgeCases:
         # Should handle None P&L gracefully
         assert metrics.total_trades == 1
 
-    def test_unordered_trades(self, calculator):
+    def test_unordered_trades(self, calculator, default_symbol):
         """Test that trades are processed in chronological order regardless of input order."""
         base_time = datetime(2024, 1, 1)
         trades = [
             Trade(
                 trade_id="T003",
-                symbol="AAPL",
+                symbol=default_symbol,
                 side="buy",
                 quantity=Decimal("100"),
                 entry_price=Decimal("150"),
@@ -1085,7 +1085,7 @@ class TestEdgeCases:
             ),
             Trade(
                 trade_id="T001",
-                symbol="AAPL",
+                symbol=default_symbol,
                 side="buy",
                 quantity=Decimal("100"),
                 entry_price=Decimal("150"),
@@ -1097,7 +1097,7 @@ class TestEdgeCases:
             ),
             Trade(
                 trade_id="T002",
-                symbol="AAPL",
+                symbol=default_symbol,
                 side="buy",
                 quantity=Decimal("100"),
                 entry_price=Decimal("150"),
@@ -1129,14 +1129,14 @@ class TestEdgeCases:
 class TestSharpeSortinoRatios:
     """Test suite for Sharpe and Sortino ratio calculations."""
 
-    def test_sharpe_ratio_with_constant_positive_returns(self, calculator):
+    def test_sharpe_ratio_with_constant_positive_returns(self, calculator, default_symbol):
         """Test Sharpe ratio with constant positive returns."""
         base_time = datetime(2024, 1, 1)
         # Create trades with consistent positive returns
         trades = [
             Trade(
                 trade_id=f"T{i:03d}",
-                symbol="AAPL",
+                symbol=default_symbol,
                 side="buy",
                 quantity=Decimal("100"),
                 entry_price=Decimal("150"),
@@ -1162,7 +1162,7 @@ class TestSharpeSortinoRatios:
         # With zero volatility in returns, Sharpe should be defined
         assert isinstance(metrics.sharpe_ratio, Decimal)
 
-    def test_sharpe_ratio_with_high_volatility(self, calculator):
+    def test_sharpe_ratio_with_high_volatility(self, calculator, default_symbol):
         """Test Sharpe ratio with volatile returns."""
         base_time = datetime(2024, 1, 1)
         trades = []
@@ -1172,7 +1172,7 @@ class TestSharpeSortinoRatios:
             trades.append(
                 Trade(
                     trade_id=f"T{i:03d}",
-                    symbol="AAPL",
+                    symbol=default_symbol,
                     side="buy",
                     quantity=Decimal("100"),
                     entry_price=Decimal("150"),

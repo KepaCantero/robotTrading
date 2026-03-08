@@ -249,10 +249,10 @@ def simple_sma_crossover_strategy(
 
 
 @pytest.fixture
-def realistic_quotes():
+def realistic_quotes(default_symbol):
     """Generate realistic quotes using GBM."""
     return generate_realistic_quotes(
-        symbol="AAPL",
+        symbol=default_symbol,
         days=252,
         seed=42,
         drift=0.05,
@@ -303,7 +303,7 @@ class TestFullPipelineNoMocks:
     5. Exact mathematical verification
     """
 
-    def test_full_pipeline_without_mocks(self, realistic_quotes, realistic_signals, test_config):
+    def test_full_pipeline_without_mocks(self, realistic_quotes, realistic_signals, test_config, default_symbol):
         """
         Test complete workflow WITHOUT ANY MOCKS.
 
@@ -324,7 +324,7 @@ class TestFullPipelineNoMocks:
 
         # Verify realistic data was generated
         assert len(realistic_quotes) == 252, "Should generate 252 trading days"
-        assert all(q.symbol == "AAPL" for q in realistic_quotes), "All quotes should be AAPL"
+        assert all(q.symbol == default_symbol for q in realistic_quotes), f"All quotes should be {default_symbol}"
 
         # Verify realistic price movement (not too wild)
         prices = [float(q.close) for q in realistic_quotes]
@@ -338,13 +338,13 @@ class TestFullPipelineNoMocks:
 
         # Verify signal metadata
         for sig in realistic_signals:
-            assert sig.symbol == "AAPL", "Signal symbol should match quotes"
+            assert sig.symbol == default_symbol, "Signal symbol should match quotes"
             assert sig.metadata is not None, "Signals should have metadata"
             assert "strategy" in sig.metadata, "Signals should have strategy name"
 
         # Add input data to summary
         reporter.add_input_data(
-            symbols=["AAPL"],
+            symbols=[default_symbol],
             date_range=(realistic_quotes[0].timestamp, realistic_quotes[-1].timestamp),
             data_points=len(realistic_quotes),
             market_regime="neutral",
@@ -381,7 +381,7 @@ class TestFullPipelineNoMocks:
                 config=test_config,
                 start_date=realistic_quotes[0].timestamp,
                 end_date=realistic_quotes[-1].timestamp,
-                adv_data={"AAPL": Decimal("50000000")},  # 50M ADV
+                adv_data={default_symbol: Decimal("50000000")},  # 50M ADV
             )
 
             # If successful, verify results
@@ -501,7 +501,7 @@ class TestCommissionCalculations:
     Instead: Verify exact calculations against known values
     """
 
-    def test_commission_impact_calculated_correctly(self):
+    def test_commission_impact_calculated_correctly(self, default_symbol):
         """
         Test commission impact is calculated EXACTLY.
 
@@ -518,7 +518,7 @@ class TestCommissionCalculations:
         )
 
         # Generate test data
-        quotes = generate_realistic_quotes(days=100, seed=42)
+        quotes = generate_realistic_quotes(symbol=default_symbol, days=100, seed=42)
         signals = simple_sma_crossover_strategy(quotes)
 
         # Run backtest directly (bypassing CapitalScaleAnalyzer due to signature mismatch)
@@ -618,7 +618,7 @@ class TestADVRule:
     - Orders over 2% ADV get rejected (if < 50%)
     """
 
-    def test_apply_adv_limit_exact_calculation(self):
+    def test_apply_adv_limit_exact_calculation(self, default_symbol):
         """
         Test ADV rule with EXACT mathematical calculations.
 
@@ -634,13 +634,13 @@ class TestADVRule:
         adv = Decimal("10000000")  # 10M ADV
         # 100K / 10M = 1% (under 2%)
 
-        adjusted, partial, rejected = analyzer.apply_adv_limit(order_size, adv, "AAPL")
+        adjusted, partial, rejected = analyzer.apply_adv_limit(order_size, adv, default_symbol)
 
         assert adjusted == order_size, f"Order under 2% should pass unchanged, got {adjusted}"
         assert partial is False, "Should not be partial fill"
         assert rejected is False, "Should not be rejected"
 
-    def test_apply_adv_limit_partial_fill(self):
+    def test_apply_adv_limit_partial_fill(self, default_symbol):
         """
         Test ADV rule partial fill with EXACT calculations.
 
@@ -666,7 +666,7 @@ class TestADVRule:
         max_allowed = adv * adv_limit  # 10M * 0.02 = 200K
         fill_ratio = max_allowed / order_size  # 200K / 250K = 0.8
 
-        adjusted, partial, rejected = analyzer.apply_adv_limit(order_size, adv, "AAPL")
+        adjusted, partial, rejected = analyzer.apply_adv_limit(order_size, adv, default_symbol)
 
         # Verify EXACT calculations
         assert adjusted == max_allowed, f"Expected max_allowed {max_allowed}, got {adjusted}"
@@ -674,7 +674,7 @@ class TestADVRule:
         assert rejected is False, "Should not be rejected"
         assert fill_ratio >= Decimal("0.5"), f"Fill ratio {fill_ratio} should be >= 50%"
 
-    def test_apply_adv_limit_rejection(self):
+    def test_apply_adv_limit_rejection(self, default_symbol):
         """
         Test ADV rule rejection with EXACT calculations.
 
@@ -700,7 +700,7 @@ class TestADVRule:
         max_allowed = adv * adv_limit  # 10M * 0.02 = 200K
         fill_ratio = max_allowed / order_size  # 200K / 1.5M = 0.133
 
-        adjusted, partial, rejected = analyzer.apply_adv_limit(order_size, adv, "AAPL")
+        adjusted, partial, rejected = analyzer.apply_adv_limit(order_size, adv, default_symbol)
 
         # Verify EXACT calculations
         assert adjusted == Decimal("0"), "Rejected order should have 0 size"
@@ -708,7 +708,7 @@ class TestADVRule:
         assert rejected is True, "Should be rejected"
         assert fill_ratio < Decimal("0.5"), f"Fill ratio {fill_ratio} should be < 50%"
 
-    def test_adv_rule_disabled_passes_all_orders(self):
+    def test_adv_rule_disabled_passes_all_orders(self, default_symbol):
         """Test that disabling ADV rule passes all orders unchanged."""
         analyzer = CapitalScaleAnalyzer(
             enable_adv_rule=False,  # Disabled
@@ -718,20 +718,20 @@ class TestADVRule:
         order_size = Decimal("5000000")  # 5M shares
         adv = Decimal("10000000")  # 10M ADV
 
-        adjusted, partial, rejected = analyzer.apply_adv_limit(order_size, adv, "AAPL")
+        adjusted, partial, rejected = analyzer.apply_adv_limit(order_size, adv, default_symbol)
 
         assert adjusted == order_size, "Should pass unchanged when disabled"
         assert partial is False, "Should not be partial fill"
         assert rejected is False, "Should not be rejected"
 
-    def test_zero_adv_passes_unchanged(self):
+    def test_zero_adv_passes_unchanged(self, default_symbol):
         """Test that zero ADV passes order unchanged (no constraint)."""
         analyzer = CapitalScaleAnalyzer(enable_adv_rule=True)
 
         order_size = Decimal("100000")
         adv = Decimal("0")  # Zero ADV
 
-        adjusted, partial, rejected = analyzer.apply_adv_limit(order_size, adv, "AAPL")
+        adjusted, partial, rejected = analyzer.apply_adv_limit(order_size, adv, default_symbol)
 
         assert adjusted == order_size, "Zero ADV should pass order unchanged"
         assert partial is False, "Should not be partial fill"
@@ -897,7 +897,7 @@ class TestEdgeCasesRobust:
             or "greater than" in str(exc_info.value).lower()
         )
 
-    def test_duplicate_capital_levels_deduplicates(self):
+    def test_duplicate_capital_levels_deduplicates(self, default_symbol):
         """Test that duplicate capital levels are handled correctly."""
         # Create analyzer with duplicates
         analyzer = CapitalScaleAnalyzer(
@@ -912,7 +912,7 @@ class TestEdgeCasesRobust:
         assert len(analyzer.capital_levels) == 3, "Should preserve all levels including duplicates"
 
         # When running analysis, should handle gracefully
-        quotes = generate_realistic_quotes(days=100)
+        quotes = generate_realistic_quotes(symbol=default_symbol, days=100)
         signals = simple_sma_crossover_strategy(quotes)
         config = BacktestConfig(strategy_name="test", initial_capital=Decimal("10000"))
 
@@ -928,7 +928,7 @@ class TestEdgeCasesRobust:
                 "duplicate" in str(e).lower() or "capital" in str(e).lower()
             ), "Error should mention duplicates or capital levels"
 
-    def test_adv_limit_over_100_percent_raises_error(self):
+    def test_adv_limit_over_100_percent_raises_error(self, default_symbol):
         """Test that ADV limit > 100% is handled correctly."""
         # Current implementation doesn't validate, but it should
         analyzer = CapitalScaleAnalyzer(adv_limit_pct=Decimal("1.5"))  # 150%!
@@ -937,17 +937,17 @@ class TestEdgeCasesRobust:
         order_size = Decimal("100000")
         adv = Decimal("10000000")
 
-        adjusted, partial, rejected = analyzer.apply_adv_limit(order_size, adv, "AAPL")
+        adjusted, partial, rejected = analyzer.apply_adv_limit(order_size, adv, default_symbol)
 
         # With 150% limit, nothing should be limited
         assert adjusted == order_size, "150% limit should pass all orders"
 
-    def test_mixed_symbols_in_quotes_filters_correctly(self):
+    def test_mixed_symbols_in_quotes_filters_correctly(self, default_symbol):
         """Test handling of mixed symbols in quotes."""
         analyzer = CapitalScaleAnalyzer()
 
         # Generate quotes for different symbols
-        aapl_quotes = generate_realistic_quotes(symbol="AAPL", days=100, seed=42)
+        aapl_quotes = generate_realistic_quotes(symbol=default_symbol, days=100, seed=42)
         msft_quotes = generate_realistic_quotes(symbol="MSFT", days=100, seed=43)
 
         # Mix quotes (simulate multi-symbol data)
@@ -973,7 +973,7 @@ class TestEdgeCasesRobust:
             # Should fail gracefully with informative error
             assert True, f"Should handle mixed symbols gracefully: {e}"
 
-    def test_near_zero_adv_handles_gracefully(self):
+    def test_near_zero_adv_handles_gracefully(self, default_symbol):
         """Test handling of near-zero ADV values."""
         analyzer = CapitalScaleAnalyzer(enable_adv_rule=True)
 
@@ -981,14 +981,14 @@ class TestEdgeCasesRobust:
         order_size = Decimal("1000")
         adv = Decimal("100")  # Only 100 shares daily volume
 
-        adjusted, partial, rejected = analyzer.apply_adv_limit(order_size, adv, "PENNY")
+        adjusted, partial, rejected = analyzer.apply_adv_limit(order_size, adv, default_symbol)
 
         # With 2% limit, max allowed = 100 * 0.02 = 2 shares
         # Fill ratio = 2 / 1000 = 0.002 (0.2%) < 50%, so should reject
         assert adjusted == Decimal("0"), "Near-zero ADV should reject order"
         assert rejected is True, "Should reject due to insufficient fill ratio"
 
-    def test_empty_quotes_returns_empty_report(self):
+    def test_empty_quotes_returns_empty_report(self, default_symbol):
         """Test handling of empty quotes."""
         analyzer = CapitalScaleAnalyzer()
 
@@ -1006,11 +1006,11 @@ class TestEdgeCasesRobust:
         assert report.passed is False, "Should fail with empty data"
         assert len(report.capital_level_results) == 0, "Should have no results"
 
-    def test_single_capital_level_works(self):
+    def test_single_capital_level_works(self, default_symbol):
         """Test with single capital level."""
         analyzer = CapitalScaleAnalyzer(capital_levels=[Decimal("10000")])
 
-        quotes = generate_realistic_quotes(days=100)
+        quotes = generate_realistic_quotes(symbol=default_symbol, days=100)
         signals = simple_sma_crossover_strategy(quotes)
         config = BacktestConfig(strategy_name="test", initial_capital=Decimal("10000"))
 
@@ -1034,11 +1034,11 @@ class TestEdgeCasesRobust:
             # Known issue: run_backtest signature mismatch
             assert "run_backtest" in str(e), f"Expected run_backtest error, got: {e}"
 
-    def test_zero_commission_with_no_trades(self):
+    def test_zero_commission_with_no_trades(self, default_symbol):
         """Test commission impact when no trades executed."""
         analyzer = CapitalScaleAnalyzer()
 
-        quotes = generate_realistic_quotes(days=100)
+        quotes = generate_realistic_quotes(symbol=default_symbol, days=100)
         config = BacktestConfig(strategy_name="test", initial_capital=Decimal("10000"))
 
         # No signals = no trades

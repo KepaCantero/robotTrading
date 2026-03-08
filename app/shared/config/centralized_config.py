@@ -43,7 +43,7 @@ from app.shared.config.params.risk_config import (
     CurrencyHedgingConfig,
     SectorCountryDiversificationConfig,
 )
-from app.shared.config.params.strategy_config import StockAllocationSettings, StrategyConfig
+from app.shared.config.params.strategy_config import StrategyConfig
 
 # SRP: Import extracted configuration modules (TASK-24)
 from app.shared.config.params.trading_thresholds import TradingThresholds

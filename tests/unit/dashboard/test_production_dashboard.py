@@ -38,7 +38,7 @@ from app.dashboard.production_dashboard import (
     ProductionDashboard,
     get_production_dashboard,
 )
-from app.models.portfolio import AssetClass, Portfolio, Position
+from app.domain.models.portfolio import AssetClass, Portfolio, Position
 
 # Set reproducible seed
 np.random.seed(42)

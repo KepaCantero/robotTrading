@@ -32,12 +32,12 @@ def sample_equity_curve():
 
 
 @pytest.fixture
-def sample_trades():
+def sample_trades(default_symbol):
     """Create sample trades for testing."""
     return [
         Trade(
             trade_id="T1",
-            symbol="AAPL",
+            symbol=default_symbol,
             side="buy",
             quantity=Decimal("100"),
             entry_price=Decimal("100"),
@@ -49,7 +49,7 @@ def sample_trades():
         ),
         Trade(
             trade_id="T2",
-            symbol="AAPL",
+            symbol=default_symbol,
             side="buy",
             quantity=Decimal("100"),
             entry_price=Decimal("105"),
@@ -61,7 +61,7 @@ def sample_trades():
         ),
         Trade(
             trade_id="T3",
-            symbol="AAPL",
+            symbol=default_symbol,
             side="buy",
             quantity=Decimal("100"),
             entry_price=Decimal("100"),
@@ -91,12 +91,12 @@ def test_calculate_equity_curve_empty(validator):
     assert curve[0] == ("start", Decimal("10000"))
 
 
-def test_calculate_equity_curve_open_trades_excluded(validator):
+def test_calculate_equity_curve_open_trades_excluded(validator, default_symbol):
     """Test that open trades are excluded from equity curve."""
     trades = [
         Trade(
             trade_id="T1",
-            symbol="AAPL",
+            symbol=default_symbol,
             side="buy",
             quantity=Decimal("100"),
             entry_price=Decimal("100"),
@@ -242,12 +242,12 @@ def test_get_drawdown_statistics_no_trades(validator):
     assert stats["equity_high"] == 10000.0
 
 
-def test_get_drawdown_statistics_all_losses(validator):
+def test_get_drawdown_statistics_all_losses(validator, default_symbol):
     """Test statistics with all losing trades."""
     trades = [
         Trade(
             trade_id=f"T{i}",
-            symbol="AAPL",
+            symbol=default_symbol,
             side="buy",
             quantity=Decimal("100"),
             entry_price=Decimal("100"),

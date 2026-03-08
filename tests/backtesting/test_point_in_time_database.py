@@ -28,9 +28,9 @@ class TestPointInTimeDatabase:
         return PointInTimeDatabase()
 
     @pytest.fixture
-    def sample_symbols(self):
+    def sample_symbols(self, quick_test_symbols):
         """Create sample symbols."""
-        return ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"]
+        return quick_test_symbols
 
     def test_initialization(self, pit_db):
         """Test database initialization."""
@@ -67,12 +67,11 @@ class TestPointInTimeDatabase:
         assert isinstance(universe, list)
         assert len(universe) <= 3
 
-    def test_get_data_as_of_date(self, pit_db):
+    def test_get_data_as_of_date(self, pit_db, default_symbol):
         """Test getting data as of a specific date."""
-        symbol = "AAPL"
         query_date = datetime(2020, 6, 15)
 
-        data = pit_db.get_data_as_of_date(symbol, query_date, lookback_days=252)
+        data = pit_db.get_data_as_of_date(default_symbol, query_date, lookback_days=252)
 
         # Should return None (no actual data in test)
         assert data is None or isinstance(data, pd.DataFrame)
@@ -152,14 +151,14 @@ class TestPointInTimeDatabase:
         assert as_of_date in pit_db._snapshot_cache
         assert pit_db._snapshot_cache[as_of_date] == snapshot
 
-    def test_cache_size_limit(self, pit_db):
+    def test_cache_size_limit(self, pit_db, default_symbol):
         """Test cache size limit."""
         # Create many snapshots to exceed cache
         for i in range(1100):
             as_of_date = datetime(2020, 1, 1) + timedelta(days=i)
             snapshot = PITDataSnapshot(
                 as_of_date=as_of_date,
-                available_symbols=["AAPL"],
+                available_symbols=[default_symbol],
                 total_universe_size=1,
                 data_coverage={},
             )
@@ -190,17 +189,17 @@ class TestPITDataSnapshot:
 class TestCorporateAction:
     """Test CorporateAction dataclass."""
 
-    def test_creation(self):
+    def test_creation(self, default_symbol):
         """Test creating CorporateAction."""
         action = CorporateAction(
-            symbol="AAPL",
+            symbol=default_symbol,
             action_type="split",
             ex_date=datetime(2020, 8, 31),
             action_details={"ratio": "4:1"},
             adjustment_factor=Decimal("4.0"),
         )
 
-        assert action.symbol == "AAPL"
+        assert action.symbol == default_symbol
         assert action.action_type == "split"
         assert action.adjustment_factor == Decimal("4.0")
 

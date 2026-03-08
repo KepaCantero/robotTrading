@@ -6,7 +6,7 @@ Part of Alert Fatigue Prevention (SRE Rule 20.11).
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 
 @dataclass

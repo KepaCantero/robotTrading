@@ -45,7 +45,7 @@ np.random.seed(42)
 
 
 def generate_gbmr_quotes(
-    symbol: str = "AAPL",
+    symbol: str,
     days: int = 2000,
     seed: int = 42,
     drift: float = 0.05,
@@ -233,10 +233,10 @@ def backtest_config():
 
 
 @pytest.fixture
-def sample_data():
+def sample_data(default_symbol):
     """Generate 12 years of sample data for walk-forward."""
     quotes = generate_gbmr_quotes(
-        symbol="TEST", days=12 * 252, seed=42, drift=0.05, volatility=0.20
+        symbol=default_symbol, days=12 * 252, seed=42, drift=0.05, volatility=0.20
     )
     signals = generate_momentum_signals(quotes, fast_period=20, slow_period=50)
     return quotes, signals
@@ -933,12 +933,12 @@ class TestTomasiniEdgeCases:
         assert result.passed is False
         assert result.total_windows == 0
 
-    def test_insufficient_data_for_regime_detection(self, tomasini_config, backtest_config):
+    def test_insufficient_data_for_regime_detection(self, tomasini_config, backtest_config, default_symbol):
         """Test regime detection with insufficient data."""
         validator = TomasiniWalkForwardValidator(config=tomasini_config)
 
         # Generate only 3 months of data
-        short_quotes = generate_gbmr_quotes(days=63, seed=42)
+        short_quotes = generate_gbmr_quotes(symbol=default_symbol, days=63, seed=42)
         short_signals = generate_momentum_signals(short_quotes)
 
         result = validator.validate_strategy(

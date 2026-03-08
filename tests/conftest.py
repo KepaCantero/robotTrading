@@ -7,6 +7,7 @@ This module provides common fixtures and configuration for all tests.
 import os
 from decimal import Decimal
 from pathlib import Path
+from typing import List
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -50,6 +51,18 @@ else:
 # This causes ImportError during test collection. We import app.main lazily.
 _app = None
 
+# Historical data directory for symbol discovery
+HISTORICAL_DATA_DIR = Path(__file__).parent.parent / "data" / "historical"
+
+
+def get_available_symbols() -> List[str]:
+    """Get all available symbols from data/historical/ directory."""
+    symbols = []
+    if HISTORICAL_DATA_DIR.exists():
+        for csv_file in HISTORICAL_DATA_DIR.glob("*.csv"):
+            symbols.append(csv_file.stem)
+    return sorted(symbols)
+
 
 def get_app():
     """Lazy load FastAPI app to avoid import errors during collection."""
@@ -64,6 +77,28 @@ def get_app():
 # Import models that don't depend on matplotlib/numpy 2.x compatibility
 from app.domain.models.assets import Asset, AssetClass, AssetRanking, Exchange  # noqa: E402
 from app.domain.models.momentum import MomentumStrategy, TechnicalIndicators, Timeframe  # noqa: E402
+
+
+# ==============================================================================
+# Symbol Fixtures - Use ALL downloaded symbols by default
+# ==============================================================================
+
+@pytest.fixture(scope="session")
+def all_available_symbols() -> List[str]:
+    """Return all available symbols from data/historical/."""
+    return get_available_symbols()
+
+
+@pytest.fixture(scope="session")
+def default_symbol(all_available_symbols) -> str:
+    """Return the first available symbol (or AAPL as fallback)."""
+    return all_available_symbols[0] if all_available_symbols else "AAPL"
+
+
+@pytest.fixture(scope="session")
+def sample_symbols(all_available_symbols) -> List[str]:
+    """Return a sample of 5 symbols for quick tests."""
+    return all_available_symbols[:5] if len(all_available_symbols) >= 5 else all_available_symbols
 
 
 @pytest.fixture

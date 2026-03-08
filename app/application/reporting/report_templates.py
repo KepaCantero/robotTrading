@@ -4,6 +4,6 @@ Report Templates Module
 Re-exports from app.services.reporting for backward compatibility.
 """
 
-from app.services.reporting.report_templates import *
+from app.services.reporting.report_templates import ReportTemplates, get_report_templates
 
-__all__ = [name for name in dir() if not name.startswith('_')]
+__all__ = ["ReportTemplates", "get_report_templates"]

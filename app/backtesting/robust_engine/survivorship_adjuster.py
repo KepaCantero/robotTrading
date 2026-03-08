@@ -452,8 +452,8 @@ class SurvivorshipAdjuster:
         dates = pd.date_range(start=backtest_start, end=backtest_end, freq=freq)
         pit_universe = {}
 
-        for date in dates:
-            date_obj = date.date()
+        for dt in dates:
+            date_obj = dt.date()
             pit_universe[date_obj] = self.get_adjusted_universe(
                 current_universe=current_universe,
                 as_of_date=date_obj,
@@ -485,8 +485,8 @@ class SurvivorshipAdjuster:
         """
         events = []
 
-        for date in pd.date_range(start=start_date, end=end_date):
-            date_obj = date.date()
+        for dt in pd.date_range(start=start_date, end=end_date):
+            date_obj = dt.date()
             if date_obj in self._delisting_by_date:
                 for symbol in self._delisting_by_date[date_obj]:
                     stock = self._delisted_stocks[symbol]

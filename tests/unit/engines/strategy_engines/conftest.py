@@ -13,8 +13,8 @@ from unittest.mock import Mock, patch
 import numpy as np
 import pytest
 
-from app.models.market_data import Quote
-from app.models.portfolio import Portfolio, Position
+from app.domain.models.market_data import Quote
+from app.domain.models.portfolio import Portfolio, Position
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 # ===== Market Data Fixtures =====

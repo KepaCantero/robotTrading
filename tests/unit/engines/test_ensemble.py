@@ -16,7 +16,7 @@ from app.engines.strategy_engines.ensemble import (
     VotingEnsemble,
     WeightedEnsemble,
 )
-from app.models.market_data import Quote
+from app.domain.models.market_data import Quote
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 

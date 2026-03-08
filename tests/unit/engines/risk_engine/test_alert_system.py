@@ -9,7 +9,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from app.engines.risk_engine.alert_system import AlertSystem, BaseAlertSystem
-from app.models.portfolio import Portfolio
+from app.domain.models.portfolio import Portfolio
 
 
 @pytest.fixture

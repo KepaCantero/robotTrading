@@ -46,11 +46,11 @@ class TestLiquidityIntegration:
             backtester.liquidity_validator.enable_partial_fills == True
         ), "Partial fills should be enabled by default"
 
-    def test_normal_order_executes_with_liquidity_validation(self, backtester):
+    def test_normal_order_executes_with_liquidity_validation(self, backtester, default_symbol):
         """Test that normal orders execute successfully with liquidity validation."""
         # Create market data with normal volume
         bar = Quote(
-            symbol="AAPL",
+            symbol=default_symbol,
             timestamp=past_time(hours_ago=1),
             bid=Decimal("99.5"),
             ask=Decimal("100.5"),
@@ -65,7 +65,7 @@ class TestLiquidityIntegration:
 
         # Create buy signal
         signal = Signal(
-            symbol="AAPL",
+            symbol=default_symbol,
             signal_type=SignalType.BUY,
             strength=SignalStrength.MODERATE,
             confidence=80.0,
@@ -83,8 +83,8 @@ class TestLiquidityIntegration:
 
         # Verify trade was executed
         assert len(backtester.trades) == 1, "Trade should be executed"
-        assert "AAPL" in backtester.positions, "Position should be opened"
-        assert backtester.positions["AAPL"] > 0, "Position should have positive quantity"
+        assert default_symbol in backtester.positions, "Position should be opened"
+        assert backtester.positions[default_symbol] > 0, "Position should have positive quantity"
 
         # Verify trade includes market impact in execution price
         trade = backtester.trades[0]
@@ -193,11 +193,11 @@ class TestLiquidityIntegration:
             "25000"
         ), f"Position size {position_size} should be <= 25,000 shares (5% partial fill)"
 
-    def test_sell_order_liquidity_validation(self, backtester):
+    def test_sell_order_liquidity_validation(self, backtester, default_symbol):
         """Test that sell orders also undergo liquidity validation."""
         # First, open a position
         bar_buy = Quote(
-            symbol="AAPL",
+            symbol=default_symbol,
             timestamp=past_time(hours_ago=2),
             bid=Decimal("99.5"),
             ask=Decimal("100.5"),
@@ -211,7 +211,7 @@ class TestLiquidityIntegration:
         )
 
         buy_signal = Signal(
-            symbol="AAPL",
+            symbol=default_symbol,
             signal_type=SignalType.BUY,
             strength=SignalStrength.MODERATE,
             confidence=80.0,
@@ -227,12 +227,12 @@ class TestLiquidityIntegration:
         backtester._execute_buy_signal(buy_signal, bar_buy)
 
         # Verify position opened
-        position_size = backtester.positions["AAPL"]
+        position_size = backtester.positions[default_symbol]
         assert position_size > 0, "Position should be opened"
 
         # Now try to sell with normal volume
         bar_sell = Quote(
-            symbol="AAPL",
+            symbol=default_symbol,
             timestamp=past_time(hours_ago=1),
             bid=Decimal("99.5"),
             ask=Decimal("100.5"),
@@ -246,7 +246,7 @@ class TestLiquidityIntegration:
         )
 
         sell_signal = Signal(
-            symbol="AAPL",
+            symbol=default_symbol,
             signal_type=SignalType.SELL,
             strength=SignalStrength.MODERATE,
             confidence=80.0,
@@ -274,10 +274,10 @@ class TestLiquidityIntegration:
             backtester.capital > initial_capital
         ), "Capital should increase after selling position"
 
-    def test_liquidity_metrics_available(self, backtester):
+    def test_liquidity_metrics_available(self, backtester, default_symbol):
         """Test that liquidity metrics can be retrieved."""
         bar = Quote(
-            symbol="AAPL",
+            symbol=default_symbol,
             timestamp=past_time(hours_ago=1),
             bid=Decimal("99.5"),
             ask=Decimal("100.5"),

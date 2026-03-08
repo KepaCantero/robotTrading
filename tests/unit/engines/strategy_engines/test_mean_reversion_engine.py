@@ -18,7 +18,7 @@ import numpy as np
 import pytest
 
 from app.engines.strategy_engines.mean_reversion_engine import MeanReversionStrategyEngine
-from app.models.market_data import Quote
+from app.domain.models.market_data import Quote
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 # ===== Initialization Tests =====
