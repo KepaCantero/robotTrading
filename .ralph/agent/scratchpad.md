@@ -22,8 +22,8 @@
 #### FASE 2: COMPONENTES CORE
 - [x] 2.1 Compliance Engine - R1-R29 (24/29 implemented, 3 partial, 2 missing)
 - [x] 2.2 Spain Tax Engine - IRPF (FULLY IMPLEMENTED)
-- [ ] 2.3 Risk Validators - Kelly, DD, R:R
-- [ ] 2.4 Decision Logger - Append-only
+- [x] 2.3 Risk Validators - Kelly, DD, R:R (FULLY IMPLEMENTED)
+- [x] 2.4 Decision Logger - Append-only (FULLY IMPLEMENTED)
 
 #### FASE 3: CONFIGURACIÓN
 - [ ] 3.1 Central Config - Hardcoded values
@@ -209,3 +209,94 @@
 ### Next Iteration Should:
 - Continue FASE 2.3: Risk Validators - Kelly, DD, R:R
 - Continue FASE 2.4: Decision Logger - Append-only
+
+### Iteration 6 (2026-03-08)
+- FASE 2.3 COMPLETED - Risk Validators Analysis:
+
+**Risk Validators Implementation Summary:**
+
+| Validator | Rule | Status | Location |
+|-----------|------|--------|----------|
+| KellyCriterionValidator | R1 | ✅ | app/services/risk/validators/kelly_criterion_validator.py |
+| DrawdownValidator | R2 | ✅ | app/services/risk/validators/drawdown_validator.py |
+| RiskRewardValidator | R4 | ✅ | app/domain/services/risk/validators/risk_reward_validator.py |
+| DrawdownMonitor | R2 | ✅ | app/services/risk_scaling/drawdown_monitor.py |
+
+**Kelly Criterion Validator (R1):**
+- Kelly Criterion formula: (win_rate * avg_win - loss_rate * avg_loss) / avg_win
+- Uses Half-Kelly (50% fractional) to reduce volatility
+- Maximum risk: 2% of capital per trade
+- Returns: KellyResult with kelly_fraction, max_position, passes_kelly, passes_2pct, passes
+
+**Drawdown Validator (R2):**
+- Maximum drawdown limit: 15%
+- Kill switch activation when drawdown >= 15%
+- Auto-reset when equity reaches new ATH
+- Returns: DrawdownResult with current_drawdown, peak_equity, passes, kill_switch_active
+
+**Risk:Reward Validator (R4):**
+- Minimum R:R ratio: 2:1 (loaded from centralized config)
+- Calculates: potential_profit / potential_loss
+- Returns: RiskRewardResult with rr_ratio, min_rr_ratio, potential_profit, potential_loss, passes
+- Helper: calculate_minimum_stop() for stop loss calculation
+
+**DrawdownMonitor (Extended R2):**
+- 0-5% drawdown → scale = 1.0x (normal)
+- 5-10% drawdown → scale = 0.8x (caution)
+- 10-15% drawdown → scale = 0.5x (warning)
+- >15% drawdown → scale = 0.0x (halt trading - circuit breaker)
+- Uses centralized config for all thresholds
+
+**Integration Points:**
+- app/services/risk/validators/__init__.py - barrel export for all validators
+- app/backtesting/validation/drawdown_validator.py - backtesting-specific implementation
+- app/engines/portfolio_engine/optimizers/base.py - KellyCriterionOptimizer
+
+**CHECKPOINT PASSED - Risk Validators Fully Implemented**
+
+### Next Iteration Should:
+- Continue FASE 2.4: Decision Logger - Append-only
+
+### Iteration 7 (2026-03-08)
+- FASE 2.4 COMPLETED - Decision Logger Analysis:
+
+**Decision Logger Implementation Summary (R15, R28):**
+
+| Component | Rule | Status | Location |
+|-----------|------|--------|----------|
+| TradingDecisionLogger | R15, R28 | ✅ | app/infrastructure/logging/trading_decision_logger.py |
+| AppendOnlyLog | R15 | ✅ | app/infrastructure/logging/append_only_log.py |
+| LogEntry | R15 | ✅ | app/services/logging/log_entry.py |
+| ITradingDecisionLogger Protocol | R15 | ✅ | app/shared/protocols/i_trading_decision_logger.py |
+
+**R15: Logging Completo - Implementation:**
+- ✅ Append-only: `AppendOnlyLog` class enforces append-only (no delete, no update)
+- ✅ Correlation ID: Each `LogEntry` has unique `correlation_id` (UUID)
+- ✅ Immutable entries: `LogEntry` is a `@dataclass(frozen=True)` - immutable
+- ✅ Timestamp ISO 8601: All timestamps in UTC with "Z" suffix
+- ✅ JSON serialization: All entries serializable via `to_dict()`
+
+**R28: Registro para Hacienda (5 años) - Implementation:**
+- ✅ `export_for_hacienda(year)` method: Exports operations for tax compliance
+- ✅ Date range export: `export_date_range(start_date, end_date)`
+- ✅ Correlation tracking: All related entries linked via correlation_id
+- ✅ File rotation: Daily log files for easy archival
+- ✅ P&L calculation: `_calculate_pnl()` method for tax reporting
+
+**Protocol Interface (ITradingDecisionLogger):**
+- 5 methods max (ISP compliant):
+  1. `log_signal()` - Log signal with correlation ID
+  2. `log_execution()` - Log execution result
+  3. `log_validation_result()` - Log validation checks
+  4. `get_logs_by_correlation_id()` - Retrieve by correlation ID
+  5. `export_for_hacienda()` - Export for tax compliance
+
+**Integration Points:**
+- Used by compliance engine for R1-R4 validation logging
+- Used by order manager for execution tracking
+- Correlation ID propagation via `app/api/__init__.py` context vars
+
+**CHECKPOINT PASSED - Decision Logger Fully Implemented**
+
+### Next Iteration Should:
+- Continue FASE 3.1: Central Config - Hardcoded values
