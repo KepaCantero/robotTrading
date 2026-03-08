@@ -1,70 +1,75 @@
-# Master Orchestrator - Verify & Fix
+# Master Orchestrator - Production Ready v6.0
 
-**Version:** 5.0
-**Accion:** VERIFICA PRIMERO, luego formatea
-**Tiempo:** ~5-10 minutos
+**Version:** 6.0
+**Accion:** EJECUTA validaciones y formateo
+**Tiempo:** ~10-15 minutos
 
 ---
 
 ## OBJETIVO
 
-Verificar que existe ANTES de hacer nada. NO crear duplicados.
+Ejecutar validaciones reales de production readiness. El agente DEBE ejecutar los comandos bash indicados en cada hat.
 
 ---
 
-## FLUJO (4 Hats)
+## FLUJO (5 Hats)
 
 ```
-1. VERIFY EXISTING COMPONENTS
-   - Verifica: SpainTaxEngine EXISTE
-   - Verifica: TradingDecisionLogger EXISTE
-   - Verifica: CentralConfig EXISTE
-   - Verifica: Protocol interfaces
-   - NO CREAR NADA - Solo verificar
+1. VERIFY COMPONENTS
+   - EJECUTA: ls commands para verificar archivos
+   - REPORTA: estado de cada componente
+   - EMITE: master.components_verified
         |
         v
-2. FORMAT CODE
-   - Ejecuta: black app --line-length 100
-   - Ejecuta: isort app --profile black
+2. RUN BLACK
+   - EJECUTA: black app --line-length 100
+   - REPORTA: archivos formateados
+   - EMITE: master.black_done
         |
         v
-3. FIX LINTING
-   - Ejecuta: ruff check app --fix
+3. RUN ISORT
+   - EJECUTA: isort app --profile black
+   - REPORTA: resultado
+   - EMITE: master.isort_done
         |
         v
-4. FINAL REPORT
-   - Genera: production_readiness_audit.md
-   - Marca: master.complete
+4. RUN RUFF
+   - EJECUTA: ruff check app --fix
+   - REPORTA: errores antes/después
+   - EMITE: master.ruff_done
+        |
+        v
+5. GENERATE REPORT
+   - CREA: .ralph/outputs/production_readiness_audit.md
+   - EMITE: master.complete
 ```
 
 ---
 
-## RUTAS CORRECTAS (Ya existen)
+## REGLAS CRITICAS
 
-| Componente | Ubicacion Real |
-|------------|----------------|
-| SpainTaxEngine | `app/services/tax_efficiency/engines/spain_tax_engine.py` |
-| DecisionLogger | `app/infrastructure/logging/trading_decision_logger.py` |
-| CentralConfig | `app/shared/config/centralized_config.py` |
-| Protocols | `app/core/protocols/` |
-| RiskValidators | `app/services/risk/validators/` |
-
----
-
-## REGLA CRITICA
-
-**NO CREAR DUPLICADOS**
-
-Si un archivo ya existe:
-- NO crear otro
-- NO modificarlo
-- Solo reportar que existe
+1. **EJECUTA los comandos** - No solo los leas
+2. **REPORTA resultados** - Muestra la salida de cada comando
+3. **NO CREES DUPLICADOS** - Solo verifica y formatea
+4. **USA LAS RUTAS CORRECTAS:**
+   - SpainTaxEngine: `app/services/tax_efficiency/engines/spain_tax_engine.py`
+   - DecisionLogger: `app/infrastructure/logging/trading_decision_logger.py`
+   - CentralConfig: `app/shared/config/centralized_config.py`
 
 ---
 
-## OUTPUT
+## OUTPUT ESPERADO
 
+Al finalizar, debe existir:
+- `.ralph/outputs/production_readiness_audit.md` con el reporte completo
 - Codigo formateado (black, isort)
-- Linting arreglado (ruff)
-- `.ralph/outputs/production_readiness_audit.md`
-- Event: `master.complete`
+- Linting reducido (ruff)
+
+---
+
+## COMANDO PARA EJECUTAR
+
+```bash
+cd /Users/kepa.cantero/Projects/algoTrading
+ralph run -P .ralph/ralph_tasks/prompts/00_master_orchestrator.md
+```
