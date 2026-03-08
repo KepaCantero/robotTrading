@@ -180,9 +180,7 @@ class RunBacktestUseCase:
             )
 
             # Create executor using factory
-            BacktestExecutorFactory.create_executor(
-                executor_type='simple', config=engine_config
-            )
+            BacktestExecutorFactory.create_executor(executor_type='simple', config=engine_config)
 
             # Import strategy from config if available
             # For now, we need to get the strategy from the config or use a default

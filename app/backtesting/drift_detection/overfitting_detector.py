@@ -14,7 +14,7 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 
-from ..domain.value_objects.backtest_result import BacktestResultValue
+from app.domain.value_objects.backtest_result import BacktestResultValue
 
 logger = logging.getLogger(__name__)
 

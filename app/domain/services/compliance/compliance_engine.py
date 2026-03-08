@@ -64,6 +64,7 @@ if TYPE_CHECKING:
     class CycleResult:
         pass
 
+
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))

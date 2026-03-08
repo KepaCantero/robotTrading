@@ -11,6 +11,7 @@ References:
 - Cont, R., & Kukanov, A. (2017) "Order Flow Imbalance and Price Movement"
 - Aldridge, I. (2013) "High-Frequency Trading"
 """
+from __future__ import annotations
 
 import logging
 from datetime import datetime

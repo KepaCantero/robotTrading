@@ -57,12 +57,10 @@ class ProcessedAlert:
     # Processing results
     should_send: bool
     reason: str
-    group_id: Optional[str] = None
-    priority_score: Optional[float] = None
-
-    # Metadata
     fingerprint: str
     similarity_hash: str
+    group_id: Optional[str] = None
+    priority_score: Optional[float] = None
     suppressed: bool = False
     delayed_until: Optional[datetime] = None
 
