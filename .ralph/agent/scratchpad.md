@@ -21,7 +21,7 @@
 
 #### FASE 2: COMPONENTES CORE
 - [x] 2.1 Compliance Engine - R1-R29 (24/29 implemented, 3 partial, 2 missing)
-- [ ] 2.2 Spain Tax Engine - IRPF
+- [x] 2.2 Spain Tax Engine - IRPF (FULLY IMPLEMENTED)
 - [ ] 2.3 Risk Validators - Kelly, DD, R:R
 - [ ] 2.4 Decision Logger - Append-only
 
@@ -170,3 +170,42 @@
 - Continue FASE 2.2: Spain Tax Engine - IRPF
 - Continue FASE 2.3: Risk Validators
 - Continue FASE 2.4: Decision Logger
+
+### Iteration 5 (2026-03-08)
+- FASE 2.2 COMPLETED - Spain Tax Engine Analysis:
+
+**Spain Tax Engine Implementation Summary:**
+
+| Component | Status | Location |
+|-----------|--------|----------|
+| IRPF Brackets 19/21/23% | ✅ | app/services/tax_efficiency/engines/spain_tax_engine.py |
+| IRPF Protocol Interface | ✅ | app/shared/protocols/i_spain_tax_engine.py |
+| IRPF Implementation | ✅ | app/services/tax_efficiency/engines/spain_tax_engine_impl.py |
+| Spain Dividend Tax (UE 0%/No-UE 19%) | ✅ | app/services/tax_efficiency/engines/spain_dividend_tax.py |
+| Modelo 720 Generator | ✅ | app/services/tax_efficiency/engines/modelo_720_generator.py |
+| Modelo 721 Generator (Crypto) | ✅ | app/services/fifo/modelo_721_generator.py |
+| FIFO Tax Tracking | ✅ | app/infrastructure/persistence/database/migrations/versions/20260127000001_fifo_tax_tracking.py |
+| FIFO Schema | ✅ | app/domain/tax/database/fifo_schema.py |
+| Spain Tax Config (centralized) | ✅ | app/shared/config/compliance.py (SpainTaxConfig class) |
+| Loss Carryforward (4 years) | ✅ | spain_tax_engine_impl.py: get_available_losses(), apply_loss_carryforward() |
+
+**Centralized Configuration (SpainTaxConfig):**
+- IRPF_RATE_19: 0.19
+- IRPF_RATE_21: 0.21
+- IRPF_RATE_23: 0.23
+- IRPF_RATE_27: 0.27
+- IRPF_RATE_28: 0.28
+- IRPF_RATE_30: 0.30
+- EU_DIVIDEND_WITHHOLDING_PCT: 0.0
+- NON_EU_DIVIDEND_WITHHOLDING_PCT: 0.19
+- MODELO_720_THRESHOLD_EUR: 50000
+- CAPITAL_LOSS_CARRY_FORWARD_YEARS: 4
+
+**Bug Fixed:**
+- modelo_720_generator.py: `from typing import dict` → `from typing import Dict` (syntax error)
+
+**CHECKPOINT PASSED - Spain Tax Engine Fully Implemented**
+
+### Next Iteration Should:
+- Continue FASE 2.3: Risk Validators - Kelly, DD, R:R
+- Continue FASE 2.4: Decision Logger - Append-only
