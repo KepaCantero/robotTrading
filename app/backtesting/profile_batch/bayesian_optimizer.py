@@ -18,11 +18,7 @@ from typing import Any, Dict
 import optuna
 
 from app.backtesting.comprehensive_backtest_runner import ComprehensiveBacktestRunner
-from app.backtesting.shared import (
-    ParameterMappingService,
-    TempConfigManager,
-    get_empty_metrics,
-)
+from app.backtesting.shared import ParameterMappingService, TempConfigManager, get_empty_metrics
 from app.domain.models.input_profile import InputProfile
 from app.shared.config.profile_config_loader import ProfileConfigLoader
 

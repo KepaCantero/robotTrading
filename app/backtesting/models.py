@@ -16,7 +16,6 @@ from typing import List, Optional, Tuple
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 
-
 class TradeSide(str, Enum):
     """Trade side (buy/sell)."""
 

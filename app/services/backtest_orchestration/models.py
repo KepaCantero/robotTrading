@@ -17,7 +17,6 @@ if TYPE_CHECKING:
 
 # Import config for default values (avoid circular import)
 def _get_default_commission() -> Decimal:
-
     return Decimal("0.001")  # 0.1% default commission
 
 

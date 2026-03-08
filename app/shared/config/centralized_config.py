@@ -30,9 +30,7 @@ from pydantic_settings import BaseSettings
 if TYPE_CHECKING:
     pass
 
-from app.shared.config.params.backtest_config import (
-    BacktestingConfig,
-)
+from app.shared.config.params.backtest_config import BacktestingConfig
 from app.shared.config.params.infrastructure_config import (
     APIConfig,
     DatabaseConfig,
@@ -45,7 +43,7 @@ from app.shared.config.params.risk_config import (
     CurrencyHedgingConfig,
     SectorCountryDiversificationConfig,
 )
-from app.shared.config.params.strategy_config import StrategyConfig
+from app.shared.config.params.strategy_config import StockAllocationSettings, StrategyConfig
 
 # SRP: Import extracted configuration modules (TASK-24)
 from app.shared.config.params.trading_thresholds import TradingThresholds

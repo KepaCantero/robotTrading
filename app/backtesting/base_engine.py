@@ -24,9 +24,7 @@ from typing import Any, Dict, Generic, List, Optional, Tuple, TypeVar, Union
 
 from pydantic import BaseModel
 
-from app.backtesting.models import (
-    Trade,
-)
+from app.backtesting.models import Trade
 
 # SINGLE SOURCE OF TRUTH: Import CentralizedConfig
 from app.shared.config.centralized_config import get_config

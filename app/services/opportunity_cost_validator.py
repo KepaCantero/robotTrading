@@ -194,7 +194,7 @@ class OpportunityCostValidator:
         monthly_risk_free_rate: Decimal = None,
         expected_trades_per_month: int = 10,
         commission_per_trade: Decimal = Decimal("15"),
-        target_alpha_pct_monthly: Decimal = getattr(config.trading, 'max_risk_per_trade', 0.02)"),  # 2% monthly
+        target_alpha_pct_monthly: Decimal = Decimal("0.02"),  # 2% monthly
     ) -> Decimal:
         """
         Calculate the capital amount where trading becomes viable.
