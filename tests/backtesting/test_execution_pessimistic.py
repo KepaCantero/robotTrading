@@ -368,10 +368,10 @@ class TestSlippageCalculation:
 class TestPositionCreation:
     """Tests for position creation with stops."""
 
-    def test_create_long_position_with_stops(self):
+    def test_create_long_position_with_stops(self, default_symbol):
         """Test creating long position with stops."""
         position = create_position_with_stops(
-            symbol="AAPL",
+            symbol=default_symbol,
             side="long",
             quantity=Decimal("100"),
             entry_price=Decimal("100"),
@@ -384,10 +384,10 @@ class TestPositionCreation:
         assert position.stop_loss_price == Decimal("95.00")  # 100 * (1 - 0.05)
         assert position.take_profit_price == Decimal("110.00")  # 100 * (1 + 0.10)
 
-    def test_create_short_position_with_stops(self):
+    def test_create_short_position_with_stops(self, default_symbol):
         """Test creating short position with stops."""
         position = create_position_with_stops(
-            symbol="AAPL",
+            symbol=default_symbol,
             side="short",
             quantity=Decimal("100"),
             entry_price=Decimal("100"),
@@ -400,10 +400,10 @@ class TestPositionCreation:
         assert position.stop_loss_price == Decimal("105.00")  # 100 * (1 + 0.05)
         assert position.take_profit_price == Decimal("90.00")  # 100 * (1 - 0.10)
 
-    def test_position_without_stops(self):
+    def test_position_without_stops(self, default_symbol):
         """Test creating position without stops."""
         position = create_position_with_stops(
-            symbol="AAPL",
+            symbol=default_symbol,
             side="long",
             quantity=Decimal("100"),
             entry_price=Decimal("100"),
@@ -422,10 +422,10 @@ class TestPositionCreation:
 class TestCommissionCalculation:
     """Tests for commission calculation on execution."""
 
-    def test_commission_calculated_on_execution(self, execution_engine):
+    def test_commission_calculated_on_execution(self, execution_engine, default_symbol):
         """Test that commission is calculated on execution."""
         result = execution_engine.execute_entry_order(
-            symbol="AAPL",
+            symbol=default_symbol,
             side="buy",
             quantity=Decimal("100"),
             signal_time=datetime(2020, 1, 1),

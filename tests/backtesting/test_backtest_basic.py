@@ -256,10 +256,10 @@ def generate_sma_crossover_signals(
 
 
 @pytest.fixture
-def realistic_quotes():
+def realistic_quotes(default_symbol):
     """Generate realistic quotes using GBM."""
     return generate_realistic_quotes(
-        symbol="AAPL",
+        symbol=default_symbol,
         days=500,
         seed=42,
         drift=0.05,
@@ -314,7 +314,7 @@ class TestSimpleBacktester:
         assert backtester.peak_equity == default_config.initial_capital
 
     def test_backtester_with_realistic_data(
-        self, realistic_quotes, realistic_signals, default_config
+        self, realistic_quotes, realistic_signals, default_config, default_symbol
     ):
         """
         Test backtest with REALISTIC GBM data (not synthetic).
@@ -335,7 +335,7 @@ class TestSimpleBacktester:
 
         # Add input data to summary
         reporter.add_input_data(
-            symbols=["AAPL"],
+            symbols=[default_symbol],
             date_range=(realistic_quotes[0].timestamp, realistic_quotes[-1].timestamp),
             data_points=len(realistic_quotes),
             market_regime="bullish"
@@ -373,7 +373,7 @@ class TestSimpleBacktester:
 
         # If we have trades, verify they have proper structure
         for trade in result.trades:
-            assert trade.symbol in ["AAPL", "TEST"]
+            assert trade.symbol in [default_symbol, "TEST"]
             assert trade.side in ["buy", "sell"]
             assert trade.quantity > 0
             assert trade.entry_price > 0
@@ -418,15 +418,15 @@ class TestSimpleBacktester:
         with pytest.raises(ValueError, match="No market data available"):
             backtester.run_backtest([], [])
 
-    def test_single_day_backtest(self, default_config):
+    def test_single_day_backtest(self, default_config, default_symbol):
         """Test backtest with single day of data."""
         # Generate single realistic quote
-        single_quote = generate_realistic_quotes(days=1, seed=42)
+        single_quote = generate_realistic_quotes(symbol=default_symbol, days=1, seed=42)
 
         # Generate signal for that day
         signals = [
             Signal(
-                symbol="AAPL",
+                symbol=default_symbol,
                 signal_type=SignalType.BUY,
                 source=SignalSource.TECHNICAL,
                 timestamp=single_quote[0].timestamp,
@@ -446,17 +446,17 @@ class TestSimpleBacktester:
         assert result.start_date == single_quote[0].timestamp
         assert result.end_date == single_quote[0].timestamp
 
-    def test_reproducibility_with_realistic_data(self, default_config):
+    def test_reproducibility_with_realistic_data(self, default_config, default_symbol):
         """
         Test that same inputs produce same outputs (with realistic data).
 
         Verifies that GBM data with same seed produces identical results.
         """
         # Generate same data twice
-        quotes1 = generate_realistic_quotes(days=100, seed=42)
+        quotes1 = generate_realistic_quotes(symbol=default_symbol, days=100, seed=42)
         signals1 = generate_sma_crossover_signals(quotes1)
 
-        quotes2 = generate_realistic_quotes(days=100, seed=42)
+        quotes2 = generate_realistic_quotes(symbol=default_symbol, days=100, seed=42)
         signals2 = generate_sma_crossover_signals(quotes2)
 
         # Run backtest twice
@@ -487,7 +487,7 @@ class TestSimpleBacktester:
         assert result.end_date <= end_date
         assert result.final_capital > 0
 
-    def test_slippage_application_exact(self, default_config):
+    def test_slippage_application_exact(self, default_config, default_symbol):
         """
         Test that slippage is applied correctly with EXACT calculations.
 
@@ -503,7 +503,7 @@ class TestSimpleBacktester:
             max_position_size=Decimal("0.1"),
         )
 
-        quotes = generate_realistic_quotes(days=100)
+        quotes = generate_realistic_quotes(symbol=default_symbol, days=100)
         signals = generate_sma_crossover_signals(quotes)
 
         backtester = SimpleBacktester(config)
@@ -524,7 +524,7 @@ class TestSimpleBacktester:
                     trade.slippage <= expected_slippage_range * 2
                 ), f"Slippage {trade.slippage} seems too high for 1% config"
 
-    def test_commission_calculation_exact(self, default_config):
+    def test_commission_calculation_exact(self, default_config, default_symbol):
         """
         Test that commission is calculated correctly with EXACT math.
 
@@ -539,7 +539,7 @@ class TestSimpleBacktester:
             max_position_size=Decimal("0.1"),
         )
 
-        quotes = generate_realistic_quotes(days=100)
+        quotes = generate_realistic_quotes(symbol=default_symbol, days=100)
         signals = generate_sma_crossover_signals(quotes)
 
         backtester = SimpleBacktester(config)
@@ -555,7 +555,7 @@ class TestSimpleBacktester:
                 total_commission == expected_total
             ), f"Expected commission {expected_total}, got {total_commission}"
 
-    def test_position_size_calculation_exact(self, default_config):
+    def test_position_size_calculation_exact(self, default_config, default_symbol):
         """
         Test position size calculation with EXACT math.
 
@@ -574,7 +574,7 @@ class TestSimpleBacktester:
 
         # Test position size calculation with specific signal
         signal = Signal(
-            symbol="AAPL",
+            symbol=default_symbol,
             signal_type=SignalType.BUY,
             strength=SignalStrength.MODERATE,
             confidence=70.0,
@@ -602,19 +602,19 @@ class TestSimpleBacktester:
             "1"
         ), f"Position size {position_size} should be close to {expected_position_size}"
 
-    def test_contradictory_signals_handling(self, default_config):
+    def test_contradictory_signals_handling(self, default_config, default_symbol):
         """
         Test handling of contradictory signals.
 
         Verifies that the backtester handles rapid buy/sell/buy sequences.
         """
-        quotes = generate_realistic_quotes(days=100)
+        quotes = generate_realistic_quotes(symbol=default_symbol, days=100)
 
         # Create contradictory signals
         base_date = quotes[50].timestamp
         signals = [
             Signal(
-                symbol="AAPL",
+                symbol=default_symbol,
                 signal_type=SignalType.BUY,
                 strength=SignalStrength.STRONG,
                 confidence=90.0,
@@ -626,7 +626,7 @@ class TestSimpleBacktester:
                 timestamp=base_date,
             ),
             Signal(
-                symbol="AAPL",
+                symbol=default_symbol,
                 signal_type=SignalType.SELL,
                 strength=SignalStrength.STRONG,
                 confidence=85.0,
@@ -638,7 +638,7 @@ class TestSimpleBacktester:
                 timestamp=base_date + timedelta(minutes=1),
             ),
             Signal(
-                symbol="AAPL",
+                symbol=default_symbol,
                 signal_type=SignalType.BUY,
                 strength=SignalStrength.MODERATE,
                 confidence=75.0,
@@ -659,10 +659,10 @@ class TestSimpleBacktester:
         assert result.final_capital > 0
         assert len(result.trades) >= 0
 
-    def test_no_signals_graceful_handling(self, default_config):
+    def test_no_signals_graceful_handling(self, default_config, default_symbol):
         """Test backtest with no signals."""
         backtester = SimpleBacktester(default_config)
-        quotes = generate_realistic_quotes(days=100)
+        quotes = generate_realistic_quotes(symbol=default_symbol, days=100)
         signals = []  # No signals
 
         result = backtester.run_backtest(quotes, signals)
@@ -839,7 +839,7 @@ class TestEdgeCasesRobust:
             take_profit_percentage=Decimal("10.0"),
         )
 
-    def test_zero_volatility_scenario_no_signals(self, default_config):
+    def test_zero_volatility_scenario_no_signals(self, default_config, default_symbol):
         """
         Test scenario of zero volatility.
 
@@ -851,7 +851,7 @@ class TestEdgeCasesRobust:
         for i in range(100):
             quotes.append(
                 Quote(
-                    symbol="TEST",
+                    symbol=default_symbol,
                     timestamp=datetime(2023, 1, 1) + timedelta(days=i),
                     bid=Decimal("100.00"),
                     ask=Decimal("100.10"),
@@ -870,7 +870,7 @@ class TestEdgeCasesRobust:
         # Verify no signals were generated
         assert len(signals) == 0, "SMA crossover should not generate signals with constant prices"
 
-    def test_market_crash_scenario(self, default_config):
+    def test_market_crash_scenario(self, default_config, default_symbol):
         """
         Test scenario of 100% market crash.
 
@@ -879,7 +879,7 @@ class TestEdgeCasesRobust:
         """
         # Generate data with strong negative drift
         quotes = generate_realistic_quotes(
-            symbol="CRASH",
+            symbol=default_symbol,
             days=100,
             seed=42,
             drift=-0.50,  # -50% annual drift (crash)
@@ -907,14 +907,14 @@ class TestEdgeCasesRobust:
             result.final_capital <= default_config.initial_capital
         ), "Should have losses in crash scenario"
 
-    def test_price_gap_down_scenario(self, default_config):
+    def test_price_gap_down_scenario(self, default_config, default_symbol):
         """
         Test scenario of price gap down.
 
         Simulates a 10% price gap overnight (e.g., earnings surprise).
         Verifies the backtester handles gaps without crashing.
         """
-        quotes = generate_realistic_quotes(days=100)
+        quotes = generate_realistic_quotes(symbol=default_symbol, days=100)
 
         # Create 10% gap down at day 50
         gap_day = 50
@@ -942,7 +942,7 @@ class TestEdgeCasesRobust:
         assert result is not None, "Should handle price gaps gracefully"
         assert result.performance is not None, "Should calculate metrics despite gaps"
 
-    def test_zero_initial_capital_graceful_handling(self, default_config):
+    def test_zero_initial_capital_graceful_handling(self, default_config, default_symbol):
         """
         Test backtest with very small initial capital.
 
@@ -957,7 +957,7 @@ class TestEdgeCasesRobust:
             max_position_size=Decimal("0.1"),
         )
 
-        quotes = generate_realistic_quotes(days=100)
+        quotes = generate_realistic_quotes(symbol=default_symbol, days=100)
         signals = generate_sma_crossover_signals(quotes)
 
         backtester = SimpleBacktester(config)
@@ -967,7 +967,7 @@ class TestEdgeCasesRobust:
         assert result.final_capital >= 0, "Final capital should be non-negative"
         assert len(result.trades) >= 0, "Trade count should be valid"
 
-    def test_very_high_commission_impact(self, default_config):
+    def test_very_high_commission_impact(self, default_config, default_symbol):
         """
         Test backtest with very high commission.
 
@@ -982,7 +982,7 @@ class TestEdgeCasesRobust:
             max_position_size=Decimal("0.1"),
         )
 
-        quotes = generate_realistic_quotes(days=100)
+        quotes = generate_realistic_quotes(symbol=default_symbol, days=100)
         signals = generate_sma_crossover_signals(quotes)
 
         backtester = SimpleBacktester(config)
@@ -1000,14 +1000,14 @@ class TestEdgeCasesRobust:
                 actual_commission == expected_commission
             ), f"Expected commission {expected_commission}, got {actual_commission}"
 
-    def test_signals_without_matching_market_data(self, default_config):
+    def test_signals_without_matching_market_data(self, default_config, default_symbol):
         """
         Test backtest with signals for symbols not in market data.
 
         Verifies graceful handling when signal symbol doesn't match quotes.
         """
         backtester = SimpleBacktester(default_config)
-        quotes = generate_realistic_quotes(symbol="AAPL", days=100)
+        quotes = generate_realistic_quotes(symbol=default_symbol, days=100)
 
         # Signal for different symbol
         signal = Signal(
@@ -1030,20 +1030,20 @@ class TestEdgeCasesRobust:
         assert result.final_capital == default_config.initial_capital
         assert len(result.trades) == 0
 
-    def test_all_buy_signals_no_sells(self, default_config):
+    def test_all_buy_signals_no_sells(self, default_config, default_symbol):
         """
         Test scenario with only buy signals (no sells).
 
         Verifies that the backtester doesn't crash when it can't close positions.
         """
-        quotes = generate_realistic_quotes(days=100)
+        quotes = generate_realistic_quotes(symbol=default_symbol, days=100)
 
         # Only buy signals (no sells)
         signals = []
         for i in range(10, 50, 10):
             signals.append(
                 Signal(
-                    symbol="AAPL",
+                    symbol=default_symbol,
                     signal_type=SignalType.BUY,
                     source=SignalSource.TECHNICAL,
                     timestamp=quotes[i].timestamp,
@@ -1067,14 +1067,14 @@ class TestEdgeCasesRobust:
         open_trades = [t for t in result.trades if t.status == TradeStatus.OPEN]
         assert len(open_trades) >= 0
 
-    def test_extreme_volatility_scenario(self, default_config):
+    def test_extreme_volatility_scenario(self, default_config, default_symbol):
         """
         Test scenario with extreme volatility (100% annual).
 
         Verifies the backtester handles extreme market conditions.
         """
         quotes = generate_realistic_quotes(
-            symbol="VOLATILE",
+            symbol=default_symbol,
             days=100,
             seed=42,
             drift=0.0,  # No drift

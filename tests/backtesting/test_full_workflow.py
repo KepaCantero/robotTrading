@@ -47,7 +47,7 @@ from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 
 def generate_realistic_quotes(
-    symbol: str = "AAPL",
+    symbol: str,
     days: int = 1000,
     seed: int = 42,
     drift: float = 0.05,
@@ -317,7 +317,7 @@ def run_monte_carlo_simulation(
 class TestEndToEndProfessionalBacktesting:
     """End-to-end integration test WITHOUT MOCKS."""
 
-    def test_e2e_real_execution_no_mocks(self):
+    def test_e2e_real_execution_no_mocks(self, default_symbol):
         """
         Test complete workflow WITHOUT ANY MOCKS.
 
@@ -339,7 +339,7 @@ class TestEndToEndProfessionalBacktesting:
         # Step 1: Generate REALISTIC data (not synthetic unrealistic)
         # ============================================================
         quotes = generate_realistic_quotes(
-            symbol="AAPL",
+            symbol=default_symbol,
             days=1000,  # ~4 years of data
             seed=42,
             drift=0.05,  # 5% annual drift (realistic)
@@ -347,7 +347,7 @@ class TestEndToEndProfessionalBacktesting:
         )
 
         assert len(quotes) == 1000, "Should generate 1000 quotes"
-        assert all(q.symbol == "AAPL" for q in quotes), "All quotes should be AAPL"
+        assert all(q.symbol == default_symbol for q in quotes), f"All quotes should be {default_symbol}"
         assert quotes[0].timestamp < quotes[-1].timestamp, "Quotes should be chronological"
 
         # Verify price movement is realistic (not too wild)
@@ -370,7 +370,7 @@ class TestEndToEndProfessionalBacktesting:
 
         # Verify signals have proper metadata
         for sig in signals:
-            assert sig.symbol == "AAPL", "Signal symbol should match quotes"
+            assert sig.symbol == default_symbol, "Signal symbol should match quotes"
             assert sig.metadata is not None, "Signals should have metadata"
             assert "strategy" in sig.metadata, "Signals should have strategy name"
             assert sig.metadata["strategy"] == "sma_crossover", "Should be SMA crossover"
@@ -764,10 +764,10 @@ class TestEndToEndProfessionalBacktesting:
 class TestEdgeCases:
     """Test edge cases that were missing from original test."""
 
-    def test_edge_case_no_trades(self):
+    def test_edge_case_no_trades(self, default_symbol):
         """Test case: No trades executed (graceful handling)."""
         # Generate quotes
-        quotes = generate_realistic_quotes(days=100)
+        quotes = generate_realistic_quotes(symbol=default_symbol, days=100)
 
         # No signals
         signals = []
@@ -789,9 +789,9 @@ class TestEdgeCases:
         assert result.total_return == Decimal("0"), "Return should be 0"
         assert result.final_capital == config.initial_capital, "Capital should be unchanged"
 
-    def test_edge_case_100_percent_losses(self):
+    def test_edge_case_100_percent_losses(self, default_symbol):
         """Test case: 100% losing trades (verify Sharpe doesn't explode)."""
-        quotes = generate_realistic_quotes(days=500, seed=123, drift=-0.10)  # Declining market
+        quotes = generate_realistic_quotes(symbol=default_symbol, days=500, seed=123, drift=-0.10)  # Declining market
 
         # Generate signals that will lose money
         signals = simple_sma_crossover_strategy(quotes)
@@ -826,7 +826,7 @@ class TestEdgeCases:
         # Only buy signals (no sells = no losses)
         signals = [
             Signal(
-                symbol="AAPL",
+                symbol=default_symbol,
                 signal_type=SignalType.BUY,
                 source=SignalSource.TECHNICAL,
                 timestamp=quotes[i].timestamp,
@@ -902,7 +902,7 @@ class TestEdgeCases:
 class TestPessimisticExecutionComplete:
     """Complete pessimistic execution tests with price verification."""
 
-    def test_pessimistic_execution_price_verification(self):
+    def test_pessimistic_execution_price_verification(self, default_symbol):
         """Test execution with complete price verification."""
         execution_engine = PessimisticExecutionEngine(
             execution_type=ExecutionType.PESSIMISTIC,
@@ -910,7 +910,7 @@ class TestPessimisticExecutionComplete:
         )
 
         position = Position(
-            symbol="AAPL",
+            symbol=default_symbol,
             side="long",
             quantity=Decimal("100"),
             entry_price=Decimal("100"),
@@ -952,7 +952,7 @@ class TestPessimisticExecutionComplete:
         assert result.slippage_bps >= Decimal("10"), "Should have >= 10 bps slippage (2x for stops)"
         assert result.slippage_bps <= Decimal("20"), "Should have <= 20 bps slippage"
 
-    def test_pessimistic_execution_sl_only(self):
+    def test_pessimistic_execution_sl_only(self, default_symbol):
         """Test when only SL is hit."""
         execution_engine = PessimisticExecutionEngine(
             execution_type=ExecutionType.PESSIMISTIC,
@@ -960,7 +960,7 @@ class TestPessimisticExecutionComplete:
         )
 
         position = Position(
-            symbol="AAPL",
+            symbol=default_symbol,
             side="long",
             quantity=Decimal("100"),
             entry_price=Decimal("100"),
@@ -984,7 +984,7 @@ class TestPessimisticExecutionComplete:
         assert result.take_profit_hit is False, "TP should not be hit"
         assert result.execution_price <= position.stop_loss_price, "Should execute at or below SL"
 
-    def test_pessimistic_execution_tp_only(self):
+    def test_pessimistic_execution_tp_only(self, default_symbol):
         """Test when only TP is hit."""
         execution_engine = PessimisticExecutionEngine(
             execution_type=ExecutionType.PESSIMISTIC,
@@ -992,7 +992,7 @@ class TestPessimisticExecutionComplete:
         )
 
         position = Position(
-            symbol="AAPL",
+            symbol=default_symbol,
             side="long",
             quantity=Decimal("100"),
             entry_price=Decimal("100"),
@@ -1026,10 +1026,10 @@ class TestPessimisticExecutionComplete:
 class TestWalkForwardRealSignals:
     """Walk-forward validation with real SMA signals."""
 
-    def test_walk_forward_real_signals(self):
+    def test_walk_forward_real_signals(self, default_symbol):
         """Test walk-forward with real SMA crossover signals."""
         # Generate 4 years of data for walk-forward
-        quotes = generate_realistic_quotes(days=1500, seed=42)  # ~6 years
+        quotes = generate_realistic_quotes(symbol=default_symbol, days=1500, seed=42)  # ~6 years
 
         # Generate real signals
         signals = simple_sma_crossover_strategy(quotes)

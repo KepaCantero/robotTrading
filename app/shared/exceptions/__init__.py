@@ -8,7 +8,7 @@ All imports from potentially circular modules are now deferred or type-only.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Optional
+from typing import TYPE_CHECKING, Callable
 
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
@@ -20,11 +20,11 @@ from app.shared.exceptions.exceptions import AlgoTradingError
 # Use TYPE_CHECKING for type hints only (no runtime import)
 if TYPE_CHECKING:
     from app.infrastructure.middleware.error_middleware import (
-        ErrorHandlingMiddleware,
-        HealthCheckMiddleware,
-        RateLimitingMiddleware,
-        RequestContextMiddleware,
-        SecurityHeadersMiddleware,
+        ErrorHandlingMiddleware as ErrorHandlingMiddleware,
+        HealthCheckMiddleware as HealthCheckMiddleware,
+        RateLimitingMiddleware as RateLimitingMiddleware,
+        RequestContextMiddleware as RequestContextMiddleware,
+        SecurityHeadersMiddleware as SecurityHeadersMiddleware,
     )
 
 

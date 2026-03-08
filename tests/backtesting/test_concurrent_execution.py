@@ -51,7 +51,7 @@ np.random.seed(42)
 
 
 def generate_realistic_quotes(
-    symbol: str = "AAPL",
+    symbol: str,
     days: int = 500,
     seed: int = 42,
     drift: float = 0.05,

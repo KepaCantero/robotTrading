@@ -18,8 +18,8 @@ from unittest.mock import Mock, patch
 import pytest
 
 from app.engines.strategy_engines.pairs_engine import PairsTradingStrategyEngine
-from app.models.market_data import Quote
-from app.models.portfolio import Portfolio, Position
+from app.domain.models.market_data import Quote
+from app.domain.models.portfolio import Portfolio, Position
 from app.models.signal import SignalSource, SignalType
 
 # ===== Initialization Tests =====

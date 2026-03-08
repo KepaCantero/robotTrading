@@ -324,13 +324,13 @@ class TestBiasCorrectionPipeline:
     """Tests for bias correction pipeline."""
 
     @pytest.fixture
-    def sample_raw_data(self):
+    def sample_raw_data(self, default_symbol):
         """Create sample raw data."""
         dates = pd.date_range(start="2020-01-01", periods=100, freq="D")
         return pd.DataFrame(
             {
                 "date": dates,
-                "symbol": ["AAPL"] * 100,
+                "symbol": [default_symbol] * 100,
                 "open": 100 + np.random.randn(100).cumsum(),
                 "high": 102 + np.random.randn(100).cumsum(),
                 "low": 98 + np.random.randn(100).cumsum(),
@@ -392,26 +392,26 @@ class TestBiasCorrectionPipeline:
 class TestCorporateAction:
     """Tests for CorporateAction dataclass."""
 
-    def test_corporate_action_creation(self):
+    def test_corporate_action_creation(self, default_symbol):
         """Test creating a CorporateAction."""
         action = CorporateAction(
             date=datetime(2020, 1, 15),
-            symbol="AAPL",
+            symbol=default_symbol,
             action_type="split",
             ratio=0.5,
             amount=None,
         )
 
         assert action.date == datetime(2020, 1, 15)
-        assert action.symbol == "AAPL"
+        assert action.symbol == default_symbol
         assert action.action_type == "split"
         assert action.ratio == 0.5
 
-    def test_dividend_action(self):
+    def test_dividend_action(self, default_symbol):
         """Test creating a dividend action."""
         action = CorporateAction(
             date=datetime(2020, 1, 15),
-            symbol="AAPL",
+            symbol=default_symbol,
             action_type="dividend",
             ratio=None,
             amount=0.5,

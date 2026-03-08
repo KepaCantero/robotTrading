@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.models.portfolio import AssetClass, HedgingMetadata, Portfolio, Position
+from app.domain.models.portfolio import AssetClass, HedgingMetadata, Portfolio, Position
 from app.services.forex_risk.tracker import CurrencyExposure, ForexExposureReport, ForexRiskTracker
 
 

@@ -8,7 +8,7 @@ from unittest.mock import Mock
 import pytest
 
 from app.engines.risk_engine.risk_limits_enforcer import RiskLimitsEnforcer
-from app.models.portfolio import Portfolio
+from app.domain.models.portfolio import Portfolio
 
 
 @pytest.fixture

@@ -10,11 +10,11 @@ from app.backtesting.models import Trade, TradeStatus
 
 
 @pytest.fixture
-def sample_long_trade():
+def sample_long_trade(default_symbol):
     """Create a sample long trade."""
     return Trade(
         trade_id="TEST001",
-        symbol="AAPL",
+        symbol=default_symbol,
         side="buy",
         quantity=Decimal("100"),
         entry_price=Decimal("150.00"),
@@ -28,11 +28,11 @@ def sample_long_trade():
 
 
 @pytest.fixture
-def sample_short_trade():
+def sample_short_trade(default_symbol):
     """Create a sample short trade."""
     return Trade(
         trade_id="TEST002",
-        symbol="AAPL",
+        symbol=default_symbol,
         side="sell",
         quantity=Decimal("100"),
         entry_price=Decimal("150.00"),
@@ -85,11 +85,11 @@ def test_validate_trade_pnl_missing_prices(validator, sample_long_trade):
     assert "missing entry/exit price" in str(exc.value)
 
 
-def test_validate_trade_pnl_open_trade_skipped(validator):
+def test_validate_trade_pnl_open_trade_skipped(validator, default_symbol):
     """Test that open trades are skipped."""
     open_trade = Trade(
         trade_id="TEST003",
-        symbol="AAPL",
+        symbol=default_symbol,
         side="buy",
         quantity=Decimal("100"),
         entry_price=Decimal("150.00"),
@@ -167,11 +167,11 @@ def test_validate_pnl_consistency_incorrect(validator, sample_long_trade):
     assert "Capital inconsistency" in str(exc.value)
 
 
-def test_validate_pnl_consistency_no_closed_trades(validator):
+def test_validate_pnl_consistency_no_closed_trades(validator, default_symbol):
     """Test P&L consistency with no closed trades."""
     open_trade = Trade(
         trade_id="TEST004",
-        symbol="AAPL",
+        symbol=default_symbol,
         side="buy",
         quantity=Decimal("100"),
         entry_price=Decimal("150.00"),
@@ -194,11 +194,11 @@ def test_validator_custom_thresholds():
     assert custom_validator.max_commission_pct == Decimal("0.05")
 
 
-def test_validate_trade_pnl_with_commission(validator):
+def test_validate_trade_pnl_with_commission(validator, default_symbol):
     """Test that commission is properly subtracted from P&L."""
     trade = Trade(
         trade_id="TEST005",
-        symbol="AAPL",
+        symbol=default_symbol,
         side="buy",
         quantity=Decimal("100"),
         entry_price=Decimal("150.00"),
@@ -212,11 +212,11 @@ def test_validate_trade_pnl_with_commission(validator):
     assert validator.validate_trade_pnl(trade) is True
 
 
-def test_validate_trade_pnl_wrong_commission(validator):
+def test_validate_trade_pnl_wrong_commission(validator, default_symbol):
     """Test that wrong commission is detected."""
     trade = Trade(
         trade_id="TEST006",
-        symbol="AAPL",
+        symbol=default_symbol,
         side="buy",
         quantity=Decimal("100"),
         entry_price=Decimal("150.00"),

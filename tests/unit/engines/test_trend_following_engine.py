@@ -9,7 +9,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from app.engines.strategy_engines import TrendFollowingStrategyEngine
-from app.models.market_data import Quote
+from app.domain.models.market_data import Quote
 from app.models.signal import SignalSource, SignalType
 
 

@@ -32,7 +32,11 @@ def create_market_bar(
     volume: Decimal = Decimal("1000000"),
     timestamp: datetime = None,
 ) -> Quote:
-    """Create a market data bar for testing."""
+    """Create a market data bar for testing.
+
+    Note: Default symbol parameter kept for backward compatibility.
+    Tests should pass default_symbol explicitly.
+    """
     if timestamp is None:
         timestamp = past_time(hours_ago=1)
 
@@ -64,50 +68,50 @@ class TestLiquidityValidatorBasic:
             partial_fill_pct=Decimal("0.05"),  # 5%
         )
 
-    def test_normal_order_accepted(self, validator):
+    def test_normal_order_accepted(self, validator, default_symbol):
         """Test that normal orders (<5% of volume) are accepted."""
-        bar = create_market_bar(volume=Decimal("1000000"))  # 1M shares daily
+        bar = create_market_bar(symbol=default_symbol, volume=Decimal("1000000"))  # 1M shares daily
 
         # Normal order: 1,000 shares = 0.1% of volume
         is_valid, reason = validator.validate_order(
-            order_quantity=Decimal("1000"), symbol="AAPL", current_bar=bar, order_side="buy"
+            order_quantity=Decimal("1000"), symbol=default_symbol, current_bar=bar, order_side="buy"
         )
 
         assert is_valid, f"Normal order should be valid, got: {reason}"
         assert reason == "OK"
 
-    def test_large_order_warned_but_accepted(self, validator):
+    def test_large_order_warned_but_accepted(self, validator, default_symbol):
         """Test that large orders (5-10% of volume) trigger warning but execute."""
-        bar = create_market_bar(volume=Decimal("1000000"))  # 1M shares daily
+        bar = create_market_bar(symbol=default_symbol, volume=Decimal("1000000"))  # 1M shares daily
 
         # Large order: 75,000 shares = 7.5% of volume (triggers warning)
         is_valid, reason = validator.validate_order(
-            order_quantity=Decimal("75000"), symbol="AAPL", current_bar=bar, order_side="buy"
+            order_quantity=Decimal("75000"), symbol=default_symbol, current_bar=bar, order_side="buy"
         )
 
         assert is_valid, f"Large order should be valid, got: {reason}"
         assert reason == "OK"
 
-    def test_excessive_order_rejected(self, validator):
+    def test_excessive_order_rejected(self, validator, default_symbol):
         """Test that excessive orders (>10% of volume) are rejected."""
-        bar = create_market_bar(volume=Decimal("1000000"))  # 1M shares daily
+        bar = create_market_bar(symbol=default_symbol, volume=Decimal("1000000"))  # 1M shares daily
 
         # Excessive order: 150,000 shares = 15% of volume (rejected)
         is_valid, reason = validator.validate_order(
-            order_quantity=Decimal("150000"), symbol="AAPL", current_bar=bar, order_side="buy"
+            order_quantity=Decimal("150000"), symbol=default_symbol, current_bar=bar, order_side="buy"
         )
 
         assert not is_valid, "Excessive order should be rejected"
         assert "exceeds maximum" in reason.lower()
         assert "10" in reason  # Check for 10 (could be "10%" or "10.0%")
 
-    def test_exact_threshold_order(self, validator):
+    def test_exact_threshold_order(self, validator, default_symbol):
         """Test order exactly at 10% threshold (triggers warning, not rejection)."""
-        bar = create_market_bar(volume=Decimal("1000000"))  # 1M shares daily
+        bar = create_market_bar(symbol=default_symbol, volume=Decimal("1000000"))  # 1M shares daily
 
         # Exact threshold: 100,000 shares = 10% of volume
         is_valid, reason = validator.validate_order(
-            order_quantity=Decimal("100000"), symbol="AAPL", current_bar=bar, order_side="buy"
+            order_quantity=Decimal("100000"), symbol=default_symbol, current_bar=bar, order_side="buy"
         )
 
         # At exactly 10%, order is valid but triggers a warning in simulate_fill
@@ -115,11 +119,11 @@ class TestLiquidityValidatorBasic:
         # However, simulate_fill will do partial fill for 5-10% range
         assert is_valid, "Order at exact 10% threshold should pass validate_order"
 
-    def test_no_volume_data(self, validator):
+    def test_no_volume_data(self, validator, default_symbol):
         """Test that orders without volume data are rejected."""
         # Create bar without volume
         bar = Quote(
-            symbol="AAPL",
+            symbol=default_symbol,
             timestamp=past_time(),
             bid=Decimal("99.5"),
             ask=Decimal("100.5"),
@@ -133,7 +137,7 @@ class TestLiquidityValidatorBasic:
         )
 
         is_valid, reason = validator.validate_order(
-            order_quantity=Decimal("1000"), symbol="AAPL", current_bar=bar, order_side="buy"
+            order_quantity=Decimal("1000"), symbol=default_symbol, current_bar=bar, order_side="buy"
         )
 
         assert not is_valid, "Order without volume data should be rejected"
@@ -163,12 +167,12 @@ class TestPartialFills:
             partial_fill_pct=Decimal("0.05"),
         )
 
-    def test_full_fill_for_normal_order(self, validator_with_partial_fills):
+    def test_full_fill_for_normal_order(self, validator_with_partial_fills, default_symbol):
         """Test that normal orders get full fills."""
-        bar = create_market_bar(volume=Decimal("1000000"))
+        bar = create_market_bar(symbol=default_symbol, volume=Decimal("1000000"))
 
         result = validator_with_partial_fills.simulate_fill(
-            order_quantity=Decimal("1000"), current_bar=bar, order_side="buy", symbol="AAPL"
+            order_quantity=Decimal("1000"), current_bar=bar, order_side="buy", symbol=default_symbol
         )
 
         assert result.fill_status == "FILLED"
@@ -177,14 +181,14 @@ class TestPartialFills:
         assert result.fill_price > Decimal("100")  # Buy orders pay more
         assert result.market_impact is not None
 
-    def test_partial_fill_for_large_order(self, validator_with_partial_fills):
+    def test_partial_fill_for_large_order(self, validator_with_partial_fills, default_symbol):
         """Test that large orders get partial fills."""
-        bar = create_market_bar(volume=Decimal("1000000"))
+        bar = create_market_bar(symbol=default_symbol, volume=Decimal("1000000"))
 
         # Request 75,000 shares (7.5% of volume)
         # Should get partial fill of 50,000 shares (5% of volume)
         result = validator_with_partial_fills.simulate_fill(
-            order_quantity=Decimal("75000"), current_bar=bar, order_side="buy", symbol="AAPL"
+            order_quantity=Decimal("75000"), current_bar=bar, order_side="buy", symbol=default_symbol
         )
 
         assert result.fill_status == "PARTIAL"
@@ -192,13 +196,13 @@ class TestPartialFills:
         assert result.requested_quantity == Decimal("75000")
         assert result.fill_price > Decimal("100")
 
-    def test_rejection_when_partial_fills_disabled(self, validator_without_partial_fills):
+    def test_rejection_when_partial_fills_disabled(self, validator_without_partial_fills, default_symbol):
         """Test that large orders are rejected when partial fills disabled."""
-        bar = create_market_bar(volume=Decimal("1000000"))
+        bar = create_market_bar(symbol=default_symbol, volume=Decimal("1000000"))
 
         # Request 75,000 shares (7.5% of volume)
         result = validator_without_partial_fills.simulate_fill(
-            order_quantity=Decimal("75000"), current_bar=bar, order_side="buy", symbol="AAPL"
+            order_quantity=Decimal("75000"), current_bar=bar, order_side="buy", symbol=default_symbol
         )
 
         assert result.fill_status == "REJECTED"
@@ -206,13 +210,13 @@ class TestPartialFills:
         assert result.rejection_reason is not None
         assert "partial fills are disabled" in result.rejection_reason.lower()
 
-    def test_excessive_order_rejected_even_with_partial_fills(self, validator_with_partial_fills):
+    def test_excessive_order_rejected_even_with_partial_fills(self, validator_with_partial_fills, default_symbol):
         """Test that orders >10% are rejected even with partial fills enabled."""
-        bar = create_market_bar(volume=Decimal("1000000"))
+        bar = create_market_bar(symbol=default_symbol, volume=Decimal("1000000"))
 
         # Request 150,000 shares (15% of volume)
         result = validator_with_partial_fills.simulate_fill(
-            order_quantity=Decimal("150000"), current_bar=bar, order_side="buy", symbol="AAPL"
+            order_quantity=Decimal("150000"), current_bar=bar, order_side="buy", symbol=default_symbol
         )
 
         assert result.fill_status == "REJECTED"
@@ -255,15 +259,15 @@ class TestMarketImpact:
         # Should be capped at 5%
         assert impact <= Decimal("0.05"), f"Market impact should be capped at 5%, got {impact}"
 
-    def test_buy_price_includes_market_impact(self, validator):
+    def test_buy_price_includes_market_impact(self, validator, default_symbol):
         """Test that buy execution price includes market impact."""
-        bar = create_market_bar(close=Decimal("100"), volume=Decimal("1000000"))
+        bar = create_market_bar(symbol=default_symbol, close=Decimal("100"), volume=Decimal("1000000"))
 
         result = validator.simulate_fill(
             order_quantity=Decimal("50000"),  # 5% of volume - should have impact
             current_bar=bar,
             order_side="buy",
-            symbol="AAPL",
+            symbol=default_symbol,
         )
 
         # Buy price should be higher than close price
@@ -271,15 +275,15 @@ class TestMarketImpact:
             "100"
         ), f"Buy price ${result.fill_price} should be higher than $100 due to market impact"
 
-    def test_sell_price_includes_market_impact(self, validator):
+    def test_sell_price_includes_market_impact(self, validator, default_symbol):
         """Test that sell execution price includes market impact."""
-        bar = create_market_bar(close=Decimal("100"), volume=Decimal("1000000"))
+        bar = create_market_bar(symbol=default_symbol, close=Decimal("100"), volume=Decimal("1000000"))
 
         result = validator.simulate_fill(
             order_quantity=Decimal("50000"),  # 5% of volume
             current_bar=bar,
             order_side="sell",
-            symbol="AAPL",
+            symbol=default_symbol,
         )
 
         # Sell price should be lower than close price
@@ -379,17 +383,17 @@ class TestEdgeCases:
         """Create default liquidity validator."""
         return LiquidityValidator()
 
-    def test_zero_volume(self, validator):
+    def test_zero_volume(self, validator, default_symbol):
         """Test handling of zero volume."""
-        bar = create_market_bar(volume=Decimal("0"))
+        bar = create_market_bar(symbol=default_symbol, volume=Decimal("0"))
 
         result = validator.simulate_fill(
-            order_quantity=Decimal("100"), current_bar=bar, order_side="buy", symbol="AAPL"
+            order_quantity=Decimal("100"), current_bar=bar, order_side="buy", symbol=default_symbol
         )
 
         assert result.fill_status == "REJECTED"
 
-    def test_custom_thresholds(self):
+    def test_custom_thresholds(self, default_symbol):
         """Test validator with custom thresholds."""
         custom_validator = LiquidityValidator(
             max_order_pct_of_volume=Decimal("0.05"),  # 5% max
@@ -397,27 +401,27 @@ class TestEdgeCases:
             partial_fill_pct=Decimal("0.02"),  # 2% partial fill
         )
 
-        bar = create_market_bar(volume=Decimal("1000000"))
+        bar = create_market_bar(symbol=default_symbol, volume=Decimal("1000000"))
 
         # 3% order should get partial fill with custom thresholds (between 2% and 5%)
         result = custom_validator.simulate_fill(
-            order_quantity=Decimal("30000"), current_bar=bar, order_side="buy", symbol="AAPL"
+            order_quantity=Decimal("30000"), current_bar=bar, order_side="buy", symbol=default_symbol
         )
 
         # 3% is > 2% partial_fill_pct, so should get partial fill
         assert result.fill_status == "PARTIAL"
         assert result.filled_quantity == Decimal("20000")  # 2% of 1M
 
-    def test_buy_vs_sell_prices(self, validator):
+    def test_buy_vs_sell_prices(self, validator, default_symbol):
         """Test that buy and sell prices are calculated differently."""
-        bar = create_market_bar(close=Decimal("100"), volume=Decimal("1000000"))
+        bar = create_market_bar(symbol=default_symbol, close=Decimal("100"), volume=Decimal("1000000"))
 
         buy_result = validator.simulate_fill(
-            order_quantity=Decimal("1000"), current_bar=bar, order_side="buy", symbol="AAPL"
+            order_quantity=Decimal("1000"), current_bar=bar, order_side="buy", symbol=default_symbol
         )
 
         sell_result = validator.simulate_fill(
-            order_quantity=Decimal("1000"), current_bar=bar, order_side="sell", symbol="AAPL"
+            order_quantity=Decimal("1000"), current_bar=bar, order_side="sell", symbol=default_symbol
         )
 
         # Buy price should be higher than sell price (adverse selection)
@@ -478,9 +482,9 @@ class TestIntegrationScenarios:
             "0.01"
         ), f"Market impact should be minimal for liquid stock, got {result.market_impact}"
 
-    def test_scalping_strategy_scenario(self, validator):
+    def test_scalping_strategy_scenario(self, validator, default_symbol):
         """Test liquidity validation for a high-frequency scalping strategy."""
-        bar = create_market_bar(close=Decimal("100"), volume=Decimal("1000000"))
+        bar = create_market_bar(symbol=default_symbol, close=Decimal("100"), volume=Decimal("1000000"))
 
         # Scalping: Many small orders
         results = []
@@ -489,7 +493,7 @@ class TestIntegrationScenarios:
                 order_quantity=Decimal("500"),  # Small order
                 current_bar=bar,
                 order_side="buy" if i % 2 == 0 else "sell",
-                symbol="AAPL",
+                symbol=default_symbol,
             )
             results.append(result)
 

@@ -18,6 +18,7 @@ from decimal import Decimal
 from typing import List
 
 import numpy as np
+import pytest
 
 from app.backtesting.test_summary import TestSummaryReporter
 from app.core.decimal_utils import round_price
@@ -35,6 +36,7 @@ class TestDatasetIntegrity(unittest.TestCase):
     def setUp(self):
         """Setup for integrity tests."""
         self.calculator = TechnicalIndicatorCalculator()
+        self.default_symbol = "AAPL"  # Default fallback for unittest
 
     def test_no_gaps_in_timestamps(self):
         """Verify no gaps in timestamps with realistic data."""
@@ -46,11 +48,11 @@ class TestDatasetIntegrity(unittest.TestCase):
             test_type="unit",
         )
 
-        quotes = self.generate_realistic_quotes("AAPL", days=500, seed=42)
+        quotes = self.generate_realistic_quotes(self.default_symbol, days=500, seed=42)
 
         # Add input data to summary
         reporter.add_input_data(
-            symbols=["AAPL"],
+            symbols=[self.default_symbol],
             date_range=(quotes[0].timestamp, quotes[-1].timestamp),
             data_points=len(quotes),
             market_regime="neutral",
@@ -107,7 +109,7 @@ class TestDatasetIntegrity(unittest.TestCase):
             test_type="unit",
         )
 
-        quotes = self.generate_realistic_quotes("AAPL", days=500, seed=42)
+        quotes = self.generate_realistic_quotes(self.default_symbol, days=500, seed=42)
 
         timestamps = [q.timestamp for q in quotes]
         unique_timestamps = set(timestamps)
@@ -148,7 +150,7 @@ class TestDatasetIntegrity(unittest.TestCase):
             test_type="unit",
         )
 
-        quotes = self.generate_realistic_quotes("AAPL", days=500, seed=42)
+        quotes = self.generate_realistic_quotes(self.default_symbol, days=500, seed=42)
 
         violations = []
         for i, quote in enumerate(quotes):
@@ -202,7 +204,7 @@ class TestDatasetIntegrity(unittest.TestCase):
             test_type="unit",
         )
 
-        quotes = self.generate_realistic_quotes("AAPL", days=500, seed=42)
+        quotes = self.generate_realistic_quotes(self.default_symbol, days=500, seed=42)
 
         anomalous_count = 0
         for quote in quotes:
@@ -246,7 +248,7 @@ class TestDatasetIntegrity(unittest.TestCase):
             test_type="unit",
         )
 
-        quotes = self.generate_realistic_quotes("AAPL", days=500, seed=42)
+        quotes = self.generate_realistic_quotes(self.default_symbol, days=500, seed=42)
 
         prices = [float(q.close) for q in quotes]
 
@@ -297,7 +299,7 @@ class TestDatasetIntegrity(unittest.TestCase):
             test_type="unit",
         )
 
-        quotes = self.generate_realistic_quotes("AAPL", days=500, seed=42)
+        quotes = self.generate_realistic_quotes(self.default_symbol, days=500, seed=42)
 
         volumes = [float(q.volume) for q in quotes]
 
@@ -528,11 +530,12 @@ class TestStrategySignalLogic(unittest.TestCase):
         self.pairs_trading = PairsTradingStrategy(
             {"name": "pairs_trading", "pair_symbols": ["AAPL", "MSFT"]}
         )
+        self.default_symbol = "AAPL"  # Default fallback for unittest
 
     def test_momentum_buy_signals_content(self):
         """Verify BUY signals have proper content and properties."""
         # Accumulate history with uptrend
-        quotes = self.generate_realistic_quotes("AAPL", days=100, seed=42, drift=0.1)
+        quotes = self.generate_realistic_quotes(self.default_symbol, days=100, seed=42, drift=0.1)
 
         # Feed all quotes to build history
         signals = []
@@ -561,7 +564,7 @@ class TestStrategySignalLogic(unittest.TestCase):
     def test_momentum_sell_signals_content(self):
         """Verify SELL signals have proper content and properties."""
         # Accumulate history with downtrend
-        quotes = self.generate_realistic_quotes("AAPL", days=100, seed=43, drift=-0.1)
+        quotes = self.generate_realistic_quotes(self.default_symbol, days=100, seed=43, drift=-0.1)
 
         # Feed all quotes to build history
         signals = []
@@ -586,7 +589,7 @@ class TestStrategySignalLogic(unittest.TestCase):
     def test_signal_distribution_balance(self):
         """Verify signals have balanced distribution (not 100% one type)."""
         # Use neutral trend data
-        quotes = self.generate_realistic_quotes("AAPL", days=100, seed=44, drift=0.0)
+        quotes = self.generate_realistic_quotes(self.default_symbol, days=100, seed=44, drift=0.0)
 
         # Collect all signals
         all_signals = []
@@ -615,7 +618,7 @@ class TestStrategySignalLogic(unittest.TestCase):
 
     def test_signal_scores_distribution(self):
         """Verify signal scores (confidence, liquidity, priority) have proper distribution."""
-        quotes = self.generate_realistic_quotes("AAPL", days=100, seed=45)
+        quotes = self.generate_realistic_quotes(self.default_symbol, days=100, seed=45)
 
         # Collect signals
         signals = []
@@ -645,7 +648,7 @@ class TestStrategySignalLogic(unittest.TestCase):
 
     def test_signals_not_overlapping(self):
         """Verify no duplicate signals (same symbol, type, timestamp)."""
-        quotes = self.generate_realistic_quotes("AAPL", days=50, seed=46)
+        quotes = self.generate_realistic_quotes(self.default_symbol, days=50, seed=46)
 
         seen = set()
         duplicates = []
@@ -710,12 +713,16 @@ class TestStrategySignalLogic(unittest.TestCase):
 class TestBacktestingEngineValidation(unittest.TestCase):
     """Validation 5: Real Backtest Execution with Metric Verification."""
 
+    def setUp(self):
+        """Setup for backtest validation tests."""
+        self.default_symbol = "AAPL"  # Default fallback for unittest
+
     def test_order_execution_price_validation(self):
         """Verify orders execute with valid prices within OHLC range."""
-        quote = self.create_realistic_quote("AAPL", price=200.0)
+        quote = self.create_realistic_quote(self.default_symbol, price=200.0)
 
         signal = Signal(
-            symbol="AAPL",
+            symbol=self.default_symbol,
             signal_type=SignalType.BUY,
             strength=SignalStrength.MODERATE,
             confidence=70.0,

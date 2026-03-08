@@ -261,9 +261,9 @@ def backtest_config():
 
 
 @pytest.fixture
-def sample_quotes_12_years():
+def sample_quotes_12_years(default_symbol):
     """Generate 12 years of quotes for 5+ cycle walk-forward."""
-    return generate_realistic_quotes("TEST", days=12 * 252, seed=42)
+    return generate_realistic_quotes(default_symbol, days=12 * 252, seed=42)
 
 
 @pytest.fixture
@@ -595,12 +595,12 @@ class TestWalkForwardEdgeCasesRobust:
     - All windows negative
     """
 
-    def test_insufficient_data_for_min_cycles(self, walk_forward_config, backtest_config):
+    def test_insufficient_data_for_min_cycles(self, walk_forward_config, backtest_config, default_symbol):
         """Test with only 2 years of data (insufficient for 5 cycles)."""
         validator = WalkForwardValidator(config=walk_forward_config)
 
         # Generate only 2 years of data
-        short_quotes = generate_realistic_quotes(days=2 * 252, seed=42)
+        short_quotes = generate_realistic_quotes(symbol=default_symbol, days=2 * 252, seed=42)
         short_signals = generate_sma_crossover_signals(short_quotes)
 
         result = validator.validate_strategy(
@@ -614,7 +614,7 @@ class TestWalkForwardEdgeCasesRobust:
         assert result["passed"] is False
         assert "Insufficient windows" in result.get("reason", "")
 
-    def test_perfect_consistency_ratio(self, walk_forward_config, backtest_config):
+    def test_perfect_consistency_ratio(self, walk_forward_config, backtest_config, default_symbol):
         """Test with IS=OOS (consistency=1.0)."""
         # Use relaxed thresholds for this edge case
         relaxed_config = walk_forward_config.copy()
@@ -625,7 +625,7 @@ class TestWalkForwardEdgeCasesRobust:
 
         # Use stable data that might produce consistent results
         stable_quotes = generate_realistic_quotes(
-            days=6 * 252, seed=123, drift=0.02, volatility=0.10
+            symbol=default_symbol, days=6 * 252, seed=123, drift=0.02, volatility=0.10
         )
         stable_signals = generate_sma_crossover_signals(stable_quotes)
 
@@ -644,7 +644,7 @@ class TestWalkForwardEdgeCasesRobust:
             # Consistency should be in valid range
             assert 0.0 <= consistency <= 2.0
 
-    def test_zero_consistency_ratio(self, walk_forward_config, backtest_config):
+    def test_zero_consistency_ratio(self, walk_forward_config, backtest_config, default_symbol):
         """Test with OOS Sharpe=0 (consistency=0.0)."""
         relaxed_config = walk_forward_config.copy()
         relaxed_config["min_cycles"] = 3
@@ -653,7 +653,7 @@ class TestWalkForwardEdgeCasesRobust:
 
         # Use volatile data that might produce poor OOS results
         volatile_quotes = generate_realistic_quotes(
-            days=6 * 252, seed=456, drift=0.0, volatility=0.40
+            symbol=default_symbol, days=6 * 252, seed=456, drift=0.0, volatility=0.40
         )
         volatile_signals = generate_sma_crossover_signals(volatile_quotes)
 
@@ -672,7 +672,7 @@ class TestWalkForwardEdgeCasesRobust:
             # Should be in valid range even if very low
             assert 0.0 <= consistency <= 2.0
 
-    def test_max_allowed_degradation_30_percent(self, walk_forward_config, backtest_config):
+    def test_max_allowed_degradation_30_percent(self, walk_forward_config, backtest_config, default_symbol):
         """Test exactly at 30% degradation threshold."""
         relaxed_config = walk_forward_config.copy()
         relaxed_config["min_cycles"] = 3
@@ -681,7 +681,7 @@ class TestWalkForwardEdgeCasesRobust:
         validator = WalkForwardValidator(config=relaxed_config)
 
         # Use data that might produce ~30% degradation
-        degradation_quotes = generate_realistic_quotes(days=6 * 252, seed=789, drift=0.03)
+        degradation_quotes = generate_realistic_quotes(symbol=default_symbol, days=6 * 252, seed=789, drift=0.03)
         degradation_signals = generate_sma_crossover_signals(degradation_quotes)
 
         result = validator.validate_strategy(
@@ -699,7 +699,7 @@ class TestWalkForwardEdgeCasesRobust:
             # Should be in valid range
             assert 0.0 <= degradation <= 1.0
 
-    def test_excessive_degradation_100_percent(self, walk_forward_config, backtest_config):
+    def test_excessive_degradation_100_percent(self, walk_forward_config, backtest_config, default_symbol):
         """Test complete collapse (100% degradation)."""
         relaxed_config = walk_forward_config.copy()
         relaxed_config["min_cycles"] = 3
@@ -708,7 +708,7 @@ class TestWalkForwardEdgeCasesRobust:
 
         # Use highly volatile data with regime changes
         collapse_quotes = generate_realistic_quotes(
-            days=6 * 252, seed=999, drift=-0.05, volatility=0.50
+            symbol=default_symbol, days=6 * 252, seed=999, drift=-0.05, volatility=0.50
         )
         collapse_signals = generate_sma_crossover_signals(collapse_quotes)
 
@@ -727,7 +727,7 @@ class TestWalkForwardEdgeCasesRobust:
             # Even with high degradation, should be capped at reasonable value
             assert 0.0 <= degradation <= 1.0
 
-    def test_exactly_50_percent_negative_windows(self, walk_forward_config, backtest_config):
+    def test_exactly_50_percent_negative_windows(self, walk_forward_config, backtest_config, default_symbol):
         """Test exactly at threshold."""
         relaxed_config = walk_forward_config.copy()
         relaxed_config["min_cycles"] = 3
@@ -737,7 +737,7 @@ class TestWalkForwardEdgeCasesRobust:
 
         # Use sideways/choppy market data
         sideways_quotes = generate_realistic_quotes(
-            days=6 * 252, seed=555, drift=0.0, volatility=0.15
+            symbol=default_symbol, days=6 * 252, seed=555, drift=0.0, volatility=0.15
         )
         sideways_signals = generate_sma_crossover_signals(sideways_quotes)
 
@@ -759,7 +759,7 @@ class TestWalkForwardEdgeCasesRobust:
                 # Should be in valid range
                 assert 0.0 <= negative_pct <= 1.0
 
-    def test_above_50_percent_negative_windows(self, walk_forward_config, backtest_config):
+    def test_above_50_percent_negative_windows(self, walk_forward_config, backtest_config, default_symbol):
         """Test 60% negative windows."""
         relaxed_config = walk_forward_config.copy()
         relaxed_config["min_cycles"] = 3
@@ -769,7 +769,7 @@ class TestWalkForwardEdgeCasesRobust:
 
         # Use declining market data
         declining_quotes = generate_realistic_quotes(
-            days=6 * 252, seed=777, drift=-0.10, volatility=0.25
+            symbol=default_symbol, days=6 * 252, seed=777, drift=-0.10, volatility=0.25
         )
         declining_signals = generate_sma_crossover_signals(declining_quotes)
 
@@ -791,7 +791,7 @@ class TestWalkForwardEdgeCasesRobust:
                 # Should be in valid range even if high
                 assert 0.0 <= negative_pct <= 1.0
 
-    def test_all_windows_negative(self, walk_forward_config, backtest_config):
+    def test_all_windows_negative(self, walk_forward_config, backtest_config, default_symbol):
         """Test 100% negative windows (complete failure)."""
         relaxed_config = walk_forward_config.copy()
         relaxed_config["min_cycles"] = 3
@@ -800,7 +800,7 @@ class TestWalkForwardEdgeCasesRobust:
 
         # Use strongly declining market
         crash_quotes = generate_realistic_quotes(
-            days=6 * 252, seed=888, drift=-0.20, volatility=0.30
+            symbol=default_symbol, days=6 * 252, seed=888, drift=-0.20, volatility=0.30
         )
         crash_signals = generate_sma_crossover_signals(crash_quotes)
 

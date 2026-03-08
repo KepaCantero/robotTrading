@@ -46,12 +46,12 @@ from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Dict, List, Protocol, runtime_checkable
 
 # Use TYPE_CHECKING for type hints only - no runtime import
 if TYPE_CHECKING:
     from app.domain.models.portfolio import Portfolio
-    from app.domain.services.risk.portfolio import PortfolioRiskManager
+    from app.domain.services.risk.portfolio import PortfolioRiskManager as PortfolioRiskManager
 
 
 # Define a Protocol for Portfolio to use at runtime instead of placeholder

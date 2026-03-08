@@ -372,8 +372,8 @@ class BacktestValidator:
         in_labels = self._triple_barrier_labels(in_sample_prices)
         oos_labels = self._triple_barrier_labels(oos_prices)
 
-        in_signal_quality = np.mean([1 for l in in_labels if l == 1]) if in_labels else 0
-        oos_signal_quality = np.mean([1 for l in oos_labels if l == 1]) if oos_labels else 0
+        in_signal_quality = np.mean([1 for lbl in in_labels if lbl == 1]) if in_labels else 0
+        oos_signal_quality = np.mean([1 for lbl in oos_labels if lbl == 1]) if oos_labels else 0
 
         logger.info("Signal Quality (Triple Barrier):")
         logger.info(f"  In-Sample:     {in_signal_quality:.2%} positive labels")

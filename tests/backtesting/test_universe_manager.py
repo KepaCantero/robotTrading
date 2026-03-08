@@ -6,10 +6,14 @@ from datetime import datetime
 from decimal import Decimal
 
 from app.backtesting.universe_manager import BACKTEST_UNIVERSE, UniverseManager
+from tests.backtesting.conftest import DEFAULT_SYMBOL
 
 
 class TestUniverseManager:
     """Test universe manager functionality."""
+
+    # For unittest-style tests that can't use pytest fixtures directly
+    default_symbol = DEFAULT_SYMBOL
 
     def test_initialization(self):
         """Test universe manager initialization."""
@@ -19,7 +23,7 @@ class TestUniverseManager:
     def test_custom_universe(self):
         """Test custom universe configuration."""
         custom_universe = {
-            "survivors": ["AAPL", "MSFT"],
+            "survivors": [self.default_symbol, "MSFT"],
             "delisted": [],
             "spun_off": [],
             "penny_stocks": [],
@@ -43,7 +47,7 @@ class TestUniverseManager:
         )
 
         # Should include survivors
-        assert "AAPL" in symbols
+        assert self.default_symbol in symbols
         assert "MSFT" in symbols
 
         # Should be more than just survivors (includes delisted/spun_off)
@@ -109,7 +113,7 @@ class TestUniverseManager:
         """Test filtering by market cap."""
         manager = UniverseManager()
 
-        symbols = ["AAPL", "MSFT", "GE", "F", "C"]
+        symbols = [self.default_symbol, "MSFT", "GE", "F", "C"]
 
         # Filter to large caps only
         large_caps = manager.filter_by_market_cap(
@@ -117,8 +121,8 @@ class TestUniverseManager:
             min_market_cap=Decimal("200"),  # $200B+
         )
 
-        # Should include AAPL, MSFT but exclude smaller
-        assert "AAPL" in large_caps
+        # Should include default_symbol, MSFT but exclude smaller
+        assert self.default_symbol in large_caps
         assert "MSFT" in large_caps
 
         # Test with unknown symbol
@@ -175,7 +179,7 @@ class TestUniverseManager:
         """Test getting sector breakdown."""
         manager = UniverseManager()
 
-        symbols = ["AAPL", "MSFT", "JPM", "BAC", "XOM"]
+        symbols = [self.default_symbol, "MSFT", "JPM", "BAC", "XOM"]
 
         sectors = manager.get_sector_diversification(symbols)
 
@@ -184,7 +188,7 @@ class TestUniverseManager:
         assert "Energy" in sectors
 
         # Check correct symbols in sectors
-        assert "AAPL" in sectors["Technology"]
+        assert self.default_symbol in sectors["Technology"]
         assert "JPM" in sectors["Financials"]
         assert "XOM" in sectors["Energy"]
 

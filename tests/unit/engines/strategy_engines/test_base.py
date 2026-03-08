@@ -20,7 +20,7 @@ from unittest.mock import Mock
 import pytest
 
 from app.engines.strategy_engines.base import BaseStrategyEngine
-from app.models.market_data import Quote
+from app.domain.models.market_data import Quote
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 # ===== Concrete Implementation for Testing =====

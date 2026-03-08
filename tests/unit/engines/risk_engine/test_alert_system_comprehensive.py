@@ -16,7 +16,7 @@ import pytest
 from hypothesis import given, settings, strategies as st
 
 from app.engines.risk_engine.alert_system import AlertSystem
-from app.models.portfolio import Portfolio
+from app.domain.models.portfolio import Portfolio
 
 # =============================================================================
 # Test Fixtures

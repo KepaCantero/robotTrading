@@ -49,7 +49,7 @@ class TestAdvancedBacktestingMethods:
 
     def generate_gbm_market_data(
         self,
-        symbol: str = "TEST_SYMBOL",
+        symbol: str,
         days: int = 252,
         seed: int = 42,
         drift: float = 0.05,
@@ -283,7 +283,7 @@ class TestAdvancedBacktestingMethods:
     # TEST METHODS
     # =========================================================================
 
-    def test_statistical_significance_test(self, config):
+    def test_statistical_significance_test(self, config, default_symbol):
         """
         Test statistical significance of strategy performance.
 
@@ -292,7 +292,7 @@ class TestAdvancedBacktestingMethods:
         """
         # Create realistic GBM market data
         market_data = self.generate_gbm_market_data(
-            symbol="AAPL", days=252, seed=42, drift=0.08, volatility=0.25
+            symbol=default_symbol, days=252, seed=42, drift=0.08, volatility=0.25
         )
 
         # Run multiple backtests with different random seeds
@@ -300,7 +300,7 @@ class TestAdvancedBacktestingMethods:
         for seed in range(10):
             # Generate different market scenarios
             scenario_data = self.generate_gbm_market_data(
-                symbol="AAPL", days=252, seed=seed, drift=0.08, volatility=0.25
+                symbol=default_symbol, days=252, seed=seed, drift=0.08, volatility=0.25
             )
 
             # Generate signals using SMA crossover (not always BUY)
@@ -328,7 +328,7 @@ class TestAdvancedBacktestingMethods:
         # Verify that results show variation (not all identical)
         assert std_return > 0, "Standard deviation should be positive for variable data"
 
-    def test_monte_carlo_simulation(self, config):
+    def test_monte_carlo_simulation(self, config, default_symbol):
         """
         Test Monte Carlo simulation for strategy robustness.
 
@@ -337,7 +337,7 @@ class TestAdvancedBacktestingMethods:
         """
         # Create base market data
         base_market_data = self.generate_gbm_market_data(
-            symbol="TSLA", days=200, seed=100, drift=0.10, volatility=0.35
+            symbol=default_symbol, days=200, seed=100, drift=0.10, volatility=0.35
         )
 
         # Run Monte Carlo simulation
@@ -350,7 +350,7 @@ class TestAdvancedBacktestingMethods:
             random_volatility = np.random.uniform(0.20, 0.40)  # Random volatility
 
             random_market_data = self.generate_gbm_market_data(
-                symbol="TSLA",
+                symbol=default_symbol,
                 days=200,
                 seed=simulation,
                 drift=random_drift,
@@ -391,7 +391,7 @@ class TestAdvancedBacktestingMethods:
             0.85 <= ratio <= 0.95
         ), f"~90% of data should be between 5th-95th percentiles, got {ratio:.2%}"
 
-    def test_trade_randomization(self, config):
+    def test_trade_randomization(self, config, default_symbol):
         """
         Test trade randomization to assess strategy robustness.
 
@@ -402,7 +402,7 @@ class TestAdvancedBacktestingMethods:
         """
         # Create market data
         market_data = self.generate_gbm_market_data(
-            symbol="MSFT", days=200, seed=200, drift=0.06, volatility=0.22
+            symbol=default_symbol, days=200, seed=200, drift=0.06, volatility=0.22
         )
 
         # Original strategy
@@ -458,7 +458,7 @@ class TestAdvancedBacktestingMethods:
         # Check if there's variation in randomized results
         assert std_randomized_return > 0, "Randomized results should show variation"
 
-    def test_bootstrap_analysis(self, config):
+    def test_bootstrap_analysis(self, config, default_symbol):
         """
         Test bootstrap analysis for strategy performance.
 
@@ -467,7 +467,7 @@ class TestAdvancedBacktestingMethods:
         """
         # Create market data
         market_data = self.generate_gbm_market_data(
-            symbol="GOOGL", days=150, seed=300, drift=0.07, volatility=0.28
+            symbol=default_symbol, days=150, seed=300, drift=0.07, volatility=0.28
         )
 
         # Run original backtest
@@ -559,7 +559,7 @@ class TestAdvancedBacktestingMethods:
         for regime, return_value in regime_results.items():
             assert return_value > -60, f"Strategy failed in {regime} market: {return_value:.2f}%"
 
-    def test_parameter_sensitivity_analysis(self, config):
+    def test_parameter_sensitivity_analysis(self, config, default_symbol):
         """
         Test parameter sensitivity analysis.
 
@@ -568,7 +568,7 @@ class TestAdvancedBacktestingMethods:
         """
         # Create market data
         market_data = self.generate_gbm_market_data(
-            symbol="NVDA", days=120, seed=700, drift=0.12, volatility=0.30
+            symbol=default_symbol, days=120, seed=700, drift=0.12, volatility=0.30
         )
 
         # Test different parameter values
@@ -629,7 +629,7 @@ class TestAdvancedBacktestingMethods:
                     result > -100
                 ), f"Parameter {param_name} produces catastrophic loss: {result:.2f}%"
 
-    def test_sma_crossover_signal_generation(self, config):
+    def test_sma_crossover_signal_generation(self, config, default_symbol):
         """
         Test SMA crossover signal generation (Bug #3 fix).
 
@@ -638,7 +638,7 @@ class TestAdvancedBacktestingMethods:
         """
         # Generate market data
         market_data = self.generate_gbm_market_data(
-            symbol="TEST", days=200, seed=800, drift=0.05, volatility=0.20
+            symbol=default_symbol, days=200, seed=800, drift=0.05, volatility=0.20
         )
 
         # Generate signals
@@ -663,7 +663,7 @@ class TestAdvancedBacktestingMethods:
         assert result is not None, "Backtest should complete successfully"
         assert len(result.trades) > 0, "Should execute trades with real signals"
 
-    def test_gbm_data_realism(self, config):
+    def test_gbm_data_realism(self, config, default_symbol):
         """
         Test GBM data generation realism (Bug #4 fix).
 
@@ -672,7 +672,7 @@ class TestAdvancedBacktestingMethods:
         """
         # Generate GBM data
         market_data = self.generate_gbm_market_data(
-            symbol="GBM_TEST", days=252, seed=900, drift=0.08, volatility=0.20
+            symbol=default_symbol, days=252, seed=900, drift=0.08, volatility=0.20
         )
 
         # Extract prices

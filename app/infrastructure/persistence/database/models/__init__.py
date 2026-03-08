@@ -10,12 +10,12 @@ Instead of dynamic importlib, we use deferred imports in functions.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Protocol, TypeVar, runtime_checkable
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 # Use TYPE_CHECKING for type hints only
 if TYPE_CHECKING:
     # These imports are only for static type checking
-    from sqlalchemy.orm import DeclarativeBase
+    from sqlalchemy.orm import DeclarativeBase as DeclarativeBase
 
 
 # Define protocols for type hints without importing the actual models

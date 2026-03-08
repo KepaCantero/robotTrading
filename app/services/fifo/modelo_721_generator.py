@@ -43,7 +43,9 @@ from sqlalchemy.exc import (
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.infrastructure.persistence.database import get_db_transaction
+from app.infrastructure.persistence import database as db_module
+
+get_db_transaction = db_module.get_db_transaction
 from app.tax.database.fifo_schema import (
     Account,
     AssetType,
