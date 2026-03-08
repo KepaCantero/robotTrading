@@ -12,7 +12,12 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
+
+if TYPE_CHECKING:
+    from app.services.live_trading.alert_to_trade_mapper import TradeSignal
+
+    TradeResult = dict  # Type alias for trade execution results
 
 from app.backtesting.engines.execution_engine import PessimisticExecutionEngine
 from app.shared.protocols import ITradeExecutor

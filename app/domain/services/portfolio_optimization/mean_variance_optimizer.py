@@ -27,9 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 # Mean-Variance Optimization default parameters
-DEFAULT_RISK_FREE_RATE = getattr(
-    config.trading, 'max_risk_per_trade', 0.02
-)  # Annual risk-free rate
+DEFAULT_RISK_FREE_RATE = 0.02  # Annual risk-free rate
 DEFAULT_MIN_WEIGHT = 0.0  # Minimum weight per asset (no short)
 DEFAULT_MAX_WEIGHT = 1.0  # Maximum weight per asset
 DEFAULT_OPTIMIZATION_TOLERANCE = 1e-9  # Optimization ftol

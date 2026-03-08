@@ -240,7 +240,7 @@ class StatisticalArbitrage:
             stop_loss = current_price * (1 + 0.02)  # 2% above
             take_profit = mean
         elif state == ReversionState.OVERSOLD:
-            stop_loss = getattr(config.trading, 'max_risk_per_trade', 0.02)  # 2% below
+            stop_loss = current_price * (1 - 0.02)  # 2% below
             take_profit = mean
         else:
             stop_loss = None

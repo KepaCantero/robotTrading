@@ -1,5 +1,10 @@
 """Strategy cycle protocols"""
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
+
+if TYPE_CHECKING:
+    from app.services.live_trading.alert_to_trade_mapper import TradeSignal
+
+    CycleResult = dict  # Type alias for cycle execution results
 
 
 class IStrategyCycleRunner(Protocol):

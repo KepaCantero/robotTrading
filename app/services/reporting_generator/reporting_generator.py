@@ -9,6 +9,8 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Optional
 
+import numpy as np
+
 from .models import AllocationSnapshot, PerformanceReport, ReportGenerationRequest, StrategyMetrics
 
 logger = logging.getLogger(__name__)

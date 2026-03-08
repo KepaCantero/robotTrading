@@ -1,5 +1,8 @@
 """Alert processing protocols"""
-from typing import Optional, Protocol
+from typing import TYPE_CHECKING, Optional, Protocol
+
+if TYPE_CHECKING:
+    from app.services.live_trading.alert_to_trade_mapper import TradeSignal
 
 
 class IAlertProcessor(Protocol):

@@ -2,7 +2,10 @@
 Post-trade analysis protocols (R11, R12, R13)
 """
 from decimal import Decimal
-from typing import Optional, Protocol
+from typing import TYPE_CHECKING, Optional, Protocol
+
+if TYPE_CHECKING:
+    from app.services.live_trading.alert_to_trade_mapper import TradeSignal
 
 
 class IPostTradeAnalyzer(Protocol):

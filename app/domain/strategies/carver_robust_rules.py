@@ -314,7 +314,7 @@ class CarverRobustRulesStrategy(BaseStrategy):
 
         # Calculate standard deviation
 
-        volatility = getattr(config.trading, 'max_risk_per_trade', 0.02)
+        volatility = 0.02  # Default volatility
 
         return volatility
 

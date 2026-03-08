@@ -60,7 +60,7 @@ class IBKRSource(BaseDataSource):
             self.is_connected = True
             logger.info(f"Conectado a IBKR ({self.host}:{self.port})")
             return True
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as e:
             logger.error(f"Timeout conectando a IBKR: {e}")
             return False
         except (ConnectionError, OSError) as e:
@@ -76,7 +76,7 @@ class IBKRSource(BaseDataSource):
             self.is_connected = False
             logger.info("Desconectado de IBKR")
             return True
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as e:
             logger.error(f"Timeout desconectando de IBKR: {e}")
             return False
         except (ConnectionError, OSError) as e:
@@ -92,7 +92,7 @@ class IBKRSource(BaseDataSource):
                 self._ib.isConnected(), timeout=self._timeouts.ib_read
             )
             return connected
-        except (asyncio.TimeoutError, ConnectionError, OSError):
+        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.warning(f"IBKR health check failed: {e}")
             return False
 
@@ -143,7 +143,7 @@ class IBKRSource(BaseDataSource):
                     }
                 )
             return ohlcv_data
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as e:
             logger.error(f"Timeout obteniendo OHLCV de IBKR para {symbol}: {e}")
             return []
         except (ValueError, TypeError, KeyError, AttributeError) as e:
@@ -253,7 +253,7 @@ class BinanceSource(BaseDataSource):
                         }
                     )
                 return ohlcv_data
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as e:
             logger.error(f"Timeout obteniendo OHLCV de Binance para {symbol}: {e}")
             return []
         except (ClientError, ValueError, KeyError, AttributeError) as e:
@@ -370,7 +370,7 @@ class AlpacaSource(BaseDataSource):
                         }
                     )
                 return ohlcv_data
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as e:
             logger.error(f"Timeout obteniendo OHLCV de Alpaca para {symbol}: {e}")
             return []
         except (ClientError, ValueError, KeyError, AttributeError) as e:
@@ -481,7 +481,7 @@ class PolygonSource(BaseDataSource):
                         }
                     )
                 return ohlcv_data
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as e:
             logger.error(f"Timeout obteniendo OHLCV de Polygon para {symbol}: {e}")
             return []
         except (ClientError, ValueError, KeyError, AttributeError) as e:
@@ -589,7 +589,7 @@ class YahooFinanceSource(BaseDataSource):
                         }
                     )
                 return ohlcv_data
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as e:
             logger.error(f"Timeout obteniendo OHLCV de Yahoo Finance para {symbol}: {e}")
             return []
         except (ClientError, ValueError, KeyError, AttributeError) as e:

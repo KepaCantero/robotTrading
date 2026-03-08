@@ -14,6 +14,8 @@ import logging
 import sys
 from pathlib import Path
 
+import numpy as np
+
 logger = logging.getLogger(__name__)
 
 # Add project root to path for imports

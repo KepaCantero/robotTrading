@@ -16,7 +16,6 @@ Features:
 
 Usage:
     from app.security.secret_manager import get_secret, require_secret
-import numpy as np
 
     # Get secret with fallback (for development)
     api_key = get_secret("API_KEY", default=None)
@@ -36,6 +35,8 @@ import time
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, List, Optional, Set
+
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -596,7 +597,7 @@ class SecretManager:
 
         # Calculate average strength score and adjust compliance
         if report.strength_scores:
-            np.mean(list(report.strength_scores.values()))
+            avg_strength = np.mean(list(report.strength_scores.values()))
             report.compliance_score = (report.compliance_score + avg_strength) / 2
 
         report.compliance_score = max(0, min(100, report.compliance_score))
