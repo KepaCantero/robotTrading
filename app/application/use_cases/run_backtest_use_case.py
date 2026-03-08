@@ -169,7 +169,7 @@ class RunBacktestUseCase:
             # Import here to avoid circular dependencies
             from decimal import Decimal
 
-            from ....backtesting.core.executor import BacktestExecutor, BacktestExecutorFactory
+            from ....backtesting.core.executor import BacktestExecutorFactory
             from ....backtesting.models import BacktestConfig as EngineBacktestConfig
 
             # Convert value object to engine config
@@ -180,7 +180,7 @@ class RunBacktestUseCase:
             )
 
             # Create executor using factory
-            executor: BacktestExecutor = BacktestExecutorFactory.create_executor(
+            BacktestExecutorFactory.create_executor(
                 executor_type='simple', config=engine_config
             )
 

@@ -1,0 +1,43 @@
+# Spec-Driven Development Preset
+# ==================================
+# Workflow: Spec → Build → Verify
+
+event_loop:
+  completion_promise: "SPEC_DRIVEN_COMPLETE"
+  max_iterations: 100
+  max_runtime_seconds: 86400
+  starting_event: "spec.start"
+
+cli:
+  backend: claude
+
+core:
+  specs_dir: ./specs/
+
+memories:
+  enabled: true
+
+hats:
+  spec_reader:
+    name: "Spec Reader"
+    triggers: ["spec.start"]
+    publishes: ["spec.read"]
+    instructions: |
+      Read and parse the spec file.
+      Create implementation plan.
+
+  implementer:
+    name: "Implementer"
+    triggers: ["spec.read"]
+    publishes: ["impl.done"]
+    instructions: |
+      Implement according to spec.
+      Follow the plan from spec_reader.
+
+  verifier:
+    name: "Verifier"
+    triggers: ["impl.done"]
+    publishes: ["spec.complete"]
+    instructions: |
+      Verify implementation matches spec.
+      Run tests to validate.

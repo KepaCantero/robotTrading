@@ -215,6 +215,6 @@ La tarea está COMPLETED cuando:
 
 ##  REFERENCIAS
 
-- `.ralph/docs/requirements/SERVICE_REQUIREMENTS.md` - Spain-Specific Requirements
-- `.ralph/rules/rules_mapping.yml` - Spain Tax Rules
+- `rules/trading/` - Spain-Specific Requirements
+- `rules/trading/` - Spain Tax Rules
 - `app/core/protocols/i_spain_tax_engine.py` - Protocol interface (debe existir de tarea 01)

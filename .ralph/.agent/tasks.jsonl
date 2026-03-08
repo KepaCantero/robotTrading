@@ -1,0 +1,7 @@
+[
+  {"id": "1", "type": "feature", "title": "Implement Spain Tax Engine", "status": "pending", "priority": 1, "created_at": "2024-01-15T10:00:00Z"},
+  {"id": "2", "type": "feature", "title": "Implement Kelly Validator", "status": "pending", "priority": 1, "created_at": "2024-01-15T10:00:00Z"},
+  {"id": "3", "type": "feature", "title": "Implement Decision Logger", "status": "pending", "priority": 1, "created_at": "2024-01-15T10:00:00Z"},
+  {"id": "4", "type": "refactor", "title": "Migrate abc.ABC to typing.Protocol", "status": "pending", "priority": 2, "created_at": "2024-01-15T10:00:00Z"},
+  {"id": "5", "type": "refactor", "title": "Centralize magic numbers", "status": "pending", "priority": 2, "created_at": "2024-01-15T10:00:00Z"}
+]

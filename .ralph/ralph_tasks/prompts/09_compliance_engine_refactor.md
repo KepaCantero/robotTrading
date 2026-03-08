@@ -335,6 +335,6 @@ La tarea está COMPLETED cuando:
 
 ##  REFERENCIAS
 
-- `.ralph/docs/requirements/SERVICE_REQUIREMENTS.md` - SOLID Principles
-- `.ralph/rules/rules_mapping.yml` - SOLID rules
+- `rules/trading/` - SOLID Principles
+- `rules/trading/` - SOLID rules
 - `.ralph/docs/architecture/compliance_engine_solid_audit.md` - Audit de ComplianceEngine

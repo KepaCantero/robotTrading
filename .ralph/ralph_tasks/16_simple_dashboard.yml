@@ -888,7 +888,7 @@ hats:
       EOF
 
       # Update master checkpoint
-      python .ralph/scripts/update_master_checkpoint.py 16_simple_dashboard COMPLETED
+      # update_master_checkpoint.py not available 16_simple_dashboard COMPLETED
       ```
 
       ### Event Format:

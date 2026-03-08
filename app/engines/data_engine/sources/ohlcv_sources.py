@@ -53,7 +53,7 @@ class IBKRSource(BaseDataSource):
             return False
         try:
             self._ib = IB()
-            connected = await asyncio.wait_for(
+            await asyncio.wait_for(
                 self._ib.connect(self.host, self.port, clientId=self.client_id),
                 timeout=self._timeouts.ib_connect,
             )
@@ -450,10 +450,9 @@ class PolygonSource(BaseDataSource):
             "1d": "day",
         }
         timespan = timespan_map.get(bar_size, "day")
-        multiplier = 1
         # Convert dates to timestamps
-        start_ts = int(start_date.timestamp() * 1000)
-        end_ts = int(end_date.timestamp() * 1000)
+        int(start_date.timestamp() * 1000)
+        int(end_date.timestamp() * 1000)
         url = f"{self.base_url}/v2/aggs/ticker/{symbol}/range/{timespan}"
         params = {
             "apiKey": self.api_key,

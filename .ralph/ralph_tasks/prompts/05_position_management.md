@@ -374,5 +374,5 @@ Al completar, crear checkpoint:
 
 ##  REFERENCIAS
 
-- `.ralph/docs/realistic_trading_rules.md` - R11, R12, R13
-- `.ralph/rules/rules_mapping.yml` - Position Management rules
+- `rules/trading/` - R11, R12, R13
+- `rules/trading/` - Position Management rules

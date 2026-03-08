@@ -705,7 +705,7 @@ hats:
       EOF
 
       # Update master checkpoint
-      python .ralph/scripts/update_master_checkpoint.py 13_live_trading_cli COMPLETED
+      # update_master_checkpoint.py not available 13_live_trading_cli COMPLETED
       ```
 
       ### PASO 7: Update Scratchpad

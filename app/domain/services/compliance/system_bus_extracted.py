@@ -6,7 +6,16 @@ TASK-24: SRP Refactoring
 from __future__ import annotations
 
 import logging
-from typing import Optional
+from datetime import datetime
+from decimal import Decimal
+from typing import TYPE_CHECKING, List, Optional
+
+import empyrical
+import pandas as pd
+
+if TYPE_CHECKING:
+    from app.domain.entities.pre_trade_analysis import PreTradeAnalysis
+    from app.domain.services.compliance.compliance_engine import ComplianceEngine
 
 logger = logging.getLogger(__name__)
 
@@ -685,7 +694,7 @@ class SystemBus:
 
                     # Strategy health: based on return consistency
                     # Positive returns more often = healthier strategy
-                    (recent_returns > 0).mean()
+                    positive_returns_pct = (recent_returns > 0).mean()
                     result.strategy_health = positive_returns_pct * config.PERCENTAGE_MULTIPLIER
                 else:
                     # Use config defaults when insufficient data
@@ -1089,7 +1098,7 @@ class SystemBus:
             # Config is a dict from YAML, use proper dict access
             exposure_config = config.get('exposure', {})
             max_strategy_exposure = exposure_config.get('max_strategy_exposure', 0.50)
-            max_pair_exposure = exposure_config.get('max_pair_exposure', 0.15)
+            exposure_config.get('max_pair_exposure', 0.15)
             max_assets_per_pair = exposure_config.get('max_assets_per_pair', 2)
             # Default correlation risk since it's not in config
             max_correlation_risk = 1.0
@@ -1171,7 +1180,7 @@ class SystemBus:
                 get_strategy_stock_allocator_config,
             )
 
-            config = get_compliance_config()
+            get_compliance_config()
             alloc_config = get_strategy_stock_allocator_config()
             compliance_config = get_compliance_config()
 
@@ -1246,7 +1255,7 @@ class SystemBus:
                 get_strategy_stock_allocator_config,
             )
 
-            alloc_config = get_strategy_stock_allocator_config()
+            get_strategy_stock_allocator_config()
             trading_config = get_config().trading
             config = get_compliance_config()
 

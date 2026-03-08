@@ -78,26 +78,26 @@ Total problems identified: **426+ files with hardcoded values**
 
 ---
 
-## TRADING RULES FROM SERVICE_REQUIREMENTS.md
+## TRADING RULES (from rules/trading/)
 
 ### R1: Kelly Criterion + 2% max position size
 - **Rule**: Validate order value <= 2% of available cash
 - **Implementation**: Use `getattr(config.trading, 'max_risk_per_trade', 0.02)`
-- **Reference**: .ralph/docs/requirements/SERVICE_REQUIREMENTS.md:210-222
+- **Reference**: rules/trading/:210-222
 
 ### R2: Drawdown 15% stop trading
 - **Rule**: Stop trading when drawdown >= 15%
 - **Implementation**: Use `getattr(config.compliance, 'max_drawdown_pct', 0.15)`
-- **Reference**: .ralph/docs/requirements/SERVICE_REQUIREMENTS.md:224-233
+- **Reference**: rules/trading/:224-233
 
 ### R4: Risk-Reward 2:1 minimum
 - **Rule**: Validate RR ratio >= 2.0 before trade
 - **Implementation**: Use `getattr(config.trading, 'min_rr_ratio', 2.0)`
-- **Reference**: .ralph/docs/requirements/SERVICE_REQUIREMENTS.md:235-250
+- **Reference**: rules/trading/:235-250
 
 ---
 
-## SPAIN TAX RULES FROM SERVICE_REQUIREMENTS.md
+## SPAIN TAX RULES (from rules/trading/)
 
 ### IRPF Progresivo (19/21/23%)
 - Use `getattr(config.spain_tax, 'irpf_rate_19', 0.19)`

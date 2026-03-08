@@ -1,0 +1,51 @@
+# Refactor Preset
+# ===============
+# Workflow: Analyze → Plan → Execute → Verify
+
+event_loop:
+  completion_promise: "REFACTOR_COMPLETE"
+  max_iterations: 150
+  max_runtime_seconds: 129600
+  starting_event: "refactor.start"
+
+cli:
+  backend: claude
+
+core:
+  specs_dir: ./specs/
+
+memories:
+  enabled: true
+
+hats:
+  analyzer:
+    name: "Code Analyzer"
+    triggers: ["refactor.start"]
+    publishes: ["refactor.analyzed"]
+    instructions: |
+      Analyze the code to refactor.
+      Identify issues and improvements.
+
+  planner:
+    name: "Refactor Planner"
+    triggers: ["refactor.analyzed"]
+    publishes: ["refactor.planned"]
+    instructions: |
+      Create refactor plan.
+      Prioritize changes by impact.
+
+  implementer:
+    name: "Refactor Implementer"
+    triggers: ["refactor.planned"]
+    publishes: ["refactor.implemented"]
+    instructions: |
+      Execute the refactor plan.
+      Make incremental changes.
+
+  verifier:
+    name: "Refactor Verifier"
+    triggers: ["refactor.implemented"]
+    publishes: ["refactor.complete"]
+    instructions: |
+      Verify refactor is complete.
+      Ensure tests still pass.

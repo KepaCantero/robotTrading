@@ -6,8 +6,8 @@
 # TIEMPO: ~8 horas
 # DEPENDS ON: 01_protocol_interfaces
 #
-# Requirements: .ralph/docs/requirements/SERVICE_REQUIREMENTS.md
-# Rules: .ralph/rules/rules_mapping.yml - Spain Tax Rules
+# Requirements: rules/trading/
+# Rules: rules/trading/ - Spain Tax Rules
 # ============================================================================
 
 event_loop:
@@ -35,8 +35,8 @@ hats:
       ## SPAIN TAX ENGINE IMPLEMENTATION
 
       **REQUISITOS:**
-      1. Leer: `.ralph/docs/requirements/SERVICE_REQUIREMENTS.md` - Sección Spain-Specific Requirements
-      2. Leer: `.ralph/rules/rules_mapping.yml` - Spain Tax Rules
+      1. Leer: `rules/trading/` - Sección Spain-Specific Requirements
+      2. Leer: `rules/trading/` - Spain Tax Rules
       3. Verificar que existe: `app/core/protocols/i_spain_tax_engine.py`
 
       **OBJETIVO:** Implementar motor de impuestos para residente fiscal en España

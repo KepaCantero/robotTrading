@@ -1,17 +1,19 @@
-# 📋 AlgoTrading - Ralph System
+# 📋 AlgoTrading - Ralph System v2.0
 
-**Fecha:** 2026-02-08
-**Objetivo:** Sistema de automatización de tareas para refactores
+**Fecha:** 2026-03-08
+**Objetivo:** Sistema de automatización de tareas para nivel AAA
 
 ---
 
 ## 🎯 ¿Qué es Ralph?
 
-Ralph es un **wrapper** para automatizar pipelines de agentes con:
+Ralph es un **orchestrator** para automatizar pipelines de agentes con:
 
-1. **Tareas definidas en templates** - Configuración YAML reutilizable
-2. **Procesamiento de resultados** - Output estandarizado
-3. **Paso de datos entre agentes** - Pipeline coordinado
+1. **Presets de workflows** - Configuraciones pre-definidas
+2. **Hats especializados** - Personas con roles específicos
+3. **Memories persistentes** - Aprendizaje entre sesiones
+4. **Tasks tracking** - Seguimiento de runtime
+5. **Backpressure validation** - Gates de calidad automáticos
 
 ### Flujo de Ralph
 
@@ -48,51 +50,49 @@ Ralph es un **wrapper** para automatizar pipelines de agentes con:
 ```
 .ralph/
 ├── README.md                           # ESTE ARCHIVO
+├── ralph-v2.yml                        # ⭐ Configuración v2.0
 │
 ├── docs/                               # Documentación del proyecto
-│   ├── scripts_README.md
-│   ├── RALPH_USER_GUIDE.md
-│   ├── RALPH_SYSTEM_DIAGRAM.md
-│   ├── analysis/                       # Análisis de 53 problemas
-│   │   ├── COMPLETE_ANALYSIS_ALL_PROBLEMS_SINGLE_USER.md ⭐
-│   │   ├── VIABILITY_ANALYSIS_CRITICAL_PROBLEMS.md
-│   │   └── EXECUTIVE_SUMMARY_ALL_PROBLEMS.md
+│   ├── analysis/                       # Análisis de problemas
 │   ├── architecture/                   # Arquitectura + SOLID
-│   │   ├── compliance_engine_architecture_analysis.md
-│   │   └── compliance_engine_solid_audit.md
-│   ├── refactoring/                    # Análisis de archivos críticos
-│   │   └── analysis_critical_files_complete.md
-│   └── requirements/                   # ⭐ SERVICE_REQUIREMENTS.md
-│       └── SERVICE_REQUIREMENTS.md
+│   └── refactoring/                    # Análisis de archivos críticos
 │
-├── rules/                              # ⭐ MAPEO DETERMINISTA
-│   ├── docs_extraction_mapping.yml     # QUÉ archivo leer, QUÉ extraer
-│   └── rules_mapping.yml               # Qué reglas aplican a cada servicio
+├── .agent/                             # ⭐ Estado persistente
+│   ├── memories.md                    # Aprendizaje entre sesiones
+│   └── tasks.jsonl                     # Tracking de runtime
 │
-├── ralph_base.yml                      # ⭐ Configuración base reutilizable
+├── hooks/                              # ⭐ Hooks de validación
+│   ├── pre_tool_use.py                 # Pre-validación de herramientas
+│   ├── post_tool_use.py                # Post-validación
+│   └── stop.py                         # Cleanup al finalizar
 │
-├── ralph_templates/                    # ⭐ Templates organizados
-│   ├── README.md                       # Índice de templates
+├── presets/                             # ⭐ WORKFLOWS PRE-DEFINIDOS
+│   ├── aaa-production.yml              # Producción AAA completo
+│   ├── tdd-red-green.yml               # TDD Red-Green-Refactor
+│   ├── debug.yml                        # Debug workflow
+│   ├── spec-driven.yml                  # Spec-driven development
+│   └── refactor.yml                     # Refactor workflow
+│
+├── rules/                              # REGLAS DE TRADING
+│   ├── python/                         # Reglas de Python
+│   └── trading/                        # 64 archivos de libros/papers
+│
+├── ralph_templates/                    # TEMPLATES
 │   ├── hats/                           # Comportamientos de agentes
-│   │   ├── base_processor_hat.yml      # ⭐ BASE - Template principal
-│   │   ├── requirement_checker_hat.yml # Genera requirements.md
-│   │   ├── validation_hat.yml          # Valida archivos
-│   │   ├── implementer_hat.yml         # Implementa código
-│   │   └── final_reviewer_hat.yml      # Revisión final
 │   ├── data/                           # Input/Output
-│   │   ├── agent_input_template.yml    # Input para agentes
-│   │   └── task_output_template.yml    # Output de tareas
 │   ├── configs/                        # Configuraciones
-│   │   ├── task_config_template.yml    # Para crear tareas
-│   │   └── pipeline_coordinator_template.yml
 │   └── agents/                         # Agentes especializados
-│       └── requirement_generator_agent.yml v3.0 ⭐ Extracción determinista
 │
-├── ralph_tasks/                        # Configuraciones de tareas
-│   ├── 01_compliance_engine_refactor.yml ⭐ Tarea P0
+├── ralph_tasks/                        # CONFIGURACIONES DE TAREAS
+│   ├── 00_master_orchestrator.yml       # ⭐ Master Orchestrator AAA
 │   └── prompts/                        # Prompts de tareas
 │
-├── outputs/                            # Outputs de tareas (generado)
+├── scripts/                            # SCRIPTS DE UTILIDAD
+│   ├── utils.py                        # CLI unificado
+│   ├── verify_compliance_validations.py
+│   └── ...
+│
+├── outputs/                            # Outputs (generado)
 ├── checkpoints/                        # Checkpoints (generado)
 └── logs/                               # Logs (generado)
 ```
@@ -156,13 +156,6 @@ Ralph es un **wrapper** para automatizar pipelines de agentes con:
 | `task_config_template.yml` | Para crear tareas |
 | `pipeline_coordinator_template.yml` | Para crear pipelines |
 
-### Rules (Mapeo Determinista)
-
-| Archivo | Uso |
-|---------|-----|
-| `docs_extraction_mapping.yml` | ⭐ QUÉ archivo leer, QUÉ extraer de docs/ |
-| `rules_mapping.yml` | Qué reglas aplican a cada servicio |
-
 ### Agents
 
 | Template | Uso |
@@ -175,98 +168,62 @@ Ralph es un **wrapper** para automatizar pipelines de agentes con:
 
 ## 🔄 Flujo con Requirements.md
 
-### Sistema de Extracción DETERMINISTA v3.0
+### Flujo de Análisis Dinámico
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  Requirement Generator Agent v3.0                       │
-│  Extracción DETERMINISTA de docs/ - NO juicio          │
+│  Tarea Ralph - Análisis por archivo                     │
 └─────────────────────┬───────────────────────────────────┘
                       │
         ┌─────────────┴──────────────┐
-        │  PASO 0: Leer mapeos       │
+        │  ANALIZAR 4 FUENTES:       │
         ▼                            │
 ┌─────────────────────┐               │
-│ docs_extraction_map │               │
-│ QUÉ hacer, QUÉ      │               │
-│ extraer de cada doc │               │
+│ 1. Archivo fuente   │  app/.../file.py
 └─────────────────────┘               │
                       │               │
         ┌─────────────┴───────────────┘
         │
         ▼
-┌─────────────────────────────────────────────────────────┐
-│  PASO 1-11: Extracción paso a paso                     │
-├─────────────────────────────────────────────────────────┤
-│  1. Identificar archivo (rules_mapping.yml)            │
-│  2. Extraer SOLID (SERVICE_REQUIREMENTS.md)             │
-│  3. Extraer Trading (realistic_trading_rules.md)       │
-│  4. Extraer Spain Tax (SERVICE_REQUIREMENTS.md)         │
-│  5. Extraer Implementation Gaps (implementation_*.md)   │
-│  6. Extraer Base Rules (docs_extraction_mapping.yml)    │
-│  7. Leer archivo Python                                 │
-│  8. Verificar cumplimiento                              │
-│  9. Generar requirements.md                             │
-│  10. Guardar en .requirements/                          │
-│  11. Validar salida                                     │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────┐
+│ 2. Requirements     │  .requirements/app/.../file.requirements.txt
+└─────────────────────┘
+        │
+        ▼
+┌─────────────────────┐
+│ 3. Rules            │  rules/trading/ (64 archivos de libros/papers)
+└─────────────────────┘
+        │
+        ▼
+┌─────────────────────┐
+│ 4. Docs             │  .ralph/docs/ (análisis, arquitectura, etc.)
+└─────────────────────┘
         │
         ▼
 ┌─────────────────────────────────────────────────────────┐
-│  Output: requirements.md con 4 categorías de reglas     │
-│  - SOLID (5 rules)                                      │
-│  - Trading (R1-R29, según servicio)                     │
-│  - Spain Tax (3 rules)                                  │
-│  - Base Rules (según servicio)                          │
+│  Output: Código actualizado / requirements / validación │
 └─────────────────────────────────────────────────────────┘
 ```
 
-### Fuentes de Verdad (DETERMINISTA)
+### Fuentes de Verdad
 
-| Categoría | Archivo | Sección |
-|-----------|---------|---------|
-| **SOLID** | `docs/requirements/SERVICE_REQUIREMENTS.md` | `## SOLID Principles` |
-| **Trading** | `docs/realistic_trading_rules.md` | `### Reglas Prioritarias (P0)` |
-| **Spain Tax** | `docs/requirements/SERVICE_REQUIREMENTS.md` | `## Spain-Specific Requirements` |
-| **Implementation Gaps** | `docs/implementation_analysis_R1-R29.md` | Tabla de estado |
+| Fuente | Ubicación | Contenido |
+|--------|-----------|-----------|
+| **Código** | `app/` | Archivos fuente Python |
+| **Requirements** | `.requirements/` | Requirements por archivo |
+| **Rules** | `rules/trading/` | 64 archivos de libros/papers |
+| **Docs** | `.ralph/docs/` | Análisis, arquitectura, guías |
 
-### Cuando NO existe requirements.md:
+### Flujo de Análisis por Archivo:
 
-```
-┌─────────────────┐
-│  Procesar File  │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│ ¿Existe         │──NO──→ requirement_generator_agent v3.0
-│ requirements.md │       │
-└────────┬────────┘       │
-         │ SÍ             ▼
-         │    ┌──────────────────────────┐
-         │    │ 1. docs_extraction_mapping │
-         │    │    QUÉ hacer, QUÉ extraer │
-         │    └──────────┬───────────────┘
-         ▼               │
-┌─────────────────┐     ▼
-│  Leer y Usar    │  ┌───────────────────────┐
-│  requirements   │  │ 2. rules_mapping.yml   │
-└────────┬────────┘  │    Qué reglas aplican  │
-         │          └──────────┬────────────┘
-         ▼                     │
-┌─────────────────┐             ▼
-│  Procesar File  │  ┌──────────────────────┐
-└─────────────────┘  │ 3. docs/               │
-         ▲           │    - SERVICE_REQUIREMENTS
-         │           │    - realistic_trading_rules
-         │           │    - implementation_analysis
-         │           └──────────┬────────────┘
-         │                      │
-         └──────────────────────┘
-        Extracción DETERMINISTA
-```
+Para cada tarea de Ralph, el agente:
 
-### requirements.md se genera automáticamente (v3.0):
+1. **Analiza el archivo** → Lee el código fuente del servicio
+2. **Analiza requirements** → Busca en `.requirements/app/.../archivo.requirements.txt`
+3. **Analiza rules** → Busca en `rules/trading/` las reglas relevantes
+4. **Analiza docs** → Busca en `.ralph/docs/` documentación adicional
+
+### Ejemplo de requirements.md generado:
 
 ```markdown
 # Requirements: app/services/compliance_engine.py
@@ -404,10 +361,8 @@ python scripts/utils.py audit_files --category p1
 ## 🔗 Quick Links
 
 - **Templates Docs:** [`ralph_templates/README.md`](./ralph_templates/README.md)
-- **Docs Extraction Mapping:** [`.ralph/rules/docs_extraction_mapping.yml`](./rules/docs_extraction_mapping.yml)
-- **Rules Mapping:** [`.ralph/rules/rules_mapping.yml`](./rules/rules_mapping.yml)
+- **Rules (Trading):** [`rules/trading/`](./rules/trading/)
 - **Análisis Completo:** [`docs/analysis/COMPLETE_ANALYSIS_ALL_PROBLEMS_SINGLE_USER.md`](./docs/analysis/COMPLETE_ANALYSIS_ALL_PROBLEMS_SINGLE_USER.md)
-- **Requirements Refactor:** [`docs/requirements/SERVICE_REQUIREMENTS.md`](./docs/requirements/SERVICE_REQUIREMENTS.md)
 - **Arquitectura:** [`docs/architecture/compliance_engine_architecture_analysis.md`](./docs/architecture/compliance_engine_architecture_analysis.md)
 
 ---
@@ -444,5 +399,56 @@ python scripts/utils.py audit_files --category p1
 
 ---
 
-**Última actualización:** 2026-02-08
-**Estado:** ✅ Sistema Ralph v3.0 - Extracción DETERMINISTA + NO FALLBACKS (implementer v2.0)
+**Última actualización:** 2026-03-08
+**Estado:** ✅ Sistema Ralph v2.1 - Optimizado para GLM 5.0 + Sub-agents integrados
+
+---
+
+## 🤖 Sub-Agents Integrados
+
+Los siguientes agentes de `awesome-claude-agents` están disponibles para delegación:
+
+| Agente | Uso en AlgoTrading |
+|--------|-------------------|
+| `code-archaeologist` | ⭐ Análisis profundo de codebase, genera reports |
+| `python-expert` | ⭐ Desarrollo Python 3.12+, async, FastAPI |
+| `ml-data-expert` | ⭐ ML/Data Science, trading algorithms |
+| `code-reviewer` | Reviews rigurosos con severity tagging |
+| `performance-optimizer` | Optimización de rendimiento |
+| `security-guardian` | Seguridad y hardening |
+
+### Cómo usar los sub-agents
+
+Los hats de Ralph pueden delegar tareas específicas a estos agentes:
+
+```yaml
+# En ralph_tasks/XX_task.yml
+hats:
+  implementer:
+    delegate_to: "@agent-python-expert"  # Para código Python complejo
+
+  trading_logic:
+    delegate_to: "@agent-ml-data-expert"  # Para algoritmos de trading
+
+  code_review:
+    delegate_to: "@agent-code-reviewer"  # Para reviews
+```
+
+---
+
+## 🧠 GLM 5.0 Optimizaciones
+
+Ralph v2.1 está optimizado para GLM 5.0:
+
+| Configuración | Valor | Razón |
+|---------------|-------|-------|
+| `max_iterations` | 300 | GLM más eficiente |
+| `memories.budget` | 16000 | Contexto 128K tokens |
+| `reasoning.type` | multi-step | GLM maneja bien multi-step |
+
+### Prompts para GLM 5.0
+
+Los prompts deben ser más directos (GLM prefiere instrucciones claras):
+- Usar bullet points en lugar de párrafos largos
+- Especificar formato de salida esperado
+- Incluir ejemplos concretos

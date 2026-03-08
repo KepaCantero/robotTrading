@@ -779,7 +779,7 @@ class MeanVarianceOptimizer(BaseOptimizer[NDArray[np.float64]]):
     ) -> PortfolioOptimizationResult:
         """Find minimum variance portfolio for target return."""
         n_assets = len(expected_returns)
-        target_daily = target_return / TRADING_DAYS
+        target_return / TRADING_DAYS
 
         def portfolio_variance(weights: NDArray[np.float64]) -> float:
             return float(weights @ cov_matrix @ weights)

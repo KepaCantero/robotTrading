@@ -5,7 +5,7 @@
 # OBJETIVO: Crear interfaces Protocol (ISP, DIP, LSP) para toda la arquitectura
 # TIEMPO: ~4 horas
 #
-# Requirements: .ralph/docs/requirements/SERVICE_REQUIREMENTS.md
+# Requirements: rules/trading/
 # Architecture: .ralph/docs/architecture/compliance_engine_architecture_analysis.md
 # ============================================================================
 
@@ -34,7 +34,7 @@ hats:
       ## PROTOCOL INTERFACES FOUNDATION
 
       **REQUISITOS:**
-      1. Leer: `.ralph/docs/requirements/SERVICE_REQUIREMENTS.md` - Sección SOLID Principles
+      1. Leer: `rules/trading/` - Sección SOLID Principles
       2. Leer: `.ralph/docs/architecture/compliance_engine_architecture_analysis.md`
 
       **OBJETIVO:** Crear interfaces Protocol siguiendo ISP (< 5 métodos por interfaz)

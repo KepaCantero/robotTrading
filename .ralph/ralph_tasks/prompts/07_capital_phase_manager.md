@@ -361,5 +361,5 @@ assert params.leverage_allowed == True
 
 ##  REFERENCIAS
 
-- `.ralph/docs/realistic_trading_rules.md` - R25, R26, R27
-- `.ralph/rules/rules_mapping.yml` - Capital Management rules
+- `rules/trading/` - R25, R26, R27
+- `rules/trading/` - Capital Management rules

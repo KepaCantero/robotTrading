@@ -1,0 +1,50 @@
+# TDD Red-Green Preset
+# ==================
+# Test-Driven Development with red-green-refactor cycle
+# Ideal for: Nueva funcionalidad con tests primero
+
+event_loop:
+  completion_promise: "TDD_CYCLE_COMPLETE"
+  max_iterations: 100
+  starting_event: "tdd.start"
+
+cli:
+  backend: claude
+
+memories:
+  enabled: true
+
+hats:
+  write_tests:
+    name: "Write Tests"
+    triggers: ["tdd.start"]
+    publishes: ["tdd.tests_written"]
+    instructions: |
+      ## WRITE TESTS (Red)
+
+      1. Analizar el archivo a testear
+      2. Escribir tests que FALLEN inicialmente (red)
+      3. Asegurar que los tests son descriptivos
+
+  make_pass:
+    name: "Make Pass"
+    triggers: ["tdd.tests_written"]
+    publishes: ["tdd.tests_pass"]
+    instructions: |
+      ## MAKE PASS (Green)
+
+      1. Escribir el código mínimo para que los tests pasen
+      2. No añadir lógica extra
+      3. Solo hacer lo necesario para pasar
+
+  refactor:
+    name: "Refactor"
+    triggers: ["tdd.tests_pass"]
+    publishes: ["tdd.complete"]
+    instructions: |
+      ## REFACTOR
+
+      1. Limpiar el código
+      2. Eliminar duplicados
+      3. Mejorar nombres y estructura
+      4. Asegurar que los tests siguen pasando

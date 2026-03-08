@@ -13,7 +13,7 @@ import logging
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from app.application.alerting import AlertEvent, AlertSeverity
+from app.services.alerting_system import AlertEvent, AlertSeverity
 from app.services.live_trading.trading_bridge_orchestrator import (
     TradingBridgeOrchestrator,
     get_trading_bridge_orchestrator,

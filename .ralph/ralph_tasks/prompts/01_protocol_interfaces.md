@@ -208,6 +208,6 @@ La tarea está COMPLETED cuando:
 
 ## 📚 REFERENCIAS
 
-- `.ralph/docs/requirements/SERVICE_REQUIREMENTS.md` - SOLID Principles
-- `.ralph/rules/rules_mapping.yml` - SOLID rules
+- `rules/trading/` - SOLID Principles
+- `rules/trading/` - SOLID rules
 - `.ralph/ralph_templates/agents/requirement_generator_agent.yml` - Requirement generator

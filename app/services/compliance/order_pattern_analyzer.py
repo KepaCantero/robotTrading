@@ -25,7 +25,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Deque, Dict, List, Optional
 
-from app.core.timezone_utils import utc_now
+from app.shared.utils.timezone_utils import utc_now
 
 logger = logging.getLogger(__name__)
 

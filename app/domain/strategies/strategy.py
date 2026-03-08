@@ -859,12 +859,12 @@ class ModularMomentumStrategy(BaseStrategy):
 
         # Decision logic: Prioritize BUY in trend_up markets
         market_type = market_context.get('type', 'unknown')
-        market_strength = market_context.get('trend_strength', 0.5)
+        market_context.get('trend_strength', 0.5)
 
         # Get indicator values from filter results for additional checks
         rsi_result = filter_results.get('rsi_filter_buy', {})
         momentum_result = filter_results.get('momentum_filter_buy', {})
-        rsi = rsi_result.get('metadata', {}).get('rsi') or rsi_result.get('value')
+        rsi_result.get('metadata', {}).get('rsi') or rsi_result.get('value')
         momentum = momentum_result.get('metadata', {}).get('momentum') or momentum_result.get(
             'value'
         )

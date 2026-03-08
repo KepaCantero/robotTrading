@@ -1,0 +1,128 @@
+# AAA Production Preset
+# ==================
+# Objetivo: Llevar el código a nivel AAA (Production Ready)
+# Incluye: Estructura, Requirements, SOLID, R1-R29, QA, Tests, Security
+
+event_loop:
+  completion_promise: "AAA_PRODUCTION_READY"
+  max_iterations: 500
+  max_runtime_seconds: 432000
+  starting_event: "aaa.start"
+
+cli:
+  backend: claude
+
+core:
+  specs_dir: ./specs/
+
+memories:
+  enabled: true
+  inject: auto
+
+tasks:
+  enabled: true
+
+hats:
+  structural_fix:
+    name: "Structural Fix"
+    triggers: ["aaa.start"]
+    publishes: ["aaa.structural_done"]
+    instructions: |
+      Eliminar duplicados, corregir imports, validar estructura.
+      Ver 00_master_orchestrator.yml FASE 1.1 para detalles.
+
+  requirements_generator:
+    name: "Requirements Generator"
+    triggers: ["aaa.structural_done"]
+    publishes: ["aaa.requirements_done"]
+    instructions: |
+      Generar requirements.md para cada archivo Python.
+      Ver 00_master_orchestrator.yml FASE 1.2 para detalles.
+
+  protocols:
+    name: "Protocol Interfaces"
+    triggers: ["aaa.requirements_done"]
+    publishes: ["aaa.protocols_done"]
+    instructions: |
+      Validar interfaces Protocol cumplen SOLID.
+      Ver 00_master_orchestrator.yml FASE 1.3 para detalles.
+
+  compliance_engine:
+    name: "Compliance Engine"
+    triggers: ["aaa.protocols_done"]
+    publishes: ["aaa.compliance_done"]
+    instructions: |
+      Validar ComplianceEngine cumple R1-R29.
+      Ver 00_master_orchestrator.yml FASE 2.1 para detalles.
+
+  spain_tax:
+    name: "Spain Tax Engine"
+    triggers: ["aaa.compliance_done"]
+    publishes: ["aaa.tax_done"]
+    instructions: |
+      Validar SpainTaxEngine cumple IRPF.
+      Ver 00_master_orchestrator.yml FASE 2.2 para detalles.
+
+  risk_validators:
+    name: "Risk Validators"
+    triggers: ["aaa.tax_done"]
+    publishes: ["aaa.risk_done"]
+    instructions: |
+      Validar Kelly, Drawdown, R:R validators.
+      Ver 00_master_orchestrator.yml FASE 2.3 para detalles.
+
+  decision_logger:
+    name: "Decision Logger"
+    triggers: ["aaa.risk_done"]
+    publishes: ["aaa.logger_done"]
+    instructions: |
+      Validar TradingDecisionLogger cumple R15, R28.
+      Ver 00_master_orchestrator.yml FASE 2.4 para detalles.
+
+  central_config:
+    name: "Central Config"
+    triggers: ["aaa.logger_done"]
+    publishes: ["aaa.config_done"]
+    instructions: |
+      Mover hardcoded values a centralized config.
+      Ver 00_master_orchestrator.yml FASE 3 para detalles.
+
+  qa_validation:
+    name: "QA Validation"
+    triggers: ["aaa.config_done"]
+    publishes: ["aaa.qa_done"]
+    instructions: |
+      Ejecutar black, isort, ruff, mypy hasta 0 errores.
+      Ver 00_master_orchestrator.yml FASE 4.1 para detalles.
+
+  tests_validation:
+    name: "Tests Validation"
+    triggers: ["aaa.qa_done"]
+    publishes: ["aaa.tests_done"]
+    instructions: |
+      Ejecutar pytest hasta 100% passing.
+      Ver 00_master_orchestrator.yml FASE 4.2 para detalles.
+      NO ejecutar backtests.
+
+  security:
+    name: "Security Hardening"
+    triggers: ["aaa.tests_done"]
+    publishes: ["aaa.security_done"]
+    instructions: |
+      Validar sin secrets en código, .env en .gitignore.
+      Ver 00_master_orchestrator.yml FASE 5 para detalles.
+
+  final_cleanup:
+    name: "Final Cleanup"
+    triggers: ["aaa.security_done"]
+    publishes: ["aaa.complete"]
+    instructions: |
+      Resolver TODOs, generar reporte final.
+      Ver 00_master_orchestrator.yml FASE 6 para detalles.
+
+quality:
+  enforce_solid: true
+  enforce_tests: true
+  enforce_typecheck: true
+  enforce_lint: true
+  min_coverage: 80

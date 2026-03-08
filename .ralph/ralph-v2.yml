@@ -1,0 +1,98 @@
+# ============================================
+# Ralph Orchestrator v2.1 - AlgoTrading AAA
+# ============================================
+# NIVEL: AAA PRODUCTION READY
+# OPTIMIZADO PARA: GLM 5.0 (Zhipu AI GLM-4-Plus)
+# BASADO EN: https://github.com/mikeyobrien/ralph-orchestrator
+# ============================================================================
+
+# CLI Settings
+cli:
+  backend: claude
+  model: glm  # Usar GLM 5.0
+
+# Event Loop Configuration
+event_loop:
+  prompt_file: .ralph/ralph_tasks/prompts/00_master_orchestrator.md
+  completion_promise: "AAA_PRODUCTION_READY"
+  max_iterations: 300  # Reducido para GLM (más eficiente)
+  max_runtime_seconds: 432000  # 120 hours
+  checkpoint_interval: 5
+  starting_event: "aaa.start"
+  # GLM-specific settings
+  reasoning:
+    enabled: true
+    type: "multi-step"  # GLM maneja bien multi-step reasoning
+
+# Core Settings
+core:
+  specs_dir: ./specs/
+
+# Backpressure - Validación automática
+backpressure:
+  enabled: true
+  gates:
+    tests: pass
+    typecheck: pass
+    lint: pass
+    build: pass
+
+# Memories - Aprendizaje persistente (aumentado para GLM)
+memories:
+  enabled: true
+  inject: auto
+  budget: 16000  # Aumentado para GLM 5.0 (128K context)
+
+# Tasks - Runtime tracking
+tasks:
+  enabled: true
+  priority_levels: 5
+  auto_close: true
+
+# Color output
+color: auto
+
+# TUI para mon progreso
+tui:
+  enabled: true
+  idle_timeout: 30
+
+# Logging
+logging:
+  level: info
+  file: .ralph/logs/ralph.log
+  max_size: 50MB
+  keep: 10
+
+# Features
+features:
+  parallel: false
+  event_persistence: true
+  memory_consolidation: true
+
+# Quality Gates
+quality:
+  enforce_solid: true
+  enforce_tests: true
+  enforce_typecheck: true
+  enforce_lint: true
+  min_coverage: 80
+
+# Hooks
+hooks:
+  pre_tool_use: .ralph/hooks/pre_tool_use.py
+  post_tool_use: .ralph/hooks/post_tool_use.py
+  stop: .ralph/hooks/stop.py
+
+# Sub-agents disponibles (awesome-claude-agents)
+# Estos agentes se pueden invocar durante las tareas de Ralph
+subagents:
+  enabled: true
+  path: ~/.claude/agents/awesome-claude-agents
+  useful_for_algotrading:
+    - code-archaeologist    # Análisis profundo de codebase
+    - python-expert          # Desarrollo Python moderno
+    - ml-data-expert         # ML/Data Science (trading)
+    - code-reviewer          # Code reviews rigurosos
+    - performance-optimizer  # Optimización de rendimiento
+    - security-guardian      # Seguridad (si está disponible)

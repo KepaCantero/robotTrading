@@ -41,7 +41,7 @@ ralph_templates/
 **Propósito:** Genera automáticamente `requirements.md` cuando no existe
 
 **Características v2:**
-- **Mapeo determinista** usando `.ralph/rules/rules_mapping.yml`
+- **Mapeo determinista** usando `rules/trading/`
 - **Detección automática** de servicio/componente
 - **Inclusión de 4 tipos de reglas:**
   1. SOLID Principles (5 reglas - siempre aplicables)
@@ -53,7 +53,7 @@ ralph_templates/
 ```
 Archivo Python → Identificar servicio
                 ↓
-        Buscar reglas en rules_mapping.yml (DETERMINISTA)
+        Buscar reglas en rules/trading/ (DETERMINISTA)
                 ↓
         Generar requirements.md con reglas aplicables
                 ↓
@@ -191,24 +191,24 @@ pipeline:
 
 El requirement generator usa **2 archivos de mapeo** para extracción determinista:
 
-1. **`.ralph/rules/docs_extraction_mapping.yml`** - Define QUÉ archivo leer y QUÉ extraer
-2. **`.ralph/rules/rules_mapping.yml`** - Define qué reglas aplican a cada servicio
+1. **`rules/trading/`** - Define QUÉ archivo leer y QUÉ extraer
+2. **`rules/trading/`** - Define qué reglas aplican a cada servicio
 
-### Archivo de Extracción: `.ralph/rules/docs_extraction_mapping.yml`
+### Archivo de Extracción: `rules/trading/`
 
 **Define fuentes de verdad:**
 ```yaml
 truth_sources:
   solid:
-    source_file: ".ralph/docs/requirements/SERVICE_REQUIREMENTS.md"
+    source_file: "rules/trading/"
     section: "## SOLID Principles"
 
   trading:
-    source_file: ".ralph/docs/realistic_trading_rules.md"
+    source_file: "rules/trading/"
     section: "### Reglas Prioritarias (P0)"
 
   spain_tax:
-    source_file: ".ralph/docs/requirements/SERVICE_REQUIREMENTS.md"
+    source_file: "rules/trading/"
     section: "## Spain-Specific Requirements"
 ```
 
@@ -219,13 +219,13 @@ extraction_rules:
     steps:
       - step: 1
         action: "READ_FILE"
-        file: ".ralph/docs/requirements/SERVICE_REQUIREMENTS.md"
+        file: "rules/trading/"
       - step: 2
         action: "PARSE"
         pattern: "### SRP-001: ..."
 ```
 
-### Archivo de Mapeo: `.ralph/rules/rules_mapping.yml`
+### Archivo de Mapeo: `rules/trading/`
 
 **Estructura:**
 ```yaml
@@ -417,29 +417,27 @@ hats:
 └────────┬────────┘             │
          │ SÍ                    ▼
          │              ┌─────────────────────┐
-         │              │ 1. docs_extraction_mapping │
+         │              │ 1. rules/trading/     │
          ▼              │    QUÉ hacer, QUÉ extraer │
 ┌─────────────────┐   └──────────┬──────────┘
 │  Leer y Usar    │              │
 │  requirements   │              ▼
 └────────┬────────┘   ┌─────────────────────┐
-         │            │ 2. rules_mapping.yml │
-         │            │    Qué reglas aplican │
+         │            │ 2. rules/trading/   │
+         │            │    Libros y papers  │
          ▼            └──────────┬──────────┘
 ┌─────────────────┐             │
 │  Procesar File  │             ▼
 │  con Reglas     │   ┌─────────────────────┐
 └─────────────────┘   │ 3. docs/             │
-         ▲            │    - SERVICE_REQUIREMENTS.md
-         │            │    - realistic_trading_rules.md
-         │            │    - implementation_analysis_*.md
+         ▲            │    - analysis/       │
+         │            │    - architecture/   │
+         │            │    - implementation_*.md
          │            └──────────┬──────────┘
          │                       │
          └───────────────────────┘
-        Extracción DETERMINISTA
-        - NO juicio
-        - SOLO patrones
-        - SIEMPRE mismos datos
+        Análisis Dinámico
+        - Archivo + Requirements + Rules + Docs
 ```
 
 ---
@@ -456,5 +454,5 @@ Antes de crear nuevo template:
 
 ---
 
-**Última actualización:** 2026-02-08
-**Estado:** ✅ Sistema Ralph v3.0 - Extracción DETERMINISTA + NO FALLBACKS implementer
+**Última actualización:** 2026-03-08
+**Estado:** ✅ Sistema Ralph - Análisis Dinámico (archivo + requirements + rules + docs)

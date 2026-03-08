@@ -47,11 +47,22 @@ import sys
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 import empyrical  # Financial metrics library (annual_volatility, sharpe_ratio, etc.)
+import numpy as np
 import pandas as pd
 from pydantic import BaseModel, Field, field_validator
+
+if TYPE_CHECKING:
+    from app.services.live_trading.alert_to_trade_mapper import TradeSignal
+
+    # Forward declarations for locally-defined result classes
+    class TradeResult:
+        pass
+
+    class CycleResult:
+        pass
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
@@ -1107,7 +1118,7 @@ class SystemBus:
 
                     # Strategy health: based on return consistency
                     # Positive returns more often = healthier strategy
-                    (recent_returns > 0).mean()
+                    positive_returns_pct = (recent_returns > 0).mean()
                     result.strategy_health = positive_returns_pct * config.PERCENTAGE_MULTIPLIER
                 else:
                     # Use config defaults when insufficient data
@@ -1511,7 +1522,7 @@ class SystemBus:
             # Config is a dict from YAML, use proper dict access
             exposure_config = config.get('exposure', {})
             max_strategy_exposure = exposure_config.get('max_strategy_exposure', 0.50)
-            max_pair_exposure = exposure_config.get('max_pair_exposure', 0.15)
+            exposure_config.get('max_pair_exposure', 0.15)
             max_assets_per_pair = exposure_config.get('max_assets_per_pair', 2)
             # Default correlation risk since it's not in config
             max_correlation_risk = 1.0
@@ -1593,7 +1604,7 @@ class SystemBus:
                 get_strategy_stock_allocator_config,
             )
 
-            config = get_compliance_config()
+            get_compliance_config()
             alloc_config = get_strategy_stock_allocator_config()
             compliance_config = get_compliance_config()
 
@@ -1668,7 +1679,7 @@ class SystemBus:
                 get_strategy_stock_allocator_config,
             )
 
-            alloc_config = get_strategy_stock_allocator_config()
+            get_strategy_stock_allocator_config()
             trading_config = get_config().trading
             config = get_compliance_config()
 
@@ -3072,7 +3083,7 @@ class ComplianceEngine:
                     return None
 
             # Generate signal using alert-to-trade mapping
-            from app.application.alerting import AlertSeverity
+            from app.services.alerting_system import AlertSeverity
             from app.services.live_trading.alert_to_trade_mapper import get_alert_to_trade_mapper
 
             mapper = get_alert_to_trade_mapper()
