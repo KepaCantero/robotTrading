@@ -43,7 +43,6 @@ import logging
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-
 from .base_optimizer import (
     BaseOptimizer,
     OptimizationConfig,

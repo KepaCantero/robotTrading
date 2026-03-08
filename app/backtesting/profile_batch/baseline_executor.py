@@ -17,7 +17,6 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, List
 
-
 from app.backtesting.comprehensive_backtest_runner import ComprehensiveBacktestRunner
 from app.backtesting.shared import MetricsDict, TempConfigManager, get_empty_metrics
 from app.domain.models.input_profile import InputProfile

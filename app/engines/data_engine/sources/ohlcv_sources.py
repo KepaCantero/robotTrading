@@ -35,6 +35,7 @@ class IBKRSource(BaseDataSource):
 
     Requiere conexion a TWS o IB Gateway con API habilitada.
     """
+
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
         self.host = config.get('host', 'localhost')
@@ -54,7 +55,7 @@ class IBKRSource(BaseDataSource):
             self._ib = IB()
             connected = await asyncio.wait_for(
                 self._ib.connect(self.host, self.port, clientId=self.client_id),
-                timeout=self._timeouts.ib_connect
+                timeout=self._timeouts.ib_connect,
             )
             self.is_connected = True
             logger.info(f"Conectado a IBKR ({self.host}:{self.port})")
@@ -65,15 +66,13 @@ class IBKRSource(BaseDataSource):
         except (ConnectionError, OSError) as e:
             logger.error(f"Error conectando a IBKR: {e}")
             return False
+
     async def disconnect(self) -> bool:
         """Desconectar de IBKR."""
         if not self.is_connected or not self._ib:
             return True
         try:
-            await asyncio.wait_for(
-                self._ib.disconnect(),
-                timeout=self._timeouts.ib_connect
-            )
+            await asyncio.wait_for(self._ib.disconnect(), timeout=self._timeouts.ib_connect)
             self.is_connected = False
             logger.info("Desconectado de IBKR")
             return True
@@ -83,19 +82,20 @@ class IBKRSource(BaseDataSource):
         except (ConnectionError, OSError) as e:
             logger.error(f"Error desconectando de IBKR: {e}")
             return False
+
     async def health_check(self) -> bool:
         """verificar salud de la conexion."""
         if not self.is_connected or not self._ib:
             return False
         try:
             connected = await asyncio.wait_for(
-                self._ib.isConnected(),
-                timeout=self._timeouts.ib_read
+                self._ib.isConnected(), timeout=self._timeouts.ib_read
             )
             return connected
         except (asyncio.TimeoutError, ConnectionError, OSError):
             logger.warning(f"IBKR health check failed: {e}")
             return False
+
     async def get_ohlcv(
         self, symbol: str, start_date: datetime, end_date: datetime, bar_size: str = "1 day"
     ) -> List[Dict[str, Any]]:
@@ -156,11 +156,13 @@ class BinanceSource(BaseDataSource):
     Fuente de datos de Binance (crypto).
     Usa la API publica de Binance para datos historicos y en tiempo real.
     """
+
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
         self.base_url = config.get('base_url', 'https://api.binance.com')
         self._timeouts = get_timeouts()
         self._session: Optional[aiohttp.ClientSession] = None
+
     async def connect(self) -> bool:
         """Conectar a Binance API."""
         timeout = aiohttp.ClientTimeout(
@@ -170,31 +172,30 @@ class BinanceSource(BaseDataSource):
         self.is_connected = True
         logger.info(f"Conectado a Binance ({self.base_url})")
         return True
+
     async def disconnect(self) -> bool:
         """desconectar de Binance."""
         if self._session:
-            await asyncio.wait_for(
-                self._session.close(),
-                timeout=self._timeouts.binance_connect
-            )
+            await asyncio.wait_for(self._session.close(), timeout=self._timeouts.binance_connect)
             self._session = None
         self.is_connected = False
         logger.info("Desconectado de Binance")
         return True
+
     async def health_check(self) -> bool:
         """verificar salud de la conexion."""
         if not self.is_connected or not self._session:
             return False
         try:
             async with self._session.get(
-                f"{self.base_url}/api/v3/ping",
-                timeout=self._timeouts.binance_read
+                f"{self.base_url}/api/v3/ping", timeout=self._timeouts.binance_read
             ) as response:
                 return response.status == 200
             return False
         except (asyncio.TimeoutError, ClientError) as e:
             logger.warning(f"Binance health check failed: {e}")
             return False
+
     async def get_ohlcv(
         self, symbol: str, start_date: datetime, end_date: datetime, bar_size: str = "1 day"
     ) -> List[Dict[str, Any]]:
@@ -255,7 +256,7 @@ class BinanceSource(BaseDataSource):
         except asyncio.TimeoutError:
             logger.error(f"Timeout obteniendo OHLCV de Binance para {symbol}: {e}")
             return []
-        except (ClientError, ValueError, KeyError) AttributeError) as e:
+        except (ClientError, ValueError, KeyError, AttributeError) as e:
             logger.error(f"Error obteniendo OHLCV de Binance para {symbol}: {e}")
             return []
 
@@ -265,6 +266,7 @@ class AlpacaSource(BaseDataSource):
     Fuente de datos de Alpaca.
     Requiere autenticacion con API keys.
     """
+
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
         self.api_key = config.get('api_key')
@@ -272,6 +274,7 @@ class AlpacaSource(BaseDataSource):
         self.base_url = config.get('base_url', 'https://paper-api.alpaca.markets')
         self._timeouts = get_timeouts()
         self._session: Optional[aiohttp.ClientSession] = None
+
     async def connect(self) -> bool:
         """Conectar a Alpaca API."""
         timeout = aiohttp.ClientTimeout(
@@ -281,17 +284,16 @@ class AlpacaSource(BaseDataSource):
         self.is_connected = True
         logger.info(f"Conectado a Alpaca ({self.base_url})")
         return True
+
     async def disconnect(self) -> bool:
         """desconectar de Alpaca."""
         if self._session:
-            await asyncio.wait_for(
-                self._session.close(),
-                timeout=self._timeouts.alpaca_connect
-            )
+            await asyncio.wait_for(self._session.close(), timeout=self._timeouts.alpaca_connect)
             self._session = None
         self.is_connected = False
         logger.info("Desconectado de Alpaca")
         return True
+
     async def health_check(self) -> bool:
         """verificar salud de la conexion."""
         if not self.is_connected or not self._session:
@@ -300,13 +302,14 @@ class AlpacaSource(BaseDataSource):
             async with self._session.get(
                 f"{self.base_url}/v2/account",
                 headers={"APCA-API-KEY-ID": self.api_key, "APCA-API-SECRET-KEY": self.api_secret},
-                timeout=self._timeouts.alpaca_read
+                timeout=self._timeouts.alpaca_read,
             ) as response:
                 return response.status == 200
             return False
         except (asyncio.TimeoutError, ClientError) as e:
             logger.warning(f"Alpaca health check failed: {e}")
             return False
+
     async def get_ohlcv(
         self, symbol: str, start_date: datetime, end_date: datetime, bar_size: str = "1 day"
     ) -> List[Dict[str, Any]]:
@@ -347,7 +350,7 @@ class AlpacaSource(BaseDataSource):
                 url,
                 params=params,
                 headers={"APCA-API-KEY-ID": self.api_key, "APCA-API-SECRET-KEY": self.api_secret},
-                timeout=self._timeouts.alpaca_read
+                timeout=self._timeouts.alpaca_read,
             ) as response:
                 if response.status != 200:
                     logger.error(f"Alpaca API error: {response.status}")
@@ -380,12 +383,14 @@ class PolygonSource(BaseDataSource):
     Fuente de datos de Polygon.io.
     Requiere API key.
     """
+
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
         self.api_key = config.get('api_key')
         self.base_url = config.get('base_url', 'https://api.polygon.io')
         self._timeouts = get_timeouts()
         self._session: Optional[aiohttp.ClientSession] = None
+
     async def connect(self) -> bool:
         """Conectar a Polygon API."""
         timeout = aiohttp.ClientTimeout(
@@ -395,17 +400,16 @@ class PolygonSource(BaseDataSource):
         self.is_connected = True
         logger.info(f"Conectado a Polygon ({self.base_url})")
         return True
+
     async def disconnect(self) -> bool:
         """desconectar de Polygon."""
         if self._session:
-            await asyncio.wait_for(
-                self._session.close(),
-                timeout=self._timeouts.polygon_connect
-            )
+            await asyncio.wait_for(self._session.close(), timeout=self._timeouts.polygon_connect)
             self._session = None
         self.is_connected = False
         logger.info("Desconectado de Polygon")
         return True
+
     async def health_check(self) -> bool:
         """verificar salud de la conexion."""
         if not self.is_connected or not self._session:
@@ -414,13 +418,13 @@ class PolygonSource(BaseDataSource):
             async with self._session.get(
                 f"{self.base_url}/v2/aggs/ticker",
                 params={"apiKey": self.api_key},
-                timeout=self._timeouts.polygon_read
-            ) as response
+                timeout=self._timeouts.polygon_read,
+            ) as response:
                 return response.status == 200
-            return False
         except (asyncio.TimeoutError, ClientError) as e:
             logger.warning(f"Polygon health check failed: {e}")
             return False
+
     async def get_ohlcv(
         self, symbol: str, start_date: datetime, end_date: datetime, bar_size: str = "1 day"
     ) -> List[Dict[str, Any]]:
@@ -458,10 +462,8 @@ class PolygonSource(BaseDataSource):
         }
         try:
             async with self._session.get(
-                url,
-                params=params,
-                timeout=self._timeouts.polygon_read
-            ) as response
+                url, params=params, timeout=self._timeouts.polygon_read
+            ) as response:
                 if response.status != 200:
                     logger.error(f"Polygon API error: {response.status}")
                     return []
@@ -493,13 +495,13 @@ class YahooFinanceSource(BaseDataSource):
     Fuente de datos de Yahoo Finance.
     Usa la API gratuita de Yahoo Finance para datos historicos.
     """
+
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
-        self.base_url = config.get(
-            'base_url', 'https://query1.finance.yahoo.com/v8/finance/chart'
-        )
+        self.base_url = config.get('base_url', 'https://query1.finance.yahoo.com/v8/finance/chart')
         self._timeouts = get_timeouts()
         self._session: Optional[aiohttp.ClientSession] = None
+
     async def connect(self) -> bool:
         """Conectar a Yahoo Finance API."""
         timeout = aiohttp.ClientTimeout(
@@ -509,17 +511,18 @@ class YahooFinanceSource(BaseDataSource):
         self.is_connected = True
         logger.info(f"Conectado a Yahoo Finance ({self.base_url})")
         return True
+
     async def disconnect(self) -> bool:
         """desconectar de Yahoo Finance."""
         if self._session:
             await asyncio.wait_for(
-                self._session.close(),
-                timeout=self._timeouts.yahoo_finance_connect
+                self._session.close(), timeout=self._timeouts.yahoo_finance_connect
             )
             self._session = None
         self.is_connected = False
         logger.info("Desconectado de Yahoo Finance")
         return True
+
     async def health_check(self) -> bool:
         """verificar salud de la conexion."""
         if not self.is_connected or not self._session:
@@ -527,14 +530,14 @@ class YahooFinanceSource(BaseDataSource):
         try:
             # Simple ping to check connectivity
             async with self._session.get(
-                f"{self.base_url}/AAPL",
-                timeout=self._timeouts.yahoo_finance_read
+                f"{self.base_url}/AAPL", timeout=self._timeouts.yahoo_finance_read
             ) as response:
                 return response.status == 200 or response.status == 429
             return False
         except (asyncio.TimeoutError, ClientError) as e:
             logger.warning(f"Yahoo Finance health check failed: {e}")
             return False
+
     async def get_ohlcv(
         self, symbol: str, start_date: datetime, end_date: datetime, bar_size: str = "1 day"
     ) -> List[Dict[str, Any]]:
@@ -562,9 +565,7 @@ class YahooFinanceSource(BaseDataSource):
         }
         try:
             async with self._session.get(
-                url,
-                params=params,
-                timeout=self._timeouts.yahoo_finance_read
+                url, params=params, timeout=self._timeouts.yahoo_finance_read
             ) as response:
                 if response.status != 200:
                     logger.error(f"Yahoo Finance API error: {response.status}")

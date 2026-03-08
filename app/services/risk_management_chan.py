@@ -94,12 +94,16 @@ class ChanStopLossCalculator:
         """
         # Get defaults from config
         config = get_config()
-        self.atr_multiplier = float(getattr(
-            config.trading, 'chan_atr_multiplier', 2.0
-        )) if atr_multiplier is None else float(atr_multiplier)
-        self.fixed_stop_pct = float(getattr(
-            config.trading, 'chan_fixed_stop_pct', 0.05
-        )) if fixed_stop_pct is None else float(fixed_stop_pct)
+        self.atr_multiplier = (
+            float(getattr(config.trading, 'chan_atr_multiplier', 2.0))
+            if atr_multiplier is None
+            else float(atr_multiplier)
+        )
+        self.fixed_stop_pct = (
+            float(getattr(config.trading, 'chan_fixed_stop_pct', 0.05))
+            if fixed_stop_pct is None
+            else float(fixed_stop_pct)
+        )
 
     def calculate_atr_stop_loss(
         self,
@@ -311,12 +315,16 @@ class ChanPositionSizer:
         """
         # Get defaults from config
         config = get_config()
-        self.risk_per_trade = float(getattr(
-            config.trading, 'max_risk_per_trade', 0.02
-        )) if risk_per_trade is None else float(risk_per_trade)
-        self.max_position_pct = float(getattr(
-            config.trading, 'max_position_size', 0.25
-        )) if max_position_pct is None else float(max_position_pct)
+        self.risk_per_trade = (
+            float(getattr(config.trading, 'max_risk_per_trade', 0.02))
+            if risk_per_trade is None
+            else float(risk_per_trade)
+        )
+        self.max_position_pct = (
+            float(getattr(config.trading, 'max_position_size', 0.25))
+            if max_position_pct is None
+            else float(max_position_pct)
+        )
 
     def calculate_risk_based_position(
         self,
@@ -508,7 +516,7 @@ class ChanPositionSizer:
         # Get default target risk from config
         if target_risk is None:
             config = get_config()
-            target_risk = float(getattr(config.trading, 'max_risk_per_trade', 0.02)
+            target_risk = float(getattr(config.trading, 'max_risk_per_trade', 0.02))
         try:
             # Base position on risk
             base_result = self.calculate_risk_based_position(
@@ -522,12 +530,14 @@ class ChanPositionSizer:
             # Get high volatility threshold from config
             config = get_config()
             # volatility_threshold_extreme is stored as a percentage (50.0 = 50%), convert to decimal
-            high_volatility_threshold = float(getattr(
-                config.trading, 'volatility_threshold_extreme', 50.0
-            )) / 100.0
+            high_volatility_threshold = (
+                float(getattr(config.trading, 'volatility_threshold_extreme', 50.0)) / 100.0
+            )
 
             # If volatility is high (above threshold), reduce position
-            vol_adjustment = min(1.0, high_volatility_threshold / volatility) if volatility > 0 else 1.0
+            vol_adjustment = (
+                min(1.0, high_volatility_threshold / volatility) if volatility > 0 else 1.0
+            )
 
             adjusted_shares = int(base_result.shares * vol_adjustment)
             adjusted_dollar_amount = adjusted_shares * entry_price

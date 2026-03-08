@@ -13,11 +13,12 @@ from typing import Optional
 @dataclass
 class KellyResult:
     """Resultado del cálculo de Kelly"""
+
     kelly_fraction: Decimal  # Fracción de Kelly (0-1)
-    max_position: Decimal    # Tamaño máximo de posición
-    passes_kelly: bool       # Si pasa el criterio Kelly
-    passes_2pct: bool        # Si pasa el límite del 2%
-    passes: bool             # Si pasa TODAS las validaciones
+    max_position: Decimal  # Tamaño máximo de posición
+    passes_kelly: bool  # Si pasa el criterio Kelly
+    passes_2pct: bool  # Si pasa el límite del 2%
+    passes: bool  # Si pasa TODAS las validaciones
 
 
 class KellyCriterionValidator:
@@ -29,13 +30,13 @@ class KellyCriterionValidator:
     Máximo riesgo: 2% del capital
     """
 
-    MAX_RISK_PCT = getattr(config.trading, 'max_risk_per_trade', 0.02)")  # 2% máximo
+    MAX_RISK_PCT = 0.02  # 2% máximo
 
     def __init__(
         self,
         win_rate: float = 0.55,
         avg_win: float = 0.03,
-        avg_loss: float = getattr(config.trading, 'max_risk_per_trade', 0.02)
+        avg_loss: float = 0.02,
     ):
         """
         Inicializar validador con parámetros históricos
@@ -67,11 +68,7 @@ class KellyCriterionValidator:
         # Kelly no puede ser negativo
         return max(kelly, Decimal("0"))
 
-    def validate(
-        self,
-        capital: Decimal,
-        order_value: Decimal
-    ) -> KellyResult:
+    def validate(self, capital: Decimal, order_value: Decimal) -> KellyResult:
         """
         Validar posición según Kelly Criterion + 2%
 
@@ -104,14 +101,14 @@ class KellyCriterionValidator:
             max_position=max_position,
             passes_kelly=passes_kelly,
             passes_2pct=passes_2pct,
-            passes=passes
+            passes=passes,
         )
 
     def update_parameters(
         self,
         win_rate: Optional[float] = None,
         avg_win: Optional[float] = None,
-        avg_loss: Optional[float] = None
+        avg_loss: Optional[float] = None,
     ) -> None:
         """
         Actualizar parámetros con nuevos datos históricos

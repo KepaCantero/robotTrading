@@ -238,7 +238,6 @@ class PyramidingManager:
         instance.additions = additions
         instance.current_additions = data["current_additions"]
 
-
         for a_data in data["addition_history"]:
             addition = PyramidingAddition(
                 addition_number=a_data["addition_number"],

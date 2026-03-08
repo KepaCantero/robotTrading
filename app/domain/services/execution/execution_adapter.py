@@ -14,9 +14,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, Optional
 
-from app.backtesting.engines.execution_engine import (
-    PessimisticExecutionEngine,
-)
+from app.backtesting.engines.execution_engine import PessimisticExecutionEngine
 from app.shared.protocols import ITradeExecutor
 
 logger = logging.getLogger(__name__)

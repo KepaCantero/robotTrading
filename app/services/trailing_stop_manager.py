@@ -19,7 +19,7 @@ class TrailingStopManager:
     by not moving against the position.
     """
 
-    def __init__(self, trailing_distance_pct: float = getattr(config.trading, 'max_risk_per_trade', 0.02):
+    def __init__(self, trailing_distance_pct: float = 0.02):
         """
         Initialize trailing stop manager.
 

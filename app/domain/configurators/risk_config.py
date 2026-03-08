@@ -65,7 +65,7 @@ class RiskConfig(BaseModel):
         ...,
         ge=Decimal("0"),
         le=Decimal("1"),
-        description= getattr(config.trading, 'max_risk_per_trade', 0.02) = 2%)",
+        description="Maximum portfolio VaR limit (e.g., 0.02 = 2%)",
     )
 
     # Leverage controls

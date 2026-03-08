@@ -24,7 +24,6 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, Optional
 
-
 logger = logging.getLogger(__name__)
 
 # Engines that require subprocess mode (PyTorch-based)

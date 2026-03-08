@@ -24,8 +24,6 @@ from typing import Any, Dict, Optional
 import yaml
 from pydantic import BaseModel, Field
 
-# Import modular strategy configs
-
 # Import modular configuration components
 from app.shared.config.base import Environment, SettingsBase
 from app.shared.config.compliance import ComplianceConfig, SpainTaxConfig
@@ -60,6 +58,9 @@ from app.shared.config.technical_indicators import (
     TechnicalIndicatorThresholds,
     WindowSizes,
 )
+
+# Import modular strategy configs
+
 
 logger = logging.getLogger(__name__)
 
