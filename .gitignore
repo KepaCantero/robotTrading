@@ -65,6 +65,7 @@ DASHBOARD_SUMMARY.md
 # ============================================================================
 
 # Environment files (production secrets)
+.env
 .env.prod
 .env.staging
 .env.local
