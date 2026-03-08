@@ -62,8 +62,8 @@ def get_app():
 
 
 # Import models that don't depend on matplotlib/numpy 2.x compatibility
-from app.models.assets import Asset, AssetClass, AssetRanking, Exchange  # noqa: E402
-from app.models.momentum import MomentumStrategy, TechnicalIndicators, Timeframe  # noqa: E402
+from app.domain.models.assets import Asset, AssetClass, AssetRanking, Exchange  # noqa: E402
+from app.domain.models.momentum import MomentumStrategy, TechnicalIndicators, Timeframe  # noqa: E402
 
 
 @pytest.fixture

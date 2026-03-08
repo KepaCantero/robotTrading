@@ -12,7 +12,7 @@ from decimal import Decimal
 import pandas as pd
 import pytest
 
-from app.models.assets import Asset, AssetClass, Exchange
+from app.domain.models.assets import Asset, AssetClass, Exchange
 from app.services.market_universe_loader import (
     YFINANCE_AVAILABLE,
     MarketUniverseLoader,

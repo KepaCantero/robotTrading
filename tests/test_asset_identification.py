@@ -8,7 +8,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.models.assets import (
+from app.domain.models.assets import (
     Asset,
     AssetClass,
     AssetFilter,

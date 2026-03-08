@@ -16,7 +16,7 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 from fastapi import HTTPException
 
-from app.api.assets import (
+from app.presentation.api.assets import (
     filter_assets,
     filter_assets_by_class,
     get_asset_details,
@@ -30,7 +30,7 @@ from app.api.assets import (
     identify_liquid_assets,
     refresh_liquidity_data,
 )
-from app.models.assets import AssetClass, AssetFilter, Exchange
+from app.domain.models.assets import AssetClass, AssetFilter, Exchange
 
 
 class TestAssetsEndpoints:
