@@ -40,6 +40,10 @@ class RiskTolerance(str, Enum):
     ALTO = "alto"
 
 
+# Alias for backward compatibility
+InvestmentObjective = ObjectivoInversion
+
+
 class TaxResidence(BaseModel):
     """
     Tax residence configuration for the investor.

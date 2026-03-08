@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 Tick-Level Order Flow Imbalance Processor.
 

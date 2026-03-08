@@ -87,7 +87,7 @@ class Event:
 
     priority: int
     event_id: str = field(compare=False, default="")
-    event_type: EventType = field(compare=False)
+    event_type: EventType = field(compare=False, default=EventType.MARKET_DATA_UPDATE)
     timestamp: datetime = field(compare=False, default_factory=datetime.utcnow)
     order_id: Optional[str] = field(compare=False, default=None)
     data: Dict[str, Any] = field(compare=False, default_factory=dict)

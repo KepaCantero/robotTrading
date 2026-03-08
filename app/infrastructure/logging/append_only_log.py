@@ -6,9 +6,14 @@ Almacenamiento append-only para logs de trading.
 import json
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from typing import List
+from typing import TYPE_CHECKING, Any, Dict, List, Union
 
-from app.services.logging.log_entry import LogEntry
+if TYPE_CHECKING:
+    from app.services.logging.log_entry import LogEntry
+
+
+# Define LogEntry type for runtime as Dict for flexibility
+LogEntryType = Union[Dict[str, Any], "LogEntry"]
 
 
 class AppendOnlyLog:
@@ -39,7 +44,7 @@ class AppendOnlyLog:
         """Obtener archivo de log para fecha específica"""
         return self.log_dir / f"trading_{date.isoformat()}.log"
 
-    def append(self, entry: LogEntry) -> None:
+    def append(self, entry: LogEntryType) -> None:
         """
         Añadir entrada al log (append-only)
 
@@ -54,7 +59,10 @@ class AppendOnlyLog:
 
         # Añadir entrada al archivo (append-only)
         with open(self._current_file, "a") as f:
-            f.write(json.dumps(entry.to_dict()) + "\n")
+            if hasattr(entry, "to_dict"):
+                f.write(json.dumps(entry.to_dict()) + "\n")
+            else:
+                f.write(json.dumps(entry) + "\n")
 
     def get_entries_by_correlation_id(self, correlation_id: str) -> List[dict]:
         """

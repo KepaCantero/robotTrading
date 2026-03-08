@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # pylint: disable=import-error,unsupported-binary-operation
 # mypy: ignore-errors
 """

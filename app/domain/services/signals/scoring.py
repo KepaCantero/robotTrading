@@ -1,5 +1,5 @@
 """
-Signals Service Package
+Signal Scoring Module
 
 Re-exports from app.services for backward compatibility.
 """
