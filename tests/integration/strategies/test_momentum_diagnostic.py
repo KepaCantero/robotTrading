@@ -10,8 +10,8 @@ from decimal import Decimal
 
 import pytest
 
-from app.models.market_data import Quote
-from app.models.portfolio import AssetClass, Portfolio, Position
+from app.domain.models.market_data import Quote
+from app.domain.models.portfolio import AssetClass, Portfolio, Position
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.strategies.momentum import MomentumStrategy
 

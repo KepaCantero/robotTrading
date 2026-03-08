@@ -44,7 +44,7 @@ from app.engines.strategy_engines import (  # noqa: E402
     PairsTradingStrategyEngine,
     TrendFollowingStrategyEngine,
 )
-from app.models.market_data import Quote  # noqa: E402
+from app.domain.models.market_data import Quote  # noqa: E402
 from app.models.signal import SignalType  # noqa: E402
 from tests.integration.data.test_data_loader import load_all_csv_data  # noqa: E402
 

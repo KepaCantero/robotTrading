@@ -11,7 +11,7 @@ from uuid import uuid4
 
 import pytest
 
-from app.models.portfolio import Position
+from app.domain.models.portfolio import Position
 from app.models.portfolio_analytics import (
     ExtendedPortfolio,
     PerformanceMetrics,
@@ -228,7 +228,7 @@ class TestPortfolioAnalyticsService:
     @pytest.fixture
     def mock_portfolio(self):
         """Create a mock portfolio for testing."""
-        from app.models.portfolio import AssetClass
+        from app.domain.models.portfolio import AssetClass
 
         positions = [
             Position(
@@ -711,7 +711,7 @@ class TestPortfolioAnalyticsIntegration:
     @pytest.mark.asyncio
     async def test_full_analytics_workflow(self):
         """Test complete analytics workflow."""
-        from app.models.portfolio import AssetClass
+        from app.domain.models.portfolio import AssetClass
 
         # Create mock portfolio
         positions = [
@@ -827,7 +827,7 @@ class TestPortfolioAnalyticsIntegration:
         assert allocation.cash_allocation == Decimal("100")
 
         # Test single position portfolio
-        from app.models.portfolio import AssetClass
+        from app.domain.models.portfolio import AssetClass
 
         single_position = [
             Position(

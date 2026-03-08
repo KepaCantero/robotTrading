@@ -26,7 +26,7 @@ from app.engines.strategy_engines import (  # noqa: E402
     ModularMomentumStrategyEngine,
     MomentumStrategyEngine,
 )
-from app.models.portfolio import AssetClass, Portfolio, Position  # noqa: E402
+from app.domain.models.portfolio import AssetClass, Portfolio, Position  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'

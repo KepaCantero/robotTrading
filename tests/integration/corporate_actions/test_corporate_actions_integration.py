@@ -25,7 +25,7 @@ from app.services.corporate_actions.handler import CorporateActionsHandler, Corp
 @pytest.fixture
 def mock_portfolio_position():
     """Create a portfolio position matching app.models.portfolio.Position."""
-    from app.models.portfolio import AssetClass, Position as PortfolioPosition
+    from app.domain.models.portfolio import AssetClass, Position as PortfolioPosition
 
     return PortfolioPosition(
         symbol="AAPL",

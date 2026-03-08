@@ -67,10 +67,10 @@ class TestSignalProcessor:
         )
 
     @pytest.fixture
-    def buy_signal(self):
+    def buy_signal(self, default_symbol):
         """Create sample buy signal."""
         return Signal(
-            symbol="AAPL",
+            symbol=default_symbol,
             signal_type=SignalType.BUY,
             strength=SignalStrength.MODERATE,
             confidence=80.0,
@@ -83,10 +83,10 @@ class TestSignalProcessor:
         )
 
     @pytest.fixture
-    def sell_signal(self):
+    def sell_signal(self, default_symbol):
         """Create sample sell signal."""
         return Signal(
-            symbol="AAPL",
+            symbol=default_symbol,
             signal_type=SignalType.SELL,
             strength=SignalStrength.MODERATE,
             confidence=70.0,
@@ -99,10 +99,10 @@ class TestSignalProcessor:
         )
 
     @pytest.fixture
-    def hold_signal(self):
+    def hold_signal(self, default_symbol):
         """Create sample hold signal."""
         return Signal(
-            symbol="AAPL",
+            symbol=default_symbol,
             signal_type=SignalType.HOLD,
             strength=SignalStrength.WEAK,
             confidence=50.0,
@@ -131,9 +131,9 @@ class TestSignalProcessor:
         assert processor.enable_risk_envelope is True
         assert processor.risk_validator is not None
 
-    def test_process_buy_signal_approved(self, signal_processor, buy_signal):
+    def test_process_buy_signal_approved(self, signal_processor, buy_signal, default_symbol):
         """Test processing approved buy signal."""
-        market_data = MockMarketData("AAPL", 150)
+        market_data = MockMarketData(default_symbol, 150)
         positions = {}
         capital = Decimal("100000")
         last_known_prices = {}
@@ -156,10 +156,10 @@ class TestSignalProcessor:
 
         assert result == "BUY"
 
-    def test_process_sell_signal_approved(self, signal_processor, sell_signal):
+    def test_process_sell_signal_approved(self, signal_processor, sell_signal, default_symbol):
         """Test processing approved sell signal."""
-        market_data = MockMarketData("AAPL", 160)
-        positions = {"AAPL": Decimal("100")}
+        market_data = MockMarketData(default_symbol, 160)
+        positions = {default_symbol: Decimal("100")}
         capital = Decimal("100000")
         last_known_prices = {}
 
@@ -181,9 +181,9 @@ class TestSignalProcessor:
 
         assert result == "SELL"
 
-    def test_process_hold_signal_skipped(self, signal_processor, hold_signal):
+    def test_process_hold_signal_skipped(self, signal_processor, hold_signal, default_symbol):
         """Test processing hold signal."""
-        market_data = MockMarketData("AAPL", 150)
+        market_data = MockMarketData(default_symbol, 150)
         positions = {}
         capital = Decimal("100000")
         last_known_prices = {}
@@ -206,11 +206,11 @@ class TestSignalProcessor:
 
         assert result is None  # HOLD signals are skipped
 
-    def test_process_signal_risk_check_failed(self, signal_processor, buy_signal, mock_strategy):
+    def test_process_signal_risk_check_failed(self, signal_processor, buy_signal, mock_strategy, default_symbol):
         """Test signal rejection when risk check fails."""
         mock_strategy.risk_check.return_value = False  # Risk check fails
 
-        market_data = MockMarketData("AAPL", 150)
+        market_data = MockMarketData(default_symbol, 150)
         positions = {}
         capital = Decimal("100000")
         last_known_prices = {}
@@ -233,9 +233,9 @@ class TestSignalProcessor:
 
         assert result is None  # Signal rejected
 
-    def test_process_signal_profitability_failed(self, signal_processor, buy_signal):
+    def test_process_signal_profitability_failed(self, signal_processor, buy_signal, default_symbol):
         """Test signal rejection when profitability validation fails."""
-        market_data = MockMarketData("AAPL", 150)
+        market_data = MockMarketData(default_symbol, 150)
         positions = {}
         capital = Decimal("100000")
         last_known_prices = {}
@@ -258,11 +258,11 @@ class TestSignalProcessor:
 
         assert result is None  # Signal rejected
 
-    def test_process_signal_no_strategy(self, config, buy_signal):
+    def test_process_signal_no_strategy(self, config, buy_signal, default_symbol):
         """Test signal processing without strategy (should pass)."""
         processor = SignalProcessor(config=config, strategy=None, enable_risk_envelope=False)
 
-        market_data = MockMarketData("AAPL", 150)
+        market_data = MockMarketData(default_symbol, 150)
         positions = {}
         capital = Decimal("100000")
         last_known_prices = {}
@@ -286,12 +286,12 @@ class TestSignalProcessor:
         # Should pass without strategy (no risk_check)
         assert result == "BUY"
 
-    def test_validate_strategy_risk_check_error_handling(self, signal_processor, buy_signal):
+    def test_validate_strategy_risk_check_error_handling(self, signal_processor, buy_signal, default_symbol):
         """Test risk check error handling."""
         # Make risk_check raise an exception
         signal_processor.strategy.risk_check.side_effect = ValueError("Test error")
 
-        market_data = MockMarketData("AAPL", 150)
+        market_data = MockMarketData(default_symbol, 150)
         positions = {}
         capital = Decimal("100000")
         last_known_prices = {}
@@ -315,7 +315,7 @@ class TestSignalProcessor:
         # Should reject signal on error
         assert result is None
 
-    def test_validate_risk_envelope_rejection(self, config, mock_strategy, buy_signal):
+    def test_validate_risk_envelope_rejection(self, config, mock_strategy, buy_signal, default_symbol):
         """Test risk envelope validation rejection."""
         # Create mock compliance engine
         mock_compliance_engine = MagicMock()
@@ -329,7 +329,7 @@ class TestSignalProcessor:
             enable_risk_envelope=True,
         )
 
-        market_data = MockMarketData("AAPL", 150)
+        market_data = MockMarketData(default_symbol, 150)
         positions = {}
         capital = Decimal("100000")
         last_known_prices = {}
@@ -352,13 +352,13 @@ class TestSignalProcessor:
 
         assert result is None  # Rejected by risk envelope
 
-    def test_validate_risk_envelope_disabled(self, config, mock_strategy, buy_signal):
+    def test_validate_risk_envelope_disabled(self, config, mock_strategy, buy_signal, default_symbol):
         """Test with risk envelope disabled."""
         processor = SignalProcessor(
             config=config, strategy=mock_strategy, enable_risk_envelope=False
         )
 
-        market_data = MockMarketData("AAPL", 150)
+        market_data = MockMarketData(default_symbol, 150)
         positions = {}
         capital = Decimal("100000")
         last_known_prices = {}
@@ -382,7 +382,7 @@ class TestSignalProcessor:
         # Should pass when risk envelope disabled
         assert result == "BUY"
 
-    def test_diagnostic_logger_signal_rejection(self, config, mock_strategy, buy_signal):
+    def test_diagnostic_logger_signal_rejection(self, config, mock_strategy, buy_signal, default_symbol):
         """Test diagnostic logger is called on rejection."""
         mock_logger = MagicMock()
         mock_strategy.risk_check.return_value = False
@@ -394,7 +394,7 @@ class TestSignalProcessor:
             diagnostic_logger=mock_logger,
         )
 
-        market_data = MockMarketData("AAPL", 150)
+        market_data = MockMarketData(default_symbol, 150)
         positions = {}
         capital = Decimal("100000")
         last_known_prices = {}
@@ -430,10 +430,10 @@ class TestSignalProcessor:
         assert "cash=" in reason
         assert "required=" in reason
 
-    def test_build_rejection_reason_sell_with_position(self, signal_processor, sell_signal):
+    def test_build_rejection_reason_sell_with_position(self, signal_processor, sell_signal, default_symbol):
         """Test building rejection reason for sell with position."""
         portfolio = MockPortfolio(
-            cash=Decimal("100000"), positions=[MockPortfolio.Position("AAPL", 100)]
+            cash=Decimal("100000"), positions=[MockPortfolio.Position(default_symbol, 100)]
         )
 
         reason = signal_processor._build_rejection_reason(sell_signal, portfolio, Decimal("160"))
@@ -452,10 +452,10 @@ class TestSignalProcessor:
         assert "SELL" in reason
         assert "no position exists" in reason
 
-    def test_signal_with_metadata(self, signal_processor):
+    def test_signal_with_metadata(self, signal_processor, default_symbol):
         """Test processing signal with metadata."""
         signal = Signal(
-            symbol="AAPL",
+            symbol=default_symbol,
             signal_type=SignalType.BUY,
             strength=SignalStrength.MODERATE,
             confidence=80.0,
@@ -468,7 +468,7 @@ class TestSignalProcessor:
             metadata={"strategy": "test_strategy", "rsi": 30.0},
         )
 
-        market_data = MockMarketData("AAPL", 150)
+        market_data = MockMarketData(default_symbol, 150)
         positions = {}
         capital = Decimal("100000")
         last_known_prices = {}
@@ -491,9 +491,9 @@ class TestSignalProcessor:
 
         assert result == "BUY"
 
-    def test_process_signal_with_last_known_prices(self, signal_processor, buy_signal):
+    def test_process_signal_with_last_known_prices(self, signal_processor, buy_signal, default_symbol):
         """Test signal processing with last known prices."""
-        market_data = MockMarketData("AAPL", 150)
+        market_data = MockMarketData(default_symbol, 150)
         positions = {"MSFT": Decimal("50")}
         capital = Decimal("100000")
         last_known_prices = {"MSFT": Decimal("300")}
@@ -552,12 +552,12 @@ class TestSignalProcessor:
 
         assert processor.strategy_name == "test_strategy"
 
-    def test_edge_case_unknown_signal_type(self, signal_processor):
+    def test_edge_case_unknown_signal_type(self, signal_processor, default_symbol):
         """Test processing unknown signal type."""
         # Create a signal with invalid type - this should fail validation
         # So we'll just test with HOLD which should return None
         signal = Signal(
-            symbol="AAPL",
+            symbol=default_symbol,
             signal_type=SignalType.HOLD,
             strength=SignalStrength.WEAK,
             confidence=50.0,
@@ -569,7 +569,7 @@ class TestSignalProcessor:
             timestamp=datetime(2024, 1, 1, 10, 0),
         )
 
-        market_data = MockMarketData("AAPL", 150)
+        market_data = MockMarketData(default_symbol, 150)
         positions = {}
         capital = Decimal("100000")
         last_known_prices = {}

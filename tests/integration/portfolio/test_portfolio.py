@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.models.portfolio import AssetClass, Position
+from app.domain.models.portfolio import AssetClass, Position
 from app.providers.paper_trading import PaperTradingPortfolioProvider
 from app.services.portfolio_service import PortfolioService
 
@@ -31,7 +31,7 @@ class TestPortfolioModels:
 
     def test_portfolio_creation(self):
         """Test Portfolio model creation."""
-        from app.models.portfolio import Portfolio
+        from app.domain.models.portfolio import Portfolio
 
         portfolio = Portfolio(
             portfolio_id="test_portfolio",

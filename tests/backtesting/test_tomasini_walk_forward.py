@@ -31,8 +31,8 @@ from app.backtesting.walk_forward_validator_enhanced import (
     TomasiniWalkForwardValidator,
     TomasiniWindowResult,
 )
-from app.core.decimal_utils import round_price
-from app.models.market_data import Quote
+from app.shared.utils.decimal_utils import round_price
+from app.domain.models.market_data import Quote
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 # Set reproducible seed

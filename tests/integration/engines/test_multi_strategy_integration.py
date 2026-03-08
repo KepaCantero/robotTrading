@@ -24,7 +24,7 @@ from app.engines.strategy_engines import (  # noqa: E402
     ModularMomentumStrategyEngine,
     MomentumStrategyEngine,
 )
-from app.models.market_data import Quote  # noqa: E402
+from app.domain.models.market_data import Quote  # noqa: E402
 from tests.integration.data.test_data_loader import load_all_csv_data  # noqa: E402
 
 logging.basicConfig(

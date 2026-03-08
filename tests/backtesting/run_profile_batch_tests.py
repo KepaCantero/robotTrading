@@ -117,7 +117,7 @@ def mock_market_data_factory():
     np.random.seed(42)
 
     def _load_market_data(symbol, start_date, end_date):
-        from app.models.market_data import Quote
+        from app.domain.models.market_data import Quote
 
         quotes = []
         base_date = datetime(2022, 1, 1)

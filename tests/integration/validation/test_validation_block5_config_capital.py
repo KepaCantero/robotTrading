@@ -12,7 +12,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from app.core.centralized_config import get_strategy_config
-from app.models.portfolio import AssetClass, Portfolio, Position
+from app.domain.models.portfolio import AssetClass, Portfolio, Position
 from app.strategies.mean_reversion import MeanReversionStrategy
 from app.strategies.momentum import MomentumStrategy
 from app.strategies.pairs_trading import PairsTradingStrategy

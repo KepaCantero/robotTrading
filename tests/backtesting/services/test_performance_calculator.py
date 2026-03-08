@@ -32,12 +32,12 @@ class TestPerformanceMetricsCalculator:
         return PerformanceMetricsCalculator(config)
 
     @pytest.fixture
-    def sample_trades(self):
+    def sample_trades(self, default_symbol):
         """Create sample trades for testing."""
         return [
             Trade(
                 trade_id="trade_1",
-                symbol="AAPL",
+                symbol=default_symbol,
                 side="buy",
                 quantity=Decimal("100"),
                 entry_price=Decimal("150"),
@@ -132,7 +132,7 @@ class TestPerformanceMetricsCalculator:
         # Should have a Sharpe ratio
         assert sharpe is not None
 
-    def test_calculate_sharpe_ratio_insufficient_trades(self, calculator):
+    def test_calculate_sharpe_ratio_insufficient_trades(self, calculator, default_symbol):
         """Test Sharpe ratio with insufficient trades."""
         sharpe = calculator._calculate_sharpe_ratio([])
 
@@ -142,7 +142,7 @@ class TestPerformanceMetricsCalculator:
             [
                 Trade(
                     trade_id="trade_1",
-                    symbol="AAPL",
+                    symbol=default_symbol,
                     side="buy",
                     quantity=Decimal("100"),
                     entry_price=Decimal("150"),
@@ -157,12 +157,12 @@ class TestPerformanceMetricsCalculator:
 
         assert sharpe is None  # Need at least 2 trades
 
-    def test_calculate_sharpe_ratio_no_closed_trades(self, calculator):
+    def test_calculate_sharpe_ratio_no_closed_trades(self, calculator, default_symbol):
         """Test Sharpe ratio with no closed trades."""
         trades = [
             Trade(
                 trade_id="trade_1",
-                symbol="AAPL",
+                symbol=default_symbol,
                 side="buy",
                 quantity=Decimal("100"),
                 entry_price=Decimal("150"),
@@ -175,7 +175,7 @@ class TestPerformanceMetricsCalculator:
 
         assert sharpe is None
 
-    def test_calculate_sharpe_ratio_zero_volatility(self, calculator):
+    def test_calculate_sharpe_ratio_zero_volatility(self, calculator, default_symbol):
         """Test Sharpe ratio calculation works."""
         # Create trades with identical P&L
         # Note: Even with identical P&L, returns will have slight variance due to
@@ -183,7 +183,7 @@ class TestPerformanceMetricsCalculator:
         trades = [
             Trade(
                 trade_id=f"trade_{i}",
-                symbol="AAPL",
+                symbol=default_symbol,
                 side="buy",
                 quantity=Decimal("100"),
                 entry_price=Decimal("150"),
@@ -234,12 +234,12 @@ class TestPerformanceMetricsCalculator:
 
         assert win_rate == Decimal("0")
 
-    def test_calculate_win_rate_all_winners(self, calculator):
+    def test_calculate_win_rate_all_winners(self, calculator, default_symbol):
         """Test win rate with all winning trades."""
         trades = [
             Trade(
                 trade_id=f"trade_{i}",
-                symbol="AAPL",
+                symbol=default_symbol,
                 side="buy",
                 quantity=Decimal("100"),
                 entry_price=Decimal("150"),
@@ -256,12 +256,12 @@ class TestPerformanceMetricsCalculator:
 
         assert win_rate == Decimal("100")
 
-    def test_calculate_win_rate_all_losers(self, calculator):
+    def test_calculate_win_rate_all_losers(self, calculator, default_symbol):
         """Test win rate with all losing trades."""
         trades = [
             Trade(
                 trade_id=f"trade_{i}",
-                symbol="AAPL",
+                symbol=default_symbol,
                 side="buy",
                 quantity=Decimal("100"),
                 entry_price=Decimal("150"),
@@ -278,12 +278,12 @@ class TestPerformanceMetricsCalculator:
 
         assert win_rate == Decimal("0")
 
-    def test_calculate_win_rate_ignores_open_trades(self, calculator):
+    def test_calculate_win_rate_ignores_open_trades(self, calculator, default_symbol):
         """Test win rate ignores open trades."""
         trades = [
             Trade(
                 trade_id="trade_1",
-                symbol="AAPL",
+                symbol=default_symbol,
                 side="buy",
                 quantity=Decimal("100"),
                 entry_price=Decimal("150"),
@@ -295,7 +295,7 @@ class TestPerformanceMetricsCalculator:
             ),
             Trade(
                 trade_id="trade_2",
-                symbol="AAPL",
+                symbol=default_symbol,
                 side="buy",
                 quantity=Decimal("100"),
                 entry_price=Decimal("150"),
@@ -327,12 +327,12 @@ class TestPerformanceMetricsCalculator:
         # Profit factor = 1496 / 502 ≈ 2.98
         assert abs(profit_factor - Decimal("2.98")) < Decimal("0.01")
 
-    def test_calculate_profit_factor_no_losses(self, calculator):
+    def test_calculate_profit_factor_no_losses(self, calculator, default_symbol):
         """Test profit factor with no losing trades."""
         trades = [
             Trade(
                 trade_id=f"trade_{i}",
-                symbol="AAPL",
+                symbol=default_symbol,
                 side="buy",
                 quantity=Decimal("100"),
                 entry_price=Decimal("150"),
@@ -350,12 +350,12 @@ class TestPerformanceMetricsCalculator:
         # No losses, should return 0
         assert profit_factor == Decimal("0")
 
-    def test_calculate_profit_factor_no_wins(self, calculator):
+    def test_calculate_profit_factor_no_wins(self, calculator, default_symbol):
         """Test profit factor with no winning trades."""
         trades = [
             Trade(
                 trade_id=f"trade_{i}",
-                symbol="AAPL",
+                symbol=default_symbol,
                 side="buy",
                 quantity=Decimal("100"),
                 entry_price=Decimal("150"),
@@ -422,12 +422,12 @@ class TestPerformanceMetricsCalculator:
         # Percentage = 994 / 100000 * 100 = 0.994%
         assert abs(metrics.total_pnl_percentage - Decimal("0.994")) < Decimal("0.01")
 
-    def test_edge_case_zero_pnl_trades(self, calculator):
+    def test_edge_case_zero_pnl_trades(self, calculator, default_symbol):
         """Test trades with zero P&L."""
         trades = [
             Trade(
                 trade_id="trade_1",
-                symbol="AAPL",
+                symbol=default_symbol,
                 side="buy",
                 quantity=Decimal("100"),
                 entry_price=Decimal("150"),
@@ -454,7 +454,7 @@ class TestPerformanceMetricsCalculator:
         # Should handle gracefully
         assert metrics.total_trades == 0
 
-    def test_sharpe_ratio_annualization(self, calculator):
+    def test_sharpe_ratio_annualization(self, calculator, default_symbol):
         """Test Sharpe ratio is properly annualized."""
         # Create multiple trades over time
         trades = []
@@ -465,7 +465,7 @@ class TestPerformanceMetricsCalculator:
             trades.append(
                 Trade(
                     trade_id=f"trade_{i}",
-                    symbol="AAPL",
+                    symbol=default_symbol,
                     side="buy",
                     quantity=Decimal("100"),
                     entry_price=Decimal("150"),

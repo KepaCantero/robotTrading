@@ -214,7 +214,7 @@ def mock_market_data():
 
     def generate_quotes(symbol: str, n_days: int = 100) -> List[Any]:
         """Generate mock quotes for a symbol."""
-        from app.models.market_data import Quote
+        from app.domain.models.market_data import Quote
 
         quotes = []
         base_date = datetime(2022, 1, 1)

@@ -32,7 +32,7 @@ from typing import Dict, Optional
 import numpy as np
 import pytest
 
-from app.models.market_data import Quote
+from app.domain.models.market_data import Quote
 from app.services.position_monitor import (
     MonitoredPosition,
     PositionMonitor,

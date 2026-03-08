@@ -19,8 +19,8 @@ from app.backtesting.execution_engine import (
     Position,
     create_position_with_stops,
 )
-from app.core.decimal_utils import round_price
-from app.models.market_data import Quote
+from app.shared.utils.decimal_utils import round_price
+from app.domain.models.market_data import Quote
 
 # ============================================================================
 # Fixtures

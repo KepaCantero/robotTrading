@@ -15,7 +15,7 @@ from decimal import Decimal
 import pytest
 
 from app.backtesting.data_split import DataSplit, TrainValTestSplitter
-from app.models.market_data import Quote
+from app.domain.models.market_data import Quote
 
 
 class TestLine3289Fix:

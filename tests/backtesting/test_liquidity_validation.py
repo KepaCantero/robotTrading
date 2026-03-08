@@ -17,7 +17,7 @@ from decimal import Decimal
 import pytest
 
 from app.backtesting.liquidity_validator import FillResult, LiquidityValidator
-from app.models.market_data import Quote
+from app.domain.models.market_data import Quote
 
 
 # Helper function to create timestamps

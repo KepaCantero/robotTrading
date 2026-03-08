@@ -10,7 +10,7 @@ from unittest.mock import Mock
 import pandas as pd
 import pytest
 
-from app.models.portfolio import AssetClass, Portfolio, Position
+from app.domain.models.portfolio import AssetClass, Portfolio, Position
 from app.services.var_position_limiter import VaRConfig, VaRPositionLimiter
 
 

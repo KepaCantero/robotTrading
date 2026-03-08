@@ -11,7 +11,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.models.portfolio import CircuitBreakerState
+from app.domain.models.portfolio import CircuitBreakerState
 from app.services.api_circuit_breaker import (
     CircuitBreakerManager,
     CircuitBreakerType,

@@ -24,7 +24,7 @@ import pytest
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.models.market_data import Quote  # noqa: E402
+from app.domain.models.market_data import Quote  # noqa: E402
 from app.services.strategy_stock_allocator import StrategyStockAllocator  # noqa: E402
 from app.strategies.mean_reversion import MeanReversionStrategy  # noqa: E402
 from app.strategies.momentum import MomentumStrategy  # noqa: E402

@@ -4,7 +4,7 @@ from decimal import Decimal
 
 import numpy as np
 
-from app.models.market_data import Quote
+from app.domain.models.market_data import Quote
 from app.models.signal import SignalType
 from app.services.momentum_analysis import TechnicalIndicatorCalculator
 from app.strategies.mean_reversion import MeanReversionStrategy

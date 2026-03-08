@@ -11,7 +11,7 @@ import unittest
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-from app.models.market_data import Quote
+from app.domain.models.market_data import Quote
 from app.models.signal import SignalType
 from app.strategies.mean_reversion import MeanReversionStrategy
 from app.strategies.momentum import MomentumStrategy

@@ -26,7 +26,7 @@ from app.engines.strategy_engines.ensemble import (
     VotingEnsemble,
     WeightedEnsemble,
 )
-from app.models.market_data import Quote
+from app.domain.models.market_data import Quote
 from app.strategies.factory import StrategyFactory
 
 logger = logging.getLogger(__name__)

@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 
 from app.backtesting.models import BacktestResult
-from app.models.portfolio import Portfolio, Position
+from app.domain.models.portfolio import Portfolio, Position
 from app.services.capacity_fade_validation import CapacityFadeRequest, CapacityFadeValidator
 from app.services.portfolio_constructor.models import AllocationWeight, PortfolioAllocation
 from app.services.reporting_generator import (
@@ -267,7 +267,7 @@ class TestDataFactory:
                 "NVDA": Decimal("10000"),
             }
 
-        from app.models.portfolio import AssetClass
+        from app.domain.models.portfolio import AssetClass
 
         portfolio_positions = [
             Position(

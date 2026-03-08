@@ -12,7 +12,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.exceptions.trading_exceptions import (
+from app.shared.exceptions.trading_exceptions import (
     AlgoTradingDatabaseError as DatabaseError,
     AlgoTradingError,
     BusinessLogicError,

@@ -21,8 +21,8 @@ import numpy as np
 import pytest
 
 from app.backtesting.test_summary import TestSummaryReporter
-from app.core.decimal_utils import round_price
-from app.models.market_data import Quote
+from app.shared.utils.decimal_utils import round_price
+from app.domain.models.market_data import Quote
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.services.momentum_analysis import TechnicalIndicatorCalculator
 from app.strategies.mean_reversion import MeanReversionStrategy
