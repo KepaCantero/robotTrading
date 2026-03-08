@@ -28,7 +28,13 @@ import aiohttp
 import pandas as pd
 from requests.exceptions import HTTPError, RequestException
 
+from app.shared.config.api_endpoints import APIEndpoints
+from app.shared.config.timeout_config import get_timeouts
+
 logger = logging.getLogger(__name__)
+
+# Get centralized timeouts
+_TIMEOUTS = get_timeouts()
 
 
 # Real S&P 500 Top 50 Stocks by Market Cap (2025)
@@ -125,7 +131,8 @@ class RealMarketDataFetcher:
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
-        self.base_url = "https://www.alphavantage.co/query"
+        # Use centralized endpoint configuration
+        self.base_url = os.getenv("ALPHA_VANTAGE_URL", APIEndpoints.ALPHA_VANTAGE)
         self.rate_limit_calls = rate_limit_calls
         self.rate_limit_period = rate_limit_period
 

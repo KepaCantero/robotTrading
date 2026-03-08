@@ -13,7 +13,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from app.api.assets import router
-from app.models.assets import (
+from app.domain.models.assets import (
     Asset,
     AssetClass,
     AssetRanking,

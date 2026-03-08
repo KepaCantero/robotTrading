@@ -23,6 +23,8 @@ from sqlalchemy.exc import (
     ProgrammingError,
 )
 
+from app.shared.config.api_endpoints import APIEndpoints
+from app.shared.config.timeout_config import get_timeouts
 from .base_source import BaseDataSource
 
 # Optional tweepy import for Twitter sentiment analysis
@@ -35,6 +37,9 @@ except ImportError:
     TWEEPY_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
+
+# Get centralized timeouts
+_TIMEOUTS = get_timeouts()
 
 
 class TwitterSentimentSource(BaseDataSource):
@@ -56,7 +61,8 @@ class TwitterSentimentSource(BaseDataSource):
         super().__init__(config)
         self.bearer_token = config.get('bearer_token')
         self.use_tweepy = config.get('use_tweepy', False)
-        self.base_url = 'https://api.twitter.com/2'
+        # Use centralized endpoint configuration
+        self.base_url = config.get('base_url', APIEndpoints.TWITTER_API)
         self.session: Optional[aiohttp.ClientSession] = None
         self._tweepy_client = None
 
@@ -201,6 +207,7 @@ class RedditSentimentSource(BaseDataSource):
     Fuente de datos de sentimiento de Reddit.
 
     Analiza posts y comentarios de subreddits relacionados con trading/inversiones.
+    Uses centralized endpoint configuration.
     """
 
     def __init__(self, config: Dict[str, Any]):
@@ -217,7 +224,10 @@ class RedditSentimentSource(BaseDataSource):
         self.client_id = config.get('client_id')
         self.client_secret = config.get('client_secret')
         self.user_agent = config.get('user_agent', 'algoTrading/1.0')
-        self.base_url = 'https://www.reddit.com'
+        # Use centralized endpoint configuration
+        self._timeouts = get_timeouts()
+        self.base_url = config.get('base_url', APIEndpoints.REDDIT_API)
+        self.token_url = config.get('token_url', APIEndpoints.REDDIT_TOKEN)
         self.session: Optional[aiohttp.ClientSession] = None
         self._access_token: Optional[str] = None
 
@@ -239,11 +249,11 @@ class RedditSentimentSource(BaseDataSource):
             raise
 
     async def _get_access_token(self) -> None:
-        """Obtener access token de Reddit."""
+        """Obtener access token de Reddit using centralized endpoint."""
         try:
             auth = aiohttp.BasicAuth(self.client_id, self.client_secret)
             async with self.session.post(
-                'https://www.reddit.com/api/v1/access_token',
+                self.token_url,  # Use centralized endpoint
                 auth=auth,
                 data={'grant_type': 'client_credentials'},
             ) as response:

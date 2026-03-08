@@ -14,9 +14,14 @@ from typing import Any, Dict, List, Optional
 # REQUIRED: No fallbacks - aiohttp is required for async HTTP requests
 import aiohttp  # noqa: F401
 
+from app.shared.config.api_endpoints import APIEndpoints
+from app.shared.config.timeout_config import get_timeouts
 from .base_source import BaseDataSource
 
 logger = logging.getLogger(__name__)
+
+# Get centralized timeouts
+_TIMEOUTS = get_timeouts()
 
 
 class OptionsVolatilitySource(BaseDataSource):
@@ -27,6 +32,8 @@ class OptionsVolatilitySource(BaseDataSource):
     - Volatility surfaces (implied volatility por strike/expiry)
     - Greeks (delta, gamma, theta, vega)
     - Option chains
+
+    Uses centralized endpoint configuration.
     """
 
     def __init__(self, config: Dict[str, Any]):
@@ -41,13 +48,17 @@ class OptionsVolatilitySource(BaseDataSource):
         super().__init__(config)
         self.provider = config.get('provider', 'polygon')
         self.api_key = config.get('api_key')
+        # Use centralized endpoint configuration
         self.base_url = self._get_base_url()
         self.session: Optional[aiohttp.ClientSession] = None
 
     def _get_base_url(self) -> str:
-        """Obtener base URL según provider."""
-        url_map = {'polygon': 'https://api.polygon.io', 'ibkr': None}  # Requiere conexión TWS
-        return url_map.get(self.provider, url_map['polygon'])
+        """Obtener base URL según provider using centralized configuration."""
+        url_map = {
+            'polygon': APIEndpoints.POLYGON,
+            'ibkr': None  # Requiere conexión TWS
+        }
+        return url_map.get(self.provider, APIEndpoints.POLYGON)
 
     async def connect(self) -> bool:
         """Conectar a fuente de opciones."""

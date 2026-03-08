@@ -13,9 +13,14 @@ from typing import Any, Dict, List, Optional
 # REQUIRED: No fallbacks - aiohttp is required for async HTTP requests
 import aiohttp  # noqa: F401
 
+from app.shared.config.api_endpoints import APIEndpoints
+from app.shared.config.timeout_config import get_timeouts
 from .base_source import BaseDataSource
 
 logger = logging.getLogger(__name__)
+
+# Get centralized timeouts
+_TIMEOUTS = get_timeouts()
 
 
 class FinancialModelingPrepSource(BaseDataSource):
@@ -26,6 +31,8 @@ class FinancialModelingPrepSource(BaseDataSource):
     - Financial statements (income, balance sheet, cash flow)
     - Key metrics (P/E, P/B, etc.)
     - Company profiles
+
+    Uses centralized endpoint configuration.
     """
 
     def __init__(self, config: Dict[str, Any]):
@@ -40,7 +47,8 @@ class FinancialModelingPrepSource(BaseDataSource):
         self.api_key = config.get('api_key')
         if not self.api_key:
             logger.warning("FMP API key no configurado")
-        self.base_url = 'https://financialmodelingprep.com/api/v3'
+        # Use centralized endpoint configuration
+        self.base_url = config.get('base_url', APIEndpoints.FINANCIAL_MODELING_PREP)
         self.session: Optional[aiohttp.ClientSession] = None
 
     async def connect(self) -> bool:
@@ -176,6 +184,7 @@ class AlphaVantageFundamentalSource(BaseDataSource):
     Fuente de datos fundamentales de Alpha Vantage.
 
     Proporciona datos fundamentales complementarios.
+    Uses centralized endpoint configuration.
     """
 
     def __init__(self, config: Dict[str, Any]):
@@ -190,7 +199,8 @@ class AlphaVantageFundamentalSource(BaseDataSource):
         self.api_key = config.get('api_key')
         if not self.api_key:
             logger.warning("Alpha Vantage API key no configurado")
-        self.base_url = 'https://www.alphavantage.co/query'
+        # Use centralized endpoint configuration
+        self.base_url = config.get('base_url', APIEndpoints.ALPHA_VANTAGE)
         self.session: Optional[aiohttp.ClientSession] = None
 
     async def connect(self) -> bool:

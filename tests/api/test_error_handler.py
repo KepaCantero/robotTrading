@@ -14,7 +14,7 @@ import pytest
 from fastapi import HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 
-from app.api.error_handler import (
+from app.shared.exceptions.error_handler import (
     attribute_error_handler,
     generic_exception_handler,
     http_exception_handler,
