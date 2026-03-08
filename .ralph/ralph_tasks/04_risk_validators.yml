@@ -6,9 +6,9 @@
 # TIEMPO: ~8 horas
 # DEPENDS ON: 01_protocol_interfaces
 #
-# Requirements: .ralph/docs/requirements/SERVICE_REQUIREMENTS.md
-# Rules: .ralph/rules/rules_mapping.yml - R1, R2, R4
-# Trading Rules: .ralph/docs/realistic_trading_rules.md
+# Requirements: rules/trading/
+# Rules: rules/trading/ - R1, R2, R4
+# Trading Rules: rules/trading/
 # ============================================================================
 
 event_loop:
@@ -36,9 +36,9 @@ hats:
       ## CRITICAL RISK VALIDATORS IMPLEMENTATION
 
       **REQUISITOS:**
-      1. Leer: `.ralph/docs/requirements/SERVICE_REQUIREMENTS.md`
-      2. Leer: `.ralph/rules/rules_mapping.yml` - R1, R2, R4
-      3. Leer: `.ralph/docs/realistic_trading_rules.md` - Reglas R1, R2, R4
+      1. Leer: `rules/trading/`
+      2. Leer: `rules/trading/` - R1, R2, R4
+      3. Leer: `rules/trading/` - Reglas R1, R2, R4
       4. Verificar que existe: `app/core/protocols/i_pre_trade_validator.py`
 
       **OBJETIVO:** Implementar validadores de riesgo críticos para pre-trade

@@ -343,7 +343,7 @@ class TradeExecutor:
             )
             return None, capital
 
-        current_price = get_price(market_data)
+        get_price(market_data)
 
         # Sell the entire current position (no need to calculate position size for sells)
         sell_quantity = current_position

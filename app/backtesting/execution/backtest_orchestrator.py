@@ -80,7 +80,7 @@ class BacktestOrchestrator:
             )
 
             # Create executor
-            executor = BacktestExecutorFactory.create_executor(
+            BacktestExecutorFactory.create_executor(
                 executor_type='simple' if not self.parallel_enabled else 'parallel',
                 config=engine_config,
             )
@@ -302,7 +302,7 @@ class BacktestOrchestrator:
         try:
             # Calculate total combinations
 
-            param_names = list(param_grid.keys())
+            list(param_grid.keys())
             param_values = list(param_grid.values())
             total_combinations = 1
             for values in param_values:

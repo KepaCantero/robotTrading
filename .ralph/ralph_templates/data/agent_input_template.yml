@@ -95,7 +95,7 @@ input_templates:
       current_task_type: "refactor"
     
     requirements:
-      specification_file: ".ralph/docs/requirements/SERVICE_REQUIREMENTS.md"
+      specification_file: "rules/trading/"
       templates:
         - ".ralph/ralph_templates/implementer_hat.yml"
       constraints:
@@ -118,7 +118,7 @@ input_templates:
       current_task_type: "validation"
     
     requirements:
-      specification_file: ".ralph/docs/validation/validation_requirements.md"
+      specification_file: "rules/trading/"
       templates:
         - ".ralph/ralph_templates/validation_hat.yml"
       constraints:

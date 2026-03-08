@@ -2,12 +2,12 @@
 # Ralph Task 25: Requirements Generator
 # ============================================
 # PRIORIDAD: P1 (IMPORTANTE) - Genera requirements.md para archivos del proyecto
-# OBJETIVO: Crear archivos requirements.md siguiendo rules_mapping.yml
+# OBJETIVO: Crear archivos requirements.md siguiendo rules/trading/
 # TIEMPO: ~8 horas
 #
-# Rules Mapping: .ralph/rules/rules_mapping.yml
-# Docs Extraction: .ralph/rules/docs_extraction_mapping.yml
-# Service Requirements: .ralph/docs/requirements/SERVICE_REQUIREMENTS.md
+# Rules Mapping: rules/trading/
+# Docs Extraction: rules/trading/
+# Service Requirements: rules/trading/
 # ============================================================================
 
 event_loop:
@@ -81,7 +81,7 @@ hats:
 
       ### FASE 3: Agrupar por servicio
 
-      Usar `rules_mapping.yml` para identificar el servicio de cada archivo:
+      Usar `rules/trading/` para identificar el servicio de cada archivo:
       - compliance: app/services/compliance/*.py
       - execution: app/services/live_trading/*.py
       - backtesting: app/backtesting/*.py
@@ -98,7 +98,7 @@ hats:
   # ==========================================================================
   rules_mapper:
     name: "Rules Mapper"
-    description: "Mapea archivos a reglas usando rules_mapping.yml"
+    description: "Mapea archivos a reglas usando rules/trading/"
     template: "ralph_templates/hats/base_processor_hat.yml"
     triggers:
       - "requirements_generator.scan_complete"
@@ -114,13 +114,13 @@ hats:
       {{shared_instructions}}
 
       ### OBJETIVO
-      Para cada archivo, identificar qué reglas aplican usando rules_mapping.yml
+      Para cada archivo, identificar qué reglas aplican usando rules/trading/
 
-      ### FASE 1: Leer rules_mapping.yml
+      ### FASE 1: Leer rules/trading/
 
       ```bash
       # Leer configuración de reglas
-      cat .ralph/rules/rules_mapping.yml
+      cat rules/trading/
       ```
 
       ### FASE 2: Mapear cada archivo
@@ -222,10 +222,10 @@ hats:
       grep "^def \|^async def " {{file_path}}
       ```
 
-      ### FASE 2: Aplicar reglas desde rules_mapping.yml
+      ### FASE 2: Aplicar reglas desde rules/trading/
 
       Para cada regla identificada:
-      1. Leer definición desde docs/ o rules_mapping.yml
+      1. Leer definición desde docs/ o rules/trading/
       2. Verificar estado de implementación en el código
       3. Marcar como [✅], [❌], o [⚠️]
 

@@ -6,8 +6,8 @@
 # TIEMPO: ~6 horas
 # DEPENDS ON: 01_protocol_interfaces
 #
-# Requirements: .ralph/docs/requirements/SERVICE_REQUIREMENTS.md
-# Rules: .ralph/rules/rules_mapping.yml - R15 (Logging), R28 (Registro Hacienda)
+# Requirements: rules/trading/
+# Rules: rules/trading/ - R15 (Logging), R28 (Registro Hacienda)
 # ============================================================================
 
 event_loop:
@@ -35,8 +35,8 @@ hats:
       ## TRADING DECISION LOGGER IMPLEMENTATION
 
       **REQUISITOS:**
-      1. Leer: `.ralph/docs/requirements/SERVICE_REQUIREMENTS.md` - Sección R15
-      2. Leer: `.ralph/rules/rules_mapping.yml` - R15, R28
+      1. Leer: `rules/trading/` - Sección R15
+      2. Leer: `rules/trading/` - R15, R28
       3. Verificar que existe: `app/core/protocols/i_trading_decision_logger.py`
 
       **OBJETIVO:** Implementar logging append-only con correlation ID para auditoría

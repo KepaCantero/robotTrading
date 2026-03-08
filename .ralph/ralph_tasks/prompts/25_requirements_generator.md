@@ -10,9 +10,9 @@
 ## OBJETIVO
 
 Crear archivos `requirements.md` para cada archivo Python del proyecto siguiendo:
-- **Rules Mapping:** `.ralph/rules/rules_mapping.yml`
-- **Docs Extraction:** `.ralph/rules/docs_extraction_mapping.yml`
-- **Service Requirements:** `.ralph/docs/requirements/SERVICE_REQUIREMENTS.md`
+- **Rules Mapping:** `rules/trading/`
+- **Docs Extraction:** `rules/trading/`
+- **Service Requirements:** `rules/trading/`
 
 ---
 
@@ -64,7 +64,7 @@ done
 ```
 
 #### 1.3 Agrupar por servicio
-Basado en `rules_mapping.yml`:
+Basado en `rules/trading/`:
 - **compliance:** `app/services/compliance/*.py`
 - **execution:** `app/services/live_trading/*.py`
 - **backtesting:** `app/backtesting/*.py`
@@ -81,11 +81,11 @@ Lista JSON de archivos agrupados por servicio.
 ## HAT 2: RULES MAPPER
 
 ### Objetivo
-Para cada archivo, determinar qué reglas aplican usando `rules_mapping.yml`
+Para cada archivo, determinar qué reglas aplican usando `rules/trading/`
 
 ### Pasos
 
-#### 2.1 Leer rules_mapping.yml
+#### 2.1 Leer rules/trading/
 ```yaml
 # Estructura a usar:
 file_pattern_mapping:
@@ -411,8 +411,8 @@ La tarea esta COMPLETED cuando:
 
 ## REFERENCIAS
 
-- `.ralph/rules/rules_mapping.yml` - Mapeo de reglas por archivo
-- `.ralph/rules/docs_extraction_mapping.yml` - Extraccion determinista
-- `.ralph/docs/requirements/SERVICE_REQUIREMENTS.md` - Requisitos SOLID + R1-R29
-- `.ralph/docs/realistic_trading_rules.md` - Reglas de trading
+- `rules/trading/` - Mapeo de reglas por archivo
+- `rules/trading/` - Extraccion determinista
+- `rules/trading/` - Requisitos SOLID + R1-R29
+- `rules/trading/` - Reglas de trading
 - `.ralph/ralph_templates/agents/requirement_generator_agent.yml` - Agente generador

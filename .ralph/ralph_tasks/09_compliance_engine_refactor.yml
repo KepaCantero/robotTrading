@@ -5,7 +5,7 @@
 # OBJETIVO: Refactorizar ComplianceEngine para SOLID + R1-R29 + Spain Tax
 # TIEMPO: ~40-60 horas
 #
-# Requirements: .ralph/docs/requirements/SERVICE_REQUIREMENTS.md
+# Requirements: rules/trading/
 # ============================================================================
 
 event_loop:
@@ -25,7 +25,7 @@ core:
 hats:
   refactor_implementer:
     name: "ComplianceEngine Refactorer"
-    description: "Refactoriza ComplianceEngine según SERVICE_REQUIREMENTS.md"
+    description: "Refactoriza ComplianceEngine según rules/trading/ y docs/"
     triggers: ["refactor.start", "refactor.next_phase"]
     publishes: ["refactor.next_phase", "refactor.complete", "refactor.blocked"]
     default_publishes: "refactor.next_phase"
@@ -33,7 +33,7 @@ hats:
       ## COMPLIANCE ENGINE REFACTOR
 
       **REQUISITOS:**
-      1. Leer: `.ralph/docs/requirements/SERVICE_REQUIREMENTS.md`
+      1. Leer: `rules/trading/`
       2. Leer: `.ralph/docs/architecture/compliance_engine_solid_audit.md`
 
       **OBJETIVO:** Convertir ComplianceEngine en coordinator SOLID con:

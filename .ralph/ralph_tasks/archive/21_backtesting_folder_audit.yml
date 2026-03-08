@@ -6,7 +6,7 @@
 # TIEMPO: ~8-10 horas
 # DEPENDS ON: 09_compliance_engine_refactor
 #
-# Requirements: .ralph/docs/requirements/SERVICE_REQUIREMENTS.md
+# Requirements: rules/trading/
 # Trading Rules: rules/trading/ (Ernest Chan, Tomasini, etc.)
 #
 # FLUJO:
@@ -38,11 +38,11 @@ core:
 shared_vars:
   OUTPUT_DIR: ".ralph/outputs"
   SCRIPTS_DIR: ".ralph/scripts"
-  AUDIT_SCRIPT: ".ralph/scripts/audit_backtesting_rules.py"
-  CLEANUP_SCRIPT: ".ralph/scripts/cleanup_obsolete_backtests.py"
+  AUDIT_SCRIPT: ".ralph/scripts/verify_compliance_validations.py"
+  CLEANUP_SCRIPT: ".ralph/scripts/fix_all_issues.py"
   VERIFY_SCRIPT: ".ralph/scripts/verify_compliance_validations.py"
   TEST_DIR: "tests/backtesting"
-  REQUIREMENTS_FILE: ".ralph/docs/requirements/SERVICE_REQUIREMENTS.md"
+  REQUIREMENTS_FILE: "rules/trading/"
 
 # ============================================================================
 # REGLA PRINCIPAL: TODO PASA POR COMPLIANCE_ENGINE

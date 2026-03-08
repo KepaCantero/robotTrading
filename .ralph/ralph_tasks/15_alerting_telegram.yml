@@ -827,7 +827,7 @@ hats:
       EOF
 
       # Update master checkpoint
-      python .ralph/scripts/update_master_checkpoint.py 15_alerting_telegram COMPLETED
+      # update_master_checkpoint.py not available 15_alerting_telegram COMPLETED
       ```
 
       ### PASO 11: Update Scratchpad

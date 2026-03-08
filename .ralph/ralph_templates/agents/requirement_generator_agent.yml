@@ -2,7 +2,7 @@
 # Ralph Agent: Requirement Generator v3.0
 # ============================================
 # Genera archivos de requirements.md con extracción DETERMINISTA de docs
-# USA docs_extraction_mapping.yml para saber QUÉ hacer
+# USA rules/trading/ para saber QUÉ hacer
 
 agent_id: requirement_generator
 agent_type: generator
@@ -38,7 +38,7 @@ output_schema:
       trading: array
       spain_tax: array
       base_rules: array
-    description: "Reglas aplicables (de docs_extraction_mapping.yml)"
+    description: "Reglas aplicables (de rules/trading/)"
 
 instructions: >-
   ## REQUIREMENT GENERATOR v3.0 - Extracción Determinista de Docs
@@ -47,15 +47,15 @@ instructions: >-
 
   ```bash
   # ESTE archivo te dice QUÉ hacer
-  cat .ralph/rules/docs_extraction_mapping.yml
+  cat rules/trading/
   ```
 
   ### PASO 1: Identificar archivo (DETERMINISTA)
 
   ```python
-  # 1. Leer rules_mapping.yml
+  # 1. Leer rules/trading/
   import yaml
-  with open('.ralph/rules/rules_mapping.yml') as f:
+  with open('rules/trading/') as f:
       rules_mapping = yaml.safe_load(f)
 
   # 2. Buscar archivo exacto
@@ -82,7 +82,7 @@ instructions: >-
 
   ```bash
   # 2.1 Leer fuente de verdad
-  cat .ralph/docs/requirements/SERVICE_REQUIREMENTS.md
+  cat rules/trading/
 
   # 2.2 Extraer sección "## SOLID Principles"
   # Buscar DESPUÉS de este heading hasta el próximo ##
@@ -108,7 +108,7 @@ instructions: >-
 
   ```bash
   # 3.1 Leer fuente de verdad
-  cat .ralph/docs/realistic_trading_rules.md
+  cat rules/trading/
 
   # 3.2 Extraer sección "### Reglas Prioritarias (P0)"
   # Buscar DESPUÉS de este heading hasta "### Reglas Secundarias"
@@ -137,7 +137,7 @@ instructions: >-
 
   ```bash
   # 4.1 Leer fuente de verdad
-  cat .ralph/docs/requirements/SERVICE_REQUIREMENTS.md
+  cat rules/trading/
 
   # 4.2 Extraer sección "## Spain-Specific Requirements"
   # Buscar DESPUÉS de este heading
@@ -198,14 +198,14 @@ instructions: >-
   ### PASO 6: Extraer Base Rules (DETERMINISTA)
 
   ```bash
-  # 6.1 Leer docs_extraction_mapping.yml
-  cat .ralph/rules/docs_extraction_mapping.yml
+  # 6.1 Leer rules/trading/
+  cat rules/trading/
 
   # 6.2 Buscar service_base_rules[file_info['service']]
   # Esto retorna lista de reglas base
 
   # 6.3 Para cada regla base:
-  # Extraer definición de base_rules en docs_extraction_mapping.yml
+  # Extraer definición de base_rules en rules/trading/
 
   base_rule = {
       "rule_id": "TYP-001",
@@ -367,10 +367,10 @@ instructions: >-
   {
     "requirements_file": ".requirements/{{file_path}}.requirements.md",
     "sources_used": [
-      ".ralph/rules/docs_extraction_mapping.yml",
-      ".ralph/rules/rules_mapping.yml",
-      ".ralph/docs/requirements/SERVICE_REQUIREMENTS.md",
-      ".ralph/docs/realistic_trading_rules.md",
+      "rules/trading/",
+      "rules/trading/",
+      "rules/trading/",
+      "rules/trading/",
       ".ralph/docs/implementation_analysis_R1-R29.md",
       "{{file_path}}"
     ],

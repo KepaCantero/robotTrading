@@ -897,7 +897,7 @@ hats:
       EOF
 
       # Update master checkpoint
-      python .ralph/scripts/update_master_checkpoint.py 17_backtest_fixes COMPLETED
+      # update_master_checkpoint.py not available 17_backtest_fixes COMPLETED
       ```
 
       ### Event Format:

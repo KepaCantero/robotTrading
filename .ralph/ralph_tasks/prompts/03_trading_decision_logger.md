@@ -255,6 +255,6 @@ La tarea está COMPLETED cuando:
 
 ##  REFERENCIAS
 
-- `.ralph/docs/requirements/SERVICE_REQUIREMENTS.md` - R15 (Logging), R28 (Registro Hacienda)
-- `.ralph/rules/rules_mapping.yml` - R15, R28, LOG-001, AUD-001
+- `rules/trading/` - R15 (Logging), R28 (Registro Hacienda)
+- `rules/trading/` - R15, R28, LOG-001, AUD-001
 - `app/core/protocols/i_trading_decision_logger.py` - Protocol interface (debe existir de tarea 01)

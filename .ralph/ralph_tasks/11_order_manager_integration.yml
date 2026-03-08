@@ -40,7 +40,7 @@ hats:
       {{shared_instructions}}
 
       **REQUISITOS:**
-      1. Leer: `.ralph/docs/requirements/SERVICE_REQUIREMENTS.md`
+      1. Leer: `rules/trading/`
       2. Leer: `.ralph/ralph_tasks/09_compliance_engine_refactor.yml` (dependencia)
 
       **OBJETIVO:** Integrar OrderManager para usar ComplianceEngine

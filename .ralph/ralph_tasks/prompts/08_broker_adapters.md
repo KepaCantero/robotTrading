@@ -549,5 +549,5 @@ pip install requests
 ##  REFERENCIAS
 
 - IBKR API Documentation: https://interactivebrokers.github.io/tws-api/
-- `.ralph/docs/realistic_trading_rules.md` - Live Trading rules
-- `.ralph/rules/rules_mapping.yml` - Broker adapter rules
+- `rules/trading/` - Live Trading rules
+- `rules/trading/` - Broker adapter rules

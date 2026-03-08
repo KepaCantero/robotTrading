@@ -456,5 +456,5 @@ assert len(missing) == 2  # REE y AAPL
 
 ##  REFERENCIAS
 
-- `.ralph/docs/realistic_trading_rules.md` - R16
-- `.ralph/rules/rules_mapping.yml` - Reconciliation rules
+- `rules/trading/` - R16
+- `rules/trading/` - Reconciliation rules

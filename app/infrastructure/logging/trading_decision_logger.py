@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from app.infrastructure.logging.append_only_log import AppendOnlyLog
-from app.infrastructure.logging.log_entry import LogEntry
+from app.services.logging.log_entry import LogEntry
 
 # @skip-import - Protocol import, skip if not available
 try:

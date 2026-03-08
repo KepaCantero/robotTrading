@@ -683,7 +683,7 @@ hats:
       EOF
 
       # Actualizar checkpoint master
-      python .ralph/scripts/update_master_checkpoint.py 12_trading_bridge_integration COMPLETED
+      # update_master_checkpoint.py not available 12_trading_bridge_integration COMPLETED
       ```
 
       ### PASO 7: Actualizar Scratchpad

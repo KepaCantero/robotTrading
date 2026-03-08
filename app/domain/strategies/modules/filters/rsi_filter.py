@@ -61,8 +61,6 @@ class RSIFilter(BaseFilter):
 
         # Default values (can be overridden by YAML config)
         self.period = 14
-        default_extreme_low = 30
-        default_extreme_high = 70
 
         # Get settings from YAML or config
         settings = self.config.get("settings", self.config)

@@ -17,7 +17,7 @@ from typing import Dict, List, Optional, Set
 import numpy as np
 import pandas as pd
 
-from app.models.market_data import DataFrequency
+from app.domain.models.market_data import DataFrequency
 
 logger = logging.getLogger(__name__)
 

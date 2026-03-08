@@ -8,7 +8,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import List
 
-from app.infrastructure.logging.log_entry import LogEntry
+from app.services.logging.log_entry import LogEntry
 
 
 class AppendOnlyLog:

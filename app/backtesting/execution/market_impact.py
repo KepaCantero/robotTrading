@@ -481,7 +481,7 @@ class MarketImpactModel:
 
                 # Extract coefficients (skipping intercept)
                 # coefficients[0] = intercept, coefficients[1] = gamma, coefficients[2] = eta
-                intercept = coefficients[0]
+                coefficients[0]
                 gamma = max(0, coefficients[1])  # Permanent impact coefficient (non-negative)
                 eta = max(0, coefficients[2])  # Temporary impact coefficient (non-negative)
 

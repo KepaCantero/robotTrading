@@ -198,8 +198,8 @@ class InputProfileRouter:
         config = get_config()
         base_max_dd = Decimal(str(getattr(config.trading, 'max_drawdown_limit', 0.15)))
         base_max_pos = Decimal(str(getattr(config.trading, 'max_position_size', 0.05)))
-        base_stop_loss = Decimal(str(getattr(config.trading, 'stop_loss_pct', 0.05)))
-        base_take_profit = Decimal(str(getattr(config.trading, 'take_profit_pct', 0.15)))
+        Decimal(str(getattr(config.trading, 'stop_loss_pct', 0.05)))
+        Decimal(str(getattr(config.trading, 'take_profit_pct', 0.15)))
 
         if tolerance == RiskTolerance.LOW:
             return RiskConfig(

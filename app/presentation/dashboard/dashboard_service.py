@@ -176,9 +176,9 @@ class DashboardService:
         """Get recent alerts."""
         try:
             # Get recent alerts from alerting system
-            from app.application.alerting import NotificationDispatcher
+            from app.services.alerting_system import NotificationDispatcher
 
-            dispatcher = NotificationDispatcher.instance()
+            NotificationDispatcher.instance()
             # Return recent alerts from dispatcher history
             # For now, return empty list as dispatcher doesn't expose history
             return []

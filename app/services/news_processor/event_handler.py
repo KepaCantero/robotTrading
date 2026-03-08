@@ -17,7 +17,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Set
 
-from app.core.timezone_utils import utc_now
+from app.shared.utils.timezone_utils import utc_now
 
 logger = logging.getLogger(__name__)
 

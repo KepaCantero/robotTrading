@@ -1,194 +1,474 @@
 # ============================================
-# Ralph Task: Master Orchestrator
+# Ralph Task: Master Orchestrator AAA v11.0
 # ============================================
-# VERSION: 7.0 - Simple y directo
-# OBJETIVO: Audit files against rules, create if missing
+# VERSION: 11.0 - PRODUCTION READY AAA
+# OPTIMIZADO PARA: GLM 5.0 (Zhipu AI)
+# OBJETIVO: Llevar el código a nivel AAA (Production Ready)
+# TIEMPO ESTIMADO: 60-80 horas (GLM más eficiente)
+# ============================================================================
+#
+# SUB-AGENTS INTEGRADOS (awesome-claude-agents):
+# - @agent-code-archaeologist: Análisis profundo de codebase
+# - @agent-python-expert: Desarrollo Python moderno
+# - @agent-ml-data-expert: ML/trading algorithms
+# - @agent-code-reviewer: Code reviews rigurosos
+# - @agent-performance-optimizer: Optimización de rendimiento
+# ============================================================================
+#
+# CHECKLIST AAA:
+# [ ] Requirements generados para todos los archivos
+# [ ] Arquitectura cumple SOLID (5 principios)
+# [ ] Sin duplicados (MD5 verificado)
+# [ ] Imports funcionan (sin circulares)
+# [ ] Backtesting cumple R1-R29 (código, no ejecución)
+# [ ] QA pasa (black, isort, ruff, mypy)
+# [ ] Tests pasan (unit + integration)
+# [ ] Config centralizada
+# [ ] Security hardening
 # ============================================================================
 
 event_loop:
   prompt_file: ".ralph/ralph_tasks/prompts/00_master_orchestrator.md"
-  completion_promise: "PRODUCTION_READY_COMPLETE"
-  max_iterations: 100
-  max_runtime_seconds: 7200
+  completion_promise: "AAA_PRODUCTION_READY"
+  max_iterations: 300  # Reducido para GLM 5.0
+  max_runtime_seconds: 432000  # 120 hours
   checkpoint_interval: 5
-  starting_event: "master.start"
+  starting_event: "aaa.start"
+  reasoning:
+    enabled: true
+    type: "multi-step"
 
 cli:
   backend: "claude"
+  model: "glm"
 
 core:
   specs_dir: "./specs/"
 
+shared_vars:
+  RULES_DIR: "rules/trading/"
+  DOCS_DIR: ".ralph/docs/"
+  REQUIREMENTS_DIR: ".requirements/"
+  APP_DIR: "app/"
+  TESTS_DIR: "tests/"
+  NO_BACKTEST_EXECUTION: true
+
+# Sub-agent configuration
+subagents:
+  enabled: true
+  available:
+    - name: code-archaeologist
+      use_for: "Análisis profundo de código, generación de reports"
+    - name: python-expert
+      use_for: "Desarrollo Python 3.12+, async, FastAPI"
+    - name: ml-data-expert
+      use_for: "ML, trading algorithms, time series"
+    - name: code-reviewer
+      use_for: "Code reviews con severity tagging"
+    - name: performance-optimizer
+      use_for: "Optimización de rendimiento"
+
+# ============================================================================
+# FASE 1: ESTRUCTURA Y REGLAS (Foundation)
+# ============================================================================
 hats:
-  # ==========================================================================
-  # HAT 1: SpainTaxEngine - Audit or Create
-  # ==========================================================================
-  spain_tax_engine:
-    name: "SpainTaxEngine"
-    triggers: ["master.start"]
-    publishes: ["master.tax_done", "master.blocked"]
-    default_publishes: "master.tax_done"
+  # --------------------------------------------------------------------------
+  # FASE 1.1: Structural Fix - Eliminar duplicados, corregir imports
+  # DELEGATE TO: @agent-code-archaeologist para análisis
+  # --------------------------------------------------------------------------
+  structural_fix:
+    name: "Structural Fix"
+    triggers: ["aaa.start"]
+    publishes: ["aaa.structural_done", "aaa.blocked"]
+    default_publishes: "aaa.structural_done"
+    delegate_to: "@agent-code-archaeologist"
     instructions: |
-      ## SPAIN TAX ENGINE
+      ## FASE 1.1: STRUCTURAL FIX
 
-      **FILE:** `app/services/tax_efficiency/engines/spain_tax_engine.py`
-      **REQUIREMENTS:** `.requirements/app/services/tax_efficiency/engines/spain_tax_engine.py.requirements.txt`
-      **RULES:** `.ralph/rules/rules_mapping.yml` (seccion spain_tax)
+      **OBJETIVO:** Código limpio sin duplicados ni imports rotos
 
-      ### ACCION:
-      1. Si el archivo EXISTE: Lee el archivo y verifica que cumple los requirements y rules
-      2. Si el archivo NO EXISTE: Crea el archivo según los requirements
+      **GLM 5.0 Optimización:**
+      - Ejecutar comandos en paralelo cuando sea posible
+      - Reportar progreso cada 5 archivos procesados
 
-      Ejecuta: `ls app/services/tax_efficiency/engines/spain_tax_engine.py`
-      - Si existe → Read file → Audit against rules → Report compliance
-      - Si no existe → Read requirements → Create file → Validate
+      ### ACCIONES:
+      1. Detectar duplicados por MD5:
+         ```bash
+         find app/ -type f -name "*.py" -exec md5 -q {} \; | sort | uniq -d
+         ```
 
-      Emite: master.tax_done
+      2. Eliminar duplicados (conservar el más reciente)
 
-  # ==========================================================================
-  # HAT 2: TradingDecisionLogger - Audit or Create
-  # ==========================================================================
-  decision_logger:
-    name: "TradingDecisionLogger"
-    triggers: ["master.tax_done"]
-    publishes: ["master.logger_done", "master.blocked"]
-    default_publishes: "master.logger_done"
+      3. Detectar imports circulares:
+         ```bash
+         python -c "import app" 2>&1 | grep -i circular
+         ```
+
+      4. Corregir imports rotos
+
+      5. Validar estructura:
+         ```bash
+         python -c "from app import *; print('OK')"
+         ```
+
+      ### OUTPUT FORMAT:
+      ```
+      ## Structural Fix Complete
+      - Duplicates: X found, Y removed
+      - Circular imports: X found, Y fixed
+      - Broken imports: X found, Y fixed
+      - Status: DONE
+      ```
+
+      Emite: aaa.structural_done
+
+  # --------------------------------------------------------------------------
+  # FASE 1.2: Requirements Generator - Crear requirements.md
+  # DELEGATE TO: @agent-code-archaeologist + @agent-ml-data-expert
+  # --------------------------------------------------------------------------
+  requirements_generator:
+    name: "Requirements Generator"
+    triggers: ["aaa.structural_done"]
+    publishes: ["aaa.requirements_done", "aaa.blocked"]
+    default_publishes: "aaa.requirements_done"
+    delegate_to: "@agent-code-archaeologist"
     instructions: |
-      ## TRADING DECISION LOGGER
+      ## FASE 1.2: REQUIREMENTS GENERATOR
 
-      **FILE:** `app/infrastructure/logging/trading_decision_logger.py`
-      **REQUIREMENTS:** `.requirements/app/infrastructure/logging/trading_decision_logger.py.requirements.txt`
-      **RULES:** `.ralph/rules/rules_mapping.yml` (seccion R15 logging)
+      **OBJETIVO:** requirements.md para CADA archivo Python
 
-      ### ACCION:
-      1. Si el archivo EXISTE: Lee el archivo y verifica que cumple los requirements y rules
-      2. Si el archivo NO EXISTE: Crea el archivo según los requirements
+      **GLM 5.0 Optimización:**
+      - Procesar en batches de 10 archivos
+      - Usar formato estructurado para output
 
-      Ejecuta: `ls app/infrastructure/logging/trading_decision_logger.py`
-      - Si existe → Read file → Audit against rules → Report compliance
-      - Si no existe → Read requirements → Create file → Validate
+      ### FLUJO POR ARCHIVO:
+      Para cada `app/**/*.py`:
 
-      Emite: master.logger_done
+      1. Analizar archivo → clases, funciones, dependencias
+      2. Analizar rules/trading/ → buscar reglas aplicables
+      3. Generar requirements.md
 
-  # ==========================================================================
-  # HAT 3: CentralConfig - Audit or Create
-  # ==========================================================================
-  central_config:
-    name: "CentralConfig"
-    triggers: ["master.logger_done"]
-    publishes: ["master.config_done", "master.blocked"]
-    default_publishes: "master.config_done"
-    instructions: |
-      ## CENTRAL CONFIG
+      ### FORMATO OUTPUT:
+      ```markdown
+      # Requirements: app/services/risk/kelly_validator.py
 
-      **FILE:** `app/shared/config/centralized_config.py`
-      **REQUIREMENTS:** `.requirements/app/shared/config/centralized_config.py.requirements.txt`
-      **RULES:** `.ralph/rules/rules_mapping.yml` (seccion config)
+      ## Propósito
+      Validar tamaño de posición según Kelly Criterion
 
-      ### ACCION:
-      1. Si el archivo EXISTE: Lee el archivo y verifica que cumple los requirements y rules
-      2. Si el archivo NO EXISTE: Crea el archivo según los requirements
+      ## Reglas Aplicables
+      | Regla | Estado | Detalle |
+      |-------|--------|---------|
+      | R1 | OK | Kelly + 2% max |
+      | SRP-001 | OK | Single Responsibility |
 
-      Ejecuta: `ls app/shared/config/centralized_config.py`
-      - Si existe → Read file → Audit against rules → Report compliance
-      - Si no existe → Read requirements → Create file → Validate
+      ## Checklist
+      - [x] Usa Kelly fraction
+      - [x] Máximo 2% del capital
+      ```
 
-      Emite: master.config_done
+      Emite: aaa.requirements_done
 
-  # ==========================================================================
-  # HAT 4: Protocol Interfaces - Audit or Create
-  # ==========================================================================
-  protocols:
+  # --------------------------------------------------------------------------
+  # FASE 1.3: Protocol Interfaces - SOLID interfaces
+  # DELEGATE TO: @agent-python-expert
+  # --------------------------------------------------------------------------
+  protocol_interfaces:
     name: "Protocol Interfaces"
-    triggers: ["master.config_done"]
-    publishes: ["master.protocols_done", "master.blocked"]
-    default_publishes: "master.protocols_done"
+    triggers: ["aaa.requirements_done"]
+    publishes: ["aaa.protocols_done", "aaa.blocked"]
+    default_publishes: "aaa.protocols_done"
+    delegate_to: "@agent-python-expert"
     instructions: |
-      ## PROTOCOL INTERFACES
+      ## FASE 1.3: PROTOCOL INTERFACES
 
-      **DIR:** `app/core/protocols/`
-      **REQUIREMENTS:** `.requirements/app/core/protocols/*.requirements.txt`
-      **RULES:** ISP-001 (max 5 methods per Protocol), LSP-001 (use typing.Protocol)
+      **OBJETIVO:** Interfaces typing.Protocol cumpliendo SOLID
 
-      ### ACCION:
-      1. Lista archivos: `ls app/core/protocols/i_*.py`
-      2. Para cada archivo:
-         - Si existe → Audit against ISP-001, LSP-001
-         - Si no existe → Read requirements → Create
+      **GLM 5.0 Optimización:**
+      - Verificar todas las interfaces en un solo análisis
+      - Reportar violaciones agrupadas por tipo
 
-      Reglas a verificar:
-      - ISP-001: Cada Protocol tiene maximo 5 metodos
-      - LSP-001: Usa typing.Protocol, NO abc.ABC
-      - DIP-001: Sin import de implementaciones concretas
+      ### REGLAS:
+      - ISP-001: Máximo 5 métodos por Protocol
+      - LSP-001: Usar typing.Protocol, NO abc.ABC
+      - DIP-001: Sin imports de implementaciones concretas
 
-      Emite: master.protocols_done
+      ### VALIDACIÓN:
+      ```bash
+      grep -r "abc.ABC" app/core/protocols/ && echo "FAIL" || echo "OK"
+      ```
 
-  # ==========================================================================
-  # HAT 5: QA - Format and Lint
-  # ==========================================================================
+      Emite: aaa.protocols_done
+
+  # --------------------------------------------------------------------------
+  # FASE 2.1: Compliance Engine - Core del sistema
+  # DELEGATE TO: @agent-python-expert + @agent-ml-data-expert
+  # --------------------------------------------------------------------------
+  compliance_engine:
+    name: "Compliance Engine Refactor"
+    triggers: ["aaa.protocols_done"]
+    publishes: ["aaa.compliance_done", "aaa.blocked"]
+    default_publishes: "aaa.compliance_done"
+    delegate_to: "@agent-python-expert"
+    instructions: |
+      ## FASE 2.1: COMPLIANCE ENGINE
+
+      **ARCHIVO:** app/application/compliance/compliance_engine.py
+      **RULES:** rules/trading/ (R1-R29)
+
+      ### VALIDACIONES REQUERIDAS:
+      | Regla | Descripción | Estado |
+      |-------|-------------|--------|
+      | R1 | Kelly + 2% max | Check |
+      | R2 | Drawdown 15% stop | Check |
+      | R4 | R:R 2:1 minimum | Check |
+      | R15 | Append-only logging | Check |
+      | R28 | 5 años registros | Check |
+
+      Emite: aaa.compliance_done
+
+  # --------------------------------------------------------------------------
+  # FASE 2.2: Spain Tax Engine - IRPF progresivo
+  # DELEGATE TO: @agent-python-expert
+  # --------------------------------------------------------------------------
+  spain_tax:
+    name: "Spain Tax Engine"
+    triggers: ["aaa.compliance_done"]
+    publishes: ["aaa.tax_done", "aaa.blocked"]
+    default_publishes: "aaa.tax_done"
+    delegate_to: "@agent-python-expert"
+    instructions: |
+      ## FASE 2.2: SPAIN TAX ENGINE
+
+      **ARCHIVO:** app/services/tax_efficiency/engines/spain_tax_engine.py
+
+      ### REGLAS:
+      - IRPF progresivo: 19%, 21%, 23%
+      - Dividendos UE: 0% withholding
+      - Dividendos No-UE: 19% withholding
+      - Modelo 720: >€50k extranjeros
+
+      Emite: aaa.tax_done
+
+  # --------------------------------------------------------------------------
+  # FASE 2.3: Risk Validators - Kelly, Drawdown, R:R
+  # DELEGATE TO: @agent-ml-data-expert
+  # --------------------------------------------------------------------------
+  risk_validators:
+    name: "Risk Validators"
+    triggers: ["aaa.tax_done"]
+    publishes: ["aaa.risk_done", "aaa.blocked"]
+    default_publishes: "aaa.risk_done"
+    delegate_to: "@agent-ml-data-expert"
+    instructions: |
+      ## FASE 2.3: RISK VALIDATORS
+
+      **DIRECTORIO:** app/services/risk/validators/
+
+      ### VALIDADORES REQUERIDOS:
+      1. kelly_validator.py - R1
+      2. drawdown_validator.py - R2
+      3. risk_reward_validator.py - R4
+      4. position_concentration_validator.py - R3
+
+      Emite: aaa.risk_done
+
+  # --------------------------------------------------------------------------
+  # FASE 2.4: Trading Decision Logger - Append-only
+  # DELEGATE TO: @agent-python-expert
+  # --------------------------------------------------------------------------
+  decision_logger:
+    name: "Decision Logger"
+    triggers: ["aaa.risk_done"]
+    publishes: ["aaa.logger_done", "aaa.blocked"]
+    default_publishes: "aaa.logger_done"
+    delegate_to: "@agent-python-expert"
+    instructions: |
+      ## FASE 2.4: DECISION LOGGER
+
+      **ARCHIVO:** app/infrastructure/logging/trading_decision_logger.py
+
+      ### REGLAS:
+      - R15: Append-only logging
+      - R28: 5 años retención
+      - Correlation ID en cada entrada
+
+      Emite: aaa.logger_done
+
+  # --------------------------------------------------------------------------
+  # FASE 3: CONFIGURACIÓN CENTRALIZADA
+  # DELEGATE TO: @agent-python-expert
+  # --------------------------------------------------------------------------
+  central_config:
+    name: "Central Config"
+    triggers: ["aaa.logger_done"]
+    publishes: ["aaa.config_done", "aaa.blocked"]
+    default_publishes: "aaa.config_done"
+    delegate_to: "@agent-python-expert"
+    instructions: |
+      ## FASE 3: CENTRAL CONFIG
+
+      **ARCHIVO:** app/shared/config/centralized_config.py
+
+      ### OBJETIVO:
+      Mover todos los valores hardcoded a config central
+
+      ### PATRONES A BUSCAR:
+      ```python
+      # MAL
+      if drawdown > 0.15:  # Magic number!
+
+      # BIEN
+      if drawdown > config.compliance.max_drawdown_pct:
+      ```
+
+      Emite: aaa.config_done
+
+  # --------------------------------------------------------------------------
+  # FASE 4.1: QA Validation - black, isort, ruff, mypy
+  # NO DELEGATE - Run locally
+  # --------------------------------------------------------------------------
   qa_validation:
     name: "QA Validation"
-    triggers: ["master.protocols_done"]
-    publishes: ["master.qa_done", "master.blocked"]
-    default_publishes: "master.qa_done"
+    triggers: ["aaa.config_done"]
+    publishes: ["aaa.qa_done", "aaa.blocked"]
+    default_publishes: "aaa.qa_done"
     instructions: |
-      ## QA VALIDATION
+      ## FASE 4.1: QA VALIDATION
 
-      ### ACCION:
-      Ejecuta estos comandos:
+      **OBJETIVO:** 0 errores en todas las herramientas
 
+      ### EJECUTAR:
       ```bash
-      black app --line-length 100
-      isort app --profile black
-      ruff check app --fix
+      black app/ --check || black app/
+      isort app/ --check-only || isort app/
+      ruff check app/ --fix
+      mypy app/ --ignore-missing-imports
       ```
 
-      Reporta errores restantes.
+      ### VALIDACIÓN FINAL:
+      ```bash
+      black app/ --check && isort app/ --check-only && ruff check app/ && echo "QA OK"
+      ```
 
-      Emite: master.qa_done
+      Emite: aaa.qa_done
 
-  # ==========================================================================
-  # HAT 6: Final Report
-  # ==========================================================================
-  final_report:
-    name: "Final Report"
-    triggers: ["master.qa_done"]
-    publishes: ["master.complete"]
-    default_publishes: "master.complete"
+  # --------------------------------------------------------------------------
+  # FASE 4.2: Tests - Unit + Integration
+  # NO DELEGATE - Run locally
+  # --------------------------------------------------------------------------
+  tests_validation:
+    name: "Tests Validation"
+    triggers: ["aaa.qa_done"]
+    publishes: ["aaa.tests_done", "aaa.blocked"]
+    default_publishes: "aaa.tests_done"
     instructions: |
-      ## FINAL REPORT
+      ## FASE 4.2: TESTS VALIDATION
 
-      ### ACCION:
-      Crea `.ralph/outputs/production_readiness_audit.md` con:
+      **OBJETIVO:** Todos los tests pasan
+
+      ### EJECUTAR:
+      ```bash
+      pytest tests/unit/ -v --tb=short
+      pytest tests/integration/ -v --tb=short -m "not backtest"
+      ```
+
+      Emite: aaa.tests_done
+
+  # --------------------------------------------------------------------------
+  # FASE 5: SECURITY HARDENING
+  # DELEGATE TO: @agent-security-guardian (si disponible)
+  # --------------------------------------------------------------------------
+  security:
+    name: "Security Hardening"
+    triggers: ["aaa.tests_done"]
+    publishes: ["aaa.security_done", "aaa.blocked"]
+    default_publishes: "aaa.security_done"
+    instructions: |
+      ## FASE 5: SECURITY HARDENING
+
+      ### CHECKLIST:
+      - [ ] Sin API keys en código
+      - [ ] Secrets en .env (gitignored)
+      - [ ] Sin SQL injection
+      - [ ] Sin command injection
+      - [ ] Logs sin datos sensibles
+
+      ### VALIDAR:
+      ```bash
+      grep -r "api_key\|password\|secret" app/ --include="*.py" | grep -v "os.getenv"
+      grep ".env" .gitignore
+      ```
+
+      Emite: aaa.security_done
+
+  # --------------------------------------------------------------------------
+  # FASE 6: FINAL CLEANUP + CODE REVIEW
+  # DELEGATE TO: @agent-code-reviewer
+  # --------------------------------------------------------------------------
+  final_cleanup:
+    name: "Final Cleanup"
+    triggers: ["aaa.security_done"]
+    publishes: ["aaa.complete", "aaa.blocked"]
+    default_publishes: "aaa.complete"
+    delegate_to: "@agent-code-reviewer"
+    instructions: |
+      ## FASE 6: FINAL CLEANUP + CODE REVIEW
+
+      ### CHECKLIST FINAL:
+      - [ ] Todos los TODOs resueltos
+      - [ ] Todos los @skip-import eliminados
+      - [ ] Todos los archivos tienen requirements.md
+      - [ ] Imports validados
+
+      ### REPORTE FINAL:
+      Crear `.ralph/outputs/aaa_audit_report.md`:
 
       ```markdown
-      # Production Readiness Audit
+      # AAA Production Ready Audit
 
       **Fecha:** (ahora)
+      **Estado:** AAA_PRODUCTION_READY
+      **Modelo:** GLM 5.0
 
-      ## Componentes Auditados
+      ## Estructura
+      - Archivos Python: X
+      - Duplicados eliminados: Y
+      - Imports corregidos: Z
 
-      | Componente | Existe | Cumple Rules | Issues |
-      |------------|--------|--------------|--------|
-      | SpainTaxEngine | si/no | si/no | lista |
-      | DecisionLogger | si/no | si/no | lista |
-      | CentralConfig | si/no | si/no | lista |
-      | Protocols | N files | si/no | lista |
+      ## Requirements
+      - Requirements generados: X/X (100%)
 
-      ## QA Status
-      - Black: OK/issues
-      - isort: OK/issues
-      - Ruff: N issues restantes
+      ## Arquitectura SOLID
+      - SRP: OK
+      - OCP: OK
+      - LSP: OK
+      - ISP: OK
+      - DIP: OK
 
-      ## Estado: PRODUCTION_READY_COMPLETE
+      ## Reglas Trading (R1-R29)
+      - R1 Kelly: OK
+      - R2 Drawdown: OK
+      - R4 R:R: OK
+
+      ## QA
+      - Black: OK
+      - isort: OK
+      - Ruff: OK
+      - Mypy: OK
+
+      ## Tests
+      - Unit: X/X pasados
+      - Integration: X/X pasados
+
+      ## Estado: AAA_PRODUCTION_READY
       ```
 
-      Emite: master.complete
+      Emite: aaa.complete
 
 memories:
   enabled: true
   inject: auto
-  budget: 3000
+  budget: 16000  # Aumentado para GLM 5.0
 
 checkpoint:
   file: ".ralph/checkpoints/00_master_orchestrator_checkpoint.json"

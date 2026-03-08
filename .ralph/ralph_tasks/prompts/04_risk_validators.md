@@ -344,7 +344,7 @@ La tarea está COMPLETED cuando:
 
 ##  REFERENCIAS
 
-- `.ralph/docs/requirements/SERVICE_REQUIREMENTS.md` - Risk Management
-- `.ralph/rules/rules_mapping.yml` - R1, R2, R4
-- `.ralph/docs/realistic_trading_rules.md` - Reglas R1, R2, R4
+- `rules/trading/` - Risk Management
+- `rules/trading/` - R1, R2, R4
+- `rules/trading/` - Reglas R1, R2, R4
 - `app/core/protocols/i_pre_trade_validator.py` - Protocol interface (debe existir de tarea 01)

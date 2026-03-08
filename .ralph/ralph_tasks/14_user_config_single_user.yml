@@ -833,7 +833,7 @@ hats:
       EOF
 
       # Update master checkpoint
-      python .ralph/scripts/update_master_checkpoint.py 14_user_config_single_user COMPLETED
+      # update_master_checkpoint.py not available 14_user_config_single_user COMPLETED
       ```
 
       ### PASO 8: Update Scratchpad

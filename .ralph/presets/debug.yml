@@ -1,0 +1,49 @@
+# Debug Preset
+# =============
+# Investigate-Fix-Verify workflow for debugging
+# Ideal for: Bugs y issues
+
+event_loop:
+  completion_promise: "DEBUG_COMPLETE"
+  max_iterations: 50
+  starting_event: "debug.start"
+
+cli:
+  backend: claude
+
+memories:
+  enabled: true
+
+hats:
+  investigate:
+    name: "Investigate"
+    triggers: ["debug.start"]
+    publishes: ["debug.investigated"]
+    instructions: |
+      ## INVESTIGATE
+
+      1. Reproducir el bug
+      2. Identificar la causa raíz
+      3. Documentar findings
+
+  fix:
+    name: "Fix"
+    triggers: ["debug.investigated"]
+    publishes: ["debug.fixed"]
+    instructions: |
+      ## FIX
+
+      1. Implementar la corrección
+      2. Añadir test de regresión
+      3. Documentar el fix
+
+  verify:
+    name: "Verify"
+    triggers: ["debug.fixed"]
+    publishes: ["debug.complete"]
+    instructions: |
+      ## VERIFY
+
+      1. Ejecutar tests
+      2. Verificar que el bug está resuelto
+      3. Verificar que no hay regresiones

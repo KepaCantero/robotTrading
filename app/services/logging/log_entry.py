@@ -6,7 +6,7 @@ Cada entrada es inmutable y se añade al log append-only.
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 
 @dataclass(frozen=True)
@@ -25,8 +25,8 @@ class LogEntry:
     correlation_id: str
     timestamp: str
     event_type: str
-    data: dict[str, Any]
-    metadata: dict[str, Any]
+    data: Dict[str, Any]
+    metadata: Dict[str, Any]
 
     @classmethod
     def create(cls, event_type: str, data: dict, metadata: Optional[dict] = None) -> "LogEntry":

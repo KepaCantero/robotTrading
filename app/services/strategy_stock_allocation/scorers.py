@@ -149,8 +149,8 @@ class MomentumScorer:
                     liquidity_score = min(1.0, avg_volume / self.config.MIN_LIQUIDITY_USD)
 
             # Normalize metrics
-            rsi_norm = (rsi / 100.0) if rsi is not None else 0.5
-            roc_norm = (
+            (rsi / 100.0) if rsi is not None else 0.5
+            (
                 min(
                     1.0,
                     max(
@@ -163,7 +163,7 @@ class MomentumScorer:
                 else 0.5
             )
             sortino_norm = min(1.0, max(0.0, sortino / 2.0)) if sortino is not None else 0.5
-            slope_norm = min(
+            min(
                 1.0,
                 max(
                     0.0,
@@ -171,7 +171,7 @@ class MomentumScorer:
                     / self.config.MOMENTUM_SLOPE_NORMALIZATION_SCALE,
                 ),
             )
-            spearman_norm = min(1.0, max(0.0, (spearman_rho + 1) / 2))
+            min(1.0, max(0.0, (spearman_rho + 1) / 2))
             h_long_norm = (
                 (h_long - self.config.MOMENTUM_HURST_NORMALIZATION_OFFSET)
                 / self.config.MOMENTUM_HURST_NORMALIZATION_SCALE
