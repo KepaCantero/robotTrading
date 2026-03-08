@@ -541,8 +541,8 @@ class DeadMansSwitch:
             try:
                 self.logger.info(f"Executing restart command: {self.config.restart_command}")
 
-                import subprocess
                 import shlex
+                import subprocess
 
                 # SECURITY: Parse command safely to avoid shell injection
                 # shlex.split() properly handles quoted arguments

@@ -10,9 +10,9 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import Dict, List, Optional
-import numpy as np
 
 import aiohttp
+import numpy as np
 from requests.exceptions import HTTPError, RequestException
 from sqlalchemy.exc import (
     DatabaseError,

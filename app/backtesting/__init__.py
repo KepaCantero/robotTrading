@@ -112,21 +112,23 @@ __all__ = [
 # Import the new engine hierarchy for advanced use cases
 # These provide a cleaner abstraction over the original engines
 from app.backtesting.base_engine import (
-    BaseBacktestEngine,
     BacktestState,
+    BaseBacktestEngine,
     EngineType,
-    ExecutionType,
     ExecutionResult,
+    ExecutionType,
     Position,
 )
 
 # Add new engine exports
-__all__.extend([
-    # Base classes and types
-    "BaseBacktestEngine",
-    "BacktestState",
-    "EngineType",
-    "ExecutionType",
-    "ExecutionResult",
-    "Position",
-])
+__all__.extend(
+    [
+        # Base classes and types
+        "BaseBacktestEngine",
+        "BacktestState",
+        "EngineType",
+        "ExecutionType",
+        "ExecutionResult",
+        "Position",
+    ]
+)

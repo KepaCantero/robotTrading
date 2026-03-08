@@ -6,11 +6,12 @@ including average entry prices, commission costs, and P&L percentages.
 """
 
 from __future__ import annotations
-import numpy as np
 
 import logging
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
+
+import numpy as np
 
 from app.backtesting.models import BacktestConfig, Trade, TradeStatus
 

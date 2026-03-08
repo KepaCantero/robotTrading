@@ -3,10 +3,10 @@ Log Entry - Inmutable append-only log entry
 
 Cada entrada es inmutable y se añade al log append-only.
 """
+import uuid
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Optional
-import uuid
 
 
 @dataclass(frozen=True)
@@ -21,6 +21,7 @@ class LogEntry:
         data: Datos del evento (JSON serializable)
         metadata: Metadatos adicionales
     """
+
     correlation_id: str
     timestamp: str
     event_type: str
@@ -48,7 +49,7 @@ class LogEntry:
             timestamp=timestamp,
             event_type=event_type,
             data=data,
-            metadata=metadata or {}
+            metadata=metadata or {},
         )
 
     def to_dict(self) -> dict:
@@ -78,5 +79,5 @@ class LogEntry:
             timestamp=datetime.utcnow().isoformat() + "Z",
             event_type=self.event_type,
             data=self.data,
-            metadata=self.metadata
+            metadata=self.metadata,
         )

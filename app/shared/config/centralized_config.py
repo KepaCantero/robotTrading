@@ -18,34 +18,20 @@ SECTIONS:
 """
 
 import logging
-from decimal import Decimal
 from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import yaml
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import Field
 from pydantic_settings import BaseSettings
 
 # Use TYPE_CHECKING to avoid circular imports
 if TYPE_CHECKING:
-    from app.domain.strategies.config import (
-        DividendStrategyConfig,
-        FXCarryTradeStrategyConfig,
-        MomentumModularConfig,
-    )
-from app.shared.config.signal_risk import MarketMicrostructureThresholds
+    pass
 
-# SRP: Import extracted configuration modules (TASK-24)
-from app.shared.config.params.trading_thresholds import TradingThresholds
-from app.shared.config.params.strategy_config import StrategyConfig, StockAllocationSettings
 from app.shared.config.params.backtest_config import (
     BacktestingConfig,
-    CommissionModel,
-    FixedCommission,
-    HybridCommission,
-    TierBracket,
-    TieredCommission,
 )
 from app.shared.config.params.infrastructure_config import (
     APIConfig,
@@ -59,6 +45,11 @@ from app.shared.config.params.risk_config import (
     CurrencyHedgingConfig,
     SectorCountryDiversificationConfig,
 )
+from app.shared.config.params.strategy_config import StrategyConfig
+
+# SRP: Import extracted configuration modules (TASK-24)
+from app.shared.config.params.trading_thresholds import TradingThresholds
+from app.shared.config.signal_risk import MarketMicrostructureThresholds
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +57,7 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 # SECTION 1: ENUMS & CONSTANTS
 # =============================================================================
+
 
 class Environment(str, Enum):
     """Environment types."""
@@ -75,9 +67,11 @@ class Environment(str, Enum):
     STAGING = "staging"
     PRODUCTION = "production"
 
+
 # SECTION 6: MAIN CONFIGURATION
 #   - CentralizedConfig: Main configuration class that aggregates all sub-configs
 # =============================================================================
+
 
 class CentralizedConfig(BaseSettings):
     """Centralized configuration for the entire application."""
@@ -117,7 +111,8 @@ class CentralizedConfig(BaseSettings):
         default_factory=ComplianceConfig, description="Compliance engine configuration"
     )
     market_microstructure: MarketMicrostructureThresholds = Field(
-        default_factory=MarketMicrostructureThresholds, description="Market microstructure thresholds"
+        default_factory=MarketMicrostructureThresholds,
+        description="Market microstructure thresholds",
     )
 
     # Strategy configurations
@@ -287,6 +282,7 @@ def get_strategy_stock_allocator_config(tier: Optional[str] = None) -> Dict[str,
         Complete Strategy Stock Allocator configuration
     """
     from app.shared.config.config_loader import load_strategy_stock_allocator_config
+
     return load_strategy_stock_allocator_config(tier)
 
 

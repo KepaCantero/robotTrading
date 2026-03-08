@@ -90,7 +90,9 @@ class ATRFilter(BaseFilter):
                 if percentile_pass:
                     confidence += min(0.3, (atr_percentile - min_atr_percentile) / 100)
                 if relative_pass:
-                    confidence += min(0.2, (relative_atr - min_relative_atr) / min_relative_atr * 0.2)
+                    confidence += min(
+                        0.2, (relative_atr - min_relative_atr) / min_relative_atr * 0.2
+                    )
 
                 passed_type = []
                 if percentile_pass:

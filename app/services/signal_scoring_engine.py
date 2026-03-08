@@ -12,8 +12,8 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Set
 
-from app.shared.config.centralized_config import get_config
 from app.domain.models.signal import Signal, SignalType
+from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -216,8 +216,16 @@ class SignalPriorityRanker:
             medium_threshold: Score threshold for medium priority (uses config if None)
         """
         config = get_config()
-        self.high_threshold = high_threshold if high_threshold is not None else config.trading.signal_high_priority_threshold
-        self.medium_threshold = medium_threshold if medium_threshold is not None else config.trading.signal_medium_priority_threshold
+        self.high_threshold = (
+            high_threshold
+            if high_threshold is not None
+            else config.trading.signal_high_priority_threshold
+        )
+        self.medium_threshold = (
+            medium_threshold
+            if medium_threshold is not None
+            else config.trading.signal_medium_priority_threshold
+        )
 
     def get_priority(self, compound_score: float) -> str:
         """

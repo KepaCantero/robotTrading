@@ -32,6 +32,9 @@ Example:
     ```
 """
 
+# Import canonical PerformanceMetrics from single source of truth
+from app.backtesting.models import PerformanceMetrics
+
 from .corporate_actions import CorporateActionHandler
 from .dividend_handler import DividendAction, DividendHandler, DividendTracker, DripConfig
 from .look_ahead_validator import LookAheadValidator, ValidationResult
@@ -46,14 +49,7 @@ from .models import (
     SpinOff,
     StockSplit,
 )
-# Import canonical PerformanceMetrics from single source of truth
-from app.backtesting.models import PerformanceMetrics
-from .performance_tracker import (
-    PerformanceTracker,
-    RegimeAnalysis,
-    RollingMetrics,
-    YearlyBreakdown,
-)
+from .performance_tracker import PerformanceTracker, RegimeAnalysis, RollingMetrics, YearlyBreakdown
 from .pit_database import PITDatabaseClient
 from .robust_backtester import (
     CheckpointData,

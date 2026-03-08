@@ -417,9 +417,7 @@ class StrategyAllocation(BaseModel):
     def needs_rebalance(self) -> bool:
         """Check if allocation needs rebalancing (>5% drift)."""
         config = get_config()
-        threshold = Decimal(str(getattr(
-            config.trading, 'portfolio_rebalance_threshold', 0.05
-        )))
+        threshold = Decimal(str(getattr(config.trading, 'portfolio_rebalance_threshold', 0.05)))
         return self.drift > threshold
 
 

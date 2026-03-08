@@ -20,15 +20,13 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 
-# SINGLE SOURCE OF TRUTH: Use CentralizedConfig instead of constants.py
-from app.shared.config.centralized_config import get_config
-from app.backtesting.services.transaction_cost_model import (
-    BrokerType,
-    TransactionCostModel,
-)
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig, BacktestResult, PerformanceMetrics
+from app.backtesting.services.transaction_cost_model import BrokerType, TransactionCostModel
 from app.domain.models.market_data import Quote
+
+# SINGLE SOURCE OF TRUTH: Use CentralizedConfig instead of constants.py
+from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -116,9 +114,7 @@ class CapitalScaleAnalyzer:
         config = _get_backtesting_config()
 
         self.capital_levels = capital_levels or config.default_capital_levels
-        self.adv_limit_pct = (
-            adv_limit_pct if adv_limit_pct is not None else config.adv_limit_pct
-        )
+        self.adv_limit_pct = adv_limit_pct if adv_limit_pct is not None else config.adv_limit_pct
         self.enable_adv_rule = enable_adv_rule
         self.enable_adaptive_commission = enable_adaptive_commission
         self.transaction_cost_model = TransactionCostModel(
@@ -128,6 +124,7 @@ class CapitalScaleAnalyzer:
 
         # Commission models by capital level (from CentralizedConfig via constants.py compatibility)
         from app.backtesting.constants import CapitalScaleConstants
+
         self._commission_models = CapitalScaleConstants().COMMISSION_MODELS
 
     def calculate_commission_for_level(
@@ -459,11 +456,7 @@ class CapitalScaleAnalyzer:
         degradation_score = max(
             Decimal("0"),
             config.scalability_alpha_max_points
-            - (
-                alpha_degradation
-                * config.scalability_alpha_max_points
-                * Decimal("2")
-            ),
+            - (alpha_degradation * config.scalability_alpha_max_points * Decimal("2")),
         )
 
         # Commission impact score (using thresholds from CentralizedConfig)
@@ -477,9 +470,7 @@ class CapitalScaleAnalyzer:
                 )
             else:
                 commission_scores.append(Decimal("10"))
-        commission_score = (
-            np.mean(commission_scores) if commission_scores else Decimal("0")
-        )
+        commission_score = np.mean(commission_scores) if commission_scores else Decimal("0")
 
         # Win rate stability (using penalty from CentralizedConfig)
         win_rates = [float(r.win_rate) for r in results if r.total_trades > 0]

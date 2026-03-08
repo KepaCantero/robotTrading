@@ -168,7 +168,9 @@ class RegimeAnalyzer:
             mean_return = regime_returns.mean()
             volatility = regime_returns.std()
             annual_trading_days = get_config().backtesting.annual_trading_days
-            sharpe = (mean_return / volatility * np.sqrt(annual_trading_days)) if volatility > 0 else 0
+            sharpe = (
+                (mean_return / volatility * np.sqrt(annual_trading_days)) if volatility > 0 else 0
+            )
             max_dd = self._calculate_max_drawdown(regime_returns)
             win_rate = (regime_returns > 0).mean()
             num_periods = len(regime_returns)
@@ -344,7 +346,9 @@ class RegimeAnalyzer:
                     test_return = test_returns.sum()
                     test_volatility = test_returns.std()
                     annual_trading_days = get_config().backtesting.annual_trading_days
-                    test_sharpe = test_return / (test_volatility + 1e-8) * np.sqrt(annual_trading_days)
+                    test_sharpe = (
+                        test_return / (test_volatility + 1e-8) * np.sqrt(annual_trading_days)
+                    )
 
                     robustness_results["period_results"].append(
                         {

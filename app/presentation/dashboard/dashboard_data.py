@@ -10,12 +10,13 @@ This module contains DashboardPerformanceMetrics which is dashboard-specific.
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
 
 
 @dataclass
 class PositionSummary:
     """Summary of a single position."""
+
     symbol: str
     quantity: int
     avg_price: Decimal
@@ -48,6 +49,7 @@ class DashboardPerformanceMetrics:
     For comprehensive backtesting metrics, use the canonical
     app.backtesting.models.PerformanceMetrics instead.
     """
+
     total_pnl: Decimal
     daily_pnl: Decimal
     daily_return_pct: float
@@ -86,6 +88,7 @@ PerformanceMetrics = DashboardPerformanceMetrics
 @dataclass
 class SystemStatus:
     """System health status."""
+
     kill_switch_active: bool
     systems_available: int
     systems_total: int
@@ -110,6 +113,7 @@ class SystemStatus:
 @dataclass
 class DashboardSnapshot:
     """Complete dashboard snapshot."""
+
     timestamp: datetime
     performance: PerformanceMetrics
     positions: List[PositionSummary]

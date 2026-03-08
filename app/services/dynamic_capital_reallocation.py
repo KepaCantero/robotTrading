@@ -17,6 +17,7 @@ import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Dict, List, Optional, Tuple
+
 import numpy as np
 
 from app.shared.config.centralized_config import get_config
@@ -115,12 +116,32 @@ class DynamicCapitalReallocationEngine:
         tt = get_config().trading_thresholds
         self._tt = tt
 
-        self.rebalance_frequency_days = rebalance_frequency_days if rebalance_frequency_days is not None else tt.dynamic_realloc_rebalance_days
-        self.rolling_window_days = rolling_window_days if rolling_window_days is not None else tt.dynamic_realloc_rolling_window
-        self.min_weight = min_weight if min_weight is not None else Decimal(str(tt.dynamic_realloc_min_weight))
-        self.max_weight = max_weight if max_weight is not None else Decimal(str(tt.dynamic_realloc_max_weight))
-        self.volatility_target = volatility_target if volatility_target is not None else tt.dynamic_realloc_volatility_target
-        self.min_trades_threshold = min_trades_threshold if min_trades_threshold is not None else tt.dynamic_realloc_min_trades
+        self.rebalance_frequency_days = (
+            rebalance_frequency_days
+            if rebalance_frequency_days is not None
+            else tt.dynamic_realloc_rebalance_days
+        )
+        self.rolling_window_days = (
+            rolling_window_days
+            if rolling_window_days is not None
+            else tt.dynamic_realloc_rolling_window
+        )
+        self.min_weight = (
+            min_weight if min_weight is not None else Decimal(str(tt.dynamic_realloc_min_weight))
+        )
+        self.max_weight = (
+            max_weight if max_weight is not None else Decimal(str(tt.dynamic_realloc_max_weight))
+        )
+        self.volatility_target = (
+            volatility_target
+            if volatility_target is not None
+            else tt.dynamic_realloc_volatility_target
+        )
+        self.min_trades_threshold = (
+            min_trades_threshold
+            if min_trades_threshold is not None
+            else tt.dynamic_realloc_min_trades
+        )
 
         # Performance history per strategy
         self.performance_history: Dict[str, List[Tuple[datetime, PerformanceMetrics]]] = {}

@@ -8,7 +8,7 @@ Eliminates 6+ duplicate implementations of _get_empty_metrics across:
 - optimization_validators.py (3 copies in same file!)
 """
 
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from app.backtesting.shared.types import MetricKeys
 
@@ -158,7 +158,8 @@ class MetricsFactory:
 
         n = len(metrics_list)
         aggregated = {
-            MetricKeys.SHARPE_RATIO: sum(m.get(MetricKeys.SHARPE_RATIO, 0) for m in metrics_list) / n,
+            MetricKeys.SHARPE_RATIO: sum(m.get(MetricKeys.SHARPE_RATIO, 0) for m in metrics_list)
+            / n,
             MetricKeys.RETURN_PCT: sum(m.get(MetricKeys.RETURN_PCT, 0) for m in metrics_list) / n,
             MetricKeys.MAX_DRAWDOWN: max(m.get(MetricKeys.MAX_DRAWDOWN, 0) for m in metrics_list),
             MetricKeys.WIN_RATE: sum(m.get(MetricKeys.WIN_RATE, 0) for m in metrics_list) / n,

@@ -33,6 +33,7 @@ import numpy as np
 import pandas as pd
 
 from app.shared.config.centralized_config import get_config
+
 from .almgren_chriss_model import MarketImpactEstimate, get_almgren_chriss_model
 from .bid_ask_bounce_removal import get_bid_ask_bounce_remover
 from .dark_pool_router import DarkPoolDecision, get_dark_pool_router
@@ -534,7 +535,12 @@ class HarrisMicrostructureIntegrator:
             calculated_vol = price_history["close"].pct_change().std() * np.sqrt(252)
             # Use calculated volatility only if it's a valid number
             import math
-            if not pd.isna(calculated_vol) and not math.isnan(calculated_vol) and not math.isinf(calculated_vol):
+
+            if (
+                not pd.isna(calculated_vol)
+                and not math.isnan(calculated_vol)
+                and not math.isinf(calculated_vol)
+            ):
                 volatility = calculated_vol
 
         impact_estimate = self.estimate_market_impact(

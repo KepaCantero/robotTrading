@@ -48,11 +48,7 @@ from .results import (
     PostTradeCheckResult,
     PreTradeCheckResult,
 )
-from .service_registry import (
-    ComplianceServiceRegistry,
-    get_service,
-    get_service_registry,
-)
+from .service_registry import ComplianceServiceRegistry, get_service, get_service_registry
 
 __all__ = [
     # Protocols

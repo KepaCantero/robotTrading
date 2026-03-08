@@ -88,7 +88,10 @@ class RSIFilter(BaseFilter):
                 "balanced": {"buy_threshold": 35, "sell_threshold": 70},  # Lowered from 40/75
                 "volatile": {"buy_threshold": 30, "sell_threshold": 75},  # Lowered from 35/80
                 "trending": {"buy_threshold": 40, "sell_threshold": 75},  # Lowered from 45/75
-                "trend_up": {"buy_threshold": 40, "sell_threshold": 80},  # Lowered from 50/80 - too restrictive!
+                "trend_up": {
+                    "buy_threshold": 40,
+                    "sell_threshold": 80,
+                },  # Lowered from 50/80 - too restrictive!
                 "trend_down": {"buy_threshold": 25, "sell_threshold": 55},  # Lowered from 30/60
                 "range": {"buy_threshold": 30, "sell_threshold": 70},  # Lowered from 35/65
                 "low_vol": {"buy_threshold": 35, "sell_threshold": 70},  # Lowered from 40/70

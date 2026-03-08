@@ -5,7 +5,6 @@ Defines the user-specific configuration model.
 """
 from decimal import Decimal
 from enum import Enum
-from pathlib import Path
 from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator
@@ -96,9 +95,7 @@ class OrderPreferences(BaseModel):
 class TradingHours(BaseModel):
     """Trading hours and session preferences."""
 
-    auto_start_market: bool = Field(
-        default=False, description="Auto-start at market open"
-    )
+    auto_start_market: bool = Field(default=False, description="Auto-start at market open")
     auto_stop_market: bool = Field(default=False, description="Auto-stop at market close")
     pre_market_trading: bool = Field(default=False, description="Allow pre-market trading")
     after_hours_trading: bool = Field(default=False, description="Allow after-hours trading")
@@ -149,9 +146,7 @@ class UserSettings(BaseModel):
     order_preferences: OrderPreferences = Field(
         default_factory=OrderPreferences, description="Order preferences"
     )
-    trading_hours: TradingHours = Field(
-        default_factory=TradingHours, description="Trading hours"
-    )
+    trading_hours: TradingHours = Field(default_factory=TradingHours, description="Trading hours")
     risk_limits: RiskLimits = Field(default_factory=RiskLimits, description="Risk limits")
     symbol_universe: SymbolUniverse = Field(
         default_factory=SymbolUniverse, description="Symbol universe"

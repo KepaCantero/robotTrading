@@ -27,7 +27,7 @@ from scipy import stats
 
 # Import canonical PerformanceMetrics from the single source of truth
 from app.backtesting.models import PerformanceMetrics
-from app.shared.config.centralized_config import CentralizedConfig, get_config
+from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -143,7 +143,11 @@ class PerformanceTracker:
             risk_free_rate: Annual risk-free rate for Sharpe ratio (default: from CentralizedConfig)
         """
         self.initial_capital = initial_capital
-        self.risk_free_rate = risk_free_rate if risk_free_rate is not None else get_config().backtesting.default_risk_free_rate
+        self.risk_free_rate = (
+            risk_free_rate
+            if risk_free_rate is not None
+            else get_config().backtesting.default_risk_free_rate
+        )
 
         # Equity curve tracking
         self.equity_curve: List[Tuple[date, Decimal]] = []
@@ -320,7 +324,9 @@ class PerformanceTracker:
         return PerformanceMetrics(
             total_return=to_decimal(total_return),
             cagr=to_decimal(cagr),
-            annualized_return=to_decimal(float(returns.mean() * annual_trading_days) if len(returns) > 0 else 0.0),
+            annualized_return=to_decimal(
+                float(returns.mean() * annual_trading_days) if len(returns) > 0 else 0.0
+            ),
             volatility=to_decimal(volatility),
             max_drawdown=to_decimal(max_drawdown),
             max_drawdown_duration=self._max_drawdown_duration(),
@@ -339,7 +345,9 @@ class PerformanceTracker:
             expectancy=to_decimal(expectancy),
             best_year=to_decimal(max(yearly_returns.values()) if yearly_returns else 0.0),
             worst_year=to_decimal(min(yearly_returns.values()) if yearly_returns else 0.0),
-            avg_yearly_return=to_decimal(np.mean(list(yearly_returns.values())) if yearly_returns else 0.0),
+            avg_yearly_return=to_decimal(
+                np.mean(list(yearly_returns.values())) if yearly_returns else 0.0
+            ),
             skewness=to_decimal(skewness),
             kurtosis=to_decimal(kurtosis),
             var_95=to_decimal(var_95),
@@ -453,7 +461,12 @@ class PerformanceTracker:
         """
         annual_trading_days = get_config().backtesting.annual_trading_days
         if windows is None:
-            windows = [annual_trading_days, annual_trading_days * 3, annual_trading_days * 5, annual_trading_days * 10]
+            windows = [
+                annual_trading_days,
+                annual_trading_days * 3,
+                annual_trading_days * 5,
+                annual_trading_days * 10,
+            ]
 
         if len(self.equity_curve) < 2:
             return RollingMetrics()
@@ -472,7 +485,8 @@ class PerformanceTracker:
             rolling_return = returns.rolling(window=window).apply(lambda x: (1 + x).prod() - 1)
             rolling_vol = returns.rolling(window=window).std() * np.sqrt(annual_trading_days)
             rolling_sharpe = (
-                returns.rolling(window=window).mean() * annual_trading_days - float(self.risk_free_rate)
+                returns.rolling(window=window).mean() * annual_trading_days
+                - float(self.risk_free_rate)
             ) / rolling_vol
 
             # Use latest values

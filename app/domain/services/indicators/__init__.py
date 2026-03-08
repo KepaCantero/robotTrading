@@ -22,15 +22,12 @@ Usage:
     rsi = indicators.rsi(prices_list, period=14)
 """
 
-from app.domain.services.indicators.technical_indicators import (
-    TechnicalIndicators,
-    IndicatorResult,
-)
 from app.domain.services.indicators.factory import (
-    get_indicator_calculator,
-    get_available_backends,
     IndicatorBackend,
+    get_available_backends,
+    get_indicator_calculator,
 )
+from app.domain.services.indicators.technical_indicators import IndicatorResult, TechnicalIndicators
 
 __all__ = [
     # Main classes

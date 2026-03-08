@@ -23,14 +23,13 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 import numpy as np
-import pandas as pd
 
 logger = logging.getLogger(__name__)
 
+from app.backtesting.core.error_handling import MutexError, TrainingError, train_with_retry
 from app.backtesting.core.executor import SimpleBacktestExecutor
-from app.backtesting.core.error_handling import train_with_retry, TrainingError, MutexError
 from app.backtesting.core.memory_manager import AggressiveMemoryManager
-from app.backtesting.models import BacktestConfig, BacktestResult
+from app.backtesting.models import BacktestConfig
 from app.domain.strategies.momentum_modular.strategy import ModularMomentumStrategy
 
 
@@ -178,7 +177,9 @@ class BacktestExecutor:
         logger.info("  - supervised: ENABLED (scikit-learn - no mutex issues)")
         logger.info("  - deep: DISABLED (PyTorch causes mutex.cc blocking)")
         logger.info("  - transformer: DISABLED (PyTorch causes mutex.cc blocking)")
-        logger.info("  - reinforcement: DISABLED (stable-baselines3/gymnasium causes mutex.cc blocking)")
+        logger.info(
+            "  - reinforcement: DISABLED (stable-baselines3/gymnasium causes mutex.cc blocking)"
+        )
 
         engine_types = ['supervised']
 
@@ -367,6 +368,7 @@ class BacktestExecutor:
         # Create executor according to configuration
         if parallel:
             from app.backtesting.core.executor import ProcessPoolBacktestExecutor
+
             executor = ProcessPoolBacktestExecutor(
                 self.backtest_config, max_processes=self.max_workers or 4
             )

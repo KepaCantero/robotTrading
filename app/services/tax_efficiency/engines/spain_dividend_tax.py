@@ -17,9 +17,36 @@ class SpainDividendTaxCalculator:
 
     # Países UE (códigos ISO)
     EU_COUNTRY_CODES = {
-        "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR",
-        "DE", "GR", "HU", "IS", "IE", "IT", "LV", "LI", "LT", "LU",
-        "MT", "NL", "NO", "PL", "PT", "RO", "SK", "SI", "ES", "SE",
+        "AT",
+        "BE",
+        "BG",
+        "HR",
+        "CY",
+        "CZ",
+        "DK",
+        "EE",
+        "FI",
+        "FR",
+        "DE",
+        "GR",
+        "HU",
+        "IS",
+        "IE",
+        "IT",
+        "LV",
+        "LI",
+        "LT",
+        "LU",
+        "MT",
+        "NL",
+        "NO",
+        "PL",
+        "PT",
+        "RO",
+        "SK",
+        "SI",
+        "ES",
+        "SE",
     }
 
     UE_WITHHOLDING = Decimal("0.00")
@@ -34,9 +61,13 @@ class SpainDividendTaxCalculator:
         """
         self._ticker_to_country: dict[str, str] = {
             # IBEX35
-            "SAN": "ES", "REE": "ES", "TEF": "ES",
+            "SAN": "ES",
+            "REE": "ES",
+            "TEF": "ES",
             # Euro Stoxx
-            "ASML": "NL", "MC": "FR", "AIR": "FR",
+            "ASML": "NL",
+            "MC": "FR",
+            "AIR": "FR",
         }
 
     def calculate_withholding(self, symbol: str, gross_amount: Decimal) -> dict:

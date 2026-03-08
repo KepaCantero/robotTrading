@@ -14,6 +14,7 @@ import logging
 from collections import deque
 from decimal import Decimal
 from typing import Dict, Optional, Tuple
+
 import numpy as np
 
 logger = logging.getLogger(__name__)

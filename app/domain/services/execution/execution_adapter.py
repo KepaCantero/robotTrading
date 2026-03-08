@@ -15,9 +15,7 @@ from decimal import Decimal
 from typing import Any, Dict, Optional
 
 from app.backtesting.engines.execution_engine import (
-    ExecutionResult,
     PessimisticExecutionEngine,
-    create_position_with_stops,
 )
 from app.shared.protocols import ITradeExecutor
 
@@ -191,7 +189,9 @@ class ExecutionEngineAdapter(ITradeExecutor):
                 success=False,
                 order_id="",
                 symbol=getattr(signal, "symbol", "UNKNOWN"),
-                side=getattr(signal, "order_side", "BUY").value if hasattr(signal, "order_side") else "BUY",
+                side=getattr(signal, "order_side", "BUY").value
+                if hasattr(signal, "order_side")
+                else "BUY",
                 quantity=getattr(signal, "quantity", Decimal("0")),
                 execution_price=Decimal("0"),
                 status="FAILED",
@@ -305,8 +305,7 @@ class ExecutionEngineAdapter(ITradeExecutor):
             }
 
         total_slippage = sum(
-            Decimal(o.get("slippage_bps", "0"))
-            for o in self._order_history.values()
+            Decimal(o.get("slippage_bps", "0")) for o in self._order_history.values()
         )
 
         return {

@@ -12,8 +12,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List
-import numpy as np
 
+import numpy as np
 from pydantic import BaseModel, Field
 
 

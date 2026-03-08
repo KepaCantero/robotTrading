@@ -1,8 +1,8 @@
 # Loop Summary
 
 **Status:** Completed successfully
-**Iterations:** 5
-**Duration:** 8m 12s
+**Iterations:** 2
+**Duration:** 3m 17s
 
 ## Tasks
 
@@ -14,4 +14,4 @@ _No events recorded._
 
 ## Final Commit
 
-df8519aa: chore: auto-commit before merge (loop primary)
+4dea5ee6: feat: progressive backtest improvements and project cleanup

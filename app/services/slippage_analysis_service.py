@@ -10,7 +10,6 @@ from typing import Dict, List, Optional
 
 import numpy as np
 
-from app.shared.config.centralized_config import get_config
 from app.models.market_data import Quote
 from app.models.slippage_analysis import (
     DynamicSlippageAnalysis,
@@ -23,6 +22,7 @@ from app.models.slippage_analysis import (
     SlippageType,
     VolatilityMetrics,
 )
+from app.shared.config.centralized_config import get_config
 
 
 class VolatilityCalculator:
@@ -48,11 +48,7 @@ class VolatilityCalculator:
         recent_returns = returns[-5:] if len(returns) >= 5 else returns
         tt = get_config().trading_thresholds
         current_volatility = Decimal(
-            str(
-                np.std(recent_returns)
-                * np.sqrt(tt.annual_trading_days)
-                * tt.percentage_multiplier
-            )
+            str(np.std(recent_returns) * np.sqrt(tt.annual_trading_days) * tt.percentage_multiplier)
         )
 
         # Volatilidad histórica (todo el período)
@@ -317,9 +313,9 @@ class DynamicSlippageService:
         """Calcular impacto del mercado usando config."""
         # Get market stress threshold from config
         config = get_config()
-        market_stress_threshold = Decimal(str(getattr(
-            config.trading, 'slippage_market_stress_threshold', 0.01
-        )))
+        market_stress_threshold = Decimal(
+            str(getattr(config.trading, 'slippage_market_stress_threshold', 0.01))
+        )
 
         base_impact = float(order_size_impact.market_cap_ratio) * 100
         liquidity_adjustment = 1 / max(0.1, liquidity_metrics.liquidity_score)
@@ -369,15 +365,9 @@ class DynamicSlippageService:
         """Calcular ajuste por volatilidad usando config."""
         # Get volatility adjustment factors from config
         config = get_config()
-        adj_extreme = Decimal(str(getattr(
-            config.trading, 'slippage_vol_adjustment_extreme', 2.0
-        )))
-        adj_high = Decimal(str(getattr(
-            config.trading, 'slippage_vol_adjustment_high', 1.0
-        )))
-        adj_normal = Decimal(str(getattr(
-            config.trading, 'slippage_vol_adjustment_normal', 0.2
-        )))
+        adj_extreme = Decimal(str(getattr(config.trading, 'slippage_vol_adjustment_extreme', 2.0)))
+        adj_high = Decimal(str(getattr(config.trading, 'slippage_vol_adjustment_high', 1.0)))
+        adj_normal = Decimal(str(getattr(config.trading, 'slippage_vol_adjustment_normal', 0.2)))
 
         if volatility_metrics.volatility_regime == MarketCondition.EXTREME_EVENTS:
             adjustment = adj_extreme

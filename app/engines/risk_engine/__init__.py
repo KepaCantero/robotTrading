@@ -79,13 +79,16 @@ def _get_portfolio_class():
     """
     try:
         from app.domain.models.portfolio import Portfolio
+
         return Portfolio
     except ImportError:
         # Return a minimal placeholder class if the real one can't be imported
         # This allows the risk_engine to be imported even when pydantic is missing
         class _PortfolioPlaceholder:
             """Placeholder Portfolio class when pydantic is not available."""
+
             pass
+
         return _PortfolioPlaceholder
 
 
@@ -98,6 +101,7 @@ def _get_portfolio_risk_manager():
     """
     try:
         from app.domain.services.risk.portfolio import PortfolioRiskManager
+
         return PortfolioRiskManager
     except ImportError:
         # Create a minimal placeholder
@@ -106,6 +110,7 @@ def _get_portfolio_risk_manager():
 
             def assess_portfolio_risk(self, portfolio):
                 return {'risk_level': 'unknown'}
+
         return _PortfolioRiskManagerPlaceholder
 
 

@@ -19,10 +19,12 @@ import pandas as pd
 # Try pandas_ta first, then pandas_ta_classic, with fallback
 try:
     import pandas_ta as ta
+
     PANDAS_TA_AVAILABLE = True
 except ImportError:
     try:
         import pandas_ta_classic as ta
+
         PANDAS_TA_AVAILABLE = True
     except ImportError:
         ta = None
@@ -76,7 +78,9 @@ class TechnicalIndicatorCalculator:
 
                 if rsi_series is not None and not rsi_series.empty and not rsi_series.isna().all():
                     rsi_value = float(rsi_series.iloc[-1])
-                    logger.debug(f"RSI({period}) calculated: {rsi_value:.2f} from {len(prices)} prices")
+                    logger.debug(
+                        f"RSI({period}) calculated: {rsi_value:.2f} from {len(prices)} prices"
+                    )
                     return round(rsi_value, 2)
 
             # Fallback: Manual RSI calculation
@@ -139,7 +143,9 @@ class TechnicalIndicatorCalculator:
 
                 if ema_series is not None and not ema_series.empty and not ema_series.isna().all():
                     ema_value = float(ema_series.iloc[-1])
-                    logger.debug(f"EMA({period}) calculated: {ema_value:.2f} from {len(prices)} prices")
+                    logger.debug(
+                        f"EMA({period}) calculated: {ema_value:.2f} from {len(prices)} prices"
+                    )
                     return round(ema_value, 2)
 
             # Fallback: Manual EMA calculation

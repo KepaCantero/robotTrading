@@ -26,12 +26,10 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import numpy as np
 import pandas as pd
 
-# Import from consolidated module
-from app.domain.services.indicators.technical_indicators import (
-    TechnicalIndicators,
-    IndicatorResult,
-)
 from app.domain.services.indicators.factory import get_indicator_calculator
+
+# Import from consolidated module
+from app.domain.services.indicators.technical_indicators import IndicatorResult, TechnicalIndicators
 
 logger = logging.getLogger(__name__)
 
@@ -68,9 +66,7 @@ class TechnicalIndicatorCalculator:
         return self._indicators
 
     def calculate_rsi(
-        self,
-        prices: Union[List, np.ndarray, pd.Series],
-        period: int = 14
+        self, prices: Union[List, np.ndarray, pd.Series], period: int = 14
     ) -> Optional[float]:
         """
         Calculate Relative Strength Index (RSI).
@@ -85,9 +81,7 @@ class TechnicalIndicatorCalculator:
         return self._indicators.rsi(prices, period=period)
 
     def calculate_ema(
-        self,
-        prices: Union[List, np.ndarray, pd.Series],
-        period: int = 20
+        self, prices: Union[List, np.ndarray, pd.Series], period: int = 20
     ) -> Optional[float]:
         """
         Calculate Exponential Moving Average (EMA).
@@ -102,9 +96,7 @@ class TechnicalIndicatorCalculator:
         return self._indicators.ema(prices, period=period)
 
     def calculate_sma(
-        self,
-        prices: Union[List, np.ndarray, pd.Series],
-        period: int = 20
+        self, prices: Union[List, np.ndarray, pd.Series], period: int = 20
     ) -> Optional[float]:
         """
         Calculate Simple Moving Average (SMA).
@@ -123,7 +115,7 @@ class TechnicalIndicatorCalculator:
         prices: Union[List, np.ndarray, pd.Series],
         fast_period: int = 12,
         slow_period: int = 26,
-        signal_period: int = 9
+        signal_period: int = 9,
     ) -> Dict[str, Optional[float]]:
         """
         Calculate MACD (Moving Average Convergence Divergence).
@@ -142,7 +134,7 @@ class TechnicalIndicatorCalculator:
             fast_period=fast_period,
             slow_period=slow_period,
             signal_period=signal_period,
-            return_components=True
+            return_components=True,
         )
         return {
             'macd': macd,
@@ -155,7 +147,7 @@ class TechnicalIndicatorCalculator:
         highs: Union[List, np.ndarray, pd.Series],
         lows: Union[List, np.ndarray, pd.Series],
         closes: Union[List, np.ndarray, pd.Series],
-        period: int = 14
+        period: int = 14,
     ) -> Optional[float]:
         """
         Calculate Average True Range (ATR).
@@ -172,10 +164,7 @@ class TechnicalIndicatorCalculator:
         return self._indicators.atr(highs, lows, closes, period=period)
 
     def calculate_bollinger_bands(
-        self,
-        prices: Union[List, np.ndarray, pd.Series],
-        period: int = 20,
-        std_dev: float = 2.0
+        self, prices: Union[List, np.ndarray, pd.Series], period: int = 20, std_dev: float = 2.0
     ) -> Dict[str, Optional[float]]:
         """
         Calculate Bollinger Bands.
@@ -189,16 +178,11 @@ class TechnicalIndicatorCalculator:
             Dictionary with 'upper', 'middle', 'lower', 'width', 'position'.
         """
         return self._indicators.bollinger_bands(
-            prices,
-            period=period,
-            std_dev=std_dev,
-            return_components=False
+            prices, period=period, std_dev=std_dev, return_components=False
         )
 
     def calculate_roc(
-        self,
-        prices: Union[List, np.ndarray, pd.Series],
-        period: int = 14
+        self, prices: Union[List, np.ndarray, pd.Series], period: int = 14
     ) -> Optional[float]:
         """
         Calculate Rate of Change (ROC).
@@ -218,7 +202,7 @@ class TechnicalIndicatorCalculator:
         lows: Union[List, np.ndarray, pd.Series],
         closes: Union[List, np.ndarray, pd.Series],
         k_period: int = 14,
-        d_period: int = 3
+        d_period: int = 3,
     ) -> Dict[str, Optional[float]]:
         """
         Calculate Stochastic Oscillator.
@@ -234,18 +218,12 @@ class TechnicalIndicatorCalculator:
             Dictionary with 'k' and 'd' values.
         """
         k, d = self._indicators.stochastic(
-            highs, lows, closes,
-            k_period=k_period,
-            d_period=d_period,
-            return_components=True
+            highs, lows, closes, k_period=k_period, d_period=d_period, return_components=True
         )
         return {'k': k, 'd': d}
 
     def calculate_stochastic_rsi(
-        self,
-        rsi_values: Union[List, np.ndarray, pd.Series],
-        period: int = 14,
-        smooth_k: int = 3
+        self, rsi_values: Union[List, np.ndarray, pd.Series], period: int = 14, smooth_k: int = 3
     ) -> Tuple[Optional[float], Optional[float]]:
         """
         Calculate Stochastic RSI from pre-calculated RSI values.
@@ -261,14 +239,16 @@ class TechnicalIndicatorCalculator:
         Returns:
             Tuple of (StochRSI %K, StochRSI %D) or (None, None) if insufficient data.
         """
-        return self._indicators.stochrsi(rsi_values, period=period, k_period=smooth_k, d_period=smooth_k)
+        return self._indicators.stochrsi(
+            rsi_values, period=period, k_period=smooth_k, d_period=smooth_k
+        )
 
     def calculate_adx(
         self,
         highs: Union[List, np.ndarray, pd.Series],
         lows: Union[List, np.ndarray, pd.Series],
         closes: Union[List, np.ndarray, pd.Series],
-        period: int = 14
+        period: int = 14,
     ) -> Dict[str, Optional[float]]:
         """
         Calculate Average Directional Index (ADX).
@@ -283,9 +263,7 @@ class TechnicalIndicatorCalculator:
             Dictionary with 'adx', 'plus_di', 'minus_di' values.
         """
         adx, plus_di, minus_di = self._indicators.adx(
-            highs, lows, closes,
-            period=period,
-            return_components=True
+            highs, lows, closes, period=period, return_components=True
         )
         return {
             'adx': adx,
@@ -298,7 +276,7 @@ class TechnicalIndicatorCalculator:
         highs: Union[List, np.ndarray, pd.Series],
         lows: Union[List, np.ndarray, pd.Series],
         closes: Union[List, np.ndarray, pd.Series],
-        period: int = 20
+        period: int = 20,
     ) -> Optional[float]:
         """
         Calculate Commodity Channel Index (CCI).
@@ -317,7 +295,7 @@ class TechnicalIndicatorCalculator:
     def calculate_obv(
         self,
         closes: Union[List, np.ndarray, pd.Series],
-        volumes: Union[List, np.ndarray, pd.Series]
+        volumes: Union[List, np.ndarray, pd.Series],
     ) -> Optional[float]:
         """
         Calculate On-Balance Volume (OBV).
@@ -336,7 +314,7 @@ class TechnicalIndicatorCalculator:
         highs: Union[List, np.ndarray, pd.Series],
         lows: Union[List, np.ndarray, pd.Series],
         closes: Union[List, np.ndarray, pd.Series],
-        period: int = 14
+        period: int = 14,
     ) -> Optional[float]:
         """
         Calculate Williams %R.
@@ -353,9 +331,7 @@ class TechnicalIndicatorCalculator:
         return self._indicators.williams_r(highs, lows, closes, period=period)
 
     def calculate_all_indicators(
-        self,
-        df: pd.DataFrame,
-        indicators: Optional[List[str]] = None
+        self, df: pd.DataFrame, indicators: Optional[List[str]] = None
     ) -> Dict[str, Any]:
         """
         Calculate multiple indicators at once.

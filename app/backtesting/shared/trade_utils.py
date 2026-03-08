@@ -8,8 +8,8 @@ Usage:
     from app.backtesting.shared.trade_utils import build_trade_reason
 """
 
-from typing import Any, Optional
 from decimal import Decimal
+from typing import Any, Optional
 
 from app.shared.config.centralized_config import get_config
 
@@ -43,9 +43,7 @@ def build_trade_reason(signal: Any, market_data: Any = None) -> str:
     reason_parts.append(signal_type_str.upper())
 
     # Source
-    source_str = (
-        signal.source.value if hasattr(signal.source, "value") else str(signal.source)
-    )
+    source_str = signal.source.value if hasattr(signal.source, "value") else str(signal.source)
     if source_str:
         reason_parts.append(f"via {source_str}")
 
@@ -190,7 +188,10 @@ def validate_trade(
         return False, f"Position {position_pct:.2%} exceeds max {max_position:.2%}"
 
     if position_pct < config.default_min_position_size:
-        return False, f"Position {position_pct:.2%} below min {config.default_min_position_size:.2%}"
+        return (
+            False,
+            f"Position {position_pct:.2%} below min {config.default_min_position_size:.2%}",
+        )
 
     return True, None
 

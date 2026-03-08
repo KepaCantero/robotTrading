@@ -1,14 +1,16 @@
 """
 Post-trade analysis protocols (R11, R12, R13)
 """
-from typing import Protocol, Optional
 from decimal import Decimal
+from typing import Optional, Protocol
 
 
 class IPostTradeAnalyzer(Protocol):
     """Análisis post-trade - Máximo 5 métodos"""
 
-    async def update_trailing_stop(self, position_id: str, current_price: Decimal) -> Optional[Decimal]:
+    async def update_trailing_stop(
+        self, position_id: str, current_price: Decimal
+    ) -> Optional[Decimal]:
         """R11: Trailing Stop Dinámico"""
         ...
 

@@ -223,13 +223,17 @@ class ResultAggregator:
         report.append("\n## Top 3 by Sharpe Ratio")
         for i, r in enumerate(best_sharpe, 1):
             metrics = r.get('metrics', r)
-            report.append(f"{i}. {r.get('test_name', 'unknown')}: Sharpe={metrics.get('sharpe_ratio', 0):.2f}")
+            report.append(
+                f"{i}. {r.get('test_name', 'unknown')}: Sharpe={metrics.get('sharpe_ratio', 0):.2f}"
+            )
 
         # Top performers by Return
         report.append("\n## Top 3 by Total Return")
         for i, r in enumerate(best_return, 1):
             metrics = r.get('metrics', r)
-            report.append(f"{i}. {r.get('test_name', 'unknown')}: Return={metrics.get('total_return', 0):.2%}")
+            report.append(
+                f"{i}. {r.get('test_name', 'unknown')}: Return={metrics.get('total_return', 0):.2%}"
+            )
 
         return "\n".join(report)
 

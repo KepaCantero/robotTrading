@@ -26,35 +26,55 @@ class TradingThresholds(BaseModel):
         default=70.0, description="Minimum signal confidence (0-100)"
     )
     min_liquidity_score: float = Field(default=50.0, description="Minimum liquidity score (0-100)")
-    signal_liquidity_score: float = Field(default=70.0, description="Default liquidity score for signals (0-100)")
-    signal_priority_score: float = Field(default=50.0, description="Default priority score for signals (0-100)")
+    signal_liquidity_score: float = Field(
+        default=70.0, description="Default liquidity score for signals (0-100)"
+    )
+    signal_priority_score: float = Field(
+        default=50.0, description="Default priority score for signals (0-100)"
+    )
 
     # Technical indicators
     rsi_oversold: float = Field(default=30.0, description="RSI oversold threshold")
     rsi_overbought: float = Field(default=70.0, description="RSI overbought threshold")
     rsi_sell_overbought: float = Field(default=70.0, description="RSI sell overbought threshold")
-    rsi_recovering_threshold: float = Field(default=50.0, description="RSI recovering threshold for buy signals")
+    rsi_recovering_threshold: float = Field(
+        default=50.0, description="RSI recovering threshold for buy signals"
+    )
     rsi_neutral_zone_min: float = Field(default=40.0, description="RSI neutral zone minimum")
     rsi_neutral_zone_max: float = Field(default=60.0, description="RSI neutral zone maximum")
 
     # History lengths for technical indicators
-    default_price_history_length: int = Field(default=200, description="Default price history length for indicators")
+    default_price_history_length: int = Field(
+        default=200, description="Default price history length for indicators"
+    )
     rsi_history_length: int = Field(default=14, description="RSI calculation period")
     atr_history_length: int = Field(default=14, description="ATR calculation period")
 
     # ATR filter settings
-    min_atr_threshold: float = Field(default=0.5, description="Minimum ATR threshold for volatility filter")
+    min_atr_threshold: float = Field(
+        default=0.5, description="Minimum ATR threshold for volatility filter"
+    )
     atr_filter_enabled: bool = Field(default=True, description="Enable ATR volatility filter")
     use_relative_atr: bool = Field(default=True, description="Use relative ATR (ATR/price)")
 
     # Position sizing
     max_position_size: float = Field(default=0.1, description="Maximum position size (0-1)")
     min_position_size: float = Field(default=0.01, description="Minimum position size (0-1)")
-    validator_default_max_position_pct: float = Field(default=0.25, description="Default max position as % of capital")
-    validator_min_position_pct: float = Field(default=0.05, description="Minimum position as % of capital")
-    validator_max_position_pct: float = Field(default=0.25, description="Maximum position limit as % of capital")
-    validator_stop_loss_warning_pct: float = Field(default=0.08, description="Stop loss warning threshold %")
-    validator_min_reward_risk_ratio: float = Field(default=2.0, description="Minimum reward/risk ratio")
+    validator_default_max_position_pct: float = Field(
+        default=0.25, description="Default max position as % of capital"
+    )
+    validator_min_position_pct: float = Field(
+        default=0.05, description="Minimum position as % of capital"
+    )
+    validator_max_position_pct: float = Field(
+        default=0.25, description="Maximum position limit as % of capital"
+    )
+    validator_stop_loss_warning_pct: float = Field(
+        default=0.08, description="Stop loss warning threshold %"
+    )
+    validator_min_reward_risk_ratio: float = Field(
+        default=2.0, description="Minimum reward/risk ratio"
+    )
 
     # Risk management
     stop_loss_pct: float = Field(default=0.05, description="Stop loss percentage (0-1)")
@@ -230,17 +250,11 @@ class TradingThresholds(BaseModel):
     )
 
     # Momentum zones
-    momentum_zone_min: float = Field(
-        default=40.0, description="Minimum momentum zone threshold"
-    )
-    momentum_zone_max: float = Field(
-        default=60.0, description="Maximum momentum zone threshold"
-    )
+    momentum_zone_min: float = Field(default=40.0, description="Minimum momentum zone threshold")
+    momentum_zone_max: float = Field(default=60.0, description="Maximum momentum zone threshold")
 
     # Logging intervals
-    log_interval_bars: int = Field(
-        default=100, description="Logging interval in bars"
-    )
+    log_interval_bars: int = Field(default=100, description="Logging interval in bars")
 
     # Volatility parameters
     volatility_min_ratio: float = Field(
@@ -349,7 +363,7 @@ class TradingThresholds(BaseModel):
             "max_yield": 0.08,
             "min_payout": 0.75,
         },
-        description="Dividend strategy parameters"
+        description="Dividend strategy parameters",
     )
 
     @field_validator(

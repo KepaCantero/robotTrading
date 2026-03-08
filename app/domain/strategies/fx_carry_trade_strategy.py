@@ -22,16 +22,22 @@ from datetime import date
 from decimal import Decimal
 from typing import Any
 
-from app.shared.config.centralized_config import get_config
 from app.domain.strategies.base import BaseStrategy
-from app.domain.strategies.fx_carry_trade.carry_calculator import CarryCalculator, CarryTradeOpportunity
-from app.domain.strategies.fx_carry_trade.fx_rates_provider import FXRateProvider, InMemoryFXRateProvider
+from app.domain.strategies.fx_carry_trade.carry_calculator import (
+    CarryCalculator,
+    CarryTradeOpportunity,
+)
+from app.domain.strategies.fx_carry_trade.fx_rates_provider import (
+    FXRateProvider,
+    InMemoryFXRateProvider,
+)
 from app.domain.strategies.fx_carry_trade.models import (
     FXCarryPosition,
     FXCarrySignal,
     FXCarryTradeConfig,
     FXPair,
 )
+from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -118,7 +124,9 @@ class FXCarryTradeStrategy(BaseStrategy):
         if isinstance(config, dict):
             # Extract known parameters or use defaults from modular config
             strategy_config = FXCarryTradeConfig(
-                min_carry_threshold=Decimal(str(config.get("min_carry_threshold", _cfg.min_carry_threshold))),
+                min_carry_threshold=Decimal(
+                    str(config.get("min_carry_threshold", _cfg.min_carry_threshold))
+                ),
                 max_positions=config.get("max_positions", _cfg.max_positions_default),
                 position_size=Decimal(str(config.get("position_size", _cfg.position_size_default))),
                 forward_months=config.get("forward_months", 3),
@@ -278,11 +286,15 @@ class FXCarryTradeStrategy(BaseStrategy):
         """
         # Base confidence from signal strength - use config multiplier
         signal_strength = abs(float(signal.signal))
-        base_confidence = min(signal_strength * self._cfg.base_confidence_multiplier, self._cfg.carry_boost_max)
+        base_confidence = min(
+            signal_strength * self._cfg.base_confidence_multiplier, self._cfg.carry_boost_max
+        )
 
         # Boost for positive carry (positive expected return) - use config
         if signal.carry > 0:
-            carry_boost = min(float(signal.carry) * self._cfg.carry_boost_multiplier, self._cfg.carry_boost_max)
+            carry_boost = min(
+                float(signal.carry) * self._cfg.carry_boost_multiplier, self._cfg.carry_boost_max
+            )
         else:
             carry_boost = 0
 
@@ -385,7 +397,9 @@ class FXCarryTradeStrategy(BaseStrategy):
         # If vol is 0.005 (0.5%), adjustment = baseline/0.005 = 2.0 (double position, capped)
         baseline_volatility = Decimal(str(self._cfg.baseline_volatility))
         vol_adjustment = baseline_volatility / max(volatility, baseline_volatility)
-        vol_adjustment = min(vol_adjustment, Decimal(str(self._cfg.vol_adjustment_max)))  # Use config cap
+        vol_adjustment = min(
+            vol_adjustment, Decimal(str(self._cfg.vol_adjustment_max))
+        )  # Use config cap
 
         position_value = position_value * vol_adjustment
 

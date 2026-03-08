@@ -1,0 +1,22 @@
+# Requirements Document: core/models/input_profile.py
+
+## 1. Module Overview
+Input profile model for trading strategy configuration.
+
+## 2. Dependencies
+- `pydantic.BaseModel`
+- `typing.Optional`
+- `typing.Dict`
+- `typing.List`
+
+## 3. Core Components (Contracts)
+- `InputProfile`: Pydantic model for user input profiles
+- Profile validation and serialization
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors
+- [x] Must validate input data with Pydantic
+- [x] Must provide default values
+
+## 5. Notes
+- Used for user-specific trading configuration

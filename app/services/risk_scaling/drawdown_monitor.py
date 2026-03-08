@@ -20,6 +20,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
 from typing import List, Optional, Tuple
+
 import numpy as np
 
 from app.shared.config.centralized_config import get_config
@@ -333,9 +334,7 @@ class DrawdownMonitor:
 
         return {
             "current_underwater_days": current_underwater,
-            "avg_underwater_days": (
-                np.mean(underwater_periods) if underwater_periods else 0
-            ),
+            "avg_underwater_days": (np.mean(underwater_periods) if underwater_periods else 0),
             "max_underwater_days": max(underwater_periods) if underwater_periods else 0,
             "num_underwater_periods": len(underwater_periods),
         }

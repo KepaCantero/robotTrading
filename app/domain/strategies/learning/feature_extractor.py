@@ -245,7 +245,7 @@ class FeatureExtractor:
         feature_names.append('obv_trend_normalized')
 
         # Multi-period Rate of Change (ROC)
-        roc_5 = indicators.get('roc_5', 0.0)   # 5-period ROC
+        roc_5 = indicators.get('roc_5', 0.0)  # 5-period ROC
         roc_10 = indicators.get('roc_10', 0.0)  # 10-period ROC
         roc_20 = indicators.get('roc_20', 0.0)  # 20-period ROC
 

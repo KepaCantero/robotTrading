@@ -12,8 +12,8 @@ from decimal import Decimal
 from typing import Any, Dict, Optional
 
 from app.backtesting.models import BacktestConfig
-from app.domain.services.compliance.compliance_engine import ComplianceEngine
 from app.domain.models.signal import Signal, SignalType
+from app.domain.services.compliance.compliance_engine import ComplianceEngine
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +71,9 @@ class SignalProcessor:
         self.trading_validator = TradingValidator()
 
         if enable_risk_envelope:
-            logger.info(f"Risk Envelope validation enabled for {strategy_name} (via ComplianceEngine)")
+            logger.info(
+                f"Risk Envelope validation enabled for {strategy_name} (via ComplianceEngine)"
+            )
 
     def process_signal(
         self,

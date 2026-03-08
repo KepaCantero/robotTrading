@@ -15,6 +15,7 @@ import logging
 import time
 from decimal import Decimal
 from typing import Dict, List, Optional
+
 import numpy as np
 
 from .models import CryptoAsset, CryptoAssetType, CryptoExchange, CryptoScreeningResult

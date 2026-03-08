@@ -24,11 +24,11 @@ from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
-from app.shared.config.centralized_config import get_config
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.strategies.base import BaseStrategy
+from app.shared.config.centralized_config import get_config
 
 from .dividend_analyzer import DividendAnalyzer
 from .dividend_portfolio_constructor import DividendPortfolio, DividendPortfolioConstructor
@@ -305,7 +305,8 @@ class DividendStrategy(BaseStrategy):
         # Calidad baja - use config multiplier
         if profile.quality_score is not None:
             if (
-                profile.quality_score < self.strategy_config.min_quality_score * self._cfg.quality_multiplier
+                profile.quality_score
+                < self.strategy_config.min_quality_score * self._cfg.quality_multiplier
             ):  # Use config multiplier
                 logger.warning(f"⚠️ Calidad deteriorada: {profile.symbol}")
                 return True
@@ -371,7 +372,11 @@ class DividendStrategy(BaseStrategy):
             strength = SignalStrength.WEAK
 
         # Priority score combinado - use config weights
-        priority = min(100, confidence * self._cfg.priority_confidence_weight + float(profile.dividend_data.dividend_yield) * self._cfg.priority_yield_weight)
+        priority = min(
+            100,
+            confidence * self._cfg.priority_confidence_weight
+            + float(profile.dividend_data.dividend_yield) * self._cfg.priority_yield_weight,
+        )
 
         # Liquidity score - calculate using actual market data instead of hardcoded value
         # Use bid-ask spread and volume for liquidity calculation
@@ -421,7 +426,9 @@ class DividendStrategy(BaseStrategy):
             signal_type=SignalType.SELL,
             strength=SignalStrength.MODERATE,
             confidence=self._cfg.sell_confidence,  # Use config value
-            liquidity_score=self._calculate_liquidity_score(market_data),  # Calculate real liquidity
+            liquidity_score=self._calculate_liquidity_score(
+                market_data
+            ),  # Calculate real liquidity
             priority_score=self._cfg.sell_priority,  # Use config value
             source=SignalSource.FUNDAMENTAL,
             price=market_data.close if hasattr(market_data, 'close') else market_data.price,
@@ -470,6 +477,7 @@ class DividendStrategy(BaseStrategy):
         # Normalize volume: use log scale for better distribution
         # $1M daily volume = 50 points (baseline), $100M = 100 points
         import math
+
         volume_score = min(100, max(0, 50 + math.log10(max(1, volume / 1_000_000)) * 25))
 
         # Combine spread (60%) and volume (40%) for final score

@@ -1,8 +1,8 @@
 """
 Spain tax protocols (IRPF, Dividendos, Modelo 720)
 """
-from typing import Protocol
 from decimal import Decimal
+from typing import Protocol
 
 
 class ISpainTaxEngine(Protocol):

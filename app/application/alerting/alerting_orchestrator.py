@@ -12,15 +12,15 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Callable, Dict, List, Optional
 
-from app.application.alerting.alert_manager import AlertManager
 from app.application.alerting.alert_rule_engine import AlertRuleEngine
+from app.application.alerting.models import AlertEvent, AlertRule, AlertSeverity
+from app.application.alerting.notification_channels import NotificationDispatcher
+from app.services.alerting_system.alert_manager import AlertManager
 from app.services.alerting_system.metrics_driven_alerter import (
     EvaluationStatistics,
     MetricQueryConfig,
     MetricsDrivenAlerter,
 )
-from app.application.alerting.models import AlertEvent, AlertRule, AlertSeverity
-from app.application.alerting.notification_channels import NotificationDispatcher
 from app.services.alerting_system.rule_templates import AlertRuleTemplates
 
 logger = logging.getLogger(__name__)

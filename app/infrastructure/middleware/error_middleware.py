@@ -12,7 +12,7 @@ from __future__ import annotations
 import logging
 import time
 import uuid
-from typing import TYPE_CHECKING, Any, Callable, Optional
+from typing import TYPE_CHECKING, Callable
 
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
@@ -20,7 +20,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 # Use TYPE_CHECKING for type hints only
 if TYPE_CHECKING:
-    from app.services.centralized_logging import LogLevel, LogService
+    pass
 
 
 def _get_centralized_logger():
@@ -31,6 +31,7 @@ def _get_centralized_logger():
         CentralizedLogger instance
     """
     from app.services.centralized_logging import centralized_logger
+
     return centralized_logger
 
 
@@ -42,6 +43,7 @@ def _get_log_level_and_service():
         Tuple of (LogLevel, LogService) enums
     """
     from app.services.centralized_logging import LogLevel, LogService
+
     return LogLevel, LogService
 
 
@@ -53,6 +55,7 @@ def _get_error_handler():
         ErrorHandler instance
     """
     from app.exceptions.error_handler import error_handler
+
     return error_handler
 
 

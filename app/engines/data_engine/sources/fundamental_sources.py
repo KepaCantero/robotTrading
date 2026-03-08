@@ -15,6 +15,7 @@ import aiohttp  # noqa: F401
 
 from app.shared.config.api_endpoints import APIEndpoints
 from app.shared.config.timeout_config import get_timeouts
+
 from .base_source import BaseDataSource
 
 logger = logging.getLogger(__name__)

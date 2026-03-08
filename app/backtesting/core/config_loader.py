@@ -186,7 +186,9 @@ class BacktestConfigLoader:
             # Take profit can be any positive number (not really a percentage)
 
         # Risk free rate (can be 0 or negative for some markets)
-        risk_free_rate_raw = config.get('risk_free_rate', float(get_config().backtesting.default_risk_free_rate))
+        risk_free_rate_raw = config.get(
+            'risk_free_rate', float(get_config().backtesting.default_risk_free_rate)
+        )
         try:
             risk_free_rate = Decimal(str(risk_free_rate_raw))
         except (ValueError, TypeError) as e:

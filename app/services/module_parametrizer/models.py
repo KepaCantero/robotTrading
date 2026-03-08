@@ -8,22 +8,28 @@ Uses centralized configuration for default values.
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 if TYPE_CHECKING:
     pass
 
+
 # Helper functions to get defaults from centralized config
 def _get_default_max_position_size() -> Decimal:
     from app.shared.config.centralized_config import get_config
+
     return Decimal(str(get_config().trading_thresholds.max_position_size))
+
 
 def _get_default_stop_loss() -> Decimal:
     from app.shared.config.centralized_config import get_config
+
     return Decimal(str(get_config().trading_thresholds.stop_loss_pct))
+
 
 def _get_default_take_profit() -> Decimal:
     from app.shared.config.centralized_config import get_config
+
     return Decimal(str(get_config().trading_thresholds.take_profit_pct))
 
 
@@ -45,7 +51,9 @@ class ModuleParameterConfig:
     priority: int = 0  # 0 = highest, 10 = lowest
 
     # Common risk parameters (shared across most modules) - use centralized config
-    max_position_size: Decimal = field(default_factory=_get_default_max_position_size)  # Uses config
+    max_position_size: Decimal = field(
+        default_factory=_get_default_max_position_size
+    )  # Uses config
     stop_loss_pct: Decimal = field(default_factory=_get_default_stop_loss)  # Uses config
     take_profit_pct: Decimal = field(default_factory=_get_default_take_profit)  # Uses config
     max_exposure: Decimal = field(default=Decimal("0.25"))  # % of capital

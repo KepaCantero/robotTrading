@@ -17,9 +17,9 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
+from app.services.live_trading.broker_connector import OrderSide, OrderStatus
+from app.services.live_trading.order_manager import OrderManager, get_order_manager
 from app.shared.protocols import ITradeExecutor
-from app.application.orchestration.live_trading.broker_connector import OrderSide, OrderStatus, OrderType
-from app.application.orchestration.live_trading.order_manager import OrderManager, get_order_manager
 
 logger = logging.getLogger(__name__)
 
@@ -113,9 +113,11 @@ class OrderManagerAdapter(ITradeExecutor):
             >>> result = await adapter.execute_order(signal)
             >>> assert result.success or result.error
         """
+
         @dataclass
         class TradeResult:
             """Result of trade execution via ITradeExecutor."""
+
             success: bool
             order_id: str
             symbol: str
@@ -195,9 +197,13 @@ class OrderManagerAdapter(ITradeExecutor):
             slippage_bps = Decimal("0")
             if signal_price > 0 and execution_price > 0:
                 if side == OrderSide.BUY:
-                    slippage_bps = ((execution_price - signal_price) / signal_price) * Decimal("10000")
+                    slippage_bps = ((execution_price - signal_price) / signal_price) * Decimal(
+                        "10000"
+                    )
                 else:
-                    slippage_bps = ((signal_price - execution_price) / signal_price) * Decimal("10000")
+                    slippage_bps = ((signal_price - execution_price) / signal_price) * Decimal(
+                        "10000"
+                    )
 
             # Map OrderStatus to string status
             status_map = {
@@ -308,14 +314,18 @@ class OrderManagerAdapter(ITradeExecutor):
                     break
 
             if target_order is None:
-                logger.warning(f"OrderManagerAdapter: Cannot modify - order {order_id} not found in pending")
+                logger.warning(
+                    f"OrderManagerAdapter: Cannot modify - order {order_id} not found in pending"
+                )
                 return False
 
             # Cancel original order
             cancel_result = await manager.cancel_order(order_id)
 
             if not cancel_result:
-                logger.warning(f"OrderManagerAdapter: Failed to cancel order {order_id} for modification")
+                logger.warning(
+                    f"OrderManagerAdapter: Failed to cancel order {order_id} for modification"
+                )
                 return False
 
             # Place new order with updated price
@@ -330,9 +340,11 @@ class OrderManagerAdapter(ITradeExecutor):
 
             if self.enable_logging:
                 if new_order:
-                    logger.info(f"OrderManagerAdapter: Order modified {order_id} -> {new_order.order_id}")
+                    logger.info(
+                        f"OrderManagerAdapter: Order modified {order_id} -> {new_order.order_id}"
+                    )
                 else:
-                    logger.warning(f"OrderManagerAdapter: Failed to place replacement order")
+                    logger.warning("OrderManagerAdapter: Failed to place replacement order")
 
             return new_order is not None
 
@@ -389,7 +401,7 @@ class OrderManagerAdapter(ITradeExecutor):
 
             # Convert BrokerOrder to TradeSignal-like objects
             # Note: Returning TradeSignal objects for compatibility with protocol
-            from app.application.orchestration.live_trading.alert_to_trade_mapper import TradeSignal, TradeSignalType
+            from app.services.live_trading.alert_to_trade_mapper import TradeSignal, TradeSignalType
 
             open_orders = []
             for order in pending_orders:

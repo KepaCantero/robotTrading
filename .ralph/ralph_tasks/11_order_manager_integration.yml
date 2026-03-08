@@ -1,0 +1,118 @@
+# ============================================
+# Ralph Task 11: Order Manager Integration
+# ============================================
+# PRIORIDAD: P0 (CRÍTICA) - Integración de OrderManager con ComplianceEngine
+# OBJETIVO: Integrar OrderManager para usar execute_trade() de ComplianceEngine
+# TIEMPO: ~4 horas
+# DEPENDS ON: 09_compliance_engine_refactor
+# ============================================================================
+
+event_loop:
+  prompt_file: ".ralph/ralph_tasks/prompts/11_order_manager_integration.md"
+  completion_promise: "ORDER_MANAGER_INTEGRATION_COMPLETE"
+  max_iterations: 50
+  max_runtime_seconds: 14400  # 4 hours
+  checkpoint_interval: 3
+  starting_event: "order_manager_integration.start"
+
+cli:
+  backend: "claude"
+
+core:
+  specs_dir: "./specs/"
+
+hats:
+  order_manager_integrator:
+    name: "Order Manager Integrator"
+    description: "Integra OrderManager con ComplianceEngine"
+    template: "ralph_templates/hats/base_processor_hat.yml"
+    triggers:
+      - "order_manager_integration.start"
+      - "order_manager_integration.next"
+    publishes:
+      - "order_manager_integration.next"
+      - "order_manager_integration.complete"
+      - "order_manager_integration.blocked"
+    default_publishes: "order_manager_integration.next"
+    instructions: |
+      ## ORDER MANAGER INTEGRATION
+
+      {{shared_instructions}}
+
+      **REQUISITOS:**
+      1. Leer: `.ralph/docs/requirements/SERVICE_REQUIREMENTS.md`
+      2. Leer: `.ralph/ralph_tasks/09_compliance_engine_refactor.yml` (dependencia)
+
+      **OBJETIVO:** Integrar OrderManager para usar ComplianceEngine
+
+      ### REGLAS CRÍTICAS:
+      - **DIP-001:** Usar ITradeExecutor via Protocol
+      - **R1, R2, R4:** Validaciones pre-trade delegadas a ComplianceEngine
+      - **NO FALLBACKS:** Si falta import, usar @skip-import
+
+      ### FASE 1: Análisis de OrderManager actual
+
+      ```bash
+      # Ubicar OrderManager
+      find app -name "order_manager.py" -type f
+
+      # Analizar estructura
+      cat app/services/live_trading/order_manager.py
+      ```
+
+      ### FASE 2: Modificar OrderManager
+
+      **Antes:**
+      ```python
+      class OrderManager:
+          def __init__(self, broker: AlpacaClient):
+              self.broker = broker
+
+          async def place_order(self, signal):
+              # Lógica directa al broker sin validaciones
+              return await self.broker.place_order(signal)
+      ```
+
+      **Después:**
+      ```python
+      from app.core.protocols import ITradeExecutor
+
+      class OrderManager:
+          def __init__(self, trade_executor: ITradeExecutor):
+              # DIP-001: Depender de abstracción
+              self._executor = trade_executor
+
+          async def place_order(self, signal):
+              # Delegar a ComplianceEngine via ITradeExecutor
+              return await self._executor.execute_order(signal)
+      ```
+
+      ### FASE 3: Actualizar factory/DI
+
+      ```python
+      # En app/services/live_trading/factory.py o similar
+      from app.services.compliance import ComplianceEngine
+      from app.services.live_trading import OrderManager
+
+      def create_order_manager(config) -> OrderManager:
+          compliance_engine = ComplianceEngine(...)  # con todas las dependencias
+          return OrderManager(trade_executor=compliance_engine)
+      ```
+
+      ### FASE 4: Validar
+
+      ```bash
+      # Validar archivo modificado
+      python .ralph/scripts/utils.py validate app/services/live_trading/order_manager.py
+
+      # Verificar imports
+      python -c "from app.services.live_trading.order_manager import OrderManager; print('✅ OK')"
+      ```
+
+memories:
+  enabled: true
+  inject: auto
+  budget: 3000
+
+checkpoint:
+  file: ".ralph/checkpoints/11_order_manager_integration_checkpoint.json"

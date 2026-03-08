@@ -23,8 +23,8 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from requests.exceptions import HTTPError, RequestException
 
 from app.domain.models.deployment import DeploymentInput
-from app.services.deploy_decision_orchestrator import get_deploy_orchestrator
 from app.infrastructure.external.integrations.health_check_manager import get_health_check_manager
+from app.services.deploy_decision_orchestrator import get_deploy_orchestrator
 
 from . import audit_logger, get_correlation_id
 from .security import audit_log, rate_limit, require_auth

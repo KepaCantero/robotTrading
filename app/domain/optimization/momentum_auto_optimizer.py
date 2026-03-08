@@ -11,8 +11,8 @@ from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-import numpy as np
 
+import numpy as np
 import yaml
 
 from app.backtesting.walk_forward_validator import WalkForwardValidator

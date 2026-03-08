@@ -9,13 +9,13 @@ Uses centralized configuration for thresholds and parameters.
 import logging
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, List
 
 from pydantic import BaseModel, Field
 
-from app.shared.config.centralized_config import get_config
 from app.domain.models.portfolio import Portfolio
 from app.services.forex_data_service import get_forex_fetcher
+from app.shared.config.centralized_config import get_config
 
 if TYPE_CHECKING:
     pass
@@ -163,12 +163,8 @@ class CurrencyHedgingEngine:
                 logger.debug(f"  {currency}: {exposure_pct} < max threshold, checking...")
 
             # Determine urgency using config thresholds
-            urgency_immediate = Decimal(str(getattr(
-                self._tt, 'currency_urgency_immediate', 0.35
-            )))
-            urgency_normal = Decimal(str(getattr(
-                self._tt, 'currency_urgency_normal', 0.25
-            )))
+            urgency_immediate = Decimal(str(getattr(self._tt, 'currency_urgency_immediate', 0.35)))
+            urgency_normal = Decimal(str(getattr(self._tt, 'currency_urgency_normal', 0.25)))
 
             if exposure_pct > urgency_immediate:
                 urgency = HedgeUrgency.IMMEDIATE
@@ -178,9 +174,9 @@ class CurrencyHedgingEngine:
                 urgency = HedgeUrgency.LOW
 
             # Calculate hedge ratio
-            default_correlation = Decimal(str(getattr(
-                self._tt, 'currency_default_correlation', 0.5
-            )))
+            default_correlation = Decimal(
+                str(getattr(self._tt, 'currency_default_correlation', 0.5))
+            )
             correlation = correlations.get(currency, default_correlation)
             hedge_ratio = self._calculate_hedge_ratio(exposure_pct, correlation, urgency)
 
@@ -244,18 +240,12 @@ class CurrencyHedgingEngine:
         strategy = self.config.get("hedge_strategy", "partial")
 
         # Get rolling hedge ratios from config
-        rolling_base = Decimal(str(getattr(
-            self._tt, 'currency_hedge_rolling_base', 0.5
-        )))
-        rolling_immediate = Decimal(str(getattr(
-            self._tt, 'currency_hedge_rolling_immediate', 0.8
-        )))
-        rolling_normal = Decimal(str(getattr(
-            self._tt, 'currency_hedge_rolling_normal', 0.6
-        )))
-        correlation_adjustment = Decimal(str(getattr(
-            self._tt, 'currency_correlation_adjustment', 0.5
-        )))
+        rolling_base = Decimal(str(getattr(self._tt, 'currency_hedge_rolling_base', 0.5)))
+        rolling_immediate = Decimal(str(getattr(self._tt, 'currency_hedge_rolling_immediate', 0.8)))
+        rolling_normal = Decimal(str(getattr(self._tt, 'currency_hedge_rolling_normal', 0.6)))
+        correlation_adjustment = Decimal(
+            str(getattr(self._tt, 'currency_correlation_adjustment', 0.5))
+        )
 
         if strategy == "full":
             # Full hedge
@@ -292,18 +282,14 @@ class CurrencyHedgingEngine:
             Cost in basis points
         """
         # Get cost factors from config
-        execution_cost_factor = Decimal(str(getattr(
-            self._tt, 'currency_execution_cost_factor', 0.5
-        )))
-        slippage_base = Decimal(str(getattr(
-            self._tt, 'currency_slippage_base_bps', 0.5
-        )))
-        size_large_threshold = Decimal(str(getattr(
-            self._tt, 'currency_size_large_threshold', 1000000
-        )))
-        size_large_factor = Decimal(str(getattr(
-            self._tt, 'currency_size_large_factor', 0.8
-        )))
+        execution_cost_factor = Decimal(
+            str(getattr(self._tt, 'currency_execution_cost_factor', 0.5))
+        )
+        slippage_base = Decimal(str(getattr(self._tt, 'currency_slippage_base_bps', 0.5)))
+        size_large_threshold = Decimal(
+            str(getattr(self._tt, 'currency_size_large_threshold', 1000000))
+        )
+        size_large_factor = Decimal(str(getattr(self._tt, 'currency_size_large_factor', 0.8)))
 
         # Get bid-ask spread
         spread_bps = self.forex_fetcher.get_bid_ask_spread(forex_pair)

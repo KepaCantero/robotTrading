@@ -3,11 +3,10 @@ Append-Only Log Storage
 
 Almacenamiento append-only para logs de trading.
 """
+import json
 from datetime import date, datetime, timedelta
 from pathlib import Path
-import json
 from typing import List
-
 
 from app.infrastructure.logging.log_entry import LogEntry
 

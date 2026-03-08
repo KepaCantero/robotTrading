@@ -669,50 +669,76 @@ class DividendStrategyConfig(BaseModel):
 
     # Strategy identification
     name: str = Field(default="DividendStrategy", description="Strategy name")
-    description: str = Field(default="Dividend investing strategy", description="Strategy description")
+    description: str = Field(
+        default="Dividend investing strategy", description="Strategy description"
+    )
     version: str = Field(default="1.0.0", description="Strategy version")
 
     # Dividend yield thresholds
     min_yield: Decimal = Field(default=Decimal("2.0"), description="Minimum dividend yield (%)")
     max_yield: Decimal = Field(default=Decimal("8.0"), description="Maximum dividend yield (%)")
-    min_dividend_yield: Decimal = Field(default=Decimal("2.0"), description="Minimum dividend yield (alias)")
-    max_dividend_yield: Decimal = Field(default=Decimal("8.0"), description="Maximum dividend yield (alias)")
+    min_dividend_yield: Decimal = Field(
+        default=Decimal("2.0"), description="Minimum dividend yield (alias)"
+    )
+    max_dividend_yield: Decimal = Field(
+        default=Decimal("8.0"), description="Maximum dividend yield (alias)"
+    )
 
     # Payout and coverage
-    max_payout_ratio: Decimal = Field(default=Decimal("75.0"), description="Maximum payout ratio (%)")
+    max_payout_ratio: Decimal = Field(
+        default=Decimal("75.0"), description="Maximum payout ratio (%)"
+    )
     min_fcf_coverage: Decimal = Field(default=Decimal("1.5"), description="Minimum FCF coverage")
     min_years_of_growth: int = Field(default=3, description="Minimum years of dividend growth")
-    min_years_consecutive: int = Field(default=3, description="Minimum consecutive years of dividend payments")
+    min_years_consecutive: int = Field(
+        default=3, description="Minimum consecutive years of dividend payments"
+    )
 
     # Portfolio construction
     max_positions: int = Field(default=25, description="Maximum positions in portfolio")
     portfolio_size: int = Field(default=25, description="Target portfolio size")
     max_sector_weight: Decimal = Field(default=Decimal("0.30"), description="Maximum sector weight")
-    max_single_position: Decimal = Field(default=Decimal("0.05"), description="Maximum single position")
+    max_single_position: Decimal = Field(
+        default=Decimal("0.05"), description="Maximum single position"
+    )
     sector_diversification: bool = Field(default=True, description="Enable sector diversification")
 
     # Quality thresholds
     min_quality_score: Decimal = Field(default=Decimal("60.0"), description="Minimum quality score")
-    min_sustainability_score: Decimal = Field(default=Decimal("50.0"), description="Minimum sustainability score")
+    min_sustainability_score: Decimal = Field(
+        default=Decimal("50.0"), description="Minimum sustainability score"
+    )
 
     # Dividend capture settings
     enable_dividend_capture: bool = Field(default=False, description="Enable dividend capture mode")
-    min_days_before_ex_dividend: int = Field(default=3, description="Min days before ex-dividend to buy")
-    min_dividend_growth: Decimal = Field(default=Decimal("5.0"), description="Minimum dividend growth rate (%)")
-    min_market_cap: Decimal = Field(default=Decimal("1000000000"), description="Minimum market cap for dividend stocks")
+    min_days_before_ex_dividend: int = Field(
+        default=3, description="Min days before ex-dividend to buy"
+    )
+    min_dividend_growth: Decimal = Field(
+        default=Decimal("5.0"), description="Minimum dividend growth rate (%)"
+    )
+    min_market_cap: Decimal = Field(
+        default=Decimal("1000000000"), description="Minimum market cap for dividend stocks"
+    )
     require_profitable: bool = Field(default=True, description="Require profitable companies")
     require_positive_fcf: bool = Field(default=True, description="Require positive free cash flow")
-    min_dividend_safety: str = Field(default="moderate", description="Minimum dividend safety rating")
+    min_dividend_safety: str = Field(
+        default="moderate", description="Minimum dividend safety rating"
+    )
     excluded_sectors: List[str] = Field(default_factory=list, description="Sectors to exclude")
     exclude_reits: bool = Field(default=False, description="Exclude REITs from screening")
     exclude_mlps: bool = Field(default=False, description="Exclude MLPs from screening")
-    max_pe_ratio: Optional[Decimal] = Field(default=Decimal("25.0"), description="Maximum P/E ratio")
+    max_pe_ratio: Optional[Decimal] = Field(
+        default=Decimal("25.0"), description="Maximum P/E ratio"
+    )
     max_pb_ratio: Optional[Decimal] = Field(default=Decimal("3.0"), description="Maximum P/B ratio")
     max_beta: Optional[Decimal] = Field(default=Decimal("1.2"), description="Maximum beta")
     # Scoring weights
     yield_weight: Decimal = Field(default=Decimal("0.3"), description="Yield score weight")
     growth_weight: Decimal = Field(default=Decimal("0.25"), description="Growth score weight")
-    sustainability_weight: Decimal = Field(default=Decimal("0.25"), description="Sustainability score weight")
+    sustainability_weight: Decimal = Field(
+        default=Decimal("0.25"), description="Sustainability score weight"
+    )
     value_weight: Decimal = Field(default=Decimal("0.2"), description="Value score weight")
 
     # Rebalancing
@@ -849,26 +875,24 @@ class LowVolatilityStrategyConfig(BaseModel):
     max_downside_deviation: Decimal = Field(
         default=Decimal("0.15"), description="Maximum downside deviation"
     )
-    max_downside_risk: Decimal = Field(
-        default=Decimal("0.20"), description="Maximum downside risk"
-    )
-    max_max_drawdown: Decimal = Field(
-        default=Decimal("0.30"), description="Maximum drawdown limit"
-    )
+    max_downside_risk: Decimal = Field(default=Decimal("0.20"), description="Maximum downside risk")
+    max_max_drawdown: Decimal = Field(default=Decimal("0.30"), description="Maximum drawdown limit")
     target_volatility: Optional[Decimal] = Field(
         default=None, description="Target portfolio volatility"
     )
 
     # Performance thresholds
     min_sharpe_ratio: Decimal = Field(default=Decimal("0.5"), description="Minimum Sharpe ratio")
-    min_sortino_ratio: Optional[Decimal] = Field(
-        default=None, description="Minimum Sortino ratio"
-    )
+    min_sortino_ratio: Optional[Decimal] = Field(default=None, description="Minimum Sortino ratio")
 
     # Score thresholds
     min_low_vol_score: Decimal = Field(default=Decimal("60.0"), description="Minimum low vol score")
-    min_defensive_score: Decimal = Field(default=Decimal("50.0"), description="Minimum defensive score")
-    min_stability_score: Decimal = Field(default=Decimal("50.0"), description="Minimum stability score")
+    min_defensive_score: Decimal = Field(
+        default=Decimal("50.0"), description="Minimum defensive score"
+    )
+    min_stability_score: Decimal = Field(
+        default=Decimal("50.0"), description="Minimum stability score"
+    )
 
     # Portfolio construction
     portfolio_size: int = Field(default=30, description="Number of positions in portfolio")
@@ -882,14 +906,16 @@ class LowVolatilityStrategyConfig(BaseModel):
 
     # Sector preferences
     defensive_sector_bias: bool = Field(default=True, description="Bias toward defensive sectors")
-    require_defensive_sector: bool = Field(default=False, description="Require stocks to be in defensive sectors")
+    require_defensive_sector: bool = Field(
+        default=False, description="Require stocks to be in defensive sectors"
+    )
     preferred_sectors: List[str] = Field(
         default_factory=lambda: ["Utilities", "Consumer Staples", "Healthcare", "Real Estate"],
-        description="Preferred defensive sectors"
+        description="Preferred defensive sectors",
     )
     avoid_sectors: List[str] = Field(
         default_factory=lambda: ["Technology", "Biotechnology", "Energy", "Materials"],
-        description="Sectors to avoid"
+        description="Sectors to avoid",
     )
 
     # Optimization settings
@@ -897,17 +923,15 @@ class LowVolatilityStrategyConfig(BaseModel):
     risk_free_rate: Decimal = Field(default=Decimal("0.04"), description="Risk-free rate")
 
     # Rebalancing
-    rebalance_threshold: Decimal = Field(
-        default=Decimal("0.05"), description="Rebalance threshold"
-    )
+    rebalance_threshold: Decimal = Field(default=Decimal("0.05"), description="Rebalance threshold")
 
     # Universe settings
-    min_market_cap: Optional[Decimal] = Field(
-        default=None, description="Minimum market cap"
-    )
+    min_market_cap: Optional[Decimal] = Field(default=None, description="Minimum market cap")
 
     # Scoring weights
-    volatility_weight: Decimal = Field(default=Decimal("0.4"), description="Volatility score weight")
+    volatility_weight: Decimal = Field(
+        default=Decimal("0.4"), description="Volatility score weight"
+    )
     defensive_weight: Decimal = Field(default=Decimal("0.3"), description="Defensive score weight")
     stability_weight: Decimal = Field(default=Decimal("0.2"), description="Stability score weight")
     quality_weight: Decimal = Field(default=Decimal("0.1"), description="Quality score weight")
@@ -924,20 +948,30 @@ class DividendScreeningCriteria(BaseModel):
     model_config = ConfigDict(extra="ignore")  # Allow extra fields for flexibility
 
     min_market_cap: Decimal = Field(default=Decimal("1000000000"), description="Minimum market cap")
-    min_dividend_yield: Decimal = Field(default=Decimal("2.0"), description="Minimum dividend yield (%)")
-    max_dividend_yield: Decimal = Field(default=Decimal("10.0"), description="Maximum dividend yield (%)")
-    max_payout_ratio: Decimal = Field(default=Decimal("75.0"), description="Maximum payout ratio (%)")
+    min_dividend_yield: Decimal = Field(
+        default=Decimal("2.0"), description="Minimum dividend yield (%)"
+    )
+    max_dividend_yield: Decimal = Field(
+        default=Decimal("10.0"), description="Maximum dividend yield (%)"
+    )
+    max_payout_ratio: Decimal = Field(
+        default=Decimal("75.0"), description="Maximum payout ratio (%)"
+    )
     min_years_of_growth: int = Field(default=3, description="Minimum years of dividend growth")
     min_fcf_coverage: Decimal = Field(default=Decimal("1.5"), description="Minimum FCF coverage")
     exclude_sectors: List[str] = Field(default_factory=list, description="Sectors to exclude")
-    excluded_sectors: List[str] = Field(default_factory=list, description="Sectors to exclude (alias)")
+    excluded_sectors: List[str] = Field(
+        default_factory=list, description="Sectors to exclude (alias)"
+    )
     min_yield: Decimal = Field(default=Decimal("2.0"), description="Minimum yield")
     max_yield: Decimal = Field(default=Decimal("10.0"), description="Maximum yield")
     max_payout: Decimal = Field(default=Decimal("75.0"), description="Maximum payout")
     min_growth: Optional[Decimal] = Field(default=None, description="Minimum growth")
     min_years: int = Field(default=3, description="Minimum years")
     min_quality: Decimal = Field(default=Decimal("50.0"), description="Minimum quality score")
-    min_sustainability: Decimal = Field(default=Decimal("50.0"), description="Minimum sustainability score")
+    min_sustainability: Decimal = Field(
+        default=Decimal("50.0"), description="Minimum sustainability score"
+    )
     require_profitable: bool = Field(default=True, description="Require profitable companies")
     require_positive_fcf: bool = Field(default=True, description="Require positive FCF")
     min_safety: str = Field(default="moderate", description="Minimum safety rating")
@@ -948,7 +982,9 @@ class LowVolatilityScreeningCriteria(BaseModel):
 
     model_config = ConfigDict(extra="ignore")  # Allow extra fields for flexibility
 
-    min_market_cap: Optional[Decimal] = Field(default=Decimal("1000000000"), description="Minimum market cap")
+    min_market_cap: Optional[Decimal] = Field(
+        default=Decimal("1000000000"), description="Minimum market cap"
+    )
     max_volatility_percentile: Decimal = Field(
         default=Decimal("0.3"), description="Maximum volatility percentile (0-1)"
     )
@@ -964,16 +1000,17 @@ class LowVolatilityScreeningCriteria(BaseModel):
     min_sharpe_ratio: Decimal = Field(default=Decimal("0.0"), description="Minimum Sharpe ratio")
     min_avg_volume: Decimal = Field(default=Decimal("500000"), description="Minimum average volume")
     min_low_vol_score: Decimal = Field(default=Decimal("60.0"), description="Minimum low vol score")
-    min_defensive_score: Decimal = Field(default=Decimal("50.0"), description="Minimum defensive score")
-    min_stability_score: Decimal = Field(default=Decimal("50.0"), description="Minimum stability score")
+    min_defensive_score: Decimal = Field(
+        default=Decimal("50.0"), description="Minimum defensive score"
+    )
+    min_stability_score: Decimal = Field(
+        default=Decimal("50.0"), description="Minimum stability score"
+    )
     preferred_sectors: List[str] = Field(
         default_factory=lambda: ["Utilities", "Consumer Staples", "Healthcare", "Real Estate"],
-        description="Preferred defensive sectors"
+        description="Preferred defensive sectors",
     )
-    avoid_sectors: List[str] = Field(
-        default_factory=list,
-        description="Sectors to avoid"
-    )
+    avoid_sectors: List[str] = Field(default_factory=list, description="Sectors to avoid")
     require_defensive: bool = Field(default=False, description="Require defensive sector")
 
 

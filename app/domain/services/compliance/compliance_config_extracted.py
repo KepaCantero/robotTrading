@@ -6,11 +6,11 @@ TASK-24: SRP Refactoring
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator
 
 logger = logging.getLogger(__name__)
+
 
 class ComplianceConfig(BaseModel):
     """
@@ -116,5 +116,3 @@ class ComplianceConfig(BaseModel):
 # =============================================================================
 # SYSTEMS AVAILABILITY TRACKING
 # =============================================================================
-
-

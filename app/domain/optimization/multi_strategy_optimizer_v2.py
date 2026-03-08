@@ -18,11 +18,11 @@ import optuna
 from app.backtesting.data_loader import DataLoader
 from app.backtesting.engines.multi_strategy_engine import MultiStrategyBacktester
 from app.domain.models.market_data import Quote
-from app.services.multi_strategy_allocation import MultiStrategyAllocationManager
-from app.services.portfolio_config_manager import get_portfolio_config_manager
 from app.domain.strategies.mean_reversion import MeanReversionStrategy
 from app.domain.strategies.momentum import MomentumStrategy
 from app.domain.strategies.pairs_trading import PairsTradingStrategy
+from app.services.multi_strategy_allocation import MultiStrategyAllocationManager
+from app.services.portfolio_config_manager import get_portfolio_config_manager
 
 logger = logging.getLogger(__name__)
 

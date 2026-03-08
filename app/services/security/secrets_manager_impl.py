@@ -12,12 +12,12 @@ R29: Security Hardening
 """
 
 import json
+import logging
 import os
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Protocol
-import logging
 
 from cryptography.fernet import Fernet, InvalidToken
 
@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class SecretValue:
     """Data model for secret values."""
+
     key: str
     value: str  # encrypted
     version: int
@@ -118,11 +119,7 @@ class EnvironmentStorage:
             List of secret keys
         """
         prefix = "SECRET_"
-        return [
-            key[len(prefix):].lower()
-            for key in os.environ
-            if key.startswith(prefix)
-        ]
+        return [key[len(prefix) :].lower() for key in os.environ if key.startswith(prefix)]
 
 
 class EncryptedFileStorage:
@@ -238,6 +235,7 @@ class EncryptedFileStorage:
 
 class SecretsError(Exception):
     """Exception for secrets errors."""
+
     pass
 
 
@@ -283,8 +281,7 @@ class SecretsManagerImpl:
         """Encrypt a secret value."""
         if self._fernet is None:
             raise SecretsError(
-                "Encryption not available. Set ALGOTRADING_ENCRYPTION_KEY "
-                "environment variable."
+                "Encryption not available. Set ALGOTRADING_ENCRYPTION_KEY " "environment variable."
             )
         return self._fernet.encrypt(value.encode()).decode()
 
@@ -292,8 +289,7 @@ class SecretsManagerImpl:
         """Decrypt a secret value."""
         if self._fernet is None:
             raise SecretsError(
-                "Encryption not available. Set ALGOTRADING_ENCRYPTION_KEY "
-                "environment variable."
+                "Encryption not available. Set ALGOTRADING_ENCRYPTION_KEY " "environment variable."
             )
         return self._fernet.decrypt(encrypted_value.encode()).decode()
 
@@ -317,15 +313,11 @@ class SecretsManagerImpl:
                 value=encrypted_value,
                 version=old_version + 1,
                 created_at=self._secrets[key].created_at,
-                updated_at=now
+                updated_at=now,
             )
         else:
             self._secrets[key] = SecretValue(
-                key=key,
-                value=encrypted_value,
-                version=1,
-                created_at=now,
-                updated_at=now
+                key=key, value=encrypted_value, version=1, created_at=now, updated_at=now
             )
 
         # Also store in backend

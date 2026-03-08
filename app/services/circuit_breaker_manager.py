@@ -113,16 +113,16 @@ class CircuitBreakerConfig:
         self.VIX_EXTREME = Decimal(str(tt.circuit_breaker_vix_extreme))
 
         # Monitoring settings - from centralized config
-        self.check_interval_seconds = float(getattr(
-            tt, 'circuit_breaker_check_interval_seconds', 30.0
-        ))
+        self.check_interval_seconds = float(
+            getattr(tt, 'circuit_breaker_check_interval_seconds', 30.0)
+        )
         self.market_index_symbol: str = "SPY"
 
         # Auto-resume settings - from centralized config
         self.auto_resume_on_halt_lift: bool = True
-        self.halt_check_interval_seconds = float(getattr(
-            tt, 'circuit_breaker_halt_check_interval_seconds', 60.0
-        ))
+        self.halt_check_interval_seconds = float(
+            getattr(tt, 'circuit_breaker_halt_check_interval_seconds', 60.0)
+        )
 
         # Apply any custom overrides
         if custom_config:

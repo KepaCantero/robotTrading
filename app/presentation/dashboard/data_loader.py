@@ -131,6 +131,7 @@ class DashboardDataLoader:
                     content = f.read()
                 # Look for PnL pattern in log (e.g., "PnL: 123.45")
                 import re
+
                 pnl_match = re.search(r'[Pp][Nn][Ll]:\s*[-+]?\d*\.?\d+', content)
                 if pnl_match:
                     try:

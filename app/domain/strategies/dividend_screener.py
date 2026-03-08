@@ -21,6 +21,7 @@ from decimal import Decimal
 from typing import Dict, List
 
 from app.shared.config.centralized_config import get_config
+
 from .models import (
     DividendProfile,
     DividendSafety,

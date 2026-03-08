@@ -23,8 +23,8 @@ from __future__ import annotations
 import logging
 from decimal import Decimal
 
-from app.domain.models.input_profile import RiskTolerance
 from app.domain.configurators.risk_config import RiskConfig
+from app.domain.models.input_profile import RiskTolerance
 
 logger = logging.getLogger(__name__)
 

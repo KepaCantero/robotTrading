@@ -31,7 +31,7 @@ from app.domain.models.portfolio_analytics import (
     PortfolioRebalance,
     RiskMetrics,
 )
-from app.domain.services.portfolio.analytics import (
+from app.services.portfolio_analytics_service import (
     PortfolioAnalyticsService,
     get_portfolio_analytics_service,
 )

@@ -64,15 +64,33 @@ class ReconnectionConfig:
         tt = get_config().trading_thresholds
 
         # Core reconnection parameters from centralized config (with kwarg overrides)
-        self.max_attempts = max_attempts if max_attempts is not None else tt.reconnection_max_attempts
-        self.base_delay_seconds = base_delay_seconds if base_delay_seconds is not None else tt.reconnection_base_delay_seconds
-        self.max_delay_seconds = max_delay_seconds if max_delay_seconds is not None else tt.reconnection_max_delay_seconds
-        self.exponential_base = exponential_base if exponential_base is not None else tt.reconnection_exponential_base
+        self.max_attempts = (
+            max_attempts if max_attempts is not None else tt.reconnection_max_attempts
+        )
+        self.base_delay_seconds = (
+            base_delay_seconds
+            if base_delay_seconds is not None
+            else tt.reconnection_base_delay_seconds
+        )
+        self.max_delay_seconds = (
+            max_delay_seconds
+            if max_delay_seconds is not None
+            else tt.reconnection_max_delay_seconds
+        )
+        self.exponential_base = (
+            exponential_base if exponential_base is not None else tt.reconnection_exponential_base
+        )
         self.jitter = jitter if jitter is not None else True
-        self.jitter_factor = jitter_factor if jitter_factor is not None else tt.reconnection_jitter_factor
+        self.jitter_factor = (
+            jitter_factor if jitter_factor is not None else tt.reconnection_jitter_factor
+        )
 
         # Alert thresholds from centralized config (with kwarg overrides)
-        self.alert_after_attempts = alert_after_attempts if alert_after_attempts is not None else tt.reconnection_alert_after_attempts
+        self.alert_after_attempts = (
+            alert_after_attempts
+            if alert_after_attempts is not None
+            else tt.reconnection_alert_after_attempts
+        )
 
         # Callbacks
         self.on_attempt = on_attempt

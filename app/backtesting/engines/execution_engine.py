@@ -15,24 +15,19 @@ SINGLE SOURCE OF TRUTH: All values from CentralizedConfig.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from app.backtesting.base_engine import (
     BaseBacktestEngine,
-    BacktestState,
     EngineType,
-    ExecutionType,
     ExecutionResult,
+    ExecutionType,
     Position,
 )
 from app.backtesting.models import BacktestConfig, BacktestResult
-from app.backtesting.services.transaction_cost_model import (
-    BrokerType,
-    TransactionCostModel,
-)
+from app.backtesting.services.transaction_cost_model import BrokerType, TransactionCostModel
 from app.domain.models.market_data import Quote
 
 logger = logging.getLogger(__name__)
@@ -90,8 +85,7 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
 
         self.execution_type = execution_type
         self.base_slippage_bps = (
-            base_slippage_bps if base_slippage_bps is not None
-            else self._base_slippage_bps
+            base_slippage_bps if base_slippage_bps is not None else self._base_slippage_bps
         )
         self.transaction_cost_model = transaction_cost_model or TransactionCostModel(
             broker=BrokerType.INTERACTIVE_BROKERS,
@@ -163,9 +157,7 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
 
             # Process any signals for this timestamp
             if signals:
-                signal_results = self._process_signals_with_delay(
-                    signals, market_data, i
-                )
+                signal_results = self._process_signals_with_delay(signals, market_data, i)
                 execution_results.extend(signal_results)
 
             # Check intra-bar execution for open positions
@@ -254,10 +246,10 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
 
         # Update capital
         if side.lower() == "buy":
-            self.state.capital -= (execution_price * quantity + commission)
+            self.state.capital -= execution_price * quantity + commission
             self.state.positions[symbol] = self.state.positions.get(symbol, Decimal("0")) + quantity
         else:
-            self.state.capital += (execution_price * quantity - commission)
+            self.state.capital += execution_price * quantity - commission
 
         return ExecutionResult(
             symbol=symbol,
@@ -455,11 +447,15 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
             # Execute at next bar open
             if self.enable_next_day_execution:
                 signal_price = self._get_price(current_md)
-                next_open = getattr(next_md, "open", None) or getattr(next_md, "open_price", signal_price)
+                next_open = getattr(next_md, "open", None) or getattr(
+                    next_md, "open_price", signal_price
+                )
 
                 result = self.execute_entry_order(
                     symbol=signal.symbol,
-                    side=signal.signal_type.value.lower() if hasattr(signal.signal_type, "value") else str(signal.signal_type).lower(),
+                    side=signal.signal_type.value.lower()
+                    if hasattr(signal.signal_type, "value")
+                    else str(signal.signal_type).lower(),
                     quantity=Decimal("100"),  # Default quantity
                     signal_time=signal.timestamp,
                     signal_price=signal_price,
@@ -530,7 +526,11 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
         days = (end_date - start_date).days
         years = Decimal(str(days / 365.25)) if days > 0 else Decimal("0")
         annualized_return = (
-            ((self.state.capital / self.config.initial_capital) ** (Decimal("1") / years) - Decimal("1")) * Decimal("100")
+            (
+                (self.state.capital / self.config.initial_capital) ** (Decimal("1") / years)
+                - Decimal("1")
+            )
+            * Decimal("100")
             if years > 0
             else Decimal("0")
         )
@@ -542,7 +542,15 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
             total_trades=len(execution_results),
             winning_trades=sum(1 for r in execution_results if r.execution_price > r.signal_price),
             losing_trades=sum(1 for r in execution_results if r.execution_price <= r.signal_price),
-            win_rate=Decimal(str(sum(1 for r in execution_results if r.execution_price > r.signal_price) / len(execution_results) * 100)) if execution_results else Decimal("0"),
+            win_rate=Decimal(
+                str(
+                    sum(1 for r in execution_results if r.execution_price > r.signal_price)
+                    / len(execution_results)
+                    * 100
+                )
+            )
+            if execution_results
+            else Decimal("0"),
             total_pnl=self.state.capital - self.config.initial_capital,
             total_pnl_percentage=total_return,
             gross_profit=Decimal("0"),

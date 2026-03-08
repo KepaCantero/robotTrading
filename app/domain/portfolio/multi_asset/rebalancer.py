@@ -14,9 +14,10 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List
 
+from app.shared.config.centralized_config import get_config
+
 from .asset_class import AssetClass, AssetClassType
 from .models import MultiAssetAllocation, MultiAssetPortfolio, Trade
-from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -414,7 +415,11 @@ class MultiAssetRebalancer:
         total_cost = total_commission + total_spread + total_impact + total_tax
         # Use config percentage multiplier
         tt = get_config().trading_thresholds
-        cost_pct = (total_cost / portfolio_value * tt.percentage_multiplier) if portfolio_value > 0 else Decimal("0")
+        cost_pct = (
+            (total_cost / portfolio_value * tt.percentage_multiplier)
+            if portfolio_value > 0
+            else Decimal("0")
+        )
 
         return CostEstimate(
             commission=total_commission,
@@ -680,8 +685,12 @@ class MultiAssetRebalancer:
         cost_too_high = cost_estimate.cost_as_percentage > cost_threshold
 
         # Get rebalance thresholds from config
-        rebalance_threshold_high = Decimal(str(getattr(cfg.trading, 'portfolio_max_deviation_high', 0.10)))
-        rebalance_threshold_medium = Decimal(str(getattr(cfg.trading, 'portfolio_max_deviation_moderate', 0.05)))
+        rebalance_threshold_high = Decimal(
+            str(getattr(cfg.trading, 'portfolio_max_deviation_high', 0.10))
+        )
+        rebalance_threshold_medium = Decimal(
+            str(getattr(cfg.trading, 'portfolio_max_deviation_moderate', 0.05))
+        )
 
         if max_deviation > Decimal("0.15"):
             # More than 15% deviation - critical

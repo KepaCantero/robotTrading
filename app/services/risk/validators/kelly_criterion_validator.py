@@ -5,9 +5,9 @@ Valida que el tamaño de la posición no exceda:
 - Kelly Criterion calculado
 - 2% máximo del capital
 """
-from typing import Optional
-from decimal import Decimal
 from dataclasses import dataclass
+from decimal import Decimal
+from typing import Optional
 
 
 @dataclass

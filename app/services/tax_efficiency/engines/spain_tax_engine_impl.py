@@ -7,9 +7,10 @@ Implements:
 - MOD720-001: Modelo 720 reporting > €50k foreign assets
 - LOSS-CF-001: Loss carryforward max 4 years
 """
-from typing import Optional
+from datetime import datetime
 from decimal import Decimal
-from datetime import datetime, date
+from typing import Optional
+
 from app.core.protocols.i_spain_tax_engine import ISpainTaxEngine  # @skip-import si no existe
 
 
@@ -30,9 +31,36 @@ class SpainTaxEngineImpl(ISpainTaxEngine):
 
     # EU Countries for dividend tax (DIV-001)
     EU_COUNTRIES = {
-        "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR",
-        "DE", "GR", "HU", "IS", "IE", "IT", "LV", "LI", "LT", "LU",
-        "MT", "NL", "NO", "PL", "PT", "RO", "SK", "SI", "ES", "SE",
+        "AT",
+        "BE",
+        "BG",
+        "HR",
+        "CY",
+        "CZ",
+        "DK",
+        "EE",
+        "FI",
+        "FR",
+        "DE",
+        "GR",
+        "HU",
+        "IS",
+        "IE",
+        "IT",
+        "LV",
+        "LI",
+        "LT",
+        "LU",
+        "MT",
+        "NL",
+        "NO",
+        "PL",
+        "PT",
+        "RO",
+        "SK",
+        "SI",
+        "ES",
+        "SE",
     }
 
     # Modelo 720 threshold (MOD720-001)
@@ -66,10 +94,7 @@ class SpainTaxEngineImpl(ISpainTaxEngine):
             if remaining <= 0:
                 break
 
-            taxable_in_bracket = min(
-                remaining,
-                bracket["max"] - bracket["min"]
-            )
+            taxable_in_bracket = min(remaining, bracket["max"] - bracket["min"])
 
             tax += taxable_in_bracket * bracket["rate"]
             remaining -= taxable_in_bracket
@@ -119,14 +144,39 @@ class SpainTaxEngineImpl(ISpainTaxEngine):
         # Mapeo básico de tickers conocidos
         eu_tickers = {
             # IBEX35
-            "SAN", "REE", "TEF", "ITX", "AMS", "ACS", "FER", "IAG",
-            "BME", "ENG", "MAP", "SAB", "CLNX", "VIS", "COL", "MRL",
-
+            "SAN",
+            "REE",
+            "TEF",
+            "ITX",
+            "AMS",
+            "ACS",
+            "FER",
+            "IAG",
+            "BME",
+            "ENG",
+            "MAP",
+            "SAB",
+            "CLNX",
+            "VIS",
+            "COL",
+            "MRL",
             # Euro Stoxx 50
-            "ASML", "MC", "AIR", "SAN", "ISP", "AI", "OR", "BNP",
-
+            "ASML",
+            "MC",
+            "AIR",
+            "SAN",
+            "ISP",
+            "AI",
+            "OR",
+            "BNP",
             # Other EU
-            "SAP", "SIE", "NESN", "RO", "NOVN", "UBSG", "DNB",
+            "SAP",
+            "SIE",
+            "NESN",
+            "RO",
+            "NOVN",
+            "UBSG",
+            "DNB",
         }
 
         return symbol in eu_tickers
@@ -191,9 +241,15 @@ class SpainTaxEngineImpl(ISpainTaxEngine):
         total_value = Decimal("0")
         for category in foreign_assets_data.values():
             if isinstance(category, dict):
-                total_value += Decimal(str(sum(
-                    Decimal(str(v)) for v in category.values() if isinstance(v, (int, float, str, Decimal))
-                )))
+                total_value += Decimal(
+                    str(
+                        sum(
+                            Decimal(str(v))
+                            for v in category.values()
+                            if isinstance(v, (int, float, str, Decimal))
+                        )
+                    )
+                )
 
         return {
             "report_type": "MODELO_720",
@@ -239,7 +295,9 @@ class SpainTaxEngineImpl(ISpainTaxEngine):
 
         return available
 
-    def apply_loss_carryforward(self, profit: Decimal, current_year: int) -> tuple[Decimal, Decimal]:
+    def apply_loss_carryforward(
+        self, profit: Decimal, current_year: int
+    ) -> tuple[Decimal, Decimal]:
         """
         LOSS-CF-001: Aplicar carryforward de pérdidas
 

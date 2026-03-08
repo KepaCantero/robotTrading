@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -107,7 +107,11 @@ class RiskMetricsCalculator:
             trading_days: Number of trading days per year (default: from CentralizedConfig)
         """
         self.confidence_level = confidence_level
-        self.trading_days = trading_days if trading_days is not None else get_config().backtesting.annual_trading_days
+        self.trading_days = (
+            trading_days
+            if trading_days is not None
+            else get_config().backtesting.annual_trading_days
+        )
 
     # =========================================================================
     # VALUE AT RISK (VaR)

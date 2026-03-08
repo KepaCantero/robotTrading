@@ -26,6 +26,7 @@ from app.backtesting.services.transaction_cost_model import (
     TransactionCostModel,
     TransactionCostResult,
 )
+
 # SHARED UTILITIES: Centralized slippage and trade utilities
 from app.backtesting.shared.slippage_utils import apply_slippage as shared_apply_slippage
 from app.backtesting.shared.trade_utils import build_trade_reason as shared_build_trade_reason
@@ -577,7 +578,9 @@ class TradeExecutor:
                 gross_value=trade_value,
                 commission=commission,
                 total_cost=commission,
-                total_cost_bps=(commission / trade_value * Decimal("10000")) if trade_value > 0 else Decimal("0"),
+                total_cost_bps=(commission / trade_value * Decimal("10000"))
+                if trade_value > 0
+                else Decimal("0"),
             )
 
         # Use realistic TransactionCostModel
@@ -597,4 +600,3 @@ class TradeExecutor:
             order_type=OrderType.MARKET,  # Backtesting assumes market orders
             average_volume=average_volume,
         )
-

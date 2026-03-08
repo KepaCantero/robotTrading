@@ -20,10 +20,10 @@ import scipy.stats  # noqa: F401
 
 SCIPY_AVAILABLE = True
 
-from app.shared.config.centralized_config import get_config
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
+from app.shared.config.centralized_config import get_config
 
 from .base import BaseStrategyEngine
 
@@ -75,12 +75,17 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
                 str(strategy_config.take_profit_pct or centralized_config.trading.take_profit_pct)
             )
             self.max_position_size = Decimal(
-                str(strategy_config.max_position_size or centralized_config.trading.max_position_size)
+                str(
+                    strategy_config.max_position_size
+                    or centralized_config.trading.max_position_size
+                )
             )
         else:
             # Fallback to config or defaults
             self.cointegration_threshold = Decimal(str(config.get("cointegration_threshold", 0.05)))
-            self.spread_threshold = Decimal(str(getattr(centralized_config.trading, 'max_risk_per_trade', 0.02)))
+            self.spread_threshold = Decimal(
+                str(getattr(centralized_config.trading, 'max_risk_per_trade', 0.02))
+            )
             self.lookback_period = config.get("lookback_period", 60)
             self.min_correlation = Decimal(str(config.get("min_correlation", 0.7)))
             self.max_pair_exposure = Decimal(str(config.get("max_pair_exposure", 0.20)))

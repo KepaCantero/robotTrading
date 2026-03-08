@@ -15,7 +15,6 @@ from typing import List, Optional, Tuple
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from app.shared.config.centralized_config import CentralizedConfig
 
 
 class TradeSide(str, Enum):
@@ -82,7 +81,9 @@ class Trade(BaseModel):
     value: Optional[Decimal] = Field(None, ge=0, description="Total trade value (quantity * price)")
     currency: str = Field(default="USD", description="Trade currency")
     priority: int = Field(default=0, ge=0, le=100, description="Execution priority (0-100)")
-    estimated_cost: Decimal = Field(default=Decimal("0"), ge=0, description="Estimated trading cost")
+    estimated_cost: Decimal = Field(
+        default=Decimal("0"), ge=0, description="Estimated trading cost"
+    )
     reason: Optional[str] = Field(None, description="Reason or signal that triggered the trade")
 
     @field_validator("side")
@@ -149,15 +150,9 @@ class PerformanceMetrics(BaseModel):
     total_return: Optional[Decimal] = Field(
         None, description="Total return over entire period (decimal form)"
     )
-    annualized_return: Optional[Decimal] = Field(
-        None, description="Annualized return percentage"
-    )
-    cagr: Optional[Decimal] = Field(
-        None, description="Compound Annual Growth Rate (decimal form)"
-    )
-    cumulative_return: Optional[Decimal] = Field(
-        None, description="Cumulative return over period"
-    )
+    annualized_return: Optional[Decimal] = Field(None, description="Annualized return percentage")
+    cagr: Optional[Decimal] = Field(None, description="Compound Annual Growth Rate (decimal form)")
+    cumulative_return: Optional[Decimal] = Field(None, description="Cumulative return over period")
 
     # =========================================================================
     # BASIC TRADE METRICS
@@ -171,9 +166,7 @@ class PerformanceMetrics(BaseModel):
     # P&L METRICS
     # =========================================================================
     total_pnl: Decimal = Field(default=Decimal("0"), description="Total profit/loss")
-    total_pnl_percentage: Decimal = Field(
-        default=Decimal("0"), description="Total P&L percentage"
-    )
+    total_pnl_percentage: Decimal = Field(default=Decimal("0"), description="Total P&L percentage")
     gross_profit: Decimal = Field(default=Decimal("0"), ge=0, description="Gross profit")
     gross_loss: Decimal = Field(default=Decimal("0"), le=0, description="Gross loss")
     net_profit: Decimal = Field(default=Decimal("0"), description="Net profit")
@@ -205,9 +198,7 @@ class PerformanceMetrics(BaseModel):
     # RISK-ADJUSTED RETURN METRICS
     # =========================================================================
     sharpe_ratio: Optional[Decimal] = Field(None, description="Sharpe ratio (annualized)")
-    sortino_ratio: Optional[Decimal] = Field(
-        None, description="Sortino ratio (downside risk)"
-    )
+    sortino_ratio: Optional[Decimal] = Field(None, description="Sortino ratio (downside risk)")
     calmar_ratio: Optional[Decimal] = Field(
         None, description="Calmar Ratio: CAGR / |Max Drawdown| (>1.0 good, >3.0 excellent)"
     )
@@ -217,9 +208,7 @@ class PerformanceMetrics(BaseModel):
     treynor_ratio: Optional[Decimal] = Field(
         None, description="Treynor ratio: (Return - RiskFree) / Beta"
     )
-    information_ratio: Optional[Decimal] = Field(
-        None, description="Information ratio vs benchmark"
-    )
+    information_ratio: Optional[Decimal] = Field(None, description="Information ratio vs benchmark")
     risk_reward_ratio: Optional[Decimal] = Field(
         None, description="Average risk/reward ratio per trade (target >=1:3)"
     )
@@ -256,9 +245,7 @@ class PerformanceMetrics(BaseModel):
     var_95: Optional[Decimal] = Field(
         None, description="Value at Risk 95%: Worst 5% scenario (negative value = potential loss)"
     )
-    var_99: Optional[Decimal] = Field(
-        None, description="Value at Risk 99%: Worst 1% scenario"
-    )
+    var_99: Optional[Decimal] = Field(None, description="Value at Risk 99%: Worst 1% scenario")
     cvar_95: Optional[Decimal] = Field(
         None, description="Conditional VaR 95%: Expected loss beyond VaR threshold"
     )

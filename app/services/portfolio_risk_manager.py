@@ -12,8 +12,8 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from app.shared.config.centralized_config import get_config
 from app.domain.models.portfolio import Portfolio, Position
+from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 

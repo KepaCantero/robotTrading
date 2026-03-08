@@ -20,8 +20,8 @@ from datetime import date
 from decimal import Decimal
 from typing import Optional, Protocol
 
-from app.shared.config.centralized_config import get_config
 from app.domain.strategies.fx_carry_trade.models import FXPair, FXRateQuote, InterestRateQuote
+from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 

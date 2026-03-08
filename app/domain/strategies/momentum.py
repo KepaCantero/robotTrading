@@ -15,12 +15,16 @@ from collections import deque
 from decimal import Decimal
 from typing import Any
 
-from app.shared.config.centralized_config import get_strategy_config, get_trading_threshold, get_config
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.services.analysis.momentum import TechnicalIndicatorCalculator
 from app.services.signal_scoring_engine import get_signal_scoring_engine
+from app.shared.config.centralized_config import (
+    get_config,
+    get_strategy_config,
+    get_trading_threshold,
+)
 
 from .base import BaseStrategy
 

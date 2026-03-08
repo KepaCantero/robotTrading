@@ -16,17 +16,15 @@ from pathlib import Path
 from typing import Any, Dict
 
 import optuna
-import yaml
 
 from app.backtesting.comprehensive_backtest_runner import ComprehensiveBacktestRunner
 from app.backtesting.shared import (
-    MetricsFactory,
     ParameterMappingService,
     TempConfigManager,
     get_empty_metrics,
 )
-from app.shared.config.profile_config_loader import ProfileConfigLoader
 from app.domain.models.input_profile import InputProfile
+from app.shared.config.profile_config_loader import ProfileConfigLoader
 
 logger = logging.getLogger(__name__)
 
@@ -171,7 +169,9 @@ class BayesianOptimizer:
         updated_config = ParameterMappingService.map_params_to_strategy_config(params, config)
 
         # Use shared TempConfigManager for automatic cleanup
-        with TempConfigManager(updated_config, self.output_dir, prefix="temp_opt") as temp_config_path:
+        with TempConfigManager(
+            updated_config, self.output_dir, prefix="temp_opt"
+        ) as temp_config_path:
             try:
                 runner = ComprehensiveBacktestRunner(str(temp_config_path))
 

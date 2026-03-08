@@ -17,15 +17,15 @@ Usage:
 """
 
 from app.shared.performance.metrics import (
-    PerformanceMetricsCalculator,
-    SharpeRatioResult,
     DrawdownResult,
+    PerformanceMetricsCalculator,
     PerformanceResult,
+    SharpeRatioResult,
+    calmar_ratio,
+    max_drawdown,
+    omega_ratio,
     sharpe_ratio,
     sortino_ratio,
-    calmar_ratio,
-    omega_ratio,
-    max_drawdown,
     ulcer_index,
 )
 

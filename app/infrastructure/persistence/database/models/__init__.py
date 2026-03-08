@@ -10,7 +10,7 @@ Instead of dynamic importlib, we use deferred imports in functions.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypeVar, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Protocol, TypeVar, runtime_checkable
 
 # Use TYPE_CHECKING for type hints only
 if TYPE_CHECKING:
@@ -177,13 +177,13 @@ def _get_models_module():
             # Try direct import first (preferred)
             try:
                 from .. import models as models_module
+
                 _model_cache["models_module"] = models_module
             except ImportError:
                 # Fallback to importlib if needed
                 import importlib.util
-                spec = importlib.util.spec_from_file_location(
-                    module_name, models_file
-                )
+
+                spec = importlib.util.spec_from_file_location(module_name, models_file)
                 if spec and spec.loader:
                     models_module = importlib.util.module_from_spec(spec)
                     sys.modules[module_name] = models_module

@@ -17,20 +17,16 @@ from __future__ import annotations
 import logging
 import uuid
 from pathlib import Path
-from typing import Any, Dict, Union
+from typing import Any, Dict
 
 import numpy as np
 import pandas as pd
 import yaml
 
 from app.backtesting.comprehensive_backtest_runner import ComprehensiveBacktestRunner
-from app.backtesting.shared import (
-    MetricsDict,
-    TempConfigManager,
-    get_empty_metrics,
-)
-from app.shared.config.profile_config_loader import ProfileConfigLoader
+from app.backtesting.shared import MetricsDict, get_empty_metrics
 from app.domain.models.input_profile import InputProfile
+from app.shared.config.profile_config_loader import ProfileConfigLoader
 
 logger = logging.getLogger(__name__)
 

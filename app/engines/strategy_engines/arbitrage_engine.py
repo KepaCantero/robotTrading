@@ -21,11 +21,11 @@ from typing import Any, Dict, List, Optional, Sequence
 
 import numpy as np
 
-from app.shared.config.centralized_config import get_config
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.services.analysis.momentum import TechnicalIndicatorCalculator
+from app.shared.config.centralized_config import get_config
 
 from .base import BaseStrategyEngine
 
@@ -81,9 +81,15 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
 
         # Risk parameters from centralized config with fallback to local config
         centralized_config = get_config()
-        self.stop_loss = Decimal(str(config.get("stop_loss", centralized_config.trading.stop_loss_pct)))
-        self.take_profit = Decimal(str(config.get("take_profit", centralized_config.trading.take_profit_pct)))
-        self.max_position_size = Decimal(str(config.get("max_position_size", centralized_config.trading.max_position_size)))
+        self.stop_loss = Decimal(
+            str(config.get("stop_loss", centralized_config.trading.stop_loss_pct))
+        )
+        self.take_profit = Decimal(
+            str(config.get("take_profit", centralized_config.trading.take_profit_pct))
+        )
+        self.max_position_size = Decimal(
+            str(config.get("max_position_size", centralized_config.trading.max_position_size))
+        )
 
         # Load strategy-specific configuration from centralized config
         strategy_config = centralized_config.get_strategy_config("arbitrage")
@@ -146,7 +152,10 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
                 str(strategy_config.take_profit_pct or centralized_config.trading.take_profit_pct)
             )
             self.max_position_size = Decimal(
-                str(strategy_config.max_position_size or centralized_config.trading.max_position_size)
+                str(
+                    strategy_config.max_position_size
+                    or centralized_config.trading.max_position_size
+                )
             )
 
         # Arbitrage pairs configuration

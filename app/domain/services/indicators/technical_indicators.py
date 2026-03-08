@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 # Try to import pandas-ta
 try:
     import pandas_ta as ta
+
     PANDAS_TA_AVAILABLE = True
 except ImportError:
     PANDAS_TA_AVAILABLE = False
@@ -44,6 +45,7 @@ except ImportError:
 @dataclass
 class IndicatorResult:
     """Container for indicator calculation results."""
+
     value: Optional[float] = None
     values: Optional[np.ndarray] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
@@ -104,7 +106,7 @@ class TechnicalIndicators:
         self,
         data: Union[pd.DataFrame, pd.Series, List, np.ndarray],
         min_length: int = 1,
-        name: str = "data"
+        name: str = "data",
     ) -> Tuple[bool, Optional[np.ndarray]]:
         """
         Validate input data and convert to numpy array.
@@ -139,18 +141,13 @@ class TechnicalIndicators:
 
         # Check length
         if len(arr) < min_length:
-            logger.warning(
-                f"Insufficient data for {name}: {len(arr)} < {min_length}"
-            )
+            logger.warning(f"Insufficient data for {name}: {len(arr)} < {min_length}")
             return False, None
 
         return True, arr
 
     def _get_column(
-        self,
-        df: pd.DataFrame,
-        column: str,
-        default: Optional[str] = None
+        self, df: pd.DataFrame, column: str, default: Optional[str] = None
     ) -> Optional[pd.Series]:
         """Get a column from DataFrame with fallback."""
         if column in df.columns:
@@ -167,7 +164,7 @@ class TechnicalIndicators:
         self,
         data: Union[pd.DataFrame, pd.Series, List, np.ndarray],
         period: int = 14,
-        return_array: bool = False
+        return_array: bool = False,
     ) -> Union[Optional[float], Optional[np.ndarray]]:
         """
         Calculate Relative Strength Index (RSI).
@@ -187,7 +184,11 @@ class TechnicalIndicators:
         """
         is_valid, prices = self._validate_input(data, min_length=period + 1, name="RSI")
         if not is_valid:
-            return np.full(len(data) if isinstance(data, (list, np.ndarray)) else len(data), np.nan) if return_array else None
+            return (
+                np.full(len(data) if isinstance(data, (list, np.ndarray)) else len(data), np.nan)
+                if return_array
+                else None
+            )
 
         if self.use_pandas_ta:
             try:
@@ -203,10 +204,7 @@ class TechnicalIndicators:
         return self._rsi_native(prices, period, return_array)
 
     def _rsi_native(
-        self,
-        prices: np.ndarray,
-        period: int,
-        return_array: bool
+        self, prices: np.ndarray, period: int, return_array: bool
     ) -> Union[Optional[float], Optional[np.ndarray]]:
         """Native pandas implementation of RSI."""
         deltas = np.diff(prices)
@@ -249,7 +247,7 @@ class TechnicalIndicators:
         self,
         data: Union[pd.DataFrame, pd.Series, List, np.ndarray],
         period: int = 20,
-        return_array: bool = False
+        return_array: bool = False,
     ) -> Union[Optional[float], Optional[np.ndarray]]:
         """
         Calculate Exponential Moving Average (EMA).
@@ -267,7 +265,11 @@ class TechnicalIndicators:
         """
         is_valid, prices = self._validate_input(data, min_length=period, name="EMA")
         if not is_valid:
-            return np.full(len(data) if isinstance(data, (list, np.ndarray)) else len(data), np.nan) if return_array else None
+            return (
+                np.full(len(data) if isinstance(data, (list, np.ndarray)) else len(data), np.nan)
+                if return_array
+                else None
+            )
 
         if self.use_pandas_ta:
             try:
@@ -283,10 +285,7 @@ class TechnicalIndicators:
         return self._ema_native(prices, period, return_array)
 
     def _ema_native(
-        self,
-        prices: np.ndarray,
-        period: int,
-        return_array: bool
+        self, prices: np.ndarray, period: int, return_array: bool
     ) -> Union[Optional[float], Optional[np.ndarray]]:
         """Native implementation of EMA."""
         alpha = 2.0 / (period + 1.0)
@@ -311,7 +310,7 @@ class TechnicalIndicators:
         self,
         data: Union[pd.DataFrame, pd.Series, List, np.ndarray],
         period: int = 20,
-        return_array: bool = False
+        return_array: bool = False,
     ) -> Union[Optional[float], Optional[np.ndarray]]:
         """
         Calculate Simple Moving Average (SMA).
@@ -328,7 +327,11 @@ class TechnicalIndicators:
         """
         is_valid, prices = self._validate_input(data, min_length=period, name="SMA")
         if not is_valid:
-            return np.full(len(data) if isinstance(data, (list, np.ndarray)) else len(data), np.nan) if return_array else None
+            return (
+                np.full(len(data) if isinstance(data, (list, np.ndarray)) else len(data), np.nan)
+                if return_array
+                else None
+            )
 
         if self.use_pandas_ta:
             try:
@@ -343,7 +346,7 @@ class TechnicalIndicators:
         # Native pandas implementation
         sma_values = np.full(len(prices), np.nan)
         for i in range(period - 1, len(prices)):
-            sma_values[i] = np.mean(prices[i - period + 1:i + 1])
+            sma_values[i] = np.mean(prices[i - period + 1 : i + 1])
 
         if return_array:
             return sma_values
@@ -359,11 +362,11 @@ class TechnicalIndicators:
         fast_period: int = 12,
         slow_period: int = 26,
         signal_period: int = 9,
-        return_components: bool = False
+        return_components: bool = False,
     ) -> Union[
         Optional[float],
         Tuple[Optional[float], Optional[float], Optional[float]],
-        Tuple[Optional[np.ndarray], Optional[np.ndarray], Optional[np.ndarray]]
+        Tuple[Optional[np.ndarray], Optional[np.ndarray], Optional[np.ndarray]],
     ]:
         """
         Calculate MACD (Moving Average Convergence Divergence).
@@ -401,7 +404,9 @@ class TechnicalIndicators:
                     if return_components:
                         return (
                             float(macd_val.iloc[-1]) if not pd.isna(macd_val.iloc[-1]) else None,
-                            float(signal_val.iloc[-1]) if not pd.isna(signal_val.iloc[-1]) else None,
+                            float(signal_val.iloc[-1])
+                            if not pd.isna(signal_val.iloc[-1])
+                            else None,
                             float(hist_val.iloc[-1]) if not pd.isna(hist_val.iloc[-1]) else None,
                         )
                     return float(macd_val.iloc[-1]) if not pd.isna(macd_val.iloc[-1]) else None
@@ -417,7 +422,7 @@ class TechnicalIndicators:
         fast_period: int,
         slow_period: int,
         signal_period: int,
-        return_components: bool
+        return_components: bool,
     ):
         """Native implementation of MACD."""
         fast_ema = self._ema_native(prices, fast_period, return_array=True)
@@ -455,7 +460,7 @@ class TechnicalIndicators:
         low: Union[pd.DataFrame, pd.Series, List, np.ndarray],
         close: Union[pd.DataFrame, pd.Series, List, np.ndarray],
         period: int = 14,
-        return_array: bool = False
+        return_array: bool = False,
     ) -> Union[Optional[float], Optional[np.ndarray]]:
         """
         Calculate Average True Range (ATR).
@@ -478,7 +483,11 @@ class TechnicalIndicators:
         is_valid_c, closes = self._validate_input(close, min_length=period + 1, name="ATR close")
 
         if not (is_valid_h and is_valid_l and is_valid_c):
-            return np.full(len(high) if isinstance(high, (list, np.ndarray)) else len(high), np.nan) if return_array else None
+            return (
+                np.full(len(high) if isinstance(high, (list, np.ndarray)) else len(high), np.nan)
+                if return_array
+                else None
+            )
 
         if self.use_pandas_ta:
             try:
@@ -494,12 +503,7 @@ class TechnicalIndicators:
         return self._atr_native(highs, lows, closes, period, return_array)
 
     def _atr_native(
-        self,
-        high: np.ndarray,
-        low: np.ndarray,
-        close: np.ndarray,
-        period: int,
-        return_array: bool
+        self, high: np.ndarray, low: np.ndarray, close: np.ndarray, period: int, return_array: bool
     ) -> Union[Optional[float], Optional[np.ndarray]]:
         """Native implementation of ATR."""
         n = len(close)
@@ -515,7 +519,7 @@ class TechnicalIndicators:
         atr_values = np.full(n, np.nan)
 
         # Initial ATR
-        atr_values[period] = np.mean(tr[1:period + 1])
+        atr_values[period] = np.mean(tr[1 : period + 1])
 
         # Wilder's smoothing
         for i in range(period + 1, n):
@@ -534,10 +538,9 @@ class TechnicalIndicators:
         data: Union[pd.DataFrame, pd.Series, List, np.ndarray],
         period: int = 20,
         std_dev: float = 2.0,
-        return_components: bool = True
+        return_components: bool = True,
     ) -> Union[
-        Tuple[Optional[float], Optional[float], Optional[float]],
-        Dict[str, Optional[float]]
+        Tuple[Optional[float], Optional[float], Optional[float]], Dict[str, Optional[float]]
     ]:
         """
         Calculate Bollinger Bands.
@@ -579,7 +582,13 @@ class TechnicalIndicators:
 
                     if return_components:
                         return (upper, middle, lower)
-                    return {"upper": upper, "middle": middle, "lower": lower, "width": width, "position": position}
+                    return {
+                        "upper": upper,
+                        "middle": middle,
+                        "lower": lower,
+                        "width": width,
+                        "position": position,
+                    }
             except Exception as e:
                 logger.debug(f"pandas-ta Bollinger failed, using fallback: {e}")
 
@@ -593,7 +602,13 @@ class TechnicalIndicators:
 
         if return_components:
             return (upper, middle, lower)
-        return {"upper": upper, "middle": middle, "lower": lower, "width": width, "position": position}
+        return {
+            "upper": upper,
+            "middle": middle,
+            "lower": lower,
+            "width": width,
+            "position": position,
+        }
 
     # ========================================================================
     # ADX (Average Directional Index)
@@ -605,11 +620,8 @@ class TechnicalIndicators:
         low: Union[pd.DataFrame, pd.Series, List, np.ndarray],
         close: Union[pd.DataFrame, pd.Series, List, np.ndarray],
         period: int = 14,
-        return_components: bool = True
-    ) -> Union[
-        Optional[float],
-        Tuple[Optional[float], Optional[float], Optional[float]]
-    ]:
+        return_components: bool = True,
+    ) -> Union[Optional[float], Tuple[Optional[float], Optional[float], Optional[float]]]:
         """
         Calculate Average Directional Index (ADX).
 
@@ -664,7 +676,7 @@ class TechnicalIndicators:
         low: np.ndarray,
         close: np.ndarray,
         period: int,
-        return_components: bool
+        return_components: bool,
     ):
         """Native implementation of ADX."""
         n = len(close)
@@ -716,11 +728,8 @@ class TechnicalIndicators:
         close: Union[pd.DataFrame, pd.Series, List, np.ndarray],
         k_period: int = 14,
         d_period: int = 3,
-        return_components: bool = True
-    ) -> Union[
-        Optional[float],
-        Tuple[Optional[float], Optional[float]]
-    ]:
+        return_components: bool = True,
+    ) -> Union[Optional[float], Tuple[Optional[float], Optional[float]]]:
         """
         Calculate Stochastic Oscillator.
 
@@ -740,7 +749,9 @@ class TechnicalIndicators:
         """
         is_valid_h, highs = self._validate_input(high, min_length=k_period, name="Stochastic high")
         is_valid_l, lows = self._validate_input(low, min_length=k_period, name="Stochastic low")
-        is_valid_c, closes = self._validate_input(close, min_length=k_period, name="Stochastic close")
+        is_valid_c, closes = self._validate_input(
+            close, min_length=k_period, name="Stochastic close"
+        )
 
         if not (is_valid_h and is_valid_l and is_valid_c):
             if return_components:
@@ -792,7 +803,7 @@ class TechnicalIndicators:
         rsi_values: Union[pd.Series, List, np.ndarray],
         period: int = 14,
         k_period: int = 3,
-        d_period: int = 3
+        d_period: int = 3,
     ) -> Tuple[Optional[float], Optional[float]]:
         """
         Calculate Stochastic RSI from pre-calculated RSI values.
@@ -810,7 +821,9 @@ class TechnicalIndicators:
             Tuple of (%K, %D) or (None, None) if insufficient data.
         """
         min_required = period + k_period + d_period - 2
-        is_valid, rsi_arr = self._validate_input(rsi_values, min_length=min_required, name="StochRSI")
+        is_valid, rsi_arr = self._validate_input(
+            rsi_values, min_length=min_required, name="StochRSI"
+        )
 
         if not is_valid:
             return (None, None)
@@ -885,7 +898,7 @@ class TechnicalIndicators:
         high: Union[pd.DataFrame, pd.Series, List, np.ndarray],
         low: Union[pd.DataFrame, pd.Series, List, np.ndarray],
         close: Union[pd.DataFrame, pd.Series, List, np.ndarray],
-        period: int = 20
+        period: int = 20,
     ) -> Optional[float]:
         """
         Calculate Commodity Channel Index (CCI).
@@ -940,7 +953,7 @@ class TechnicalIndicators:
         self,
         close: Union[pd.DataFrame, pd.Series, List, np.ndarray],
         volume: Union[pd.DataFrame, pd.Series, List, np.ndarray],
-        return_array: bool = False
+        return_array: bool = False,
     ) -> Union[Optional[float], Optional[np.ndarray]]:
         """
         Calculate On-Balance Volume (OBV).
@@ -960,7 +973,11 @@ class TechnicalIndicators:
         is_valid_v, volumes = self._validate_input(volume, min_length=2, name="OBV volume")
 
         if not (is_valid_c and is_valid_v):
-            return np.full(len(close) if isinstance(close, (list, np.ndarray)) else len(close), np.nan) if return_array else None
+            return (
+                np.full(len(close) if isinstance(close, (list, np.ndarray)) else len(close), np.nan)
+                if return_array
+                else None
+            )
 
         if self.use_pandas_ta:
             try:
@@ -998,7 +1015,7 @@ class TechnicalIndicators:
         high: Union[pd.DataFrame, pd.Series, List, np.ndarray],
         low: Union[pd.DataFrame, pd.Series, List, np.ndarray],
         close: Union[pd.DataFrame, pd.Series, List, np.ndarray],
-        period: int = 14
+        period: int = 14,
     ) -> Optional[float]:
         """
         Calculate Williams %R.
@@ -1017,7 +1034,9 @@ class TechnicalIndicators:
         """
         is_valid_h, highs = self._validate_input(high, min_length=period, name="Williams %R high")
         is_valid_l, lows = self._validate_input(low, min_length=period, name="Williams %R low")
-        is_valid_c, closes = self._validate_input(close, min_length=period, name="Williams %R close")
+        is_valid_c, closes = self._validate_input(
+            close, min_length=period, name="Williams %R close"
+        )
 
         if not (is_valid_h and is_valid_l and is_valid_c):
             return None
@@ -1047,9 +1066,7 @@ class TechnicalIndicators:
     # ========================================================================
 
     def roc(
-        self,
-        data: Union[pd.DataFrame, pd.Series, List, np.ndarray],
-        period: int = 14
+        self, data: Union[pd.DataFrame, pd.Series, List, np.ndarray], period: int = 14
     ) -> Optional[float]:
         """
         Calculate Rate of Change (ROC).
@@ -1089,9 +1106,7 @@ class TechnicalIndicators:
     # ========================================================================
 
     def calculate_all(
-        self,
-        df: pd.DataFrame,
-        indicators: Optional[List[str]] = None
+        self, df: pd.DataFrame, indicators: Optional[List[str]] = None
     ) -> Dict[str, Any]:
         """
         Calculate multiple indicators at once.
@@ -1106,8 +1121,17 @@ class TechnicalIndicators:
         """
         if indicators is None:
             indicators = [
-                'rsi', 'ema_20', 'ema_50', 'sma_20', 'macd',
-                'atr', 'bollinger', 'adx', 'stochastic', 'cci', 'williams_r'
+                'rsi',
+                'ema_20',
+                'ema_50',
+                'sma_20',
+                'macd',
+                'atr',
+                'bollinger',
+                'adx',
+                'stochastic',
+                'cci',
+                'williams_r',
             ]
 
         results = {}
@@ -1128,19 +1152,22 @@ class TechnicalIndicators:
                 elif indicator == 'sma_20' and has_close:
                     results['sma_20'] = self.sma(df['close'], period=20)
                 elif indicator == 'macd' and has_close:
-                    results['macd'], results['macd_signal'], results['macd_histogram'] = \
-                        self.macd(df['close'], return_components=True)
+                    results['macd'], results['macd_signal'], results['macd_histogram'] = self.macd(
+                        df['close'], return_components=True
+                    )
                 elif indicator == 'atr' and has_ohlc:
                     results['atr'] = self.atr(df['high'], df['low'], df['close'])
                 elif indicator == 'bollinger' and has_close:
                     bands = self.bollinger_bands(df['close'], return_components=False)
                     results.update(bands)
                 elif indicator == 'adx' and has_ohlc:
-                    results['adx'], results['plus_di'], results['minus_di'] = \
-                        self.adx(df['high'], df['low'], df['close'], return_components=True)
+                    results['adx'], results['plus_di'], results['minus_di'] = self.adx(
+                        df['high'], df['low'], df['close'], return_components=True
+                    )
                 elif indicator == 'stochastic' and has_ohlc:
-                    results['stoch_k'], results['stoch_d'] = \
-                        self.stochastic(df['high'], df['low'], df['close'], return_components=True)
+                    results['stoch_k'], results['stoch_d'] = self.stochastic(
+                        df['high'], df['low'], df['close'], return_components=True
+                    )
                 elif indicator == 'cci' and has_ohlc:
                     results['cci'] = self.cci(df['high'], df['low'], df['close'])
                 elif indicator == 'williams_r' and has_ohlc:

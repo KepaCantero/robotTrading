@@ -149,9 +149,7 @@ class PyramidingManager:
         addition_pct = self.additions[self.current_additions]
         return self.initial_size * addition_pct
 
-    def add_position(
-        self, price: Decimal, current_pnl: Decimal
-    ) -> PyramidingResult:
+    def add_position(self, price: Decimal, current_pnl: Decimal) -> PyramidingResult:
         """
         Añadir a la posición (registra la adición).
 
@@ -240,7 +238,6 @@ class PyramidingManager:
         instance.additions = additions
         instance.current_additions = data["current_additions"]
 
-        from datetime import datetime
 
         for a_data in data["addition_history"]:
             addition = PyramidingAddition(

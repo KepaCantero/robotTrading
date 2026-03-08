@@ -106,15 +106,20 @@ class DynamicCapitalAdjuster:
         # Reduce weight based on consecutive losses
         if consecutive_losses > 0:
             reduction = min(
-                self.adjustment_factor * consecutive_losses, Decimal(str(self._tt.max_reduction_factor))
+                self.adjustment_factor * consecutive_losses,
+                Decimal(str(self._tt.max_reduction_factor)),
             )
             adjusted = adjusted * (Decimal("1") - reduction)
 
         # Further reduce based on poor recent performance - use config thresholds
         if recent_performance < Decimal(str(self._tt.poor_performance_threshold)):
-            adjusted = adjusted * (Decimal("1") - Decimal(str(self._tt.strong_performance_reduction)))
+            adjusted = adjusted * (
+                Decimal("1") - Decimal(str(self._tt.strong_performance_reduction))
+            )
         elif recent_performance < Decimal(str(self._tt.weak_performance_threshold)):
-            adjusted = adjusted * (Decimal("1") - Decimal(str(self._tt.moderate_performance_reduction)))
+            adjusted = adjusted * (
+                Decimal("1") - Decimal(str(self._tt.moderate_performance_reduction))
+            )
 
         # Enforce bounds
         adjusted = max(self.min_allocation, min(self.max_allocation, adjusted))

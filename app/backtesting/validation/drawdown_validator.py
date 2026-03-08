@@ -7,6 +7,7 @@ and detect potential issues in risk metrics.
 import logging
 from decimal import Decimal
 from typing import Dict, List, Optional, Tuple
+
 import numpy as np
 
 from app.backtesting.models import Trade, TradeStatus
@@ -35,7 +36,7 @@ class DrawdownValidator:
 
     # Validation thresholds
     MAX_DRAWDOWN_PCT = Decimal("100")  # Max 100% drawdown
-    MIN_DRAWDOWN_PCT = Decimal("0")    # Min 0% drawdown
+    MIN_DRAWDOWN_PCT = Decimal("0")  # Min 0% drawdown
 
     def __init__(
         self,
@@ -72,8 +73,7 @@ class DrawdownValidator:
 
         # Sort trades by exit time
         closed_trades = [
-            t for t in trades
-            if t.status == TradeStatus.CLOSED and t.exit_time is not None
+            t for t in trades if t.status == TradeStatus.CLOSED and t.exit_time is not None
         ]
         closed_trades.sort(key=lambda t: t.exit_time)
 
@@ -189,8 +189,7 @@ class DrawdownValidator:
 
         if drawdown_pct < -self.max_drawdown_pct:
             raise DrawdownValidationError(
-                f"Drawdown exceeds maximum: {drawdown_pct}% "
-                f"(max: {-self.max_drawdown_pct}%)",
+                f"Drawdown exceeds maximum: {drawdown_pct}% " f"(max: {-self.max_drawdown_pct}%)",
                 details={
                     "drawdown_pct": float(drawdown_pct),
                     "max_allowed": float(-self.max_drawdown_pct),
@@ -234,12 +233,11 @@ class DrawdownValidator:
         if len(peaks) > 1:
             # Each peak should be higher than the last (or there was a drawdown)
             for i in range(1, len(peaks)):
-                if peaks[i][1] < peaks[i-1][1]:
+                if peaks[i][1] < peaks[i - 1][1]:
                     raise DrawdownValidationError(
-                        f"Peak decreased without tracking: "
-                        f"{peaks[i-1][1]} -> {peaks[i][1]}",
+                        f"Peak decreased without tracking: " f"{peaks[i-1][1]} -> {peaks[i][1]}",
                         details={
-                            "previous_peak": float(peaks[i-1][1]),
+                            "previous_peak": float(peaks[i - 1][1]),
                             "current_peak": float(peaks[i][1]),
                         },
                     )

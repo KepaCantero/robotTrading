@@ -9,14 +9,11 @@ Provides modular components for backtesting:
 - ResultAggregator: Result aggregation and persistence
 """
 
-from app.backtesting.runners.regime_analyzer import (
-    RegimeAnalyzer,
-    detect_regimes,
-)
 from app.backtesting.runners.monte_carlo_simulator import (
     MonteCarloSimulator,
     generate_monte_carlo_quotes,
 )
+from app.backtesting.runners.regime_analyzer import RegimeAnalyzer, detect_regimes
 from app.backtesting.runners.result_aggregator import (
     ResultAggregator,
     aggregate_results,

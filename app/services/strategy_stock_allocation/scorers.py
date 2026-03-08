@@ -43,6 +43,7 @@ except ImportError:
         Returns a tuple indicating stationarity test failed.
         """
         import warnings
+
         warnings.warn(
             "statsmodels not installed - ADF test not available. "
             "Install statsmodels for cointegration testing: pip install statsmodels",
@@ -150,17 +151,32 @@ class MomentumScorer:
             # Normalize metrics
             rsi_norm = (rsi / 100.0) if rsi is not None else 0.5
             roc_norm = (
-                min(1.0, max(0.0, (roc_optimal + self.config.MOMENTUM_ROC_NORMALIZATION_OFFSET) / self.config.MOMENTUM_ROC_NORMALIZATION_SCALE))
-                if roc_optimal is not None else 0.5
+                min(
+                    1.0,
+                    max(
+                        0.0,
+                        (roc_optimal + self.config.MOMENTUM_ROC_NORMALIZATION_OFFSET)
+                        / self.config.MOMENTUM_ROC_NORMALIZATION_SCALE,
+                    ),
+                )
+                if roc_optimal is not None
+                else 0.5
             )
             sortino_norm = min(1.0, max(0.0, sortino / 2.0)) if sortino is not None else 0.5
-            slope_norm = (
-                min(1.0, max(0.0, (slope_pct + self.config.MOMENTUM_SLOPE_NORMALIZATION_OFFSET) / self.config.MOMENTUM_SLOPE_NORMALIZATION_SCALE))
+            slope_norm = min(
+                1.0,
+                max(
+                    0.0,
+                    (slope_pct + self.config.MOMENTUM_SLOPE_NORMALIZATION_OFFSET)
+                    / self.config.MOMENTUM_SLOPE_NORMALIZATION_SCALE,
+                ),
             )
             spearman_norm = min(1.0, max(0.0, (spearman_rho + 1) / 2))
             h_long_norm = (
-                (h_long - self.config.MOMENTUM_HURST_NORMALIZATION_OFFSET) / self.config.MOMENTUM_HURST_NORMALIZATION_SCALE
-                if h_long is not None else 0.5
+                (h_long - self.config.MOMENTUM_HURST_NORMALIZATION_OFFSET)
+                / self.config.MOMENTUM_HURST_NORMALIZATION_SCALE
+                if h_long is not None
+                else 0.5
             )
 
             # Weighted score
@@ -380,10 +396,25 @@ class MeanReversionScorer:
             inv_tau_norm = 0.5
             if half_life is not None:
                 inv_tau = 1.0 / half_life
-                inv_tau_norm = min(1.0, max(0.0, (inv_tau - self.config.INVERSE_TAU_NORMALIZATION_OFFSET) / self.config.INVERSE_TAU_NORMALIZATION_SCALE))
+                inv_tau_norm = min(
+                    1.0,
+                    max(
+                        0.0,
+                        (inv_tau - self.config.INVERSE_TAU_NORMALIZATION_OFFSET)
+                        / self.config.INVERSE_TAU_NORMALIZATION_SCALE,
+                    ),
+                )
 
             sortino_norm = min(1.0, max(0.0, sortino / 2.0)) if sortino is not None else 0.5
-            h_long_norm = max(0.0, (self.config.MEAN_REVERSION_HURST_NORMALIZATION_CENTER - h_long) / self.config.MEAN_REVERSION_HURST_NORMALIZATION_SCALE) if h_long is not None else 0.5
+            h_long_norm = (
+                max(
+                    0.0,
+                    (self.config.MEAN_REVERSION_HURST_NORMALIZATION_CENTER - h_long)
+                    / self.config.MEAN_REVERSION_HURST_NORMALIZATION_SCALE,
+                )
+                if h_long is not None
+                else 0.5
+            )
 
             # Weighted score
             weights = self.config.MEAN_REVERSION_WEIGHTS
@@ -597,7 +628,14 @@ class PairsTradingScorer:
             inv_tau_norm = 0.5
             if half_life is not None:
                 inv_tau = 1.0 / half_life
-                inv_tau_norm = min(1.0, max(0.0, (inv_tau - self.config.INVERSE_TAU_NORMALIZATION_OFFSET) / self.config.INVERSE_TAU_NORMALIZATION_SCALE))
+                inv_tau_norm = min(
+                    1.0,
+                    max(
+                        0.0,
+                        (inv_tau - self.config.INVERSE_TAU_NORMALIZATION_OFFSET)
+                        / self.config.INVERSE_TAU_NORMALIZATION_SCALE,
+                    ),
+                )
 
             # Weighted score
             weights = self.config.PAIRS_TRADING_WEIGHTS
@@ -677,7 +715,9 @@ class PairsTradingScorer:
                     garch_normalization_factor = (
                         garch_vol_spread / (spread_std * np.sqrt(252)) if spread_std > 0 else 1.0
                     )
-                    garch_normalized_z = spread_z_score / max(garch_normalization_factor, self.config.GARCH_NORMALIZATION_MIN_FACTOR)
+                    garch_normalized_z = spread_z_score / max(
+                        garch_normalization_factor, self.config.GARCH_NORMALIZATION_MIN_FACTOR
+                    )
                     logger.debug(
                         f"Pair {ticker1}-{ticker2}: z_raw={spread_z_score:.4f}, "
                         f"GARCH_vol={garch_vol_spread:.4f}, z_GARCH={garch_normalized_z:.4f}"

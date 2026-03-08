@@ -12,7 +12,7 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
-from app.api.strategies import (
+from app.presentation.api.strategies import (
     get_config_loader,
     get_execution_engine,
     get_strategy_logger,

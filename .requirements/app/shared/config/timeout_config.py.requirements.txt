@@ -1,0 +1,106 @@
+# Requirements Document: shared/config/timeout_config.py
+
+## 1. Module Overview
+Centralized Timeout Configuration for External API Calls.
+
+This module provides timeout settings for all external service integrations:
+- Broker APIs (Alpaca, Interactive Brokers)
+- Market data providers (Yahoo Finance, Polygon, Alpha Vantage)
+- Database connections (PostgreSQL, Redis, QuestDB)
+- External services (MLFlow, Dagster)
+- WebSocket connections
+
+All timeouts are configurable via environment variables for deployment flexibility.
+
+## 2. Dependencies
+- `logging`
+- `os`
+- `dataclasses.dataclass`
+- `dataclasses.field`
+- `typing.Dict`
+- `typing.Optional`
+
+## 3. Core Components (Contracts)
+### Public Classes
+- `TimeoutConfig`: Centralized timeout configuration dataclass (frozen)
+- `TimeoutManager`: Context manager and utilities for timeout handling
+
+### Public Functions
+- `get_timeouts()`: Get the global timeout configuration singleton
+- `get_timeout(operation)`: Get timeout value for a named operation
+
+### Properties
+- `http_timeout`: Combined HTTP timeout (connect + read)
+- `alpaca_timeout`: Combined Alpaca timeout (connect + read)
+- `ib_timeout`: Combined IB timeout (connect + read)
+
+### Methods
+- `get_httpx_timeout()`: Get timeout dict for httpx client
+- `get_aiohttp_timeout()`: Get total timeout for aiohttp client
+- `from_env()`: Load timeout configuration from environment variables
+
+## 4. Configuration Categories
+### Broker API Timeouts
+- `alpaca_connect`: 10.0s
+- `alpaca_read`: 30.0s
+- `alpaca_write`: 30.0s
+- `ib_connect`: 15.0s
+- `ib_read`: 30.0s
+- `ib_order_execution`: 60.0s
+
+### Market Data Timeouts
+- `yahoo_finance_connect`: 10.0s
+- `yahoo_finance_read`: 30.0s
+- `polygon_connect`: 10.0s
+- `polygon_read`: 15.0s
+
+### Database Timeouts
+- `postgres_connect`: 5.0s
+- `postgres_query`: 30.0s
+- `redis_connect`: 5.0s
+- `questdb_connect`: 5.0s
+
+### HTTP Timeouts
+- `http_connect`: 10.0s
+- `http_read`: 30.0s
+- `http_write`: 30.0s
+
+### WebSocket Timeouts
+- `websocket_ping_interval`: 30.0s
+- `websocket_ping_timeout`: 10.0s
+- `websocket_idle_timeout`: 60.0s
+
+## 5. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors
+- [x] Must contain explicit structured logging
+- [x] Must not expose external secrets
+- [x] Exceptions must be handled
+- [x] All timeouts configurable via environment variables
+- [x] Uses dataclass for immutable configuration
+- [x] Singleton pattern for global instance
+
+## 6. Environment Variables
+Pattern: `TIMEOUT_{SERVICE}_{OPERATION}`
+Examples:
+- `TIMEOUT_ALPACA_READ=45.0`
+- `TIMEOUT_HTTP_CONNECT=15.0`
+- `TIMEOUT_POSTGRES_QUERY=60.0`
+
+## 7. Usage Example
+```python
+from app.shared.config.timeout_config import get_timeouts, TIMEOUTS
+
+# Get global config
+config = get_timeouts()
+timeout = config.alpaca_read
+
+# Use in async calls
+result = await asyncio.wait_for(
+    external_api_call(),
+    timeout=config.alpaca_read
+)
+
+# Use in httpx
+async with httpx.AsyncClient(timeout=config.get_httpx_timeout()) as client:
+    ...
+```

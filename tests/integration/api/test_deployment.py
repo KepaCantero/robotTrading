@@ -15,8 +15,8 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
-from app.api.deployment import router
-from app.models.deployment import DeploymentInput
+from app.presentation.api.deployment import router
+from app.domain.models.deployment import DeploymentInput
 
 
 class TestDeploymentAPIEndpoints:
@@ -94,7 +94,7 @@ class TestDeploymentAPIEndpoints:
         self, client, mock_deployment_input, mock_deployment_decision
     ):
         """Test validate_strategy returns valid deployment decision."""
-        with patch("app.api.deployment.get_deploy_orchestrator") as mock_orchestrator:
+        with patch("app.presentation.api.deployment.get_deploy_orchestrator") as mock_orchestrator:
             mock_orch = MagicMock()
             mock_orch.make_decision = AsyncMock(return_value=mock_deployment_decision)
             mock_orchestrator.return_value = mock_orch
@@ -135,7 +135,7 @@ class TestDeploymentAPIEndpoints:
     @pytest.mark.asyncio
     async def test_get_deployment_decision_success(self, client, mock_deployment_decision):
         """Test get_deployment_decision returns decision details."""
-        with patch("app.api.deployment.get_deploy_orchestrator") as mock_orchestrator:
+        with patch("app.presentation.api.deployment.get_deploy_orchestrator") as mock_orchestrator:
             mock_orch = MagicMock()
             mock_orch.decision_history = [mock_deployment_decision]
             mock_orchestrator.return_value = mock_orch
@@ -149,7 +149,7 @@ class TestDeploymentAPIEndpoints:
     @pytest.mark.asyncio
     async def test_get_deployment_decision_not_found(self, client):
         """Test get_deployment_decision returns 404 for non-existent decision."""
-        with patch("app.api.deployment.get_deploy_orchestrator") as mock_orchestrator:
+        with patch("app.presentation.api.deployment.get_deploy_orchestrator") as mock_orchestrator:
             mock_orch = MagicMock()
             mock_orch.decision_history = []
             mock_orchestrator.return_value = mock_orch
@@ -160,7 +160,7 @@ class TestDeploymentAPIEndpoints:
     @pytest.mark.asyncio
     async def test_list_deployment_decisions_success(self, client, mock_deployment_decision):
         """Test list_deployment_decisions returns paginated list."""
-        with patch("app.api.deployment.get_deploy_orchestrator") as mock_orchestrator:
+        with patch("app.presentation.api.deployment.get_deploy_orchestrator") as mock_orchestrator:
             mock_orch = MagicMock()
             mock_orch.decision_history = [mock_deployment_decision] * 15
             mock_orchestrator.return_value = mock_orch
@@ -177,7 +177,7 @@ class TestDeploymentAPIEndpoints:
     @pytest.mark.asyncio
     async def test_list_deployment_decisions_with_offset(self, client, mock_deployment_decision):
         """Test list_deployment_decisions respects offset parameter."""
-        with patch("app.api.deployment.get_deploy_orchestrator") as mock_orchestrator:
+        with patch("app.presentation.api.deployment.get_deploy_orchestrator") as mock_orchestrator:
             mock_orch = MagicMock()
             mock_orch.decision_history = [mock_deployment_decision] * 15
             mock_orchestrator.return_value = mock_orch
@@ -197,7 +197,7 @@ class TestDeploymentAPIEndpoints:
         mock_health.response_time_ms = 50
         mock_health.consecutive_failures = 0
 
-        with patch("app.api.deployment.get_health_check_manager") as mock_health_manager:
+        with patch("app.presentation.api.deployment.get_health_check_manager") as mock_health_manager:
             mock_manager = MagicMock()
             mock_manager.get_all_health_status.return_value = {
                 "service1": mock_health,
@@ -229,7 +229,7 @@ class TestDeploymentAPIEndpoints:
         mock_degraded.response_time_ms = 500
         mock_degraded.consecutive_failures = 0
 
-        with patch("app.api.deployment.get_health_check_manager") as mock_health_manager:
+        with patch("app.presentation.api.deployment.get_health_check_manager") as mock_health_manager:
             mock_manager = MagicMock()
             mock_manager.get_all_health_status.return_value = {
                 "service1": mock_healthy,
@@ -260,7 +260,7 @@ class TestDeploymentAPIEndpoints:
         mock_unhealthy.response_time_ms = 1000
         mock_unhealthy.consecutive_failures = 3
 
-        with patch("app.api.deployment.get_health_check_manager") as mock_health_manager:
+        with patch("app.presentation.api.deployment.get_health_check_manager") as mock_health_manager:
             mock_manager = MagicMock()
             mock_manager.get_all_health_status.return_value = {
                 "service1": mock_healthy,
@@ -289,10 +289,10 @@ class TestDeploymentAPIEndpoints:
         mock_health.response_time_ms = 50
         mock_health.consecutive_failures = 0
 
-        with patch("app.api.deployment.get_deploy_orchestrator") as mock_orchestrator:
+        with patch("app.presentation.api.deployment.get_deploy_orchestrator") as mock_orchestrator:
             mock_orchestrator.return_value = mock_orch
 
-            with patch("app.api.deployment.get_health_check_manager") as mock_health_manager:
+            with patch("app.presentation.api.deployment.get_health_check_manager") as mock_health_manager:
                 mock_manager = MagicMock()
                 mock_manager.get_all_health_status.return_value = {"service1": mock_health}
                 mock_manager.get_unhealthy_services.return_value = []
@@ -321,7 +321,7 @@ class TestDeploymentAPIEndpoints:
         conditional_decision.status = "CONDITIONAL"
         conditional_decision.decision_id = str(uuid4())
 
-        with patch("app.api.deployment.get_deploy_orchestrator") as mock_orchestrator:
+        with patch("app.presentation.api.deployment.get_deploy_orchestrator") as mock_orchestrator:
             mock_orch = MagicMock()
             mock_orch.decision_history = [
                 approved_decision,
@@ -330,7 +330,7 @@ class TestDeploymentAPIEndpoints:
             ]
             mock_orchestrator.return_value = mock_orch
 
-            with patch("app.api.deployment.get_health_check_manager") as mock_health_manager:
+            with patch("app.presentation.api.deployment.get_health_check_manager") as mock_health_manager:
                 mock_manager = MagicMock()
                 mock_manager.get_all_health_status.return_value = {}
                 mock_manager.get_unhealthy_services.return_value = []
@@ -362,7 +362,7 @@ class TestErrorHandling:
         """Test validate_strategy handles timeout errors."""
         import asyncio
 
-        with patch("app.api.deployment.get_deploy_orchestrator") as mock_orchestrator:
+        with patch("app.presentation.api.deployment.get_deploy_orchestrator") as mock_orchestrator:
             mock_orch = MagicMock()
             mock_orch.make_decision = AsyncMock(side_effect=asyncio.TimeoutError())
             mock_orchestrator.return_value = mock_orch
@@ -383,7 +383,7 @@ class TestErrorHandling:
     @pytest.mark.asyncio
     async def test_get_deployment_decision_error(self, client):
         """Test get_deployment_decision handles errors correctly."""
-        with patch("app.api.deployment.get_deploy_orchestrator") as mock_orchestrator:
+        with patch("app.presentation.api.deployment.get_deploy_orchestrator") as mock_orchestrator:
             mock_orch = MagicMock()
             mock_orch.decision_history = []
             # Simulate error during retrieval
@@ -413,7 +413,7 @@ class TestErrorHandling:
     @pytest.mark.asyncio
     async def test_health_check_error_handling(self, client):
         """Test health_check handles errors gracefully."""
-        with patch("app.api.deployment.get_health_check_manager") as mock_health_manager:
+        with patch("app.presentation.api.deployment.get_health_check_manager") as mock_health_manager:
             mock_manager = MagicMock()
             mock_manager.get_all_health_status.side_effect = Exception("Health check failed")
             mock_health_manager.return_value = mock_manager

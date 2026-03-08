@@ -30,24 +30,18 @@ Reference:
     - Chan, E.P. (2013). Algorithmic Trading.
 """
 
+from decimal import Decimal
 from typing import List, Optional, Union
 
 import numpy as np
 import pandas as pd
-from decimal import Decimal
 
 # Import the consolidated domain implementation
 from app.domain.services.metrics.performance_metrics import (
-    PerformanceMetricsCalculator as _PerformanceMetricsCalculator,
-    SharpeRatioResult,
     DrawdownResult,
+    PerformanceMetricsCalculator as _PerformanceMetricsCalculator,
     PerformanceResult,
-    get_sharpe_ratio as _get_sharpe_ratio,
-    get_sortino_ratio as _get_sortino_ratio,
-    get_calmar_ratio as _get_calmar_ratio,
-    get_omega_ratio as _get_omega_ratio,
-    get_max_drawdown as _get_max_drawdown,
-    get_ulcer_index as _get_ulcer_index,
+    SharpeRatioResult,
 )
 
 # Re-export dataclasses
@@ -119,7 +113,9 @@ class PerformanceMetricsCalculator(_PerformanceMetricsCalculator):
         )
 
 
-def _to_float_array(returns: Union[pd.Series, np.ndarray, List[Decimal], List[float]]) -> np.ndarray:
+def _to_float_array(
+    returns: Union[pd.Series, np.ndarray, List[Decimal], List[float]]
+) -> np.ndarray:
     """Convert returns to numpy array, handling various input types."""
     if isinstance(returns, pd.Series):
         arr = returns.values.astype(np.float64)
@@ -172,7 +168,9 @@ def sortino_ratio(
         Sortino ratio (annualized if annualize=True)
     """
     calc = PerformanceMetricsCalculator.from_config(risk_free_rate=risk_free_rate)
-    return calc.sortino_ratio(returns, risk_free_rate=risk_free_rate, target_return=target_return, annualize=annualize)
+    return calc.sortino_ratio(
+        returns, risk_free_rate=risk_free_rate, target_return=target_return, annualize=annualize
+    )
 
 
 def calmar_ratio(

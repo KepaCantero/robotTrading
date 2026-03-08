@@ -16,7 +16,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 from requests.exceptions import HTTPError, RequestException
 
-from app.shared.config.centralized_config import get_config
 from app.domain.models.profitability_validation import (
     HistoricalValidation,
     ProfitabilityValidation,
@@ -27,6 +26,7 @@ from app.domain.models.profitability_validation import (
     ValidationResponse,
 )
 from app.services.profitability_validation_service import ProfitabilityValidationService
+from app.shared.config.centralized_config import get_config
 
 # Constants
 DEFAULT_VALUE_200 = 200

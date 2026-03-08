@@ -31,7 +31,9 @@ def _get_config_limit(attr_name: str, default_value: float) -> Decimal:
         value = float(getattr(config.trading, attr_name, default_value))
         return Decimal(str(value))
     except (AttributeError, ValueError, TypeError) as e:
-        logger.warning(f"Error getting config limit '{attr_name}': {e}, using default {default_value}")
+        logger.warning(
+            f"Error getting config limit '{attr_name}': {e}, using default {default_value}"
+        )
         return Decimal(str(default_value))
 
 
@@ -99,7 +101,9 @@ class LimitAdjuster:
         elif tier == "medium":
             return {
                 "stop_loss_pct": _get_config_limit("limit_medium_stop_loss_pct", 0.03),
-                "daily_loss_limit_pct": _get_config_limit("limit_medium_daily_loss_limit_pct", 0.10),
+                "daily_loss_limit_pct": _get_config_limit(
+                    "limit_medium_daily_loss_limit_pct", 0.10
+                ),
                 "max_position_pct": _get_config_limit("limit_medium_max_position_pct", 0.20),
                 "leverage": _get_config_limit("limit_medium_leverage", 1.5),
                 "margin_requirement": _get_config_limit("limit_medium_margin_requirement", 0.25),
@@ -217,7 +221,9 @@ class LimitAdjuster:
             daily_loss_limit=base_limits.daily_loss_limit * multiplier,
             max_position_size=base_limits.max_position_size * multiplier,
             max_portfolio_leverage=base_limits.max_portfolio_leverage * multiplier,
-            min_margin_requirement=base_limits.min_margin_requirement / multiplier if multiplier > Decimal("0") else base_limits.min_margin_requirement,
+            min_margin_requirement=base_limits.min_margin_requirement / multiplier
+            if multiplier > Decimal("0")
+            else base_limits.min_margin_requirement,
             max_drawdown_limit=base_limits.max_drawdown_limit * multiplier,
         )
 

@@ -482,7 +482,9 @@ class ComplianceServiceRegistry:
 
     def _create_price_discovery_analyzer(self) -> Optional[Any]:
         try:
-            from app.domain.market_analysis.microstructure.price_discovery import get_price_discovery_analyzer
+            from app.domain.market_analysis.microstructure.price_discovery import (
+                get_price_discovery_analyzer,
+            )
 
             return get_price_discovery_analyzer()
         except ImportError:
@@ -490,7 +492,9 @@ class ComplianceServiceRegistry:
 
     def _create_call_auction(self) -> Optional[Any]:
         try:
-            from app.domain.market_analysis.microstructure.trading_mechanisms import get_call_auction
+            from app.domain.market_analysis.microstructure.trading_mechanisms import (
+                get_call_auction,
+            )
 
             return get_call_auction()
         except ImportError:

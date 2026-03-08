@@ -13,11 +13,11 @@ from collections import deque
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Sequence
 
-from app.shared.config.centralized_config import get_config
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.services.analysis.momentum import TechnicalIndicatorCalculator
+from app.shared.config.centralized_config import get_config
 
 from .base import BaseStrategyEngine
 
@@ -63,7 +63,10 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
                 str(strategy_config.take_profit_pct or centralized_config.trading.take_profit_pct)
             )
             self.max_position_size = Decimal(
-                str(strategy_config.max_position_size or centralized_config.trading.max_position_size)
+                str(
+                    strategy_config.max_position_size
+                    or centralized_config.trading.max_position_size
+                )
             )
         else:
             # Fallback to config or defaults

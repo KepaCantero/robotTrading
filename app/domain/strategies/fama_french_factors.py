@@ -108,9 +108,9 @@ class FactorModelResult:
         """Check if market beta is statistically significant (p < 0.05)."""
         try:
             config = get_config()
-            significance_threshold = float(getattr(
-                config.trading, 'p_value_significance_threshold', 0.05
-            ))
+            significance_threshold = float(
+                getattr(config.trading, 'p_value_significance_threshold', 0.05)
+            )
         except (AttributeError, Exception):
             significance_threshold = 0.05
         return self.p_values.get("market", 1.0) < significance_threshold
@@ -118,7 +118,10 @@ class FactorModelResult:
     @property
     def has_positive_alpha(self) -> bool:
         """Check if alpha is positive and significant."""
-        return self.loadings.alpha > 0 and self.p_values.get("alpha", 1.0) < self.p_value_significance_threshold
+        return (
+            self.loadings.alpha > 0
+            and self.p_values.get("alpha", 1.0) < self.p_value_significance_threshold
+        )
 
 
 class FamaFrenchModel:
@@ -152,9 +155,7 @@ class FamaFrenchModel:
         if risk_free_rate is None:
             try:
                 config = get_config()
-                risk_free_rate = float(getattr(
-                    config.trading, 'risk_free_rate', 0.02
-                ))
+                risk_free_rate = float(getattr(config.trading, 'risk_free_rate', 0.02))
             except (AttributeError, Exception):
                 risk_free_rate = 0.02
         self._risk_free_rate = risk_free_rate

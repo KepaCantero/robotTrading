@@ -1,0 +1,114 @@
+# ============================================
+# Ralph Task 30: Optimizer Parameters
+# ============================================
+# PRIORIDAD: P1 (IMPORTANTE) - Optimizadores usan central config
+# OBJETIVO: Todos los optimizadores usan parámetros de central config
+# TIEMPO: ~4 horas
+# ============================================================================
+
+event_loop:
+  prompt_file: ".ralph/ralph_tasks/prompts/30_optimizer_params.md"
+  completion_promise: "OPTIMIZER_PARAMS_COMPLETE"
+  max_iterations: 60
+  max_runtime_seconds: 14400  # 4 hours
+  checkpoint_interval: 3
+  starting_event: "optimizer_params.start"
+
+cli:
+  backend: "claude"
+
+core:
+  specs_dir: "./specs/"
+
+hats:
+  optimizer_updater:
+    name: "Optimizer Parameters Updater"
+    description: "Actualiza optimizadores para usar central config"
+    template: "ralph_templates/hats/implementer_hat.yml"
+    triggers:
+      - "optimizer_params.start"
+      - "optimizer_params.update_next"
+    publishes:
+      - "optimizer_params.update_next"
+      - "optimizer_params.complete"
+      - "optimizer_params.blocked"
+    default_publishes: "optimizer_params.update_next"
+    instructions: |
+      ## OPTIMIZER PARAMETERS UPDATE
+
+      {{shared_instructions}}
+
+      **OBJETIVO:** Optimizadores usan TODOS los parámetros de central config
+
+      **PREREQUISITO:** Tarea 26 (Central Config Consolidation) completada
+
+      ### OPTIMIZADORES A ACTUALIZAR
+
+      ```bash
+      # Encontrar optimizadores
+      find app -name "*optimizer*" -o -name "*optim*" | grep -v __pycache__
+      ```
+
+      ### PARÁMETROS REQUERIDOS
+
+      Desde central_config.py:
+      - TradingConfig (position_size_pct, kelly_fraction, max_drawdown)
+      - RiskConfig (stop_loss_pct, take_profit_pct, rr_ratio)
+      - TimingConfig (execution_windows)
+
+      ### PATRÓN DE ACTUALIZACIÓN
+
+      ```python
+      # ANTES
+      class ParameterOptimizer:
+          def __init__(self):
+              self.param_ranges = {
+                  "position_size": (0.01, 0.05),  # Hardcoded!
+                  "stop_loss": (0.05, 0.15),      # Hardcoded!
+              }
+
+      # DESPUÉS
+      from app.shared.config import CentralConfig
+
+      class ParameterOptimizer:
+          def __init__(self, config: CentralConfig):
+              self.config = config
+              self.param_ranges = {
+                  "position_size": (
+                      config.trading.min_position_size_pct,
+                      config.trading.max_position_size_pct
+                  ),
+                  "stop_loss": (
+                      config.risk.min_stop_loss_pct,
+                      config.risk.max_stop_loss_pct
+                  ),
+              }
+      ```
+
+      ### ARCHIVOS A ACTUALIZAR
+
+      1. app/optimization/parameter/optimizer.py
+      2. app/optimization/parameter/grid_search.py
+      3. app/optimization/parameter/bayesian_optimizer.py
+      4. app/backtesting/optimization/strategy_optimizer.py
+
+      ### VALIDACIÓN
+
+      ```bash
+      # Verificar que optimizadores usan config
+      grep -rn "CentralConfig\|TradingConfig\|RiskConfig" app/optimization/
+
+      # Verificar que no hay hardcoded values
+      grep -rn "0\.0[0-9]\|0\.[0-9][0-9]" app/optimization/ | grep -v config
+
+      # Tests
+      pytest tests/unit/optimization/ -v
+      ```
+
+memories:
+  enabled: true
+  inject: auto
+  budget: 3000
+
+checkpoint:
+  file: ".ralph/checkpoints/30_optimizer_params_checkpoint.json"

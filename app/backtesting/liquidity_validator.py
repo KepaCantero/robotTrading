@@ -89,20 +89,21 @@ class LiquidityValidator:
 
         # Get thresholds from CentralizedConfig or use overrides
         self.max_order_pct_of_volume = (
-            max_order_pct_of_volume if max_order_pct_of_volume is not None
-            else config.adv_limit_pct
+            max_order_pct_of_volume if max_order_pct_of_volume is not None else config.adv_limit_pct
         )
         self.warning_order_pct_of_volume = (
-            warning_order_pct_of_volume if warning_order_pct_of_volume is not None
+            warning_order_pct_of_volume
+            if warning_order_pct_of_volume is not None
             else config.adv_limit_pct / 2
         )
         self.partial_fill_pct = (
-            partial_fill_pct if partial_fill_pct is not None
-            else config.adv_limit_pct / 2
+            partial_fill_pct if partial_fill_pct is not None else config.adv_limit_pct / 2
         )
 
         # Market impact parameters from CentralizedConfig
-        self.base_slippage_pct = config.base_slippage_bps / Decimal("10000")  # Convert bps to decimal
+        self.base_slippage_pct = config.base_slippage_bps / Decimal(
+            "10000"
+        )  # Convert bps to decimal
         self.max_additional_slippage = Decimal("0.01")  # 1% max additional
 
         logger.info(

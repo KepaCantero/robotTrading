@@ -11,9 +11,9 @@ Usage:
     print(momentum_cfg.bear_market_strength_threshold)
 """
 
-from .momentum_config import MomentumModularConfig
 from .dividend_config import DividendStrategyConfig
 from .fx_carry_config import FXCarryTradeStrategyConfig
+from .momentum_config import MomentumModularConfig
 
 __all__ = [
     "MomentumModularConfig",

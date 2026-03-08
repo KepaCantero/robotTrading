@@ -449,7 +449,9 @@ class PairsTrading:
             half_life = float('inf')
 
         # Simple cointegration criterion
-        is_cointegrated = correlation > self._tt.pairs_correlation_min and half_life < self._max_half_life
+        is_cointegrated = (
+            correlation > self._tt.pairs_correlation_min and half_life < self._max_half_life
+        )
 
         return CointegrationResult(
             is_cointegrated=is_cointegrated,

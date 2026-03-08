@@ -28,11 +28,16 @@ from streamlit import session_state  # noqa: E402
 
 from app.backtesting.data_loader import DataLoader  # noqa: E402
 from app.backtesting.engine import SimpleBacktester  # noqa: E402
-from app.backtesting.models import BacktestConfig  # noqa: E402
 from app.backtesting.engines.multi_strategy_engine import MultiStrategyBacktester  # noqa: E402
+from app.backtesting.models import BacktestConfig  # noqa: E402
+from app.domain.strategies.mean_reversion import MeanReversionStrategy  # noqa: E402
+from app.domain.strategies.momentum import MomentumStrategy  # noqa: E402
+from app.domain.strategies.pairs_trading import PairsTradingStrategy  # noqa: E402
 
 # IMPORTANT: Import logging_config FIRST to ensure all warnings/errors go to files
-from app.presentation.dashboard.comprehensive_data_loader import ComprehensiveBacktestLoader  # noqa: E402
+from app.presentation.dashboard.comprehensive_data_loader import (  # noqa: E402
+    ComprehensiveBacktestLoader,
+)
 from app.presentation.dashboard.multi_strategy_utils import (  # noqa: E402
     generate_multi_strategy_summary_text,
     save_multi_strategy_results,
@@ -41,9 +46,6 @@ from app.presentation.dashboard.report_generator import (  # noqa: E402
     generate_backend_test_summary,
     save_backtest_result,
 )
-from app.domain.strategies.mean_reversion import MeanReversionStrategy  # noqa: E402
-from app.domain.strategies.momentum import MomentumStrategy  # noqa: E402
-from app.domain.strategies.pairs_trading import PairsTradingStrategy  # noqa: E402
 
 # Logging is already configured by logging_config module
 logger = logging.getLogger(__name__)

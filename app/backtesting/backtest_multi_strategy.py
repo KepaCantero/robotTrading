@@ -24,9 +24,9 @@ from typing import Any, Dict, List
 logger = logging.getLogger(__name__)
 
 from app.backtesting.core.memory_manager import AggressiveMemoryManager
-from app.backtesting.models import BacktestConfig
 from app.backtesting.engines.multi_strategy_engine import MultiStrategyBacktester
 from app.backtesting.factories import StrategyFactory
+from app.backtesting.models import BacktestConfig
 
 
 class BacktestMultiStrategyRunner:

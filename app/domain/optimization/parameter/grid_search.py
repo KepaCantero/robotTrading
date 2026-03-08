@@ -14,8 +14,8 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
 from itertools import product
 from typing import Any, Callable, Dict, List, Optional, Tuple
-import numpy as np
 
+import numpy as np
 from tqdm import tqdm
 
 from .base_optimizer import BaseOptimizer, OptimizationConfig, OptimizationResult

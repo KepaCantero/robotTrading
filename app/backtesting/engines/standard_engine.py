@@ -18,16 +18,13 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
 
 import pandas as pd
 
-from app.backtesting.base_engine import (
-    BaseBacktestEngine,
-    BacktestState,
-    EngineType,
-)
+from app.backtesting.base_engine import BaseBacktestEngine, EngineType
+from app.backtesting.liquidity_validator import LiquidityValidator
 from app.backtesting.models import (
     BacktestConfig,
     BacktestResult,
@@ -35,7 +32,6 @@ from app.backtesting.models import (
     Trade,
     TradeStatus,
 )
-from app.backtesting.liquidity_validator import LiquidityValidator
 
 # Services
 from app.backtesting.services.equity_tracker import EquityCurveTracker
@@ -120,7 +116,9 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
             partial_fill_pct=Decimal("0.05"),
         )
 
-        logger.info(f"StandardBacktestEngine initialized for {strategy_name} with COMPLIANCE ENGINE")
+        logger.info(
+            f"StandardBacktestEngine initialized for {strategy_name} with COMPLIANCE ENGINE"
+        )
 
     def _initialize_services(self, compliance_engine: Optional[ComplianceEngine]) -> None:
         """Initialize all service classes."""
@@ -289,7 +287,10 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
         days = (market_data[-1].timestamp - market_data[0].timestamp).days
         years = Decimal(str(days / 365.25))
         annualized_return = (
-            ((self.state.capital / self.config.initial_capital) ** (Decimal("1") / years) - Decimal("1"))
+            (
+                (self.state.capital / self.config.initial_capital) ** (Decimal("1") / years)
+                - Decimal("1")
+            )
             * Decimal("100")
             if years > 0
             else Decimal("0")
@@ -680,7 +681,8 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
 
             avg_price = market_price
             buy_trades = [
-                t for t in self.state.trades
+                t
+                for t in self.state.trades
                 if t.symbol == symbol and t.side == "buy" and t.status == TradeStatus.OPEN
             ]
             if buy_trades:
@@ -752,7 +754,8 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
             pnl_percentage=pnl_info["pnl_percentage"],
             commission=pnl_info["total_commission"],
             slippage=abs(
-                current_position * (exit_price_with_slippage - (current_price or recent_trades[-1].entry_price))
+                current_position
+                * (exit_price_with_slippage - (current_price or recent_trades[-1].entry_price))
             ),
             reason=reason,
         )
@@ -764,7 +767,9 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
                 buy_trade.exit_time = timestamp
 
         self.state.trades.append(trade)
-        self.state.capital += current_position * exit_price_with_slippage - pnl_info["total_commission"]
+        self.state.capital += (
+            current_position * exit_price_with_slippage - pnl_info["total_commission"]
+        )
         self.position_manager.close_position(symbol)
 
     def _close_all_positions(
@@ -776,7 +781,9 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
             if price_map and symbol in price_map:
                 closing_price = price_map[symbol]
             else:
-                recent_trades_for_symbol = [t for t in reversed(self.state.trades) if t.symbol == symbol]
+                recent_trades_for_symbol = [
+                    t for t in reversed(self.state.trades) if t.symbol == symbol
+                ]
                 if recent_trades_for_symbol:
                     closing_price = recent_trades_for_symbol[0].entry_price
                 else:
@@ -795,7 +802,9 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
         ):
             return
 
-        from app.domain.strategies.momentum_modular.learning.learning_updater import LearningEngineUpdater
+        from app.domain.strategies.momentum_modular.learning.learning_updater import (
+            LearningEngineUpdater,
+        )
 
         if not hasattr(self.strategy, "_learning_updater"):
             self.strategy._learning_updater = LearningEngineUpdater(
@@ -900,9 +909,11 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
     def __getstate__(self) -> Dict[str, Any]:
         """Get state for pickling."""
         state = super().__getstate__()
-        state.update({
-            "total_portfolio_capital": float(self.total_portfolio_capital),
-        })
+        state.update(
+            {
+                "total_portfolio_capital": float(self.total_portfolio_capital),
+            }
+        )
         return state
 
     def __setstate__(self, state: Dict[str, Any]) -> None:

@@ -49,8 +49,8 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-import pandas as pd
 import empyrical  # Financial metrics library (annual_volatility, sharpe_ratio, etc.)
+import pandas as pd
 from pydantic import BaseModel, Field, field_validator
 
 # Add project root to path
@@ -236,6 +236,7 @@ class SystemAvailability:
     def _check_backtesting(self) -> bool:
         try:
             from importlib.util import find_spec
+
             return find_spec("app.backtesting") is not None
         except ImportError:
             return False
@@ -243,6 +244,7 @@ class SystemAvailability:
     def _check_live_trading(self) -> bool:
         try:
             from importlib.util import find_spec
+
             return find_spec("app.providers.live_trading") is not None
         except ImportError:
             return False
@@ -250,6 +252,7 @@ class SystemAvailability:
     def _check_paper_trading(self) -> bool:
         try:
             from importlib.util import find_spec
+
             return find_spec("app.providers.paper_trading") is not None
         except ImportError:
             return False
@@ -257,6 +260,7 @@ class SystemAvailability:
     def _check_strategies(self) -> bool:
         try:
             from importlib.util import find_spec
+
             return find_spec("app.strategies") is not None
         except ImportError:
             return False
@@ -264,6 +268,7 @@ class SystemAvailability:
     def _check_risk_engine(self) -> bool:
         try:
             from importlib.util import find_spec
+
             return find_spec("app.engines.risk_engine") is not None
         except ImportError:
             return False
@@ -271,6 +276,7 @@ class SystemAvailability:
     def _check_portfolio_engine(self) -> bool:
         try:
             from importlib.util import find_spec
+
             return find_spec("app.engines.portfolio_engine") is not None
         except ImportError:
             return False
@@ -278,6 +284,7 @@ class SystemAvailability:
     def _check_data_engine(self) -> bool:
         try:
             from importlib.util import find_spec
+
             return find_spec("app.services.data_service") is not None
         except ImportError:
             return False
@@ -285,6 +292,7 @@ class SystemAvailability:
     def _check_context_engine(self) -> bool:
         try:
             from importlib.util import find_spec
+
             return find_spec("app.maestro") is not None
         except ImportError:
             return False
@@ -298,6 +306,7 @@ class SystemAvailability:
         """
         try:
             from importlib.util import find_spec
+
             return find_spec("app.microstructure") is not None
         except ImportError as e:
             if self.enable_logging:
@@ -307,6 +316,7 @@ class SystemAvailability:
     def _check_chan(self) -> bool:
         try:
             from importlib.util import find_spec
+
             return find_spec("app.services.momentum_analysis_chan") is not None
         except ImportError:
             return False
@@ -314,6 +324,7 @@ class SystemAvailability:
     def _check_narang(self) -> bool:
         try:
             from importlib.util import find_spec
+
             return find_spec("app.services") is not None
         except ImportError:
             return False
@@ -321,6 +332,7 @@ class SystemAvailability:
     def _check_lopez_de_prado(self) -> bool:
         try:
             from importlib.util import find_spec
+
             return find_spec("app.services.optimization_chan") is not None
         except ImportError:
             return False
@@ -335,6 +347,7 @@ class SystemAvailability:
     def _check_hastie(self) -> bool:
         try:
             from importlib.util import find_spec
+
             return find_spec("app.ensemble") is not None
         except ImportError:
             return False
@@ -342,13 +355,18 @@ class SystemAvailability:
     def _check_harris(self) -> bool:
         try:
             from importlib.util import find_spec
-            return find_spec("app.engines.execution_engine.microstructure.harris_integration") is not None
+
+            return (
+                find_spec("app.engines.execution_engine.microstructure.harris_integration")
+                is not None
+            )
         except ImportError:
             return False
 
     def _check_ohara(self) -> bool:
         try:
             from importlib.util import find_spec
+
             return find_spec("app.microstructure") is not None
         except ImportError:
             return False
@@ -363,6 +381,7 @@ class SystemAvailability:
     def _check_hull(self) -> bool:
         try:
             from importlib.util import find_spec
+
             return find_spec("app.services.risk_management_chan") is not None
         except ImportError:
             return False
@@ -370,6 +389,7 @@ class SystemAvailability:
     def _check_sre(self) -> bool:
         try:
             from importlib.util import find_spec
+
             return find_spec("app.sre") is not None
         except ImportError:
             return False
@@ -510,6 +530,7 @@ class SystemBus:
             PreTradeAnalysis with comprehensive results from ALL systems
         """
         from app.shared.config.centralized_config import get_compliance_config
+
         config = get_compliance_config()
 
         result = PreTradeAnalysis(
@@ -545,6 +566,7 @@ class SystemBus:
                 # Handle critical failures
                 if self._is_critical_failure(system_name):
                     from app.shared.config.centralized_config import get_compliance_config
+
                     config = get_compliance_config()
                     result.can_execute = False
                     result.confidence *= config.CONF_CRITICAL_FAILURE_MULTIPLIER
@@ -607,12 +629,13 @@ class SystemBus:
     def _aggregate_metrics(self, result: PreTradeAnalysis):
         """Aggregate metrics from multiple systems."""
         from app.shared.config.centralized_config import get_compliance_config
+
         config = get_compliance_config()
 
         # Liquidity (Harris + O'Hara) - using configurable weights
         result.liquidity_score = (
-            result.harris_liquidity_score * config.HARRIS_LIQUIDITY_WEIGHT +
-            result.ohara_price_discovery_score * config.OHARA_LIQUIDITY_WEIGHT
+            result.harris_liquidity_score * config.HARRIS_LIQUIDITY_WEIGHT
+            + result.ohara_price_discovery_score * config.OHARA_LIQUIDITY_WEIGHT
         )
 
         # Liquidity regime (combine both) - using configurable thresholds
@@ -656,6 +679,7 @@ class SystemBus:
         """
         try:
             from app.shared.config.centralized_config import get_compliance_config
+
             config = get_compliance_config()
 
             # Calculate data quality from actual data (not hardcoded)
@@ -663,7 +687,11 @@ class SystemBus:
                 # Data quality: percentage of non-null values across all columns
                 total_cells = len(price_history) * len(price_history.columns)
                 non_null_cells = price_history.count().sum()
-                result.data_quality_score = (non_null_cells / total_cells) * config.PERCENTAGE_MULTIPLIER if total_cells > 0 else 0.0
+                result.data_quality_score = (
+                    (non_null_cells / total_cells) * config.PERCENTAGE_MULTIPLIER
+                    if total_cells > 0
+                    else 0.0
+                )
 
                 # Check for missing data
                 result.missing_data_detected = price_history.isnull().any().any()
@@ -676,7 +704,9 @@ class SystemBus:
                         most_recent_time = most_recent_time.to_pydatetime()
                     # Calculate freshness in milliseconds
                     time_diff = datetime.now() - most_recent_time
-                    result.data_freshness_ms = time_diff.total_seconds() * config.MILLISECONDS_MULTIPLIER
+                    result.data_freshness_ms = (
+                        time_diff.total_seconds() * config.MILLISECONDS_MULTIPLIER
+                    )
                 else:
                     # Can't calculate freshness, use None to indicate not available
                     result.data_freshness_ms = None
@@ -726,6 +756,7 @@ class SystemBus:
         """
         try:
             from app.shared.config.centralized_config import get_compliance_config
+
             config = get_compliance_config()
 
             if price_history is not None and 'close' in price_history.columns:
@@ -761,7 +792,9 @@ class SystemBus:
                     # Adjust confidence for extreme volatility (using config threshold)
                     if vol_percentile > config.HIGH_VOLATILITY_PERCENTILE:
                         result.confidence -= config.CONF_HIGH_VOLATILITY_PENALTY
-                        result.reasons.append(f"High volatility regime (percentile: {vol_percentile})")
+                        result.reasons.append(
+                            f"High volatility regime (percentile: {vol_percentile})"
+                        )
 
             return True
         except Exception as e:
@@ -789,6 +822,7 @@ class SystemBus:
         """
         try:
             from app.shared.config.centralized_config import get_compliance_config
+
             config = get_compliance_config()
 
             if price_history is not None:
@@ -827,6 +861,7 @@ class SystemBus:
         """
         try:
             from app.shared.config.centralized_config import get_compliance_config
+
             config = get_compliance_config()
             compliance_config = get_compliance_config()
 
@@ -913,11 +948,15 @@ class SystemBus:
                 # Use configured max data age (addresses GAP-CFG-002)
                 if 'timestamp' in price_history.columns:
                     last_timestamp = pd.to_datetime(price_history['timestamp'].iloc[-1])
-                    data_age = (datetime.now() - last_timestamp).total_seconds() / config.SECONDS_PER_DAY
+                    data_age = (
+                        datetime.now() - last_timestamp
+                    ).total_seconds() / config.SECONDS_PER_DAY
                 elif len(price_history) > 0:
                     # Assume index is timestamp if no timestamp column
                     last_timestamp = pd.to_datetime(price_history.index[-1])
-                    data_age = (datetime.now() - last_timestamp).total_seconds() / config.SECONDS_PER_DAY
+                    data_age = (
+                        datetime.now() - last_timestamp
+                    ).total_seconds() / config.SECONDS_PER_DAY
                 else:
                     data_age = 0
 
@@ -988,6 +1027,7 @@ class SystemBus:
         """Handle Hull risk metrics."""
         try:
             from app.shared.config.centralized_config import get_compliance_config
+
             config = get_compliance_config()
 
             if price_history is not None:
@@ -1059,7 +1099,11 @@ class SystemBus:
                     # Normalize signal to 0-1 range (0=bearish, 1=bullish)
                     # Using sigmoid-like transformation with config scaling factor
                     import math
-                    result.strategy_signal = 1.0 / (1.0 + math.exp(-avg_return * compliance_config.STRATEGY_SIGNAL_SCALING_FACTOR))
+
+                    result.strategy_signal = 1.0 / (
+                        1.0
+                        + math.exp(-avg_return * compliance_config.STRATEGY_SIGNAL_SCALING_FACTOR)
+                    )
 
                     # Strategy health: based on return consistency
                     # Positive returns more often = healthier strategy
@@ -1100,6 +1144,7 @@ class SystemBus:
         """
         try:
             from app.shared.config.centralized_config import get_compliance_config
+
             config = get_compliance_config()
 
             if price_history is not None:
@@ -1153,6 +1198,7 @@ class SystemBus:
         """
         try:
             from app.shared.config.centralized_config import get_compliance_config
+
             config = get_compliance_config()
 
             # Check if meta-labeling model is fitted
@@ -1200,9 +1246,10 @@ class SystemBus:
         Calculates metrics from actual price data when available.
         """
         try:
-            from app.shared.config.centralized_config import get_compliance_config
-            from statsmodels.tsa.stattools import adfuller
             from scipy import stats
+            from statsmodels.tsa.stattools import adfuller
+
+            from app.shared.config.centralized_config import get_compliance_config
 
             config = get_compliance_config()
 
@@ -1215,9 +1262,13 @@ class SystemBus:
                 adf_pvalue = adf_result[1]  # p-value from ADF test
                 # Convert p-value to health score: lower p-value = more stationary = higher health
                 if adf_pvalue < config.ADF_PVALUE_THRESHOLD:
-                    result.statistical_model_health = 100.0 - (adf_pvalue * config.STATIONARY_HEALTH_MULTIPLIER)
+                    result.statistical_model_health = 100.0 - (
+                        adf_pvalue * config.STATIONARY_HEALTH_MULTIPLIER
+                    )
                 else:
-                    result.statistical_model_health = max(0.0, 100.0 - (adf_pvalue * config.NON_STATIONARY_HEALTH_MULTIPLIER))
+                    result.statistical_model_health = max(
+                        0.0, 100.0 - (adf_pvalue * config.NON_STATIONARY_HEALTH_MULTIPLIER)
+                    )
 
                 # Cross-validation score: use coefficient of variation (CV) from scipy
                 # CV measures relative variability (std/mean), lower CV = more consistent = higher CV score
@@ -1270,8 +1321,10 @@ class SystemBus:
         Timeout handling is delegated to the HarrisIntegrator subsystem.
         """
         try:
-            from decimal import InvalidOperation, DivisionByZero
+            from decimal import DivisionByZero, InvalidOperation
+
             from app.shared.config.centralized_config import get_compliance_config
+
             config = get_compliance_config()
 
             # Estimate ADV with error handling
@@ -1296,7 +1349,8 @@ class SystemBus:
             result.harris_order_book_depth_ok = harris_check.order_book_depth_ok
             # liquidity_score doesn't exist in PreTradeCheckResult, use liquidity_sufficient as proxy
             result.harris_liquidity_score = (
-                config.LIQUIDITY_SCORE_SUFFICIENT if harris_check.liquidity_sufficient
+                config.LIQUIDITY_SCORE_SUFFICIENT
+                if harris_check.liquidity_sufficient
                 else config.LIQUIDITY_SCORE_INSUFFICIENT
             )
             result.harris_vpin = getattr(harris_check, 'vpin', 0.0)
@@ -1305,7 +1359,9 @@ class SystemBus:
             # Use estimated_cost_bps as market_impact_bps for now
             result.market_impact_bps = getattr(harris_check, 'estimated_cost_bps', 0.0)
             # timing_cost_bps not available in PreTradeCheckResult, estimate as portion of cost
-            result.timing_cost_bps = getattr(harris_check, 'estimated_cost_bps', 0.0) * config.TIMING_COST_MULTIPLIER
+            result.timing_cost_bps = (
+                getattr(harris_check, 'estimated_cost_bps', 0.0) * config.TIMING_COST_MULTIPLIER
+            )
             # Map venue names
             result.venue = getattr(harris_check, 'recommended_venue', 'lit_exchange')
             result.algorithm = getattr(harris_check, 'recommended_order_type', 'LIMIT')
@@ -1342,6 +1398,7 @@ class SystemBus:
         """
         try:
             from app.shared.config.centralized_config import get_compliance_config
+
             config = get_compliance_config()
 
             # subsystem is a dict with 'liquidity' and 'order_flow' analyzers
@@ -1362,7 +1419,11 @@ class SystemBus:
                 # Use high-low range as proxy for spread
                 spread_window = config.SPREAD_WINDOW
                 if "high" in price_history.columns and "low" in price_history.columns:
-                    recent_spread = ((price_history["high"] - price_history["low"]) / price_history["close"]).tail(spread_window).mean()
+                    recent_spread = (
+                        ((price_history["high"] - price_history["low"]) / price_history["close"])
+                        .tail(spread_window)
+                        .mean()
+                    )
                     spread_bps = float(recent_spread * config.BASIS_POINTS_MULTIPLIER)
                 else:
                     spread_bps = config.ESTIMATED_SPREAD_BPS
@@ -1376,7 +1437,9 @@ class SystemBus:
                 )
 
                 # Classify regime
-                result.ohara_liquidity_regime = liquidity_analyzer.classify_liquidity_regime(liquidity_score)
+                result.ohara_liquidity_regime = liquidity_analyzer.classify_liquidity_regime(
+                    liquidity_score
+                )
                 result.ohara_price_discovery_score = liquidity_score
 
                 # Adjust confidence based on liquidity (using config penalties)
@@ -1398,14 +1461,18 @@ class SystemBus:
                     returns = price_history["close"].pct_change().dropna()
                     # Higher volatility correlates with higher information asymmetry
                     flow_volatility = returns.tail(flow_window).std()
-                    result.ohara_order_flow_toxicity = min(1.0, flow_volatility * config.ORDER_FLOW_TOXICITY_SCALING_FACTOR)
+                    result.ohara_order_flow_toxicity = min(
+                        1.0, flow_volatility * config.ORDER_FLOW_TOXICITY_SCALING_FACTOR
+                    )
                 else:
                     result.ohara_order_flow_toxicity = config.DEFAULT_ORDER_FLOW_TOXICITY
 
                 # Adjust confidence for high toxicity (using config threshold)
                 if result.ohara_order_flow_toxicity > config.MAX_ORDER_FLOW_TOXICITY:
                     result.confidence -= config.CONF_HIGH_TOXICITY_PENALTY
-                    result.reasons.append(f"High order flow toxicity: {result.ohara_order_flow_toxicity:.2f}")
+                    result.reasons.append(
+                        f"High order flow toxicity: {result.ohara_order_flow_toxicity:.2f}"
+                    )
             else:
                 result.ohara_order_flow_toxicity = config.DEFAULT_ORDER_FLOW_TOXICITY
 
@@ -1477,12 +1544,16 @@ class SystemBus:
                 # Calculate diversification score based on position count vs max_assets_per_pair
                 # More positions = better diversification, up to a reasonable limit
                 max_positions = max_assets_per_pair * 10  # Scale to portfolio level
-                result.diversification_score = min(1.0, position_count / max_positions) if position_count > 0 else 0.0
+                result.diversification_score = (
+                    min(1.0, position_count / max_positions) if position_count > 0 else 0.0
+                )
 
                 # Correlation risk - estimate based on concentration
                 # Fewer positions = higher correlation risk
                 if position_count <= 1:
-                    result.correlation_risk = max_correlation_risk  # Maximum risk with single position
+                    result.correlation_risk = (
+                        max_correlation_risk  # Maximum risk with single position
+                    )
                 else:
                     # Use HHI (Herfindahl-Hirschman Index) concept: lower concentration = lower risk
                     result.correlation_risk = max_correlation_risk / position_count
@@ -1544,8 +1615,12 @@ class SystemBus:
                     recent_trend = returns.tail(slope_window_min).mean()
                     older_trend = returns.head(len(returns) - slope_window_min).mean()
                     epsilon = compliance_config.EPSILON_DIVISION
-                    trend_consistency = 1.0 - abs(recent_trend - older_trend) / (abs(older_trend) + epsilon)
-                    result.backtest_confidence = max(compliance_config.MIN_BACKTEST_CONFIDENCE, min(1.0, trend_consistency))
+                    trend_consistency = 1.0 - abs(recent_trend - older_trend) / (
+                        abs(older_trend) + epsilon
+                    )
+                    result.backtest_confidence = max(
+                        compliance_config.MIN_BACKTEST_CONFIDENCE, min(1.0, trend_consistency)
+                    )
                 else:
                     result.backtest_confidence = compliance_config.DEFAULT_SIGNAL_STRENGTH
 
@@ -1587,7 +1662,11 @@ class SystemBus:
         Estimates slippage based on MIN_LIQUIDITY_USD threshold.
         """
         try:
-            from app.shared.config.centralized_config import get_strategy_stock_allocator_config, get_compliance_config, get_config
+            from app.shared.config.centralized_config import (
+                get_compliance_config,
+                get_config,
+                get_strategy_stock_allocator_config,
+            )
 
             alloc_config = get_strategy_stock_allocator_config()
             trading_config = get_config().trading
@@ -1610,14 +1689,20 @@ class SystemBus:
             # Estimate slippage based on urgency and execution probability
             # Using GARCH_FORECAST_HORIZON as reference for volatility impact
             base_slippage = config.BASE_SLIPPAGE_BPS  # Base slippage in bps
-            urgency_multiplier = config.URGENCY_BASE_MULTIPLIER + urgency  # High urgency increases slippage
-            result.estimated_slippage_bps = base_slippage * urgency_multiplier * (config.SLIPPAGE_VOLATILITY_FACTOR - result.execution_probability)
+            urgency_multiplier = (
+                config.URGENCY_BASE_MULTIPLIER + urgency
+            )  # High urgency increases slippage
+            result.estimated_slippage_bps = (
+                base_slippage
+                * urgency_multiplier
+                * (config.SLIPPAGE_VOLATILITY_FACTOR - result.execution_probability)
+            )
 
             # Optimal participation rate based on TradingConfig max_position_size
             # Higher urgency = higher participation rate, but capped by max_position_size
             result.optimal_participation_rate = min(
                 trading_config.max_position_size,
-                config.BASE_PARTICIPATION_RATE + urgency * trading_config.max_position_size
+                config.BASE_PARTICIPATION_RATE + urgency * trading_config.max_position_size,
             )
 
             return True
@@ -1645,6 +1730,7 @@ class SystemBus:
         """
         try:
             from app.shared.config.centralized_config import get_compliance_config
+
             config = get_compliance_config()
 
             # Architecture score - check if subsystem indicates compliance
@@ -1763,11 +1849,14 @@ class SystemBus:
         """
         try:
             from app.shared.config.centralized_config import get_compliance_config
+
             config = get_compliance_config()
 
             # Architecture pattern compliance
             if isinstance(subsystem, dict) and subsystem.get('architecture_compliant'):
-                result.architecture_pattern_compliance = config.PERCIVAL_ARCHITECTURE_COMPLIANT_SCORE
+                result.architecture_pattern_compliance = (
+                    config.PERCIVAL_ARCHITECTURE_COMPLIANT_SCORE
+                )
             else:
                 result.architecture_pattern_compliance = config.PERCIVAL_ARCHITECTURE_DEFAULT_SCORE
 
@@ -1801,14 +1890,19 @@ class SystemBus:
         """
         try:
             from app.shared.config.centralized_config import get_compliance_config
+
             config = get_compliance_config()
 
             # Get golden signals from SRE monitor
             if subsystem and hasattr(subsystem, 'get_golden_signals'):
                 signals = subsystem.get_golden_signals()
                 result.slo_compliance = signals.get('slo_compliance', True)
-                result.error_budget_remaining = signals.get('error_budget_remaining', config.SLO_DEFAULT_ERROR_BUDGET)
-                result.latency_p95_ms = signals.get('latency_p95_ms', config.SLO_DEFAULT_LATENCY_P95_MS)
+                result.error_budget_remaining = signals.get(
+                    'error_budget_remaining', config.SLO_DEFAULT_ERROR_BUDGET
+                )
+                result.latency_p95_ms = signals.get(
+                    'latency_p95_ms', config.SLO_DEFAULT_LATENCY_P95_MS
+                )
                 result.golden_signals_health = signals.get('health', config.SLO_DEFAULT_HEALTH)
 
                 # Check SLO compliance
@@ -1847,6 +1941,7 @@ class SystemBus:
         """
         try:
             from app.shared.config.centralized_config import get_compliance_config
+
             config = get_compliance_config()
 
             # TDD compliance metrics
@@ -1885,6 +1980,7 @@ class SystemBus:
         """
         try:
             from app.shared.config.centralized_config import get_compliance_config
+
             config = get_compliance_config()
 
             # Clean architecture metrics
@@ -1969,6 +2065,7 @@ class ComplianceEngine:
         self._daily_pnl_tracking: List[Dict[str, Any]] = []
         # Use ComplianceConfig for default starting capital
         from app.shared.config.centralized_config import get_compliance_config
+
         config = get_compliance_config()
         self._starting_capital: float = config.DEFAULT_STARTING_CAPITAL
 
@@ -2198,14 +2295,10 @@ class ComplianceEngine:
                 else 0.0
             ),
             "avg_win": (
-                np.mean([t.get('pnl', 0) for t in winning_trades])
-                if winning_trades
-                else 0.0
+                np.mean([t.get('pnl', 0) for t in winning_trades]) if winning_trades else 0.0
             ),
             "avg_loss": (
-                np.mean([t.get('pnl', 0) for t in losing_trades])
-                if losing_trades
-                else 0.0
+                np.mean([t.get('pnl', 0) for t in losing_trades]) if losing_trades else 0.0
             ),
             "trades": [
                 {
@@ -2309,8 +2402,8 @@ class ComplianceEngine:
                 }
 
             elif name == "narang":
-                from app.services.portfolio_construction_narang import get_portfolio_constructor
                 from app.domain.strategies.alpha_models import get_alpha_model
+                from app.services.portfolio_construction_narang import get_portfolio_constructor
 
                 # Use correct model_type: "multi_factor" not "multifactor"
                 alpha_config = config_factory.get_alpha_model_config()
@@ -2343,8 +2436,12 @@ class ComplianceEngine:
                 return get_harris_integrator(asset_class=self.asset_class)
 
             elif name == "ohara":
-                from app.domain.market_analysis.microstructure.liquidity import get_liquidity_analyzer
-                from app.domain.market_analysis.microstructure.order_flow import get_order_flow_analyzer
+                from app.domain.market_analysis.microstructure.liquidity import (
+                    get_liquidity_analyzer,
+                )
+                from app.domain.market_analysis.microstructure.order_flow import (
+                    get_order_flow_analyzer,
+                )
 
                 return {
                     "liquidity": get_liquidity_analyzer(),
@@ -2655,6 +2752,7 @@ class ComplianceEngine:
         # Use default urgency from config if not provided
         if urgency is None:
             from app.shared.config.centralized_config import get_compliance_config
+
             config = get_compliance_config()
             urgency = config.DEFAULT_URGENCY
 
@@ -2706,10 +2804,13 @@ class ComplianceEngine:
             PostTradeAnalysis with comprehensive quality metrics
         """
         from app.shared.config.centralized_config import get_compliance_config
+
         config = get_compliance_config()
 
         # Calculate latency
-        latency_ms = (execution_time - submission_time).total_seconds() * config.MILLISECONDS_MULTIPLIER
+        latency_ms = (
+            execution_time - submission_time
+        ).total_seconds() * config.MILLISECONDS_MULTIPLIER
 
         # Harris analysis
         harris = self._get_subsystem("harris")
@@ -2862,6 +2963,7 @@ class ComplianceEngine:
     ) -> None:
         """Track order completion for SLO monitoring."""
         from app.shared.config.centralized_config import get_compliance_config
+
         config = get_compliance_config()
 
         if order_id not in self._active_orders:
@@ -2872,7 +2974,9 @@ class ComplianceEngine:
         filled_quantity = filled_quantity or order["quantity"]
 
         # Calculate latency
-        latency_ms = (execution_time - order["submission_time"]).total_seconds() * config.MILLISECONDS_MULTIPLIER
+        latency_ms = (
+            execution_time - order["submission_time"]
+        ).total_seconds() * config.MILLISECONDS_MULTIPLIER
 
         # Check SLO (use configured threshold, addresses GAP-CFG-002)
         slo_met = latency_ms < self.config.slo_latency_ms
@@ -2968,8 +3072,8 @@ class ComplianceEngine:
                     return None
 
             # Generate signal using alert-to-trade mapping
-            from app.application.orchestration.live_trading.alert_to_trade_mapper import get_alert_to_trade_mapper
             from app.application.alerting import AlertSeverity
+            from app.services.live_trading.alert_to_trade_mapper import get_alert_to_trade_mapper
 
             mapper = get_alert_to_trade_mapper()
             portfolio_value = Decimal(str(self._starting_capital))
@@ -3014,7 +3118,6 @@ class ComplianceEngine:
 
     async def prioritize_alerts(self, alerts: list) -> list:
         """Prioritize alerts by urgency (CRITICAL > WARNING > INFO)."""
-        from app.application.alerting import AlertSeverity
 
         priority_map = {
             "CRITICAL": 0,
@@ -3066,9 +3169,11 @@ class ComplianceEngine:
         """
         # Use injected dependencies or create defaults (late import to avoid layer violation)
         if decision_logger is None or tax_engine is None or broker_connector is None:
-            from app.application.orchestration.live_trading.broker_connector import BrokerConnector
+            from app.domain.services.tax.efficiency.engines.spain_tax_engine_impl import (
+                SpainTaxEngineImpl,
+            )
             from app.infrastructure.logging.trading_decision_logger import TradingDecisionLogger
-            from app.domain.services.tax.efficiency.engines.spain_tax_engine_impl import SpainTaxEngineImpl
+            from app.services.live_trading.broker_connector import BrokerConnector
 
         if decision_logger is None:
             decision_logger = TradingDecisionLogger()
@@ -3120,10 +3225,13 @@ class ComplianceEngine:
 
             # Kelly Criterion validation (R1) - using ComplianceConfig
             from app.shared.config.centralized_config import get_compliance_config
+
             config = get_compliance_config()
 
             kelly_max_position_pct = Decimal(str(config.KELLY_MAX_POSITION_PCT))
-            order_value = quantity * price if price > 0 else portfolio_value * kelly_max_position_pct
+            order_value = (
+                quantity * price if price > 0 else portfolio_value * kelly_max_position_pct
+            )
             max_risk = portfolio_value * kelly_max_position_pct  # Max position size from config
 
             if order_value > max_risk:
@@ -3142,6 +3250,7 @@ class ComplianceEngine:
 
             # Risk:Reward validation (R4) - using ComplianceConfig
             from app.shared.config.centralized_config import get_compliance_config
+
             config = get_compliance_config()
 
             if signal.stop_loss and signal.take_profit:
@@ -3161,7 +3270,10 @@ class ComplianceEngine:
                             correlation_id=correlation_id,
                             passed=False,
                             validator="risk_reward",
-                            details={"rr_ratio": str(rr_ratio), "min_rr": str(config.MIN_RISK_REWARD_RATIO)},
+                            details={
+                                "rr_ratio": str(rr_ratio),
+                                "min_rr": str(config.MIN_RISK_REWARD_RATIO),
+                            },
                         )
 
                         return self._create_failed_result(signal, error_msg)
@@ -3248,7 +3360,7 @@ class ComplianceEngine:
 
     async def cancel_order(self, order_id: str) -> bool:
         """Cancel order via broker."""
-        from app.application.orchestration.live_trading.broker_connector import BrokerConnector
+        from app.services.live_trading.broker_connector import BrokerConnector
 
         broker = BrokerConnector()
         try:
@@ -3263,7 +3375,7 @@ class ComplianceEngine:
 
     async def modify_order(self, order_id: str, new_price: Decimal) -> bool:
         """Modify order price."""
-        from app.application.orchestration.live_trading.broker_connector import BrokerConnector
+        from app.services.live_trading.broker_connector import BrokerConnector
 
         broker = BrokerConnector()
         try:
@@ -3313,7 +3425,6 @@ class ComplianceEngine:
             CycleResult with execution metrics
         """
         from dataclasses import dataclass, field
-        from typing import List
 
         @dataclass
         class CycleResult:
@@ -3480,12 +3591,9 @@ class ComplianceEngine:
 
         return is_dup
 
-    async def _submit_to_broker(
-        self, broker, signal: "TradeSignal"
-    ) -> str:
+    async def _submit_to_broker(self, broker, signal: "TradeSignal") -> str:
         """Submit order to broker."""
         # Convert TradeSignal to broker format
-        from app.application.orchestration.live_trading.broker_connector import OrderSide, OrderType
 
         order_id = f"order_{datetime.now().timestamp()}"
 
@@ -3543,11 +3651,13 @@ class ComplianceEngine:
             # Handle NaN or infinite values
             if pd.isna(mean_volume) or math.isnan(mean_volume) or math.isinf(mean_volume):
                 from app.shared.config.centralized_config import get_compliance_config
+
                 config = get_compliance_config()
                 return Decimal(str(config.ESTIMATED_VOLUME))
             return Decimal(str(mean_volume))
         # Use ComplianceConfig for default estimated volume
         from app.shared.config.centralized_config import get_compliance_config
+
         config = get_compliance_config()
         return Decimal(str(config.ESTIMATED_VOLUME))
 

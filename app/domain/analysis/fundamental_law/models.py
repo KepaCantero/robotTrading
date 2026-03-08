@@ -270,15 +270,9 @@ class ICMetrics:
         Uses the same config-based assessment as FundamentalLawCalculator.
         """
         config = get_config()
-        ic_excellent = Decimal(str(getattr(
-            config.trading, 'fundamental_law_ic_excellent', 0.05
-        )))
-        ic_good = Decimal(str(getattr(
-            config.trading, 'fundamental_law_ic_good', 0.03
-        )))
-        ic_fair = Decimal(str(getattr(
-            config.trading, 'fundamental_law_ic_fair', 0.01
-        )))
+        ic_excellent = Decimal(str(getattr(config.trading, 'fundamental_law_ic_excellent', 0.05)))
+        ic_good = Decimal(str(getattr(config.trading, 'fundamental_law_ic_good', 0.03)))
+        ic_fair = Decimal(str(getattr(config.trading, 'fundamental_law_ic_fair', 0.01)))
 
         if self.ic >= ic_excellent:
             return "excellent"
@@ -321,6 +315,7 @@ class ICMetrics:
 
         # Get persistence thresholds from config
         from app.shared.config.centralized_config import get_config
+
         cfg = get_config()
         long_threshold = Decimal(str(getattr(cfg.trading, 'signal_persistence_long', 0.7)))
         medium_threshold = Decimal(str(getattr(cfg.trading, 'signal_persistence_medium', 0.4)))

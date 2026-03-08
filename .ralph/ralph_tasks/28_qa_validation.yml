@@ -1,0 +1,105 @@
+# ============================================
+# Ralph Task 28: QA Validation
+# ============================================
+# PRIORIDAD: P0 (CRÍTICA) - Validación de calidad sin errores
+# OBJETIVO: Eliminar todos los errores de QA (linting, typing, tests)
+# TIEMPO: ~6 horas
+# ============================================================================
+
+event_loop:
+  prompt_file: ".ralph/ralph_tasks/prompts/28_qa_validation.md"
+  completion_promise: "QA_VALIDATION_COMPLETE"
+  max_iterations: 100
+  max_runtime_seconds: 21600  # 6 hours
+  checkpoint_interval: 3
+  starting_event: "qa_validation.start"
+
+cli:
+  backend: "claude"
+
+core:
+  specs_dir: "./specs/"
+
+hats:
+  qa_validator:
+    name: "QA Validator"
+    description: "Valida y corrige errores de QA"
+    template: "ralph_templates/hats/validation_hat.yml"
+    triggers:
+      - "qa_validation.start"
+      - "qa_validation.validate_next"
+    publishes:
+      - "qa_validation.validate_next"
+      - "qa_validation.complete"
+      - "qa_validation.blocked"
+    default_publishes: "qa_validation.validate_next"
+    instructions: |
+      ## QA VALIDATION
+
+      {{shared_instructions}}
+
+      **OBJETIVO:** Proyecto sin errores de QA
+
+      ### HERRAMIENTAS DE QA
+
+      1. **Black** - Formato de código
+      2. **isort** - Orden de imports
+      3. **ruff** - Linting
+      4. **mypy** - Type checking
+      5. **pytest** - Tests unitarios
+
+      ### FASE 1: Ejecutar validaciones
+
+      ```bash
+      # Black
+      black app/ --check
+
+      # isort
+      isort app/ --check-only
+
+      # Ruff
+      ruff check app/
+
+      # Mypy
+      mypy app/ --ignore-missing-imports
+
+      # Pytest
+      pytest tests/ -v
+      ```
+
+      ### FASE 2: Corregir errores
+
+      Para cada tipo de error:
+      1. **Black/isort:** Auto-fix con --fix
+      2. **Ruff:** Corregir manualmente o con --fix
+      3. **Mypy:** Añadir type hints faltantes
+      4. **Pytest:** Corregir tests fallidos
+
+      ### FASE 3: Validación final
+
+      ```bash
+      # Ejecutar todo de nuevo
+      black app/ --check && \
+      isort app/ --check-only && \
+      ruff check app/ && \
+      mypy app/ --ignore-missing-imports && \
+      pytest tests/ -v
+      ```
+
+      ### MÉTRICAS DE ÉXITO
+
+      | Herramienta | Estado Objetivo |
+      |-------------|-----------------|
+      | black | 0 errors |
+      | isort | 0 errors |
+      | ruff | 0 errors |
+      | mypy | 0 errors |
+      | pytest | 0 failures |
+
+memories:
+  enabled: true
+  inject: auto
+  budget: 4000
+
+checkpoint:
+  file: ".ralph/checkpoints/28_qa_validation_checkpoint.json"

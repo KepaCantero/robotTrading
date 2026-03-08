@@ -8,12 +8,12 @@ for the algorithmic trading system.
 import heapq
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional
-import numpy as np
 
+import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.shared.config.centralized_config import get_config
@@ -652,21 +652,13 @@ class SignalPriorityQueue:
         try:
             # Get thresholds from config
             config = get_config()
-            volume_high = Decimal(str(getattr(
-                config.trading, 'signal_volume_high', 1000000
-            )))
-            volume_low = Decimal(str(getattr(
-                config.trading, 'signal_volume_low', 100000
-            )))
-            spread_excellent = Decimal(str(getattr(
-                config.trading, 'signal_spread_excellent', 0.01
-            )))
-            spread_poor = Decimal(str(getattr(
-                config.trading, 'signal_spread_poor', 0.05
-            )))
-            ema_trend_strong = getattr(
-                config.trading, 'signal_ema_trend_strong', 0.02
+            volume_high = Decimal(str(getattr(config.trading, 'signal_volume_high', 1000000)))
+            volume_low = Decimal(str(getattr(config.trading, 'signal_volume_low', 100000)))
+            spread_excellent = Decimal(
+                str(getattr(config.trading, 'signal_spread_excellent', 0.01))
             )
+            spread_poor = Decimal(str(getattr(config.trading, 'signal_spread_poor', 0.05)))
+            ema_trend_strong = getattr(config.trading, 'signal_ema_trend_strong', 0.02)
 
             # Base confidence from signal strength indicators
             base_confidence = 60.0
@@ -727,27 +719,21 @@ class SignalPriorityQueue:
 
             # Get thresholds from config
             config = get_config()
-            volume_very_high = Decimal(str(getattr(
-                config.trading, 'signal_volume_very_high', 5000000
-            )))
-            volume_high = Decimal(str(getattr(
-                config.trading, 'signal_volume_high', 1000000
-            )))
-            volume_low = Decimal(str(getattr(
-                config.trading, 'signal_volume_low', 100000
-            )))
-            spread_very_tight = Decimal(str(getattr(
-                config.trading, 'signal_spread_very_tight', 0.005
-            )))
-            spread_excellent = Decimal(str(getattr(
-                config.trading, 'signal_spread_excellent', 0.01
-            )))
-            spread_acceptable = Decimal(str(getattr(
-                config.trading, 'signal_spread_acceptable', 0.1
-            )))
-            spread_very_wide = Decimal(str(getattr(
-                config.trading, 'signal_spread_very_wide', 0.2
-            )))
+            volume_very_high = Decimal(
+                str(getattr(config.trading, 'signal_volume_very_high', 5000000))
+            )
+            volume_high = Decimal(str(getattr(config.trading, 'signal_volume_high', 1000000)))
+            volume_low = Decimal(str(getattr(config.trading, 'signal_volume_low', 100000)))
+            spread_very_tight = Decimal(
+                str(getattr(config.trading, 'signal_spread_very_tight', 0.005))
+            )
+            spread_excellent = Decimal(
+                str(getattr(config.trading, 'signal_spread_excellent', 0.01))
+            )
+            spread_acceptable = Decimal(
+                str(getattr(config.trading, 'signal_spread_acceptable', 0.1))
+            )
+            spread_very_wide = Decimal(str(getattr(config.trading, 'signal_spread_very_wide', 0.2)))
 
             # Fallback to simple calculation
             base_score = 50.0
@@ -942,7 +928,9 @@ class SignalPriorityQueue:
                     config = get_config()
                     high_vol = getattr(config.trading, 'signal_volatility_high_threshold', 0.05)
                     low_vol = getattr(config.trading, 'signal_volatility_low_threshold', 0.01)
-                    moderate_vol = getattr(config.trading, 'signal_volatility_moderate_threshold', 0.02)
+                    moderate_vol = getattr(
+                        config.trading, 'signal_volatility_moderate_threshold', 0.02
+                    )
                     if vol > high_vol:  # High volatility
                         score -= 20.0  # Penalize high volatility
                     elif vol < low_vol:  # Low volatility

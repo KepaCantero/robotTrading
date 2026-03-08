@@ -4,7 +4,7 @@ Shared type definitions for backtesting module.
 Consolidates type aliases that were duplicated across multiple files.
 """
 
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Union
 
 # Type aliases for better type safety and consistency
 ConfigDict = Dict[str, Any]

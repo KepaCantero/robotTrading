@@ -34,7 +34,11 @@ class InsightGenerator:
         Args:
             risk_free_rate: Risk-free rate for calculations (default: from CentralizedConfig)
         """
-        self.risk_free_rate = risk_free_rate if risk_free_rate is not None else float(get_config().backtesting.default_risk_free_rate)
+        self.risk_free_rate = (
+            risk_free_rate
+            if risk_free_rate is not None
+            else float(get_config().backtesting.default_risk_free_rate)
+        )
         self.insights: List[str] = []
         self.warnings: List[Dict[str, Any]] = []
         self.recommendations: List[Dict[str, Any]] = []

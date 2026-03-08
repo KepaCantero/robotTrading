@@ -18,6 +18,7 @@ from typing import Any, Dict, List, Optional
 
 from app.domain.strategies.mean_reversion import MeanReversionStrategy
 from app.domain.strategies.momentum import MomentumStrategy
+
 # from app.domain.strategies.momentum_modular.strategy import ModularMomentumStrategy  # TODO: Create module
 from app.domain.strategies.pairs_trading import PairsTrading as PairsTradingStrategy
 

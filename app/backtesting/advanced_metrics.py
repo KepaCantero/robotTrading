@@ -18,7 +18,7 @@ from typing import List, Optional
 import numpy as np
 from scipy import stats
 
-from app.shared.config.centralized_config import CentralizedConfig, get_config
+from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,11 @@ class AdvancedMetricsCalculator:
             risk_free_rate: Annual risk-free rate (default: from CentralizedConfig)
             confidence_level: Confidence level for VaR/CVaR (default: 95%)
         """
-        self.risk_free_rate = float(risk_free_rate) if risk_free_rate is not None else float(get_config().backtesting.default_risk_free_rate)
+        self.risk_free_rate = (
+            float(risk_free_rate)
+            if risk_free_rate is not None
+            else float(get_config().backtesting.default_risk_free_rate)
+        )
         self.confidence_level = confidence_level
         self._annual_trading_days = get_config().backtesting.annual_trading_days
 

@@ -13,6 +13,9 @@ Reference: Rule 11-lopez-de-prado-advances-in-financial-machine-learning.md
 
 from __future__ import annotations
 
+# Re-export canonical Trade and PerformanceMetrics from app.backtesting.models
+from app.backtesting.models import PerformanceMetrics, Trade, TradeSide, TradeStatus
+
 from .backtest_engine import (
     BacktestConfig,
     BacktestEngine,
@@ -21,8 +24,6 @@ from .backtest_engine import (
     OrderStatus,
     OrderType,
 )
-# Re-export canonical Trade and PerformanceMetrics from app.backtesting.models
-from app.backtesting.models import PerformanceMetrics, Trade, TradeSide, TradeStatus
 from .dividend_handler import DividendHandler, DividendPayment, DividendReinvestmentStrategy
 from .market_impact import (
     ImpactParameters,

@@ -210,6 +210,19 @@ from .models import (
     get_roll_estimator,
     get_stoll_decomposer,
 )
+from .ofi import (  # OFI Models; OFI Classes
+    CumulativeOFI,
+    OFICalculator,
+    OFIConfig,
+    OFIPrediction,
+    OFIPredictor,
+    OFISignal,
+    OFISignalConfig,
+    OFISignalGenerator,
+    OrderBookSnapshot,
+    TickData,
+    TickLevelOFIProcessor,
+)
 from .order_flow import (
     InformationAsymmetryMetrics,
     Order,
@@ -251,21 +264,6 @@ from .trading_mechanisms import (
     get_continuous_double_auction,
     get_dealer_market,
     get_mechanism_comparator,
-)
-from .ofi import (
-    # OFI Models
-    OrderBookSnapshot,
-    TickData,
-    OFIConfig,
-    OFISignalConfig,
-    OFIPrediction,
-    OFISignal,
-    CumulativeOFI,
-    # OFI Classes
-    OFICalculator,
-    OFIPredictor,
-    OFISignalGenerator,
-    TickLevelOFIProcessor,
 )
 
 __version__ = "1.0.0"

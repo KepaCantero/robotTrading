@@ -32,14 +32,8 @@ Usage:
         results = runner.run_baseline_backtest()
 """
 
-from app.backtesting.shared.metrics import (
-    MetricsFactory,
-    get_empty_metrics,
-)
-from app.backtesting.shared.parameter_mapper import (
-    ParameterMappingService,
-    map_params_to_config,
-)
+from app.backtesting.shared.metrics import MetricsFactory, get_empty_metrics
+from app.backtesting.shared.parameter_mapper import ParameterMappingService, map_params_to_config
 from app.backtesting.shared.temp_config import (
     TempConfigFactory,
     TempConfigManager,

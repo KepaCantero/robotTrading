@@ -399,9 +399,7 @@ class QualityInvesting:
         if min_weight is None:
             try:
                 config = get_config()
-                min_weight = float(getattr(
-                    config.trading, 'min_allocation_weight', 0.02
-                ))
+                min_weight = float(getattr(config.trading, 'min_allocation_weight', 0.02))
             except (AttributeError, Exception):
                 min_weight = 0.02
 

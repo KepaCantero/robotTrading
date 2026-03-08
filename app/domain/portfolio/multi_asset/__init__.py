@@ -45,6 +45,9 @@ Example Usage:
     ... )
 """
 
+# Re-export Trade from canonical location for backward compatibility
+from app.backtesting.models import Trade
+
 from .allocation import (
     AllocationResult,
     MarketRegime,
@@ -68,8 +71,6 @@ from .models import (
     PortfolioMetrics,
     RiskTolerance,
 )
-# Re-export Trade from canonical location for backward compatibility
-from app.backtesting.models import Trade
 from .multi_asset_portfolio import (
     MultiAssetConfig,
     MultiAssetPortfolioManager,

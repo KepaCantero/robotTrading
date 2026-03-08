@@ -431,9 +431,15 @@ class SpreadAwareSlippageModel(SlippageModel):
         if spread and self._config.half_spread:
             spread_pct = float(spread) / float(price)
             if side == "buy":
-                slippage_pct += spread_pct * (self._tt.spread_skew_base + self._config.spread_skew * (1 - self._tt.spread_skew_base))
+                slippage_pct += spread_pct * (
+                    self._tt.spread_skew_base
+                    + self._config.spread_skew * (1 - self._tt.spread_skew_base)
+                )
             else:
-                slippage_pct += spread_pct * (self._tt.spread_skew_base + (1 - self._config.spread_skew) * (1 - self._tt.spread_skew_base))
+                slippage_pct += spread_pct * (
+                    self._tt.spread_skew_base
+                    + (1 - self._config.spread_skew) * (1 - self._tt.spread_skew_base)
+                )
 
         # Add liquidity premium
         slippage_pct += self._config.liquidity_premium

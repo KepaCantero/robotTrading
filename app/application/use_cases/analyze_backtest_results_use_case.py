@@ -6,11 +6,11 @@ including performance metrics, risk assessment, and comparison.
 """
 
 from __future__ import annotations
-import numpy as np
 
 from decimal import Decimal
 from typing import Any
 
+import numpy as np
 import structlog
 
 from ...domain.repositories.backtest_repository import BacktestRepository

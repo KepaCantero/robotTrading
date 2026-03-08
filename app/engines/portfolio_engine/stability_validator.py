@@ -61,7 +61,9 @@ class StabilityValidationConfig:
 
     # Cost parameters
     transaction_cost_bps: float = 10.0  # 10 bps per trade
-    risk_free_rate: float = float(get_config().backtesting.default_risk_free_rate)  # Annual risk-free rate from config
+    risk_free_rate: float = float(
+        get_config().backtesting.default_risk_free_rate
+    )  # Annual risk-free rate from config
 
     # Validation flags
     require_stable_for_production: bool = True
@@ -595,7 +597,11 @@ def create_portfolio_stability_validator(
     Returns:
         Configured PortfolioStabilityValidator
     """
-    rf = risk_free_rate if risk_free_rate is not None else float(get_config().backtesting.default_risk_free_rate)
+    rf = (
+        risk_free_rate
+        if risk_free_rate is not None
+        else float(get_config().backtesting.default_risk_free_rate)
+    )
     config = StabilityValidationConfig(
         min_stability_score=min_stability_score,
         transaction_cost_bps=transaction_cost_bps,

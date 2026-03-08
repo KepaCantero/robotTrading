@@ -31,7 +31,10 @@ class FXCarryTradeStrategyConfig(BaseModel):
         default=2.0, ge=1.0, le=10.0, description="Maximum leverage for carry trades (2x)"
     )
     min_liquidity: float = Field(
-        default=1_000_000.0, ge=100_000.0, le=100_000_000.0, description="Minimum liquidity requirement ($1M)"
+        default=1_000_000.0,
+        ge=100_000.0,
+        le=100_000_000.0,
+        description="Minimum liquidity requirement ($1M)",
     )
 
     # Volatility calculations

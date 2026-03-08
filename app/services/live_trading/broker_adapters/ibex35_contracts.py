@@ -9,49 +9,50 @@ from typing import List
 
 from ib_insync.contract import Contract as IBContract, Stock
 
-
 # IBEX35 constituents (common Spanish stocks with exchange suffixes)
 IBEX35_SYMBOLS = [
-    "ACS.MC",     # ACS Group
-    "AENA.MC",    # Aena
-    "AMS.MC",     # Amadeus
-    "ANA.MC",     # Acciona
-    "ACX.MC",     # Acciona Energia
-    "SAB.MC",     # Sabadell
-    "BME.MC",     # Bolsas y Mercados
-    "BKT.MC",     # Bankinter
-    "SAN.MC",     # Banco Santander
-    "CLNX.MC",    # Cellnex
-    "CABK.MC",    # CaixaBank
-    "ENG.MC",     # Enagas
-    "ELE.MC",     # Endesa
-    "FER.MC",     # Ferrovial
-    "GRF.MC",     # Grifols
-    "IAG.MC",     # IAG
-    "IBE.MC",     # Iberdrola
-    "ITX.MC",     # Inditex
-    "COL.MC",     # Colonial
-    "LOG.MC",     # Logista
-    "MAP.MC",     # Mapfre
-    "MEL.MC",     # Melia Hotels
-    "MRL.MC",     # Merlin Properties
-    "NTGY.MC",    # Naturgy
-    "OHL.MC",     # OHLA
-    "PHM.MC",     # PharmaMar
-    "REE.MC",     # Red Electrica
-    "REP.MC",     # Repsol
-    "SAR.MC",     # Sacyr (temporarily in IBEX35)
-    "SLR.MC",     # Solaria
-    "TUB.MC",     # Tubacex
-    "TEF.MC",     # Telefonica
-    "VIS.MC",     # Viscofan
-    "VWS.MC",     # VW Woks (temporarily in IBEX35)
-    "BBVA.MC",    # BBVA (trades on NYSE but in IBEX35)
-    "MTS.MC",     # ArcelorMittal (trades on multiple exchanges but in IBEX35)
+    "ACS.MC",  # ACS Group
+    "AENA.MC",  # Aena
+    "AMS.MC",  # Amadeus
+    "ANA.MC",  # Acciona
+    "ACX.MC",  # Acciona Energia
+    "SAB.MC",  # Sabadell
+    "BME.MC",  # Bolsas y Mercados
+    "BKT.MC",  # Bankinter
+    "SAN.MC",  # Banco Santander
+    "CLNX.MC",  # Cellnex
+    "CABK.MC",  # CaixaBank
+    "ENG.MC",  # Enagas
+    "ELE.MC",  # Endesa
+    "FER.MC",  # Ferrovial
+    "GRF.MC",  # Grifols
+    "IAG.MC",  # IAG
+    "IBE.MC",  # Iberdrola
+    "ITX.MC",  # Inditex
+    "COL.MC",  # Colonial
+    "LOG.MC",  # Logista
+    "MAP.MC",  # Mapfre
+    "MEL.MC",  # Melia Hotels
+    "MRL.MC",  # Merlin Properties
+    "NTGY.MC",  # Naturgy
+    "OHL.MC",  # OHLA
+    "PHM.MC",  # PharmaMar
+    "REE.MC",  # Red Electrica
+    "REP.MC",  # Repsol
+    "SAR.MC",  # Sacyr (temporarily in IBEX35)
+    "SLR.MC",  # Solaria
+    "TUB.MC",  # Tubacex
+    "TEF.MC",  # Telefonica
+    "VIS.MC",  # Viscofan
+    "VWS.MC",  # VW Woks (temporarily in IBEX35)
+    "BBVA.MC",  # BBVA (trades on NYSE but in IBEX35)
+    "MTS.MC",  # ArcelorMittal (trades on multiple exchanges but in IBEX35)
 ]
 
 
-def create_stock_contract(symbol: str, currency: str = "EUR", exchange: str = "SMART") -> IBContract:
+def create_stock_contract(
+    symbol: str, currency: str = "EUR", exchange: str = "SMART"
+) -> IBContract:
     """
     Create an IB Contract for a Spanish stock.
 
@@ -71,11 +72,7 @@ def create_stock_contract(symbol: str, currency: str = "EUR", exchange: str = "S
     # Extract symbol without exchange suffix if provided
     base_symbol = symbol.split('.')[0]
 
-    contract = Stock(
-        symbol=base_symbol,
-        exchange=exchange,
-        currency=currency
-    )
+    contract = Stock(symbol=base_symbol, exchange=exchange, currency=currency)
 
     return contract
 
@@ -93,11 +90,7 @@ def create_index_contract() -> IBContract:
     """
     from ib_insync.contract import Index
 
-    contract = Index(
-        symbol="IBEX",
-        exchange="Meff",  # Spanish derivatives exchange
-        currency="EUR"
-    )
+    contract = Index(symbol="IBEX", exchange="Meff", currency="EUR")  # Spanish derivatives exchange
 
     return contract
 

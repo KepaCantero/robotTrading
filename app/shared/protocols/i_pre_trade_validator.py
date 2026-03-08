@@ -1,8 +1,8 @@
 """
 Pre-trade validation protocols (R1, R2, R4)
 """
-from typing import Protocol, Optional
 from decimal import Decimal
+from typing import Optional, Protocol
 
 
 class IPreTradeValidator(Protocol):

@@ -26,7 +26,7 @@ Usage:
 
 import logging
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Dict, Optional
 
 logger = logging.getLogger(__name__)

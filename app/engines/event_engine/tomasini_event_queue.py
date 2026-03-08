@@ -9,7 +9,6 @@ Implements Tomasini's event queue pattern from "Trading Systems":
 """
 
 from __future__ import annotations
-import numpy as np
 
 import asyncio
 import logging
@@ -19,6 +18,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, IntEnum
 from typing import Any, Awaitable, Callable, Dict, List, Optional
+
+import numpy as np
 
 from app.domain.entities.order import Order
 
@@ -412,9 +413,7 @@ class TomasiniEventQueue:
             Dictionary with queue statistics
         """
         processing_times = self._stats["processing_time_ms"]
-        avg_processing_time = (
-            np.mean(processing_times) if processing_times else 0
-        )
+        avg_processing_time = np.mean(processing_times) if processing_times else 0
 
         return {
             "events_processed": self._stats["events_processed"],
@@ -523,11 +522,7 @@ class OrderSubmitHandler(OrderEventHandler):
         # In production, this would fetch from a repository
         logger.warning(f"Order {order_id} not found in internal storage, using placeholder")
         return Order(
-            id=order_id,
-            symbol="UNKNOWN",
-            quantity=0,
-            order_type="MARKET",
-            status="PENDING"
+            id=order_id, symbol="UNKNOWN", quantity=0, order_type="MARKET", status="PENDING"
         )
 
 

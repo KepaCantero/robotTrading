@@ -41,15 +41,15 @@ class DiscrepancyDetector:
         """Initialize detector and load tolerances from centralized config."""
         config = get_config()
         # Get tolerances from config with defaults
-        self.QUANTITY_TOLERANCE = Decimal(str(getattr(
-            config.trading, 'reconciliation_quantity_tolerance', 1
-        )))
-        self.PRICE_TOLERANCE_PCT = Decimal(str(getattr(
-            config.trading, 'reconciliation_price_tolerance_pct', 0.001
-        )))
-        self.VALUE_TOLERANCE_PCT = Decimal(str(getattr(
-            config.trading, 'reconciliation_value_tolerance_pct', 0.005
-        )))
+        self.QUANTITY_TOLERANCE = Decimal(
+            str(getattr(config.trading, 'reconciliation_quantity_tolerance', 1))
+        )
+        self.PRICE_TOLERANCE_PCT = Decimal(
+            str(getattr(config.trading, 'reconciliation_price_tolerance_pct', 0.001))
+        )
+        self.VALUE_TOLERANCE_PCT = Decimal(
+            str(getattr(config.trading, 'reconciliation_value_tolerance_pct', 0.005))
+        )
 
     def detect_position_mismatch(
         self, broker_qty: Decimal, internal_qty: Decimal

@@ -432,7 +432,11 @@ class BacktestValidator:
         config = get_config()
         self.min_samples = min_samples
         self.confidence_level = confidence_level
-        self.risk_free_rate = risk_free_rate if risk_free_rate is not None else float(config.backtesting.default_risk_free_rate)
+        self.risk_free_rate = (
+            risk_free_rate
+            if risk_free_rate is not None
+            else float(config.backtesting.default_risk_free_rate)
+        )
         self._annual_trading_days = config.backtesting.annual_trading_days
 
         self.lookahead_corrector = LookAheadBiasCorrector()

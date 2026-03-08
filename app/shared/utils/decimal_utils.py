@@ -12,9 +12,8 @@ Key principles:
 
 import logging
 import math
-import numbers
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation, getcontext
-from typing import List, Optional, Sequence, Union
+from typing import Optional, Sequence, Union
 
 # Set high precision for financial calculations
 getcontext().prec = 28  # Sufficient for most financial calculations
@@ -521,8 +520,7 @@ def validate_price_for_asset_class(
 
 
 def safe_mean(
-    values: Sequence[Union[int, float, str, Decimal]],
-    default: Optional[Decimal] = None
+    values: Sequence[Union[int, float, str, Decimal]], default: Optional[Decimal] = None
 ) -> Optional[Decimal]:
     """
     Calculate mean (average) of a sequence of values using specialized libraries.
@@ -559,7 +557,7 @@ def safe_mean(
 def safe_variance(
     values: Sequence[Union[int, float, str, Decimal]],
     default: Optional[Decimal] = None,
-    sample: bool = False
+    sample: bool = False,
 ) -> Optional[Decimal]:
     """
     Calculate variance of a sequence of values.
@@ -599,7 +597,7 @@ def safe_variance(
 def safe_std(
     values: Sequence[Union[int, float, str, Decimal]],
     default: Optional[Decimal] = None,
-    sample: bool = False
+    sample: bool = False,
 ) -> Optional[Decimal]:
     """
     Calculate standard deviation of a sequence of values.
@@ -631,8 +629,7 @@ def safe_std(
 
 
 def safe_decimal_sqrt(
-    value: Union[int, float, str, Decimal],
-    default: Optional[Decimal] = None
+    value: Union[int, float, str, Decimal], default: Optional[Decimal] = None
 ) -> Optional[Decimal]:
     """
     Calculate square root of a Decimal value.
@@ -674,10 +671,7 @@ _BPS_CONVERSION_FACTOR = Decimal("10000")
 _BPS_DECIMAL_FACTOR = Decimal("0.0001")  # 1/10000
 
 
-def to_bps(
-    value: Union[int, float, str, Decimal],
-    precision: int = 2
-) -> Decimal:
+def to_bps(value: Union[int, float, str, Decimal], precision: int = 2) -> Decimal:
     """
     Convert a decimal value to basis points (BPS).
 
@@ -705,10 +699,7 @@ def to_bps(
     return round_decimal(result, precision)
 
 
-def from_bps(
-    bps_value: Union[int, float, str, Decimal],
-    precision: int = 6
-) -> Decimal:
+def from_bps(bps_value: Union[int, float, str, Decimal], precision: int = 6) -> Decimal:
     """
     Convert basis points (BPS) to decimal value.
 
@@ -779,9 +770,7 @@ def from_bps_float(bps_value: float) -> float:
 
 
 def spread_to_bps(
-    bid: Union[int, float, str, Decimal],
-    ask: Union[int, float, str, Decimal],
-    precision: int = 2
+    bid: Union[int, float, str, Decimal], ask: Union[int, float, str, Decimal], precision: int = 2
 ) -> Decimal:
     """
     Convert bid-ask spread to basis points.
@@ -812,8 +801,7 @@ def spread_to_bps(
 
 
 def annualize_volatility(
-    daily_volatility: Union[int, float, str, Decimal],
-    trading_days: int = 252
+    daily_volatility: Union[int, float, str, Decimal], trading_days: int = 252
 ) -> Decimal:
     """
     Annualize daily volatility using proper sqrt calculation.
@@ -839,8 +827,7 @@ def annualize_volatility(
 
 
 def annualize_returns(
-    daily_return: Union[int, float, str, Decimal],
-    trading_days: int = 252
+    daily_return: Union[int, float, str, Decimal], trading_days: int = 252
 ) -> Decimal:
     """
     Annualize daily returns.

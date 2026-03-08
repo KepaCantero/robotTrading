@@ -16,6 +16,7 @@ import aiohttp  # noqa: F401
 
 from app.shared.config.api_endpoints import APIEndpoints
 from app.shared.config.timeout_config import get_timeouts
+
 from .base_source import BaseDataSource
 
 logger = logging.getLogger(__name__)
@@ -54,10 +55,7 @@ class OptionsVolatilitySource(BaseDataSource):
 
     def _get_base_url(self) -> str:
         """Obtener base URL según provider using centralized configuration."""
-        url_map = {
-            'polygon': APIEndpoints.POLYGON,
-            'ibkr': None  # Requiere conexión TWS
-        }
+        url_map = {'polygon': APIEndpoints.POLYGON, 'ibkr': None}  # Requiere conexión TWS
         return url_map.get(self.provider, APIEndpoints.POLYGON)
 
     async def connect(self) -> bool:

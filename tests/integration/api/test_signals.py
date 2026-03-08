@@ -13,8 +13,8 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
-from app.api.signals import get_signal_scorer_service, router
-from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
+from app.presentation.api.signals import get_signal_scorer_service, router
+from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.services.signal_scorer import SignalScorerService
 
 

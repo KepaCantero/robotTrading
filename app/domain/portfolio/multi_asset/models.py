@@ -380,7 +380,9 @@ class MultiAssetPortfolio:
         return False
 
     def calculate_portfolio_metrics(
-        self, returns: pd.DataFrame, risk_free_rate: float = getattr(config.trading, 'max_risk_per_trade', 0.02)
+        self,
+        returns: pd.DataFrame,
+        risk_free_rate: float = getattr(config.trading, 'max_risk_per_trade', 0.02),
     ) -> PortfolioMetrics:
         """
         Calculate portfolio-level metrics.

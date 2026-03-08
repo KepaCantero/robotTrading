@@ -275,7 +275,10 @@ class OFIConfig(BaseModel):
 
     # EMA calculation (ofi_calculator.py line 384)
     ema_alpha_numerator: float = Field(
-        default=2.0, ge=1.0, le=10.0, description="Numerator for EMA alpha calculation (alpha = 2/(window+1))"
+        default=2.0,
+        ge=1.0,
+        le=10.0,
+        description="Numerator for EMA alpha calculation (alpha = 2/(window+1))",
     )
 
     # Regime detection thresholds (ofi_calculator.py lines 441-443)
@@ -363,9 +366,7 @@ class OFIConfig(BaseModel):
     weight_threshold: float = Field(
         default=0.5, ge=0.0, le=1.0, description="Weight for threshold signal"
     )
-    weight_model: float = Field(
-        default=0.3, ge=0.0, le=1.0, description="Weight for model signal"
-    )
+    weight_model: float = Field(default=0.3, ge=0.0, le=1.0, description="Weight for model signal")
     weight_momentum: float = Field(
         default=0.2, ge=0.0, le=1.0, description="Weight for momentum signal"
     )
@@ -401,15 +402,9 @@ class OFIConfig(BaseModel):
     )
 
     # Horizon strings (ofi_predictor.py lines 362-364)
-    horizon_short: str = Field(
-        default="5m", description="Short horizon string"
-    )
-    horizon_medium: str = Field(
-        default="15m", description="Medium horizon string"
-    )
-    horizon_long: str = Field(
-        default="60m", description="Long horizon string"
-    )
+    horizon_short: str = Field(default="5m", description="Short horizon string")
+    horizon_medium: str = Field(default="15m", description="Medium horizon string")
+    horizon_long: str = Field(default="60m", description="Long horizon string")
 
     # Training parameters (ofi_predictor.py lines 396, 421)
     min_training_samples: int = Field(
@@ -421,10 +416,16 @@ class OFIConfig(BaseModel):
 
     # Prediction intervals (ofi_predictor.py lines 540, 563)
     default_confidence_level: float = Field(
-        default=0.95, ge=0.5, le=0.99, description="Default confidence level for prediction intervals"
+        default=0.95,
+        ge=0.5,
+        le=0.99,
+        description="Default confidence level for prediction intervals",
     )
     prediction_std_error_ratio: float = Field(
-        default=0.5, ge=0.1, le=2.0, description="Ratio for std error estimation in prediction intervals"
+        default=0.5,
+        ge=0.1,
+        le=2.0,
+        description="Ratio for std error estimation in prediction intervals",
     )
 
     # Regime detection parameters (ofi_predictor.py lines 607-640)

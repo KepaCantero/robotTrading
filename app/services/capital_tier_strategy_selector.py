@@ -31,11 +31,11 @@ from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional, Tuple
 
-from app.shared.config.centralized_config import get_config
 from app.services.account_configuration import AccountConfiguration, AccountTier
 from app.services.deployment_validator import DeploymentStatus, DeploymentValidator
 from app.services.expensive_module_gate import ExpensiveModuleGate
 from app.services.learning_capital_gate import LearningCapitalGate
+from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -369,9 +369,13 @@ class CapitalTierStrategySelector:
 
         risk_profile = RiskProfile(
             tier=self.tier.value,
-            max_position_size=self.config.get("position_size_pct", tier_defaults["position_size_pct"]),
+            max_position_size=self.config.get(
+                "position_size_pct", tier_defaults["position_size_pct"]
+            ),
             max_concurrent_trades=self.config.get("max_concurrent_trades", 2),
-            max_daily_loss_pct=self.config.get("max_daily_loss_pct", tier_defaults["max_daily_loss_pct"]),
+            max_daily_loss_pct=self.config.get(
+                "max_daily_loss_pct", tier_defaults["max_daily_loss_pct"]
+            ),
             max_drawdown_pct=self.DRAWDOWN_TOLERANCE[self.tier],
             leverage_allowed=self.LEVERAGE_ALLOWANCES[self.tier],
             learning_enabled=learning_enabled,
@@ -632,7 +636,9 @@ class CapitalTierStrategySelector:
             "tier": self.tier.value,
             "capital": float(self.capital),
             "capital_range": self._get_tier_range(),
-            "position_size": float(self.config.get("position_size_pct", tier_defaults["position_size_pct"])),
+            "position_size": float(
+                self.config.get("position_size_pct", tier_defaults["position_size_pct"])
+            ),
             "max_concurrent_trades": self.config.get("max_concurrent_trades", 2),
             "learning_enabled": self.config.get("learning_enabled", False),
             "expensive_modules_enabled": self.config.get("expensive_modules_enabled", False),

@@ -1,0 +1,139 @@
+# ============================================
+# Ralph Task 18: Additional Trading Rules
+# ============================================
+# PRIORIDAD: P2 (OPCIONAL) - Reglas adicionales de trading
+# OBJETIVO: Implementar R6, R7, R9, R14, R17-R24
+# TIEMPO: ~24 horas
+# ============================================================================
+
+event_loop:
+  prompt_file: ".ralph/ralph_tasks/prompts/18_additional_rules.md"
+  completion_promise: "ADDITIONAL_RULES_COMPLETE"
+  max_iterations: 150
+  max_runtime_seconds: 86400  # 24 hours
+  checkpoint_interval: 3
+  starting_event: "additional_rules.start"
+
+cli:
+  backend: "claude"
+
+core:
+  specs_dir: "./specs/"
+
+hats:
+  additional_rules_implementer:
+    name: "Additional Rules Implementer"
+    description: "Implementa reglas adicionales de trading R6-R24"
+    template: "ralph_templates/hats/implementer_hat.yml"
+    triggers:
+      - "additional_rules.start"
+      - "additional_rules.next_rule"
+    publishes:
+      - "additional_rules.next_rule"
+      - "additional_rules.complete"
+      - "additional_rules.blocked"
+    default_publishes: "additional_rules.next_rule"
+    instructions: |
+      ## ADDITIONAL TRADING RULES
+
+      {{shared_instructions}}
+
+      **OBJETIVO:** Implementar reglas adicionales de trading (P2)
+
+      ### REGLAS A IMPLEMENTAR
+
+      #### R6: Overfitting Prevention
+      - Ratio parámetros:datos < 1:30
+      - Walk-forward validation
+      - Out-of-sample testing
+
+      #### R7: Monte Carlo Simulation
+      - Simular 1000+ escenarios
+      - VaR calculation
+      - Confidence intervals
+
+      #### R9: Execution Timing
+      - Evitar primera hora (9:30-10:00 ET)
+      - Evitar última hora (15:30-16:00 ET)
+      - Lunch trap (12:00-13:00 ET)
+
+      #### R14: Data Quality
+      - Missing data handling
+      - Outlier detection
+      - Stale data rejection
+
+      #### R17: No Emotional Trading
+      - Automated execution only
+      - No manual overrides
+      - Rule-based decisions
+
+      #### R18: Trade Journal
+      - Log every trade rationale
+      - Track emotions/notes
+      - Review weekly
+
+      #### R19: Market Regime Detection
+      - Trend vs Range detection
+      - Volatility regime
+      - Adapt strategy accordingly
+
+      #### R20: Multiple Confirmation
+      - 2-3 confirmations required
+      - Technical + Fundamental + Sentiment
+      - Reduce false signals
+
+      #### R21: Volume as Filter
+      - High volume required
+      - Volume > 1.5x average
+      - Avoid low liquidity
+
+      #### R22: Monthly Review
+      - Auto-adjust parameters
+      - Performance analysis
+      - Rule compliance check
+
+      #### R23: A/B Testing
+      - Test improvements gradually
+      - Statistical significance
+      - Rollout only if better
+
+      #### R24: Diversification
+      - Multiple strategies
+      - Uncorrelated assets
+      - Reduce concentration risk
+
+      ### ESTRUCTURA DE ARCHIVOS
+
+      ```
+      app/services/trading_rules/
+      ├── __init__.py
+      ├── overfitting_prevention.py    # R6
+      ├── monte_carlo.py               # R7
+      ├── execution_timing.py          # R9
+      ├── data_quality.py              # R14
+      ├── emotional_control.py         # R17
+      ├── trade_journal.py             # R18
+      ├── regime_detector.py           # R19
+      ├── confirmation_manager.py      # R20
+      ├── volume_filter.py             # R21
+      ├── monthly_review.py            # R22
+      ├── ab_testing.py                # R23
+      └── diversification.py           # R24
+      ```
+
+      ### VALIDACIÓN POR REGLA
+
+      Para cada regla:
+      1. Crear archivo con implementación
+      2. Validar con python .ralph/scripts/utils.py validate
+      3. Crear test unitario
+      4. Documentar en requirements.md
+      5. Marcar como COMPLETED
+
+memories:
+  enabled: true
+  inject: auto
+  budget: 5000
+
+checkpoint:
+  file: ".ralph/checkpoints/18_additional_rules_checkpoint.json"

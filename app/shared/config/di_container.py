@@ -268,7 +268,7 @@ def get_signal_scorer_service():
     """
     global _signal_scorer_service_instance
     if _signal_scorer_service_instance is None:
-        from app.domain.services.signals.scorer import SignalScorerService
+        from app.services.signal_scorer import SignalScorerService
 
         portfolio_service = get_portfolio_service()
         _signal_scorer_service_instance = SignalScorerService(portfolio_service)

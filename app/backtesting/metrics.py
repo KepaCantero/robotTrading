@@ -36,7 +36,6 @@ except ImportError:
         "For full functionality, install: pip install empyrical-reloaded"
     )
 
-from app.shared.utils.decimal_utils import safe_mean
 from app.backtesting.advanced_metrics import AdvancedMetricsCalculator
 from app.backtesting.lopez_de_prado_metrics import (
     ConcentrationAnalyzer,
@@ -49,6 +48,7 @@ from app.backtesting.lopez_de_prado_metrics import (
     TurnoverAdjustedMetrics,
 )
 from app.backtesting.models import PerformanceMetrics, Trade
+from app.shared.utils.decimal_utils import safe_mean
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +77,11 @@ class MetricsCalculator:
             risk_free_rate: Annual risk-free rate (defaults to config value)
         """
         config = get_config()
-        self.risk_free_rate = risk_free_rate if risk_free_rate is not None else config.backtesting.default_risk_free_rate
+        self.risk_free_rate = (
+            risk_free_rate
+            if risk_free_rate is not None
+            else config.backtesting.default_risk_free_rate
+        )
         self._annual_trading_days = config.backtesting.annual_trading_days
 
         # Initialize López de Prado metrics components
@@ -382,7 +386,10 @@ class MetricsCalculator:
                     # (empyrical expects daily rate when period='daily')
                     daily_risk_free = float(self.risk_free_rate) / self._annual_trading_days
                     sharpe = ep_module.sharpe_ratio(
-                        returns_array, risk_free=daily_risk_free, period='daily', annualization=self._annual_trading_days
+                        returns_array,
+                        risk_free=daily_risk_free,
+                        period='daily',
+                        annualization=self._annual_trading_days,
                     )
                     # Handle NaN
                     if np.isnan(sharpe) or np.isinf(sharpe):
@@ -435,7 +442,10 @@ class MetricsCalculator:
                     # Convert annual risk-free rate to daily for empyrical
                     daily_risk_free = float(self.risk_free_rate) / self._annual_trading_days
                     sortino = ep_module.sortino_ratio(
-                        returns_array, risk_free=daily_risk_free, period='daily', annualization=self._annual_trading_days
+                        returns_array,
+                        risk_free=daily_risk_free,
+                        period='daily',
+                        annualization=self._annual_trading_days,
                     )
                     # Handle NaN
                     if np.isnan(sortino) or np.isinf(sortino):
@@ -968,7 +978,11 @@ class LopezDePradoMetricsCalculator:
             transaction_cost_bps: Transaction cost in basis points
         """
         config = get_config()
-        self.risk_free_rate = risk_free_rate if risk_free_rate is not None else float(config.backtesting.default_risk_free_rate)
+        self.risk_free_rate = (
+            risk_free_rate
+            if risk_free_rate is not None
+            else float(config.backtesting.default_risk_free_rate)
+        )
         self._annual_trading_days = config.backtesting.annual_trading_days
         self.stability_threshold = stability_threshold
         self.transaction_cost_bps = transaction_cost_bps

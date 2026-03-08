@@ -15,16 +15,11 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List
 
-import yaml
 
 from app.backtesting.comprehensive_backtest_runner import ComprehensiveBacktestRunner
-from app.backtesting.shared import (
-    MetricsDict,
-    TempConfigManager,
-    get_empty_metrics,
-)
+from app.backtesting.shared import MetricsDict, TempConfigManager, get_empty_metrics
 from app.domain.models.input_profile import InputProfile
 
 logger = logging.getLogger(__name__)
@@ -72,7 +67,9 @@ class BaselineBacktestExecutor:
         )
 
         # Use shared TempConfigManager for automatic cleanup
-        with TempConfigManager(config, self.output_dir, prefix=f"temp_{profile.input_id[:8]}") as temp_config_path:
+        with TempConfigManager(
+            config, self.output_dir, prefix=f"temp_{profile.input_id[:8]}"
+        ) as temp_config_path:
             try:
                 runner = ComprehensiveBacktestRunner(str(temp_config_path))
 

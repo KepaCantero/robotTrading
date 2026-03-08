@@ -20,8 +20,8 @@ from typing import List, Optional
 
 import numpy as np
 
-from app.shared.utils.decimal_utils import round_price, to_decimal
 from app.domain.models.market_data import Quote
+from app.shared.utils.decimal_utils import round_price, to_decimal
 
 logger = logging.getLogger(__name__)
 

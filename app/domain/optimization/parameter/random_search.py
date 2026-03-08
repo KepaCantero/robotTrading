@@ -13,8 +13,8 @@ import random
 from datetime import datetime
 from math import exp, log
 from typing import Any, Callable, Dict, List
-import numpy as np
 
+import numpy as np
 from tqdm import tqdm
 
 from .base_optimizer import BaseOptimizer, OptimizationConfig, OptimizationResult

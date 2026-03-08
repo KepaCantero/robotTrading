@@ -79,7 +79,7 @@ class VolatilityDetector(BaseMarketDetector):
 
         # Calcular percentil del ATR actual usando bisect para mayor precisión
         current_atr = atr_history[-1]
-        window = atr_history[-self.percentile_window:]
+        window = atr_history[-self.percentile_window :]
         sorted_atr = sorted(window)
 
         # Usar bisect para encontrar la posición correcta (evita problemas con floats)

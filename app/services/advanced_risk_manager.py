@@ -15,9 +15,9 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, Optional
 
-from app.shared.config.centralized_config import get_config
 from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal
+from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,9 @@ def _get_risk_config(attr_name: str, default_value: float) -> Decimal:
         value = float(getattr(config.trading, attr_name, default_value))
         return Decimal(str(value))
     except (AttributeError, ValueError, TypeError) as e:
-        logger.warning(f"Error getting risk config '{attr_name}': {e}, using default {default_value}")
+        logger.warning(
+            f"Error getting risk config '{attr_name}': {e}, using default {default_value}"
+        )
         return Decimal(str(default_value))
 
 

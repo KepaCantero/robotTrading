@@ -1,0 +1,76 @@
+# Requirements Document: shared/decorators/validation.py
+
+## 1. Module Overview
+Reusable validation decorators for API endpoints.
+
+Provides decorators for:
+- Symbol validation
+- Order parameter validation
+- Rate limiting
+- Request model validation with Pydantic
+
+## 2. Dependencies
+- `functools.wraps`
+- `typing.Callable`
+- `typing.Type`
+- `typing.Dict`
+- `typing.Any`
+- `pydantic.BaseModel`
+- `app.security.input_validation.validator` (external)
+- `app.security.input_validation.InputSanitizer` (external)
+
+## 3. Core Components (Contracts)
+### Public Decorators
+- `validate_symbol(func)`: Validate symbol parameter in request
+- `validate_order_params(func)`: Validate all order parameters
+- `validate_and_sanitize_input(func)`: Validate inputs with sanitization
+- `validate_list_input(func)`: Validate list input
+- `validate_request(func)`: Validate request data against Pydantic model
+
+### Public Functions
+- `validate_request_model(model_class, data, sanitize)`: Validate request data against Pydantic model
+- `validate_and_sanitize_input(data, input_type, **constraints)`: Convenience function for validation
+
+## 4. Input Types Supported
+- `symbol`: Trading symbol validation
+- `email`: Email sanitization
+- `url`: URL sanitization
+- `price`: Price validation
+- `quantity`: Quantity validation
+- `order`: Order parameters validation
+
+## 5. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors
+- [x] Must validate inputs before processing
+- [x] Must sanitize string inputs
+- [x] Must raise ValidationError on invalid input
+- [x] Must preserve function metadata with @wraps
+
+## 6. Error Handling
+- Raises `ValidationError` for invalid inputs
+- Includes descriptive error messages
+- Preserves original exception context
+
+## 7. Usage Example
+```python
+from app.shared.decorators.validation import (
+    validate_symbol,
+    validate_order_params,
+    rate_limit
+)
+
+@validate_symbol
+async def get_quote(symbol: str):
+    # symbol is already validated
+    ...
+
+@validate_order_params
+async def place_order(symbol: str, side: str, quantity: int):
+    # All order params are validated
+    ...
+```
+
+## 8. Notes
+- Decorators are async-compatible
+- Input sanitization prevents injection attacks
+- Pydantic models provide structured validation

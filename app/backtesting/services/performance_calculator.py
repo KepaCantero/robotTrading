@@ -13,7 +13,6 @@ from decimal import Decimal
 from typing import List, Optional
 
 from app.backtesting.models import BacktestConfig, PerformanceMetrics, Trade, TradeStatus
-from app.shared.config.centralized_config import get_config
 from app.shared.utils.decimal_utils import safe_mean, safe_variance
 
 logger = logging.getLogger(__name__)

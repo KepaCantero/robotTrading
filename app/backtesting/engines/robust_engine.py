@@ -28,11 +28,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 
-from app.backtesting.base_engine import (
-    BaseBacktestEngine,
-    BacktestState,
-    EngineType,
-)
+from app.backtesting.base_engine import BaseBacktestEngine, EngineType
 
 # SINGLE SOURCE OF TRUTH: Import CentralizedConfig
 from app.shared.config.centralized_config import get_config
@@ -324,8 +320,7 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
             dividend_tracker=kwargs.get("dividend_tracker"),
             checkpoints_used=self._checkpoint_count,
             total_duration_seconds=(
-                (datetime.utcnow() - self._start_time).total_seconds()
-                if self._start_time else 0.0
+                (datetime.utcnow() - self._start_time).total_seconds() if self._start_time else 0.0
             ),
         )
 
@@ -348,15 +343,17 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
         records = []
         for item in data:
             if hasattr(item, "timestamp") and hasattr(item, "close"):
-                records.append({
-                    "timestamp": item.timestamp,
-                    "open": float(getattr(item, "open", item.close)),
-                    "high": float(getattr(item, "high", item.close)),
-                    "low": float(getattr(item, "low", item.close)),
-                    "close": float(item.close),
-                    "volume": float(getattr(item, "volume", 0)),
-                    "symbol": getattr(item, "symbol", "UNKNOWN"),
-                })
+                records.append(
+                    {
+                        "timestamp": item.timestamp,
+                        "open": float(getattr(item, "open", item.close)),
+                        "high": float(getattr(item, "high", item.close)),
+                        "low": float(getattr(item, "low", item.close)),
+                        "close": float(item.close),
+                        "volume": float(getattr(item, "volume", 0)),
+                        "symbol": getattr(item, "symbol", "UNKNOWN"),
+                    }
+                )
 
         df = pd.DataFrame(records)
         if not df.empty and "timestamp" in df.columns:
@@ -453,13 +450,12 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
             )
             symbol = signal.symbol
             price_input = (
-                signal.price if hasattr(signal, "price")
+                signal.price
+                if hasattr(signal, "price")
                 else getattr(market_data, "close", Decimal("0"))
             )
             price = (
-                Decimal(str(price_input))
-                if not isinstance(price_input, Decimal)
-                else price_input
+                Decimal(str(price_input)) if not isinstance(price_input, Decimal) else price_input
             )
         except (AttributeError, KeyError, ValueError) as e:
             logger.warning(f"Could not process signal: {e}")
@@ -494,15 +490,17 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
         self._capital -= actual_cost
         self._positions[symbol] = self._positions.get(symbol, Decimal("0")) + Decimal(str(shares))
 
-        self._trades.append({
-            "symbol": symbol,
-            "side": "buy",
-            "shares": shares,
-            "price": float(price),
-            "commission": float(commission),
-            "date": self._current_date,
-            "timestamp": datetime.combine(self._current_date, datetime.min.time()),
-        })
+        self._trades.append(
+            {
+                "symbol": symbol,
+                "side": "buy",
+                "shares": shares,
+                "price": float(price),
+                "commission": float(commission),
+                "date": self._current_date,
+                "timestamp": datetime.combine(self._current_date, datetime.min.time()),
+            }
+        )
 
     def _execute_sell(self, symbol: str, price: Decimal, signal: Any) -> None:
         """Execute a sell order."""
@@ -525,16 +523,18 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
         pnl = proceeds - shares_to_sell * cost_basis
         self._cost_basis[symbol] = Decimal("0")
 
-        self._trades.append({
-            "symbol": symbol,
-            "side": "sell",
-            "shares": float(shares_to_sell),
-            "price": float(price),
-            "commission": float(commission),
-            "pnl": float(pnl),
-            "date": self._current_date,
-            "timestamp": datetime.combine(self._current_date, datetime.min.time()),
-        })
+        self._trades.append(
+            {
+                "symbol": symbol,
+                "side": "sell",
+                "shares": float(shares_to_sell),
+                "price": float(price),
+                "commission": float(commission),
+                "pnl": float(pnl),
+                "date": self._current_date,
+                "timestamp": datetime.combine(self._current_date, datetime.min.time()),
+            }
+        )
 
     def _update_progress(
         self,
@@ -549,13 +549,15 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
         years_completed = chunk_idx * self.config.chunk_size_days / 365.25
         total_years = (self.config.end_date - self.config.start_date).days / 365.25
 
-        self.config.progress_callback({
-            "current_year": int(years_completed) + 1,
-            "total_years": int(total_years) + 1,
-            "current_date": chunk_end_date,
-            "capital": self._capital,
-            "trades_executed": len(self._trades),
-        })
+        self.config.progress_callback(
+            {
+                "current_year": int(years_completed) + 1,
+                "total_years": int(total_years) + 1,
+                "current_date": chunk_end_date,
+                "capital": self._capital,
+                "trades_executed": len(self._trades),
+            }
+        )
 
     def _save_checkpoint_if_needed(
         self,
@@ -568,8 +570,7 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
 
         days_completed = chunk_idx * self.config.chunk_size_days
         should_checkpoint = (
-            days_completed % self.config.checkpoint_frequency == 0
-            or chunk_idx == total_chunks
+            days_completed % self.config.checkpoint_frequency == 0 or chunk_idx == total_chunks
         )
 
         if should_checkpoint:
@@ -588,12 +589,15 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
             "cost_basis": {k: float(v) for k, v in self._cost_basis.items()},
             "year": (
                 (self._current_date.year - self.config.start_date.year) + 1
-                if self._current_date else 1
+                if self._current_date
+                else 1
             ),
             "progress": (
                 (self._current_date - self.config.start_date).days
-                / (self.config.end_date - self.config.start_date).days * 100
-                if self._current_date else 0.0
+                / (self.config.end_date - self.config.start_date).days
+                * 100
+                if self._current_date
+                else 0.0
             ),
         }
 
@@ -625,7 +629,11 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
             with open(latest_file, "r") as f:
                 data = json.load(f)
 
-            self._current_date = date.fromisoformat(data["current_date"]) if data.get("current_date") else self.config.start_date
+            self._current_date = (
+                date.fromisoformat(data["current_date"])
+                if data.get("current_date")
+                else self.config.start_date
+            )
             self._capital = Decimal(str(data["capital"]))
             self._positions = {k: Decimal(str(v)) for k, v in data.get("positions", {}).items()}
             self._cost_basis = {k: Decimal(str(v)) for k, v in data.get("cost_basis", {}).items()}
@@ -656,7 +664,10 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
         if self._lookahead_validator is None:
             try:
                 from app.backtesting.robust_engine.look_ahead_validator import LookAheadValidator
-                self._lookahead_validator = LookAheadValidator(strict_mode=self.config.validation_strict_mode)
+
+                self._lookahead_validator = LookAheadValidator(
+                    strict_mode=self.config.validation_strict_mode
+                )
             except ImportError:
                 logger.warning("LookAheadValidator not available, skipping validation")
                 return
@@ -668,7 +679,9 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
         )
 
         if not self._validation_result.is_valid:
-            error_msg = f"Look-ahead bias validation failed. Issues: {self._validation_result.issues}"
+            error_msg = (
+                f"Look-ahead bias validation failed. Issues: {self._validation_result.issues}"
+            )
             logger.error(error_msg)
             if self.config.validation_strict_mode:
                 raise ValueError(error_msg)

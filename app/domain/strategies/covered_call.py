@@ -345,7 +345,9 @@ class CoveredCallStrategy:
     ) -> Optional[OptionData]:
         """Find call option with higher strike for more premium."""
         # Look for higher strike with similar expiration
-        target_strike = stock_price * (1 + self._target_otm * self._tt.covered_call_otm_multiplier)  # More OTM
+        target_strike = stock_price * (
+            1 + self._target_otm * self._tt.covered_call_otm_multiplier
+        )  # More OTM
 
         best_call = None
         min_distance = float('inf')

@@ -5,8 +5,6 @@ Extracted from centralized_config.py for SRP compliance.
 TASK-24: SRP Refactoring
 """
 
-from app.shared.config.params.trading_thresholds import TradingThresholds
-from app.shared.config.params.strategy_config import StrategyConfig, StockAllocationSettings
 from app.shared.config.params.backtest_config import (
     BacktestingConfig,
     CommissionModel,
@@ -27,6 +25,8 @@ from app.shared.config.params.risk_config import (
     CurrencyHedgingConfig,
     SectorCountryDiversificationConfig,
 )
+from app.shared.config.params.strategy_config import StockAllocationSettings, StrategyConfig
+from app.shared.config.params.trading_thresholds import TradingThresholds
 
 __all__ = [
     # Trading

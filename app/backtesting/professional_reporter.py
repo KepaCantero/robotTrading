@@ -11,6 +11,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, List, Optional, TypedDict, Union
+
 import numpy as np
 
 from app.backtesting.acceptance_criteria import AcceptanceReport

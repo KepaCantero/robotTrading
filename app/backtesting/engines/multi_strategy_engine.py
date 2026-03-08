@@ -23,22 +23,15 @@ from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
 
-from app.backtesting.base_engine import (
-    BaseBacktestEngine,
-    BacktestState,
-    EngineType,
-)
-from app.backtesting.models import BacktestConfig, BacktestResult, PerformanceMetrics
-from app.backtesting.signal_diagnostic_logger import SignalDiagnosticLogger
 from app.backtesting.backtesting_compliance import (
-    BacktestingCompliance,
     BacktestingComplianceResult,
     create_backtesting_compliance,
 )
-
-# SINGLE SOURCE OF TRUTH: Import CentralizedConfig
-from app.shared.config.centralized_config import get_config, StockAllocationSettings
+from app.backtesting.base_engine import BaseBacktestEngine, EngineType
+from app.backtesting.models import BacktestConfig, BacktestResult, PerformanceMetrics
+from app.backtesting.signal_diagnostic_logger import SignalDiagnosticLogger
 from app.domain.models.market_data import Quote
+from app.domain.strategies.base import BaseStrategy
 from app.services.dynamic_capital_reallocation import DynamicCapitalReallocationEngine
 from app.services.multi_strategy_allocation import MultiStrategyAllocationManager
 from app.services.portfolio_config_manager import (
@@ -46,7 +39,9 @@ from app.services.portfolio_config_manager import (
     get_portfolio_config_manager,
 )
 from app.services.strategy_stock_allocator import StrategyStockAllocator
-from app.domain.strategies.base import BaseStrategy
+
+# SINGLE SOURCE OF TRUTH: Import CentralizedConfig
+from app.shared.config.centralized_config import StockAllocationSettings
 
 logger = logging.getLogger(__name__)
 
@@ -219,9 +214,7 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
         }
 
         # Run allocation
-        use_allocator = self._run_allocation(
-            historical_data, strategy_allocations_dict
-        )
+        use_allocator = self._run_allocation(historical_data, strategy_allocations_dict)
 
         # STEP 3: Run backtest for each strategy
         results_by_strategy: Dict[str, BacktestResult] = {}
@@ -243,9 +236,7 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
                 filtered_quotes = self._filter_quotes_by_strategy(quotes, strategy_name)
 
             # Generate signals for this strategy
-            signals = self._generate_signals_for_strategy(
-                strategy, strategy_name, filtered_quotes
-            )
+            signals = self._generate_signals_for_strategy(strategy, strategy_name, filtered_quotes)
             signals_by_strategy[strategy_name] = signals
 
             if not signals:
@@ -261,10 +252,18 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
                 strategy_name=f"{strategy_name}_backtest",
                 initial_capital=allocated_capital,
                 commission_per_trade=self.config_params.get("commission", bt_config.min_commission),
-                slippage_percentage=self.config_params.get("slippage", bt_config.base_slippage_bps / Decimal("100")),
-                stop_loss_percentage=self.config_params.get("stop_loss", bt_config.default_stop_loss_pct * Decimal("100")),
-                take_profit_percentage=self.config_params.get("take_profit", bt_config.default_take_profit_pct * Decimal("100")),
-                max_position_size=self.config_params.get("max_position_size", bt_config.default_max_position_size),
+                slippage_percentage=self.config_params.get(
+                    "slippage", bt_config.base_slippage_bps / Decimal("100")
+                ),
+                stop_loss_percentage=self.config_params.get(
+                    "stop_loss", bt_config.default_stop_loss_pct * Decimal("100")
+                ),
+                take_profit_percentage=self.config_params.get(
+                    "take_profit", bt_config.default_take_profit_pct * Decimal("100")
+                ),
+                max_position_size=self.config_params.get(
+                    "max_position_size", bt_config.default_max_position_size
+                ),
             )
 
             # Run backtest using StandardBacktestEngine
@@ -302,7 +301,9 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
                 "residual_capital": float(self.allocation_result.residual_capital),
                 "validation_errors": self.allocation_result.validation_errors,
                 "allocation_method": "StrategyStockAllocator",
-                "decision_logs": self.allocation_result.decision_logs[-10:] if self.allocation_result.decision_logs else [],
+                "decision_logs": self.allocation_result.decision_logs[-10:]
+                if self.allocation_result.decision_logs
+                else [],
             }
 
         logger.info(
@@ -392,7 +393,9 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
                             self.diagnostic_logger.log_signal_candidate(
                                 strategy_name,
                                 quote.symbol,
-                                sig.signal_type.value if hasattr(sig.signal_type, "value") else str(sig.signal_type),
+                                sig.signal_type.value
+                                if hasattr(sig.signal_type, "value")
+                                else str(sig.signal_type),
                                 sig.metadata if hasattr(sig, "metadata") else {},
                             )
             except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
@@ -479,7 +482,9 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
             final_capital=initial_capital,
             total_return=Decimal("0"),
             trades=[],
-            equity_curve=[(start_date, initial_capital), (end_date, initial_capital)] if start_date and end_date else [],
+            equity_curve=[(start_date, initial_capital), (end_date, initial_capital)]
+            if start_date and end_date
+            else [],
             performance=PerformanceMetrics(
                 total_trades=0,
                 winning_trades=0,
@@ -532,8 +537,12 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
                 "total_trades": result.performance.total_trades if result.performance else 0,
                 "win_rate": float(result.performance.win_rate) if result.performance else 0.0,
                 "total_return": float(result.total_return),
-                "sharpe_ratio": float(result.performance.sharpe_ratio) if result.performance and result.performance.sharpe_ratio else None,
-                "max_drawdown": float(result.performance.max_drawdown) if result.performance and result.performance.max_drawdown else 0,
+                "sharpe_ratio": float(result.performance.sharpe_ratio)
+                if result.performance and result.performance.sharpe_ratio
+                else None,
+                "max_drawdown": float(result.performance.max_drawdown)
+                if result.performance and result.performance.max_drawdown
+                else 0,
             }
 
         return {
@@ -542,7 +551,11 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
                 "total_initial_capital": float(total_initial),
                 "total_final_capital": float(total_final),
                 "total_return": float(total_return),
-                "total_trades": sum(r.performance.total_trades for r in results_by_strategy.values() if r.performance),
+                "total_trades": sum(
+                    r.performance.total_trades
+                    for r in results_by_strategy.values()
+                    if r.performance
+                ),
                 "weighted_sharpe": weighted_sharpe,
                 "weighted_max_dd": weighted_max_dd,
                 "all_trades": all_trades,

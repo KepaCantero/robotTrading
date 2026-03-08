@@ -3,20 +3,21 @@ Drawdown Validator (R2)
 
 Valida que el drawdown no exceda 15% (kill switch)
 """
-from typing import Optional
-from decimal import Decimal
-from datetime import datetime
 from dataclasses import dataclass
+from datetime import datetime
+from decimal import Decimal
+from typing import Optional
 
 
 @dataclass
 class DrawdownResult:
     """Resultado de validación de drawdown"""
+
     current_drawdown: Decimal  # Drawdown actual (%)
-    peak_equity: Decimal       # Equity máximo
-    current_equity: Decimal    # Equity actual
-    passes: bool               # Si pasa (< 15%)
-    kill_switch_active: bool   # Si kill switch está activo
+    peak_equity: Decimal  # Equity máximo
+    current_equity: Decimal  # Equity actual
+    passes: bool  # Si pasa (< 15%)
+    kill_switch_active: bool  # Si kill switch está activo
 
 
 class DrawdownValidator:
@@ -80,7 +81,7 @@ class DrawdownValidator:
             peak_equity=self._peak_equity or Decimal("0"),
             current_equity=current_equity,
             passes=passes,
-            kill_switch_active=self._kill_switch_active
+            kill_switch_active=self._kill_switch_active,
         )
 
     def get_current_drawdown(self) -> Decimal:

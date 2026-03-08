@@ -17,8 +17,7 @@ Architecture:
 from __future__ import annotations
 
 import logging
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import numpy as np
 import pandas as pd
@@ -156,7 +155,7 @@ class BacktestRegimeAnalyzer:
                     if hmm_success:
                         regime_predictions = []
                         for i in range(len(prices)):
-                            window_prices = prices[max(0, i - 100): i + 1]
+                            window_prices = prices[max(0, i - 100) : i + 1]
                             pred = hmm_detector.detect(window_prices.tolist())
                             regime_predictions.append(pred.get('state', 1))
 
@@ -205,7 +204,7 @@ class BacktestRegimeAnalyzer:
                     if cluster_success:
                         regime_predictions = []
                         for i in range(len(prices)):
-                            window_prices = prices[max(0, i - 100): i + 1]
+                            window_prices = prices[max(0, i - 100) : i + 1]
                             pred = cluster_detector.detect(window_prices.tolist())
                             regime_predictions.append(pred.get('cluster', 1))
 

@@ -91,7 +91,9 @@ class PnLValidator:
 
         # Compare with actual P&L
         difference = abs(trade.pnl - expected_pnl)
-        difference_bps = (difference / abs(expected_pnl) * 10000) if expected_pnl != 0 else Decimal("0")
+        difference_bps = (
+            (difference / abs(expected_pnl) * 10000) if expected_pnl != 0 else Decimal("0")
+        )
 
         if difference_bps > self.max_difference_bps:
             raise PnLValidationError(
@@ -147,12 +149,15 @@ class PnLValidator:
             PnLValidationError: If total doesn't match
         """
         calculated_total = sum(
-            trade.pnl for trade in trades
+            trade.pnl
+            for trade in trades
             if trade.status == TradeStatus.CLOSED and trade.pnl is not None
         )
 
         difference = abs(reported_total - calculated_total)
-        difference_bps = (difference / abs(calculated_total) * 10000) if calculated_total != 0 else Decimal("0")
+        difference_bps = (
+            (difference / abs(calculated_total) * 10000) if calculated_total != 0 else Decimal("0")
+        )
 
         if difference_bps > self.max_difference_bps:
             raise PnLValidationError(
@@ -224,13 +229,16 @@ class PnLValidator:
             PnLValidationError: If inconsistent
         """
         total_pnl = sum(
-            trade.pnl for trade in trades
+            trade.pnl
+            for trade in trades
             if trade.status == TradeStatus.CLOSED and trade.pnl is not None
         )
 
         expected_final = initial_capital + total_pnl
         difference = abs(final_capital - expected_final)
-        difference_bps = (difference / abs(expected_final) * 10000) if expected_final != 0 else Decimal("0")
+        difference_bps = (
+            (difference / abs(expected_final) * 10000) if expected_final != 0 else Decimal("0")
+        )
 
         if difference_bps > self.max_difference_bps:
             raise PnLValidationError(

@@ -56,12 +56,28 @@ class SpainTaxEngine(TaxEngine):
         spain_tax = get_config().spain_tax
 
         # Use config values as defaults, allow override via parameter
-        self.BRACKET_1_LIMIT = to_decimal(config.get("bracket_1_limit", "33007.99")) if config else Decimal("33007.99")
-        self.BRACKET_2_LIMIT = to_decimal(config.get("bracket_2_limit", "53407.99")) if config else Decimal("53407.99")
+        self.BRACKET_1_LIMIT = (
+            to_decimal(config.get("bracket_1_limit", "33007.99")) if config else Decimal("33007.99")
+        )
+        self.BRACKET_2_LIMIT = (
+            to_decimal(config.get("bracket_2_limit", "53407.99")) if config else Decimal("53407.99")
+        )
 
-        self.RATE_1 = to_decimal(config.get("rate_1", spain_tax.irpf_rate_19)) if config else Decimal(str(spain_tax.irpf_rate_19))
-        self.RATE_2 = to_decimal(config.get("rate_2", spain_tax.irpf_rate_21)) if config else Decimal(str(spain_tax.irpf_rate_21))
-        self.RATE_3 = to_decimal(config.get("rate_3", spain_tax.irpf_rate_23)) if config else Decimal(str(spain_tax.irpf_rate_23))
+        self.RATE_1 = (
+            to_decimal(config.get("rate_1", spain_tax.irpf_rate_19))
+            if config
+            else Decimal(str(spain_tax.irpf_rate_19))
+        )
+        self.RATE_2 = (
+            to_decimal(config.get("rate_2", spain_tax.irpf_rate_21))
+            if config
+            else Decimal(str(spain_tax.irpf_rate_21))
+        )
+        self.RATE_3 = (
+            to_decimal(config.get("rate_3", spain_tax.irpf_rate_23))
+            if config
+            else Decimal(str(spain_tax.irpf_rate_23))
+        )
 
         self.MODELO_720_THRESHOLD = to_decimal(str(spain_tax.modelo_720_threshold_eur))
         self.LOSS_CARRYFORWARD_YEARS = int(spain_tax.capital_loss_carry_forward_years)
@@ -205,9 +221,33 @@ class SpainTaxEngine(TaxEngine):
 
         # EU/EEA countries with 0% withholding (Parent-Subsidiary Directive)
         eu_countries = {
-            "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI",
-            "FR", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU",
-            "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE",
+            "AT",
+            "BE",
+            "BG",
+            "HR",
+            "CY",
+            "CZ",
+            "DK",
+            "EE",
+            "FI",
+            "FR",
+            "DE",
+            "GR",
+            "HU",
+            "IE",
+            "IT",
+            "LV",
+            "LT",
+            "LU",
+            "MT",
+            "NL",
+            "PL",
+            "PT",
+            "RO",
+            "SK",
+            "SI",
+            "ES",
+            "SE",
         }
 
         country_upper = country.upper()
@@ -325,8 +365,7 @@ class SpainTaxEngine(TaxEngine):
         net_gain = max(total_gains - total_losses, Decimal("0"))
 
         logger.info(
-            f"Gain compensation: gains={total_gains}, losses={total_losses}, "
-            f"net={net_gain}"
+            f"Gain compensation: gains={total_gains}, losses={total_losses}, " f"net={net_gain}"
         )
 
         return self.calculate_capital_gains_tax(net_gain)

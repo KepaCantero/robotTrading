@@ -1,8 +1,8 @@
 """
 Trade execution protocols
 """
-from typing import Protocol
 from decimal import Decimal
+from typing import Protocol
 
 
 class ITradeExecutor(Protocol):

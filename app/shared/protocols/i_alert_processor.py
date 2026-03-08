@@ -1,5 +1,5 @@
 """Alert processing protocols"""
-from typing import Protocol, Optional
+from typing import Optional, Protocol
 
 
 class IAlertProcessor(Protocol):

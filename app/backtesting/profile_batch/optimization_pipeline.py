@@ -19,8 +19,8 @@ from typing import Any, Dict
 import numpy as np
 import pandas as pd
 
-from app.shared.config.profile_config_loader import ProfileConfigLoader
 from app.domain.models.input_profile import InputProfile
+from app.shared.config.profile_config_loader import ProfileConfigLoader
 
 from .bayesian_optimizer import BayesianOptimizer
 from .optimization_validators import MonteCarloSimulator, OutOfSampleValidator, WalkForwardValidator
