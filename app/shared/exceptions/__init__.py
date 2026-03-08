@@ -28,12 +28,14 @@ if TYPE_CHECKING:
     )
 
 
-def _get_error_handlers() -> tuple[
-    Callable,
-    Callable,
-    Callable,
-    Callable,
-]:
+def _get_error_handlers() -> (
+    tuple[
+        Callable,
+        Callable,
+        Callable,
+        Callable,
+    ]
+):
     """
     Lazily import error handlers to avoid circular dependencies.
 
@@ -47,6 +49,7 @@ def _get_error_handlers() -> tuple[
         starlette_http_exception_handler,
         validation_exception_handler,
     )
+
     return (
         algotrading_exception_handler,
         generic_exception_handler,
@@ -55,13 +58,15 @@ def _get_error_handlers() -> tuple[
     )
 
 
-def _get_middleware_classes() -> tuple[
-    type,
-    type,
-    type,
-    type,
-    type,
-]:
+def _get_middleware_classes() -> (
+    tuple[
+        type,
+        type,
+        type,
+        type,
+        type,
+    ]
+):
     """
     Lazily import middleware classes to avoid circular dependencies.
 
@@ -75,6 +80,7 @@ def _get_middleware_classes() -> tuple[
         RequestContextMiddleware,
         SecurityHeadersMiddleware,
     )
+
     return (
         ErrorHandlingMiddleware,
         HealthCheckMiddleware,

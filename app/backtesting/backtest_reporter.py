@@ -24,8 +24,8 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 from app.backtesting.core.memory_manager import AggressiveMemoryManager
-from app.backtesting.models import BacktestResult
 from app.backtesting.factories import StrategyFactory
+from app.backtesting.models import BacktestResult
 
 
 class BacktestReporter:
@@ -439,9 +439,7 @@ class BacktestReporter:
             },
         }
 
-    def extract_transformer_predictions(
-        self, strategy: Any, quotes: List
-    ) -> 'np.ndarray':
+    def extract_transformer_predictions(self, strategy: Any, quotes: List) -> 'np.ndarray':
         """
         Extract Transformer predictions from strategy.
 
@@ -471,9 +469,7 @@ class BacktestReporter:
 
         return np.array(predictions)
 
-    def extract_transformer_feature_importance(
-        self, strategy: Any
-    ) -> Dict[str, float]:
+    def extract_transformer_feature_importance(self, strategy: Any) -> Dict[str, float]:
         """
         Extract feature importance from Transformer model.
 

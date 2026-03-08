@@ -112,18 +112,12 @@ class ConservativeBacktestFallback(FallbackStrategy):
         try:
             config = get_config()
             # Get fallback parameters from config with defaults
-            annual_return = float(getattr(
-                config.trading, 'fallback_conservative_annual_return', 0.05
-            ))
-            sharpe_ratio = float(getattr(
-                config.trading, 'fallback_conservative_sharpe_ratio', 0.5
-            ))
-            max_drawdown = float(getattr(
-                config.trading, 'fallback_expected_max_drawdown', -0.15
-            ))
-            feasibility_ratio = float(getattr(
-                config.trading, 'fallback_feasibility_ratio', 0.8
-            ))
+            annual_return = float(
+                getattr(config.trading, 'fallback_conservative_annual_return', 0.05)
+            )
+            sharpe_ratio = float(getattr(config.trading, 'fallback_conservative_sharpe_ratio', 0.5))
+            max_drawdown = float(getattr(config.trading, 'fallback_expected_max_drawdown', -0.15))
+            feasibility_ratio = float(getattr(config.trading, 'fallback_feasibility_ratio', 0.8))
         except (AttributeError, ValueError) as e:
             logger.error(f"Error loading fallback config: {e}, using defaults")
             annual_return = 0.05

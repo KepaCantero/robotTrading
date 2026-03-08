@@ -5,7 +5,7 @@ import os
 from typing import List
 
 from app.services.alerting_system.models import NotificationChannelType, NotificationTarget
-from app.user_config.user_settings import NotificationSettings, UserSettings
+from app.user_config.user_settings import UserSettings
 
 
 def user_settings_to_notification_targets(settings: UserSettings) -> List[NotificationTarget]:

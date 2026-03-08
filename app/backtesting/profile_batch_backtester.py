@@ -50,7 +50,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 import numpy as np
@@ -58,6 +58,11 @@ import optuna
 import pandas as pd
 import yaml
 
+# COMPLIANCE: Importar BacktestingCompliance para R5, R6, R7, DATA-001
+from app.backtesting.backtesting_compliance import (
+    BacktestingComplianceResult,
+    create_backtesting_compliance,
+)
 from app.backtesting.comprehensive_backtest_runner import ComprehensiveBacktestRunner
 from app.backtesting.professional_reporter import ProfessionalReporter
 from app.backtesting.services import (
@@ -76,26 +81,17 @@ from app.backtesting.services import (
 from app.backtesting.shared import (
     ConfigDict,
     MetricsDict,
-    MetricsFactory,
     ParameterDict,
     ParameterMappingService,
     TempConfigManager,
     get_empty_metrics,
 )
-
-# COMPLIANCE: Importar BacktestingCompliance para R5, R6, R7, DATA-001
-from app.backtesting.backtesting_compliance import (
-    BacktestingCompliance,
-    BacktestingComplianceResult,
-    create_backtesting_compliance,
-)
-
-from app.shared.config.profile_config_loader import ProfileConfigLoader
 from app.domain.models.input_profile import InputProfile
 from app.services.profile_driven_trading.profile_strategy_mapper import (
     StrategyMapping,
     create_profile_mapper,
 )
+from app.shared.config.profile_config_loader import ProfileConfigLoader
 
 logger = logging.getLogger(__name__)
 
@@ -807,7 +803,8 @@ class ProfileBatchBacktester:
                     # Single strategy execution
                     results = runner.run_baseline_backtest()
                     return self._safe_extract_first_result(
-                        results, context=f"backtest with params for {profile.objetivo_inversion.value}"
+                        results,
+                        context=f"backtest with params for {profile.objetivo_inversion.value}",
                     )
             except Exception as e:
                 logger.error(f"Backtest with params failed: {e}", exc_info=True)
@@ -1340,9 +1337,7 @@ class ProfileBatchBacktester:
 
         return results[0]
 
-    def _persist_optimized_params(
-        self, best_params: ParameterDict, profile: InputProfile
-    ) -> bool:
+    def _persist_optimized_params(self, best_params: ParameterDict, profile: InputProfile) -> bool:
         """
         Persist optimized parameters to YAML config files.
 
@@ -1420,17 +1415,25 @@ class ProfileBatchBacktester:
                 },
                 "volume_filter": {
                     "thresholds": {
-                        "conservative": {"min_volume_ratio": best_params.get("volume_threshold", 1.2)},
+                        "conservative": {
+                            "min_volume_ratio": best_params.get("volume_threshold", 1.2)
+                        },
                         "balanced": {"min_volume_ratio": best_params.get("volume_threshold", 1.2)},
-                        "aggressive": {"min_volume_ratio": best_params.get("volume_threshold", 1.2)},
+                        "aggressive": {
+                            "min_volume_ratio": best_params.get("volume_threshold", 1.2)
+                        },
                     }
                 },
             },
             "strategies": {
                 "momentum_modular": {
                     "risk_manager": {
-                        "stop_loss": {"fixed_percentage": {"value": best_params.get("stop_loss", 0.02)}},
-                        "take_profit": {"fixed_percentage": {"value": best_params.get("take_profit", 0.10)}},
+                        "stop_loss": {
+                            "fixed_percentage": {"value": best_params.get("stop_loss", 0.02)}
+                        },
+                        "take_profit": {
+                            "fixed_percentage": {"value": best_params.get("take_profit", 0.10)}
+                        },
                     }
                 }
             },
@@ -1461,7 +1464,9 @@ class ProfileBatchBacktester:
                         "rsi_filter": {
                             "adaptive_thresholds": {
                                 "trend_up": {"buy_threshold": best_params.get("rsi_threshold", 30)},
-                                "trend_down": {"buy_threshold": best_params.get("rsi_threshold", 30)},
+                                "trend_down": {
+                                    "buy_threshold": best_params.get("rsi_threshold", 30)
+                                },
                                 "range": {"buy_threshold": best_params.get("rsi_threshold", 30)},
                                 "high_vol": {"buy_threshold": best_params.get("rsi_threshold", 30)},
                             }
@@ -1474,9 +1479,15 @@ class ProfileBatchBacktester:
                         },
                         "volume_filter": {
                             "thresholds": {
-                                "conservative": {"min_volume_ratio": best_params.get("volume_threshold", 1.2)},
-                                "balanced": {"min_volume_ratio": best_params.get("volume_threshold", 1.2)},
-                                "aggressive": {"min_volume_ratio": best_params.get("volume_threshold", 1.2)},
+                                "conservative": {
+                                    "min_volume_ratio": best_params.get("volume_threshold", 1.2)
+                                },
+                                "balanced": {
+                                    "min_volume_ratio": best_params.get("volume_threshold", 1.2)
+                                },
+                                "aggressive": {
+                                    "min_volume_ratio": best_params.get("volume_threshold", 1.2)
+                                },
                             }
                         },
                     }

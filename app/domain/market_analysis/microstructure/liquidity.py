@@ -653,9 +653,7 @@ class LiquidityAnalyzer:
         else:
             config = get_config()
             volatility = getattr(
-                config.market_microstructure,
-                'default_volatility',
-                0.02
+                config.market_microstructure, 'default_volatility', 0.02
             )  # Default from config
 
         # Calculate composite liquidity score
@@ -807,11 +805,7 @@ class LiquidityAnalyzer:
 
         # Decompose spread
         config = get_config()
-        default_vol = getattr(
-            config.market_microstructure,
-            'default_volatility',
-            0.02
-        )
+        default_vol = getattr(config.market_microstructure, 'default_volatility', 0.02)
         spread_decomp = self.decompose_spread(
             spread_bps=metrics.bid_ask_spread_bps,
             price_variance=(

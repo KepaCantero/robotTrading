@@ -16,16 +16,18 @@ Protocol Compliance:
 import asyncio
 import logging
 from datetime import datetime
-from decimal import Decimal
 from typing import Any, Dict, Optional
 
 from ib_insync import IB, LimitOrder, MarketOrder, StopOrder, util
-from ib_insync.contract import Contract as IBContract, Stock
+from ib_insync.contract import Contract as IBContract
 
-from app.infrastructure.resilience.reconnection_manager import ReconnectionConfig, ReconnectionManager
-from app.core.protocols import IBrokerAdapter
-from .currency_converter import CurrencyConverter, get_currency_converter
-from .ibex35_contracts import create_stock_contract, is_ibex35_symbol
+from app.infrastructure.resilience.reconnection_manager import (
+    ReconnectionConfig,
+    ReconnectionManager,
+)
+
+from .currency_converter import get_currency_converter
+from .ibex35_contracts import create_stock_contract
 
 util.patchAsyncio()
 
@@ -52,11 +54,7 @@ class IBKRSpainAdapter:
     CONNECTION_TIMEOUT = 10
     RECONNECT_DELAY = 5
 
-    def __init__(
-        self,
-        config: Optional[Dict[str, Any]] = None,
-        ib_instance: Optional[IB] = None
-    ):
+    def __init__(self, config: Optional[Dict[str, Any]] = None, ib_instance: Optional[IB] = None):
         """
         Initialize IBKR Spain adapter.
 
@@ -101,6 +99,7 @@ class IBKRSpainAdapter:
     def _load_config_from_env() -> Dict[str, Any]:
         """Load configuration from environment variables."""
         import os
+
         return {
             'host': os.getenv('IB_HOST', '127.0.0.1'),
             'port': int(os.getenv('IB_PORT', '7497')),
@@ -159,8 +158,7 @@ class IBKRSpainAdapter:
 
         try:
             logger.info(
-                f"Connecting to IB at {self.host}:{self.port} "
-                f"(Client ID: {self.client_id})"
+                f"Connecting to IB at {self.host}:{self.port} " f"(Client ID: {self.client_id})"
             )
 
             await asyncio.wait_for(
@@ -297,10 +295,7 @@ class IBKRSpainAdapter:
                 "timestamp": datetime.now(),
             }
 
-            logger.info(
-                f"Order placed: {order_id} - {side} {quantity} {symbol} "
-                f"({order_type})"
-            )
+            logger.info(f"Order placed: {order_id} - {side} {quantity} {symbol} " f"({order_type})")
 
             return order_id
 
@@ -329,9 +324,7 @@ class IBKRSpainAdapter:
             order_info = self._placed_orders.get(order_id)
             if order_info and "contract" in order_info:
                 # Cancel specific order
-                self.ib.cancelOrder(
-                    self._placed_orders[order_id].get("orderId")
-                )
+                self.ib.cancelOrder(self._placed_orders[order_id].get("orderId"))
             else:
                 # Use IB's cancelOrder by ID
                 # Note: IB API requires the Order object, not just ID
@@ -401,18 +394,21 @@ class IBKRSpainAdapter:
                     # For now, keep original currency
                     pass
 
-                positions.append({
-                    "symbol": pos.contract.symbol,
-                    "position": float(pos.position),
-                    "avg_cost": float(pos.avgCost) if pos.avgCost else 0.0,
-                    "market_value": position_value,
-                    "currency": pos.contract.currency,
-                    "unrealized_pnl": float(pos.unrealizedPNL) if pos.unrealizedPNL else 0.0,
-                })
+                positions.append(
+                    {
+                        "symbol": pos.contract.symbol,
+                        "position": float(pos.position),
+                        "avg_cost": float(pos.avgCost) if pos.avgCost else 0.0,
+                        "market_value": position_value,
+                        "currency": pos.contract.currency,
+                        "unrealized_pnl": float(pos.unrealizedPNL) if pos.unrealizedPNL else 0.0,
+                    }
+                )
 
             # Build account dict
             result = {
-                "account_id": self.account or (self.ib.managedAccounts()[0] if self.ib.managedAccounts() else ""),
+                "account_id": self.account
+                or (self.ib.managedAccounts()[0] if self.ib.managedAccounts() else ""),
                 "currency": "EUR",
                 "net_liquidation": summary.get("NetLiquidation", {}).get("value", 0.0),
                 "available_funds": summary.get("AvailableFunds", {}).get("value", 0.0),
@@ -467,9 +463,7 @@ class IBKRSpainAdapter:
         return self._connected and self.ib.isConnected()
 
 
-def get_ibkr_spain_adapter(
-    config: Optional[Dict[str, Any]] = None
-) -> IBKRSpainAdapter:
+def get_ibkr_spain_adapter(config: Optional[Dict[str, Any]] = None) -> IBKRSpainAdapter:
     """
     Get or create IBKR Spain adapter instance.
 

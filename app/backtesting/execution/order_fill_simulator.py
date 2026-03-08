@@ -90,8 +90,12 @@ class SimulatorConfig:
     fill_constraints: FillConstraints = field(default_factory=FillConstraints)
 
     # Rejection thresholds - derived from CentralizedConfig
-    rejection_threshold_adv_pct: Decimal = field(default_factory=lambda: _get_backtesting_config().adv_limit_pct * Decimal("2.5"))
-    liquidity_warning_threshold: Decimal = field(default_factory=lambda: _get_backtesting_config().adv_limit_pct * Decimal("1.5"))
+    rejection_threshold_adv_pct: Decimal = field(
+        default_factory=lambda: _get_backtesting_config().adv_limit_pct * Decimal("2.5")
+    )
+    liquidity_warning_threshold: Decimal = field(
+        default_factory=lambda: _get_backtesting_config().adv_limit_pct * Decimal("1.5")
+    )
 
 
 class OrderFillSimulator:

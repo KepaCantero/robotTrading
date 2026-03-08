@@ -13,16 +13,28 @@ class MomentumModularConfig(BaseModel):
 
     # Market regime thresholds
     bear_market_strength_threshold: float = Field(
-        default=0.99, ge=0.0, le=1.0, description="Trend strength threshold for bear market detection (99% - only extreme crashes)"
+        default=0.99,
+        ge=0.0,
+        le=1.0,
+        description="Trend strength threshold for bear market detection (99% - only extreme crashes)",
     )
     volatility_crisis_percentile: float = Field(
-        default=75.0, ge=50.0, le=100.0, description="Volatility percentile for crisis detection (75%)"
+        default=75.0,
+        ge=50.0,
+        le=100.0,
+        description="Volatility percentile for crisis detection (75%)",
     )
     normal_volatility_min: float = Field(
-        default=40.0, ge=20.0, le=60.0, description="Minimum volatility percentile for normal regime (40%)"
+        default=40.0,
+        ge=20.0,
+        le=60.0,
+        description="Minimum volatility percentile for normal regime (40%)",
     )
     normal_volatility_max: float = Field(
-        default=70.0, ge=60.0, le=90.0, description="Maximum volatility percentile for normal regime (70%)"
+        default=70.0,
+        ge=60.0,
+        le=90.0,
+        description="Maximum volatility percentile for normal regime (70%)",
     )
 
     # History and training thresholds
@@ -57,7 +69,10 @@ class MomentumModularConfig(BaseModel):
         default=0.5, ge=0.1, le=1.0, description="Minimum volume ratio for liquidity score (0.5)"
     )
     volume_ratio_multiplier: float = Field(
-        default=50.0, ge=10.0, le=100.0, description="Volume ratio multiplier for liquidity score (50)"
+        default=50.0,
+        ge=10.0,
+        le=100.0,
+        description="Volume ratio multiplier for liquidity score (50)",
     )
 
     # Priority score weights

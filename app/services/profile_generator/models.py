@@ -9,21 +9,26 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, List, Optional
 
 if TYPE_CHECKING:
     pass
+
 
 # Helper functions to get defaults from centralized config
 def _get_default_max_leverage() -> Decimal:
     return Decimal("1.0")  # No leverage by default
 
+
 def _get_default_max_position_size() -> Decimal:
     return Decimal("5.0")  # 5% of portfolio
 
+
 def _get_default_max_daily_loss() -> Decimal:
     from app.shared.config.centralized_config import get_config
+
     return Decimal(str(get_config().trading_thresholds.circuit_breaker_daily_loss))
+
 
 def _get_default_max_concentration() -> Decimal:
     return Decimal("30.0")  # 30% in single asset
@@ -100,9 +105,13 @@ class InvestmentProfile:
 
     # Risk and leverage - use centralized config for defaults
     max_leverage: Decimal = field(default_factory=_get_default_max_leverage)
-    max_position_size_pct: Decimal = field(default_factory=_get_default_max_position_size)  # % of portfolio
+    max_position_size_pct: Decimal = field(
+        default_factory=_get_default_max_position_size
+    )  # % of portfolio
     max_daily_loss_pct: Decimal = field(default_factory=_get_default_max_daily_loss)  # Uses config
-    max_portfolio_concentration_pct: Decimal = field(default_factory=_get_default_max_concentration)  # % in single asset
+    max_portfolio_concentration_pct: Decimal = field(
+        default_factory=_get_default_max_concentration
+    )  # % in single asset
 
     # Dynamic adjustment
     rebalance_frequency_days: int = 30

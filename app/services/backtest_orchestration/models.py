@@ -9,38 +9,49 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, List, Optional
 
 if TYPE_CHECKING:
     pass
 
+
 # Import config for default values (avoid circular import)
 def _get_default_commission() -> Decimal:
-    from app.shared.config.centralized_config import get_config
+
     return Decimal("0.001")  # 0.1% default commission
+
 
 def _get_default_slippage() -> Decimal:
     from app.shared.config.centralized_config import get_config
+
     tt = get_config().trading_thresholds
     return tt.base_slippage / Decimal("100")  # Convert % to decimal
 
+
 def _get_default_stop_loss() -> Decimal:
     from app.shared.config.centralized_config import get_config
+
     tt = get_config().trading_thresholds
     return Decimal(str(tt.stop_loss_pct))
 
+
 def _get_default_take_profit() -> Decimal:
     from app.shared.config.centralized_config import get_config
+
     tt = get_config().trading_thresholds
     return Decimal(str(tt.take_profit_pct))
 
+
 def _get_default_max_loss() -> Decimal:
     from app.shared.config.centralized_config import get_config
+
     tt = get_config().trading_thresholds
     return Decimal(str(tt.circuit_breaker_daily_loss))
 
+
 def _get_default_position_size() -> Decimal:
     from app.shared.config.centralized_config import get_config
+
     tt = get_config().trading_thresholds
     return Decimal(str(tt.max_position_size))
 
@@ -76,10 +87,14 @@ class BacktestConfig:
     strategy_name: str = "momentum_modular"
     symbols: List[str] = field(default_factory=list)
     max_positions: int = 10
-    max_position_size_pct: Decimal = field(default_factory=_get_default_position_size)  # Uses config
+    max_position_size_pct: Decimal = field(
+        default_factory=_get_default_position_size
+    )  # Uses config
 
     # Risk parameters - use centralized config
-    max_loss_pct: Decimal = field(default_factory=_get_default_max_loss)  # Uses config (circuit_breaker_daily_loss)
+    max_loss_pct: Decimal = field(
+        default_factory=_get_default_max_loss
+    )  # Uses config (circuit_breaker_daily_loss)
     stop_loss_pct: Decimal = field(default_factory=_get_default_stop_loss)  # Uses config
     take_profit_pct: Decimal = field(default_factory=_get_default_take_profit)  # Uses config
 

@@ -33,6 +33,7 @@ except ImportError:
     from typing_extensions import ParamSpec
 
 from app.shared.config.centralized_config import get_config
+
 from .models import PeriodResult, WalkForwardConfig, WalkForwardResult
 
 logger = logging.getLogger(__name__)

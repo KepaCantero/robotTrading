@@ -28,7 +28,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, TypeVar, Generic
+from typing import Any, Dict, Generic, List, Optional, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
@@ -38,6 +38,7 @@ logger = logging.getLogger(__name__)
 
 class OptimizerType(str, Enum):
     """Types of optimizers available."""
+
     # Parameter optimizers
     BAYESIAN = "bayesian"
     GRID_SEARCH = "grid_search"
@@ -52,6 +53,7 @@ class OptimizerType(str, Enum):
 
 class OptimizationStatus(str, Enum):
     """Status of an optimization run."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -113,6 +115,7 @@ class OptimizationConfig:
     def n_parallel_jobs(self) -> int:
         """Get actual number of parallel jobs."""
         import os
+
         if self.n_jobs == -1:
             return os.cpu_count() or 1
         return max(1, self.n_jobs)
@@ -261,7 +264,7 @@ class OptimizationResult:
         sorted_trials = sorted(
             successful,
             key=lambda x: x.objective_value,
-            reverse=self.config.maximize if self.config else True
+            reverse=self.config.maximize if self.config else True,
         )
         return [t.params for t in sorted_trials[:n]]
 
@@ -334,6 +337,7 @@ class BaseOptimizer(ABC, Generic[T]):
         # Set random seed if specified
         if config.random_seed is not None:
             import random
+
             random.seed(config.random_seed)
             np.random.seed(config.random_seed)
 
@@ -402,7 +406,7 @@ class BaseOptimizer(ABC, Generic[T]):
             return False
 
         # Check if no improvement in last N trials
-        recent_trials = self._history[-self.config.early_stopping_patience:]
+        recent_trials = self._history[-self.config.early_stopping_patience :]
 
         if self.config.maximize:
             best_recent = max(t.objective_value for t in recent_trials if t.is_success)

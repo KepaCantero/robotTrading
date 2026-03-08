@@ -25,6 +25,7 @@ from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional, Tuple  # noqa: F401
+
 import numpy as np
 
 logger = logging.getLogger(__name__)

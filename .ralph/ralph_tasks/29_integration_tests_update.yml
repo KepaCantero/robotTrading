@@ -1,0 +1,128 @@
+# ============================================
+# Ralph Task 29: Integration Tests Update
+# ============================================
+# PRIORIDAD: P0 (CRÍTICA) - Actualizar integration tests
+# OBJETIVO: Todos los integration tests actualizados y pasando
+# TIEMPO: ~8 horas
+# ============================================================================
+
+event_loop:
+  prompt_file: ".ralph/ralph_tasks/prompts/29_integration_tests_update.md"
+  completion_promise: "INTEGRATION_TESTS_COMPLETE"
+  max_iterations: 100
+  max_runtime_seconds: 28800  # 8 hours
+  checkpoint_interval: 3
+  starting_event: "integration_tests.start"
+
+cli:
+  backend: "claude"
+
+core:
+  specs_dir: "./specs/"
+
+hats:
+  integration_test_updater:
+    name: "Integration Test Updater"
+    description: "Actualiza integration tests para reflejar cambios"
+    template: "ralph_templates/hats/implementer_hat.yml"
+    triggers:
+      - "integration_tests.start"
+      - "integration_tests.update_next"
+    publishes:
+      - "integration_tests.update_next"
+      - "integration_tests.complete"
+      - "integration_tests.blocked"
+    default_publishes: "integration_tests.update_next"
+    instructions: |
+      ## INTEGRATION TESTS UPDATE
+
+      {{shared_instructions}}
+
+      **OBJETIVO:** Integration tests actualizados y pasando
+
+      ### ESTRUCTURA DE TESTS
+
+      ```
+      tests/
+      ├── integration/
+      │   ├── api/
+      │   │   ├── test_api_assets.py
+      │   │   └── test_api_endpoints.py
+      │   ├── compliance/
+      │   │   ├── test_compliance_engine.py
+      │   │   ├── test_pre_trade_validator.py
+      │   │   └── test_risk_validators.py
+      │   ├── execution/
+      │   │   ├── test_order_manager.py
+      │   │   └── test_broker_adapter.py
+      │   └── backtesting/
+      │       └── test_backtest_engine.py
+      └── conftest.py
+      ```
+
+      ### TESTS REQUERIDOS
+
+      1. **ComplianceEngine Integration**
+         - test_execute_trade_flow
+         - test_risk_validation_integration
+         - test_logging_integration
+
+      2. **OrderManager Integration**
+         - test_order_placement_via_compliance
+         - test_order_cancellation
+         - test_position_updates
+
+      3. **Broker Adapter Integration**
+         - test_alpaca_connection
+         - test_order_execution
+         - test_position_reconciliation
+
+      4. **Backtesting Integration**
+         - test_full_backtest_flow
+         - test_metrics_calculation
+         - test_results_storage
+
+      ### PATRONES DE TEST
+
+      ```python
+      import pytest
+      from pytest_httpx import HTTPXMock
+
+      @pytest.fixture
+      def mock_broker():
+          """Mock broker adapter"""
+          pass
+
+      @pytest.fixture
+      def compliance_engine(mock_broker):
+          """ComplianceEngine with mocked dependencies"""
+          pass
+
+      @pytest.mark.integration
+      async def test_execute_trade_flow(compliance_engine):
+          """Test full trade execution flow"""
+          signal = create_test_signal()
+          result = await compliance_engine.execute_trade(signal, portfolio)
+
+          assert result.success
+          assert result.validation_passed
+          assert result.correlation_id
+      ```
+
+      ### VALIDACIÓN
+
+      ```bash
+      # Ejecutar integration tests
+      pytest tests/integration/ -v --tb=short
+
+      # Coverage
+      pytest tests/integration/ --cov=app --cov-report=term-missing
+      ```
+
+memories:
+  enabled: true
+  inject: auto
+  budget: 4000
+
+checkpoint:
+  file: ".ralph/checkpoints/29_integration_tests_update_checkpoint.json"

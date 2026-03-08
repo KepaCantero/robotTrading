@@ -8,7 +8,7 @@ take profits parciales, y pyramiding.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from decimal import Decimal
 from typing import TYPE_CHECKING, Optional
 
@@ -101,9 +101,7 @@ class PostTradeAnalyzerImpl(IPostTradeAnalyzer):
 
         return result.new_stop
 
-    async def check_partial_take_profit(
-        self, position_id: str, current_pnl: Decimal
-    ) -> bool:
+    async def check_partial_take_profit(self, position_id: str, current_pnl: Decimal) -> bool:
         """
         R12: Take Profit Parcial.
 
@@ -140,9 +138,7 @@ class PostTradeAnalyzerImpl(IPostTradeAnalyzer):
 
         return False
 
-    async def evaluate_pyramiding(
-        self, position_id: str, unrealized_pnl: Decimal
-    ) -> bool:
+    async def evaluate_pyramiding(self, position_id: str, unrealized_pnl: Decimal) -> bool:
         """
         R13: Pyramiding (solo ganadores).
 

@@ -11,10 +11,11 @@ TASK-24: SRP Refactoring
 import logging
 from typing import Any, Dict, Optional
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator
 from pydantic_settings import BaseSettings
 
 logger = logging.getLogger(__name__)
+
 
 class StrategyConfig(BaseModel):
     """Configuration for individual strategies."""
@@ -471,4 +472,3 @@ class StockAllocationSettings(BaseSettings):
 #
 # This is THE SINGLE SOURCE OF TRUTH for all backtesting parameters.
 # =============================================================================
-

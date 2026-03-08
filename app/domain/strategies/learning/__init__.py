@@ -3,7 +3,6 @@ LearningEngine - Sistema modular de aprendizaje híbrido para estrategias de tra
 """
 
 from .base_learning_engine import BaseLearningEngine
-from .subprocess_engine_wrapper import SubprocessLearningEngineWrapper
 
 # Drift detection y overfitting (siempre disponibles) [TASK-4.2-DRIFT]
 from .drift_detector import (
@@ -65,6 +64,7 @@ from .multitask_learning import (
     SharedBackbone,
     TaskHead,
 )
+from .subprocess_engine_wrapper import SubprocessLearningEngineWrapper
 
 # Transfer learning (siempre disponibles)
 from .transfer_learning import FineTuner, KnowledgeDistiller, ModelRegistry, TransferLearningManager

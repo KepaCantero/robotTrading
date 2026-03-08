@@ -6,9 +6,9 @@ Contains base classes, enums, and common utilities for the configuration system.
 
 import logging
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from pydantic_settings import BaseSettings
 
 logger = logging.getLogger(__name__)

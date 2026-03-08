@@ -92,12 +92,10 @@ class DeploymentDecisionOrchestrator:
 
         # Load threshold values from centralized config
         config = get_config()
-        self._drawdown_threshold = Decimal(str(getattr(
-            config.trading, 'max_drawdown_limit', 0.15
-        )))
-        self._capital_loss_threshold = Decimal(str(getattr(
-            config.trading, 'capital_loss_threshold', 0.40
-        )))
+        self._drawdown_threshold = Decimal(str(getattr(config.trading, 'max_drawdown_limit', 0.15)))
+        self._capital_loss_threshold = Decimal(
+            str(getattr(config.trading, 'capital_loss_threshold', 0.40))
+        )
 
         logger.info("✅ DeploymentDecisionOrchestrator initialized")
 

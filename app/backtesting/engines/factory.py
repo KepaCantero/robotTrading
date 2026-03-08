@@ -21,10 +21,7 @@ Usage:
 
 from typing import Any, Dict, Optional, Type, TypeVar
 
-from app.backtesting.base_engine import (
-    BaseBacktestEngine,
-    EngineType,
-)
+from app.backtesting.base_engine import BaseBacktestEngine, EngineType
 from app.backtesting.models import BacktestConfig
 
 # Type variable for engine types
@@ -105,24 +102,28 @@ class EngineFactory:
         # Import and register all engine types
         try:
             from app.backtesting.engines.standard_engine import StandardBacktestEngine
+
             cls._registry[EngineType.STANDARD] = StandardBacktestEngine
         except ImportError:
             pass
 
         try:
             from app.backtesting.engines.execution_engine import ExecutionBacktestEngine
+
             cls._registry[EngineType.EXECUTION] = ExecutionBacktestEngine
         except ImportError:
             pass
 
         try:
             from app.backtesting.engines.multi_strategy_engine import MultiStrategyBacktestEngine
+
             cls._registry[EngineType.MULTI_STRATEGY] = MultiStrategyBacktestEngine
         except ImportError:
             pass
 
         try:
             from app.backtesting.engines.robust_engine import RobustBacktestEngine
+
             cls._registry[EngineType.ROBUST] = RobustBacktestEngine
         except ImportError:
             pass
@@ -295,29 +296,34 @@ class EngineFactory:
 # ENGINE REGISTRY INITIALIZATION
 # =========================================================================
 
+
 def _initialize_registry():
     """Initialize the engine registry with all built-in engines."""
     # This is called on module import to ensure all engines are available
     try:
         from app.backtesting.engines.standard_engine import StandardBacktestEngine
+
         EngineFactory.register(EngineType.STANDARD, StandardBacktestEngine)
     except ImportError:
         pass
 
     try:
         from app.backtesting.engines.execution_engine import ExecutionBacktestEngine
+
         EngineFactory.register(EngineType.EXECUTION, ExecutionBacktestEngine)
     except ImportError:
         pass
 
     try:
         from app.backtesting.engines.multi_strategy_engine import MultiStrategyBacktestEngine
+
         EngineFactory.register(EngineType.MULTI_STRATEGY, MultiStrategyBacktestEngine)
     except ImportError:
         pass
 
     try:
         from app.backtesting.engines.robust_engine import RobustBacktestEngine
+
         EngineFactory.register(EngineType.ROBUST, RobustBacktestEngine)
     except ImportError:
         pass

@@ -381,9 +381,7 @@ class BollingerBandsIndicator:
             recent_bandwidths = bb_data["bandwidth"].iloc[-lookback:].dropna()
 
             # Calculate percentile rank
-            percentile = (
-                (recent_bandwidths < current_bandwidth).mean() * 100
-            )
+            percentile = (recent_bandwidths < current_bandwidth).mean() * 100
 
             return percentile
 

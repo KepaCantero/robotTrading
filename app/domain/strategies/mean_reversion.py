@@ -14,11 +14,15 @@ import logging
 from decimal import Decimal
 from typing import Any
 
-from app.shared.config.centralized_config import get_strategy_config, get_trading_threshold, get_config
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.services.analysis.momentum import TechnicalIndicatorCalculator
+from app.shared.config.centralized_config import (
+    get_config,
+    get_strategy_config,
+    get_trading_threshold,
+)
 
 from .base import BaseStrategy
 
@@ -86,7 +90,9 @@ class MeanReversionStrategy(BaseStrategy):
         # Parámetros adicionales - use config for default
         min_z_score_value = config.get("min_z_score")
         if min_z_score_value is None and strategy_config:
-            min_z_score_value = strategy_config.parameters.get("min_z_score", self._tt.min_z_score_default)
+            min_z_score_value = strategy_config.parameters.get(
+                "min_z_score", self._tt.min_z_score_default
+            )
         elif min_z_score_value is None:
             min_z_score_value = self._tt.min_z_score_default  # Use config default
         self.min_z_score = Decimal(str(min_z_score_value))
@@ -427,7 +433,9 @@ class MeanReversionStrategy(BaseStrategy):
         """
         # OPTIMIZED: More permissive BUY conditions for 50-100 trades target
         # Check if z-score indicates undervaluation (reduced threshold to 70%)
-        z_score_buy = -self.z_score_threshold * Decimal(str(self._tt.z_score_entry_multiplier))  # Use config multiplier
+        z_score_buy = -self.z_score_threshold * Decimal(
+            str(self._tt.z_score_entry_multiplier)
+        )  # Use config multiplier
         is_undervalued = z_score < z_score_buy
 
         # Price drop/rise checks removed - optional for more opportunities
@@ -466,7 +474,9 @@ class MeanReversionStrategy(BaseStrategy):
         """
         # OPTIMIZED: More permissive SELL conditions for 50-100 trades target
         # Check if z-score indicates overvaluation (reduced threshold to 70%)
-        z_score_sell = self.z_score_threshold * Decimal(str(self._tt.z_score_entry_multiplier))  # Use config multiplier
+        z_score_sell = self.z_score_threshold * Decimal(
+            str(self._tt.z_score_entry_multiplier)
+        )  # Use config multiplier
         is_overvalued = z_score > z_score_sell
 
         # Price drop/rise checks removed - optional for more opportunities

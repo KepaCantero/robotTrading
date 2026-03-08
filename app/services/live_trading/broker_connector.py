@@ -16,7 +16,10 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, Optional
 
-from app.infrastructure.resilience.reconnection_manager import ReconnectionConfig, ReconnectionManager
+from app.infrastructure.resilience.reconnection_manager import (
+    ReconnectionConfig,
+    ReconnectionManager,
+)
 
 logger = logging.getLogger(__name__)
 

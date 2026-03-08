@@ -37,9 +37,10 @@ from sqlalchemy.exc import (
     ProgrammingError,
 )
 
+from app.api.cost_analysis import router as cost_analysis_router
+from app.infrastructure.persistence.database import close_database, init_database
 from app.presentation.api.assets import router as assets_router
 from app.presentation.api.capa2_endpoints import router as capa2_router
-from app.api.cost_analysis import router as cost_analysis_router
 from app.presentation.api.error_handler import (
     attribute_error_handler,
     generic_exception_handler,
@@ -71,7 +72,6 @@ from app.presentation.api.portfolio_analytics import router as portfolio_analyti
 from app.presentation.api.signals import router as signals_router
 from app.presentation.api.trading_error_handler import router as trading_error_handler_router
 from app.shared.config.config import get_settings
-from app.infrastructure.persistence.database import close_database, init_database
 
 # AlgoTrading MVP - Main FastAPI Application
 #

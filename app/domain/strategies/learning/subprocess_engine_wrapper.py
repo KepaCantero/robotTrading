@@ -19,14 +19,11 @@ timeout handling to prevent hangs.
 import logging
 import multiprocessing as mp
 import platform
-import sys
 import traceback
 from dataclasses import dataclass
-from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional
 
-import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -160,9 +157,7 @@ def _worker_process(
                     response_queue.put(SubprocessResponse(success=result, result=result))
 
             except Exception as e:
-                response_queue.put(
-                    SubprocessResponse(success=False, error=str(e))
-                )
+                response_queue.put(SubprocessResponse(success=False, error=str(e)))
 
     except Exception as e:
         response_queue.put(
@@ -236,12 +231,12 @@ class SubprocessLearningEngineWrapper:
 
         Removes unpicklable objects like file handles, database connections, etc.
         """
-        import copy
 
         def _is_picklable(obj: Any) -> bool:
             """Check if an object can be pickled."""
             try:
                 import pickle
+
                 pickle.dumps(obj)
                 return True
             except (TypeError, pickle.PicklingError, AttributeError):
@@ -262,6 +257,7 @@ class SubprocessLearningEngineWrapper:
                 try:
                     # Try to pickle the value
                     import pickle
+
                     pickle.dumps(value)
                     sanitized[key] = value
                 except (TypeError, pickle.PicklingError):
@@ -418,9 +414,7 @@ class SubprocessLearningEngineWrapper:
             if request.operation == EngineOperation.TRAIN:
                 result = self._engine.train(
                     training_data=request.data,
-                    validation_data=request.data.get("validation_data")
-                    if request.data
-                    else None,
+                    validation_data=request.data.get("validation_data") if request.data else None,
                 )
                 if result:
                     self.is_trained = True

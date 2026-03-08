@@ -7,13 +7,6 @@ real-time quotes, historical data, and data feed management.
 NOTE: Mock data has been removed - only real data sources are supported.
 """
 
-from app.infrastructure.data.feeds import (
-    AlphaVantageFeed,
-    DataFeedInterface,
-    PolygonFeed,
-    YahooFinanceFeed,
-    create_data_feed,
-)
 from app.domain.models.market_data import (
     DataFeedConfig,
     DataFeedType,
@@ -23,6 +16,13 @@ from app.domain.models.market_data import (
     MarketDataStatus,
     MarketDataSubscription,
     Quote,
+)
+from app.infrastructure.data.feeds import (
+    AlphaVantageFeed,
+    DataFeedInterface,
+    PolygonFeed,
+    YahooFinanceFeed,
+    create_data_feed,
 )
 
 # Models

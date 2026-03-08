@@ -300,9 +300,8 @@ class YAMLConfigLoader:
             "threshold": lambda v: isinstance(v, (int, float)) or isinstance(v, dict),
             "enabled": lambda v: isinstance(v, bool),
             # Tier validation - only validate string values, not tier config dicts
-            "tier": lambda v: (
-                isinstance(v, str) and v in ["micro", "small", "medium", "large"]
-            ) or isinstance(v, dict),  # tier config dicts are valid
+            "tier": lambda v: (isinstance(v, str) and v in ["micro", "small", "medium", "large"])
+            or isinstance(v, dict),  # tier config dicts are valid
         }
 
         # Recursively validate nested config

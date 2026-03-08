@@ -11,7 +11,11 @@ from decimal import Decimal
 from typing import Optional
 
 from app.domain.trading.market_making.avellaneda_stoikov.as_model import AvellanedaStoikovModel
-from app.domain.trading.market_making.avellaneda_stoikov.models import ASConfig, ASQuote, ASQuoteParams
+from app.domain.trading.market_making.avellaneda_stoikov.models import (
+    ASConfig,
+    ASQuote,
+    ASQuoteParams,
+)
 
 logger = logging.getLogger(__name__)
 

@@ -8,8 +8,8 @@ import logging
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
-from app.shared.config.centralized_config import SectorCountryDiversificationConfig
 from app.domain.models.portfolio import Portfolio, Position
+from app.shared.config.centralized_config import SectorCountryDiversificationConfig
 
 logger = logging.getLogger(__name__)
 

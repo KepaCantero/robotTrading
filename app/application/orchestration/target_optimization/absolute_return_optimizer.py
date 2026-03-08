@@ -13,6 +13,7 @@ from decimal import Decimal
 from typing import Dict
 
 from app.shared.config.centralized_config import get_config
+
 from .capital_tier_selector import CapitalTierSelector
 from .models import AbsoluteReturnTarget, AbsoluteReturnValidation
 
@@ -194,9 +195,9 @@ class ParameterOptimizer:
         # Diversify across multiple positions to reduce risk
         try:
             config = get_config()
-            small_position_threshold = Decimal(str(getattr(
-                config.trading, 'position_size_small_threshold', 0.05
-            )))
+            small_position_threshold = Decimal(
+                str(getattr(config.trading, 'position_size_small_threshold', 0.05))
+            )
         except (AttributeError, ValueError) as e:
             logger.error(f"Error loading position sizing config: {e}, using default 0.05")
             small_position_threshold = Decimal("0.05")

@@ -6,7 +6,7 @@ Contains configuration for database, Redis, API, logging, and monitoring.
 
 from typing import List, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import Field, field_validator
 
 from app.shared.config.base import ConfigBase, SettingsBase
 
@@ -157,7 +157,9 @@ class LoggingConfig(ConfigBase):
     elk_port: int = Field(default=9200, description="ELK port")
 
     # Log rotation
-    log_interval_bars: int = Field(default=50, ge=10, le=1000, description="Log interval (number of bars)")
+    log_interval_bars: int = Field(
+        default=50, ge=10, le=1000, description="Log interval (number of bars)"
+    )
 
 
 class MonitoringConfig(ConfigBase):
@@ -175,7 +177,9 @@ class MonitoringConfig(ConfigBase):
     # Alerts
     alert_email_enabled: bool = Field(default=False, description="Enable email alerts")
     alert_email_to: List[str] = Field(default=[], description="Alert email recipients")
-    alert_email_from: str = Field(default="alerts@algotrading.com", description="Alert email sender")
+    alert_email_from: str = Field(
+        default="alerts@algotrading.com", description="Alert email sender"
+    )
 
     # Health check
     health_check_interval: int = Field(default=60, description="Health check interval in seconds")

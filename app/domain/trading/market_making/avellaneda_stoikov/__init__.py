@@ -39,7 +39,11 @@ References:
 - Guéant, O., Lehalle, C.A. & Fernandez-Tapia, J. (2013) "Dealing with inventory risk"
 """
 
-from app.domain.trading.market_making.avellaneda_stoikov.as_model import ASConfig, ASQuote, AvellanedaStoikovModel
+from app.domain.trading.market_making.avellaneda_stoikov.as_model import (
+    ASConfig,
+    ASQuote,
+    AvellanedaStoikovModel,
+)
 from app.domain.trading.market_making.avellaneda_stoikov.inventory_manager import (
     InventoryConfig,
     InventoryManager,

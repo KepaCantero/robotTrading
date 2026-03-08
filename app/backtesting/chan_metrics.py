@@ -27,7 +27,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import numpy as np
 import pandas as pd
 
-from app.shared.config.centralized_config import CentralizedConfig, get_config
+from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -127,7 +127,11 @@ class ChanSharpeRatioCalculator:
             trading_days: Number of trading days per year (default: from CentralizedConfig)
         """
         self.risk_free_rate = risk_free_rate
-        self.trading_days = trading_days if trading_days is not None else get_config().backtesting.annual_trading_days
+        self.trading_days = (
+            trading_days
+            if trading_days is not None
+            else get_config().backtesting.annual_trading_days
+        )
 
     def calculate_sharpe_ratio(
         self,
@@ -586,7 +590,11 @@ class ChanCalmarRatioCalculator:
         Args:
             trading_days: Trading days per year (default: from CentralizedConfig)
         """
-        self.trading_days = trading_days if trading_days is not None else get_config().backtesting.annual_trading_days
+        self.trading_days = (
+            trading_days
+            if trading_days is not None
+            else get_config().backtesting.annual_trading_days
+        )
 
     def calculate_calmar_ratio(
         self,
@@ -1044,7 +1052,11 @@ def calculate_sharpe_ratio(
     risk_free_rate: float = None,
 ) -> float:
     """Convenience function to calculate Sharpe ratio."""
-    rf = risk_free_rate if risk_free_rate is not None else float(get_config().backtesting.default_risk_free_rate)
+    rf = (
+        risk_free_rate
+        if risk_free_rate is not None
+        else float(get_config().backtesting.default_risk_free_rate)
+    )
     calc = ChanSharpeRatioCalculator(risk_free_rate=rf)
     result = calc.calculate_sharpe_ratio(returns)
     return result.annualized_sharpe

@@ -11,7 +11,9 @@ from pydantic import BaseModel, Field
 from requests.exceptions import HTTPError, RequestException
 
 from app.domain.models.input_profile import InputProcessor, InputProfile
-from app.infrastructure.persistence.configuration.configuration_repository import ConfigurationRepository
+from app.infrastructure.persistence.configuration.configuration_repository import (
+    ConfigurationRepository,
+)
 from app.services.deployment.deploy_decision_orchestrator import DeployDecisionOrchestrator
 
 from . import audit_logger, get_correlation_id

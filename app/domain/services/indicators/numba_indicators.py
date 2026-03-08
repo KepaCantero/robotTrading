@@ -29,7 +29,7 @@ Usage:
 """
 
 import logging
-from typing import Optional, Tuple, Union, List
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -39,6 +39,7 @@ logger = logging.getLogger(__name__)
 try:
     import numba
     from numba import jit
+
     NUMBA_AVAILABLE = True
     NUMBA_VERSION = numba.__version__
     logger.info(f"Numba {NUMBA_VERSION} available - JIT compilation enabled for indicators")
@@ -49,10 +50,12 @@ except ImportError:
         "Numba not available - using pure Python fallback for indicators. "
         "Install with: pip install numba"
     )
+
     # Create a no-op decorator for fallback
     def jit(*args, **kwargs):
         def decorator(func):
             return func
+
         if args and callable(args[0]):
             return args[0]
         return decorator
@@ -221,10 +224,7 @@ def _calculate_sma_numba(prices: np.ndarray, period: int) -> np.ndarray:
 
 @jit(nopython=True, cache=True)
 def _calculate_macd_numba(
-    prices: np.ndarray,
-    fast_period: int,
-    slow_period: int,
-    signal_period: int
+    prices: np.ndarray, fast_period: int, slow_period: int, signal_period: int
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Calculate MACD using Numba JIT."""
     n = len(prices)
@@ -264,7 +264,9 @@ def _calculate_macd_numba(
         signal_alpha = 2.0 / (signal_period + 1.0)
         for i in range(signal_start, n):
             if not np.isnan(macd_line[i]):
-                signal_line[i] = signal_alpha * macd_line[i] + (1.0 - signal_alpha) * signal_line[i - 1]
+                signal_line[i] = (
+                    signal_alpha * macd_line[i] + (1.0 - signal_alpha) * signal_line[i - 1]
+                )
 
     # Histogram
     histogram = np.full(n, np.nan)
@@ -277,10 +279,7 @@ def _calculate_macd_numba(
 
 @jit(nopython=True, cache=True)
 def _calculate_atr_numba(
-    high: np.ndarray,
-    low: np.ndarray,
-    close: np.ndarray,
-    period: int
+    high: np.ndarray, low: np.ndarray, close: np.ndarray, period: int
 ) -> np.ndarray:
     """Calculate ATR using Numba JIT."""
     n = len(close)
@@ -314,9 +313,7 @@ def _calculate_atr_numba(
 
 @jit(nopython=True, cache=True)
 def _calculate_bollinger_bands_numba(
-    prices: np.ndarray,
-    period: int,
-    num_std: float
+    prices: np.ndarray, period: int, num_std: float
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Calculate Bollinger Bands using Numba JIT."""
     n = len(prices)
@@ -349,11 +346,7 @@ def _calculate_bollinger_bands_numba(
 
 @jit(nopython=True, cache=True)
 def _calculate_stochastic_numba(
-    high: np.ndarray,
-    low: np.ndarray,
-    close: np.ndarray,
-    k_period: int,
-    d_period: int
+    high: np.ndarray, low: np.ndarray, close: np.ndarray, k_period: int, d_period: int
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Calculate Stochastic Oscillator using Numba JIT."""
     n = len(close)
@@ -478,10 +471,7 @@ class NumbaIndicators:
         return np.array(data, dtype=np.float64)
 
     def rsi(
-        self,
-        prices: Union[List, np.ndarray],
-        period: int = 14,
-        return_array: bool = False
+        self, prices: Union[List, np.ndarray], period: int = 14, return_array: bool = False
     ) -> Union[Optional[float], Optional[np.ndarray]]:
         """
         Calculate RSI using Numba JIT.
@@ -505,10 +495,7 @@ class NumbaIndicators:
         return float(result) if not np.isnan(result) else None
 
     def ema(
-        self,
-        prices: Union[List, np.ndarray],
-        period: int = 20,
-        return_array: bool = False
+        self, prices: Union[List, np.ndarray], period: int = 20, return_array: bool = False
     ) -> Union[Optional[float], Optional[np.ndarray]]:
         """
         Calculate EMA using Numba JIT.
@@ -532,10 +519,7 @@ class NumbaIndicators:
         return float(result) if not np.isnan(result) else None
 
     def sma(
-        self,
-        prices: Union[List, np.ndarray],
-        period: int = 20,
-        return_array: bool = False
+        self, prices: Union[List, np.ndarray], period: int = 20, return_array: bool = False
     ) -> Union[Optional[float], Optional[np.ndarray]]:
         """
         Calculate SMA using Numba JIT.
@@ -564,11 +548,8 @@ class NumbaIndicators:
         fast_period: int = 12,
         slow_period: int = 26,
         signal_period: int = 9,
-        return_components: bool = True
-    ) -> Union[
-        Optional[float],
-        Tuple[Optional[float], Optional[float], Optional[float]]
-    ]:
+        return_components: bool = True,
+    ) -> Union[Optional[float], Tuple[Optional[float], Optional[float], Optional[float]]]:
         """
         Calculate MACD using Numba JIT.
 
@@ -607,7 +588,7 @@ class NumbaIndicators:
         low: Union[List, np.ndarray],
         close: Union[List, np.ndarray],
         period: int = 14,
-        return_array: bool = False
+        return_array: bool = False,
     ) -> Union[Optional[float], Optional[np.ndarray]]:
         """
         Calculate ATR using Numba JIT.
@@ -637,10 +618,7 @@ class NumbaIndicators:
         return float(result[-1]) if not np.isnan(result[-1]) else None
 
     def bollinger_bands(
-        self,
-        prices: Union[List, np.ndarray],
-        period: int = 20,
-        std_dev: float = 2.0
+        self, prices: Union[List, np.ndarray], period: int = 20, std_dev: float = 2.0
     ) -> Tuple[Optional[float], Optional[float], Optional[float]]:
         """
         Calculate Bollinger Bands using Numba JIT.
@@ -672,7 +650,7 @@ class NumbaIndicators:
         low: Union[List, np.ndarray],
         close: Union[List, np.ndarray],
         k_period: int = 14,
-        d_period: int = 3
+        d_period: int = 3,
     ) -> Tuple[Optional[float], Optional[float]]:
         """
         Calculate Stochastic Oscillator using Numba JIT.
@@ -703,22 +681,14 @@ class NumbaIndicators:
 
         return (k_val, d_val)
 
-    def rolling_mean(
-        self,
-        values: Union[List, np.ndarray],
-        window: int
-    ) -> Optional[np.ndarray]:
+    def rolling_mean(self, values: Union[List, np.ndarray], window: int) -> Optional[np.ndarray]:
         """Calculate rolling mean using Numba JIT."""
         arr = self._to_array(values)
         if len(arr) < window:
             return None
         return _rolling_mean_numba(arr, window)
 
-    def rolling_std(
-        self,
-        values: Union[List, np.ndarray],
-        window: int
-    ) -> Optional[np.ndarray]:
+    def rolling_std(self, values: Union[List, np.ndarray], window: int) -> Optional[np.ndarray]:
         """Calculate rolling std using Numba JIT."""
         arr = self._to_array(values)
         if len(arr) < window:

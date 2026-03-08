@@ -48,7 +48,8 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import minimize
 
-from app.shared.config.centralized_config import CentralizedConfig, get_config
+from app.shared.config.centralized_config import get_config
+
 from .base_optimizer import (
     BaseOptimizer,
     OptimizationConfig,
@@ -67,6 +68,7 @@ TRADING_DAYS = _config.backtesting.annual_trading_days
 
 class OptimizationMethod(str, Enum):
     """Available optimization methods for MVO."""
+
     MAX_SHARPE = "max_sharpe"
     MIN_VARIANCE = "min_variance"
     EQUAL_WEIGHT = "equal_weight"
@@ -76,6 +78,7 @@ class OptimizationMethod(str, Enum):
 
 class ShrinkageMethod(str, Enum):
     """Available shrinkage methods for covariance estimation."""
+
     LEDOIT_WOLF = "ledoit_wolf"
     ORACLE_APPROXIMATING = "oracle_approximating"
     SAMPLE = "sample"
@@ -88,6 +91,7 @@ class PortfolioOptimizationResult:
 
     Contains optimal weights and portfolio metrics.
     """
+
     weights: NDArray[np.float64]
     expected_return: float
     expected_risk: float
@@ -123,6 +127,7 @@ class PortfolioOptimizationResult:
 @dataclass
 class EfficientFrontierPoint:
     """Single point on the efficient frontier."""
+
     weights: NDArray[np.float64]
     portfolio_return: float
     portfolio_risk: float
@@ -132,6 +137,7 @@ class EfficientFrontierPoint:
 @dataclass
 class EfficientFrontier:
     """Efficient frontier with multiple optimal portfolios."""
+
     points: List[EfficientFrontierPoint]
     max_sharpe_index: int
     min_variance_index: int
@@ -157,6 +163,7 @@ class EfficientFrontier:
 @dataclass
 class CovarianceResult:
     """Result of covariance calculation."""
+
     covariance_matrix: NDArray[np.float64]
     means: NDArray[np.float64]
     symbols: List[str]
@@ -164,11 +171,13 @@ class CovarianceResult:
 
 class InputValidationError(ValueError):
     """Raised when input validation fails."""
+
     pass
 
 
 class OptimizationError(RuntimeError):
     """Raised when optimization fails."""
+
     pass
 
 
@@ -574,7 +583,7 @@ class MeanVarianceOptimizer(BaseOptimizer[NDArray[np.float64]]):
             OptimizationError: If covariance calculation fails.
         """
         # Use only the most recent lookback_days
-        recent_returns = returns[-self._lookback_days:, :]
+        recent_returns = returns[-self._lookback_days :, :]
 
         if use_shrinkage:
             cov_matrix = self._shrink_covariance_matrix(recent_returns, shrinkage_method)
@@ -705,7 +714,8 @@ class MeanVarianceOptimizer(BaseOptimizer[NDArray[np.float64]]):
         expected_risk = float(np.sqrt(weights @ cov_matrix @ weights))
         sharpe_ratio = (
             (expected_return - self._risk_free_rate) / expected_risk
-            if expected_risk > 0 else float(-np.inf)
+            if expected_risk > 0
+            else float(-np.inf)
         )
 
         return PortfolioOptimizationResult(
@@ -747,7 +757,8 @@ class MeanVarianceOptimizer(BaseOptimizer[NDArray[np.float64]]):
         expected_risk = float(np.sqrt(weights @ cov_matrix @ weights))
         sharpe_ratio = (
             (expected_return - self._risk_free_rate) / expected_risk
-            if expected_risk > 0 else float(-np.inf)
+            if expected_risk > 0
+            else float(-np.inf)
         )
 
         return PortfolioOptimizationResult(
@@ -795,7 +806,8 @@ class MeanVarianceOptimizer(BaseOptimizer[NDArray[np.float64]]):
         expected_risk = float(np.sqrt(weights @ cov_matrix @ weights))
         sharpe_ratio = (
             (actual_return - self._risk_free_rate) / expected_risk
-            if expected_risk > 0 else float(-np.inf)
+            if expected_risk > 0
+            else float(-np.inf)
         )
 
         return PortfolioOptimizationResult(
@@ -825,7 +837,8 @@ class MeanVarianceOptimizer(BaseOptimizer[NDArray[np.float64]]):
         expected_risk = float(np.sqrt(weights @ cov_matrix @ weights))
         sharpe_ratio = (
             (expected_return - self._risk_free_rate) / expected_risk
-            if expected_risk > 0 else float(-np.inf)
+            if expected_risk > 0
+            else float(-np.inf)
         )
 
         return PortfolioOptimizationResult(
@@ -851,7 +864,8 @@ class MeanVarianceOptimizer(BaseOptimizer[NDArray[np.float64]]):
         expected_risk = float(np.sqrt(weights @ cov_matrix @ weights))
         sharpe_ratio = (
             (expected_return - self._risk_free_rate) / expected_risk
-            if expected_risk > 0 else float(-np.inf)
+            if expected_risk > 0
+            else float(-np.inf)
         )
 
         return PortfolioOptimizationResult(
@@ -951,24 +965,28 @@ class MeanVarianceOptimizer(BaseOptimizer[NDArray[np.float64]]):
             try:
                 result = self._target_return_optimization(expected_returns, cov_matrix, target)
                 if result.success:
-                    points.append(EfficientFrontierPoint(
-                        weights=result.weights,
-                        portfolio_return=result.expected_return,
-                        portfolio_risk=result.expected_risk,
-                        sharpe_ratio=result.sharpe_ratio,
-                    ))
+                    points.append(
+                        EfficientFrontierPoint(
+                            weights=result.weights,
+                            portfolio_return=result.expected_return,
+                            portfolio_risk=result.expected_risk,
+                            sharpe_ratio=result.sharpe_ratio,
+                        )
+                    )
             except Exception:
                 continue
 
         if not points:
             # Fallback to min variance
             if min_var_result.success:
-                points.append(EfficientFrontierPoint(
-                    weights=min_var_result.weights,
-                    portfolio_return=min_var_result.expected_return,
-                    portfolio_risk=min_var_result.expected_risk,
-                    sharpe_ratio=min_var_result.sharpe_ratio,
-                ))
+                points.append(
+                    EfficientFrontierPoint(
+                        weights=min_var_result.weights,
+                        portfolio_return=min_var_result.expected_return,
+                        portfolio_risk=min_var_result.expected_risk,
+                        sharpe_ratio=min_var_result.sharpe_ratio,
+                    )
+                )
 
         if not points:
             raise OptimizationError("Failed to calculate any efficient frontier points")

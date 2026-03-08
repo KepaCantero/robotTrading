@@ -13,8 +13,8 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
-from app.api.portfolio import get_portfolio_service, router
-from app.models.portfolio import Portfolio
+from app.presentation.api.portfolio import get_portfolio_service, router
+from app.domain.models.portfolio import Portfolio
 from app.services.portfolio_service import PortfolioService
 
 

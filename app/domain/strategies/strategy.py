@@ -7,12 +7,12 @@ from collections import deque
 from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
 import numpy as np
 
 if TYPE_CHECKING:
     pass
 
-from app.shared.config.centralized_config import get_config
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
@@ -45,7 +45,7 @@ class StrategyConfig:
     # NOTE: trend strength uses 0.25 divisor, so 1.01 threshold = disabled (strength capped at 1.0)
     # TODO: Investigate why trend_strength is always 1.0 in backtests
     bear_market_strength_threshold: float = 1.01  # Temporarily disabled for testing
-    volatility_crisis_percentile: float = 99.0    # Aumentado de 98.0 - solo extremo
+    volatility_crisis_percentile: float = 99.0  # Aumentado de 98.0 - solo extremo
     normal_volatility_min: float = 20.0
     normal_volatility_max: float = 80.0
 
@@ -55,8 +55,8 @@ class StrategyConfig:
     # Confianza (escala 0-100, consistente con Signal model)
     # SIG-001/R20: Strong signals require confidence >= 70%
     very_strong_confidence: float = 90.0  # VERY_STRONG: >= 90%
-    strong_confidence: float = 70.0       # STRONG: >= 70%
-    moderate_confidence: float = 50.0     # MODERATE: >= 50%
+    strong_confidence: float = 70.0  # STRONG: >= 70%
+    moderate_confidence: float = 50.0  # MODERATE: >= 50%
 
     # Volumen
     volume_ratio_min: float = 1.0
@@ -252,7 +252,9 @@ class ModularMomentumStrategy(BaseStrategy):
                 # This solves the macOS mutex.cc blocking issue
                 from .learning.subprocess_engine_wrapper import SubprocessLearningEngineWrapper
 
-                logger.info(f"🚀 Initializing {engine_type} engine via SubprocessWrapper (macOS safe)")
+                logger.info(
+                    f"🚀 Initializing {engine_type} engine via SubprocessWrapper (macOS safe)"
+                )
                 self.learning_engine = SubprocessLearningEngineWrapper(
                     engine_type=engine_type,
                     config=self._learning_config,
@@ -311,7 +313,10 @@ class ModularMomentumStrategy(BaseStrategy):
 
         # 1. Bear market crash: trend DOWN with EXTREME strength (> 1.0 means disabled)
         # Only block if trend is strongly down AND strength is extreme
-        if market_type == 'trend_down' and trend_strength > self._cfg.bear_market_strength_threshold:
+        if (
+            market_type == 'trend_down'
+            and trend_strength > self._cfg.bear_market_strength_threshold
+        ):
             _rate_limited_logger.warning(
                 f"🚨 BEAR MARKET CRASH DETECTED: "
                 f"type={market_type}, strength={trend_strength:.2f} > {self._cfg.bear_market_strength_threshold:.2f} - "
@@ -358,7 +363,10 @@ class ModularMomentumStrategy(BaseStrategy):
             return True
 
         # 4. Downtrend but not extreme strength - ALLOW with caution
-        if market_type == 'trend_down' and trend_strength <= self._cfg.bear_market_strength_threshold:
+        if (
+            market_type == 'trend_down'
+            and trend_strength <= self._cfg.bear_market_strength_threshold
+        ):
             logger.debug(
                 f"⚠️ MILD DOWNTREND: type={market_type}, strength={trend_strength:.2f} - Trading ALLOWED (cautious)"
             )
@@ -451,7 +459,9 @@ class ModularMomentumStrategy(BaseStrategy):
                     # Si no está entrenado pero está habilitado, intentar entrenar automáticamente
                     if not self.learning_engine.is_ready():
                         # Intentar entrenar con datos históricos si hay suficientes
-                        if len(self.price_history) >= self._cfg.auto_train_min_history:  # Use config value
+                        if (
+                            len(self.price_history) >= self._cfg.auto_train_min_history
+                        ):  # Use config value
                             try:
                                 self._auto_train_learning_engine()
                             except (RuntimeError, ValueError, TypeError, KeyError) as e:
@@ -577,11 +587,17 @@ class ModularMomentumStrategy(BaseStrategy):
             # Calcular liquidity_score (usar volume_ratio del indicador o default) - use config
             volume_ratio = indicators.get('volume_ratio', 1.0)
             liquidity_score = min(
-                100.0, max(0.0, (volume_ratio - self._cfg.volume_ratio_min) * self._cfg.volume_ratio_multiplier)
+                100.0,
+                max(
+                    0.0,
+                    (volume_ratio - self._cfg.volume_ratio_min) * self._cfg.volume_ratio_multiplier,
+                ),
             )  # Normalizar using config values
 
             # Calcular priority_score (combinación de confidence y liquidity) - use config weights
-            priority_score = (confidence * self._cfg.priority_confidence_weight) + (liquidity_score * self._cfg.priority_liquidity_weight)
+            priority_score = (confidence * self._cfg.priority_confidence_weight) + (
+                liquidity_score * self._cfg.priority_liquidity_weight
+            )
 
             # Obtener volume del market_data o usar un default - use config
             volume = Decimal(str(getattr(market_data, 'volume', 0)))
@@ -673,6 +689,7 @@ class ModularMomentumStrategy(BaseStrategy):
             # ATR percentile - usar bisect para cálculo correcto
             if len(self.atr_history) >= 30:
                 import bisect
+
                 # Convert deque to list for slicing (deque doesn't support slice notation in older Python)
                 recent_atr = list(self.atr_history)[-30:] if len(self.atr_history) > 0 else []
                 sorted_atr = sorted(recent_atr)
@@ -703,7 +720,9 @@ class ModularMomentumStrategy(BaseStrategy):
         indicators['macd_histogram'] = macd_histogram
 
         # Bollinger Bands (20, 2)
-        bb_upper, bb_middle, bb_lower, bb_width, bb_position = self._calculate_bollinger_bands(prices)
+        bb_upper, bb_middle, bb_lower, bb_width, bb_position = self._calculate_bollinger_bands(
+            prices
+        )
         indicators['bb_upper'] = bb_upper
         indicators['bb_middle'] = bb_middle
         indicators['bb_lower'] = bb_lower
@@ -792,14 +811,16 @@ class ModularMomentumStrategy(BaseStrategy):
         buy_passed_filters = [
             filter_name
             for filter_name in filter_names
-            if f"{filter_name}_buy" in filter_results and filter_results[f"{filter_name}_buy"].get('passed', False)
+            if f"{filter_name}_buy" in filter_results
+            and filter_results[f"{filter_name}_buy"].get('passed', False)
         ]
 
         # Count SELL filter passes using _sell suffix
         sell_passed_filters = [
             filter_name
             for filter_name in filter_names
-            if f"{filter_name}_sell" in filter_results and filter_results[f"{filter_name}_sell"].get('passed', False)
+            if f"{filter_name}_sell" in filter_results
+            and filter_results[f"{filter_name}_sell"].get('passed', False)
         ]
 
         total_filters = len(self.filters)
@@ -844,7 +865,9 @@ class ModularMomentumStrategy(BaseStrategy):
         rsi_result = filter_results.get('rsi_filter_buy', {})
         momentum_result = filter_results.get('momentum_filter_buy', {})
         rsi = rsi_result.get('metadata', {}).get('rsi') or rsi_result.get('value')
-        momentum = momentum_result.get('metadata', {}).get('momentum') or momentum_result.get('value')
+        momentum = momentum_result.get('metadata', {}).get('momentum') or momentum_result.get(
+            'value'
+        )
 
         # CRITICAL FIX: In uptrend, prioritize BUY signals
         # Only generate SELL in uptrend if filter-based SELL passes AND momentum is negative
@@ -854,24 +877,22 @@ class ModularMomentumStrategy(BaseStrategy):
                     f"✅ BUY signal in uptrend: {len(buy_passed_filters)}/{total_filters} filters"
                 )
                 return SignalType.BUY
-            elif sell_signal and momentum is not None and momentum < self._cfg.negative_momentum_threshold:
+            elif (
+                sell_signal
+                and momentum is not None
+                and momentum < self._cfg.negative_momentum_threshold
+            ):
                 # Only sell in uptrend if momentum is actually negative
-                logger.info(
-                    f"🔴 SELL signal: filters + negative momentum in uptrend"
-                )
+                logger.info("🔴 SELL signal: filters + negative momentum in uptrend")
                 return SignalType.SELL
 
         # Standard logic for non-uptrend markets
         if sell_signal:
-            logger.info(
-                f"🔴 SELL signal: {len(sell_passed_filters)}/{total_filters} filters passed"
-            )
+            logger.info(f"🔴 SELL signal: {len(sell_passed_filters)}/{total_filters} filters passed")
             return SignalType.SELL
 
         if buy_signal:
-            logger.info(
-                f"✅ BUY signal: {len(buy_passed_filters)}/{total_filters} filters passed"
-            )
+            logger.info(f"✅ BUY signal: {len(buy_passed_filters)}/{total_filters} filters passed")
             return SignalType.BUY
 
         logger.debug(
@@ -896,7 +917,10 @@ class ModularMomentumStrategy(BaseStrategy):
                 'confidence', learning_prediction.get('success_probability', 0.5)
             )
             # Combinar: usar pesos de config
-            combined = base_confidence * self._cfg.learning_filter_weight + learning_confidence * self._cfg.learning_confidence_weight
+            combined = (
+                base_confidence * self._cfg.learning_filter_weight
+                + learning_confidence * self._cfg.learning_confidence_weight
+            )
             return min(100.0, max(0.0, combined * 100))
 
         return min(100.0, max(0.0, base_confidence * 100))
@@ -933,7 +957,10 @@ class ModularMomentumStrategy(BaseStrategy):
                     logger.debug(f"FeatureExtractor no disponible: {e}")
                     self._feature_extractor = None
 
-            if self._feature_extractor is not None and len(self.price_history) >= self._cfg.auto_train_min_history:  # Use config
+            if (
+                self._feature_extractor is not None
+                and len(self.price_history) >= self._cfg.auto_train_min_history
+            ):  # Use config
                 # Crear datos sintéticos basados en histórico
                 # Nota: Esto es una aproximación. En producción, necesitaríamos los quotes completos
                 logger.debug(
@@ -1283,11 +1310,15 @@ class ModularMomentumStrategy(BaseStrategy):
         else:
             position = 0.5
 
-        return round(upper, 4), round(middle, 4), round(lower, 4), round(width, 4), round(position, 4)
+        return (
+            round(upper, 4),
+            round(middle, 4),
+            round(lower, 4),
+            round(width, 4),
+            round(position, 4),
+        )
 
-    def _calculate_adx(
-        self, highs: list, lows: list, prices: list, period: int = 14
-    ) -> tuple:
+    def _calculate_adx(self, highs: list, lows: list, prices: list, period: int = 14) -> tuple:
         """
         Calculate ADX (Average Directional Index) and DI indicators.
 
@@ -1491,7 +1522,9 @@ class ModularMomentumStrategy(BaseStrategy):
 
     def get_position_size(self, signal: Signal, portfolio: Portfolio) -> Decimal:
         """Calcular tamaño de posición - use config value."""
-        max_position_size = Decimal(str(self.config.get("max_position_size", self._cfg.max_position_size_default)))
+        max_position_size = Decimal(
+            str(self.config.get("max_position_size", self._cfg.max_position_size_default))
+        )
         available_cash = portfolio.cash
 
         if signal.signal_type == SignalType.BUY:

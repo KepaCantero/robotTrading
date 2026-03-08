@@ -7,15 +7,15 @@ and system status for dashboard display.
 import asyncio
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 
+from app.domain.services.compliance.compliance_engine import get_compliance_engine
 from app.presentation.dashboard.dashboard_data import (
-    DashboardSnapshot,
     DashboardPerformanceMetrics,
+    DashboardSnapshot,
     PositionSummary,
     SystemStatus,
 )
-from app.domain.services.compliance.compliance_engine import get_compliance_engine
 
 
 class DashboardService:
@@ -65,14 +65,10 @@ class DashboardService:
 
             # Get portfolio value
             portfolio_value = await self._get_portfolio_value()
-            starting_capital = Decimal(
-                str(self._compliance_engine._starting_capital)
-            )
+            starting_capital = Decimal(str(self._compliance_engine._starting_capital))
 
             # Calculate drawdown
-            current_drawdown = self._calculate_drawdown(
-                portfolio_value, starting_capital
-            )
+            current_drawdown = self._calculate_drawdown(portfolio_value, starting_capital)
             max_drawdown = self._compliance_engine._max_drawdown_ratio
 
             return DashboardPerformanceMetrics(
@@ -89,7 +85,7 @@ class DashboardService:
                 portfolio_value=portfolio_value,
                 starting_capital=starting_capital,
             )
-        except Exception as e:
+        except Exception:
             # Return empty metrics on error
             return self._empty_performance()
 
@@ -111,7 +107,9 @@ class DashboardService:
 
                 avg_price = Decimal(str(pos.get("avg_price", 0)))
                 current_price = Decimal(str(pos.get("current_price", avg_price)))
-                market_value = Decimal(str(pos.get("market_value", quantity * float(current_price))))
+                market_value = Decimal(
+                    str(pos.get("market_value", quantity * float(current_price)))
+                )
                 unrealized_pnl = Decimal(str(pos.get("unrealized_pnl", 0)))
 
                 # Calculate P&L percentage
@@ -136,7 +134,7 @@ class DashboardService:
                 )
 
             return positions
-        except Exception as e:
+        except Exception:
             return []
 
     async def _get_system_status(self) -> SystemStatus:
@@ -171,7 +169,7 @@ class DashboardService:
                 bridge_status=bridge_status,
                 active_orders=active_orders,
             )
-        except Exception as e:
+        except Exception:
             return self._empty_system_status()
 
     async def _get_recent_alerts(self) -> List[Dict[str, Any]]:
@@ -202,9 +200,7 @@ class DashboardService:
         """Get broker connector instance."""
         if self._broker is None:
             try:
-                from app.application.orchestration.live_trading.broker_connector import (
-                    get_broker_connector,
-                )
+                from app.services.live_trading.broker_connector import get_broker_connector
 
                 self._broker = get_broker_connector()
             except Exception:
@@ -215,7 +211,7 @@ class DashboardService:
         """Get trading bridge instance."""
         if self._bridge is None:
             try:
-                from app.application.orchestration.live_trading.trading_bridge_orchestrator import (
+                from app.services.live_trading.trading_bridge_orchestrator import (
                     get_trading_bridge_orchestrator,
                 )
 

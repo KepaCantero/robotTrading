@@ -15,8 +15,8 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
-from app.api.portfolio_analytics import router
-from app.models.portfolio_analytics import (
+from app.presentation.api.portfolio_analytics import router
+from app.domain.models.portfolio_analytics import (
     PerformanceMetrics,
     PerformancePeriod,
     PortfolioAllocation,
@@ -117,7 +117,7 @@ class TestPortfolioAnalyticsAPIEndpoints:
     ):
         """Test calculate_performance_metrics returns valid metrics."""
         with patch(
-            "app.api.portfolio_analytics.get_portfolio_analytics_service"
+            "app.presentation.api.portfolio_analytics.get_portfolio_analytics_service"
         ) as mock_get_service:
             mock_service = AsyncMock()
             mock_service.calculate_performance_metrics.return_value = mock_performance_metrics
@@ -141,7 +141,7 @@ class TestPortfolioAnalyticsAPIEndpoints:
     ):
         """Test get_performance_metrics returns valid metrics."""
         with patch(
-            "app.api.portfolio_analytics.get_portfolio_analytics_service"
+            "app.presentation.api.portfolio_analytics.get_portfolio_analytics_service"
         ) as mock_get_service:
             mock_service = AsyncMock()
             mock_service.calculate_performance_metrics.return_value = mock_performance_metrics
@@ -157,7 +157,7 @@ class TestPortfolioAnalyticsAPIEndpoints:
     async def test_get_risk_metrics_success(self, client, mock_portfolio_id, mock_risk_metrics):
         """Test get_risk_metrics returns valid risk metrics."""
         with patch(
-            "app.api.portfolio_analytics.get_portfolio_analytics_service"
+            "app.presentation.api.portfolio_analytics.get_portfolio_analytics_service"
         ) as mock_get_service:
             mock_service = AsyncMock()
             mock_service.calculate_risk_metrics.return_value = mock_risk_metrics
@@ -175,7 +175,7 @@ class TestPortfolioAnalyticsAPIEndpoints:
     ):
         """Test get_portfolio_analytics returns comprehensive analytics."""
         with patch(
-            "app.api.portfolio_analytics.get_portfolio_analytics_service"
+            "app.presentation.api.portfolio_analytics.get_portfolio_analytics_service"
         ) as mock_get_service:
             mock_service = AsyncMock()
             mock_service.generate_portfolio_analytics.return_value = mock_portfolio_analytics
@@ -202,7 +202,7 @@ class TestPortfolioAnalyticsAPIEndpoints:
         )
 
         with patch(
-            "app.api.portfolio_analytics.get_portfolio_analytics_service"
+            "app.presentation.api.portfolio_analytics.get_portfolio_analytics_service"
         ) as mock_get_service:
             mock_service = AsyncMock()
             mock_service.analyze_portfolio_allocation.return_value = mock_allocation
@@ -249,7 +249,7 @@ class TestPortfolioAnalyticsAPIEndpoints:
         )
 
         with patch(
-            "app.api.portfolio_analytics.get_portfolio_analytics_service"
+            "app.presentation.api.portfolio_analytics.get_portfolio_analytics_service"
         ) as mock_get_service:
             mock_service = AsyncMock()
             mock_service.generate_rebalance_recommendation.return_value = mock_rebalance
@@ -311,7 +311,7 @@ class TestPortfolioAnalyticsAPIEndpoints:
         )
 
         with patch(
-            "app.api.portfolio_analytics.get_portfolio_analytics_service"
+            "app.presentation.api.portfolio_analytics.get_portfolio_analytics_service"
         ) as mock_get_service:
             mock_service = AsyncMock()
             mock_service.compare_portfolios.return_value = mock_comparison
@@ -331,7 +331,7 @@ class TestPortfolioAnalyticsAPIEndpoints:
     ):
         """Test get_analytics_summary returns summary data."""
         with patch(
-            "app.api.portfolio_analytics.get_portfolio_analytics_service"
+            "app.presentation.api.portfolio_analytics.get_portfolio_analytics_service"
         ) as mock_get_service:
             mock_service = AsyncMock()
             mock_service.generate_portfolio_analytics.return_value = mock_portfolio_analytics
@@ -372,7 +372,7 @@ class TestErrorHandling:
         import asyncio
 
         with patch(
-            "app.api.portfolio_analytics.get_portfolio_analytics_service"
+            "app.presentation.api.portfolio_analytics.get_portfolio_analytics_service"
         ) as mock_get_service:
             mock_service = AsyncMock()
             mock_service.calculate_performance_metrics.side_effect = asyncio.TimeoutError()
@@ -391,7 +391,7 @@ class TestErrorHandling:
     async def test_get_risk_metrics_connection_error(self, client):
         """Test get_risk_metrics handles connection errors."""
         with patch(
-            "app.api.portfolio_analytics.get_portfolio_analytics_service"
+            "app.presentation.api.portfolio_analytics.get_portfolio_analytics_service"
         ) as mock_get_service:
             mock_service = AsyncMock()
             mock_service.calculate_risk_metrics.side_effect = ConnectionError("Connection failed")

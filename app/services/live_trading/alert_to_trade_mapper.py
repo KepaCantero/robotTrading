@@ -15,10 +15,10 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, List, Optional
 
-from app.shared.config.centralized_config import get_config
 from app.services.alerting_system import AlertSeverity
+from app.shared.config.centralized_config import get_config
 
 from .broker_connector import OrderSide, OrderType
 
@@ -64,7 +64,9 @@ class AlertToTradeRule:
     # Risk adjustments
     max_position_size: Decimal = Decimal("50000")
     use_limit_orders: bool = False
-    limit_price_offset: Decimal = field(default_factory=_get_default_limit_offset)  # Uses centralized config
+    limit_price_offset: Decimal = field(
+        default_factory=_get_default_limit_offset
+    )  # Uses centralized config
     # Time-based rules
     quiet_period_minutes: int = 0  # Cooldown between trades
     last_triggered_at: Optional[datetime] = None

@@ -14,6 +14,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Tuple
+
 import numpy as np
 
 from .models import ExecutionMonitoring
@@ -240,9 +241,7 @@ class ExecutionCostMonitor:
         # Calculate aggregates
         total_slippage = sum(c["slippage_cost"] for c in costs)
         total_commission = sum(c["commission_cost"] for c in costs)
-        avg_slippage_bps = (
-            np.mean([c["slippage_bps"] for c in costs]) if costs else Decimal("0")
-        )
+        avg_slippage_bps = np.mean([c["slippage_bps"] for c in costs]) if costs else Decimal("0")
 
         return {
             "execution_id": execution_id,

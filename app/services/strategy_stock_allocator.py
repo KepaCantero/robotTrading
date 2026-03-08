@@ -27,8 +27,8 @@ from pydantic import BaseModel, Field
 from scipy import stats
 from scipy.optimize import minimize
 
-from app.shared.config.centralized_config import StockAllocationSettings
 from app.services.momentum_analysis import TechnicalIndicatorCalculator
+from app.shared.config.centralized_config import StockAllocationSettings
 
 logger = logging.getLogger(__name__)
 

@@ -10,7 +10,6 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from app.shared.config.centralized_config import get_config
 from app.domain.models.portfolio import (
     AssetClass,
     AssetUniverse,
@@ -19,6 +18,7 @@ from app.domain.models.portfolio import (
     Portfolio,
     Position,
 )
+from app.shared.config.centralized_config import get_config
 
 
 class PaperTradingPortfolioProvider:

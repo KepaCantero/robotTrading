@@ -37,7 +37,7 @@ warnings.warn(
     "risk_envelope_validator.py is DEPRECATED. "
     "Use ComplianceEngine.validate_risk_envelope() instead.",
     DeprecationWarning,
-    stacklevel=2
+    stacklevel=2,
 )
 
 import logging

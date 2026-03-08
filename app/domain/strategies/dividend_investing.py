@@ -550,9 +550,14 @@ class DividendInvesting:
         payout_ratio = metrics.payout_ratio if np.isfinite(metrics.payout_ratio) else 1.0
 
         # Generate signal
-        if score > self._tt.dividend_score_excellent and valuation_ratio < self._tt.valuation_ratio_cheap:
+        if (
+            score > self._tt.dividend_score_excellent
+            and valuation_ratio < self._tt.valuation_ratio_cheap
+        ):
             return DividendSignal.BUY
-        elif score > self._tt.dividend_score_good and valuation_ratio < self._tt.valuation_ratio_fair:
+        elif (
+            score > self._tt.dividend_score_good and valuation_ratio < self._tt.valuation_ratio_fair
+        ):
             return DividendSignal.BUY
         elif score < 0.3 or payout_ratio > 0.9:
             # Risk of dividend cut (0.3 and 0.9 are business logic, not config)

@@ -15,8 +15,8 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
-from app.api.market_data import router
-from app.models.market_data import (
+from app.presentation.api.market_data import router
+from app.domain.models.market_data import (
     DataFeedConfig,
     DataFeedType,
     DataFrequency,
@@ -88,7 +88,7 @@ class TestMarketDataAPIEndpoints:
     @pytest.mark.asyncio
     async def test_get_quote_success(self, client, mock_quote):
         """Test get_quote returns valid quote data."""
-        with patch("app.api.market_data.get_market_data_service") as mock_get_service:
+        with patch("app.presentation.api.market_data.get_market_data_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.get_quote.return_value = mock_quote
             mock_get_service.return_value = mock_service
@@ -103,7 +103,7 @@ class TestMarketDataAPIEndpoints:
     @pytest.mark.asyncio
     async def test_get_quote_not_found(self, client):
         """Test get_quote returns error when quote not available."""
-        with patch("app.api.market_data.get_market_data_service") as mock_get_service:
+        with patch("app.presentation.api.market_data.get_market_data_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.get_quote.return_value = None
             mock_get_service.return_value = mock_service
@@ -117,7 +117,7 @@ class TestMarketDataAPIEndpoints:
     @pytest.mark.asyncio
     async def test_get_multiple_quotes_success(self, client, mock_quote):
         """Test get_multiple_quotes returns quotes for multiple symbols."""
-        with patch("app.api.market_data.get_market_data_service") as mock_get_service:
+        with patch("app.presentation.api.market_data.get_market_data_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.get_quote.return_value = mock_quote
             mock_get_service.return_value = mock_service
@@ -131,7 +131,7 @@ class TestMarketDataAPIEndpoints:
     @pytest.mark.asyncio
     async def test_get_top_liquid_quotes_success(self, client, mock_quote):
         """Test get_top_liquid_quotes returns liquid assets."""
-        with patch("app.api.market_data.get_market_data_service") as mock_get_service:
+        with patch("app.presentation.api.market_data.get_market_data_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.get_top_liquid_assets_quotes.return_value = [mock_quote]
             mock_get_service.return_value = mock_service
@@ -154,7 +154,7 @@ class TestMarketDataAPIEndpoints:
         end_date = datetime.utcnow()
         start_date = end_date - timedelta(days=10)
 
-        with patch("app.api.market_data.get_market_data_service") as mock_get_service:
+        with patch("app.presentation.api.market_data.get_market_data_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.get_historical_data.return_value = mock_historical_data
             mock_get_service.return_value = mock_service
@@ -194,7 +194,7 @@ class TestMarketDataAPIEndpoints:
     @pytest.mark.asyncio
     async def test_create_feed_config_success(self, client, mock_feed_config):
         """Test create_feed_config creates configuration."""
-        with patch("app.api.market_data.get_market_data_service") as mock_get_service:
+        with patch("app.presentation.api.market_data.get_market_data_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.add_feed_config.return_value = mock_feed_config.id
             mock_get_service.return_value = mock_service
@@ -244,7 +244,7 @@ class TestMarketDataAPIEndpoints:
     @pytest.mark.asyncio
     async def test_list_feed_configs_success(self, client, mock_feed_config):
         """Test list_feed_configs returns all configurations."""
-        with patch("app.api.market_data.get_market_data_service") as mock_get_service:
+        with patch("app.presentation.api.market_data.get_market_data_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.list_feed_configs.return_value = [mock_feed_config]
             mock_get_service.return_value = mock_service
@@ -258,7 +258,7 @@ class TestMarketDataAPIEndpoints:
     @pytest.mark.asyncio
     async def test_get_feed_config_success(self, client, mock_feed_config):
         """Test get_feed_config returns configuration."""
-        with patch("app.api.market_data.get_market_data_service") as mock_get_service:
+        with patch("app.presentation.api.market_data.get_market_data_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.get_feed_config.return_value = mock_feed_config
             mock_get_service.return_value = mock_service
@@ -272,7 +272,7 @@ class TestMarketDataAPIEndpoints:
     @pytest.mark.asyncio
     async def test_get_feed_config_not_found(self, client):
         """Test get_feed_config returns 404 for non-existent config."""
-        with patch("app.api.market_data.get_market_data_service") as mock_get_service:
+        with patch("app.presentation.api.market_data.get_market_data_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.get_feed_config.return_value = None
             mock_get_service.return_value = mock_service
@@ -283,7 +283,7 @@ class TestMarketDataAPIEndpoints:
     @pytest.mark.asyncio
     async def test_connect_feed_success(self, client, mock_feed_config):
         """Test connect_feed connects to feed."""
-        with patch("app.api.market_data.get_market_data_service") as mock_get_service:
+        with patch("app.presentation.api.market_data.get_market_data_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.connect_feed.return_value = True
             mock_get_service.return_value = mock_service
@@ -296,7 +296,7 @@ class TestMarketDataAPIEndpoints:
     @pytest.mark.asyncio
     async def test_disconnect_feed_success(self, client, mock_feed_config):
         """Test disconnect_feed disconnects from feed."""
-        with patch("app.api.market_data.get_market_data_service") as mock_get_service:
+        with patch("app.presentation.api.market_data.get_market_data_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.disconnect_feed.return_value = True
             mock_get_service.return_value = mock_service
@@ -309,7 +309,7 @@ class TestMarketDataAPIEndpoints:
     @pytest.mark.asyncio
     async def test_subscribe_to_symbols_success(self, client):
         """Test subscribe_to_symbols subscribes to symbols."""
-        with patch("app.api.market_data.get_market_data_service") as mock_get_service:
+        with patch("app.presentation.api.market_data.get_market_data_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.subscribe_to_symbols.return_value = True
             mock_get_service.return_value = mock_service
@@ -325,7 +325,7 @@ class TestMarketDataAPIEndpoints:
     @pytest.mark.asyncio
     async def test_get_service_status_success(self, client):
         """Test get_service_status returns service status."""
-        with patch("app.api.market_data.get_market_data_service") as mock_get_service:
+        with patch("app.presentation.api.market_data.get_market_data_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.get_service_status.return_value = {
                 "status": "operational",
@@ -342,7 +342,7 @@ class TestMarketDataAPIEndpoints:
     @pytest.mark.asyncio
     async def test_clear_cache_success(self, client):
         """Test clear_cache clears cached data."""
-        with patch("app.api.market_data.get_market_data_service") as mock_get_service:
+        with patch("app.presentation.api.market_data.get_market_data_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.clear_cache.return_value = None
             mock_get_service.return_value = mock_service
@@ -355,7 +355,7 @@ class TestMarketDataAPIEndpoints:
     @pytest.mark.asyncio
     async def test_get_cache_stats_success(self, client):
         """Test get_cache_stats returns cache metrics."""
-        with patch("app.api.market_data.get_market_data_service") as mock_get_service:
+        with patch("app.presentation.api.market_data.get_market_data_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.get_cache_stats.return_value = {"cached_quotes": 100, "cache_size_mb": 1.5}
             mock_get_service.return_value = mock_service
@@ -384,7 +384,7 @@ class TestErrorHandling:
         """Test get_quote handles timeout errors."""
         import asyncio
 
-        with patch("app.api.market_data.get_market_data_service") as mock_get_service:
+        with patch("app.presentation.api.market_data.get_market_data_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.get_quote.side_effect = asyncio.TimeoutError()
             mock_get_service.return_value = mock_service
@@ -397,7 +397,7 @@ class TestErrorHandling:
         """Test get_historical_data handles connection errors."""
         from requests.exceptions import ConnectionError
 
-        with patch("app.api.market_data.get_market_data_service") as mock_get_service:
+        with patch("app.presentation.api.market_data.get_market_data_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.get_historical_data.side_effect = ConnectionError("Connection failed")
             mock_get_service.return_value = mock_service

@@ -446,8 +446,12 @@ class AdvancedVisualizer:
                 return None
 
             # Calculate rolling metrics
-            rolling_mean = returns.rolling(window).mean() * annual_trading_days * 100  # Annualized %
-            rolling_std = returns.rolling(window).std() * np.sqrt(annual_trading_days) * 100  # Annualized %
+            rolling_mean = (
+                returns.rolling(window).mean() * annual_trading_days * 100
+            )  # Annualized %
+            rolling_std = (
+                returns.rolling(window).std() * np.sqrt(annual_trading_days) * 100
+            )  # Annualized %
             rolling_sharpe = rolling_mean / (rolling_std + 1e-8)
 
             # Create subplots

@@ -151,7 +151,9 @@ class PositionSizingEngine:
                 strategy_config = get_strategy_config()
                 risk_config = strategy_config.get_risk_config()
                 risk_per_trade_pct = float(
-                    risk_config.get('risk_per_trade', {}).get('default', self._tt.risk_per_trade_default)
+                    risk_config.get('risk_per_trade', {}).get(
+                        'default', self._tt.risk_per_trade_default
+                    )
                 )
             else:
                 # Use centralized config
@@ -407,7 +409,9 @@ class PositionSizingEngine:
             }
 
             if capital is not None:
-                fallback_result["position_value"] = capital * Decimal(str(self._tt.kelly_fallback_fraction))
+                fallback_result["position_value"] = capital * Decimal(
+                    str(self._tt.kelly_fallback_fraction)
+                )
 
             return fallback_result
 

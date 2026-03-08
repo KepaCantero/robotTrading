@@ -262,7 +262,9 @@ class VolatilityTargetingRebalancer(BaseRebalancer):
         """Inicializar volatility-targeting rebalancer."""
         super().__init__(config)
         self.target_volatility = config.get('target_volatility', 0.15)  # 15% por defecto
-        self.volatility_threshold = getattr(config.trading, 'max_risk_per_trade', 0.02)  # 2% desviación
+        self.volatility_threshold = getattr(
+            config.trading, 'max_risk_per_trade', 0.02
+        )  # 2% desviación
         self.cov_matrix = None  # Se actualizará con datos reales
 
     def should_rebalance(

@@ -146,7 +146,9 @@ class CapitalViabilityValidator:
             if capital >= Decimal("50000"):
                 expected_alpha_pct = max_achievable_alpha
             elif capital >= Decimal("25000"):
-                expected_alpha_pct = (min_achievable_alpha + max_achievable_alpha) / Decimal("2")  # Midpoint
+                expected_alpha_pct = (min_achievable_alpha + max_achievable_alpha) / Decimal(
+                    "2"
+                )  # Midpoint
             else:
                 expected_alpha_pct = min_achievable_alpha
 

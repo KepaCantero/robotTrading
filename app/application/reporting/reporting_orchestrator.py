@@ -7,8 +7,8 @@ Integrates templates, metrics, and portfolio data to generate comprehensive repo
 import logging
 from datetime import datetime
 from typing import Dict, Optional
-import numpy as np
 
+import numpy as np
 import pandas as pd
 
 from app.application.reporting.quantstats_integration import get_quantstats_integration

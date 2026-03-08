@@ -364,6 +364,7 @@ class CostParametersModel(BaseModel):
     def validate_commission_rates(cls, v):
         """Validate commission rates."""
         from app.shared.config.centralized_config import get_config
+
         cfg = get_config()
         max_commission = Decimal(str(getattr(cfg.trading, 'cost_max_commission_rate', 0.1)))
         for asset_class, rate in v.items():
@@ -376,6 +377,7 @@ class CostParametersModel(BaseModel):
     def validate_slippage_rates(cls, v):
         """Validate slippage rates."""
         from app.shared.config.centralized_config import get_config
+
         cfg = get_config()
         max_slippage = Decimal(str(getattr(cfg.trading, 'cost_max_slippage_rate', 0.05)))
         for asset_class, rate in v.items():

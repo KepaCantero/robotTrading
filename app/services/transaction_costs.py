@@ -255,7 +255,9 @@ class TransactionCostModel:
         trade_value = order.quantity * execution_price
         # Use config value for BPS multiplier
         tt = get_config().trading_thresholds
-        cost_as_bps = float(total_cost / trade_value * tt.bps_multiplier) if trade_value > 0 else 0.0
+        cost_as_bps = (
+            float(total_cost / trade_value * tt.bps_multiplier) if trade_value > 0 else 0.0
+        )
 
         # Estimate execution duration
         expected_duration = self._estimate_execution_duration(

@@ -25,18 +25,17 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
+# COMPLIANCE: Backtesting Compliance (R5, R6, R7, DATA-001)
+from app.backtesting.backtesting_compliance import (
+    BacktestingComplianceResult,
+    create_backtesting_compliance,
+)
+
 # Core backtesting modules (Fase 1 + Fase 2)
 from app.backtesting.core import BacktestConfigLoader, BacktestOrchestrator
 from app.backtesting.core.error_handling import MutexError, TrainingError, train_with_retry
 from app.backtesting.core.executor import ProcessPoolBacktestExecutor, SimpleBacktestExecutor
 from app.backtesting.core.memory_manager import AggressiveMemoryManager
-
-# COMPLIANCE: Backtesting Compliance (R5, R6, R7, DATA-001)
-from app.backtesting.backtesting_compliance import (
-    BacktestingCompliance,
-    BacktestingComplianceResult,
-    create_backtesting_compliance,
-)
 
 # Data loading
 from app.backtesting.data_loader import DataLoader
@@ -47,11 +46,16 @@ from app.backtesting.data_split import (
     TrainValTestSplitter,
     validate_out_of_sample_performance,
 )
+from app.backtesting.engines.multi_strategy_engine import MultiStrategyBacktester
 
 # Strategy factory (Phase 5: extracted from God Object)
 from app.backtesting.factories import StrategyFactory
 from app.backtesting.models import BacktestConfig, BacktestResult
-from app.backtesting.engines.multi_strategy_engine import MultiStrategyBacktester
+from app.backtesting.runners.monte_carlo_simulator import MonteCarloSimulator
+
+# SRP Extracted modules (Phase 6)
+from app.backtesting.runners.regime_analyzer import RegimeAnalyzer
+from app.backtesting.runners.result_aggregator import ResultAggregator
 
 # Strategy implementations
 # TODO: Create momentum_modular module. Using MomentumStrategy as alias.
@@ -64,10 +68,6 @@ from app.domain.strategies.momentum import MomentumStrategy as ModularMomentumSt
 
 # Portfolio management
 
-# SRP Extracted modules (Phase 6)
-from app.backtesting.runners.regime_analyzer import RegimeAnalyzer
-from app.backtesting.runners.monte_carlo_simulator import MonteCarloSimulator
-from app.backtesting.runners.result_aggregator import ResultAggregator
 
 
 class ComprehensiveBacktestRunner:
@@ -162,7 +162,9 @@ class ComprehensiveBacktestRunner:
         )
         self.result_aggregator = ResultAggregator(
             output_dir=self.output_dir,
-            output_formats=self.raw_config.get('reporting', {}).get('output_format', ['csv', 'json'])
+            output_formats=self.raw_config.get('reporting', {}).get(
+                'output_format', ['csv', 'json']
+            ),
         )
 
         logger.info(f"ComprehensiveBacktestRunner initialized with {len(self.quotes)} quotes")
@@ -370,7 +372,9 @@ class ComprehensiveBacktestRunner:
 
         return results
 
-    def _run_compliance_validation(self, results: List[Dict[str, Any]]) -> BacktestingComplianceResult:
+    def _run_compliance_validation(
+        self, results: List[Dict[str, Any]]
+    ) -> BacktestingComplianceResult:
         """
         Ejecutar validación de compliance sobre los resultados de backtest.
 
@@ -477,13 +481,15 @@ class ComprehensiveBacktestRunner:
         windows = []
 
         for r in wf_results:
-            windows.append({
-                'is_return': r.get('train_return', 0),
-                'oos_return': r.get('return_pct', 0),
-                'is_sharpe': r.get('train_sharpe', 0),
-                'oos_sharpe': r.get('sharpe_ratio', 0),
-                'trades': r.get('total_trades', 0),
-            })
+            windows.append(
+                {
+                    'is_return': r.get('train_return', 0),
+                    'oos_return': r.get('return_pct', 0),
+                    'is_sharpe': r.get('train_sharpe', 0),
+                    'oos_sharpe': r.get('sharpe_ratio', 0),
+                    'trades': r.get('total_trades', 0),
+                }
+            )
 
         return windows
 
@@ -2172,10 +2178,11 @@ class ComprehensiveBacktestRunner:
             List with optimization results including best parameters,
             all trial results, and comparison with baseline
         """
-        import optuna
-        from optuna.samplers import TPESampler
-        from optuna.pruners import MedianPruner
         import copy
+
+        import optuna
+        from optuna.pruners import MedianPruner
+        from optuna.samplers import TPESampler
 
         logger.info("=" * 80)
         logger.info("OPTUNA OPTIMIZATION - Bayesian Hyperparameter Search")
@@ -2213,7 +2220,9 @@ class ComprehensiveBacktestRunner:
                         'max_depth': trial.suggest_int('max_depth', 3, 20),
                         'min_samples_split': trial.suggest_int('min_samples_split', 2, 20),
                         'min_samples_leaf': trial.suggest_int('min_samples_leaf', 1, 10),
-                        'max_features': trial.suggest_categorical('max_features', ['sqrt', 'log2', None]),
+                        'max_features': trial.suggest_categorical(
+                            'max_features', ['sqrt', 'log2', None]
+                        ),
                     }
                 elif algorithm == 'xgboost':
                     params = {
@@ -2251,6 +2260,7 @@ class ComprehensiveBacktestRunner:
                 # Create a temporary runner with the trial config
                 # Write config to temp file
                 import tempfile
+
                 import yaml
 
                 with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
@@ -2301,6 +2311,7 @@ class ComprehensiveBacktestRunner:
                 finally:
                     # Clean up temp file
                     import os
+
                     if os.path.exists(temp_config_path):
                         os.remove(temp_config_path)
 
@@ -2315,7 +2326,9 @@ class ComprehensiveBacktestRunner:
         baseline_metrics = {}
         if baseline_result:
             if isinstance(baseline_result, list) and len(baseline_result) > 0:
-                baseline_metrics = baseline_result[0] if isinstance(baseline_result[0], dict) else {}
+                baseline_metrics = (
+                    baseline_result[0] if isinstance(baseline_result[0], dict) else {}
+                )
             elif isinstance(baseline_result, dict):
                 baseline_metrics = baseline_result
 
@@ -2366,7 +2379,9 @@ class ComprehensiveBacktestRunner:
                 'sharpe_ratio': best_result.get('sharpe_ratio', 0) if best_result else 0,
                 'win_rate': best_result.get('win_rate', 0) if best_result else 0,
                 'total_trades': best_result.get('total_trades', 0) if best_result else 0,
-            } if best_result else {},
+            }
+            if best_result
+            else {},
             'baseline': {
                 'total_pnl': baseline_metrics.get('total_pnl', 0),
                 'return_pct': baseline_metrics.get('return_pct', 0),
@@ -2375,14 +2390,14 @@ class ComprehensiveBacktestRunner:
                 'total_trades': baseline_metrics.get('total_trades', 0),
             },
             'improvement': {
-                'pnl_diff': (best_result.get('total_pnl', 0) if best_result else 0) - baseline_metrics.get('total_pnl', 0),
-                'sharpe_diff': (best_result.get('sharpe_ratio', 0) if best_result else 0) - baseline_metrics.get('sharpe_ratio', 0),
+                'pnl_diff': (best_result.get('total_pnl', 0) if best_result else 0)
+                - baseline_metrics.get('total_pnl', 0),
+                'sharpe_diff': (best_result.get('sharpe_ratio', 0) if best_result else 0)
+                - baseline_metrics.get('sharpe_ratio', 0),
             },
             'all_trials': trial_results[:20],  # First 20 trials
             'optimization_history': [
-                {'trial': t.number, 'value': t.value}
-                for t in study.trials
-                if t.value is not None
+                {'trial': t.number, 'value': t.value} for t in study.trials if t.value is not None
             ],
         }
 
@@ -2755,9 +2770,7 @@ class ComprehensiveBacktestRunner:
         oos_labels = triple_barrier_labels(oos_prices)
 
         in_signal_quality = np.mean([1 for l in in_labels if l == 1]) if in_labels else 0
-        oos_signal_quality = (
-            np.mean([1 for l in oos_labels if l == 1]) if oos_labels else 0
-        )
+        oos_signal_quality = np.mean([1 for l in oos_labels if l == 1]) if oos_labels else 0
 
         logger.info("Signal Quality (Triple Barrier):")
         logger.info(f"  In-Sample:     {in_signal_quality:.2%} positive labels")

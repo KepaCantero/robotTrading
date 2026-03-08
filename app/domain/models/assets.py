@@ -9,8 +9,8 @@ from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional
-import numpy as np
 
+import numpy as np
 from pydantic import BaseModel, Field, field_validator
 
 

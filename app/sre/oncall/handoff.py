@@ -19,7 +19,6 @@ Domain Model (Cosmic Python - Rule 16):
 """
 
 from __future__ import annotations
-import numpy as np
 
 import asyncio
 import logging
@@ -30,6 +29,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
 import aiosqlite
+import numpy as np
 
 from app.shared.utils.safe_parse import safe_parse
 

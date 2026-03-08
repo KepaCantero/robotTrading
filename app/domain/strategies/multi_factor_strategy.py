@@ -37,11 +37,11 @@ from typing import Any, Dict, List, Optional
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
-from app.shared.config.centralized_config import get_config
 
 # Import both BaseStrategy classes - inherit from app's BaseStrategy
 # but also be compatible with registry's BaseStrategy via async execute()
 from app.domain.strategies.base import BaseStrategy
+from app.shared.config.centralized_config import get_config
 
 from .factor_calculator import FactorCalculator
 from .factor_models import FactorModelManager
@@ -596,7 +596,9 @@ class MultiFactorStrategy(BaseStrategy):
             # Get config for thresholds
             cfg = get_config()
             weights_tolerance = Decimal(str(getattr(cfg.trading, 'factor_weights_tolerance', 0.05)))
-            max_single_position_limit = Decimal(str(getattr(cfg.trading, 'max_single_position_limit', 0.5)))
+            max_single_position_limit = Decimal(
+                str(getattr(cfg.trading, 'max_single_position_limit', 0.5))
+            )
 
             # Validate weights sum
             total_weight = (

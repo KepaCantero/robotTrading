@@ -8,7 +8,6 @@ Uses centralized configuration for trading calendar constants.
 """
 
 from __future__ import annotations
-import numpy as np
 
 import logging
 from dataclasses import dataclass
@@ -17,9 +16,11 @@ from decimal import ROUND_HALF_UP, Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
+import numpy as np
+
 from app.backtesting.models import Trade, TradeStatus
-from app.shared.config.centralized_config import get_config
 from app.domain.models.order import OrderType
+from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -112,18 +113,18 @@ class CostAnalysisService:
             }
 
             self.infrastructure_cost_per_trade = Decimal("0.50")  # $0.50 per trade
-            self.borrowing_cost_rate = Decimal(str(getattr(
-                config.trading, 'borrowing_cost_rate', 0.05
-            )))  # 5% annual borrowing cost from config
+            self.borrowing_cost_rate = Decimal(
+                str(getattr(config.trading, 'borrowing_cost_rate', 0.05))
+            )  # 5% annual borrowing cost from config
 
             # Profitability thresholds from config
-            self.min_profitability_threshold = Decimal(str(getattr(
-                config.trading, 'max_risk_per_trade', 0.02
-            )))  # 2% minimum profit
+            self.min_profitability_threshold = Decimal(
+                str(getattr(config.trading, 'max_risk_per_trade', 0.02))
+            )  # 2% minimum profit
             # Cost impact ratio: 30% is Chan's recommended maximum
-            self.max_cost_impact_ratio = Decimal(str(getattr(
-                config.trading, 'max_cost_impact_ratio', 0.30
-            )))  # 30% max cost impact from config
+            self.max_cost_impact_ratio = Decimal(
+                str(getattr(config.trading, 'max_cost_impact_ratio', 0.30))
+            )  # 30% max cost impact from config
 
         except (AttributeError, ValueError) as e:
             logger.warning(f"Error loading config for CostAnalysisService: {e}. Using defaults.")
@@ -421,9 +422,9 @@ class CostAnalysisService:
 
         # Annualized turnover rate (using centralized config for trading days)
         config = get_config()
-        annual_trading_days = Decimal(str(getattr(
-            config.trading, 'annual_trading_days_const', 252
-        )))
+        annual_trading_days = Decimal(
+            str(getattr(config.trading, 'annual_trading_days_const', 252))
+        )
         annual_turnover = annual_trading_days / Decimal(str(holding_period_days))
 
         # Minimum annual profit edge required
@@ -613,21 +614,21 @@ class CostAnalysisService:
             volume_ratio = trade.quantity / avg_volume if avg_volume > 0 else Decimal("0")
 
             # Get market impact thresholds from config
-            large_order_threshold = Decimal(str(getattr(
-                config.trading, 'market_impact_large_order_threshold', 0.10
-            )))
-            medium_order_threshold = Decimal(str(getattr(
-                config.trading, 'market_impact_medium_order_threshold', 0.05
-            )))
-            large_order_rate = Decimal(str(getattr(
-                config.trading, 'market_impact_large_order_rate', 0.005
-            )))
-            medium_order_rate = Decimal(str(getattr(
-                config.trading, 'market_impact_medium_order_rate', 0.002
-            )))
-            small_order_rate = Decimal(str(getattr(
-                config.trading, 'market_impact_small_order_rate', 0.0005
-            )))
+            large_order_threshold = Decimal(
+                str(getattr(config.trading, 'market_impact_large_order_threshold', 0.10))
+            )
+            medium_order_threshold = Decimal(
+                str(getattr(config.trading, 'market_impact_medium_order_threshold', 0.05))
+            )
+            large_order_rate = Decimal(
+                str(getattr(config.trading, 'market_impact_large_order_rate', 0.005))
+            )
+            medium_order_rate = Decimal(
+                str(getattr(config.trading, 'market_impact_medium_order_rate', 0.002))
+            )
+            small_order_rate = Decimal(
+                str(getattr(config.trading, 'market_impact_small_order_rate', 0.0005))
+            )
 
             # Market impact increases with order size
             if volume_ratio > large_order_threshold:
@@ -689,14 +690,10 @@ class CostAnalysisService:
 
         # Analyze cost components
         avg_slippage = (
-            np.mean([bd.slippage for bd in cost_breakdowns])
-            if cost_breakdowns
-            else Decimal("0")
+            np.mean([bd.slippage for bd in cost_breakdowns]) if cost_breakdowns else Decimal("0")
         )
         avg_commission = (
-            np.mean([bd.commission for bd in cost_breakdowns])
-            if cost_breakdowns
-            else Decimal("0")
+            np.mean([bd.commission for bd in cost_breakdowns]) if cost_breakdowns else Decimal("0")
         )
 
         if avg_slippage > avg_commission * Decimal("2"):

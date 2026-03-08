@@ -4,8 +4,8 @@ Risk:Reward Validator (R4)
 Valida que la relación riesgo:retorno sea mínimo 2:1
 Uses centralized configuration for minimum R:R ratio.
 """
-from decimal import Decimal
 from dataclasses import dataclass
+from decimal import Decimal
 
 from app.shared.config.centralized_config import get_config
 
@@ -13,11 +13,12 @@ from app.shared.config.centralized_config import get_config
 @dataclass
 class RiskRewardResult:
     """Resultado de validación R:R"""
-    rr_ratio: Decimal        # Relación R:R
-    min_rr_ratio: Decimal    # R:R mínimo requerido
+
+    rr_ratio: Decimal  # Relación R:R
+    min_rr_ratio: Decimal  # R:R mínimo requerido
     potential_profit: Decimal
     potential_loss: Decimal
-    passes: bool             # Si pasa (>= 2:1)
+    passes: bool  # Si pasa (>= 2:1)
 
 
 class RiskRewardValidator:
@@ -30,15 +31,10 @@ class RiskRewardValidator:
     def __init__(self):
         """Initialize validator with config values."""
         config = get_config()
-        self.MIN_RR_RATIO = Decimal(str(getattr(
-            config.trading, 'min_rr_ratio', 2.0
-        )))
+        self.MIN_RR_RATIO = Decimal(str(getattr(config.trading, 'min_rr_ratio', 2.0)))
 
     def validate(
-        self,
-        entry_price: Decimal,
-        target_price: Decimal,
-        stop_loss: Decimal
+        self, entry_price: Decimal, target_price: Decimal, stop_loss: Decimal
     ) -> RiskRewardResult:
         """
         Validar relación riesgo:retorno
@@ -62,7 +58,7 @@ class RiskRewardValidator:
                 min_rr_ratio=self.MIN_RR_RATIO,
                 potential_profit=potential_profit,
                 potential_loss=potential_loss,
-                passes=False
+                passes=False,
             )
 
         # Calcular R:R
@@ -76,14 +72,10 @@ class RiskRewardValidator:
             min_rr_ratio=self.MIN_RR_RATIO,
             potential_profit=potential_profit,
             potential_loss=potential_loss,
-            passes=passes
+            passes=passes,
         )
 
-    def calculate_minimum_stop(
-        self,
-        entry_price: Decimal,
-        target_price: Decimal
-    ) -> Decimal:
+    def calculate_minimum_stop(self, entry_price: Decimal, target_price: Decimal) -> Decimal:
         """
         Calcular stop loss mínimo para cumplir R:R 2:1
 

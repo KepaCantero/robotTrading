@@ -332,17 +332,13 @@ class ProfileBasedRegimeSelector(BaseStrategyEngine):
                     detected_regime = MarketRegime.TRENDING_UP
                 else:
                     detected_regime = MarketRegime.TRENDING_DOWN
-                detected_confidence = (
-                    (self.hurst_exponent - 0.5) / (1.0 - 0.5)
-                ) * 100  # 0-100
+                detected_confidence = ((self.hurst_exponent - 0.5) / (1.0 - 0.5)) * 100  # 0-100
 
             elif self.hurst_exponent < self.HURST_MEAN_REVERSION_THRESHOLD:
                 # Mean reversion - verificar half-life
                 if self.half_life is not None and self.half_life < self.HALF_LIFE_MAX:
                     detected_regime = MarketRegime.MEAN_REVERTING
-                    detected_confidence = (
-                        (0.5 - self.hurst_exponent) / 0.5
-                    ) * 100
+                    detected_confidence = ((0.5 - self.hurst_exponent) / 0.5) * 100
                 else:
                     # Half-life muy largo, no es mean reversion tradeable
                     detected_regime = MarketRegime.UNKNOWN

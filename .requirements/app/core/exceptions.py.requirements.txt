@@ -1,0 +1,23 @@
+# Requirements Document: core/exceptions.py
+
+## 1. Module Overview
+Centralized exception definitions for the trading application.
+
+## 2. Dependencies
+- `typing.Optional`
+
+## 3. Core Components (Contracts)
+- `TradingError`: Base exception for trading operations
+- `DataError`: Exception for data-related errors
+- `ValidationError`: Exception for validation failures
+- `RiskError`: Exception for risk management errors
+- `BrokerError`: Exception for broker communication errors
+
+## 4. Execution Requirements (Compliance Rules)
+- [x] Must execute without syntax errors
+- [x] Must provide descriptive error messages
+- [x] Must preserve stack trace context
+
+## 5. Notes
+- All custom exceptions inherit from base TradingError
+- Provides consistent error handling across the application

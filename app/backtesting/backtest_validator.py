@@ -19,23 +19,21 @@ Architecture:
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from datetime import timedelta
+from typing import Any, Dict, List
 
 import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)
 
-from app.backtesting.core.executor import SimpleBacktestExecutor
-from app.backtesting.core.error_handling import train_with_retry
-from app.backtesting.core.memory_manager import AggressiveMemoryManager
 from app.backtesting.backtesting_compliance import (
-    BacktestingCompliance,
     BacktestingComplianceResult,
     create_backtesting_compliance,
 )
+from app.backtesting.core.error_handling import train_with_retry
+from app.backtesting.core.executor import SimpleBacktestExecutor
+from app.backtesting.core.memory_manager import AggressiveMemoryManager
 from app.backtesting.models import BacktestConfig
 from app.domain.strategies.momentum_modular.strategy import ModularMomentumStrategy
 
@@ -261,7 +259,9 @@ class BacktestValidator:
         logger.info(f"  Return:       {in_sample_metrics['return_pct']:.2f}%")
         logger.info(f"  Sharpe:       {float(in_sample_result.performance.sharpe_ratio or 0):.3f}")
         logger.info(f"  Win Rate:     {float(in_sample_result.performance.win_rate):.2%}")
-        logger.info(f"  Max DD:       {float(in_sample_result.performance.max_drawdown_percentage):.2%}")
+        logger.info(
+            f"  Max DD:       {float(in_sample_result.performance.max_drawdown_percentage):.2%}"
+        )
         logger.info(f"  Total Trades: {in_sample_result.performance.total_trades}")
 
         # Backtest out-of-sample with FROZEN parameters
@@ -303,23 +303,27 @@ class BacktestValidator:
 
         return_drop = (
             ((is_return - oos_return) / abs(is_return) * 100)
-            if is_return != 0 else (0 if oos_return == 0 else -100)
+            if is_return != 0
+            else (0 if oos_return == 0 else -100)
         )
 
         sharpe_drop = (
             ((is_sharpe - oos_sharpe) / abs(is_sharpe) * 100)
-            if is_sharpe != 0 else (0 if oos_sharpe == 0 else -100)
+            if is_sharpe != 0
+            else (0 if oos_sharpe == 0 else -100)
         )
 
         win_rate_drop = (
             ((is_win_rate - oos_win_rate) / abs(is_win_rate) * 100)
-            if is_win_rate != 0 else (0 if oos_win_rate == 0 else -100)
+            if is_win_rate != 0
+            else (0 if oos_win_rate == 0 else -100)
         )
 
         # Concept drift detection
         concept_drift_detected = (
             oos_return < concept_drift_threshold * is_return
-            if is_return > 0 else oos_return < is_return
+            if is_return > 0
+            else oos_return < is_return
         )
 
         is_acceptable = sharpe_drop < (acceptable_degradation * 100)
@@ -441,7 +445,8 @@ class BacktestValidator:
             'overall_status': 'PASS' if (is_acceptable and not concept_drift_detected) else 'FAIL',
             'modules_active': (
                 list(self.raw_config['modules']['filters'].keys())
-                if 'modules' in self.raw_config else []
+                if 'modules' in self.raw_config
+                else []
             ),
             'thresholds': thresholds_helper(strategy_config),
         }
@@ -457,7 +462,9 @@ class BacktestValidator:
         logger.info(f"Overall Status: {result_dict['overall_status']}")
         logger.info(f"Validation Passed: {result_dict['validation_passed']}")
         logger.info(f"Concept Drift: {'DETECTED' if concept_drift_detected else 'NOT DETECTED'}")
-        logger.info(f"Degradation: {sharpe_drop:.1f}% (threshold: {acceptable_degradation*100:.0f}%)")
+        logger.info(
+            f"Degradation: {sharpe_drop:.1f}% (threshold: {acceptable_degradation*100:.0f}%)"
+        )
         logger.info("=" * 80)
 
         return [result_dict]
@@ -598,9 +605,7 @@ class BacktestValidator:
 
         return count
 
-    def extract_walk_forward_results(
-        self, results: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+    def extract_walk_forward_results(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
         Extract walk-forward results for R5 validation.
 
@@ -614,13 +619,15 @@ class BacktestValidator:
         windows = []
 
         for r in wf_results:
-            windows.append({
-                'is_return': r.get('train_return', 0),
-                'oos_return': r.get('return_pct', 0),
-                'is_sharpe': r.get('train_sharpe', 0),
-                'oos_sharpe': r.get('sharpe_ratio', 0),
-                'trades': r.get('total_trades', 0),
-            })
+            windows.append(
+                {
+                    'is_return': r.get('train_return', 0),
+                    'oos_return': r.get('return_pct', 0),
+                    'is_sharpe': r.get('train_sharpe', 0),
+                    'oos_sharpe': r.get('sharpe_ratio', 0),
+                    'trades': r.get('total_trades', 0),
+                }
+            )
 
         return windows
 

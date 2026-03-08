@@ -11,17 +11,18 @@ This module provides automated key rotation with:
 R29: Security Hardening
 """
 
-from dataclasses import dataclass, field
+import logging
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Dict, List, Optional
-import logging
 
 logger = logging.getLogger(__name__)
 
 
 class RotationStatus(Enum):
     """Status of a key rotation operation."""
+
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
@@ -32,6 +33,7 @@ class RotationStatus(Enum):
 @dataclass
 class RotationSchedule:
     """Schedule configuration for key rotations."""
+
     key_id: str
     rotation_interval_days: int
     last_rotation: datetime
@@ -55,6 +57,7 @@ class RotationSchedule:
 @dataclass
 class RotationResult:
     """Result of a key rotation operation."""
+
     key_id: str
     old_key_id: Optional[str]
     new_key_id: Optional[str]
@@ -66,6 +69,7 @@ class RotationResult:
 
 class RotationError(Exception):
     """Exception for rotation errors."""
+
     pass
 
 
@@ -87,7 +91,7 @@ class KeyRotationManager:
         key_id: str,
         interval_days: int,
         grace_period_days: int = 7,
-        start_from: Optional[datetime] = None
+        start_from: Optional[datetime] = None,
     ) -> RotationSchedule:
         """
         Schedule automatic rotation for a key.
@@ -118,7 +122,7 @@ class KeyRotationManager:
             last_rotation=start_from,
             next_rotation=next_rotation,
             grace_period_days=grace_period_days,
-            rotation_status=RotationStatus.PENDING
+            rotation_status=RotationStatus.PENDING,
         )
 
         self._schedules[key_id] = schedule
@@ -152,7 +156,7 @@ class KeyRotationManager:
         key_id: str,
         new_value: Optional[str] = None,
         api_key_manager=None,
-        secrets_manager=None
+        secrets_manager=None,
     ) -> RotationResult:
         """
         Rotate a key to a new value.
@@ -189,6 +193,7 @@ class KeyRotationManager:
                     # Generate new value if not provided
                     if new_value is None:
                         import secrets
+
                         new_value = secrets.token_urlsafe(32)
 
                     # Revoke old key after grace period would be handled separately
@@ -200,7 +205,7 @@ class KeyRotationManager:
                         key_name=f"{old_key.key_name}_rotated",
                         api_key=new_value,
                         permission=old_key.permission,
-                        expires_in_days=None  # Keep old expiration logic
+                        expires_in_days=None,  # Keep old expiration logic
                     )
 
                 else:
@@ -210,6 +215,7 @@ class KeyRotationManager:
             elif secrets_manager is not None:
                 if new_value is None:
                     import secrets
+
                     new_value = secrets.token_urlsafe(32)
 
                 if key_id in secrets_manager.list_secrets() or secrets_manager.get_secret(key_id):
@@ -220,9 +226,7 @@ class KeyRotationManager:
                     raise RotationError(f"Secret {key_id} not found")
 
             else:
-                raise RotationError(
-                    "Either api_key_manager or secrets_manager must be provided"
-                )
+                raise RotationError("Either api_key_manager or secrets_manager must be provided")
 
             # Update schedule
             if schedule:
@@ -237,12 +241,11 @@ class KeyRotationManager:
                 new_key_id=new_key_id,
                 rotated_at=now,
                 success=True,
-                status=RotationStatus.COMPLETED
+                status=RotationStatus.COMPLETED,
             )
 
             logger.info(
-                f"Successfully rotated key {key_id} "
-                f"(old: {old_key_id}, new: {new_key_id})"
+                f"Successfully rotated key {key_id} " f"(old: {old_key_id}, new: {new_key_id})"
             )
 
         except Exception as e:
@@ -256,7 +259,7 @@ class KeyRotationManager:
                 rotated_at=now,
                 success=False,
                 error_message=str(e),
-                status=RotationStatus.FAILED
+                status=RotationStatus.FAILED,
             )
 
             logger.error(f"Failed to rotate key {key_id}: {e}")
@@ -283,9 +286,7 @@ class KeyRotationManager:
             return False
 
         if not schedule.is_in_grace_period():
-            logger.error(
-                f"Cannot rollback key {key_id}: grace period has expired"
-            )
+            logger.error(f"Cannot rollback key {key_id}: grace period has expired")
             return False
 
         if schedule.old_key_id is None:
@@ -333,10 +334,7 @@ class KeyRotationManager:
         if key_id is None:
             return self._rotation_history.copy()
 
-        return [
-            result for result in self._rotation_history
-            if result.key_id == key_id
-        ]
+        return [result for result in self._rotation_history if result.key_id == key_id]
 
     def cancel_schedule(self, key_id: str) -> bool:
         """
@@ -358,7 +356,7 @@ class KeyRotationManager:
         self,
         key_id: str,
         interval_days: Optional[int] = None,
-        grace_period_days: Optional[int] = None
+        grace_period_days: Optional[int] = None,
     ) -> bool:
         """
         Update an existing rotation schedule.

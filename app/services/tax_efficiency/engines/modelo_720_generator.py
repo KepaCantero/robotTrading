@@ -3,9 +3,9 @@ Modelo 720 Report Generator
 
 Genera reportes para el Modelo 720 (declaración de bienes en el extranjero)
 """
-from typing import dict
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
+from typing import dict
 
 
 class Modelo720Generator:
@@ -74,8 +74,7 @@ class Modelo720Generator:
             Diccionario con datos del reporte
         """
         total_value = sum(
-            sum(item["value"] for item in category.values())
-            for category in self.assets.values()
+            sum(item["value"] for item in category.values()) for category in self.assets.values()
         )
 
         return {
@@ -91,5 +90,5 @@ class Modelo720Generator:
                 "funds_count": len(self.assets["funds"]),
                 "bonds_count": len(self.assets["bonds"]),
                 "cash_accounts_count": len(self.assets["cash_accounts"]),
-            }
+            },
         }

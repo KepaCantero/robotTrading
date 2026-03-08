@@ -214,7 +214,11 @@ class SignalGenerator:
 
         if rsi < rsi_oversold:
             # Oversold - potential buy
-            strength = SignalStrength.STRONG if rsi < (rsi_oversold - Decimal("10")) else SignalStrength.MODERATE
+            strength = (
+                SignalStrength.STRONG
+                if rsi < (rsi_oversold - Decimal("10"))
+                else SignalStrength.MODERATE
+            )
             confidence = (rsi_oversold - rsi) / rsi_oversold
 
             return Signal(
@@ -228,7 +232,11 @@ class SignalGenerator:
 
         elif rsi > rsi_overbought:
             # Overbought - potential sell
-            strength = SignalStrength.STRONG if rsi > (rsi_overbought + Decimal("10")) else SignalStrength.MODERATE
+            strength = (
+                SignalStrength.STRONG
+                if rsi > (rsi_overbought + Decimal("10"))
+                else SignalStrength.MODERATE
+            )
             confidence = (rsi - rsi_overbought) / (Decimal("100") - rsi_overbought)
 
             return Signal(

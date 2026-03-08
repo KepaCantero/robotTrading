@@ -108,10 +108,7 @@ class CurrencyConverter:
             # Create forex contract
             from ib_insync.contract import Forex
 
-            contract = Forex(
-                baseCurrency=base.upper(),
-                quoteCurrency=quote.upper()
-            )
+            contract = Forex(baseCurrency=base.upper(), quoteCurrency=quote.upper())
 
             # Request market data
             self.ib.reqMktData(contract, "", False, False)

@@ -21,17 +21,15 @@ import logging
 import tempfile
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
-from decimal import Decimal
 from itertools import product
 from typing import Any, Dict, List, Optional
 
 import numpy as np
-import pandas as pd
 
 logger = logging.getLogger(__name__)
 
-from app.backtesting.core.executor import SimpleBacktestExecutor
 from app.backtesting.core.error_handling import train_with_retry
+from app.backtesting.core.executor import SimpleBacktestExecutor
 from app.backtesting.core.memory_manager import AggressiveMemoryManager
 from app.backtesting.data_split import (
     DataSplit,
@@ -202,11 +200,15 @@ class BacktestOptimizer:
             results = []
             failed_combinations = 0
 
-            def evaluate_param_set(params: Dict[str, Any], param_idx: int) -> Optional[Dict[str, Any]]:
+            def evaluate_param_set(
+                params: Dict[str, Any], param_idx: int
+            ) -> Optional[Dict[str, Any]]:
                 """Evaluate a single parameter combination on train/val sets."""
                 try:
                     if param_idx % 10 == 0:
-                        logger.info(f"Testing parameter set {param_idx + 1}/{total_combinations}...")
+                        logger.info(
+                            f"Testing parameter set {param_idx + 1}/{total_combinations}..."
+                        )
 
                     strategy_config = create_strategy_config_helper()
 
@@ -218,7 +220,9 @@ class BacktestOptimizer:
 
                     if 'presets' in strategy_config and 'custom' in strategy_config['presets']:
                         if 'min_confidence' in params:
-                            strategy_config['presets']['custom']['min_confidence'] = params['min_confidence']
+                            strategy_config['presets']['custom']['min_confidence'] = params[
+                                'min_confidence'
+                            ]
 
                     strategy = ModularMomentumStrategy(strategy_config)
 
@@ -246,7 +250,8 @@ class BacktestOptimizer:
                     val_sharpe = float(val_result.performance.sharpe_ratio or 0)
                     val_return = (
                         (float(val_result.final_capital) - float(initial_capital))
-                        / float(initial_capital) * 100
+                        / float(initial_capital)
+                        * 100
                     )
 
                     # Get training performance
@@ -266,11 +271,13 @@ class BacktestOptimizer:
                         'val_return': val_return,
                         'win_rate': (
                             float(val_result.performance.win_rate)
-                            if val_result.performance else 0.0
+                            if val_result.performance
+                            else 0.0
                         ),
                         'max_drawdown': (
                             float(val_result.performance.max_drawdown_percentage)
-                            if val_result.performance else 0.0
+                            if val_result.performance
+                            else 0.0
                         ),
                         'total_trades': (
                             val_result.performance.total_trades if val_result.performance else 0
@@ -283,7 +290,9 @@ class BacktestOptimizer:
 
             # Execute grid search (parallel or sequential)
             if self.parallel_enabled and total_combinations > 10:
-                logger.info(f"Running grid search in parallel (max_workers={self.max_workers or 'auto'})")
+                logger.info(
+                    f"Running grid search in parallel (max_workers={self.max_workers or 'auto'})"
+                )
 
                 with ProcessPoolExecutor(max_workers=self.max_workers) as executor:
                     future_to_params = {
@@ -312,7 +321,9 @@ class BacktestOptimizer:
                     else:
                         failed_combinations += 1
 
-            logger.info(f"\nGrid search complete: {len(results)} successful, {failed_combinations} failed")
+            logger.info(
+                f"\nGrid search complete: {len(results)} successful, {failed_combinations} failed"
+            )
 
             if not results:
                 logger.error("No parameter combinations completed successfully")
@@ -345,7 +356,9 @@ class BacktestOptimizer:
 
             if 'presets' in strategy_config and 'custom' in strategy_config['presets']:
                 if 'min_confidence' in best_result['params']:
-                    strategy_config['presets']['custom']['min_confidence'] = best_result['params']['min_confidence']
+                    strategy_config['presets']['custom']['min_confidence'] = best_result['params'][
+                        'min_confidence'
+                    ]
 
             best_strategy = ModularMomentumStrategy(strategy_config)
 
@@ -359,14 +372,17 @@ class BacktestOptimizer:
             test_sharpe = float(test_result.performance.sharpe_ratio or 0)
             test_return = (
                 (float(test_result.final_capital) - float(initial_capital))
-                / float(initial_capital) * 100
+                / float(initial_capital)
+                * 100
             )
 
             logger.info("Test performance:")
             logger.info(f"  Sharpe Ratio: {test_sharpe:.3f}")
             logger.info(f"  Return:       {test_return:.2f}%")
             logger.info(f"  Win Rate:     {float(test_result.performance.win_rate):.2%}")
-            logger.info(f"  Max Drawdown: {float(test_result.performance.max_drawdown_percentage):.2f}%")
+            logger.info(
+                f"  Max Drawdown: {float(test_result.performance.max_drawdown_percentage):.2f}%"
+            )
 
             # Validate OOS performance
             oos_validation = validate_out_of_sample_performance(
@@ -379,12 +395,14 @@ class BacktestOptimizer:
             # Calculate performance degradation
             sharpe_degradation = (
                 (best_result['val_sharpe'] - test_sharpe) / abs(best_result['val_sharpe']) * 100
-                if best_result['val_sharpe'] != 0 else 0.0
+                if best_result['val_sharpe'] != 0
+                else 0.0
             )
 
             return_degradation = (
                 (best_result['val_return'] - test_return) / abs(best_result['val_return']) * 100
-                if best_result['val_return'] != 0 else 0.0
+                if best_result['val_return'] != 0
+                else 0.0
             )
 
             logger.info("\nPerformance degradation:")
@@ -506,8 +524,8 @@ class BacktestOptimizer:
             List with optimization results
         """
         import optuna
-        from optuna.samplers import TPESampler
         from optuna.pruners import MedianPruner
+        from optuna.samplers import TPESampler
 
         logger.info("=" * 80)
         logger.info("OPTUNA OPTIMIZATION - Bayesian Hyperparameter Search")
@@ -543,7 +561,9 @@ class BacktestOptimizer:
                         'max_depth': trial.suggest_int('max_depth', 3, 20),
                         'min_samples_split': trial.suggest_int('min_samples_split', 2, 20),
                         'min_samples_leaf': trial.suggest_int('min_samples_leaf', 1, 10),
-                        'max_features': trial.suggest_categorical('max_features', ['sqrt', 'log2', None]),
+                        'max_features': trial.suggest_categorical(
+                            'max_features', ['sqrt', 'log2', None]
+                        ),
                     }
                 elif algorithm == 'xgboost':
                     params = {
@@ -577,8 +597,9 @@ class BacktestOptimizer:
                 trial_config['learning_engines']['supervised']['lookahead_days'] = lookahead_days
 
                 # Write config to temp file and run backtest
-                import yaml
                 import os
+
+                import yaml
 
                 with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
                     yaml.dump(trial_config, f)
@@ -586,7 +607,9 @@ class BacktestOptimizer:
 
                 try:
                     # Import ComprehensiveBacktestRunner for trial
-                    from app.backtesting.comprehensive_backtest_runner import ComprehensiveBacktestRunner
+                    from app.backtesting.comprehensive_backtest_runner import (
+                        ComprehensiveBacktestRunner,
+                    )
 
                     trial_runner = ComprehensiveBacktestRunner(temp_config_path)
                     results = trial_runner.run_learning_engines_backtest()
@@ -639,7 +662,9 @@ class BacktestOptimizer:
         baseline_metrics = {}
         if baseline_result:
             if isinstance(baseline_result, list) and len(baseline_result) > 0:
-                baseline_metrics = baseline_result[0] if isinstance(baseline_result[0], dict) else {}
+                baseline_metrics = (
+                    baseline_result[0] if isinstance(baseline_result[0], dict) else {}
+                )
             elif isinstance(baseline_result, dict):
                 baseline_metrics = baseline_result
 
@@ -690,7 +715,9 @@ class BacktestOptimizer:
                 'sharpe_ratio': best_result.get('sharpe_ratio', 0) if best_result else 0,
                 'win_rate': best_result.get('win_rate', 0) if best_result else 0,
                 'total_trades': best_result.get('total_trades', 0) if best_result else 0,
-            } if best_result else {},
+            }
+            if best_result
+            else {},
             'baseline': {
                 'total_pnl': baseline_metrics.get('total_pnl', 0),
                 'return_pct': baseline_metrics.get('return_pct', 0),
@@ -699,14 +726,14 @@ class BacktestOptimizer:
                 'total_trades': baseline_metrics.get('total_trades', 0),
             },
             'improvement': {
-                'pnl_diff': (best_result.get('total_pnl', 0) if best_result else 0) - baseline_metrics.get('total_pnl', 0),
-                'sharpe_diff': (best_result.get('sharpe_ratio', 0) if best_result else 0) - baseline_metrics.get('sharpe_ratio', 0),
+                'pnl_diff': (best_result.get('total_pnl', 0) if best_result else 0)
+                - baseline_metrics.get('total_pnl', 0),
+                'sharpe_diff': (best_result.get('sharpe_ratio', 0) if best_result else 0)
+                - baseline_metrics.get('sharpe_ratio', 0),
             },
             'all_trials': trial_results[:20],
             'optimization_history': [
-                {'trial': t.number, 'value': t.value}
-                for t in study.trials
-                if t.value is not None
+                {'trial': t.number, 'value': t.value} for t in study.trials if t.value is not None
             ],
         }
 
@@ -805,7 +832,8 @@ class BacktestOptimizer:
 
         baseline_sharpe = (
             float(baseline_result.performance.sharpe_ratio)
-            if baseline_result.performance.sharpe_ratio else 0.0
+            if baseline_result.performance.sharpe_ratio
+            else 0.0
         )
         baseline_return = baseline_metrics['return_pct']
         baseline_win_rate = (
@@ -813,7 +841,8 @@ class BacktestOptimizer:
         )
         baseline_max_dd = (
             float(baseline_result.performance.max_drawdown_percentage)
-            if baseline_result.performance else 0.0
+            if baseline_result.performance
+            else 0.0
         )
 
         logger.info("Baseline Results:")
@@ -849,16 +878,19 @@ class BacktestOptimizer:
 
                 ablation_sharpe = (
                     float(ablation_result.performance.sharpe_ratio)
-                    if ablation_result.performance.sharpe_ratio else 0.0
+                    if ablation_result.performance.sharpe_ratio
+                    else 0.0
                 )
                 ablation_return = ablation_metrics['return_pct']
                 ablation_win_rate = (
                     float(ablation_result.performance.win_rate)
-                    if ablation_result.performance else 0.0
+                    if ablation_result.performance
+                    else 0.0
                 )
                 ablation_max_dd = (
                     float(ablation_result.performance.max_drawdown_percentage)
-                    if ablation_result.performance else 0.0
+                    if ablation_result.performance
+                    else 0.0
                 )
 
                 # Calculate degradation
@@ -892,11 +924,13 @@ class BacktestOptimizer:
                     'max_drawdown': ablation_max_dd,
                     'total_trades': (
                         ablation_result.performance.total_trades
-                        if ablation_result.performance else 0
+                        if ablation_result.performance
+                        else 0
                     ),
                     'avg_trade_pnl': (
                         ablation_metrics['total_pnl'] / ablation_result.performance.total_trades
-                        if ablation_result.performance and ablation_result.performance.total_trades > 0
+                        if ablation_result.performance
+                        and ablation_result.performance.total_trades > 0
                         else 0.0
                     ),
                     'final_capital': ablation_metrics['final_capital'],

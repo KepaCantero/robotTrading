@@ -13,8 +13,8 @@ from app.services.position_management.partial_take_profit import (
     TakeProfitAction,
 )
 from app.services.position_management.post_trade_analyzer_impl import (
-    PostTradeAnalyzerImpl,
     PositionState,
+    PostTradeAnalyzerImpl,
     TradeSignal,
 )
 from app.services.position_management.pyramiding_manager import (

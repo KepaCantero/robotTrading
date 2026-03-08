@@ -43,7 +43,6 @@ import logging
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-import numpy as np
 
 from .base_optimizer import (
     BaseOptimizer,
@@ -75,6 +74,7 @@ except ImportError:
 
 class ParameterType:
     """Parameter type constants for search space definition."""
+
     CONTINUOUS = "continuous"
     INTEGER = "integer"
     CATEGORICAL = "categorical"
@@ -557,9 +557,11 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
                 objective_value=value if value is not None else 0.0,
                 status=status,
                 start_time=datetime.fromtimestamp(trial.datetime_start.timestamp())
-                if trial.datetime_start else None,
+                if trial.datetime_start
+                else None,
                 end_time=datetime.fromtimestamp(trial.datetime_complete.timestamp())
-                if trial.datetime_complete else None,
+                if trial.datetime_complete
+                else None,
                 iteration=trial.number,
                 additional_info={
                     "optuna_trial_number": trial.number,
@@ -773,8 +775,10 @@ class MultiObjectiveBayesianOptimizer(BaseOptimizer[SearchSpace]):
 
         for trial in best_trials:
             if trial.state == optuna.trial.TrialState.COMPLETE:
-                self._pareto_front.append({
-                    "params": dict(trial.params),
-                    "objectives": trial.values,
-                    "trial_number": trial.number,
-                })
+                self._pareto_front.append(
+                    {
+                        "params": dict(trial.params),
+                        "objectives": trial.values,
+                        "trial_number": trial.number,
+                    }
+                )

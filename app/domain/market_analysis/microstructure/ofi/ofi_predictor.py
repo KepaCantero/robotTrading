@@ -27,7 +27,11 @@ from numpy.linalg import LinAlgError
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.preprocessing import StandardScaler
 
-from app.domain.market_analysis.microstructure.ofi.models import OFIConfig, OFIHorizon, OFIPrediction
+from app.domain.market_analysis.microstructure.ofi.models import (
+    OFIConfig,
+    OFIHorizon,
+    OFIPrediction,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -235,7 +239,11 @@ class OFIPredictor:
         # Calculate momentum (recent - previous average)
         recent = np.mean(historical_ofi[-self.config.momentum_recent_window :])
         previous = (
-            np.mean(historical_ofi[-self.config.momentum_previous_window : -self.config.momentum_recent_window])
+            np.mean(
+                historical_ofi[
+                    -self.config.momentum_previous_window : -self.config.momentum_recent_window
+                ]
+            )
             if len(historical_ofi) >= self.config.momentum_previous_window
             else 0.0
         )
@@ -335,9 +343,7 @@ class OFIPredictor:
 
             # Expected return = OFI * correlation * vol_adjustment
             # This is a simplified model
-            expected_return = (
-                ofi * corr * return_std * self.config.expected_return_multiplier
-            )
+            expected_return = ofi * corr * return_std * self.config.expected_return_multiplier
 
             # Convert to basis points
             expected_bps = Decimal(str(expected_return * self.config.expected_bps_multiplier))
@@ -536,14 +542,18 @@ class OFIPredictor:
         """
         if not self._is_trained or self._logistic_model is None or self._scaler is None:
             # Fallback to OFI magnitude
-            return min(self.config.confidence_max, abs(ofi) * self.config.fallback_confidence_multiplier)
+            return min(
+                self.config.confidence_max, abs(ofi) * self.config.fallback_confidence_multiplier
+            )
 
         try:
             ofi_scaled = self._scaler.transform([[ofi]])
             proba = self._logistic_model.predict_proba(ofi_scaled)[0]
             return float(max(proba))
         except (ValueError, AttributeError):
-            return min(self.config.confidence_max, abs(ofi) * self.config.fallback_confidence_multiplier)
+            return min(
+                self.config.confidence_max, abs(ofi) * self.config.fallback_confidence_multiplier
+            )
 
     def calculate_prediction_intervals(
         self, ofi: float, confidence_level: float | None = None
@@ -629,10 +639,14 @@ class OFIPredictor:
         previous_std = float(np.std(previous))
 
         # Check for mean shift
-        mean_shift = abs(recent_mean - previous_mean) / (abs(previous_mean) + self.config.regime_shift_epsilon)
+        mean_shift = abs(recent_mean - previous_mean) / (
+            abs(previous_mean) + self.config.regime_shift_epsilon
+        )
 
         # Check for volatility shift
-        vol_shift = abs(recent_std - previous_std) / (previous_std + self.config.regime_shift_epsilon)
+        vol_shift = abs(recent_std - previous_std) / (
+            previous_std + self.config.regime_shift_epsilon
+        )
 
         # Determine regime
         if mean_shift > self.config.regime_mean_shift_threshold:

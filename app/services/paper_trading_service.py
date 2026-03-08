@@ -12,9 +12,8 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from app.shared.config.centralized_config import get_config
-from app.models.market_data import Quote
 from app.domain.models.order import Order
+from app.models.market_data import Quote
 from app.models.paper_trading import (
     OrderSide,
     OrderType,
@@ -28,6 +27,7 @@ from app.models.paper_trading import (
 )
 from app.models.slippage_analysis import SlippageCalculationParams
 from app.services.slippage_analysis_service import DynamicSlippageService
+from app.shared.config.centralized_config import get_config
 
 
 class PaperTradingService:

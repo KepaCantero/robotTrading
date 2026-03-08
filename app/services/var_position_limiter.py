@@ -39,22 +39,12 @@ class VaRConfig:
         tt = get_config().trading
 
         # Get VaR configuration from centralized config
-        self.max_var_limit_pct = Decimal(str(getattr(
-            tt, 'var_max_limit_pct', 0.02
-        )))
-        self.confidence_level = getattr(
-            tt, 'var_confidence_level', 0.95
-        )
-        self.lookback_days = getattr(
-            tt, 'var_lookback_days', 60
-        )
-        self.warning_threshold_pct = Decimal(str(getattr(
-            tt, 'var_warning_threshold_pct', 0.8
-        )))
+        self.max_var_limit_pct = Decimal(str(getattr(tt, 'var_max_limit_pct', 0.02)))
+        self.confidence_level = getattr(tt, 'var_confidence_level', 0.95)
+        self.lookback_days = getattr(tt, 'var_lookback_days', 60)
+        self.warning_threshold_pct = Decimal(str(getattr(tt, 'var_warning_threshold_pct', 0.8)))
         self.use_real_correlation = True  # Always use real correlation
-        self.default_volatility = getattr(
-            tt, 'var_default_volatility', 0.2
-        )
+        self.default_volatility = getattr(tt, 'var_default_volatility', 0.2)
 
         # Apply any custom overrides
         if custom_config:
@@ -374,9 +364,7 @@ class VaRPositionLimiter:
 
             z_score = norm.ppf(confidence_level)
             incremental_var = (
-                portfolio_value
-                * safe_decimal_sqrt(incremental_variance)
-                * to_decimal(str(z_score))
+                portfolio_value * safe_decimal_sqrt(incremental_variance) * to_decimal(str(z_score))
             )
 
             projected_var = current_var + incremental_var

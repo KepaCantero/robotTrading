@@ -124,9 +124,7 @@ class PostTradeAnalysis:
         )
 
     def is_high_quality_execution(
-        self,
-        min_execution_quality_score: float = 70.0,
-        min_fill_rate: float = 95.0
+        self, min_execution_quality_score: float = 70.0, min_fill_rate: float = 95.0
     ) -> bool:
         """
         Determine if this was a high-quality execution.
@@ -143,7 +141,7 @@ class PostTradeAnalysis:
             True if execution meets high-quality criteria, False otherwise.
         """
         return (
-            self.slo_met and
-            self.execution_quality_score >= min_execution_quality_score and
-            self.fill_rate >= min_fill_rate
+            self.slo_met
+            and self.execution_quality_score >= min_execution_quality_score
+            and self.fill_rate >= min_fill_rate
         )

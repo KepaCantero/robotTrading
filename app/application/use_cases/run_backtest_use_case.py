@@ -167,10 +167,10 @@ class RunBacktestUseCase:
         """
         try:
             # Import here to avoid circular dependencies
-            from ....backtesting.core.executor import BacktestExecutorFactory, BacktestExecutor
-            from ....backtesting.models import BacktestConfig as EngineBacktestConfig
-            from ....backtesting.engine import SimpleBacktester
             from decimal import Decimal
+
+            from ....backtesting.core.executor import BacktestExecutor, BacktestExecutorFactory
+            from ....backtesting.models import BacktestConfig as EngineBacktestConfig
 
             # Convert value object to engine config
             engine_config = EngineBacktestConfig(
@@ -181,8 +181,7 @@ class RunBacktestUseCase:
 
             # Create executor using factory
             executor: BacktestExecutor = BacktestExecutorFactory.create_executor(
-                executor_type='simple',
-                config=engine_config
+                executor_type='simple', config=engine_config
             )
 
             # Import strategy from config if available
@@ -192,7 +191,6 @@ class RunBacktestUseCase:
             # Get market data for the backtest
             # This would typically come from a data service
             # For now, we'll create a minimal placeholder
-            from ....backtesting.models import BacktestResult
 
             # Create a placeholder result with the configured parameters
             # In a full implementation, this would call executor.execute() with actual data
@@ -212,7 +210,7 @@ class RunBacktestUseCase:
                 extra={
                     "initial_capital": float(config.initial_capital),
                     "commission": float(getattr(config, 'commission', 0.001)),
-                }
+                },
             )
 
             return result_value

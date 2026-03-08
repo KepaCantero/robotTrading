@@ -13,7 +13,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from app.api.profitability_validation import router
+from app.presentation.api.profitability_validation import router
 from app.models.profitability_validation import (
     CostBreakdown,
     HistoricalValidation,

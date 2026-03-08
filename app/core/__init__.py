@@ -21,6 +21,7 @@ from app.shared.config.config_loader import (
     get_config_loader,
     load_strategy_stock_allocator_config,
 )
+from app.shared.config.yaml_config_updater import YAMLConfigUpdater
 from app.shared.utils.timezone_utils import (
     format_market_time,
     format_utc,
@@ -31,7 +32,6 @@ from app.shared.utils.timezone_utils import (
     to_utc,
     utc_now,
 )
-from app.shared.config.yaml_config_updater import YAMLConfigUpdater
 
 # =============================================================================
 # THE ONLY COMPLIANCE ENGINE - USE THIS FOR EVERYTHING

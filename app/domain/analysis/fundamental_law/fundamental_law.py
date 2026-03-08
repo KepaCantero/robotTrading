@@ -456,15 +456,9 @@ class FundamentalLawCalculator:
     def _assess_skill_level(self, ic: Decimal) -> str:
         """Assess forecasting skill based on IC using config thresholds."""
         config = get_config()
-        ic_excellent = Decimal(str(getattr(
-            config.trading, 'fundamental_law_ic_excellent', 0.05
-        )))
-        ic_good = Decimal(str(getattr(
-            config.trading, 'fundamental_law_ic_good', 0.03
-        )))
-        ic_fair = Decimal(str(getattr(
-            config.trading, 'fundamental_law_ic_fair', 0.01
-        )))
+        ic_excellent = Decimal(str(getattr(config.trading, 'fundamental_law_ic_excellent', 0.05)))
+        ic_good = Decimal(str(getattr(config.trading, 'fundamental_law_ic_good', 0.03)))
+        ic_fair = Decimal(str(getattr(config.trading, 'fundamental_law_ic_fair', 0.01)))
 
         if ic >= ic_excellent:
             return "excellent"
@@ -496,15 +490,9 @@ class FundamentalLawCalculator:
     def _assess_ir(self, ir: Decimal) -> str:
         """Assess Information Ratio quality using config thresholds."""
         config = get_config()
-        ir_excellent = Decimal(str(getattr(
-            config.trading, 'fundamental_law_ir_excellent', 1.0
-        )))
-        ir_good = Decimal(str(getattr(
-            config.trading, 'fundamental_law_ir_good', 0.5
-        )))
-        ir_fair = Decimal(str(getattr(
-            config.trading, 'fundamental_law_ir_fair', 0.25
-        )))
+        ir_excellent = Decimal(str(getattr(config.trading, 'fundamental_law_ir_excellent', 1.0)))
+        ir_good = Decimal(str(getattr(config.trading, 'fundamental_law_ir_good', 0.5)))
+        ir_fair = Decimal(str(getattr(config.trading, 'fundamental_law_ir_fair', 0.25)))
 
         if ir >= ir_excellent:
             return "excellent"
@@ -518,15 +506,9 @@ class FundamentalLawCalculator:
     def _assess_tc(self, tc: Decimal) -> str:
         """Assess Transfer Coefficient using config thresholds."""
         config = get_config()
-        tc_excellent = Decimal(str(getattr(
-            config.trading, 'fundamental_law_tc_excellent', 0.8
-        )))
-        tc_good = Decimal(str(getattr(
-            config.trading, 'fundamental_law_tc_good', 0.6
-        )))
-        tc_fair = Decimal(str(getattr(
-            config.trading, 'fundamental_law_tc_fair', 0.4
-        )))
+        tc_excellent = Decimal(str(getattr(config.trading, 'fundamental_law_tc_excellent', 0.8)))
+        tc_good = Decimal(str(getattr(config.trading, 'fundamental_law_tc_good', 0.6)))
+        tc_fair = Decimal(str(getattr(config.trading, 'fundamental_law_tc_fair', 0.4)))
 
         if tc >= tc_excellent:
             return "excellent"

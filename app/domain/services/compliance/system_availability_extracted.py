@@ -6,11 +6,10 @@ TASK-24: SRP Refactoring
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
-from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
+
 
 class SystemAvailability:
     """Track availability of all 17 systems (8 main + 12 compliance, with overlap)."""
@@ -68,6 +67,7 @@ class SystemAvailability:
     def _check_backtesting(self) -> bool:
         try:
             from importlib.util import find_spec
+
             return find_spec("app.backtesting") is not None
         except ImportError:
             return False
@@ -75,6 +75,7 @@ class SystemAvailability:
     def _check_live_trading(self) -> bool:
         try:
             from importlib.util import find_spec
+
             return find_spec("app.providers.live_trading") is not None
         except ImportError:
             return False
@@ -82,6 +83,7 @@ class SystemAvailability:
     def _check_paper_trading(self) -> bool:
         try:
             from importlib.util import find_spec
+
             return find_spec("app.providers.paper_trading") is not None
         except ImportError:
             return False
@@ -89,6 +91,7 @@ class SystemAvailability:
     def _check_strategies(self) -> bool:
         try:
             from importlib.util import find_spec
+
             return find_spec("app.strategies") is not None
         except ImportError:
             return False
@@ -96,6 +99,7 @@ class SystemAvailability:
     def _check_risk_engine(self) -> bool:
         try:
             from importlib.util import find_spec
+
             return find_spec("app.engines.risk_engine") is not None
         except ImportError:
             return False
@@ -103,6 +107,7 @@ class SystemAvailability:
     def _check_portfolio_engine(self) -> bool:
         try:
             from importlib.util import find_spec
+
             return find_spec("app.engines.portfolio_engine") is not None
         except ImportError:
             return False
@@ -110,6 +115,7 @@ class SystemAvailability:
     def _check_data_engine(self) -> bool:
         try:
             from importlib.util import find_spec
+
             return find_spec("app.services.data_service") is not None
         except ImportError:
             return False
@@ -117,6 +123,7 @@ class SystemAvailability:
     def _check_context_engine(self) -> bool:
         try:
             from importlib.util import find_spec
+
             return find_spec("app.maestro") is not None
         except ImportError:
             return False
@@ -130,6 +137,7 @@ class SystemAvailability:
         """
         try:
             from importlib.util import find_spec
+
             return find_spec("app.microstructure") is not None
         except ImportError as e:
             if self.enable_logging:
@@ -139,6 +147,7 @@ class SystemAvailability:
     def _check_chan(self) -> bool:
         try:
             from importlib.util import find_spec
+
             return find_spec("app.services.momentum_analysis_chan") is not None
         except ImportError:
             return False
@@ -146,6 +155,7 @@ class SystemAvailability:
     def _check_narang(self) -> bool:
         try:
             from importlib.util import find_spec
+
             return find_spec("app.services") is not None
         except ImportError:
             return False
@@ -153,6 +163,7 @@ class SystemAvailability:
     def _check_lopez_de_prado(self) -> bool:
         try:
             from importlib.util import find_spec
+
             return find_spec("app.services.optimization_chan") is not None
         except ImportError:
             return False
@@ -167,6 +178,7 @@ class SystemAvailability:
     def _check_hastie(self) -> bool:
         try:
             from importlib.util import find_spec
+
             return find_spec("app.ensemble") is not None
         except ImportError:
             return False
@@ -174,13 +186,18 @@ class SystemAvailability:
     def _check_harris(self) -> bool:
         try:
             from importlib.util import find_spec
-            return find_spec("app.engines.execution_engine.microstructure.harris_integration") is not None
+
+            return (
+                find_spec("app.engines.execution_engine.microstructure.harris_integration")
+                is not None
+            )
         except ImportError:
             return False
 
     def _check_ohara(self) -> bool:
         try:
             from importlib.util import find_spec
+
             return find_spec("app.microstructure") is not None
         except ImportError:
             return False
@@ -195,6 +212,7 @@ class SystemAvailability:
     def _check_hull(self) -> bool:
         try:
             from importlib.util import find_spec
+
             return find_spec("app.services.risk_management_chan") is not None
         except ImportError:
             return False
@@ -202,6 +220,7 @@ class SystemAvailability:
     def _check_sre(self) -> bool:
         try:
             from importlib.util import find_spec
+
             return find_spec("app.sre") is not None
         except ImportError:
             return False
@@ -243,5 +262,3 @@ class SystemAvailability:
 # =============================================================================
 # SYSTEM BUS - Orchestrates All 17 Systems
 # =============================================================================
-
-

@@ -9,10 +9,12 @@ This module exports DashboardPerformanceMetrics (aliased as PerformanceMetrics f
 """
 
 from app.presentation.dashboard.dashboard_data import (
-    DashboardSnapshot,
-    DashboardPerformanceMetrics,
-    PositionSummary,
     PerformanceMetrics,  # Backward compatibility alias
+)
+from app.presentation.dashboard.dashboard_data import (
+    DashboardPerformanceMetrics,
+    DashboardSnapshot,
+    PositionSummary,
     SystemStatus,
 )
 from app.presentation.dashboard.dashboard_service import DashboardService, get_dashboard_service

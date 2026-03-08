@@ -11,7 +11,6 @@ import statistics
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
-from app.shared.config.centralized_config import get_config
 from app.models.profitability_validation import (
     CostBreakdown,
     HistoricalValidation,
@@ -25,6 +24,7 @@ from app.models.profitability_validation import (
     ValidationStatus,
 )
 from app.services.cost_analysis_service import CostAnalysisService
+from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 

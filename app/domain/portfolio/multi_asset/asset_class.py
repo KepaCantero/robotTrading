@@ -34,7 +34,7 @@ def _get_asset_config(attr_name: str, default_value: float) -> float:
     try:
         config = get_config()
         return float(getattr(config.trading, attr_name, default_value))
-    except (AttributeError, ValueError, TypeError) as e:
+    except (AttributeError, ValueError, TypeError):
         # Use default value without logging - these are fallback values
         return default_value
 

@@ -26,8 +26,8 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 
-from app.shared.config.centralized_config import get_config
 from app.domain.models.portfolio import Portfolio
+from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,9 @@ def _get_risk_config(attr_name: str, default_value: float) -> Decimal:
         value = float(getattr(config.trading, attr_name, default_value))
         return Decimal(str(value))
     except (AttributeError, ValueError, TypeError) as e:
-        logger.warning(f"Error getting risk config '{attr_name}': {e}, using default {default_value}")
+        logger.warning(
+            f"Error getting risk config '{attr_name}': {e}, using default {default_value}"
+        )
         return Decimal(str(default_value))
 
 
@@ -317,14 +319,16 @@ class RiskLimitsEnforcer:
                 # Get risk heatmap thresholds from config
                 try:
                     config = get_config()
-                    high_risk_threshold = float(getattr(
-                        config.trading, 'risk_heatmap_high_threshold', 0.15
-                    ))
-                    medium_risk_threshold = float(getattr(
-                        config.trading, 'risk_heatmap_medium_threshold', 0.10
-                    ))
+                    high_risk_threshold = float(
+                        getattr(config.trading, 'risk_heatmap_high_threshold', 0.15)
+                    )
+                    medium_risk_threshold = float(
+                        getattr(config.trading, 'risk_heatmap_medium_threshold', 0.10)
+                    )
                 except (AttributeError, ValueError, TypeError) as e:
-                    self.logger.warning(f"Error getting risk heatmap thresholds: {e}, using defaults")
+                    self.logger.warning(
+                        f"Error getting risk heatmap thresholds: {e}, using defaults"
+                    )
                     high_risk_threshold = 0.15
                     medium_risk_threshold = 0.10
 
@@ -397,12 +401,12 @@ class RiskLimitsEnforcer:
         # Risk concentration assessment using config
         try:
             config = get_config()
-            high_threshold = float(getattr(
-                config.trading, 'risk_concentration_high_threshold', 60.0
-            ))
-            medium_threshold = float(getattr(
-                config.trading, 'risk_concentration_medium_threshold', 40.0
-            ))
+            high_threshold = float(
+                getattr(config.trading, 'risk_concentration_high_threshold', 60.0)
+            )
+            medium_threshold = float(
+                getattr(config.trading, 'risk_concentration_medium_threshold', 40.0)
+            )
         except (AttributeError, ValueError, TypeError) as e:
             self.logger.warning(f"Error getting risk concentration thresholds: {e}, using defaults")
             high_threshold = 60.0
@@ -480,9 +484,9 @@ class RiskLimitsEnforcer:
             # Get default volatility from config
             try:
                 config = get_config()
-                default_vol = float(getattr(
-                    config.trading, 'risk_enforcer_default_volatility', 0.2
-                ))
+                default_vol = float(
+                    getattr(config.trading, 'risk_enforcer_default_volatility', 0.2)
+                )
             except (AttributeError, ValueError, TypeError) as e:
                 self.logger.warning(f"Error getting default volatility: {e}, using default 0.2")
                 default_vol = 0.2

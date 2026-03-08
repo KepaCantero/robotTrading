@@ -43,10 +43,12 @@ logging.info(
 # Try pandas_ta first, then pandas_ta_classic, with fallback
 try:
     import pandas_ta as ta
+
     PANDAS_TA_AVAILABLE = True
 except ImportError:
     try:
         import pandas_ta_classic as ta
+
         PANDAS_TA_AVAILABLE = True
     except ImportError:
         ta = None

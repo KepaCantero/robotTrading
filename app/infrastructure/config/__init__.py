@@ -5,6 +5,7 @@ Provides user-specific configuration for single-user deployment.
 Allows individual traders to customize settings without code changes.
 """
 
+from .user_config_manager import UserConfigManager, get_user_config
 from .user_settings import (
     BrokerType,
     NotificationSettings,
@@ -16,7 +17,6 @@ from .user_settings import (
     TradingProfile,
     UserSettings,
 )
-from .user_config_manager import UserConfigManager, get_user_config
 
 __all__ = [
     "UserSettings",

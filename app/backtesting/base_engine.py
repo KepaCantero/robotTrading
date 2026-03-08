@@ -17,20 +17,15 @@ from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime, date
+from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, TypeVar, Generic, Union
-from uuid import uuid4
+from typing import Any, Dict, Generic, List, Optional, Tuple, TypeVar, Union
 
 from pydantic import BaseModel
 
 from app.backtesting.models import (
-    BacktestConfig,
-    BacktestResult,
-    PerformanceMetrics,
     Trade,
-    TradeStatus,
 )
 
 # SINGLE SOURCE OF TRUTH: Import CentralizedConfig
@@ -362,7 +357,10 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
         """
         # Use shared utility if available, otherwise use local implementation
         try:
-            from app.backtesting.shared.slippage_utils import apply_slippage as shared_apply_slippage
+            from app.backtesting.shared.slippage_utils import (
+                apply_slippage as shared_apply_slippage,
+            )
+
             return shared_apply_slippage(
                 price=price,
                 is_buy=is_buy,
@@ -387,7 +385,9 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
 
         Used as fallback when shared utility is not available.
         """
-        slippage = slippage_pct if slippage_pct is not None else self._base_slippage_bps / Decimal("10000")
+        slippage = (
+            slippage_pct if slippage_pct is not None else self._base_slippage_bps / Decimal("10000")
+        )
 
         # Apply stop multiplier for stop-loss executions
         if is_stop:
@@ -415,7 +415,10 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
             Human-readable trade reason string
         """
         try:
-            from app.backtesting.shared.trade_utils import build_trade_reason as shared_build_trade_reason
+            from app.backtesting.shared.trade_utils import (
+                build_trade_reason as shared_build_trade_reason,
+            )
+
             return shared_build_trade_reason(signal=signal, market_data=market_data)
         except ImportError:
             # Fallback implementation
@@ -583,9 +586,7 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
         details: str = "",
     ) -> None:
         """Log rejected signal details."""
-        logger.warning(
-            f"{self.strategy_name} SIGNAL REJECTED: {symbol} - {reason}. {details}"
-        )
+        logger.warning(f"{self.strategy_name} SIGNAL REJECTED: {symbol} - {reason}. {details}")
         if self.diagnostic_logger:
             self.diagnostic_logger.log_signal_rejected(
                 self.strategy_name,

@@ -12,8 +12,8 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from app.api.optimization import router
-from app.models.optimization import (
+from app.presentation.api.optimization import router
+from app.domain.models.optimization import (
     OptimizationArtifact,
     OptimizationMethod,
     OptimizationMetrics,
@@ -134,7 +134,7 @@ class TestOptimizationAPI:
 class TestOptimizationEndpoints(TestOptimizationAPI):
     """Test cases for optimization API endpoints."""
 
-    @patch("app.api.optimization.get_optimization_service")
+    @patch("app.presentation.api.optimization.get_optimization_service")
     def test_optimize_parameters_success(self, mock_service, client, optimization_request_data):
         """Test successful parameter optimization."""
         # Mock service response
@@ -169,7 +169,7 @@ class TestOptimizationEndpoints(TestOptimizationAPI):
         assert "min_strength" in data["optimized_parameters"]
         assert "rsi_period" in data["optimized_parameters"]
 
-    @patch("app.api.optimization.get_optimization_service")
+    @patch("app.presentation.api.optimization.get_optimization_service")
     def test_optimize_parameters_validation_error(self, mock_service, client):
         """Test parameter optimization with validation error."""
         # Mock service to raise ValueError
@@ -201,7 +201,7 @@ class TestOptimizationEndpoints(TestOptimizationAPI):
         # Verify error response
         assert response.status_code == 422
 
-    @patch("app.api.optimization.get_optimization_service")
+    @patch("app.presentation.api.optimization.get_optimization_service")
     def test_optimize_parameters_runtime_error(
         self, mock_service, client, optimization_request_data
     ):
@@ -220,7 +220,7 @@ class TestOptimizationEndpoints(TestOptimizationAPI):
         # endpoint works
         assert response.status_code == 200  # The service is working correctly
 
-    @patch("app.api.optimization.get_optimization_service")
+    @patch("app.presentation.api.optimization.get_optimization_service")
     def test_perform_out_of_sample_test_success(
         self, mock_service, client, out_of_sample_test_data
     ):
@@ -267,7 +267,7 @@ class TestOptimizationEndpoints(TestOptimizationAPI):
         assert isinstance(data["calmar_ratio"], (int, float))
         assert isinstance(data["sortino_ratio"], (int, float))
 
-    @patch("app.api.optimization.get_optimization_service")
+    @patch("app.presentation.api.optimization.get_optimization_service")
     def test_perform_out_of_sample_test_validation_error(self, mock_service, client):
         """Test out-of-sample testing with validation error."""
         # Mock service to raise ValueError
@@ -294,7 +294,7 @@ class TestOptimizationEndpoints(TestOptimizationAPI):
         # Verify error response
         assert response.status_code == 422
 
-    @patch("app.api.optimization.get_optimization_service")
+    @patch("app.presentation.api.optimization.get_optimization_service")
     def test_get_optimization_artifacts(self, mock_service, client):
         """Test getting optimization artifacts."""
         # Mock service response
@@ -327,7 +327,7 @@ class TestOptimizationEndpoints(TestOptimizationAPI):
         data = response.json()
         assert isinstance(data, list)  # Should return a list of artifacts
 
-    @patch("app.api.optimization.get_optimization_service")
+    @patch("app.presentation.api.optimization.get_optimization_service")
     def test_get_optimization_artifacts_with_strategy_filter(self, mock_service, client):
         """Test getting optimization artifacts with strategy filter."""
         # Mock service response
@@ -360,7 +360,7 @@ class TestOptimizationEndpoints(TestOptimizationAPI):
         data = response.json()
         assert isinstance(data, list)  # Should return a list of artifacts
 
-    @patch("app.api.optimization.get_optimization_service")
+    @patch("app.presentation.api.optimization.get_optimization_service")
     def test_get_optimization_artifact_by_id(self, mock_service, client):
         """Test getting specific optimization artifact by ID."""
         # Mock service response
@@ -391,7 +391,7 @@ class TestOptimizationEndpoints(TestOptimizationAPI):
         # Verify response - should return 404 since no artifacts exist
         assert response.status_code == 404
 
-    @patch("app.api.optimization.get_optimization_service")
+    @patch("app.presentation.api.optimization.get_optimization_service")
     def test_get_optimization_artifact_not_found(self, mock_service, client):
         """Test getting non-existent optimization artifact."""
         # Mock service response (empty list)
@@ -406,7 +406,7 @@ class TestOptimizationEndpoints(TestOptimizationAPI):
         assert response.status_code == 404
         assert "Artifact not found" in response.json()["detail"]
 
-    @patch("app.api.optimization.get_optimization_service")
+    @patch("app.presentation.api.optimization.get_optimization_service")
     def test_get_optimization_summary(self, mock_service, client):
         """Test getting optimization summary."""
         # Mock service response
@@ -435,7 +435,7 @@ class TestOptimizationEndpoints(TestOptimizationAPI):
         assert isinstance(data["failed_optimizations"], int)
         assert isinstance(data["artifacts_count"], int)
 
-    @patch("app.api.optimization.get_optimization_service")
+    @patch("app.presentation.api.optimization.get_optimization_service")
     def test_get_optimization_metrics(self, mock_service, client):
         """Test getting optimization metrics."""
         # Mock service response
@@ -478,7 +478,7 @@ class TestOptimizationEndpoints(TestOptimizationAPI):
         # Verify response - should return 404 since no artifacts exist
         assert response.status_code == 404
 
-    @patch("app.api.optimization.get_optimization_service")
+    @patch("app.presentation.api.optimization.get_optimization_service")
     def test_get_optimization_metrics_not_found(self, mock_service, client):
         """Test getting metrics for non-existent artifact."""
         # Mock service response (empty list)
@@ -520,7 +520,7 @@ class TestOptimizationUtilityEndpoints(TestOptimizationAPI):
         assert "multiplier" in data
         assert "percentage" in data
 
-    @patch("app.api.optimization.get_optimization_service")
+    @patch("app.presentation.api.optimization.get_optimization_service")
     def test_validate_optimization_config_valid(self, mock_service, client):
         """Test validating valid optimization configuration."""
         # Mock service
@@ -548,7 +548,7 @@ class TestOptimizationUtilityEndpoints(TestOptimizationAPI):
         assert data["valid"] is True
         assert "Configuration is valid" in data["message"]
 
-    @patch("app.api.optimization.get_optimization_service")
+    @patch("app.presentation.api.optimization.get_optimization_service")
     def test_validate_optimization_config_invalid(self, mock_service, client):
         """Test validating invalid optimization configuration."""
         # Mock service to raise ValueError
@@ -569,7 +569,7 @@ class TestOptimizationUtilityEndpoints(TestOptimizationAPI):
 
         assert response.status_code == 422
 
-    @patch("app.api.optimization.get_optimization_service")
+    @patch("app.presentation.api.optimization.get_optimization_service")
     def test_get_best_parameters(self, mock_service, client):
         """Test getting best parameters for a strategy."""
         # Mock service response
@@ -600,7 +600,7 @@ class TestOptimizationUtilityEndpoints(TestOptimizationAPI):
         # Verify response - should return 404 since no artifacts exist
         assert response.status_code == 404
 
-    @patch("app.api.optimization.get_optimization_service")
+    @patch("app.presentation.api.optimization.get_optimization_service")
     def test_get_best_parameters_not_found(self, mock_service, client):
         """Test getting best parameters for non-existent strategy."""
         # Mock service response (empty list)
@@ -615,7 +615,7 @@ class TestOptimizationUtilityEndpoints(TestOptimizationAPI):
         assert response.status_code == 404
         assert "No optimization artifacts found" in response.json()["detail"]
 
-    @patch("app.api.optimization.get_optimization_service")
+    @patch("app.presentation.api.optimization.get_optimization_service")
     def test_delete_optimization_artifact(self, mock_service, client):
         """Test deleting optimization artifact."""
         # Mock service
@@ -631,7 +631,7 @@ class TestOptimizationUtilityEndpoints(TestOptimizationAPI):
         # Verify response - should return 404 since no artifacts exist
         assert response.status_code == 404
 
-    @patch("app.api.optimization.get_optimization_service")
+    @patch("app.presentation.api.optimization.get_optimization_service")
     def test_delete_optimization_artifact_not_found(self, mock_service, client):
         """Test deleting non-existent optimization artifact."""
         # Mock service
@@ -660,7 +660,7 @@ class TestOptimizationUtilityEndpoints(TestOptimizationAPI):
 class TestOptimizationAPIErrorHandling(TestOptimizationAPI):
     """Test error handling in optimization API."""
 
-    @patch("app.api.optimization.get_optimization_service")
+    @patch("app.presentation.api.optimization.get_optimization_service")
     def test_unexpected_error_handling(self, mock_service, client, optimization_request_data):
         """Test handling of unexpected errors."""
         # Mock service to raise unexpected error

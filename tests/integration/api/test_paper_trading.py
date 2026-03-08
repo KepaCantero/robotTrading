@@ -15,8 +15,8 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
-from app.api.paper_trading import router
-from app.models.paper_trading import (
+from app.presentation.api.paper_trading import router
+from app.domain.models.paper_trading import (
     OrderSide,
     OrderType,
     PaperPortfolio,
@@ -108,7 +108,7 @@ class TestPaperTradingAPIEndpoints:
     @pytest.mark.asyncio
     async def test_create_portfolio_success(self, client):
         """Test create_portfolio creates a new portfolio."""
-        with patch("app.api.paper_trading.get_paper_trading_service") as mock_get_service:
+        with patch("app.presentation.api.paper_trading.get_paper_trading_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.create_portfolio.return_value = MagicMock(
                 id=uuid4(),
@@ -129,7 +129,7 @@ class TestPaperTradingAPIEndpoints:
     @pytest.mark.asyncio
     async def test_get_portfolio_success(self, client, mock_portfolio):
         """Test get_portfolio returns portfolio data."""
-        with patch("app.api.paper_trading.get_paper_trading_service") as mock_get_service:
+        with patch("app.presentation.api.paper_trading.get_paper_trading_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.get_portfolio.return_value = mock_portfolio
             mock_get_service.return_value = mock_service
@@ -143,7 +143,7 @@ class TestPaperTradingAPIEndpoints:
     @pytest.mark.asyncio
     async def test_get_portfolio_not_found(self, client):
         """Test get_portfolio returns 404 for non-existent portfolio."""
-        with patch("app.api.paper_trading.get_paper_trading_service") as mock_get_service:
+        with patch("app.presentation.api.paper_trading.get_paper_trading_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.get_portfolio.return_value = None
             mock_get_service.return_value = mock_service
@@ -154,7 +154,7 @@ class TestPaperTradingAPIEndpoints:
     @pytest.mark.asyncio
     async def test_list_portfolios_success(self, client, mock_portfolio):
         """Test list_portfolios returns all portfolios."""
-        with patch("app.api.paper_trading.get_paper_trading_service") as mock_get_service:
+        with patch("app.presentation.api.paper_trading.get_paper_trading_service") as mock_get_service:
             mock_service = MagicMock()
             mock_service.portfolios = {mock_portfolio.id: mock_portfolio}
             mock_get_service.return_value = mock_service
@@ -168,7 +168,7 @@ class TestPaperTradingAPIEndpoints:
     @pytest.mark.asyncio
     async def test_create_session_success(self, client, mock_session, mock_portfolio_id):
         """Test create_session creates a new session."""
-        with patch("app.api.paper_trading.get_paper_trading_service") as mock_get_service:
+        with patch("app.presentation.api.paper_trading.get_paper_trading_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.create_session.return_value = mock_session
             mock_get_service.return_value = mock_service
@@ -189,7 +189,7 @@ class TestPaperTradingAPIEndpoints:
     @pytest.mark.asyncio
     async def test_get_session_success(self, client, mock_session):
         """Test get_session returns session data."""
-        with patch("app.api.paper_trading.get_paper_trading_service") as mock_get_service:
+        with patch("app.presentation.api.paper_trading.get_paper_trading_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.get_session.return_value = mock_session
             mock_get_service.return_value = mock_service
@@ -203,7 +203,7 @@ class TestPaperTradingAPIEndpoints:
     @pytest.mark.asyncio
     async def test_get_session_not_found(self, client):
         """Test get_session returns 404 for non-existent session."""
-        with patch("app.api.paper_trading.get_paper_trading_service") as mock_get_service:
+        with patch("app.presentation.api.paper_trading.get_paper_trading_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.get_session.return_value = None
             mock_get_service.return_value = mock_service
@@ -214,7 +214,7 @@ class TestPaperTradingAPIEndpoints:
     @pytest.mark.asyncio
     async def test_close_session_success(self, client, mock_session):
         """Test close_session closes a session."""
-        with patch("app.api.paper_trading.get_paper_trading_service") as mock_get_service:
+        with patch("app.presentation.api.paper_trading.get_paper_trading_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.close_session.return_value = mock_session
             mock_get_service.return_value = mock_service
@@ -227,7 +227,7 @@ class TestPaperTradingAPIEndpoints:
     @pytest.mark.asyncio
     async def test_list_sessions_success(self, client, mock_session, mock_portfolio_id):
         """Test list_sessions returns sessions with filters."""
-        with patch("app.api.paper_trading.get_paper_trading_service") as mock_get_service:
+        with patch("app.presentation.api.paper_trading.get_paper_trading_service") as mock_get_service:
             mock_service = MagicMock()
             mock_service.sessions = {mock_session.id: mock_session}
             mock_get_service.return_value = mock_service
@@ -242,7 +242,7 @@ class TestPaperTradingAPIEndpoints:
     @pytest.mark.asyncio
     async def test_execute_trade_success(self, client, mock_trade, mock_portfolio_id):
         """Test execute_trade executes a trade successfully."""
-        with patch("app.api.paper_trading.get_paper_trading_service") as mock_get_service:
+        with patch("app.presentation.api.paper_trading.get_paper_trading_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.execute_trade.return_value = mock_trade
             mock_get_service.return_value = mock_service
@@ -264,7 +264,7 @@ class TestPaperTradingAPIEndpoints:
     @pytest.mark.asyncio
     async def test_execute_trade_with_limit_order(self, client, mock_trade, mock_portfolio_id):
         """Test execute_trade executes a limit order."""
-        with patch("app.api.paper_trading.get_paper_trading_service") as mock_get_service:
+        with patch("app.presentation.api.paper_trading.get_paper_trading_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.execute_trade.return_value = mock_trade
             mock_get_service.return_value = mock_service
@@ -286,7 +286,7 @@ class TestPaperTradingAPIEndpoints:
     @pytest.mark.asyncio
     async def test_get_trades_success(self, client, mock_trade, mock_portfolio_id):
         """Test get_trades returns trades for a portfolio."""
-        with patch("app.api.paper_trading.get_paper_trading_service") as mock_get_service:
+        with patch("app.presentation.api.paper_trading.get_paper_trading_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.get_trades.return_value = [mock_trade]
             mock_get_service.return_value = mock_service
@@ -300,7 +300,7 @@ class TestPaperTradingAPIEndpoints:
     @pytest.mark.asyncio
     async def test_get_trades_with_filters(self, client, mock_trade, mock_portfolio_id):
         """Test get_trades filters by symbol and status."""
-        with patch("app.api.paper_trading.get_paper_trading_service") as mock_get_service:
+        with patch("app.presentation.api.paper_trading.get_paper_trading_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.get_trades.return_value = [mock_trade]
             mock_get_service.return_value = mock_service
@@ -315,7 +315,7 @@ class TestPaperTradingAPIEndpoints:
     @pytest.mark.asyncio
     async def test_get_trade_success(self, client, mock_trade):
         """Test get_trade returns trade by ID."""
-        with patch("app.api.paper_trading.get_paper_trading_service") as mock_get_service:
+        with patch("app.presentation.api.paper_trading.get_paper_trading_service") as mock_get_service:
             mock_service = MagicMock()
             mock_service.trades = {mock_trade.id: mock_trade}
             mock_get_service.return_value = mock_service
@@ -329,7 +329,7 @@ class TestPaperTradingAPIEndpoints:
     @pytest.mark.asyncio
     async def test_get_trade_not_found(self, client):
         """Test get_trade returns 404 for non-existent trade."""
-        with patch("app.api.paper_trading.get_paper_trading_service") as mock_get_service:
+        with patch("app.presentation.api.paper_trading.get_paper_trading_service") as mock_get_service:
             mock_service = MagicMock()
             mock_service.trades = {}
             mock_get_service.return_value = mock_service
@@ -350,7 +350,7 @@ class TestPaperTradingAPIEndpoints:
             currency="USD",
         )
 
-        with patch("app.api.paper_trading.get_paper_trading_service") as mock_get_service:
+        with patch("app.presentation.api.paper_trading.get_paper_trading_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.get_positions.return_value = [mock_position]
             mock_get_service.return_value = mock_service
@@ -374,7 +374,7 @@ class TestPaperTradingAPIEndpoints:
             currency="USD",
         )
 
-        with patch("app.api.paper_trading.get_paper_trading_service") as mock_get_service:
+        with patch("app.presentation.api.paper_trading.get_paper_trading_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.get_positions.return_value = [mock_position]
             mock_get_service.return_value = mock_service
@@ -388,7 +388,7 @@ class TestPaperTradingAPIEndpoints:
     @pytest.mark.asyncio
     async def test_update_market_prices_success(self, client):
         """Test update_market_prices updates prices for symbols."""
-        with patch("app.api.paper_trading.get_paper_trading_service") as mock_get_service:
+        with patch("app.presentation.api.paper_trading.get_paper_trading_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.update_market_prices.return_value = None
             mock_get_service.return_value = mock_service
@@ -425,7 +425,7 @@ class TestPaperTradingAPIEndpoints:
             currency="USD",
         )
 
-        with patch("app.api.paper_trading.get_paper_trading_service") as mock_get_service:
+        with patch("app.presentation.api.paper_trading.get_paper_trading_service") as mock_get_service:
             mock_service = MagicMock()
             mock_service.configs = {mock_config.id: mock_config}
             mock_get_service.return_value = mock_service
@@ -447,7 +447,7 @@ class TestPaperTradingAPIEndpoints:
             currency="USD",
         )
 
-        with patch("app.api.paper_trading.get_paper_trading_service") as mock_get_service:
+        with patch("app.presentation.api.paper_trading.get_paper_trading_service") as mock_get_service:
             mock_service = MagicMock()
             mock_service.configs = {mock_config.id: mock_config}
             mock_get_service.return_value = mock_service
@@ -460,7 +460,7 @@ class TestPaperTradingAPIEndpoints:
     @pytest.mark.asyncio
     async def test_get_config_not_found(self, client):
         """Test get_config returns 404 for non-existent config."""
-        with patch("app.api.paper_trading.get_paper_trading_service") as mock_get_service:
+        with patch("app.presentation.api.paper_trading.get_paper_trading_service") as mock_get_service:
             mock_service = MagicMock()
             mock_service.configs = {}
             mock_get_service.return_value = mock_service
@@ -471,7 +471,7 @@ class TestPaperTradingAPIEndpoints:
     @pytest.mark.asyncio
     async def test_get_portfolio_stats_success(self, client, mock_portfolio):
         """Test get_portfolio_stats returns portfolio statistics."""
-        with patch("app.api.paper_trading.get_paper_trading_service") as mock_get_service:
+        with patch("app.presentation.api.paper_trading.get_paper_trading_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.get_portfolio.return_value = mock_portfolio
             mock_service.get_trades.return_value = []
@@ -512,7 +512,7 @@ class TestErrorHandling:
         """Test execute_trade handles timeout errors."""
         import asyncio
 
-        with patch("app.api.paper_trading.get_paper_trading_service") as mock_get_service:
+        with patch("app.presentation.api.paper_trading.get_paper_trading_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.execute_trade.side_effect = asyncio.TimeoutError()
             mock_get_service.return_value = mock_service
@@ -531,7 +531,7 @@ class TestErrorHandling:
     @pytest.mark.asyncio
     async def test_execute_trade_validation_error(self, client):
         """Test execute_trade handles validation errors."""
-        with patch("app.api.paper_trading.get_paper_trading_service") as mock_get_service:
+        with patch("app.presentation.api.paper_trading.get_paper_trading_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.execute_trade.side_effect = ValueError("Invalid quantity")
             mock_get_service.return_value = mock_service
@@ -550,7 +550,7 @@ class TestErrorHandling:
     @pytest.mark.asyncio
     async def test_get_portfolio_stats_not_found(self, client):
         """Test get_portfolio_stats returns 404 for non-existent portfolio."""
-        with patch("app.api.paper_trading.get_paper_trading_service") as mock_get_service:
+        with patch("app.presentation.api.paper_trading.get_paper_trading_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.get_portfolio.return_value = None
             mock_get_service.return_value = mock_service
@@ -561,7 +561,7 @@ class TestErrorHandling:
     @pytest.mark.asyncio
     async def test_create_portfolio_validation_error(self, client):
         """Test create_portfolio handles validation errors."""
-        with patch("app.api.paper_trading.get_paper_trading_service") as mock_get_service:
+        with patch("app.presentation.api.paper_trading.get_paper_trading_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.create_portfolio.side_effect = ValueError("Invalid initial cash")
             mock_get_service.return_value = mock_service

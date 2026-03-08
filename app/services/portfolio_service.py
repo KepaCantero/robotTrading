@@ -12,7 +12,6 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from app.shared.config.centralized_config import get_config
 from app.domain.models.portfolio import (
     AssetClass,
     AssetUniverse,
@@ -22,14 +21,12 @@ from app.domain.models.portfolio import (
     PortfolioProvider,
     Position,
 )
-from app.services.api_circuit_breaker import (
-    CircuitBreakerManager,
-    CircuitBreakerType,
-)
+from app.services.api_circuit_breaker import CircuitBreakerManager, CircuitBreakerType
 from app.services.country_diversification_validator import CountryDiversificationValidator
 from app.services.currency_hedging_engine import CurrencyHedgingEngine
 from app.services.portfolio_risk_manager import PortfolioRiskManager
 from app.services.sector_diversification_validator import SectorDiversificationValidator
+from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -357,18 +354,10 @@ class PortfolioService:
         config = get_config()
         tt = config.trading
 
-        equity_max_spread = Decimal(str(getattr(
-            tt, 'asset_universe_equity_max_spread', 0.01
-        )))
-        equity_min_volume = Decimal(str(getattr(
-            tt, 'asset_universe_equity_min_volume', 1000000
-        )))
-        crypto_max_spread = Decimal(str(getattr(
-            tt, 'asset_universe_crypto_max_spread', 0.005
-        )))
-        crypto_min_volume = Decimal(str(getattr(
-            tt, 'asset_universe_crypto_min_volume', 10000000
-        )))
+        equity_max_spread = Decimal(str(getattr(tt, 'asset_universe_equity_max_spread', 0.01)))
+        equity_min_volume = Decimal(str(getattr(tt, 'asset_universe_equity_min_volume', 1000000)))
+        crypto_max_spread = Decimal(str(getattr(tt, 'asset_universe_crypto_max_spread', 0.005)))
+        crypto_min_volume = Decimal(str(getattr(tt, 'asset_universe_crypto_min_volume', 10000000)))
 
         # Mock data para testing - en producción vendría de una fuente real
         return [

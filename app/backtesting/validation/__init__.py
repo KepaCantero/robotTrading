@@ -72,6 +72,7 @@ from .cross_validation_methods import (
     cross_validate,
     nested_cross_validate,
 )
+from .drawdown_validator import DrawdownValidationError, DrawdownValidator
 from .feature_explosion_validator import (
     FeatureExplosionLevel,
     FeatureExplosionResult,
@@ -113,6 +114,9 @@ from .parameter_stability import (
     filter_stable_parameters,
     rank_parameters_by_stability,
 )
+
+# Task 17: Backtest Fixes - P&L and Drawdown Validators
+from .pnl_validator import PnLValidationError, PnLValidator
 from .purged_kfold import (
     PurgedKFold,
     PurgedKFoldConfig,
@@ -130,16 +134,6 @@ from .walk_forward import (
     WalkForwardValidator,
     calculate_consistency_score,
     calculate_degradation,
-)
-
-# Task 17: Backtest Fixes - P&L and Drawdown Validators
-from .pnl_validator import (
-    PnLValidator,
-    PnLValidationError,
-)
-from .drawdown_validator import (
-    DrawdownValidator,
-    DrawdownValidationError,
 )
 
 __all__ = [

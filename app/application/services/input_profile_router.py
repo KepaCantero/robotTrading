@@ -14,10 +14,10 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, Optional
 
-from app.shared.config.centralized_config import get_config
 from app.domain.models.input_profile import InputProfile, InvestmentObjective, RiskTolerance
 from app.domain.value_objects.investment_horizon import InvestmentHorizon
 from app.domain.value_objects.tax_residence import TaxResidence
+from app.shared.config.centralized_config import get_config
 
 
 class StrategyType(str, Enum):
@@ -203,79 +203,73 @@ class InputProfileRouter:
 
         if tolerance == RiskTolerance.LOW:
             return RiskConfig(
-                max_drawdown=Decimal(str(getattr(
-                    config.trading, 'risk_low_max_drawdown', base_max_dd
-                ))),
-                max_volatility=Decimal(str(getattr(
-                    config.trading, 'risk_low_max_volatility', 0.20
-                ))),
-                max_position_size=Decimal(str(getattr(
-                    config.trading, 'risk_low_max_position', base_max_pos
-                ))),
+                max_drawdown=Decimal(
+                    str(getattr(config.trading, 'risk_low_max_drawdown', base_max_dd))
+                ),
+                max_volatility=Decimal(
+                    str(getattr(config.trading, 'risk_low_max_volatility', 0.20))
+                ),
+                max_position_size=Decimal(
+                    str(getattr(config.trading, 'risk_low_max_position', base_max_pos))
+                ),
                 leverage_allowed=False,
                 max_leverage=Decimal("1.0"),
-                stop_loss_atr_multiplier=Decimal(str(getattr(
-                    config.trading, 'risk_low_atr_multiplier', 2.0
-                ))),
-                take_profit_atr_multiplier=Decimal(str(getattr(
-                    config.trading, 'risk_low_take_profit_multiplier', 3.0
-                ))),
+                stop_loss_atr_multiplier=Decimal(
+                    str(getattr(config.trading, 'risk_low_atr_multiplier', 2.0))
+                ),
+                take_profit_atr_multiplier=Decimal(
+                    str(getattr(config.trading, 'risk_low_take_profit_multiplier', 3.0))
+                ),
                 var_confidence=float(getattr(config.trading, 'risk_low_var_confidence', 0.95)),
-                expected_shortfall_confidence=float(getattr(
-                    config.trading, 'risk_low_es_confidence', 0.95
-                )),
+                expected_shortfall_confidence=float(
+                    getattr(config.trading, 'risk_low_es_confidence', 0.95)
+                ),
             )
         elif tolerance == RiskTolerance.MEDIUM:
             return RiskConfig(
-                max_drawdown=Decimal(str(getattr(
-                    config.trading, 'risk_medium_max_drawdown', 0.25
-                ))),
-                max_volatility=Decimal(str(getattr(
-                    config.trading, 'risk_medium_max_volatility', 0.30
-                ))),
-                max_position_size=Decimal(str(getattr(
-                    config.trading, 'risk_medium_max_position', 0.10
-                ))),
+                max_drawdown=Decimal(
+                    str(getattr(config.trading, 'risk_medium_max_drawdown', 0.25))
+                ),
+                max_volatility=Decimal(
+                    str(getattr(config.trading, 'risk_medium_max_volatility', 0.30))
+                ),
+                max_position_size=Decimal(
+                    str(getattr(config.trading, 'risk_medium_max_position', 0.10))
+                ),
                 leverage_allowed=True,
-                max_leverage=Decimal(str(getattr(
-                    config.trading, 'risk_medium_max_leverage', 1.5
-                ))),
-                stop_loss_atr_multiplier=Decimal(str(getattr(
-                    config.trading, 'risk_medium_atr_multiplier', 2.5
-                ))),
-                take_profit_atr_multiplier=Decimal(str(getattr(
-                    config.trading, 'risk_medium_take_profit_multiplier', 4.0
-                ))),
+                max_leverage=Decimal(str(getattr(config.trading, 'risk_medium_max_leverage', 1.5))),
+                stop_loss_atr_multiplier=Decimal(
+                    str(getattr(config.trading, 'risk_medium_atr_multiplier', 2.5))
+                ),
+                take_profit_atr_multiplier=Decimal(
+                    str(getattr(config.trading, 'risk_medium_take_profit_multiplier', 4.0))
+                ),
                 var_confidence=float(getattr(config.trading, 'risk_medium_var_confidence', 0.95)),
-                expected_shortfall_confidence=float(getattr(
-                    config.trading, 'risk_medium_es_confidence', 0.95
-                )),
+                expected_shortfall_confidence=float(
+                    getattr(config.trading, 'risk_medium_es_confidence', 0.95)
+                ),
             )
         else:  # HIGH
             return RiskConfig(
-                max_drawdown=Decimal(str(getattr(
-                    config.trading, 'risk_high_max_drawdown', 0.40
-                ))),
-                max_volatility=Decimal(str(getattr(
-                    config.trading, 'risk_high_max_volatility', 0.50
-                ))),
-                max_position_size=Decimal(str(getattr(
-                    config.trading, 'risk_high_max_position', 0.20
-                ))),
+                max_drawdown=Decimal(str(getattr(config.trading, 'risk_high_max_drawdown', 0.40))),
+                max_volatility=Decimal(
+                    str(getattr(config.trading, 'risk_high_max_volatility', 0.50))
+                ),
+                max_position_size=Decimal(
+                    str(getattr(config.trading, 'risk_high_max_position', 0.20))
+                ),
                 leverage_allowed=True,
-                max_leverage=Decimal(str(getattr(
-                    config.trading, 'risk_high_max_leverage', 2.0
-                ))),
-                stop_loss_atr_multiplier=Decimal(str(getattr(
-                    config.trading, 'risk_high_atr_multiplier', 3.0
-                ))),
-                take_profit_atr_multiplier=Decimal(str(getattr(
-                    config.trading, 'risk_high_take_profit_multiplier', 6.0
-                ))),
+                max_leverage=Decimal(str(getattr(config.trading, 'risk_high_max_leverage', 2.0))),
+                stop_loss_atr_multiplier=Decimal(
+                    str(getattr(config.trading, 'risk_high_atr_multiplier', 3.0))
+                ),
+                take_profit_atr_multiplier=Decimal(
+                    str(getattr(config.trading, 'risk_high_take_profit_multiplier', 6.0))
+                ),
                 var_confidence=float(getattr(config.trading, 'risk_high_var_confidence', 0.99)),
-                expected_shortfall_confidence=float(getattr(
-                    config.trading, 'risk_high_es_confidence', 0.975
-                )),
+                expected_shortfall_confidence=float(
+                    getattr(config.trading, 'risk_high_es_confidence', 0.975)
+                ),
             )
 
     def _select_optimization_config(
@@ -351,17 +345,15 @@ class InputProfileRouter:
             return TaxConfig(
                 country="Spain",
                 method=getattr(config.spain_tax, 'TRADING_TAX_METHOD', 'FIFO'),
-                dividend_tax_rate=Decimal(str(getattr(
-                    config.spain_tax, 'IRPF_RATE_19', 0.19
-                ))),
-                capital_gains_tax_rate=Decimal(str(getattr(
-                    config.spain_tax, 'CAPITAL_GAINS_SHORT_TERM_RATE', 0.19
-                ))),
+                dividend_tax_rate=Decimal(str(getattr(config.spain_tax, 'IRPF_RATE_19', 0.19))),
+                capital_gains_tax_rate=Decimal(
+                    str(getattr(config.spain_tax, 'CAPITAL_GAINS_SHORT_TERM_RATE', 0.19))
+                ),
                 short_term_holding_period=365,  # 1 year
                 tax_loss_harvesting=getattr(config.spain_tax, 'TAX_LOSS_HARVESTING_ENABLED', True),
-                witholding_tax_rate=Decimal(str(getattr(
-                    config.spain_tax, 'EU_DIVIDEND_WITHHOLDING_PCT', 0.0
-                ))),
+                witholding_tax_rate=Decimal(
+                    str(getattr(config.spain_tax, 'EU_DIVIDEND_WITHHOLDING_PCT', 0.0))
+                ),
             )
         elif country == "USA":
             return TaxConfig(
@@ -415,7 +407,9 @@ class InputProfileRouter:
         liquidity_high = float(getattr(config.trading, 'constraint_min_liquidity_high', 0.7))
         sector_low = Decimal(str(getattr(config.trading, 'constraint_sector_exposure_low', 0.25)))
         sector_high = Decimal(str(getattr(config.trading, 'constraint_sector_exposure_high', 0.40)))
-        capital_liquidity_threshold = float(getattr(config.trading, 'constraint_capital_liquidity', 50000))
+        capital_liquidity_threshold = float(
+            getattr(config.trading, 'constraint_capital_liquidity', 50000)
+        )
 
         # Max positions based on capital
         capital = float(profile.capital.amount)
@@ -489,7 +483,9 @@ class InputProfileRouter:
                     "lookback_period": int(getattr(str_config.trading, 'strat_mom_lookback', 252)),
                     "rebalance_frequency": "monthly",
                     "top_percentile": float(getattr(str_config.trading, 'strat_mom_top_pct', 0.3)),
-                    "bottom_percentile": float(getattr(str_config.trading, 'strat_mom_bottom_pct', 0.3)),
+                    "bottom_percentile": float(
+                        getattr(str_config.trading, 'strat_mom_bottom_pct', 0.3)
+                    ),
                     "long_only": config.long_only,
                 }
             )
@@ -498,9 +494,15 @@ class InputProfileRouter:
                 {
                     "min_yield": float(getattr(str_config.trading, 'strat_div_min_yield', 0.02)),
                     "max_yield": float(getattr(str_config.trading, 'strat_div_max_yield', 0.10)),
-                    "min_dividend_growth": float(getattr(str_config.trading, 'strat_div_min_growth', 0.0)),
-                    "max_payout_ratio": float(getattr(str_config.trading, 'strat_div_max_payout', 0.8)),
-                    "min_dividend_years": int(getattr(str_config.trading, 'strat_div_min_years', 5)),
+                    "min_dividend_growth": float(
+                        getattr(str_config.trading, 'strat_div_min_growth', 0.0)
+                    ),
+                    "max_payout_ratio": float(
+                        getattr(str_config.trading, 'strat_div_max_payout', 0.8)
+                    ),
+                    "min_dividend_years": int(
+                        getattr(str_config.trading, 'strat_div_min_years', 5)
+                    ),
                 }
             )
         elif strategy_type == StrategyType.LOW_VOLATILITY:
@@ -517,8 +519,12 @@ class InputProfileRouter:
                     "factor_weights": {
                         "value": float(getattr(str_config.trading, 'strat_mf_weight_value', 0.25)),
                         "size": float(getattr(str_config.trading, 'strat_mf_weight_size', 0.25)),
-                        "momentum": float(getattr(str_config.trading, 'strat_mf_weight_momentum', 0.25)),
-                        "quality": float(getattr(str_config.trading, 'strat_mf_weight_quality', 0.25)),
+                        "momentum": float(
+                            getattr(str_config.trading, 'strat_mf_weight_momentum', 0.25)
+                        ),
+                        "quality": float(
+                            getattr(str_config.trading, 'strat_mf_weight_quality', 0.25)
+                        ),
                     },
                     "rebalance_frequency": "quarterly",
                 }

@@ -10,17 +10,15 @@ Purpose: Integrate TradingBridge with ComplianceEngine for live trading executio
 from __future__ import annotations
 
 import logging
-from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from app.shared.protocols import ITradeExecutor
 from app.application.alerting import AlertEvent, AlertSeverity
-from app.application.orchestration.live_trading.broker_connector import OrderSide, OrderStatus
-from app.application.orchestration.live_trading.trading_bridge_orchestrator import (
+from app.services.live_trading.trading_bridge_orchestrator import (
     TradingBridgeOrchestrator,
     get_trading_bridge_orchestrator,
 )
+from app.shared.protocols import ITradeExecutor
 
 logger = logging.getLogger(__name__)
 
@@ -177,7 +175,9 @@ class TradingBridgeAdapter(ITradeExecutor):
                 success=False,
                 order_id="",
                 symbol=getattr(signal, "symbol", "UNKNOWN"),
-                side=getattr(signal, "order_side", "BUY").value if hasattr(signal, "order_side") else "BUY",
+                side=getattr(signal, "order_side", "BUY").value
+                if hasattr(signal, "order_side")
+                else "BUY",
                 quantity=getattr(signal, "quantity", Decimal("0")),
                 execution_price=Decimal("0"),
                 status="FAILED",

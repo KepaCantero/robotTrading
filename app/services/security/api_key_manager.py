@@ -11,12 +11,12 @@ This module provides secure storage and management of API keys with:
 R29: Security Hardening
 """
 
-from dataclasses import dataclass, field
+import logging
+import uuid
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from typing import Dict, List, Optional
-import uuid
-import logging
 
 from cryptography.fernet import Fernet
 
@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 
 class KeyPermission(Enum):
     """Permission levels for API keys."""
+
     READ_ONLY = "read_only"
     TRADING = "trading"
     ADMIN = "admin"
@@ -33,6 +34,7 @@ class KeyPermission(Enum):
 @dataclass
 class ApiKey:
     """Data model for API key storage."""
+
     key_id: str
     key_name: str
     encrypted_key: str
@@ -51,6 +53,7 @@ class ApiKey:
 
 class KeyValidationError(Exception):
     """Exception for key validation errors."""
+
     pass
 
 
@@ -72,6 +75,7 @@ class ApiKeyManager:
         """
         if encryption_key is None:
             import os
+
             key = os.environ.get("ALGOTRADING_ENCRYPTION_KEY")
             if not key:
                 raise ValueError(
@@ -116,7 +120,7 @@ class ApiKeyManager:
         key_name: str,
         api_key: str,
         permission: KeyPermission,
-        expires_in_days: Optional[int] = None
+        expires_in_days: Optional[int] = None,
     ) -> str:
         """
         Add a new API key.
@@ -134,9 +138,7 @@ class ApiKeyManager:
             KeyValidationError: If the key format is invalid
         """
         if not self._validate_key_format(api_key):
-            raise KeyValidationError(
-                f"Invalid API key format for key '{key_name}'"
-            )
+            raise KeyValidationError(f"Invalid API key format for key '{key_name}'")
 
         key_id = str(uuid.uuid4())
         encrypted_key = self._encrypt_key(api_key)
@@ -144,6 +146,7 @@ class ApiKeyManager:
         expires_at = None
         if expires_in_days is not None:
             from datetime import timedelta
+
             expires_at = datetime.utcnow() + timedelta(days=expires_in_days)
 
         api_key_obj = ApiKey(
@@ -266,9 +269,7 @@ class ApiKeyManager:
         for key_id, key in self._keys.items():
             if key.is_active and key.is_expired():
                 expired_ids.append(key_id)
-                logger.warning(
-                    f"API key '{key.key_name}' with ID {key_id} has expired"
-                )
+                logger.warning(f"API key '{key.key_name}' with ID {key_id} has expired")
         return expired_ids
 
     def get_decrypted_key(self, key_id: str) -> Optional[str]:

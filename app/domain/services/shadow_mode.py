@@ -65,6 +65,7 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional
+
 import numpy as np
 
 from app.shared.interfaces.broker_base import Order

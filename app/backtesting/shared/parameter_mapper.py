@@ -11,7 +11,7 @@ and the nested YAML configuration structure used by strategies.
 """
 
 import copy
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from app.backtesting.shared.types import ConfigKeys
 
@@ -114,17 +114,13 @@ class ParameterMappingService:
                 # Unknown parameter - log warning but continue
                 import logging
 
-                logging.getLogger(__name__).debug(
-                    f"Unknown optimization parameter: {param_name}"
-                )
+                logging.getLogger(__name__).debug(f"Unknown optimization parameter: {param_name}")
 
         config[ConfigKeys.STRATEGY] = strategy
         return config
 
     @classmethod
-    def _apply_mapping(
-        cls, strategy: Dict[str, Any], mapping: Dict[str, Any], value: Any
-    ) -> None:
+    def _apply_mapping(cls, strategy: Dict[str, Any], mapping: Dict[str, Any], value: Any) -> None:
         """
         Apply a parameter mapping to the strategy config.
 
@@ -168,9 +164,7 @@ class ParameterMappingService:
         cls._apply_mapping(strategy, mapping, rsi_threshold)
 
     @classmethod
-    def map_ema_periods(
-        cls, strategy: Dict[str, Any], ema_short: int, ema_long: int
-    ) -> None:
+    def map_ema_periods(cls, strategy: Dict[str, Any], ema_short: int, ema_long: int) -> None:
         """
         Map EMA periods to filter parameters.
 
@@ -187,9 +181,7 @@ class ParameterMappingService:
             cls._apply_mapping(strategy, mapping, ema_long)
 
     @classmethod
-    def map_volume_threshold(
-        cls, strategy: Dict[str, Any], volume_threshold: float
-    ) -> None:
+    def map_volume_threshold(cls, strategy: Dict[str, Any], volume_threshold: float) -> None:
         """
         Map volume threshold to all presets.
 
@@ -256,9 +248,7 @@ class ParameterMappingService:
             "strategies": {
                 "momentum_modular": {
                     "risk_manager": {
-                        "stop_loss": {
-                            "fixed_percentage": {"value": params.get("stop_loss", 0.02)}
-                        },
+                        "stop_loss": {"fixed_percentage": {"value": params.get("stop_loss", 0.02)}},
                         "take_profit": {
                             "fixed_percentage": {"value": params.get("take_profit", 0.10)}
                         },

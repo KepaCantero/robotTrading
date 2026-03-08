@@ -16,12 +16,12 @@ Migration Guide:
          backtesting_config = get_config().backtesting
 """
 
+import warnings
 from decimal import Decimal
 from typing import Dict, List
-import warnings
 
 # Import from centralized config
-from app.shared.config.centralized_config import get_config, BacktestingConfig
+from app.shared.config.centralized_config import BacktestingConfig, get_config
 
 # =============================================================================
 # DEPRECATION WARNING
@@ -31,13 +31,14 @@ warnings.warn(
     "app.backtesting.constants is deprecated. "
     "Use app.shared.config.centralized_config.get_config().backtesting instead.",
     DeprecationWarning,
-    stacklevel=2
+    stacklevel=2,
 )
 
 
 # =============================================================================
 # BACKWARDS COMPATIBILITY LAYER
 # =============================================================================
+
 
 def _get_backtesting_config() -> BacktestingConfig:
     """Get backtesting config from centralized config."""
@@ -50,6 +51,7 @@ from typing import TypedDict, Union
 
 class FixedCommissionModel(TypedDict):
     """Fixed commission model."""
+
     type: str
     cost: Decimal
     description: str
@@ -57,6 +59,7 @@ class FixedCommissionModel(TypedDict):
 
 class HybridCommissionModel(TypedDict):
     """Hybrid commission model."""
+
     type: str
     min_cost: Decimal
     rate: Decimal
@@ -65,6 +68,7 @@ class HybridCommissionModel(TypedDict):
 
 class TierBracket(TypedDict):
     """Single tier bracket for tiered commission."""
+
     volume_max: Union[int, float]
     rate: Decimal
     min: Decimal
@@ -72,6 +76,7 @@ class TierBracket(TypedDict):
 
 class TieredCommissionModel(TypedDict):
     """Tiered commission model."""
+
     type: str
     brackets: List[TierBracket]
     description: str
@@ -83,6 +88,7 @@ CommissionModel = Union[FixedCommissionModel, HybridCommissionModel, TieredCommi
 # =============================================================================
 # COMPATIBILITY CLASSES - delegate to CentralizedConfig
 # =============================================================================
+
 
 class CapitalScaleConstants:
     """
@@ -143,18 +149,42 @@ class CapitalScaleConstants:
             Decimal("50000"): {
                 "type": "tiered",
                 "brackets": [
-                    {"volume_max": 50000, "rate": config.default_commission_rate, "min": Decimal("0.50")},
-                    {"volume_max": 500000, "rate": config.default_commission_rate / 5, "min": Decimal("0.10")},
-                    {"volume_max": float("inf"), "rate": config.default_commission_rate / 100, "min": Decimal("0.01")},
+                    {
+                        "volume_max": 50000,
+                        "rate": config.default_commission_rate,
+                        "min": Decimal("0.50"),
+                    },
+                    {
+                        "volume_max": 500000,
+                        "rate": config.default_commission_rate / 5,
+                        "min": Decimal("0.10"),
+                    },
+                    {
+                        "volume_max": float("inf"),
+                        "rate": config.default_commission_rate / 100,
+                        "min": Decimal("0.01"),
+                    },
                 ],
                 "description": "Pro account - tiered pricing",
             },
             Decimal("100000"): {
                 "type": "tiered",
                 "brackets": [
-                    {"volume_max": 100000, "rate": config.default_commission_rate / 2, "min": Decimal("0.50")},
-                    {"volume_max": 500000, "rate": config.default_commission_rate / 20, "min": Decimal("0.05")},
-                    {"volume_max": float("inf"), "rate": config.default_commission_rate / 500, "min": Decimal("0.01")},
+                    {
+                        "volume_max": 100000,
+                        "rate": config.default_commission_rate / 2,
+                        "min": Decimal("0.50"),
+                    },
+                    {
+                        "volume_max": 500000,
+                        "rate": config.default_commission_rate / 20,
+                        "min": Decimal("0.05"),
+                    },
+                    {
+                        "volume_max": float("inf"),
+                        "rate": config.default_commission_rate / 500,
+                        "min": Decimal("0.01"),
+                    },
                 ],
                 "description": "Fund account - institutional pricing",
             },

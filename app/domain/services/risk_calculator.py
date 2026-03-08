@@ -61,7 +61,11 @@ class RiskCalculator:
         Args:
             risk_free_rate: Risk-free rate for Sharpe ratio calculation (default: from CentralizedConfig)
         """
-        self._risk_free_rate = risk_free_rate if risk_free_rate is not None else get_config().backtesting.default_risk_free_rate
+        self._risk_free_rate = (
+            risk_free_rate
+            if risk_free_rate is not None
+            else get_config().backtesting.default_risk_free_rate
+        )
 
     def calculate_portfolio_risk(self, portfolio: Portfolio) -> RiskMetrics:
         """

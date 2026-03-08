@@ -5,11 +5,11 @@ Este módulo exporta los servicios refactorizados con motores especializados
 y gestores centralizados para mejor mantenibilidad.
 """
 
-# Asset & Market Universe
-from .asset_identification import AssetIdentificationService, get_asset_identification_service
-
 # Nuevos gestores centralizados
 from .api_circuit_breaker import CircuitBreakerManager, CircuitBreakerType
+
+# Asset & Market Universe
+from .asset_identification import AssetIdentificationService, get_asset_identification_service
 from .circuit_breaker_manager import (
     CircuitBreakerConfig,
     CircuitBreakerLevel,

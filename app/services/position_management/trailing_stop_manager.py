@@ -15,9 +15,9 @@ Uses centralized configuration for default trailing percentage.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from decimal import Decimal
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from app.shared.config.centralized_config import get_config
 
@@ -85,9 +85,7 @@ class TrailingStopManager:
         self.highest_price = entry_price
         self.current_stop = initial_stop
 
-    def update(
-        self, current_price: Decimal, unrealized_pnl: Decimal
-    ) -> TrailingStopResult:
+    def update(self, current_price: Decimal, unrealized_pnl: Decimal) -> TrailingStopResult:
         """
         Actualizar trailing stop según precio actual y P&L.
 
@@ -138,7 +136,9 @@ class TrailingStopManager:
             # Esto permite que el stop suba con el precio pero no baje
             new_stop = current_price * (Decimal("1") - self.trailing_pct)
             action = "trailing_1.5pct"
-            reason = f"R={r_multiple:.1f}: Trailing stop at {self.trailing_pct:.2%} from current price"
+            reason = (
+                f"R={r_multiple:.1f}: Trailing stop at {self.trailing_pct:.2%} from current price"
+            )
 
         # Solo actualizar si el nuevo stop es más alto (protege ganancias)
         # Para posiciones LONG, higher stop = mejor protección

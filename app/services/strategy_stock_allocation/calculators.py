@@ -34,6 +34,7 @@ except ImportError:
     def OLS(*args, **kwargs):
         """Fallback OLS when statsmodels is not available."""
         import warnings
+
         warnings.warn(
             "statsmodels not installed - OLS regression not available. "
             "Install statsmodels: pip install statsmodels",
@@ -49,6 +50,7 @@ except ImportError:
         Returns a tuple indicating stationarity test failed.
         """
         import warnings
+
         warnings.warn(
             "statsmodels not installed - ADF test not available. "
             "Install statsmodels for stationarity testing: pip install statsmodels",
@@ -64,6 +66,7 @@ except ImportError:
         Returns a tuple indicating stationarity test failed.
         """
         import warnings
+
         warnings.warn(
             "statsmodels not installed - KPSS test not available. "
             "Install statsmodels for stationarity testing: pip install statsmodels",

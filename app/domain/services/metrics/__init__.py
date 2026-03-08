@@ -42,22 +42,22 @@ Reference:
 
 from app.domain.services.metrics.performance_metrics import (
     PerformanceMetricsCalculator,
+    get_calmar_ratio,
+    get_max_drawdown,
+    get_omega_ratio,
     get_sharpe_ratio,
     get_sortino_ratio,
-    get_calmar_ratio,
-    get_omega_ratio,
-    get_max_drawdown,
     get_ulcer_index,
 )
 from app.domain.services.metrics.risk_metrics import (
     RiskMetricsCalculator,
-    get_var,
-    get_cvar,
-    get_volatility,
     get_beta,
     get_correlation,
-    get_tracking_error,
+    get_cvar,
     get_information_ratio,
+    get_tracking_error,
+    get_var,
+    get_volatility,
 )
 
 __all__ = [

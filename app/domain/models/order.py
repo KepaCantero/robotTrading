@@ -86,7 +86,9 @@ class Order(BaseModel):
         tt = get_config().trading_thresholds
         max_quantity = Decimal(str(tt.max_order_quantity_shares))
         if v > max_quantity:
-            raise ValueError(f"Quantity exceeds maximum limit of {tt.max_order_quantity_shares:,.0f} shares, got {v}")
+            raise ValueError(
+                f"Quantity exceeds maximum limit of {tt.max_order_quantity_shares:,.0f} shares, got {v}"
+            )
 
         return v
 
@@ -108,7 +110,9 @@ class Order(BaseModel):
         tt = get_config().trading_thresholds
         max_price = Decimal(str(tt.max_order_price_usd))
         if v > max_price:
-            raise ValueError(f"Price exceeds maximum limit of ${tt.max_order_price_usd:,.0f}, got {v}")
+            raise ValueError(
+                f"Price exceeds maximum limit of ${tt.max_order_price_usd:,.0f}, got {v}"
+            )
 
         return v
 

@@ -9,10 +9,10 @@ Uses centralized configuration for all thresholds.
 """
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from app.shared.config.centralized_config import get_config
 from app.shared.utils.timezone_utils import utc_now
@@ -84,9 +84,7 @@ class CircuitBreaker:
 
         if self.failure_count >= self.failure_threshold:
             self.state = CircuitState.OPEN
-            logger.warning(
-                f"Circuit {self.name} opened after {self.failure_count} failures"
-            )
+            logger.warning(f"Circuit {self.name} opened after {self.failure_count} failures")
 
     def reset(self) -> None:
         """Reset circuit breaker to initial state."""
@@ -204,9 +202,7 @@ class CircuitBreakerManager:
 
     def get_all_breaker_statuses(self) -> Dict[str, Dict[str, Any]]:
         """Get status of all circuit breakers."""
-        return {
-            name: breaker.to_dict() for name, breaker in self.circuit_breakers.items()
-        }
+        return {name: breaker.to_dict() for name, breaker in self.circuit_breakers.items()}
 
     def reset_breaker(self, breaker_name: str) -> bool:
         """Reset a specific circuit breaker."""
@@ -239,7 +235,5 @@ class CircuitBreakerManager:
                 else 0
             ),
             "active_breakers": len(self.circuit_breakers),
-            "open_breakers": sum(
-                1 for b in self.circuit_breakers.values() if b.is_open()
-            ),
+            "open_breakers": sum(1 for b in self.circuit_breakers.values() if b.is_open()),
         }

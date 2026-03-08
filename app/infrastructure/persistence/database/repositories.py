@@ -21,7 +21,6 @@ from sqlalchemy.exc import (
 from sqlalchemy.orm import Session
 from structlog import get_logger
 
-from app.shared.exceptions.exceptions import raise_database_error
 from app.infrastructure.persistence.models import (
     Asset,
     Backtest,
@@ -34,6 +33,7 @@ from app.infrastructure.persistence.models import (
     Trade,
     User,
 )
+from app.shared.exceptions.exceptions import raise_database_error
 
 # pylint: disable=inconsistent-return-statements
 # The raise_database_error function always raises an exception, so pylint

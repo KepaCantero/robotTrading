@@ -22,10 +22,10 @@ from app.services.tax_efficiency.engines.factory import (
     is_country_supported,
     register_tax_engine,
 )
-from app.services.tax_efficiency.engines.spain_tax_engine import SpainTaxEngine
-from app.services.tax_efficiency.engines.spain_tax_engine_impl import SpainTaxEngineImpl
 from app.services.tax_efficiency.engines.modelo_720_generator import Modelo720Generator
 from app.services.tax_efficiency.engines.spain_dividend_tax import SpainDividendTaxCalculator
+from app.services.tax_efficiency.engines.spain_tax_engine import SpainTaxEngine
+from app.services.tax_efficiency.engines.spain_tax_engine_impl import SpainTaxEngineImpl
 
 __all__ = [
     # Base classes

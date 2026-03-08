@@ -242,7 +242,7 @@ class OFICalculator:
             distance = float((mid_price - price) / mid_price)
             weight = max(
                 self.config.weight_min,
-                self.config.weight_max - distance * self.config.distance_multiplier
+                self.config.weight_max - distance * self.config.distance_multiplier,
             )  # Decay weight with distance
             weighted_bid_vol += int(qty * weight)
 
@@ -253,7 +253,7 @@ class OFICalculator:
             distance = float((price - mid_price) / mid_price)
             weight = max(
                 self.config.weight_min,
-                self.config.weight_max - distance * self.config.distance_multiplier
+                self.config.weight_max - distance * self.config.distance_multiplier,
             )
             weighted_ask_vol += int(qty * weight)
 
@@ -337,11 +337,7 @@ class OFICalculator:
             return 0.0
 
         recent = np.mean(ofi_history[-window:])
-        previous = np.mean(
-            ofi_history[
-                -(window * self.config.window_size_multiplier) : -window
-            ]
-        )
+        previous = np.mean(ofi_history[-(window * self.config.window_size_multiplier) : -window])
 
         return float(recent - previous)
 
@@ -693,9 +689,7 @@ class OFICalculator:
         # Find best lag
         best_corr = 0.0
         best_lag = 0
-        for lag in range(
-            1, min(self.config.default_max_lag, len(ofi_array) // 2)
-        ):
+        for lag in range(1, min(self.config.default_max_lag, len(ofi_array) // 2)):
             corr = np.corrcoef(ofi_array[:-lag], returns_array[lag:])[0, 1]
             if not np.isnan(corr) and abs(corr) > abs(best_corr):
                 best_corr = corr

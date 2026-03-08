@@ -292,8 +292,8 @@ class HyperparameterOptimizer:
             if self._data_feed_provider is not None:
                 provider = self._data_feed_provider
             else:
-                from app.infrastructure.data.feeds import YahooFinanceFeed
                 from app.domain.models.market_data import DataFeedConfig, DataFeedType
+                from app.infrastructure.data.feeds import YahooFinanceFeed
 
                 feed_config = DataFeedConfig(
                     feed_type=DataFeedType.YAHOO_FINANCE,

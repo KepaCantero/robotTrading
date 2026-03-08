@@ -10,7 +10,6 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from app.shared.config.centralized_config import get_config
 from app.domain.models.signal import (
     MarketData,
     Signal,
@@ -24,6 +23,7 @@ from app.services.portfolio_service import PortfolioService
 from app.services.position_sizing_engine import PositionSizingEngine
 from app.services.signal_evaluation_engine import SignalEvaluationEngine
 from app.services.signal_execution_engine import SignalExecutionEngine
+from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 

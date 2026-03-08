@@ -65,16 +65,46 @@ class StochRSIFilter(BaseFilter):
             # Default adaptive thresholds for different market conditions
             # FIX: Raised oversold_threshold for trending markets - in uptrends StochRSI rarely drops below 30
             self.adaptive_thresholds = {
-                "balanced": {"oversold_threshold": 30, "overbought_threshold": 75},  # Raised from 25/80
-                "volatile": {"oversold_threshold": 25, "overbought_threshold": 80},  # Raised from 20/85
-                "trending": {"oversold_threshold": 45, "overbought_threshold": 85},  # Raised from 30/85
-                "trend_up": {"oversold_threshold": 50, "overbought_threshold": 85},  # Raised from 35/85
-                "trend_down": {"oversold_threshold": 25, "overbought_threshold": 65},  # Raised from 20/70
-                "range": {"oversold_threshold": 25, "overbought_threshold": 75},  # Raised from 20/80
-                "low_vol": {"oversold_threshold": 30, "overbought_threshold": 75},  # Raised from 25/80
-                "high_vol": {"oversold_threshold": 25, "overbought_threshold": 80},  # Raised from 20/85
-                "no_trend": {"oversold_threshold": 30, "overbought_threshold": 75},  # Raised from 25/80
-                "unknown": {"oversold_threshold": 30, "overbought_threshold": 75},  # Raised from 25/80
+                "balanced": {
+                    "oversold_threshold": 30,
+                    "overbought_threshold": 75,
+                },  # Raised from 25/80
+                "volatile": {
+                    "oversold_threshold": 25,
+                    "overbought_threshold": 80,
+                },  # Raised from 20/85
+                "trending": {
+                    "oversold_threshold": 45,
+                    "overbought_threshold": 85,
+                },  # Raised from 30/85
+                "trend_up": {
+                    "oversold_threshold": 50,
+                    "overbought_threshold": 85,
+                },  # Raised from 35/85
+                "trend_down": {
+                    "oversold_threshold": 25,
+                    "overbought_threshold": 65,
+                },  # Raised from 20/70
+                "range": {
+                    "oversold_threshold": 25,
+                    "overbought_threshold": 75,
+                },  # Raised from 20/80
+                "low_vol": {
+                    "oversold_threshold": 30,
+                    "overbought_threshold": 75,
+                },  # Raised from 25/80
+                "high_vol": {
+                    "oversold_threshold": 25,
+                    "overbought_threshold": 80,
+                },  # Raised from 20/85
+                "no_trend": {
+                    "oversold_threshold": 30,
+                    "overbought_threshold": 75,
+                },  # Raised from 25/80
+                "unknown": {
+                    "oversold_threshold": 30,
+                    "overbought_threshold": 75,
+                },  # Raised from 25/80
             }
 
     def _get_thresholds_for_context(self, market_context: Dict) -> Dict:
@@ -90,10 +120,13 @@ class StochRSIFilter(BaseFilter):
         if market_type in self.adaptive_thresholds:
             return self.adaptive_thresholds[market_type]
 
-        return self.adaptive_thresholds.get("unknown", {
-            "oversold_threshold": 25,
-            "overbought_threshold": 80,
-        })
+        return self.adaptive_thresholds.get(
+            "unknown",
+            {
+                "oversold_threshold": 25,
+                "overbought_threshold": 80,
+            },
+        )
 
     def _apply_filter_logic(self, indicators: Dict, market_context: Dict, signal_type: str) -> Dict:
         """Aplicar lógica del filtro Stochastic RSI."""

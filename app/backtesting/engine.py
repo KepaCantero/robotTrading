@@ -28,15 +28,16 @@ from app.backtesting.services.pnl_calculator import ProfitAndLossCalculator
 from app.backtesting.services.position_manager import PositionManager
 from app.backtesting.services.signal_processor import SignalProcessor
 from app.backtesting.services.trade_executor import TradeExecutor
+
 # SHARED UTILITIES: Centralized slippage and trade utilities
 from app.backtesting.shared.slippage_utils import apply_slippage as shared_apply_slippage
 from app.backtesting.shared.trade_utils import build_trade_reason as shared_build_trade_reason
+from app.domain.models.portfolio import AssetClass, Portfolio, Position
+from app.domain.models.signal import Signal
 
 # COMPLIANCE: Import compliance_engine - "THE ONLY ENGINE" that must be used
 from app.domain.services.compliance.compliance_engine import ComplianceEngine
 from app.domain.services.trading_validators import TradingValidator
-from app.domain.models.portfolio import AssetClass, Portfolio, Position
-from app.domain.models.signal import Signal
 from app.services.dynamic_capital_reallocation import DynamicCapitalReallocationEngine
 
 logger = logging.getLogger(__name__)
@@ -408,8 +409,9 @@ class BacktestEngine:
         Returns:
             pandas DataFrame with OHLCV data and DatetimeIndex, or None if no data
         """
-        import pandas as pd
         from datetime import timedelta
+
+        import pandas as pd
 
         if not self._market_data_list:
             return None
@@ -471,7 +473,9 @@ class BacktestEngine:
         ):
             return
 
-        from app.domain.strategies.momentum_modular.learning.learning_updater import LearningEngineUpdater
+        from app.domain.strategies.momentum_modular.learning.learning_updater import (
+            LearningEngineUpdater,
+        )
 
         if not hasattr(self.strategy, '_learning_updater'):
             self.strategy._learning_updater = LearningEngineUpdater(
@@ -743,7 +747,9 @@ class BacktestEngine:
             pre_trade_analysis = self.compliance_engine.analyze_pre_trade(
                 symbol=signal.symbol,
                 side="SELL",
-                quantity=Decimal(str(current_position_qty)),  # Actual position quantity, not Decimal("0")!
+                quantity=Decimal(
+                    str(current_position_qty)
+                ),  # Actual position quantity, not Decimal("0")!
                 price=current_price,
                 price_history=price_history,
                 urgency=0.5,

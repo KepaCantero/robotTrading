@@ -13,12 +13,12 @@ from collections import deque
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Sequence
 
-from app.shared.config.centralized_config import get_config
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.services.analysis.momentum import TechnicalIndicatorCalculator
 from app.domain.services.signals.scoring import get_signal_scoring_engine
+from app.shared.config.centralized_config import get_config
 
 from .base import BaseStrategyEngine
 
@@ -339,15 +339,9 @@ class MomentumStrategyEngine(BaseStrategyEngine):
             confidence = 50.0
 
             # RSI contribution (RSI bajo = más momentum alcista)
-            rsi_very_oversold = float(getattr(
-                config.trading, 'momentum_rsi_very_oversold', 30.0
-            ))
-            rsi_oversold = float(getattr(
-                config.trading, 'momentum_rsi_oversold', 40.0
-            ))
-            rsi_neutral_low = float(getattr(
-                config.trading, 'momentum_rsi_neutral_low', 50.0
-            ))
+            rsi_very_oversold = float(getattr(config.trading, 'momentum_rsi_very_oversold', 30.0))
+            rsi_oversold = float(getattr(config.trading, 'momentum_rsi_oversold', 40.0))
+            rsi_neutral_low = float(getattr(config.trading, 'momentum_rsi_neutral_low', 50.0))
 
             if rsi < rsi_very_oversold:
                 confidence += 20.0
@@ -357,12 +351,12 @@ class MomentumStrategyEngine(BaseStrategyEngine):
                 confidence += 10.0
 
             # Momentum contribution
-            momentum_high_threshold = float(getattr(
-                config.trading, 'momentum_confidence_high_threshold', 0.05
-            ))
-            momentum_medium_threshold = float(getattr(
-                config.trading, 'momentum_confidence_medium_threshold', 0.02
-            ))
+            momentum_high_threshold = float(
+                getattr(config.trading, 'momentum_confidence_high_threshold', 0.05)
+            )
+            momentum_medium_threshold = float(
+                getattr(config.trading, 'momentum_confidence_medium_threshold', 0.02)
+            )
 
             if momentum > momentum_high_threshold:
                 confidence += 15.0
@@ -370,12 +364,12 @@ class MomentumStrategyEngine(BaseStrategyEngine):
                 confidence += 10.0
 
             # Volume contribution
-            volume_high_threshold = float(getattr(
-                config.trading, 'momentum_volume_ratio_high_threshold', 2.0
-            ))
-            volume_medium_threshold = float(getattr(
-                config.trading, 'momentum_volume_ratio_medium_threshold', 1.5
-            ))
+            volume_high_threshold = float(
+                getattr(config.trading, 'momentum_volume_ratio_high_threshold', 2.0)
+            )
+            volume_medium_threshold = float(
+                getattr(config.trading, 'momentum_volume_ratio_medium_threshold', 1.5)
+            )
 
             if volume_ratio > volume_high_threshold:
                 confidence += 10.0

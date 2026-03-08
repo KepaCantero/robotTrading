@@ -24,17 +24,14 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 import yaml
 
-from app.backtesting.engine import SimpleBacktester
-from app.backtesting.models import BacktestConfig
-from app.backtesting.realistic_data_generator import MarketRegime, RealisticDataGenerator
-
 # COMPLIANCE: Importar BacktestingCompliance para R5, R6, R7, DATA-001
 from app.backtesting.backtesting_compliance import (
-    BacktestingCompliance,
     BacktestingComplianceResult,
     create_backtesting_compliance,
 )
-
+from app.backtesting.engine import SimpleBacktester
+from app.backtesting.models import BacktestConfig
+from app.backtesting.realistic_data_generator import MarketRegime, RealisticDataGenerator
 from app.domain.models.market_data import Quote
 
 logger = logging.getLogger(__name__)
@@ -604,7 +601,9 @@ class WalkForwardValidator:
         # COMPLIANCE: Inicializar validador de compliance
         self.backtesting_compliance = create_backtesting_compliance()
         self.compliance_results: List[BacktestingComplianceResult] = []
-        logger.info("WalkForwardValidator initialized with BacktestingCompliance (R5, R6, R7, DATA-001)")
+        logger.info(
+            "WalkForwardValidator initialized with BacktestingCompliance (R5, R6, R7, DATA-001)"
+        )
 
     def create_windows(
         self,
@@ -794,9 +793,7 @@ class WalkForwardValidator:
         # IS/OOS Analysis (Req #2)
         is_oos_analysis = {
             "avg_is_return": np.mean(is_returns) if is_returns else 0.0,
-            "avg_is_sharpe": (
-                np.mean(is_sharpe_ratios) if is_sharpe_ratios else 0.0
-            ),
+            "avg_is_sharpe": (np.mean(is_sharpe_ratios) if is_sharpe_ratios else 0.0),
             "avg_is_drawdown": np.mean(is_drawdowns) if is_drawdowns else 0.0,
         }
 
@@ -958,13 +955,15 @@ class WalkForwardValidator:
         for r in walk_forward_results:
             is_metrics = r.get('is_metrics', {})
             oos_metrics = r.get('oos_metrics', {})
-            windows.append({
-                'is_return': is_metrics.get('total_return', 0),
-                'oos_return': oos_metrics.get('total_return', 0),
-                'is_sharpe': is_metrics.get('sharpe_ratio', 0),
-                'oos_sharpe': oos_metrics.get('sharpe_ratio', 0),
-                'trades': oos_metrics.get('total_trades', 0),
-            })
+            windows.append(
+                {
+                    'is_return': is_metrics.get('total_return', 0),
+                    'oos_return': oos_metrics.get('total_return', 0),
+                    'is_sharpe': is_metrics.get('sharpe_ratio', 0),
+                    'oos_sharpe': oos_metrics.get('sharpe_ratio', 0),
+                    'trades': oos_metrics.get('total_trades', 0),
+                }
+            )
 
         # Ejecutar validación
         compliance_result = self.backtesting_compliance.validate_backtest(

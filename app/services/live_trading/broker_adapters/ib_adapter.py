@@ -44,8 +44,11 @@ from ib_insync import IB, LimitOrder, MarketOrder, StopOrder, util
 from ib_insync.contract import Contract as IBContract
 from ib_insync.ticker import Ticker
 
-from app.infrastructure.resilience.reconnection_manager import ReconnectionConfig, ReconnectionManager
 from app.domain.services.trading_validators import TradingValidator
+from app.infrastructure.resilience.reconnection_manager import (
+    ReconnectionConfig,
+    ReconnectionManager,
+)
 
 # from app.models.position import Position  # NOTE: Position model not implemented yet
 # from app.utils.exceptions import BrokerError, ConfigurationError  # NOTE: Not implemented

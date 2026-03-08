@@ -3,7 +3,6 @@ Telegram Bot Helper
 
 Helper utilities for setting up and testing Telegram bot integration.
 """
-import asyncio
 import logging
 from typing import Optional
 

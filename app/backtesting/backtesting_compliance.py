@@ -24,9 +24,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 
@@ -59,9 +57,11 @@ EMBARGO_DAYS = 10  # Días de embargo después del test
 # RESULTADOS DE COMPLIANCE
 # =============================================================================
 
+
 @dataclass
 class ComplianceViolation:
     """Representa una violación de compliance."""
+
     rule_id: str
     rule_name: str
     severity: str  # 'ERROR', 'WARNING', 'INFO'
@@ -74,6 +74,7 @@ class ComplianceViolation:
 @dataclass
 class BacktestingComplianceResult:
     """Resultado completo de validación de compliance."""
+
     is_compliant: bool
     violations: List[ComplianceViolation] = field(default_factory=list)
 
@@ -118,6 +119,7 @@ class BacktestingComplianceResult:
 # =============================================================================
 # VALIDADOR PRINCIPAL
 # =============================================================================
+
 
 class BacktestingCompliance:
     """
@@ -200,14 +202,16 @@ class BacktestingCompliance:
             result = BacktestingComplianceResult(is_compliant=True)
 
         if n_observations <= 0:
-            result.add_violation(ComplianceViolation(
-                rule_id='R6',
-                rule_name='Overfitting Prevention',
-                severity='ERROR',
-                message='n_observations debe ser > 0',
-                value=n_observations,
-                threshold=1,
-            ))
+            result.add_violation(
+                ComplianceViolation(
+                    rule_id='R6',
+                    rule_name='Overfitting Prevention',
+                    severity='ERROR',
+                    message='n_observations debe ser > 0',
+                    value=n_observations,
+                    threshold=1,
+                )
+            )
             result.overfitting_check_passed = False
             return result
 
@@ -215,19 +219,21 @@ class BacktestingCompliance:
         result.param_observation_ratio = ratio
 
         if ratio >= self.max_param_ratio:
-            result.add_violation(ComplianceViolation(
-                rule_id='R6',
-                rule_name='Overfitting Prevention',
-                severity='ERROR',
-                message=f'Ratio parametros/observaciones ({ratio:.4f}) >= max permitido ({self.max_param_ratio:.4f})',
-                value=ratio,
-                threshold=self.max_param_ratio,
-                details={
-                    'n_parameters': n_parameters,
-                    'n_observations': n_observations,
-                    'min_observations_needed': int(n_parameters / self.max_param_ratio),
-                }
-            ))
+            result.add_violation(
+                ComplianceViolation(
+                    rule_id='R6',
+                    rule_name='Overfitting Prevention',
+                    severity='ERROR',
+                    message=f'Ratio parametros/observaciones ({ratio:.4f}) >= max permitido ({self.max_param_ratio:.4f})',
+                    value=ratio,
+                    threshold=self.max_param_ratio,
+                    details={
+                        'n_parameters': n_parameters,
+                        'n_observations': n_observations,
+                        'min_observations_needed': int(n_parameters / self.max_param_ratio),
+                    },
+                )
+            )
             result.overfitting_check_passed = False
         else:
             logger.info(
@@ -272,22 +278,21 @@ class BacktestingCompliance:
 
         # Validar número mínimo de ventanas
         if len(windows_results) < self.min_walk_forward_windows:
-            result.add_violation(ComplianceViolation(
-                rule_id='R5',
-                rule_name='Walk-Forward Analysis',
-                severity='ERROR',
-                message=f'Insuficientes ventanas WF: {len(windows_results)} < {self.min_walk_forward_windows}',
-                value=len(windows_results),
-                threshold=self.min_walk_forward_windows,
-            ))
+            result.add_violation(
+                ComplianceViolation(
+                    rule_id='R5',
+                    rule_name='Walk-Forward Analysis',
+                    severity='ERROR',
+                    message=f'Insuficientes ventanas WF: {len(windows_results)} < {self.min_walk_forward_windows}',
+                    value=len(windows_results),
+                    threshold=self.min_walk_forward_windows,
+                )
+            )
             result.walk_forward_passed = False
             return result
 
         # Calcular métricas de consistencia
-        profitable_windows = sum(
-            1 for w in windows_results
-            if w.get('oos_return', 0) > 0
-        )
+        profitable_windows = sum(1 for w in windows_results if w.get('oos_return', 0) > 0)
         consistency = profitable_windows / len(windows_results)
         result.walk_forward_consistency = consistency
 
@@ -305,40 +310,43 @@ class BacktestingCompliance:
 
         # Validar consistencia
         if consistency < self.min_consistency_ratio:
-            result.add_violation(ComplianceViolation(
-                rule_id='R5',
-                rule_name='Walk-Forward Analysis',
-                severity='ERROR',
-                message=f'Consistencia WF ({consistency:.2%}) < mínimo ({self.min_consistency_ratio:.2%})',
-                value=consistency,
-                threshold=self.min_consistency_ratio,
-                details={
-                    'profitable_windows': profitable_windows,
-                    'total_windows': len(windows_results),
-                }
-            ))
+            result.add_violation(
+                ComplianceViolation(
+                    rule_id='R5',
+                    rule_name='Walk-Forward Analysis',
+                    severity='ERROR',
+                    message=f'Consistencia WF ({consistency:.2%}) < mínimo ({self.min_consistency_ratio:.2%})',
+                    value=consistency,
+                    threshold=self.min_consistency_ratio,
+                    details={
+                        'profitable_windows': profitable_windows,
+                        'total_windows': len(windows_results),
+                    },
+                )
+            )
 
         # Validar degradación IS->OOS
         degradation = 1 - is_oos_ratio if is_oos_ratio > 0 else 1.0
         if degradation > self.max_is_oos_degradation:
-            result.add_violation(ComplianceViolation(
-                rule_id='R5',
-                rule_name='Walk-Forward Analysis',
-                severity='WARNING',
-                message=f'Degradación IS->OOS ({degradation:.2%}) > máximo ({self.max_is_oos_degradation:.2%})',
-                value=degradation,
-                threshold=self.max_is_oos_degradation,
-                details={
-                    'avg_is_sharpe': avg_is_sharpe,
-                    'avg_oos_sharpe': avg_oos_sharpe,
-                    'is_oos_ratio': is_oos_ratio,
-                }
-            ))
+            result.add_violation(
+                ComplianceViolation(
+                    rule_id='R5',
+                    rule_name='Walk-Forward Analysis',
+                    severity='WARNING',
+                    message=f'Degradación IS->OOS ({degradation:.2%}) > máximo ({self.max_is_oos_degradation:.2%})',
+                    value=degradation,
+                    threshold=self.max_is_oos_degradation,
+                    details={
+                        'avg_is_sharpe': avg_is_sharpe,
+                        'avg_oos_sharpe': avg_oos_sharpe,
+                        'is_oos_ratio': is_oos_ratio,
+                    },
+                )
+            )
 
         # Determinar si pasó
         result.walk_forward_passed = (
-            consistency >= self.min_consistency_ratio
-            and degradation <= self.max_is_oos_degradation
+            consistency >= self.min_consistency_ratio and degradation <= self.max_is_oos_degradation
         )
 
         if result.walk_forward_passed:
@@ -385,27 +393,31 @@ class BacktestingCompliance:
 
         # Validar número de simulaciones
         if n_simulations < self.min_monte_carlo_sims:
-            result.add_violation(ComplianceViolation(
-                rule_id='R7',
-                rule_name='Monte Carlo Simulation',
-                severity='WARNING',
-                message=f'Pocas simulaciones MC: {n_simulations} < {self.min_monte_carlo_sims}',
-                value=n_simulations,
-                threshold=self.min_monte_carlo_sims,
-            ))
+            result.add_violation(
+                ComplianceViolation(
+                    rule_id='R7',
+                    rule_name='Monte Carlo Simulation',
+                    severity='WARNING',
+                    message=f'Pocas simulaciones MC: {n_simulations} < {self.min_monte_carlo_sims}',
+                    value=n_simulations,
+                    threshold=self.min_monte_carlo_sims,
+                )
+            )
 
         # Validar que VaR está en rango esperado (-1 a 0 típicamente)
         if var_95 > 0 or var_99 > 0:
-            result.add_violation(ComplianceViolation(
-                rule_id='R7',
-                rule_name='Monte Carlo Simulation',
-                severity='WARNING',
-                message=f'VaR positivo detectado - posible error en cálculo',
-                details={
-                    'var_95': var_95,
-                    'var_99': var_99,
-                }
-            ))
+            result.add_violation(
+                ComplianceViolation(
+                    rule_id='R7',
+                    rule_name='Monte Carlo Simulation',
+                    severity='WARNING',
+                    message='VaR positivo detectado - posible error en cálculo',
+                    details={
+                        'var_95': var_95,
+                        'var_99': var_99,
+                    },
+                )
+            )
 
         # Monte Carlo pasa si se ejecutó con suficientes simulaciones
         result.monte_carlo_passed = n_simulations >= self.min_monte_carlo_sims
@@ -453,42 +465,45 @@ class BacktestingCompliance:
 
         # Validar purge days
         if purge_days < self.min_purge_days:
-            result.add_violation(ComplianceViolation(
-                rule_id='DATA-001',
-                rule_name='Purged Cross-Validation',
-                severity='ERROR',
-                message=f'Purge days ({purge_days}) < mínimo ({self.min_purge_days})',
-                value=purge_days,
-                threshold=self.min_purge_days,
-            ))
+            result.add_violation(
+                ComplianceViolation(
+                    rule_id='DATA-001',
+                    rule_name='Purged Cross-Validation',
+                    severity='ERROR',
+                    message=f'Purge days ({purge_days}) < mínimo ({self.min_purge_days})',
+                    value=purge_days,
+                    threshold=self.min_purge_days,
+                )
+            )
 
         # Validar embargo
         if embargo_days < EMBARGO_DAYS:
-            result.add_violation(ComplianceViolation(
-                rule_id='DATA-001',
-                rule_name='Purged Cross-Validation',
-                severity='WARNING',
-                message=f'Embargo days ({embargo_days}) < recomendado ({EMBARGO_DAYS})',
-                value=embargo_days,
-                threshold=EMBARGO_DAYS,
-            ))
+            result.add_violation(
+                ComplianceViolation(
+                    rule_id='DATA-001',
+                    rule_name='Purged Cross-Validation',
+                    severity='WARNING',
+                    message=f'Embargo days ({embargo_days}) < recomendado ({EMBARGO_DAYS})',
+                    value=embargo_days,
+                    threshold=EMBARGO_DAYS,
+                )
+            )
 
         # Validar overlap
         if has_overlap:
-            result.add_violation(ComplianceViolation(
-                rule_id='DATA-001',
-                rule_name='Purged Cross-Validation',
-                severity='ERROR',
-                message='Overlap detectado entre folds - data leakage risk',
-                details={
-                    'has_overlap': has_overlap,
-                }
-            ))
+            result.add_violation(
+                ComplianceViolation(
+                    rule_id='DATA-001',
+                    rule_name='Purged Cross-Validation',
+                    severity='ERROR',
+                    message='Overlap detectado entre folds - data leakage risk',
+                    details={
+                        'has_overlap': has_overlap,
+                    },
+                )
+            )
 
-        result.purged_cv_passed = (
-            purge_days >= self.min_purge_days
-            and not has_overlap
-        )
+        result.purged_cv_passed = purge_days >= self.min_purge_days and not has_overlap
 
         if result.purged_cv_passed:
             logger.info(
@@ -583,6 +598,7 @@ class BacktestingCompliance:
 # =============================================================================
 # FUNCIÓN DE CONVENIENCIA
 # =============================================================================
+
 
 def create_backtesting_compliance() -> BacktestingCompliance:
     """

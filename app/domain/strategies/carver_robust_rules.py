@@ -22,12 +22,16 @@ from datetime import datetime, time
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from app.shared.config.centralized_config import get_strategy_config, get_trading_threshold, get_config
+from app.application.scheduling.market_scheduler import MarketScheduler, MarketType
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.services.analysis.momentum import TechnicalIndicatorCalculator
-from app.application.scheduling.market_scheduler import MarketScheduler, MarketType
+from app.shared.config.centralized_config import (
+    get_config,
+    get_strategy_config,
+    get_trading_threshold,
+)
 
 from .base import BaseStrategy
 
@@ -309,7 +313,6 @@ class CarverRobustRulesStrategy(BaseStrategy):
             returns.append(ret)
 
         # Calculate standard deviation
-        import numpy as np
 
         volatility = getattr(config.trading, 'max_risk_per_trade', 0.02)
 

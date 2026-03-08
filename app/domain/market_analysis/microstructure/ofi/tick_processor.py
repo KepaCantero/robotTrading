@@ -25,7 +25,11 @@ from typing import Optional
 
 import numpy as np
 
-from app.domain.market_analysis.microstructure.ofi.models import OrderBookSnapshot, OrderSide, TickData
+from app.domain.market_analysis.microstructure.ofi.models import (
+    OrderBookSnapshot,
+    OrderSide,
+    TickData,
+)
 from app.domain.market_analysis.microstructure.ofi.ofi_calculator import OFICalculator
 
 logger = logging.getLogger(__name__)

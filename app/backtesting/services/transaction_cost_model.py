@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 from enum import Enum
 from typing import Any, Dict, Optional
 
@@ -33,6 +33,7 @@ logger = logging.getLogger(__name__)
 
 class BrokerType(Enum):
     """Supported broker types for cost modeling."""
+
     INTERACTIVE_BROKERS = "interactive_brokers"
     ALPACA = "alpaca"
     GENERIC = "generic"
@@ -40,6 +41,7 @@ class BrokerType(Enum):
 
 class OrderType(Enum):
     """Order types for cost calculation."""
+
     MARKET = "market"
     LIMIT = "limit"
     STOP = "stop"
@@ -60,21 +62,21 @@ class BrokerConfig:
     """
 
     # Commission structure - defaults from CentralizedConfig
-    commission_per_share: Optional[Decimal] = None   # IBKR: $0.005/share
-    commission_minimum: Optional[Decimal] = None     # IBKR: $1.00 minimum
-    commission_maximum: Optional[Decimal] = None    # IBKR: 0.5% of trade value max
+    commission_per_share: Optional[Decimal] = None  # IBKR: $0.005/share
+    commission_minimum: Optional[Decimal] = None  # IBKR: $1.00 minimum
+    commission_maximum: Optional[Decimal] = None  # IBKR: 0.5% of trade value max
 
     # Exchange fees (SEC, TAF, etc.) - these are regulatory, not broker-specific
-    sec_fee_rate: Decimal = Decimal("0.0000278")     # SEC fee per dollar of sale
+    sec_fee_rate: Decimal = Decimal("0.0000278")  # SEC fee per dollar of sale
     taf_fee_per_share: Decimal = Decimal("0.000166")  # Trading Activity Fee
 
     # Spread assumptions (typical for liquid stocks) - from CentralizedConfig
     default_spread_bps: Optional[Decimal] = None
-    large_cap_spread_bps: Decimal = Decimal("3")     # 3 bps for large caps
-    small_cap_spread_bps: Decimal = Decimal("15")    # 15 bps for small caps
+    large_cap_spread_bps: Decimal = Decimal("3")  # 3 bps for large caps
+    small_cap_spread_bps: Decimal = Decimal("15")  # 15 bps for small caps
 
     # Slippage parameters (Almgren-Chriss inspired) - from CentralizedConfig
-    temporary_impact_coefficient: Decimal = Decimal("0.1")   # Temporary impact
+    temporary_impact_coefficient: Decimal = Decimal("0.1")  # Temporary impact
     permanent_impact_coefficient: Decimal = Decimal("0.05")  # Permanent impact
 
     # Participation rate limits - from CentralizedConfig
@@ -91,7 +93,9 @@ class BrokerConfig:
         if self.commission_maximum is None:
             self.commission_maximum = config.default_commission_rate
         if self.default_spread_bps is None:
-            self.default_spread_bps = config.base_slippage_bps / Decimal("2")  # Spread is half slippage
+            self.default_spread_bps = config.base_slippage_bps / Decimal(
+                "2"
+            )  # Spread is half slippage
         if self.max_participation_rate is None:
             self.max_participation_rate = config.adv_limit_pct
 
@@ -386,6 +390,7 @@ class TransactionCostModel:
 
         # Permanent impact (scales with sqrt of participation rate)
         import math
+
         perm_impact = (
             self.config.permanent_impact_coefficient
             * Decimal(str(math.sqrt(float(participation_rate))))
@@ -429,7 +434,9 @@ class TransactionCostModel:
             pass
         elif order_type == OrderType.LIMIT:
             # Limit orders have lower slippage (better execution expected)
-            base_slippage_bps = base_slippage_bps * config.optimistic_slippage_bps / config.base_slippage_bps
+            base_slippage_bps = (
+                base_slippage_bps * config.optimistic_slippage_bps / config.base_slippage_bps
+            )
         else:
             # Stop orders have worse execution
             base_slippage_bps = base_slippage_bps * config.stop_slippage_multiplier

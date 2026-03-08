@@ -440,7 +440,9 @@ class RegimeBasedSelector(BaseStrategyEnsemble):
 
         # Hysteresis for regime changes - require N consecutive detections
         self.regime_history: List[str] = []
-        self.hysteresis_count = config.get("hysteresis_count", 3)  # Require 3 consecutive detections
+        self.hysteresis_count = config.get(
+            "hysteresis_count", 3
+        )  # Require 3 consecutive detections
 
         logger.info("RegimeBasedSelector initialized")
 

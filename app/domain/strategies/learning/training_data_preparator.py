@@ -49,7 +49,9 @@ class TrainingDataPreparator:
         """
         # Lazy import de FeatureExtractor solo cuando se necesite
         if feature_extractor is None:
-            from app.domain.strategies.momentum_modular.learning.feature_extractor import FeatureExtractor
+            from app.domain.strategies.momentum_modular.learning.feature_extractor import (
+                FeatureExtractor,
+            )
 
             self.feature_extractor = FeatureExtractor()
         else:
@@ -476,9 +478,7 @@ class TrainingDataPreparator:
         indicators_df['atr_percentile'] = (
             indicators_df['atr']
             .rolling(window=30)
-            .apply(
-                lambda x: (x.iloc[-1] <= x).mean() * 100 if len(x) > 0 else 50, raw=False
-            )
+            .apply(lambda x: (x.iloc[-1] <= x).mean() * 100 if len(x) > 0 else 50, raw=False)
             .fillna(50)
         )
 

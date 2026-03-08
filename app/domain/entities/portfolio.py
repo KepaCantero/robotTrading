@@ -16,11 +16,11 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, Iterator, List, Optional
 
-from app.shared.config.centralized_config import get_config
 from app.domain.entities.position import Position, PositionSide, PositionStatus
 from app.domain.value_objects.capital import Capital
 from app.domain.value_objects.money import Money
 from app.domain.value_objects.risk_parameters import RiskParameters
+from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -581,14 +581,12 @@ class Portfolio:
         # Get default risk parameters from centralized config
         try:
             config = get_config()
-            stop_loss_pct = Decimal(str(getattr(
-                config.trading, 'stop_loss_pct', 0.05
-            )))
-            take_profit_pct = Decimal(str(getattr(
-                config.trading, 'take_profit_pct', 0.10
-            )))
+            stop_loss_pct = Decimal(str(getattr(config.trading, 'stop_loss_pct', 0.05)))
+            take_profit_pct = Decimal(str(getattr(config.trading, 'take_profit_pct', 0.10)))
         except (AttributeError, ValueError) as e:
-            logger.warning(f"Error loading trading config for portfolio creation: {e}, using defaults")
+            logger.warning(
+                f"Error loading trading config for portfolio creation: {e}, using defaults"
+            )
             stop_loss_pct = Decimal('0.05')
             take_profit_pct = Decimal('0.10')
 

@@ -444,7 +444,9 @@ class MarketImpactModel:
                     # Calculate regressors
                     participation_rate = float(order_size / adv)
                     X1 = participation_rate  # Permanent: order_size / adv
-                    X2 = float(volatility) * math.sqrt(participation_rate)  # Temporary: vol * sqrt(order_size / adv)
+                    X2 = float(volatility) * math.sqrt(
+                        participation_rate
+                    )  # Temporary: vol * sqrt(order_size / adv)
 
                     X1_values.append(X1)
                     X2_values.append(X2)
@@ -516,7 +518,9 @@ class MarketImpactModel:
                 return self.ac_config
 
         except Exception as e:
-            logger.error(f"Error during coefficient calibration: {e}, using defaults", exc_info=True)
+            logger.error(
+                f"Error during coefficient calibration: {e}, using defaults", exc_info=True
+            )
             return self.ac_config
 
     def estimate_impact_range(

@@ -170,7 +170,11 @@ class SharpeRatioCombinator:
         Args:
             risk_free_rate: Annual risk-free rate (default: from CentralizedConfig)
         """
-        self.risk_free_rate = risk_free_rate if risk_free_rate is not None else float(get_config().backtesting.default_risk_free_rate)
+        self.risk_free_rate = (
+            risk_free_rate
+            if risk_free_rate is not None
+            else float(get_config().backtesting.default_risk_free_rate)
+        )
 
     def combine_sharpes_optimal(
         self,
@@ -761,7 +765,11 @@ class TurnoverAdjustedCalculator:
             risk_free_rate: Annual risk-free rate (default: from CentralizedConfig)
         """
         self.transaction_cost_bps = transaction_cost_bps
-        self.risk_free_rate = risk_free_rate if risk_free_rate is not None else float(get_config().backtesting.default_risk_free_rate)
+        self.risk_free_rate = (
+            risk_free_rate
+            if risk_free_rate is not None
+            else float(get_config().backtesting.default_risk_free_rate)
+        )
 
     def calculate_turnover_adjusted_sharpe(
         self,
@@ -1017,7 +1025,11 @@ def create_lopez_de_prado_suite(
     Returns:
         Dictionary with all Lopez de Prado metrics calculators
     """
-    rf = risk_free_rate if risk_free_rate is not None else float(get_config().backtesting.default_risk_free_rate)
+    rf = (
+        risk_free_rate
+        if risk_free_rate is not None
+        else float(get_config().backtesting.default_risk_free_rate)
+    )
     return {
         "sharpe_combiner": SharpeRatioCombinator(risk_free_rate=rf),
         "stability_validator": PortfolioStabilityValidator(

@@ -33,6 +33,7 @@ class ExtendedPortfolio(BasePortfolio):
     def validate_portfolio_consistency(self) -> "ExtendedPortfolio":
         """Validate portfolio consistency."""
         from app.shared.config.centralized_config import get_config
+
         cfg = get_config()
 
         if self.cash_balance != self.cash:
@@ -345,6 +346,7 @@ class PortfolioAllocation(BaseModel):
     def validate_allocation_sum(self) -> "PortfolioAllocation":
         """Validate that allocations sum to 100%."""
         from app.shared.config.centralized_config import get_config
+
         cfg = get_config()
 
         total_allocation = (

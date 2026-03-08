@@ -28,9 +28,9 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from requests.exceptions import HTTPError, RequestException
 
-from app.shared.config.di_container import get_portfolio_service as di_get_portfolio_service
 from app.domain.models.portfolio import AssetUniverse, MarketRegimeData, Position
 from app.services.portfolio_service import PortfolioService
+from app.shared.config.di_container import get_portfolio_service as di_get_portfolio_service
 
 from . import audit_logger, get_correlation_id
 

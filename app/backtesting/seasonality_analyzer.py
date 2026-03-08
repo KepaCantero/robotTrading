@@ -324,7 +324,9 @@ class SeasonalityAnalyzer:
                 }
             except ImportError:
                 # Use fallback implementation
-                from app.shared.performance.statsmodels_fallback import seasonal_decompose as fallback_decompose
+                from app.shared.performance.statsmodels_fallback import (
+                    seasonal_decompose as fallback_decompose,
+                )
 
                 decomposition = fallback_decompose(monthly, model=method, period=12)
 

@@ -8,7 +8,7 @@ circuit breakers, and related parameters.
 from decimal import Decimal
 from typing import Dict
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import Field, field_validator
 
 from app.shared.config.base import ConfigBase
 
@@ -18,14 +18,20 @@ class SignalThresholds(ConfigBase):
 
     # Signal strength and confidence
     min_signal_strength: float = Field(default=60.0, description="Minimum signal strength (0-100)")
-    min_signal_confidence: float = Field(default=70.0, description="Minimum signal confidence (0-100)")
+    min_signal_confidence: float = Field(
+        default=70.0, description="Minimum signal confidence (0-100)"
+    )
     min_liquidity_score: float = Field(default=50.0, description="Minimum liquidity score (0-100)")
 
     # Additional thresholds for momentum analysis
-    min_strength: float = Field(default=60.0, description="Minimum strength threshold for momentum analysis")
+    min_strength: float = Field(
+        default=60.0, description="Minimum strength threshold for momentum analysis"
+    )
 
     # Signal Scoring Engine (TASK-SC-1 to SC-5)
-    signal_cooldown_minutes: int = Field(default=10, description="Signal cooldown period in minutes")
+    signal_cooldown_minutes: int = Field(
+        default=10, description="Signal cooldown period in minutes"
+    )
     signal_compound_weights: Dict[str, float] = Field(
         default_factory=lambda: {
             "confidence": 0.30,
@@ -36,10 +42,16 @@ class SignalThresholds(ConfigBase):
         },
         description="Weights for compound signal scoring",
     )
-    signal_high_priority_threshold: float = Field(default=80.0, description="High priority threshold (0-100)")
-    signal_medium_priority_threshold: float = Field(default=50.0, description="Medium priority threshold (0-100)")
+    signal_high_priority_threshold: float = Field(
+        default=80.0, description="High priority threshold (0-100)"
+    )
+    signal_medium_priority_threshold: float = Field(
+        default=50.0, description="Medium priority threshold (0-100)"
+    )
 
-    @field_validator("min_signal_strength", "min_signal_confidence", "min_liquidity_score", "min_strength")
+    @field_validator(
+        "min_signal_strength", "min_signal_confidence", "min_liquidity_score", "min_strength"
+    )
     @classmethod
     def validate_0_100_range(cls, v):
         if not 0 <= v <= 100:
@@ -65,8 +77,12 @@ class RiskManagementThresholds(ConfigBase):
 
     # Strategy-specific exposure limits
     max_momentum_exposure: float = Field(default=0.50, description="Max momentum exposure (0-1)")
-    max_mean_reversion_exposure: float = Field(default=0.30, description="Max mean reversion exposure (0-1)")
-    max_pairs_trading_exposure: float = Field(default=0.30, description="Max pairs trading exposure (0-1)")
+    max_mean_reversion_exposure: float = Field(
+        default=0.30, description="Max mean reversion exposure (0-1)"
+    )
+    max_pairs_trading_exposure: float = Field(
+        default=0.30, description="Max pairs trading exposure (0-1)"
+    )
 
     # Trading controls
     max_consecutive_stops: int = Field(default=5, description="Max consecutive stops before pause")
@@ -109,9 +125,15 @@ class CircuitBreakerThresholds(ConfigBase):
     circuit_breaker_daily_loss: float = Field(
         default=0.05, description="Circuit breaker daily loss threshold (Chan #15: 5%)"
     )
-    circuit_breaker_drawdown: float = Field(default=0.1, description="Circuit breaker drawdown threshold")
-    circuit_breaker_volatility: float = Field(default=0.05, description="Circuit breaker volatility threshold")
-    circuit_breaker_error_rate: float = Field(default=0.05, description="Circuit breaker error rate threshold")
+    circuit_breaker_drawdown: float = Field(
+        default=0.1, description="Circuit breaker drawdown threshold"
+    )
+    circuit_breaker_volatility: float = Field(
+        default=0.05, description="Circuit breaker volatility threshold"
+    )
+    circuit_breaker_error_rate: float = Field(
+        default=0.05, description="Circuit breaker error rate threshold"
+    )
 
     @field_validator(
         "circuit_breaker_daily_loss",
@@ -129,12 +151,23 @@ class CircuitBreakerThresholds(ConfigBase):
 class SlippageThresholds(ConfigBase):
     """Configuration for slippage analysis parameters."""
 
-    volatility_threshold_high: Decimal = Field(default=Decimal("30.0"), description="High volatility threshold (%)")
-    volatility_threshold_extreme: Decimal = Field(default=Decimal("50.0"), description="Extreme volatility threshold (%)")
-    max_spread_threshold: Decimal = Field(default=Decimal("2.0"), description="Maximum spread threshold (%)")
+    volatility_threshold_high: Decimal = Field(
+        default=Decimal("30.0"), description="High volatility threshold (%)"
+    )
+    volatility_threshold_extreme: Decimal = Field(
+        default=Decimal("50.0"), description="Extreme volatility threshold (%)"
+    )
+    max_spread_threshold: Decimal = Field(
+        default=Decimal("2.0"), description="Maximum spread threshold (%)"
+    )
     base_slippage: Decimal = Field(default=Decimal("0.1"), description="Base slippage rate (%)")
 
-    @field_validator("volatility_threshold_high", "volatility_threshold_extreme", "max_spread_threshold", "base_slippage")
+    @field_validator(
+        "volatility_threshold_high",
+        "volatility_threshold_extreme",
+        "max_spread_threshold",
+        "base_slippage",
+    )
     @classmethod
     def validate_decimal_percentage(cls, v):
         if not Decimal("0") <= v <= Decimal("100"):
@@ -150,7 +183,7 @@ class TradingCostThresholds(ConfigBase):
         default=Decimal("0.001"),
         ge=Decimal("0"),
         le=Decimal("0.1"),
-        description="Commission rate as decimal (0.001 = 0.1%)"
+        description="Commission rate as decimal (0.001 = 0.1%)",
     )
 
     # Slippage rates (as decimals, e.g., 0.0005 = 0.05%)
@@ -158,7 +191,7 @@ class TradingCostThresholds(ConfigBase):
         default=Decimal("0.0005"),
         ge=Decimal("0"),
         le=Decimal("0.01"),
-        description="Expected slippage rate as decimal (0.0005 = 0.05%)"
+        description="Expected slippage rate as decimal (0.0005 = 0.05%)",
     )
 
     # Market impact rates (as decimals, e.g., 0.0002 = 0.02%)
@@ -166,42 +199,44 @@ class TradingCostThresholds(ConfigBase):
         default=Decimal("0.0002"),
         ge=Decimal("0"),
         le=Decimal("0.01"),
-        description="Expected market impact rate as decimal (0.0002 = 0.02%)"
+        description="Expected market impact rate as decimal (0.0002 = 0.02%)",
     )
 
     # Fixed costs per trade (in USD)
     infrastructure_cost_per_trade: Decimal = Field(
         default=Decimal("1.0"),
         ge=Decimal("0"),
-        description="Fixed infrastructure cost per trade in USD"
+        description="Fixed infrastructure cost per trade in USD",
     )
 
     data_fee_per_trade: Decimal = Field(
-        default=Decimal("0.5"),
-        ge=Decimal("0"),
-        description="Fixed data fee per trade in USD"
+        default=Decimal("0.5"), ge=Decimal("0"), description="Fixed data fee per trade in USD"
     )
 
     # Trade value estimation multiplier
     trade_value_multiplier: Decimal = Field(
         default=Decimal("10"),
         ge=Decimal("1"),
-        description="Multiplier to estimate trade value from PnL"
+        description="Multiplier to estimate trade value from PnL",
     )
 
     # Assumptions for calculations
     assumed_base_capital: Decimal = Field(
         default=Decimal("1000"),
         ge=Decimal("100"),
-        description="Assumed base capital for return calculations"
+        description="Assumed base capital for return calculations",
     )
 
 
 class PerformanceThresholds(ConfigBase):
     """Configuration for performance and latency thresholds."""
 
-    max_latency_ms: int = Field(default=1000, description="Maximum acceptable latency in milliseconds")
-    max_execution_time_ms: int = Field(default=500, description="Maximum execution time in milliseconds")
+    max_latency_ms: int = Field(
+        default=1000, description="Maximum acceptable latency in milliseconds"
+    )
+    max_execution_time_ms: int = Field(
+        default=500, description="Maximum execution time in milliseconds"
+    )
 
 
 class MarketMicrostructureThresholds(ConfigBase):
@@ -212,37 +247,24 @@ class MarketMicrostructureThresholds(ConfigBase):
         default=0.02,
         ge=0.0,
         le=1.0,
-        description="Default volatility assumption when historical data unavailable"
+        description="Default volatility assumption when historical data unavailable",
     )
 
     # Liquidity score thresholds
     liquidity_high_threshold: float = Field(
-        default=80.0,
-        ge=0.0,
-        le=100.0,
-        description="Liquidity score threshold for HIGH regime"
+        default=80.0, ge=0.0, le=100.0, description="Liquidity score threshold for HIGH regime"
     )
     liquidity_normal_threshold: float = Field(
-        default=60.0,
-        ge=0.0,
-        le=100.0,
-        description="Liquidity score threshold for NORMAL regime"
+        default=60.0, ge=0.0, le=100.0, description="Liquidity score threshold for NORMAL regime"
     )
     liquidity_low_threshold: float = Field(
-        default=40.0,
-        ge=0.0,
-        le=100.0,
-        description="Liquidity score threshold for LOW regime"
+        default=40.0, ge=0.0, le=100.0, description="Liquidity score threshold for LOW regime"
     )
 
     # Market impact thresholds
     high_market_impact_bps: float = Field(
-        default=50.0,
-        ge=0.0,
-        description="Market impact threshold (in bps) for high impact alert"
+        default=50.0, ge=0.0, description="Market impact threshold (in bps) for high impact alert"
     )
     wide_spread_bps: float = Field(
-        default=10.0,
-        ge=0.0,
-        description="Spread threshold (in bps) for wide spread alert"
+        default=10.0, ge=0.0, description="Spread threshold (in bps) for wide spread alert"
     )

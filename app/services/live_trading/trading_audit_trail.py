@@ -24,6 +24,7 @@ from decimal import Decimal
 from enum import Enum
 from pathlib import Path
 from typing import Deque, Dict, List, Optional
+
 import numpy as np
 
 logger = logging.getLogger(__name__)

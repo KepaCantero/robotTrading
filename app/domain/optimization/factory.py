@@ -30,11 +30,8 @@ import numpy as np
 from numpy.typing import NDArray
 
 from app.shared.config.centralized_config import get_config
-from .base_optimizer import (
-    BaseOptimizer,
-    OptimizationConfig,
-    OptimizerType,
-)
+
+from .base_optimizer import BaseOptimizer, OptimizationConfig, OptimizerType
 from .bayesian_optimizer import BayesianOptimizer, SearchSpace
 from .grid_search_optimizer import GridSearchOptimizer, GridSearchOptimizerCV
 from .mean_variance_optimizer import MeanVarianceOptimizer
@@ -253,13 +250,17 @@ class OptimizerFactory:
         return GridSearchOptimizer(config=config)
 
     @classmethod
-    def _create_mean_variance(cls, config: OptimizationConfig, **kwargs: Any) -> MeanVarianceOptimizer:
+    def _create_mean_variance(
+        cls, config: OptimizationConfig, **kwargs: Any
+    ) -> MeanVarianceOptimizer:
         """Create a Mean-Variance optimizer."""
         return MeanVarianceOptimizer(
             config=config,
             lookback_days=kwargs.get("lookback_days", 252),
             max_position=kwargs.get("max_position", 0.20),
-            risk_free_rate=kwargs.get("risk_free_rate", float(get_config().backtesting.default_risk_free_rate)),
+            risk_free_rate=kwargs.get(
+                "risk_free_rate", float(get_config().backtesting.default_risk_free_rate)
+            ),
             regularization_gamma=kwargs.get("regularization_gamma", 0.01),
             sum_tolerance=kwargs.get("sum_tolerance", 1e-6),
             allow_short=kwargs.get("allow_short", False),
@@ -346,7 +347,11 @@ class OptimizerFactory:
             metric="sharpe_ratio",
         )
 
-        rf = risk_free_rate if risk_free_rate is not None else float(get_config().backtesting.default_risk_free_rate)
+        rf = (
+            risk_free_rate
+            if risk_free_rate is not None
+            else float(get_config().backtesting.default_risk_free_rate)
+        )
 
         return MeanVarianceOptimizer(
             config=config,

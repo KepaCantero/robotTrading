@@ -222,7 +222,9 @@ class RegimeAnalyzer:
                 'volatility': float(regime_returns.std()),
                 'min_return': float(regime_returns.min()),
                 'max_return': float(regime_returns.max()),
-                'sharpe': float(regime_returns.mean() / regime_returns.std()) if regime_returns.std() > 0 else 0.0,
+                'sharpe': float(regime_returns.mean() / regime_returns.std())
+                if regime_returns.std() > 0
+                else 0.0,
             }
 
         return stats

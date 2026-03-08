@@ -271,7 +271,9 @@ def generate_backend_test_summary(
     """
     # If this is a multi-strategy backtest, generate different summary
     if multi_strategy_results and strategy == "all_strategies":
-        from app.presentation.dashboard.multi_strategy_utils import generate_multi_strategy_summary_text
+        from app.presentation.dashboard.multi_strategy_utils import (
+            generate_multi_strategy_summary_text,
+        )
 
         # Generate multi-strategy specific summary
         generate_multi_strategy_summary_text(multi_strategy_results)

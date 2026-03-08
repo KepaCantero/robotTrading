@@ -18,18 +18,18 @@ Reference: López de Prado (2018) "Advances in Financial Machine Learning"
 
 from __future__ import annotations
 
+import uuid
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional, Tuple
-import uuid
 
 import numpy as np
 from numpy.typing import NDArray
 
 # Import canonical Trade and PerformanceMetrics from app.backtesting.models
-from app.backtesting.models import PerformanceMetrics, Trade, TradeSide, TradeStatus
+from app.backtesting.models import PerformanceMetrics, Trade, TradeStatus
 from app.shared.config.centralized_config import get_config
 
 
@@ -391,6 +391,7 @@ class BacktestEngine:
         Returns:
             PerformanceMetrics (canonical from app.backtesting.models)
         """
+
         # Helper function to convert to Decimal
         def to_decimal(val):
             if val is None:

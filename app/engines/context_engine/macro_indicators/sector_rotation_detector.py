@@ -4,6 +4,7 @@ SectorRotationDetector - Detector de rotación sectorial (simplificado).
 
 import logging
 from typing import Any, Dict, List
+
 import numpy as np
 
 logger = logging.getLogger(__name__)

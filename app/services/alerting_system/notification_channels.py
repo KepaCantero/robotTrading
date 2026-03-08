@@ -383,7 +383,7 @@ class TelegramChannel(NotificationChannel):
     async def send(self, target: NotificationTarget, payload: NotificationPayload) -> bool:
         """Send notification via Telegram Bot API."""
         if not target.enabled:
-            logger.debug(f"Telegram channel disabled")
+            logger.debug("Telegram channel disabled")
             return False
 
         try:

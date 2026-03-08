@@ -9,8 +9,8 @@ import logging
 from datetime import datetime
 from typing import Any, Dict, Optional
 
-from app.shared.config.centralized_config import get_config
 from app.domain.models.signal import MarketData, SignalType
+from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 

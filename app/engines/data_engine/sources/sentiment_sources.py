@@ -10,10 +10,10 @@ Fuentes soportadas:
 import asyncio
 import logging
 from typing import Any, Dict, List, Optional
-import numpy as np
 
 # REQUIRED: No fallbacks - aiohttp is required for async HTTP requests
 import aiohttp  # noqa: F401
+import numpy as np
 from requests.exceptions import HTTPError, RequestException
 from sqlalchemy.exc import (
     DatabaseError,
@@ -25,6 +25,7 @@ from sqlalchemy.exc import (
 
 from app.shared.config.api_endpoints import APIEndpoints
 from app.shared.config.timeout_config import get_timeouts
+
 from .base_source import BaseDataSource
 
 # Optional tweepy import for Twitter sentiment analysis
@@ -177,9 +178,7 @@ class TwitterSentimentSource(BaseDataSource):
                         else:
                             sentiment_scores.append(0.0)
 
-                    avg_sentiment = (
-                        np.mean(sentiment_scores) if sentiment_scores else 0.0
-                    )
+                    avg_sentiment = np.mean(sentiment_scores) if sentiment_scores else 0.0
 
                     return {
                         'sentiment_score': float(avg_sentiment),
@@ -367,9 +366,7 @@ class RedditSentimentSource(BaseDataSource):
                 else:
                     sentiment_scores.append(0.0)
 
-            avg_sentiment = (
-                np.mean(sentiment_scores) if sentiment_scores else 0.0
-            )
+            avg_sentiment = np.mean(sentiment_scores) if sentiment_scores else 0.0
 
             return {
                 'sentiment_score': float(avg_sentiment),
@@ -529,9 +526,7 @@ class NewsSentimentSource(BaseDataSource):
                     else:
                         sentiment_scores.append(0.0)
 
-                avg_sentiment = (
-                    np.mean(sentiment_scores) if sentiment_scores else 0.0
-                )
+                avg_sentiment = np.mean(sentiment_scores) if sentiment_scores else 0.0
 
                 return {
                     'sentiment_score': float(avg_sentiment),
@@ -583,9 +578,7 @@ class NewsSentimentSource(BaseDataSource):
                             # Ponderar por relevancia
                             sentiment_scores.append(sentiment * relevance)
 
-                avg_sentiment = (
-                    np.mean(sentiment_scores) if sentiment_scores else 0.0
-                )
+                avg_sentiment = np.mean(sentiment_scores) if sentiment_scores else 0.0
 
                 return {
                     'sentiment_score': float(avg_sentiment),

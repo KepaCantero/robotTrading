@@ -9,11 +9,12 @@ TASK-24: SRP Refactoring
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
 logger = logging.getLogger(__name__)
+
 
 class DatabaseConfig(BaseModel):
     """
@@ -138,6 +139,7 @@ class APIConfig(BaseModel):
 #   - MonitoringConfig: Monitoring and alerting configuration
 # =============================================================================
 
+
 class LoggingConfig(BaseModel):
     """Logging configuration."""
 
@@ -197,4 +199,3 @@ class MonitoringConfig(BaseModel):
 #   - SectorCountryDiversificationConfig: Sector/country diversification limits
 #   - ComplianceConfig: Compliance engine thresholds
 # =============================================================================
-

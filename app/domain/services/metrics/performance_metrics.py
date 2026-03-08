@@ -21,12 +21,12 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Union
 
 import numpy as np
 import pandas as pd
 
-from app.shared.config.centralized_config import CentralizedConfig, get_config
+from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -163,7 +163,11 @@ class PerformanceMetricsCalculator:
             use_empyrical: Whether to use empyrical library when available
         """
         self.risk_free_rate = risk_free_rate
-        self.trading_days = trading_days if trading_days is not None else get_config().backtesting.annual_trading_days
+        self.trading_days = (
+            trading_days
+            if trading_days is not None
+            else get_config().backtesting.annual_trading_days
+        )
         self.use_empyrical = use_empyrical and EMPYRICAL_AVAILABLE
 
     # =========================================================================
@@ -768,7 +772,9 @@ class PerformanceMetricsCalculator:
         sortino = self.sortino_ratio(returns_array)
 
         dd_result = self.max_drawdown_analysis(equity_array)
-        calmar = self.calmar_ratio(returns_array, equity_array, cagr=cagr_val, max_drawdown=dd_result.max_drawdown)
+        calmar = self.calmar_ratio(
+            returns_array, equity_array, cagr=cagr_val, max_drawdown=dd_result.max_drawdown
+        )
         omega = self.omega_ratio(returns_array)
 
         vol = self.volatility(returns_array)

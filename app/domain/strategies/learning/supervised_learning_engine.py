@@ -755,7 +755,9 @@ class SupervisedLearningEngine(BaseLearningEngine):
     def _extract_features(self, features: Dict) -> List[float]:
         """Extraer vector de features del dict usando FeatureExtractor."""
         # Usar FeatureExtractor para extracción completa
-        from app.domain.strategies.momentum_modular.learning.feature_extractor import FeatureExtractor
+        from app.domain.strategies.momentum_modular.learning.feature_extractor import (
+            FeatureExtractor,
+        )
 
         if not hasattr(self, '_feature_extractor'):
             self._feature_extractor = FeatureExtractor()

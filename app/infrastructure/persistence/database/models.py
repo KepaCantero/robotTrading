@@ -267,8 +267,7 @@ class Trade(Base):
         Returns:
             app.backtesting.models.Trade instance
         """
-        from app.backtesting.models import Trade as PydanticTrade
-        from app.backtesting.models import TradeStatus
+        from app.backtesting.models import Trade as PydanticTrade, TradeStatus
 
         # Map SQLAlchemy status to Pydantic TradeStatus
         status_map = {
@@ -310,7 +309,6 @@ class Trade(Base):
         Returns:
             SQLAlchemy Trade instance (not persisted)
         """
-        from app.backtesting.models import Trade as PydanticTrade
         from app.backtesting.models import TradeStatus
 
         # Map Pydantic TradeStatus to SQLAlchemy status

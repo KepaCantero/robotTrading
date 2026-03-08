@@ -207,7 +207,9 @@ class TimeSeriesMomentum:
                     stop_loss = current_price * (1 - stop_loss_pct)
                     take_profit = current_price * (1 + take_profit_pct)
                 except (AttributeError, ValueError, TypeError) as e:
-                    logger.warning(f"Error getting stop loss/take profit config: {e}, using defaults")
+                    logger.warning(
+                        f"Error getting stop loss/take profit config: {e}, using defaults"
+                    )
                     stop_loss = current_price * 0.98  # 2% stop loss
                     take_profit = current_price * 1.06  # 6% take profit
             else:
@@ -239,9 +241,13 @@ class TimeSeriesMomentum:
                     stop_loss_pct = float(getattr(config.trading, 'stop_loss_pct', 0.02))
                     take_profit_pct = float(getattr(config.trading, 'take_profit_pct', 0.06))
                     stop_loss = current_price * (1 + stop_loss_pct)  # For short, stop loss is above
-                    take_profit = current_price * (1 - take_profit_pct)  # For short, target is below
+                    take_profit = current_price * (
+                        1 - take_profit_pct
+                    )  # For short, target is below
                 except (AttributeError, ValueError, TypeError) as e:
-                    logger.warning(f"Error getting stop loss/take profit config: {e}, using defaults")
+                    logger.warning(
+                        f"Error getting stop loss/take profit config: {e}, using defaults"
+                    )
                     stop_loss = current_price * 1.02  # 2% stop loss for short
                     take_profit = current_price * 0.94  # 6% take profit for short
             else:
@@ -327,7 +333,9 @@ class TimeSeriesMomentum:
             vol_target = float(getattr(config.trading, 'momentum_volatility_target', 0.15))
             vol_floor = float(getattr(config.trading, 'momentum_volatility_floor', 0.01))
             fixed_max_position = float(getattr(config.trading, 'momentum_fixed_max_position', 0.5))
-            default_max_position = float(getattr(config.trading, 'momentum_default_max_position', 0.3))
+            default_max_position = float(
+                getattr(config.trading, 'momentum_default_max_position', 0.3)
+            )
         except (AttributeError, ValueError, TypeError) as e:
             logger.warning(f"Error getting position sizing config: {e}, using defaults")
             vol_target = 0.15

@@ -67,9 +67,10 @@ class BacktestOrchestrator:
             config = BacktestConfigValue.from_dict(self.backtest_config)
 
             # Import backtest engine
+            from decimal import Decimal
+
             from ...backtesting.core.executor import BacktestExecutorFactory
             from ...backtesting.models import BacktestConfig as EngineBacktestConfig
-            from decimal import Decimal
 
             # Create engine config
             engine_config = EngineBacktestConfig(
@@ -81,7 +82,7 @@ class BacktestOrchestrator:
             # Create executor
             executor = BacktestExecutorFactory.create_executor(
                 executor_type='simple' if not self.parallel_enabled else 'parallel',
-                config=engine_config
+                config=engine_config,
             )
 
             # For now, return a placeholder result
@@ -118,7 +119,9 @@ class BacktestOrchestrator:
 
         try:
             # Get learning engines from config
-            learning_engines = self.backtest_config.get('learning_engines', ['supervised', 'reinforcement', 'transformer'])
+            learning_engines = self.backtest_config.get(
+                'learning_engines', ['supervised', 'reinforcement', 'transformer']
+            )
 
             results = []
             for engine_name in learning_engines:
@@ -241,7 +244,9 @@ class BacktestOrchestrator:
 
         try:
             # Get modules to test from config
-            modules = self.backtest_config.get('modules', ['signal_generation', 'risk_management', 'position_sizing'])
+            modules = self.backtest_config.get(
+                'modules', ['signal_generation', 'risk_management', 'position_sizing']
+            )
 
             results = {}
             for module in modules:
@@ -296,7 +301,7 @@ class BacktestOrchestrator:
 
         try:
             # Calculate total combinations
-            import itertools
+
             param_names = list(param_grid.keys())
             param_values = list(param_grid.values())
             total_combinations = 1
@@ -373,7 +378,9 @@ class BacktestOrchestrator:
 
         try:
             # Get strategies from config
-            strategies = self.backtest_config.get('strategies', ['momentum', 'mean_reversion', 'pairs_trading'])
+            strategies = self.backtest_config.get(
+                'strategies', ['momentum', 'mean_reversion', 'pairs_trading']
+            )
 
             results = []
             for strategy_name in strategies:

@@ -22,11 +22,11 @@ from datetime import date
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from app.shared.config.centralized_config import get_config
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.strategies.base import BaseStrategy
+from app.shared.config.centralized_config import get_config
 
 from .greeks_calculator import GreeksCalculator
 from .models import (
@@ -82,12 +82,12 @@ class CoveredCallStrategy(BaseStrategy):
 
         # Usar configuración centralizada para multiplicadores de moneyness
         config = get_config()
-        min_moneyness_multiplier = Decimal(str(getattr(
-            config.trading, 'covered_call_min_moneyness_multiplier', 0.5
-        )))
-        max_moneyness_multiplier = Decimal(str(getattr(
-            config.trading, 'covered_call_max_moneyness_multiplier', 2.0
-        )))
+        min_moneyness_multiplier = Decimal(
+            str(getattr(config.trading, 'covered_call_min_moneyness_multiplier', 0.5))
+        )
+        max_moneyness_multiplier = Decimal(
+            str(getattr(config.trading, 'covered_call_max_moneyness_multiplier', 2.0))
+        )
 
         screening_criteria = OptionScreeningCriteria(
             min_days_to_expiry=max(7, self.strategy_config.target_dte - 15),
@@ -146,25 +146,25 @@ class CoveredCallStrategy(BaseStrategy):
                 "name": "CoveredCallStrategy",
                 "description": "Estrategia de covered calls",
                 "version": "1.0.0",
-                "max_position_size": Decimal(str(getattr(
-                    config.trading, 'covered_call_max_position_size', 0.10
-                ))),
+                "max_position_size": Decimal(
+                    str(getattr(config.trading, 'covered_call_max_position_size', 0.10))
+                ),
                 "max_contracts_per_position": 10,
                 "min_shares_required": 100,
                 "target_dte": 30,
-                "target_otm_pct": Decimal(str(getattr(
-                    config.trading, 'covered_call_target_otm_pct', 0.03
-                ))),
-                "min_premium_pct": Decimal(str(getattr(
-                    config.trading, 'covered_call_min_premium_pct', 0.01
-                ))),
+                "target_otm_pct": Decimal(
+                    str(getattr(config.trading, 'covered_call_target_otm_pct', 0.03))
+                ),
+                "min_premium_pct": Decimal(
+                    str(getattr(config.trading, 'covered_call_min_premium_pct', 0.01))
+                ),
                 "roll_threshold_days": 7,
-                "roll_threshold_itm": Decimal(str(getattr(
-                    config.trading, 'covered_call_roll_threshold_itm', 0.02
-                ))),
-                "roll_threshold_otm": Decimal(str(getattr(
-                    config.trading, 'covered_call_roll_threshold_otm', 0.05
-                ))),
+                "roll_threshold_itm": Decimal(
+                    str(getattr(config.trading, 'covered_call_roll_threshold_itm', 0.02))
+                ),
+                "roll_threshold_otm": Decimal(
+                    str(getattr(config.trading, 'covered_call_roll_threshold_otm', 0.05))
+                ),
                 "assignment_probability_threshold": AssignmentProbability.HIGH,
                 "auto_roll": False,
                 "avoid_earnings": True,
@@ -443,9 +443,9 @@ class CoveredCallStrategy(BaseStrategy):
         """
         # Verificar exposición total - usar configuración centralizada
         config = get_config()
-        max_total_exposure = Decimal(str(getattr(
-            config.trading, 'covered_call_max_total_exposure', 0.30
-        )))
+        max_total_exposure = Decimal(
+            str(getattr(config.trading, 'covered_call_max_total_exposure', 0.30))
+        )
 
         # Calcular exposición actual
         current_exposure = Decimal("0")
@@ -503,10 +503,16 @@ class CoveredCallStrategy(BaseStrategy):
                 return False
 
             # Validar prima mínima
-            min_premium = Decimal(str(getattr(config.trading, 'covered_call_min_premium_lower', 0.005)))
-            max_premium = Decimal(str(getattr(config.trading, 'covered_call_min_premium_upper', 0.10)))
+            min_premium = Decimal(
+                str(getattr(config.trading, 'covered_call_min_premium_lower', 0.005))
+            )
+            max_premium = Decimal(
+                str(getattr(config.trading, 'covered_call_min_premium_upper', 0.10))
+            )
             if not (min_premium <= self.strategy_config.min_premium_pct <= max_premium):
-                logger.error(f"min_premium_pct debe estar entre {min_premium:.1%} y {max_premium:.1%}")
+                logger.error(
+                    f"min_premium_pct debe estar entre {min_premium:.1%} y {max_premium:.1%}"
+                )
                 return False
 
             # Validar tamaño de posición
@@ -587,9 +593,9 @@ class CoveredCallStrategy(BaseStrategy):
             target_strike = current_price * (1 + self.strategy_config.target_otm_pct)
             # Usar configuración centralizada para tolerancia de strike
             config = get_config()
-            strike_tolerance = Decimal(str(getattr(
-                config.trading, 'covered_call_strike_tolerance', 0.02
-            )))
+            strike_tolerance = Decimal(
+                str(getattr(config.trading, 'covered_call_strike_tolerance', 0.02))
+            )
             filtered_options = [
                 opt
                 for opt in filtered_options

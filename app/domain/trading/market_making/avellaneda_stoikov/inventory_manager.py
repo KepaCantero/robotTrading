@@ -19,7 +19,6 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
-from app.shared.config.centralized_config import get_config
 from app.domain.trading.market_making.avellaneda_stoikov.as_model import calculate_inventory_risk
 from app.domain.trading.market_making.avellaneda_stoikov.models import (
     ASConfig,
@@ -27,6 +26,7 @@ from app.domain.trading.market_making.avellaneda_stoikov.models import (
     InventoryConfig,
     InventoryState,
 )
+from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 

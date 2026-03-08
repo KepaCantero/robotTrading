@@ -17,6 +17,7 @@ import numpy as np
 import pandas as pd
 
 from app.shared.config.centralized_config import get_config
+
 from .asset_class import AssetClass, AssetClassType
 from .models import AllocationStrategy, RiskTolerance
 

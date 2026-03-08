@@ -14,6 +14,7 @@ from collections import deque
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Sequence
+
 import numpy as np
 
 from app.domain.models.market_data import Quote

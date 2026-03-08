@@ -40,7 +40,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
 from itertools import product
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
@@ -55,7 +54,7 @@ from .base_optimizer import (
     OptimizerType,
     TrialResult,
 )
-from .bayesian_optimizer import SearchSpace, ParameterType
+from .bayesian_optimizer import ParameterType, SearchSpace
 
 logger = logging.getLogger(__name__)
 
@@ -409,8 +408,7 @@ class GridSearchOptimizer(BaseOptimizer[SearchSpace]):
         """
         # Create async tasks
         tasks = [
-            self._evaluate_single(params, objective, i)
-            for i, params in enumerate(combinations)
+            self._evaluate_single(params, objective, i) for i, params in enumerate(combinations)
         ]
 
         # Execute in parallel batches
@@ -418,7 +416,7 @@ class GridSearchOptimizer(BaseOptimizer[SearchSpace]):
         results = []
 
         for i in range(0, len(tasks), batch_size):
-            batch = tasks[i: i + batch_size]
+            batch = tasks[i : i + batch_size]
 
             # Check timeout before each batch
             if self._check_timeout():

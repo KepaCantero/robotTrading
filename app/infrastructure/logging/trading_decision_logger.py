@@ -6,8 +6,9 @@ Logger append-only con correlation ID para todas las decisiones de trading.
 from datetime import datetime
 from typing import List, Optional
 
-from app.infrastructure.logging.log_entry import LogEntry
 from app.infrastructure.logging.append_only_log import AppendOnlyLog
+from app.infrastructure.logging.log_entry import LogEntry
+
 # @skip-import - Protocol import, skip if not available
 try:
     from app.shared.protocols.i_trading_decision_logger import ITradingDecisionLogger
@@ -15,6 +16,7 @@ except ImportError:
     # Protocol not available yet, define placeholder for runtime
     class ITradingDecisionLogger:
         """Placeholder protocol when import fails"""
+
         pass
 
 
@@ -30,11 +32,7 @@ class TradingDecisionLogger(ITradingDecisionLogger):
     def __init__(self, log_dir: str = ".ralph/logs/trading"):
         self._log = AppendOnlyLog(log_dir)
 
-    def log_signal(
-        self,
-        signal: dict,
-        metadata: Optional[dict] = None
-    ) -> str:
+    def log_signal(self, signal: dict, metadata: Optional[dict] = None) -> str:
         """
         Log signal con correlation ID
 
@@ -53,17 +51,13 @@ class TradingDecisionLogger(ITradingDecisionLogger):
                 "quantity": signal.get("quantity"),
                 "price": signal.get("price"),
             },
-            metadata=metadata or {}
+            metadata=metadata or {},
         )
 
         self._log.append(entry)
         return entry.correlation_id
 
-    def log_execution(
-        self,
-        correlation_id: str,
-        result: dict
-    ) -> None:
+    def log_execution(self, correlation_id: str, result: dict) -> None:
         """
         Log execution result
 
@@ -82,17 +76,13 @@ class TradingDecisionLogger(ITradingDecisionLogger):
                 "filled_quantity": result.get("filled_quantity"),
                 "commission": result.get("commission"),
             },
-            metadata={}
+            metadata={},
         )
 
         self._log.append(entry)
 
     def log_validation_result(
-        self,
-        correlation_id: str,
-        validator: str,
-        passed: bool,
-        details: Optional[dict] = None
+        self, correlation_id: str, validator: str, passed: bool, details: Optional[dict] = None
     ) -> None:
         """
         Log validation result
@@ -112,7 +102,7 @@ class TradingDecisionLogger(ITradingDecisionLogger):
                 "passed": passed,
                 "details": details or {},
             },
-            metadata={}
+            metadata={},
         )
 
         self._log.append(entry)
@@ -157,20 +147,26 @@ class TradingDecisionLogger(ITradingDecisionLogger):
         formatted = []
         for corr_id, entries_list in operations.items():
             # Extraer datos relevantes
-            signal_entry = next((e for e in entries_list if e["event_type"] == "signal_received"), None)
-            execution_entry = next((e for e in entries_list if e["event_type"] == "execution_result"), None)
+            signal_entry = next(
+                (e for e in entries_list if e["event_type"] == "signal_received"), None
+            )
+            execution_entry = next(
+                (e for e in entries_list if e["event_type"] == "execution_result"), None
+            )
 
             if signal_entry and execution_entry:
-                formatted.append({
-                    "correlation_id": corr_id,
-                    "timestamp": signal_entry["timestamp"],
-                    "symbol": signal_entry["data"]["symbol"],
-                    "action": signal_entry["data"]["action"],
-                    "quantity": signal_entry["data"]["quantity"],
-                    "entry_price": signal_entry["data"].get("price"),
-                    "exit_price": execution_entry["data"].get("filled_price"),
-                    "profit_loss": self._calculate_pnl(signal_entry, execution_entry),
-                })
+                formatted.append(
+                    {
+                        "correlation_id": corr_id,
+                        "timestamp": signal_entry["timestamp"],
+                        "symbol": signal_entry["data"]["symbol"],
+                        "action": signal_entry["data"]["action"],
+                        "quantity": signal_entry["data"]["quantity"],
+                        "entry_price": signal_entry["data"].get("price"),
+                        "exit_price": execution_entry["data"].get("filled_price"),
+                        "profit_loss": self._calculate_pnl(signal_entry, execution_entry),
+                    }
+                )
 
         return formatted
 

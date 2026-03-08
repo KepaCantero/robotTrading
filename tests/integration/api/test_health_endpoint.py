@@ -11,7 +11,7 @@ This test module verifies that the /health endpoint properly checks:
 import pytest
 from fastapi.testclient import TestClient
 
-from app.api.health import HealthChecker
+from app.presentation.api.health import HealthChecker
 
 
 class TestHealthEndpoint:

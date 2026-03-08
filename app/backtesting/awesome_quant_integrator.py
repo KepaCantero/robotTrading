@@ -13,7 +13,7 @@ from typing import Dict, Optional, TypedDict
 import numpy as np
 import pandas as pd
 
-from app.shared.config.centralized_config import CentralizedConfig, get_config
+from app.shared.config.centralized_config import get_config
 
 # Trading days constant - Annual trading days (NYSE convention)
 # Get from CentralizedConfig for consistency across the codebase
@@ -180,7 +180,11 @@ class AwesomeQuantIntegrator:
         Args:
             risk_free_rate: Risk-free rate for calculations (default: from CentralizedConfig)
         """
-        self.risk_free_rate = risk_free_rate if risk_free_rate is not None else float(get_config().backtesting.default_risk_free_rate)
+        self.risk_free_rate = (
+            risk_free_rate
+            if risk_free_rate is not None
+            else float(get_config().backtesting.default_risk_free_rate)
+        )
         self._check_availability()
 
     def _check_availability(self) -> None:
@@ -635,9 +639,7 @@ class AwesomeQuantIntegrator:
                 metrics["omega_ratio"] = float('inf') if gains.sum() > 0 else 0.0
 
             # Win rate
-            metrics["win_rate"] = (
-                float((returns > 0).mean()) if len(returns) > 0 else 0.0
-            )
+            metrics["win_rate"] = float((returns > 0).mean()) if len(returns) > 0 else 0.0
 
             # Value at Risk metrics
             metrics["var_95"] = float(np.percentile(returns.astype(float), 5))

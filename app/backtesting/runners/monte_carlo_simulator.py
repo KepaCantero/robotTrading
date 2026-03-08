@@ -144,12 +144,14 @@ class MonteCarloSimulator:
                 volatility_multiplier=vol_mult,
             )
 
-            scenarios.append({
-                'scenario_id': i,
-                'volatility_multiplier': vol_mult,
-                'quotes': quotes,
-                'description': f"Volatility {vol_mult:.1f}x baseline",
-            })
+            scenarios.append(
+                {
+                    'scenario_id': i,
+                    'volatility_multiplier': vol_mult,
+                    'quotes': quotes,
+                    'description': f"Volatility {vol_mult:.1f}x baseline",
+                }
+            )
 
         return scenarios
 

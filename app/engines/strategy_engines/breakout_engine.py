@@ -17,11 +17,11 @@ from collections import deque
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Sequence
 
-from app.shared.config.centralized_config import get_config
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.services.analysis.momentum import TechnicalIndicatorCalculator
+from app.shared.config.centralized_config import get_config
 
 from .base import BaseStrategyEngine
 
@@ -101,7 +101,10 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
                 str(strategy_config.take_profit_pct or centralized_config.trading.take_profit_pct)
             )
             self.max_position_size = Decimal(
-                str(strategy_config.max_position_size or centralized_config.trading.max_position_size)
+                str(
+                    strategy_config.max_position_size
+                    or centralized_config.trading.max_position_size
+                )
             )
             if "max_exposure" in params:
                 self.max_exposure = Decimal(str(params.get("max_exposure", self.max_exposure)))
@@ -395,15 +398,15 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
             distance_ratio = distance_beyond / range_width
 
             # Contribución por distancia (hasta +25)
-            distance_high_threshold = float(getattr(
-                config.trading, 'breakout_distance_high_threshold', 0.05
-            ))
-            distance_medium_threshold = float(getattr(
-                config.trading, 'breakout_distance_medium_threshold', 0.02
-            ))
-            distance_low_threshold = float(getattr(
-                config.trading, 'breakout_distance_low_threshold', 0.01
-            ))
+            distance_high_threshold = float(
+                getattr(config.trading, 'breakout_distance_high_threshold', 0.05)
+            )
+            distance_medium_threshold = float(
+                getattr(config.trading, 'breakout_distance_medium_threshold', 0.02)
+            )
+            distance_low_threshold = float(
+                getattr(config.trading, 'breakout_distance_low_threshold', 0.01)
+            )
 
             if distance_ratio > distance_high_threshold:
                 confidence += 25.0
@@ -413,12 +416,12 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
                 confidence += 10.0
 
             # Contribución por volumen (hasta +25)
-            volume_high_threshold = float(getattr(
-                config.trading, 'breakout_volume_ratio_high_threshold', 3.0
-            ))
-            volume_medium_threshold = float(getattr(
-                config.trading, 'breakout_volume_ratio_medium_threshold', 2.0
-            ))
+            volume_high_threshold = float(
+                getattr(config.trading, 'breakout_volume_ratio_high_threshold', 3.0)
+            )
+            volume_medium_threshold = float(
+                getattr(config.trading, 'breakout_volume_ratio_medium_threshold', 2.0)
+            )
             min_volume_threshold = float(self.min_volume_ratio)
 
             if volume_ratio > volume_high_threshold:

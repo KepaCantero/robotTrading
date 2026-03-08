@@ -124,14 +124,12 @@ class AlpacaClient:
 
             loop = asyncio.get_event_loop()
             self.api = await asyncio.wait_for(
-                loop.run_in_executor(None, create_client),
-                timeout=self._timeouts.alpaca_connect
+                loop.run_in_executor(None, create_client), timeout=self._timeouts.alpaca_connect
             )
 
             # Test connectivity by getting account with timeout
             account = await asyncio.wait_for(
-                loop.run_in_executor(None, self.api.get_account),
-                timeout=self._timeouts.alpaca_read
+                loop.run_in_executor(None, self.api.get_account), timeout=self._timeouts.alpaca_read
             )
 
             if not account:
@@ -171,8 +169,7 @@ class AlpacaClient:
         try:
             loop = asyncio.get_event_loop()
             account = await asyncio.wait_for(
-                loop.run_in_executor(None, self.api.get_account),
-                timeout=self._timeouts.alpaca_read
+                loop.run_in_executor(None, self.api.get_account), timeout=self._timeouts.alpaca_read
             )
 
             return {
@@ -253,8 +250,7 @@ class AlpacaClient:
                 return self.api.submit_order(**kwargs)
 
             order = await asyncio.wait_for(
-                loop.run_in_executor(None, submit),
-                timeout=self._timeouts.alpaca_write
+                loop.run_in_executor(None, submit), timeout=self._timeouts.alpaca_write
             )
 
             logger.info(f"Order submitted: {order.id} ({symbol} {side} {qty})")
@@ -287,7 +283,7 @@ class AlpacaClient:
             loop = asyncio.get_event_loop()
             await asyncio.wait_for(
                 loop.run_in_executor(None, self.api.cancel_order, order_id),
-                timeout=self._timeouts.alpaca_write
+                timeout=self._timeouts.alpaca_write,
             )
             logger.info(f"Order cancelled: {order_id}")
             return True
@@ -319,7 +315,7 @@ class AlpacaClient:
             loop = asyncio.get_event_loop()
             order = await asyncio.wait_for(
                 loop.run_in_executor(None, self.api.get_order, order_id),
-                timeout=self._timeouts.alpaca_read
+                timeout=self._timeouts.alpaca_read,
             )
 
             return {
@@ -327,7 +323,9 @@ class AlpacaClient:
                 "symbol": order.symbol,
                 "qty": float(order.qty),
                 "filled_qty": float(order.filled_qty) if order.filled_qty else 0,
-                "filled_avg_price": float(order.filled_avg_price) if order.filled_avg_price else None,
+                "filled_avg_price": float(order.filled_avg_price)
+                if order.filled_avg_price
+                else None,
                 "type": order.order_type,
                 "side": order.side,
                 "status": order.status,
@@ -367,7 +365,7 @@ class AlpacaClient:
             loop = asyncio.get_event_loop()
             positions = await asyncio.wait_for(
                 loop.run_in_executor(None, self.api.get_positions),
-                timeout=self._timeouts.alpaca_read
+                timeout=self._timeouts.alpaca_read,
             )
 
             return [
@@ -411,11 +409,8 @@ class AlpacaClient:
         try:
             loop = asyncio.get_event_loop()
             orders = await asyncio.wait_for(
-                loop.run_in_executor(
-                    None,
-                    lambda: self.api.get_orders(status=status, limit=limit)
-                ),
-                timeout=self._timeouts.alpaca_read
+                loop.run_in_executor(None, lambda: self.api.get_orders(status=status, limit=limit)),
+                timeout=self._timeouts.alpaca_read,
             )
 
             return [
@@ -532,12 +527,14 @@ class AlpacaClient:
                 # Wait for auth response with timeout
                 try:
                     auth_response = await asyncio.wait_for(
-                        websocket.recv(),
-                        timeout=self._timeouts.alpaca_connect
+                        websocket.recv(), timeout=self._timeouts.alpaca_connect
                     )
                     auth_data = json.loads(auth_response)
 
-                    if auth_data.get("status") != "auth_success" and auth_data.get("T") != "success":
+                    if (
+                        auth_data.get("status") != "auth_success"
+                        and auth_data.get("T") != "success"
+                    ):
                         raise ConnectionError(f"WebSocket auth failed: {auth_data}")
 
                     logger.info("WebSocket authenticated")
@@ -551,8 +548,7 @@ class AlpacaClient:
                 while self.is_streaming:
                     try:
                         message = await asyncio.wait_for(
-                            websocket.recv(),
-                            timeout=self._timeouts.websocket_idle_timeout
+                            websocket.recv(), timeout=self._timeouts.websocket_idle_timeout
                         )
                         await self._process_stream_message(message)
                     except asyncio.TimeoutError:
@@ -662,8 +658,7 @@ class AlpacaClient:
             if self.stream_socket:
                 try:
                     await asyncio.wait_for(
-                        self.stream_socket.close(),
-                        timeout=self._timeouts.websocket_close_timeout
+                        self.stream_socket.close(), timeout=self._timeouts.websocket_close_timeout
                     )
                 except asyncio.TimeoutError:
                     logger.warning("Socket close timed out")
