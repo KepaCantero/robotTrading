@@ -165,7 +165,7 @@ class SignalCompoundScoreCalculator:
         if not metadata:
             return 0.5  # Neutral value if no data
 
-        volatility = getattr(config.trading, 'max_risk_per_trade', 0.02)
+        volatility = 0.02  # Default volatility
         # Prefer moderate volatility (0.01-0.03)
         # Normalize to 0-1
         if 0.01 <= volatility <= 0.03:

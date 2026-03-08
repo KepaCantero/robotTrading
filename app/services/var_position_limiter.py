@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 import numpy as np
 
 from app.shared.config.centralized_config import get_config
-from app.shared.utils.decimal_utils import to_decimal, validate_price
+from app.shared.utils.decimal_utils import safe_decimal_sqrt, to_decimal, validate_price
 
 if TYPE_CHECKING:
     from app.engines.risk_engine.correlation_analyzers.correlation_analyzers import (

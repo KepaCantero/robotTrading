@@ -30,9 +30,8 @@ logger = logging.getLogger(__name__)
 # Black-Litterman default parameters
 DEFAULT_RISK_AVERSION = 3.0  # Typical institutional risk aversion (delta)
 DEFAULT_TAU = 0.05  # Uncertainty scaling parameter for prior
-DEFAULT_RISK_FREE_RATE = getattr(
-    config.trading, 'max_risk_per_trade', 0.02
-)  # Annual risk-free rate
+# Default risk-free rate - can be overridden via config
+DEFAULT_RISK_FREE_RATE = 0.02  # Annual risk-free rate
 
 
 @dataclass

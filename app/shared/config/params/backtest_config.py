@@ -10,9 +10,12 @@ TASK-24: SRP Refactoring
 
 import logging
 from decimal import Decimal
-from typing import Dict, List
+from typing import TYPE_CHECKING, Dict, List
 
 from pydantic import BaseModel, Field, field_validator
+
+if TYPE_CHECKING:
+    pass  # Forward references only
 
 logger = logging.getLogger(__name__)
 
@@ -315,5 +318,7 @@ def get_backtesting_constants() -> "BacktestingConfig":
     """Get backtesting constants from centralized config."""
     global BACKTESTING_CONSTANTS
     if BACKTESTING_CONSTANTS is None:
+        from app.shared.config.centralized_config import get_config
+
         BACKTESTING_CONSTANTS = get_config().backtesting
     return BACKTESTING_CONSTANTS

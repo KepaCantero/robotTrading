@@ -28,6 +28,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
+import numpy as np
 import pandas as pd
 
 from .models import DividendAction, DividendTracker, DripConfig

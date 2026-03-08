@@ -19,6 +19,8 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Set
 
+from httpx import HTTPError
+
 from app.shared.config.centralized_config import get_config
 from app.shared.utils.decimal_utils import to_decimal
 from app.shared.utils.timezone_utils import utc_now

@@ -14,7 +14,10 @@ Usage:
 """
 
 from decimal import Decimal
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
+
+if TYPE_CHECKING:
+    from app.shared.config.params.backtest_config import BacktestingConfig as BacktestConfig
 
 from app.shared.config.centralized_config import get_config
 

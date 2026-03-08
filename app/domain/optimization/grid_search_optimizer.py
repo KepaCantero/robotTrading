@@ -42,7 +42,7 @@ import asyncio
 import logging
 from datetime import datetime
 from itertools import product
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 

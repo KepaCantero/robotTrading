@@ -15,7 +15,12 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
+if TYPE_CHECKING:
+    from app.services.live_trading.alert_to_trade_mapper import TradeSignal
+
+    TradeResult = dict  # Type alias for trade execution results
 
 from app.services.live_trading.broker_connector import OrderSide, OrderStatus
 from app.services.live_trading.order_manager import OrderManager, get_order_manager

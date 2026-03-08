@@ -11,7 +11,12 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
+if TYPE_CHECKING:
+    from app.services.live_trading.alert_to_trade_mapper import TradeSignal
+
+    TradeResult = dict  # Type alias for trade execution results
 
 from app.services.alerting_system import AlertEvent, AlertSeverity
 from app.services.live_trading.trading_bridge_orchestrator import (

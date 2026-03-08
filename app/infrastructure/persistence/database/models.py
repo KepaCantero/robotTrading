@@ -16,7 +16,10 @@ Architecture layers:
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
+
+if TYPE_CHECKING:
+    from app.backtesting.models import Trade as PydanticTrade
 
 from sqlalchemy import (
     JSON,
