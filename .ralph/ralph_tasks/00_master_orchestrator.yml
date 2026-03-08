@@ -1,8 +1,8 @@
 # ============================================
-# Ralph Task: Master Orchestrator - Simple & Correct
+# Ralph Task: Master Orchestrator
 # ============================================
-# VERSION: 5.0 - Verifica ANTES de crear
-# OBJETIVO: Production ready sin duplicados
+# VERSION: 7.0 - Simple y directo
+# OBJETIVO: Audit files against rules, create if missing
 # ============================================================================
 
 event_loop:
@@ -21,158 +21,174 @@ core:
 
 hats:
   # ==========================================================================
-  # HAT 1: Verify What Exists - NO TOCAR si ya existe
+  # HAT 1: SpainTaxEngine - Audit or Create
   # ==========================================================================
-  verify_exists:
-    name: "Verify Existing Components"
-    description: "Verifica que existe ANTES de hacer nada"
+  spain_tax_engine:
+    name: "SpainTaxEngine"
     triggers: ["master.start"]
-    publishes: ["master.verified", "master.blocked"]
-    default_publishes: "master.verified"
+    publishes: ["master.tax_done", "master.blocked"]
+    default_publishes: "master.tax_done"
     instructions: |
-      ## VERIFY WHAT EXISTS
+      ## SPAIN TAX ENGINE
 
-      **REGLA CRITICA:** NO CREAR nada que ya exista.
+      **FILE:** `app/services/tax_efficiency/engines/spain_tax_engine.py`
+      **REQUIREMENTS:** `.requirements/app/services/tax_efficiency/engines/spain_tax_engine.py.requirements.txt`
+      **RULES:** `.ralph/rules/rules_mapping.yml` (seccion spain_tax)
 
-      ### Verificar cada componente:
+      ### ACCION:
+      1. Si el archivo EXISTE: Lee el archivo y verifica que cumple los requirements y rules
+      2. Si el archivo NO EXISTE: Crea el archivo según los requirements
 
-      ```bash
-      echo "=== VERIFYING EXISTING COMPONENTS ==="
+      Ejecuta: `ls app/services/tax_efficiency/engines/spain_tax_engine.py`
+      - Si existe → Read file → Audit against rules → Report compliance
+      - Si no existe → Read requirements → Create file → Validate
 
-      # SpainTaxEngine
-      if [ -f "app/services/tax_efficiency/engines/spain_tax_engine.py" ]; then
-        echo "SpainTaxEngine: EXISTS"
-      else
-        echo "SpainTaxEngine: MISSING"
-      fi
-
-      # DecisionLogger
-      if [ -f "app/infrastructure/logging/trading_decision_logger.py" ]; then
-        echo "DecisionLogger: EXISTS"
-      else
-        echo "DecisionLogger: MISSING"
-      fi
-
-      # CentralConfig
-      if [ -f "app/shared/config/centralized_config.py" ]; then
-        echo "CentralConfig: EXISTS"
-      else
-        echo "CentralConfig: MISSING"
-      fi
-
-      # Protocols
-      PROTOCOLS=$(ls app/core/protocols/i_*.py 2>/dev/null | wc -l)
-      echo "Protocol interfaces: $PROTOCOLS"
-
-      echo "=== VERIFICATION COMPLETE ==="
-      ```
-
-      ### OUTPUT
-      - Reportar que existe
-      - NO crear duplicados
-      - Emitir: master.verified
+      Emite: master.tax_done
 
   # ==========================================================================
-  # HAT 2: Format Code - black + isort
+  # HAT 2: TradingDecisionLogger - Audit or Create
   # ==========================================================================
-  format_code:
-    name: "Format Code"
-    description: "Formatea codigo con black e isort"
-    triggers: ["master.verified"]
-    publishes: ["master.formatted", "master.blocked"]
-    default_publishes: "master.formatted"
+  decision_logger:
+    name: "TradingDecisionLogger"
+    triggers: ["master.tax_done"]
+    publishes: ["master.logger_done", "master.blocked"]
+    default_publishes: "master.logger_done"
     instructions: |
-      ## FORMAT CODE
+      ## TRADING DECISION LOGGER
 
-      Ejecutar formateadores.
+      **FILE:** `app/infrastructure/logging/trading_decision_logger.py`
+      **REQUIREMENTS:** `.requirements/app/infrastructure/logging/trading_decision_logger.py.requirements.txt`
+      **RULES:** `.ralph/rules/rules_mapping.yml` (seccion R15 logging)
+
+      ### ACCION:
+      1. Si el archivo EXISTE: Lee el archivo y verifica que cumple los requirements y rules
+      2. Si el archivo NO EXISTE: Crea el archivo según los requirements
+
+      Ejecuta: `ls app/infrastructure/logging/trading_decision_logger.py`
+      - Si existe → Read file → Audit against rules → Report compliance
+      - Si no existe → Read requirements → Create file → Validate
+
+      Emite: master.logger_done
+
+  # ==========================================================================
+  # HAT 3: CentralConfig - Audit or Create
+  # ==========================================================================
+  central_config:
+    name: "CentralConfig"
+    triggers: ["master.logger_done"]
+    publishes: ["master.config_done", "master.blocked"]
+    default_publishes: "master.config_done"
+    instructions: |
+      ## CENTRAL CONFIG
+
+      **FILE:** `app/shared/config/centralized_config.py`
+      **REQUIREMENTS:** `.requirements/app/shared/config/centralized_config.py.requirements.txt`
+      **RULES:** `.ralph/rules/rules_mapping.yml` (seccion config)
+
+      ### ACCION:
+      1. Si el archivo EXISTE: Lee el archivo y verifica que cumple los requirements y rules
+      2. Si el archivo NO EXISTE: Crea el archivo según los requirements
+
+      Ejecuta: `ls app/shared/config/centralized_config.py`
+      - Si existe → Read file → Audit against rules → Report compliance
+      - Si no existe → Read requirements → Create file → Validate
+
+      Emite: master.config_done
+
+  # ==========================================================================
+  # HAT 4: Protocol Interfaces - Audit or Create
+  # ==========================================================================
+  protocols:
+    name: "Protocol Interfaces"
+    triggers: ["master.config_done"]
+    publishes: ["master.protocols_done", "master.blocked"]
+    default_publishes: "master.protocols_done"
+    instructions: |
+      ## PROTOCOL INTERFACES
+
+      **DIR:** `app/core/protocols/`
+      **REQUIREMENTS:** `.requirements/app/core/protocols/*.requirements.txt`
+      **RULES:** ISP-001 (max 5 methods per Protocol), LSP-001 (use typing.Protocol)
+
+      ### ACCION:
+      1. Lista archivos: `ls app/core/protocols/i_*.py`
+      2. Para cada archivo:
+         - Si existe → Audit against ISP-001, LSP-001
+         - Si no existe → Read requirements → Create
+
+      Reglas a verificar:
+      - ISP-001: Cada Protocol tiene maximo 5 metodos
+      - LSP-001: Usa typing.Protocol, NO abc.ABC
+      - DIP-001: Sin import de implementaciones concretas
+
+      Emite: master.protocols_done
+
+  # ==========================================================================
+  # HAT 5: QA - Format and Lint
+  # ==========================================================================
+  qa_validation:
+    name: "QA Validation"
+    triggers: ["master.protocols_done"]
+    publishes: ["master.qa_done", "master.blocked"]
+    default_publishes: "master.qa_done"
+    instructions: |
+      ## QA VALIDATION
+
+      ### ACCION:
+      Ejecuta estos comandos:
 
       ```bash
-      echo "=== FORMATTING CODE ==="
-
-      # Black
       black app --line-length 100
-
-      # Isort
       isort app --profile black
-
-      echo "=== FORMATTING COMPLETE ==="
-      ```
-
-      ### OUTPUT
-      - Codigo formateado
-      - Emitir: master.formatted
-
-  # ==========================================================================
-  # HAT 3: Fix Linting - ruff --fix
-  # ==========================================================================
-  fix_linting:
-    name: "Fix Linting"
-    description: "Arregla linting con ruff"
-    triggers: ["master.formatted"]
-    publishes: ["master.linted", "master.blocked"]
-    default_publishes: "master.linted"
-    instructions: |
-      ## FIX LINTING
-
-      ```bash
-      echo "=== FIXING LINTING ==="
-
-      # Ruff fix
       ruff check app --fix
-
-      echo "=== LINTING COMPLETE ==="
       ```
 
-      ### OUTPUT
-      - Linting arreglado
-      - Emitir: master.linted
+      Reporta errores restantes.
+
+      Emite: master.qa_done
 
   # ==========================================================================
-  # HAT 4: Final Report
+  # HAT 6: Final Report
   # ==========================================================================
   final_report:
     name: "Final Report"
-    description: "Genera reporte final"
-    triggers: ["master.linted"]
+    triggers: ["master.qa_done"]
     publishes: ["master.complete"]
     default_publishes: "master.complete"
     instructions: |
       ## FINAL REPORT
 
-      ```bash
-      mkdir -p .ralph/outputs
+      ### ACCION:
+      Crea `.ralph/outputs/production_readiness_audit.md` con:
 
-      cat > .ralph/outputs/production_readiness_audit.md << 'EOF'
-      # Production Readiness Report
+      ```markdown
+      # Production Readiness Audit
 
-      **Date:** $(date)
+      **Fecha:** (ahora)
 
-      ## Components Status
+      ## Componentes Auditados
 
-      - SpainTaxEngine: EXISTS (app/services/tax_efficiency/engines/)
-      - DecisionLogger: EXISTS (app/infrastructure/logging/)
-      - CentralConfig: EXISTS (app/shared/config/)
+      | Componente | Existe | Cumple Rules | Issues |
+      |------------|--------|--------------|--------|
+      | SpainTaxEngine | si/no | si/no | lista |
+      | DecisionLogger | si/no | si/no | lista |
+      | CentralConfig | si/no | si/no | lista |
+      | Protocols | N files | si/no | lista |
 
-      ## Actions Taken
+      ## QA Status
+      - Black: OK/issues
+      - isort: OK/issues
+      - Ruff: N issues restantes
 
-      - Code formatted with black
-      - Imports sorted with isort
-      - Linting fixed with ruff
-
-      ## Status: COMPLETE
-      EOF
-
-      echo "Report saved"
+      ## Estado: PRODUCTION_READY_COMPLETE
       ```
 
-      ### OUTPUT
-      - Reporte generado
-      - Emitir: master.complete
+      Emite: master.complete
 
 memories:
   enabled: true
   inject: auto
-  budget: 2000
+  budget: 3000
 
 checkpoint:
   file: ".ralph/checkpoints/00_master_orchestrator_checkpoint.json"
