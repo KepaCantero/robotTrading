@@ -7,16 +7,16 @@
 
 ## Current State
 
-### Project Metrics (Initial)
-- Python files in app/: 272
-- Requirements generated: Existing (need to verify coverage)
+### Project Metrics (Updated)
+- Python files in app/: 1140
+- Requirements generated: 1140 (100% coverage)
 - Focus: SOLO app/ - tests/ is IGNORED
 
 ### Progress by Phase
 
 #### FASE 1: ESTRUCTURA
 - [x] 1.1 Structural Fix - Check duplicates (NO DUPLICATES FOUND)
-- [ ] 1.2 Requirements Generator - Verify coverage
+- [x] 1.2 Requirements Generator - 100% coverage (1140/1140)
 - [ ] 1.3 Protocol Interfaces - Count and verify
 
 #### FASE 2: COMPONENTES CORE
@@ -50,7 +50,21 @@
   - CHECKPOINT PASSED
   - COMMITTED: d790d273
 
+### Iteration 2 (2026-03-08)
+- FASE 1.2 COMPLETED:
+  - Initial coverage: 1126/1140 = 98.8%
+  - Missing files identified: 14
+  - Created 14 new requirements.txt files:
+    - app/core/config/__init__.py, base.py
+    - app/application/reporting/quantstats_integration.py, report_templates.py
+    - app/domain/strategies/momentum_modular/* (strategy, learning, modules)
+    - app/domain/services/signals/scoring.py
+    - app/sre/alert_fatigue_prevention/alert_grouper.py, alert_prioritizer.py
+  - Final coverage: 1140/1140 = 100%
+  - CHECKPOINT PASSED
+  - COMMITTED: e128f2e4
+
 ### Next Iteration Should:
-- Pick FASE 1.2: Requirements Generator - Verify coverage
-- Run checkpoint to count Python files vs requirements files
-- Generate any missing requirements.txt files
+- Pick FASE 1.3: Protocol Interfaces - Verify SOLID
+- Run checkpoint to count Protocol classes in app/
+- Document interfaces with their locations
