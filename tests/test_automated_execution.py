@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.models.momentum import MarketData
+from app.domain.models.momentum import MarketData
 
 
 class TestAutomatedExecution:

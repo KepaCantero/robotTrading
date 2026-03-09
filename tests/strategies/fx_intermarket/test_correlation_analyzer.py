@@ -12,8 +12,8 @@ import pandas as pd
 import pytest
 from pandas import DataFrame, Series
 
-from app.strategies.fx_intermarket.correlation_analyzer import CorrelationAnalyzer
-from app.strategies.fx_intermarket.models import (
+from app.domain.strategies.fx_intermarket.correlation_analyzer import CorrelationAnalyzer
+from app.domain.strategies.fx_intermarket.models import (
     AssetClass,
     FXCorrelationPair,
     IntermarketRelationship,

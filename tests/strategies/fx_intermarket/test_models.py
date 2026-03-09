@@ -10,7 +10,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.strategies.fx_intermarket.models import (
+from app.domain.strategies.fx_intermarket.models import (
     AssetClass,
     FXCorrelationPair,
     FXIntermarketConfig,

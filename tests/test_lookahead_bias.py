@@ -9,7 +9,7 @@ import pytest
 
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig
-from app.models.momentum import MarketData
+from app.domain.models.momentum import MarketData
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 

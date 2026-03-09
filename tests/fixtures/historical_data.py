@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import List
 
-from app.models.momentum import MarketData
+from app.domain.models.momentum import MarketData
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 

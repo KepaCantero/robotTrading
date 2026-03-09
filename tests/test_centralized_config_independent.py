@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from app.core.centralized_config import (
+from app.shared.config.centralized_config import (
     APIConfig,
     CentralizedConfig,
     DatabaseConfig,

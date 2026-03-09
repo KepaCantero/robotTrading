@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 
 if TYPE_CHECKING:
-    from app.shared.config.centralized_config import StockAllocationSettings
+    from app.shared.config.params.strategy_config import StockAllocationSettings
 
 logger = logging.getLogger(__name__)
 

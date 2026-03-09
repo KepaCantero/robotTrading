@@ -556,12 +556,12 @@ class TestExecutionEngineIntegration:
     def test_adapter_has_execution_engine(self, execution_adapter):
         """Test that adapter has execution engine instance."""
         assert execution_adapter.execution_engine is not None
-        from app.backtesting.execution_engine import PessimisticExecutionEngine
+        from app.backtesting.engines.execution_engine import PessimisticExecutionEngine
         assert isinstance(execution_adapter.execution_engine, PessimisticExecutionEngine)
 
     def test_adapter_uses_custom_engine(self):
         """Test that adapter can use custom execution engine."""
-        from app.backtesting.execution_engine import PessimisticExecutionEngine
+        from app.backtesting.engines.execution_engine import PessimisticExecutionEngine
 
         custom_engine = PessimisticExecutionEngine()
         adapter = ExecutionEngineAdapter(execution_engine=custom_engine)

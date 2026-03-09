@@ -14,7 +14,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from app.core.centralized_config import CentralizedConfig, get_config, set_config
+from app.shared.config.centralized_config import CentralizedConfig, get_config, set_config
 from app.core.test_config import TestConfigManager
 
 # Test Categories

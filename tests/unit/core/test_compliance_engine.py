@@ -25,7 +25,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from app.core.compliance_engine import (
+from app.domain.services.compliance.compliance_engine import (
     ComplianceEngine,
     PortfolioOptimization,
     PostTradeAnalysis,

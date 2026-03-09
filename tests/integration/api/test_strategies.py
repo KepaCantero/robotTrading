@@ -19,7 +19,10 @@ from app.presentation.api.strategies import (
     get_strategy_registry,
     router,
 )
-from app.strategies import ExecutionEngine, StrategyConfigLoader, StrategyLogger, StrategyRegistry
+from app.domain.strategies.execution_engine import ExecutionEngine
+from app.domain.strategies.config_loader import StrategyConfigLoader
+from app.domain.strategies.strategy_logger import StrategyLogger
+from app.domain.strategies.strategy_registry import StrategyRegistry
 
 
 class TestStrategiesAPIEndpoints:

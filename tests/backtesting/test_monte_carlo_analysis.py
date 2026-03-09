@@ -25,7 +25,7 @@ import pytest
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig
 from app.shared.utils.decimal_utils import round_price
-from app.models.momentum import MarketData
+from app.domain.models.momentum import MarketData
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 

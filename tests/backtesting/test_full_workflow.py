@@ -32,7 +32,7 @@ from bs4 import BeautifulSoup
 
 from app.backtesting.acceptance_criteria import AcceptanceCriteria, AcceptanceReport, VerdictStatus
 from app.backtesting.capital_scale_analyzer import CapitalScaleAnalysisReport, CapitalScaleAnalyzer
-from app.backtesting.execution_engine import ExecutionType, PessimisticExecutionEngine, Position
+from app.backtesting.engines.execution_engine import ExecutionType, PessimisticExecutionEngine, Position
 from app.backtesting.models import BacktestConfig, BacktestResult, TradeStatus
 from app.backtesting.professional_reporter import ProfessionalReport, ProfessionalReporter
 from app.backtesting.robustness_tester import ParameterSensitivityResult, RobustnessTester

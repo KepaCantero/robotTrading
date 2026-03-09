@@ -1,7 +1,7 @@
-from app.core.centralized_config import StockAllocationSettings
+from app.shared.config.params.strategy_config import StockAllocationSettings
 
 """
-    from app.core.centralized_config import StockAllocationSettings
+    from app.shared.config.params.strategy_config import StockAllocationSettings
 Integration Tests: Signal Generation with Real Data
 
 Tests signal generation for:
@@ -26,9 +26,9 @@ sys.path.insert(0, str(project_root))
 
 from app.domain.models.market_data import Quote  # noqa: E402
 from app.services.strategy_stock_allocator import StrategyStockAllocator  # noqa: E402
-from app.strategies.mean_reversion import MeanReversionStrategy  # noqa: E402
-from app.strategies.momentum import MomentumStrategy  # noqa: E402
-from app.strategies.pairs_trading import PairsTradingStrategy  # noqa: E402
+from app.domain.strategies.mean_reversion import MeanReversionStrategy  # noqa: E402
+from app.domain.strategies.momentum import MomentumStrategy  # noqa: E402
+from app.domain.strategies.pairs_trading import PairsTradingStrategy  # noqa: E402
 from tests.integration.data.test_data_loader import load_all_csv_data  # noqa: E402
 
 logging.basicConfig(

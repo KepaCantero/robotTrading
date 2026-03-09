@@ -9,7 +9,7 @@ Tests the CORRECTED RSI logic:
 
 import pytest
 
-from app.strategies.momentum_modular.modules.filters.rsi_filter import RSIFilter
+from app.domain.strategies.momentum_modular.modules.filters.rsi_filter import RSIFilter
 
 
 @pytest.fixture(autouse=True)

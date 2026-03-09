@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from app.strategies.momentum_modular.learning.regularization import (
+from app.domain.strategies.momentum_modular.learning.regularization import (
     AdaptiveLasso,
     ElasticNetRegularization,
     L1Regularization,

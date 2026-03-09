@@ -17,8 +17,8 @@ from app.backtesting.models import BacktestConfig
 from app.domain.models.market_data import Quote
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.services.momentum_analysis import TechnicalIndicatorCalculator
-from app.strategies.mean_reversion import MeanReversionStrategy
-from app.strategies.momentum import MomentumStrategy
+from app.domain.strategies.mean_reversion import MeanReversionStrategy
+from app.domain.strategies.momentum import MomentumStrategy
 
 
 class TestEmptyDataset(unittest.TestCase):

@@ -5,7 +5,7 @@ Tests for momentum strategy models.
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-from app.models.momentum import MomentumSignal, MomentumType
+from app.domain.models.momentum import MomentumSignal, MomentumType
 
 
 class TestMomentumModels:

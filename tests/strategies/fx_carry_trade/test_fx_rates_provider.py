@@ -11,7 +11,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.strategies.fx_carry_trade.fx_rates_provider import (
+from app.domain.strategies.fx_carry_trade.fx_rates_provider import (
     CachedFXRateProvider,
     FXDataSource,
     FXInterestRateProvider,
@@ -19,7 +19,7 @@ from app.strategies.fx_carry_trade.fx_rates_provider import (
     InMemoryFXRateProvider,
     MockFXDataSource,
 )
-from app.strategies.fx_carry_trade.models import FXPair, InterestRateQuote
+from app.domain.strategies.fx_carry_trade.models import FXPair, InterestRateQuote
 
 
 class TestInMemoryFXRateProvider:
