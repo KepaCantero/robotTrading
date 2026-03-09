@@ -1,93 +1,212 @@
-# Requirements Document: backtesting/config_loader.py
+# Requirements Document: app/backtesting/config_loader.py
 
 ## 1. Module Overview
-Configuration Loader for Meta-Analyzer
-
-Loads and manages YAML configuration for all meta-analysis components.
-Provides configuration access throughout the backtesting analysis pipeline.
-
-Design Note: Plain Dict Return Type
-------------------------------------
-This class intentionally returns Dict[str, Any] instead of value objects.
-This is a deliberate design choice for the following reasons:
-
-1. **Configuration is not a domain entity**: Configuration data represents
-   external settings/parameters, not domain concepts like Money, Portfolio, or Order.
-
-2. **Dynamic structure requirements**: The meta-analyzer configuration needs
-   to support arbitrary nested structures (metric_thresholds.sharpe_ratio.excellent)
-   that would require excessive boilerplate with value objects.
-
-3. **Read-only access pattern**: This class provides read-only access to loaded
-   configuration. All mutation happens through YAML file edits, not through
-   the API, reducing the need for value object encapsulation.
-
-4. **Downstream conversion**: When configuration values are used in domain
-   operations, they ARE converted to value objects (e.g., Decimal for monetary
-   values) by the consuming classes (BacktestConfig, strategies, etc.).
-
-5. **Compatibility**: Many existing components expect dict-based configuration
-   for compatibility with YAML serialization/deserialization.
-
-See: BacktestConfigLoader (core/config_loader.py) for an example where
-configuration IS converted to a typed value object (BacktestConfig) with
-proper Decimal validation.
+File: config_loader.py
+Domain: Backtest
+Generated: 2026-03-09
 
 ## 2. Dependencies
 - `logging`
-- `pathlib.Path`
-- `typing.Any`
-- `typing.Dict`
-- `typing.List`
-- `typing.Optional`
+- `pathlib`
+- `pydantic`
+- `typing`
 - `yaml`
-- `pydantic.BaseModel`
-- `pydantic.ConfigDict`
-- `pydantic.Field`
-- `pydantic.field_validator`
 
-## 3. Core Components (Contracts)
-### Public Classes
-- `MetricThresholdConfig`: Must conform to application domain models.
-- `RollingWindowsConfig`: Must conform to application domain models.
-- `SeasonalityConfig`: Must conform to application domain models.
-- `RegimeDetectionConfig`: Must conform to application domain models.
-- `AnalysisConfig`: Must conform to application domain models.
-- `StaticPlotsConfig`: Must conform to application domain models.
-- `InteractiveConfig`: Must conform to application domain models.
-- `VisualizationConfig`: Must conform to application domain models.
-- `ReportingConfig`: Must conform to application domain models.
-- `LoggingConfig`: Must conform to application domain models.
-- `AdvancedConfig`: Must conform to application domain models.
-- `MetaAnalyzerConfig`: Must conform to application domain models.
-- `ConfigLoader`: Must conform to application domain models.
+## 3. Core Components
+### Classes
+- `MetricThresholdConfig`
+- `RollingWindowsConfig`
+- `SeasonalityConfig`
+- `RegimeDetectionConfig`
+- `AnalysisConfig`
+- `StaticPlotsConfig`
+- `InteractiveConfig`
+- `VisualizationConfig`
+- `ReportingConfig`
+- `LoggingConfig`
+- `AdvancedConfig`
+- `MetaAnalyzerConfig`
+- `ConfigLoader`
 ### Public Functions
-- `get_config()`: Must return strictly typed objects.
-- `reset_config()`: Must return strictly typed objects.
-- `validate_positive_thresholds()`: Must return strictly typed objects.
-- `validate_logging_level()`: Must return strictly typed objects.
-- `validate_config()`: Must return strictly typed objects.
-- `get()`: Must return strictly typed objects.
-- `get_section()`: Must return strictly typed objects.
-- `get_metric_thresholds()`: Must return strictly typed objects.
-- `get_analysis_config()`: Must return strictly typed objects.
-- `get_visualization_config()`: Must return strictly typed objects.
-- `get_reporting_config()`: Must return strictly typed objects.
-- `get_alerts_config()`: Must return strictly typed objects.
-- `get_regime_detection_config()`: Must return strictly typed objects.
-- `get_seasonality_config()`: Must return strictly typed objects.
-- `get_clustering_config()`: Must return strictly typed objects.
-- `get_walk_forward_config()`: Must return strictly typed objects.
-- `get_alert_threshold()`: Must return strictly typed objects.
-- `is_enabled()`: Must return strictly typed objects.
-- `get_random_state()`: Must return strictly typed objects.
-- `get_logging_level()`: Must return strictly typed objects.
-- `to_dict()`: Must return strictly typed objects.
-- `reload()`: Must return strictly typed objects.
-- `validate_config()`: Must return strictly typed objects.
+- `get_config()`
+- `reset_config()`
+- `validate_positive_thresholds()`
+- `validate_logging_level()`
+- `validate_config()`
+- `get()`
+- `get_section()`
+- `get_metric_thresholds()`
+- `get_analysis_config()`
+- `get_visualization_config()`
+- `get_reporting_config()`
+- `get_alerts_config()`
+- `get_regime_detection_config()`
+- `get_seasonality_config()`
+- `get_clustering_config()`
+- `get_walk_forward_config()`
+- `get_alert_threshold()`
+- `is_enabled()`
+- `get_random_state()`
+- `get_logging_level()`
+- `to_dict()`
+- `reload()`
+- `validate_config()`
 
-## 4. Execution Requirements (Compliance Rules)
-- [x] Must execute without syntax errors.
-- [x] Must contain explicit structured logging or print interception.
-- [x] Must not expose external secrets.
-- [x] Exceptions must be handled.
+## 4. SOLID Principles (from rules/python/03-solid-principles.md)
+
+### SRP - Single Responsibility Principle
+Single Responsibility: One class, one reason to change. Split when class has multiple responsibilities.
+- [ ] This file has ONE primary responsibility
+- [ ] Classes have one reason to change
+
+### OCP - Open/Closed Principle
+Open/Closed: Open for extension, closed for modification. Use interfaces/protocols.
+- [ ] Uses Protocol interfaces for extension
+- [ ] No modification needed for new implementations
+
+### LSP - Liskov Substitution Principle
+Liskov Substitution: Subtypes must be substitutable for base types without breaking behavior.
+- [ ] Subclasses can replace parent classes without breaking behavior
+- [ ] No surprising overrides in child classes
+
+### ISP - Interface Segregation Principle
+Interface Segregation: Small, focused interfaces. Don't force clients to implement unused methods.
+- [ ] Interfaces are small and focused
+- [ ] Clients don't depend on methods they don't use
+
+### DIP - Dependency Inversion Principle
+Dependency Inversion: Depend on abstractions, not concretions. Use dependency injection.
+- [ ] High-level modules depend on abstractions (Protocols)
+- [ ] Dependencies injected via __init__ or function parameters
+
+## 5. Python Coding Standards (from rules/python/)
+
+### Type Hints (rules/python/02-type-hints.md)
+- [ ] Use typing module for all function signatures
+- [ ] Prefer typing.Protocol over ABC for interfaces
+- [ ] Use | for Union types (Python 3.10+)
+- [ ] Avoid Any, use specific types or generics
+- [ ] Return types must be explicit
+
+### Formatting (rules/python/01-formatting-style.md)
+- [ ] Black formatter (line length 88)
+- [ ] isort for import sorting
+- [ ] Ruff for linting
+- [ ] Docstrings for all public functions/classes
+- [ ] Max 100 characters per line
+
+### Logging (rules/python/09-logging-observability.md)
+- [ ] Use structured logging (JSON format)
+- [ ] Never log sensitive data (API keys, passwords)
+- [ ] Use correlation IDs for tracing
+- [ ] Log levels: DEBUG, INFO, WARNING, ERROR, CRITICAL
+- [ ] Append-only log files for audit trails
+
+### Security (rules/trading/28-security-and-secrets.md)
+- [ ] Never hardcode secrets or API keys
+- [ ] Use .env files (gitignored) for credentials
+- [ ] Validate all external inputs
+- [ ] Use parameterized queries (no SQL injection)
+- [ ] Hash passwords with bcrypt/argon2
+
+## 6. Trading Rules (from rules/trading/64-realistic-retail-trading-rules.md)
+
+### Applicable Rules
+
+#### R2
+Drawdown Monitor (15% warning, 25% halt trading, auto cooldown)
+
+- [ ] Implementation verified
+- [ ] Tests pass
+
+#### R5
+Walk-Forward Analysis (70/30 train/test split, min 50 trades OOS, max 30% degradation)
+
+- [ ] Implementation verified
+- [ ] Tests pass
+
+#### R6
+Overfitting Prevention (min 30 samples per parameter, purged cross-validation)
+
+- [ ] Implementation verified
+- [ ] Tests pass
+
+#### R7
+Monte Carlo Risk Analysis (1000 simulations, validate DD within 5-95 percentile)
+
+- [ ] Implementation verified
+- [ ] Tests pass
+
+### All Trading Rules Reference
+
+| Rule | Category | Description |
+|------|----------|-------------|
+| R1 | Capital Management | Kelly Criterion + Max Position Size... |
+| R2 | Capital Management | Drawdown Monitor... |
+| R3 | Capital Management | Correlation & Concentration Limits... |
+| R4 | Capital Management | Risk/Reward Ratio Minimum 2:1... |
+| R5 | Backtesting | Walk-Forward Analysis... |
+| R6 | Backtesting | Overfitting Prevention... |
+| R7 | Backtesting | Monte Carlo Risk Analysis... |
+| R8 | Execution | Bid-Ask Spread Management... |
+| R9 | Execution | Execution Timing... |
+| R10 | Execution | Slippage Monitor... |
+| R11 | Position Management | Dynamic Trailing Stop... |
+| R12 | Position Management | Partial Take Profit... |
+| R13 | Position Management | Pyramiding... |
+| R14 | Data & Infrastructure | Data Quality Validation... |
+| R15 | Data & Infrastructure | Complete Logging... |
+| R16 | Data & Infrastructure | Daily Reconciliation... |
+| R17 | Psychology | Emotion Control... |
+| R18 | Psychology | Trade Journal... |
+| R19 | Technical Analysis | Market Regime Detection... |
+| R20 | Technical Analysis | Multi-Confirmation... |
+| R21 | Technical Analysis | Volume Filter... |
+| R22 | Adaptation | Monthly Review... |
+| R23 | Adaptation | A/B Testing... |
+| R24 | Adaptation | Strategy Diversification... |
+| R25 | Capital Phases | Phase 1... |
+| R26 | Capital Phases | Phase 2... |
+| R27 | Capital Phases | Phase 3... |
+| R28 | Compliance | Trade Record Retention... |
+| R29 | Compliance | API Key Security... |
+
+## 7. Spain Tax Compliance (from app/services/tax/)
+
+### IRPF Brackets
+- 19%: 0 - 6,000 EUR
+- 21%: 6,000 - 50,000 EUR
+- 23%: 50,000+ EUR
+
+### Modelo 720
+- [ ] Foreign assets >50,000 EUR reported
+- [ ] Annual declaration by March 31
+
+### Loss Carryforward
+- [ ] Losses can offset gains for 4 years
+- [ ] Track realized losses separately
+
+## 8. Execution Checklist
+
+### Pre-Deployment
+- [ ] All SOLID principles verified
+- [ ] Type hints complete and correct
+- [ ] Logging implemented
+- [ ] Security reviewed (no hardcoded secrets)
+- [ ] Trading rules implemented (if applicable)
+
+### Code Quality
+- [ ] Black formatting passes
+- [ ] isort passes
+- [ ] Ruff linting passes
+- [ ] Mypy type checking passes (warnings acceptable)
+
+### Testing
+- [ ] Unit tests pass
+- [ ] Integration tests pass (if applicable)
+- [ ] Backtesting validation (if strategy)
+
+---
+Generated by Requirements Generator v2.0
+Reference: rules/trading/64-realistic-retail-trading-rules.md
+Reference: rules/python/03-solid-principles.md

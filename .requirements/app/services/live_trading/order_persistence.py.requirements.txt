@@ -1,61 +1,177 @@
-# Requirements Document: services/live_trading/order_persistence.py
+# Requirements Document: app/services/live_trading/order_persistence.py
 
 ## 1. Module Overview
-Order Persistence Layer - SQLite-based order storage
-
-Provides persistent storage for orders across system restarts.
-Critical for production trading to ensure no orders are lost.
-
-PRODUCTION FEATURES:
-- WAL mode for better concurrent reads
-- Busy timeout for retries
-- UTC timestamps for consistency
-- Connection reuse with thread safety
+File: order_persistence.py
+Domain: General
+Generated: 2026-03-09
 
 ## 2. Dependencies
+- `contextlib`
+- `datetime`
+- `decimal`
 - `json`
 - `logging`
+- `pathlib`
+- `sqlalchemy.exc`
 - `sqlite3`
 - `threading`
-- `contextlib.contextmanager`
-- `datetime.datetime`
-- `datetime.timezone`
-- `decimal.Decimal`
-- `pathlib.Path`
-- `typing.Dict`
-- `typing.List`
-- `typing.Optional`
-- `sqlalchemy.exc.DatabaseError`
-- `sqlalchemy.exc.DataError`
-- `sqlalchemy.exc.IntegrityError`
-- `sqlalchemy.exc.OperationalError`
-- `sqlalchemy.exc.ProgrammingError`
+- `typing`
 
-## 3. Core Components (Contracts)
-### Public Classes
-- `DecimalEncoder`: Must conform to application domain models.
-- `OrderPersistence`: Must conform to application domain models.
+## 3. Core Components
+### Classes
+- `DecimalEncoder`
+- `OrderPersistence`
 ### Public Functions
-- `utc_now()`: Must return strictly typed objects.
-- `decimal_decoder()`: Must return strictly typed objects.
-- `get_order_persistence()`: Must return strictly typed objects.
-- `default()`: Must return strictly typed objects.
-- `save_order()`: Must return strictly typed objects.
-- `get_order()`: Must return strictly typed objects.
-- `get_pending_orders()`: Must return strictly typed objects.
-- `get_executed_orders()`: Must return strictly typed objects.
-- `get_order_history()`: Must return strictly typed objects.
-- `mark_order_executed()`: Must return strictly typed objects.
-- `save_execution()`: Must return strictly typed objects.
-- `get_executions()`: Must return strictly typed objects.
-- `save_error()`: Must return strictly typed objects.
-- `get_errors()`: Must return strictly typed objects.
-- `cleanup_old_orders()`: Must return strictly typed objects.
-- `get_stats()`: Must return strictly typed objects.
-- `close()`: Must return strictly typed objects.
+- `utc_now()`
+- `decimal_decoder()`
+- `get_order_persistence()`
+- `default()`
+- `save_order()`
+- `get_order()`
+- `get_pending_orders()`
+- `get_executed_orders()`
+- `get_order_history()`
+- `mark_order_executed()`
+- `save_execution()`
+- `get_executions()`
+- `save_error()`
+- `get_errors()`
+- `cleanup_old_orders()`
+- `get_stats()`
+- `close()`
 
-## 4. Execution Requirements (Compliance Rules)
-- [x] Must execute without syntax errors.
-- [x] Must contain explicit structured logging or print interception.
-- [x] Must not expose external secrets.
-- [x] Exceptions must be handled.
+## 4. SOLID Principles (from rules/python/03-solid-principles.md)
+
+### SRP - Single Responsibility Principle
+Single Responsibility: One class, one reason to change. Split when class has multiple responsibilities.
+- [ ] This file has ONE primary responsibility
+- [ ] Classes have one reason to change
+
+### OCP - Open/Closed Principle
+Open/Closed: Open for extension, closed for modification. Use interfaces/protocols.
+- [ ] Uses Protocol interfaces for extension
+- [ ] No modification needed for new implementations
+
+### LSP - Liskov Substitution Principle
+Liskov Substitution: Subtypes must be substitutable for base types without breaking behavior.
+- [ ] Subclasses can replace parent classes without breaking behavior
+- [ ] No surprising overrides in child classes
+
+### ISP - Interface Segregation Principle
+Interface Segregation: Small, focused interfaces. Don't force clients to implement unused methods.
+- [ ] Interfaces are small and focused
+- [ ] Clients don't depend on methods they don't use
+
+### DIP - Dependency Inversion Principle
+Dependency Inversion: Depend on abstractions, not concretions. Use dependency injection.
+- [ ] High-level modules depend on abstractions (Protocols)
+- [ ] Dependencies injected via __init__ or function parameters
+
+## 5. Python Coding Standards (from rules/python/)
+
+### Type Hints (rules/python/02-type-hints.md)
+- [ ] Use typing module for all function signatures
+- [ ] Prefer typing.Protocol over ABC for interfaces
+- [ ] Use | for Union types (Python 3.10+)
+- [ ] Avoid Any, use specific types or generics
+- [ ] Return types must be explicit
+
+### Formatting (rules/python/01-formatting-style.md)
+- [ ] Black formatter (line length 88)
+- [ ] isort for import sorting
+- [ ] Ruff for linting
+- [ ] Docstrings for all public functions/classes
+- [ ] Max 100 characters per line
+
+### Logging (rules/python/09-logging-observability.md)
+- [ ] Use structured logging (JSON format)
+- [ ] Never log sensitive data (API keys, passwords)
+- [ ] Use correlation IDs for tracing
+- [ ] Log levels: DEBUG, INFO, WARNING, ERROR, CRITICAL
+- [ ] Append-only log files for audit trails
+
+### Security (rules/trading/28-security-and-secrets.md)
+- [ ] Never hardcode secrets or API keys
+- [ ] Use .env files (gitignored) for credentials
+- [ ] Validate all external inputs
+- [ ] Use parameterized queries (no SQL injection)
+- [ ] Hash passwords with bcrypt/argon2
+
+## 6. Trading Rules (from rules/trading/64-realistic-retail-trading-rules.md)
+
+### General Compliance
+This file should comply with all applicable trading rules based on its functionality.
+
+### All Trading Rules Reference
+
+| Rule | Category | Description |
+|------|----------|-------------|
+| R1 | Capital Management | Kelly Criterion + Max Position Size... |
+| R2 | Capital Management | Drawdown Monitor... |
+| R3 | Capital Management | Correlation & Concentration Limits... |
+| R4 | Capital Management | Risk/Reward Ratio Minimum 2:1... |
+| R5 | Backtesting | Walk-Forward Analysis... |
+| R6 | Backtesting | Overfitting Prevention... |
+| R7 | Backtesting | Monte Carlo Risk Analysis... |
+| R8 | Execution | Bid-Ask Spread Management... |
+| R9 | Execution | Execution Timing... |
+| R10 | Execution | Slippage Monitor... |
+| R11 | Position Management | Dynamic Trailing Stop... |
+| R12 | Position Management | Partial Take Profit... |
+| R13 | Position Management | Pyramiding... |
+| R14 | Data & Infrastructure | Data Quality Validation... |
+| R15 | Data & Infrastructure | Complete Logging... |
+| R16 | Data & Infrastructure | Daily Reconciliation... |
+| R17 | Psychology | Emotion Control... |
+| R18 | Psychology | Trade Journal... |
+| R19 | Technical Analysis | Market Regime Detection... |
+| R20 | Technical Analysis | Multi-Confirmation... |
+| R21 | Technical Analysis | Volume Filter... |
+| R22 | Adaptation | Monthly Review... |
+| R23 | Adaptation | A/B Testing... |
+| R24 | Adaptation | Strategy Diversification... |
+| R25 | Capital Phases | Phase 1... |
+| R26 | Capital Phases | Phase 2... |
+| R27 | Capital Phases | Phase 3... |
+| R28 | Compliance | Trade Record Retention... |
+| R29 | Compliance | API Key Security... |
+
+## 7. Spain Tax Compliance (from app/services/tax/)
+
+### IRPF Brackets
+- 19%: 0 - 6,000 EUR
+- 21%: 6,000 - 50,000 EUR
+- 23%: 50,000+ EUR
+
+### Modelo 720
+- [ ] Foreign assets >50,000 EUR reported
+- [ ] Annual declaration by March 31
+
+### Loss Carryforward
+- [ ] Losses can offset gains for 4 years
+- [ ] Track realized losses separately
+
+## 8. Execution Checklist
+
+### Pre-Deployment
+- [ ] All SOLID principles verified
+- [ ] Type hints complete and correct
+- [ ] Logging implemented
+- [ ] Security reviewed (no hardcoded secrets)
+- [ ] Trading rules implemented (if applicable)
+
+### Code Quality
+- [ ] Black formatting passes
+- [ ] isort passes
+- [ ] Ruff linting passes
+- [ ] Mypy type checking passes (warnings acceptable)
+
+### Testing
+- [ ] Unit tests pass
+- [ ] Integration tests pass (if applicable)
+- [ ] Backtesting validation (if strategy)
+
+---
+Generated by Requirements Generator v2.0
+Reference: rules/trading/64-realistic-retail-trading-rules.md
+Reference: rules/python/03-solid-principles.md

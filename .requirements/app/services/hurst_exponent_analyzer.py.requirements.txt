@@ -1,88 +1,180 @@
-# Requirements Document: services/hurst_exponent_analyzer.py
+# Requirements Document: app/services/hurst_exponent_analyzer.py
 
 ## 1. Module Overview
-Hurst Exponent Analyzer for Market Regime Detection
-
-This module implements Hurst Exponent calculation using R/S (Rescaled Range) analysis
-to determine whether a time series is trending, mean-reverting, or random walk.
-
-Based on Ernest Chan's Algorithmic Trading (Rule 2.2):
-- H = 0.5: Random walk (Geometric Brownian Motion)
-- H < 0.5: Mean-reverting (suitable for mean reversion strategies)
-- H > 0.5: Trending (suitable for trend following strategies)
-
-CRITICAL: NUMBA IS REQUIRED DEPENDENCY - NO FALLBACKS
-- This module REQUIRES Numba to be installed
-- NO fallback to pure Python - fails fast if Numba not available
-- 100% Numba JIT acceleration on all performance-critical functions
-- Expected speedup: 50-100x vs pure Python
-
-PERFORMANCE OPTIMIZATIONS (Rule 19 - High Performance Python):
-- Uses Numba JIT compilation for 50-100x speedup on R/S calculations
-- Efficient memory management for large time series
-- Parallel processing for multiple time scales
-
-STATISTICAL VALIDATION (Rule 3 - López de Prado):
-- Implements proper R/S analysis methodology
-- Confidence intervals via bootstrapping
-- Statistical significance testing
-- Multiple time scale analysis
-
-TIME SERIES BEST PRACTICES (Rule 32 - Tsay):
-- Pre-whitening to remove autocorrelation
-- Stationarity checks
-- Proper handling of non-stationary series
-
-Author: Algorithmic Trading Team
-Date: 2026-01-28
-Version: 2.0.0 - NO FALLBACKS (Numba Required)
-Compliance: Ernest Chan Rule 2.2, Rule 19, Rule 3, Rule 32
+File: hurst_exponent_analyzer.py
+Domain: General
+Generated: 2026-03-09
 
 ## 2. Dependencies
+- `dataclasses`
+- `datetime`
+- `enum`
 - `logging`
-- `dataclasses.dataclass`
-- `datetime.datetime`
-- `enum.Enum`
-- `typing.Dict`
-- `typing.List`
-- `typing.Optional`
-- `typing.Tuple`
-- `typing.Union`
 - `numba`
 - `numpy`
 - `pandas`
-- `numba.jit`
+- `typing`
 
-## 3. Core Components (Contracts)
-### Public Classes
-- `MarketRegime`: Must conform to application domain models.
-- `StrategyRecommendation`: Must conform to application domain models.
-- `HurstResult`: Must conform to application domain models.
-- `RegimeChange`: Must conform to application domain models.
-- `HurstExponentAnalyzer`: Must conform to application domain models.
+## 3. Core Components
+### Classes
+- `MarketRegime`
+- `StrategyRecommendation`
+- `HurstResult`
+- `RegimeChange`
+- `HurstExponentAnalyzer`
 ### Public Functions
-- `calculate_rs_numba()`: Must return strictly typed objects.
-- `calculate_cumulative_deviation_numba()`: Must return strictly typed objects.
-- `calculate_rs_for_window_numba()`: Must return strictly typed objects.
-- `calculate_hurst_rs_numba()`: Must return strictly typed objects.
-- `calculate_hurst_variance_numba()`: Must return strictly typed objects.
-- `calculate_aggregated_variance_numba()`: Must return strictly typed objects.
-- `calculate_hurst_exponent()`: Must return strictly typed objects.
-- `classify_regime()`: Must return strictly typed objects.
-- `recommend_strategy_from_hurst()`: Must return strictly typed objects.
-- `get_analyzer_info()`: Must return strictly typed objects.
-- `analyze()`: Must return strictly typed objects.
-- `detect_regime_change()`: Must return strictly typed objects.
-- `monitor_multiple_symbols()`: Must return strictly typed objects.
-- `get_historical_hurst()`: Must return strictly typed objects.
-- `calculate_hurst_exponent()`: Must return strictly typed objects.
-- `classify_regime()`: Must return strictly typed objects.
-- `get_strategy_recommendation()`: Must return strictly typed objects.
-- `calculate_rolling_hurst()`: Must return strictly typed objects.
-- `detect_regime_changes()`: Must return strictly typed objects.
+- `calculate_rs_numba()`
+- `calculate_cumulative_deviation_numba()`
+- `calculate_rs_for_window_numba()`
+- `calculate_hurst_rs_numba()`
+- `calculate_hurst_variance_numba()`
+- `calculate_aggregated_variance_numba()`
+- `calculate_hurst_exponent()`
+- `classify_regime()`
+- `recommend_strategy_from_hurst()`
+- `get_analyzer_info()`
+- `analyze()`
+- `detect_regime_change()`
+- `monitor_multiple_symbols()`
+- `get_historical_hurst()`
+- `calculate_hurst_exponent()`
+- `classify_regime()`
+- `get_strategy_recommendation()`
+- `calculate_rolling_hurst()`
+- `detect_regime_changes()`
 
-## 4. Execution Requirements (Compliance Rules)
-- [x] Must execute without syntax errors.
-- [x] Must contain explicit structured logging or print interception.
-- [x] Must not expose external secrets.
-- [x] Exceptions must be handled.
+## 4. SOLID Principles (from rules/python/03-solid-principles.md)
+
+### SRP - Single Responsibility Principle
+Single Responsibility: One class, one reason to change. Split when class has multiple responsibilities.
+- [ ] This file has ONE primary responsibility
+- [ ] Classes have one reason to change
+
+### OCP - Open/Closed Principle
+Open/Closed: Open for extension, closed for modification. Use interfaces/protocols.
+- [ ] Uses Protocol interfaces for extension
+- [ ] No modification needed for new implementations
+
+### LSP - Liskov Substitution Principle
+Liskov Substitution: Subtypes must be substitutable for base types without breaking behavior.
+- [ ] Subclasses can replace parent classes without breaking behavior
+- [ ] No surprising overrides in child classes
+
+### ISP - Interface Segregation Principle
+Interface Segregation: Small, focused interfaces. Don't force clients to implement unused methods.
+- [ ] Interfaces are small and focused
+- [ ] Clients don't depend on methods they don't use
+
+### DIP - Dependency Inversion Principle
+Dependency Inversion: Depend on abstractions, not concretions. Use dependency injection.
+- [ ] High-level modules depend on abstractions (Protocols)
+- [ ] Dependencies injected via __init__ or function parameters
+
+## 5. Python Coding Standards (from rules/python/)
+
+### Type Hints (rules/python/02-type-hints.md)
+- [ ] Use typing module for all function signatures
+- [ ] Prefer typing.Protocol over ABC for interfaces
+- [ ] Use | for Union types (Python 3.10+)
+- [ ] Avoid Any, use specific types or generics
+- [ ] Return types must be explicit
+
+### Formatting (rules/python/01-formatting-style.md)
+- [ ] Black formatter (line length 88)
+- [ ] isort for import sorting
+- [ ] Ruff for linting
+- [ ] Docstrings for all public functions/classes
+- [ ] Max 100 characters per line
+
+### Logging (rules/python/09-logging-observability.md)
+- [ ] Use structured logging (JSON format)
+- [ ] Never log sensitive data (API keys, passwords)
+- [ ] Use correlation IDs for tracing
+- [ ] Log levels: DEBUG, INFO, WARNING, ERROR, CRITICAL
+- [ ] Append-only log files for audit trails
+
+### Security (rules/trading/28-security-and-secrets.md)
+- [ ] Never hardcode secrets or API keys
+- [ ] Use .env files (gitignored) for credentials
+- [ ] Validate all external inputs
+- [ ] Use parameterized queries (no SQL injection)
+- [ ] Hash passwords with bcrypt/argon2
+
+## 6. Trading Rules (from rules/trading/64-realistic-retail-trading-rules.md)
+
+### General Compliance
+This file should comply with all applicable trading rules based on its functionality.
+
+### All Trading Rules Reference
+
+| Rule | Category | Description |
+|------|----------|-------------|
+| R1 | Capital Management | Kelly Criterion + Max Position Size... |
+| R2 | Capital Management | Drawdown Monitor... |
+| R3 | Capital Management | Correlation & Concentration Limits... |
+| R4 | Capital Management | Risk/Reward Ratio Minimum 2:1... |
+| R5 | Backtesting | Walk-Forward Analysis... |
+| R6 | Backtesting | Overfitting Prevention... |
+| R7 | Backtesting | Monte Carlo Risk Analysis... |
+| R8 | Execution | Bid-Ask Spread Management... |
+| R9 | Execution | Execution Timing... |
+| R10 | Execution | Slippage Monitor... |
+| R11 | Position Management | Dynamic Trailing Stop... |
+| R12 | Position Management | Partial Take Profit... |
+| R13 | Position Management | Pyramiding... |
+| R14 | Data & Infrastructure | Data Quality Validation... |
+| R15 | Data & Infrastructure | Complete Logging... |
+| R16 | Data & Infrastructure | Daily Reconciliation... |
+| R17 | Psychology | Emotion Control... |
+| R18 | Psychology | Trade Journal... |
+| R19 | Technical Analysis | Market Regime Detection... |
+| R20 | Technical Analysis | Multi-Confirmation... |
+| R21 | Technical Analysis | Volume Filter... |
+| R22 | Adaptation | Monthly Review... |
+| R23 | Adaptation | A/B Testing... |
+| R24 | Adaptation | Strategy Diversification... |
+| R25 | Capital Phases | Phase 1... |
+| R26 | Capital Phases | Phase 2... |
+| R27 | Capital Phases | Phase 3... |
+| R28 | Compliance | Trade Record Retention... |
+| R29 | Compliance | API Key Security... |
+
+## 7. Spain Tax Compliance (from app/services/tax/)
+
+### IRPF Brackets
+- 19%: 0 - 6,000 EUR
+- 21%: 6,000 - 50,000 EUR
+- 23%: 50,000+ EUR
+
+### Modelo 720
+- [ ] Foreign assets >50,000 EUR reported
+- [ ] Annual declaration by March 31
+
+### Loss Carryforward
+- [ ] Losses can offset gains for 4 years
+- [ ] Track realized losses separately
+
+## 8. Execution Checklist
+
+### Pre-Deployment
+- [ ] All SOLID principles verified
+- [ ] Type hints complete and correct
+- [ ] Logging implemented
+- [ ] Security reviewed (no hardcoded secrets)
+- [ ] Trading rules implemented (if applicable)
+
+### Code Quality
+- [ ] Black formatting passes
+- [ ] isort passes
+- [ ] Ruff linting passes
+- [ ] Mypy type checking passes (warnings acceptable)
+
+### Testing
+- [ ] Unit tests pass
+- [ ] Integration tests pass (if applicable)
+- [ ] Backtesting validation (if strategy)
+
+---
+Generated by Requirements Generator v2.0
+Reference: rules/trading/64-realistic-retail-trading-rules.md
+Reference: rules/python/03-solid-principles.md
