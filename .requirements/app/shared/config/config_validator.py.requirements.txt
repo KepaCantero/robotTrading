@@ -1,78 +1,235 @@
-# Requirements Document: shared/config/config_validator.py
+# Requirements Document: app/shared/config/config_validator.py
 
 ## 1. Module Overview
-Configuration Validator Module
-Phase 4.2: Production Config Management
-
-This module provides validation for YAML configuration files and environment
-variables to ensure production readiness.
+File: config_validator.py
+Domain: General
+Generated: 2026-03-09
 
 ## 2. Dependencies
+- `argparse`
 - `datetime`
 - `logging`
 - `os`
+- `pathlib`
+- `pydantic`
 - `re`
 - `sys`
-- `pathlib.Path`
-- `typing.Any`
-- `typing.Dict`
-- `typing.List`
-- `typing.Optional`
+- `typing`
 - `yaml`
-- `pydantic.BaseModel`
-- `pydantic.Field`
-- `pydantic.ValidationError`
-- `pydantic.field_validator`
-- `argparse`
 
-## 3. Core Components (Contracts)
-### Public Classes
-- `ProfileOptimizationConfigValidator`: Must conform to application domain models.
-- `BatchBacktestConfigValidator`: Must conform to application domain models.
-- `ValidationErrorDetail`: Must conform to application domain models.
-- `ValidationResult`: Must conform to application domain models.
-- `DatabaseConfigValidator`: Must conform to application domain models.
-- `RiskConfigValidator`: Must conform to application domain models.
-- `CircuitBreakerValidator`: Must conform to application domain models.
-- `ConfigValidator`: Must conform to application domain models.
+## 3. Core Components
+### Classes
+- `ProfileOptimizationConfigValidator`
+- `BatchBacktestConfigValidator`
+- `ValidationErrorDetail`
+- `ValidationResult`
+- `DatabaseConfigValidator`
+- `RiskConfigValidator`
+- `CircuitBreakerValidator`
+- `ConfigValidator`
 ### Public Functions
-- `main()`: Must return strictly typed objects.
-- `validate_test_size()`: Must return strictly typed objects.
-- `validate_cv_folds()`: Must return strictly typed objects.
-- `validate_worker_multiplier()`: Must return strictly typed objects.
-- `validate_positive_thresholds()`: Must return strictly typed objects.
-- `validate_drawdown()`: Must return strictly typed objects.
-- `validate_database_url()`: Must return strictly typed objects.
-- `validate_non_empty_dict()`: Must return strictly typed objects.
-- `validate_symbols()`: Must return strictly typed objects.
-- `validate_date_format()`: Must return strictly typed objects.
-- `validate_n_trials()`: Must return strictly typed objects.
-- `validate_max_profiles()`: Must return strictly typed objects.
-- `add_error()`: Must return strictly typed objects.
-- `add_warning()`: Must return strictly typed objects.
-- `print_summary()`: Must return strictly typed objects.
-- `validate_backup_interval()`: Must return strictly typed objects.
-- `validate_retention()`: Must return strictly typed objects.
-- `validate_percentages()`: Must return strictly typed objects.
-- `validate_leverage()`: Must return strictly typed objects.
-- `validate_thresholds()`: Must return strictly typed objects.
-- `validate_yaml_syntax()`: Must return strictly typed objects.
-- `validate_environment_value()`: Must return strictly typed objects.
-- `validate_debug_mode()`: Must return strictly typed objects.
-- `validate_required_sections()`: Must return strictly typed objects.
-- `validate_placeholders()`: Must return strictly typed objects.
-- `validate_environment_variables()`: Must return strictly typed objects.
-- `validate_database_config()`: Must return strictly typed objects.
-- `validate_risk_config()`: Must return strictly typed objects.
-- `validate_circuit_breaker_config()`: Must return strictly typed objects.
-- `validate_production_config()`: Must return strictly typed objects.
-- `validate_profile_optimization_config()`: Must return strictly typed objects.
-- `validate_batch_backtest_config()`: Must return strictly typed objects.
-- `check_dict()`: Must return strictly typed objects.
-- `extract()`: Must return strictly typed objects.
+- `main()`
+- `validate_test_size()`
+- `validate_cv_folds()`
+- `validate_worker_multiplier()`
+- `validate_positive_thresholds()`
+- `validate_drawdown()`
+- `validate_database_url()`
+- `validate_non_empty_dict()`
+- `validate_symbols()`
+- `validate_date_format()`
+- `validate_n_trials()`
+- `validate_max_profiles()`
+- `add_error()`
+- `add_warning()`
+- `print_summary()`
+- `validate_backup_interval()`
+- `validate_retention()`
+- `validate_percentages()`
+- `validate_leverage()`
+- `validate_thresholds()`
+- `validate_yaml_syntax()`
+- `validate_environment_value()`
+- `validate_debug_mode()`
+- `validate_required_sections()`
+- `validate_placeholders()`
+- `validate_environment_variables()`
+- `validate_database_config()`
+- `validate_risk_config()`
+- `validate_circuit_breaker_config()`
+- `validate_production_config()`
+- `validate_profile_optimization_config()`
+- `validate_batch_backtest_config()`
+- `check_dict()`
+- `extract()`
 
-## 4. Execution Requirements (Compliance Rules)
-- [x] Must execute without syntax errors.
-- [x] Must contain explicit structured logging or print interception.
-- [x] Must not expose external secrets.
-- [x] Exceptions must be handled.
+## 4. SOLID Principles (from rules/python/03-solid-principles.md)
+
+### SRP - Single Responsibility Principle
+Single Responsibility: One class, one reason to change. Split when class has multiple responsibilities.
+- [ ] This file has ONE primary responsibility
+- [ ] Classes have one reason to change
+
+### OCP - Open/Closed Principle
+Open/Closed: Open for extension, closed for modification. Use interfaces/protocols.
+- [ ] Uses Protocol interfaces for extension
+- [ ] No modification needed for new implementations
+
+### LSP - Liskov Substitution Principle
+Liskov Substitution: Subtypes must be substitutable for base types without breaking behavior.
+- [ ] Subclasses can replace parent classes without breaking behavior
+- [ ] No surprising overrides in child classes
+
+### ISP - Interface Segregation Principle
+Interface Segregation: Small, focused interfaces. Don't force clients to implement unused methods.
+- [ ] Interfaces are small and focused
+- [ ] Clients don't depend on methods they don't use
+
+### DIP - Dependency Inversion Principle
+Dependency Inversion: Depend on abstractions, not concretions. Use dependency injection.
+- [ ] High-level modules depend on abstractions (Protocols)
+- [ ] Dependencies injected via __init__ or function parameters
+
+## 5. Python Coding Standards (from rules/python/)
+
+### Type Hints (rules/python/02-type-hints.md)
+- [ ] Use typing module for all function signatures
+- [ ] Prefer typing.Protocol over ABC for interfaces
+- [ ] Use | for Union types (Python 3.10+)
+- [ ] Avoid Any, use specific types or generics
+- [ ] Return types must be explicit
+
+### Formatting (rules/python/01-formatting-style.md)
+- [ ] Black formatter (line length 88)
+- [ ] isort for import sorting
+- [ ] Ruff for linting
+- [ ] Docstrings for all public functions/classes
+- [ ] Max 100 characters per line
+
+### Logging (rules/python/09-logging-observability.md)
+- [ ] Use structured logging (JSON format)
+- [ ] Never log sensitive data (API keys, passwords)
+- [ ] Use correlation IDs for tracing
+- [ ] Log levels: DEBUG, INFO, WARNING, ERROR, CRITICAL
+- [ ] Append-only log files for audit trails
+
+### Security (rules/trading/28-security-and-secrets.md)
+- [ ] Never hardcode secrets or API keys
+- [ ] Use .env files (gitignored) for credentials
+- [ ] Validate all external inputs
+- [ ] Use parameterized queries (no SQL injection)
+- [ ] Hash passwords with bcrypt/argon2
+
+## 6. Trading Rules (from rules/trading/64-realistic-retail-trading-rules.md)
+
+### Applicable Rules
+
+#### R1
+Kelly Criterion + Max Position Size (2% max risk per trade, 25% Kelly fraction)
+
+- [ ] Implementation verified
+- [ ] Tests pass
+
+#### R2
+Drawdown Monitor (15% warning, 25% halt trading, auto cooldown)
+
+- [ ] Implementation verified
+- [ ] Tests pass
+
+#### R28
+Trade Record Retention (5 years minimum, append-only, monthly reports)
+
+- [ ] Implementation verified
+- [ ] Tests pass
+
+#### R5
+Walk-Forward Analysis (70/30 train/test split, min 50 trades OOS, max 30% degradation)
+
+- [ ] Implementation verified
+- [ ] Tests pass
+
+#### R6
+Overfitting Prevention (min 30 samples per parameter, purged cross-validation)
+
+- [ ] Implementation verified
+- [ ] Tests pass
+
+#### R7
+Monte Carlo Risk Analysis (1000 simulations, validate DD within 5-95 percentile)
+
+- [ ] Implementation verified
+- [ ] Tests pass
+
+### All Trading Rules Reference
+
+| Rule | Category | Description |
+|------|----------|-------------|
+| R1 | Capital Management | Kelly Criterion + Max Position Size... |
+| R2 | Capital Management | Drawdown Monitor... |
+| R3 | Capital Management | Correlation & Concentration Limits... |
+| R4 | Capital Management | Risk/Reward Ratio Minimum 2:1... |
+| R5 | Backtesting | Walk-Forward Analysis... |
+| R6 | Backtesting | Overfitting Prevention... |
+| R7 | Backtesting | Monte Carlo Risk Analysis... |
+| R8 | Execution | Bid-Ask Spread Management... |
+| R9 | Execution | Execution Timing... |
+| R10 | Execution | Slippage Monitor... |
+| R11 | Position Management | Dynamic Trailing Stop... |
+| R12 | Position Management | Partial Take Profit... |
+| R13 | Position Management | Pyramiding... |
+| R14 | Data & Infrastructure | Data Quality Validation... |
+| R15 | Data & Infrastructure | Complete Logging... |
+| R16 | Data & Infrastructure | Daily Reconciliation... |
+| R17 | Psychology | Emotion Control... |
+| R18 | Psychology | Trade Journal... |
+| R19 | Technical Analysis | Market Regime Detection... |
+| R20 | Technical Analysis | Multi-Confirmation... |
+| R21 | Technical Analysis | Volume Filter... |
+| R22 | Adaptation | Monthly Review... |
+| R23 | Adaptation | A/B Testing... |
+| R24 | Adaptation | Strategy Diversification... |
+| R25 | Capital Phases | Phase 1... |
+| R26 | Capital Phases | Phase 2... |
+| R27 | Capital Phases | Phase 3... |
+| R28 | Compliance | Trade Record Retention... |
+| R29 | Compliance | API Key Security... |
+
+## 7. Spain Tax Compliance (from app/services/tax/)
+
+### IRPF Brackets
+- 19%: 0 - 6,000 EUR
+- 21%: 6,000 - 50,000 EUR
+- 23%: 50,000+ EUR
+
+### Modelo 720
+- [ ] Foreign assets >50,000 EUR reported
+- [ ] Annual declaration by March 31
+
+### Loss Carryforward
+- [ ] Losses can offset gains for 4 years
+- [ ] Track realized losses separately
+
+## 8. Execution Checklist
+
+### Pre-Deployment
+- [ ] All SOLID principles verified
+- [ ] Type hints complete and correct
+- [ ] Logging implemented
+- [ ] Security reviewed (no hardcoded secrets)
+- [ ] Trading rules implemented (if applicable)
+
+### Code Quality
+- [ ] Black formatting passes
+- [ ] isort passes
+- [ ] Ruff linting passes
+- [ ] Mypy type checking passes (warnings acceptable)
+
+### Testing
+- [ ] Unit tests pass
+- [ ] Integration tests pass (if applicable)
+- [ ] Backtesting validation (if strategy)
+
+---
+Generated by Requirements Generator v2.0
+Reference: rules/trading/64-realistic-retail-trading-rules.md
+Reference: rules/python/03-solid-principles.md

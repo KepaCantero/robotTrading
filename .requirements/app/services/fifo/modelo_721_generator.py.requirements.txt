@@ -1,76 +1,178 @@
-# Requirements Document: services/fifo/modelo_721_generator.py
+# Requirements Document: app/services/fifo/modelo_721_generator.py
 
 ## 1. Module Overview
-Modelo 721 Generator - Spain Tax Report Generator
-
-Generates Modelo 721 reports for Hacienda (Spanish tax authority).
-
-CRITICAL FOR SPAIN RESIDENTS:
-- Modelo 721: MANDATORY reporting of cryptocurrency holdings
-- Applies to ALL crypto holdings (no minimum threshold)
-- Due date: January 1 - March 31 of the following year
-- Reporting period: January 1 - December 31 (previous calendar year)
-- Required: Saldo a 31 de diciembre (balance on December 31st)
-- Required: Valor en EUR (value in Euros using official exchange rates)
-- Required: Identificación de exchanges (exchange identification)
-- Required: Fecha y hora de cada transacción (date and time of each transaction)
-
-This module provides:
-1. Annual report generation
-2. Dec 31 balance snapshots for crypto holdings
-3. Capital gains calculations
-4. CSV export format for Hacienda submission
-
-Author: Claude (FIFO Database Integration - Phase 2.1)
-Date: 2026-01-25
+File: modelo_721_generator.py
+Domain: General
+Generated: 2026-03-09
 
 ## 2. Dependencies
+- `app.infrastructure.persistence`
+- `app.tax.database.fifo_schema`
 - `asyncio`
 - `csv`
+- `dataclasses`
+- `datetime`
+- `decimal`
 - `logging`
-- `dataclasses.dataclass`
-- `dataclasses.field`
-- `datetime.date`
-- `datetime.datetime`
-- `datetime.timezone`
-- `decimal.Decimal`
-- `pathlib.Path`
-- `typing.Any`
-- `typing.Dict`
-- `typing.List`
-- `typing.Optional`
-- `uuid.UUID`
-- `sqlalchemy.extract`
-- `sqlalchemy.select`
-- `sqlalchemy.exc.DatabaseError`
-- `sqlalchemy.exc.DataError`
-- `sqlalchemy.exc.IntegrityError`
-- `sqlalchemy.exc.OperationalError`
-- `sqlalchemy.exc.ProgrammingError`
-- `sqlalchemy.ext.asyncio.AsyncSession`
-- `app.infrastructure.persistence.database.get_db_transaction`
-- `app.tax.database.fifo_schema.Account`
-- `app.tax.database.fifo_schema.AssetType`
-- `app.tax.database.fifo_schema.BalanceSnapshot`
-- `app.tax.database.fifo_schema.Lot`
-- `app.tax.database.fifo_schema.LotStatus`
-- `app.tax.database.fifo_schema.TaxReport`
-- `app.tax.database.fifo_schema.Transaction`
-- `app.tax.database.fifo_schema.TransactionType`
+- `pathlib`
+- `sqlalchemy`
+- `sqlalchemy.exc`
+- `sqlalchemy.ext.asyncio`
+- `typing`
+- `uuid`
 
-## 3. Core Components (Contracts)
-### Public Classes
-- `CryptoBalance`: Must conform to application domain models.
-- `TransactionDetail`: Must conform to application domain models.
-- `CapitalGainLoss`: Must conform to application domain models.
-- `Modelo721Report`: Must conform to application domain models.
-- `Modelo721Generator`: Must conform to application domain models.
+## 3. Core Components
+### Classes
+- `CryptoBalance`
+- `TransactionDetail`
+- `CapitalGainLoss`
+- `Modelo721Report`
+- `Modelo721Generator`
 ### Public Functions
-- `get_modelo_721_generator()`: Must return strictly typed objects.
-- `to_dict()`: Must return strictly typed objects.
+- `get_modelo_721_generator()`
+- `to_dict()`
+- `generate_annual_report()`
+- `export_to_csv()`
+- `save_report_to_database()`
+- `get_previous_year_reports()`
 
-## 4. Execution Requirements (Compliance Rules)
-- [x] Must execute without syntax errors.
-- [x] Must contain explicit structured logging or print interception.
-- [x] Must not expose external secrets.
-- [x] Exceptions must be handled.
+## 4. SOLID Principles (from rules/python/03-solid-principles.md)
+
+### SRP - Single Responsibility Principle
+Single Responsibility: One class, one reason to change. Split when class has multiple responsibilities.
+- [ ] This file has ONE primary responsibility
+- [ ] Classes have one reason to change
+
+### OCP - Open/Closed Principle
+Open/Closed: Open for extension, closed for modification. Use interfaces/protocols.
+- [ ] Uses Protocol interfaces for extension
+- [ ] No modification needed for new implementations
+
+### LSP - Liskov Substitution Principle
+Liskov Substitution: Subtypes must be substitutable for base types without breaking behavior.
+- [ ] Subclasses can replace parent classes without breaking behavior
+- [ ] No surprising overrides in child classes
+
+### ISP - Interface Segregation Principle
+Interface Segregation: Small, focused interfaces. Don't force clients to implement unused methods.
+- [ ] Interfaces are small and focused
+- [ ] Clients don't depend on methods they don't use
+
+### DIP - Dependency Inversion Principle
+Dependency Inversion: Depend on abstractions, not concretions. Use dependency injection.
+- [ ] High-level modules depend on abstractions (Protocols)
+- [ ] Dependencies injected via __init__ or function parameters
+
+## 5. Python Coding Standards (from rules/python/)
+
+### Type Hints (rules/python/02-type-hints.md)
+- [ ] Use typing module for all function signatures
+- [ ] Prefer typing.Protocol over ABC for interfaces
+- [ ] Use | for Union types (Python 3.10+)
+- [ ] Avoid Any, use specific types or generics
+- [ ] Return types must be explicit
+
+### Formatting (rules/python/01-formatting-style.md)
+- [ ] Black formatter (line length 88)
+- [ ] isort for import sorting
+- [ ] Ruff for linting
+- [ ] Docstrings for all public functions/classes
+- [ ] Max 100 characters per line
+
+### Logging (rules/python/09-logging-observability.md)
+- [ ] Use structured logging (JSON format)
+- [ ] Never log sensitive data (API keys, passwords)
+- [ ] Use correlation IDs for tracing
+- [ ] Log levels: DEBUG, INFO, WARNING, ERROR, CRITICAL
+- [ ] Append-only log files for audit trails
+
+### Security (rules/trading/28-security-and-secrets.md)
+- [ ] Never hardcode secrets or API keys
+- [ ] Use .env files (gitignored) for credentials
+- [ ] Validate all external inputs
+- [ ] Use parameterized queries (no SQL injection)
+- [ ] Hash passwords with bcrypt/argon2
+
+## 6. Trading Rules (from rules/trading/64-realistic-retail-trading-rules.md)
+
+### Applicable Rules
+
+#### R28
+Trade Record Retention (5 years minimum, append-only, monthly reports)
+
+- [ ] Implementation verified
+- [ ] Tests pass
+
+### All Trading Rules Reference
+
+| Rule | Category | Description |
+|------|----------|-------------|
+| R1 | Capital Management | Kelly Criterion + Max Position Size... |
+| R2 | Capital Management | Drawdown Monitor... |
+| R3 | Capital Management | Correlation & Concentration Limits... |
+| R4 | Capital Management | Risk/Reward Ratio Minimum 2:1... |
+| R5 | Backtesting | Walk-Forward Analysis... |
+| R6 | Backtesting | Overfitting Prevention... |
+| R7 | Backtesting | Monte Carlo Risk Analysis... |
+| R8 | Execution | Bid-Ask Spread Management... |
+| R9 | Execution | Execution Timing... |
+| R10 | Execution | Slippage Monitor... |
+| R11 | Position Management | Dynamic Trailing Stop... |
+| R12 | Position Management | Partial Take Profit... |
+| R13 | Position Management | Pyramiding... |
+| R14 | Data & Infrastructure | Data Quality Validation... |
+| R15 | Data & Infrastructure | Complete Logging... |
+| R16 | Data & Infrastructure | Daily Reconciliation... |
+| R17 | Psychology | Emotion Control... |
+| R18 | Psychology | Trade Journal... |
+| R19 | Technical Analysis | Market Regime Detection... |
+| R20 | Technical Analysis | Multi-Confirmation... |
+| R21 | Technical Analysis | Volume Filter... |
+| R22 | Adaptation | Monthly Review... |
+| R23 | Adaptation | A/B Testing... |
+| R24 | Adaptation | Strategy Diversification... |
+| R25 | Capital Phases | Phase 1... |
+| R26 | Capital Phases | Phase 2... |
+| R27 | Capital Phases | Phase 3... |
+| R28 | Compliance | Trade Record Retention... |
+| R29 | Compliance | API Key Security... |
+
+## 7. Spain Tax Compliance (from app/services/tax/)
+
+### IRPF Brackets
+- 19%: 0 - 6,000 EUR
+- 21%: 6,000 - 50,000 EUR
+- 23%: 50,000+ EUR
+
+### Modelo 720
+- [ ] Foreign assets >50,000 EUR reported
+- [ ] Annual declaration by March 31
+
+### Loss Carryforward
+- [ ] Losses can offset gains for 4 years
+- [ ] Track realized losses separately
+
+## 8. Execution Checklist
+
+### Pre-Deployment
+- [ ] All SOLID principles verified
+- [ ] Type hints complete and correct
+- [ ] Logging implemented
+- [ ] Security reviewed (no hardcoded secrets)
+- [ ] Trading rules implemented (if applicable)
+
+### Code Quality
+- [ ] Black formatting passes
+- [ ] isort passes
+- [ ] Ruff linting passes
+- [ ] Mypy type checking passes (warnings acceptable)
+
+### Testing
+- [ ] Unit tests pass
+- [ ] Integration tests pass (if applicable)
+- [ ] Backtesting validation (if strategy)
+
+---
+Generated by Requirements Generator v2.0
+Reference: rules/trading/64-realistic-retail-trading-rules.md
+Reference: rules/python/03-solid-principles.md

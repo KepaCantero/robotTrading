@@ -1,94 +1,243 @@
-# Requirements Document: infrastructure/persistence/database/repositories.py
+# Requirements Document: app/infrastructure/persistence/database/repositories.py
 
 ## 1. Module Overview
-Repository Pattern Implementation for Database Access
-TASK-6: Configuración de base de datos
+File: repositories.py
+Domain: Data
+Generated: 2026-03-09
 
 ## 2. Dependencies
-- `__future__.annotations`
+- `__future__`
+- `app.infrastructure.persistence.models`
+- `app.shared.exceptions.exceptions`
+- `datetime`
+- `decimal`
+- `sqlalchemy`
+- `sqlalchemy.exc`
+- `sqlalchemy.orm`
+- `structlog`
+- `typing`
 - `uuid`
-- `datetime.datetime`
-- `datetime.timedelta`
-- `decimal.Decimal`
-- `typing.Any`
-- `typing.Generic`
-- `typing.TypeVar`
-- `sqlalchemy.and_`
-- `sqlalchemy.func`
-- `sqlalchemy.exc.DatabaseError`
-- `sqlalchemy.exc.DataError`
-- `sqlalchemy.exc.IntegrityError`
-- `sqlalchemy.exc.OperationalError`
-- `sqlalchemy.exc.ProgrammingError`
-- `sqlalchemy.orm.Session`
-- `structlog.get_logger`
-- `app.shared.exceptions.exceptions.raise_database_error`
-- `app.infrastructure.persistence.models.Asset`
-- `app.infrastructure.persistence.models.Backtest`
-- `app.infrastructure.persistence.models.MarketData`
-- `app.infrastructure.persistence.models.Portfolio`
-- `app.infrastructure.persistence.models.Position`
-- `app.infrastructure.persistence.models.RiskMetrics`
-- `app.infrastructure.persistence.models.Signal`
-- `app.infrastructure.persistence.models.SystemLog`
-- `app.infrastructure.persistence.models.Trade`
-- `app.infrastructure.persistence.models.User`
 
-## 3. Core Components (Contracts)
-### Public Classes
-- `BaseRepository`: Must conform to application domain models.
-- `UserRepository`: Must conform to application domain models.
-- `PortfolioRepository`: Must conform to application domain models.
-- `AssetRepository`: Must conform to application domain models.
-- `PositionRepository`: Must conform to application domain models.
-- `TradeRepository`: Must conform to application domain models.
-- `MarketDataRepository`: Must conform to application domain models.
-- `SignalRepository`: Must conform to application domain models.
-- `BacktestRepository`: Must conform to application domain models.
-- `RiskMetricsRepository`: Must conform to application domain models.
-- `SystemLogRepository`: Must conform to application domain models.
+## 3. Core Components
+### Classes
+- `BaseRepository`
+- `UserRepository`
+- `PortfolioRepository`
+- `AssetRepository`
+- `PositionRepository`
+- `TradeRepository`
+- `MarketDataRepository`
+- `SignalRepository`
+- `BacktestRepository`
+- `RiskMetricsRepository`
+- `SystemLogRepository`
 ### Public Functions
-- `create()`: Must return strictly typed objects.
-- `get_by_id()`: Must return strictly typed objects.
-- `get_all()`: Must return strictly typed objects.
-- `update()`: Must return strictly typed objects.
-- `delete()`: Must return strictly typed objects.
-- `count()`: Must return strictly typed objects.
-- `get_by_username()`: Must return strictly typed objects.
-- `get_by_email()`: Must return strictly typed objects.
-- `get_active_users()`: Must return strictly typed objects.
-- `get_by_user()`: Must return strictly typed objects.
-- `get_active_by_user()`: Must return strictly typed objects.
-- `update_total_value()`: Must return strictly typed objects.
-- `get_by_symbol()`: Must return strictly typed objects.
-- `get_by_asset_class()`: Must return strictly typed objects.
-- `get_active_assets()`: Must return strictly typed objects.
-- `search_by_name()`: Must return strictly typed objects.
-- `get_by_portfolio()`: Must return strictly typed objects.
-- `get_by_portfolio_and_asset()`: Must return strictly typed objects.
-- `get_non_zero_positions()`: Must return strictly typed objects.
-- `update_position_price()`: Must return strictly typed objects.
-- `get_by_portfolio()`: Must return strictly typed objects.
-- `get_by_asset()`: Must return strictly typed objects.
-- `get_by_date_range()`: Must return strictly typed objects.
-- `get_trade_summary()`: Must return strictly typed objects.
-- `get_by_asset_and_date_range()`: Must return strictly typed objects.
-- `get_latest_price()`: Must return strictly typed objects.
-- `bulk_insert()`: Must return strictly typed objects.
-- `get_by_strategy()`: Must return strictly typed objects.
-- `get_by_asset()`: Must return strictly typed objects.
-- `get_recent_signals()`: Must return strictly typed objects.
-- `get_by_portfolio()`: Must return strictly typed objects.
-- `get_by_strategy()`: Must return strictly typed objects.
-- `get_completed_backtests()`: Must return strictly typed objects.
-- `get_latest_by_portfolio()`: Must return strictly typed objects.
-- `get_by_date_range()`: Must return strictly typed objects.
-- `get_by_level()`: Must return strictly typed objects.
-- `get_by_service()`: Must return strictly typed objects.
-- `get_recent_logs()`: Must return strictly typed objects.
+- `create()`
+- `get_by_id()`
+- `get_all()`
+- `update()`
+- `delete()`
+- `count()`
+- `get_by_username()`
+- `get_by_email()`
+- `get_active_users()`
+- `get_by_user()`
+- `get_active_by_user()`
+- `update_total_value()`
+- `get_by_symbol()`
+- `get_by_asset_class()`
+- `get_active_assets()`
+- `search_by_name()`
+- `get_by_portfolio()`
+- `get_by_portfolio_and_asset()`
+- `get_non_zero_positions()`
+- `update_position_price()`
+- `get_by_portfolio()`
+- `get_by_asset()`
+- `get_by_date_range()`
+- `get_trade_summary()`
+- `get_by_asset_and_date_range()`
+- `get_latest_price()`
+- `bulk_insert()`
+- `get_by_strategy()`
+- `get_by_asset()`
+- `get_recent_signals()`
+- `get_by_portfolio()`
+- `get_by_strategy()`
+- `get_completed_backtests()`
+- `get_latest_by_portfolio()`
+- `get_by_date_range()`
+- `get_by_level()`
+- `get_by_service()`
+- `get_recent_logs()`
 
-## 4. Execution Requirements (Compliance Rules)
-- [x] Must execute without syntax errors.
-- [x] Must contain explicit structured logging or print interception.
-- [x] Must not expose external secrets.
-- [x] Exceptions must be handled.
+## 4. SOLID Principles (from rules/python/03-solid-principles.md)
+
+### SRP - Single Responsibility Principle
+Single Responsibility: One class, one reason to change. Split when class has multiple responsibilities.
+- [ ] This file has ONE primary responsibility
+- [ ] Classes have one reason to change
+
+### OCP - Open/Closed Principle
+Open/Closed: Open for extension, closed for modification. Use interfaces/protocols.
+- [ ] Uses Protocol interfaces for extension
+- [ ] No modification needed for new implementations
+
+### LSP - Liskov Substitution Principle
+Liskov Substitution: Subtypes must be substitutable for base types without breaking behavior.
+- [ ] Subclasses can replace parent classes without breaking behavior
+- [ ] No surprising overrides in child classes
+
+### ISP - Interface Segregation Principle
+Interface Segregation: Small, focused interfaces. Don't force clients to implement unused methods.
+- [ ] Interfaces are small and focused
+- [ ] Clients don't depend on methods they don't use
+
+### DIP - Dependency Inversion Principle
+Dependency Inversion: Depend on abstractions, not concretions. Use dependency injection.
+- [ ] High-level modules depend on abstractions (Protocols)
+- [ ] Dependencies injected via __init__ or function parameters
+
+## 5. Python Coding Standards (from rules/python/)
+
+### Type Hints (rules/python/02-type-hints.md)
+- [ ] Use typing module for all function signatures
+- [ ] Prefer typing.Protocol over ABC for interfaces
+- [ ] Use | for Union types (Python 3.10+)
+- [ ] Avoid Any, use specific types or generics
+- [ ] Return types must be explicit
+
+### Formatting (rules/python/01-formatting-style.md)
+- [ ] Black formatter (line length 88)
+- [ ] isort for import sorting
+- [ ] Ruff for linting
+- [ ] Docstrings for all public functions/classes
+- [ ] Max 100 characters per line
+
+### Logging (rules/python/09-logging-observability.md)
+- [ ] Use structured logging (JSON format)
+- [ ] Never log sensitive data (API keys, passwords)
+- [ ] Use correlation IDs for tracing
+- [ ] Log levels: DEBUG, INFO, WARNING, ERROR, CRITICAL
+- [ ] Append-only log files for audit trails
+
+### Security (rules/trading/28-security-and-secrets.md)
+- [ ] Never hardcode secrets or API keys
+- [ ] Use .env files (gitignored) for credentials
+- [ ] Validate all external inputs
+- [ ] Use parameterized queries (no SQL injection)
+- [ ] Hash passwords with bcrypt/argon2
+
+## 6. Trading Rules (from rules/trading/64-realistic-retail-trading-rules.md)
+
+### Applicable Rules
+
+#### R14
+Data Quality Validation (missing values, duplicates, outliers >3std)
+
+- [ ] Implementation verified
+- [ ] Tests pass
+
+#### R15
+Complete Logging (append-only, correlation ID, every decision logged)
+
+- [ ] Implementation verified
+- [ ] Tests pass
+
+#### R2
+Drawdown Monitor (15% warning, 25% halt trading, auto cooldown)
+
+- [ ] Implementation verified
+- [ ] Tests pass
+
+#### R5
+Walk-Forward Analysis (70/30 train/test split, min 50 trades OOS, max 30% degradation)
+
+- [ ] Implementation verified
+- [ ] Tests pass
+
+#### R6
+Overfitting Prevention (min 30 samples per parameter, purged cross-validation)
+
+- [ ] Implementation verified
+- [ ] Tests pass
+
+#### R7
+Monte Carlo Risk Analysis (1000 simulations, validate DD within 5-95 percentile)
+
+- [ ] Implementation verified
+- [ ] Tests pass
+
+### All Trading Rules Reference
+
+| Rule | Category | Description |
+|------|----------|-------------|
+| R1 | Capital Management | Kelly Criterion + Max Position Size... |
+| R2 | Capital Management | Drawdown Monitor... |
+| R3 | Capital Management | Correlation & Concentration Limits... |
+| R4 | Capital Management | Risk/Reward Ratio Minimum 2:1... |
+| R5 | Backtesting | Walk-Forward Analysis... |
+| R6 | Backtesting | Overfitting Prevention... |
+| R7 | Backtesting | Monte Carlo Risk Analysis... |
+| R8 | Execution | Bid-Ask Spread Management... |
+| R9 | Execution | Execution Timing... |
+| R10 | Execution | Slippage Monitor... |
+| R11 | Position Management | Dynamic Trailing Stop... |
+| R12 | Position Management | Partial Take Profit... |
+| R13 | Position Management | Pyramiding... |
+| R14 | Data & Infrastructure | Data Quality Validation... |
+| R15 | Data & Infrastructure | Complete Logging... |
+| R16 | Data & Infrastructure | Daily Reconciliation... |
+| R17 | Psychology | Emotion Control... |
+| R18 | Psychology | Trade Journal... |
+| R19 | Technical Analysis | Market Regime Detection... |
+| R20 | Technical Analysis | Multi-Confirmation... |
+| R21 | Technical Analysis | Volume Filter... |
+| R22 | Adaptation | Monthly Review... |
+| R23 | Adaptation | A/B Testing... |
+| R24 | Adaptation | Strategy Diversification... |
+| R25 | Capital Phases | Phase 1... |
+| R26 | Capital Phases | Phase 2... |
+| R27 | Capital Phases | Phase 3... |
+| R28 | Compliance | Trade Record Retention... |
+| R29 | Compliance | API Key Security... |
+
+## 7. Spain Tax Compliance (from app/services/tax/)
+
+### IRPF Brackets
+- 19%: 0 - 6,000 EUR
+- 21%: 6,000 - 50,000 EUR
+- 23%: 50,000+ EUR
+
+### Modelo 720
+- [ ] Foreign assets >50,000 EUR reported
+- [ ] Annual declaration by March 31
+
+### Loss Carryforward
+- [ ] Losses can offset gains for 4 years
+- [ ] Track realized losses separately
+
+## 8. Execution Checklist
+
+### Pre-Deployment
+- [ ] All SOLID principles verified
+- [ ] Type hints complete and correct
+- [ ] Logging implemented
+- [ ] Security reviewed (no hardcoded secrets)
+- [ ] Trading rules implemented (if applicable)
+
+### Code Quality
+- [ ] Black formatting passes
+- [ ] isort passes
+- [ ] Ruff linting passes
+- [ ] Mypy type checking passes (warnings acceptable)
+
+### Testing
+- [ ] Unit tests pass
+- [ ] Integration tests pass (if applicable)
+- [ ] Backtesting validation (if strategy)
+
+---
+Generated by Requirements Generator v2.0
+Reference: rules/trading/64-realistic-retail-trading-rules.md
+Reference: rules/python/03-solid-principles.md
