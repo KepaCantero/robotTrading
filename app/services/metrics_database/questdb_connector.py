@@ -84,7 +84,7 @@ class QuestDBConnector:
                 "Set QUESTDB_PASSWORD environment variable.",
                 stacklevel=2,
             )
-                        # No fallback password - must be configured via environment
+            # No fallback password - must be configured via environment
 
         self.pool_size = pool_size
         self.batch_size = batch_size
