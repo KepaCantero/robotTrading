@@ -11,7 +11,7 @@ from decimal import Decimal
 
 from app.domain.models.market_data import Quote
 from app.models.signal import SignalType
-from app.strategies.momentum import MomentumStrategy
+from app.domain.strategies.momentum import MomentumStrategy
 
 
 class TestMomentumRegression(unittest.TestCase):

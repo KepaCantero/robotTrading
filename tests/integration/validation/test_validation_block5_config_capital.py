@@ -11,11 +11,11 @@ import unittest
 from datetime import datetime
 from decimal import Decimal
 
-from app.core.centralized_config import get_strategy_config
+from app.shared.config.centralized_config import get_strategy_config
 from app.domain.models.portfolio import AssetClass, Portfolio, Position
-from app.strategies.mean_reversion import MeanReversionStrategy
-from app.strategies.momentum import MomentumStrategy
-from app.strategies.pairs_trading import PairsTradingStrategy
+from app.domain.strategies.mean_reversion import MeanReversionStrategy
+from app.domain.strategies.momentum import MomentumStrategy
+from app.domain.strategies.pairs_trading import PairsTradingStrategy
 
 
 class TestExposureRestriction(unittest.TestCase):

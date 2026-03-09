@@ -193,7 +193,7 @@ def mock_momentum_service():
     service.get_technical_indicators.return_value = indicators
 
     # Mock analyze_asset_momentum
-    from app.models.momentum import MomentumAnalysis, MomentumSignal, MomentumType  # noqa: E402
+    from app.domain.models.momentum import MomentumAnalysis, MomentumSignal, MomentumType  # noqa: E402
 
     analysis = MomentumAnalysis(
         symbol="AAPL",

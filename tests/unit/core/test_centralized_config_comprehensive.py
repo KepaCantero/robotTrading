@@ -74,7 +74,7 @@ class TestConfigurationLoading:
 
     def test_load_config_from_yaml(self, sample_config_file):
         """Test loading configuration from YAML file."""
-        from app.core.centralized_config import load_config_from_yaml
+        from app.shared.config.centralized_config import load_config_from_yaml
 
         config = load_config_from_yaml(sample_config_file)
 
@@ -84,7 +84,7 @@ class TestConfigurationLoading:
 
     def test_load_config_from_json(self, tmp_path, sample_config_dict):
         """Test loading configuration from JSON file."""
-        from app.core.centralized_config import load_config_from_json
+        from app.shared.config.centralized_config import load_config_from_json
 
         config_file = tmp_path / "test_config.json"
         with open(config_file, 'w') as f:
@@ -97,14 +97,14 @@ class TestConfigurationLoading:
 
     def test_load_nonexistent_file(self):
         """Test loading a file that doesn't exist."""
-        from app.core.centralized_config import load_config_from_yaml
+        from app.shared.config.centralized_config import load_config_from_yaml
 
         with pytest.raises(FileNotFoundError):
             load_config_from_yaml(Path("/nonexistent/file.yaml"))
 
     def test_load_invalid_yaml(self, tmp_path):
         """Test loading invalid YAML file."""
-        from app.core.centralized_config import load_config_from_yaml
+        from app.shared.config.centralized_config import load_config_from_yaml
 
         invalid_file = tmp_path / "invalid.yaml"
         with open(invalid_file, 'w') as f:
@@ -115,7 +115,7 @@ class TestConfigurationLoading:
 
     def test_load_empty_config(self, tmp_path):
         """Test loading empty configuration file."""
-        from app.core.centralized_config import load_config_from_yaml
+        from app.shared.config.centralized_config import load_config_from_yaml
 
         empty_file = tmp_path / "empty.yaml"
         empty_file.touch()
@@ -135,7 +135,7 @@ class TestConfigurationValidation:
 
     def test_validate_atr_multipliers(self, sample_config_dict):
         """Test ATR multiplier validation."""
-        from app.core.centralized_config import validate_atr_multipliers
+        from app.shared.config.centralized_config import validate_atr_multipliers
 
         atr_multipliers = sample_config_dict['risk_management']['atr_multipliers']
         is_valid = validate_atr_multipliers(atr_multipliers)
@@ -144,7 +144,7 @@ class TestConfigurationValidation:
 
     def test_validate_atr_multipliers_with_negative(self):
         """Test ATR multiplier validation with negative values."""
-        from app.core.centralized_config import validate_atr_multipliers
+        from app.shared.config.centralized_config import validate_atr_multipliers
 
         invalid_multipliers = {
             'default_stop': -1.0,
@@ -158,7 +158,7 @@ class TestConfigurationValidation:
 
     def test_validate_risk_percentages(self, sample_config_dict):
         """Test risk percentage validation."""
-        from app.core.centralized_config import validate_risk_percentages
+        from app.shared.config.centralized_config import validate_risk_percentages
 
         risk_config = sample_config_dict['risk_management']['position_sizing']
         is_valid = validate_risk_percentages(risk_config)
@@ -167,7 +167,7 @@ class TestConfigurationValidation:
 
     def test_validate_risk_percentages_exceeding_100(self):
         """Test risk percentage validation with values > 100%."""
-        from app.core.centralized_config import validate_risk_percentages
+        from app.shared.config.centralized_config import validate_risk_percentages
 
         invalid_config = {
             'default_risk_per_trade': 1.5,  # 150%
@@ -180,7 +180,7 @@ class TestConfigurationValidation:
 
     def test_validate_trading_symbols(self, sample_config_dict):
         """Test trading symbols validation."""
-        from app.core.centralized_config import validate_trading_symbols
+        from app.shared.config.centralized_config import validate_trading_symbols
 
         symbols = sample_config_dict['trading']['symbols']
         is_valid = validate_trading_symbols(symbols)
@@ -189,7 +189,7 @@ class TestConfigurationValidation:
 
     def test_validate_trading_symbols_empty_list(self):
         """Test trading symbols validation with empty list."""
-        from app.core.centralized_config import validate_trading_symbols
+        from app.shared.config.centralized_config import validate_trading_symbols
 
         is_valid = validate_trading_symbols([])
 
@@ -197,7 +197,7 @@ class TestConfigurationValidation:
 
     def test_validate_trading_symbols_duplicates(self):
         """Test trading symbols validation with duplicates."""
-        from app.core.centralized_config import validate_trading_symbols
+        from app.shared.config.centralized_config import validate_trading_symbols
 
         symbols_with_duplicates = ['AAPL', 'MSFT', 'AAPL', 'GOOGL']
         is_valid = validate_trading_symbols(symbols_with_duplicates)
@@ -207,7 +207,7 @@ class TestConfigurationValidation:
 
     def test_validate_dates(self, sample_config_dict):
         """Test date validation."""
-        from app.core.centralized_config import validate_dates
+        from app.shared.config.centralized_config import validate_dates
 
         backtest_config = sample_config_dict['backtesting']
         is_valid = validate_dates(backtest_config)
@@ -216,7 +216,7 @@ class TestConfigurationValidation:
 
     def test_validate_dates_invalid_order(self):
         """Test date validation with invalid order."""
-        from app.core.centralized_config import validate_dates
+        from app.shared.config.centralized_config import validate_dates
 
         invalid_config = {
             'start_date': '2024-01-01',
@@ -238,7 +238,7 @@ class TestConfigurationAccess:
 
     def test_get_atr_multiplier(self, sample_config_dict):
         """Test getting ATR multiplier."""
-        from app.core.centralized_config import Configuration
+        from app.shared.config.centralized_config import Configuration
 
         config = Configuration(sample_config_dict)
 
@@ -248,7 +248,7 @@ class TestConfigurationAccess:
 
     def test_get_atr_multiplier_not_exists(self, sample_config_dict):
         """Test getting non-existent ATR multiplier."""
-        from app.core.centralized_config import Configuration
+        from app.shared.config.centralized_config import Configuration
 
         config = Configuration(sample_config_dict)
 
@@ -259,7 +259,7 @@ class TestConfigurationAccess:
 
     def test_get_risk_config(self, sample_config_dict):
         """Test getting risk configuration."""
-        from app.core.centralized_config import Configuration
+        from app.shared.config.centralized_config import Configuration
 
         config = Configuration(sample_config_dict)
 
@@ -270,7 +270,7 @@ class TestConfigurationAccess:
 
     def test_get_trading_symbols(self, sample_config_dict):
         """Test getting trading symbols."""
-        from app.core.centralized_config import Configuration
+        from app.shared.config.centralized_config import Configuration
 
         config = Configuration(sample_config_dict)
 
@@ -280,7 +280,7 @@ class TestConfigurationAccess:
 
     def test_get_backtest_dates(self, sample_config_dict):
         """Test getting backtest dates."""
-        from app.core.centralized_config import Configuration
+        from app.shared.config.centralized_config import Configuration
 
         config = Configuration(sample_config_dict)
 
@@ -300,7 +300,7 @@ class TestConfigurationMerging:
 
     def test_merge_configs(self, sample_config_dict):
         """Test merging two configurations."""
-        from app.core.centralized_config import merge_configs
+        from app.shared.config.centralized_config import merge_configs
 
         base_config = sample_config_dict.copy()
         override_config = {
@@ -320,7 +320,7 @@ class TestConfigurationMerging:
 
     def test_merge_configs_nested(self):
         """Test merging nested configurations."""
-        from app.core.centralized_config import merge_configs
+        from app.shared.config.centralized_config import merge_configs
 
         base = {
             'level1': {
@@ -348,7 +348,7 @@ class TestConfigurationMerging:
 
     def test_merge_configs_empty_override(self, sample_config_dict):
         """Test merging with empty override."""
-        from app.core.centralized_config import merge_configs
+        from app.shared.config.centralized_config import merge_configs
 
         merged = merge_configs(sample_config_dict, {})
 
@@ -356,7 +356,7 @@ class TestConfigurationMerging:
 
     def test_merge_configs_empty_base(self):
         """Test merging with empty base."""
-        from app.core.centralized_config import merge_configs
+        from app.shared.config.centralized_config import merge_configs
 
         override = {'key': 'value'}
         merged = merge_configs({}, override)
@@ -374,7 +374,7 @@ class TestConfigurationDefaults:
 
     def test_default_atr_multiplier(self):
         """Test default ATR multiplier."""
-        from app.core.centralized_config import get_default_atr_multiplier
+        from app.shared.config.centralized_config import get_default_atr_multiplier
 
         multiplier = get_default_atr_multiplier()
 
@@ -382,7 +382,7 @@ class TestConfigurationDefaults:
 
     def test_default_risk_per_trade(self):
         """Test default risk per trade percentage."""
-        from app.core.centralized_config import get_default_risk_per_trade
+        from app.shared.config.centralized_config import get_default_risk_per_trade
 
         risk = get_default_risk_per_trade()
 
@@ -390,7 +390,7 @@ class TestConfigurationDefaults:
 
     def test_default_max_position_size(self):
         """Test default maximum position size."""
-        from app.core.centralized_config import get_default_max_position_size
+        from app.shared.config.centralized_config import get_default_max_position_size
 
         max_size = get_default_max_position_size()
 
@@ -398,7 +398,7 @@ class TestConfigurationDefaults:
 
     def test_default_stop_distance_pct(self):
         """Test default stop loss distance percentage."""
-        from app.core.centralized_config import get_default_stop_distance_pct
+        from app.shared.config.centralized_config import get_default_stop_distance_pct
 
         stop_pct = get_default_stop_distance_pct()
 
@@ -415,7 +415,7 @@ class TestConfigurationCaching:
 
     def test_config_cached_after_load(self, sample_config_file):
         """Test that configuration is cached after loading."""
-        from app.core.centralized_config import load_config_from_yaml
+        from app.shared.config.centralized_config import load_config_from_yaml
 
         config1 = load_config_from_yaml(sample_config_file)
         config2 = load_config_from_yaml(sample_config_file)
@@ -427,7 +427,7 @@ class TestConfigurationCaching:
 
     def test_config_cache_invalidated_on_change(self, sample_config_file):
         """Test that cache is invalidated when config file changes."""
-        from app.core.centralized_config import load_config_from_yaml
+        from app.shared.config.centralized_config import load_config_from_yaml
 
         load_config_from_yaml(sample_config_file)
 
@@ -456,7 +456,7 @@ class TestConfigurationProperties:
     @settings(max_examples=30)
     def test_atr_multiplier_positive_property(self, multiplier):
         """Property: ATR multipliers should always be positive."""
-        from app.core.centralized_config import validate_atr_multipliers
+        from app.shared.config.centralized_config import validate_atr_multipliers
 
         config = {
             'default_stop': multiplier,
@@ -475,7 +475,7 @@ class TestConfigurationProperties:
     @settings(max_examples=30)
     def test_risk_percentage_bounds_property(self, risk_pct):
         """Property: Risk percentages should be between 0 and 1 (0-100%)."""
-        from app.core.centralized_config import validate_risk_percentages
+        from app.shared.config.centralized_config import validate_risk_percentages
 
         config = {
             'default_risk_per_trade': risk_pct,
@@ -492,7 +492,7 @@ class TestConfigurationProperties:
     @settings(max_examples=20)
     def test_symbols_list_property(self, num_symbols):
         """Property: Symbols list should be non-empty if trading enabled."""
-        from app.core.centralized_config import validate_trading_symbols
+        from app.shared.config.centralized_config import validate_trading_symbols
 
         symbols = [f"SYMBOL{i:04d}" for i in range(num_symbols)]
 
@@ -508,7 +508,7 @@ class TestConfigurationProperties:
     @settings(max_examples=20)
     def test_date_order_property(self, days_offset):
         """Property: End date should be after start date."""
-        from app.core.centralized_config import validate_dates
+        from app.shared.config.centralized_config import validate_dates
 
         start = "2020-01-01"
         end_date = datetime(2020, 1, 1) + timedelta(days=days_offset)
@@ -536,7 +536,7 @@ class TestConfigurationEdgeCases:
 
     def test_config_with_none_values(self):
         """Test configuration with None values."""
-        from app.core.centralized_config import Configuration
+        from app.shared.config.centralized_config import Configuration
 
         config_dict = {
             'risk_management': None,
@@ -550,7 +550,7 @@ class TestConfigurationEdgeCases:
 
     def test_config_with_missing_sections(self, sample_config_dict):
         """Test accessing missing configuration sections."""
-        from app.core.centralized_config import Configuration
+        from app.shared.config.centralized_config import Configuration
 
         config = Configuration(sample_config_dict)
 
@@ -560,7 +560,7 @@ class TestConfigurationEdgeCases:
 
     def test_config_with_extra_sections(self, sample_config_dict):
         """Test configuration with extra/unknown sections."""
-        from app.core.centralized_config import Configuration
+        from app.shared.config.centralized_config import Configuration
 
         sample_config_dict['unknown_section'] = {'key': 'value'}
 
@@ -570,7 +570,7 @@ class TestConfigurationEdgeCases:
 
     def test_config_with_zero_values(self):
         """Test configuration with zero values."""
-        from app.core.centralized_config import Configuration
+        from app.shared.config.centralized_config import Configuration
 
         config_dict = {
             'risk_management': {
@@ -589,7 +589,7 @@ class TestConfigurationEdgeCases:
 
     def test_config_with_very_large_values(self):
         """Test configuration with very large values."""
-        from app.core.centralized_config import Configuration
+        from app.shared.config.centralized_config import Configuration
 
         config_dict = {
             'backtesting': {
@@ -613,7 +613,7 @@ class TestConfigurationUpdates:
 
     def test_update_atr_multiplier(self, sample_config_dict):
         """Test updating ATR multiplier."""
-        from app.core.centralized_config import Configuration
+        from app.shared.config.centralized_config import Configuration
 
         config = Configuration(sample_config_dict)
 
@@ -623,7 +623,7 @@ class TestConfigurationUpdates:
 
     def test_update_nested_value(self, sample_config_dict):
         """Test updating nested configuration value."""
-        from app.core.centralized_config import Configuration
+        from app.shared.config.centralized_config import Configuration
 
         config = Configuration(sample_config_dict)
 
@@ -645,7 +645,7 @@ class TestConfigurationThreadSafety:
         """Test concurrent read access to configuration."""
         import threading
 
-        from app.core.centralized_config import Configuration
+        from app.shared.config.centralized_config import Configuration
 
         config = Configuration(sample_config_dict)
         results = []
@@ -676,7 +676,7 @@ class TestConfigurationIntegration:
 
     def test_full_config_workflow(self, sample_config_file):
         """Test complete configuration workflow."""
-        from app.core.centralized_config import Configuration, load_config_from_yaml
+        from app.shared.config.centralized_config import Configuration, load_config_from_yaml
 
         # Load from file
         config_dict = load_config_from_yaml(sample_config_file)
@@ -696,7 +696,7 @@ class TestConfigurationIntegration:
 
     def test_config_with_validation(self, sample_config_dict):
         """Test configuration with full validation."""
-        from app.core.centralized_config import Configuration, validate_config
+        from app.shared.config.centralized_config import Configuration, validate_config
 
         config = Configuration(sample_config_dict)
 

@@ -23,7 +23,7 @@ def test_basic_imports():
 def test_trading_thresholds_creation():
     """Test TradingThresholds creation."""
     try:
-        from app.core.centralized_config import TradingThresholds
+        from app.shared.config.centralized_config import TradingThresholds
 
         thresholds = TradingThresholds()
         assert thresholds.min_signal_strength == 60.0
@@ -39,7 +39,7 @@ def test_trading_thresholds_creation():
 def test_strategy_config_creation():
     """Test StrategyConfig creation."""
     try:
-        from app.core.centralized_config import StrategyConfig
+        from app.shared.config.centralized_config import StrategyConfig
 
         config = StrategyConfig(name="test_strategy", enabled=True, weight=1.0)
         assert config.name == "test_strategy"
@@ -108,7 +108,7 @@ def test_exceptions():
 def test_validation():
     """Test validation logic."""
     try:
-        from app.core.centralized_config import TradingThresholds
+        from app.shared.config.centralized_config import TradingThresholds
 
         # Test valid values
         thresholds = TradingThresholds(
@@ -184,7 +184,7 @@ def test_temp_directory_creation():
 def test_configuration_loading():
     """Test configuration loading without file system dependencies."""
     try:
-        from app.core.centralized_config import CentralizedConfig
+        from app.shared.config.centralized_config import CentralizedConfig
 
         # Test default configuration
         config = CentralizedConfig()
@@ -207,7 +207,7 @@ def test_configuration_loading():
 def test_model_validation():
     """Test model validation."""
     try:
-        from app.core.centralized_config import StrategyConfig, TradingThresholds
+        from app.shared.config.centralized_config import StrategyConfig, TradingThresholds
 
         # Test TradingThresholds validation
         thresholds = TradingThresholds()

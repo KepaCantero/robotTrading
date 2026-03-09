@@ -52,7 +52,7 @@ class TestMCCIntegration:
     def test_mcc_in_evaluation_metrics(self, mock_train_data, mock_model):
         """Test that MCC is included in model evaluation metrics."""
         try:
-            from app.strategies.momentum_modular.learning.supervised_learning_engine import (
+            from app.domain.strategies.momentum_modular.learning.supervised_learning_engine import (
                 SupervisedLearningEngine,
             )
 
@@ -95,7 +95,7 @@ class TestMCCIntegration:
         try:
             pass
 
-            from app.strategies.momentum_modular.learning.supervised_learning_engine import (
+            from app.domain.strategies.momentum_modular.learning.supervised_learning_engine import (
                 SupervisedLearningEngine,
             )
 
@@ -196,7 +196,7 @@ class TestMCCIntegration:
             # Verify the import is present
             import inspect
 
-            from app.strategies.momentum_modular.learning.supervised_learning_engine import (
+            from app.domain.strategies.momentum_modular.learning.supervised_learning_engine import (
                 SupervisedLearningEngine,
             )
 

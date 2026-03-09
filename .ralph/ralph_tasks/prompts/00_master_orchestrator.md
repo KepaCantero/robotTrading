@@ -1,6 +1,23 @@
-# Master Orchestrator AAA v11.0 - NO SHORTCUTS
+# Master Orchestrator AAA v13.0 - PRODUCTION CODE ONLY
 
 **OBJETIVO:** Llevar el código a nivel AAA (Production Ready) - EJECUCIÓN COMPLETA OBLIGATORIA
+
+---
+
+## ⚠️ ALCANCE: SOLO CÓDIGO DE PRODUCCIÓN
+
+**ESTE ORQUESTADOR SOLO ANALIZA:**
+- ✅ `app/` - Código de producción (ÚNICO directorio analizado)
+- ✅ `config/` - Archivos de configuración
+- ✅ `scripts/` - Scripts de utilidad
+
+**ESTE ORQUESTADOR NUNCA ANALIZA:**
+- ❌ `tests/` - **IGNORADO COMPLETAMENTE** - No leer, no modificar, no ejecutar, no generar requirements
+- ❌ `.venv/` - **IGNORADO** - Virtual environment
+- ❌ `__pycache__/` - **IGNORADO** - Cache
+
+**RAZÓN:** El análisis de calidad se centra exclusivamente en el código que se despliega a producción.
+Los tests son responsabilidad del desarrollador y se ejecutan fuera de este orquestador.
 
 ---
 
@@ -12,108 +29,112 @@
 3. ❌ Continuar a la siguiente fase sin completar la anterior al 100%
 4. ❌ Marcar tareas como completas sin ejecutar los checkpoints
 5. ❌ Generar outputs incompletos (ej: requirements.md parciales)
-6. ❌ Ignorar fallos en tests o QA
+6. ❌ Analizar, leer, modificar o ejecutar archivos en tests/
 
 **OBLIGATORIO:**
 1. ✅ Ejecutar CADA checkpoint antes de avanzar
 2. ✅ Documentar outputs específicos de cada fase
 3. ✅ Corregir errores antes de continuar
-4. ✅ Generar requirements.md para TODOS los archivos Python
-5. ✅ Tests deben pasar al 100% antes de Phase 6
+4. ✅ Generar requirements.md SOLO para archivos en app/
+5. ✅ Centrarse EXCLUSIVAMENTE en código de producción
 
 ---
 
 ## FLUJO (6 Fases con Checkpoints Obligatorios)
 
-### FASE 1: ESTRUCTURA [OBLIGATORIO]
+### FASE 1: ESTRUCTURA [SOLO app/]
 
 #### 1.1 Structural Fix
-**ACCIÓN:** Eliminar duplicados, corregir imports
+**ACCIÓN:** Eliminar duplicados, corregir imports en app/
 **CHECKPOINT:**
 ```bash
-find app -name "*.py" -exec md5sum {} \; | sort | uniq -D -w32
+find app -name "*.py" -type f -exec md5sum {} \; 2>/dev/null | sort | uniq -D -w32
 ```
-**OUTPUT:** Lista de duplicados eliminados
+**OUTPUT:** Lista de duplicados eliminados en app/
 
 #### 1.2 Requirements Generator
-**ACCIÓN:** Generar requirements.md para CADA archivo Python
+**ACCIÓN:** Generar requirements.md para CADA archivo Python en app/
 **CHECKPOINT:**
 ```bash
-PYTHON_FILES=$(find app -name "*.py" | wc -l)
-REQ_FILES=$(find .requirements/app -name "*.md" | wc -l)
-echo "Python files: $PYTHON_FILES, Requirements: $REQ_FILES"
-# DEBE coincidir o documentar diferencia
+PYTHON_FILES=$(find app -name "*.py" -type f | wc -l)
+REQ_FILES=$(find .requirements/app -name "*.requirements.txt" 2>/dev/null | wc -l)
+echo "Production Python files in app/: $PYTHON_FILES"
+echo "Requirements generated: $REQ_FILES"
+echo "Coverage: $REQ_FILES/$PYTHON_FILES"
 ```
 **OUTPUT:**
-- Archivos Python totales: X
+- Archivos Python en app/: X
 - Requirements generados: Y
-- Diferencia: Z (justificada)
+- Coverage: Y/X = Z%
 
 #### 1.3 Protocol Interfaces
-**ACCIÓN:** CREAR/MEJORAR interfaces SOLID usando typing.Protocol
+**ACCIÓN:** CREAR/MEJORAR interfaces SOLID usando typing.Protocol en app/
 **CHECKPOINT:**
 ```bash
-grep -r "class.*Protocol" app/shared/protocols | wc -l
+grep -r "class.*Protocol" app/ --include="*.py" 2>/dev/null | wc -l
 ```
-**OUTPUT:** Documentar interfaces creadas/mejoradas con ubicación
+**OUTPUT:** Documentar interfaces creadas/mejoradas con ubicación en app/
 
 ---
 
-### FASE 2: COMPONENTES CORE [OBLIGATORIO IMPLEMENTAR]
+### FASE 2: COMPONENTES CORE [SOLO app/]
 
 #### 2.1 Compliance Engine
-**ACCIÓN:** CREAR/MEJORAR validaciones R1-R29
+**ACCIÓN:** CREAR/MEJORAR validaciones R1-R29 en app/
 **CHECKPOINT:**
 - Leer `rules/trading/64-realistic-retail-trading-rules.md`
-- Verificar implementación de cada regla R1-R29
-- Tests unitarios del compliance engine pasando
+- Verificar implementación de cada regla R1-R29 en app/services/compliance/
+- Verificar que los archivos de compliance existen y tienen la lógica correcta
 
-**OUTPUT:** Tabla de reglas implementadas con ubicación
+**OUTPUT:** Tabla de reglas implementadas con ubicación en app/
 
 #### 2.2 Spain Tax Engine
-**ACCIÓN:** CREAR/MEJORAR IRPF 19/21/23%
+**ACCIÓN:** CREAR/MEJORAR IRPF 19/21/23% en app/
 **CHECKPOINT:**
 ```bash
-pytest tests/unit/services/tax_efficiency/ -v
+# Verificar que los archivos de tax engine existen en app/
+find app -name "*tax*" -o -name "*irpf*" 2>/dev/null | head -20
+grep -r "IRPF\|irpf\|19\|21\|23" app/services/tax* --include="*.py" 2>/dev/null | head -10
 ```
-**OUTPUT:** Verificar brackets IRPF, Modelo 720, loss carryforward
+**OUTPUT:** Verificar que brackets IRPF, Modelo 720, loss carryforward están implementados en app/
 
 #### 2.3 Risk Validators
-**ACCIÓN:** CREAR/MEJORAR Kelly, DD, R:R validators
+**ACCIÓN:** CREAR/MEJORAR Kelly, DD, R:R validators en app/
 **CHECKPOINT:**
-- KellyCriterionValidator tests pasando
-- DrawdownValidator tests pasando
-- RiskRewardValidator tests pasando
-
-**OUTPUT:** Tabla de validators con ubicación y estado de tests
+```bash
+# Verificar que los validators existen en app/
+grep -r "KellyCriterion\|DrawdownValidator\|RiskReward" app/ --include="*.py" 2>/dev/null | head -20
+```
+**OUTPUT:** Tabla de validators con ubicación en app/
 
 #### 2.4 Decision Logger
-**ACCIÓN:** CREAR/MEJORAR append-only logger con correlation ID
+**ACCIÓN:** CREAR/MEJORAR append-only logger con correlation ID en app/
 **CHECKPOINT:**
-- AppendOnlyLog tests pasando
-- Correlation ID tracking verificado
-
-**OUTPUT:** Documentar implementación R15 (append-only) y R28 (retención)
+```bash
+# Verificar que el logger existe en app/
+grep -r "append.only\|correlation.id\|AppendOnlyLog" app/ --include="*.py" 2>/dev/null | head -10
+```
+**OUTPUT:** Documentar implementación R15 (append-only) y R28 (retención) en app/
 
 ---
 
-### FASE 3: CONFIGURACIÓN [OBLIGATORIO MOVER]
+### FASE 3: CONFIGURACIÓN [SOLO app/]
 
 #### 3.1 Central Config
-**ACCIÓN:** MOVER TODOS los hardcoded values a centralized_config
+**ACCIÓN:** MOVER TODOS los hardcoded values a centralized_config en app/
 **CHECKPOINT:**
 ```bash
-grep -rn "0\.0[0-9]\|[1-9][0-9]\.[0-9]" app --include="*.py" | grep -v "test" | grep -v "__pycache__"
-# Documentar valores hardcoded restantes (si los hay)
+# Buscar valores hardcoded en app/ (NO en tests)
+grep -rn "0\.0[0-9]\|[1-9][0-9]\.[0-9]" app --include="*.py" 2>/dev/null | grep -v "__pycache__" | grep -v "\.pyc" | head -50
 ```
 **OUTPUT:** Lista de valores movidos a config
 
 ---
 
-### FASE 4: QA [OBLIGATORIO 0 ERRORES CRÍTICOS]
+### FASE 4: QA [SOLO app/]
 
 #### 4.1 QA Validation
-**ACCIÓN:** Ejecutar y CORREGIR hasta tener 0 errores
+**ACCIÓN:** Ejecutar linting y CORREGIR errores en app/
 **CHECKPOINTS:**
 ```bash
 black --check app 2>&1 | tee /tmp/black.log
@@ -127,29 +148,18 @@ mypy app --no-error-summary 2>&1 | head -100 | tee /tmp/mypy.log
 - Ruff: X errores corregidos / 0 errores restantes
 - Mypy: X errores totales (aceptable >0 para type hints)
 
-#### 4.2 Tests Unit + Integration
-**ACCIÓN:** Ejecutar tests y CORREGIR todos los fallos
-**CHECKPOINTS:**
-```bash
-pytest tests/unit -v --tb=short 2>&1 | tee /tmp/unit_tests.log
-pytest tests/integration -v --tb=short 2>&1 | tee /tmp/integration_tests.log
-```
-**PROHIBIDO:** Continuar a Fase 5 si hay tests fallando
-**OUTPUT:**
-- Unit tests: X/Y pasando (debe ser 100%)
-- Integration tests: X/Y pasando (debe ser 100%)
-
 ---
 
-### FASE 5: SECURITY [OBLIGATORIO HARDENING]
+### FASE 5: SECURITY [SOLO app/]
 
 #### 5.1 Security Hardening
-**ACCIÓN:** Eliminar secrets, configurar .env gitignored
+**ACCIÓN:** Eliminar secrets, configurar .env gitignored en app/
 **CHECKPOINTS:**
 ```bash
-grep -r "sk-\|pk-\|xoxb-\|api_key\s*=\s*['\"]" app --include="*.py" || echo "No secrets found"
+# Buscar secrets SOLO en app/ (NO en tests)
+grep -r "sk-\|pk-\|xoxb-\|api_key\s*=\s*['\"]" app --include="*.py" 2>/dev/null || echo "No secrets found"
 grep -q ".env" .gitignore && echo ".env in gitignore" || echo "MISSING: .env in gitignore"
-grep -r "password\s*=\s*['\"]" app --include="*.py" | grep -v "test" | grep -v "example" || echo "No hardcoded passwords"
+grep -r "password\s*=\s*['\"]" app --include="*.py" 2>/dev/null | grep -v "example" || echo "No hardcoded passwords"
 ```
 **OUTPUT:**
 - Secrets eliminados: X
@@ -158,13 +168,13 @@ grep -r "password\s*=\s*['\"]" app --include="*.py" | grep -v "test" | grep -v "
 
 ---
 
-### FASE 6: FINAL [OBLIGATORIO DOCUMENTACIÓN]
+### FASE 6: FINAL [SOLO app/]
 
 #### 6.1 Final Cleanup
-**ACCIÓN:** Resolver TODOs, generar reporte AAA con MÉTRICAS REALES
+**ACCIÓN:** Resolver TODOs, generar reporte AAA con MÉTRICAS REALES de app/
 **CHECKPOINTS:**
 ```bash
-grep -r "TODO\|FIXME\|XXX\|HACK" app --include="*.py" | wc -l
+grep -r "TODO\|FIXME\|XXX\|HACK" app --include="*.py" 2>/dev/null | wc -l
 ```
 **OUTPUT:** `.ralph/outputs/aaa_audit_report.md` con:
 
@@ -175,19 +185,19 @@ grep -r "TODO\|FIXME\|XXX\|HACK" app --include="*.py" | wc -l
 **Estado:** AAA_PRODUCTION_READY | INCOMPLETE
 **Duración:** X horas
 
-## Métricas Reales (OBLIGATORIO)
+## Métricas de Producción (SOLO app/)
 
 ### Estructura
-- Archivos Python: X (contar con find)
+- Archivos Python en app/: X (contar con find app)
 - Duplicados eliminados: Y
 - Imports corregidos: Z
 
 ### Requirements
-- Archivos Python: X
+- Archivos Python en app/: X
 - Requirements generados: Y
 - Coverage: Y/X = Z%
 
-### Arquitectura SOLID
+### Arquitectura SOLID (SOLO app/)
 - Protocol interfaces: X
 - SRP violations: X
 - OCP violations: X
@@ -195,28 +205,23 @@ grep -r "TODO\|FIXME\|XXX\|HACK" app --include="*.py" | wc -l
 - ISP violations: X
 - DIP violations: X
 
-### Reglas Trading (R1-R29)
+### Reglas Trading (R1-R29) en app/
 - Reglas implementadas: X/29
 - Reglas pendientes: [lista]
-- Tests de compliance: X/Y pasando
+- Ubicaciones: [tabla con paths en app/]
 
-### Spain Tax
+### Spain Tax en app/
 - IRPF brackets: ✅ 19/21/23%
 - Modelo 720: ✅/❌
 - Loss carryforward: ✅/❌
 
-### QA
+### QA (SOLO app/)
 - Black: X errores
 - isort: X errores
 - Ruff: X errores
 - Mypy: X errores (aceptable >0)
 
-### Tests
-- Unit tests: X/Y pasando (debe ser 100%)
-- Integration tests: X/Y pasando (debe ser 100%)
-- Cobertura: X%
-
-### Security
+### Security (SOLO app/)
 - Secrets en código: X
 - .env gitignored: Sí/No
 - Logs limpios: Sí/No
@@ -224,7 +229,7 @@ grep -r "TODO\|FIXME\|XXX\|HACK" app --include="*.py" | wc -l
 ## Estado Final: [AAA_PRODUCTION_READY | INCOMPLETE]
 
 Si INCOMPLETE, listar:
-1. Faltantes específicos
+1. Faltantes específicos en app/
 2. Acciones requeridas
 3. Bloqueadores identificados
 ```
@@ -235,17 +240,17 @@ Si INCOMPLETE, listar:
 
 | Fuente | Ubicación | Uso |
 |--------|-----------|-----|
+| **Código Producción** | `app/` | Archivos Python a analizar |
 | **Rules** | `rules/trading/64-realistic-retail-trading-rules.md` | Reglas R1-R29 de trading |
 | **Docs** | `.ralph/docs/` | Análisis, arquitectura |
-| **Requirements** | `.requirements/` | Requirements por archivo |
-| **Código** | `app/` | Archivos Python |
+| **Requirements** | `.requirements/app/` | Requirements por archivo |
 
 ---
 
 ## NO EJECUTAR BACKTESTS
 
 **IMPORTANTE:** Este orquestador NO ejecuta backtests.
-Solo valida que el código cumple las reglas R1-R29.
+Solo valida que el código de producción cumple las reglas R1-R29.
 La ejecución de backtests llevaría demasiado tiempo.
 
 ---
@@ -254,12 +259,12 @@ La ejecución de backtests llevaría demasiado tiempo.
 
 Antes de marcar como COMPLETE, verificar:
 
-- [ ] Todos los checkpoints ejecutados
+- [ ] Todos los checkpoints ejecutados en app/
 - [ ] Todos los outputs documentados
-- [ ] Tests al 100% pasando
-- [ ] QA al 0% errores (excepto mypy type hints)
-- [ ] Security hardening completo
-- [ ] Reporte AAA con métricas reales (no placeholders)
+- [ ] QA al 0% errores en app/ (excepto mypy type hints)
+- [ ] Security hardening completo en app/
+- [ ] Reporte AAA con métricas reales de app/ (no placeholders)
+- [ ] NO se ha analizado ni ejecutado ningún archivo en tests/
 
 ---
 

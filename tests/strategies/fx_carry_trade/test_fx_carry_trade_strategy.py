@@ -11,13 +11,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.strategies.fx_carry_trade.carry_calculator import CarryCalculator, CarryTradeOpportunity
-from app.strategies.fx_carry_trade.fx_carry_trade_strategy import (
+from app.domain.strategies.fx_carry_trade.carry_calculator import CarryCalculator, CarryTradeOpportunity
+from app.domain.strategies.fx_carry_trade.fx_carry_trade_strategy import (
     FXCarryTradeState,
     FXCarryTradeStrategy,
 )
-from app.strategies.fx_carry_trade.fx_rates_provider import InMemoryFXRateProvider
-from app.strategies.fx_carry_trade.models import (
+from app.domain.strategies.fx_carry_trade.fx_rates_provider import InMemoryFXRateProvider
+from app.domain.strategies.fx_carry_trade.models import (
     FXCarryPosition,
     FXCarrySignal,
     FXCarryTradeConfig,

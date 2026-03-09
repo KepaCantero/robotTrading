@@ -13,7 +13,7 @@ from decimal import Decimal
 from datetime import datetime
 from unittest.mock import Mock, AsyncMock, patch, MagicMock
 
-from app.core.compliance_engine import ComplianceEngine
+from app.domain.services.compliance.compliance_engine import ComplianceEngine
 
 
 class TestIAlertProcessorMethods:

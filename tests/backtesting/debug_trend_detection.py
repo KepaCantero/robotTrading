@@ -13,7 +13,7 @@ import numpy as np
 # Test the TrendDetector's EMA calculation
 def test_ema_calculation():
     """Test EMA calculation with sample data."""
-    from app.strategies.momentum_modular.modules.market_detectors.trend_detector import TrendDetector
+    from app.domain.strategies.momentum_modular.modules.market_detectors.trend_detector import TrendDetector
 
     # Create sample price data that's trending UP
     # Simulate a bull market: prices going from 100 to 150
@@ -114,7 +114,7 @@ def test_with_real_data():
         print("yfinance not installed, skipping real data test")
         return
 
-    from app.strategies.momentum_modular.modules.market_detectors.trend_detector import TrendDetector
+    from app.domain.strategies.momentum_modular.modules.market_detectors.trend_detector import TrendDetector
 
     print("=" * 60)
     print("REAL DATA TEST (AAPL 2021)")
@@ -166,7 +166,7 @@ def test_with_real_data():
 
 def test_short_sequences():
     """Test with short price sequences like at backtest start."""
-    from app.strategies.momentum_modular.modules.market_detectors.trend_detector import TrendDetector
+    from app.domain.strategies.momentum_modular.modules.market_detectors.trend_detector import TrendDetector
 
     print("=" * 60)
     print("SHORT SEQUENCE TEST (Early Backtest)")
@@ -198,7 +198,7 @@ def test_short_sequences():
 
 def test_volatile_data():
     """Test with volatile/choppy data that might cause extreme strength values."""
-    from app.strategies.momentum_modular.modules.market_detectors.trend_detector import TrendDetector
+    from app.domain.strategies.momentum_modular.modules.market_detectors.trend_detector import TrendDetector
 
     print("=" * 60)
     print("VOLATILE DATA TEST")

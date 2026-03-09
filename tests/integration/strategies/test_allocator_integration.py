@@ -109,7 +109,7 @@ def test_allocation():
     print("\n2️⃣ Creating StrategyStockAllocator...")
     try:
         # StrategyStockAllocator accepts StockAllocationSettings or None (uses defaults)
-        from app.core.centralized_config import StockAllocationSettings
+        from app.shared.config.params.strategy_config import StockAllocationSettings
 
         allocator = StrategyStockAllocator(StockAllocationSettings())
         print("✅ Allocator created")

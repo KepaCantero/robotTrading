@@ -394,3 +394,21 @@ def async_database_transaction(func):
             return await func(session, *args, **kwargs)
 
     return wrapper
+
+
+# Backward compatibility functions for tests
+def get_session_factory():
+    """Get the session factory for backward compatibility."""
+    if not db_manager.session_factory:
+        db_manager.initialize_sync_engine()
+    return db_manager.session_factory
+
+
+def close_database():
+    """Close database connections for backward compatibility."""
+    db_manager.close_connections()
+
+
+def get_db_transaction():
+    """Get database transaction context for backward compatibility."""
+    return DatabaseSession()

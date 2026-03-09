@@ -430,7 +430,10 @@ class TradingThresholds(BaseModel):
         default=10000.0, description="Minimum capital for learning engine to be economically viable"
     )
     learning_max_cost_ratio: float = Field(
-        default=0.30, ge=0.0, le=1.0, description="Maximum acceptable learning cost as ratio of alpha"
+        default=0.30,
+        ge=0.0,
+        le=1.0,
+        description="Maximum acceptable learning cost as ratio of alpha",
     )
 
     # Capital Tier Configuration (FASE 3.1 - Centralized Config)
@@ -452,7 +455,10 @@ class TradingThresholds(BaseModel):
         default=0.15, ge=0.05, le=0.30, description="Alpha threshold for capital viability"
     )
     capital_viability_min_achievable: float = Field(
-        default=0.01, ge=0.005, le=0.05, description="Minimum achievable alpha for capital viability"
+        default=0.01,
+        ge=0.005,
+        le=0.05,
+        description="Minimum achievable alpha for capital viability",
     )
     capital_viability_max_achievable: float = Field(
         default=0.30, ge=0.10, le=0.50, description="Maximum achievable alpha for capital viability"
@@ -600,7 +606,10 @@ class TradingThresholds(BaseModel):
 
     # Opportunity Cost Configuration (FASE 3.1 - Centralized Config)
     opportunity_risk_free_rate: float = Field(
-        default=0.05, ge=0.0, le=0.15, description="Risk-free rate for opportunity cost calculations"
+        default=0.05,
+        ge=0.0,
+        le=0.15,
+        description="Risk-free rate for opportunity cost calculations",
     )
 
     # Dynamic Reallocation Configuration (FASE 3.1 - Centralized Config)

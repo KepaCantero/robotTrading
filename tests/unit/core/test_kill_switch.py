@@ -8,7 +8,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.core.compliance_engine import ComplianceEngine
+from app.domain.services.compliance.compliance_engine import ComplianceEngine
 
 
 @pytest.fixture(autouse=True)

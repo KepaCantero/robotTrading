@@ -16,7 +16,7 @@ import pytest
 from app.domain.models.market_data import Quote
 from app.services.portfolio_builder import PortfolioBuilder
 from app.services.portfolio_config_manager import get_portfolio_config_manager
-from app.strategies.momentum import MomentumStrategy
+from app.domain.strategies.momentum import MomentumStrategy
 
 
 class TestTemporalSynchronization(unittest.TestCase):

@@ -12,6 +12,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app.services.centralized_logging import LogLevel, LogService, centralized_logger
 from app.shared.exceptions.trading_exceptions import (
     AlgoTradingDatabaseError as DatabaseError,
     AlgoTradingError,
@@ -23,7 +24,6 @@ from app.shared.exceptions.trading_exceptions import (
     SystemError,
     ValidationError,
 )
-from app.services.centralized_logging import LogLevel, LogService, centralized_logger
 
 
 class ErrorHandler:

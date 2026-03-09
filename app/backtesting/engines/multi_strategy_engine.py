@@ -41,7 +41,7 @@ from app.services.portfolio_config_manager import (
 from app.services.strategy_stock_allocator import StrategyStockAllocator
 
 # SINGLE SOURCE OF TRUTH: Import CentralizedConfig
-from app.shared.config.centralized_config import StockAllocationSettings
+from app.shared.config.params.strategy_config import StockAllocationSettings
 
 logger = logging.getLogger(__name__)
 

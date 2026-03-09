@@ -10,7 +10,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.strategies.fx_carry_trade.models import (
+from app.domain.strategies.fx_carry_trade.models import (
     CurrencyCode,
     FXCarryPosition,
     FXCarrySignal,

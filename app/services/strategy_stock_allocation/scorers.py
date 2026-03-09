@@ -15,7 +15,7 @@ import pandas as pd
 from scipy import stats
 
 if TYPE_CHECKING:
-    from app.shared.config.centralized_config import StockAllocationSettings
+    from app.shared.config.params.strategy_config import StockAllocationSettings
 
 from .calculators import HalfLifeCalculator, HurstCalculator
 

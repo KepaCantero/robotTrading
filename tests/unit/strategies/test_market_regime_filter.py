@@ -11,7 +11,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from app.strategies.momentum_modular.strategy import ModularMomentumStrategy
+from app.domain.strategies.momentum_modular.strategy import ModularMomentumStrategy
 
 
 class TestMarketRegimeFilter:
@@ -435,7 +435,7 @@ class TestMarketRegimeFilterLogging:
     @pytest.fixture(autouse=True)
     def reset_rate_limited_logger(self):
         """Reset the rate-limited logger counters before each logging test."""
-        from app.strategies.momentum_modular.strategy import _rate_limited_logger
+        from app.domain.strategies.momentum_modular.strategy import _rate_limited_logger
 
         # Reset counters to ensure logs appear in tests
         _rate_limited_logger.counters.clear()

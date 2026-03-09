@@ -69,16 +69,97 @@ subagents:
       use_for: "Optimización de rendimiento"
 
 # ============================================================================
-# FASE 1: ESTRUCTURA Y REGLAS (Foundation)
+# FASE 0: CLEAN START - Borrar tareas anteriores, NO asumir nada
 # ============================================================================
 hats:
+  # --------------------------------------------------------------------------
+  # FASE 0: Clean Start - Limpiar todo estado previo
+  # CRÍTICO: Siempre ejecutar primero, no asumir que nada existe
+  # --------------------------------------------------------------------------
+  clean_start:
+    name: "Clean Start"
+    triggers: ["aaa.start"]
+    publishes: ["aaa.clean_done", "aaa.blocked"]
+    default_publishes: "aaa.clean_done"
+    instructions: |
+      ## FASE 0: CLEAN START - NO ASUMIR NADA
+
+      **OBJETIVO:** Limpiar TODO estado previo antes de empezar
+
+      **CRÍTICO:** Esta fase DEBE ejecutarse SIEMPRE primero
+
+      ### ACCIONES OBLIGATORIAS:
+
+      1. **Limpiar handoff.md** (borrar contenido previo):
+         ```bash
+         echo "# Handoff - Clean Start" > .ralph/agent/handoff.md
+         echo "Iniciado: $(date)" >> .ralph/agent/handoff.md
+         ```
+
+      2. **Eliminar TODOS los archivos de estado y memoria**:
+         ```bash
+         # Estado del loop
+         rm -f .ralph/loop.lock 2>/dev/null || true
+         rm -f .ralph/loops.json 2>/dev/null || true
+         rm -f .ralph/current-events 2>/dev/null || true
+         rm -f .ralph/current-loop-id 2>/dev/null || true
+
+         # Historial y eventos
+         rm -f .ralph/events-*.jsonl 2>/dev/null || true
+         rm -f .ralph/history.jsonl 2>/dev/null || true
+         rm -f .ralph/history.jsonl.lock 2>/dev/null || true
+
+         # Tareas del agente
+         rm -f .ralph/agent/tasks.jsonl 2>/dev/null || true
+         rm -f .ralph/agent/tasks.jsonl.lock 2>/dev/null || true
+         rm -f .ralph/.agent/tasks.jsonl 2>/dev/null || true
+
+         # Checkpoints
+         rm -rf .ralph/checkpoints/*.json 2>/dev/null || true
+         ```
+
+      3. **Limpiar outputs de auditorías previas**:
+         ```bash
+         rm -rf .ralph/audit_output/* 2>/dev/null || true
+         rm -rf .ralph/outputs/*.md 2>/dev/null || true
+         ```
+
+      4. **Verificar estructura base existe**:
+         ```bash
+         mkdir -p .ralph/agent
+         mkdir -p .ralph/checkpoints
+         mkdir -p .ralph/outputs
+         mkdir -p .ralph/audit_output
+         mkdir -p .requirements
+         ```
+
+      5. **Resetear variables de estado**:
+         - NO asumir que archivos existen
+         - NO asumir que imports funcionan
+         - NO asumir que tests pasan
+         - Empezar desde CERO
+
+      ### OUTPUT FORMAT:
+      ```
+      ## Clean Start Complete
+      - Handoff: LIMPIO
+      - Loop state: ELIMINADO (loop.lock, loops.json, current-*)
+      - Events: LIMPIOS (events-*, history.*)
+      - Tasks: ELIMINADAS (tasks.jsonl)
+      - Checkpoints: ELIMINADOS
+      - Audit outputs: LIMPIOS
+      - Estado: FRESH START - MEMORIA RESET
+      ```
+
+      Emite: aaa.clean_done
+
   # --------------------------------------------------------------------------
   # FASE 1.1: Structural Fix - Eliminar duplicados, corregir imports
   # DELEGATE TO: @agent-code-archaeologist para análisis
   # --------------------------------------------------------------------------
   structural_fix:
     name: "Structural Fix"
-    triggers: ["aaa.start"]
+    triggers: ["aaa.clean_done"]
     publishes: ["aaa.structural_done", "aaa.blocked"]
     default_publishes: "aaa.structural_done"
     delegate_to: "@agent-code-archaeologist"

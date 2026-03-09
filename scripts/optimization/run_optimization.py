@@ -86,8 +86,8 @@ def parse_symbols(symbols_str: Optional[str]) -> List[str]:
     return get_available_symbols()
 
 
-def run_bayesian_optimization(args) -> int:
-    """Run Optuna-based Bayesian optimization."""
+def run_bayesian_optimization(args, symbols: List[str]) -> int:
+    """Run Optuna-based Bayesian optimization across multiple symbols."""
     from app.optimization.multi_strategy_optimizer_v2 import MultiStrategyOptimizerV2
 
     end_date = datetime.now()
@@ -97,38 +97,58 @@ def run_bayesian_optimization(args) -> int:
     print("\n" + "=" * 80)
     print("BAYESIAN OPTIMIZATION (Optuna TPE)")
     print("=" * 80)
+    print(f"Symbols: {len(symbols)} stocks")
+    print(f"  {', '.join(symbols[:10])}{'...' if len(symbols) > 10 else ''}")
     print(f"Period: {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')} ({args.years} years)")
     print(f"Capital: ${args.capital:,.2f}")
     print(f"Trials: {args.trials}")
     print(f"Output: {output_dir}")
     print("=" * 80 + "\n")
 
-    optimizer = MultiStrategyOptimizerV2(
-        start_date=start_date,
-        end_date=end_date,
-        total_capital=Decimal(str(args.capital)),
-        output_dir=output_dir,
-        max_runs=args.trials,
-    )
+    all_results = {}
 
-    result = optimizer.run_optimization(
-        n_trials=args.trials,
-        timeout=args.timeout,
-    )
+    for symbol in symbols:
+        print(f"\n--- Optimizing {symbol} ({symbols.index(symbol)+1}/{len(symbols)}) ---")
 
+        try:
+            optimizer = MultiStrategyOptimizerV2(
+                start_date=start_date,
+                end_date=end_date,
+                total_capital=Decimal(str(args.capital)),
+                output_dir=output_dir / symbol,
+                max_runs=args.trials,
+            )
+
+            result = optimizer.run_optimization(
+                n_trials=args.trials,
+                timeout=args.timeout,
+            )
+            all_results[symbol] = result
+            print(f"  {symbol} Best Score: {result['best_score']:.4f}")
+
+        except Exception as e:
+            logger.error(f"Error optimizing {symbol}: {e}")
+            all_results[symbol] = {"error": str(e)}
+
+    # Summary
     print("\n" + "=" * 80)
-    print("BAYESIAN OPTIMIZATION COMPLETE")
+    print("BAYESIAN OPTIMIZATION COMPLETE - ALL SYMBOLS")
     print("=" * 80)
-    print(f"Best Score: {result['best_score']:.4f}")
-    print(f"Trials: {result['n_trials']}")
+
+    successful = {k: v for k, v in all_results.items() if "error" not in v}
+    if successful:
+        best_symbol = max(successful.items(), key=lambda x: x[1].get('best_score', 0))
+        print(f"Best Overall: {best_symbol[0]} with score {best_symbol[1].get('best_score', 0):.4f}")
+
+    print(f"Successful: {len(successful)}/{len(symbols)}")
     print(f"Results saved to: {output_dir}")
     print("=" * 80)
 
     return 0
 
 
-def run_grid_search(args) -> int:
-    """Run Grid Search optimization."""
+def run_grid_search(args, symbols: List[str]) -> int:
+    """Run Grid Search optimization across multiple symbols."""
     from app.optimization.grid_search_optimizer import GridSearchOptimizer
 
     end_date = datetime.now()
@@ -138,34 +158,54 @@ def run_grid_search(args) -> int:
     print("\n" + "=" * 80)
     print("GRID SEARCH OPTIMIZATION")
     print("=" * 80)
+    print(f"Symbols: {len(symbols)} stocks")
+    print(f"  {', '.join(symbols[:10])}{'...' if len(symbols) > 10 else ''}")
     print(f"Period: {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')} ({args.years} years)")
     print(f"Capital: ${args.capital:,.2f}")
     print(f"Max Combinations: {args.max_combinations or 'All'}")
     print(f"Output: {output_dir}")
     print("=" * 80 + "\n")
 
-    optimizer = GridSearchOptimizer(
-        start_date=start_date,
-        end_date=end_date,
-        total_capital=Decimal(str(args.capital)),
-        output_dir=output_dir,
-    )
+    all_results = {}
 
-    result = optimizer.optimize(max_combinations=args.max_combinations)
+    for symbol in symbols:
+        print(f"\n--- Grid Search {symbol} ({symbols.index(symbol)+1}/{len(symbols)}) ---")
 
+        try:
+            optimizer = GridSearchOptimizer(
+                start_date=start_date,
+                end_date=end_date,
+                total_capital=Decimal(str(args.capital)),
+                output_dir=output_dir / symbol,
+            )
+
+            result = optimizer.optimize(max_combinations=args.max_combinations)
+            all_results[symbol] = result
+            print(f"  {symbol} Best Score: {result['best_score']:.4f}")
+
+        except Exception as e:
+            logger.error(f"Error in grid search for {symbol}: {e}")
+            all_results[symbol] = {"error": str(e)}
+
+    # Summary
     print("\n" + "=" * 80)
-    print("GRID SEARCH COMPLETE")
+    print("GRID SEARCH COMPLETE - ALL SYMBOLS")
     print("=" * 80)
-    print(f"Best Score: {result['best_score']:.4f}")
-    print(f"Combinations Tested: {result['total_tested']}")
+
+    successful = {k: v for k, v in all_results.items() if "error" not in v}
+    if successful:
+        best_symbol = max(successful.items(), key=lambda x: x[1].get('best_score', 0))
+        print(f"Best Overall: {best_symbol[0]} with score {best_symbol[1].get('best_score', 0):.4f}")
+
+    print(f"Successful: {len(successful)}/{len(symbols)}")
     print(f"Results saved to: {output_dir}")
     print("=" * 80)
 
     return 0
 
 
-def run_multi_strategy(args) -> int:
-    """Run Multi-Strategy optimization."""
+def run_multi_strategy(args, symbols: List[str]) -> int:
+    """Run Multi-Strategy optimization across multiple symbols."""
     from app.optimization.multi_strategy_optimizer import MultiStrategyOptimizer
 
     end_date = datetime.now()
@@ -175,7 +215,8 @@ def run_multi_strategy(args) -> int:
     print("\n" + "=" * 80)
     print("MULTI-STRATEGY OPTIMIZATION")
     print("=" * 80)
-    print(f"Symbol: {args.symbol}")
+    print(f"Symbols: {len(symbols)} stocks")
+    print(f"  {', '.join(symbols[:10])}{'...' if len(symbols) > 10 else ''}")
     print(f"Period: {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')} ({args.years} years)")
     print(f"Capital: ${args.capital:,.2f}")
     print(f"Trials: {args.trials}")
@@ -183,54 +224,69 @@ def run_multi_strategy(args) -> int:
     print(f"Output: {output_dir}")
     print("=" * 80 + "\n")
 
-    optimizer = MultiStrategyOptimizer(
-        total_capital=Decimal(str(args.capital)),
-        symbol=args.symbol,
-        start_date=start_date,
-        end_date=end_date,
-        n_trials=args.trials,
-        objective_metric=args.metric,
-    )
+    all_results = {}
 
-    study = optimizer.optimize(
-        storage=args.storage,
-        study_name=args.study_name,
-        resume=args.resume,
-    )
+    for symbol in symbols:
+        print(f"\n--- Multi-Strategy {symbol} ({symbols.index(symbol)+1}/{len(symbols)}) ---")
 
-    best_config = optimizer.get_best_config()
-    final_results = optimizer.run_backtest_with_best_params()
+        try:
+            optimizer = MultiStrategyOptimizer(
+                total_capital=Decimal(str(args.capital)),
+                symbol=symbol,
+                start_date=start_date,
+                end_date=end_date,
+                n_trials=args.trials,
+                objective_metric=args.metric,
+            )
 
+            study = optimizer.optimize(
+                storage=args.storage,
+                study_name=f"{args.study_name}_{symbol}",
+                resume=args.resume,
+            )
+
+            best_config = optimizer.get_best_config()
+            final_results = optimizer.run_backtest_with_best_params()
+
+            all_results[symbol] = {
+                "best_value": optimizer.best_value,
+                "total_return": final_results['combined']['total_return'],
+                "weighted_sharpe": final_results['combined']['weighted_sharpe'],
+            }
+
+            print(f"  {symbol} Best {args.metric}: {optimizer.best_value:.4f}")
+            print(f"  Return: {final_results['combined']['total_return']:.2f}%")
+
+            # Save config for this symbol
+            import json
+            config_path = output_dir / symbol / "best_config.json"
+            config_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(config_path, "w") as f:
+                json.dump(best_config, f, indent=2, default=str)
+
+        except Exception as e:
+            logger.error(f"Error in multi-strategy for {symbol}: {e}")
+            all_results[symbol] = {"error": str(e)}
+
+    # Summary
     print("\n" + "=" * 80)
-    print("MULTI-STRATEGY OPTIMIZATION COMPLETE")
+    print("MULTI-STRATEGY OPTIMIZATION COMPLETE - ALL SYMBOLS")
     print("=" * 80)
-    print(f"Best {args.metric}: {optimizer.best_value:.4f}")
 
-    print("\nBest Allocation:")
-    if "allocation" in best_config:
-        for strategy_name, weight in best_config["allocation"].items():
-            allocated = args.capital * weight
-            print(f"  {strategy_name}: {weight:.1%} (${allocated:,.2f})")
+    successful = {k: v for k, v in all_results.items() if "error" not in v}
+    if successful:
+        best_symbol = max(successful.items(), key=lambda x: x[1].get('best_value', 0))
+        print(f"Best Overall: {best_symbol[0]} with {args.metric} {best_symbol[1].get('best_value', 0):.4f}")
 
-    print(f"\nFinal Backtest Results:")
-    print(f"  Total Return: {final_results['combined']['total_return']:.2f}%")
-    print(f"  Total Trades: {final_results['combined']['total_trades']}")
-    print(f"  Weighted Sharpe: {final_results['combined']['weighted_sharpe']:.4f}")
-
-    # Save best config
-    import json
-    config_path = output_dir / "best_config.json"
-    config_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(config_path, "w") as f:
-        json.dump(best_config, f, indent=2, default=str)
-    print(f"\nBest config saved to: {config_path}")
+    print(f"Successful: {len(successful)}/{len(symbols)}")
+    print(f"Results saved to: {output_dir}")
     print("=" * 80)
 
     return 0
 
 
-def run_hyperparameter(args) -> int:
-    """Run Hyperparameter optimization."""
+def run_hyperparameter(args, symbols: List[str]) -> int:
+    """Run Hyperparameter optimization across multiple symbols."""
     from app.strategies.momentum_modular.optimization.hyperparameter_optimizer import HyperparameterOptimizer
 
     year = datetime.now().year - 1 if args.years == 1 else datetime.now().year - args.years
@@ -241,7 +297,8 @@ def run_hyperparameter(args) -> int:
     print("\n" + "=" * 80)
     print("HYPERPARAMETER OPTIMIZATION")
     print("=" * 80)
-    print(f"Symbol: {args.symbol}")
+    print(f"Symbols: {len(symbols)} stocks")
+    print(f"  {', '.join(symbols[:10])}{'...' if len(symbols) > 10 else ''}")
     print(f"Period: {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}")
     print(f"Capital: ${args.capital:,.2f}")
     print(f"Metric: {args.metric}")
@@ -250,40 +307,60 @@ def run_hyperparameter(args) -> int:
     print(f"Output: {output_dir}")
     print("=" * 80 + "\n")
 
-    optimizer = HyperparameterOptimizer(
-        symbol=args.symbol,
-        start_date=start_date,
-        end_date=end_date,
-        initial_capital=Decimal(str(args.capital)),
-        optimization_metric=args.metric,
-        optimization_method=args.method,
-    )
+    all_results = {}
 
-    results = optimizer.optimize(
-        max_iterations=args.trials,
-        random_seed=args.seed,
-    )
+    for symbol in symbols:
+        print(f"\n--- Hyperparameter {symbol} ({symbols.index(symbol)+1}/{len(symbols)}) ---")
 
+        try:
+            optimizer = HyperparameterOptimizer(
+                symbol=symbol,
+                start_date=start_date,
+                end_date=end_date,
+                initial_capital=Decimal(str(args.capital)),
+                optimization_metric=args.metric,
+                optimization_method=args.method,
+            )
+
+            results = optimizer.optimize(
+                max_iterations=args.trials,
+                random_seed=args.seed,
+            )
+
+            all_results[symbol] = results
+            print(f"  {symbol} Best Score: {results['best_score']:.4f}")
+
+        except Exception as e:
+            logger.error(f"Error in hyperparameter optimization for {symbol}: {e}")
+            all_results[symbol] = {"error": str(e)}
+
+    # Summary
     print("\n" + "=" * 80)
-    print("HYPERPARAMETER OPTIMIZATION COMPLETE")
+    print("HYPERPARAMETER OPTIMIZATION COMPLETE - ALL SYMBOLS")
     print("=" * 80)
-    print(f"Best Score: {results['best_score']:.4f}")
-    print(f"Total Iterations: {results['total_iterations']}")
 
-    print("\nBest Configuration:")
-    for key, value in results['best_config'].items():
-        print(f"  {key}: {value}")
+    successful = {k: v for k, v in all_results.items() if "error" not in v}
+    if successful:
+        best_symbol = max(successful.items(), key=lambda x: x[1].get('best_score', 0))
+        print(f"Best Overall: {best_symbol[0]} with score {best_symbol[1].get('best_score', 0):.4f}")
 
-    print(f"\nResults saved to: {output_dir}")
+        print("\nTop 5 Configurations:")
+        sorted_results = sorted(successful.items(), key=lambda x: x[1].get('best_score', 0), reverse=True)[:5]
+        for sym, res in sorted_results:
+            print(f"  {sym}: {res.get('best_score', 0):.4f}")
+
+    print(f"\nSuccessful: {len(successful)}/{len(symbols)}")
+    print(f"Results saved to: {output_dir}")
     print("=" * 80)
 
     return 0
 
 
-def run_all_optimizations(args) -> int:
-    """Run all optimization types sequentially."""
+def run_all_optimizations(args, symbols: List[str]) -> int:
+    """Run all optimization types sequentially across all symbols."""
     print("\n" + "=" * 80)
     print("RUNNING ALL OPTIMIZATIONS")
+    print(f"Symbols: {len(symbols)} stocks")
     print("=" * 80)
 
     results = {}
@@ -296,13 +373,13 @@ def run_all_optimizations(args) -> int:
 
         try:
             if opt_type == "bayesian":
-                result = run_bayesian_optimization(args)
+                result = run_bayesian_optimization(args, symbols)
             elif opt_type == "grid":
-                result = run_grid_search(args)
+                result = run_grid_search(args, symbols)
             elif opt_type == "multi-strategy":
-                result = run_multi_strategy(args)
+                result = run_multi_strategy(args, symbols)
             elif opt_type == "hyperparameter":
-                result = run_hyperparameter(args)
+                result = run_hyperparameter(args, symbols)
 
             results[opt_type] = {"status": "success", "exit_code": result}
         except Exception as e:
@@ -326,7 +403,9 @@ def run_all_optimizations(args) -> int:
 
 
 def list_optimization_types():
-    """Print available optimization types."""
+    """Print available optimization types and symbols."""
+    available_symbols = get_available_symbols()
+
     print("\n" + "=" * 80)
     print("AVAILABLE OPTIMIZATION TYPES")
     print("=" * 80)
@@ -344,22 +423,34 @@ def list_optimization_types():
         print(f"    {desc}")
 
     print("\n" + "=" * 80)
+    print(f"AVAILABLE SYMBOLS ({len(available_symbols)} stocks)")
+    print("=" * 80)
+
+    # Print symbols in rows of 10
+    for i in range(0, len(available_symbols), 10):
+        row = available_symbols[i:i+10]
+        print(f"  {', '.join(row)}")
+
+    print("\n" + "=" * 80)
     print("EXAMPLES")
     print("=" * 80)
     print("""
-    # Bayesian optimization (default)
+    # Bayesian optimization with ALL symbols (default)
     python scripts/optimization/run_optimization.py --type bayesian --years 10 --trials 100
 
-    # Grid search
+    # With specific symbols only
+    python scripts/optimization/run_optimization.py --type bayesian --symbols AAPL,MSFT,NVDA
+
+    # Grid search with all symbols
     python scripts/optimization/run_optimization.py --type grid --years 5 --max-combinations 500
 
-    # Multi-strategy with specific symbol
-    python scripts/optimization/run_optimization.py --type multi-strategy --symbol AAPL --metric sharpe
+    # Multi-strategy optimization
+    python scripts/optimization/run_optimization.py --type multi-strategy --metric sharpe
 
     # Hyperparameter with random search
     python scripts/optimization/run_optimization.py --type hyperparameter --method random_search
 
-    # Run all
+    # Run all optimizations
     python scripts/optimization/run_optimization.py --type all --years 5 --trials 50
     """)
     print("=" * 80)
@@ -373,8 +464,9 @@ def main():
 Examples:
     python scripts/optimization/run_optimization.py --list
     python scripts/optimization/run_optimization.py --type bayesian --years 10 --trials 100
+    python scripts/optimization/run_optimization.py --type bayesian --symbols AAPL,MSFT,NVDA
     python scripts/optimization/run_optimization.py --type grid --years 5
-    python scripts/optimization/run_optimization.py --type multi-strategy --symbol AAPL
+    python scripts/optimization/run_optimization.py --type multi-strategy --metric sharpe
     python scripts/optimization/run_optimization.py --type hyperparameter --metric sharpe_ratio
     python scripts/optimization/run_optimization.py --type all
         """,
@@ -392,7 +484,15 @@ Examples:
     parser.add_argument(
         "--list",
         action="store_true",
-        help="List available optimization types and exit",
+        help="List available optimization types and symbols, then exit",
+    )
+
+    # Symbol selection
+    parser.add_argument(
+        "--symbols",
+        type=str,
+        default=None,
+        help="Comma-separated list of symbols (default: ALL downloaded symbols)",
     )
 
     # Common arguments
@@ -427,12 +527,6 @@ Examples:
         type=int,
         default=None,
         help="Timeout in seconds (default: None)",
-    )
-    parser.add_argument(
-        "--symbol",
-        type=str,
-        default="AAPL",
-        help="Symbol to optimize (default: AAPL)",
     )
     parser.add_argument(
         "--metric",
@@ -491,20 +585,29 @@ Examples:
         list_optimization_types()
         return 0
 
+    # Parse symbols (use all available if not specified)
+    symbols = parse_symbols(args.symbols)
+
+    if not symbols:
+        logger.error("No symbols found. Download data first or use --symbols option.")
+        return 1
+
+    logger.info(f"Using {len(symbols)} symbols: {', '.join(symbols[:10])}{'...' if len(symbols) > 10 else ''}")
+
     # Ensure output directory exists
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
 
     # Run selected optimization
     if args.type == "bayesian":
-        return run_bayesian_optimization(args)
+        return run_bayesian_optimization(args, symbols)
     elif args.type == "grid":
-        return run_grid_search(args)
+        return run_grid_search(args, symbols)
     elif args.type == "multi-strategy":
-        return run_multi_strategy(args)
+        return run_multi_strategy(args, symbols)
     elif args.type == "hyperparameter":
-        return run_hyperparameter(args)
+        return run_hyperparameter(args, symbols)
     elif args.type == "all":
-        return run_all_optimizations(args)
+        return run_all_optimizations(args, symbols)
     else:
         logger.error(f"Unknown optimization type: {args.type}")
         return 1

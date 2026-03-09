@@ -20,7 +20,7 @@ import pandas as pd
 from pydantic import BaseModel, Field
 
 from app.services.momentum_analysis import TechnicalIndicatorCalculator
-from app.shared.config.centralized_config import StockAllocationSettings
+from app.shared.config.params.strategy_config import StockAllocationSettings
 
 from .allocators import ERCCapitalAllocator
 from .calculators import HalfLifeCalculator, HurstCalculator, StationarityTester

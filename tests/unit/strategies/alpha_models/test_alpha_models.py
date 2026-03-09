@@ -10,7 +10,7 @@ import pandas as pd
 import pytest
 
 from app.models.signal import SignalStrength, SignalType
-from app.strategies.alpha_models import (
+from app.domain.strategies.alpha_models import (
     AlphaDecayMetrics,
     AlphaDecayRegime,
     AlphaSignal,

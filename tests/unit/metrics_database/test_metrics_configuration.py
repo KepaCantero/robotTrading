@@ -10,7 +10,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.core.centralized_config import get_config
+from app.shared.config.centralized_config import get_config
 from app.services.metrics_database.models import (
     MetricPoint,
     MetricsCollectorConfig,

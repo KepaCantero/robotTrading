@@ -7,7 +7,7 @@ from unittest.mock import mock_open, patch
 
 import pytest
 
-from app.core.centralized_config import (
+from app.shared.config.centralized_config import (
     APIConfig,
     CentralizedConfig,
     DatabaseConfig,

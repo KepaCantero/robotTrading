@@ -5,7 +5,7 @@ Tests for market data concurrency handling.
 from datetime import datetime
 from decimal import Decimal
 
-from app.models.momentum import MarketData
+from app.domain.models.momentum import MarketData
 
 
 class TestMarketDataConcurrency:

@@ -5,7 +5,6 @@ Genera reportes para el Modelo 720 (declaración de bienes en el extranjero)
 """
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict
 
 
 class Modelo720Generator:

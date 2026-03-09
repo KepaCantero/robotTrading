@@ -10,7 +10,7 @@ import pytest
 
 from app.domain.models.market_data import Quote
 from app.services.momentum_analysis import TechnicalIndicatorCalculator
-from app.strategies.momentum import MomentumStrategy
+from app.domain.strategies.momentum import MomentumStrategy
 
 
 @pytest.fixture

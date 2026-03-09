@@ -16,7 +16,7 @@ import pytest
 from decimal import Decimal
 from datetime import datetime, timezone
 
-from app.core.compliance_engine import ComplianceEngine, ComplianceConfig
+from app.domain.services.compliance.compliance_engine import ComplianceEngine, ComplianceConfig
 from app.services.execution.execution_adapter import ExecutionEngineAdapter
 from app.services.execution.order_manager_adapter import OrderManagerAdapter
 from app.services.execution.trading_bridge_adapter import TradingBridgeAdapter

@@ -13,7 +13,7 @@ from typing import Any, Dict, List
 
 import pytest
 
-from app.strategies.strategy_registry import (
+from app.domain.strategies.strategy_registry import (
     BaseStrategy,
     StrategyContext,
     StrategyFactory,

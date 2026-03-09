@@ -16,7 +16,7 @@ import pytest
 # Skip all tests if lightgbm is not available
 pytest.importorskip("lightgbm")
 
-from app.strategies.momentum_modular.learning.supervised_learning_engine import (
+from app.domain.strategies.momentum_modular.learning.supervised_learning_engine import (
     SupervisedLearningEngine,
 )
 

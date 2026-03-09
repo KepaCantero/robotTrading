@@ -25,7 +25,7 @@ def test_imports():
 def test_trading_thresholds():
     """Test TradingThresholds configuration."""
     try:
-        from app.core.centralized_config import TradingThresholds
+        from app.shared.config.centralized_config import TradingThresholds
 
         thresholds = TradingThresholds()
 
@@ -54,7 +54,7 @@ def test_trading_thresholds():
 def test_strategy_config():
     """Test StrategyConfig configuration."""
     try:
-        from app.core.centralized_config import StrategyConfig
+        from app.shared.config.centralized_config import StrategyConfig
 
         config = StrategyConfig(name="test_strategy")
 
@@ -79,7 +79,7 @@ def test_strategy_config():
 def test_database_config():
     """Test DatabaseConfig configuration."""
     try:
-        from app.core.centralized_config import DatabaseConfig
+        from app.shared.config.centralized_config import DatabaseConfig
 
         config = DatabaseConfig()
 
@@ -114,7 +114,7 @@ def test_database_config():
 def test_redis_config():
     """Test RedisConfig configuration."""
     try:
-        from app.core.centralized_config import RedisConfig
+        from app.shared.config.centralized_config import RedisConfig
 
         config = RedisConfig()
 
@@ -145,7 +145,7 @@ def test_redis_config():
 def test_api_config():
     """Test APIConfig configuration."""
     try:
-        from app.core.centralized_config import APIConfig
+        from app.shared.config.centralized_config import APIConfig
 
         config = APIConfig()
 
@@ -168,7 +168,7 @@ def test_api_config():
 def test_environment_enum():
     """Test Environment enum."""
     try:
-        from app.core.centralized_config import Environment
+        from app.shared.config.centralized_config import Environment
 
         assert Environment.DEVELOPMENT == "development"
         assert Environment.TESTING == "testing"
@@ -185,7 +185,7 @@ def test_environment_enum():
 def test_validation():
     """Test configuration validation."""
     try:
-        from app.core.centralized_config import TradingThresholds
+        from app.shared.config.centralized_config import TradingThresholds
 
         # Test valid values
         TradingThresholds(max_position_size=0.1)

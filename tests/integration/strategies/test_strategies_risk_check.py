@@ -14,9 +14,9 @@ from decimal import Decimal
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import AssetClass, Portfolio, Position
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
-from app.strategies.mean_reversion import MeanReversionStrategy
-from app.strategies.momentum import MomentumStrategy
-from app.strategies.pairs_trading import PairsTradingStrategy
+from app.domain.strategies.mean_reversion import MeanReversionStrategy
+from app.domain.strategies.momentum import MomentumStrategy
+from app.domain.strategies.pairs_trading import PairsTradingStrategy
 
 
 class TestStrategiesRiskCheck(unittest.TestCase):
