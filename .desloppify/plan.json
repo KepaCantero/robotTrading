@@ -1,7 +1,7 @@
 {
   "version": 8,
   "created": "2026-03-12T04:26:53+00:00",
-  "updated": "2026-03-12T06:43:15+00:00",
+  "updated": "2026-03-12T06:44:20+00:00",
   "queue_order": [],
   "deferred": [],
   "skipped": {
@@ -5672,6 +5672,26 @@
       "note": null,
       "attestation": "I have actually reflected and I am not deferring this for lazy reasons. Test coverage improvements require writing unit tests, which the user explicitly excluded from scope.",
       "created_at": "2026-03-12T06:37:29+00:00",
+      "review_after": null,
+      "skipped_at_scan": 1
+    },
+    "stale_exclude::.benchmarks::.benchmarks": {
+      "issue_id": "stale_exclude::.benchmarks::.benchmarks",
+      "kind": "temporary",
+      "reason": null,
+      "note": null,
+      "attestation": null,
+      "created_at": "2026-03-12T06:44:20+00:00",
+      "review_after": null,
+      "skipped_at_scan": 1
+    },
+    "stale_exclude::.gap_reports::.gap_reports": {
+      "issue_id": "stale_exclude::.gap_reports::.gap_reports",
+      "kind": "temporary",
+      "reason": null,
+      "note": null,
+      "attestation": null,
+      "created_at": "2026-03-12T06:44:20+00:00",
       "review_after": null,
       "skipped_at_scan": 1
     }
@@ -18716,6 +18736,21 @@
       "actor": "user",
       "note": null,
       "detail": {}
+    },
+    {
+      "timestamp": "2026-03-12T06:44:20+00:00",
+      "action": "skip",
+      "issue_ids": [
+        "stale_exclude::.benchmarks::.benchmarks",
+        "stale_exclude::.gap_reports::.gap_reports"
+      ],
+      "cluster_name": null,
+      "actor": "user",
+      "note": null,
+      "detail": {
+        "kind": "temporary",
+        "reason": null
+      }
     }
   ],
   "epic_triage_meta": {},
