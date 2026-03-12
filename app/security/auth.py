@@ -26,7 +26,7 @@ import logging
 from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import timedelta
-from typing import Any, Callable
+from typing import Callable
 
 from fastapi import Depends, HTTPException, Security, status
 from fastapi.security import APIKeyHeader, HTTPAuthorizationCredentials, HTTPBearer

@@ -5,7 +5,6 @@ Verifies that all new modules work correctly and maintain backward compatibility
 """
 
 import pytest
-from pathlib import Path
 from app.shared.config.protocols import (
     ConfigProvider,
     FileConfigLoader,

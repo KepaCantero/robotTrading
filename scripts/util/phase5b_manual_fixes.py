@@ -9,7 +9,6 @@ Author: Backend Developer
 Date: 2026-01-28
 """
 
-import re
 from pathlib import Path
 
 PROJECT_ROOT = Path("/Users/kepa.cantero/Projects/algoTrading")

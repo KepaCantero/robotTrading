@@ -9,7 +9,7 @@ import json
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Dict, Any
 
 
 def run_mypy(file_path: Path) -> Dict[str, Any]:

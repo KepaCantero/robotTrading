@@ -8,13 +8,11 @@ operational toil following Google SRE principles.
 
 import asyncio
 import sys
-from datetime import datetime, timedelta
 
 sys.path.insert(0, '/Users/kepa.cantero/Projects/algoTrading')
 
 from app.sre.automation.toil_tracker import (
     ToilTracker,
-    ToilCategory,
     ToilConfig,
 )
 

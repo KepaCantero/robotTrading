@@ -12,19 +12,15 @@ Tests the secrets management functionality including:
 
 import pytest
 import os
-import json
 import tempfile
-from pathlib import Path
 from datetime import datetime
 from cryptography.fernet import Fernet
 
 from app.services.security.secrets_manager_impl import (
     SecretsManagerImpl,
     SecretValue,
-    SecretStorage,
     EnvironmentStorage,
     EncryptedFileStorage,
-    SecretsError,
 )
 
 

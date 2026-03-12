@@ -15,7 +15,6 @@ with real PessimisticExecutionEngine (not mocked).
 
 import pytest
 from decimal import Decimal
-from datetime import datetime, timezone
 
 from app.services.execution.execution_adapter import ExecutionEngineAdapter
 

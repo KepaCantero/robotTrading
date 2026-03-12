@@ -12,7 +12,7 @@ This example demonstrates how to use the CryptoMomentumStrategy:
 """
 
 from decimal import Decimal
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import pandas as pd
 import numpy as np

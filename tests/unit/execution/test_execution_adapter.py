@@ -343,7 +343,6 @@ async def test_slippage_calculation_accuracy(adapter):
 # Tests for ITradeExecutor protocol compliance
 def test_adapter_implements_itradeexecutor():
     """Test that ExecutionEngineAdapter implements ITradeExecutor protocol."""
-    from app.core.protocols import ITradeExecutor
 
     adapter = ExecutionEngineAdapter()
 

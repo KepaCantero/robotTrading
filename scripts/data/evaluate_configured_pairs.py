@@ -16,8 +16,6 @@ sys.path.insert(0, str(project_root))
 
 import pandas as pd
 import numpy as np
-from app.services.strategy_stock_allocator import StrategyStockAllocator
-from app.core.centralized_config import StockAllocationSettings
 from tests.integration.test_data_loader import load_all_csv_data
 
 try:

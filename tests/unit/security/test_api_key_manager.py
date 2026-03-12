@@ -11,7 +11,6 @@ Tests the API key management functionality including:
 """
 
 import pytest
-import os
 from datetime import datetime, timedelta
 from cryptography.fernet import Fernet
 

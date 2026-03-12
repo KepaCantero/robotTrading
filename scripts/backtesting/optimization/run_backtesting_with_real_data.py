@@ -36,7 +36,6 @@ Requirements:
 import asyncio
 import json
 import logging
-import os
 import sys
 from datetime import datetime, timedelta
 from decimal import Decimal

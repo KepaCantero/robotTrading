@@ -22,7 +22,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.core.compliance_engine import get_compliance_engine, ComplianceConfig
+from app.core.compliance_engine import get_compliance_engine
 from app.services.live_trading.trading_bridge_orchestrator import get_trading_bridge_orchestrator
 from app.services.live_trading.broker_connector import get_broker_connector, OrderSide
 

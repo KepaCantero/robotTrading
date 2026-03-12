@@ -17,8 +17,6 @@ from __future__ import annotations
 import gc
 import logging
 import sys
-from datetime import datetime, timedelta
-from decimal import Decimal
 from pathlib import Path
 
 import pandas as pd
@@ -42,12 +40,6 @@ os.environ['OPENBLAS_NUM_THREADS'] = '1'
 os.environ['MKL_NUM_THREADS'] = '1'
 os.environ['CUDA_VISIBLE_DEVICES'] = ''
 
-from app.core.models.input_profile import (
-    InputProfile,
-    ObjectivoInversion,
-    RiskTolerance,
-    TaxResidence,
-)
 from app.services.strategy_stock_allocator import StrategyStockAllocator
 
 

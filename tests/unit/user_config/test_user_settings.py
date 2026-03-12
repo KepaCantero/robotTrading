@@ -9,7 +9,6 @@ from pathlib import Path
 from app.user_config import (
     UserSettings,
     BrokerType,
-    OrderTypePreference,
     UserConfigManager,
 )
 import yaml

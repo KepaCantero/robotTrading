@@ -20,16 +20,13 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 os.environ['CUDA_VISIBLE_DEVICES'] = ''
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-import asyncio
 import gc
-import hashlib
 import json
 import logging
 import subprocess
 import sys
 import uuid
 from datetime import datetime
-from decimal import Decimal
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -47,7 +44,6 @@ from app.backtesting.models import BacktestConfig, BacktestResult
 from app.domain.strategies.factory import StrategyFactory
 from app.domain.strategies.momentum import MomentumStrategy
 from app.domain.strategies.mean_reversion import MeanReversionStrategy
-from app.domain.strategies.pairs_trading import PairsTrading
 from app.engines.strategy_engines import (
     BreakoutStrategyEngine,
     TrendFollowingStrategyEngine,

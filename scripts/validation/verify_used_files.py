@@ -5,10 +5,8 @@ Checks: imports, string references, config files, entry points.
 """
 
 import ast
-import json
-import re
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
+from typing import List, Set, Tuple
 
 
 def get_all_python_files() -> Set[Path]:

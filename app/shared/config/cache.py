@@ -13,7 +13,6 @@ import time
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from app.shared.config.protocols import ConfigCache
 
 logger = logging.getLogger(__name__)
 

@@ -14,7 +14,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 
 from app.backtesting.reports.baseline_optimization_reporter import (
     BaselineOptimizationReporter,

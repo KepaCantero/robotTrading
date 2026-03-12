@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, f1_score, mean_squared_error, r2_score
+from sklearn.metrics import accuracy_score, f1_score
 
 from app.backtesting.validation.purged_kfold import (
     PurgedKFold,

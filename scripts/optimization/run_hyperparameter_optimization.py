@@ -7,7 +7,7 @@ Ejecuta múltiples backtests variando parámetros para encontrar la configuraci�
 import logging
 import sys
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 
 # Agregar raíz del proyecto al path

@@ -16,7 +16,6 @@ import logging
 import threading
 import time
 from collections import defaultdict
-from typing import Any
 
 from app.shared.audit import AuditAction, AuditLogger, get_audit_logger
 

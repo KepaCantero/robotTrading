@@ -15,15 +15,12 @@ from sklearn.linear_model import LinearRegression
 # Import the new modules
 from app.backtesting.validation.cross_sectional_consistency import (
     CrossSectionalConsistencyChecker,
-    ConsistencyLevel,
 )
 from app.backtesting.validation.bias_variance_analysis import (
     BiasVarianceAnalyzer,
-    ModelComplexityLevel,
 )
 from app.backtesting.validation.feature_explosion_validator import (
     FeatureExplosionValidator,
-    FeatureExplosionLevel,
 )
 
 

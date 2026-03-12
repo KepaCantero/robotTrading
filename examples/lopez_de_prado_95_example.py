@@ -41,7 +41,6 @@ from app.backtesting.labeling import (
     MetaBetSizingConfig,
     # Concurrent Training
     ConcurrentModelTrainer,
-    train_models_concurrent,
 )
 
 from app.backtesting.feature_engineering import (

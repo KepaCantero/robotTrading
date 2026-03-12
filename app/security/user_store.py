@@ -18,7 +18,6 @@ import hmac
 import logging
 import os
 import threading
-from typing import Any
 
 from app.shared.config.environment_config import get_config
 

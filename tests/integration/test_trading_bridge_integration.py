@@ -486,7 +486,6 @@ class TestProtocolCompliance:
 
     def test_implements_itradeexecutor(self, bridge_adapter):
         """Test that TradingBridgeAdapter implements ITradeExecutor."""
-        from app.core.protocols import ITradeExecutor
 
         # Check all required methods exist
         assert hasattr(bridge_adapter, "execute_order")

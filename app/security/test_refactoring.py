@@ -415,12 +415,8 @@ def test_solid_principles():
     print("="*70)
 
     from app.security.interfaces import (
-        AuthAttemptTrackerProtocol,
-        JWTTokenManagerProtocol,
         UserStoreProtocol,
     )
-    from app.security.user import User, UserRoles
-    from app.security.user_store import UserStore
 
     # SRP: Single Responsibility Principle
     print("✓ SRP: Each module has a single responsibility")
@@ -473,7 +469,6 @@ def test_metrics():
     print("REFACTORING METRICS")
     print("="*70)
 
-    import os
 
     # Original file
     original_file = "/Users/kepa.cantero/Projects/algoTrading/app/security/auth.py"

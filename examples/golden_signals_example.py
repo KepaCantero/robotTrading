@@ -19,7 +19,6 @@ The script will:
 import asyncio
 import random
 import time
-from datetime import datetime
 
 from app.sre.monitoring import (
     get_golden_signals_monitor,

@@ -5,7 +5,6 @@ Validates tool outputs after execution
 """
 import json
 import sys
-from pathlib import Path
 
 
 def main():

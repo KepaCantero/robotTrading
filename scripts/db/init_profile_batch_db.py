@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.backtesting.profile_batch_backtester import Base, ProfileResultDB
+from app.backtesting.profile_batch_backtester import Base
 
 
 def init_database(db_url: str, drop_existing: bool = False):

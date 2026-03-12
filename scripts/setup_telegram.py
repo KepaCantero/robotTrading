@@ -12,7 +12,6 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from app.services.alerting_system.telegram_helper import (
-    TelegramBotHelper,
     setup_telegram_bot_interactive,
 )
 

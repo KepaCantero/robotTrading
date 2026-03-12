@@ -15,7 +15,6 @@ with real OrderManager and RiskGates (not mocked).
 
 import pytest
 from decimal import Decimal
-from datetime import datetime, timezone
 
 from app.services.execution.order_manager_adapter import OrderManagerAdapter
 
@@ -538,7 +537,6 @@ class TestProtocolCompliance:
 
     def test_implements_itradeexecutor(self, order_adapter):
         """Test that OrderManagerAdapter implements ITradeExecutor."""
-        from app.core.protocols import ITradeExecutor
 
         # Check all required methods exist
         assert hasattr(order_adapter, "execute_order")

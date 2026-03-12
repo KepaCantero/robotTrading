@@ -10,7 +10,6 @@ Usage:
 """
 
 from decimal import Decimal
-from datetime import datetime, time
 
 from app.simulation.order_book import (
     create_limit_order_book,

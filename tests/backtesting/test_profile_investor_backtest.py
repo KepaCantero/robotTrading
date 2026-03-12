@@ -19,7 +19,6 @@ import sys
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List
 
 # Configurar path antes de imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))

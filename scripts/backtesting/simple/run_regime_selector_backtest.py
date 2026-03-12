@@ -13,9 +13,7 @@ which automatically adapts to market conditions:
 This is Option B from the strategy analysis - using an adaptive strategy.
 """
 
-import asyncio
 import logging
-import os
 import sys
 from datetime import datetime
 from decimal import Decimal

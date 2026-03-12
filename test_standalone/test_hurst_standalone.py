@@ -10,16 +10,12 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-import numpy as np
-import pandas as pd
-import pytest
 
 # Direct import to avoid conftest.py
 from app.services.hurst_exponent_analyzer import (
     HurstExponentAnalyzer,
     MarketRegime,
     StrategyRecommendation,
-    HurstResult,
 )
 
 

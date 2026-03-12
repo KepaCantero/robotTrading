@@ -4,7 +4,6 @@ Script to count all Python files in the app/ directory.
 Usage: python scripts/count_app_files.py
 """
 
-import os
 from pathlib import Path
 from typing import Dict, List
 

@@ -4,7 +4,6 @@ Pydantic V2 Migration Script
 Testing Reviewer Audit - Phase 1: Critical Fixes
 """
 
-import os
 import re
 from pathlib import Path
 

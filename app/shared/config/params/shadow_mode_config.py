@@ -10,7 +10,6 @@ TASK-24: SRP Refactoring
 
 import logging
 from decimal import Decimal
-from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator
 

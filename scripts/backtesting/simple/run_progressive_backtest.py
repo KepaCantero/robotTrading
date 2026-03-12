@@ -26,9 +26,8 @@ import subprocess
 import sys
 import time
 from datetime import datetime, timedelta
-from decimal import Decimal
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Tuple
 
 # Añadir proyecto al path
 # scripts/backtesting/simple/ -> scripts/backtesting/ -> scripts/ -> project_root

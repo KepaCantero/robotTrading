@@ -12,11 +12,9 @@ Compliance: Ernest Chan Rule 2.2 - Hurst Exponent Analysis
 """
 
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List
+from datetime import datetime
 
 import numpy as np
-import pandas as pd
 import yfinance as yf
 
 # Import Hurst Exponent Analyzer

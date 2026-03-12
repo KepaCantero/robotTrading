@@ -4,7 +4,7 @@ Unit tests for Daily Reconciliation Service (R16)
 Tests for the daily position reconciliation between broker and internal records.
 """
 
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -436,8 +436,6 @@ def test_imports():
     from app.services.reconciliation import (
         DailyReconciler,
         DiscrepancyDetector,
-        Position,
-        ReconciliationResult,
     )
 
     assert DailyReconciler is not None
