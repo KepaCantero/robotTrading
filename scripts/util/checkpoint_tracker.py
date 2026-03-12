@@ -13,14 +13,12 @@ Usage:
     python scripts/checkpoint_tracker.py batch core   # Process entire core batch
 """
 
-import ast
 import json
-import re
 import sys
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional
 
 
 @dataclass

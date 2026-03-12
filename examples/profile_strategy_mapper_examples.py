@@ -10,7 +10,6 @@ from decimal import Decimal
 
 from app.core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
 from app.services.profile_driven_trading.profile_strategy_mapper import (
-    ProfileStrategyMapper,
     create_profile_mapper,
     map_profile_to_strategies,
     get_capital_tier,

@@ -20,16 +20,12 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Protocol
+from typing import Any, Dict, Iterator, List, Optional, Protocol
 
 from app.domain.entities.position import Position, PositionSide, PositionStatus
 from app.domain.value_objects.capital import Capital
 from app.domain.value_objects.money import Money
 from app.domain.value_objects.risk_parameters import RiskParameters
-
-# Avoid runtime import - only import for type hints
-if TYPE_CHECKING:
-    from app.shared.config.centralized_config import CentralizedConfig
 
 logger = logging.getLogger(__name__)
 

@@ -17,7 +17,6 @@ project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 # IMPORTANT: Import logging_config FIRST to ensure all warnings/errors go to files
-from app.core.logging_config import setup_file_logging
 
 # Logging is already configured by logging_config module
 logger = logging.getLogger(__name__)

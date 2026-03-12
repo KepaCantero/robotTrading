@@ -20,7 +20,6 @@ except ImportError:
     print("❌ yahoo_fin not installed. Run: pip install yahoo-fin requests-html")
     sys.exit(1)
 
-import pandas as pd
 
 def download_symbol(symbol: str, years: int = 10, output_dir: str = "data/historical", delay: float = 3.0):
     """Download single symbol using yahoo_fin."""

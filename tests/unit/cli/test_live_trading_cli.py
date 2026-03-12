@@ -176,7 +176,6 @@ async def test_live_trading_cli_show_positions(mock_broker):
 async def test_live_trading_cli_place_order(mock_broker):
     """Test LiveTradingCLI place_order method."""
     from start_live_trading import LiveTradingCLI
-    from decimal import Decimal
 
     with patch('start_live_trading.get_broker_connector', return_value=mock_broker), \
          patch('start_live_trading.get_compliance_engine') as mock_get_engine:

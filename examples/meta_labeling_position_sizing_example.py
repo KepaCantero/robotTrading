@@ -16,7 +16,6 @@ Based on:
 """
 
 import numpy as np
-import pandas as pd
 from decimal import Decimal
 
 from app.services.position_sizing_engine import (

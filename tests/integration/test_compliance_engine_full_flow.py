@@ -14,7 +14,6 @@ the system with real components (not mocks).
 
 import pytest
 from decimal import Decimal
-from datetime import datetime, timezone
 
 from app.domain.services.compliance.compliance_engine import ComplianceEngine, ComplianceConfig
 from app.services.execution.execution_adapter import ExecutionEngineAdapter
@@ -465,7 +464,6 @@ class TestProtocolCompliance:
 
     def test_execution_adapter_protocol_compliance(self, execution_adapter):
         """Test ExecutionEngineAdapter implements ITradeExecutor."""
-        from app.core.protocols import ITradeExecutor
 
         # Check all required methods exist
         assert hasattr(execution_adapter, "execute_order")
@@ -483,7 +481,6 @@ class TestProtocolCompliance:
 
     def test_order_manager_adapter_protocol_compliance(self, order_manager_adapter):
         """Test OrderManagerAdapter implements ITradeExecutor."""
-        from app.core.protocols import ITradeExecutor
 
         # Check all required methods exist
         assert hasattr(order_manager_adapter, "execute_order")
@@ -494,7 +491,6 @@ class TestProtocolCompliance:
 
     def test_trading_bridge_adapter_protocol_compliance(self, trading_bridge_adapter):
         """Test TradingBridgeAdapter implements ITradeExecutor."""
-        from app.core.protocols import ITradeExecutor
 
         # Check all required methods exist
         assert hasattr(trading_bridge_adapter, "execute_order")

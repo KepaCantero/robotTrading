@@ -13,7 +13,6 @@ sys.path.insert(0, str(project_root))
 
 import logging
 from decimal import Decimal
-from datetime import datetime, timedelta
 from app.domain.strategies.momentum_modular.automated_backtest import run_automated_backtest
 
 # Configurar logging

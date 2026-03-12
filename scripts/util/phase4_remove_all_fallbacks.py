@@ -5,8 +5,6 @@ Phase 4: Complete Fallback Elimination Script
 This script removes ALL fallback patterns from the codebase.
 """
 
-import os
-import re
 from pathlib import Path
 
 # Project root

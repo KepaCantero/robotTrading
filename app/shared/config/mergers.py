@@ -11,7 +11,6 @@ import logging
 from copy import deepcopy
 from typing import Any, Dict
 
-from app.shared.config.protocols import ConfigMerger
 
 logger = logging.getLogger(__name__)
 

@@ -5,7 +5,6 @@ Script para comparar todos los reportes de trading generados.
 
 import json
 from pathlib import Path
-from datetime import datetime
 from typing import Dict, List
 
 

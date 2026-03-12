@@ -7,10 +7,8 @@ Tibshirani, and Friedman.
 """
 
 import numpy as np
-import pandas as pd
-from sklearn.datasets import make_regression, make_classification
+from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
-from sklearn.ensemble import RandomForestRegressor
 from sklearn.tree import DecisionTreeRegressor
 
 # Import new ESL-compliant modules
@@ -32,9 +30,6 @@ from app.strategies.momentum_modular.learning.regularization import (
 
 from app.backtesting.model_selection import (
     ModelSelector,
-    compute_criteria,
-    select_model_by_aic,
-    select_model_by_bic,
 )
 
 from app.backtesting.ensemble_methods import (

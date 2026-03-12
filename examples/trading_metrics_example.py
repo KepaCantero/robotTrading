@@ -24,7 +24,6 @@ from datetime import datetime, timedelta
 from app.sre.monitoring import (
     get_trading_metrics_monitor,
     TradingMetricsConfig,
-    TradingHealthStatus,
 )
 
 

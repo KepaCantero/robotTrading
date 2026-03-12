@@ -47,7 +47,6 @@ def example_using_facade():
 def example_using_config_loader():
     """Example using BacktestConfigLoader for configuration management."""
     from app.backtesting.core import BacktestConfigLoader
-    from decimal import Decimal
 
     # Load configuration
     config_path = "config/backtesting/comprehensive_backtest.yaml"

@@ -6,13 +6,10 @@ baseline vs optimization testing across investor profiles.
 """
 
 import logging
-from datetime import datetime
 from decimal import Decimal
-from pathlib import Path
 
 from app.backtesting.profile_batch_backtester import (
     ProfileBatchBacktester,
-    create_profile_batch_backtester,
 )
 from app.core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
 

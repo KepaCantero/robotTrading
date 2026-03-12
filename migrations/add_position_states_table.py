@@ -10,7 +10,7 @@ Run: python -m migrations.add_position_states_table
 import logging
 from sqlalchemy import text
 
-from app.database import Base, db_manager
+from app.database import db_manager
 from app.database.models import PositionState
 
 logger = logging.getLogger(__name__)

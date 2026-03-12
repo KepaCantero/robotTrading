@@ -29,20 +29,11 @@ logger = logging.getLogger(__name__)
 async def main():
     """Run error budget demonstration."""
     from app.sre.error_budgets import (
-        get_error_budget_manager,
-        ErrorBudgetConfig,
-        BudgetPeriod,
-        SLOTracker,
         SLIMetric,
         SLIMetricType,
-        BudgetAlertManager,
-        AlertRecipients,
-        DevelopmentGate,
-        DevelopmentGateConfig,
     )
     from app.sre.error_budgets.integration import (
         get_error_budget_integration,
-        create_error_budget_router,
     )
 
     logger.info("=" * 80)

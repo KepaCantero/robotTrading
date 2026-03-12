@@ -9,10 +9,9 @@ This version includes:
 - Domain-specific rules based on file location
 """
 
-import os
 import ast
 from pathlib import Path
-from typing import Dict, List, Set, Optional
+from typing import Dict, List, Set
 from dataclasses import dataclass, field
 
 

@@ -3,13 +3,11 @@ Alembic Configuration for Database Migrations
 TASK-6: Configuración de base de datos
 """
 
-import os
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
 
 from alembic import context
-from alembic.config import Config
 from app.core.environment_config import get_config
 # Import your models here
 from app.database import Base

@@ -5,11 +5,10 @@ Live Dashboard for GAP Audit Progress
 Real-time monitoring of batch processing, file status, and metrics.
 """
 import json
-import os
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 from rich.console import Console
 from rich.layout import Layout

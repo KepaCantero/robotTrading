@@ -11,7 +11,7 @@ import asyncio
 import pytest
 from decimal import Decimal
 from datetime import datetime
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
+from unittest.mock import Mock, AsyncMock, patch
 
 from app.domain.services.compliance.compliance_engine import ComplianceEngine
 

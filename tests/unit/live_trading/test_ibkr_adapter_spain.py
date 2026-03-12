@@ -5,8 +5,7 @@ Tests the IBrokerAdapter Protocol implementation for Spanish traders.
 """
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
-from decimal import Decimal
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from app.services.live_trading.broker_adapters.ibkr_adapter_spain import (
     IBKRSpainAdapter,

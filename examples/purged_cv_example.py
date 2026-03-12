@@ -17,7 +17,7 @@ Reference:
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import accuracy_score
 
 from app.backtesting.validation.cross_validation import (
     PurgedKFold,
@@ -27,7 +27,6 @@ from app.backtesting.validation.cross_validation import (
 from app.backtesting.labeling.triple_barrier import (
     TripleBarrierConfig,
     TripleBarrierLabeler,
-    triple_barrier_method,
 )
 
 

@@ -41,7 +41,6 @@ from __future__ import annotations
 import gc
 import json
 import logging
-import math
 import random
 import sys
 import uuid
@@ -50,10 +49,9 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Protocol
 
 import numpy as np
-import pandas as pd
 import yaml
 
 # Thread safety configuration (CRITICAL - must be BEFORE imports)
@@ -72,7 +70,6 @@ project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from app.backtesting.comprehensive_backtest_runner import ComprehensiveBacktestRunner
-from app.backtesting.data_loader import DataLoader
 from app.core.models.input_profile import (
     InputProfile,
     ObjectivoInversion,

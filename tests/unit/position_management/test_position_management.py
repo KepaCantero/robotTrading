@@ -9,11 +9,8 @@ from decimal import Decimal
 
 from app.services.position_management import (
     TrailingStopManager,
-    TrailingStopResult,
     PartialTakeProfit,
-    ProfitTarget,
     PyramidingManager,
-    PyramidingResult,
 )
 
 

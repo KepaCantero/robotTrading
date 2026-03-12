@@ -18,7 +18,6 @@ from decimal import Decimal
 from typing import List
 
 import numpy as np
-import pytest
 
 from app.backtesting.test_summary import TestSummaryReporter
 from app.shared.utils.decimal_utils import round_price

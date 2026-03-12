@@ -6,9 +6,8 @@ Tests the adapter that bridges OrderManager to ITradeExecutor protocol.
 
 import pytest
 from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock, Mock
+from unittest.mock import AsyncMock, MagicMock
 
-from app.core.protocols import ITradeExecutor
 from app.domain.services.execution.order_manager_adapter import (
     OrderManagerAdapter,
     get_order_manager_adapter,

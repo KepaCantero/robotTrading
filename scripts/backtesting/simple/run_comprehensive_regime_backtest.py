@@ -10,12 +10,11 @@ This script performs:
 """
 
 import logging
-import os
 import sys
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 # Add project root to path
 # scripts/backtesting/simple/ -> scripts/backtesting/ -> scripts/ -> project_root
