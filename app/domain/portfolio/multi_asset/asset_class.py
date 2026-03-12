@@ -7,6 +7,7 @@ used to represent and analyze different asset classes in a multi-asset portfolio
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -18,6 +19,8 @@ import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.shared.config.centralized_config import get_config
+
+logger = logging.getLogger(__name__)
 
 
 def _get_asset_config(attr_name: str, default_value: float) -> float:
@@ -34,8 +37,11 @@ def _get_asset_config(attr_name: str, default_value: float) -> float:
     try:
         config = get_config()
         return float(getattr(config.trading, attr_name, default_value))
-    except (AttributeError, ValueError, TypeError):
-        # Use default value without logging - these are fallback values
+    except (AttributeError, ValueError, TypeError) as e:
+        logger.debug(
+            "Config attribute not found, using default",
+            extra={"attr_name": attr_name, "default_value": default_value, "error": str(e)}
+        )
         return default_value
 
 
@@ -596,6 +602,7 @@ class AssetClass:
         Raises:
             ValueError: If configuration is invalid
         """
+        logger.debug("Validating asset class", extra={"name": self.name, "type": self.type.value})
         # Check name
         if not self.name or len(self.name.strip()) == 0:
             raise ValueError("Asset class name cannot be empty")
@@ -641,6 +648,7 @@ class AssetClass:
         if self.metrics:
             self.metrics.validate()
 
+        logger.debug("Asset class validation passed", extra={"name": self.name})
         return True
 
     @property
@@ -663,6 +671,16 @@ class AssetClass:
         """
         if risk_free_rate is None:
             risk_free_rate = _get_asset_config("portfolio_risk_free_rate", 0.02)
+
+        logger.debug(
+            "Calculating Sharpe ratio",
+            extra={
+                "name": self.name,
+                "expected_return": float(self.expected_return),
+                "volatility": float(self.volatility),
+                "risk_free_rate": risk_free_rate
+            }
+        )
 
         rf = Decimal(str(risk_free_rate))
         if self.volatility == 0:

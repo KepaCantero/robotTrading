@@ -7,11 +7,14 @@ identifying liquid assets, and retrieving asset rankings.
 # mypy: ignore-errors
 
 import asyncio
+import logging
 from datetime import datetime
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from requests.exceptions import HTTPError, RequestException
+
+logger = logging.getLogger(__name__)
 
 from app.domain.models.assets import AssetClass, AssetFilter, Exchange
 from app.services.asset_identification import (
@@ -27,6 +30,7 @@ async def get_assets_overview(
     service: AssetIdentificationService = Depends(get_asset_identification_service),
 ):
     """Get overview of all asset universes."""
+    logger.debug("Getting assets overview")
     try:
         overview = {}
 
@@ -34,9 +38,14 @@ async def get_assets_overview(
             summary = await service.get_universe_summary(asset_class)
             overview[asset_class.value] = summary
 
+        logger.info("Assets overview retrieved", extra={"asset_classes": len(overview)})
         return {"success": True, "overview": overview, "timestamp": datetime.utcnow()}
 
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        logger.error(
+            "Error getting assets overview",
+            extra={"error": str(e), "error_type": type(e).__name__}
+        )
         raise HTTPException(status_code=500, detail=f"Error getting assets overview: {str(e)}")
 
 
@@ -47,9 +56,17 @@ async def get_liquid_assets(
     service: AssetIdentificationService = Depends(get_asset_identification_service),
 ):
     """Get top liquid assets for a specific asset class."""
+    logger.debug(
+        "Getting liquid assets",
+        extra={"asset_class": asset_class.value, "limit": limit}
+    )
     try:
         assets = await service.get_top_liquid_assets(asset_class, limit)
 
+        logger.info(
+            "Liquid assets retrieved",
+            extra={"asset_class": asset_class.value, "count": len(assets)}
+        )
         return {
             "success": True,
             "asset_class": asset_class.value,
@@ -74,6 +91,10 @@ async def get_liquid_assets(
         }
 
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        logger.error(
+            "Error getting liquid assets",
+            extra={"asset_class": asset_class.value, "error": str(e), "error_type": type(e).__name__}
+        )
         raise HTTPException(status_code=500, detail=f"Error getting liquid assets: {str(e)}")
 
 
@@ -105,12 +126,15 @@ async def get_asset_details(
     service: AssetIdentificationService = Depends(get_asset_identification_service),
 ):
     """Get detailed asset information by symbol."""
+    logger.debug("Getting asset details", extra={"symbol": symbol})
     try:
         asset = await service.get_asset_details(symbol.upper())
 
         if not asset:
+            logger.warning("Asset not found", extra={"symbol": symbol})
             raise HTTPException(status_code=404, detail=f"Asset {symbol} not found")
 
+        logger.info("Asset details retrieved", extra={"symbol": symbol})
         return {
             "success": True,
             "asset": {
@@ -133,6 +157,10 @@ async def get_asset_details(
         }
 
     except (ValueError, TypeError, KeyError, AttributeError) as e:
+        logger.error(
+            "Error getting asset details",
+            extra={"symbol": symbol, "error": str(e), "error_type": type(e).__name__}
+        )
         raise HTTPException(status_code=500, detail=f"Error getting asset details: {str(e)}")
 
 
@@ -281,6 +309,10 @@ async def identify_liquid_assets(
     limit: int = Query(20, ge=1, le=100, description="Number of assets to identify"),
 ):
     """Identify and rank liquid assets for a specific asset class."""
+    logger.debug(
+        "Identifying liquid assets",
+        extra={"asset_class": asset_class.value, "limit": limit}
+    )
     try:
         # Identify liquid assets
         assets = await service.identify_liquid_assets(asset_class, limit)
@@ -288,6 +320,10 @@ async def identify_liquid_assets(
         # Update universe in background
         background_tasks.add_task(service.update_asset_universe, asset_class, assets)
 
+        logger.info(
+            "Liquid assets identified",
+            extra={"asset_class": asset_class.value, "count": len(assets)}
+        )
         return {
             "success": True,
             "asset_class": asset_class.value,
@@ -310,6 +346,10 @@ async def identify_liquid_assets(
         }
 
     except (ValueError, TypeError, KeyError, AttributeError) as e:
+        logger.error(
+            "Error identifying liquid assets",
+            extra={"asset_class": asset_class.value, "error": str(e), "error_type": type(e).__name__}
+        )
         raise HTTPException(status_code=500, detail=f"Error identifying liquid assets: {str(e)}")
 
 
@@ -423,6 +463,7 @@ async def get_exchanges():
 @router.get("/health", response_model=Dict[str, Any])
 async def health_check():
     """Health check endpoint for assets service."""
+    logger.debug("Health check requested")
     try:
         return {
             "success": True,
@@ -432,6 +473,7 @@ async def health_check():
         }
 
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        logger.error("Health check failed", extra={"error": str(e)})
         raise HTTPException(status_code=500, detail=f"Health check failed: {str(e)}")
 
 

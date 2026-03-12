@@ -13,9 +13,17 @@ scripts/
 ├── utils.py                    # CLI unificado
 │
 ├── backtesting/                # Scripts de backtesting
-│   ├── run_comprehensive_backtest.py
-│   ├── run_all_backtests.py
-│   └── ...
+│   ├── README.md               # Documentación detallada de backtesting
+│   ├── simple/                 # Backtests sin optimización
+│   │   ├── run_simple_backtest.py
+│   │   ├── run_baseline_backtest.py
+│   │   ├── run_deep_learning_backtest.py
+│   │   └── ...
+│   └── optimization/           # Backtests con optimización
+│       ├── run_comprehensive_backtest.py
+│       ├── run_all_backtests.py
+│       ├── run_profile_batch_backtester.py
+│       └── ...
 │
 ├── validation/                 # Scripts de validación
 │   └── validate_file_complete.sh
@@ -54,27 +62,35 @@ python scripts/utils.py <comando> [argumentos]
 
 ## 📊 Scripts de Backtesting
 
-### run_comprehensive_backtest.py
+Ver documentación completa en `scripts/backtesting/README.md`
 
-**Propósito:** Ejecutar backtest completo con todas las estrategias
+### Simple Backtests (sin optimización)
 
-**Uso:**
+**run_simple_backtest.py** - Backtest básico de verificación
 ```bash
-python scripts/backtesting/run_comprehensive_backtest.py
+python scripts/backtesting/simple/run_simple_backtest.py
 ```
 
-**Output:**
-- Reporte de backtest
-- Métricas de rendimiento
-- Archivo de resultados JSON
-
-### run_all_backtests.py
-
-**Propósito:** Ejecutar TODOS los backtests
-
-**Uso:**
+**run_baseline_backtest.py** - Backtest base sin ML/optimización
 ```bash
-python scripts/backtesting/run_all_backtests.py
+python scripts/backtesting/simple/run_baseline_backtest.py --symbol AAPL
+```
+
+### Optimization Backtests (con optimización)
+
+**run_comprehensive_backtest.py** - Pipeline completo con múltiples optimizaciones
+```bash
+python scripts/backtesting/optimization/run_comprehensive_backtest.py
+```
+
+**run_all_backtests.py** - Ejecutar TODOS los backtests con optimización
+```bash
+python scripts/backtesting/optimization/run_all_backtests.py
+```
+
+**run_profile_batch_backtester.py** - Batch de 180 perfiles con Bayesian optimization
+```bash
+python scripts/backtesting/optimization/run_profile_batch_backtester.py --all --parallel
 ```
 
 ---

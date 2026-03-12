@@ -9,10 +9,13 @@ between broker and internal records.
 Uses centralized configuration for all tolerance thresholds.
 """
 
+import logging
 from decimal import Decimal
 from typing import Optional
 
 from app.shared.config.centralized_config import get_config
+
+logger = logging.getLogger(__name__)
 
 
 class DiscrepancyDetector:
@@ -51,6 +54,15 @@ class DiscrepancyDetector:
             str(getattr(config.trading, 'reconciliation_value_tolerance_pct', 0.005))
         )
 
+        logger.info(
+            "DiscrepancyDetector initialized",
+            extra={
+                "quantity_tolerance": str(self.QUANTITY_TOLERANCE),
+                "price_tolerance_pct": str(self.PRICE_TOLERANCE_PCT),
+                "value_tolerance_pct": str(self.VALUE_TOLERANCE_PCT),
+            }
+        )
+
     def detect_position_mismatch(
         self, broker_qty: Decimal, internal_qty: Decimal
     ) -> Optional[dict]:
@@ -74,6 +86,10 @@ class DiscrepancyDetector:
             )
             # Returns: discrepancy dict (difference of 2 > tolerance of 1)
         """
+        logger.debug(
+            "detect_position_mismatch called",
+            extra={"broker_qty": str(broker_qty), "internal_qty": str(internal_qty)}
+        )
         diff = abs(broker_qty - internal_qty)
 
         if diff > self.QUANTITY_TOLERANCE:
@@ -85,7 +101,7 @@ class DiscrepancyDetector:
             else:
                 severity = "MEDIUM"
 
-            return {
+            result = {
                 "type": "QUANTITY_MISMATCH",
                 "broker_qty": str(broker_qty),
                 "internal_qty": str(internal_qty),
@@ -96,6 +112,11 @@ class DiscrepancyDetector:
                 "tolerance": str(self.QUANTITY_TOLERANCE),
                 "severity": severity,
             }
+            logger.warning(
+                "Quantity mismatch detected",
+                extra={"discrepancy_type": "QUANTITY_MISMATCH", "severity": severity, "difference": str(diff)}
+            )
+            return result
 
         return None
 
@@ -122,10 +143,18 @@ class DiscrepancyDetector:
             )
             # Returns: discrepancy dict (0.5% > 0.1% tolerance)
         """
+        logger.debug(
+            "detect_price_mismatch called",
+            extra={"broker_price": str(broker_price), "internal_price": str(internal_price)}
+        )
         # Handle zero price case
         if internal_price == 0:
             if broker_price == 0:
                 return None  # Both zero - no discrepancy
+            logger.warning(
+                "Price mismatch detected: internal price is zero",
+                extra={"discrepancy_type": "PRICE_MISMATCH", "broker_price": str(broker_price)}
+            )
             return {
                 "type": "PRICE_MISMATCH",
                 "broker_price": str(broker_price),
@@ -148,7 +177,7 @@ class DiscrepancyDetector:
             else:
                 severity = "MEDIUM"
 
-            return {
+            result = {
                 "type": "PRICE_MISMATCH",
                 "broker_price": str(broker_price),
                 "internal_price": str(internal_price),
@@ -157,6 +186,11 @@ class DiscrepancyDetector:
                 "tolerance": "0.1%",
                 "severity": severity,
             }
+            logger.warning(
+                "Price mismatch detected",
+                extra={"discrepancy_type": "PRICE_MISMATCH", "severity": severity, "diff_pct": f"{diff_pct * 100:.3f}%"}
+            )
+            return result
 
         return None
 
@@ -288,6 +322,13 @@ class DiscrepancyDetector:
                 internal_positions={"SAN.MC": {"quantity": Decimal("98"), ...}}
             )
         """
+        logger.info(
+            "detect_all_discrepancies called",
+            extra={
+                "broker_positions_count": len(broker_positions),
+                "internal_positions_count": len(internal_positions),
+            }
+        )
         result = {
             "quantity_mismatches": [],
             "price_mismatches": [],
@@ -342,6 +383,17 @@ class DiscrepancyDetector:
             + len(result["price_mismatches"])
             + len(result["value_mismatches"])
             + len(result["missing_positions"])
+        )
+
+        logger.info(
+            "Discrepancy detection completed",
+            extra={
+                "total_discrepancies": result["total_discrepancies"],
+                "quantity_mismatches": len(result["quantity_mismatches"]),
+                "price_mismatches": len(result["price_mismatches"]),
+                "value_mismatches": len(result["value_mismatches"]),
+                "missing_positions": len(result["missing_positions"]),
+            }
         )
 
         return result

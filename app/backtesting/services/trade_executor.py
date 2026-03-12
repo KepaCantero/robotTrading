@@ -95,11 +95,16 @@ class TradeExecutor:
 
         # Initialize validators
         self.trading_validator = TradingValidator()
+
+        # Get liquidity configuration from CentralizedConfig
+        from app.shared.config.centralized_config import get_config
+
+        backtest_config = get_config().backtesting
         self.liquidity_validator = LiquidityValidator(
-            enable_partial_fills=True,
-            max_order_pct_of_volume=Decimal("0.10"),
-            warning_order_pct_of_volume=Decimal("0.05"),
-            partial_fill_pct=Decimal("0.05"),
+            enable_partial_fills=backtest_config.liquidity_enable_partial_fills,
+            max_order_pct_of_volume=backtest_config.liquidity_max_order_pct_of_volume,
+            warning_order_pct_of_volume=backtest_config.liquidity_warning_order_pct_of_volume,
+            partial_fill_pct=backtest_config.liquidity_partial_fill_pct,
         )
 
     def execute_buy_signal(
@@ -489,7 +494,11 @@ class TradeExecutor:
             try:
                 return Decimal(str(signal.metadata["commission_per_trade_pct"]))
             except (ValueError, TypeError, InvalidOperation):
-                pass
+                # Invalid commission value in metadata - will fall back to strategy or default
+                logger.debug(
+                    f"Invalid commission_per_trade_pct in signal metadata: "
+                    f"{signal.metadata.get('commission_per_trade_pct')}"
+                )
 
         if self.strategy and hasattr(self.strategy, "commission_per_trade_pct"):
             return self.strategy.commission_per_trade_pct
@@ -504,7 +513,11 @@ class TradeExecutor:
             try:
                 return Decimal(str(signal.metadata["slippage_per_trade_pct"]))
             except (ValueError, TypeError, InvalidOperation):
-                pass
+                # Invalid slippage value in metadata - will fall back to strategy or default
+                logger.debug(
+                    f"Invalid slippage_per_trade_pct in signal metadata: "
+                    f"{signal.metadata.get('slippage_per_trade_pct')}"
+                )
 
         if self.strategy and hasattr(self.strategy, "slippage_per_trade_pct"):
             return self.strategy.slippage_per_trade_pct
@@ -590,7 +603,11 @@ class TradeExecutor:
             try:
                 average_volume = Decimal(str(market_data.volume))
             except (ValueError, TypeError):
-                pass
+                # Invalid or missing volume data - TransactionCostModel will handle gracefully
+                logger.debug(
+                    f"Could not extract volume from market_data for {symbol}: "
+                    f"volume={getattr(market_data, 'volume', None)}"
+                )
 
         return self.transaction_cost_model.calculate_costs(
             symbol=symbol,

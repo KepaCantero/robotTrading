@@ -2,7 +2,7 @@
 
 ## 1. Module Overview
 File: daily_reconciler.py
-Domain: General
+Domain: Compliance/Infrastructure
 Generated: 2026-03-09
 
 ## 2. Dependencies
@@ -81,6 +81,26 @@ Dependency Inversion: Depend on abstractions, not concretions. Use dependency in
 - [ ] Hash passwords with bcrypt/argon2
 
 ## 6. Trading Rules (from rules/trading/64-realistic-retail-trading-rules.md)
+
+### Applicable Rules
+
+#### R16
+Daily Reconciliation (reconcile broker vs internal positions daily, detect discrepancies within 0.1% price tolerance)
+
+- [ ] Implementation verified
+- [ ] Tests pass
+
+#### R14
+Data Quality Validation (check for missing/incorrect data before use, validate OHLCV relationships)
+
+- [ ] Implementation verified
+- [ ] Tests pass
+
+#### R15
+Complete Logging (log all trades, signals, decisions with timestamps, use append-only for audit)
+
+- [ ] Implementation verified
+- [ ] Tests pass
 
 ### General Compliance
 This file should comply with all applicable trading rules based on its functionality.

@@ -152,7 +152,18 @@ class BaseStrategyEngine(BaseStrategy, ABC):
         self.is_ensemble_component = False
         self.ensemble_weight = Decimal("1.0")  # Peso en ensemble (default: único engine)
 
-        logger.info(f"{self.__class__.__name__} initialized: {self.name}")
+        logger.info(
+            "BaseStrategyEngine initialized",
+            extra={
+                "strategy_name": self.name,
+                "strategy_class": self.__class__.__name__,
+                "learning_enabled": self.learning_enabled,
+                "data_engine_enabled": self.data_engine_enabled,
+                "context_engine_enabled": self.context_engine_enabled,
+                "portfolio_engine_enabled": self.portfolio_engine_enabled,
+                "risk_engine_enabled": self.risk_engine_enabled,
+            },
+        )
 
     # ===== Métodos abstractos adicionales =====
 
@@ -192,7 +203,12 @@ class BaseStrategyEngine(BaseStrategy, ABC):
         self.learning_engine = learning_engine
         self.learning_enabled = learning_engine is not None
         logger.info(
-            f"{self.__class__.__name__}: Learning Engine {'habilitado' if self.learning_enabled else 'deshabilitado'}"
+            "Learning Engine status changed",
+            extra={
+                "strategy_name": self.name,
+                "strategy_class": self.__class__.__name__,
+                "learning_enabled": self.learning_enabled,
+            },
         )
 
     def get_learning_prediction(
@@ -221,7 +237,12 @@ class BaseStrategyEngine(BaseStrategy, ABC):
             return prediction
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.warning(
-                f"{self.__class__.__name__}: Error obteniendo predicción de Learning Engine: {e}"
+                "Error obteniendo predicción de Learning Engine",
+                extra={
+                    "strategy_name": self.name,
+                    "strategy_class": self.__class__.__name__,
+                    "error_type": type(e).__name__,
+                },
             )
             return None
 
@@ -420,7 +441,13 @@ class BaseStrategyEngine(BaseStrategy, ABC):
         """
         self.data_engine = data_engine
         self.data_engine_enabled = True
-        logger.info(f"{self.__class__.__name__}: DataEngine configurado externamente")
+        logger.info(
+            "DataEngine configurado externamente",
+            extra={
+                "strategy_name": self.name,
+                "strategy_class": self.__class__.__name__,
+            },
+        )
 
     def set_context_engine(self, context_engine: Any) -> None:
         """
@@ -431,7 +458,13 @@ class BaseStrategyEngine(BaseStrategy, ABC):
         """
         self.context_engine = context_engine
         self.context_engine_enabled = True
-        logger.info(f"{self.__class__.__name__}: ContextEngine configurado externamente")
+        logger.info(
+            "ContextEngine configurado externamente",
+            extra={
+                "strategy_name": self.name,
+                "strategy_class": self.__class__.__name__,
+            },
+        )
 
     def set_portfolio_engine(self, portfolio_engine: Any) -> None:
         """
@@ -442,7 +475,13 @@ class BaseStrategyEngine(BaseStrategy, ABC):
         """
         self.portfolio_engine = portfolio_engine
         self.portfolio_engine_enabled = True
-        logger.info(f"{self.__class__.__name__}: PortfolioEngine configurado externamente")
+        logger.info(
+            "PortfolioEngine configurado externamente",
+            extra={
+                "strategy_name": self.name,
+                "strategy_class": self.__class__.__name__,
+            },
+        )
 
     def set_risk_engine(self, risk_engine: Any) -> None:
         """
@@ -453,7 +492,13 @@ class BaseStrategyEngine(BaseStrategy, ABC):
         """
         self.risk_engine = risk_engine
         self.risk_engine_enabled = True
-        logger.info(f"{self.__class__.__name__}: RiskEngine configurado externamente")
+        logger.info(
+            "RiskEngine configurado externamente",
+            extra={
+                "strategy_name": self.name,
+                "strategy_class": self.__class__.__name__,
+            },
+        )
 
     # ===== Métodos mejorados de generate_signals =====
 

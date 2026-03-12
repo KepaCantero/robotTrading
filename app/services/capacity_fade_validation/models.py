@@ -5,12 +5,15 @@ Data structures for capacity fade analysis and validation.
 Used to validate that strategy alpha remains sustainable as capital scales.
 """
 
+import logging
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 
 class FeasibilityDecision(Enum):
@@ -97,7 +100,7 @@ class CapacityFadeRequest(BaseModel):
 
     # Target deployment
     target_capital_usd: Decimal = Field(gt=Decimal("0"))
-    target_monthly_return_usd: Optional[Decimal] = None  # e.g., €800/month
+    target_monthly_return_usd: Optional[Decimal] = None  # e.g., EUR800/month
 
     # Average position size (for liquidity calculation)
     avg_position_size_usd: Decimal = Field(gt=Decimal("0"))
@@ -124,3 +127,20 @@ class CapacityFadeResponse(BaseModel):
     details: dict = Field(default_factory=dict)
 
     error_message: Optional[str] = None
+
+
+logger.debug(
+    "CapacityFadeValidation models loaded",
+    extra={
+        "component": "capacity_fade_validation_models",
+        "operation": "module_init",
+        "models": [
+            "FeasibilityDecision",
+            "LiquidityReport",
+            "CapacityFadeAnalysis",
+            "FeasibilityGate",
+            "CapacityFadeRequest",
+            "CapacityFadeResponse",
+        ],
+    }
+)

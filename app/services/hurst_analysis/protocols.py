@@ -12,10 +12,13 @@ the required methods automatically satisfies the protocol.
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, Protocol
 
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 # Use TYPE_CHECKING to avoid circular imports
 if TYPE_CHECKING:
@@ -98,3 +101,20 @@ class ChangeDetectorProtocol(Protocol):
     ) -> "RegimeChange | None":
         """Detect regime change for a symbol."""
         ...
+
+
+logger.debug(
+    "HurstAnalysis protocols loaded",
+    extra={
+        "component": "hurst_analysis_protocols",
+        "operation": "module_init",
+        "protocols": [
+            "HurstCalculator",
+            "RegimeClassifierProtocol",
+            "StrategyRecommenderProtocol",
+            "ConfidenceCalculatorProtocol",
+            "HistoricalTrackerProtocol",
+            "ChangeDetectorProtocol",
+        ],
+    }
+)

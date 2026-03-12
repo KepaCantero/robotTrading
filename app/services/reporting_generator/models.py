@@ -4,11 +4,14 @@ T9.1: ReportingGenerator - Models for performance reporting
 Generates comprehensive performance reports with visualizations and metrics.
 """
 
+import logging
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 
 class PerformanceMetric(BaseModel):
@@ -109,3 +112,19 @@ class PerformanceReport(BaseModel):
 
     # Error handling
     error_message: Optional[str] = Field(None, description="Error message if failed")
+
+
+logger.debug(
+    "ReportingGenerator models loaded",
+    extra={
+        "component": "reporting_generator_models",
+        "operation": "module_init",
+        "models": [
+            "PerformanceMetric",
+            "StrategyMetrics",
+            "AllocationSnapshot",
+            "ReportGenerationRequest",
+            "PerformanceReport",
+        ],
+    }
+)

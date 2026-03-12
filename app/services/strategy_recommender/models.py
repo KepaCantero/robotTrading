@@ -4,10 +4,13 @@ T6.1: StrategyRecommender - Models
 Data models for strategy recommendation requests and results.
 """
 
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Literal, Optional
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -83,3 +86,19 @@ class StrategyRecommendation:
     # Detailed analysis
     objective_weights: Optional[ObjectiveWeights] = None
     error_message: Optional[str] = None
+
+
+logger.debug(
+    "StrategyRecommender models loaded",
+    extra={
+        "component": "strategy_recommender_models",
+        "operation": "module_init",
+        "models": [
+            "ObjectiveWeights",
+            "StrategyScore",
+            "RecommendationSuggestion",
+            "StrategyRecommendationRequest",
+            "StrategyRecommendation",
+        ],
+    }
+)

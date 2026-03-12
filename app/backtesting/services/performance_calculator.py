@@ -13,9 +13,13 @@ from decimal import Decimal
 from typing import List, Optional
 
 from app.backtesting.models import BacktestConfig, PerformanceMetrics, Trade, TradeStatus
+from app.shared.config.centralized_config import get_config
 from app.shared.utils.decimal_utils import safe_mean, safe_variance
 
 logger = logging.getLogger(__name__)
+
+# Get centralized backtesting configuration
+_backtest_config = get_config().backtesting
 
 
 class PerformanceMetricsCalculator:
@@ -203,11 +207,11 @@ class PerformanceMetricsCalculator:
         # std_dev is very small but not zero, causing Sharpe to explode.
         # Minimum 15% annualized volatility is a reasonable floor for any trading strategy.
         # This prevents unrealistic Sharpe ratios when few trades have similar outcomes.
-        MIN_ANNUAL_VOLATILITY = Decimal("0.15")  # 15% minimum annualized volatility
+        MIN_ANNUAL_VOLATILITY = _backtest_config.min_annual_volatility
 
-        # Annualize (252 trading days)
-        annual_mean = mean_return * Decimal("252")
-        annual_std = std_dev * Decimal(str(math.sqrt(252)))
+        # Annualize using config trading days
+        annual_mean = mean_return * Decimal(str(_backtest_config.annual_trading_days))
+        annual_std = std_dev * Decimal(str(math.sqrt(_backtest_config.annual_trading_days)))
 
         # Apply volatility floor
         annual_std = max(annual_std, MIN_ANNUAL_VOLATILITY)

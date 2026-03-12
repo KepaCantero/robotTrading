@@ -5,12 +5,15 @@ Este módulo define los modelos de datos para validar que las estrategias
 generen rentabilidad neta positiva después de todos los costos operativos.
 """
 
+import logging
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, field_validator
+
+logger = logging.getLogger(__name__)
 
 
 class ValidationStatus(str, Enum):
@@ -51,7 +54,7 @@ class CostBreakdown(BaseModel):
     @property
     def total_costs(self) -> Decimal:
         """Calcular el total de costos."""
-        return (
+        total = (
             self.commissions
             + self.slippage
             + self.market_impact
@@ -60,6 +63,17 @@ class CostBreakdown(BaseModel):
             + self.financing
             + self.other
         )
+        logger.debug(
+            "Total costs calculated",
+            extra={
+                "commissions": str(self.commissions),
+                "slippage": str(self.slippage),
+                "market_impact": str(self.market_impact),
+                "infrastructure": str(self.infrastructure),
+                "total_costs": str(total),
+            }
+        )
+        return total
 
     @field_validator(
         "commissions",
@@ -73,6 +87,14 @@ class CostBreakdown(BaseModel):
     @classmethod
     def validate_positive_amount(cls, v):
         if v < 0:
+            logger.warning(
+                "Invalid cost amount detected",
+                extra={
+                    "validator": "validate_positive_amount",
+                    "value": str(v),
+                    "error": "Cost amounts must be non-negative",
+                }
+            )
             raise ValueError("Cost amounts must be non-negative")
         return v
 
@@ -133,6 +155,21 @@ class ValidationCriteria(BaseModel):
 class ProfitabilityValidation(BaseModel):
     """Resultado de la validación de rentabilidad."""
 
+    def __init__(self, **data):
+        """Initialize profitability validation with logging."""
+        super().__init__(**data)
+        logger.info(
+            "ProfitabilityValidation created",
+            extra={
+                "strategy_name": self.strategy_name,
+                "status": self.status.value,
+                "is_profitable": self.is_profitable,
+                "risk_level": self.risk_level,
+                "period_start": str(self.period_start),
+                "period_end": str(self.period_end),
+            }
+        )
+
     strategy_name: str = Field(..., description="Nombre de la estrategia")
     validation_date: datetime = Field(
         default_factory=datetime.now, description="Fecha de validación"
@@ -164,6 +201,14 @@ class ProfitabilityValidation(BaseModel):
     @classmethod
     def validate_positive_capital(cls, v):
         if v <= 0:
+            logger.warning(
+                "Invalid capital amount detected",
+                extra={
+                    "validator": "validate_positive_capital",
+                    "value": str(v),
+                    "error": "Capital amounts must be positive",
+                }
+            )
             raise ValueError("Capital amounts must be positive")
         return v
 

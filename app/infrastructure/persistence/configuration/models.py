@@ -4,10 +4,13 @@ Configuration Persistence Models - T11.1
 Data models for configuration storage and retrieval.
 """
 
+import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 
 class StrategyConfiguration(BaseModel):

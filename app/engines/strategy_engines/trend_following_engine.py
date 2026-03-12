@@ -128,7 +128,19 @@ class TrendFollowingStrategyEngine(BaseStrategyEngine):
         # Signal scoring engine
         self.signal_scorer = get_signal_scoring_engine()
 
-        logger.info(f"TrendFollowingStrategyEngine initialized: {self.name}")
+        logger.info(
+            "TrendFollowingStrategyEngine initialized",
+            extra={
+                "strategy_name": self.name,
+                "strategy_type": "trend_following",
+                "adx_period": self.adx_period,
+                "adx_threshold": float(self.adx_threshold),
+                "macd_fast_period": self.macd_fast_period,
+                "macd_slow_period": self.macd_slow_period,
+                "macd_signal_period": self.macd_signal_period,
+                "min_volume_ratio": float(self.min_volume_ratio),
+            },
+        )
 
     # ===== Implementación de métodos abstractos =====
 
@@ -330,6 +342,19 @@ class TrendFollowingStrategyEngine(BaseStrategyEngine):
                 )
 
                 signals.append(signal)
+                logger.info(
+                    "Signal generated: BUY (bullish trend)",
+                    extra={
+                        "strategy": "trend_following",
+                        "signal_type": "BUY",
+                        "symbol": market_data.symbol,
+                        "price": float(current_price),
+                        "confidence": float(confidence),
+                        "adx": float(adx),
+                        "macd_histogram": float(macd_histogram),
+                        "volume_ratio": float(volume_ratio),
+                    },
+                )
 
             # Condiciones para señal SELL (tendencia bajista)
             macd_bearish = macd_line < macd_signal and macd_histogram < -float(
@@ -373,10 +398,29 @@ class TrendFollowingStrategyEngine(BaseStrategyEngine):
                 )
 
                 signals.append(signal)
+                logger.info(
+                    "Signal generated: SELL (bearish trend)",
+                    extra={
+                        "strategy": "trend_following",
+                        "signal_type": "SELL",
+                        "symbol": market_data.symbol,
+                        "price": float(current_price),
+                        "confidence": float(confidence),
+                        "adx": float(adx),
+                        "macd_histogram": float(macd_histogram),
+                        "volume_ratio": float(volume_ratio),
+                    },
+                )
 
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(
-                f"Error generando señal en TrendFollowingStrategyEngine: {e}", exc_info=True
+                "Error generando señal en TrendFollowingStrategyEngine",
+                extra={
+                    "strategy": "trend_following",
+                    "symbol": getattr(market_data, 'symbol', None),
+                    "error_type": type(e).__name__,
+                },
+                exc_info=True,
             )
 
         return signals
@@ -441,19 +485,42 @@ class TrendFollowingStrategyEngine(BaseStrategyEngine):
             )
             if total_exposure >= float(self.max_exposure):
                 logger.debug(
-                    f"Risk check failed: total exposure {total_exposure} >= {self.max_exposure}"
+                    "Risk check failed: total exposure exceeded",
+                    extra={
+                        "strategy": "trend_following",
+                        "symbol": signal.symbol,
+                        "total_exposure": total_exposure,
+                        "max_exposure": float(self.max_exposure),
+                        "check_type": "exposure",
+                    },
                 )
                 return False
 
             # Check confidence mínima - lowered to 30.0 for flexibility
             if signal.confidence < 30.0:
-                logger.debug(f"Risk check failed: confidence {signal.confidence} < 30.0")
+                logger.debug(
+                    "Risk check failed: confidence below minimum",
+                    extra={
+                        "strategy": "trend_following",
+                        "symbol": signal.symbol,
+                        "signal_confidence": signal.confidence,
+                        "min_confidence": 30.0,
+                        "check_type": "confidence",
+                    },
+                )
                 return False
 
             return True
 
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-            logger.error(f"Error en risk_check: {e}", exc_info=True)
+            logger.error(
+                "Error en risk_check",
+                extra={
+                    "strategy": "trend_following",
+                    "error_type": type(e).__name__,
+                },
+                exc_info=True,
+            )
             return False
 
     # Helper methods to reduce average cyclomatic complexity

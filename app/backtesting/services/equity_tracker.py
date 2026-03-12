@@ -79,12 +79,13 @@ class EquityCurveTracker:
                     current_price = last_known_prices[symbol]
                     portfolio_value += quantity * current_price
                 else:
-                    # Fallback: try to get price from trades
+                    # Fallback: try to get price from trades or raise error
                     logger.warning(
                         f"No tracked price for {symbol}, using entry price for equity curve"
                     )
                     # This is a fallback that should rarely happen
-                    portfolio_value += quantity * self._get_entry_price_fallback(symbol)
+                    price = self._get_entry_price_fallback(symbol, last_known_prices)
+                    portfolio_value += quantity * price
 
         self.equity_curve.append((timestamp, portfolio_value))
 
@@ -182,22 +183,35 @@ class EquityCurveTracker:
         self.max_drawdown = Decimal("0")
         self.peak_equity = self.initial_capital
 
-    def _get_entry_price_fallback(self, symbol: str) -> Decimal:
+    def _get_entry_price_fallback(
+        self, symbol: str, last_known_prices: Dict[str, Decimal]
+    ) -> Decimal:
         """
         Get fallback entry price for a symbol (rarely used).
 
         Args:
             symbol: Trading symbol
+            last_known_prices: Dictionary of last known prices
 
         Returns:
-            Fallback price (should not be relied upon)
+            Fallback price from last_known_prices if available
+
+        Raises:
+            ValueError: If no price is available for the symbol
         """
-        # This is a last resort fallback
+        # Check if we have any price in last_known_prices for this symbol
+        if symbol in last_known_prices and last_known_prices[symbol] > 0:
+            logger.warning(
+                f"Using last known price for {symbol} as fallback: {last_known_prices[symbol]}"
+            )
+            return last_known_prices[symbol]
+
+        # No price available - raise exception to prevent incorrect calculations
         logger.error(
             f"CRITICAL: No price available for {symbol} in equity curve calculation. "
-            f"Using fallback - this indicates a bug in price tracking."
+            f"This indicates a bug in price tracking."
         )
-        return Decimal("0")
+        raise ValueError(f"No entry price found for {symbol} and no last known price available")
 
     def calculate_returns(self) -> List[Decimal]:
         """

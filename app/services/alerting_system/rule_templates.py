@@ -9,6 +9,7 @@ These templates provide sensible defaults for:
 - Market regime alerts
 """
 
+import logging
 from decimal import Decimal
 from typing import List
 
@@ -20,6 +21,8 @@ from app.services.alerting_system.models import (
     LogicOperator,
     ThresholdRule,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class AlertRuleTemplates:
@@ -345,7 +348,9 @@ class AlertRuleTemplates:
     @staticmethod
     def get_all_default_templates() -> List[AlertRule]:
         """Return all default alert rule templates."""
-        return [
+        logger.debug("Loading all default alert rule templates")
+
+        templates = [
             # Portfolio Risk (3 rules)
             AlertRuleTemplates.portfolio_drawdown_warning(),
             AlertRuleTemplates.portfolio_drawdown_critical(),
@@ -366,9 +371,24 @@ class AlertRuleTemplates:
             AlertRuleTemplates.error_rate_high(),
         ]
 
+        logger.info(
+            "Default alert templates loaded",
+            extra={
+                "total_templates": len(templates),
+                "categories": ["portfolio_risk", "market_conditions", "execution_quality", "performance", "trading_quality", "system_health"],
+            }
+        )
+
+        return templates
+
     @staticmethod
     def get_template_by_id(rule_id: str) -> AlertRule:
         """Get a specific template by rule ID."""
+        logger.debug(
+            "Looking up alert template by ID",
+            extra={"rule_id": rule_id}
+        )
+
         templates = {
             # Portfolio Risk
             "portfolio_drawdown_warning": AlertRuleTemplates.portfolio_drawdown_warning(),
@@ -390,17 +410,58 @@ class AlertRuleTemplates:
             "error_rate_high": AlertRuleTemplates.error_rate_high(),
         }
         if rule_id not in templates:
+            logger.error(
+                "Alert template not found",
+                extra={
+                    "rule_id": rule_id,
+                    "available_templates": list(templates.keys()),
+                }
+            )
             raise ValueError(f"Unknown rule template ID: {rule_id}")
+
+        logger.info(
+            "Alert template retrieved",
+            extra={
+                "rule_id": rule_id,
+                "rule_name": templates[rule_id].name,
+                "severity": templates[rule_id].severity.value,
+            }
+        )
         return templates[rule_id]
 
     @staticmethod
     def get_templates_by_category(category: str) -> List[AlertRule]:
         """Get all templates for a specific category."""
+        logger.debug(
+            "Fetching templates by category",
+            extra={"category": category}
+        )
+
         all_templates = AlertRuleTemplates.get_all_default_templates()
-        return [t for t in all_templates if t.tags.get("category") == category]
+        filtered = [t for t in all_templates if t.tags.get("category") == category]
+
+        logger.info(
+            "Templates filtered by category",
+            extra={
+                "category": category,
+                "templates_found": len(filtered),
+            }
+        )
+        return filtered
 
     @staticmethod
     def get_critical_templates() -> List[AlertRule]:
         """Get all CRITICAL severity templates."""
+        logger.debug("Fetching all CRITICAL severity templates")
+
         all_templates = AlertRuleTemplates.get_all_default_templates()
-        return [t for t in all_templates if t.severity == AlertSeverity.CRITICAL]
+        critical = [t for t in all_templates if t.severity == AlertSeverity.CRITICAL]
+
+        logger.info(
+            "Critical templates retrieved",
+            extra={
+                "critical_count": len(critical),
+                "rule_ids": [t.rule_id for t in critical],
+            }
+        )
+        return critical

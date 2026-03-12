@@ -5,12 +5,15 @@ This module defines Pydantic models for cost analysis functionality
 including cost breakdown, profitability validation, and Cost Impact Ratio (CIR) analysis.
 """
 
+import logging
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
 from pydantic import BaseModel, Field, field_validator
+
+logger = logging.getLogger(__name__)
 
 from app.backtesting.models import TradeStatus
 from app.domain.models.order import OrderSide, OrderType
@@ -92,7 +95,22 @@ class CostBreakdownModel(BaseModel):
                 )
             )
             if abs(v - expected_total) > Decimal("0.01"):
+                logger.error(
+                    "Cost validation failed: total cost mismatch",
+                    extra={
+                        "trade_id": info.data.get("trade_id") if info else None,
+                        "expected_total": float(expected_total) if expected_total else None,
+                        "actual_total": float(v),
+                    },
+                )
                 raise ValueError("Total cost does not match sum of components")
+            logger.debug(
+                "Cost breakdown validated successfully",
+                extra={
+                    "trade_id": info.data.get("trade_id") if info else None,
+                    "total_cost": float(v),
+                },
+            )
         return v
 
     @field_validator("cost_percentage")
@@ -218,7 +236,22 @@ class CostAnalysisResultModel(BaseModel):
                 )
             )
             if abs(v - expected_total) > Decimal("0.01"):
+                logger.error(
+                    "Cost analysis validation failed: total costs mismatch",
+                    extra={
+                        "strategy_name": info.data.get("strategy_name") if info else None,
+                        "expected_total": float(expected_total) if expected_total else None,
+                        "actual_total": float(v),
+                    },
+                )
                 raise ValueError("Total costs do not match sum of components")
+            logger.debug(
+                "Cost analysis total costs validated",
+                extra={
+                    "strategy_name": info.data.get("strategy_name") if info else None,
+                    "total_costs": float(v),
+                },
+            )
         return v
 
     @field_validator("net_profit")
@@ -241,7 +274,24 @@ class CostAnalysisResultModel(BaseModel):
                 )
             )
             if abs(v - expected_net) > Decimal("0.01"):
+                logger.error(
+                    "Net profit validation failed: calculation mismatch",
+                    extra={
+                        "strategy_name": info.data.get("strategy_name") if info else None,
+                        "gross_profit": float(info.data.get("gross_profit", 0)),
+                        "total_costs": float(info.data.get("total_costs", 0)),
+                        "expected_net": float(expected_net) if expected_net else None,
+                        "actual_net": float(v),
+                    },
+                )
                 raise ValueError("Net profit calculation is incorrect")
+            logger.debug(
+                "Net profit validated",
+                extra={
+                    "strategy_name": info.data.get("strategy_name") if info else None,
+                    "net_profit": float(v),
+                },
+            )
         return v
 
     @field_validator("cost_impact_ratio")
@@ -369,7 +419,19 @@ class CostParametersModel(BaseModel):
         max_commission = Decimal(str(getattr(cfg.trading, 'cost_max_commission_rate', 0.1)))
         for asset_class, rate in v.items():
             if rate < 0 or rate > max_commission:
+                logger.error(
+                    "Commission rate validation failed",
+                    extra={
+                        "asset_class": asset_class,
+                        "rate": float(rate),
+                        "max_allowed": float(max_commission),
+                    },
+                )
                 raise ValueError(f"Invalid commission rate for {asset_class}: {rate}")
+        logger.debug(
+            "Commission rates validated",
+            extra={"asset_classes": list(v.keys())},
+        )
         return v
 
     @field_validator("slippage_rates")
@@ -382,7 +444,19 @@ class CostParametersModel(BaseModel):
         max_slippage = Decimal(str(getattr(cfg.trading, 'cost_max_slippage_rate', 0.05)))
         for asset_class, rate in v.items():
             if rate < 0 or rate > max_slippage:
+                logger.error(
+                    "Slippage rate validation failed",
+                    extra={
+                        "asset_class": asset_class,
+                        "rate": float(rate),
+                        "max_allowed": float(max_slippage),
+                    },
+                )
                 raise ValueError(f"Invalid slippage rate for {asset_class}: {rate}")
+        logger.debug(
+            "Slippage rates validated",
+            extra={"asset_classes": list(v.keys())},
+        )
         return v
 
 

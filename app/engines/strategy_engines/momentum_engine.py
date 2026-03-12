@@ -116,7 +116,19 @@ class MomentumStrategyEngine(BaseStrategyEngine):
         # Signal scoring engine
         self.signal_scorer = get_signal_scoring_engine()
 
-        logger.info(f"MomentumStrategyEngine initialized: {self.name}")
+        logger.info(
+            "MomentumStrategyEngine initialized",
+            extra={
+                "strategy_name": self.name,
+                "strategy_type": "momentum",
+                "rsi_period": self.rsi_period,
+                "ema_period": self.ema_period,
+                "rsi_threshold": float(self.rsi_threshold),
+                "momentum_threshold": float(self.momentum_threshold),
+                "volume_threshold": float(self.volume_threshold),
+                "atr_filter_enabled": self.atr_filter_enabled,
+            },
+        )
 
     # ===== Implementación de métodos abstractos =====
 
@@ -258,7 +270,14 @@ class MomentumStrategyEngine(BaseStrategyEngine):
                         relative_atr = (atr / current_price) * 100 if current_price > 0 else 0
                         if relative_atr < float(self.min_atr_threshold * 100):
                             logger.debug(
-                                f"Señal filtrada por ATR bajo: {relative_atr:.2f}% < {float(self.min_atr_threshold * 100):.2f}%"
+                                "Señal filtrada por ATR bajo",
+                                extra={
+                                    "strategy": "momentum",
+                                    "symbol": market_data.symbol,
+                                    "relative_atr_pct": relative_atr,
+                                    "min_atr_threshold_pct": float(self.min_atr_threshold * 100),
+                                    "filter_reason": "low_atr",
+                                },
                             )
                             return []
 
@@ -311,9 +330,30 @@ class MomentumStrategyEngine(BaseStrategyEngine):
                 )
 
                 signals.append(signal)
+                logger.info(
+                    "Signal generated",
+                    extra={
+                        "strategy": "momentum",
+                        "signal_type": "BUY",
+                        "symbol": market_data.symbol,
+                        "price": float(current_price),
+                        "confidence": float(confidence),
+                        "rsi": float(rsi),
+                        "momentum": float(momentum),
+                        "volume_ratio": float(volume_ratio),
+                    },
+                )
 
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-            logger.error(f"Error generando señal en MomentumStrategyEngine: {e}", exc_info=True)
+            logger.error(
+                "Error generando señal en MomentumStrategyEngine",
+                extra={
+                    "strategy": "momentum",
+                    "symbol": getattr(market_data, 'symbol', None),
+                    "error_type": type(e).__name__,
+                },
+                exc_info=True,
+            )
 
         return signals
 
@@ -429,7 +469,14 @@ class MomentumStrategyEngine(BaseStrategyEngine):
         current_exposure = portfolio.get_total_exposure()
         if current_exposure >= float(self.max_exposure):
             logger.debug(
-                f"Risk check fallido: exposición {current_exposure:.2%} >= {float(self.max_exposure):.2%}"
+                "Risk check fallido: exposición excedida",
+                extra={
+                    "strategy": "momentum",
+                    "symbol": signal.symbol,
+                    "current_exposure": current_exposure,
+                    "max_exposure": float(self.max_exposure),
+                    "check_type": "exposure",
+                },
             )
             return False
 
@@ -437,7 +484,14 @@ class MomentumStrategyEngine(BaseStrategyEngine):
         min_confidence = self.config.get("min_signal_confidence", 50.0)
         if signal.confidence < min_confidence:
             logger.debug(
-                f"Risk check fallido: confidence {signal.confidence:.2f} < {min_confidence:.2f}"
+                "Risk check fallido: confidence insuficiente",
+                extra={
+                    "strategy": "momentum",
+                    "symbol": signal.symbol,
+                    "signal_confidence": signal.confidence,
+                    "min_confidence": min_confidence,
+                    "check_type": "confidence",
+                },
             )
             return False
 

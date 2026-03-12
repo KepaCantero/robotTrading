@@ -8,11 +8,14 @@ Defines:
 - AbsoluteReturnTarget with feasibility validation
 """
 
+import logging
 from decimal import Decimal
 from enum import Enum
 from typing import ClassVar, Dict, List, Optional
 
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 
 class CapitalTier(str, Enum):
@@ -83,7 +86,9 @@ class StrategyFeatures(BaseModel):
 
     def enabled_modules(self) -> List[str]:
         """Return list of enabled module names."""
-        return [k for k, v in self.dict().items() if v]
+        modules = [k for k, v in self.dict().items() if v]
+        logger.debug("Getting enabled strategy modules", extra={"enabled_modules": modules, "total_count": len(modules)})
+        return modules
 
 
 class CapitalTierConfig(BaseModel):
@@ -130,14 +135,33 @@ class AbsoluteReturnTarget(BaseModel):
     def target_annual_return_pct(self) -> Decimal:
         """Calculate required annual return as percentage."""
         annual_target = self.target_euros_monthly * 12
-        return (annual_target / self.capital * 100).quantize(Decimal("0.01"))
+        result = (annual_target / self.capital * 100).quantize(Decimal("0.01"))
+        logger.debug(
+            "Calculated target annual return percentage",
+            extra={
+                "target_monthly_euros": float(self.target_euros_monthly),
+                "annual_target_euros": float(annual_target),
+                "capital": float(self.capital),
+                "annual_return_pct": float(result)
+            }
+        )
+        return result
 
     def required_alpha_monthly(self) -> Decimal:
         """Calculate required monthly alpha after tax and commission."""
         monthly_total_cost = (self.commission_per_trade * self.expected_trades_per_month) + (
             self.target_euros_monthly * self.tax_rate
         )
-        return self.target_euros_monthly + monthly_total_cost
+        result = self.target_euros_monthly + monthly_total_cost
+        logger.debug(
+            "Calculated required monthly alpha",
+            extra={
+                "target_monthly_euros": float(self.target_euros_monthly),
+                "monthly_total_cost": float(monthly_total_cost),
+                "required_alpha_monthly": float(result)
+            }
+        )
+        return result
 
 
 class AbsoluteReturnValidation(BaseModel):

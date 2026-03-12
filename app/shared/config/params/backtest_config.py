@@ -232,6 +232,78 @@ class BacktestingConfig(BaseModel):
     default_start_date: str = Field(default="2018-01-01", description="Default backtest start date")
     default_end_date: str = Field(default="2023-12-31", description="Default backtest end date")
 
+    # ========== LIQUIDITY VALIDATOR SETTINGS ==========
+    # For LiquidityValidator in backtesting engine
+
+    liquidity_enable_partial_fills: bool = Field(
+        default=True, description="Enable partial fills for large orders"
+    )
+    liquidity_max_order_pct_of_volume: Decimal = Field(
+        default=Decimal("0.10"), description="Maximum order as percentage of daily volume"
+    )
+    liquidity_warning_order_pct_of_volume: Decimal = Field(
+        default=Decimal("0.05"), description="Warning threshold for order as percentage of volume"
+    )
+    liquidity_partial_fill_pct: Decimal = Field(
+        default=Decimal("0.05"), description="Fill percentage for partial fills"
+    )
+
+    # ========== COMPLIANCE ENGINE SETTINGS ==========
+
+    compliance_enable_logging: bool = Field(
+        default=False, description="Enable compliance engine logging during backtesting"
+    )
+
+    # ========== LEARNING ENGINE SETTINGS ==========
+
+    learning_rebalance_frequency_days: int = Field(
+        default=7, description="Rebalance frequency for learning engine"
+    )
+
+    # ========== TRADE VALIDATION SETTINGS ==========
+
+    commission_ratio_threshold: Decimal = Field(
+        default=Decimal("0.01"), description="Commission ratio threshold for trade validation"
+    )
+    commission_profit_multiplier: int = Field(
+        default=5, description="Multiplier for expected profit vs commission check"
+    )
+    signal_time_tolerance_seconds: int = Field(
+        default=86400, description="Time tolerance in seconds for signal matching (1 day)"
+    )
+
+    # ========== DEFAULT PORTFOLIO SETTINGS ==========
+
+    default_broker_name: str = Field(default="backtester", description="Default broker name for backtests")
+    default_currency: str = Field(default="USD", description="Default currency for backtests")
+
+    # ========== TRADING CONSTANTS ==========
+
+    trading_days_per_year: int = Field(
+        default=252, description="Number of trading days per year for annualization"
+    )
+    long_term_holding_days: int = Field(
+        default=365, description="Days to qualify for long-term capital gains"
+    )
+    default_annual_volatility: Decimal = Field(
+        default=Decimal("0.20"), description="Default annual volatility for calculations"
+    )
+    min_annual_volatility: Decimal = Field(
+        default=Decimal("0.15"), description="Minimum annual volatility threshold"
+    )
+    default_daily_volatility: Decimal = Field(
+        default=Decimal("0.02"), description="Default daily volatility for calculations"
+    )
+    sortino_infinite_value: Decimal = Field(
+        default=Decimal("999"), description="Value to represent infinite Sortino ratio"
+    )
+    default_confidence_threshold: Decimal = Field(
+        default=Decimal("0.6"), description="Default confidence threshold for signals"
+    )
+    default_volatility_for_dd: Decimal = Field(
+        default=Decimal("0.20"), description="Default volatility for drawdown estimation"
+    )
+
     # ========== URLs (External APIs) ==========
 
     yahoo_finance_base_url: str = Field(

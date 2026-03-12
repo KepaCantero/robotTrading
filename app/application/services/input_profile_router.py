@@ -9,10 +9,13 @@ This is a CRITICAL component for autonomous system operation.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, Optional
+
+logger = logging.getLogger(__name__)
 
 from app.domain.models.input_profile import InputProfile, InvestmentObjective, RiskTolerance
 from app.domain.value_objects.investment_horizon import InvestmentHorizon
@@ -138,6 +141,17 @@ class InputProfileRouter:
         Returns:
             Complete SystemConfiguration
         """
+        logger.info(
+            "Generating system configuration from InputProfile",
+            extra={
+                "objective": profile.objective.value if profile.objective else None,
+                "risk_tolerance": profile.risk_tolerance.value if profile.risk_tolerance else None,
+                "horizon_months": profile.horizon.months if profile.horizon else None,
+                "capital": float(profile.capital.amount) if profile.capital else None,
+                "currency": profile.capital.currency if profile.capital else None,
+            },
+        )
+
         # 1. Select strategy type from investment objective
         strategy_type = self._select_strategy_type(profile.objective)
 
@@ -156,7 +170,7 @@ class InputProfileRouter:
         # 5. Generate additional constraints
         constraints = self._generate_constraints(profile)
 
-        return SystemConfiguration(
+        config = SystemConfiguration(
             input_profile=profile,
             strategy_type=strategy_type,
             risk_config=risk_config,
@@ -164,6 +178,20 @@ class InputProfileRouter:
             tax_config=tax_config,
             **constraints,
         )
+
+        logger.info(
+            "System configuration generated successfully",
+            extra={
+                "strategy_type": strategy_type.value,
+                "max_drawdown": float(risk_config.max_drawdown),
+                "max_position_size": float(risk_config.max_position_size),
+                "optimization_type": optimization_config.optimization_type.value,
+                "tax_country": tax_config.country,
+                "max_positions": constraints.get("max_positions"),
+            },
+        )
+
+        return config
 
     def _select_strategy_type(self, objective: InvestmentObjective) -> StrategyType:
         """
@@ -176,6 +204,11 @@ class InputProfileRouter:
         - BALANCED_GROWTH -> Multi-Factor
         - INCOME_GENERATION -> Covered Call
         """
+        logger.debug(
+            "Selecting strategy type",
+            extra={"investment_objective": objective.value if objective else None},
+        )
+
         strategy_map = {
             InvestmentObjective.MAXIMIZE_CAPITAL: StrategyType.MOMENTUM,
             InvestmentObjective.MAXIMIZE_DIVIDENDS: StrategyType.DIVIDEND,
@@ -183,7 +216,17 @@ class InputProfileRouter:
             InvestmentObjective.BALANCED_GROWTH: StrategyType.MULTI_FACTOR,
             InvestmentObjective.INCOME_GENERATION: StrategyType.COVERED_CALL,
         }
-        return strategy_map.get(objective, StrategyType.MULTI_FACTOR)
+        strategy_type = strategy_map.get(objective, StrategyType.MULTI_FACTOR)
+
+        logger.info(
+            "Strategy type selected",
+            extra={
+                "investment_objective": objective.value if objective else None,
+                "strategy_type": strategy_type.value,
+            },
+        )
+
+        return strategy_type
 
     def _select_risk_config(self, tolerance: RiskTolerance) -> RiskConfig:
         """
@@ -194,6 +237,11 @@ class InputProfileRouter:
         - MEDIUM -> 25% max drawdown, 1.5x leverage, 10% max position
         - HIGH -> 40% max drawdown, 2x leverage, 20% max position
         """
+        logger.debug(
+            "Selecting risk configuration",
+            extra={"risk_tolerance": tolerance.value if tolerance else None},
+        )
+
         # Get base config values
         config = get_config()
         base_max_dd = Decimal(str(getattr(config.trading, 'max_drawdown_limit', 0.15)))
@@ -272,6 +320,18 @@ class InputProfileRouter:
                 ),
             )
 
+        logger.info(
+            "Risk configuration selected",
+            extra={
+                "risk_tolerance": tolerance.value if tolerance else None,
+                "max_drawdown": float(risk_config.max_drawdown),
+                "max_position_size": float(risk_config.max_position_size),
+                "leverage_allowed": risk_config.leverage_allowed,
+            },
+        )
+
+        return risk_config
+
     def _select_optimization_config(
         self,
         horizon: InvestmentHorizon,
@@ -338,6 +398,11 @@ class InputProfileRouter:
         - UK: FIFO, 0-38.1% dividend tax, 10-28% capital gains
         """
         country = residence.country_name
+        logger.debug(
+            "Creating tax configuration",
+            extra={"tax_country": country},
+        )
+
         config = get_config()
 
         if country == "Spain":
@@ -385,6 +450,18 @@ class InputProfileRouter:
                 tax_loss_harvesting=True,
                 witholding_tax_rate=Decimal("0.15"),
             )
+
+        logger.info(
+            "Tax configuration created",
+            extra={
+                "country": tax_config.country,
+                "method": tax_config.method,
+                "dividend_tax_rate": float(tax_config.dividend_tax_rate),
+                "capital_gains_tax_rate": float(tax_config.capital_gains_tax_rate),
+            },
+        )
+
+        return tax_config
 
     def _generate_constraints(self, profile: InputProfile) -> Dict[str, Any]:
         """
@@ -462,6 +539,13 @@ class InputProfileRouter:
         Returns:
             Dictionary of strategy configuration parameters
         """
+        logger.info(
+            "Getting strategy configuration",
+            extra={
+                "objective": profile.objective.value if profile.objective else None,
+            },
+        )
+
         config = self(profile)
         strategy_type = config.strategy_type
 

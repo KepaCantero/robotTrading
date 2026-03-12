@@ -5,6 +5,7 @@ Dataclasses for module-level parameter generation and configuration.
 Uses centralized configuration for default values.
 """
 
+import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
@@ -12,6 +13,8 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 if TYPE_CHECKING:
     pass
+
+logger = logging.getLogger(__name__)
 
 
 # Helper functions to get defaults from centralized config
@@ -155,3 +158,19 @@ class ParameterizationResult:
         default_factory=list
     )  # Modules disabled due to capital tier
     parametrization_time_ms: float = 0.0
+
+
+logger.debug(
+    "ModuleParametrizer models loaded",
+    extra={
+        "component": "module_parametrizer_models",
+        "operation": "module_init",
+        "models": [
+            "ParameterizationPreset",
+            "ModuleParameterConfig",
+            "ModuleParameterSet",
+            "ParameterizationRequest",
+            "ParameterizationResult",
+        ],
+    }
+)

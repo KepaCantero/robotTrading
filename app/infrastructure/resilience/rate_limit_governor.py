@@ -124,7 +124,12 @@ class TokenBucketAlgorithm:
                 self.state.total_requests += 1
                 self.state.successful_requests += 1
                 logger.debug(
-                    f"Token acquired. Remaining: {self.state.tokens:.2f}/{self.state.capacity}"
+                    f"Token acquired. Remaining: {self.state.tokens:.2f}/{self.state.capacity}",
+                    extra={
+                        "tokens_remaining": self.state.tokens,
+                        "tokens_capacity": self.state.capacity,
+                        "total_requests": self.state.total_requests,
+                    }
                 )
                 return True
 
@@ -134,7 +139,13 @@ class TokenBucketAlgorithm:
 
             logger.warning(
                 f"Rate limit reached. Waiting {wait_time:.2f}s for token refill. "
-                f"Tokens: {self.state.tokens:.2f}/{self.state.capacity}"
+                f"Tokens: {self.state.tokens:.2f}/{self.state.capacity}",
+                extra={
+                    "wait_time_seconds": wait_time,
+                    "tokens_remaining": self.state.tokens,
+                    "tokens_capacity": self.state.capacity,
+                    "blocked_requests": self.state.blocked_requests,
+                }
             )
 
             if timeout is not None and wait_time > timeout:
@@ -170,7 +181,13 @@ class TokenBucketAlgorithm:
 
             logger.debug(
                 f"Refilled {tokens_added:.2f} tokens in {elapsed:.2f}s. "
-                f"Current: {self.state.tokens:.2f}/{self.state.capacity}"
+                f"Current: {self.state.tokens:.2f}/{self.state.capacity}",
+                extra={
+                    "tokens_added": tokens_added,
+                    "elapsed_seconds": elapsed,
+                    "tokens_current": self.state.tokens,
+                    "tokens_capacity": self.state.capacity,
+                }
             )
 
     def _calculate_wait_time(self) -> float:
@@ -271,7 +288,14 @@ class WebSocketFirstStrategy:
             self._subscriptions[symbol] = []
 
         self._subscriptions[symbol].append(callback)
-        logger.info(f"Subscribed to {symbol} ticker via WebSocket")
+        logger.info(
+            f"Subscribed to {symbol} ticker via WebSocket",
+            extra={
+                "symbol": symbol,
+                "subscription_count": len(self._subscriptions[symbol]),
+                "total_symbols": len(self._subscriptions),
+            }
+        )
 
     async def start_websocket(self, websocket_url: str):
         """
@@ -281,22 +305,41 @@ class WebSocketFirstStrategy:
             websocket_url: URL del WebSocket del broker
         """
         if not self._use_websocket:
-            logger.info("WebSocket disabled, using REST only")
+            logger.info(
+                "WebSocket disabled, using REST only",
+                extra={"websocket_enabled": False}
+            )
             return
 
+        logger.debug(
+            "Starting WebSocket connection",
+            extra={"websocket_url": websocket_url}
+        )
         try:
             import aiohttp
 
             self._websocket = await aiohttp.ClientSession().ws_connect(websocket_url)
             self._is_connected = True
 
-            logger.info(f"WebSocket connected to {websocket_url}")
+            logger.info(
+                f"WebSocket connected to {websocket_url}",
+                extra={
+                    "websocket_url": websocket_url,
+                    "connected": True,
+                }
+            )
 
             # Task para procesar mensajes
             asyncio.create_task(self._process_messages())
 
         except (asyncio.TimeoutError, OSError) as e:
-            logger.error(f"WebSocket connection failed: {e}")
+            logger.error(
+                f"WebSocket connection failed: {e}",
+                extra={
+                    "websocket_url": websocket_url,
+                    "error_type": type(e).__name__,
+                }
+            )
             self._is_connected = False
 
     async def _process_messages(self):
@@ -312,11 +355,18 @@ class WebSocketFirstStrategy:
                     data = msg.json()
                     await self._handle_message(data)
                 elif msg.type == 4:  # WSMsgType.ERROR
-                    logger.error(f"WebSocket error: {self._websocket.exception()}")
+                    logger.error(
+                        f"WebSocket error: {self._websocket.exception()}",
+                        extra={"error_type": "websocket_error"},
+                        exc_info=True
+                    )
                     break
 
         except OSError as e:
-            logger.error(f"Error processing WebSocket messages: {e}")
+            logger.error(
+                "Error processing WebSocket messages",
+                extra={"error_type": type(e).__name__}
+            )
         finally:
             self._is_connected = False
 
@@ -340,14 +390,23 @@ class WebSocketFirstStrategy:
                         else:
                             callback(symbol, price)
                     except (asyncio.TimeoutError, OSError) as e:
-                        logger.error(f"Error in ticker callback: {e}")
+                        logger.error(
+                            f"Error in ticker callback: {e}",
+                            extra={
+                                "symbol": symbol,
+                                "error_type": type(e).__name__,
+                            }
+                        )
 
     async def stop_websocket(self):
         """Detener conexión WebSocket"""
         if self._websocket:
             await self._websocket.close()
             self._is_connected = False
-            logger.info("WebSocket connection closed")
+            logger.info(
+                "WebSocket connection closed",
+                extra={"connected": False}
+            )
 
 
 class AdaptiveRateLimiter:
@@ -391,7 +450,13 @@ class AdaptiveRateLimiter:
             self.current_rate = max(1, int(self.current_rate * 0.5))
 
             logger.warning(
-                f"Detected rate limit (429). Reducing rate: {old_rate} → {self.current_rate} req/s"
+                f"Detected rate limit (429). Reducing rate: {old_rate} → {self.current_rate} req/s",
+                extra={
+                    "old_rate": old_rate,
+                    "new_rate": self.current_rate,
+                    "429_count": self._429_count,
+                    "reduction_pct": 50,
+                }
             )
 
             self._429_count = 0
@@ -403,7 +468,15 @@ class AdaptiveRateLimiter:
             old_rate = self.current_rate
             self.current_rate = min(self.initial_rate, int(self.current_rate * 1.1))
 
-            logger.info(f"Stable period. Increasing rate: {old_rate} → {self.current_rate} req/s")
+            logger.info(
+                f"Stable period. Increasing rate: {old_rate} → {self.current_rate} req/s",
+                extra={
+                    "old_rate": old_rate,
+                    "new_rate": self.current_rate,
+                    "success_count": self._success_count,
+                    "increase_pct": 10,
+                }
+            )
 
             self._success_count = 0
             self._last_adjustment = time.time()
@@ -453,7 +526,15 @@ class RateLimitGovernor:
         logger.info(
             f"RateLimitGovernor initialized for {broker_name}: "
             f"{self.config.max_requests_per_second} req/s, "
-            f"WebSocket={'enabled' if self.config.websocket_enabled else 'disabled'}"
+            f"WebSocket={'enabled' if self.config.websocket_enabled else 'disabled'}",
+            extra={
+                "broker_name": broker_name,
+                "max_requests_per_second": self.config.max_requests_per_second,
+                "burst_capacity": self.config.burst_capacity,
+                "refill_rate": self.config.refill_rate,
+                "websocket_enabled": self.config.websocket_enabled,
+                "adaptive_mode": self.config.adaptive_mode,
+            }
         )
 
     async def acquire_token(self, timeout: Optional[float] = None) -> bool:
@@ -471,6 +552,13 @@ class RateLimitGovernor:
         Raises:
             RateLimitError: Si timeout expira
         """
+        logger.debug(
+            "Acquiring rate limit token",
+            extra={
+                "broker_name": self.broker_name,
+                "timeout": timeout,
+            }
+        )
         return await self.token_bucket.acquire(timeout=timeout)
 
     async def get_ticker(self, symbol: str, rest_fallback: Callable) -> Decimal:
@@ -503,6 +591,13 @@ class RateLimitGovernor:
         Args:
             status_code: HTTP status code
         """
+        logger.debug(
+            "Recording HTTP response for adaptive rate limiting",
+            extra={
+                "broker_name": self.broker_name,
+                "status_code": status_code,
+            }
+        )
         await self.adaptive_limiter.record_response(status_code)
 
     async def start_websocket(self, websocket_url: str):

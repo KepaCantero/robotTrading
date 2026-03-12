@@ -7,6 +7,7 @@ profit/loss, and trade metadata.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -15,6 +16,8 @@ from typing import Optional
 
 from app.domain.entities.position import PositionSide
 from app.domain.value_objects.money import Money
+
+logger = logging.getLogger(__name__)
 
 
 class TradeStatus(str, Enum):
@@ -95,16 +98,41 @@ class Trade:
 
     def __post_init__(self):
         """Validate trade invariants."""
+        logger.debug(
+            "Validating trade",
+            extra={"trade_id": self.trade_id, "symbol": self.symbol}
+        )
         if not self.trade_id:
+            logger.error("Trade validation failed: empty trade ID")
             raise ValueError("Trade ID cannot be empty")
         if not self.symbol:
+            logger.error(
+                "Trade validation failed: empty symbol",
+                extra={"trade_id": self.trade_id}
+            )
             raise ValueError("Symbol cannot be empty")
         if self.quantity <= 0:
+            logger.error(
+                "Trade validation failed: invalid quantity",
+                extra={"trade_id": self.trade_id, "quantity": str(self.quantity)}
+            )
             raise ValueError("Quantity must be positive")
         if self.entry_price < 0:
+            logger.error(
+                "Trade validation failed: negative entry price",
+                extra={"trade_id": self.trade_id, "entry_price": str(self.entry_price)}
+            )
             raise ValueError("Entry price cannot be negative")
         if self.exit_price < 0:
+            logger.error(
+                "Trade validation failed: negative exit price",
+                extra={"trade_id": self.trade_id, "exit_price": str(self.exit_price)}
+            )
             raise ValueError("Exit price cannot be negative")
+        logger.debug(
+            "Trade validation passed",
+            extra={"trade_id": self.trade_id, "symbol": self.symbol}
+        )
 
     # ==========================================================================
     # P&L Calculations
@@ -291,6 +319,17 @@ class Trade:
         Returns:
             Trade instance
         """
+        logger.info(
+            "Creating trade from position",
+            extra={
+                "trade_id": trade_id,
+                "symbol": symbol,
+                "side": side.value,
+                "quantity": str(position_quantity),
+                "entry_price": str(entry_price),
+                "exit_price": str(exit_price)
+            }
+        )
         return cls(
             trade_id=trade_id,
             symbol=symbol,
@@ -322,6 +361,17 @@ class Trade:
         strategy_name: Optional[str] = None,
     ) -> Trade:
         """Create a long trade."""
+        logger.info(
+            "Creating long trade",
+            extra={
+                "trade_id": trade_id,
+                "symbol": symbol,
+                "side": "LONG",
+                "quantity": str(quantity),
+                "entry_price": str(entry_price),
+                "exit_price": str(exit_price)
+            }
+        )
         return cls(
             trade_id=trade_id,
             symbol=symbol,
@@ -354,6 +404,17 @@ class Trade:
         strategy_name: Optional[str] = None,
     ) -> Trade:
         """Create a short trade."""
+        logger.info(
+            "Creating short trade",
+            extra={
+                "trade_id": trade_id,
+                "symbol": symbol,
+                "side": "SHORT",
+                "quantity": str(quantity),
+                "entry_price": str(entry_price),
+                "exit_price": str(exit_price)
+            }
+        )
         return cls(
             trade_id=trade_id,
             symbol=symbol,

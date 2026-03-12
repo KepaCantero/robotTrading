@@ -4,12 +4,15 @@ Data models for parameter optimization.
 Defines the core data structures used across all optimization algorithms.
 """
 
+import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, field_validator
+
+logger = logging.getLogger(__name__)
 
 
 class ParameterType(str, Enum):
@@ -81,32 +84,83 @@ class ParameterRange:
 
     def __post_init__(self):
         """Validate parameter range after initialization."""
+        logger.debug(
+            "Initializing parameter range",
+            extra={
+                "parameter_name": self.name,
+                "parameter_type": self.parameter_type.value,
+                "scale": self.scale.value,
+            }
+        )
+
         # Auto-detect parameter type if not specified
         if self.parameter_type == ParameterType.CONTINUOUS:
             if self.values is not None:
                 if all(isinstance(v, (int, bool)) for v in self.values):
                     self.parameter_type = ParameterType.CATEGORICAL
+                    logger.debug(
+                        f"Auto-detected parameter type as {ParameterType.CATEGORICAL.value}",
+                        extra={"parameter_name": self.name}
+                    )
                 elif all(isinstance(v, int) for v in self.values):
                     self.parameter_type = ParameterType.DISCRETE
+                    logger.debug(
+                        f"Auto-detected parameter type as {ParameterType.DISCRETE.value}",
+                        extra={"parameter_name": self.name}
+                    )
 
         # Validate based on type
         if self.parameter_type == ParameterType.CATEGORICAL:
             if not self.values:
+                logger.error(
+                    "Categorical parameter missing values",
+                    extra={"parameter_name": self.name}
+                )
                 raise ValueError(f"Categorical parameter '{self.name}' must have values")
 
         elif self.parameter_type in (ParameterType.CONTINUOUS, ParameterType.INTEGER):
             if self.min_value is None or self.max_value is None:
+                logger.error(
+                    "Parameter missing min/max values",
+                    extra={
+                        "parameter_name": self.name,
+                        "parameter_type": self.parameter_type.value,
+                    }
+                )
                 raise ValueError(
                     f"Parameter '{self.name}' of type {self.parameter_type} "
                     "must have min_value and max_value"
                 )
             if self.min_value >= self.max_value:
+                logger.error(
+                    "Invalid parameter range: min >= max",
+                    extra={
+                        "parameter_name": self.name,
+                        "min_value": float(self.min_value),
+                        "max_value": float(self.max_value),
+                    }
+                )
                 raise ValueError(
                     f"Parameter '{self.name}': min_value ({self.min_value}) "
                     f"must be less than max_value ({self.max_value})"
                 )
             if self.scale == ParameterScale.LOG and self.min_value <= 0:
+                logger.error(
+                    "Log scale requires positive min_value",
+                    extra={
+                        "parameter_name": self.name,
+                        "min_value": float(self.min_value),
+                    }
+                )
                 raise ValueError(f"Parameter '{self.name}': log scale requires positive min_value")
+
+        logger.info(
+            "Parameter range initialized successfully",
+            extra={
+                "parameter_name": self.name,
+                "parameter_type": self.parameter_type.value,
+            }
+        )
 
     def sample(self) -> Any:
         """
@@ -120,11 +174,29 @@ class ParameterRange:
         """
         import random
 
+        logger.debug(
+            "Sampling parameter value",
+            extra={
+                "parameter_name": self.name,
+                "parameter_type": self.parameter_type.value,
+            }
+        )
+
         if self.parameter_type == ParameterType.CATEGORICAL:
-            return random.choice(self.values)  # type: ignore
+            value = random.choice(self.values)  # type: ignore
+            logger.debug(
+                "Sampled categorical value",
+                extra={"parameter_name": self.name, "value": str(value)}
+            )
+            return value
 
         elif self.parameter_type == ParameterType.DISCRETE:
-            return random.choice(self.values)  # type: ignore
+            value = random.choice(self.values)  # type: ignore
+            logger.debug(
+                "Sampled discrete value",
+                extra={"parameter_name": self.name, "value": str(value)}
+            )
+            return value
 
         elif self.parameter_type == ParameterType.INTEGER:
             min_val = int(self.min_value)  # type: ignore
@@ -132,11 +204,17 @@ class ParameterRange:
             step = int(self.step) if self.step else 1  # type: ignore
 
             if step == 1:
-                return random.randint(min_val, max_val)
+                value = random.randint(min_val, max_val)
             else:
                 num_steps = (max_val - min_val) // step
                 random_step = random.randint(0, num_steps)
-                return min_val + random_step * step
+                value = min_val + random_step * step
+
+            logger.debug(
+                "Sampled integer value",
+                extra={"parameter_name": self.name, "value": value}
+            )
+            return value
 
         elif self.parameter_type == ParameterType.CONTINUOUS:
             min_val = float(self.min_value)  # type: ignore
@@ -146,10 +224,23 @@ class ParameterRange:
                 log_min = self._log(min_val)
                 log_max = self._log(max_val)
                 log_value = random.uniform(log_min, log_max)
-                return self._exp(log_value)
+                value = self._exp(log_value)
             else:
-                return random.uniform(min_val, max_val)
+                value = random.uniform(min_val, max_val)
 
+            logger.debug(
+                "Sampled continuous value",
+                extra={"parameter_name": self.name, "value": value}
+            )
+            return value
+
+        logger.error(
+            "Failed to sample parameter",
+            extra={
+                "parameter_name": self.name,
+                "parameter_type": self.parameter_type.value,
+            }
+        )
         raise ValueError(f"Cannot sample parameter '{self.name}' of type {self.parameter_type}")
 
     def _log(self, value: float) -> float:
@@ -275,8 +366,26 @@ class ParameterConstraint:
             True if constraint is satisfied
         """
         try:
-            return self.constraint_func(params)
-        except Exception:
+            result = self.constraint_func(params)
+            if not result:
+                logger.debug(
+                    "Constraint check failed",
+                    extra={
+                        "constraint_name": self.name,
+                        "description": self.description,
+                        "params": {k: str(v) for k, v in params.items()},
+                    }
+                )
+            return result
+        except Exception as e:
+            logger.warning(
+                "Constraint check raised exception",
+                extra={
+                    "constraint_name": self.name,
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                }
+            )
             return False
 
 
@@ -309,13 +418,32 @@ class ParameterGrid:
 
     def __post_init__(self):
         """Validate parameter grid."""
+        logger.debug(
+            "Initializing parameter grid",
+            extra={"parameter_count": len(self.parameters)}
+        )
+
         if not self.parameters:
+            logger.error("Parameter grid has no parameters")
             raise ValueError("ParameterGrid must have at least one parameter")
 
         # Check for duplicate parameter names
         names = [p.name for p in self.parameters]
         if len(names) != len(set(names)):
+            logger.error(
+                "Duplicate parameter names found",
+                extra={"parameter_names": names}
+            )
             raise ValueError("Duplicate parameter names in ParameterGrid")
+
+        logger.info(
+            "Parameter grid initialized",
+            extra={
+                "parameter_count": len(self.parameters),
+                "constraint_count": len(self.constraints),
+                "parameter_names": names,
+            }
+        )
 
     def generate_combinations(self) -> List[Dict[str, Any]]:
         """
@@ -325,6 +453,11 @@ class ParameterGrid:
             List of parameter dictionaries
         """
         from itertools import product
+
+        logger.debug(
+            "Generating parameter combinations for grid search",
+            extra={"parameter_count": len(self.parameters)}
+        )
 
         grid_values = [p.get_grid_values() for p in self.parameters]
         param_names = [p.name for p in self.parameters]
@@ -336,6 +469,14 @@ class ParameterGrid:
             if self._check_constraints(params):
                 combinations.append(params)
 
+        logger.info(
+            "Parameter combinations generated",
+            extra={
+                "total_combinations": len(combinations),
+                "parameter_count": len(self.parameters),
+            }
+        )
+
         return combinations
 
     def sample_random(self) -> Dict[str, Any]:
@@ -345,13 +486,29 @@ class ParameterGrid:
         Returns:
             Random parameter dictionary
         """
+        logger.debug(
+            "Sampling random parameter combination",
+            extra={"max_attempts": 100}
+        )
+
         max_attempts = 100
-        for _ in range(max_attempts):
+        for attempt in range(max_attempts):
             params = {p.name: p.sample() for p in self.parameters}
             if self._check_constraints(params):
+                logger.info(
+                    "Random parameter combination sampled",
+                    extra={
+                        "attempt": attempt + 1,
+                        "params": {k: str(v) for k, v in params.items()},
+                    }
+                )
                 return params
 
         # If no valid combination found after many attempts, return without constraints
+        logger.warning(
+            "Failed to find valid parameter combination after max attempts",
+            extra={"max_attempts": max_attempts}
+        )
         return {p.name: p.sample() for p in self.parameters}
 
     def _check_constraints(self, params: Dict[str, Any]) -> bool:

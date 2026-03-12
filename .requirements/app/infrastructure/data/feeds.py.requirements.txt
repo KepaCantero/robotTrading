@@ -6,15 +6,29 @@ Domain: Data
 Generated: 2026-03-09
 
 ## 2. Dependencies
-- `abc`
-- `aiohttp`
+
+### Python Modules (Internal/Stdlib)
+- `abc` (stdlib)
+- `asyncio` (stdlib)
+- `datetime` (stdlib)
+- `decimal` (stdlib)
+- `logging` (stdlib)
+- `typing` (stdlib)
+
+### Internal Modules
 - `app.domain.models.market_data`
 - `app.shared.config.api_endpoints`
-- `asyncio`
-- `datetime`
-- `decimal`
-- `logging`
-- `typing`
+
+### External Packages (pip install)
+```
+# HTTP Client
+aiohttp>=3.9.0            # Async HTTP client for market data APIs
+```
+
+### Data Feed APIs Supported
+- Alpha Vantage - requires `ALPHA_VANTAGE_API_KEY`
+- Yahoo Finance - free, no API key required
+- Polygon.io (Massive) - requires `POLYGON_API_KEY`
 
 ## 3. Core Components
 ### Classes

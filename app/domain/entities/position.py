@@ -7,6 +7,7 @@ profit/loss calculations, and risk metrics.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -14,6 +15,8 @@ from enum import Enum
 from typing import Optional
 
 from app.domain.value_objects.money import Money
+
+logger = logging.getLogger(__name__)
 
 
 class PositionSide(str, Enum):
@@ -149,20 +152,53 @@ class Position:
 
     def _validate(self) -> None:
         """Validate position invariants."""
+        logger.debug(
+            "Validating position",
+            extra={"symbol": self.symbol, "quantity": str(self.quantity)}
+        )
         if not self.symbol:
+            logger.error("Position validation failed: empty symbol")
             raise ValueError("Symbol cannot be empty")
         if self.quantity < 0:
+            logger.error(
+                "Position validation failed: negative quantity",
+                extra={"symbol": self.symbol, "quantity": str(self.quantity)}
+            )
             raise ValueError("Quantity cannot be negative")
         if self.avg_entry_price < 0:
+            logger.error(
+                "Position validation failed: negative entry price",
+                extra={"symbol": self.symbol, "avg_entry_price": str(self.avg_entry_price)}
+            )
             raise ValueError("Entry price cannot be negative")
         if self.current_price < 0:
+            logger.error(
+                "Position validation failed: negative current price",
+                extra={"symbol": self.symbol, "current_price": str(self.current_price)}
+            )
             raise ValueError("Current price cannot be negative")
         if self.current_price == 0:
+            logger.error(
+                "Position validation failed: zero price",
+                extra={"symbol": self.symbol}
+            )
             raise ValueError("Price cannot be zero")
         if self.stop_loss is not None and self.stop_loss <= 0:
+            logger.error(
+                "Position validation failed: invalid stop loss",
+                extra={"symbol": self.symbol, "stop_loss": str(self.stop_loss)}
+            )
             raise ValueError("Stop loss must be positive when set")
         if self.take_profit is not None and self.take_profit <= 0:
+            logger.error(
+                "Position validation failed: invalid take profit",
+                extra={"symbol": self.symbol, "take_profit": str(self.take_profit)}
+            )
             raise ValueError("Take profit must be positive when set")
+        logger.debug(
+            "Position validation passed",
+            extra={"symbol": self.symbol}
+        )
 
     @property
     def avg_price(self) -> Decimal:
@@ -270,7 +306,15 @@ class Position:
         Raises:
             ValueError: If price is negative or zero
         """
+        logger.debug(
+            "Updating position price",
+            extra={"symbol": self.symbol, "old_price": str(self.current_price), "new_price": str(new_price)}
+        )
         if new_price <= 0:
+            logger.error(
+                "Price update failed: invalid price",
+                extra={"symbol": self.symbol, "new_price": str(new_price)}
+            )
             raise ValueError("Price must be positive")
 
         self.current_price = new_price
@@ -278,8 +322,16 @@ class Position:
 
         # Update max/min
         if new_price > self.max_price:
+            logger.debug(
+                "New max price recorded",
+                extra={"symbol": self.symbol, "max_price": str(new_price)}
+            )
             self.max_price = new_price
         if new_price < self.min_price:
+            logger.debug(
+                "New min price recorded",
+                extra={"symbol": self.symbol, "min_price": str(new_price)}
+            )
             self.min_price = new_price
 
     def add_shares(self, quantity: Decimal, price: Decimal) -> None:
@@ -293,14 +345,41 @@ class Position:
         Raises:
             ValueError: If quantity or price is negative, or position size exceeds limit
         """
+        logger.info(
+            "Adding shares to position",
+            extra={
+                "symbol": self.symbol,
+                "current_quantity": str(self.quantity),
+                "adding_quantity": str(quantity),
+                "price": str(price)
+            }
+        )
         if quantity < 0:
+            logger.error(
+                "Add shares failed: negative quantity",
+                extra={"symbol": self.symbol, "quantity": str(quantity)}
+            )
             raise ValueError("Quantity cannot be negative")
         if price < 0:
+            logger.error(
+                "Add shares failed: negative price",
+                extra={"symbol": self.symbol, "price": str(price)}
+            )
             raise ValueError("Price cannot be negative")
 
         # Calculate new total quantity
         total_quantity = self.quantity + quantity
         if total_quantity > MAX_POSITION_SIZE:
+            logger.error(
+                "Add shares failed: position size limit exceeded",
+                extra={
+                    "symbol": self.symbol,
+                    "current_quantity": str(self.quantity),
+                    "adding_quantity": str(quantity),
+                    "total_quantity": str(total_quantity),
+                    "max_size": str(MAX_POSITION_SIZE)
+                }
+            )
             raise ValueError(
                 f"Position size cannot exceed {MAX_POSITION_SIZE}. "
                 f"Current: {self.quantity}, Adding: {quantity}, Total would be: {total_quantity}"
@@ -312,6 +391,14 @@ class Position:
         self.quantity = total_quantity
         self.avg_entry_price = total_cost / total_quantity if total_quantity > 0 else Decimal("0")
         self.updated_at = datetime.now(timezone.utc)
+        logger.info(
+            "Shares added successfully",
+            extra={
+                "symbol": self.symbol,
+                "new_quantity": str(self.quantity),
+                "new_avg_price": str(self.avg_entry_price)
+            }
+        )
 
     def remove_shares(self, quantity: Decimal, price: Decimal) -> None:
         """
@@ -324,15 +411,44 @@ class Position:
         Raises:
             ValueError: If quantity exceeds current position
         """
+        logger.info(
+            "Removing shares from position",
+            extra={
+                "symbol": self.symbol,
+                "current_quantity": str(self.quantity),
+                "removing_quantity": str(quantity),
+                "exit_price": str(price)
+            }
+        )
         if quantity < 0:
+            logger.error(
+                "Remove shares failed: negative quantity",
+                extra={"symbol": self.symbol, "quantity": str(quantity)}
+            )
             raise ValueError("Quantity cannot be negative")
         if quantity > self.quantity:
+            logger.error(
+                "Remove shares failed: quantity exceeds position",
+                extra={
+                    "symbol": self.symbol,
+                    "current_quantity": str(self.quantity),
+                    "removing_quantity": str(quantity)
+                }
+            )
             raise ValueError("Cannot remove more shares than held")
 
         self.quantity -= quantity
         self.avg_exit_price = price
 
         if self.quantity == 0:
+            logger.info(
+                "Position closed",
+                extra={
+                    "symbol": self.symbol,
+                    "exit_price": str(price),
+                    "status": "closed"
+                }
+            )
             self.status = PositionStatus.CLOSED
             self.exit_date = datetime.now(timezone.utc)
 
@@ -411,6 +527,15 @@ class Position:
         take_profit: Optional[Decimal] = None,
     ) -> Position:
         """Create a new long position."""
+        logger.info(
+            "Creating long position",
+            extra={
+                "symbol": symbol,
+                "quantity": str(quantity),
+                "entry_price": str(entry_price),
+                "side": "LONG"
+            }
+        )
         return cls(
             symbol=symbol,
             entry_date=datetime.now(timezone.utc),
@@ -435,6 +560,15 @@ class Position:
         take_profit: Optional[Decimal] = None,
     ) -> Position:
         """Create a new short position."""
+        logger.info(
+            "Creating short position",
+            extra={
+                "symbol": symbol,
+                "quantity": str(quantity),
+                "entry_price": str(entry_price),
+                "side": "SHORT"
+            }
+        )
         return cls(
             symbol=symbol,
             entry_date=datetime.now(timezone.utc),

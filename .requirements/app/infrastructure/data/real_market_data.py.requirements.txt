@@ -6,18 +6,33 @@ Domain: Data
 Generated: 2026-03-09
 
 ## 2. Dependencies
-- `aiohttp`
+
+### Python Modules (Internal/Stdlib)
+- `asyncio` (stdlib)
+- `datetime` (stdlib)
+- `json` (stdlib)
+- `logging` (stdlib)
+- `os` (stdlib)
+- `pathlib` (stdlib)
+- `typing` (stdlib)
+
+### Internal Modules
 - `app.shared.config.api_endpoints`
 - `app.shared.config.timeout_config`
-- `asyncio`
-- `datetime`
-- `json`
-- `logging`
-- `os`
-- `pandas`
-- `pathlib`
-- `requests.exceptions`
-- `typing`
+
+### External Packages (pip install)
+```
+# HTTP Client
+aiohttp>=3.9.0            # Async HTTP client for API calls
+requests>=2.31.0          # Sync HTTP fallback
+
+# Data Processing
+pandas>=2.0.0             # DataFrame for market data
+numpy>=1.26.0             # Numerical operations (pandas dependency)
+```
+
+### API Keys Required
+- `ALPHA_VANTAGE_API_KEY` - Alpha Vantage API key (env variable)
 
 ## 3. Core Components
 ### Classes

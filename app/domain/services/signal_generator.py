@@ -10,10 +10,13 @@ Reference: Rule 05-architecture.md, Rule 03-solid-principles.md
 # mypy: ignore-errors
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 from app.shared.config.centralized_config import get_config
 
@@ -114,6 +117,15 @@ class SignalGenerator:
         self._rsi_oversold = Decimal(str(config.trading.rsi_oversold))  # Default 30
         self._rsi_overbought = Decimal(str(config.trading.rsi_overbought))  # Default 70
 
+        logger.info(
+            "SignalGenerator initialized",
+            extra={
+                "confidence_threshold": float(confidence_threshold),
+                "rsi_oversold": float(self._rsi_oversold),
+                "rsi_overbought": float(self._rsi_overbought),
+            },
+        )
+
     def generate_ma_crossover_signal(
         self,
         indicators: IndicatorValues,
@@ -134,7 +146,20 @@ class SignalGenerator:
         Returns:
             Generated signal
         """
+        logger.debug(
+            "Generating MA crossover signal",
+            extra={
+                "symbol": symbol,
+                "has_sma20": indicators.sma_20 is not None,
+                "has_sma50": indicators.sma_50 is not None,
+            },
+        )
+
         if indicators.sma_20 is None or indicators.sma_50 is None:
+            logger.warning(
+                "Insufficient MA data for signal generation",
+                extra={"symbol": symbol},
+            )
             return self._hold_signal(symbol, "Insufficient MA data")
 
         fast_ma = indicators.sma_20
@@ -151,7 +176,7 @@ class SignalGenerator:
             strength = self._calculate_ma_strength(fast_ma, slow_ma)
             confidence = min(strength.value / Decimal("100"), Decimal("1"))
 
-            return Signal(
+            signal = Signal(
                 symbol=symbol,
                 signal_type=SignalType.BUY,
                 strength=strength,
@@ -159,6 +184,18 @@ class SignalGenerator:
                 reason=f"Price above fast MA ({fast_ma}), which is above slow MA ({slow_ma})",
                 metadata={"fast_ma": str(fast_ma), "slow_ma": str(slow_ma)},
             )
+            logger.info(
+                "Generated MA crossover BUY signal",
+                extra={
+                    "symbol": symbol,
+                    "signal_type": "BUY",
+                    "strength": strength.value,
+                    "confidence": float(confidence),
+                    "fast_ma": float(fast_ma),
+                    "slow_ma": float(slow_ma),
+                },
+            )
+            return signal
 
         elif not fast_above_slow and not price_above_fast:
             # Bearish: price < fast < slow
@@ -166,7 +203,7 @@ class SignalGenerator:
             strength = self._calculate_ma_strength(slow_ma, fast_ma)
             confidence = min(strength.value / Decimal("100"), Decimal("1"))
 
-            return Signal(
+            signal = Signal(
                 symbol=symbol,
                 signal_type=SignalType.SELL,
                 strength=strength,
@@ -174,9 +211,25 @@ class SignalGenerator:
                 reason=f"Price below fast MA ({fast_ma}), which is below slow MA ({slow_ma})",
                 metadata={"fast_ma": str(fast_ma), "slow_ma": str(slow_ma)},
             )
+            logger.info(
+                "Generated MA crossover SELL signal",
+                extra={
+                    "symbol": symbol,
+                    "signal_type": "SELL",
+                    "strength": strength.value,
+                    "confidence": float(confidence),
+                    "fast_ma": float(fast_ma),
+                    "slow_ma": float(slow_ma),
+                },
+            )
+            return signal
 
         else:
             # Mixed signals - hold
+            logger.debug(
+                "MA alignment unclear, generating HOLD signal",
+                extra={"symbol": symbol},
+            )
             return Signal(
                 symbol=symbol,
                 signal_type=SignalType.HOLD,
@@ -205,7 +258,19 @@ class SignalGenerator:
         Returns:
             Generated signal
         """
+        logger.debug(
+            "Generating RSI signal",
+            extra={
+                "symbol": symbol,
+                "has_rsi": indicators.rsi is not None,
+            },
+        )
+
         if indicators.rsi is None:
+            logger.warning(
+                "RSI not available for signal generation",
+                extra={"symbol": symbol},
+            )
             return self._hold_signal(symbol, "RSI not available")
 
         rsi = indicators.rsi
@@ -221,7 +286,7 @@ class SignalGenerator:
             )
             confidence = (rsi_oversold - rsi) / rsi_oversold
 
-            return Signal(
+            signal = Signal(
                 symbol=symbol,
                 signal_type=SignalType.BUY,
                 strength=strength,
@@ -229,6 +294,17 @@ class SignalGenerator:
                 reason=f"RSI oversold at {rsi}",
                 metadata={"rsi": str(rsi)},
             )
+            logger.info(
+                "Generated RSI BUY signal (oversold)",
+                extra={
+                    "symbol": symbol,
+                    "signal_type": "BUY",
+                    "strength": strength.value,
+                    "confidence": float(confidence),
+                    "rsi": float(rsi),
+                },
+            )
+            return signal
 
         elif rsi > rsi_overbought:
             # Overbought - potential sell
@@ -239,7 +315,7 @@ class SignalGenerator:
             )
             confidence = (rsi - rsi_overbought) / (Decimal("100") - rsi_overbought)
 
-            return Signal(
+            signal = Signal(
                 symbol=symbol,
                 signal_type=SignalType.SELL,
                 strength=strength,
@@ -247,9 +323,24 @@ class SignalGenerator:
                 reason=f"RSI overbought at {rsi}",
                 metadata={"rsi": str(rsi)},
             )
+            logger.info(
+                "Generated RSI SELL signal (overbought)",
+                extra={
+                    "symbol": symbol,
+                    "signal_type": "SELL",
+                    "strength": strength.value,
+                    "confidence": float(confidence),
+                    "rsi": float(rsi),
+                },
+            )
+            return signal
 
         else:
             # Neutral zone
+            logger.debug(
+                "RSI in neutral zone, generating HOLD signal",
+                extra={"symbol": symbol, "rsi": float(rsi)},
+            )
             return Signal(
                 symbol=symbol,
                 signal_type=SignalType.HOLD,
@@ -419,7 +510,19 @@ class SignalGenerator:
         Returns:
             Consensus signal
         """
+        logger.debug(
+            "Combining signals for consensus",
+            extra={
+                "symbol": symbol,
+                "signal_count": len(signals),
+            },
+        )
+
         if not signals:
+            logger.warning(
+                "No signals to combine",
+                extra={"symbol": symbol},
+            )
             return self._hold_signal(symbol, "No signals to combine")
 
         # Count buy/sell/hold signals
@@ -439,7 +542,7 @@ class SignalGenerator:
             avg_confidence = buy_confidence / buy_count if buy_count > 0 else Decimal("0")
 
             reasons = [s.reason for s in signals if s.signal_type == SignalType.BUY]
-            return Signal(
+            signal = Signal(
                 symbol=symbol,
                 signal_type=SignalType.BUY,
                 strength=strength,
@@ -447,6 +550,20 @@ class SignalGenerator:
                 reason=f"Consensus BUY ({buy_count}/{len(signals)} signals)",
                 metadata={"signals": reasons},
             )
+            logger.info(
+                "Combined signals: BUY consensus",
+                extra={
+                    "symbol": symbol,
+                    "signal_type": "BUY",
+                    "strength": strength.value,
+                    "confidence": float(avg_confidence),
+                    "buy_count": buy_count,
+                    "sell_count": sell_count,
+                    "hold_count": hold_count,
+                    "total_signals": len(signals),
+                },
+            )
+            return signal
 
         elif sell_count > buy_count and sell_count > hold_count:
             strength = self._calculate_consensus_strength(
@@ -455,7 +572,7 @@ class SignalGenerator:
             avg_confidence = sell_confidence / sell_count if sell_count > 0 else Decimal("0")
 
             reasons = [s.reason for s in signals if s.signal_type == SignalType.SELL]
-            return Signal(
+            signal = Signal(
                 symbol=symbol,
                 signal_type=SignalType.SELL,
                 strength=strength,
@@ -463,8 +580,32 @@ class SignalGenerator:
                 reason=f"Consensus SELL ({sell_count}/{len(signals)} signals)",
                 metadata={"signals": reasons},
             )
+            logger.info(
+                "Combined signals: SELL consensus",
+                extra={
+                    "symbol": symbol,
+                    "signal_type": "SELL",
+                    "strength": strength.value,
+                    "confidence": float(avg_confidence),
+                    "buy_count": buy_count,
+                    "sell_count": sell_count,
+                    "hold_count": hold_count,
+                    "total_signals": len(signals),
+                },
+            )
+            return signal
 
         else:
+            logger.info(
+                "No clear consensus from signal combination",
+                extra={
+                    "symbol": symbol,
+                    "buy_count": buy_count,
+                    "sell_count": sell_count,
+                    "hold_count": hold_count,
+                    "total_signals": len(signals),
+                },
+            )
             return Signal(
                 symbol=symbol,
                 signal_type=SignalType.HOLD,

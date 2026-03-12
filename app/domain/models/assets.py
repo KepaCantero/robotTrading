@@ -5,6 +5,7 @@ This module defines the data models for assets, liquidity metrics,
 and asset universe management.
 """
 
+import logging
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
@@ -12,6 +13,8 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 from pydantic import BaseModel, Field, field_validator
+
+logger = logging.getLogger(__name__)
 
 
 class AssetClass(str, Enum):
@@ -91,14 +94,27 @@ class Asset(BaseModel):
     def validate_symbol(cls, v):
         """Validate asset symbol format."""
         if not v or len(v.strip()) == 0:
+            logger.error(
+                "Asset symbol validation failed: empty symbol",
+                extra={"symbol_value": repr(v)},
+            )
             raise ValueError("Symbol cannot be empty")
-        return v.strip().upper()
+        validated = v.strip().upper()
+        logger.debug(
+            "Asset symbol validated",
+            extra={"original": v, "validated": validated},
+        )
+        return validated
 
     @field_validator("name")
     @classmethod
     def validate_name(cls, v):
         """Validate asset name."""
         if not v or len(v.strip()) == 0:
+            logger.error(
+                "Asset name validation failed: empty name",
+                extra={"name_value": repr(v)},
+            )
             raise ValueError("Name cannot be empty")
         return v.strip()
 
@@ -114,7 +130,16 @@ class Asset(BaseModel):
 
         log_volume = math.log10(float(self.avg_volume))
         # Scale 100-10000 to 0-100
-        return min(100.0, max(0.0, (log_volume - 2) * 20))
+        score = min(100.0, max(0.0, (log_volume - 2) * 20))
+        logger.debug(
+            "Calculated volume score",
+            extra={
+                "symbol": self.symbol,
+                "avg_volume": str(self.avg_volume),
+                "volume_score": score,
+            },
+        )
+        return score
 
     @property
     def spread_score(self) -> float:
@@ -125,7 +150,16 @@ class Asset(BaseModel):
         # Lower spread = higher score
         # Normalize based on typical spreads
         spread_pct = float(self.avg_spread) * 100
-        return max(0.0, min(100.0, 100 - spread_pct * 10))
+        score = max(0.0, min(100.0, 100 - spread_pct * 10))
+        logger.debug(
+            "Calculated spread score",
+            extra={
+                "symbol": self.symbol,
+                "avg_spread": str(self.avg_spread),
+                "spread_score": score,
+            },
+        )
+        return score
 
     @property
     def combined_liquidity_score(self) -> float:
@@ -133,7 +167,17 @@ class Asset(BaseModel):
         volume_weight = 0.6
         spread_weight = 0.4
 
-        return self.volume_score * volume_weight + self.spread_score * spread_weight
+        score = self.volume_score * volume_weight + self.spread_score * spread_weight
+        logger.debug(
+            "Calculated combined liquidity score",
+            extra={
+                "symbol": self.symbol,
+                "volume_score": self.volume_score,
+                "spread_score": self.spread_score,
+                "combined_score": score,
+            },
+        )
+        return score
 
 
 class AssetUniverse(BaseModel):
@@ -158,6 +202,14 @@ class AssetUniverse(BaseModel):
     def __init__(self, **data):
         super().__init__(**data)
         self._update_statistics()
+        logger.info(
+            "AssetUniverse initialized",
+            extra={
+                "asset_class": self.asset_class.value,
+                "total_assets": self.total_assets,
+                "avg_liquidity_score": self.avg_liquidity_score,
+            },
+        )
 
     def _update_statistics(self):
         """Update universe statistics."""
@@ -173,28 +225,82 @@ class AssetUniverse(BaseModel):
             self.avg_liquidity_score = 0.0
             self.total_market_cap = None
 
+        logger.debug(
+            "Updated universe statistics",
+            extra={
+                "total_assets": self.total_assets,
+                "avg_liquidity_score": self.avg_liquidity_score,
+                "total_market_cap": str(self.total_market_cap) if self.total_market_cap else None,
+            },
+        )
+
     def add_asset(self, asset: Asset) -> bool:
         """Add asset to universe."""
+        logger.debug(
+            "Attempting to add asset to universe",
+            extra={
+                "symbol": asset.symbol,
+                "asset_class": asset.asset_class.value,
+                "universe_class": self.asset_class.value,
+            },
+        )
+
         if asset.asset_class != self.asset_class:
+            logger.warning(
+                "Asset class mismatch, cannot add to universe",
+                extra={
+                    "asset_symbol": asset.symbol,
+                    "asset_class": asset.asset_class.value,
+                    "expected_class": self.asset_class.value,
+                },
+            )
             return False
 
         # Check if asset already exists
         existing_symbols = {a.symbol for a in self.assets}
         if asset.symbol in existing_symbols:
+            logger.debug(
+                "Asset already exists in universe",
+                extra={"symbol": asset.symbol},
+            )
             return False
 
         self.assets.append(asset)
         self._update_statistics()
+        logger.info(
+            "Asset added to universe",
+            extra={
+                "symbol": asset.symbol,
+                "total_assets": self.total_assets,
+            },
+        )
         return True
 
     def remove_asset(self, symbol: str) -> bool:
         """Remove asset from universe."""
+        logger.debug(
+            "Attempting to remove asset from universe",
+            extra={"symbol": symbol},
+        )
+
         original_count = len(self.assets)
         self.assets = [a for a in self.assets if a.symbol != symbol]
 
         if len(self.assets) < original_count:
             self._update_statistics()
+            logger.info(
+                "Asset removed from universe",
+                extra={
+                    "symbol": symbol,
+                    "total_assets": self.total_assets,
+                },
+            )
             return True
+
+        logger.debug(
+            "Asset not found in universe",
+            extra={"symbol": symbol},
+        )
         return False
 
     def get_top_liquid_assets(self, n: Optional[int] = None) -> List[Asset]:
@@ -204,13 +310,31 @@ class AssetUniverse(BaseModel):
 
         # Sort by liquidity score (descending)
         sorted_assets = sorted(self.assets, key=lambda x: x.liquidity_score, reverse=True)
-        return sorted_assets[:n]
+        result = sorted_assets[:n]
+
+        logger.debug(
+            "Retrieved top liquid assets",
+            extra={
+                "requested_n": n,
+                "returned_count": len(result),
+            },
+        )
+        return result
 
     def get_asset_by_symbol(self, symbol: str) -> Optional[Asset]:
         """Get asset by symbol."""
         for asset in self.assets:
             if asset.symbol == symbol:
+                logger.debug(
+                    "Found asset by symbol",
+                    extra={"symbol": symbol},
+                )
                 return asset
+
+        logger.debug(
+            "Asset not found by symbol",
+            extra={"symbol": symbol},
+        )
         return None
 
     def update_asset_liquidity(
@@ -221,8 +345,22 @@ class AssetUniverse(BaseModel):
         avg_spread: Decimal,
     ) -> bool:
         """Update asset liquidity metrics."""
+        logger.debug(
+            "Updating asset liquidity metrics",
+            extra={
+                "symbol": symbol,
+                "liquidity_score": liquidity_score,
+                "avg_volume": str(avg_volume),
+                "avg_spread": str(avg_spread),
+            },
+        )
+
         asset = self.get_asset_by_symbol(symbol)
         if not asset:
+            logger.warning(
+                "Cannot update liquidity: asset not found",
+                extra={"symbol": symbol},
+            )
             return False
 
         asset.liquidity_score = liquidity_score
@@ -231,6 +369,13 @@ class AssetUniverse(BaseModel):
         asset.last_updated = datetime.utcnow()
 
         self._update_statistics()
+        logger.info(
+            "Asset liquidity updated",
+            extra={
+                "symbol": symbol,
+                "new_liquidity_score": liquidity_score,
+            },
+        )
         return True
 
 
@@ -269,7 +414,12 @@ class LiquidityMetrics(BaseModel):
     @classmethod
     def validate_symbol(cls, v):
         """Validate symbol format."""
-        return v.strip().upper()
+        validated = v.strip().upper()
+        logger.debug(
+            "LiquidityMetrics symbol validated",
+            extra={"original": v, "validated": validated},
+        )
+        return validated
 
 
 class AssetRanking(BaseModel):
@@ -288,6 +438,15 @@ class AssetRanking(BaseModel):
         spread_score: float,
     ) -> None:
         """Add asset ranking."""
+        logger.debug(
+            "Adding asset ranking",
+            extra={
+                "symbol": symbol,
+                "rank": rank,
+                "liquidity_score": liquidity_score,
+            },
+        )
+
         ranking_entry = {
             "symbol": symbol,
             "liquidity_score": liquidity_score,
@@ -301,7 +460,12 @@ class AssetRanking(BaseModel):
     def get_top_ranked(self, n: int = 20) -> List[Dict[str, Any]]:
         """Get top N ranked assets."""
         sorted_rankings = sorted(self.rankings, key=lambda x: x["rank"])
-        return sorted_rankings[:n]
+        result = sorted_rankings[:n]
+        logger.debug(
+            "Retrieved top ranked assets",
+            extra={"requested_n": n, "returned_count": len(result)},
+        )
+        return result
 
 
 class AssetFilter(BaseModel):
@@ -319,21 +483,69 @@ class AssetFilter(BaseModel):
     def matches(self, asset: Asset) -> bool:
         """Check if asset matches filter criteria."""
         if self.asset_class and asset.asset_class != self.asset_class:
+            logger.debug(
+                "Asset filter mismatch: asset_class",
+                extra={
+                    "symbol": asset.symbol,
+                    "expected": self.asset_class.value,
+                    "actual": asset.asset_class.value,
+                },
+            )
             return False
 
         if asset.liquidity_score < self.min_liquidity_score:
+            logger.debug(
+                "Asset filter mismatch: liquidity_score",
+                extra={
+                    "symbol": asset.symbol,
+                    "min_required": self.min_liquidity_score,
+                    "actual": asset.liquidity_score,
+                },
+            )
             return False
 
         if asset.avg_volume < self.min_volume:
+            logger.debug(
+                "Asset filter mismatch: volume",
+                extra={
+                    "symbol": asset.symbol,
+                    "min_required": str(self.min_volume),
+                    "actual": str(asset.avg_volume),
+                },
+            )
             return False
 
         if asset.avg_spread > self.max_spread:
+            logger.debug(
+                "Asset filter mismatch: spread",
+                extra={
+                    "symbol": asset.symbol,
+                    "max_allowed": str(self.max_spread),
+                    "actual": str(asset.avg_spread),
+                },
+            )
             return False
 
         if self.exchanges and asset.exchange not in self.exchanges:
+            logger.debug(
+                "Asset filter mismatch: exchange",
+                extra={
+                    "symbol": asset.symbol,
+                    "allowed_exchanges": [e.value for e in self.exchanges],
+                    "actual": asset.exchange.value,
+                },
+            )
             return False
 
         if self.active_only and not asset.is_active:
+            logger.debug(
+                "Asset filter mismatch: inactive",
+                extra={"symbol": asset.symbol},
+            )
             return False
 
+        logger.debug(
+            "Asset matches filter criteria",
+            extra={"symbol": asset.symbol},
+        )
         return True

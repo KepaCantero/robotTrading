@@ -13,10 +13,13 @@ Architecture layers:
 - Infrastructure (app.database): SQLAlchemy ORM, persistence ✅
 """
 
+import logging
 import uuid
 from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, List, Optional
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from app.backtesting.models import Trade as PydanticTrade
@@ -270,6 +273,10 @@ class Trade(Base):
         Returns:
             app.backtesting.models.Trade instance
         """
+        logger.debug(
+            "converting_trade_to_pydantic",
+            extra={"trade_id": str(self.id), "symbol": self.asset.symbol if self.asset else None, "side": self.side}
+        )
         from app.backtesting.models import Trade as PydanticTrade, TradeStatus
 
         # Map SQLAlchemy status to Pydantic TradeStatus
@@ -280,7 +287,7 @@ class Trade(Base):
             "PARTIALLY_FILLED": TradeStatus.PARTIALLY_FILLED,
         }
 
-        return PydanticTrade(
+        result = PydanticTrade(
             trade_id=str(self.id),
             symbol=self.asset.symbol if self.asset else "",
             side=self.side.lower(),
@@ -291,6 +298,11 @@ class Trade(Base):
             commission=self.commission,
             slippage=self.slippage,
         )
+        logger.debug(
+            "trade_converted_to_pydantic",
+            extra={"trade_id": str(self.id), "pydantic_trade_id": result.trade_id}
+        )
+        return result
 
     @classmethod
     def from_pydantic(
@@ -312,6 +324,15 @@ class Trade(Base):
         Returns:
             SQLAlchemy Trade instance (not persisted)
         """
+        logger.debug(
+            "creating_sqlalchemy_trade_from_pydantic",
+            extra={
+                "pydantic_trade_id": pydantic_trade.trade_id,
+                "portfolio_id": str(portfolio_id),
+                "asset_id": str(asset_id),
+                "order_id": order_id
+            }
+        )
         from app.backtesting.models import TradeStatus
 
         # Map Pydantic TradeStatus to SQLAlchemy status
@@ -322,7 +343,7 @@ class Trade(Base):
             TradeStatus.PARTIALLY_FILLED: "PARTIALLY_FILLED",
         }
 
-        return cls(
+        result = cls(
             id=uuid.UUID(pydantic_trade.trade_id) if pydantic_trade.trade_id else uuid.uuid4(),
             portfolio_id=portfolio_id,
             asset_id=asset_id,
@@ -336,6 +357,11 @@ class Trade(Base):
             status=status_map.get(pydantic_trade.status, "PENDING"),
             executed_at=pydantic_trade.entry_time,
         )
+        logger.debug(
+            "sqlalchemy_trade_created_from_pydantic",
+            extra={"trade_id": str(result.id), "side": result.side, "status": result.status}
+        )
+        return result
 
 
 class MarketData(Base):
@@ -540,6 +566,10 @@ class PositionState(Base):
     )
 
     def __repr__(self):
+        logger.debug(
+            "position_state_repr",
+            extra={"monitor_id": self.monitor_id, "version": self.version}
+        )
         return f"<PositionState(monitor_id={self.monitor_id}, version={self.version})>"
 
     __table_args__ = (

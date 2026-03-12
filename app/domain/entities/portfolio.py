@@ -5,6 +5,12 @@ A Portfolio represents a collection of positions with associated
 capital, risk parameters, and trading constraints.
 
 Reference: Rule 05-architecture.md, Rule 03-solid-principles.md
+
+DIP Compliance (Dependency Inversion Principle):
+- Uses Protocol interfaces for external dependencies (TradingConfigProvider)
+- Accepts dependencies via __init__ parameters (dependency injection)
+- Factory methods accept optional config providers for flexibility
+- Backward compatible with default implementations
 """
 
 from __future__ import annotations
@@ -14,15 +20,47 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, Iterator, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Protocol
 
 from app.domain.entities.position import Position, PositionSide, PositionStatus
 from app.domain.value_objects.capital import Capital
 from app.domain.value_objects.money import Money
 from app.domain.value_objects.risk_parameters import RiskParameters
-from app.shared.config.centralized_config import get_config
+
+# Avoid runtime import - only import for type hints
+if TYPE_CHECKING:
+    from app.shared.config.centralized_config import CentralizedConfig
 
 logger = logging.getLogger(__name__)
+
+
+# =============================================================================
+# PROTOCOL INTERFACES (DIP Compliance)
+# =============================================================================
+
+
+class TradingConfigProvider(Protocol):
+    """
+    Protocol for trading configuration provider.
+
+    This abstraction allows Portfolio to depend on an interface rather than
+    a concrete implementation, following the Dependency Inversion Principle.
+
+    Implementations can be:
+    - CentralizedConfig (default)
+    - Mock config for testing
+    - Custom config sources
+    """
+
+    @property
+    def stop_loss_pct(self) -> float:
+        """Default stop loss percentage."""
+        ...
+
+    @property
+    def take_profit_pct(self) -> float:
+        """Default take profit percentage."""
+        ...
 
 
 class PortfolioStatus(str, Enum):
@@ -41,6 +79,12 @@ class Portfolio:
 
     This is a pure domain entity that maintains business rules
     and invariants for portfolio management.
+
+    DIP Compliance:
+    - External dependencies are injected via optional parameters
+    - Uses Protocol interfaces for type hints (not concrete implementations)
+    - Factory methods accept optional config providers
+    - Backward compatible with defaults when dependencies not provided
 
     Key behaviors:
     - Position management (add, remove, update)
@@ -66,8 +110,11 @@ class Portfolio:
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
 
-    # Optional logger for audit logging (dependency injection)
-    _audit_logger: Optional[logging.Logger] = None
+    # Dependency Injection (DIP Compliance)
+    # Optional logger for audit logging
+    _audit_logger: Optional[logging.Logger] = field(default=None, repr=False, compare=False)
+    # Optional config provider for dynamic configuration access
+    _config_provider: Optional[TradingConfigProvider] = field(default=None, repr=False, compare=False)
 
     def __post_init__(self):
         """Validate portfolio invariants."""
@@ -92,6 +139,30 @@ class Portfolio:
             audit_logger: Logger instance to use for audit logging
         """
         self._audit_logger = audit_logger
+        logger.debug(
+            "Audit logger set for portfolio",
+            extra={"portfolio_id": self.portfolio_id},
+        )
+
+    def set_config_provider(self, config_provider: TradingConfigProvider) -> None:
+        """
+        Set the configuration provider for this portfolio instance.
+
+        This method enables dependency injection of configuration sources,
+        following the Dependency Inversion Principle.
+
+        Args:
+            config_provider: Configuration provider implementing TradingConfigProvider protocol
+
+        Example:
+            >>> from app.shared.config.centralized_config import get_config
+            >>> portfolio.set_config_provider(get_config().trading)
+        """
+        self._config_provider = config_provider
+        logger.debug(
+            "Config provider set for portfolio",
+            extra={"portfolio_id": self.portfolio_id},
+        )
 
     def _audit_log(self, action: str, details: Dict[str, Any]) -> None:
         """
@@ -557,9 +628,14 @@ class Portfolio:
         currency: str = "USD",
         max_position_size_pct: Decimal = Decimal("0.2"),
         max_portfolio_exposure_pct: Decimal = Decimal("0.8"),
+        config_provider: Optional[TradingConfigProvider] = None,
+        audit_logger: Optional[logging.Logger] = None,
     ) -> Portfolio:
         """
         Factory to create a new portfolio.
+
+        This factory method follows the Dependency Inversion Principle by
+        accepting optional dependencies rather than creating them internally.
 
         Args:
             portfolio_id: Unique portfolio identifier
@@ -567,9 +643,31 @@ class Portfolio:
             currency: Base currency
             max_position_size_pct: Max position size as percentage
             max_portfolio_exposure_pct: Max portfolio exposure as percentage
+            config_provider: Optional trading config provider (defaults to global config if None)
+            audit_logger: Optional audit logger instance
 
         Returns:
             New Portfolio instance
+
+        Example:
+            >>> # With default config
+            >>> portfolio = Portfolio.create("pf-001", Decimal("100000"))
+
+            >>> # With custom config (DIP compliant)
+            >>> from app.shared.config.centralized_config import get_config
+            >>> portfolio = Portfolio.create(
+            ...     "pf-001",
+            ...     Decimal("100000"),
+            ...     config_provider=get_config().trading
+            ... )
+
+            >>> # With mock config for testing
+            >>> mock_config = MockConfig(stop_loss_pct=0.05, take_profit_pct=0.10)
+            >>> portfolio = Portfolio.create(
+            ...     "pf-001",
+            ...     Decimal("100000"),
+            ...     config_provider=mock_config
+            ... )
         """
         # Create Capital value object
         capital = Capital.from_amount(initial_capital, currency)
@@ -578,17 +676,45 @@ class Portfolio:
         max_position_size = initial_capital * max_position_size_pct
         max_portfolio_exposure = initial_capital * max_portfolio_exposure_pct
 
-        # Get default risk parameters from centralized config
-        try:
-            config = get_config()
-            stop_loss_pct = Decimal(str(getattr(config.trading, 'stop_loss_pct', 0.05)))
-            take_profit_pct = Decimal(str(getattr(config.trading, 'take_profit_pct', 0.10)))
-        except (AttributeError, ValueError) as e:
-            logger.warning(
-                f"Error loading trading config for portfolio creation: {e}, using defaults"
+        # Get default risk parameters from config provider (DIP compliant)
+        # If config_provider is not provided, use default values
+        if config_provider is not None:
+            # Use injected config provider
+            stop_loss_pct = Decimal(str(config_provider.stop_loss_pct))
+            take_profit_pct = Decimal(str(config_provider.take_profit_pct))
+            logger.debug(
+                "Using injected config provider for risk parameters",
+                extra={
+                    "portfolio_id": portfolio_id,
+                    "stop_loss_pct": str(stop_loss_pct),
+                    "take_profit_pct": str(take_profit_pct),
+                },
             )
-            stop_loss_pct = Decimal('0.05')
-            take_profit_pct = Decimal('0.10')
+        else:
+            # Fallback to default values (backward compatible)
+            # Lazy import to avoid direct dependency at module level
+            try:
+                from app.shared.config.centralized_config import get_config
+
+                config = get_config()
+                stop_loss_pct = Decimal(str(getattr(config.trading, "stop_loss_pct", 0.05)))
+                take_profit_pct = Decimal(str(getattr(config.trading, "take_profit_pct", 0.10)))
+                logger.debug(
+                    "Using global config for risk parameters",
+                    extra={
+                        "portfolio_id": portfolio_id,
+                        "stop_loss_pct": str(stop_loss_pct),
+                        "take_profit_pct": str(take_profit_pct),
+                    },
+                )
+            except (ImportError, AttributeError, ValueError) as e:
+                # Ultimate fallback - use hardcoded defaults
+                logger.warning(
+                    f"Could not load trading config for portfolio creation: {e}, using defaults",
+                    extra={"portfolio_id": portfolio_id, "error": str(e)},
+                )
+                stop_loss_pct = Decimal("0.05")
+                take_profit_pct = Decimal("0.10")
 
         risk_params = RiskParameters(
             max_position_size=max_position_size,
@@ -597,12 +723,32 @@ class Portfolio:
             take_profit_pct=take_profit_pct,
         )
 
-        return cls(
+        portfolio = cls(
             portfolio_id=portfolio_id,
             capital=capital,
             risk_parameters=risk_params,
             currency=currency,
         )
+
+        # Set injected dependencies if provided
+        if audit_logger is not None:
+            portfolio.set_audit_logger(audit_logger)
+
+        if config_provider is not None:
+            portfolio.set_config_provider(config_provider)
+
+        logger.info(
+            "Created new portfolio",
+            extra={
+                "portfolio_id": portfolio_id,
+                "initial_capital": str(initial_capital),
+                "currency": currency,
+                "has_custom_config": config_provider is not None,
+                "has_audit_logger": audit_logger is not None,
+            },
+        )
+
+        return portfolio
 
     def to_dict(self) -> dict:
         """Convert to dictionary for serialization."""

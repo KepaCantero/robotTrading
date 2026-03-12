@@ -8,6 +8,7 @@ including quotes, historical data, and feed configuration.
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 from uuid import UUID
@@ -24,6 +25,8 @@ from app.domain.models.market_data import (
     Quote,
 )
 from app.infrastructure.feeds.market_data import MarketDataService, get_market_data_service
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/market-data", tags=["market-data"])
 
@@ -119,18 +122,34 @@ async def get_quote(
     service: MarketDataService = Depends(get_market_data_service),
 ):
     """Get real-time quote for a symbol."""
+    logger.debug(
+        "get_quote called",
+        extra={"symbol": symbol, "feed_id": str(feed_id) if feed_id else None}
+    )
     try:
         quote = await service.get_quote(symbol, feed_id)
 
         if quote:
+            logger.info(
+                "Quote retrieved successfully",
+                extra={"symbol": symbol, "feed_id": str(feed_id) if feed_id else None}
+            )
             return QuoteResponse(success=True, data=quote, timestamp=datetime.utcnow())
         else:
+            logger.warning(
+                "No quote data available",
+                extra={"symbol": symbol, "feed_id": str(feed_id) if feed_id else None}
+            )
             return QuoteResponse(
                 success=False,
                 error=f"No quote data available for {symbol}",
                 timestamp=datetime.utcnow(),
             )
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        logger.error(
+            "Error getting quote",
+            extra={"symbol": symbol, "error_type": type(e).__name__, "error_message": str(e)}
+        )
         raise HTTPException(status_code=500, detail=f"Error getting quote for {symbol}: {str(e)}")
 
 
@@ -185,16 +204,39 @@ async def get_historical_data(
     service: MarketDataService = Depends(get_market_data_service),
 ):
     """Get historical data for a symbol."""
+    logger.info(
+        "get_historical_data called",
+        extra={
+            "symbol": symbol,
+            "start_date": start_date.isoformat(),
+            "end_date": end_date.isoformat(),
+            "frequency": frequency.value if hasattr(frequency, 'value') else str(frequency),
+            "feed_id": str(feed_id) if feed_id else None
+        }
+    )
     try:
         # Validate date range
         if start_date >= end_date:
+            logger.warning(
+                "Invalid date range",
+                extra={"symbol": symbol, "start_date": start_date.isoformat(), "end_date": end_date.isoformat()}
+            )
             raise HTTPException(status_code=400, detail="Start date must be before end date")
 
         if (end_date - start_date).days > 365:
+            logger.warning(
+                "Date range exceeds 365 days",
+                extra={"symbol": symbol, "days": (end_date - start_date).days}
+            )
             raise HTTPException(status_code=400, detail="Date range cannot exceed 365 days")
 
         historical_data = await service.get_historical_data(
             symbol, start_date, end_date, frequency, feed_id
+        )
+
+        logger.info(
+            "Historical data retrieved",
+            extra={"symbol": symbol, "data_points": len(historical_data)}
         )
 
         return HistoricalDataResponse(
@@ -204,6 +246,10 @@ async def get_historical_data(
             timestamp=datetime.utcnow(),
         )
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        logger.error(
+            "Error getting historical data",
+            extra={"symbol": symbol, "error_type": type(e).__name__, "error_message": str(e)}
+        )
         raise HTTPException(
             status_code=500,
             detail=f"Error getting historical data for {symbol}: {str(e)}",
@@ -216,6 +262,10 @@ async def create_feed_config(
     service: MarketDataService = Depends(get_market_data_service),
 ):
     """Create a new data feed configuration."""
+    logger.info(
+        "create_feed_config called",
+        extra={"feed_name": request.name, "feed_type": request.feed_type.value if hasattr(request.feed_type, 'value') else str(request.feed_type)}
+    )
     try:
         config = DataFeedConfig(
             name=request.name,
@@ -235,8 +285,17 @@ async def create_feed_config(
         config_id = await service.add_feed_config(config)
         config.id = config_id
 
+        logger.info(
+            "Feed configuration created",
+            extra={"config_id": str(config_id), "feed_name": request.name}
+        )
+
         return FeedConfigResponse(success=True, data=config, timestamp=datetime.utcnow())
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        logger.error(
+            "Error creating feed configuration",
+            extra={"feed_name": request.name, "error_type": type(e).__name__, "error_message": str(e)}
+        )
         raise HTTPException(status_code=500, detail=f"Error creating feed configuration: {str(e)}")
 
 
@@ -280,14 +339,21 @@ async def connect_feed(
     service: MarketDataService = Depends(get_market_data_service),
 ):
     """Connect to a data feed."""
+    logger.info("connect_feed called", extra={"config_id": str(config_id)})
     try:
         success = await service.connect_feed(config_id)
 
         if success:
+            logger.info("Feed connected successfully", extra={"config_id": str(config_id)})
             return {"success": True, "message": f"Connected to feed {config_id}"}
         else:
+            logger.warning("Failed to connect to feed", extra={"config_id": str(config_id)})
             raise HTTPException(status_code=500, detail=f"Failed to connect to feed {config_id}")
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        logger.error(
+            "Error connecting to feed",
+            extra={"config_id": str(config_id), "error_type": type(e).__name__, "error_message": str(e)}
+        )
         raise HTTPException(status_code=500, detail=f"Error connecting to feed: {str(e)}")
 
 

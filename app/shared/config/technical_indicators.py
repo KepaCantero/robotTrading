@@ -5,14 +5,30 @@ Contains configuration for technical indicators, windows,
 and analysis parameters.
 """
 
+import logging
 
 from pydantic import Field
 
 from app.shared.config.base import ConfigBase
 
+logger = logging.getLogger(__name__)
+
 
 class TechnicalIndicatorThresholds(ConfigBase):
     """Configuration for technical indicator thresholds."""
+
+    def __init__(self, **data):
+        """Initialize technical indicator thresholds with logging."""
+        super().__init__(**data)
+        logger.debug(
+            "TechnicalIndicatorThresholds initialized",
+            extra={
+                "config_type": "TechnicalIndicatorThresholds",
+                "rsi_oversold": self.rsi_oversold,
+                "rsi_overbought": self.rsi_overbought,
+                "mean_reversion_lookback": self.mean_reversion_lookback_period,
+            }
+        )
 
     # RSI thresholds
     rsi_oversold: float = Field(default=30.0, description="RSI oversold threshold")

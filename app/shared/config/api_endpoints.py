@@ -19,9 +19,12 @@ Usage:
     url = APIEndpoints.get_yahoo_finance_url(symbol)
 """
 
+import logging
 import os
 from dataclasses import dataclass, field
 from typing import Dict, Optional
+
+logger = logging.getLogger(__name__)
 
 from app.shared.config.timeout_config import get_timeouts
 
@@ -97,6 +100,10 @@ class APIEndpoints:
     @classmethod
     def get_yahoo_finance_url(cls, symbol: str) -> str:
         """Get Yahoo Finance URL for a symbol."""
+        logger.debug(
+            "Generating Yahoo Finance URL",
+            extra={"symbol": symbol, "base_url": cls.YAHOO_FINANCE_V8},
+        )
         return f"{cls.YAHOO_FINANCE_V8}/{symbol}"
 
     @classmethod
@@ -112,7 +119,8 @@ class APIEndpoints:
     @classmethod
     def from_env(cls) -> Dict[str, str]:
         """Load endpoints from environment variables (for overrides)."""
-        return {
+        logger.debug("Loading endpoints from environment variables")
+        endpoints = {
             "alpaca_paper": os.getenv("ALPACA_PAPER_URL", cls.ALPACA_PAPER),
             "alpaca_live": os.getenv("ALPACA_LIVE_URL", cls.ALPACA_LIVE),
             "yahoo_finance": os.getenv("YAHOO_FINANCE_URL", cls.YAHOO_FINANCE_V8),
@@ -121,6 +129,11 @@ class APIEndpoints:
             "binance": os.getenv("BINANCE_URL", cls.BINANCE),
             "binance_testnet": os.getenv("BINANCE_TESTNET_URL", cls.BINANCE_TESTNET),
         }
+        logger.debug(
+            "Endpoints loaded from environment",
+            extra={"endpoints_count": len(endpoints)},
+        )
+        return endpoints
 
 
 class EndpointRegistry:
@@ -136,6 +149,7 @@ class EndpointRegistry:
     def __new__(cls) -> "EndpointRegistry":
         """Singleton pattern for consistent endpoint configuration."""
         if cls._instance is None:
+            logger.info("Creating EndpointRegistry singleton instance")
             cls._instance = super().__new__(cls)
             cls._instance._endpoints = {}
             cls._instance._initialize_endpoints()
@@ -143,6 +157,7 @@ class EndpointRegistry:
 
     def _initialize_endpoints(self) -> None:
         """Initialize all endpoint configurations with timeouts from config."""
+        logger.debug("Initializing endpoint configurations")
         timeouts = get_timeouts()
 
         # Trading Platforms
@@ -212,6 +227,11 @@ class EndpointRegistry:
             read_timeout=timeouts.reddit_read,
         )
 
+        logger.info(
+            "Endpoint configurations initialized",
+            extra={"endpoints_count": len(self._endpoints)},
+        )
+
     def get(self, name: str) -> EndpointConfig:
         """
         Get endpoint configuration by name.
@@ -225,7 +245,15 @@ class EndpointRegistry:
         Raises:
             KeyError: If endpoint not found
         """
+        logger.debug(
+            "Getting endpoint configuration",
+            extra={"endpoint_name": name},
+        )
         if name not in self._endpoints:
+            logger.error(
+                "Unknown endpoint requested",
+                extra={"endpoint_name": name, "available_endpoints": list(self._endpoints.keys())},
+            )
             raise KeyError(f"Unknown endpoint: {name}. Available: {list(self._endpoints.keys())}")
         return self._endpoints[name]
 

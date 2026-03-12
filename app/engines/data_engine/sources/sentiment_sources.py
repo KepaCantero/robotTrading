@@ -260,8 +260,9 @@ class RedditSentimentSource(BaseDataSource):
                     data = await response.json()
                     self._access_token = data.get('access_token')
                     logger.debug("Reddit access token obtenido")
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
-            logger.warning(f"No se pudo obtener Reddit access token: {e}")
+        except (asyncio.TimeoutError, ConnectionError, OSError):
+            # Don't log exception details at warning level - could contain sensitive data
+            logger.warning("Failed to obtain Reddit access token")
 
     async def disconnect(self) -> bool:
         """Desconectar de Reddit."""
@@ -273,8 +274,9 @@ class RedditSentimentSource(BaseDataSource):
             self.is_connected = False
             logger.info("Desconectado de Reddit")
             return True
-        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
-            logger.error(f"Error desconectando de Reddit: {e}")
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError):
+            # Don't log exception details - could contain sensitive data
+            logger.error("Error disconnecting from Reddit")
             return False
 
     async def health_check(self) -> bool:

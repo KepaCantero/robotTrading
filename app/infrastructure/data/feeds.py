@@ -72,6 +72,14 @@ class DataFeedInterface(ABC):
 
     async def _make_request(self, url: str, params: Dict[str, Any] = None) -> Dict[str, Any]:
         """Make HTTP request with rate limiting and error handling."""
+        logger.debug(
+            "Making HTTP request",
+            extra={
+                "url": url,
+                "params": params,
+                "feed_type": self.config.feed_type.value if hasattr(self.config.feed_type, 'value') else str(self.config.feed_type),
+            }
+        )
         async with self._rate_limiter:
             if not self.session:
                 raise ConnectionError("Not connected to data feed")
@@ -82,12 +90,33 @@ class DataFeedInterface(ABC):
                     params=params,
                     timeout=aiohttp.ClientTimeout(total=self.config.timeout_seconds),
                 ) as response:
+                    logger.debug(
+                        "HTTP response received",
+                        extra={
+                            "url": url,
+                            "status_code": response.status,
+                        }
+                    )
                     if response.status == 200:
                         data = await response.json()
                         self.config.error_count = 0
                         self.config.last_updated = datetime.utcnow()
+                        logger.debug(
+                            "HTTP request successful",
+                            extra={
+                                "url": url,
+                                "error_count": self.config.error_count,
+                            }
+                        )
                         return data
                     else:
+                        logger.warning(
+                            "HTTP request returned non-200 status",
+                            extra={
+                                "url": url,
+                                "status_code": response.status,
+                            }
+                        )
                         raise aiohttp.ClientResponseError(
                             request_info=response.request_info,
                             history=response.history,
@@ -96,7 +125,14 @@ class DataFeedInterface(ABC):
                         )
             except (ConnectionError, TimeoutError, ClientError) as e:
                 self.config.error_count += 1
-                logger.error(f"Request failed for {url}: {e}")
+                logger.error(
+                    f"Request failed for {url}: {e}",
+                    extra={
+                        "url": url,
+                        "error_type": type(e).__name__,
+                        "error_count": self.config.error_count,
+                    }
+                )
                 raise
 
 
@@ -109,12 +145,25 @@ class AlphaVantageFeed(DataFeedInterface):
 
     async def connect(self) -> bool:
         """Connect to Alpha Vantage API."""
+        logger.debug(
+            "Connecting to Alpha Vantage API",
+            extra={"base_url": self.base_url}
+        )
         try:
             self.session = aiohttp.ClientSession()
-            logger.info("Connected to Alpha Vantage API")
+            logger.info(
+                "Connected to Alpha Vantage API",
+                extra={"base_url": self.base_url, "connected": True}
+            )
             return True
         except (ConnectionError, TimeoutError, ClientError) as e:
-            logger.error(f"Failed to connect to Alpha Vantage: {e}")
+            logger.error(
+                f"Failed to connect to Alpha Vantage: {e}",
+                extra={
+                    "base_url": self.base_url,
+                    "error_type": type(e).__name__,
+                }
+            )
             return False
 
     async def disconnect(self) -> bool:
@@ -122,13 +171,23 @@ class AlphaVantageFeed(DataFeedInterface):
         if self.session:
             await self.session.close()
             self.session = None
-            logger.info("Disconnected from Alpha Vantage API")
+            logger.info(
+                "Disconnected from Alpha Vantage API",
+                extra={"connected": False}
+            )
         return True
 
     async def get_quote(self, symbol: str) -> Optional[Quote]:
         """Get real-time quote from Alpha Vantage."""
+        logger.debug(
+            "Getting quote from Alpha Vantage",
+            extra={"symbol": symbol, "feed_type": "alpha_vantage"}
+        )
         if not self.config.api_key:
-            logger.error("Alpha Vantage API key not configured")
+            logger.error(
+                "Alpha Vantage API key not configured",
+                extra={"symbol": symbol}
+            )
             return None
 
         params = {
@@ -141,7 +200,10 @@ class AlphaVantageFeed(DataFeedInterface):
             data = await self._make_request(self.base_url, params)
 
             if "Global Quote" not in data:
-                logger.warning(f"No quote data for {symbol}")
+                logger.warning(
+                    f"No quote data for {symbol}",
+                    extra={"symbol": symbol, "response_keys": list(data.keys())}
+                )
                 return None
 
             quote_data = data["Global Quote"]
@@ -163,7 +225,13 @@ class AlphaVantageFeed(DataFeedInterface):
                 metadata={"raw_data": quote_data},
             )
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
-            logger.error(f"Failed to get quote for {symbol}: {e}")
+            logger.error(
+                f"Failed to get quote for {symbol}: {e}",
+                extra={
+                    "symbol": symbol,
+                    "error_type": type(e).__name__,
+                }
+            )
             return None
 
     async def get_historical_data(
@@ -174,8 +242,20 @@ class AlphaVantageFeed(DataFeedInterface):
         frequency: DataFrequency = DataFrequency.DAILY,
     ) -> List[HistoricalData]:
         """Get historical data from Alpha Vantage."""
+        logger.debug(
+            "Getting historical data from Alpha Vantage",
+            extra={
+                "symbol": symbol,
+                "start_date": start_date.isoformat(),
+                "end_date": end_date.isoformat(),
+                "frequency": frequency.value,
+            }
+        )
         if not self.config.api_key:
-            logger.error("Alpha Vantage API key not configured")
+            logger.error(
+                "Alpha Vantage API key not configured",
+                extra={"symbol": symbol}
+            )
             return []
 
         # Map frequency to Alpha Vantage function
@@ -201,7 +281,10 @@ class AlphaVantageFeed(DataFeedInterface):
                     break
 
             if not time_series_key:
-                logger.warning(f"No historical data for {symbol}")
+                logger.warning(
+                    f"No historical data for {symbol}",
+                    extra={"symbol": symbol, "response_keys": list(data.keys())}
+                )
                 return []
 
             historical_data = []
@@ -228,12 +311,21 @@ class AlphaVantageFeed(DataFeedInterface):
 
             return sorted(historical_data, key=lambda x: x.timestamp)
         except (ConnectionError, TimeoutError, ClientError) as e:
-            logger.error(f"Failed to get historical data for {symbol}: {e}")
+            logger.error(
+                f"Failed to get historical data for {symbol}: {e}",
+                extra={
+                    "symbol": symbol,
+                    "error_type": type(e).__name__,
+                }
+            )
             return []
 
     async def subscribe_to_symbols(self, symbols: List[str]) -> bool:
         """Alpha Vantage doesn't support real-time subscriptions."""
-        logger.warning("Alpha Vantage doesn't support real-time subscriptions")
+        logger.warning(
+            "Alpha Vantage doesn't support real-time subscriptions",
+            extra={"symbols": symbols, "supported": False}
+        )
         return False
 
 
@@ -246,12 +338,25 @@ class YahooFinanceFeed(DataFeedInterface):
 
     async def connect(self) -> bool:
         """Connect to Yahoo Finance API."""
+        logger.debug(
+            "Connecting to Yahoo Finance API",
+            extra={"base_url": self.base_url}
+        )
         try:
             self.session = aiohttp.ClientSession()
-            logger.info("Connected to Yahoo Finance API")
+            logger.info(
+                "Connected to Yahoo Finance API",
+                extra={"base_url": self.base_url, "connected": True}
+            )
             return True
         except (ConnectionError, TimeoutError, ClientError) as e:
-            logger.error(f"Failed to connect to Yahoo Finance: {e}")
+            logger.error(
+                f"Failed to connect to Yahoo Finance: {e}",
+                extra={
+                    "base_url": self.base_url,
+                    "error_type": type(e).__name__,
+                }
+            )
             return False
 
     async def disconnect(self) -> bool:
@@ -259,11 +364,18 @@ class YahooFinanceFeed(DataFeedInterface):
         if self.session:
             await self.session.close()
             self.session = None
-            logger.info("Disconnected from Yahoo Finance API")
+            logger.info(
+                "Disconnected from Yahoo Finance API",
+                extra={"connected": False}
+            )
         return True
 
     async def get_quote(self, symbol: str) -> Optional[Quote]:
         """Get real-time quote from Yahoo Finance."""
+        logger.debug(
+            "Getting quote from Yahoo Finance",
+            extra={"symbol": symbol, "feed_type": "yahoo_finance"}
+        )
         url = f"{self.base_url}/{symbol}"
         params = {"range": "1d", "interval": "1m", "includePrePost": "true"}
 
@@ -271,7 +383,10 @@ class YahooFinanceFeed(DataFeedInterface):
             data = await self._make_request(url, params)
 
             if "chart" not in data or not data["chart"]["result"]:
-                logger.warning(f"No quote data for {symbol}")
+                logger.warning(
+                    f"No quote data for {symbol}",
+                    extra={"symbol": symbol}
+                )
                 return None
 
             result = data["chart"]["result"][0]
@@ -281,14 +396,20 @@ class YahooFinanceFeed(DataFeedInterface):
             # Get latest data point
             timestamps = result["timestamp"]
             if not timestamps:
-                logger.warning(f"No timestamp data for {symbol}")
+                logger.warning(
+                    f"No timestamp data for {symbol}",
+                    extra={"symbol": symbol}
+                )
                 return None
 
             latest_idx = -1
             latest_close = quote["close"][latest_idx]
 
             if latest_close is None:
-                logger.warning(f"No close price for {symbol}")
+                logger.warning(
+                    f"No close price for {symbol}",
+                    extra={"symbol": symbol}
+                )
                 return None
 
             return Quote(  # type: ignore
@@ -308,7 +429,13 @@ class YahooFinanceFeed(DataFeedInterface):
                 metadata={"raw_data": result},
             )
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error(f"Failed to get quote for {symbol}: {e}")
+            logger.error(
+                f"Failed to get quote for {symbol}: {e}",
+                extra={
+                    "symbol": symbol,
+                    "error_type": type(e).__name__,
+                }
+            )
             return None
 
     async def get_historical_data(
@@ -319,6 +446,15 @@ class YahooFinanceFeed(DataFeedInterface):
         frequency: DataFrequency = DataFrequency.DAILY,
     ) -> List[HistoricalData]:
         """Get historical data from Yahoo Finance."""
+        logger.debug(
+            "Getting historical data from Yahoo Finance",
+            extra={
+                "symbol": symbol,
+                "start_date": start_date.isoformat(),
+                "end_date": end_date.isoformat(),
+                "frequency": frequency.value,
+            }
+        )
         # Map frequency to Yahoo Finance interval
         interval_map = {
             DataFrequency.DAILY: "1d",
@@ -345,7 +481,10 @@ class YahooFinanceFeed(DataFeedInterface):
             data = await self._make_request(url, params)
 
             if "chart" not in data or not data["chart"]["result"]:
-                logger.warning(f"No historical data for {symbol}")
+                logger.warning(
+                    f"No historical data for {symbol}",
+                    extra={"symbol": symbol}
+                )
                 return []
 
             result = data["chart"]["result"][0]
@@ -375,12 +514,21 @@ class YahooFinanceFeed(DataFeedInterface):
 
             return historical_data
         except (ConnectionError, TimeoutError, ClientError) as e:
-            logger.error(f"Failed to get historical data for {symbol}: {e}")
+            logger.error(
+                f"Failed to get historical data for {symbol}: {e}",
+                extra={
+                    "symbol": symbol,
+                    "error_type": type(e).__name__,
+                }
+            )
             return []
 
     async def subscribe_to_symbols(self, symbols: List[str]) -> bool:
         """Yahoo Finance doesn't support real-time subscriptions."""
-        logger.warning("Yahoo Finance doesn't support real-time subscriptions")
+        logger.warning(
+            "Yahoo Finance doesn't support real-time subscriptions",
+            extra={"symbols": symbols, "supported": False}
+        )
         return False
 
 
@@ -393,12 +541,25 @@ class PolygonFeed(DataFeedInterface):
 
     async def connect(self) -> bool:
         """Connect to Massive.com (Polygon.io) API."""
+        logger.debug(
+            "Connecting to Massive.com (Polygon.io) API",
+            extra={"base_url": self.base_url}
+        )
         try:
             self.session = aiohttp.ClientSession()
-            logger.info("Connected to Massive.com (Polygon.io) API")
+            logger.info(
+                "Connected to Massive.com (Polygon.io) API",
+                extra={"base_url": self.base_url, "connected": True}
+            )
             return True
         except (ConnectionError, TimeoutError, ClientError) as e:
-            logger.error(f"Failed to connect to Massive.com: {e}")
+            logger.error(
+                f"Failed to connect to Massive.com: {e}",
+                extra={
+                    "base_url": self.base_url,
+                    "error_type": type(e).__name__,
+                }
+            )
             return False
 
     async def disconnect(self) -> bool:
@@ -406,13 +567,23 @@ class PolygonFeed(DataFeedInterface):
         if self.session:
             await self.session.close()
             self.session = None
-            logger.info("Disconnected from Massive.com (Polygon.io) API")
+            logger.info(
+                "Disconnected from Massive.com (Polygon.io) API",
+                extra={"connected": False}
+            )
         return True
 
     async def get_quote(self, symbol: str) -> Optional[Quote]:
         """Get real-time quote from Massive.com (Polygon.io)."""
+        logger.debug(
+            "Getting quote from Massive.com (Polygon.io)",
+            extra={"symbol": symbol, "feed_type": "polygon"}
+        )
         if not self.config.api_key:
-            logger.error("Massive.com API key not configured")
+            logger.error(
+                "Massive.com API key not configured",
+                extra={"symbol": symbol}
+            )
             return None
 
         # Massive.com snapshot endpoint
@@ -423,7 +594,10 @@ class PolygonFeed(DataFeedInterface):
             data = await self._make_request(url, params)
 
             if data.get("status") != "OK" or not data.get("snapshot"):
-                logger.warning(f"No quote data for {symbol}")
+                logger.warning(
+                    f"No quote data for {symbol}",
+                    extra={"symbol": symbol, "status": data.get("status")}
+                )
                 return None
 
             snapshot = data["snapshot"]
@@ -468,7 +642,13 @@ class PolygonFeed(DataFeedInterface):
                 metadata={"raw_data": snapshot},
             )
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
-            logger.error(f"Failed to get quote for {symbol}: {e}")
+            logger.error(
+                f"Failed to get quote for {symbol}: {e}",
+                extra={
+                    "symbol": symbol,
+                    "error_type": type(e).__name__,
+                }
+            )
             return None
 
     async def get_historical_data(
@@ -479,8 +659,20 @@ class PolygonFeed(DataFeedInterface):
         frequency: DataFrequency = DataFrequency.DAILY,
     ) -> List[HistoricalData]:
         """Get historical data from Massive.com (Polygon.io)."""
+        logger.debug(
+            "Getting historical data from Massive.com (Polygon.io)",
+            extra={
+                "symbol": symbol,
+                "start_date": start_date.isoformat(),
+                "end_date": end_date.isoformat(),
+                "frequency": frequency.value,
+            }
+        )
         if not self.config.api_key:
-            logger.error("Massive.com API key not configured")
+            logger.error(
+                "Massive.com API key not configured",
+                extra={"symbol": symbol}
+            )
             return []
 
         # Map frequency to Massive timespan
@@ -513,7 +705,10 @@ class PolygonFeed(DataFeedInterface):
             data = await self._make_request(url, params)
 
             if not data.get("results"):
-                logger.warning(f"No historical data for {symbol}")
+                logger.warning(
+                    f"No historical data for {symbol}",
+                    extra={"symbol": symbol}
+                )
                 return []
 
             historical_data = []
@@ -539,12 +734,21 @@ class PolygonFeed(DataFeedInterface):
 
             return historical_data
         except (ConnectionError, TimeoutError, ClientError) as e:
-            logger.error(f"Failed to get historical data for {symbol}: {e}")
+            logger.error(
+                f"Failed to get historical data for {symbol}: {e}",
+                extra={
+                    "symbol": symbol,
+                    "error_type": type(e).__name__,
+                }
+            )
             return []
 
     async def subscribe_to_symbols(self, symbols: List[str]) -> bool:
         """Massive.com supports real-time subscriptions via WebSocket (not implemented here)."""
-        logger.warning("Massive.com WebSocket subscriptions not implemented in HTTP mode")
+        logger.warning(
+            "Massive.com WebSocket subscriptions not implemented in HTTP mode",
+            extra={"symbols": symbols, "supported": False}
+        )
         return False
 
 
@@ -555,6 +759,10 @@ def create_data_feed(config: DataFeedConfig) -> DataFeedInterface:
     NOTE: Mock data has been removed - only real data sources are supported.
     For backtesting, use Yahoo Finance (free) or configure Polygon/AlphaVantage API keys.
     """
+    logger.debug(
+        "Creating data feed",
+        extra={"feed_type": config.feed_type.value if hasattr(config.feed_type, 'value') else str(config.feed_type)}
+    )
     if config.feed_type == DataFeedType.ALPHA_VANTAGE:
         return AlphaVantageFeed(config)
     elif config.feed_type == DataFeedType.YAHOO_FINANCE:

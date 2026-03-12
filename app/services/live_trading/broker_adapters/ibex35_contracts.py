@@ -5,9 +5,12 @@ Provides contract creation utilities for trading Spanish stocks and indices
 through Interactive Brokers.
 """
 
+import logging
 from typing import List
 
 from ib_insync.contract import Contract as IBContract, Stock
+
+logger = logging.getLogger(__name__)
 
 # IBEX35 constituents (common Spanish stocks with exchange suffixes)
 IBEX35_SYMBOLS = [
@@ -72,7 +75,30 @@ def create_stock_contract(
     # Extract symbol without exchange suffix if provided
     base_symbol = symbol.split('.')[0]
 
+    logger.debug(
+        "Creating stock contract",
+        extra={
+            "component": "ibex35_contracts",
+            "operation": "create_stock_contract",
+            "symbol": symbol,
+            "base_symbol": base_symbol,
+            "currency": currency,
+            "exchange": exchange,
+        }
+    )
+
     contract = Stock(symbol=base_symbol, exchange=exchange, currency=currency)
+
+    logger.info(
+        "Stock contract created",
+        extra={
+            "component": "ibex35_contracts",
+            "operation": "create_stock_contract",
+            "symbol": base_symbol,
+            "currency": currency,
+            "exchange": exchange,
+        }
+    )
 
     return contract
 
@@ -90,7 +116,27 @@ def create_index_contract() -> IBContract:
     """
     from ib_insync.contract import Index
 
+    logger.debug(
+        "Creating IBEX35 index contract",
+        extra={
+            "component": "ibex35_contracts",
+            "operation": "create_index_contract",
+            "index": "IBEX",
+            "exchange": "Meff",
+            "currency": "EUR",
+        }
+    )
+
     contract = Index(symbol="IBEX", exchange="Meff", currency="EUR")  # Spanish derivatives exchange
+
+    logger.info(
+        "IBEX35 index contract created",
+        extra={
+            "component": "ibex35_contracts",
+            "operation": "create_index_contract",
+            "contract_symbol": "IBEX",
+        }
+    )
 
     return contract
 
@@ -106,6 +152,15 @@ def get_ibex35_symbols() -> List[str]:
         This list may not be exhaustive as IBEX35 composition
         changes quarterly. Always verify with official sources.
     """
+    logger.debug(
+        "Retrieving IBEX35 symbols list",
+        extra={
+            "component": "ibex35_contracts",
+            "operation": "get_ibex35_symbols",
+            "symbols_count": len(IBEX35_SYMBOLS),
+        }
+    )
+
     return IBEX35_SYMBOLS.copy()
 
 
@@ -124,7 +179,20 @@ def is_ibex35_symbol(symbol: str) -> bool:
     if '.' not in normalized:
         normalized = f"{normalized}.MC"
 
-    return normalized in IBEX35_SYMBOLS
+    result = normalized in IBEX35_SYMBOLS
+
+    logger.debug(
+        "Checking if symbol is IBEX35 constituent",
+        extra={
+            "component": "ibex35_contracts",
+            "operation": "is_ibex35_symbol",
+            "input_symbol": symbol,
+            "normalized_symbol": normalized,
+            "is_ibex35": result,
+        }
+    )
+
+    return result
 
 
 def get_spanish_exchange_suffix() -> str:
@@ -134,4 +202,13 @@ def get_spanish_exchange_suffix() -> str:
     Returns:
         ".MC" (Madrid, Spain / Bolsa de Madrid)
     """
+    logger.debug(
+        "Retrieving Spanish exchange suffix",
+        extra={
+            "component": "ibex35_contracts",
+            "operation": "get_spanish_exchange_suffix",
+            "suffix": ".MC",
+        }
+    )
+
     return ".MC"

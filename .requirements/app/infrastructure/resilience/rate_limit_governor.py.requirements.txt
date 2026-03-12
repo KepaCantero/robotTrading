@@ -6,14 +6,28 @@ Domain: Infrastructure
 Generated: 2026-03-09
 
 ## 2. Dependencies
-- `aiohttp`
-- `asyncio`
-- `dataclasses`
-- `decimal`
-- `enum`
-- `logging`
-- `time`
-- `typing`
+
+### Python Modules (Stdlib)
+- `asyncio` (stdlib)
+- `dataclasses` (stdlib)
+- `decimal` (stdlib)
+- `enum` (stdlib)
+- `logging` (stdlib)
+- `time` (stdlib)
+- `typing` (stdlib)
+
+### External Packages (pip install)
+```
+# WebSocket Support (optional, for WebSocketFirstStrategy)
+aiohttp>=3.9.0            # WebSocket client for broker streams
+```
+
+### Broker Rate Limits Configured
+- Binance: 20 req/s
+- Kraken: 10 req/s
+- Coinbase: 10 req/s
+- OANDA: 15 req/s
+- Degiro: 5 req/s
 
 ## 3. Core Components
 ### Classes

@@ -8,6 +8,10 @@ reference and a suggestion generator for the vectorization auditor.
 
 from __future__ import annotations
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class VectorizationPatterns:
     """
@@ -545,6 +549,28 @@ trading_hours = df.between_time('09:30', '16:00')
         Returns:
             Dictionary mapping pattern names to their documentation.
         """
+        logger.debug(
+            "Retrieving all vectorization patterns",
+            extra={"pattern_count": len([
+                cls.elementwise_operation,
+                cls.filtering,
+                cls.rolling_calculation,
+                cls.groupby_aggregation,
+                cls.correlation_matrix,
+                cls.conditional_assignment,
+                cls.exponential_weighted,
+                cls.percentage_change,
+                cls.cumulative_operations,
+                cls.shift_lag,
+                cls.rank_percentile,
+                cls.distance_matrix,
+                cls.interpolation,
+                cls.difference_operations,
+                cls.value_counts_mode,
+                cls.outer_product,
+                cls.datetime_operations,
+            ])}
+        )
         methods = [
             cls.elementwise_operation,
             cls.filtering,
@@ -570,6 +596,11 @@ trading_hours = df.between_time('09:30', '16:00')
             pattern_name = method.__name__.replace("_", " ").title()
             patterns[pattern_name] = method()
 
+        logger.debug(
+            "All vectorization patterns retrieved successfully",
+            extra={"pattern_names": list(patterns.keys())}
+        )
+
         return patterns
 
     @classmethod
@@ -582,6 +613,10 @@ trading_hours = df.between_time('09:30', '16:00')
         Returns:
             Suggested pattern documentation.
         """
+        logger.debug(
+            "Getting vectorization suggestion for issue",
+            extra={"issue_type": issue_type}
+        )
         suggestions: dict[str, str] = {
             "for_loop": cls.elementwise_operation(),
             "list_comp": cls.elementwise_operation(),
@@ -594,7 +629,13 @@ trading_hours = df.between_time('09:30', '16:00')
             "nested_loop": cls.correlation_matrix(),
         }
 
-        return suggestions.get(issue_type, cls.elementwise_operation())
+        suggestion = suggestions.get(issue_type, cls.elementwise_operation())
+        logger.debug(
+            "Vectorization suggestion found",
+            extra={"issue_type": issue_type, "has_suggestion": issue_type in suggestions}
+        )
+
+        return suggestion
 
     @classmethod
     def get_trading_specific_examples(cls) -> dict[str, str]:
@@ -603,6 +644,10 @@ trading_hours = df.between_time('09:30', '16:00')
         Returns:
             Dictionary mapping trading concepts to vectorized implementations.
         """
+        logger.debug(
+            "Retrieving trading-specific vectorization examples",
+            extra={"example_types": ["simple_returns", "log_returns", "moving_average", "volatility", "sharpe_ratio", "bollinger_bands", "rsi"]}
+        )
         return {
             "simple_returns": """
 # Simple Returns Calculation
@@ -714,6 +759,10 @@ rsi = 100 - (100 / (1 + rs))
         Returns:
             Dictionary mapping operations to (non_vectorized, vectorized) time estimates.
         """
+        logger.debug(
+            "Retrieving performance comparison data",
+            extra={"operation_count": 7}
+        )
         return {
             "Sum 1M elements": ("~100ms", "~1ms"),
             "Mean 1M elements": ("~100ms", "~1ms"),

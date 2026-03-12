@@ -100,12 +100,29 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
         # Technical indicator calculator
         self.indicator_calculator = TechnicalIndicatorCalculator()
 
-        logger.info(f"MeanReversionStrategyEngine initialized: {self.name}")
+        logger.info(
+            "MeanReversionStrategyEngine initialized",
+            extra={
+                "strategy_name": self.name,
+                "strategy_type": "mean_reversion",
+                "z_score_threshold": float(self.z_score_threshold),
+                "lookback_period": self.lookback_period,
+                "volatility_threshold": float(self.volatility_threshold),
+                "min_z_score": float(self.min_z_score),
+                "atr_floor": float(self.atr_floor),
+            },
+        )
         config_value = (
             strategy_config.parameters.get('z_score_threshold') if strategy_config else 'NO_CONFIG'
         )
         logger.info(
-            f"⚠️ CRITICAL: z_score_threshold={self.z_score_threshold} (target: 1.0, config loaded: {config_value})"
+            "CRITICAL: z_score_threshold configuration loaded",
+            extra={
+                "strategy": "mean_reversion",
+                "z_score_threshold": float(self.z_score_threshold),
+                "target_value": 1.0,
+                "config_loaded_value": config_value,
+            },
         )
 
     # ===== Implementación de métodos abstractos =====
@@ -317,6 +334,18 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
                     volatility,
                 )
                 signals.append(signal)
+                logger.info(
+                    "Signal generated: BUY (oversold)",
+                    extra={
+                        "strategy": "mean_reversion",
+                        "signal_type": "BUY",
+                        "symbol": market_data.symbol,
+                        "price": float(current_price),
+                        "confidence": float(confidence),
+                        "z_score": float(z_score),
+                        "volatility": volatility,
+                    },
+                )
             elif sell_condition:
                 confidence = self._calculate_confidence(
                     abs(float(z_score_decimal)), volatility, is_oversold=False
@@ -332,10 +361,28 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
                     volatility,
                 )
                 signals.append(signal)
+                logger.info(
+                    "Signal generated: SELL (overbought)",
+                    extra={
+                        "strategy": "mean_reversion",
+                        "signal_type": "SELL",
+                        "symbol": market_data.symbol,
+                        "price": float(current_price),
+                        "confidence": float(confidence),
+                        "z_score": float(z_score),
+                        "volatility": volatility,
+                    },
+                )
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(
-                f"Error generando señal en MeanReversionStrategyEngine: {e}", exc_info=True
+                "Error generando señal en MeanReversionStrategyEngine",
+                extra={
+                    "strategy": "mean_reversion",
+                    "symbol": getattr(market_data, 'symbol', None),
+                    "error_type": type(e).__name__,
+                },
+                exc_info=True,
             )
 
         return signals
@@ -404,14 +451,30 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
         min_confidence = self.config.get("min_signal_confidence", 50.0)
         if signal.confidence < min_confidence:
             logger.debug(
-                f"Risk check fallido: confidence {signal.confidence:.2f} < {min_confidence:.2f}"
+                "Risk check fallido: confidence insuficiente",
+                extra={
+                    "strategy": "mean_reversion",
+                    "symbol": signal.symbol,
+                    "signal_confidence": signal.confidence,
+                    "min_confidence": min_confidence,
+                    "check_type": "confidence",
+                },
             )
             return False
 
         # Verificar volatilidad (mean reversion requiere volatilidad controlada)
         volatility = signal.metadata.get('volatility', 0.0)
         if volatility > float(self.volatility_threshold * 2):  # Permitir hasta 2x el threshold
-            logger.debug(f"Risk check fallido: volatilidad {volatility:.4f} muy alta")
+            logger.debug(
+                "Risk check fallido: volatilidad muy alta",
+                extra={
+                    "strategy": "mean_reversion",
+                    "symbol": signal.symbol,
+                    "volatility": volatility,
+                    "max_volatility": float(self.volatility_threshold * 2),
+                    "check_type": "volatility",
+                },
+            )
             return False
 
         return True

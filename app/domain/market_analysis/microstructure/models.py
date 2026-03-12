@@ -22,6 +22,7 @@ References:
 """
 from __future__ import annotations  # Enable Python 3.10+ union syntax in Python 3.9
 
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
@@ -30,6 +31,8 @@ from typing import Any, Dict, List, Optional, Tuple, Union  # noqa: F401
 
 import numpy as np
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 # mypy: ignore-errors
 # pylint: disable=unsupported-binary-operation  # For Python 3.10+ union syntax
@@ -270,10 +273,10 @@ class GlostenMilgromModel:
     3. Quote adjustments depend on trade direction
 
     Model structure:
-    - With probability α: information event occurs
-      - With probability δ: Bad news (value goes to 0)
-      - With probability 1-δ: Good news (value goes to 1)
-    - With probability 1-α: No information event (value stays at V₀)
+    - With probability alpha: information event occurs
+      - With probability delta: Bad news (value goes to 0)
+      - With probability 1-delta: Good news (value goes to 1)
+    - With probability 1-alpha: No information event (value stays at V0)
     """
 
     def __init__(
@@ -294,6 +297,16 @@ class GlostenMilgromModel:
             mu: Informed trader arrival rate
             epsilon: Uninformed trader arrival rate (buy = sell)
         """
+        logger.debug(
+            "Initializing Glosten-Milgrom model",
+            extra={
+                "initial_value": initial_value,
+                "alpha": alpha,
+                "delta": delta,
+                "mu": mu,
+                "epsilon": epsilon,
+            },
+        )
         self.initial_value = initial_value
         self.alpha = alpha
         self.delta = delta
@@ -314,6 +327,14 @@ class GlostenMilgromModel:
         Returns:
             Tuple of (bid_price, ask_price)
         """
+        logger.debug(
+            "Calculating equilibrium spread",
+            extra={
+                "initial_value": self.initial_value,
+                "alpha": self.alpha,
+                "delta": self.delta,
+            },
+        )
         V0 = self.initial_value
         V_low = 0  # Value with bad news
         V_high = 2 * V0  # Value with good news (assumes symmetric)
@@ -351,6 +372,14 @@ class GlostenMilgromModel:
         # E[V | buy] = prob_informed_given_buy * V_high + (1 - prob_informed_given_buy) * V₀
         ask = prob_informed_given_buy * V_high + (1 - prob_informed_given_buy) * V0
 
+        logger.info(
+            "Equilibrium spread calculated",
+            extra={
+                "bid": bid,
+                "ask": ask,
+                "spread": ask - bid,
+            },
+        )
         return bid, ask
 
     def simulate_trade_sequence(
@@ -510,6 +539,14 @@ class KyleModel:
             Sigma0: Prior variance of value
             Sigma_u: Variance of noise trader demand
         """
+        logger.debug(
+            "Initializing Kyle model",
+            extra={
+                "V0": V0,
+                "Sigma0": Sigma0,
+                "Sigma_u": Sigma_u,
+            },
+        )
         self.V0 = V0
         self.Sigma0 = Sigma0
         self.Sigma_u = Sigma_u
@@ -517,6 +554,12 @@ class KyleModel:
         # Calculate equilibrium lambda (market depth parameter)
         # λ = σᵥ / σᵤ where σᵥ² = Σ₀
         self.lambda_kyle = np.sqrt(Sigma0) / np.sqrt(Sigma_u)
+        logger.info(
+            "Kyle model initialized",
+            extra={
+                "lambda_kyle": self.lambda_kyle,
+            },
+        )
 
     def calculate_market_depth(self) -> float:
         """
@@ -538,7 +581,7 @@ class KyleModel:
         Calculate optimal informed trading strategy
 
         Informed trader maximizes: E[(v - p)x]
-        Optimal strategy: x = (v - V₀) / (2λ)
+        Optimal strategy: x = (v - V0) / (2 lambda)
 
         Args:
             true_value: Actual fundamental value known to informed trader
@@ -546,6 +589,13 @@ class KyleModel:
         Returns:
             KyleModelResult with analysis
         """
+        logger.debug(
+            "Calculating optimal informed trading",
+            extra={
+                "true_value": true_value,
+                "V0": self.V0,
+            },
+        )
         # Optimal order size
         information_signal = true_value - self.V0
         optimal_order = information_signal / (2 * self.lambda_kyle)
@@ -882,6 +932,13 @@ class MicrostructureModelComparator:
         Returns:
             Dictionary with results from all models
         """
+        logger.debug(
+            "Analyzing market with microstructure models",
+            extra={
+                "price_history_length": len(price_history),
+                "order_flow_provided": order_flow is not None,
+            },
+        )
         results = {}
 
         # Roll spread estimate
@@ -898,7 +955,15 @@ class MicrostructureModelComparator:
             'spread_components': self.gm_model.calculate_spread_components(),
         }
 
-        # Kyle market depth
+        logger.info(
+            "Market analysis completed",
+            extra={
+                "roll_spread_bps": results['roll']['estimated_spread_bps'],
+                "glosten_milgrom_spread_bps": results['glosten_milgrom']['spread_components'],
+                "kyle_market_depth_lambda": results['kyle']['market_depth_lambda'],
+                "interpretation": results['kyle']['interpretation'],
+            },
+        )        # Kyle market depth
         lambda_kyle = self.kyle_model.calculate_market_depth()
         results['kyle'] = {
             'market_depth_lambda': lambda_kyle,

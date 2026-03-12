@@ -3,11 +3,14 @@ User Settings Model
 
 Defines the user-specific configuration model.
 """
+import logging
 from decimal import Decimal
 from enum import Enum
 from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator
+
+logger = logging.getLogger(__name__)
 
 
 class BrokerType(str, Enum):
@@ -168,17 +171,44 @@ class UserSettings(BaseModel):
         """Validate log level."""
         valid_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
         if v.upper() not in valid_levels:
+            logger.warning(
+                "Invalid log level provided",
+                extra={"provided_level": v, "valid_levels": valid_levels}
+            )
             raise ValueError(f"Invalid log level: {v}. Must be one of {valid_levels}")
+        logger.debug(
+            "Log level validated",
+            extra={"log_level": v.upper()}
+        )
         return v.upper()
 
     def get_allowed_symbols(self) -> List[str]:
         """Get list of allowed trading symbols."""
-        return self.symbol_universe.allowed_symbols
+        symbols = self.symbol_universe.allowed_symbols
+        logger.debug(
+            "Retrieved allowed symbols",
+            extra={"symbol_count": len(symbols), "user_id": self.user_id}
+        )
+        return symbols
 
     def is_symbol_allowed(self, symbol: str) -> bool:
         """Check if symbol is allowed for trading."""
-        return symbol.upper() in self.symbol_universe.allowed_symbols
+        allowed = symbol.upper() in self.symbol_universe.allowed_symbols
+        logger.debug(
+            "Symbol permission check",
+            extra={
+                "symbol": symbol,
+                "allowed": allowed,
+                "user_id": self.user_id,
+            }
+        )
+        return allowed
 
     def is_paper_trading(self) -> bool:
         """Check if running in paper trading mode."""
-        return self.broker_settings.paper_trading
+        is_paper = self.broker_settings.paper_trading
+        logger.debug(
+            "Paper trading mode check",
+            extra={"is_paper_trading": is_paper, "user_id": self.user_id}
+        )
+        return is_paper

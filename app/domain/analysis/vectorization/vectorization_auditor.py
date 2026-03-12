@@ -10,12 +10,15 @@ patterns without executing the code.
 from __future__ import annotations
 
 import ast
+import logging
 import time
 from decimal import Decimal
 from pathlib import Path
 
 from app.domain.analysis.vectorization.models import VectorizationIssue, VectorizationReport
 from app.domain.analysis.vectorization.patterns import VectorizationPatterns
+
+logger = logging.getLogger(__name__)
 
 
 class VectorizationAuditor:
@@ -79,6 +82,10 @@ class VectorizationAuditor:
         self.file_patterns = file_patterns or ["*.py"]
         self.verbose = verbose
         self.patterns = VectorizationPatterns()
+        logger.info(
+            "VectorizationAuditor initialized",
+            extra={"exclude_dirs": list(self.exclude_dirs), "file_patterns": self.file_patterns}
+        )
 
     def audit_file(
         self,
@@ -97,9 +104,11 @@ class VectorizationAuditor:
             SyntaxError: If the file has invalid Python syntax.
         """
         file_path = Path(file_path)
+        logger.debug("Auditing file", extra={"file_path": str(file_path)})
 
         if not file_path.exists():
             msg = f"File not found: {file_path}"
+            logger.error(msg, extra={"file_path": str(file_path)})
             raise FileNotFoundError(msg)
 
         # Read and parse the file
@@ -109,6 +118,7 @@ class VectorizationAuditor:
                 tree = ast.parse(source_code, filename=str(file_path))
         except SyntaxError as e:
             msg = f"Syntax error in {file_path}: {e}"
+            logger.error(msg, extra={"file_path": str(file_path), "error": str(e)})
             raise SyntaxError(msg) from e
 
         issues: list[VectorizationIssue] = []
@@ -121,6 +131,11 @@ class VectorizationAuditor:
         issues.extend(self._check_enumerate_loops(tree, str(file_path), source_code))
         issues.extend(self._check_range_len_loops(tree, str(file_path), source_code))
         issues.extend(self._check_while_loops(tree, str(file_path), source_code))
+
+        logger.info(
+            "File audit completed",
+            extra={"file_path": str(file_path), "issues_found": len(issues)}
+        )
 
         return issues
 
@@ -143,8 +158,14 @@ class VectorizationAuditor:
         start_time = time.time()
         directory = Path(directory)
 
+        logger.info(
+            "Starting directory audit",
+            extra={"directory": str(directory), "pattern": pattern, "recursive": recursive}
+        )
+
         if not directory.exists():
             msg = f"Directory not found: {directory}"
+            logger.error(msg, extra={"directory": str(directory)})
             raise FileNotFoundError(msg)
 
         # Find all Python files
@@ -196,6 +217,17 @@ class VectorizationAuditor:
             key=lambda x: x[1],
             reverse=True,
         )[:10]
+
+        logger.info(
+            "Directory audit completed",
+            extra={
+                "directory": str(directory),
+                "total_files_scanned": total_files,
+                "total_issues_found": total_issues,
+                "vectorization_score": float(vectorization_score),
+                "scan_duration_seconds": scan_duration
+            }
+        )
 
         return VectorizationReport(
             total_files_scanned=total_files,
@@ -757,10 +789,12 @@ class VectorizationAuditor:
         Returns:
             List of VectorizationIssue objects.
         """
+        logger.debug("Auditing code snippet", extra={"filename": filename})
         try:
             tree = ast.parse(code, filename=filename)
         except SyntaxError as e:
             msg = f"Syntax error in code snippet: {e}"
+            logger.error(msg, extra={"filename": filename, "error": str(e)})
             raise SyntaxError(msg) from e
 
         issues: list[VectorizationIssue] = []
@@ -772,5 +806,10 @@ class VectorizationAuditor:
         issues.extend(self._check_enumerate_loops(tree, filename, code))
         issues.extend(self._check_range_len_loops(tree, filename, code))
         issues.extend(self._check_while_loops(tree, filename, code))
+
+        logger.info(
+            "Code snippet audit completed",
+            extra={"filename": filename, "issues_found": len(issues)}
+        )
 
         return issues

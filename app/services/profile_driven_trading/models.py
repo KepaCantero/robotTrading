@@ -5,12 +5,15 @@ Defines configuration, results, and intermediate data structures used
 throughout the trading lifecycle.
 """
 
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 
 class StageType(Enum):
@@ -86,6 +89,20 @@ class OrchestratorConfig:
     max_concurrent_stages: int = 4  # Parallel stage execution
     timeout_seconds: int = 300  # 5 minutes per stage
 
+    def __post_init__(self):
+        """Log configuration initialization."""
+        logger.info(
+            "OrchestratorConfig initialized",
+            extra={
+                "enable_rl_signals": self.enable_rl_signals,
+                "enable_tax_optimization": self.enable_tax_optimization,
+                "auto_execute_trades": self.auto_execute_trades,
+                "use_ibkr": self.use_ibkr,
+                "max_position_size_pct": self.max_position_size_pct,
+                "max_daily_loss_pct": self.max_daily_loss_pct,
+            },
+        )
+
 
 @dataclass
 class StageResult:
@@ -103,6 +120,22 @@ class StageResult:
     errors: List[str] = field(default_factory=list)
     warnings: List[str] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self):
+        """Log stage result creation."""
+        log_level = logging.INFO if self.success else logging.WARNING
+        logger.log(
+            log_level,
+            f"StageResult created: {self.stage_type.value}",
+            extra={
+                "stage_type": self.stage_type.value,
+                "success": self.success,
+                "message": self.message,
+                "duration_ms": self.duration_ms,
+                "error_count": len(self.errors),
+                "warning_count": len(self.warnings),
+            },
+        )
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
@@ -140,6 +173,16 @@ class SignalSet:
         self, symbol: str, action: str, source: str = "default", confidence: float = 0.5
     ):
         """Add a signal for a symbol."""
+        logger.debug(
+            "Adding signal to SignalSet",
+            extra={
+                "symbol": symbol,
+                "action": action,
+                "source": source,
+                "confidence": confidence,
+            },
+        )
+
         self.signals[symbol] = action
         self.confidence_scores[symbol] = confidence
 
@@ -161,7 +204,7 @@ class SignalSet:
     def get_summary(self) -> Dict[str, Any]:
         """Get summary statistics of the signal set."""
         total = len(self.signals)
-        return {
+        summary = {
             "total_signals": total,
             "buy_signals": self.buy_count,
             "sell_signals": self.sell_count,
@@ -176,6 +219,12 @@ class SignalSet:
                 np.mean(list(self.confidence_scores.values())) if self.confidence_scores else 0
             ),
         }
+
+        logger.debug(
+            "SignalSet summary generated",
+            extra=summary,
+        )
+        return summary
 
 
 @dataclass
@@ -192,6 +241,21 @@ class RiskValidationResult:
     warnings: List[str] = field(default_factory=list)
     metrics: Dict[str, float] = field(default_factory=dict)
     validation_timestamp: datetime = field(default_factory=datetime.utcnow)
+
+    def __post_init__(self):
+        """Log risk validation result."""
+        log_level = logging.INFO if self.passed else logging.WARNING
+        logger.log(
+            log_level,
+            f"RiskValidationResult: {'PASSED' if self.passed else 'FAILED'}",
+            extra={
+                "passed": self.passed,
+                "risk_level": self.risk_level,
+                "violation_count": len(self.violations),
+                "warning_count": len(self.warnings),
+                "violations": self.violations[:5] if self.violations else [],  # First 5
+            },
+        )
 
     def get_summary(self) -> Dict[str, Any]:
         """Get summary of risk validation."""
@@ -225,6 +289,21 @@ class ExecutionResult:
     execution_time_ms: float = 0.0
     order_details: List[Dict[str, Any]] = field(default_factory=list)
     errors: List[str] = field(default_factory=list)
+
+    def __post_init__(self):
+        """Log execution result."""
+        logger.info(
+            f"ExecutionResult: {'EXECUTED' if self.executed else 'NOT EXECUTED'}",
+            extra={
+                "executed": self.executed,
+                "dry_run": self.dry_run,
+                "orders_submitted": self.orders_submitted,
+                "orders_filled": self.orders_filled,
+                "orders_failed": self.orders_failed,
+                "total_value_eur": self.total_value_eur,
+                "execution_time_ms": self.execution_time_ms,
+            },
+        )
 
     def get_summary(self) -> Dict[str, Any]:
         """Get summary of execution result."""
@@ -268,27 +347,68 @@ class TradingResult:
     risk_validation: Optional[RiskValidationResult] = None
     backtest_result: Optional[Any] = None
 
+    def __post_init__(self):
+        """Log trading result."""
+        logger.info(
+            f"TradingResult: {'SUCCESS' if self.success else 'FAILED'}",
+            extra={
+                "success": self.success,
+                "profile_id": self.profile_id,
+                "execution_time_ms": self.execution_time_ms,
+                "stage_count": len(self.stage_results),
+                "error_count": len(self.errors),
+                "warning_count": len(self.warnings),
+            },
+        )
+
     def get_stage_result(self, stage_type: StageType) -> Optional[StageResult]:
         """Get result for a specific stage."""
         for result in self.stage_results:
             if result.stage_type == stage_type:
+                logger.debug(
+                    "Retrieved stage result",
+                    extra={
+                        "stage_type": stage_type.value,
+                        "success": result.success,
+                    },
+                )
                 return result
+
+        logger.debug(
+            "Stage result not found",
+            extra={"stage_type": stage_type.value},
+        )
         return None
 
     def get_successful_stages(self) -> List[StageResult]:
         """Get all successfully completed stages."""
-        return [r for r in self.stage_results if r.success]
+        successful = [r for r in self.stage_results if r.success]
+        logger.debug(
+            "Retrieved successful stages",
+            extra={"successful_count": len(successful), "total_stages": len(self.stage_results)},
+        )
+        return successful
 
     def get_failed_stages(self) -> List[StageResult]:
         """Get all failed stages."""
-        return [r for r in self.stage_results if not r.success]
+        failed = [r for r in self.stage_results if not r.success]
+        if failed:
+            logger.warning(
+                "Retrieved failed stages",
+                extra={
+                    "failed_count": len(failed),
+                    "total_stages": len(self.stage_results),
+                    "failed_stage_types": [s.stage_type.value for s in failed],
+                },
+            )
+        return failed
 
     def get_summary(self) -> Dict[str, Any]:
         """Get comprehensive summary of the trading result."""
         successful_stages = self.get_successful_stages()
         failed_stages = self.get_failed_stages()
 
-        return {
+        summary = {
             "success": self.success,
             "profile_id": self.profile_id,
             "execution_time_seconds": self.execution_time_ms / 1000,
@@ -310,6 +430,12 @@ class TradingResult:
             "errors": self.errors,
             "warnings": self.warnings,
         }
+
+        logger.debug(
+            "TradingResult summary generated",
+            extra={"success": self.success, "profile_id": self.profile_id},
+        )
+        return summary
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""

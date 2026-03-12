@@ -7,6 +7,7 @@ portfolio system, including portfolio definitions, allocations, metrics, and tra
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
@@ -17,6 +18,8 @@ import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.shared.config.centralized_config import get_config
+
+logger = logging.getLogger(__name__)
 
 
 class RiskTolerance(str, Enum):
@@ -178,6 +181,10 @@ class MultiAssetAllocation:
         Raises:
             ValueError: If allocation is invalid
         """
+        logger.debug(
+            "Validating allocation",
+            extra={"asset_class": self.asset_class.name, "weight": float(self.weight)}
+        )
         # Check weight is in valid range
         if self.weight < 0 or self.weight > 1:
             raise ValueError(f"Asset class weight must be between 0 and 1, got {self.weight}")
@@ -196,6 +203,7 @@ class MultiAssetAllocation:
             if weight < 0 or weight > 1:
                 raise ValueError(f"Asset weight for {symbol} must be between 0 and 1, got {weight}")
 
+        logger.debug("Allocation validation passed", extra={"asset_class": self.asset_class.name})
         return True
 
 
@@ -311,6 +319,7 @@ class MultiAssetPortfolio:
         Raises:
             ValueError: If portfolio is invalid
         """
+        logger.debug("Validating portfolio", extra={"name": self.name})
         # Check weights sum to approximately 1
         total_weight = self.calculate_total_weights()
         tolerance = Decimal("0.01")
@@ -323,6 +332,7 @@ class MultiAssetPortfolio:
         for alloc in self.allocations.values():
             alloc.validate()
 
+        logger.debug("Portfolio validation passed", extra={"name": self.name})
         return True
 
     def needs_rebalancing(self) -> bool:
@@ -358,6 +368,14 @@ class MultiAssetPortfolio:
         Args:
             allocation: Allocation to add
         """
+        logger.info(
+            "Adding allocation to portfolio",
+            extra={
+                "portfolio_name": self.name,
+                "asset_class": allocation.asset_class.name,
+                "weight": float(allocation.weight)
+            }
+        )
         # Validate before adding
         allocation.validate()
         self.allocations[allocation.asset_class.name] = allocation
@@ -373,10 +391,16 @@ class MultiAssetPortfolio:
         Returns:
             True if allocation was removed, False if not found
         """
+        logger.info(
+            "Removing allocation from portfolio",
+            extra={"portfolio_name": self.name, "asset_class": asset_class_name}
+        )
         if asset_class_name in self.allocations:
             del self.allocations[asset_class_name]
             self.updated_at = datetime.utcnow()
+            logger.debug("Allocation removed successfully")
             return True
+        logger.warning("Allocation not found for removal", extra={"asset_class": asset_class_name})
         return False
 
     def calculate_portfolio_metrics(

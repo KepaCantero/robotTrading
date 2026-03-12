@@ -7,10 +7,14 @@ This module provides daily reconciliation between broker positions and internal 
 to detect discrepancies and ensure data consistency.
 """
 
+import logging
+
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -101,6 +105,10 @@ class DailyReconciler:
         """Initialize the daily reconciler"""
         self._broker_positions: dict[str, Position] = {}
         self._internal_positions: dict[str, Position] = {}
+        logger.debug(
+            "DailyReconciler initialized",
+            extra={"component": "reconciliation", "action": "init"},
+        )
 
     async def reconcile_positions(
         self, broker_positions: list[Position], internal_positions: list[Position]
@@ -124,6 +132,16 @@ class DailyReconciler:
                 internal_positions=[Position("SAN.MC", Decimal("100"), ...)]
             )
         """
+        logger.info(
+            "Starting position reconciliation",
+            extra={
+                "component": "reconciliation",
+                "action": "reconcile_start",
+                "broker_positions_count": len(broker_positions),
+                "internal_positions_count": len(internal_positions),
+            },
+        )
+
         # Convert to dict by symbol for efficient lookup
         self._broker_positions = {p.symbol: p for p in broker_positions}
         self._internal_positions = {p.symbol: p for p in internal_positions}
@@ -156,6 +174,30 @@ class DailyReconciler:
         total = len(all_symbols)
         is_balanced = mismatched == 0 and missing == 0
 
+        logger.info(
+            "Position reconciliation completed",
+            extra={
+                "component": "reconciliation",
+                "action": "reconcile_complete",
+                "total_positions": total,
+                "matched_positions": matched,
+                "mismatched_positions": mismatched,
+                "missing_positions": missing,
+                "is_balanced": is_balanced,
+            },
+        )
+
+        if not is_balanced:
+            logger.warning(
+                "Reconciliation found discrepancies",
+                extra={
+                    "component": "reconciliation",
+                    "action": "discrepancies_found",
+                    "mismatched_count": mismatched,
+                    "missing_count": missing,
+                },
+            )
+
         return ReconciliationResult(
             date=date.today(),
             total_positions=total,
@@ -186,6 +228,16 @@ class DailyReconciler:
 
         # Only in broker (missing in internal records)
         if broker_pos is not None and internal_pos is None:
+            logger.warning(
+                "Position missing in internal records",
+                extra={
+                    "component": "reconciliation",
+                    "action": "position_missing_internal",
+                    "symbol": symbol,
+                    "broker_quantity": str(broker_pos.quantity),
+                    "severity": "HIGH",
+                },
+            )
             return {
                 "status": "MISSING",
                 "symbol": symbol,
@@ -198,6 +250,16 @@ class DailyReconciler:
 
         # Only in internal (missing in broker - phantom position)
         if broker_pos is None and internal_pos is not None:
+            logger.error(
+                "Phantom position detected - exists in internal but not broker",
+                extra={
+                    "component": "reconciliation",
+                    "action": "phantom_position",
+                    "symbol": symbol,
+                    "internal_quantity": str(internal_pos.quantity),
+                    "severity": "CRITICAL",
+                },
+            )
             return {
                 "status": "MISSING",
                 "symbol": symbol,
@@ -249,11 +311,24 @@ class DailyReconciler:
                 }
             )
 
+        severity = "HIGH" if len(discrepancies) > 1 else "MEDIUM"
+        logger.warning(
+            "Position mismatch detected",
+            extra={
+                "component": "reconciliation",
+                "action": "position_mismatch",
+                "symbol": symbol,
+                "discrepancies_count": len(discrepancies),
+                "discrepancy_types": [d["type"] for d in discrepancies],
+                "severity": severity,
+            },
+        )
+
         return {
             "status": "MISMATCH",
             "symbol": symbol,
             "discrepancies": discrepancies,
-            "severity": "HIGH" if len(discrepancies) > 1 else "MEDIUM",
+            "severity": severity,
         }
 
     def generate_reconciliation_report(self, result: ReconciliationResult) -> str:

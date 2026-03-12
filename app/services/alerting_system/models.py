@@ -4,11 +4,14 @@ T18.2: Advanced Alerting System Models
 Data models for alert rules, events, and notification targets.
 """
 
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 
 class AlertSeverity(str, Enum):
@@ -93,19 +96,40 @@ class ThresholdRule:
 
     def evaluate(self, value: Decimal) -> bool:
         """Evaluate metric against threshold."""
+        logger.debug(
+            "Evaluating threshold rule",
+            extra={
+                "metric_name": self.metric_name,
+                "operator": self.operator.value,
+                "threshold": str(self.threshold),
+                "value": str(value),
+                "operation": "threshold_evaluate"
+            }
+        )
         if self.operator == ComparisonOperator.GREATER_THAN:
-            return value > self.threshold
+            result = value > self.threshold
         elif self.operator == ComparisonOperator.GREATER_THAN_OR_EQUAL:
-            return value >= self.threshold
+            result = value >= self.threshold
         elif self.operator == ComparisonOperator.LESS_THAN:
-            return value < self.threshold
+            result = value < self.threshold
         elif self.operator == ComparisonOperator.LESS_THAN_OR_EQUAL:
-            return value <= self.threshold
+            result = value <= self.threshold
         elif self.operator == ComparisonOperator.EQUAL:
-            return value == self.threshold
+            result = value == self.threshold
         elif self.operator == ComparisonOperator.NOT_EQUAL:
-            return value != self.threshold
-        return False
+            result = value != self.threshold
+        else:
+            result = False
+
+        logger.debug(
+            "Threshold rule evaluation result",
+            extra={
+                "metric_name": self.metric_name,
+                "triggered": result,
+                "symbol": self.symbol
+            }
+        )
+        return result
 
     def to_dict(self) -> Dict:
         """Convert to dictionary."""
@@ -274,12 +298,37 @@ class AlertEvaluationContext:
 
     def calculate_change_percent(self) -> Optional[Decimal]:
         """Calculate percentage change from first to current value."""
+        logger.debug(
+            "Calculating change percent",
+            extra={
+                "metric_name": self.metric_name,
+                "window_data_length": len(self.window_data),
+                "operation": "calculate_change_percent"
+            }
+        )
         if not self.window_data or len(self.window_data) < 2:
+            logger.debug(
+                "Insufficient data for change calculation",
+                extra={"metric_name": self.metric_name, "window_data_length": len(self.window_data)}
+            )
             return None
         first_value = self.window_data[0]
         if first_value == 0:
+            logger.debug(
+                "First value is zero, cannot calculate change",
+                extra={"metric_name": self.metric_name}
+            )
             return None
         change = ((self.current_value - first_value) / first_value) * 100
+        logger.debug(
+            "Change percent calculated",
+            extra={
+                "metric_name": self.metric_name,
+                "change_percent": float(change),
+                "first_value": float(first_value),
+                "current_value": float(self.current_value)
+            }
+        )
         return change
 
 

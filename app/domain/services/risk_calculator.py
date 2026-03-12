@@ -9,6 +9,7 @@ Reference: Rule 05-architecture.md, Rule 03-solid-principles.md
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Dict, List
@@ -18,6 +19,8 @@ import numpy as np
 from app.domain.entities.portfolio import Portfolio
 from app.domain.entities.position import Position
 from app.shared.config.centralized_config import get_config
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -66,6 +69,10 @@ class RiskCalculator:
             if risk_free_rate is not None
             else get_config().backtesting.default_risk_free_rate
         )
+        logger.debug(
+            "RiskCalculator initialized",
+            extra={"risk_free_rate": str(self._risk_free_rate)},
+        )
 
     def calculate_portfolio_risk(self, portfolio: Portfolio) -> RiskMetrics:
         """
@@ -77,11 +84,20 @@ class RiskCalculator:
         Returns:
             RiskMetrics object with calculated metrics
         """
+        logger.info(
+            "Calculating portfolio risk",
+            extra={"portfolio_id": getattr(portfolio, "id", "unknown")},
+        )
+
         # Get position values
         position_values = [pos.get_value().amount for pos in portfolio.get_open_positions()]
         total_value = portfolio.get_total_value().amount
 
         if total_value == 0 or not position_values:
+            logger.warning(
+                "Empty portfolio or zero value - returning zero metrics",
+                extra={"total_value": str(total_value), "position_count": len(position_values)},
+            )
             return RiskMetrics(
                 portfolio_value=Decimal("0"),
                 var_95=Decimal("0"),
@@ -102,7 +118,9 @@ class RiskCalculator:
         # Calculate volatility (simplified - uses position weights)
         weights = [v / total_value for v in position_values]
         daily_vol = self._estimate_portfolio_volatility(weights, position_values)
-        annual_vol = daily_vol * Decimal(str(np.sqrt(252)))
+        annual_vol = daily_vol * Decimal(
+            str(np.sqrt(get_config().backtesting.trading_days_per_year))
+        )
 
         # Calculate VaR (simplified parametric VaR)
         var_95 = self._calculate_var(total_value, daily_vol, Decimal("1.65"))
@@ -114,6 +132,16 @@ class RiskCalculator:
 
         # Calculate risk utilisation
         utilisation = self._calculate_risk_utilisation(portfolio)
+
+        logger.info(
+            "Portfolio risk calculated",
+            extra={
+                "var_95": str(var_95),
+                "var_99": str(var_99),
+                "daily_volatility": str(daily_vol),
+                "utilisation": str(utilisation),
+            },
+        )
 
         return RiskMetrics(
             portfolio_value=total_value,
@@ -195,7 +223,7 @@ class RiskCalculator:
         sharpe = (mean_return - self._risk_free_rate) / std_return
 
         if annualized:
-            sharpe *= Decimal(str(np.sqrt(252)))
+            sharpe *= Decimal(str(np.sqrt(get_config().backtesting.trading_days_per_year)))
 
         return sharpe
 
@@ -230,18 +258,18 @@ class RiskCalculator:
         downside_returns = [r for r in returns if r < target_return]
 
         if not downside_returns:
-            return Decimal("999")  # Infinite Sortino (no downside)
+            return get_config().backtesting.sortino_infinite_value  # Infinite Sortino (no downside)
 
         downside_arr = np.array([float(r - target_return) for r in downside_returns])
         downside_deviation = Decimal(str(np.sqrt(np.mean(downside_arr**2))))
 
         if downside_deviation == 0:
-            return Decimal("999")
+            return get_config().backtesting.sortino_infinite_value
 
         sortino = (mean_return - target_return) / downside_deviation
 
         if annualized:
-            sortino *= Decimal(str(np.sqrt(252)))
+            sortino *= Decimal(str(np.sqrt(get_config().backtesting.trading_days_per_year)))
 
         return sortino
 
@@ -351,12 +379,14 @@ class RiskCalculator:
         if total_weight == 0:
             return Decimal("0")
 
-        # Assume 2% daily volatility per position (conservative)
-        position_vol = 0.02
+        # Use default daily volatility from config (conservative)
+        position_vol = float(get_config().backtesting.default_daily_volatility)
 
         # Portfolio vol = weighted average * sqrt(n) for uncorrelated
         n = len(weights)
-        portfolio_vol = position_vol * Decimal(str(np.sqrt(n))) if n > 0 else Decimal("0")
+        portfolio_vol = (
+            Decimal(str(position_vol)) * Decimal(str(np.sqrt(n))) if n > 0 else Decimal("0")
+        )
 
         return portfolio_vol
 
@@ -389,8 +419,8 @@ class RiskCalculator:
             return Decimal("0")
 
         max_weight = max(weights)
-        # Assume 20% drawdown on largest position
-        return max_weight * Decimal("0.2")
+        # Use default volatility for drawdown estimation from config
+        return max_weight * get_config().backtesting.default_volatility_for_dd
 
     def _calculate_risk_utilisation(self, portfolio: Portfolio) -> Decimal:
         """

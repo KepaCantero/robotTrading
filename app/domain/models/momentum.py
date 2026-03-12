@@ -5,12 +5,15 @@ This module defines the data models for momentum trading strategies,
 technical indicators, and momentum signals.
 """
 
+import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
+
+logger = logging.getLogger(__name__)
 
 
 class MomentumType(str, Enum):
@@ -88,6 +91,7 @@ class MomentumSignal(BaseModel):
     def validate_symbol(cls, v):
         """Validate symbol format."""
         if not v or len(v.strip()) == 0:
+            logger.error("MomentumSignal validation failed: empty symbol")
             raise ValueError("Symbol cannot be empty")
         return v.strip().upper()
 
@@ -96,6 +100,10 @@ class MomentumSignal(BaseModel):
     def validate_direction(cls, v):
         """Validate signal direction."""
         if v.upper() not in ["BUY", "SELL"]:
+            logger.error(
+                "MomentumSignal validation failed: invalid direction",
+                extra={"direction": v}
+            )
             raise ValueError("Direction must be BUY or SELL")
         return v.upper()
 
@@ -167,11 +175,20 @@ class MarketData(BaseModel):
         if isinstance(v, (int, float)):
             v = Decimal(str(v))
         elif not isinstance(v, Decimal):
+            logger.error("MarketData validation failed: invalid price type")
             raise ValueError("Price fields must be numbers")
 
         if v <= 0:
+            logger.error(
+                "MarketData validation failed: non-positive price",
+                extra={"price": str(v)}
+            )
             raise ValueError(f"Price fields must be positive, got {v}")
         if v > Decimal("1000000"):  # $1M limit
+            logger.error(
+                "MarketData validation failed: price exceeds limit",
+                extra={"price": str(v), "limit": "1000000"}
+            )
             raise ValueError(f"Price exceeds maximum limit of $1M, got {v}")
 
         return v
@@ -209,37 +226,99 @@ class MarketData(BaseModel):
     @model_validator(mode="after")
     def validate_price_consistency(self) -> "MarketData":
         """Validate consistency between high, low, open, and close prices."""
+        logger.debug(
+            "Validating market data price consistency",
+            extra={"symbol": self.symbol}
+        )
         if self.high_price < self.low_price:
+            logger.error(
+                "MarketData validation failed: high < low",
+                extra={
+                    "symbol": self.symbol,
+                    "high_price": str(self.high_price),
+                    "low_price": str(self.low_price)
+                }
+            )
             raise ValueError(
                 f"High price ({self.high_price}) cannot be less than low price ({self.low_price})."
             )
 
         if not (self.low_price <= self.open_price <= self.high_price):
+            logger.error(
+                "MarketData validation failed: open price outside range",
+                extra={
+                    "symbol": self.symbol,
+                    "open_price": str(self.open_price),
+                    "low_price": str(self.low_price),
+                    "high_price": str(self.high_price)
+                }
+            )
             raise ValueError(
                 f"Open price ({self.open_price}) must be between low ({self.low_price}) and high ({self.high_price})."
             )
 
         if not (self.low_price <= self.close_price <= self.high_price):
+            logger.error(
+                "MarketData validation failed: close price outside range",
+                extra={
+                    "symbol": self.symbol,
+                    "close_price": str(self.close_price),
+                    "low_price": str(self.low_price),
+                    "high_price": str(self.high_price)
+                }
+            )
             raise ValueError(
                 f"Close price ({self.close_price}) must be between low ({self.low_price}) and high ({self.high_price})."
             )
 
         if self.bid >= self.ask:
+            logger.error(
+                "MarketData validation failed: bid >= ask",
+                extra={
+                    "symbol": self.symbol,
+                    "bid": str(self.bid),
+                    "ask": str(self.ask)
+                }
+            )
             raise ValueError(f"Bid price ({self.bid}) must be less than ask price ({self.ask}).")
 
         if not (self.ask - self.bid == self.spread):
+            logger.error(
+                "MarketData validation failed: spread mismatch",
+                extra={
+                    "symbol": self.symbol,
+                    "calculated_spread": str(self.ask - self.bid),
+                    "provided_spread": str(self.spread)
+                }
+            )
             raise ValueError(
                 f"Calculated spread ({self.ask - self.bid}) does not match provided spread ({self.spread})."
             )
 
         if self.spread < 0:
+            logger.error(
+                "MarketData validation failed: negative spread",
+                extra={"symbol": self.symbol, "spread": str(self.spread)}
+            )
             raise ValueError(f"Spread cannot be negative, got {self.spread}")
 
         if self.spread > self.ask * Decimal("0.1"):  # 10% spread limit
+            logger.error(
+                "MarketData validation failed: excessive spread",
+                extra={
+                    "symbol": self.symbol,
+                    "spread": str(self.spread),
+                    "ask": str(self.ask)
+                }
+            )
             raise ValueError(
                 f"Excessive spread ({self.spread}) detected for ask price ({self.ask})."
             )
 
+        logger.debug(
+            "MarketData validation passed",
+            extra={"symbol": self.symbol}
+        )
         return self
 
 
@@ -445,6 +524,15 @@ class MomentumAnalysis(BaseModel):
 
     def add_signal(self, signal: MomentumSignal):
         """Add a momentum signal to the analysis."""
+        logger.info(
+            "Adding momentum signal to analysis",
+            extra={
+                "symbol": self.symbol,
+                "signal_type": signal.signal_type.value,
+                "direction": signal.direction,
+                "strength": signal.strength
+            }
+        )
         self.signals.append(signal)
         self.signal_count = len(self.signals)
 
@@ -474,6 +562,14 @@ class MomentumFilter(BaseModel):
 
     def matches(self, signal: MomentumSignal) -> bool:
         """Check if signal matches filter criteria."""
+        logger.debug(
+            "Checking signal against filter",
+            extra={
+                "signal_symbol": signal.symbol,
+                "signal_strength": signal.strength,
+                "signal_confidence": signal.confidence
+            }
+        )
         if self.symbols and signal.symbol not in self.symbols:
             return False
 
@@ -497,4 +593,8 @@ class MomentumFilter(BaseModel):
             if age_hours > self.max_age_hours:
                 return False
 
+        logger.debug(
+            "Signal matches filter criteria",
+            extra={"signal_symbol": signal.symbol}
+        )
         return True

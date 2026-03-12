@@ -8,11 +8,14 @@ Orchestrates final decision to deploy strategy or not based on:
 - Portfolio metrics
 """
 
+import logging
 from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 
 class DeploymentInput(BaseModel):
@@ -133,3 +136,17 @@ class DeploymentDecision(BaseModel):
     )
 
     error_message: Optional[str] = Field(None, description="Error if any")
+
+
+logger.debug(
+    "DeployDecisionOrchestrator models loaded",
+    extra={
+        "component": "deploy_decision_orchestrator_models",
+        "operation": "module_init",
+        "models": [
+            "DeploymentInput",
+            "DeploymentRationale",
+            "DeploymentDecision",
+        ],
+    }
+)

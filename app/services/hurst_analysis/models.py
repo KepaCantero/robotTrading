@@ -8,9 +8,12 @@ following the Single Responsibility Principle.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
+
+logger = logging.getLogger(__name__)
 
 
 class MarketRegime(Enum):
@@ -21,7 +24,7 @@ class MarketRegime(Enum):
 
         According to Ernest Chan (Algorithmic Trading, Rule 2.2):
         - MEAN_REVERTING: H < 0.5 (anti-persistent behavior)
-        - RANDOM_WALK: H ≈ 0.5 (efficient market, no predictability)
+        - RANDOM_WALK: H approx 0.5 (efficient market, no predictability)
         - TRENDING: H > 0.5 (persistent behavior)
 
         Attributes:
@@ -104,3 +107,18 @@ class RegimeChange:
     old_hurst: float
     new_hurst: float
     confidence: float
+
+
+logger.debug(
+    "HurstAnalysis models loaded",
+    extra={
+        "component": "hurst_analysis_models",
+        "operation": "module_init",
+        "models": [
+            "MarketRegime",
+            "StrategyRecommendation",
+            "HurstResult",
+            "RegimeChange",
+        ],
+    }
+)

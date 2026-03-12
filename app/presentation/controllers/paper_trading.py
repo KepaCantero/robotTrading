@@ -7,6 +7,7 @@ portfolio simulation, and trade execution for the algorithmic trading system.
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
@@ -34,6 +35,8 @@ from app.domain.models.paper_trading import (
     TradeStatus,
 )
 from app.infrastructure.brokers.paper import PaperTradingService, get_paper_trading_service
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/paper-trading", tags=["Paper Trading"])
 
@@ -132,14 +135,38 @@ async def create_portfolio(
     service: PaperTradingService = Depends(get_paper_trading_service),
 ) -> PortfolioResponse:
     """Create a new paper trading portfolio."""
+    logger.info(
+        "Creating paper trading portfolio",
+        extra={
+            "portfolio_name": request.name,
+            "config_id": str(request.config_id) if request.config_id else None,
+            "initial_cash": float(request.initial_cash) if request.initial_cash else None,
+        }
+    )
     try:
         portfolio = await service.create_portfolio(
             name=request.name,
             config_id=request.config_id,
             initial_cash=request.initial_cash,
         )
+        logger.info(
+            "Paper trading portfolio created successfully",
+            extra={
+                "portfolio_id": str(portfolio.id),
+                "portfolio_name": portfolio.name,
+                "initial_cash": float(portfolio.cash_balance),
+            }
+        )
         return PortfolioResponse(success=True, portfolio=portfolio)
     except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
+        logger.error(
+            "Failed to create portfolio",
+            extra={
+                "portfolio_name": request.name,
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+            }
+        )
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -149,10 +176,26 @@ async def get_portfolio(
     service: PaperTradingService = Depends(get_paper_trading_service),
 ) -> PortfolioResponse:
     """Get portfolio by ID."""
+    logger.debug(
+        "Fetching portfolio by ID",
+        extra={"portfolio_id": str(portfolio_id)}
+    )
     portfolio = await service.get_portfolio(portfolio_id)
     if not portfolio:
+        logger.warning(
+            "Portfolio not found",
+            extra={"portfolio_id": str(portfolio_id)}
+        )
         raise HTTPException(status_code=404, detail="Portfolio not found")
 
+    logger.info(
+        "Portfolio retrieved",
+        extra={
+            "portfolio_id": str(portfolio_id),
+            "portfolio_name": portfolio.name,
+            "total_equity": float(portfolio.total_equity),
+        }
+    )
     return PortfolioResponse(success=True, portfolio=portfolio)
 
 
@@ -172,6 +215,14 @@ async def create_session(
     service: PaperTradingService = Depends(get_paper_trading_service),
 ) -> SessionResponse:
     """Create a new trading session."""
+    logger.info(
+        "Creating trading session",
+        extra={
+            "portfolio_id": str(request.portfolio_id),
+            "session_name": request.name,
+            "config_id": str(request.config_id) if request.config_id else None,
+        }
+    )
     try:
         session = await service.create_session(
             portfolio_id=request.portfolio_id,
@@ -179,8 +230,25 @@ async def create_session(
             description=request.description,
             config_id=request.config_id,
         )
+        logger.info(
+            "Trading session created successfully",
+            extra={
+                "session_id": str(session.id),
+                "session_name": session.name,
+                "portfolio_id": str(session.portfolio_id),
+            }
+        )
         return SessionResponse(success=True, session=session)
     except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
+        logger.error(
+            "Failed to create trading session",
+            extra={
+                "portfolio_id": str(request.portfolio_id),
+                "session_name": request.name,
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+            }
+        )
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -235,6 +303,18 @@ async def execute_trade(
     service: PaperTradingService = Depends(get_paper_trading_service),
 ) -> TradeResponse:
     """Execute a paper trade."""
+    logger.info(
+        "Executing paper trade",
+        extra={
+            "portfolio_id": str(portfolio_id),
+            "symbol": request.symbol,
+            "side": request.side.value,
+            "order_type": request.order_type.value,
+            "quantity": float(request.quantity),
+            "price": float(request.price) if request.price else None,
+            "session_id": str(session_id) if session_id else None,
+        }
+    )
     try:
         trade = await service.execute_trade(
             portfolio_id=portfolio_id,
@@ -247,8 +327,26 @@ async def execute_trade(
             strategy_id=request.strategy_id,
             signal_id=request.signal_id,
         )
+        logger.info(
+            "Paper trade executed successfully",
+            extra={
+                "trade_id": str(trade.id),
+                "portfolio_id": str(portfolio_id),
+                "symbol": request.symbol,
+                "status": trade.status.value,
+            }
+        )
         return TradeResponse(success=True, trade=trade)
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
+        logger.error(
+            "Failed to execute trade",
+            extra={
+                "portfolio_id": str(portfolio_id),
+                "symbol": request.symbol,
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+            }
+        )
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -315,13 +413,32 @@ async def update_market_prices(
     service: PaperTradingService = Depends(get_paper_trading_service),
 ) -> MarketUpdateResponse:
     """Update market prices for all symbols."""
+    logger.info(
+        "Updating market prices",
+        extra={"symbol_count": len(request.quotes)}
+    )
     try:
         await service.update_market_prices(request.quotes)
         updated_symbols = list(request.quotes.keys())
+        logger.info(
+            "Market prices updated successfully",
+            extra={
+                "updated_count": len(updated_symbols),
+                "symbols": updated_symbols[:10],  # Log first 10 to avoid huge logs
+            }
+        )
         return MarketUpdateResponse(
             success=True, updated_symbols=updated_symbols, count=len(updated_symbols)
         )
     except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
+        logger.error(
+            "Failed to update market prices",
+            extra={
+                "symbol_count": len(request.quotes),
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+            }
+        )
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -392,6 +509,7 @@ async def get_portfolio_stats(
 @router.get("/health")
 async def health_check() -> Dict[str, str]:
     """Health check endpoint for paper trading service."""
+    logger.debug("Health check requested")
     return {
         "status": "healthy",
         "service": "paper-trading",

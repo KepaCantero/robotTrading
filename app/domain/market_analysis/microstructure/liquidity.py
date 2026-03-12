@@ -17,6 +17,7 @@ References:
 """
 from __future__ import annotations  # Enable Python 3.10+ union syntax in Python 3.9
 
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -27,6 +28,8 @@ import numpy as np
 import pandas as pd
 
 from app.shared.config.centralized_config import get_config
+
+logger = logging.getLogger(__name__)
 
 # mypy: ignore-errors
 # pylint: disable=unsupported-binary-operation  # For Python 3.10+ union syntax
@@ -202,6 +205,13 @@ class LiquidityAnalyzer:
             lookback_periods: Number of periods for historical analysis
             depth_levels: Number of order book levels to analyze
         """
+        logger.debug(
+            "Initializing LiquidityAnalyzer",
+            extra={
+                "lookback_periods": lookback_periods,
+                "depth_levels": depth_levels,
+            },
+        )
         self.lookback_periods = lookback_periods
         self.depth_levels = depth_levels
         self._historical_metrics: list[LiquidityMetrics] = []
@@ -224,6 +234,14 @@ class LiquidityAnalyzer:
         Returns:
             DepthProfile with depth information
         """
+        logger.debug(
+            "Measuring market depth",
+            extra={
+                "bid_levels": len(order_book.get('bids', [])),
+                "ask_levels": len(order_book.get('asks', [])),
+                "target_size": str(target_size) if target_size else None,
+            },
+        )
         bids = order_book.get('bids', [])
         asks = order_book.get('asks', [])
 
@@ -256,6 +274,14 @@ class LiquidityAnalyzer:
         else:
             imbalance_ratio = 0.0
 
+        logger.info(
+            "Market depth measured",
+            extra={
+                "total_bid_depth": float(total_bid_depth),
+                "total_ask_depth": float(total_ask_depth),
+                "imbalance_ratio": imbalance_ratio,
+            },
+        )
         return DepthProfile(
             timestamp=timestamp,
             bid_levels=bid_levels,

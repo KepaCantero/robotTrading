@@ -107,6 +107,10 @@ class MessageBus:
         Returns:
             True if published successfully
         """
+        logger.debug(
+            "Publishing message to channel",
+            extra={"channel": channel, "message_keys": list(message.keys())}
+        )
         try:
             if self.use_zmq and channel in ['market-ticks', 'signals'] and self.zmq_socket:
                 # Use ZeroMQ for high-frequency channels
@@ -127,10 +131,17 @@ class MessageBus:
                         try:
                             callback(message)
                         except Exception as e:
-                            logger.error(f"Error in memory subscriber callback: {e}")
+                            logger.error(
+                                "Error in memory subscriber callback",
+                                extra={"channel": channel, "error": str(e)},
+                                exc_info=True
+                            )
                 return True
         except (ConnectionError, TimeoutError) as e:
-            logger.error(f"Failed to publish to {channel}: {e}")
+            logger.error(
+                "Failed to publish to channel",
+                extra={"channel": channel, "error_type": type(e).__name__}
+            )
             return False
 
     def subscribe(
@@ -160,6 +171,10 @@ class MessageBus:
 
     def _subscribe_redis(self, channel: str, callback: Callable) -> Thread:
         """Subscribe using Redis pub/sub."""
+        logger.info(
+            "Starting Redis subscription",
+            extra={"channel": channel}
+        )
 
         def _run():
             try:
@@ -173,11 +188,21 @@ class MessageBus:
                             data = verify_and_load(message['data'])
                             callback(data)
                         except ValueError as e:
-                            logger.error(f"Security error processing Redis message: {e}")
+                            logger.error(
+                                "Security error processing Redis message",
+                                extra={"channel": channel, "error": str(e)},
+                                exc_info=True
+                            )
                         except (ConnectionError, TimeoutError) as e:  # nosec B014
-                            logger.error(f"Error processing Redis message: {e}")
+                            logger.error(
+                                "Error processing Redis message",
+                                extra={"channel": channel, "error_type": type(e).__name__}
+                            )
             except (ConnectionError, TimeoutError) as e:  # nosec B014
-                logger.error(f"Redis subscription error: {e}")
+                logger.error(
+                    "Redis subscription error",
+                    extra={"channel": channel, "error_type": type(e).__name__}
+                )
 
         thread = Thread(target=_run, daemon=True)
         thread.start()
@@ -209,15 +234,25 @@ class MessageBus:
                         # Note: time.sleep() is acceptable here because this runs
                         # in a dedicated thread, not in an async event loop
                     except ValueError as e:
-                        logger.error(f"Security error processing ZMQ message: {e}")
+                        logger.error(
+                            "Security error processing ZMQ message",
+                            extra={"channel": channel, "error": str(e)},
+                            exc_info=True
+                        )
                     except (
                         OSError
                     ) as e:  # Covers FileNotFoundError, PermissionError, IOError, IsADirectoryError
-                        logger.error(f"Error processing ZMQ message: {e}")
+                        logger.error(
+                            "Error processing ZMQ message",
+                            extra={"channel": channel, "error_type": type(e).__name__}
+                        )
             except (
                 OSError
             ) as e:  # Covers FileNotFoundError, PermissionError, IOError, IsADirectoryError
-                logger.error(f"ZMQ subscription error: {e}")
+                logger.error(
+                    "ZMQ subscription error",
+                    extra={"channel": channel, "error_type": type(e).__name__}
+                )
 
         thread = Thread(target=_run, daemon=True)
         thread.start()
@@ -225,6 +260,10 @@ class MessageBus:
 
     def close(self):
         """Close connections."""
+        logger.info(
+            "Closing MessageBus connections",
+            extra={"has_redis": self.redis_client is not None, "has_zmq": self.zmq_socket is not None}
+        )
         if self.redis_pubsub:
             self.redis_pubsub.close()
         if self.redis_client:
@@ -242,6 +281,10 @@ _message_bus: Optional[MessageBus] = None
 def get_message_bus() -> MessageBus:
     """Get or create global message bus instance."""
     global _message_bus
+    logger.debug(
+        "Getting message bus instance",
+        extra={"exists": _message_bus is not None}
+    )
     if _message_bus is None:
         import os
 

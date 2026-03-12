@@ -11,11 +11,14 @@ Date: 2026-02-03
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Protocol
 
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 # =============================================================================
 # BASE PROTOCOLS
@@ -39,7 +42,10 @@ class ComplianceService(Protocol):
 
     def initialize(self) -> None:
         """Initialize the service (lazy initialization)."""
-        ...
+        logger.debug(
+            "Initializing compliance service",
+            extra={"service_name": self.get_service_name()},
+        )
 
 
 # =============================================================================
@@ -81,6 +87,16 @@ class PreTradeCheckable(ComplianceService, Protocol):
                 - reasons (List[str]): Reasons for decision
                 - risk_factors (Dict[str, float]): Risk factors
         """
+        logger.debug(
+            "Performing pre-trade check",
+            extra={
+                "symbol": symbol,
+                "side": side,
+                "quantity": str(quantity),
+                "current_price": str(current_price),
+                "has_price_history": price_history is not None,
+            },
+        )
         ...
 
 
@@ -131,6 +147,17 @@ class PostTradeCheckable(ComplianceService, Protocol):
                 - timing_cost_bps (float): Timing cost in bps
                 - execution_quality_score (float): Quality score (0-100)
         """
+        logger.debug(
+            "Performing post-trade check",
+            extra={
+                "order_id": order_id,
+                "symbol": symbol,
+                "side": side,
+                "quantity": str(quantity),
+                "execution_price": str(execution_price),
+                "signal_price": str(signal_price) if signal_price else None,
+            },
+        )
         ...
 
 
@@ -171,6 +198,14 @@ class Optimizable(ComplianceService, Protocol):
                 - expected_risk (float): Expected portfolio risk
                 - sharpe_ratio (float): Sharpe ratio
         """
+        logger.debug(
+            "Optimizing portfolio",
+            extra={
+                "num_symbols": len(symbols),
+                "returns_shape": returns.shape if returns is not None else None,
+                "has_constraints": constraints is not None,
+            },
+        )
         ...
 
 
@@ -193,6 +228,14 @@ class RegimeDetectable(ComplianceService, Protocol):
         Returns:
             Regime label (e.g., "BULL", "BEAR", "NEUTRAL")
         """
+        logger.debug(
+            "Detecting market regime",
+            extra={
+                "price_history_shape": (
+                    price_history.shape if price_history is not None else None
+                ),
+            },
+        )
         ...
 
 
@@ -214,6 +257,13 @@ class AlphaGeneratable(ComplianceService, Protocol):
                 - signal (float): Signal strength
                 - horizon (int): Recommended holding period
         """
+        logger.debug(
+            "Generating alpha signal",
+            extra={
+                "symbol": symbol,
+                "market_data_shape": market_data.shape if market_data is not None else None,
+            },
+        )
         ...
 
 
@@ -234,6 +284,12 @@ class RiskCalculable(ComplianceService, Protocol):
                 - beta (float): Beta coefficient
                 - volatility (float): Annualized volatility
         """
+        logger.debug(
+            "Calculating risk metrics",
+            extra={
+                "returns_shape": returns.shape if returns is not None else None,
+            },
+        )
         ...
 
 
@@ -256,6 +312,14 @@ class LiquidityAnalyzable(ComplianceService, Protocol):
                 - liquidity_regime (str): Regime label
                 - estimated_impact_bps (float): Estimated market impact
         """
+        logger.debug(
+            "Analyzing liquidity",
+            extra={
+                "symbol": symbol,
+                "quantity": str(quantity),
+                "has_order_book": order_book is not None,
+            },
+        )
         ...
 
 
@@ -279,6 +343,15 @@ class ExecutionAlgorithm(ComplianceService, Protocol):
                 - venue (str): Execution venue
                 - limit_price (Optional[Decimal]): Limit price if applicable
         """
+        logger.debug(
+            "Getting execution parameters",
+            extra={
+                "symbol": symbol,
+                "side": side,
+                "quantity": str(quantity),
+                "urgency": urgency,
+            },
+        )
         ...
 
 
@@ -303,6 +376,15 @@ class TransactionCostModel(ComplianceService, Protocol):
                 - commission_bps (float): Commission
                 - total_cost_bps (float): Total cost
         """
+        logger.debug(
+            "Estimating transaction costs",
+            extra={
+                "symbol": symbol,
+                "side": side,
+                "quantity": str(quantity),
+                "current_price": str(current_price),
+            },
+        )
         ...
 
 
@@ -320,6 +402,12 @@ class MetaLabelingService(ComplianceService, Protocol):
         Returns:
             DataFrame with meta-labels applied
         """
+        logger.debug(
+            "Applying meta-labels",
+            extra={
+                "predictions_shape": predictions.shape if predictions is not None else None,
+            },
+        )
         ...
 
 
@@ -337,4 +425,10 @@ class CrossValidationService(ComplianceService, Protocol):
         Returns:
             List of (train_idx, test_idx) tuples
         """
+        logger.debug(
+            "Getting cross-validation splits",
+            extra={
+                "data_shape": data.shape if data is not None else None,
+            },
+        )
         ...

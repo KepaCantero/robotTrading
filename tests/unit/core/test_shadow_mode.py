@@ -19,8 +19,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 import pytest_asyncio
 
-from app.core.interfaces.broker_base import Order, OrderSide, OrderType, Ticker
-from app.core.shadow_mode import (
+from app.shared.interfaces.broker_base import Order, OrderSide, OrderType, Ticker
+from app.domain.services.shadow_mode import (
     ShadowExecutionResult,
     ShadowModeAwareBroker,
     ShadowModeConfig,

@@ -8,9 +8,9 @@ Generated: 2026-03-09
 ## 2. Dependencies
 - `datetime`
 - `logging`
-- `models`
 - `typing`
 - `uuid`
+- `.models` (AlertEvent, AlertHistory, AlertRule, AlertState)
 
 ## 3. Core Components
 ### Classes

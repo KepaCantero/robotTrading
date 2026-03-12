@@ -146,8 +146,19 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
         self.trades_today = 0
         self.last_trade_date = None
 
-        logger.info(f"PairsTradingStrategyEngine initialized: {self.name}")
-        logger.info(f"Pair symbols: {self.pair_symbols}")
+        logger.info(
+            "PairsTradingStrategyEngine initialized",
+            extra={
+                "strategy_name": self.name,
+                "strategy_type": "pairs_trading",
+                "pair_symbols": self.pair_symbols,
+                "cointegration_threshold": float(self.cointegration_threshold),
+                "spread_threshold": float(self.spread_threshold),
+                "lookback_period": self.lookback_period,
+                "min_correlation": float(self.min_correlation),
+                "min_spread_z_score": float(self.min_spread_z_score),
+            },
+        )
 
     # ===== Implementación de métodos abstractos =====
 
@@ -408,7 +419,16 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
                     signals.append(signal)
 
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
-            logger.error(f"Error generando señal en PairsTradingStrategyEngine: {e}", exc_info=True)
+            logger.error(
+                "Error generando señal en PairsTradingStrategyEngine",
+                extra={
+                    "strategy": "pairs_trading",
+                    "symbol": getattr(market_data, 'symbol', None),
+                    "pair_symbols": self.pair_symbols,
+                    "error_type": type(e).__name__,
+                },
+                exc_info=True,
+            )
 
         return signals
 
@@ -563,7 +583,14 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
         total_exposure = self._calculate_total_exposure(portfolio)
         if total_exposure > self.max_total_exposure:
             logger.debug(
-                f"Risk check fallido: exposición total {total_exposure:.2%} > {self.max_total_exposure:.2%}"
+                "Risk check fallido: exposición total excedida",
+                extra={
+                    "strategy": "pairs_trading",
+                    "symbol": signal.symbol,
+                    "total_exposure": float(total_exposure),
+                    "max_total_exposure": float(self.max_total_exposure),
+                    "check_type": "total_exposure",
+                },
             )
             return False
 
@@ -571,7 +598,14 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
         pair_exposure = self._calculate_pair_exposure(portfolio)
         if pair_exposure > self.max_pair_exposure:
             logger.debug(
-                f"Risk check fallido: exposición del par {pair_exposure:.2%} > {self.max_pair_exposure:.2%}"
+                "Risk check fallido: exposición del par excedida",
+                extra={
+                    "strategy": "pairs_trading",
+                    "symbol": signal.symbol,
+                    "pair_exposure": float(pair_exposure),
+                    "max_pair_exposure": float(self.max_pair_exposure),
+                    "check_type": "pair_exposure",
+                },
             )
             return False
 
@@ -583,13 +617,27 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
             self.cointegration_threshold
         ):
             logger.debug(
-                f"Risk check fallido: cointegración {cointegration_score:.4f} < {float(self.cointegration_threshold):.4f}"
+                "Risk check fallido: cointegración insuficiente",
+                extra={
+                    "strategy": "pairs_trading",
+                    "symbol": signal.symbol,
+                    "cointegration_score": cointegration_score,
+                    "cointegration_threshold": float(self.cointegration_threshold),
+                    "check_type": "cointegration",
+                },
             )
             return False
 
         if abs(correlation) < float(self.min_correlation):
             logger.debug(
-                f"Risk check fallido: correlación {correlation:.4f} < {float(self.min_correlation):.4f}"
+                "Risk check fallido: correlación insuficiente",
+                extra={
+                    "strategy": "pairs_trading",
+                    "symbol": signal.symbol,
+                    "correlation": correlation,
+                    "min_correlation": float(self.min_correlation),
+                    "check_type": "correlation",
+                },
             )
             return False
 

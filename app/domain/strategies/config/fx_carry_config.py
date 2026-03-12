@@ -5,7 +5,11 @@ This module contains all configuration parameters for the FX carry trade strateg
 Centralized from fx_carry_trade/fx_carry_trade_strategy.py hardcoded values.
 """
 
+import logging
+
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 
 class FXCarryTradeStrategyConfig(BaseModel):
@@ -61,3 +65,17 @@ class FXCarryTradeStrategyConfig(BaseModel):
     carry_boost_multiplier: float = Field(
         default=500.0, ge=100.0, le=1000.0, description="Carry boost multiplier (500x)"
     )
+
+    def __init__(self, **data):
+        """Initialize FX Carry Trade Strategy configuration with logging."""
+        super().__init__(**data)
+        logger.info(
+            "FXCarryTradeStrategyConfig initialized",
+            extra={
+                "component": "FXCarryTradeStrategyConfig",
+                "min_carry_threshold": self.min_carry_threshold,
+                "max_positions_default": self.max_positions_default,
+                "position_size_default": self.position_size_default,
+                "max_leverage": self.max_leverage,
+            },
+        )

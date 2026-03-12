@@ -4,7 +4,10 @@ Core Exceptions for AlgoTrading Application
 This module provides centralized exception definitions for the application.
 """
 
+import logging
 from typing import Any, Dict, Optional
+
+logger = logging.getLogger(__name__)
 
 
 class AlgoTradingError(Exception):
@@ -20,6 +23,16 @@ class AlgoTradingError(Exception):
         self.message = message
         self.error_code = error_code
         self.details = details or {}
+
+        # Log exception creation with structured context
+        logger.debug(
+            f"Exception created: {self.__class__.__name__}",
+            extra={
+                "exception_type": self.__class__.__name__,
+                "error_code": error_code,
+                "message": message,
+            }
+        )
 
 
 class BacktestError(AlgoTradingError):

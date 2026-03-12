@@ -225,7 +225,45 @@ Monte Carlo Risk Analysis (1000 simulations, validate DD within 5-95 percentile)
 - [ ] Losses can offset gains for 4 years
 - [ ] Track realized losses separately
 
-## 8. Execution Checklist
+## 8. Audit Logging Requirements (Rule R28)
+
+### Required Audit Events
+- **ADD_POSITION**: New position added to portfolio
+- **ADD_TO_POSITION**: Additional shares bought for existing position
+- **NEW_POSITION**: First position for a symbol
+- **REMOVE_POSITION_NOT_FOUND**: Attempted removal of non-existent position
+- **CLOSE_POSITION**: Full position exit
+- **REDUCE_POSITION**: Partial position exit
+- **UPDATE_POSITION_PRICE**: Price update for position
+- **UPDATE_PRICE_FAILED**: Failed price update (position not found)
+- **ADD_POSITION_REJECTED**: Position rejected due to risk limits
+
+### Audit Log Format
+```json
+{
+    "portfolio_id": "string",
+    "action": "string",
+    "timestamp": "ISO8601 datetime",
+    "symbol": "string (optional)",
+    "quantity": "decimal (optional)",
+    "price": "decimal (optional)",
+    "reason": "string (optional)",
+    "details": "object (additional context)"
+}
+```
+
+### Retention Requirements
+- **Minimum:** 5 years (Rule R28)
+- **Format:** Append-only (no modifications/deletions)
+- **Storage:** Structured logs (JSON format)
+- **Reports:** Monthly audit reports required
+
+### Implementation
+- Use `_audit_log()` method for all state changes
+- Logger can be injected via `set_audit_logger()`
+- Falls back to module logger if no audit logger set
+
+## 9. Execution Checklist
 
 ### Pre-Deployment
 - [ ] All SOLID principles verified

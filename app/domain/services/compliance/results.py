@@ -11,9 +11,12 @@ Date: 2026-02-03
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 # =============================================================================
 # PRE-TRADE RESULTS
@@ -39,6 +42,15 @@ class CheckResult:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
+        logger.debug(
+            "Converting CheckResult to dict",
+            extra={
+                "result_type": "CheckResult",
+                "passed": self.passed,
+                "confidence": self.confidence,
+                "reasons_count": len(self.reasons),
+            }
+        )
         return {
             "passed": self.passed,
             "confidence": self.confidence,
@@ -92,6 +104,17 @@ class PreTradeCheckResult(CheckResult):
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         base_dict = super().to_dict()
+        logger.debug(
+            "Converting PreTradeCheckResult to dict",
+            extra={
+                "result_type": "PreTradeCheckResult",
+                "can_execute": self.can_execute,
+                "market_regime": self.market_regime,
+                "liquidity_regime": self.liquidity_regime,
+                "estimated_total_cost_bps": self.estimated_total_cost_bps,
+                "recommended_venue": self.recommended_venue,
+            }
+        )
         base_dict.update(
             {
                 "can_execute": self.can_execute,
@@ -157,6 +180,18 @@ class PostTradeCheckResult(CheckResult):
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         base_dict = super().to_dict()
+        logger.debug(
+            "Converting PostTradeCheckResult to dict",
+            extra={
+                "result_type": "PostTradeCheckResult",
+                "order_id": self.order_id,
+                "symbol": self.symbol,
+                "side": self.side,
+                "execution_quality_score": self.execution_quality_score,
+                "implementation_shortfall_bps": self.implementation_shortfall_bps,
+                "fill_rate": self.fill_rate,
+            }
+        )
         base_dict.update(
             {
                 "order_id": self.order_id,

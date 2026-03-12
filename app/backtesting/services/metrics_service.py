@@ -44,8 +44,55 @@ class MetricsCalculationService:
 
         Args:
             acceptance_criteria: Configuration dict with thresholds for evaluation
+
+        Required configuration keys:
+            - significance_threshold: Minimum % improvement for statistical significance
+            - strong_significance_threshold: Minimum % improvement for strong significance
+            - degradation_threshold: Maximum % improvement degradation to prefer baseline
+            - confidence_high: High confidence level (0-1)
+            - confidence_medium: Medium confidence level (0-1)
+            - confidence_low: Low confidence level (0-1)
+            - min_sharpe: Minimum Sharpe ratio for approval
+            - min_return: Minimum return for approval
+            - max_drawdown: Maximum drawdown allowed
+            - revision_multiplier: Multiplier for min_sharpe revision threshold
+
+        Raises:
+            ValueError: If required configuration keys are missing
         """
         self.acceptance_criteria = acceptance_criteria
+        self._validate_acceptance_criteria()
+
+    def _validate_acceptance_criteria(self) -> None:
+        """
+        Validate that all required acceptance criteria are present.
+
+        Raises:
+            ValueError: If required keys are missing from acceptance_criteria
+        """
+        required_keys = [
+            "significance_threshold",
+            "strong_significance_threshold",
+            "degradation_threshold",
+            "confidence_high",
+            "confidence_medium",
+            "confidence_low",
+            "min_sharpe",
+            "min_return",
+            "max_drawdown",
+            "revision_multiplier",
+        ]
+
+        missing_keys = [key for key in required_keys if key not in self.acceptance_criteria]
+
+        if missing_keys:
+            raise ValueError(
+                f"Missing required acceptance criteria keys: {', '.join(missing_keys)}. "
+                f"Required keys: {', '.join(required_keys)}. "
+                f"Please ensure configuration file contains acceptance_criteria section with all required keys."
+            )
+
+        logger.debug("Acceptance criteria validation passed")
 
     def calculate_improvements(
         self, baseline: Dict[str, Any], optimized: Dict[str, Any]
@@ -114,15 +161,13 @@ class MetricsCalculationService:
         Returns:
             BaselineOptimizationComparison object
         """
-        # Get thresholds from config
-        significance_threshold = self.acceptance_criteria.get("significance_threshold", 5)
-        strong_significance_threshold = self.acceptance_criteria.get(
-            "strong_significance_threshold", 10
-        )
-        degradation_threshold = self.acceptance_criteria.get("degradation_threshold", -5)
-        confidence_high = self.acceptance_criteria.get("confidence_high", 0.8)
-        confidence_medium = self.acceptance_criteria.get("confidence_medium", 0.7)
-        confidence_low = self.acceptance_criteria.get("confidence_low", 0.5)
+        # Get thresholds from config (validated in __init__)
+        significance_threshold = self.acceptance_criteria["significance_threshold"]
+        strong_significance_threshold = self.acceptance_criteria["strong_significance_threshold"]
+        degradation_threshold = self.acceptance_criteria["degradation_threshold"]
+        confidence_high = self.acceptance_criteria["confidence_high"]
+        confidence_medium = self.acceptance_criteria["confidence_medium"]
+        confidence_low = self.acceptance_criteria["confidence_low"]
 
         # Calculate improvements
         sharpe_imp = self._pct_improvement(
@@ -220,11 +265,11 @@ class MetricsCalculationService:
         Returns:
             Tuple of (ready: bool, recommendation: str)
         """
-        # Get thresholds from config
-        min_sharpe = self.acceptance_criteria.get("min_sharpe", 1.0)
-        min_return = self.acceptance_criteria.get("min_return", 0.10)
-        max_dd = self.acceptance_criteria.get("max_drawdown", -0.25)
-        revision_multiplier = self.acceptance_criteria.get("revision_multiplier", 0.8)
+        # Get thresholds from config (validated in __init__)
+        min_sharpe = self.acceptance_criteria["min_sharpe"]
+        min_return = self.acceptance_criteria["min_return"]
+        max_dd = self.acceptance_criteria["max_drawdown"]
+        revision_multiplier = self.acceptance_criteria["revision_multiplier"]
 
         sharpe = optimized.optimized_metrics.get("sharpe_ratio", 0)
         total_return = optimized.optimized_metrics.get("return_pct", 0)

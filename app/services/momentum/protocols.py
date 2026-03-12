@@ -7,8 +7,11 @@ Following SOLID principles:
 - Open/Closed: Extensible through protocol implementations
 """
 
+import logging
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Protocol, Tuple
+
+logger = logging.getLogger(__name__)
 
 from app.domain.models.momentum import (
     MomentumAnalysis,

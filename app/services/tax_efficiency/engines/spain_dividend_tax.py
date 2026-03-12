@@ -1,21 +1,24 @@
 """
 Spain Dividend Tax Calculator
 
-Calcula retenciones de dividendos para residentes españoles
+Calcula retenciones de dividendos para residentes espanoles
 """
+import logging
 from decimal import Decimal
 from typing import dict
+
+logger = logging.getLogger(__name__)
 
 
 class SpainDividendTaxCalculator:
     """
     Calculadora de impuestos sobre dividendos
 
-    - UE: 0% retención
-    - No-UE: 19% retención
+    - UE: 0% retencion
+    - No-UE: 19% retencion
     """
 
-    # Países UE (códigos ISO)
+    # Paises UE (codigos ISO)
     EU_COUNTRY_CODES = {
         "AT",
         "BE",
@@ -70,9 +73,20 @@ class SpainDividendTaxCalculator:
             "AIR": "FR",
         }
 
+        logger.info(
+            "SpainDividendTaxCalculator initialized",
+            extra={
+                "component": "spain_dividend_tax",
+                "operation": "init",
+                "ue_withholding": str(self.UE_WITHHOLDING),
+                "non_ue_withholding": str(self.NON_EU_WITHHOLDING),
+                "ticker_mappings_count": len(self._ticker_to_country),
+            }
+        )
+
     def calculate_withholding(self, symbol: str, gross_amount: Decimal) -> dict:
         """
-        Calcular retención sobre dividendo
+        Calcular retencion sobre dividendo
 
         Args:
             symbol: Ticker
@@ -98,6 +112,21 @@ class SpainDividendTaxCalculator:
 
         withholding_amount = gross_amount * rate
         net_amount = gross_amount - withholding_amount
+
+        logger.info(
+            "Dividend withholding calculated",
+            extra={
+                "component": "spain_dividend_tax",
+                "operation": "calculate_withholding",
+                "symbol": symbol,
+                "country": country,
+                "is_eu": is_eu,
+                "gross_amount": str(gross_amount),
+                "withholding_rate": str(rate),
+                "withholding_amount": str(withholding_amount),
+                "net_amount": str(net_amount),
+            }
+        )
 
         return {
             "gross": float(gross_amount),
@@ -126,8 +155,33 @@ class SpainDividendTaxCalculator:
         Note:
             To add new ticker mappings, use add_ticker_mapping() method
         """
-        return self._ticker_to_country.get(symbol, "UNKNOWN")
+        country = self._ticker_to_country.get(symbol, "UNKNOWN")
+
+        logger.debug(
+            "Country lookup for symbol",
+            extra={
+                "component": "spain_dividend_tax",
+                "operation": "get_country",
+                "symbol": symbol,
+                "country": country,
+                "found": country != "UNKNOWN",
+            }
+        )
+
+        return country
 
     def add_ticker_mapping(self, symbol: str, country: str) -> None:
-        """Añadir mapeo ticker -> país"""
+        """Anadir mapeo ticker -> pais"""
+        old_country = self._ticker_to_country.get(symbol)
         self._ticker_to_country[symbol] = country
+
+        logger.info(
+            "Ticker mapping added/updated",
+            extra={
+                "component": "spain_dividend_tax",
+                "operation": "add_ticker_mapping",
+                "symbol": symbol,
+                "old_country": old_country,
+                "new_country": country,
+            }
+        )

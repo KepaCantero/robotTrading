@@ -4,11 +4,14 @@ FASE 6.1: XAI Models - Data structures for explainability results
 Defines Pydantic models for SHAP, LIME, and feature importance explanations.
 """
 
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 # ============================================================================
 # SHAP Explanation Models
@@ -39,8 +42,25 @@ class SHAPExplanation(BaseModel):
 
     def get_top_features(self, n: int = 5) -> List[SHAPValue]:
         """Get top n most important features by absolute SHAP value."""
+        logger.debug(
+            "Getting top SHAP features",
+            extra={
+                "prediction_id": self.prediction_id,
+                "num_features_requested": n,
+                "total_features": len(self.shap_values),
+            }
+        )
         sorted_values = sorted(self.shap_values, key=lambda x: abs(x.shap_value), reverse=True)
-        return sorted_values[:n]
+        top_features = sorted_values[:n]
+        logger.debug(
+            "Top SHAP features retrieved",
+            extra={
+                "prediction_id": self.prediction_id,
+                "num_features_returned": len(top_features),
+                "top_feature_names": [f.feature_name for f in top_features],
+            }
+        )
+        return top_features
 
 
 class SHAPSummaryPlot(BaseModel):
@@ -111,8 +131,26 @@ class FeatureImportanceReport(BaseModel):
 
     def get_top_features(self, n: int = 10) -> List[FeatureImportance]:
         """Get top n most important features."""
+        logger.debug(
+            "Getting top important features",
+            extra={
+                "model_name": self.model_name,
+                "method": self.method,
+                "num_features_requested": n,
+                "total_features": self.total_features,
+            }
+        )
         sorted_features = sorted(self.features, key=lambda x: x.importance_score, reverse=True)
-        return sorted_features[:n]
+        top_features = sorted_features[:n]
+        logger.info(
+            "Top features retrieved",
+            extra={
+                "model_name": self.model_name,
+                "num_features_returned": len(top_features),
+                "top_feature_names": [f.feature_name for f in top_features[:5]],
+            }
+        )
+        return top_features
 
 
 # ============================================================================

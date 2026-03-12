@@ -4,6 +4,8 @@ Example: How to use correlation ID logging utilities in API endpoints.
 This file demonstrates the proper usage of the logging utilities for request tracking.
 """
 
+import logging
+
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
@@ -15,6 +17,8 @@ from app.presentation.api.logging_utils import (
     log_warning,
     log_with_context,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/example", tags=["logging-examples"])
 
@@ -40,6 +44,14 @@ async def example_endpoint(request: Request, body: ExampleRequest) -> ExampleRes
     This endpoint shows how to use the logging utilities throughout
     the request lifecycle for proper request tracking.
     """
+    logger.debug(
+        "Example endpoint invoked",
+        extra={
+            "endpoint": "/example/endpoint",
+            "method": request.method,
+            "data_length": len(body.data),
+        },
+    )
     # Log endpoint entry with correlation ID
     log_info(
         request,
@@ -71,6 +83,14 @@ async def example_endpoint(request: Request, body: ExampleRequest) -> ExampleRes
         )
 
     except ValueError as e:
+        logger.warning(
+            "Validation error in example endpoint",
+            extra={
+                "error_type": "ValueError",
+                "error_message": str(e),
+                "input_data": body.data,
+            },
+        )
         # Log error with exception details
         log_error(
             request,
@@ -81,6 +101,14 @@ async def example_endpoint(request: Request, body: ExampleRequest) -> ExampleRes
         raise HTTPException(status_code=400, detail=str(e))
 
     except Exception as e:
+        logger.error(
+            "Unexpected error in example endpoint",
+            extra={
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+            },
+            exc_info=True,
+        )
         # Log unexpected errors
         log_error(
             request,
@@ -94,6 +122,10 @@ async def example_endpoint(request: Request, body: ExampleRequest) -> ExampleRes
 @router.get("/warnings")
 async def example_with_warnings(request: Request) -> dict:
     """Example endpoint showing warning level logging."""
+    logger.debug(
+        "Warnings endpoint invoked",
+        extra={"endpoint": "/example/warnings"},
+    )
     log_info(request, "Warnings endpoint called")
 
     # Simulate a condition that should trigger a warning
@@ -113,6 +145,13 @@ async def example_with_warnings(request: Request) -> dict:
 @router.post("/custom-levels")
 async def example_with_custom_levels(request: Request, body: ExampleRequest) -> dict:
     """Example endpoint showing custom log levels."""
+    logger.debug(
+        "Custom levels endpoint invoked",
+        extra={
+            "endpoint": "/example/custom-levels",
+            "data_length": len(body.data),
+        },
+    )
     # Use log_with_context for custom level specification
     log_with_context(
         request,
@@ -128,6 +167,10 @@ async def example_with_custom_levels(request: Request, body: ExampleRequest) -> 
 @router.get("/multiple-steps")
 async def example_multiple_steps(request: Request) -> dict:
     """Example endpoint showing logging at multiple processing steps."""
+    logger.debug(
+        "Multiple steps endpoint invoked",
+        extra={"endpoint": "/example/multiple-steps"},
+    )
     # Step 1: Initialization
     log_info(request, "Step 1: Initializing", step="initialization")
 
@@ -151,6 +194,13 @@ async def example_multiple_steps(request: Request) -> dict:
 @router.post("/error-scenarios")
 async def example_error_scenarios(request: Request, body: ExampleRequest) -> dict:
     """Example endpoint showing error logging with different scenarios."""
+    logger.debug(
+        "Error scenarios endpoint invoked",
+        extra={
+            "endpoint": "/example/error-scenarios",
+            "input_data": body.data,
+        },
+    )
     log_info(request, "Error scenarios endpoint called", input_data=body.data)
 
     try:

@@ -8,6 +8,7 @@ performance metrics, risk analysis, and portfolio management features.
 from __future__ import annotations
 
 import asyncio
+import logging
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
@@ -15,6 +16,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 from app.domain.models.portfolio_analytics import (
     ExtendedPortfolio,
@@ -192,6 +195,13 @@ async def calculate_performance_metrics(
     analytics_service: PortfolioAnalyticsService = Depends(get_portfolio_analytics_service),
 ):
     """Calculate performance metrics for a portfolio."""
+    logger.debug(
+        "Calculating performance metrics",
+        extra={
+            "portfolio_id": str(request.portfolio_id),
+            "period": request.period.value
+        }
+    )
     try:
         # Get portfolio data (mock for now)
         portfolio = _get_mock_portfolio(request.portfolio_id)
@@ -204,9 +214,17 @@ async def calculate_performance_metrics(
             end_date=request.end_date,
         )
 
+        logger.info(
+            "Performance metrics calculated",
+            extra={"portfolio_id": str(request.portfolio_id)}
+        )
         return PerformanceMetricsResponse(success=True, data=metrics, error=None)
 
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        logger.error(
+            "Failed to calculate performance metrics",
+            extra={"portfolio_id": str(request.portfolio_id), "error": str(e), "error_type": type(e).__name__}
+        )
         return PerformanceMetricsResponse(
             success=False, data=None, error=f"Failed to calculate performance metrics: {str(e)}"
         )
@@ -244,6 +262,7 @@ async def get_risk_metrics(
     analytics_service: PortfolioAnalyticsService = Depends(get_portfolio_analytics_service),
 ):
     """Get risk metrics for a portfolio."""
+    logger.debug("Getting risk metrics", extra={"portfolio_id": str(portfolio_id)})
     try:
         # Get portfolio data (mock for now)
         portfolio = _get_mock_portfolio(portfolio_id)
@@ -251,9 +270,14 @@ async def get_risk_metrics(
         # Calculate risk metrics
         metrics = await analytics_service.calculate_risk_metrics(portfolio)
 
+        logger.info("Risk metrics calculated", extra={"portfolio_id": str(portfolio_id)})
         return RiskMetricsResponse(success=True, data=metrics, error=None)
 
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        logger.error(
+            "Failed to get risk metrics",
+            extra={"portfolio_id": str(portfolio_id), "error": str(e), "error_type": type(e).__name__}
+        )
         return RiskMetricsResponse(
             success=False, data=None, error=f"Failed to get risk metrics: {str(e)}"
         )
@@ -265,6 +289,7 @@ async def get_portfolio_analytics(
     analytics_service: PortfolioAnalyticsService = Depends(get_portfolio_analytics_service),
 ):
     """Get comprehensive portfolio analytics."""
+    logger.debug("Getting portfolio analytics", extra={"portfolio_id": str(portfolio_id)})
     try:
         # Get portfolio data (mock for now)
         portfolio = _get_mock_portfolio(portfolio_id)
@@ -272,9 +297,14 @@ async def get_portfolio_analytics(
         # Generate analytics
         analytics = await analytics_service.generate_portfolio_analytics(portfolio)
 
+        logger.info("Portfolio analytics generated", extra={"portfolio_id": str(portfolio_id)})
         return PortfolioAnalyticsResponse(success=True, data=analytics, error=None)
 
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        logger.error(
+            "Failed to get portfolio analytics",
+            extra={"portfolio_id": str(portfolio_id), "error": str(e), "error_type": type(e).__name__}
+        )
         return PortfolioAnalyticsResponse(
             success=False, data=None, error=f"Failed to get portfolio analytics: {str(e)}"
         )
@@ -307,6 +337,10 @@ async def get_rebalance_recommendation(
     analytics_service: PortfolioAnalyticsService = Depends(get_portfolio_analytics_service),
 ):
     """Get portfolio rebalancing recommendations."""
+    logger.debug(
+        "Getting rebalance recommendation",
+        extra={"portfolio_id": str(request.portfolio_id)}
+    )
     try:
         # Get portfolio data (mock for now)
         portfolio = _get_mock_portfolio(request.portfolio_id)
@@ -339,9 +373,17 @@ async def get_rebalance_recommendation(
             portfolio=portfolio, target_allocation=target_allocation
         )
 
+        logger.info(
+            "Rebalance recommendation generated",
+            extra={"portfolio_id": str(request.portfolio_id)}
+        )
         return RebalanceResponse(success=True, data=rebalance, error=None)
 
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        logger.error(
+            "Failed to get rebalance recommendation",
+            extra={"portfolio_id": str(request.portfolio_id), "error": str(e), "error_type": type(e).__name__}
+        )
         return RebalanceResponse(
             success=False, data=None, error=f"Failed to get rebalance recommendation: {str(e)}"
         )
@@ -353,13 +395,25 @@ async def compare_portfolios(
     analytics_service: PortfolioAnalyticsService = Depends(get_portfolio_analytics_service),
 ):
     """Compare multiple portfolios."""
+    logger.debug(
+        "Comparing portfolios",
+        extra={"portfolio_ids": [str(pid) for pid in request.portfolio_ids]}
+    )
     try:
         # Generate comparison
         comparison = await analytics_service.compare_portfolios(request.portfolio_ids)
 
+        logger.info(
+            "Portfolios compared",
+            extra={"portfolio_count": len(request.portfolio_ids)}
+        )
         return PortfolioComparisonResponse(success=True, data=comparison, error=None)
 
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        logger.error(
+            "Failed to compare portfolios",
+            extra={"error": str(e), "error_type": type(e).__name__}
+        )
         return PortfolioComparisonResponse(
             success=False, data=None, error=f"Failed to compare portfolios: {str(e)}"
         )
@@ -410,6 +464,7 @@ async def get_analytics_summary(
 @router.get("/health-check")
 async def health_check():
     """Health check endpoint for portfolio analytics service."""
+    logger.debug("Health check requested")
     return {
         "status": "healthy",
         "service": "portfolio-analytics",

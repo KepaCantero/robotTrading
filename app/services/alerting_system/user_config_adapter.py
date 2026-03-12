@@ -1,11 +1,14 @@
 """
 Adapter to convert UserSettings to Alerting System configuration.
 """
+import logging
 import os
 from typing import List
 
 from app.services.alerting_system.models import NotificationChannelType, NotificationTarget
 from app.user_config.user_settings import UserSettings
+
+logger = logging.getLogger(__name__)
 
 
 def user_settings_to_notification_targets(settings: UserSettings) -> List[NotificationTarget]:
@@ -18,6 +21,16 @@ def user_settings_to_notification_targets(settings: UserSettings) -> List[Notifi
     Returns:
         List of NotificationTarget objects
     """
+    logger.debug(
+        "Converting user settings to notification targets",
+        extra={
+            "component": "user_config_adapter",
+            "operation": "convert_settings",
+            "telegram_enabled": settings.notifications.enable_telegram,
+            "email_enabled": settings.notifications.enable_email,
+        }
+    )
+
     targets = []
     notifications = settings.notifications
 
@@ -25,6 +38,16 @@ def user_settings_to_notification_targets(settings: UserSettings) -> List[Notifi
     if notifications.enable_telegram and notifications.telegram_chat_id:
         # Get bot_token from environment or secure storage
         bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+
+        logger.info(
+            "Adding Telegram notification target",
+            extra={
+                "component": "user_config_adapter",
+                "operation": "add_telegram_target",
+                "chat_id_configured": bool(notifications.telegram_chat_id),
+                "bot_token_configured": bool(bot_token),
+            }
+        )
 
         targets.append(
             NotificationTarget(
@@ -47,6 +70,17 @@ def user_settings_to_notification_targets(settings: UserSettings) -> List[Notifi
         smtp_password = os.environ.get("SMTP_PASSWORD", "")
         from_address = os.environ.get("SMTP_FROM", "alerts@algotrading.local")
 
+        logger.info(
+            "Adding Email notification target",
+            extra={
+                "component": "user_config_adapter",
+                "operation": "add_email_target",
+                "email_address": notifications.email_address,
+                "smtp_host": smtp_host,
+                "smtp_port": smtp_port,
+            }
+        )
+
         targets.append(
             NotificationTarget(
                 channel_type=NotificationChannelType.EMAIL,
@@ -62,5 +96,14 @@ def user_settings_to_notification_targets(settings: UserSettings) -> List[Notifi
                 },
             )
         )
+
+    logger.info(
+        "Notification targets conversion complete",
+        extra={
+            "component": "user_config_adapter",
+            "operation": "convert_settings_complete",
+            "total_targets": len(targets),
+        }
+    )
 
     return targets

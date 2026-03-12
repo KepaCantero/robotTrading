@@ -4,10 +4,10 @@ import platform
 import sys
 from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
 
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -111,7 +111,7 @@ settings = None
 logger = logging.getLogger(__name__)
 
 
-def get_app_settings():
+def get_app_settings() -> "Settings":
     """Get application settings with lazy loading."""
     global settings  # pylint: disable=global-statement
     if settings is None:
@@ -213,6 +213,7 @@ app.add_middleware(
 from fastapi.exceptions import RequestValidationError
 from pydantic import ValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.responses import JSONResponse as StarletteJSONResponse
 
 # HTTP Exceptions (4xx, 5xx)
 app.add_exception_handler(HTTPException, http_exception_handler)  # type: ignore[arg-type]
@@ -254,7 +255,8 @@ app.include_router(
 # SRE Error Budget System (Rule 20)
 
 
-async def root() -> Dict[str, Any]:
+@app.get("/", tags=["Root"])
+async def root() -> dict[str, Any]:
     """
     Root endpoint providing basic application information.
 
@@ -275,7 +277,7 @@ async def root() -> Dict[str, Any]:
 
 
 @app.get("/health/detailed", tags=["Health"])
-async def detailed_health_check() -> Dict[str, Any]:
+async def detailed_health_check() -> dict[str, Any]:
     """
     Detailed health check endpoint with system information.
 
@@ -298,7 +300,7 @@ async def detailed_health_check() -> Dict[str, Any]:
 
 
 @app.exception_handler(404)
-async def not_found_handler(request, exc):
+async def not_found_handler(request: Request, exc: HTTPException) -> StarletteJSONResponse:
     """Custom 404 error handler."""
     return JSONResponse(
         status_code=404,
@@ -311,7 +313,7 @@ async def not_found_handler(request, exc):
 
 
 @app.exception_handler(500)
-async def internal_error_handler(request, exc):
+async def internal_error_handler(request: Request, exc: HTTPException) -> StarletteJSONResponse:
     """Custom 500 error handler."""
     logger.error(f"Internal server error: {exc}")
     return JSONResponse(

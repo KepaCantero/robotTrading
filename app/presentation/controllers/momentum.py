@@ -8,11 +8,14 @@ technical indicators, and momentum strategy management.
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from requests.exceptions import ConnectionError, HTTPError, RequestException
+
+logger = logging.getLogger(__name__)
 
 from app.domain.models.momentum import MomentumFilter, MomentumStrategy, MomentumType, Timeframe
 from app.domain.services.analysis.momentum import (
@@ -46,6 +49,7 @@ async def get_momentum_overview(
     service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
 ):
     """Get overview of momentum analysis system."""
+    logger.debug("Getting momentum overview", extra={"endpoint": "get_momentum_overview"})
     try:
         # Get top momentum assets
         top_assets = await service.get_top_momentum_assets(10)
@@ -69,6 +73,10 @@ async def get_momentum_overview(
         }
 
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        logger.error(
+            "Error getting momentum overview",
+            extra={"error": str(e), "error_type": type(e).__name__}
+        )
         raise HTTPException(
             status_code=DEFAULT_VALUE_500, detail=f"Error getting momentum overview: {str(e)}"
         )
@@ -80,6 +88,7 @@ async def analyze_asset_momentum_post(
     service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
 ):
     """Analyze momentum for a specific asset via POST request."""
+    logger.debug("Analyzing asset momentum via POST", extra={"request_data": request_data})
     try:
         symbol = request_data.get("symbol", "").upper()
         timeframe_str = request_data.get("timeframe", "daily")
@@ -109,10 +118,20 @@ async def analyze_asset_momentum_post(
         analysis = await service.analyze_asset_momentum(symbol, timeframe)
 
         if not analysis:
+            logger.warning("No analysis found for symbol", extra={"symbol": symbol})
             raise HTTPException(
                 status_code=DEFAULT_VALUE_404, detail=f"No analysis found for {symbol}"
             )
 
+        logger.info(
+            "Asset momentum analysis completed",
+            extra={
+                "symbol": symbol,
+                "timeframe": timeframe.value,
+                "overall_momentum": analysis.overall_momentum,
+                "signal_count": analysis.signal_count
+            }
+        )
         return {
             "success": True,
             "analysis": {
@@ -160,6 +179,10 @@ async def analyze_asset_momentum_post(
         }
 
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        logger.error(
+            "Error analyzing asset momentum",
+            extra={"error": str(e), "error_type": type(e).__name__}
+        )
         raise HTTPException(
             status_code=DEFAULT_VALUE_500, detail=f"Error analyzing momentum for {symbol}: {str(e)}"
         )
@@ -172,6 +195,7 @@ async def analyze_asset_momentum(
     service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
 ):
     """Analyze momentum for a specific asset."""
+    logger.debug("Analyzing asset momentum", extra={"symbol": symbol, "timeframe": timeframe.value})
     try:
         analysis = await service.analyze_asset_momentum(symbol.upper(), timeframe)
 
@@ -226,6 +250,10 @@ async def analyze_asset_momentum(
         }
 
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        logger.error(
+            "Error analyzing asset momentum",
+            extra={"symbol": symbol, "error": str(e), "error_type": type(e).__name__}
+        )
         raise HTTPException(
             status_code=DEFAULT_VALUE_500, detail=f"Error analyzing momentum for {symbol}: {str(e)}"
         )
@@ -237,19 +265,29 @@ async def get_momentum_signals_for_symbol(
     service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
 ):
     """Get momentum signals for a specific asset."""
+    logger.debug("Getting momentum signals for symbol", extra={"symbol": symbol})
     try:
         signals = await service.get_momentum_signals_for_symbol(symbol.upper())
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        logger.error(
+            "Error getting momentum signals",
+            extra={"symbol": symbol, "error": str(e), "error_type": type(e).__name__}
+        )
         raise HTTPException(
             status_code=DEFAULT_VALUE_500,
             detail=f"Error getting momentum signals for {symbol}: {str(e)}",
         )
 
     if not signals:
+        logger.warning("No momentum signals found for symbol", extra={"symbol": symbol})
         raise HTTPException(
             status_code=DEFAULT_VALUE_404, detail=f"No momentum signals found for {symbol.upper()}"
         )
 
+    logger.info(
+        "Retrieved momentum signals for symbol",
+        extra={"symbol": symbol, "signal_count": len(signals)}
+    )
     return {
         "success": True,
         "symbol": symbol.upper(),
@@ -384,6 +422,7 @@ async def create_momentum_strategy(
     service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
 ):
     """Create a new momentum strategy."""
+    logger.debug("Creating momentum strategy", extra={"strategy_name": strategy_data.get("name")})
     try:
         # Validate required fields
         required_fields = ["name", "description", "timeframe"]
@@ -465,6 +504,14 @@ async def create_momentum_strategy(
         # Create strategy via service
         created_strategy = await service.create_strategy(strategy)
 
+        logger.info(
+            "Momentum strategy created successfully",
+            extra={
+                "strategy_name": created_strategy.name,
+                "momentum_type": created_strategy.momentum_type.value,
+                "timeframe": created_strategy.timeframe.value
+            }
+        )
         return {
             "success": True,
             "strategy": {
@@ -492,6 +539,10 @@ async def create_momentum_strategy(
         }
 
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        logger.error(
+            "Error creating momentum strategy",
+            extra={"error": str(e), "error_type": type(e).__name__}
+        )
         raise HTTPException(
             status_code=DEFAULT_VALUE_500, detail=f"Error creating momentum strategy: {str(e)}"
         )
@@ -620,6 +671,7 @@ async def delete_momentum_strategy(
     service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
 ):
     """Delete a momentum strategy."""
+    logger.debug("Deleting momentum strategy", extra={"strategy_name": strategy_name})
     try:
         # Check if strategy exists
         existing_strategy = await service.get_strategy(strategy_name)
@@ -632,10 +684,12 @@ async def delete_momentum_strategy(
         success = await service.delete_strategy(strategy_name)
 
         if not success:
+            logger.error("Failed to delete strategy", extra={"strategy_name": strategy_name})
             raise HTTPException(
                 status_code=DEFAULT_VALUE_500, detail=f"Failed to delete strategy {strategy_name}"
             )
 
+        logger.info("Strategy deleted successfully", extra={"strategy_name": strategy_name})
         return {
             "success": True,
             "message": f"Strategy {strategy_name} deleted successfully",
@@ -643,6 +697,10 @@ async def delete_momentum_strategy(
         }
 
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        logger.error(
+            "Error deleting momentum strategy",
+            extra={"strategy_name": strategy_name, "error": str(e), "error_type": type(e).__name__}
+        )
         raise HTTPException(
             status_code=DEFAULT_VALUE_500, detail=f"Error deleting momentum strategy: {str(e)}"
         )
@@ -753,8 +811,16 @@ async def analyze_multiple_assets(
     service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
 ):
     """Analyze momentum for multiple assets."""
+    logger.debug(
+        "Batch momentum analysis requested",
+        extra={"symbols": symbols, "timeframe": timeframe.value}
+    )
     try:
         if len(symbols) > DEFAULT_VALUE_20:
+            logger.warning(
+                "Batch size exceeds limit",
+                extra={"requested": len(symbols), "limit": DEFAULT_VALUE_20}
+            )
             raise HTTPException(status_code=400, detail="Maximum MAX_20 symbols allowed per batch")
 
         analyses = []
@@ -776,6 +842,14 @@ async def analyze_multiple_assets(
             except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
                 errors.append({"symbol": symbol, "error": str(e)})
 
+        logger.info(
+            "Batch momentum analysis completed",
+            extra={
+                "successful_count": len(analyses),
+                "error_count": len(errors),
+                "timeframe": timeframe.value
+            }
+        )
         return {
             "success": True,
             "timeframe": timeframe.value,
@@ -788,6 +862,10 @@ async def analyze_multiple_assets(
         }
 
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        logger.error(
+            "Error analyzing multiple assets",
+            extra={"error": str(e), "error_type": type(e).__name__}
+        )
         raise HTTPException(
             status_code=DEFAULT_VALUE_500, detail=f"Error analyzing multiple assets: {str(e)}"
         )
@@ -844,6 +922,7 @@ async def get_technical_indicators(
 @router.get("/health", response_model=Dict[str, Any])
 async def momentum_health_check():
     """Health check endpoint for momentum service."""
+    logger.debug("Health check requested")
     try:
         return {
             "success": True,
@@ -853,6 +932,7 @@ async def momentum_health_check():
         }
 
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        logger.error("Momentum health check failed", extra={"error": str(e)})
         raise HTTPException(
             status_code=DEFAULT_VALUE_500, detail=f"Momentum health check failed: {str(e)}"
         )

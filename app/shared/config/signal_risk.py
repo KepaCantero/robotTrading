@@ -5,8 +5,11 @@ Contains configuration for signal thresholds, risk management,
 circuit breakers, and related parameters.
 """
 
+import logging
 from decimal import Decimal
 from typing import Dict
+
+logger = logging.getLogger(__name__)
 
 from pydantic import Field, field_validator
 
@@ -55,7 +58,15 @@ class SignalThresholds(ConfigBase):
     @classmethod
     def validate_0_100_range(cls, v):
         if not 0 <= v <= 100:
+            logger.warning(
+                "Signal threshold validation failed",
+                extra={"value": v, "valid_range": "0-100"},
+            )
             raise ValueError("Value must be between 0 and 100")
+        logger.debug(
+            "Signal threshold validated",
+            extra={"value": v},
+        )
         return v
 
 
@@ -96,7 +107,15 @@ class RiskManagementThresholds(ConfigBase):
     @classmethod
     def validate_stop_loss(cls, v):
         if not 0 <= v <= 0.5:
+            logger.warning(
+                "Stop loss validation failed",
+                extra={"value": v, "valid_range": "0-0.5"},
+            )
             raise ValueError("Stop loss percentage must be between 0 and 0.5")
+        logger.debug(
+            "Stop loss validated",
+            extra={"value": v},
+        )
         return v
 
     @field_validator(
@@ -115,7 +134,15 @@ class RiskManagementThresholds(ConfigBase):
     @classmethod
     def validate_percentage_0_1(cls, v):
         if not 0 <= v <= 1:
+            logger.warning(
+                "Risk management threshold validation failed",
+                extra={"value": v, "valid_range": "0-1"},
+            )
             raise ValueError("Percentage values must be between 0 and 1")
+        logger.debug(
+            "Risk management threshold validated",
+            extra={"value": v},
+        )
         return v
 
 
@@ -144,7 +171,15 @@ class CircuitBreakerThresholds(ConfigBase):
     @classmethod
     def validate_percentage_0_1(cls, v):
         if not 0 <= v <= 1:
+            logger.warning(
+                "Circuit breaker threshold validation failed",
+                extra={"value": v, "valid_range": "0-1"},
+            )
             raise ValueError("Percentage values must be between 0 and 1")
+        logger.debug(
+            "Circuit breaker threshold validated",
+            extra={"value": v},
+        )
         return v
 
 
@@ -171,7 +206,15 @@ class SlippageThresholds(ConfigBase):
     @classmethod
     def validate_decimal_percentage(cls, v):
         if not Decimal("0") <= v <= Decimal("100"):
+            logger.warning(
+                "Slippage threshold validation failed",
+                extra={"value": str(v), "valid_range": "0-100"},
+            )
             raise ValueError("Percentage values must be between 0 and 100")
+        logger.debug(
+            "Slippage threshold validated",
+            extra={"value": str(v)},
+        )
         return v
 
 

@@ -16,6 +16,7 @@ Reference:
 - Factor investing approach (Berkin & Swedroe)
 """
 
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
@@ -23,6 +24,8 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+logger = logging.getLogger(__name__)
 
 
 class FactorType(str, Enum):
@@ -407,7 +410,25 @@ class FactorStrategyConfig(BaseModel):
         cfg = get_config()
         tolerance = Decimal(str(getattr(cfg.trading, 'factor_weights_tolerance', 0.05)))
         if abs(total - Decimal("1.0")) > tolerance:
+            logger.error(
+                "Factor weights validation failed",
+                extra={
+                    "total": float(total),
+                    "tolerance": float(tolerance),
+                    "weights": {
+                        "value": float(self.value_weight),
+                        "profitability": float(self.profitability_weight),
+                        "momentum": float(self.momentum_weight),
+                        "size": float(self.size_weight),
+                        "investment": float(self.investment_weight),
+                    },
+                },
+            )
             raise ValueError(f"Factor weights must sum to 1.0, sum to {total}")
+        logger.debug(
+            "Factor weights validated successfully",
+            extra={"total": float(total)},
+        )
         return self
 
     @model_validator(mode="after")
@@ -420,11 +441,37 @@ class FactorStrategyConfig(BaseModel):
         cfg = get_config()
         max_tilt = Decimal(str(getattr(cfg.trading, 'max_total_tilt', 0.8)))
         if total_tilt > max_tilt:
+            logger.error(
+                "Factor tilt validation failed",
+                extra={
+                    "total_tilt": float(total_tilt),
+                    "max_tilt": float(max_tilt),
+                    "tilts": {
+                        "value": float(self.value_tilt),
+                        "size": float(self.size_tilt),
+                        "profitability": float(self.profitability_tilt),
+                    },
+                },
+            )
             raise ValueError(f"Total absolute tilt exceeds {max_tilt}: {total_tilt}")
+        logger.debug(
+            "Factor tilts validated successfully",
+            extra={"total_tilt": float(total_tilt)},
+        )
         return self
 
     def get_factor_tilts(self) -> List[FactorTilt]:
         """Get list of factor tilts as dataclasses."""
+        logger.debug(
+            "Generating factor tilts",
+            extra={
+                "value_tilt": float(self.value_tilt),
+                "size_tilt": float(self.size_tilt),
+                "profitability_tilt": float(self.profitability_tilt),
+                "investment_tilt": float(self.investment_tilt),
+                "momentum_tilt": float(self.momentum_tilt),
+            },
+        )
         return [
             FactorTilt(
                 factor=FactorType.VALUE,
