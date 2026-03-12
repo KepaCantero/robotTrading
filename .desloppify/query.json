@@ -1,46 +1,81 @@
 {
-  "command": "next",
-  "items": [
-    {
-      "id": "auto/stale_exclude",
-      "action_type": "manual_fix",
-      "summary": "Fix 2 stale exclude issues",
-      "member_count": 2,
-      "members": [
-        {
-          "id": "stale_exclude::.benchmarks::.benchmarks",
-          "confidence": "low",
-          "detector": "stale_exclude",
-          "file": ".benchmarks",
-          "summary": "Excluded directory '.benchmarks' has 0 references from scanned code \u2014 may be stale",
-          "status": "open",
-          "kind": "issue",
-          "primary_command": "desloppify plan resolve \"stale_exclude::.benchmarks::.benchmarks\" --note \"<what you did>\" --confirm"
-        },
-        {
-          "id": "stale_exclude::.gap_reports::.gap_reports",
-          "confidence": "low",
-          "detector": "stale_exclude",
-          "file": ".gap_reports",
-          "summary": "Excluded directory '.gap_reports' has 0 references from scanned code \u2014 may be stale",
-          "status": "open",
-          "kind": "issue",
-          "primary_command": "desloppify plan resolve \"stale_exclude::.gap_reports::.gap_reports\" --note \"<what you did>\" --confirm"
-        }
-      ],
-      "cluster_name": "auto/stale_exclude",
-      "cluster_auto": true,
-      "detector": "stale_exclude",
-      "kind": "cluster",
-      "primary_command": "remove stale exclusion or verify it's still needed"
-    }
+  "command": "resolve",
+  "patterns": [
+    "auto/unused_enums"
   ],
-  "queue": {
-    "total": 1,
-    "mode": "execution"
-  },
+  "status": "fixed",
+  "resolved": [
+    "unused_enums::app/backtesting/drift_detection/drift_detectors.py::DriftType",
+    "unused_enums::app/backtesting/execution/market_impact.py::ImpactType",
+    "unused_enums::app/backtesting/execution/models.py::TimeOfDay",
+    "unused_enums::app/backtesting/execution/slippage_model.py::TimeOfDay",
+    "unused_enums::app/backtesting/execution/slippage_model.py::MarketCapCategory",
+    "unused_enums::app/backtesting/execution/transaction_cost.py::FeeType",
+    "unused_enums::app/backtesting/execution/transaction_cost.py::CommissionType",
+    "unused_enums::app/backtesting/model_selection.py::CriterionType",
+    "unused_enums::app/domain/entities/trade.py::TradeType",
+    "unused_enums::app/domain/entities/trade.py::ExitReason",
+    "unused_enums::app/domain/models/cost_analysis.py::CostType",
+    "unused_enums::app/domain/models/momentum.py::TechnicalIndicator",
+    "unused_enums::app/domain/models/profitability_validation.py::ProfitabilityMetric",
+    "unused_enums::app/domain/services/backtesting/dividend_handler.py::DividendType",
+    "unused_enums::app/domain/services/backtesting/market_impact.py::ImpactModelType",
+    "unused_enums::app/domain/services/backtesting/transaction_costs.py::CostModelType",
+    "unused_enums::app/domain/strategies/covered_call.py::CallSignal",
+    "unused_enums::app/domain/strategies/dividend_investing.py::DividendSignal",
+    "unused_enums::app/domain/strategies/learning/base_learning_engine.py::StabilityStatus",
+    "unused_enums::app/domain/strategies/learning/subprocess_engine_wrapper.py::EngineOperation",
+    "unused_enums::app/domain/strategies/low_volatility_anomaly.py::VolatilityCategory",
+    "unused_enums::app/domain/strategies/pairs_trading.py::PairSignal",
+    "unused_enums::app/domain/strategies/quality_screen.py::QualitySignal",
+    "unused_enums::app/domain/strategies/statistical_arbitrage.py::ReversionState",
+    "unused_enums::app/domain/strategies/time_series_momentum.py::TrendState",
+    "unused_enums::app/engines/execution_engine/microstructure/almgren_chriss_model.py::ImpactComponent",
+    "unused_enums::app/engines/execution_engine/microstructure/dark_pool_router.py::ExecutionVenue",
+    "unused_enums::app/engines/strategy_engines/profile_regime_selector.py::InvestorProfile",
+    "unused_enums::app/infrastructure/resilience/rate_limit_governor.py::RateLimitStrategy",
+    "unused_enums::app/services/api_circuit_breaker.py::CircuitState",
+    "unused_enums::app/services/cost_analysis_service.py::CostType",
+    "unused_enums::app/services/parametrization/module_parametrizer.py::ModuleType",
+    "unused_enums::app/services/value_signal_enhancer.py::ValueMetricType",
+    "unused_enums::app/shared/utils/symbol_mapper.py::MappingStatus",
+    "unused_enums::app/simulation/exchange.py::OrderMatchingAlgorithm",
+    "unused_enums::app/sre/chaos_engine/blast_radius.py::BlastRadiusScope",
+    "unused_enums::app/sre/chaos_engine/chaos_orchestrator.py::ExperimentStatus",
+    "unused_enums::app/sre/chaos_engine/failure_injectors.py::InjectionType",
+    "unused_enums::app/sre/chaos_engine/game_days.py::GameDayStatus",
+    "unused_enums::app/sre/chaos_engine/game_days.py::ScenarioStatus",
+    "unused_enums::app/sre/chaos_engine/stress_tester.py::StressTestType",
+    "unused_enums::app/sre/chaos_engine/stress_tester.py::TestStatus",
+    "unused_enums::app/sre/error_budgets/slo_tracker.py::SLOComplianceStatus",
+    "unused_enums::app/sre/monitoring/trading_metrics.py::OrderExecutionPhase",
+    "unused_enums::app/sre/oncall/dashboard.py::DashboardViewType",
+    "unused_enums::app/sre/oncall/dashboard.py::StatusIndicator",
+    "unused_enums::app/sre/oncall/escalation.py::IncidentSeverity",
+    "unused_enums::app/sre/oncall/escalation.py::EscalationStatus",
+    "unused_enums::app/sre/oncall/escalation.py::LevelType",
+    "unused_enums::app/sre/oncall/handoff.py::HandoffStatus",
+    "unused_enums::app/sre/oncall/handoff.py::ChecklistItemType",
+    "unused_enums::app/sre/oncall/rotation.py::RotationType",
+    "unused_enums::app/sre/reconciliation/boot_reconciler.py::ReconciliationAction",
+    "unused_enums::scripts/backtesting/optimization/run_full_compliance_test.py::TestStatus",
+    "unused_enums::scripts/run_full_backtest_suite.py::TestStatus",
+    "unused_enums::scripts/util/handle_blocked_files.py::BlockReason",
+    "unused_enums::tests/mocks/__init__.py::MockConnectionStatus"
+  ],
+  "count": 57,
+  "next_command": "desloppify next",
+  "overall_score": 20.4,
+  "objective_score": 81.4,
+  "strict_score": 20.4,
+  "verified_strict_score": 80.2,
+  "prev_overall_score": 20.4,
+  "prev_objective_score": 81.4,
+  "prev_strict_score": 20.4,
+  "prev_verified_strict_score": 80.2,
+  "attestation": "I have actually Removed 57 unused enum classes that were never imported or used in production code and I am not gaming the score.",
   "narrative": {
-    "phase": "first_scan",
+    "phase": "middle_grind",
     "headline": "All T1 items cleared!",
     "dimensions": {
       "lowest_dimensions": [
@@ -131,8 +166,8 @@
       {
         "type": "refactor",
         "detector": "structural",
-        "count": 614,
-        "description": "614 structural issues \u2014 review large files \u2014 split only when responsibilities are clearly separable",
+        "count": 617,
+        "description": "617 structural issues \u2014 review large files \u2014 split only when responsibilities are clearly separable",
         "command": "desloppify show structural --status open",
         "impact": 0.0,
         "dimension": "File health",
@@ -175,23 +210,19 @@
       {
         "type": "refactor",
         "detector": "test_coverage",
-        "count": 547,
-        "description": "547 test_coverage issues in 1 cluster(s) \u2014 run `desloppify next`",
-        "command": "desloppify next",
+        "count": 568,
+        "description": "568 test_coverage issues \u2014 add tests for untested production modules \u2014 prioritize by import count",
+        "command": "desloppify show test_coverage --status open",
         "impact": 0.0,
         "dimension": "Test health",
         "priority": 10,
-        "clusters": [
-          "auto/test_coverage"
-        ],
-        "cluster_count": 1,
         "lane": "test_coverage"
       },
       {
         "type": "refactor",
         "detector": "signature",
-        "count": 256,
-        "description": "256 signature issues \u2014 consolidate inconsistent function signatures",
+        "count": 258,
+        "description": "258 signature issues \u2014 consolidate inconsistent function signatures",
         "command": "desloppify show signature --status open",
         "impact": 0.0,
         "dimension": "Unknown",
@@ -201,8 +232,8 @@
       {
         "type": "refactor",
         "detector": "responsibility_cohesion",
-        "count": 42,
-        "description": "42 responsibility_cohesion issues \u2014 split modules with too many responsibilities \u2014 extract focused sub-modules",
+        "count": 43,
+        "description": "43 responsibility_cohesion issues \u2014 split modules with too many responsibilities \u2014 extract focused sub-modules",
         "command": "desloppify show responsibility_cohesion --status open",
         "impact": 0.0,
         "dimension": "Code quality",
@@ -223,8 +254,8 @@
       {
         "type": "manual_fix",
         "detector": "smells",
-        "count": 1124,
-        "description": "1124 smells issues \u2014 inspect with `desloppify next` and fix manually",
+        "count": 1134,
+        "description": "1134 smells issues \u2014 inspect with `desloppify next` and fix manually",
         "command": "desloppify show smells --status open",
         "impact": 0.0,
         "dimension": "Code quality",
@@ -234,8 +265,8 @@
       {
         "type": "manual_fix",
         "detector": "global_mutable_config",
-        "count": 187,
-        "description": "187 global_mutable_config issues \u2014 refactor module-level mutable state \u2014 use explicit init functions or dependency injection",
+        "count": 188,
+        "description": "188 global_mutable_config issues \u2014 refactor module-level mutable state \u2014 use explicit init functions or dependency injection",
         "command": "desloppify show global_mutable_config --status open",
         "impact": 0.0,
         "dimension": "Code quality",
@@ -246,15 +277,11 @@
         "type": "manual_fix",
         "detector": "stale_exclude",
         "count": 2,
-        "description": "2 stale_exclude issues in 1 cluster(s) \u2014 run `desloppify next`",
-        "command": "desloppify next",
+        "description": "2 stale_exclude issues \u2014 remove stale exclusion or verify it's still needed",
+        "command": "desloppify show stale_exclude --status open",
         "impact": 0.0,
         "dimension": "Code quality",
         "priority": 16,
-        "clusters": [
-          "auto/stale_exclude"
-        ],
-        "cluster_count": 1,
         "lane": "refactor_1"
       },
       {
@@ -272,7 +299,7 @@
     "strategy": {
       "fixer_leverage": {
         "auto_fixable_count": 0,
-        "total_count": 4040,
+        "total_count": 4078,
         "coverage": 0.0,
         "impact_ratio": 0.0,
         "recommendation": "none"
@@ -303,7 +330,7 @@
             14,
             15
           ],
-          "file_count": 1061,
+          "file_count": 1064,
           "total_impact": 0.0,
           "automation": "manual",
           "run_first": false
@@ -330,7 +357,7 @@
           "actions": [
             10
           ],
-          "file_count": 547,
+          "file_count": 564,
           "total_impact": 0.0,
           "automation": "manual",
           "run_first": false
@@ -385,113 +412,27 @@
     },
     "reminders": [
       {
+        "type": "rescan_needed",
+        "message": "Rescan to verify \u2014 cascading effects may create new issues.",
+        "command": "desloppify scan",
+        "priority": 1,
+        "severity": "high"
+      },
+      {
         "type": "zone_classification",
-        "message": "729 of 1910 files classified as non-production (1 config, 15 generated, 79 script, 634 test). Override with `desloppify zone set <file> production` if any are misclassified.",
+        "message": "731 of 1913 files classified as non-production (1 config, 15 generated, 79 script, 636 test). Override with `desloppify zone set <file> production` if any are misclassified.",
         "command": "desloppify zone show",
         "priority": 2,
         "severity": "medium"
       }
     ],
     "reminder_history": {
-      "zone_classification": 2,
-      "report_scores": 1
+      "zone_classification": 3,
+      "report_scores": 2,
+      "feedback_nudge": 1,
+      "rescan_needed": 1
     }
   },
-  "agent_notes": [
-    "Do NOT use `desloppify plan skip` unless the user explicitly asks you to skip an item.",
-    "If you cannot fix an item, report it and move to the next one.",
-    "For cluster items: if the autofix_hint finds 0 results, drill into individual issues with the primary_command."
-  ],
-  "plan": {
-    "active": true,
-    "focus": null,
-    "clusters": [
-      {
-        "name": "auto/unused",
-        "description": "Remove 512 unused issues",
-        "item_count": 0
-      },
-      {
-        "name": "auto/test_coverage",
-        "description": "Fix 547 test coverage issues",
-        "item_count": 547
-      },
-      {
-        "name": "auto/security",
-        "description": "Fix 459 security issues",
-        "item_count": 0
-      },
-      {
-        "name": "auto/unused_enums",
-        "description": "Fix 57 unused enums issues",
-        "item_count": 0
-      },
-      {
-        "name": "auto/stale_exclude",
-        "description": "Fix 2 stale exclude issues",
-        "item_count": 2
-      },
-      {
-        "name": "auto/initial-review",
-        "description": "Initial review of 20 unscored subjective dimensions",
-        "item_count": 20
-      }
-    ],
-    "total_ordered": 0,
-    "total_skipped": 567,
-    "plan_overrides_narrative": true
-  },
-  "overall_score": 20.4,
-  "objective_score": 81.7,
-  "strict_score": 20.4,
-  "scorecard_dimensions": [
-    {
-      "name": "File health",
-      "score": 76.7,
-      "strict": 76.7,
-      "checks": 1260,
-      "failing": 417,
-      "tier": 3,
-      "subjective": false
-    },
-    {
-      "name": "Code quality",
-      "score": 89.3,
-      "strict": 89.3,
-      "checks": 9216,
-      "failing": 1791,
-      "tier": 3,
-      "subjective": false
-    },
-    {
-      "name": "Duplication",
-      "score": 96.0,
-      "strict": 96.0,
-      "checks": 11241,
-      "failing": 610,
-      "tier": 3,
-      "subjective": false
-    },
-    {
-      "name": "Security",
-      "score": 100.0,
-      "strict": 100.0,
-      "checks": 3166,
-      "failing": 1,
-      "tier": 4,
-      "subjective": false
-    },
-    {
-      "name": "Test health",
-      "score": 51.5,
-      "strict": 51.5,
-      "checks": 20886,
-      "failing": 547,
-      "tier": 4,
-      "subjective": false
-    }
-  ],
-  "subjective_measures": [],
   "config": {
     "target_strict_score": 95,
     "review_max_age_days": 30,
