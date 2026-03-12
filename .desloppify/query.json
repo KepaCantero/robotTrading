@@ -1,82 +1,280 @@
 {
-  "command": "resolve",
-  "patterns": [
-    "auto/unused_enums"
+  "command": "next",
+  "items": [
+    {
+      "id": "auto/unused",
+      "action_type": "auto_fix",
+      "summary": "Remove 320 unused issues",
+      "member_count": 320,
+      "members": [
+        {
+          "id": "unused::examples/baseline_optimization_reporter_example.py::reporter:370",
+          "confidence": "high",
+          "detector": "unused",
+          "file": "examples/baseline_optimization_reporter_example.py",
+          "summary": "Unused vars: reporter",
+          "status": "open",
+          "kind": "issue",
+          "primary_command": "desloppify plan resolve \"unused::examples/baseline_optimization_reporter_example.py::reporter:370\" --note \"<what you did>\" --confirm"
+        },
+        {
+          "id": "unused::examples/tier_mapping_usage.py::spanish_tiers:203",
+          "confidence": "high",
+          "detector": "unused",
+          "file": "examples/tier_mapping_usage.py",
+          "summary": "Unused vars: spanish_tiers",
+          "status": "open",
+          "kind": "issue",
+          "primary_command": "desloppify plan resolve \"unused::examples/tier_mapping_usage.py::spanish_tiers:203\" --note \"<what you did>\" --confirm"
+        },
+        {
+          "id": "unused::examples/toil_tracker_example.py::json_data:234",
+          "confidence": "high",
+          "detector": "unused",
+          "file": "examples/toil_tracker_example.py",
+          "summary": "Unused vars: json_data",
+          "status": "open",
+          "kind": "issue",
+          "primary_command": "desloppify plan resolve \"unused::examples/toil_tracker_example.py::json_data:234\" --note \"<what you did>\" --confirm"
+        },
+        {
+          "id": "unused::examples/trading_metrics_example.py::metrics:277",
+          "confidence": "high",
+          "detector": "unused",
+          "file": "examples/trading_metrics_example.py",
+          "summary": "Unused vars: metrics",
+          "status": "open",
+          "kind": "issue",
+          "primary_command": "desloppify plan resolve \"unused::examples/trading_metrics_example.py::metrics:277\" --note \"<what you did>\" --confirm"
+        },
+        {
+          "id": "unused::examples/triple_barrier_example.py::fig:469",
+          "confidence": "high",
+          "detector": "unused",
+          "file": "examples/triple_barrier_example.py",
+          "summary": "Unused vars: fig",
+          "status": "open",
+          "kind": "issue",
+          "primary_command": "desloppify plan resolve \"unused::examples/triple_barrier_example.py::fig:469\" --note \"<what you did>\" --confirm"
+        },
+        {
+          "id": "unused::examples/using_new_backtesting_core.py::results:176",
+          "confidence": "high",
+          "detector": "unused",
+          "file": "examples/using_new_backtesting_core.py",
+          "summary": "Unused vars: results",
+          "status": "open",
+          "kind": "issue",
+          "primary_command": "desloppify plan resolve \"unused::examples/using_new_backtesting_core.py::results:176\" --note \"<what you did>\" --confirm"
+        },
+        {
+          "id": "unused::scripts/audit_logging_consistency.py::):105",
+          "confidence": "high",
+          "detector": "unused",
+          "file": "scripts/audit_logging_consistency.py",
+          "summary": "Unused vars: )",
+          "status": "open",
+          "kind": "issue",
+          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::):105\" --note \"<what you did>\" --confirm"
+        },
+        {
+          "id": "unused::scripts/audit_logging_consistency.py::):125",
+          "confidence": "high",
+          "detector": "unused",
+          "file": "scripts/audit_logging_consistency.py",
+          "summary": "Unused vars: )",
+          "status": "open",
+          "kind": "issue",
+          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::):125\" --note \"<what you did>\" --confirm"
+        },
+        {
+          "id": "unused::scripts/audit_logging_consistency.py::):138",
+          "confidence": "high",
+          "detector": "unused",
+          "file": "scripts/audit_logging_consistency.py",
+          "summary": "Unused vars: )",
+          "status": "open",
+          "kind": "issue",
+          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::):138\" --note \"<what you did>\" --confirm"
+        },
+        {
+          "id": "unused::scripts/audit_logging_consistency.py::):155",
+          "confidence": "high",
+          "detector": "unused",
+          "file": "scripts/audit_logging_consistency.py",
+          "summary": "Unused vars: )",
+          "status": "open",
+          "kind": "issue",
+          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::):155\" --note \"<what you did>\" --confirm"
+        },
+        {
+          "id": "unused::scripts/audit_logging_consistency.py::):159",
+          "confidence": "high",
+          "detector": "unused",
+          "file": "scripts/audit_logging_consistency.py",
+          "summary": "Unused vars: )",
+          "status": "open",
+          "kind": "issue",
+          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::):159\" --note \"<what you did>\" --confirm"
+        },
+        {
+          "id": "unused::scripts/audit_logging_consistency.py::):59",
+          "confidence": "high",
+          "detector": "unused",
+          "file": "scripts/audit_logging_consistency.py",
+          "summary": "Unused vars: )",
+          "status": "open",
+          "kind": "issue",
+          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::):59\" --note \"<what you did>\" --confirm"
+        },
+        {
+          "id": "unused::scripts/audit_logging_consistency.py::):79",
+          "confidence": "high",
+          "detector": "unused",
+          "file": "scripts/audit_logging_consistency.py",
+          "summary": "Unused vars: )",
+          "status": "open",
+          "kind": "issue",
+          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::):79\" --note \"<what you did>\" --confirm"
+        },
+        {
+          "id": "unused::scripts/audit_logging_consistency.py::,:105",
+          "confidence": "high",
+          "detector": "unused",
+          "file": "scripts/audit_logging_consistency.py",
+          "summary": "Unused vars: ,",
+          "status": "open",
+          "kind": "issue",
+          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::,:105\" --note \"<what you did>\" --confirm"
+        },
+        {
+          "id": "unused::scripts/audit_logging_consistency.py::,:106",
+          "confidence": "high",
+          "detector": "unused",
+          "file": "scripts/audit_logging_consistency.py",
+          "summary": "Unused vars: ,",
+          "status": "open",
+          "kind": "issue",
+          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::,:106\" --note \"<what you did>\" --confirm"
+        },
+        {
+          "id": "unused::scripts/audit_logging_consistency.py::,:118",
+          "confidence": "high",
+          "detector": "unused",
+          "file": "scripts/audit_logging_consistency.py",
+          "summary": "Unused vars: ,",
+          "status": "open",
+          "kind": "issue",
+          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::,:118\" --note \"<what you did>\" --confirm"
+        },
+        {
+          "id": "unused::scripts/audit_logging_consistency.py::,:120",
+          "confidence": "high",
+          "detector": "unused",
+          "file": "scripts/audit_logging_consistency.py",
+          "summary": "Unused vars: ,",
+          "status": "open",
+          "kind": "issue",
+          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::,:120\" --note \"<what you did>\" --confirm"
+        },
+        {
+          "id": "unused::scripts/audit_logging_consistency.py::,:125",
+          "confidence": "high",
+          "detector": "unused",
+          "file": "scripts/audit_logging_consistency.py",
+          "summary": "Unused vars: ,",
+          "status": "open",
+          "kind": "issue",
+          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::,:125\" --note \"<what you did>\" --confirm"
+        },
+        {
+          "id": "unused::scripts/audit_logging_consistency.py::,:137",
+          "confidence": "high",
+          "detector": "unused",
+          "file": "scripts/audit_logging_consistency.py",
+          "summary": "Unused vars: ,",
+          "status": "open",
+          "kind": "issue",
+          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::,:137\" --note \"<what you did>\" --confirm"
+        },
+        {
+          "id": "unused::scripts/audit_logging_consistency.py::,:138",
+          "confidence": "high",
+          "detector": "unused",
+          "file": "scripts/audit_logging_consistency.py",
+          "summary": "Unused vars: ,",
+          "status": "open",
+          "kind": "issue",
+          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::,:138\" --note \"<what you did>\" --confirm"
+        },
+        {
+          "id": "unused::scripts/audit_logging_consistency.py::,:142",
+          "confidence": "high",
+          "detector": "unused",
+          "file": "scripts/audit_logging_consistency.py",
+          "summary": "Unused vars: ,",
+          "status": "open",
+          "kind": "issue",
+          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::,:142\" --note \"<what you did>\" --confirm"
+        },
+        {
+          "id": "unused::scripts/audit_logging_consistency.py::,:146",
+          "confidence": "high",
+          "detector": "unused",
+          "file": "scripts/audit_logging_consistency.py",
+          "summary": "Unused vars: ,",
+          "status": "open",
+          "kind": "issue",
+          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::,:146\" --note \"<what you did>\" --confirm"
+        },
+        {
+          "id": "unused::scripts/audit_logging_consistency.py::,:147",
+          "confidence": "high",
+          "detector": "unused",
+          "file": "scripts/audit_logging_consistency.py",
+          "summary": "Unused vars: ,",
+          "status": "open",
+          "kind": "issue",
+          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::,:147\" --note \"<what you did>\" --confirm"
+        },
+        {
+          "id": "unused::scripts/audit_logging_consistency.py::,:149",
+          "confidence": "high",
+          "detector": "unused",
+          "file": "scripts/audit_logging_consistency.py",
+          "summary": "Unused vars: ,",
+          "status": "open",
+          "kind": "issue",
+          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::,:149\" --note \"<what you did>\" --confirm"
+        },
+        {
+          "id": "unused::scripts/audit_logging_consistency.py::,:152",
+          "confidence": "high",
+          "detector": "unused",
+          "file": "scripts/audit_logging_consistency.py",
+          "summary": "Unused vars: ,",
+          "status": "open",
+          "kind": "issue",
+          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::,:152\" --note \"<what you did>\" --confirm"
+        }
+      ],
+      "cluster_name": "auto/unused",
+      "cluster_auto": true,
+      "detector": "unused",
+      "kind": "cluster",
+      "primary_command": "desloppify next --cluster auto/unused --count 10",
+      "members_truncated": true,
+      "members_sample_limit": 25,
+      "autofix_hint": "desloppify autofix unused-imports --dry-run"
+    }
   ],
-  "status": "fixed",
-  "resolved": [
-    "unused_enums::app/backtesting/drift_detection/drift_detectors.py::DriftType",
-    "unused_enums::app/backtesting/execution/market_impact.py::ImpactType",
-    "unused_enums::app/backtesting/execution/models.py::TimeOfDay",
-    "unused_enums::app/backtesting/execution/slippage_model.py::TimeOfDay",
-    "unused_enums::app/backtesting/execution/slippage_model.py::MarketCapCategory",
-    "unused_enums::app/backtesting/execution/transaction_cost.py::FeeType",
-    "unused_enums::app/backtesting/execution/transaction_cost.py::CommissionType",
-    "unused_enums::app/backtesting/model_selection.py::CriterionType",
-    "unused_enums::app/domain/entities/trade.py::TradeType",
-    "unused_enums::app/domain/entities/trade.py::ExitReason",
-    "unused_enums::app/domain/models/cost_analysis.py::CostType",
-    "unused_enums::app/domain/models/momentum.py::TechnicalIndicator",
-    "unused_enums::app/domain/models/profitability_validation.py::ProfitabilityMetric",
-    "unused_enums::app/domain/services/backtesting/dividend_handler.py::DividendType",
-    "unused_enums::app/domain/services/backtesting/market_impact.py::ImpactModelType",
-    "unused_enums::app/domain/services/backtesting/transaction_costs.py::CostModelType",
-    "unused_enums::app/domain/strategies/covered_call.py::CallSignal",
-    "unused_enums::app/domain/strategies/dividend_investing.py::DividendSignal",
-    "unused_enums::app/domain/strategies/learning/base_learning_engine.py::StabilityStatus",
-    "unused_enums::app/domain/strategies/learning/subprocess_engine_wrapper.py::EngineOperation",
-    "unused_enums::app/domain/strategies/low_volatility_anomaly.py::VolatilityCategory",
-    "unused_enums::app/domain/strategies/pairs_trading.py::PairSignal",
-    "unused_enums::app/domain/strategies/quality_screen.py::QualitySignal",
-    "unused_enums::app/domain/strategies/statistical_arbitrage.py::ReversionState",
-    "unused_enums::app/domain/strategies/time_series_momentum.py::TrendState",
-    "unused_enums::app/engines/execution_engine/microstructure/almgren_chriss_model.py::ImpactComponent",
-    "unused_enums::app/engines/execution_engine/microstructure/dark_pool_router.py::ExecutionVenue",
-    "unused_enums::app/engines/strategy_engines/profile_regime_selector.py::InvestorProfile",
-    "unused_enums::app/infrastructure/resilience/rate_limit_governor.py::RateLimitStrategy",
-    "unused_enums::app/services/api_circuit_breaker.py::CircuitState",
-    "unused_enums::app/services/cost_analysis_service.py::CostType",
-    "unused_enums::app/services/parametrization/module_parametrizer.py::ModuleType",
-    "unused_enums::app/services/value_signal_enhancer.py::ValueMetricType",
-    "unused_enums::app/shared/utils/symbol_mapper.py::MappingStatus",
-    "unused_enums::app/simulation/exchange.py::OrderMatchingAlgorithm",
-    "unused_enums::app/sre/chaos_engine/blast_radius.py::BlastRadiusScope",
-    "unused_enums::app/sre/chaos_engine/chaos_orchestrator.py::ExperimentStatus",
-    "unused_enums::app/sre/chaos_engine/failure_injectors.py::InjectionType",
-    "unused_enums::app/sre/chaos_engine/game_days.py::GameDayStatus",
-    "unused_enums::app/sre/chaos_engine/game_days.py::ScenarioStatus",
-    "unused_enums::app/sre/chaos_engine/stress_tester.py::StressTestType",
-    "unused_enums::app/sre/chaos_engine/stress_tester.py::TestStatus",
-    "unused_enums::app/sre/error_budgets/slo_tracker.py::SLOComplianceStatus",
-    "unused_enums::app/sre/monitoring/trading_metrics.py::OrderExecutionPhase",
-    "unused_enums::app/sre/oncall/dashboard.py::DashboardViewType",
-    "unused_enums::app/sre/oncall/dashboard.py::StatusIndicator",
-    "unused_enums::app/sre/oncall/escalation.py::IncidentSeverity",
-    "unused_enums::app/sre/oncall/escalation.py::EscalationStatus",
-    "unused_enums::app/sre/oncall/escalation.py::LevelType",
-    "unused_enums::app/sre/oncall/handoff.py::HandoffStatus",
-    "unused_enums::app/sre/oncall/handoff.py::ChecklistItemType",
-    "unused_enums::app/sre/oncall/rotation.py::RotationType",
-    "unused_enums::app/sre/reconciliation/boot_reconciler.py::ReconciliationAction",
-    "unused_enums::scripts/backtesting/optimization/run_full_compliance_test.py::TestStatus",
-    "unused_enums::scripts/run_full_backtest_suite.py::TestStatus",
-    "unused_enums::scripts/util/handle_blocked_files.py::BlockReason",
-    "unused_enums::tests/mocks/__init__.py::MockConnectionStatus"
-  ],
-  "count": 57,
-  "next_command": "desloppify next",
-  "overall_score": 20.3,
-  "objective_score": 81.3,
-  "strict_score": 20.3,
-  "verified_strict_score": 80.0,
-  "prev_overall_score": 20.3,
-  "prev_objective_score": 81.3,
-  "prev_strict_score": 20.3,
-  "prev_verified_strict_score": 80.0,
-  "attestation": "I have actually Enums intentionally defined for type safety and future extensibility - provide type-safe API contracts even if not currently imported externally and I am not gaming the score.",
+  "queue": {
+    "total": 1,
+    "mode": "execution"
+  },
   "narrative": {
     "phase": "stagnation",
-    "headline": "All T1 items cleared!",
+    "headline": "\u26a0 339 security issues \u2014 review before other cleanup. All T1 items cleared!",
     "dimensions": {
       "lowest_dimensions": [
         {
@@ -108,118 +306,118 @@
       "stagnant_dimensions": [
         {
           "name": "Security",
-          "strict": 100.0,
-          "stuck_scans": 4
+          "strict": 97.4,
+          "stuck_scans": 5
         },
         {
           "name": "File health",
           "strict": 76.6,
-          "stuck_scans": 4
+          "stuck_scans": 5
         },
         {
           "name": "Duplication",
           "strict": 96.0,
-          "stuck_scans": 4
+          "stuck_scans": 5
         },
         {
           "name": "Abstraction fit",
           "strict": 0.0,
-          "stuck_scans": 4
+          "stuck_scans": 5
         },
         {
           "name": "AI generated debt",
           "strict": 0.0,
-          "stuck_scans": 4
+          "stuck_scans": 5
         },
         {
           "name": "API coherence",
           "strict": 0.0,
-          "stuck_scans": 4
+          "stuck_scans": 5
         },
         {
           "name": "Auth consistency",
           "strict": 0.0,
-          "stuck_scans": 4
+          "stuck_scans": 5
         },
         {
           "name": "Contracts",
           "strict": 0.0,
-          "stuck_scans": 4
+          "stuck_scans": 5
         },
         {
           "name": "Convention drift",
           "strict": 0.0,
-          "stuck_scans": 4
+          "stuck_scans": 5
         },
         {
           "name": "Cross-module arch",
           "strict": 0.0,
-          "stuck_scans": 4
+          "stuck_scans": 5
         },
         {
           "name": "Dep health",
           "strict": 0.0,
-          "stuck_scans": 4
+          "stuck_scans": 5
         },
         {
           "name": "Design coherence",
           "strict": 0.0,
-          "stuck_scans": 4
+          "stuck_scans": 5
         },
         {
           "name": "Error consistency",
           "strict": 0.0,
-          "stuck_scans": 4
+          "stuck_scans": 5
         },
         {
           "name": "High elegance",
           "strict": 0.0,
-          "stuck_scans": 4
+          "stuck_scans": 5
         },
         {
           "name": "Stale migration",
           "strict": 0.0,
-          "stuck_scans": 4
+          "stuck_scans": 5
         },
         {
           "name": "Init coupling",
           "strict": 0.0,
-          "stuck_scans": 4
+          "stuck_scans": 5
         },
         {
           "name": "Logic clarity",
           "strict": 0.0,
-          "stuck_scans": 4
+          "stuck_scans": 5
         },
         {
           "name": "Low elegance",
           "strict": 0.0,
-          "stuck_scans": 4
+          "stuck_scans": 5
         },
         {
           "name": "Mid elegance",
           "strict": 0.0,
-          "stuck_scans": 4
+          "stuck_scans": 5
         },
         {
           "name": "Naming quality",
           "strict": 0.0,
-          "stuck_scans": 4
+          "stuck_scans": 5
         },
         {
           "name": "Structure nav",
           "strict": 0.0,
-          "stuck_scans": 4
+          "stuck_scans": 5
         },
         {
           "name": "Test strategy",
           "strict": 0.0,
-          "stuck_scans": 4
+          "stuck_scans": 5
         },
         {
           "name": "Type safety",
           "strict": 0.0,
-          "stuck_scans": 4
+          "stuck_scans": 5
         }
       ]
     },
@@ -326,12 +524,16 @@
       {
         "type": "refactor",
         "detector": "test_coverage",
-        "count": 578,
-        "description": "578 test_coverage issues \u2014 add tests for untested production modules \u2014 prioritize by import count",
-        "command": "desloppify show test_coverage --status open",
+        "count": 581,
+        "description": "581 test_coverage issues in 1 cluster(s) \u2014 run `desloppify next`",
+        "command": "desloppify next",
         "impact": 0.0,
         "dimension": "Test health",
         "priority": 10,
+        "clusters": [
+          "auto/test_coverage"
+        ],
+        "cluster_count": 1,
         "lane": "test_coverage"
       },
       {
@@ -369,13 +571,43 @@
       },
       {
         "type": "manual_fix",
+        "detector": "unused",
+        "count": 320,
+        "description": "320 unused issues in 1 cluster(s) \u2014 run `desloppify next`",
+        "command": "desloppify next",
+        "impact": 0.0,
+        "dimension": "Code quality",
+        "priority": 14,
+        "clusters": [
+          "auto/unused"
+        ],
+        "cluster_count": 1,
+        "lane": "refactor_0"
+      },
+      {
+        "type": "manual_fix",
         "detector": "smells",
         "count": 1134,
         "description": "1134 smells issues \u2014 inspect with `desloppify next` and fix manually",
         "command": "desloppify show smells --status open",
         "impact": 0.0,
         "dimension": "Code quality",
-        "priority": 14,
+        "priority": 15,
+        "lane": "refactor_0"
+      },
+      {
+        "type": "manual_fix",
+        "detector": "unused_enums",
+        "count": 57,
+        "description": "57 unused_enums issues in 1 cluster(s) \u2014 run `desloppify next`",
+        "command": "desloppify next",
+        "impact": 0.0,
+        "dimension": "Unknown",
+        "priority": 16,
+        "clusters": [
+          "auto/unused_enums"
+        ],
+        "cluster_count": 1,
         "lane": "refactor_0"
       },
       {
@@ -386,19 +618,38 @@
         "command": "desloppify show global_mutable_config --status open",
         "impact": 0.0,
         "dimension": "Code quality",
-        "priority": 15,
+        "priority": 17,
         "lane": "refactor_0"
       },
       {
         "type": "manual_fix",
         "detector": "stale_exclude",
         "count": 2,
-        "description": "2 stale_exclude issues \u2014 remove stale exclusion or verify it's still needed",
-        "command": "desloppify show stale_exclude --status open",
+        "description": "2 stale_exclude issues in 1 cluster(s) \u2014 run `desloppify next`",
+        "command": "desloppify next",
         "impact": 0.0,
         "dimension": "Code quality",
-        "priority": 16,
+        "priority": 18,
+        "clusters": [
+          "auto/stale_exclude"
+        ],
+        "cluster_count": 1,
         "lane": "refactor_1"
+      },
+      {
+        "type": "manual_fix",
+        "detector": "security",
+        "count": 339,
+        "description": "339 security issues in 1 cluster(s) \u2014 run `desloppify next`",
+        "command": "desloppify next",
+        "impact": 0.0,
+        "dimension": "Security",
+        "priority": 19,
+        "clusters": [
+          "auto/security"
+        ],
+        "cluster_count": 1,
+        "lane": "refactor_0"
       },
       {
         "type": "manual_fix",
@@ -408,14 +659,14 @@
         "command": "desloppify review --prepare",
         "impact": 0.0,
         "dimension": "Unknown",
-        "priority": 17,
+        "priority": 20,
         "lane": "refactor_2"
       }
     ],
     "strategy": {
       "fixer_leverage": {
         "auto_fixable_count": 0,
-        "total_count": 4092,
+        "total_count": 4811,
         "coverage": 0.0,
         "impact_ratio": 0.0,
         "recommendation": "none"
@@ -444,16 +695,19 @@
             12,
             13,
             14,
-            15
+            15,
+            16,
+            17,
+            19
           ],
-          "file_count": 1064,
+          "file_count": 1083,
           "total_impact": 0.0,
           "automation": "manual",
           "run_first": false
         },
         "refactor_1": {
           "actions": [
-            16
+            18
           ],
           "file_count": 2,
           "total_impact": 0.0,
@@ -462,7 +716,7 @@
         },
         "refactor_2": {
           "actions": [
-            17
+            20
           ],
           "file_count": 1,
           "total_impact": 0.0,
@@ -473,7 +727,7 @@
           "actions": [
             10
           ],
-          "file_count": 570,
+          "file_count": 572,
           "total_impact": 0.0,
           "automation": "manual",
           "run_first": false
@@ -521,28 +775,109 @@
     "risk_flags": [],
     "strict_target": {
       "target": 95.0,
-      "current": 20.3,
-      "gap": 74.7,
+      "current": 20.1,
+      "gap": 74.9,
       "state": "below",
       "warning": null
     },
-    "reminders": [
-      {
-        "type": "rescan_needed",
-        "message": "Rescan to verify \u2014 cascading effects may create new issues.",
-        "command": "desloppify scan",
-        "priority": 1,
-        "severity": "high"
-      }
-    ],
+    "reminders": [],
     "reminder_history": {
       "zone_classification": 3,
-      "report_scores": 4,
+      "report_scores": 5,
       "feedback_nudge": 3,
-      "stagnant_nudge": 24,
-      "rescan_needed": 1
+      "stagnant_nudge": 24
     }
   },
+  "agent_notes": [
+    "Do NOT use `desloppify plan skip` unless the user explicitly asks you to skip an item.",
+    "If you cannot fix an item, report it and move to the next one.",
+    "For cluster items: if the autofix_hint finds 0 results, drill into individual issues with the primary_command."
+  ],
+  "plan": {
+    "active": true,
+    "focus": null,
+    "clusters": [
+      {
+        "name": "auto/unused",
+        "description": "Remove 320 unused issues",
+        "item_count": 320
+      },
+      {
+        "name": "auto/test_coverage",
+        "description": "Fix 581 test coverage issues",
+        "item_count": 581
+      },
+      {
+        "name": "auto/security",
+        "description": "Fix 339 security issues",
+        "item_count": 339
+      },
+      {
+        "name": "auto/unused_enums",
+        "description": "Fix 57 unused enums issues",
+        "item_count": 57
+      },
+      {
+        "name": "auto/stale_exclude",
+        "description": "Fix 2 stale exclude issues",
+        "item_count": 2
+      }
+    ],
+    "total_ordered": 0,
+    "total_skipped": 603,
+    "plan_overrides_narrative": true
+  },
+  "overall_score": 20.1,
+  "objective_score": 80.3,
+  "strict_score": 20.1,
+  "scorecard_dimensions": [
+    {
+      "name": "File health",
+      "score": 76.6,
+      "strict": 76.6,
+      "checks": 1261,
+      "failing": 419,
+      "tier": 3,
+      "subjective": false
+    },
+    {
+      "name": "Code quality",
+      "score": 86.3,
+      "strict": 86.3,
+      "checks": 9225,
+      "failing": 2081,
+      "tier": 3,
+      "subjective": false
+    },
+    {
+      "name": "Duplication",
+      "score": 96.0,
+      "strict": 96.0,
+      "checks": 11247,
+      "failing": 611,
+      "tier": 3,
+      "subjective": false
+    },
+    {
+      "name": "Security",
+      "score": 97.4,
+      "strict": 97.4,
+      "checks": 3168,
+      "failing": 340,
+      "tier": 4,
+      "subjective": false
+    },
+    {
+      "name": "Test health",
+      "score": 49.1,
+      "strict": 49.1,
+      "checks": 20901,
+      "failing": 581,
+      "tier": 4,
+      "subjective": false
+    }
+  ],
+  "subjective_measures": [],
   "config": {
     "target_strict_score": 95,
     "review_max_age_days": 30,
