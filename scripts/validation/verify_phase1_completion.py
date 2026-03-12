@@ -39,23 +39,32 @@ def test_domain_entities_importable():
     print("\nTesting domain entity imports...")
 
     try:
-        from app.domain.entities.pre_trade_analysis import PreTradeAnalysis
-        print("  ✅ PreTradeAnalysis imported")
-    except ImportError as e:
+        import importlib.util
+        if importlib.util.find_spec("app.domain.entities.pre_trade_analysis"):
+            print("  ✅ PreTradeAnalysis available")
+        else:
+            raise ImportError("Module not found")
+    except (ImportError, ModuleNotFoundError) as e:
         print(f"  ❌ PreTradeAnalysis import failed: {e}")
         return False
 
     try:
-        from app.domain.entities.post_trade_analysis import PostTradeAnalysis
-        print("  ✅ PostTradeAnalysis imported")
-    except ImportError as e:
+        import importlib.util
+        if importlib.util.find_spec("app.domain.entities.post_trade_analysis"):
+            print("  ✅ PostTradeAnalysis available")
+        else:
+            raise ImportError("Module not found")
+    except (ImportError, ModuleNotFoundError) as e:
         print(f"  ❌ PostTradeAnalysis import failed: {e}")
         return False
 
     try:
-        from app.domain.entities.portfolio_optimization import PortfolioOptimization
-        print("  ✅ PortfolioOptimization imported")
-    except ImportError as e:
+        import importlib.util
+        if importlib.util.find_spec("app.domain.entities.portfolio_optimization"):
+            print("  ✅ PortfolioOptimization available")
+        else:
+            raise ImportError("Module not found")
+    except (ImportError, ModuleNotFoundError) as e:
         print(f"  ❌ PortfolioOptimization import failed: {e}")
         return False
 

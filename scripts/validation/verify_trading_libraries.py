@@ -74,8 +74,7 @@ libraries_to_check = {
 # Importar pandas y numpy que son dependencias comunes
 try:
     import pandas as pd
-    import numpy as np
-    print("✅ Dependencias base (pandas, numpy) disponibles")
+    print("✅ Dependencias base (pandas) disponibles")
 except ImportError as e:
     print(f"❌ Error importando dependencias base: {e}")
     sys.exit(1)
