@@ -5,11 +5,14 @@ Dataclasses for investment profiles and related structures.
 Uses centralized configuration for default values.
 """
 
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import TYPE_CHECKING, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     pass
@@ -124,15 +127,64 @@ class InvestmentProfile:
 
     def __post_init__(self):
         """Validate profile after initialization."""
+        logger.debug(
+            "Validating investment profile",
+            extra={
+                "input_id": self.input_id,
+                "capital_tier": self.capital_tier.value,
+                "initial_capital": str(self.initial_capital),
+            },
+        )
         if self.initial_capital <= Decimal("0"):
+            logger.error(
+                "Profile validation failed: invalid initial capital",
+                extra={
+                    "input_id": self.input_id,
+                    "initial_capital": str(self.initial_capital),
+                    "validation_error": "Initial capital must be positive",
+                },
+            )
             raise ValueError("Initial capital must be positive")
         if self.max_leverage < Decimal("1.0") or self.max_leverage > Decimal("3.0"):
+            logger.error(
+                "Profile validation failed: invalid leverage",
+                extra={
+                    "input_id": self.input_id,
+                    "max_leverage": str(self.max_leverage),
+                    "validation_error": "Leverage must be between 1.0 and 3.0",
+                },
+            )
             raise ValueError("Leverage must be between 1.0 and 3.0")
         if self.min_monthly_return_eur < Decimal("0"):
+            logger.error(
+                "Profile validation failed: invalid minimum return",
+                extra={
+                    "input_id": self.input_id,
+                    "min_monthly_return_eur": str(self.min_monthly_return_eur),
+                    "validation_error": "Minimum return must be non-negative",
+                },
+            )
             raise ValueError("Minimum return must be non-negative")
+        logger.info(
+            "Investment profile validated successfully",
+            extra={
+                "input_id": self.input_id,
+                "profile_id": self.profile_id,
+                "capital_tier": self.capital_tier.value,
+                "objective": self.objective.value,
+                "risk_profile": self.risk_profile.value,
+            },
+        )
 
     def to_dict(self) -> Dict:
         """Convert profile to dictionary."""
+        logger.debug(
+            "Converting profile to dictionary",
+            extra={
+                "input_id": self.input_id,
+                "profile_id": self.profile_id,
+            },
+        )
         return {
             "input_id": self.input_id,
             "profile_id": self.profile_id,

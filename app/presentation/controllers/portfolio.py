@@ -14,6 +14,7 @@ Security Compliance: DEFAULT_PERCENT_95%
 from __future__ import annotations
 
 import asyncio
+import logging
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
@@ -24,6 +25,8 @@ from requests.exceptions import HTTPError, RequestException
 from app.domain.models.portfolio import AssetUniverse, MarketRegimeData, Position
 from app.infrastructure.providers.paper_trading import PaperTradingPortfolioProvider
 from app.services.portfolio_service import PortfolioService
+
+logger = logging.getLogger(__name__)
 
 # Constants
 DEFAULT_PERCENT_95 = 95
@@ -47,8 +50,10 @@ def get_portfolio_service() -> PortfolioService:
     """
     global _portfolio_service
     if _portfolio_service is None:
+        logger.info("Initializing portfolio service singleton")
         provider = PaperTradingPortfolioProvider()
         _portfolio_service = PortfolioService(provider)
+        logger.info("Portfolio service initialized successfully")
 
     return _portfolio_service
 
@@ -87,15 +92,25 @@ async def get_portfolio_summary(
     Raises:
         HTTPException: If portfolio unavailable or retrieval fails
     """
+    logger.debug("get_portfolio_summary called")
     try:
         portfolio = await service.get_portfolio()
         if portfolio is None:
+            logger.warning("Portfolio unavailable due to circuit breaker")
             raise HTTPException(
                 status_code=DEFAULT_VALUE_503, detail="Portfolio unavailable due to circuit breaker"
             )
         summary = service.get_portfolio_summary(portfolio)
+        logger.info(
+            "Portfolio summary retrieved",
+            extra={"total_equity": float(portfolio.total_equity) if hasattr(portfolio, 'total_equity') else None}
+        )
         return summary
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
+        logger.error(
+            "Error getting portfolio summary",
+            extra={"error_type": type(e).__name__, "error_message": str(e)}
+        )
         raise HTTPException(
             status_code=DEFAULT_VALUE_500, detail=f"Error getting portfolio: {str(e)}"
         )
@@ -148,14 +163,21 @@ async def get_position(
     Raises:
         HTTPException: If position not found or retrieval fails
     """
+    logger.debug("get_position called", extra={"symbol": symbol})
     try:
         position = await service.get_position(symbol.upper())
         if position is None:
+            logger.warning("Position not found", extra={"symbol": symbol})
             raise HTTPException(
                 status_code=DEFAULT_VALUE_404, detail=f"Position {symbol} not found"
             )
+        logger.info("Position retrieved", extra={"symbol": symbol})
         return position
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        logger.error(
+            "Error getting position",
+            extra={"symbol": symbol, "error_type": type(e).__name__, "error_message": str(e)}
+        )
         raise HTTPException(
             status_code=DEFAULT_VALUE_500, detail=f"Error getting position: {str(e)}"
         )
@@ -236,6 +258,10 @@ async def simulate_trade(
     Raises:
         HTTPException: If simulation fails
     """
+    logger.info(
+        "simulate_trade called",
+        extra={"symbol": trade_request.symbol, "quantity": trade_request.quantity, "price": trade_request.price}
+    )
     try:
         quantity = Decimal(str(trade_request.quantity))
         price = Decimal(str(trade_request.price)) if trade_request.price is not None else None
@@ -243,6 +269,10 @@ async def simulate_trade(
         success = await service.simulate_trade(trade_request.symbol.upper(), quantity, price)
 
         if success:
+            logger.info(
+                "Trade simulated successfully",
+                extra={"symbol": trade_request.symbol, "quantity": trade_request.quantity}
+            )
             return TradeResponse(
                 success=True,
                 message="Trade simulated successfully",
@@ -251,6 +281,10 @@ async def simulate_trade(
                 price=trade_request.price,
             )
         else:
+            logger.warning(
+                "Trade simulation failed",
+                extra={"symbol": trade_request.symbol, "quantity": trade_request.quantity}
+            )
             return TradeResponse(
                 success=False,
                 message="Trade simulation failed",
@@ -260,6 +294,10 @@ async def simulate_trade(
             )
 
     except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
+        logger.error(
+            "Error simulating trade",
+            extra={"symbol": trade_request.symbol, "error_type": type(e).__name__, "error_message": str(e)}
+        )
         raise HTTPException(
             status_code=DEFAULT_VALUE_500, detail=f"Error simulating trade: {str(e)}"
         )
@@ -307,10 +345,16 @@ async def reset_circuit_breaker(
     Raises:
         HTTPException: If reset fails
     """
+    logger.info("reset_circuit_breaker called", extra={"circuit_breaker_name": name})
     try:
         service.reset_circuit_breaker(name)
+        logger.info("Circuit breaker reset successfully", extra={"circuit_breaker_name": name})
         return {"message": f"Circuit breaker {name} reset successfully"}
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        logger.error(
+            "Error resetting circuit breaker",
+            extra={"circuit_breaker_name": name, "error_type": type(e).__name__, "error_message": str(e)}
+        )
         raise HTTPException(
             status_code=DEFAULT_VALUE_500, detail=f"Error resetting circuit breaker: {str(e)}"
         )
@@ -329,12 +373,17 @@ async def portfolio_health_check(
     Returns:
         Dict with health status and service information
     """
+    logger.debug("portfolio_health_check called")
     try:
         # Check if any circuit breakers are open
         status = service.get_circuit_breaker_status()
         open_breakers = [name for name, info in status.items() if info["state"] == "open"]
 
         if open_breakers:
+            logger.warning(
+                "Health check: circuit breakers open",
+                extra={"open_breakers": open_breakers}
+            )
             return {
                 "status": "degraded",
                 "message": f"Circuit breakers open: {', '.join(open_breakers)}",
@@ -344,8 +393,13 @@ async def portfolio_health_check(
         # Try to get portfolio
         portfolio = await service.get_portfolio()
         if portfolio is None:
+            logger.warning("Health check: portfolio service unavailable")
             return {"status": "unhealthy", "message": "Portfolio service unavailable"}
 
+        logger.info(
+            "Health check passed",
+            extra={"portfolio_equity": float(portfolio.total_equity), "positions_count": len(portfolio.positions)}
+        )
         return {
             "status": "healthy",
             "message": "Portfolio service operational",
@@ -354,4 +408,8 @@ async def portfolio_health_check(
         }
 
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
+        logger.error(
+            "Health check failed",
+            extra={"error_type": type(e).__name__, "error_message": str(e)}
+        )
         return {"status": "unhealthy", "message": f"Portfolio service error: {str(e)}"}

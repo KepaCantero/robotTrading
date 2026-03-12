@@ -7,9 +7,13 @@ verification system, including issues, reports, and benchmark results.
 
 from __future__ import annotations
 
+import logging
+
 from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -46,6 +50,15 @@ class VectorizationIssue:
         """
         valid_severities = {"critical", "high", "medium", "low"}
         if self.severity not in valid_severities:
+            logger.error(
+                "Invalid severity value",
+                extra={
+                    "component": "vectorization",
+                    "action": "validation_error",
+                    "severity_value": self.severity,
+                    "valid_severities": list(valid_severities),
+                },
+            )
             msg = f"Invalid severity: {self.severity}. Must be one of {valid_severities}"
             raise ValueError(msg)
 
@@ -61,8 +74,29 @@ class VectorizationIssue:
             "nested_loop",
         }
         if self.issue_type not in valid_types:
+            logger.error(
+                "Invalid issue_type value",
+                extra={
+                    "component": "vectorization",
+                    "action": "validation_error",
+                    "issue_type_value": self.issue_type,
+                    "valid_types": list(valid_types),
+                },
+            )
             msg = f"Invalid issue_type: {self.issue_type}. Must be one of {valid_types}"
             raise ValueError(msg)
+
+        logger.debug(
+            "VectorizationIssue created",
+            extra={
+                "component": "vectorization",
+                "action": "issue_created",
+                "file_path": self.file_path,
+                "line_number": self.line_number,
+                "severity": self.severity,
+                "issue_type": self.issue_type,
+            },
+        )
 
     def get_severity_weight(self) -> int:
         """Get the weight of this issue for score calculation.
@@ -220,18 +254,56 @@ class BenchmarkResult:
             ValueError: If times are invalid or speedup cannot be calculated.
         """
         if self.vectorized_time <= 0:
+            logger.error(
+                "Invalid vectorized_time value",
+                extra={
+                    "component": "vectorization",
+                    "action": "benchmark_validation_error",
+                    "function_name": self.function_name,
+                    "vectorized_time": self.vectorized_time,
+                },
+            )
             msg = f"vectorized_time must be positive, got {self.vectorized_time}"
             raise ValueError(msg)
         if self.non_vectorized_time <= 0:
+            logger.error(
+                "Invalid non_vectorized_time value",
+                extra={
+                    "component": "vectorization",
+                    "action": "benchmark_validation_error",
+                    "function_name": self.function_name,
+                    "non_vectorized_time": self.non_vectorized_time,
+                },
+            )
             msg = f"non_vectorized_time must be positive, got {self.non_vectorized_time}"
             raise ValueError(msg)
         if self.n_elements <= 0:
+            logger.error(
+                "Invalid n_elements value",
+                extra={
+                    "component": "vectorization",
+                    "action": "benchmark_validation_error",
+                    "function_name": self.function_name,
+                    "n_elements": self.n_elements,
+                },
+            )
             msg = f"n_elements must be positive, got {self.n_elements}"
             raise ValueError(msg)
 
         # Calculate speedup if not provided
         if self.speedup == 0:
             object.__setattr__(self, "speedup", self.non_vectorized_time / self.vectorized_time)
+
+        logger.debug(
+            "BenchmarkResult created",
+            extra={
+                "component": "vectorization",
+                "action": "benchmark_created",
+                "function_name": self.function_name,
+                "speedup": self.speedup,
+                "n_elements": self.n_elements,
+            },
+        )
 
     def get_summary(self) -> str:
         """Get a human-readable summary of the benchmark result.

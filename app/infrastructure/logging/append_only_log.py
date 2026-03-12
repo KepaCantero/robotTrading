@@ -4,9 +4,12 @@ Append-Only Log Storage
 Almacenamiento append-only para logs de trading.
 """
 import json
+import logging
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Union
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from app.services.logging.log_entry import LogEntry
@@ -39,6 +42,14 @@ class AppendOnlyLog:
         # Archivo actual (por fecha)
         self._current_date = datetime.utcnow().date()
         self._current_file = self._get_log_file(self._current_date)
+        logger.info(
+            "AppendOnlyLog initialized",
+            extra={
+                "component": "AppendOnlyLog",
+                "log_dir": str(self.log_dir),
+                "current_file": str(self._current_file),
+            },
+        )
 
     def _get_log_file(self, date: date) -> Path:
         """Obtener archivo de log para fecha específica"""
@@ -54,8 +65,18 @@ class AppendOnlyLog:
         # Rotar si cambió el día
         current_date = datetime.utcnow().date()
         if current_date != self._current_date:
+            old_date = self._current_date
             self._current_date = current_date
             self._current_file = self._get_log_file(current_date)
+            logger.info(
+                "Log file rotated",
+                extra={
+                    "component": "AppendOnlyLog",
+                    "old_date": old_date.isoformat(),
+                    "new_date": current_date.isoformat(),
+                    "new_file": str(self._current_file),
+                },
+            )
 
         # Añadir entrada al archivo (append-only)
         with open(self._current_file, "a") as f:
@@ -63,6 +84,14 @@ class AppendOnlyLog:
                 f.write(json.dumps(entry.to_dict()) + "\n")
             else:
                 f.write(json.dumps(entry) + "\n")
+        logger.debug(
+            "Log entry appended",
+            extra={
+                "component": "AppendOnlyLog",
+                "file": str(self._current_file),
+                "entry_type": type(entry).__name__,
+            },
+        )
 
     def get_entries_by_correlation_id(self, correlation_id: str) -> List[dict]:
         """
@@ -75,6 +104,14 @@ class AppendOnlyLog:
             Lista de entradas con ese correlation_id
         """
         entries = []
+        logger.debug(
+            "Searching entries by correlation_id",
+            extra={
+                "component": "AppendOnlyLog",
+                "correlation_id": correlation_id,
+                "search_days": 7,
+            },
+        )
 
         # Buscar en archivos de logs (últimos 7 días por defecto)
         for days_ago in range(7):
@@ -90,6 +127,14 @@ class AppendOnlyLog:
                     if entry.get("correlation_id") == correlation_id:
                         entries.append(entry)
 
+        logger.info(
+            "Entries retrieved by correlation_id",
+            extra={
+                "component": "AppendOnlyLog",
+                "correlation_id": correlation_id,
+                "entries_found": len(entries),
+            },
+        )
         return entries
 
     def export_date_range(self, start_date: date, end_date: date) -> List[dict]:
@@ -105,6 +150,14 @@ class AppendOnlyLog:
         """
         entries = []
         current = start_date
+        logger.debug(
+            "Exporting date range",
+            extra={
+                "component": "AppendOnlyLog",
+                "start_date": start_date.isoformat(),
+                "end_date": end_date.isoformat(),
+            },
+        )
 
         while current <= end_date:
             log_file = self._get_log_file(current)
@@ -116,4 +169,13 @@ class AppendOnlyLog:
 
             current += timedelta(days=1)
 
+        logger.info(
+            "Date range exported",
+            extra={
+                "component": "AppendOnlyLog",
+                "start_date": start_date.isoformat(),
+                "end_date": end_date.isoformat(),
+                "total_entries": len(entries),
+            },
+        )
         return entries

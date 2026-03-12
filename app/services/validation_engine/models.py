@@ -4,10 +4,13 @@ T5.1: ValidationEngine - Models
 Data models for validation requests and results.
 """
 
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -98,3 +101,20 @@ class ValidationResult:
     overall_recommendation: str = "PENDING"  # APPROVE, CONDITIONAL, REJECT, REVIEW_REQUIRED
     confidence_level: str = "high"  # high, medium, low
     error_message: Optional[str] = None
+
+
+logger.debug(
+    "ValidationEngine models loaded",
+    extra={
+        "component": "validation_engine_models",
+        "operation": "module_init",
+        "models": [
+            "ModuleViabilityAnalysis",
+            "CapitalViabilityAnalysis",
+            "LearningViabilityAnalysis",
+            "FeasibilityAnalysis",
+            "ValidationRequest",
+            "ValidationResult",
+        ],
+    }
+)

@@ -17,7 +17,7 @@ This document defines the comprehensive backtesting framework for algorithmic tr
 - Standard parameter values
 - Single-pass execution
 
-**Script**: `scripts/backtesting/run_baseline_backtest.py`
+**Script**: `scripts/backtesting/simple/run_baseline_backtest.py`
 
 **Configuration**:
 ```yaml
@@ -49,8 +49,8 @@ baseline:
 4. **Transformer** - Attention-based models (BERT, GPT-style)
 
 **Scripts**:
-- `scripts/backtesting/run_deep_learning_backtest.py`
-- `scripts/backtesting/run_transformer_backtest.py`
+- `scripts/backtesting/simple/run_deep_learning_backtest.py`
+- `scripts/backtesting/simple/run_transformer_backtest.py`
 
 **Configuration**:
 ```yaml
@@ -163,7 +163,7 @@ monte_carlo:
 ### 1.5 Grid Search Optimization
 **Purpose**: Systematic parameter space exploration.
 
-**Script**: `scripts/run_grid_search.py`
+**Script**: `scripts/backtesting/optimization/run_comprehensive_backtest.py` (with `grid_search` type)
 
 **Configuration**:
 ```yaml
@@ -265,7 +265,7 @@ regime_test:
 ### 1.10 Hyperparameter Optimization
 **Purpose**: Advanced optimization using Optuna.
 
-**Script**: `scripts/run_hyperparameter_optimization.py`
+**Script**: `scripts/backtesting/optimization/run_full_compliance_test.py` (includes hyperparameter optimization)
 
 **Configuration**:
 ```yaml

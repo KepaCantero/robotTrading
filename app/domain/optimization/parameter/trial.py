@@ -5,12 +5,15 @@ Trial tracking for parameter optimization.
 Tracks individual optimization trials, their status, and results.
 """
 
+import logging
 import traceback
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 from .models import TrialStatus
 
@@ -124,6 +127,16 @@ class TrialHistory:
             trial: TrialResult to add
         """
         self.trials.append(trial)
+        logger.debug(
+            "Trial added to history",
+            extra={
+                "trial_id": trial.trial_id,
+                "status": trial.status.value,
+                "objective_value": trial.objective_value,
+                "iteration": trial.iteration,
+                "total_trials": len(self.trials),
+            },
+        )
 
     def get_best_trial(self) -> Optional[TrialResult]:
         """
@@ -133,13 +146,28 @@ class TrialHistory:
             TrialResult with highest objective value, or None if no trials
         """
         if not self.trials:
+            logger.debug("No trials in history to find best")
             return None
 
         successful_trials = [t for t in self.trials if t.is_success]
         if not successful_trials:
+            logger.warning(
+                "No successful trials found",
+                extra={"total_trials": len(self.trials)},
+            )
             return None
 
-        return max(successful_trials, key=lambda t: t.objective_value)
+        best = max(successful_trials, key=lambda t: t.objective_value)
+        logger.info(
+            "Best trial found",
+            extra={
+                "trial_id": best.trial_id,
+                "objective_value": best.objective_value,
+                "iteration": best.iteration,
+                "total_successful_trials": len(successful_trials),
+            },
+        )
+        return best
 
     def get_best_params(self) -> Optional[Dict[str, Any]]:
         """
@@ -338,6 +366,17 @@ class TrialHistory:
     def finish(self) -> None:
         """Mark optimization as finished."""
         self.end_time = datetime.now()
+        logger.info(
+            "Optimization finished",
+            extra={
+                "total_trials": len(self.trials),
+                "successful_trials": sum(1 for t in self.trials if t.is_success),
+                "failed_trials": sum(1 for t in self.trials if t.is_failed),
+                "pruned_trials": sum(1 for t in self.trials if t.is_pruned),
+                "best_score": self.get_best_score(),
+                "total_time_seconds": self.get_total_time(),
+            },
+        )
 
     def get_summary(self) -> Dict[str, Any]:
         """
@@ -383,8 +422,21 @@ class TrialHistory:
         """
         import json
 
+        logger.info(
+            "Saving trial history to file",
+            extra={
+                "filepath": filepath,
+                "total_trials": len(self.trials),
+            },
+        )
+
         with open(filepath, "w") as f:
             json.dump(self.to_dict(), f, indent=2, default=str)
+
+        logger.info(
+            "Trial history saved successfully",
+            extra={"filepath": filepath},
+        )
 
     @classmethod
     def load(cls, filepath: str) -> "TrialHistory":
@@ -399,6 +451,11 @@ class TrialHistory:
         """
         import json
 
+        logger.info(
+            "Loading trial history from file",
+            extra={"filepath": filepath},
+        )
+
         with open(filepath, "r") as f:
             data = json.load(f)
 
@@ -409,6 +466,14 @@ class TrialHistory:
             history.start_time = datetime.fromisoformat(data["start_time"])
         if data.get("end_time"):
             history.end_time = datetime.fromisoformat(data["end_time"])
+
+        logger.info(
+            "Trial history loaded successfully",
+            extra={
+                "filepath": filepath,
+                "total_trials": len(trials),
+            },
+        )
 
         return history
 
@@ -440,9 +505,26 @@ class TrialContext:
         self.end_time: Optional[datetime] = None
         self.error: Optional[Exception] = None
 
+        logger.debug(
+            "TrialContext created",
+            extra={
+                "trial_id": trial_id,
+                "iteration": iteration,
+                "params": params,
+            },
+        )
+
     def __enter__(self) -> "TrialContext":
         """Start trial timing."""
         self.start_time = datetime.now()
+        logger.info(
+            "Trial started",
+            extra={
+                "trial_id": self.trial_id,
+                "iteration": self.iteration,
+                "start_time": self.start_time.isoformat(),
+            },
+        )
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
@@ -451,6 +533,27 @@ class TrialContext:
 
         if exc_type is not None:
             self.error = exc_val
+            logger.error(
+                "Trial failed with exception",
+                extra={
+                    "trial_id": self.trial_id,
+                    "iteration": self.iteration,
+                    "error_type": exc_type.__name__ if exc_type else None,
+                    "error_message": str(exc_val) if exc_val else None,
+                },
+                exc_info=True,
+            )
+        else:
+            logger.info(
+                "Trial completed successfully",
+                extra={
+                    "trial_id": self.trial_id,
+                    "iteration": self.iteration,
+                    "duration_seconds": (
+                        self.end_time - self.start_time
+                    ).total_seconds() if self.start_time else 0,
+                },
+            )
 
         # Don't suppress exceptions
         return False

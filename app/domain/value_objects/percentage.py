@@ -7,9 +7,12 @@ and arithmetic operations.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -33,25 +36,43 @@ class Percentage:
     @classmethod
     def from_decimal(cls, decimal_value: Decimal) -> Percentage:
         """Create percentage from decimal (0.5 -> 50%)."""
-        return cls(value=decimal_value * Decimal("100"))
+        result = cls(value=decimal_value * Decimal("100"))
+        logger.debug(
+            "Created percentage from decimal",
+            extra={"decimal_value": float(decimal_value), "percentage": float(result.value)}
+        )
+        return result
 
     @classmethod
     def from_float(cls, float_value: float) -> Percentage:
         """Create percentage from float (0.5 -> 50%)."""
-        return cls(value=Decimal(str(float_value)) * Decimal("100"))
+        result = cls(value=Decimal(str(float_value)) * Decimal("100"))
+        logger.debug(
+            "Created percentage from float",
+            extra={"float_value": float_value, "percentage": float(result.value)}
+        )
+        return result
 
     @classmethod
     def from_percent(cls, percent_value: Decimal | str | int | float) -> Percentage:
         """Create percentage from percent value (50 -> 50%)."""
         if isinstance(percent_value, str):
-            return cls(value=Decimal(percent_value))
+            result = cls(value=Decimal(percent_value))
         elif isinstance(percent_value, (int, float)):
-            return cls(value=Decimal(str(percent_value)))
-        return cls(value=percent_value)
+            result = cls(value=Decimal(str(percent_value)))
+        else:
+            result = cls(value=percent_value)
+
+        logger.debug(
+            "Created percentage from percent value",
+            extra={"input_value": str(percent_value), "percentage": float(result.value)}
+        )
+        return result
 
     @classmethod
     def zero(cls) -> Percentage:
         """Create zero percentage."""
+        logger.debug("Created zero percentage")
         return cls(value=Decimal("0"))
 
     @property
@@ -68,27 +89,75 @@ class Percentage:
         """Add two percentages."""
         result = self.value + other.value
         if result > 100:
+            logger.warning(
+                "Percentage addition would exceed 100",
+                extra={"self_value": float(self.value), "other_value": float(other.value)}
+            )
             raise ValueError("Percentage cannot exceed 100")
-        return Percentage(value=result)
+        added = Percentage(value=result)
+        logger.debug(
+            "Added percentages",
+            extra={
+                "self_value": float(self.value),
+                "other_value": float(other.value),
+                "result": float(added.value)
+            }
+        )
+        return added
 
     def subtract(self, other: Percentage) -> Percentage:
         """Subtract two percentages."""
         result = self.value - other.value
         if result < 0:
+            logger.warning(
+                "Percentage subtraction would be negative",
+                extra={"self_value": float(self.value), "other_value": float(other.value)}
+            )
             raise ValueError("Result cannot be negative")
-        return Percentage(value=result)
+        subtracted = Percentage(value=result)
+        logger.debug(
+            "Subtracted percentages",
+            extra={
+                "self_value": float(self.value),
+                "other_value": float(other.value),
+                "result": float(subtracted.value)
+            }
+        )
+        return subtracted
 
     def multiply(self, multiplier: Decimal | int | float) -> Percentage:
         """Multiply percentage by scalar."""
         mult = Decimal(str(multiplier))
         result = self.value * mult
         if result > 100:
+            logger.warning(
+                "Percentage multiplication would exceed 100",
+                extra={"self_value": float(self.value), "multiplier": float(mult)}
+            )
             raise ValueError("Result cannot exceed 100%")
-        return Percentage(value=result)
+        multiplied = Percentage(value=result)
+        logger.debug(
+            "Multiplied percentage",
+            extra={
+                "self_value": float(self.value),
+                "multiplier": float(mult),
+                "result": float(multiplied.value)
+            }
+        )
+        return multiplied
 
     def apply_to(self, amount: Decimal) -> Decimal:
         """Apply percentage to amount."""
-        return amount * self.as_decimal
+        result = amount * self.as_decimal
+        logger.debug(
+            "Applied percentage to amount",
+            extra={
+                "percentage": float(self.value),
+                "amount": float(amount),
+                "result": float(result)
+            }
+        )
+        return result
 
     def is_zero(self) -> bool:
         """Check if percentage is zero."""

@@ -5,6 +5,7 @@ This module defines Pydantic models for ensemble configuration,
 Pareto front solutions, and portfolio combination metrics.
 """
 
+import logging
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
@@ -13,6 +14,8 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.shared.config.centralized_config import get_config
+
+logger = logging.getLogger(__name__)
 
 
 class OptimizationObjective(str, Enum):
@@ -70,15 +73,31 @@ class ObjectiveConfig(BaseModel):
     def validate_weights(cls, v: List[float]) -> List[float]:
         """Validate that weights sum to approximately 1.0."""
         if not all(isinstance(w, (int, float)) for w in v):
+            logger.warning(
+                "Invalid weight types detected",
+                extra={"weights": v, "weight_types": [type(w).__name__ for w in v]}
+            )
             raise ValueError("All weights must be numbers")
 
         total = sum(v)
         if abs(total - 1.0) > 0.01:
+            logger.warning(
+                "Weights do not sum to 1.0",
+                extra={"weights": v, "total": total}
+            )
             raise ValueError(f"Weights must sum to 1.0, got {total}")
 
         if any(w < 0 for w in v):
+            logger.warning(
+                "Negative weights detected",
+                extra={"weights": v}
+            )
             raise ValueError("Weights cannot be negative")
 
+        logger.debug(
+            "Weights validated successfully",
+            extra={"weights": v, "total": total}
+        )
         return v
 
     @field_validator("objectives")
@@ -88,10 +107,22 @@ class ObjectiveConfig(BaseModel):
     ) -> List[OptimizationObjective]:
         """Validate that number of objectives matches number of weights."""
         if "weights" in info.data and len(v) != len(info.data["weights"]):
+            logger.warning(
+                "Objectives count does not match weights count",
+                extra={
+                    "objectives_count": len(v),
+                    "weights_count": len(info.data["weights"]),
+                    "objectives": [obj.value for obj in v]
+                }
+            )
             raise ValueError(
                 f"Number of objectives ({len(v)}) must match "
                 f"number of weights ({len(info.data['weights'])})"
             )
+        logger.debug(
+            "Objectives validated successfully",
+            extra={"objectives_count": len(v)}
+        )
         return v
 
 
@@ -158,17 +189,30 @@ class ParetoSolution(BaseModel):
     def validate_strategy_weights(cls, v: Dict[str, Decimal]) -> Dict[str, Decimal]:
         """Validate that strategy weights sum to approximately 1.0."""
         if not v:
+            logger.warning("Empty strategy weights provided")
             raise ValueError("Strategy weights cannot be empty")
 
         # Convert to float for summation
         total = sum(float(w) for w in v.values())
 
         if abs(total - 1.0) > 0.01:
+            logger.warning(
+                "Strategy weights do not sum to 1.0",
+                extra={"weights": {k: str(v) for k, v in v.items()}, "total": total}
+            )
             raise ValueError(f"Strategy weights must sum to 1.0, got {total}")
 
         if any(w < 0 for w in v.values()):
+            logger.warning(
+                "Negative strategy weights detected",
+                extra={"weights": {k: str(v) for k, v in v.items()}}
+            )
             raise ValueError("Strategy weights cannot be negative")
 
+        logger.debug(
+            "Pareto solution strategy weights validated",
+            extra={"strategies": list(v.keys()), "total": total}
+        )
         return v
 
     @property
@@ -259,16 +303,29 @@ class EnsembleConfig(BaseModel):
             return v
 
         if not v:
+            logger.warning("Empty strategy weights provided for ensemble config")
             raise ValueError("Strategy weights cannot be empty when provided")
 
         total = sum(v.values())
 
         if abs(total - 1.0) > 0.01:
+            logger.warning(
+                "Ensemble config strategy weights do not sum to 1.0",
+                extra={"weights": v, "total": total}
+            )
             raise ValueError(f"Strategy weights must sum to 1.0, got {total}")
 
         if any(w < 0 for w in v.values()):
+            logger.warning(
+                "Negative strategy weights in ensemble config",
+                extra={"weights": v}
+            )
             raise ValueError("Strategy weights cannot be negative")
 
+        logger.debug(
+            "Ensemble config strategy weights validated",
+            extra={"strategies": list(v.keys()), "total": total}
+        )
         return v
 
 

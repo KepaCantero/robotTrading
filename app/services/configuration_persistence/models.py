@@ -4,11 +4,14 @@ T11.1: ConfigurationPersistence - Models for configuration storage and retrieval
 Persists strategy configurations to in-memory store with optional persistence.
 """
 
+import logging
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 
 class StrategyConfiguration(BaseModel):
@@ -106,3 +109,20 @@ class VersionedConfiguration(BaseModel):
     created_at: datetime = Field(..., description="Version creation time")
     configuration: StrategyConfiguration = Field(..., description="Configuration at this version")
     change_description: str = Field(default="", description="Description of changes")
+
+
+logger.debug(
+    "ConfigurationPersistence models loaded",
+    extra={
+        "component": "configuration_persistence_models",
+        "operation": "module_init",
+        "models": [
+            "StrategyConfiguration",
+            "ConfigurationSaveRequest",
+            "ConfigurationLoadRequest",
+            "ConfigurationLoadResponse",
+            "ConfigurationListResponse",
+            "VersionedConfiguration",
+        ],
+    }
+)

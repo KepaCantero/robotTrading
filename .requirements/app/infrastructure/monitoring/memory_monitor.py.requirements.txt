@@ -6,17 +6,31 @@ Domain: Infrastructure
 Generated: 2026-03-09
 
 ## 2. Dependencies
+
+### Python Modules (Internal/Stdlib)
+- `asyncio` (stdlib)
+- `dataclasses` (stdlib)
+- `datetime` (stdlib)
+- `enum` (stdlib)
+- `gc` (stdlib)
+- `logging` (stdlib)
+- `os` (stdlib)
+- `sys` (stdlib)
+- `typing` (stdlib)
+
+### Internal Modules
 - `app.shared.utils.timezone_utils`
-- `asyncio`
-- `dataclasses`
-- `datetime`
-- `enum`
-- `gc`
-- `logging`
-- `os`
-- `psutil`
-- `sys`
-- `typing`
+
+### External Packages (pip install)
+```
+# System Monitoring
+psutil>=5.9.0             # Process and system utilities
+```
+
+### Memory Limits Default
+- Warning threshold: 3072 MB (3 GB)
+- Critical limit: 4096 MB (4 GB)
+- Check interval: 300 seconds (5 min)
 
 ## 3. Core Components
 ### Classes

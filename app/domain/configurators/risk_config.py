@@ -10,9 +10,12 @@ Reference: rules/trading/papers/13-john-hull-risk-management.md
 
 from __future__ import annotations
 
+import logging
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+logger = logging.getLogger(__name__)
 
 
 class RiskConfig(BaseModel):
@@ -102,6 +105,15 @@ class RiskConfig(BaseModel):
         """Ensure max_leverage is 1.0 when leverage not allowed."""
         if "leverage_allowed" in info.data and not info.data["leverage_allowed"]:
             if v != Decimal("1.0"):
+                logger.warning(
+                    "Leverage validation failed",
+                    extra={
+                        "component": "RiskConfig",
+                        "validator": "validate_leverage_consistency",
+                        "max_leverage": str(v),
+                        "leverage_allowed": False,
+                    },
+                )
                 raise ValueError("max_leverage must be 1.0 when leverage_allowed is False")
         return v
 
@@ -112,6 +124,15 @@ class RiskConfig(BaseModel):
         if "stop_loss_atr_multiplier" in info.data:
             stop_loss = info.data["stop_loss_atr_multiplier"]
             if v <= stop_loss:
+                logger.warning(
+                    "Trailing stop validation failed",
+                    extra={
+                        "component": "RiskConfig",
+                        "validator": "validate_trailing_stop_greater_than_stop_loss",
+                        "trailing_stop": str(v),
+                        "stop_loss": str(stop_loss),
+                    },
+                )
                 raise ValueError(
                     f"trailing_stop_atr_multiplier ({v}) must be greater than "
                     f"stop_loss_atr_multiplier ({stop_loss})"
@@ -147,7 +168,18 @@ class RiskConfig(BaseModel):
         Returns:
             Maximum position value in currency units
         """
-        return capital * self.max_position_size
+        position_limit = capital * self.max_position_size
+        logger.debug(
+            "Position limit calculated",
+            extra={
+                "component": "RiskConfig",
+                "method": "get_position_limit_for_capital",
+                "capital": str(capital),
+                "max_position_size": str(self.max_position_size),
+                "position_limit": str(position_limit),
+            },
+        )
+        return position_limit
 
     def get_var_limit_for_capital(self, capital: Decimal) -> Decimal:
         """
@@ -159,7 +191,18 @@ class RiskConfig(BaseModel):
         Returns:
             VaR limit in currency units
         """
-        return capital * self.portfolio_var_limit
+        var_limit = capital * self.portfolio_var_limit
+        logger.debug(
+            "VaR limit calculated",
+            extra={
+                "component": "RiskConfig",
+                "method": "get_var_limit_for_capital",
+                "capital": str(capital),
+                "portfolio_var_limit": str(self.portfolio_var_limit),
+                "var_limit": str(var_limit),
+            },
+        )
+        return var_limit
 
     def get_daily_loss_limit_for_capital(self, capital: Decimal) -> Decimal:
         """
@@ -171,4 +214,15 @@ class RiskConfig(BaseModel):
         Returns:
             Daily loss limit in currency units
         """
-        return capital * self.max_daily_loss
+        daily_loss_limit = capital * self.max_daily_loss
+        logger.debug(
+            "Daily loss limit calculated",
+            extra={
+                "component": "RiskConfig",
+                "method": "get_daily_loss_limit_for_capital",
+                "capital": str(capital),
+                "max_daily_loss": str(self.max_daily_loss),
+                "daily_loss_limit": str(daily_loss_limit),
+            },
+        )
+        return daily_loss_limit

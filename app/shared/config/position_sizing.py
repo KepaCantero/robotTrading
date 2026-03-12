@@ -5,12 +5,15 @@ Contains configuration for position sizing, portfolio allocation,
 rebalancing, and related parameters.
 """
 
+import logging
 from decimal import Decimal
 from typing import Dict
 
 from pydantic import Field, field_validator
 
 from app.shared.config.base import ConfigBase
+
+logger = logging.getLogger(__name__)
 
 
 class PositionSizingThresholds(ConfigBase):
@@ -49,8 +52,11 @@ class PositionSizingThresholds(ConfigBase):
     )
     @classmethod
     def validate_percentage_0_1(cls, v):
+        logger.debug("Validating position sizing percentage value", extra={"value": v})
         if not 0 <= v <= 1:
+            logger.error("Position sizing percentage validation failed: must be between 0 and 1", extra={"value": v})
             raise ValueError("Percentage values must be between 0 and 1")
+        logger.debug("Position sizing percentage validation passed", extra={"value": v})
         return v
 
 
@@ -90,8 +96,11 @@ class PortfolioAllocationThresholds(ConfigBase):
     )
     @classmethod
     def validate_percentage_0_1(cls, v):
+        logger.debug("Validating portfolio allocation percentage value", extra={"value": v})
         if not 0 <= v <= 1:
+            logger.error("Portfolio allocation percentage validation failed: must be between 0 and 1", extra={"value": v})
             raise ValueError("Percentage values must be between 0 and 1")
+        logger.debug("Portfolio allocation percentage validation passed", extra={"value": v})
         return v
 
 

@@ -191,7 +191,59 @@ Monte Carlo Risk Analysis (1000 simulations, validate DD within 5-95 percentile)
 - [ ] Losses can offset gains for 4 years
 - [ ] Track realized losses separately
 
-## 8. Execution Checklist
+## 8. Calculation Assumptions and Limitations
+
+### VaR Calculation
+- **Method:** Parametric (assumes normal distribution)
+- **Confidence levels:** 95% (z=1.65), 99% (z=2.33)
+- **Formula:** `VaR = portfolio_value * daily_volatility * z_score`
+- **Limitation:** Does not capture fat tails or black swan events
+- **Note:** Conservative for highly volatile assets
+
+### Volatility Estimation
+- **Method:** Simplified weighted average
+- **Assumption:** Zero correlation between positions (conservative)
+- **Daily vol assumption:** 2% per position (conservative default)
+- **Annualization:** `annual_vol = daily_vol * sqrt(252)`
+- **Note:** Overestimates risk for diversified portfolios
+
+### Sharpe Ratio
+- **Risk-free rate:** From `CentralizedConfig.backtesting.default_risk_free_rate`
+- **Annualization:** `sharpe * sqrt(252)` trading days
+- **Minimum samples:** 2 data points required
+- **Formula:** `(mean_return - risk_free_rate) / std_return`
+
+### Sortino Ratio
+- **Target return:** Default 0 (can be customized)
+- **Downside deviation:** Only negative returns considered
+- **Infinite Sortino:** Returns "999" when no downside risk
+- **Formula:** `(mean_return - target_return) / downside_deviation`
+
+### Beta Calculation
+- **Minimum data points:** 2 (returns default beta 1.0 if less)
+- **Default value:** 1.0 (market beta)
+- **Method:** Covariance(asset, market) / Variance(market)
+- **Limitation:** Requires synchronous data points
+
+### Herfindahl Index (HHI)
+- **Range:** 0 (perfectly diversified) to 1 (single position)
+- **Formula:** `sum(weight_i^2)` for all positions
+- **Interpretation:**
+  - HHI < 0.15: Well diversified
+  - 0.15 <= HHI < 0.25: Moderately concentrated
+  - HHI >= 0.25: Highly concentrated
+
+### Risk Utilisation
+- **Formula:** `(current_exposure / max_exposure) * 100`
+- **Cap:** Maximum 100% (even if over limit)
+- **Smart interpretation:** max_portfolio_exposure can be multiplier or absolute value
+
+### Concentration Metrics
+- **Position concentration:** Single position as % of portfolio
+- **get_max_concentration()**: Returns (symbol, percentage)
+- **Warning threshold:** > 25% highly concentrated
+
+## 9. Execution Checklist
 
 ### Pre-Deployment
 - [ ] All SOLID principles verified

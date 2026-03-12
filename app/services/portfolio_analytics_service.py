@@ -5,13 +5,14 @@ This service provides comprehensive portfolio analytics including performance
 metrics calculation, risk analysis, and portfolio management features.
 """
 
+import logging
 import statistics
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import List, Optional
 from uuid import UUID
 
-from loguru import logger
+logger = logging.getLogger(__name__)
 
 from app.domain.models.portfolio import Portfolio
 from app.domain.models.portfolio_analytics import (
@@ -34,6 +35,7 @@ class PortfolioAnalyticsService:
 
     def __init__(self, market_data_service: Optional[MarketDataService] = None):
         """Initialize the portfolio analytics service."""
+        logger.debug("Initializing PortfolioAnalyticsService", extra={"has_market_data_service": market_data_service is not None})
         self.market_data_service = market_data_service
         self._config = get_config()
         # Use centralized config for risk-free rate and benchmark return
@@ -43,6 +45,7 @@ class PortfolioAnalyticsService:
         self._benchmark_return = Decimal(
             str(getattr(self._config.trading, 'analytics_benchmark_return', 0.08))
         )
+        logger.info("PortfolioAnalyticsService initialized", extra={"risk_free_rate": float(self._risk_free_rate), "benchmark_return": float(self._benchmark_return)})
 
     async def calculate_performance_metrics(
         self,
@@ -52,7 +55,8 @@ class PortfolioAnalyticsService:
         end_date: Optional[datetime] = None,
     ) -> PerformanceMetrics:
         """Calculate comprehensive performance metrics for a portfolio."""
-        logger.info(f"Calculating performance metrics for portfolio {portfolio.id}")
+        logger.debug("calculate_performance_metrics called", extra={"portfolio_id": str(portfolio.id), "period": period.value})
+        logger.info("Calculating performance metrics for portfolio", extra={"portfolio_id": str(portfolio.id), "period": period.value, "start_date": str(start_date), "end_date": str(end_date)})
 
         # Set default dates if not provided
         if not end_date:
@@ -64,6 +68,7 @@ class PortfolioAnalyticsService:
         portfolio_values = await self._get_portfolio_values(portfolio, start_date, end_date)
 
         if len(portfolio_values) < 2:
+            logger.error("Insufficient data for performance calculation", extra={"portfolio_id": str(portfolio.id), "values_count": len(portfolio_values)})
             raise ValueError("Insufficient data for performance calculation")
 
         # Calculate returns
@@ -132,10 +137,12 @@ class PortfolioAnalyticsService:
             excess_return=excess_return,
             tracking_error=tracking_error,
         )
+        logger.info("Performance metrics calculated", extra={"portfolio_id": str(portfolio.id), "total_return": float(total_return), "sharpe_ratio": float(sharpe_ratio), "max_drawdown": float(max_drawdown)})
 
     async def calculate_risk_metrics(self, portfolio: ExtendedPortfolio) -> RiskMetrics:
         """Calculate comprehensive risk metrics for a portfolio."""
-        logger.info(f"Calculating risk metrics for portfolio {portfolio.id}")
+        logger.debug("calculate_risk_metrics called", extra={"portfolio_id": str(portfolio.id)})
+        logger.info("Calculating risk metrics for portfolio", extra={"portfolio_id": str(portfolio.id)})
 
         # Get historical returns for risk calculation
         end_date = datetime.utcnow()
@@ -145,7 +152,7 @@ class PortfolioAnalyticsService:
         returns = self._calculate_returns(portfolio_values)
 
         if len(returns) < 30:
-            logger.warning("Insufficient data for comprehensive risk analysis")
+            logger.warning("Insufficient data for comprehensive risk analysis", extra={"portfolio_id": str(portfolio.id), "returns_count": len(returns)})
             # Use simplified risk metrics
             return self._calculate_simplified_risk_metrics(portfolio)
 
@@ -190,12 +197,14 @@ class PortfolioAnalyticsService:
             average_correlation=avg_correlation,
             diversification_ratio=diversification_ratio,
         )
+        logger.info("Risk metrics calculated", extra={"portfolio_id": str(portfolio.id), "annualized_volatility": float(annualized_volatility), "herfindahl_index": float(herfindahl_index)})
 
     async def generate_portfolio_analytics(
         self, portfolio: ExtendedPortfolio
     ) -> PortfolioAnalytics:
         """Generate comprehensive portfolio analytics."""
-        logger.info(f"Generating portfolio analytics for portfolio {portfolio.id}")
+        logger.debug("generate_portfolio_analytics called", extra={"portfolio_id": str(portfolio.id)})
+        logger.info("Generating portfolio analytics for portfolio", extra={"portfolio_id": str(portfolio.id)})
 
         # Calculate performance and risk metrics
         performance_metrics = await self.calculate_performance_metrics(portfolio)
@@ -228,12 +237,14 @@ class PortfolioAnalyticsService:
             recommendations=recommendations,
             warnings=warnings,
         )
+        logger.info("Portfolio analytics generated", extra={"portfolio_id": str(portfolio.id), "risk_level": risk_level.value, "health_score": float(health_score)})
 
     async def analyze_portfolio_allocation(
         self, portfolio: ExtendedPortfolio
     ) -> PortfolioAllocation:
         """Analyze portfolio allocation across asset classes and sectors."""
-        logger.info(f"Analyzing portfolio allocation for portfolio {portfolio.id}")
+        logger.debug("analyze_portfolio_allocation called", extra={"portfolio_id": str(portfolio.id)})
+        logger.info("Analyzing portfolio allocation for portfolio", extra={"portfolio_id": str(portfolio.id)})
 
         # Calculate asset class allocations
         total_value = portfolio.total_value
@@ -283,6 +294,7 @@ class PortfolioAnalyticsService:
             sector_allocations=sector_allocations,
             top_holdings=top_holdings,
         )
+        logger.info("Portfolio allocation analyzed", extra={"portfolio_id": str(portfolio.id), "equity_allocation": float(equity_allocation), "cash_allocation": float(cash_allocation), "position_count": len(portfolio.positions)})
 
     async def generate_rebalance_recommendation(
         self,
@@ -290,7 +302,8 @@ class PortfolioAnalyticsService:
         target_allocation: Optional[PortfolioAllocation] = None,
     ) -> Optional[PortfolioRebalance]:
         """Generate portfolio rebalancing recommendations."""
-        logger.info(f"Generating rebalance recommendation for portfolio {portfolio.id}")
+        logger.debug("generate_rebalance_recommendation called", extra={"portfolio_id": str(portfolio.id), "has_target_allocation": target_allocation is not None})
+        logger.info("Generating rebalance recommendation for portfolio", extra={"portfolio_id": str(portfolio.id)})
 
         current_allocation = await self.analyze_portfolio_allocation(portfolio)
 
@@ -325,7 +338,7 @@ class PortfolioAnalyticsService:
         )
 
         if equity_deviation < rebalance_threshold and cash_deviation < rebalance_threshold:
-            logger.info("Portfolio is within rebalancing thresholds")
+            logger.info("Portfolio is within rebalancing thresholds", extra={"portfolio_id": str(portfolio.id), "equity_deviation": float(equity_deviation), "cash_deviation": float(cash_deviation), "threshold": float(rebalance_threshold)})
             return None
 
         # Generate rebalancing actions
@@ -380,12 +393,15 @@ class PortfolioAnalyticsService:
             risk_impact=risk_impact,
             return_impact=return_impact,
         )
+        logger.info("Rebalance recommendation generated", extra={"portfolio_id": str(portfolio.id), "equity_deviation": float(equity_deviation), "cash_deviation": float(cash_deviation), "actions_count": len(rebalance_actions)})
 
     async def compare_portfolios(self, portfolio_ids: List[UUID]) -> PortfolioComparison:
         """Compare multiple portfolios."""
-        logger.info(f"Comparing portfolios: {portfolio_ids}")
+        logger.debug("compare_portfolios called", extra={"portfolio_ids": [str(pid) for pid in portfolio_ids]})
+        logger.info("Comparing portfolios", extra={"portfolio_count": len(portfolio_ids), "portfolio_ids": [str(pid) for pid in portfolio_ids]})
 
         if len(portfolio_ids) < 2:
+            logger.error("At least 2 portfolios required for comparison", extra={"portfolio_count": len(portfolio_ids)})
             raise ValueError("At least 2 portfolios required for comparison")
 
         # This would need portfolio data - simplified for now
@@ -472,6 +488,7 @@ class PortfolioAnalyticsService:
                 f"Portfolio {best_risk_adjusted} offers best risk-adjusted returns",
             ],
         )
+        logger.info("Portfolio comparison completed", extra={"portfolio_count": len(portfolio_ids), "best_performer": str(best_performer), "lowest_risk": str(lowest_risk), "best_risk_adjusted": str(best_risk_adjusted)})
 
     # Helper methods for calculations
 

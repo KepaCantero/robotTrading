@@ -118,7 +118,18 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
         # Calculadora de indicadores técnicos (para ATR opcional)
         self.indicator_calculator = TechnicalIndicatorCalculator()
 
-        logger.info(f"BreakoutStrategyEngine initialized: {self.name}")
+        logger.info(
+            "BreakoutStrategyEngine initialized",
+            extra={
+                "strategy_name": self.name,
+                "strategy_type": "breakout",
+                "lookback_period": self.lookback_period,
+                "breakout_threshold_pct": float(self.breakout_threshold_pct),
+                "min_volume_ratio": float(self.min_volume_ratio),
+                "max_exposure": float(self.max_exposure),
+                "min_signal_confidence": self.min_signal_confidence,
+            },
+        )
 
     # ===== Implementación de métodos abstractos =====
 
@@ -328,6 +339,20 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
                     },
                 )
                 signals.append(signal)
+                logger.info(
+                    "Signal generated: BUY (breakout up)",
+                    extra={
+                        "strategy": "breakout",
+                        "signal_type": "BUY",
+                        "symbol": market_data.symbol,
+                        "price": float(current_price),
+                        "confidence": float(confidence),
+                        "range_high": range_high,
+                        "range_low": range_low,
+                        "volume_ratio": volume_ratio,
+                        "breakout_level": breakout_up_level,
+                    },
+                )
 
             elif breakout_down and volume_ok:
                 confidence = self._calculate_breakout_confidence(
@@ -364,9 +389,31 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
                     },
                 )
                 signals.append(signal)
+                logger.info(
+                    "Signal generated: SELL (breakout down)",
+                    extra={
+                        "strategy": "breakout",
+                        "signal_type": "SELL",
+                        "symbol": market_data.symbol,
+                        "price": float(current_price),
+                        "confidence": float(confidence),
+                        "range_high": range_high,
+                        "range_low": range_low,
+                        "volume_ratio": volume_ratio,
+                        "breakout_level": breakout_down_level,
+                    },
+                )
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error(f"Error generando señal en BreakoutStrategyEngine: {e}", exc_info=True)
+            logger.error(
+                "Error generando señal en BreakoutStrategyEngine",
+                extra={
+                    "strategy": "breakout",
+                    "symbol": getattr(market_data, 'symbol', None),
+                    "error_type": type(e).__name__,
+                },
+                exc_info=True,
+            )
 
         return signals
 
@@ -434,7 +481,14 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
             return min(100.0, max(0.0, confidence))
 
         except (ValueError, AttributeError, KeyError) as e:
-            logger.error(f"Error calculating breakout confidence: {e}")
+            logger.error(
+                "Error calculating breakout confidence",
+                extra={
+                    "strategy": "breakout",
+                    "direction": direction,
+                    "error_type": type(e).__name__,
+                },
+            )
             # Fallback to original hardcoded values
             if direction == "up":
                 distance_beyond = max(0.0, current_price - range_high)
@@ -496,16 +550,28 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
 
         if current_exposure >= float(self.max_exposure):
             logger.debug(
-                "Risk check fallido en BreakoutStrategyEngine: "
-                f"exposición {current_exposure:.2%} >= {float(self.max_exposure):.2%}"
+                "Risk check fallido en BreakoutStrategyEngine: exposición excedida",
+                extra={
+                    "strategy": "breakout",
+                    "symbol": signal.symbol,
+                    "current_exposure": current_exposure,
+                    "max_exposure": float(self.max_exposure),
+                    "check_type": "exposure",
+                },
             )
             return False
 
         # Confianza mínima
         if signal.confidence < self.min_signal_confidence:
             logger.debug(
-                "Risk check fallido en BreakoutStrategyEngine: "
-                f"confidence {signal.confidence:.2f} < {self.min_signal_confidence:.2f}"
+                "Risk check fallido en BreakoutStrategyEngine: confidence insuficiente",
+                extra={
+                    "strategy": "breakout",
+                    "symbol": signal.symbol,
+                    "signal_confidence": signal.confidence,
+                    "min_confidence": self.min_signal_confidence,
+                    "check_type": "confidence",
+                },
             )
             return False
 

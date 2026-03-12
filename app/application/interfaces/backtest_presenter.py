@@ -6,10 +6,13 @@ to the UI layer. Implementations should be thin wrappers that
 delegate business logic to use cases.
 """
 
+import logging
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 
 class BacktestPresenter(ABC):

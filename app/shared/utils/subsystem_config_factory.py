@@ -13,6 +13,7 @@ Usage:
     risk_config = factory.get_risk_engine_config()
 """
 
+import logging
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
@@ -20,6 +21,8 @@ if TYPE_CHECKING:
     from app.shared.config.params.backtest_config import BacktestingConfig as BacktestConfig
 
 from app.shared.config.centralized_config import get_config
+
+logger = logging.getLogger(__name__)
 
 
 class SubsystemConfigFactory:
@@ -41,6 +44,10 @@ class SubsystemConfigFactory:
     def __new__(cls) -> "SubsystemConfigFactory":
         """Singleton pattern for consistent config access."""
         if cls._instance is None:
+            logger.debug(
+                "Creating new SubsystemConfigFactory instance",
+                extra={"operation": "singleton_creation"}
+            )
             cls._instance = super().__new__(cls)
             cls._instance._initialized = False
         return cls._instance
@@ -49,6 +56,10 @@ class SubsystemConfigFactory:
         """Initialize factory with default configurations."""
         if self._initialized:
             return
+        logger.info(
+            "Initializing SubsystemConfigFactory",
+            extra={"operation": "factory_init"}
+        )
         self._initialized = True
 
     # ==========================================================================
@@ -62,9 +73,13 @@ class SubsystemConfigFactory:
         Returns:
             BacktestConfig with sensible defaults
         """
+        logger.debug(
+            "Getting backtest config",
+            extra={"subsystem": "backtesting_engine", "operation": "get_backtest_config"}
+        )
         from app.backtesting.models import BacktestConfig
 
-        return BacktestConfig(
+        config = BacktestConfig(
             strategy_name="compliance_default",
             initial_capital=Decimal("100000"),
             commission_per_trade=Decimal("1.0"),
@@ -72,6 +87,15 @@ class SubsystemConfigFactory:
             risk_free_rate=get_config().backtesting.default_risk_free_rate,
             max_position_size=Decimal("0.1"),
         )
+        logger.info(
+            "Backtest config created",
+            extra={
+                "strategy_name": config.strategy_name,
+                "initial_capital": float(config.initial_capital),
+                "subsystem": "backtesting_engine"
+            }
+        )
+        return config
 
     # ==========================================================================
     # RISK ENGINE CONFIG
@@ -84,7 +108,11 @@ class SubsystemConfigFactory:
         Returns:
             Dict with risk engine defaults
         """
-        return {
+        logger.debug(
+            "Getting risk engine config",
+            extra={"subsystem": "risk_engine", "operation": "get_risk_engine_config"}
+        )
+        config = {
             "max_portfolio_var": 0.15,
             "max_position_concentration": 0.20,
             "var_confidence_level": 0.95,
@@ -101,6 +129,15 @@ class SubsystemConfigFactory:
                 "concentration_warning": 0.15,
             },
         }
+        logger.info(
+            "Risk engine config created",
+            extra={
+                "max_portfolio_var": config["max_portfolio_var"],
+                "var_confidence_level": config["var_confidence_level"],
+                "subsystem": "risk_engine"
+            }
+        )
+        return config
 
     # ==========================================================================
     # PORTFOLIO ENGINE CONFIG
@@ -250,6 +287,10 @@ class SubsystemConfigFactory:
         Returns:
             Configuration object/dict or None if not found
         """
+        logger.debug(
+            "Getting config for subsystem",
+            extra={"subsystem_name": subsystem_name, "operation": "get_config_by_name"}
+        )
         config_map = {
             "backtesting_engine": self.get_backtest_config,
             "risk_engine": self.get_risk_engine_config,
@@ -265,7 +306,16 @@ class SubsystemConfigFactory:
 
         getter = config_map.get(subsystem_name)
         if getter:
-            return getter()
+            config = getter()
+            logger.info(
+                "Config retrieved for subsystem",
+                extra={"subsystem_name": subsystem_name, "config_type": type(config).__name__}
+            )
+            return config
+        logger.warning(
+            "No config found for subsystem",
+            extra={"subsystem_name": subsystem_name, "available_subsystems": list(config_map.keys())}
+        )
         return None
 
 
@@ -282,5 +332,9 @@ def get_subsystem_config_factory() -> SubsystemConfigFactory:
     """
     global _factory
     if _factory is None:
+        logger.info(
+            "Creating SubsystemConfigFactory singleton",
+            extra={"operation": "get_subsystem_config_factory"}
+        )
         _factory = SubsystemConfigFactory()
     return _factory

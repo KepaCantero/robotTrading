@@ -196,9 +196,28 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
         self.trades_today = 0
         self.last_trade_date = None
 
-        logger.info(f"ArbitrageStrategyEngine initialized: {self.name}")
-        logger.info(f"Arbitrage type: {self.arbitrage_type}")
-        logger.info(f"Arbitrage pairs: {self.arbitrage_pairs}")
+        logger.info(
+            "ArbitrageStrategyEngine initialized",
+            extra={
+                "strategy_name": self.name,
+                "strategy_type": "arbitrage",
+                "arbitrage_type": self.arbitrage_type,
+                "lookback_period": self.lookback_period,
+                "entry_z_score": float(self.entry_z_score),
+                "exit_z_score": float(self.exit_z_score),
+                "min_correlation": float(self.min_correlation),
+                "max_exposure": float(self.max_exposure),
+            },
+        )
+        logger.info(
+            "Arbitrage configuration loaded",
+            extra={
+                "strategy": "arbitrage",
+                "arbitrage_type": self.arbitrage_type,
+                "arbitrage_pairs": self.arbitrage_pairs,
+                "num_pairs": len(self.arbitrage_pairs),
+            },
+        )
 
     # ===== Implementation of abstract methods =====
 
@@ -502,7 +521,16 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
                 )
 
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
-            logger.error(f"Error generando senal en ArbitrageStrategyEngine: {e}", exc_info=True)
+            logger.error(
+                "Error generando senal en ArbitrageStrategyEngine",
+                extra={
+                    "strategy": "arbitrage",
+                    "symbol": getattr(market_data, 'symbol', None),
+                    "arbitrage_type": self.arbitrage_type,
+                    "error_type": type(e).__name__,
+                },
+                exc_info=True,
+            )
 
         return signals
 
@@ -826,7 +854,14 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
             yield_rate: Tasa de rendimiento anualizada
         """
         self.yield_data[symbol] = yield_rate
-        logger.debug(f"Set yield for {symbol}: {yield_rate:.4f}")
+        logger.debug(
+            "Yield data updated",
+            extra={
+                "strategy": "arbitrage",
+                "symbol": symbol,
+                "yield_rate": yield_rate,
+            },
+        )
 
     def set_funding_rate(self, symbol: str, funding_rate: float) -> None:
         """
@@ -837,7 +872,14 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
             funding_rate: Tasa de funding
         """
         self.funding_rates[symbol] = funding_rate
-        logger.debug(f"Set funding rate for {symbol}: {funding_rate:.6f}")
+        logger.debug(
+            "Funding rate updated",
+            extra={
+                "strategy": "arbitrage",
+                "symbol": symbol,
+                "funding_rate": funding_rate,
+            },
+        )
 
     def get_required_parameters(self) -> List[str]:
         """Obtener parametros requeridos."""
@@ -870,16 +912,28 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
 
         if current_exposure >= float(self.max_exposure):
             logger.debug(
-                "Risk check fallido en ArbitrageStrategyEngine: "
-                f"exposicion {current_exposure:.2%} >= {float(self.max_exposure):.2%}"
+                "Risk check fallido en ArbitrageStrategyEngine: exposicion excedida",
+                extra={
+                    "strategy": "arbitrage",
+                    "symbol": signal.symbol,
+                    "current_exposure": current_exposure,
+                    "max_exposure": float(self.max_exposure),
+                    "check_type": "exposure",
+                },
             )
             return False
 
         # Check signal confidence
         if signal.confidence < self.min_signal_confidence:
             logger.debug(
-                "Risk check fallido en ArbitrageStrategyEngine: "
-                f"confidence {signal.confidence:.2f} < {self.min_signal_confidence:.2f}"
+                "Risk check fallido en ArbitrageStrategyEngine: confidence insuficiente",
+                extra={
+                    "strategy": "arbitrage",
+                    "symbol": signal.symbol,
+                    "signal_confidence": signal.confidence,
+                    "min_confidence": self.min_signal_confidence,
+                    "check_type": "confidence",
+                },
             )
             return False
 
@@ -887,8 +941,14 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
         symbol_exposure = self._calculate_symbol_exposure(signal.symbol, portfolio)
         if symbol_exposure >= float(self.max_position_per_leg):
             logger.debug(
-                "Risk check fallido en ArbitrageStrategyEngine: "
-                f"exposicion simbolo {symbol_exposure:.2%} >= {float(self.max_position_per_leg):.2%}"
+                "Risk check fallido en ArbitrageStrategyEngine: exposicion simbolo excedida",
+                extra={
+                    "strategy": "arbitrage",
+                    "symbol": signal.symbol,
+                    "symbol_exposure": symbol_exposure,
+                    "max_position_per_leg": float(self.max_position_per_leg),
+                    "check_type": "position_limit",
+                },
             )
             return False
 

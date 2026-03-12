@@ -8,6 +8,8 @@ Provides comprehensive data quality checks for market data before backtesting:
 - Pre-backtest data quality checks
 """
 
+import logging
+
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
@@ -15,6 +17,8 @@ from typing import Dict, List
 
 import numpy as np
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 
 class DataQualityIssue(BaseModel):
@@ -81,6 +85,16 @@ class DataValidationService:
         self.gap_threshold = gap_threshold
         self.outlier_zscore_threshold = outlier_zscore_threshold
         self.consistency_tolerance = consistency_tolerance
+        logger.info(
+            "DataValidationService initialized",
+            extra={
+                "component": "data_validation",
+                "action": "init",
+                "gap_threshold": gap_threshold,
+                "outlier_zscore_threshold": outlier_zscore_threshold,
+                "consistency_tolerance": consistency_tolerance,
+            },
+        )
 
     def detect_price_gaps(self, data: List[OHLCData], symbol: str) -> List[DataQualityIssue]:
         """
@@ -96,6 +110,17 @@ class DataValidationService:
         Returns:
             List of gap issues detected
         """
+        logger.debug(
+            "Starting price gap detection",
+            extra={
+                "component": "data_validation",
+                "action": "gap_detection_start",
+                "symbol": symbol,
+                "data_points": len(data),
+                "threshold": self.gap_threshold,
+            },
+        )
+
         issues = []
 
         for i in range(1, len(data)):
@@ -126,6 +151,17 @@ class DataValidationService:
                     )
                 )
 
+        if issues:
+            logger.warning(
+                "Price gaps detected",
+                extra={
+                    "component": "data_validation",
+                    "action": "gaps_detected",
+                    "symbol": symbol,
+                    "gaps_count": len(issues),
+                },
+            )
+
         return issues
 
     def identify_outliers(self, data: List[OHLCData], symbol: str) -> List[DataQualityIssue]:
@@ -142,10 +178,31 @@ class DataValidationService:
         Returns:
             List of outlier issues detected
         """
+        logger.debug(
+            "Starting outlier identification",
+            extra={
+                "component": "data_validation",
+                "action": "outlier_detection_start",
+                "symbol": symbol,
+                "data_points": len(data),
+                "zscore_threshold": self.outlier_zscore_threshold,
+            },
+        )
+
         issues = []
 
         if len(data) < 10:
             # Need at least 10 data points for meaningful z-score calculation
+            logger.debug(
+                "Insufficient data for outlier detection",
+                extra={
+                    "component": "data_validation",
+                    "action": "outlier_detection_skipped",
+                    "symbol": symbol,
+                    "data_points": len(data),
+                    "minimum_required": 10,
+                },
+            )
             return issues
 
         # Calculate price changes
@@ -160,6 +217,14 @@ class DataValidationService:
         std_change = variance**0.5
 
         if std_change == 0:
+            logger.debug(
+                "Zero variance in price changes, skipping outlier detection",
+                extra={
+                    "component": "data_validation",
+                    "action": "outlier_detection_zero_variance",
+                    "symbol": symbol,
+                },
+            )
             return issues
 
         # Identify outliers
@@ -185,6 +250,19 @@ class DataValidationService:
                     )
                 )
 
+        if issues:
+            logger.warning(
+                "Outliers detected",
+                extra={
+                    "component": "data_validation",
+                    "action": "outliers_detected",
+                    "symbol": symbol,
+                    "outliers_count": len(issues),
+                    "mean_change": mean_change,
+                    "std_change": std_change,
+                },
+            )
+
         return issues
 
     def validate_ohlc_consistency(
@@ -205,6 +283,16 @@ class DataValidationService:
         Returns:
             List of consistency issues detected
         """
+        logger.debug(
+            "Starting OHLC consistency validation",
+            extra={
+                "component": "data_validation",
+                "action": "consistency_check_start",
+                "symbol": symbol,
+                "data_points": len(data),
+            },
+        )
+
         issues = []
 
         for ohlc in data:
@@ -273,6 +361,17 @@ class DataValidationService:
                     )
                 )
 
+        if issues:
+            logger.error(
+                "OHLC consistency errors detected",
+                extra={
+                    "component": "data_validation",
+                    "action": "consistency_errors_detected",
+                    "symbol": symbol,
+                    "errors_count": len(issues),
+                },
+            )
+
         return issues
 
     def validate_data_quality(self, data: List[OHLCData], symbol: str) -> DataQualityReport:
@@ -288,6 +387,16 @@ class DataValidationService:
         Returns:
             Complete data quality report
         """
+        logger.info(
+            "Starting comprehensive data quality validation",
+            extra={
+                "component": "data_validation",
+                "action": "quality_check_start",
+                "symbol": symbol,
+                "total_records": len(data),
+            },
+        )
+
         all_issues = []
 
         # Run all validation checks
@@ -310,6 +419,32 @@ class DataValidationService:
 
         # Data is valid if no critical consistency errors
         is_valid = consistency_errors == 0
+
+        logger.info(
+            "Data quality validation completed",
+            extra={
+                "component": "data_validation",
+                "action": "quality_check_complete",
+                "symbol": symbol,
+                "total_issues": total_issues,
+                "gaps_detected": gaps_detected,
+                "outliers_detected": outliers_detected,
+                "consistency_errors": consistency_errors,
+                "quality_score": quality_score,
+                "is_valid": is_valid,
+            },
+        )
+
+        if not is_valid:
+            logger.error(
+                "Data validation failed - critical consistency errors found",
+                extra={
+                    "component": "data_validation",
+                    "action": "quality_check_failed",
+                    "symbol": symbol,
+                    "consistency_errors": consistency_errors,
+                },
+            )
 
         return DataQualityReport(
             symbol=symbol,
@@ -334,9 +469,46 @@ class DataValidationService:
         Returns:
             Dictionary of symbol -> quality report
         """
+        logger.info(
+            "Starting bulk data validation",
+            extra={
+                "component": "data_validation",
+                "action": "bulk_validation_start",
+                "symbols_count": len(data_dict),
+                "symbols": list(data_dict.keys()),
+            },
+        )
+
         reports = {}
+        valid_count = 0
+        invalid_count = 0
 
         for symbol, data in data_dict.items():
             reports[symbol] = self.validate_data_quality(data, symbol)
+            if reports[symbol].is_valid:
+                valid_count += 1
+            else:
+                invalid_count += 1
+
+        logger.info(
+            "Bulk data validation completed",
+            extra={
+                "component": "data_validation",
+                "action": "bulk_validation_complete",
+                "total_symbols": len(data_dict),
+                "valid_symbols": valid_count,
+                "invalid_symbols": invalid_count,
+            },
+        )
+
+        if invalid_count > 0:
+            logger.warning(
+                "Bulk validation found invalid symbols",
+                extra={
+                    "component": "data_validation",
+                    "action": "bulk_validation_warnings",
+                    "invalid_count": invalid_count,
+                },
+            )
 
         return reports

@@ -19,11 +19,14 @@ References:
 from __future__ import annotations  # Enable Python 3.10+ union syntax in Python 3.9
 
 import heapq
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional, Tuple  # noqa: F401
+
+logger = logging.getLogger(__name__)
 
 # mypy: ignore-errors
 # pylint: disable=unsupported-binary-operation  # For Python 3.10+ union syntax
@@ -228,6 +231,13 @@ class CallAuction:
             price_tick: Minimum price variation
             min_price_increment: Minimum price increment for iteration
         """
+        logger.debug(
+            "Initializing CallAuction",
+            extra={
+                "price_tick": str(price_tick),
+                "min_price_increment": str(min_price_increment),
+            },
+        )
         self.price_tick = price_tick
         self.min_price_increment = min_price_increment
         self.buy_orders: list[LimitOrder] = []
@@ -305,9 +315,23 @@ class CallAuction:
         Returns:
             AuctionResult with execution details
         """
+        logger.debug(
+            "Executing call auction",
+            extra={
+                "buy_orders": len(self.buy_orders),
+                "sell_orders": len(self.sell_orders),
+            },
+        )
         clearing_price, total_volume = self.calculate_clearing_price()
 
         if clearing_price is None or total_volume == 0:
+            logger.warning(
+                "No clearing price found - auction failed",
+                extra={
+                    "buy_orders": len(self.buy_orders),
+                    "sell_orders": len(self.sell_orders),
+                },
+            )
             return AuctionResult(
                 auction_time=datetime.now(),
                 clearing_price=Decimal('0'),
@@ -372,6 +396,15 @@ class CallAuction:
         total_order_volume = sum(o.size for o in self.buy_orders + self.sell_orders)
         efficiency = float(total_volume / max(total_order_volume, Decimal('1'))) * 100
 
+        logger.info(
+            "Call auction executed",
+            extra={
+                "clearing_price": float(clearing_price),
+                "total_volume": float(total_volume),
+                "matched_orders": len(matched_orders),
+                "execution_efficiency": efficiency,
+            },
+        )
         return AuctionResult(
             auction_time=datetime.now(),
             clearing_price=clearing_price,
@@ -405,6 +438,10 @@ class ContinuousDoubleAuction:
         Args:
             price_tick: Minimum price variation
         """
+        logger.debug(
+            "Initializing ContinuousDoubleAuction",
+            extra={"price_tick": str(price_tick)},
+        )
         self.price_tick = price_tick
         self.buy_book: list[LimitOrder] = []
         self.sell_book: list[LimitOrder] = []
@@ -607,6 +644,14 @@ class DealerMarket:
             risk_aversion: Risk aversion parameter (0-1)
             inventory_limit: Maximum inventory position
         """
+        logger.debug(
+            "Initializing DealerMarket",
+            extra={
+                "initial_capital": str(initial_capital),
+                "risk_aversion": risk_aversion,
+                "inventory_limit": str(inventory_limit),
+            },
+        )
         self.capital = initial_capital
         self.risk_aversion = risk_aversion
         self.inventory_limit = inventory_limit

@@ -10,6 +10,7 @@ Paper: Novy-Marx, R. (2013). "The Other Side of Value: Gross Profitability Premi
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, List, Tuple
@@ -17,6 +18,8 @@ from typing import Dict, List, Tuple
 import numpy as np
 
 from app.shared.config.centralized_config import get_config
+
+logger = logging.getLogger(__name__)
 
 
 class QualitySignal(str, Enum):
@@ -273,6 +276,18 @@ class QualityInvesting:
         self._min_coverage = min_interest_coverage
         self._quality_weight = quality_weight
         self._value_weight = value_weight
+        logger.debug(
+            "QualityInvesting strategy initialized",
+            extra={
+                "min_quality_score": min_quality_score,
+                "min_roe": min_roe,
+                "min_profit_margin": min_profit_margin,
+                "max_debt_to_equity": max_debt_to_equity,
+                "min_interest_coverage": min_interest_coverage,
+                "quality_weight": quality_weight,
+                "value_weight": value_weight
+            }
+        )
 
     def screen_quality_stocks(
         self,
@@ -287,12 +302,24 @@ class QualityInvesting:
         Returns:
             List of symbols that pass screening
         """
+        logger.debug(
+            "Starting quality stock screening",
+            extra={"total_stocks": len(quality_metrics)}
+        )
         qualified = []
 
         for symbol, metrics in quality_metrics.items():
             if self._passes_screen(metrics):
                 qualified.append(symbol)
 
+        logger.info(
+            "Quality stock screening completed",
+            extra={
+                "total_stocks": len(quality_metrics),
+                "qualified_stocks": len(qualified),
+                "pass_rate": len(qualified) / len(quality_metrics) if quality_metrics else 0
+            }
+        )
         return qualified
 
     def _passes_screen(self, metrics: QualityMetrics) -> bool:
@@ -334,6 +361,10 @@ class QualityInvesting:
         Returns:
             List of (symbol, score) tuples sorted by score (highest first)
         """
+        logger.debug(
+            "Starting quality stock ranking",
+            extra={"total_stocks": len(quality_metrics)}
+        )
         scores = []
 
         for symbol, metrics in quality_metrics.items():
@@ -345,6 +376,16 @@ class QualityInvesting:
 
         # Sort by score (descending)
         scores.sort(key=lambda x: x[1], reverse=True)
+
+        logger.info(
+            "Quality stock ranking completed",
+            extra={
+                "total_stocks": len(quality_metrics),
+                "ranked_stocks": len(scores),
+                "top_score": scores[0][1] if scores else None,
+                "bottom_score": scores[-1][1] if scores else None
+            }
+        )
 
         return scores
 
@@ -395,6 +436,16 @@ class QualityInvesting:
         Returns:
             QualityPortfolio with optimal allocation
         """
+        logger.info(
+            "Constructing quality portfolio",
+            extra={
+                "capital": capital,
+                "max_positions": max_positions,
+                "min_weight": min_weight,
+                "max_weight": max_weight,
+                "available_stocks": len(quality_metrics)
+            }
+        )
         # Get min_weight from config if not provided
         if min_weight is None:
             try:
@@ -411,6 +462,10 @@ class QualityInvesting:
         selected = ranked[:n_stocks]
 
         if not selected:
+            logger.warning(
+                "No quality stocks selected for portfolio",
+                extra={"capital": capital, "max_positions": max_positions}
+            )
             return QualityPortfolio(
                 positions={},
                 portfolio_quality_score=0.0,
@@ -454,6 +509,17 @@ class QualityInvesting:
             quality_metrics[s].financial_health_score * w for s, w in weights.items()
         )
 
+        logger.info(
+            "Quality portfolio constructed successfully",
+            extra={
+                "positions_count": len(weights),
+                "portfolio_quality_score": portfolio_quality,
+                "portfolio_profitability": portfolio_profitability,
+                "portfolio_financial_health": portfolio_health,
+                "capital": capital
+            }
+        )
+
         return QualityPortfolio(
             positions=weights,
             portfolio_quality_score=portfolio_quality,
@@ -493,6 +559,15 @@ class QualityInvesting:
         Returns:
             QualitySignal with action
         """
+        logger.debug(
+            "Generating quality signal",
+            extra={
+                "symbol": metrics.symbol,
+                "current_price": current_price,
+                "fair_value": fair_value,
+                "quality_score": metrics.overall_quality_score
+            }
+        )
         # Get quality category
         category = metrics.quality_category
 
@@ -520,9 +595,25 @@ class QualityInvesting:
 
         # Avoid poor quality
         elif category in (QualitySignal.LOW_QUALITY, QualitySignal.POOR_QUALITY):
+            logger.debug(
+                "Poor quality stock signal generated",
+                extra={
+                    "symbol": metrics.symbol,
+                    "category": category.value,
+                    "quality_score": metrics.overall_quality_score
+                }
+            )
             return QualitySignal.POOR_QUALITY  # Avoid
 
         else:
+            logger.debug(
+                "Quality signal generated",
+                extra={
+                    "symbol": metrics.symbol,
+                    "category": category.value,
+                    "valuation_ratio": valuation_ratio
+                }
+            )
             return category
 
     def calculate_gross_profitability_premium(
@@ -542,6 +633,13 @@ class QualityInvesting:
         Returns:
             Tuple of (high_gp_return, low_gp_return)
         """
+        logger.debug(
+            "Calculating gross profitability premium",
+            extra={
+                "stocks_count": len(quality_metrics),
+                "returns_count": len(returns)
+            }
+        )
         # Split by gross profit margin
         high_gp = []
         low_gp = []
@@ -557,5 +655,16 @@ class QualityInvesting:
 
         high_gp_return = np.mean(high_gp) if high_gp else 0.0
         low_gp_return = np.mean(low_gp) if low_gp else 0.0
+
+        logger.info(
+            "Gross profitability premium calculated",
+            extra={
+                "high_gp_stocks": len(high_gp),
+                "low_gp_stocks": len(low_gp),
+                "high_gp_return": float(high_gp_return),
+                "low_gp_return": float(low_gp_return),
+                "premium": float(high_gp_return - low_gp_return)
+            }
+        )
 
         return float(high_gp_return), float(low_gp_return)

@@ -6,15 +6,33 @@ Domain: General
 Generated: 2026-03-09
 
 ## 2. Dependencies
-- `base_learning_engine`
-- `gymnasium`
-- `gymnasium.spaces`
-- `logging`
-- `numpy`
-- `os`
-- `stable_baselines3`
-- `stable_baselines3.common.callbacks`
-- `typing`
+
+### Required Python Packages (pip install)
+- `stable-baselines3>=2.0.0` - RL algorithms (PPO, A2C, DQN, SAC, TD3, DDPG)
+- `gymnasium>=0.29.0` - Environment API (migrated from deprecated gym)
+- `numpy>=1.24.0` - Numerical computing
+
+### Internal Dependencies
+- `base_learning_engine` - Base class for learning engines
+
+### Optional Python Packages (enhanced features)
+- `torch>=2.0.0` - PyTorch backend for custom neural network policies
+- `tensorboard>=2.14.0` - Training visualization and monitoring
+
+### Standard Library
+- `logging` - Logging framework
+- `os` - Environment variables
+- `typing` - Type hints
+
+### Hardware Requirements
+- **RAM:** 8GB+ recommended for training
+- **GPU:** CUDA-compatible GPU for faster training (optional but recommended)
+- **Storage:** 1GB+ for model checkpoints and logs
+- **CPU:** Multi-core recommended for parallel environments
+
+### Environment Variables
+- `TF_CPP_MIN_LOG_LEVEL=2` - Reduce TensorFlow logging
+- `OMP_NUM_THREADS=1` - Reduce thread contention during training
 
 ## 3. Core Components
 ### Classes
@@ -95,17 +113,62 @@ Kelly Criterion + Max Position Size (2% max risk per trade, 25% Kelly fraction)
 - [ ] Implementation verified
 - [ ] Tests pass
 
-#### R11
-Dynamic Trailing Stop (breakeven at 2R, 50% trailing at 3R)
-
-- [ ] Implementation verified
-- [ ] Tests pass
-
 #### R2
 Drawdown Monitor (15% warning, 25% halt trading, auto cooldown)
 
-- [ ] Implementation verified
+- [ ] Implementation verified: `terminated = current_equity < self.cash * 0.5`
 - [ ] Tests pass
+
+#### R6
+Overfitting Prevention (min 30 samples per parameter, purged cross-validation)
+
+- [ ] Training data must have sufficient samples
+- [ ] Use cross-validation for hyperparameter tuning
+- [ ] Monitor training vs validation performance gap
+
+#### R7
+Monte Carlo Risk Analysis (1000 simulations, validate DD within 5-95 percentile)
+
+- [ ] Use for strategy validation after training
+- [ ] Compare learned policy against random baselines
+
+#### R11
+Dynamic Trailing Stop (breakeven at 2R, 50% trailing at 3R)
+
+- [ ] Implemented via `_adjust_stop_loss()` method
+- [ ] Learned through reward shaping
+
+#### R22
+Monthly Review (evaluate strategy performance, adjust if degradation >20%)
+
+- [ ] Retrain agent monthly with new data
+- [ ] Monitor for concept drift
+
+## 6.1 ML-Specific Requirements
+
+### Training Configuration
+| Parameter | Recommended | Notes |
+|-----------|-------------|-------|
+| `training_steps` | 100,000+ | More for complex strategies |
+| `learning_rate` | 3e-4 | Lower for fine-tuning |
+| `batch_size` | 64-256 | Depends on memory |
+| `n_epochs` (PPO) | 10 | More for stability |
+| `buffer_size` | 100,000 | For off-policy (DQN, SAC) |
+
+### Environment Configuration
+| Parameter | Default | Notes |
+|-----------|---------|-------|
+| `observation_dim` | 20 | Market features + position |
+| `max_steps` | 1000 | Per episode |
+| `transaction_cost` | 0.001 | 0.1% per trade |
+
+### Reward Configuration
+| Weight | Default | Purpose |
+|--------|---------|---------|
+| `pnl_weight` | 1.0 | Profit/Loss reward |
+| `sharpe_weight` | 0.3 | Risk-adjusted reward |
+| `drawdown_penalty` | 0.5 | Risk penalty |
+| `transaction_cost` | 0.001 | Trading cost penalty |
 
 ### All Trading Rules Reference
 

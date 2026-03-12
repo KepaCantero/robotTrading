@@ -1,9 +1,12 @@
 from decimal import Decimal
 from typing import List, Optional
 
+import logging
 from pydantic import BaseModel, Field
 
 from app.services.portfolio_constructor import AllocationWeight, PortfolioAllocation
+
+logger = logging.getLogger(__name__)
 
 """
 T8.1: RiskScalingApplication Models
@@ -64,3 +67,17 @@ class RiskAdjustedPortfolio(BaseModel):
 # Update forward references
 RiskScalingRequest.model_rebuild()
 RiskAdjustedPortfolio.model_rebuild()
+
+
+logger.debug(
+    "RiskScalingApplication models loaded",
+    extra={
+        "component": "risk_scaling_application_models",
+        "operation": "module_init",
+        "models": [
+            "RiskScalingRequest",
+            "AdjustedAllocationWeight",
+            "RiskAdjustedPortfolio",
+        ],
+    }
+)

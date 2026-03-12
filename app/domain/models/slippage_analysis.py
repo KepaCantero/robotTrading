@@ -6,12 +6,15 @@ Implementa cálculo dinámico de slippage basado en volatilidad del mercado y li
 no solo 0.1% fijo.
 """
 
+import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
 from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator
+
+logger = logging.getLogger(__name__)
 
 
 class SlippageType(str, Enum):
@@ -141,21 +144,60 @@ class DynamicSlippageAnalysis(BaseModel):
 
     def get_slippage_by_type(self, slippage_type: SlippageType) -> Optional[SlippageComponent]:
         """Obtener componente de slippage por tipo."""
+        logger.debug(
+            "Looking up slippage component",
+            extra={"slippage_type": slippage_type.value, "asset_symbol": self.asset_symbol}
+        )
         for component in self.slippage_components:
             if component.slippage_type == slippage_type:
+                logger.debug(
+                    "Slippage component found",
+                    extra={
+                        "slippage_type": slippage_type.value,
+                        "value": float(component.value),
+                        "confidence": component.confidence
+                    }
+                )
                 return component
+        logger.debug(
+            "Slippage component not found",
+            extra={"slippage_type": slippage_type.value, "asset_symbol": self.asset_symbol}
+        )
         return None
 
     def get_adjusted_price(self) -> Decimal:
         """Obtener precio ajustado por slippage."""
         if self.order_side.lower() == "buy":
-            return self.base_price * (1 + self.total_slippage / Decimal("100"))
+            adjusted = self.base_price * (1 + self.total_slippage / Decimal("100"))
         else:  # sell
-            return self.base_price * (1 - self.total_slippage / Decimal("100"))
+            adjusted = self.base_price * (1 - self.total_slippage / Decimal("100"))
+
+        logger.debug(
+            "Calculated adjusted price",
+            extra={
+                "asset_symbol": self.asset_symbol,
+                "order_side": self.order_side,
+                "base_price": float(self.base_price),
+                "total_slippage": float(self.total_slippage),
+                "adjusted_price": float(adjusted)
+            }
+        )
+        return adjusted
 
     def get_slippage_cost(self) -> Decimal:
         """Obtener costo total del slippage."""
-        return self.base_price * self.order_size * self.total_slippage / Decimal("100")
+        cost = self.base_price * self.order_size * self.total_slippage / Decimal("100")
+        logger.debug(
+            "Calculated slippage cost",
+            extra={
+                "asset_symbol": self.asset_symbol,
+                "base_price": float(self.base_price),
+                "order_size": float(self.order_size),
+                "total_slippage": float(self.total_slippage),
+                "slippage_cost": float(cost)
+            }
+        )
+        return cost
 
 
 class SlippageCalculationParams(BaseModel):
@@ -201,12 +243,34 @@ class SlippageHistory(BaseModel):
         """Agregar nuevo análisis al historial."""
         self.analyses.append(analysis)
         self.updated_at = datetime.now()
+        logger.info(
+            "Added slippage analysis to history",
+            extra={
+                "asset_symbol": self.asset_symbol,
+                "total_slippage": float(analysis.total_slippage),
+                "market_condition": analysis.market_condition.value,
+                "analyses_count": len(self.analyses)
+            }
+        )
 
     def get_latest_analysis(self) -> Optional[DynamicSlippageAnalysis]:
         """Obtener el análisis más reciente."""
         if not self.analyses:
+            logger.debug(
+                "No analyses available",
+                extra={"asset_symbol": self.asset_symbol}
+            )
             return None
-        return max(self.analyses, key=lambda x: x.calculation_timestamp)
+        latest = max(self.analyses, key=lambda x: x.calculation_timestamp)
+        logger.debug(
+            "Retrieved latest analysis",
+            extra={
+                "asset_symbol": self.asset_symbol,
+                "total_slippage": float(latest.total_slippage),
+                "timestamp": latest.calculation_timestamp.isoformat()
+            }
+        )
+        return latest
 
     def get_average_slippage(self, days: int = 7) -> Optional[Decimal]:
         """Obtener slippage promedio de los últimos N días."""
@@ -214,22 +278,51 @@ class SlippageHistory(BaseModel):
         recent_analyses = [a for a in self.analyses if a.calculation_timestamp >= cutoff_date]
 
         if not recent_analyses:
+            logger.debug(
+                "No recent analyses for average calculation",
+                extra={"asset_symbol": self.asset_symbol, "days": days}
+            )
             return None
 
         total_slippage = sum(a.total_slippage for a in recent_analyses)
-        return total_slippage / len(recent_analyses)
+        avg = total_slippage / len(recent_analyses)
+        logger.info(
+            "Calculated average slippage",
+            extra={
+                "asset_symbol": self.asset_symbol,
+                "days": days,
+                "average_slippage": float(avg),
+                "analyses_count": len(recent_analyses)
+            }
+        )
+        return avg
 
     def get_slippage_trend(self) -> str:
         """Obtener tendencia del slippage."""
         if len(self.analyses) < 2:
+            logger.debug(
+                "Insufficient data for trend analysis",
+                extra={"asset_symbol": self.asset_symbol, "analyses_count": len(self.analyses)}
+            )
             return "insufficient_data"
 
         recent = self.analyses[-1].total_slippage
         previous = self.analyses[-2].total_slippage
 
         if recent > previous * Decimal("1.1"):
-            return "increasing"
+            trend = "increasing"
         elif recent < previous * Decimal("0.9"):
-            return "decreasing"
+            trend = "decreasing"
         else:
-            return "stable"
+            trend = "stable"
+
+        logger.info(
+            "Determined slippage trend",
+            extra={
+                "asset_symbol": self.asset_symbol,
+                "trend": trend,
+                "recent_slippage": float(recent),
+                "previous_slippage": float(previous)
+            }
+        )
+        return trend

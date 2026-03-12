@@ -9,6 +9,7 @@ This module defines all Pydantic and dataclass models used throughout the OFI
 module, ensuring type safety and validation.
 """
 
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -16,6 +17,8 @@ from enum import Enum
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+logger = logging.getLogger(__name__)
 
 
 # Custom exception types for data model validation
@@ -695,6 +698,14 @@ class CumulativeOFI:
         Returns:
             New CumulativeOFI instance with updated values
         """
+        logger.debug(
+            "Updating CumulativeOFI",
+            extra={
+                "symbol": self.symbol,
+                "ofi_value": ofi_value,
+                "current_cofi": self.current_cofi
+            }
+        )
         new_cofi = self.current_cofi + ofi_value
         new_history = self.history + ((timestamp, new_cofi),)
 
@@ -751,6 +762,10 @@ class CumulativeOFI:
         Returns:
             New CumulativeOFI instance with reset values
         """
+        logger.info(
+            "Resetting CumulativeOFI tracker",
+            extra={"symbol": self.symbol, "new_start_time": new_start_time.isoformat()}
+        )
         return CumulativeOFI(
             symbol=self.symbol,
             start_time=new_start_time,

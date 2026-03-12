@@ -22,12 +22,15 @@ Date: 2025-01-25
 Status: DESIGN PHASE - Not implemented
 """
 
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional
 from uuid import UUID, uuid4
+
+logger = logging.getLogger(__name__)
 
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
@@ -478,6 +481,10 @@ class FIFOProcessor:
 
     def __init__(self, session):
         self.session = session
+        logger.debug(
+            "FIFOProcessor initialized",
+            extra={"session_type": type(session).__name__}
+        )
 
     def process_buy(self, transaction: Transaction) -> Lot:
         """
@@ -489,6 +496,15 @@ class FIFOProcessor:
         Returns:
             Lot creado
         """
+        logger.debug(
+            "Processing BUY transaction for FIFO",
+            extra={
+                "transaction_id": str(transaction.id),
+                "symbol": transaction.symbol,
+                "quantity": str(transaction.quantity),
+                "tx_type": transaction.tx_type.value
+            }
+        )
         lot = Lot(
             account_id=transaction.account_id,
             symbol=transaction.symbol,
@@ -502,6 +518,16 @@ class FIFOProcessor:
         )
         self.session.add(lot)
         self.session.flush()
+        logger.debug(
+            "FIFO lot created for BUY transaction",
+            extra={
+                "lot_id": str(lot.id),
+                "transaction_id": str(transaction.id),
+                "symbol": transaction.symbol,
+                "quantity_opened": str(transaction.quantity),
+                "cost_basis": str(transaction.cost_basis)
+            }
+        )
         return lot
 
     def process_sell(self, transaction: Transaction, strict_fifo: bool = True) -> FIFOCalculation:
@@ -518,6 +544,15 @@ class FIFOProcessor:
         Raises:
             ValueError: Si no hay suficientes lotes disponibles
         """
+        logger.debug(
+            "Processing SELL transaction for FIFO",
+            extra={
+                "transaction_id": str(transaction.id),
+                "symbol": transaction.symbol,
+                "quantity": str(transaction.quantity),
+                "strict_fifo": strict_fifo
+            }
+        )
         # Query open lots for this symbol, ordered by opened_at (FIFO)
         open_lots = (
             self.session.query(Lot)
@@ -529,6 +564,15 @@ class FIFOProcessor:
             )
             .order_by(Lot.opened_at)  # FIFO = oldest first
             .all()
+        )
+
+        logger.debug(
+            "Found open lots for FIFO processing",
+            extra={
+                "symbol": transaction.symbol,
+                "open_lots_count": len(open_lots),
+                "total_available": str(sum(lot.quantity_remaining for lot in open_lots))
+            }
         )
 
         quantity_to_close = transaction.quantity
@@ -560,6 +604,16 @@ class FIFOProcessor:
 
         # Validation
         if quantity_to_close > 0 and strict_fifo:
+            logger.error(
+                "Insufficient lots for SELL transaction",
+                extra={
+                    "transaction_id": str(transaction.id),
+                    "symbol": transaction.symbol,
+                    "quantity_requested": str(transaction.quantity),
+                    "quantity_missing": str(quantity_to_close),
+                    "available_quantity": str(sum([lot.quantity_remaining for lot in open_lots]))
+                }
+            )
             raise ValueError(
                 f"Insufficient lots to sell {transaction.quantity} {transaction.symbol}. "
                 f"Missing {quantity_to_close}. Available: {sum([lot.quantity_remaining for lot in open_lots])}"
@@ -591,6 +645,19 @@ class FIFOProcessor:
             'loss': str(loss),
         }
 
+        logger.debug(
+            "FIFO calculation completed for SELL transaction",
+            extra={
+                "transaction_id": str(transaction.id),
+                "symbol": transaction.symbol,
+                "lots_closed_count": len(lots_closed),
+                "cost_basis": str(total_cost_basis),
+                "proceeds": str(proceeds),
+                "gain": str(gain),
+                "loss": str(loss)
+            }
+        )
+
         return fifo_calc
 
     def process_transfer(
@@ -606,6 +673,16 @@ class FIFOProcessor:
             from_account: Source account
             to_account: Destination account
         """
+        logger.debug(
+            "Processing transfer between accounts",
+            extra={
+                "transaction_id": str(transaction.id),
+                "symbol": transaction.symbol,
+                "from_account_id": str(from_account.id),
+                "to_account_id": str(to_account.id),
+                "quantity": str(transaction.quantity)
+            }
+        )
         # For tracking, we create a "virtual" lot in the destination
         # with the SAME cost basis as the source
 
@@ -634,6 +711,10 @@ class Modelo721Generator:
 
     def __init__(self, session):
         self.session = session
+        logger.debug(
+            "Modelo721Generator initialized",
+            extra={"session_type": type(session).__name__}
+        )
 
     def generate_annual_report(self, user_id: UUID, year: int) -> TaxReport:
         """
@@ -646,6 +727,10 @@ class Modelo721Generator:
         Returns:
             TaxReport con datos completos
         """
+        logger.info(
+            "Generating Modelo 721 annual report",
+            extra={"user_id": str(user_id), "tax_year": year}
+        )
         # Get all crypto accounts
         crypto_accounts = (
             self.session.query(Account)
@@ -655,6 +740,16 @@ class Modelo721Generator:
                 Account.is_active,
             )
             .all()
+        )
+
+        logger.debug(
+            "Retrieved crypto accounts for tax report",
+            extra={
+                "user_id": str(user_id),
+                "tax_year": year,
+                "accounts_count": len(crypto_accounts),
+                "exchanges": [a.exchange_name for a in crypto_accounts]
+            }
         )
 
         # For each symbol, calculate balance at Dec 31
@@ -692,6 +787,17 @@ class Modelo721Generator:
         total_gain = sum([lot.realized_gain or Decimal("0") for lot in closed_lots])
         total_loss = sum([lot.realized_loss or Decimal("0") for lot in closed_lots])
 
+        logger.debug(
+            "Calculated gains/losses for tax year",
+            extra={
+                "user_id": str(user_id),
+                "tax_year": year,
+                "total_gain": str(total_gain),
+                "total_loss": str(total_loss),
+                "closed_lots_count": len(closed_lots)
+            }
+        )
+
         # Create report
         report = TaxReport(
             user_id=user_id,
@@ -707,6 +813,18 @@ class Modelo721Generator:
             total_gain_eur=total_gain,
             total_loss_eur=total_loss,
             report_date=datetime(year, 12, 31),
+        )
+
+        logger.info(
+            "Modelo 721 annual report generated successfully",
+            extra={
+                "user_id": str(user_id),
+                "tax_year": year,
+                "report_id": str(report.id),
+                "total_holdings_eur": str(report.total_holdings_eur),
+                "total_gain_eur": str(total_gain),
+                "total_loss_eur": str(total_loss)
+            }
         )
 
         return report

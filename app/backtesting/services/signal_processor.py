@@ -245,8 +245,7 @@ class SignalProcessor:
                 f"position_size={position_size:.6f})"
             )
         elif signal.signal_type == SignalType.SELL:
-            pass
-
+            # For SELL signals, check if position exists to provide context
             existing_pos = next((p for p in portfolio.positions if p.symbol == signal.symbol), None)
             if not existing_pos:
                 rejection_reason += " (SELL: no position exists)"
@@ -312,10 +311,11 @@ class SignalProcessor:
                     current_price if s == signal.symbol else last_known_prices.get(s, current_price)
                 )
             )
+            # Use strategy's position sizing or fallback to config default minimum
             position_size = (
                 self.strategy.get_position_size(signal, portfolio)
                 if self.strategy
-                else Decimal("0.01")
+                else self.config.max_position_size
             )
             trade_value = signal.price * position_size
         elif signal.signal_type == SignalType.SELL:

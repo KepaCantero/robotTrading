@@ -7,10 +7,13 @@ following Clean Architecture principles with no infrastructure dependencies.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 
 class StrategyType(Enum):
@@ -52,6 +55,10 @@ class StockMetrics:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
+        logger.debug(
+            "Converting StockMetrics to dict",
+            extra={"ticker": self.ticker, "strategy": self.strategy.value if self.strategy else None}
+        )
         return {
             'ticker': self.ticker,
             'strategy': self.strategy.value if self.strategy else None,
@@ -86,6 +93,10 @@ class PairMetrics:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
+        logger.debug(
+            "Converting PairMetrics to dict",
+            extra={"ticker1": self.ticker1, "ticker2": self.ticker2}
+        )
         return {
             'ticker1': self.ticker1,
             'ticker2': self.ticker2,
@@ -114,18 +125,35 @@ class AllocationResult:
 
     def get_total_allocated_capital(self) -> Decimal:
         """Calculate total allocated capital."""
-        return sum(m.capital for m in self.allocations.values())
+        total = sum(m.capital for m in self.allocations.values())
+        logger.debug(
+            "Calculated total allocated capital",
+            extra={"total_capital": float(total), "allocations_count": len(self.allocations)}
+        )
+        return total
 
     def get_allocation_count(self) -> int:
         """Get number of allocated stocks."""
-        return len(self.allocations)
+        count = len(self.allocations)
+        logger.debug("Retrieved allocation count", extra={"count": count})
+        return count
 
     def get_pairs_count(self) -> int:
         """Get number of trading pairs."""
-        return len(self.pairs)
+        count = len(self.pairs)
+        logger.debug("Retrieved pairs count", extra={"count": count})
+        return count
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
+        logger.debug(
+            "Converting AllocationResult to dict",
+            extra={
+                "allocations_count": len(self.allocations),
+                "pairs_count": len(self.pairs),
+                "validation_passed": self.validation_passed
+            }
+        )
         return {
             'allocations': {
                 ticker: metrics.to_dict() for ticker, metrics in self.allocations.items()
@@ -166,15 +194,48 @@ class AllocationConfig:
             min_position_size: Minimum size of any position (as decimal)
             reserve_ratio: Ratio of capital to keep in reserve
         """
+        logger.debug(
+            "Initializing AllocationConfig",
+            extra={
+                "initial_capital": float(initial_capital),
+                "max_positions": max_positions,
+                "max_position_size": float(max_position_size),
+                "min_position_size": float(min_position_size),
+                "reserve_ratio": float(reserve_ratio)
+            }
+        )
         if initial_capital <= 0:
+            logger.error(
+                "AllocationConfig validation failed - invalid initial_capital",
+                extra={"initial_capital": float(initial_capital)}
+            )
             raise ValueError("Initial capital must be positive")
         if max_positions <= 0:
+            logger.error(
+                "AllocationConfig validation failed - invalid max_positions",
+                extra={"max_positions": max_positions}
+            )
             raise ValueError("Max positions must be positive")
         if max_position_size <= 0 or max_position_size > 1:
+            logger.error(
+                "AllocationConfig validation failed - invalid max_position_size",
+                extra={"max_position_size": float(max_position_size)}
+            )
             raise ValueError("Max position size must be between 0 and 1")
         if min_position_size <= 0 or min_position_size > max_position_size:
+            logger.error(
+                "AllocationConfig validation failed - invalid min_position_size",
+                extra={
+                    "min_position_size": float(min_position_size),
+                    "max_position_size": float(max_position_size)
+                }
+            )
             raise ValueError("Min position size must be positive and <= max position size")
         if reserve_ratio < 0 or reserve_ratio >= 1:
+            logger.error(
+                "AllocationConfig validation failed - invalid reserve_ratio",
+                extra={"reserve_ratio": float(reserve_ratio)}
+            )
             raise ValueError("Reserve ratio must be between 0 and 1")
 
         self.initial_capital = initial_capital
@@ -182,17 +243,35 @@ class AllocationConfig:
         self.max_position_size = max_position_size
         self.min_position_size = min_position_size
         self.reserve_ratio = reserve_ratio
+        logger.info(
+            "AllocationConfig initialized successfully",
+            extra={
+                "initial_capital": float(initial_capital),
+                "allocatable_capital": float(self.get_allocatable_capital())
+            }
+        )
 
     def get_reservable_capital(self) -> Decimal:
         """Calculate capital to keep in reserve."""
-        return self.initial_capital * self.reserve_ratio
+        reserve = self.initial_capital * self.reserve_ratio
+        logger.debug(
+            "Calculated reservable capital",
+            extra={"reservable_capital": float(reserve)}
+        )
+        return reserve
 
     def get_allocatable_capital(self) -> Decimal:
         """Calculate capital available for allocation."""
-        return self.initial_capital - self.get_reservable_capital()
+        allocatable = self.initial_capital - self.get_reservable_capital()
+        logger.debug(
+            "Calculated allocatable capital",
+            extra={"allocatable_capital": float(allocatable)}
+        )
+        return allocatable
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
+        logger.debug("Converting AllocationConfig to dict")
         return {
             'initial_capital': float(self.initial_capital),
             'max_positions': self.max_positions,

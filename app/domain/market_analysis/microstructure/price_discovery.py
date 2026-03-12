@@ -19,6 +19,7 @@ References:
 """
 from __future__ import annotations  # Enable Python 3.10+ union syntax in Python 3.9
 
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -27,6 +28,8 @@ from typing import Dict, List, Tuple  # noqa: F401
 
 import numpy as np
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 # mypy: ignore-errors
 # pylint: disable=unsupported-binary-operation  # For Python 3.10+ union syntax
@@ -351,6 +354,13 @@ class PriceDiscoveryAnalyzer:
             lookback_periods: Number of periods for analysis
             min_observations: Minimum observations required
         """
+        logger.debug(
+            "Initializing PriceDiscoveryAnalyzer",
+            extra={
+                "lookback_periods": lookback_periods,
+                "min_observations": min_observations,
+            },
+        )
         self.lookback_periods = lookback_periods
         self.min_observations = min_observations
         self._historical_errors: list[float] = []
@@ -378,7 +388,17 @@ class PriceDiscoveryAnalyzer:
         Returns:
             EfficientPriceEstimate with Roll model estimate
         """
+        logger.debug(
+            "Estimating efficient price using Roll model",
+            extra={
+                "price_history_length": len(price_history),
+            },
+        )
         if len(price_history) < 2:
+            logger.error(
+                "Insufficient data for Roll model",
+                extra={"price_history_length": len(price_history)},
+            )
             raise ValueError("Insufficient data for Roll model")
 
         prices = price_history['close'].values
@@ -404,6 +424,15 @@ class PriceDiscoveryAnalyzer:
         std_error = np.std(returns) / np.sqrt(len(returns))
         ci_width = Decimal(str(std_error * 1.96))
 
+        logger.info(
+            "Efficient price estimated using Roll model",
+            extra={
+                "observed_price": float(observed_price),
+                "efficient_price": float(efficient_price),
+                "pricing_error": float(pricing_error),
+                "estimated_spread": estimatedSpread,
+            },
+        )
         return EfficientPriceEstimate(
             timestamp=datetime.now(),
             observed_price=observed_price,
@@ -434,7 +463,21 @@ class PriceDiscoveryAnalyzer:
         Returns:
             Information share between 0 and 1
         """
+        logger.debug(
+            "Calculating Hasbrouck information share",
+            extra={
+                "price_series_length": len(price_series),
+                "trade_series_length": len(trade_series),
+            },
+        )
         if len(price_series) < self.min_observations:
+            logger.warning(
+                "Insufficient data for Hasbrouck information share",
+                extra={
+                    "price_series_length": len(price_series),
+                    "min_observations": self.min_observations,
+                },
+            )
             return 0.5  # Default equal share
 
         # Vector error correction model (simplified)
@@ -448,11 +491,23 @@ class PriceDiscoveryAnalyzer:
         price_variance = price_changes.var()
 
         if price_variance == 0:
+            logger.warning(
+                "Price variance is zero for Hasbrouck calculation",
+                extra={"price_variance": price_variance},
+            )
             return 0.5
 
         # Information share proportional to trade impact
         information_share = min(1.0, max(0.0, abs(trade_impact) / price_variance))
 
+        logger.info(
+            "Hasbrouck information share calculated",
+            extra={
+                "information_share": information_share,
+                "trade_impact": trade_impact,
+                "price_variance": price_variance,
+            },
+        )
         return float(information_share)
 
     def measure_price_adjustment_speed(

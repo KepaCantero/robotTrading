@@ -28,6 +28,9 @@ from typing import Any, Dict, Optional
 # SINGLE SOURCE OF TRUTH: Import CentralizedConfig for all values
 from app.shared.config.centralized_config import get_config
 
+# Get centralized backtesting configuration
+_backtest_config = get_config().backtesting
+
 logger = logging.getLogger(__name__)
 
 
@@ -379,7 +382,7 @@ class TransactionCostModel:
         participation_rate = min(participation_rate, self.config.max_participation_rate)
 
         # Volatility adjustment (use default if not provided)
-        vol = volatility or Decimal("0.20")  # 20% default
+        vol = volatility or _backtest_config.default_volatility
 
         # Temporary impact (scales with participation rate)
         temp_impact = (

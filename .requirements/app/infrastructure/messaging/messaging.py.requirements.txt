@@ -6,14 +6,26 @@ Domain: Infrastructure
 Generated: 2026-03-09
 
 ## 2. Dependencies
-- `logging`
-- `os`
-- `redis`
-- `secure_serialization`
-- `threading`
-- `time`
-- `typing`
-- `zmq`
+
+### Python Modules (Internal/Stdlib)
+- `logging` (stdlib)
+- `os` (stdlib)
+- `threading` (stdlib)
+- `time` (stdlib)
+- `typing` (stdlib)
+- `secure_serialization` (internal)
+
+### External Packages (pip install)
+```
+# Message Brokers
+redis>=5.0.0              # Redis pub/sub for messaging
+pyzmq>=25.0.0             # ZeroMQ for high-throughput
+hiredis>=2.2.0            # Fast C parser for Redis (optional)
+```
+
+### Optional Dependencies
+- `redis` - Required for distributed messaging
+- `pyzmq` - Optional for high-frequency data channels
 
 ## 3. Core Components
 ### Classes

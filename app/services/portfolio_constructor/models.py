@@ -4,10 +4,13 @@ T7.1: PortfolioConstructor Models
 Data structures for portfolio construction and allocation.
 """
 
+import logging
 from decimal import Decimal
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 
 class PortfolioConstructionRequest(BaseModel):
@@ -75,3 +78,19 @@ class RiskAdjustedPortfolio(BaseModel):
     volatility_level: str
     adjustment_rationale: str = ""
     error_message: Optional[str] = None
+
+
+logger.debug(
+    "PortfolioConstructor models loaded",
+    extra={
+        "component": "portfolio_constructor_models",
+        "operation": "module_init",
+        "models": [
+            "PortfolioConstructionRequest",
+            "AllocationWeight",
+            "PortfolioAllocation",
+            "RiskScalingRequest",
+            "RiskAdjustedPortfolio",
+        ],
+    }
+)

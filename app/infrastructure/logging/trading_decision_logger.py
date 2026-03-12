@@ -3,11 +3,14 @@ Trading Decision Logger - R15, R28
 
 Logger append-only con correlation ID para todas las decisiones de trading.
 """
+import logging
 from datetime import datetime
 from typing import List, Optional
 
 from app.infrastructure.logging.append_only_log import AppendOnlyLog
 from app.services.logging.log_entry import LogEntry
+
+logger = logging.getLogger(__name__)
 
 # @skip-import - Protocol import, skip if not available
 try:
@@ -30,7 +33,15 @@ class TradingDecisionLogger(ITradingDecisionLogger):
     """
 
     def __init__(self, log_dir: str = ".ralph/logs/trading"):
+        logger.debug(
+            "Initializing TradingDecisionLogger",
+            extra={"log_dir": log_dir},
+        )
         self._log = AppendOnlyLog(log_dir)
+        logger.info(
+            "TradingDecisionLogger initialized",
+            extra={"log_dir": log_dir},
+        )
 
     def log_signal(self, signal: dict, metadata: Optional[dict] = None) -> str:
         """
@@ -41,8 +52,16 @@ class TradingDecisionLogger(ITradingDecisionLogger):
             metadata: Metadatos adicionales
 
         Returns:
-            Correlation ID para esta operación
+            Correlation ID para esta operacion
         """
+        logger.debug(
+            "Logging signal",
+            extra={
+                "symbol": signal.get("symbol"),
+                "action": signal.get("action"),
+                "quantity": signal.get("quantity"),
+            },
+        )
         entry = LogEntry.create(
             event_type="signal_received",
             data={
@@ -55,6 +74,15 @@ class TradingDecisionLogger(ITradingDecisionLogger):
         )
 
         self._log.append(entry)
+        logger.info(
+            "Signal logged successfully",
+            extra={
+                "correlation_id": entry.correlation_id,
+                "symbol": signal.get("symbol"),
+                "action": signal.get("action"),
+                "event_type": "signal_received",
+            },
+        )
         return entry.correlation_id
 
     def log_execution(self, correlation_id: str, result: dict) -> None:
@@ -65,6 +93,14 @@ class TradingDecisionLogger(ITradingDecisionLogger):
             correlation_id: ID de correlación de la operación
             result: Resultado de la ejecución
         """
+        logger.debug(
+            "Logging execution result",
+            extra={
+                "correlation_id": correlation_id,
+                "order_id": result.get("order_id"),
+                "status": result.get("status"),
+            },
+        )
         entry = LogEntry(
             correlation_id=correlation_id,
             timestamp=datetime.utcnow().isoformat() + "Z",
@@ -80,6 +116,15 @@ class TradingDecisionLogger(ITradingDecisionLogger):
         )
 
         self._log.append(entry)
+        logger.info(
+            "Execution result logged",
+            extra={
+                "correlation_id": correlation_id,
+                "order_id": result.get("order_id"),
+                "status": result.get("status"),
+                "event_type": "execution_result",
+            },
+        )
 
     def log_validation_result(
         self, correlation_id: str, validator: str, passed: bool, details: Optional[dict] = None
@@ -93,6 +138,14 @@ class TradingDecisionLogger(ITradingDecisionLogger):
             passed: Si pasó la validación
             details: Detalles adicionales
         """
+        logger.debug(
+            "Logging validation result",
+            extra={
+                "correlation_id": correlation_id,
+                "validator": validator,
+                "passed": passed,
+            },
+        )
         entry = LogEntry(
             correlation_id=correlation_id,
             timestamp=datetime.utcnow().isoformat() + "Z",
@@ -106,6 +159,15 @@ class TradingDecisionLogger(ITradingDecisionLogger):
         )
 
         self._log.append(entry)
+        logger.info(
+            "Validation result logged",
+            extra={
+                "correlation_id": correlation_id,
+                "validator": validator,
+                "passed": passed,
+                "event_type": "validation_result",
+            },
+        )
 
     def get_logs_by_correlation_id(self, correlation_id: str) -> List[dict]:
         """
@@ -117,7 +179,19 @@ class TradingDecisionLogger(ITradingDecisionLogger):
         Returns:
             Lista de entradas con ese ID
         """
-        return self._log.get_entries_by_correlation_id(correlation_id)
+        logger.debug(
+            "Retrieving logs by correlation ID",
+            extra={"correlation_id": correlation_id},
+        )
+        entries = self._log.get_entries_by_correlation_id(correlation_id)
+        logger.info(
+            "Logs retrieved by correlation ID",
+            extra={
+                "correlation_id": correlation_id,
+                "entry_count": len(entries),
+            },
+        )
+        return entries
 
     def export_for_hacienda(self, year: int) -> List[dict]:
         """
@@ -129,10 +203,26 @@ class TradingDecisionLogger(ITradingDecisionLogger):
         Returns:
             Lista de todas las operaciones del año
         """
+        logger.info(
+            "Exporting logs for Hacienda",
+            extra={
+                "year": year,
+                "export_type": "hacienda",
+            },
+        )
         start_date = datetime(year, 1, 1).date()
         end_date = datetime(year, 12, 31).date()
 
         entries = self._log.export_date_range(start_date, end_date)
+        logger.debug(
+            "Retrieved entries for date range",
+            extra={
+                "year": year,
+                "entry_count": len(entries),
+                "start_date": str(start_date),
+                "end_date": str(end_date),
+            },
+        )
 
         # Agrupar por correlation_id y formatear para Hacienda
         operations = {}
@@ -168,6 +258,14 @@ class TradingDecisionLogger(ITradingDecisionLogger):
                     }
                 )
 
+        logger.info(
+            "Hacienda export completed",
+            extra={
+                "year": year,
+                "total_operations": len(formatted),
+                "total_entries": len(entries),
+            },
+        )
         return formatted
 
     def _calculate_pnl(self, signal_entry: dict, execution_entry: dict) -> float:

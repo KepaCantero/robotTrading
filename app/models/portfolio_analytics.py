@@ -5,6 +5,7 @@ This module defines enhanced models for portfolio management including
 performance metrics, risk analysis, and portfolio analytics.
 """
 
+import logging
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
@@ -14,6 +15,8 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.domain.models.portfolio import Portfolio as BasePortfolio
+
+logger = logging.getLogger(__name__)
 
 
 class ExtendedPortfolio(BasePortfolio):
@@ -34,9 +37,26 @@ class ExtendedPortfolio(BasePortfolio):
         """Validate portfolio consistency."""
         from app.shared.config.centralized_config import get_config
 
+        logger.debug(
+            "Validating portfolio consistency",
+            extra={
+                "portfolio_id": str(self.id),
+                "portfolio_name": self.name,
+                "total_value": float(self.total_value),
+            }
+        )
+
         cfg = get_config()
 
         if self.cash_balance != self.cash:
+            logger.error(
+                "Cash balance validation failed",
+                extra={
+                    "portfolio_id": str(self.id),
+                    "cash_balance": float(self.cash_balance),
+                    "cash": float(self.cash),
+                }
+            )
             raise ValueError("Cash balance must match cash field")
 
         # Calculate total value from positions and cash
@@ -47,9 +67,27 @@ class ExtendedPortfolio(BasePortfolio):
         # Get tolerance from config
         tolerance = Decimal(str(getattr(cfg.trading, 'portfolio_value_tolerance', 0.01)))
         if abs(self.total_value - calculated_total) > tolerance:
+            logger.error(
+                "Total value mismatch in portfolio",
+                extra={
+                    "portfolio_id": str(self.id),
+                    "expected_total": float(calculated_total),
+                    "actual_total": float(self.total_value),
+                    "tolerance": float(tolerance),
+                }
+            )
             raise ValueError(
                 f"Total value mismatch. Expected: {calculated_total}, Got: {self.total_value}"
             )
+
+        logger.info(
+            "Portfolio consistency validated successfully",
+            extra={
+                "portfolio_id": str(self.id),
+                "total_value": float(self.total_value),
+                "position_count": len(self.positions),
+            }
+        )
 
         return self
 
@@ -177,11 +215,48 @@ class PerformanceMetrics(BaseModel):
     @model_validator(mode="after")
     def validate_metrics_consistency(self) -> "PerformanceMetrics":
         """Validate consistency between metrics."""
+        logger.debug(
+            "Validating performance metrics consistency",
+            extra={
+                "portfolio_id": str(self.portfolio_id),
+                "period": self.period.value,
+                "start_date": self.start_date.isoformat(),
+                "end_date": self.end_date.isoformat(),
+            }
+        )
+
         if self.start_date >= self.end_date:
+            logger.error(
+                "Invalid date range in metrics",
+                extra={
+                    "portfolio_id": str(self.portfolio_id),
+                    "start_date": self.start_date.isoformat(),
+                    "end_date": self.end_date.isoformat(),
+                }
+            )
             raise ValueError("Start date must be before end date")
 
         if self.cash_value + self.equity_value != self.total_value:
+            logger.error(
+                "Value consistency check failed",
+                extra={
+                    "portfolio_id": str(self.portfolio_id),
+                    "cash_value": float(self.cash_value),
+                    "equity_value": float(self.equity_value),
+                    "total_value": float(self.total_value),
+                }
+            )
             raise ValueError("Cash + Equity must equal total value")
+
+        logger.info(
+            "Performance metrics validated",
+            extra={
+                "portfolio_id": str(self.portfolio_id),
+                "total_return": float(self.total_return),
+                "sharpe_ratio": float(self.sharpe_ratio),
+                "max_drawdown": float(self.max_drawdown),
+            }
+        )
 
         return self
 
@@ -347,6 +422,17 @@ class PortfolioAllocation(BaseModel):
         """Validate that allocations sum to 100%."""
         from app.shared.config.centralized_config import get_config
 
+        logger.debug(
+            "Validating portfolio allocation",
+            extra={
+                "portfolio_id": str(self.portfolio_id),
+                "equity_allocation": float(self.equity_allocation),
+                "fixed_income_allocation": float(self.fixed_income_allocation),
+                "cash_allocation": float(self.cash_allocation),
+                "alternative_allocation": float(self.alternative_allocation),
+            }
+        )
+
         cfg = get_config()
 
         total_allocation = (
@@ -359,7 +445,23 @@ class PortfolioAllocation(BaseModel):
         # Get tolerance from config
         tolerance = Decimal(str(getattr(cfg.trading, 'portfolio_allocation_tolerance', 0.01)))
         if abs(total_allocation - Decimal("100")) > tolerance:
+            logger.error(
+                "Allocation sum validation failed",
+                extra={
+                    "portfolio_id": str(self.portfolio_id),
+                    "total_allocation": float(total_allocation),
+                    "tolerance": float(tolerance),
+                }
+            )
             raise ValueError(f"Asset class allocations must sum to 100%, got {total_allocation}")
+
+        logger.info(
+            "Portfolio allocation validated",
+            extra={
+                "portfolio_id": str(self.portfolio_id),
+                "total_allocation": float(total_allocation),
+            }
+        )
 
         return self
 
@@ -437,10 +539,42 @@ class PortfolioComparison(BaseModel):
     @model_validator(mode="after")
     def validate_comparison_data(self) -> "PortfolioComparison":
         """Validate comparison data consistency."""
+        logger.debug(
+            "Validating portfolio comparison data",
+            extra={
+                "comparison_id": str(self.id),
+                "portfolio_count": len(self.portfolio_ids),
+            }
+        )
+
         if len(self.portfolio_ids) < 2:
+            logger.error(
+                "Insufficient portfolios for comparison",
+                extra={
+                    "comparison_id": str(self.id),
+                    "portfolio_count": len(self.portfolio_ids),
+                }
+            )
             raise ValueError("At least 2 portfolios required for comparison")
 
         if len(self.portfolio_ids) != len(self.performance_comparison):
+            logger.error(
+                "Performance comparison data mismatch",
+                extra={
+                    "comparison_id": str(self.id),
+                    "portfolio_count": len(self.portfolio_ids),
+                    "comparison_count": len(self.performance_comparison),
+                }
+            )
             raise ValueError("Performance comparison must include all portfolios")
+
+        logger.info(
+            "Portfolio comparison validated",
+            extra={
+                "comparison_id": str(self.id),
+                "portfolio_count": len(self.portfolio_ids),
+                "best_performer": str(self.best_performer),
+            }
+        )
 
         return self

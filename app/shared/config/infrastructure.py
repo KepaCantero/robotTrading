@@ -4,11 +4,14 @@ Infrastructure Configuration Module
 Contains configuration for database, Redis, API, logging, and monitoring.
 """
 
+import logging
 from typing import List, Optional
 
 from pydantic import Field, field_validator
 
 from app.shared.config.base import ConfigBase, SettingsBase
+
+logger = logging.getLogger(__name__)
 
 
 class DatabaseConfig(SettingsBase):
@@ -42,8 +45,11 @@ class DatabaseConfig(SettingsBase):
     @field_validator("port", "questdb_port")
     @classmethod
     def validate_port(cls, v):
+        logger.debug("Validating port number", extra={"port": v})
         if not 1 <= v <= 65535:
+            logger.error("Port validation failed: must be between 1 and 65535", extra={"port": v})
             raise ValueError("Port must be between 1 and 65535")
+        logger.debug("Port validation passed", extra={"port": v})
         return v
 
     @property
@@ -56,14 +62,18 @@ class DatabaseConfig(SettingsBase):
         """
         import os
 
+        logger.debug("Building database connection string", extra={"host": self.host, "port": self.port, "database": self.name})
         # Rule 28: Always read from environment, never use hardcoded value
         db_password = os.getenv("DB_PASSWORD", self.password)
         if not db_password:
+            logger.error("DB_PASSWORD environment variable not set")
             raise ValueError(
                 "DB_PASSWORD environment variable not set. "
                 "Cannot build secure connection string."
             )
-        return f"postgresql://{self.user}:{db_password}@{self.host}:{self.port}/{self.name}"
+        conn_str = f"postgresql://{self.user}:{db_password}@{self.host}:{self.port}/{self.name}"
+        logger.info("Database connection string generated", extra={"host": self.host, "port": self.port, "database": self.name})
+        return conn_str
 
 
 class RedisConfig(ConfigBase):
@@ -81,16 +91,22 @@ class RedisConfig(ConfigBase):
     @field_validator("port")
     @classmethod
     def validate_port(cls, v):
+        logger.debug("Validating Redis port number", extra={"port": v})
         if not 1 <= v <= 65535:
+            logger.error("Redis port validation failed: must be between 1 and 65535", extra={"port": v})
             raise ValueError("Port must be between 1 and 65535")
+        logger.debug("Redis port validation passed", extra={"port": v})
         return v
 
     @property
     def connection_string(self) -> str:
         """Generate Redis connection string."""
+        logger.debug("Building Redis connection string", extra={"host": self.host, "port": self.port, "db": self.db})
         if self.password:
+            logger.info("Redis connection string generated with authentication", extra={"host": self.host, "port": self.port, "db": self.db})
             return f"redis://:{self.password}@{self.host}:{self.port}/{self.db}"
         else:
+            logger.info("Redis connection string generated without authentication", extra={"host": self.host, "port": self.port, "db": self.db})
             return f"redis://{self.host}:{self.port}/{self.db}"
 
 
@@ -121,15 +137,21 @@ class APIConfig(SettingsBase):
     @field_validator("port")
     @classmethod
     def validate_port(cls, v):
+        logger.debug("Validating API port number", extra={"port": v})
         if not 1 <= v <= 65535:
+            logger.error("API port validation failed: must be between 1 and 65535", extra={"port": v})
             raise ValueError("Port must be between 1 and 65535")
+        logger.debug("API port validation passed", extra={"port": v})
         return v
 
     @field_validator("secret_key")
     @classmethod
     def validate_secret_key(cls, v):
+        logger.debug("Validating API secret key length")
         if len(v) < 16:
+            logger.error("Secret key validation failed: must be at least 16 characters", extra={"key_length": len(v)})
             raise ValueError("Secret key must be at least 16 characters long")
+        logger.debug("Secret key validation passed")
         return v
 
 
@@ -187,6 +209,9 @@ class MonitoringConfig(ConfigBase):
     @field_validator("prometheus_port", "grafana_port")
     @classmethod
     def validate_port(cls, v):
+        logger.debug("Validating monitoring port number", extra={"port": v})
         if not 1 <= v <= 65535:
+            logger.error("Monitoring port validation failed: must be between 1 and 65535", extra={"port": v})
             raise ValueError("Port must be between 1 and 65535")
+        logger.debug("Monitoring port validation passed", extra={"port": v})
         return v

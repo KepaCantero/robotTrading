@@ -5,6 +5,8 @@ This module defines models for market data feeds, quotes, and real-time data
 for the algorithmic trading system.
 """
 
+import logging
+
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
@@ -12,6 +14,8 @@ from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+logger = logging.getLogger(__name__)
 
 
 class DataFeedType(str, Enum):
@@ -94,11 +98,36 @@ class Quote(BaseModel):
         if isinstance(v, (int, float)):
             v = Decimal(str(v))
         elif not isinstance(v, Decimal):
+            logger.error(
+                "Price field validation failed - not a number",
+                extra={
+                    "component": "market_data",
+                    "action": "price_validation_error",
+                    "value_type": type(v).__name__,
+                },
+            )
             raise ValueError("Price fields must be numbers")
 
         if v <= 0:
+            logger.warning(
+                "Price field validation failed - non-positive value",
+                extra={
+                    "component": "market_data",
+                    "action": "price_validation_warning",
+                    "value": str(v),
+                },
+            )
             raise ValueError(f"Required price fields must be positive, got {v}")
         if v > Decimal("1000000"):  # $1M limit
+            logger.warning(
+                "Price exceeds maximum limit",
+                extra={
+                    "component": "market_data",
+                    "action": "price_validation_warning",
+                    "value": str(v),
+                    "limit": "1000000",
+                },
+            )
             raise ValueError(f"Price exceeds maximum limit of $1M, got {v}")
 
         return v
@@ -126,13 +155,38 @@ class Quote(BaseModel):
         if isinstance(v, (int, float)):
             v = Decimal(str(v))
         elif not isinstance(v, Decimal):
+            logger.error(
+                "Volume validation failed - not a number",
+                extra={
+                    "component": "market_data",
+                    "action": "volume_validation_error",
+                    "value_type": type(v).__name__,
+                },
+            )
             raise ValueError("Volume must be a number")
 
         if v < 0:
+            logger.warning(
+                "Volume validation failed - negative value",
+                extra={
+                    "component": "market_data",
+                    "action": "volume_validation_warning",
+                    "value": str(v),
+                },
+            )
             raise ValueError(f"Volume must be non-negative, got {v}")
         # Increased limit to 10B shares to accommodate high-volume stocks (NVDA, TSLA, etc.)
         # Some stocks can have daily volumes exceeding 1B shares during high volatility periods
         if v > Decimal("10000000000"):  # 10B shares limit
+            logger.warning(
+                "Volume exceeds maximum limit",
+                extra={
+                    "component": "market_data",
+                    "action": "volume_validation_warning",
+                    "value": str(v),
+                    "limit": "10000000000",
+                },
+            )
             raise ValueError(f"Volume exceeds maximum limit of 10B shares, got {v}")
 
         return v
@@ -157,21 +211,63 @@ class Quote(BaseModel):
     def validate_quote_consistency(self) -> "Quote":
         """Validate consistency between price fields."""
         if self.high < self.low:
+            logger.error(
+                "Quote consistency validation failed - high < low",
+                extra={
+                    "component": "market_data",
+                    "action": "quote_consistency_error",
+                    "symbol": self.symbol,
+                    "high": str(self.high),
+                    "low": str(self.low),
+                },
+            )
             raise ValueError(
                 f"High price ({self.high}) cannot be less than low price ({self.low})."
             )
 
         if not (self.low <= self.open <= self.high):
+            logger.error(
+                "Quote consistency validation failed - open outside range",
+                extra={
+                    "component": "market_data",
+                    "action": "quote_consistency_error",
+                    "symbol": self.symbol,
+                    "open": str(self.open),
+                    "low": str(self.low),
+                    "high": str(self.high),
+                },
+            )
             raise ValueError(
                 f"Open price ({self.open}) must be between low ({self.low}) and high ({self.high})."
             )
 
         if not (self.low <= self.close <= self.high):
+            logger.error(
+                "Quote consistency validation failed - close outside range",
+                extra={
+                    "component": "market_data",
+                    "action": "quote_consistency_error",
+                    "symbol": self.symbol,
+                    "close": str(self.close),
+                    "low": str(self.low),
+                    "high": str(self.high),
+                },
+            )
             raise ValueError(
                 f"Close price ({self.close}) must be between low ({self.low}) and high ({self.high})."
             )
 
         if self.bid > self.ask:
+            logger.error(
+                "Quote consistency validation failed - bid > ask",
+                extra={
+                    "component": "market_data",
+                    "action": "quote_consistency_error",
+                    "symbol": self.symbol,
+                    "bid": str(self.bid),
+                    "ask": str(self.ask),
+                },
+            )
             raise ValueError(
                 f"Bid price ({self.bid}) must be less than or equal to ask price ({self.ask})."
             )
@@ -183,8 +279,29 @@ class Quote(BaseModel):
             # Use calculated spread when true bid/ask available
             if self.spread == 0:
                 self.spread = calculated_spread
+                logger.debug(
+                    "Spread auto-calculated from bid/ask",
+                    extra={
+                        "component": "market_data",
+                        "action": "spread_calculated",
+                        "symbol": self.symbol,
+                        "spread": str(self.spread),
+                    },
+                )
             # Allow reasonable deviation (default spread when bid=ask)
         # When bid=ask (calculated_spread=0), provided spread is used as-is
+
+        logger.debug(
+            "Quote validated successfully",
+            extra={
+                "component": "market_data",
+                "action": "quote_validated",
+                "symbol": self.symbol,
+                "bid": str(self.bid),
+                "ask": str(self.ask),
+                "last": str(self.last),
+            },
+        )
 
         return self
 
@@ -234,19 +351,61 @@ class HistoricalData(BaseModel):
     def validate_ohlc_consistency(self) -> "HistoricalData":
         """Validate OHLC consistency."""
         if self.high < self.low:
+            logger.error(
+                "Historical data OHLC consistency failed - high < low",
+                extra={
+                    "component": "market_data",
+                    "action": "ohlc_consistency_error",
+                    "symbol": self.symbol,
+                    "high": str(self.high),
+                    "low": str(self.low),
+                },
+            )
             raise ValueError(
                 f"High price ({self.high}) cannot be less than low price ({self.low})."
             )
 
         if not (self.low <= self.open <= self.high):
+            logger.error(
+                "Historical data OHLC consistency failed - open outside range",
+                extra={
+                    "component": "market_data",
+                    "action": "ohlc_consistency_error",
+                    "symbol": self.symbol,
+                    "open": str(self.open),
+                    "low": str(self.low),
+                    "high": str(self.high),
+                },
+            )
             raise ValueError(
                 f"Open price ({self.open}) must be between low ({self.low}) and high ({self.high})."
             )
 
         if not (self.low <= self.close <= self.high):
+            logger.error(
+                "Historical data OHLC consistency failed - close outside range",
+                extra={
+                    "component": "market_data",
+                    "action": "ohlc_consistency_error",
+                    "symbol": self.symbol,
+                    "close": str(self.close),
+                    "low": str(self.low),
+                    "high": str(self.high),
+                },
+            )
             raise ValueError(
                 f"Close price ({self.close}) must be between low ({self.low}) and high ({self.high})."
             )
+
+        logger.debug(
+            "Historical data validated successfully",
+            extra={
+                "component": "market_data",
+                "action": "historical_data_validated",
+                "symbol": self.symbol,
+                "frequency": self.frequency.value if self.frequency else None,
+            },
+        )
 
         return self
 
@@ -344,7 +503,32 @@ class MarketDataCache(BaseModel):
     def is_cache_valid(self) -> bool:
         """Check if cache is still valid."""
         if self.is_expired:
+            logger.debug(
+                "Cache marked as expired",
+                extra={
+                    "component": "market_data",
+                    "action": "cache_check",
+                    "symbol": self.symbol,
+                    "data_type": self.data_type,
+                    "is_expired": True,
+                },
+            )
             return False
 
         age_seconds = (datetime.utcnow() - self.timestamp).total_seconds()
-        return age_seconds < self.ttl_seconds
+        is_valid = age_seconds < self.ttl_seconds
+
+        logger.debug(
+            "Cache validity check",
+            extra={
+                "component": "market_data",
+                "action": "cache_check",
+                "symbol": self.symbol,
+                "data_type": self.data_type,
+                "age_seconds": age_seconds,
+                "ttl_seconds": self.ttl_seconds,
+                "is_valid": is_valid,
+            },
+        )
+
+        return is_valid

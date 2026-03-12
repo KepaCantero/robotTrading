@@ -5,12 +5,15 @@ Automatically generates documentation for backtest results.
 """
 
 import json
+import logging
 import statistics
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
 
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 
 def save_backtest_result(
@@ -28,6 +31,15 @@ def save_backtest_result(
 
     Returns dict of saved file paths.
     """
+    logger.debug(
+        "Saving backtest result",
+        extra={
+            "result_key": result_key,
+            "module": module,
+            "config": config,
+            "symbol": symbol
+        }
+    )
     # Create directory structure
     results_dir = project_root / "docs" / "BACKTEST_RESULTS" / module.lower()
     results_dir.mkdir(parents=True, exist_ok=True)
@@ -73,6 +85,14 @@ def save_backtest_result(
         f.write(report_content)
     files["report"] = report_file
 
+    logger.info(
+        "Backtest result saved",
+        extra={
+            "module": module,
+            "config": config,
+            "files_saved": len(files)
+        }
+    )
     return files
 
 
@@ -199,6 +219,10 @@ def update_summary_index(
     project_root: Path,
 ):
     """Update the summary_index.md with new backtest result."""
+    logger.debug(
+        "Updating summary index",
+        extra={"module": module, "config": config}
+    )
 
     index_file = project_root / "docs" / "BACKTEST_RESULTS" / "summary_index.md"
 
@@ -239,6 +263,11 @@ def update_summary_index(
     with open(index_file, "w") as f:
         f.write('\n'.join(lines))
 
+    logger.info(
+        "Summary index updated",
+        extra={"module": module, "config": config, "index_file": str(index_file)}
+    )
+
 
 def generate_backend_test_summary(
     all_results: List[Dict],
@@ -269,6 +298,15 @@ def generate_backend_test_summary(
     Returns:
         Path to generated summary file
     """
+    logger.debug(
+        "Generating backend test summary",
+        extra={
+            "strategy": strategy,
+            "preset": preset,
+            "symbol": symbol,
+            "results_count": len(all_results)
+        }
+    )
     # If this is a multi-strategy backtest, generate different summary
     if multi_strategy_results and strategy == "all_strategies":
         from app.presentation.dashboard.multi_strategy_utils import (
@@ -325,11 +363,20 @@ def generate_backend_test_summary(
     with open(summary_file, "w") as f:
         f.write(report)
 
+    logger.info(
+        "Backend test summary generated",
+        extra={
+            "strategy": strategy,
+            "preset": preset,
+            "summary_file": str(summary_file)
+        }
+    )
     return summary_file
 
 
 def _aggregate_metrics(all_results: List[Dict]) -> Dict:
     """Aggregate metrics from all module results."""
+    logger.debug("Aggregating metrics", extra={"results_count": len(all_results)})
     if not all_results:
         return {}
 
@@ -373,6 +420,14 @@ def _generate_comprehensive_backend_report(
     multi_strategy_results: Optional[Dict] = None,
 ) -> str:
     """Generate comprehensive backend test report."""
+    logger.debug(
+        "Generating comprehensive backend report",
+        extra={
+            "strategy": strategy,
+            "preset": preset,
+            "symbol": symbol
+        }
+    )
 
     (end_date - start_date).days
 
@@ -694,6 +749,7 @@ def _generate_multi_strategy_section(multi_strategy_results: Optional[Dict]) -> 
 
 def _generate_module_analysis(all_results: List[Dict]) -> str:
     """Generate module-specific analysis."""
+    logger.debug("Generating module analysis", extra={"modules_count": len(all_results)})
     analysis = """
 ## 3. ⚙️ Análisis Técnico por Módulo
 
@@ -850,6 +906,10 @@ def _generate_findings_and_recommendations(
     metrics: Dict, all_results: List[Dict], preset: str
 ) -> str:
     """Generate findings and recommendations."""
+    logger.debug(
+        "Generating findings and recommendations",
+        extra={"preset": preset}
+    )
     avg_win_rate = metrics.get("avg_win_rate", 0)
     avg_return = metrics.get("avg_total_return", 0)
 
@@ -941,6 +1001,10 @@ def _generate_findings_and_recommendations(
 
 def _generate_conclusion(metrics: Dict, avg_return: float, avg_win_rate: float) -> str:
     """Generate final conclusion."""
+    logger.debug(
+        "Generating conclusion",
+        extra={"avg_return": avg_return, "avg_win_rate": avg_win_rate}
+    )
 
     # Determine status
     if avg_return > 10 and avg_win_rate > 55:

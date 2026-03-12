@@ -5,12 +5,16 @@ This module contains Pydantic models for walk-forward analysis, out-of-sample te
 and parameter optimization to prevent overfitting in trading strategies.
 """
 
+import logging
+
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator, model_validator
+
+logger = logging.getLogger(__name__)
 
 
 class OptimizationMethod(str, Enum):
@@ -43,7 +47,26 @@ class ParameterConstraint(BaseModel):
     @model_validator(mode="after")
     def validate_values(self):
         if self.min_value >= self.max_value:
+            logger.error(
+                "Parameter constraint validation failed - min >= max",
+                extra={
+                    "component": "optimization",
+                    "action": "constraint_validation_error",
+                    "min_value": self.min_value,
+                    "max_value": self.max_value,
+                },
+            )
             raise ValueError("min_value must be less than max_value")
+        logger.debug(
+            "ParameterConstraint validated",
+            extra={
+                "component": "optimization",
+                "action": "constraint_validated",
+                "min_value": self.min_value,
+                "max_value": self.max_value,
+                "parameter_type": self.parameter_type.value,
+            },
+        )
         return self
 
 
@@ -58,9 +81,29 @@ class OptimizationParameter(BaseModel):
     @model_validator(mode="after")
     def validate_current_value(self):
         if not (self.constraints.min_value <= self.current_value <= self.constraints.max_value):
+            logger.error(
+                "Optimization parameter validation failed - value out of bounds",
+                extra={
+                    "component": "optimization",
+                    "action": "parameter_validation_error",
+                    "parameter_name": self.name,
+                    "current_value": self.current_value,
+                    "min_value": self.constraints.min_value,
+                    "max_value": self.constraints.max_value,
+                },
+            )
             raise ValueError(
                 f"current_value {self.current_value} must be within constraints [{self.constraints.min_value}, {self.constraints.max_value}]"
             )
+        logger.debug(
+            "OptimizationParameter validated",
+            extra={
+                "component": "optimization",
+                "action": "parameter_validated",
+                "parameter_name": self.name,
+                "current_value": self.current_value,
+            },
+        )
         return self
 
 
@@ -94,7 +137,24 @@ class WalkForwardConfig(BaseModel):
             and "initial_train_period" in info.data
             and v >= info.data["initial_train_period"]
         ):
+            logger.error(
+                "Walk-forward config validation failed - test_period >= initial_train_period",
+                extra={
+                    "component": "optimization",
+                    "action": "walk_forward_validation_error",
+                    "test_period": v,
+                    "initial_train_period": info.data.get("initial_train_period"),
+                },
+            )
             raise ValueError("test_period must be less than initial_train_period")
+        logger.debug(
+            "WalkForwardConfig test_period validated",
+            extra={
+                "component": "optimization",
+                "action": "walk_forward_validated",
+                "test_period": v,
+            },
+        )
         return v
 
 
@@ -147,6 +207,14 @@ class OptimizationConfig(BaseModel):
             and info.data.get("method") == OptimizationMethod.WALK_FORWARD
             and v is None
         ):
+            logger.error(
+                "Optimization config validation failed - missing walk_forward_config",
+                extra={
+                    "component": "optimization",
+                    "action": "config_validation_error",
+                    "method": OptimizationMethod.WALK_FORWARD.value,
+                },
+            )
             raise ValueError("walk_forward_config is required when method is walk_forward")
         return v
 
@@ -158,6 +226,14 @@ class OptimizationConfig(BaseModel):
             and info.data.get("method") == OptimizationMethod.PURGED_K_FOLD
             and v is None
         ):
+            logger.error(
+                "Optimization config validation failed - missing purged_k_fold_config",
+                extra={
+                    "component": "optimization",
+                    "action": "config_validation_error",
+                    "method": OptimizationMethod.PURGED_K_FOLD.value,
+                },
+            )
             raise ValueError("purged_k_fold_config is required when method is purged_k_fold")
         return v
 
@@ -192,9 +268,36 @@ class OutOfSampleTest(BaseModel):
     @model_validator(mode="after")
     def validate_dates(self):
         if self.test_end_date <= self.test_start_date:
+            logger.error(
+                "OutOfSampleTest validation failed - test_end_date <= test_start_date",
+                extra={
+                    "component": "optimization",
+                    "action": "oos_test_validation_error",
+                    "test_start_date": str(self.test_start_date),
+                    "test_end_date": str(self.test_end_date),
+                },
+            )
             raise ValueError("test_end_date must be after test_start_date")
         if self.train_end_date <= self.train_start_date:
+            logger.error(
+                "OutOfSampleTest validation failed - train_end_date <= train_start_date",
+                extra={
+                    "component": "optimization",
+                    "action": "oos_test_validation_error",
+                    "train_start_date": str(self.train_start_date),
+                    "train_end_date": str(self.train_end_date),
+                },
+            )
             raise ValueError("train_end_date must be after train_start_date")
+        logger.debug(
+            "OutOfSampleTest dates validated",
+            extra={
+                "component": "optimization",
+                "action": "oos_test_validated",
+                "strategy_name": self.strategy_name,
+                "test_period_days": (self.test_end_date - self.test_start_date).days,
+            },
+        )
         return self
 
 
@@ -237,7 +340,27 @@ class ParameterOptimizationRequest(BaseModel):
     @model_validator(mode="after")
     def validate_data_end_date(self):
         if self.data_end_date <= self.data_start_date:
+            logger.error(
+                "ParameterOptimizationRequest validation failed - data_end_date <= data_start_date",
+                extra={
+                    "component": "optimization",
+                    "action": "optimization_request_validation_error",
+                    "strategy_name": self.strategy_name,
+                    "data_start_date": str(self.data_start_date),
+                    "data_end_date": str(self.data_end_date),
+                },
+            )
             raise ValueError("data_end_date must be after data_start_date")
+        logger.info(
+            "ParameterOptimizationRequest validated",
+            extra={
+                "component": "optimization",
+                "action": "optimization_request_validated",
+                "strategy_name": self.strategy_name,
+                "parameters_count": len(self.parameters),
+                "optimization_method": self.optimization_config.method.value,
+            },
+        )
         return self
 
 
@@ -293,7 +416,25 @@ class OptimizationMetrics(BaseModel):
     @classmethod
     def validate_overfitting_risk(cls, v):
         if v > 0.7:
+            logger.error(
+                "OptimizationMetrics validation failed - high overfitting risk",
+                extra={
+                    "component": "optimization",
+                    "action": "metrics_validation_error",
+                    "overfitting_risk": v,
+                    "threshold": 0.7,
+                },
+            )
             raise ValueError("High overfitting risk detected")
+        if v > 0.5:
+            logger.warning(
+                "OptimizationMetrics warning - elevated overfitting risk",
+                extra={
+                    "component": "optimization",
+                    "action": "metrics_validation_warning",
+                    "overfitting_risk": v,
+                },
+            )
         return v
 
 
@@ -336,9 +477,35 @@ class OptimizationSummary(BaseModel):
 
         # Replace NaN and infinity with None or default values
         if math.isnan(self.avg_optimization_time) or math.isinf(self.avg_optimization_time):
+            logger.warning(
+                "OptimizationSummary contains invalid avg_optimization_time, resetting to 0",
+                extra={
+                    "component": "optimization",
+                    "action": "summary_validation_warning",
+                    "original_value": str(self.avg_optimization_time),
+                },
+            )
             self.avg_optimization_time = 0.0
 
         if math.isnan(self.best_score) or math.isinf(self.best_score):
+            logger.warning(
+                "OptimizationSummary contains invalid best_score, resetting to 0",
+                extra={
+                    "component": "optimization",
+                    "action": "summary_validation_warning",
+                    "original_value": str(self.best_score),
+                },
+            )
             self.best_score = 0.0
+
+        logger.debug(
+            "OptimizationSummary validated",
+            extra={
+                "component": "optimization",
+                "action": "summary_validated",
+                "total_optimizations": self.total_optimizations,
+                "best_strategy": self.best_strategy,
+            },
+        )
 
         return self

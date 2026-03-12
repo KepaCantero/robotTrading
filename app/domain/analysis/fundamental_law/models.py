@@ -11,10 +11,13 @@ Reference:
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
 
 from app.shared.config.centralized_config import get_config
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -97,14 +100,28 @@ class FundamentalLawComponents:
             >>> components.validate()
             True
         """
+        logger.debug(
+            "Validating Fundamental Law components",
+            extra={
+                "ir": float(self.information_ratio),
+                "ic": float(self.information_coefficient),
+                "breadth": float(self.breadth),
+                "tc": float(self.transfer_coefficient),
+            }
+        )
+
         # Validate all components are non-negative
         if self.information_ratio < 0:
+            logger.error("Information Ratio cannot be negative", extra={"value": float(self.information_ratio)})
             raise ValueError("Information Ratio cannot be negative")
         if self.information_coefficient < 0:
+            logger.error("Information Coefficient cannot be negative", extra={"value": float(self.information_coefficient)})
             raise ValueError("Information Coefficient cannot be negative")
         if self.breadth < 0:
+            logger.error("Breadth cannot be negative", extra={"value": float(self.breadth)})
             raise ValueError("Breadth cannot be negative")
         if self.transfer_coefficient < 0:
+            logger.error("Transfer Coefficient cannot be negative", extra={"value": float(self.transfer_coefficient)})
             raise ValueError("Transfer Coefficient cannot be negative")
 
         # Calculate expected IR from components
@@ -116,9 +133,20 @@ class FundamentalLawComponents:
         # Use relative tolerance for better handling of different scales
         if self.information_ratio != 0:
             relative_difference = difference / abs(self.information_ratio)
-            return relative_difference <= tolerance
+            is_valid = relative_difference <= tolerance
         else:
-            return difference <= tolerance
+            is_valid = difference <= tolerance
+
+        logger.info(
+            f"Fundamental Law validation {'passed' if is_valid else 'failed'}",
+            extra={
+                "is_valid": is_valid,
+                "difference": float(difference),
+                "tolerance": float(tolerance),
+            }
+        )
+
+        return is_valid
 
     def get_theoretical_ir(self) -> Decimal:
         """
@@ -234,7 +262,17 @@ class ICMetrics:
             >>> metrics.is_significant(alpha=0.001)
             False
         """
-        return self.statistical_significance < alpha
+        is_sig = self.statistical_significance < alpha
+        logger.debug(
+            f"IC significance check: {'significant' if is_sig else 'not significant'}",
+            extra={
+                "ic": float(self.ic),
+                "p_value": self.statistical_significance,
+                "alpha": alpha,
+                "is_significant": is_sig,
+            }
+        )
+        return is_sig
 
     def get_skill_level(self) -> str:
         """
@@ -255,13 +293,22 @@ class ICMetrics:
             'excellent'
         """
         if self.ic >= Decimal("0.05"):
-            return "excellent"
+            skill_level = "excellent"
         elif self.ic >= Decimal("0.03"):
-            return "good"
+            skill_level = "good"
         elif self.ic >= Decimal("0.01"):
-            return "fair"
+            skill_level = "fair"
         else:
-            return "poor"
+            skill_level = "poor"
+
+        logger.debug(
+            f"IC skill level assessed: {skill_level}",
+            extra={
+                "ic": float(self.ic),
+                "skill_level": skill_level,
+            }
+        )
+        return skill_level
 
     def get_skill_level_config(self) -> str:
         """
@@ -302,6 +349,7 @@ class ICMetrics:
             'medium'
         """
         if not self.ic_decay or len(self.ic_decay) < 2:
+            logger.debug("Signal persistence unknown: insufficient decay data")
             return "unknown"
 
         # Calculate decay rate
@@ -309,6 +357,7 @@ class ICMetrics:
         final_ic = self.ic_decay[-1]
 
         if initial_ic == 0:
+            logger.warning("Signal persistence unknown: initial IC is zero")
             return "unknown"
 
         decay_ratio = abs(final_ic) / abs(initial_ic)
@@ -321,11 +370,23 @@ class ICMetrics:
         medium_threshold = Decimal(str(getattr(cfg.trading, 'signal_persistence_medium', 0.4)))
 
         if decay_ratio >= long_threshold:
-            return "long"  # Signal persists well
+            persistence = "long"  # Signal persists well
         elif decay_ratio >= medium_threshold:
-            return "medium"  # Moderate decay
+            persistence = "medium"  # Moderate decay
         else:
-            return "short"  # Signal decays quickly
+            persistence = "short"  # Signal decays quickly
+
+        logger.debug(
+            f"Signal persistence assessed: {persistence}",
+            extra={
+                "decay_ratio": float(decay_ratio),
+                "initial_ic": float(initial_ic),
+                "final_ic": float(final_ic),
+                "persistence": persistence,
+            }
+        )
+
+        return persistence
 
 
 @dataclass
@@ -387,11 +448,23 @@ class BreadthMetrics:
         breadth_medium = getattr(config.trading, 'breadth_medium_threshold', 100)
 
         if self.effective_breadth >= Decimal(str(breadth_high)):
-            return "high"
+            category = "high"
         elif self.effective_breadth >= Decimal(str(breadth_medium)):
-            return "medium"
+            category = "medium"
         else:
-            return "low"
+            category = "low"
+
+        logger.debug(
+            f"Breadth category assessed: {category}",
+            extra={
+                "effective_breadth": float(self.effective_breadth),
+                "annual_breadth": float(self.annual_breadth),
+                "independence_factor": float(self.independence_factor),
+                "category": category,
+            }
+        )
+
+        return category
 
     def get_breadth_sqrt(self) -> Decimal:
         """

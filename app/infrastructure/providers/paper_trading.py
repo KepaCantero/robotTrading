@@ -5,10 +5,13 @@ This module implements a paper trading portfolio provider for testing
 and simulation without real broker connections.
 """
 
+import logging
 import random
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 from app.domain.models.portfolio import (
     AssetClass,
@@ -26,6 +29,10 @@ class PaperTradingPortfolioProvider:
 
     def __init__(self, initial_cash: Decimal = Decimal("100000")):
         """Initialize paper trading provider with initial cash."""
+        logger.info(
+            "Initializing paper trading provider",
+            extra={"initial_cash": float(initial_cash), "broker": "paper_trading"},
+        )
         self.initial_cash = initial_cash
         self.cash = initial_cash
         self.positions: Dict[str, Position] = {}
@@ -85,6 +92,10 @@ class PaperTradingPortfolioProvider:
 
     async def get_portfolio(self) -> Portfolio:
         """Get current portfolio state."""
+        logger.debug(
+            "Getting portfolio state",
+            extra={"positions_count": len(self.positions), "cash": float(self.cash)},
+        )
         # Update market prices with some random movement
         await self._update_market_prices()
 
@@ -96,13 +107,21 @@ class PaperTradingPortfolioProvider:
                     position.market_price - position.avg_price
                 ) * position.quantity
 
-        return Portfolio(
+        portfolio = Portfolio(
             cash=self.cash,
             positions=list(self.positions.values()),
             timestamp=datetime.utcnow(),
             broker=self.broker,
             currency="USD",
         )
+        logger.debug(
+            "Portfolio state retrieved",
+            extra={
+                "total_equity": float(portfolio.total_equity),
+                "positions_count": len(portfolio.positions),
+            },
+        )
+        return portfolio
 
     async def get_position(self, symbol: str) -> Optional[Position]:
         """Get specific position by symbol."""
@@ -146,9 +165,21 @@ class PaperTradingPortfolioProvider:
         self, symbol: str, quantity: Decimal, price: Optional[Decimal] = None
     ) -> bool:
         """Simulate a trade execution."""
+        logger.info(
+            "Simulating trade",
+            extra={
+                "symbol": symbol,
+                "quantity": float(quantity),
+                "price": float(price) if price else None,
+            },
+        )
         symbol = symbol.upper()
 
         if symbol not in self.market_prices:
+            logger.warning(
+                "Trade simulation failed - symbol not found",
+                extra={"symbol": symbol, "available_symbols": list(self.market_prices.keys())},
+            )
             return False
 
         if price is None:
@@ -158,6 +189,14 @@ class PaperTradingPortfolioProvider:
 
         # Check if we have enough cash for buy orders
         if quantity > 0 and total_cost > self.cash:
+            logger.warning(
+                "Trade simulation failed - insufficient cash",
+                extra={
+                    "symbol": symbol,
+                    "required_cash": float(total_cost),
+                    "available_cash": float(self.cash),
+                },
+            )
             return False
 
         # Execute the trade
@@ -215,10 +254,24 @@ class PaperTradingPortfolioProvider:
                 )
                 self.cash += total_cost
 
+        logger.info(
+            "Trade simulation completed successfully",
+            extra={
+                "symbol": symbol,
+                "quantity": float(quantity),
+                "price": float(price),
+                "total_cost": float(total_cost),
+                "remaining_cash": float(self.cash),
+            },
+        )
         return True
 
     async def reset_portfolio(self):
         """Reset portfolio to initial state."""
+        logger.info(
+            "Resetting portfolio to initial state",
+            extra={"initial_cash": float(self.initial_cash)},
+        )
         self.cash = self.initial_cash
         self.positions = {}
 
@@ -271,6 +324,13 @@ class PaperTradingPortfolioProvider:
 
     async def update_portfolio(self, portfolio: Portfolio) -> bool:
         """Update portfolio state."""
+        logger.info(
+            "Updating portfolio state",
+            extra={
+                "cash": float(portfolio.cash),
+                "positions_count": len(portfolio.positions),
+            },
+        )
         try:
             # Update cash
             self.cash = portfolio.cash
@@ -278,6 +338,11 @@ class PaperTradingPortfolioProvider:
             # Update positions
             self.positions = {pos.symbol: pos for pos in portfolio.positions}
 
+            logger.debug("Portfolio state updated successfully")
             return True
-        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
+            logger.error(
+                "Failed to update portfolio state",
+                extra={"error": str(e), "error_type": type(e).__name__},
+            )
             return False

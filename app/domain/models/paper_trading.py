@@ -5,6 +5,7 @@ This module defines models for paper trading simulation, virtual portfolio manag
 and trade execution simulation for the algorithmic trading system.
 """
 
+import logging
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
@@ -12,6 +13,8 @@ from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, field_validator, model_validator
+
+logger = logging.getLogger(__name__)
 
 
 class PaperTradingMode(str, Enum):
@@ -121,20 +124,67 @@ class PaperTrade(BaseModel):
     def validate_trade_consistency(self) -> "PaperTrade":
         """Validate trade consistency."""
         if self.filled_quantity > self.quantity:
+            logger.error(
+                "Trade validation failed: filled quantity exceeds order quantity",
+                extra={
+                    "trade_id": str(self.id),
+                    "symbol": self.symbol,
+                    "filled_quantity": float(self.filled_quantity),
+                    "quantity": float(self.quantity),
+                },
+            )
             raise ValueError(
                 f"Filled quantity ({self.filled_quantity}) cannot exceed order quantity ({self.quantity})"
             )
 
         if self.status == TradeStatus.FILLED and self.filled_quantity != self.quantity:
+            logger.error(
+                "Trade validation failed: filled status but quantity mismatch",
+                extra={
+                    "trade_id": str(self.id),
+                    "symbol": self.symbol,
+                    "status": self.status.value,
+                    "filled_quantity": float(self.filled_quantity),
+                    "quantity": float(self.quantity),
+                },
+            )
             raise ValueError("Filled trade must have filled_quantity equal to quantity")
 
         if self.status == TradeStatus.PARTIALLY_FILLED and self.filled_quantity >= self.quantity:
+            logger.error(
+                "Trade validation failed: partial fill status but invalid quantity",
+                extra={
+                    "trade_id": str(self.id),
+                    "symbol": self.symbol,
+                    "status": self.status.value,
+                    "filled_quantity": float(self.filled_quantity),
+                    "quantity": float(self.quantity),
+                },
+            )
             raise ValueError("Partially filled trade must have filled_quantity less than quantity")
 
         if self.filled_at and self.filled_at < self.created_at:
+            logger.error(
+                "Trade validation failed: fill time before creation time",
+                extra={
+                    "trade_id": str(self.id),
+                    "symbol": self.symbol,
+                    "filled_at": self.filled_at.isoformat(),
+                    "created_at": self.created_at.isoformat(),
+                },
+            )
             raise ValueError(
                 f"Fill time ({self.filled_at}) cannot be before creation time ({self.created_at})"
             )
+
+        logger.debug(
+            "Paper trade validated successfully",
+            extra={
+                "trade_id": str(self.id),
+                "symbol": self.symbol,
+                "status": self.status.value,
+            },
+        )
 
         return self
 
@@ -220,6 +270,17 @@ class PaperPosition(BaseModel):
         # Calculate total P&L
         self.total_pnl = self.unrealized_pnl + self.realized_pnl
 
+        logger.debug(
+            "Position metrics calculated",
+            extra={
+                "position_id": str(self.id),
+                "symbol": self.symbol,
+                "quantity": float(self.quantity),
+                "unrealized_pnl": float(self.unrealized_pnl),
+                "total_pnl": float(self.total_pnl),
+            },
+        )
+
         return self
 
     def recalculate_metrics(self) -> None:
@@ -240,6 +301,16 @@ class PaperPosition(BaseModel):
 
         # Calculate total P&L
         self.total_pnl = self.unrealized_pnl + self.realized_pnl
+
+        logger.debug(
+            "Position metrics recalculated",
+            extra={
+                "position_id": str(self.id),
+                "symbol": self.symbol,
+                "current_price": float(self.current_price),
+                "unrealized_pnl": float(self.unrealized_pnl),
+            },
+        )
 
 
 class PaperPortfolio(BaseModel):
@@ -338,6 +409,18 @@ class PaperPortfolio(BaseModel):
         # Calculate total return
         if self.initial_cash > 0:
             self.total_return = (self.total_pnl / self.initial_cash) * Decimal("100")
+
+        logger.debug(
+            "Portfolio metrics calculated",
+            extra={
+                "portfolio_id": str(self.id),
+                "portfolio_name": self.name,
+                "total_equity": float(self.total_equity),
+                "total_pnl": float(self.total_pnl),
+                "total_return": float(self.total_return),
+                "positions_count": len(self.positions),
+            },
+        )
 
         return self
 
@@ -481,13 +564,41 @@ class PaperTradingSession(BaseModel):
     def validate_session_timing(self) -> "PaperTradingSession":
         """Validate session timing."""
         if self.ended_at and self.ended_at < self.started_at:
+            logger.error(
+                "Session timing validation failed: end time before start time",
+                extra={
+                    "session_id": str(self.id),
+                    "session_name": self.name,
+                    "started_at": self.started_at.isoformat(),
+                    "ended_at": self.ended_at.isoformat(),
+                },
+            )
             raise ValueError(
                 f"End time ({self.ended_at}) cannot be before start time ({self.started_at})"
             )
 
         if self.last_activity < self.started_at:
+            logger.error(
+                "Session timing validation failed: last activity before start time",
+                extra={
+                    "session_id": str(self.id),
+                    "session_name": self.name,
+                    "started_at": self.started_at.isoformat(),
+                    "last_activity": self.last_activity.isoformat(),
+                },
+            )
             raise ValueError(
                 f"Last activity ({self.last_activity}) cannot be before start time ({self.started_at})"
             )
+
+        logger.debug(
+            "Paper trading session validated successfully",
+            extra={
+                "session_id": str(self.id),
+                "session_name": self.name,
+                "is_active": self.is_active,
+                "total_trades": self.total_trades,
+            },
+        )
 
         return self

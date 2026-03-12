@@ -4,10 +4,13 @@ Configuration Repository - T11.1
 Type-based storage for various artifact types.
 """
 
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -34,6 +37,10 @@ class ConfigurationRepository:
 
     def __init__(self):
         self._store: Dict[str, StoredConfiguration] = {}
+        logger.debug(
+            "ConfigurationRepository initialized",
+            extra={"component": "ConfigurationRepository", "store_size": 0},
+        )
 
     def save(
         self, config_type: str, data: Dict[str, Any], metadata: Optional[Dict[str, Any]] = None
@@ -51,29 +58,87 @@ class ConfigurationRepository:
         )
 
         self._store[config_id] = config
+        logger.info(
+            "Configuration saved",
+            extra={
+                "component": "ConfigurationRepository",
+                "config_id": config_id,
+                "config_type": config_type,
+                "store_size": len(self._store),
+                "has_metadata": bool(metadata),
+            },
+        )
         return config_id
 
     def load(self, config_id: str) -> Optional[StoredConfiguration]:
         """Load a configuration by ID."""
-        return self._store.get(config_id)
+        config = self._store.get(config_id)
+        logger.debug(
+            "Configuration loaded",
+            extra={
+                "component": "ConfigurationRepository",
+                "config_id": config_id,
+                "found": config is not None,
+            },
+        )
+        return config
 
     def list_by_type(self, config_type: str) -> List[StoredConfiguration]:
         """List all configurations of a specific type."""
-        return [c for c in self._store.values() if c.config_type == config_type]
+        configs = [c for c in self._store.values() if c.config_type == config_type]
+        logger.debug(
+            "Configurations listed by type",
+            extra={
+                "component": "ConfigurationRepository",
+                "config_type": config_type,
+                "count": len(configs),
+            },
+        )
+        return configs
 
     def delete(self, config_id: str) -> bool:
         """Delete a configuration by ID."""
         if config_id in self._store:
             del self._store[config_id]
+            logger.info(
+                "Configuration deleted",
+                extra={
+                    "component": "ConfigurationRepository",
+                    "config_id": config_id,
+                    "store_size": len(self._store),
+                },
+            )
             return True
+        logger.warning(
+            "Configuration not found for deletion",
+            extra={
+                "component": "ConfigurationRepository",
+                "config_id": config_id,
+            },
+        )
         return False
 
     def update(self, config_id: str, data: Dict[str, Any]) -> Optional[StoredConfiguration]:
         """Update a configuration's data."""
         if config_id not in self._store:
+            logger.warning(
+                "Configuration not found for update",
+                extra={
+                    "component": "ConfigurationRepository",
+                    "config_id": config_id,
+                },
+            )
             return None
 
         config = self._store[config_id]
         config.data = data
         config.updated_at = datetime.utcnow()
+        logger.info(
+            "Configuration updated",
+            extra={
+                "component": "ConfigurationRepository",
+                "config_id": config_id,
+                "config_type": config.config_type,
+            },
+        )
         return config

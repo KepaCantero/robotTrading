@@ -14,6 +14,7 @@ from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 from app.backtesting.liquidity_validator import LiquidityValidator
+from app.shared.config.centralized_config import get_config
 from app.backtesting.models import (
     BacktestConfig,
     BacktestResult,
@@ -41,6 +42,10 @@ from app.domain.services.trading_validators import TradingValidator
 from app.services.dynamic_capital_reallocation import DynamicCapitalReallocationEngine
 
 logger = logging.getLogger(__name__)
+
+# Get centralized backtesting configuration
+_config = get_config()
+_backtest_config = _config.backtesting
 
 
 def get_price(md) -> Decimal:
@@ -152,17 +157,17 @@ class BacktestEngine:
         # Initialize validators (keep for backward compatibility)
         self.trading_validator = TradingValidator()
         self.liquidity_validator = LiquidityValidator(
-            enable_partial_fills=True,  # Allow partial fills for large orders
-            max_order_pct_of_volume=Decimal("0.10"),  # Reject orders >10% of daily volume
-            warning_order_pct_of_volume=Decimal("0.05"),  # Warn for orders >5% of daily volume
-            partial_fill_pct=Decimal("0.05"),  # Fill up to 5% of volume for partial fills
+            enable_partial_fills=_backtest_config.liquidity_enable_partial_fills,
+            max_order_pct_of_volume=_backtest_config.liquidity_max_order_pct_of_volume,
+            warning_order_pct_of_volume=_backtest_config.liquidity_warning_order_pct_of_volume,
+            partial_fill_pct=_backtest_config.liquidity_partial_fill_pct,
         )
 
         # COMPLIANCE: Initialize compliance_engine - "THE ONLY ENGINE" per documentation
         # This engine integrates ALL 17 systems (8 main + 12 compliance rules)
         # All trades MUST be validated through analyze_pre_trade() and analyze_post_trade()
         self.compliance_engine = ComplianceEngine(
-            enable_logging=False,  # Reduce logging noise during backtesting
+            enable_logging=_backtest_config.compliance_enable_logging,
         )
         # Set starting capital for kill switch calculations (Hull Rule 13.1)
         self.compliance_engine.set_starting_capital(float(config.initial_capital))
@@ -232,10 +237,10 @@ class BacktestEngine:
         self.performance_calculator = PerformanceMetricsCalculator(self.config)
         self.trading_validator = TradingValidator()
         self.liquidity_validator = LiquidityValidator(
-            enable_partial_fills=True,
-            max_order_pct_of_volume=Decimal("0.10"),
-            warning_order_pct_of_volume=Decimal("0.05"),
-            partial_fill_pct=Decimal("0.05"),
+            enable_partial_fills=_backtest_config.liquidity_enable_partial_fills,
+            max_order_pct_of_volume=_backtest_config.liquidity_max_order_pct_of_volume,
+            warning_order_pct_of_volume=_backtest_config.liquidity_warning_order_pct_of_volume,
+            partial_fill_pct=_backtest_config.liquidity_partial_fill_pct,
         )
         # Recreate compliance engine (it has its own pickle support)
         self.compliance_engine = ComplianceEngine(enable_logging=False)

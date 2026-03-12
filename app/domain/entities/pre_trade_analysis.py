@@ -7,9 +7,12 @@ It's a pure domain entity with no infrastructure dependencies.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -169,17 +172,53 @@ class PreTradeAnalysis:
 
     def get_execution_summary(self) -> str:
         """Get a human-readable execution summary."""
+        logger.debug(
+            "Generating execution summary",
+            extra={
+                "can_execute": self.can_execute,
+                "confidence": self.confidence,
+                "algorithm": self.algorithm,
+                "venue": self.venue,
+            },
+        )
         if not self.can_execute:
+            logger.info(
+                "Execution not permitted",
+                extra={
+                    "can_execute": False,
+                    "reasons": self.reasons,
+                    "confidence": self.confidence,
+                },
+            )
             return f"Cannot execute: {'; '.join(self.reasons)}"
 
-        return (
+        summary = (
             f"Execute {self.algorithm} @ {self.limit_price or 'MARKET'} "
             f"on {self.venue} (confidence: {self.confidence:.0%}, "
             f"est. cost: {self.total_cost_bps:.1f} bps)"
         )
+        logger.info(
+            "Execution summary generated",
+            extra={
+                "can_execute": True,
+                "algorithm": self.algorithm,
+                "venue": self.venue,
+                "confidence": self.confidence,
+                "total_cost_bps": self.total_cost_bps,
+            },
+        )
+        return summary
 
     def get_risk_summary(self) -> Dict[str, Any]:
         """Get a summary of risk metrics."""
+        logger.debug(
+            "Generating risk summary",
+            extra={
+                "portfolio_var": self.portfolio_var,
+                "position_limit_ok": self.position_limit_ok,
+                "drawdown_limit_ok": self.drawdown_limit_ok,
+            },
+        )
         return {
             "portfolio_var": self.portfolio_var,
             "position_limit_ok": self.position_limit_ok,
@@ -191,6 +230,14 @@ class PreTradeAnalysis:
 
     def get_compliance_summary(self) -> Dict[str, Any]:
         """Get a summary of compliance metrics."""
+        logger.debug(
+            "Generating compliance summary",
+            extra={
+                "slo_compliance": self.slo_compliance,
+                "test_coverage": self.test_coverage,
+                "clean_architecture_score": self.clean_architecture_score,
+            },
+        )
         return {
             "slo_compliance": self.slo_compliance,
             "test_coverage": self.test_coverage,

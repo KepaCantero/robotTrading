@@ -6,9 +6,13 @@ for statistical learning, meta-labeling, microstructure, risk management,
 and execution quality.
 """
 
+import logging
+
 from pydantic import Field, field_validator, model_validator
 
 from app.shared.config.base import ConfigBase
+
+logger = logging.getLogger(__name__)
 
 
 class ComplianceConfig(ConfigBase):
@@ -651,7 +655,9 @@ class ComplianceConfig(ConfigBase):
     )
     @classmethod
     def validate_score_100(cls, v):
+        logger.debug("validating_score_100", extra={"value": v})
         if not 0 <= v <= 100:
+            logger.error("validation_failed_score_100", extra={"value": v, "expected_range": "0-100"})
             raise ValueError("Score must be between 0 and 100")
         return v
 
@@ -698,14 +704,18 @@ class ComplianceConfig(ConfigBase):
     )
     @classmethod
     def validate_score_1(cls, v):
+        logger.debug("validating_score_1", extra={"value": v})
         if not 0 <= v <= 1:
+            logger.error("validation_failed_score_1", extra={"value": v, "expected_range": "0-1"})
             raise ValueError("Score must be between 0 and 1")
         return v
 
     @field_validator("ESTIMATED_SPREAD_BPS")
     @classmethod
     def validate_spread_bps(cls, v):
+        logger.debug("validating_spread_bps", extra={"value": v})
         if not 0 <= v <= 100:
+            logger.error("validation_failed_spread_bps", extra={"value": v, "expected_range": "0-100"})
             raise ValueError("Spread BPS must be between 0 and 100")
         return v
 
@@ -713,11 +723,28 @@ class ComplianceConfig(ConfigBase):
     def validate_liquidity_weights_sum(self):
         """Ensure liquidity aggregation weights sum to approximately 1.0."""
         total = self.HARRIS_LIQUIDITY_WEIGHT + self.OHARA_LIQUIDITY_WEIGHT
+        logger.debug(
+            "validating_liquidity_weights_sum",
+            extra={
+                "harris_weight": self.HARRIS_LIQUIDITY_WEIGHT,
+                "ohara_weight": self.OHARA_LIQUIDITY_WEIGHT,
+                "total": total
+            }
+        )
         if not (0.99 <= total <= 1.01):  # Allow small floating point tolerance
+            logger.error(
+                "liquidity_weights_validation_failed",
+                extra={
+                    "harris_weight": self.HARRIS_LIQUIDITY_WEIGHT,
+                    "ohara_weight": self.OHARA_LIQUIDITY_WEIGHT,
+                    "total": total
+                }
+            )
             raise ValueError(
                 f"Liquidity weights must sum to 1.0, got {total:.4f} "
                 f"(Harris={self.HARRIS_LIQUIDITY_WEIGHT}, O'Hara={self.OHARA_LIQUIDITY_WEIGHT})"
             )
+        logger.debug("liquidity_weights_validated", extra={"total": total})
         return self
 
 

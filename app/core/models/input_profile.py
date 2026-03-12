@@ -4,12 +4,15 @@ Input Profile Model
 Defines the input profile for investment strategy configuration.
 """
 
+import logging
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict
 
 from pydantic import BaseModel, Field, validator
+
+logger = logging.getLogger(__name__)
 
 
 class ObjectivoInversion(str, Enum):
@@ -44,12 +47,18 @@ class InputProfile(BaseModel):
 
     @validator("capital_must_be_positive")
     def validate_capital(cls, v: Decimal) -> bool:
+        logger.debug("Validating capital value", extra={"capital": float(v)})
         if v <= 0:
+            logger.error("Capital validation failed: must be positive", extra={"capital": float(v)})
             raise ValueError("Capital must be positive")
+        logger.debug("Capital validation passed", extra={"capital": float(v)})
         return v
 
     @validator("horizon_must_be_valid")
     def validate_horizon(cls, v: int) -> bool:
+        logger.debug("Validating investment horizon", extra={"horizon_months": v})
         if v < 1 or v > 600:
+            logger.error("Horizon validation failed: must be between 1 and 600 months", extra={"horizon_months": v})
             raise ValueError("Investment horizon must be between 1 and 600 months")
+        logger.debug("Horizon validation passed", extra={"horizon_months": v})
         return v

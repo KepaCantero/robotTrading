@@ -2,18 +2,18 @@
 
 ## 1. Module Overview
 File: smart_order_router.py
-Domain: General
+Domain: Execution
 Generated: 2026-03-09
 
 ## 2. Dependencies
-- `broker_negotiation_engine`
 - `decimal`
-- `execution_cost_monitor`
 - `logging`
-- `market_impact_estimator`
-- `models`
-- `order_splitting_optimizer`
 - `typing`
+- `.broker_negotiation_engine` (get_broker_negotiation_engine)
+- `.execution_cost_monitor` (get_execution_cost_monitor)
+- `.market_impact_estimator` (get_market_impact_estimator)
+- `.models` (ExecutionPlan)
+- `.order_splitting_optimizer` (get_order_splitting_optimizer)
 
 ## 3. Core Components
 ### Classes
@@ -82,6 +82,26 @@ Dependency Inversion: Depend on abstractions, not concretions. Use dependency in
 - [ ] Hash passwords with bcrypt/argon2
 
 ## 6. Trading Rules (from rules/trading/64-realistic-retail-trading-rules.md)
+
+### Applicable Rules
+
+#### R8
+Bid-Ask Spread Management (limit orders <0.1%, market only strong signals)
+
+- [ ] Implementation verified
+- [ ] Tests pass
+
+#### R9
+Execution Timing (avoid market open/close 15min, optimal 10AM-1PM EST)
+
+- [ ] Implementation verified
+- [ ] Tests pass
+
+#### R10
+Slippage Monitor (max 0.1% warning, 0.2% reject)
+
+- [ ] Implementation verified
+- [ ] Tests pass
 
 ### General Compliance
 This file should comply with all applicable trading rules based on its functionality.

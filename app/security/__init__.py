@@ -12,6 +12,7 @@ Features:
 - Secrets management
 - Rate limiting
 - Audit logging
+- Authentication and authorization
 
 Modules:
 - input_validation: Comprehensive input sanitization
@@ -19,6 +20,12 @@ Modules:
 - output_encoding: XSS-safe output encoding
 - security_headers: Security headers middleware
 - secrets_manager: Secrets lifecycle management
+- auth: Authentication and authorization (SOLID-compliant)
+- user: User domain model
+- user_store: User storage backend
+- jwt_token_manager: JWT token management
+- auth_attempt_tracker: Auth attempt tracking and lockout
+- interfaces: Protocol interfaces for dependency injection
 
 Usage:
     from app.security import (
@@ -26,6 +33,8 @@ Usage:
         require_csrf,
         get_secret,
         add_security_headers,
+        get_current_user,
+        User,
     )
 
     # Validate input
@@ -37,10 +46,16 @@ Usage:
     # Get secret securely
     api_key = get_secret("API_KEY")
 
+    # Use authentication
+    @router.get("/protected")
+    async def protected_route(user: User = Depends(get_current_user)):
+        return {"user": user.username}
+
 Security Compliance: 95%
 - OWASP Top 10
 - CIS Benchmarks
 - Zero-trust architecture
+- SOLID Principles
 """
 
 from app.security.csrf_protection import (
@@ -80,6 +95,33 @@ from app.security.security_headers import (
     XFrameOptions,
     add_security_headers,
     get_security_headers,
+)
+
+# Authentication components (SOLID-compliant refactored)
+from app.security.auth import (
+    AuthAttemptTracker,
+    JWTTokenManager,
+    User,
+    UserRoles,
+    UserStore,
+    create_access_token_for_user,
+    get_admin_user,
+    get_attempt_tracker,
+    get_current_user,
+    get_current_user_optional,
+    get_deployer_user,
+    get_token_manager,
+    get_user_id,
+    get_user_store,
+    get_username,
+    require_permissions,
+    require_roles,
+    verify_token_and_get_user,
+)
+from app.security.interfaces import (
+    AuthAttemptTrackerProtocol,
+    JWTTokenManagerProtocol,
+    UserStoreProtocol,
 )
 
 # Optional imports - secrets_manager requires cryptography
@@ -135,6 +177,30 @@ __all__ = [
     "ReferrerPolicy",
     "PermissionsPolicy",
     "CSPHeaders",
+    # Authentication and Authorization
+    "User",
+    "UserRoles",
+    "UserStore",
+    "get_user_store",
+    "JWTTokenManager",
+    "get_token_manager",
+    "AuthAttemptTracker",
+    "get_attempt_tracker",
+    "get_current_user_optional",
+    "get_current_user",
+    "get_admin_user",
+    "get_trader_user",
+    "get_deployer_user",
+    "require_roles",
+    "require_permissions",
+    "get_user_id",
+    "get_username",
+    "create_access_token_for_user",
+    "verify_token_and_get_user",
+    # Protocol interfaces
+    "UserStoreProtocol",
+    "JWTTokenManagerProtocol",
+    "AuthAttemptTrackerProtocol",
     # Secrets management
     "validate_secrets",
     "get_secret",

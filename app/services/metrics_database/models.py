@@ -5,11 +5,14 @@ Data models for time-series metrics storage and querying.
 """
 
 import asyncio
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 
 class MetricType(str, Enum):
@@ -317,8 +320,32 @@ class CollectorSource:
     async def collect(self) -> List[MetricPoint]:
         """Execute collection."""
         try:
-            return await self.collector_fn()
-        except (asyncio.TimeoutError, OSError):
+            logger.debug(
+                "Starting metric collection",
+                extra={
+                    "source_name": self.name,
+                    "priority": self.priority,
+                    "timeout_seconds": self.timeout_seconds,
+                }
+            )
+            result = await self.collector_fn()
+            logger.info(
+                "Metric collection completed",
+                extra={
+                    "source_name": self.name,
+                    "metrics_collected": len(result),
+                }
+            )
+            return result
+        except (asyncio.TimeoutError, OSError) as e:
+            logger.warning(
+                "Metric collection failed",
+                extra={
+                    "source_name": self.name,
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                }
+            )
             # Log error but don't raise to allow other sources to continue
             return []
 
@@ -349,12 +376,29 @@ class QuestDBConfig:
         """Validate configuration after initialization."""
         import os
 
+        logger.debug(
+            "Initializing QuestDB configuration",
+            extra={
+                "host": self.host,
+                "port": self.port,
+                "database": self.database,
+                "user": self.user,
+            }
+        )
+
         # Rule 28: Read password from environment if not provided
         if not self.password:
             self.password = os.getenv("QUESTDB_PASSWORD", "")
         if not self.password:
             import warnings
 
+            logger.warning(
+                "QuestDB password not configured",
+                extra={
+                    "host": self.host,
+                    "environment_variable": "QUESTDB_PASSWORD",
+                }
+            )
             warnings.warn(
                 "QUESTDB_PASSWORD not set. QuestDB features may not work correctly.",
                 UserWarning,
@@ -370,10 +414,26 @@ class QuestDBConfig:
         Never hardcodes credentials in connection strings.
         """
         if not self.password:
+            logger.error(
+                "Cannot build connection string: password not configured",
+                extra={
+                    "host": self.host,
+                    "port": self.port,
+                    "database": self.database,
+                }
+            )
             raise ValueError(
                 "QUESTDB_PASSWORD environment variable not set. "
                 "Cannot build secure connection string."
             )
+        logger.debug(
+            "QuestDB connection string generated",
+            extra={
+                "host": self.host,
+                "port": self.port,
+                "database": self.database,
+            }
+        )
         return (
             f"postgresql://{self.user}:{self.password}@" f"{self.host}:{self.port}/{self.database}"
         )

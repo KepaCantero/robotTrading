@@ -30,11 +30,14 @@ Reference:
     - Chan, E.P. (2013). Algorithmic Trading.
 """
 
+import logging
 from decimal import Decimal
 from typing import List, Optional, Union
 
 import numpy as np
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 # Import the consolidated domain implementation
 from app.domain.services.metrics.performance_metrics import (
@@ -106,6 +109,16 @@ class PerformanceMetricsCalculator(_PerformanceMetricsCalculator):
         rf = risk_free_rate if risk_free_rate is not None else float(config.default_risk_free_rate)
         td = trading_days if trading_days is not None else config.annual_trading_days
 
+        logger.debug(
+            "Creating PerformanceMetricsCalculator from config",
+            extra={
+                "risk_free_rate": rf,
+                "trading_days": td,
+                "use_empyrical": use_empyrical,
+                "config_source": "CentralizedConfig",
+            }
+        )
+
         return cls(
             risk_free_rate=rf,
             trading_days=td,
@@ -117,6 +130,13 @@ def _to_float_array(
     returns: Union[pd.Series, np.ndarray, List[Decimal], List[float]]
 ) -> np.ndarray:
     """Convert returns to numpy array, handling various input types."""
+    logger.debug(
+        "Converting returns to float array",
+        extra={
+            "input_type": type(returns).__name__,
+            "input_length": len(returns) if hasattr(returns, '__len__') else 'N/A',
+        }
+    )
     if isinstance(returns, pd.Series):
         arr = returns.values.astype(np.float64)
     elif isinstance(returns, list):
@@ -126,7 +146,16 @@ def _to_float_array(
             arr = np.array(returns, dtype=np.float64)
     else:
         arr = np.asarray(returns, dtype=np.float64)
-    return arr[~np.isnan(arr)]
+
+    result = arr[~np.isnan(arr)]
+    logger.debug(
+        "Returns conversion complete",
+        extra={
+            "output_length": len(result),
+            "nan_removed": len(arr) - len(result),
+        }
+    )
+    return result
 
 
 def sharpe_ratio(
@@ -145,8 +174,24 @@ def sharpe_ratio(
     Returns:
         Sharpe ratio (annualized if annualize=True)
     """
+    logger.debug(
+        "Calculating Sharpe ratio",
+        extra={
+            "returns_length": len(returns) if hasattr(returns, '__len__') else 'N/A',
+            "risk_free_rate": risk_free_rate,
+            "annualize": annualize,
+        }
+    )
     calc = PerformanceMetricsCalculator.from_config(risk_free_rate=risk_free_rate)
-    return calc.sharpe_ratio(returns, risk_free_rate=risk_free_rate, annualize=annualize)
+    result = calc.sharpe_ratio(returns, risk_free_rate=risk_free_rate, annualize=annualize)
+    logger.info(
+        "Sharpe ratio calculated",
+        extra={
+            "sharpe_ratio": result,
+            "annualized": annualize,
+        }
+    )
+    return result
 
 
 def sortino_ratio(

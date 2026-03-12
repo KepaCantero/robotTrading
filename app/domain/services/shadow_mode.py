@@ -68,6 +68,7 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 
+from app.shared.config.centralized_config import get_config
 from app.shared.interfaces.broker_base import Order
 from app.sre.data_integrity.sanity_layer import DataSanityLayer, SanityCheckResult
 from app.sre.state_machine.wal_persistence import OrderLog, OrderState, OrderStateMachine
@@ -90,17 +91,34 @@ class ShadowModeConfig:
     enabled: bool = False
     shadow_type: ShadowModeType = ShadowModeType.DRY_RUN
     fill_simulation_model: str = "realistic"  # 'instant', 'realistic', 'slippage_model'
-    slippage_bps: int = 5  # Default slippage in basis points
-    fill_delay_ms: int = 100  # Simulated fill delay in milliseconds
-    partial_fill_probability: float = 0.1  # 10% chance of partial fill
-    rejection_probability: float = 0.01  # 1% chance of rejection
+    slippage_bps: int = None  # Will be loaded from centralized config
+    fill_delay_ms: int = None  # Will be loaded from centralized config
+    partial_fill_probability: float = None  # Will be loaded from centralized config
+    rejection_probability: float = None  # Will be loaded from centralized config
     enable_comparison: bool = True  # Track shadow vs real comparisons
-    comparison_window_minutes: int = 60  # Time window for comparisons
-    max_shadow_orders_per_day: int = 1000  # Safety limit
+    comparison_window_minutes: int = None  # Will be loaded from centralized config
+    max_shadow_orders_per_day: int = None  # Will be loaded from centralized config
     audit_log_path: Optional[str] = None  # Path to audit log file
 
     def __post_init__(self):
-        """Validate configuration."""
+        """Load defaults from centralized config and validate."""
+        # Load from centralized config if not explicitly set
+        config = get_config().shadow_mode
+
+        if self.slippage_bps is None:
+            self.slippage_bps = config.slippage_bps
+        if self.fill_delay_ms is None:
+            self.fill_delay_ms = config.fill_delay_ms
+        if self.partial_fill_probability is None:
+            self.partial_fill_probability = config.partial_fill_probability
+        if self.rejection_probability is None:
+            self.rejection_probability = config.rejection_probability
+        if self.comparison_window_minutes is None:
+            self.comparison_window_minutes = config.comparison_window_minutes
+        if self.max_shadow_orders_per_day is None:
+            self.max_shadow_orders_per_day = config.max_shadow_orders_per_day
+
+        # Validate configuration
         if self.slippage_bps < 0:
             raise ValueError("slippage_bps must be non-negative")
         if self.fill_delay_ms < 0:
@@ -486,8 +504,13 @@ class ShadowModeExecutor:
         """
         import random
 
-        # Simulate fill delay
-        delay_ms = self.config.fill_delay_ms + random.randint(-20, 50)
+        # Get centralized config for simulation parameters
+        config = get_config().shadow_mode
+
+        # Simulate fill delay with jitter from centralized config
+        delay_ms = self.config.fill_delay_ms + random.randint(
+            config.fill_delay_jitter_min_ms, config.fill_delay_jitter_max_ms
+        )
         await asyncio.sleep(delay_ms / 1000.0)
 
         # Check for rejection
@@ -515,9 +538,26 @@ class ShadowModeExecutor:
             try:
                 ticker = await self.broker.get_live_ticker(symbol)
                 base_price = ticker.last
-            except (ValueError, KeyError, AttributeError, IndexError, TypeError):
-                # Fallback to requested price or default
-                base_price = price or Decimal("100.00")
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
+                # Fallback price handling with proper error management
+                if price is not None:
+                    base_price = price
+                    logger.warning(
+                        f"SHADOW MODE: Broker ticker unavailable for {symbol}, "
+                        f"using requested price {price}. Error: {e}"
+                    )
+                elif config.enable_fallback_price:
+                    base_price = config.fallback_price
+                    logger.warning(
+                        f"SHADOW MODE: Broker ticker unavailable for {symbol}, "
+                        f"using fallback price {config.fallback_price}. Error: {e}"
+                    )
+                else:
+                    raise ValueError(
+                        f"Cannot determine price for MARKET order {shadow_order_id} "
+                        f"for {symbol}: broker ticker unavailable and no fallback price provided. "
+                        f"Error: {e}"
+                    )
         else:
             # For LIMIT orders, use the limit price
             base_price = price
@@ -533,13 +573,13 @@ class ShadowModeExecutor:
         else:
             fill_price = base_price * (Decimal("2") - slippage_multiplier)
 
-        # Check for partial fill
+        # Check for partial fill using centralized config parameters
         fill_quantity = quantity
         is_partial = False
 
         if random.random() < self.config.partial_fill_probability:
-            # Partial fill: 50-90% of quantity
-            fill_pct = random.uniform(0.5, 0.9)
+            # Partial fill: use configured min/max percentages
+            fill_pct = random.uniform(config.partial_fill_min_pct, config.partial_fill_max_pct)
             fill_quantity = quantity * Decimal(str(fill_pct)).quantize(Decimal("0.01"))
             is_partial = True
 
@@ -910,8 +950,12 @@ def detect_shadow_mode_from_env() -> ShadowModeConfig:
     Environment Variables:
     - SHADOW_MODE_ENABLED: "true" to enable
     - SHADOW_MODE_TYPE: "dry_run", "shadow", or "production"
-    - SHADOW_SLIPPAGE_BPS: Slippage in basis points (default: 5)
-    - SHADOW_FILL_DELAY_MS: Fill delay in milliseconds (default: 100)
+    - SHADOW_SLIPPAGE_BPS: Slippage in basis points (default from centralized config)
+    - SHADOW_FILL_DELAY_MS: Fill delay in milliseconds (default from centralized config)
+    - SHADOW_PARTIAL_FILL_PROB: Partial fill probability (default from centralized config)
+    - SHADOW_REJECTION_PROB: Rejection probability (default from centralized config)
+    - SHADOW_MAX_ORDERS: Max shadow orders per day (default from centralized config)
+    - SHADOW_COMPARISON_WINDOW: Comparison window in minutes (default from centralized config)
     - SHADOW_AUDIT_LOG: Path to audit log file
 
     Returns:
@@ -924,11 +968,26 @@ def detect_shadow_mode_from_env() -> ShadowModeConfig:
     shadow_type_str = os.getenv("SHADOW_MODE_TYPE", "shadow")
     shadow_type = ShadowModeType(shadow_type_str)
 
+    # Get centralized config defaults
+    centralized_config = get_config().shadow_mode
+
     config = ShadowModeConfig(
         enabled=enabled,
         shadow_type=shadow_type,
-        slippage_bps=int(os.getenv("SHADOW_SLIPPAGE_BPS", "5")),
-        fill_delay_ms=int(os.getenv("SHADOW_FILL_DELAY_MS", "100")),
+        slippage_bps=int(os.getenv("SHADOW_SLIPPAGE_BPS", str(centralized_config.slippage_bps))),
+        fill_delay_ms=int(os.getenv("SHADOW_FILL_DELAY_MS", str(centralized_config.fill_delay_ms))),
+        partial_fill_probability=float(
+            os.getenv("SHADOW_PARTIAL_FILL_PROB", str(centralized_config.partial_fill_probability))
+        ),
+        rejection_probability=float(
+            os.getenv("SHADOW_REJECTION_PROB", str(centralized_config.rejection_probability))
+        ),
+        max_shadow_orders_per_day=int(
+            os.getenv("SHADOW_MAX_ORDERS", str(centralized_config.max_shadow_orders_per_day))
+        ),
+        comparison_window_minutes=int(
+            os.getenv("SHADOW_COMPARISON_WINDOW", str(centralized_config.comparison_window_minutes))
+        ),
         audit_log_path=os.getenv("SHADOW_AUDIT_LOG"),
     )
 
@@ -936,5 +995,8 @@ def detect_shadow_mode_from_env() -> ShadowModeConfig:
         logger.info(f"SHADOW MODE ENABLED: {shadow_type.value}")
         logger.info(f"  Slippage: {config.slippage_bps}bps")
         logger.info(f"  Fill delay: {config.fill_delay_ms}ms")
+        logger.info(f"  Partial fill prob: {config.partial_fill_probability}")
+        logger.info(f"  Rejection prob: {config.rejection_probability}")
+        logger.info(f"  Max orders/day: {config.max_shadow_orders_per_day}")
 
     return config

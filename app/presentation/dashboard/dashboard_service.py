@@ -5,9 +5,12 @@ Provides methods to fetch current positions, performance metrics,
 and system status for dashboard display.
 """
 import asyncio
+import logging
 from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 from app.domain.services.compliance.compliance_engine import get_compliance_engine
 from app.presentation.dashboard.dashboard_data import (
@@ -22,12 +25,14 @@ class DashboardService:
     """Service for fetching dashboard data."""
 
     def __init__(self):
+        logger.info("Initializing DashboardService")
         self._compliance_engine = get_compliance_engine(enable_logging=False)
         self._broker = None
         self._bridge = None
 
     async def get_snapshot(self) -> DashboardSnapshot:
         """Get complete dashboard snapshot."""
+        logger.debug("Fetching dashboard snapshot")
         timestamp = datetime.now(timezone.utc)
 
         # Fetch all data concurrently
@@ -41,14 +46,37 @@ class DashboardService:
 
         # Handle any exceptions
         if isinstance(performance, Exception):
+            logger.warning(
+                "Failed to fetch performance metrics",
+                extra={"error": str(performance)},
+            )
             performance = self._empty_performance()
         if isinstance(positions, Exception):
+            logger.warning(
+                "Failed to fetch positions",
+                extra={"error": str(positions)},
+            )
             positions = []
         if isinstance(system_status, Exception):
+            logger.warning(
+                "Failed to fetch system status",
+                extra={"error": str(system_status)},
+            )
             system_status = self._empty_system_status()
         if isinstance(recent_alerts, Exception):
+            logger.warning(
+                "Failed to fetch recent alerts",
+                extra={"error": str(recent_alerts)},
+            )
             recent_alerts = []
 
+        logger.info(
+            "Dashboard snapshot created",
+            extra={
+                "positions_count": len(positions) if positions else 0,
+                "alerts_count": len(recent_alerts) if recent_alerts else 0,
+            },
+        )
         return DashboardSnapshot(
             timestamp=timestamp,
             performance=performance,
@@ -60,6 +88,7 @@ class DashboardService:
     async def _get_performance_metrics(self) -> DashboardPerformanceMetrics:
         """Get performance metrics from ComplianceEngine."""
         try:
+            logger.debug("Fetching performance metrics from compliance engine")
             daily_summary = self._compliance_engine.get_daily_pnl_summary()
             slo_metrics = self._compliance_engine.get_slo_metrics()
 
@@ -71,7 +100,7 @@ class DashboardService:
             current_drawdown = self._calculate_drawdown(portfolio_value, starting_capital)
             max_drawdown = self._compliance_engine._max_drawdown_ratio
 
-            return DashboardPerformanceMetrics(
+            metrics = DashboardPerformanceMetrics(
                 total_pnl=Decimal(str(daily_summary.get("total_pnl", 0))),
                 daily_pnl=Decimal(str(daily_summary.get("daily_pnl", 0))),
                 daily_return_pct=daily_summary.get("daily_return_pct", 0.0),
@@ -85,15 +114,30 @@ class DashboardService:
                 portfolio_value=portfolio_value,
                 starting_capital=starting_capital,
             )
-        except Exception:
+            logger.debug(
+                "Performance metrics fetched successfully",
+                extra={
+                    "daily_pnl": float(metrics.daily_pnl),
+                    "total_trades": metrics.total_trades,
+                    "win_rate": metrics.win_rate,
+                },
+            )
+            return metrics
+        except Exception as e:
+            logger.error(
+                "Failed to fetch performance metrics",
+                extra={"error": str(e), "error_type": type(e).__name__},
+            )
             # Return empty metrics on error
             return self._empty_performance()
 
     async def _get_positions(self) -> List[PositionSummary]:
         """Get current positions."""
         try:
+            logger.debug("Fetching positions from broker")
             broker = await self._get_broker()
             if not broker:
+                logger.warning("No broker available for fetching positions")
                 return []
 
             positions_data = await broker.get_positions()
@@ -133,13 +177,22 @@ class DashboardService:
                     )
                 )
 
+            logger.debug(
+                "Positions fetched successfully",
+                extra={"positions_count": len(positions)},
+            )
             return positions
-        except Exception:
+        except Exception as e:
+            logger.error(
+                "Failed to fetch positions",
+                extra={"error": str(e), "error_type": type(e).__name__},
+            )
             return []
 
     async def _get_system_status(self) -> SystemStatus:
         """Get system health status."""
         try:
+            logger.debug("Fetching system status")
             status_data = self._compliance_engine.get_system_status()
             slo_metrics = self._compliance_engine.get_slo_metrics()
 
@@ -160,7 +213,7 @@ class DashboardService:
             systems_available = availability.get("available_systems", 0)
             systems_total = availability.get("total_systems", 0)
 
-            return SystemStatus(
+            status = SystemStatus(
                 kill_switch_active=self._compliance_engine.check_kill_switch(),
                 systems_available=systems_available,
                 systems_total=systems_total,
@@ -169,55 +222,92 @@ class DashboardService:
                 bridge_status=bridge_status,
                 active_orders=active_orders,
             )
-        except Exception:
+            logger.debug(
+                "System status fetched successfully",
+                extra={
+                    "kill_switch_active": status.kill_switch_active,
+                    "systems_available": status.systems_available,
+                    "active_orders": status.active_orders,
+                },
+            )
+            return status
+        except Exception as e:
+            logger.error(
+                "Failed to fetch system status",
+                extra={"error": str(e), "error_type": type(e).__name__},
+            )
             return self._empty_system_status()
 
     async def _get_recent_alerts(self) -> List[Dict[str, Any]]:
         """Get recent alerts."""
         try:
+            logger.debug("Fetching recent alerts")
             # Get recent alerts from alerting system
             from app.services.alerting_system import NotificationDispatcher
 
             NotificationDispatcher.instance()
             # Return recent alerts from dispatcher history
             # For now, return empty list as dispatcher doesn't expose history
+            logger.debug("Recent alerts fetched (currently empty)")
             return []
-        except Exception:
+        except Exception as e:
+            logger.error(
+                "Failed to fetch recent alerts",
+                extra={"error": str(e), "error_type": type(e).__name__},
+            )
             return []
 
     async def _get_portfolio_value(self) -> Decimal:
         """Get current portfolio value."""
         try:
+            logger.debug("Fetching portfolio value")
             broker = await self._get_broker()
             if broker:
                 value = await broker.calculate_portfolio_value()
+                logger.debug(
+                    "Portfolio value fetched",
+                    extra={"portfolio_value": float(value)},
+                )
                 return Decimal(str(value))
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(
+                "Failed to fetch portfolio value from broker",
+                extra={"error": str(e)},
+            )
         return Decimal(str(self._compliance_engine._starting_capital))
 
     async def _get_broker(self):
         """Get broker connector instance."""
         if self._broker is None:
             try:
+                logger.debug("Getting broker connector instance")
                 from app.services.live_trading.broker_connector import get_broker_connector
 
                 self._broker = get_broker_connector()
-            except Exception:
-                pass
+                logger.info("Broker connector initialized")
+            except Exception as e:
+                logger.warning(
+                    "Failed to get broker connector",
+                    extra={"error": str(e)},
+                )
         return self._broker
 
     async def _get_bridge(self):
         """Get trading bridge instance."""
         if self._bridge is None:
             try:
+                logger.debug("Getting trading bridge instance")
                 from app.services.live_trading.trading_bridge_orchestrator import (
                     get_trading_bridge_orchestrator,
                 )
 
                 self._bridge = get_trading_bridge_orchestrator()
-            except Exception:
-                pass
+                logger.info("Trading bridge initialized")
+            except Exception as e:
+                logger.warning(
+                    "Failed to get trading bridge",
+                    extra={"error": str(e)},
+                )
         return self._bridge
 
     def _calculate_drawdown(self, current: Decimal, peak: Decimal) -> float:
@@ -263,5 +353,6 @@ def get_dashboard_service() -> DashboardService:
     """Get singleton dashboard service instance."""
     global _dashboard_service
     if _dashboard_service is None:
+        logger.info("Creating singleton DashboardService instance")
         _dashboard_service = DashboardService()
     return _dashboard_service

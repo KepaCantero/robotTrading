@@ -5,7 +5,11 @@ This module contains all configuration parameters for the dividend strategy.
 Centralized from dividend/dividend_strategy.py hardcoded values.
 """
 
+import logging
+
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 
 class DividendStrategyConfig(BaseModel):
@@ -82,3 +86,17 @@ class DividendStrategyConfig(BaseModel):
     sell_priority: float = Field(
         default=60.0, ge=30.0, le=90.0, description="Default priority for sell signals (60%)"
     )
+
+    def __init__(self, **data):
+        """Initialize Dividend Strategy configuration with logging."""
+        super().__init__(**data)
+        logger.info(
+            "DividendStrategyConfig initialized",
+            extra={
+                "component": "DividendStrategyConfig",
+                "min_yield_default": self.min_yield_default,
+                "max_yield_default": self.max_yield_default,
+                "portfolio_size_default": self.portfolio_size_default,
+                "max_single_position_default": self.max_single_position_default,
+            },
+        )

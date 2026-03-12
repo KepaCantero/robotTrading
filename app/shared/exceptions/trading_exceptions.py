@@ -4,8 +4,11 @@ TASK-4: Sistema de manejo de errores unificado
 """
 
 # mypy: ignore-errors
+import logging
 from enum import Enum
 from typing import Any, Dict, Optional
+
+logger = logging.getLogger(__name__)
 
 
 class ErrorSeverity(Enum):
@@ -51,6 +54,16 @@ class AlgoTradingError(Exception):
         self.original_error = original_error
         super().__init__(self.message)
 
+        logger.debug(
+            "AlgoTradingError created",
+            extra={
+                "error_code": error_code,
+                "category": category.value,
+                "severity": severity.value,
+                "message": message,
+            }
+        )
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert error to dictionary."""
         return {
@@ -84,6 +97,15 @@ class ValidationError(AlgoTradingError):
                 "value": str(value) if value is not None else None,
                 **(details or {}),
             },
+        )
+
+        logger.warning(
+            "Validation error occurred",
+            extra={
+                "error_type": "ValidationError",
+                "field": field,
+                "value": str(value)[:100] if value is not None else None,  # Truncate for logging
+            }
         )
 
 
@@ -127,6 +149,16 @@ class ExternalAPIError(AlgoTradingError):
                 "status_code": status_code,
                 **(details or {}),
             },
+        )
+
+        logger.error(
+            "External API error occurred",
+            extra={
+                "error_type": "ExternalAPIError",
+                "api_name": api_name,
+                "status_code": status_code,
+                "message": message,
+            }
         )
 
 
@@ -206,6 +238,15 @@ class SecurityError(AlgoTradingError):
             category=ErrorCategory.SECURITY,
             severity=ErrorSeverity.CRITICAL,
             details={"violation_type": violation_type, **(details or {})},
+        )
+
+        logger.critical(
+            "Security error occurred",
+            extra={
+                "error_type": "SecurityError",
+                "violation_type": violation_type,
+                "message": message,
+            }
         )
 
 

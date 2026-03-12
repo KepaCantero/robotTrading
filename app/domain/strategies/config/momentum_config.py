@@ -5,7 +5,11 @@ This module contains all configuration parameters for the momentum modular strat
 Centralized from momentum_modular/strategy.py hardcoded values.
 """
 
+import logging
+
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 
 class MomentumModularConfig(BaseModel):
@@ -119,3 +123,17 @@ class MomentumModularConfig(BaseModel):
     max_position_size_default: float = Field(
         default=0.1, ge=0.01, le=0.5, description="Default max position size for momentum (10%)"
     )
+
+    def __init__(self, **data):
+        """Initialize Momentum Modular configuration with logging."""
+        super().__init__(**data)
+        logger.info(
+            "MomentumModularConfig initialized",
+            extra={
+                "component": "MomentumModularConfig",
+                "min_history_length": self.min_history_length,
+                "min_success_probability_default": self.min_success_probability_default,
+                "max_position_size_default": self.max_position_size_default,
+                "bear_market_strength_threshold": self.bear_market_strength_threshold,
+            },
+        )

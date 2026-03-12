@@ -6,17 +6,31 @@ Domain: Data
 Generated: 2026-03-09
 
 ## 2. Dependencies
-- `__future__`
+
+### Python Modules (Internal/Stdlib)
+- `__future__` (stdlib)
+- `datetime` (stdlib)
+- `decimal` (stdlib)
+- `typing` (stdlib)
+- `uuid` (stdlib)
+
+### Internal Modules
 - `app.infrastructure.persistence.models`
 - `app.shared.exceptions.exceptions`
-- `datetime`
-- `decimal`
-- `sqlalchemy`
+
+### External Packages (pip install)
+```
+# Database
+sqlalchemy>=2.0.0          # ORM for repository pattern
+asyncpg>=0.29.0            # PostgreSQL async driver
+
+# Logging
+structlog>=23.0.0          # Structured logging
+```
+
+### SQLAlchemy Submodules
 - `sqlalchemy.exc`
 - `sqlalchemy.orm`
-- `structlog`
-- `typing`
-- `uuid`
 
 ## 3. Core Components
 ### Classes

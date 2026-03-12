@@ -7,11 +7,14 @@ Implements:
 - MOD720-001: Modelo 720 reporting > €50k foreign assets
 - LOSS-CF-001: Loss carryforward max 4 years
 """
+import logging
 from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
 from app.core.protocols.i_spain_tax_engine import ISpainTaxEngine  # @skip-import si no existe
+
+logger = logging.getLogger(__name__)
 
 
 class SpainTaxEngineImpl(ISpainTaxEngine):
@@ -84,7 +87,15 @@ class SpainTaxEngineImpl(ISpainTaxEngine):
         Returns:
             Impuesto a pagar
         """
+        logger.debug(
+            "Calculating capital gains tax",
+            extra={"profit": float(profit), "operation": "calculate_capital_gains_tax"}
+        )
         if profit <= 0:
+            logger.debug(
+                "No tax on zero or negative profit",
+                extra={"profit": float(profit), "tax": 0.0}
+            )
             return Decimal("0")
 
         tax = Decimal("0")
@@ -99,7 +110,16 @@ class SpainTaxEngineImpl(ISpainTaxEngine):
             tax += taxable_in_bracket * bracket["rate"]
             remaining -= taxable_in_bracket
 
-        return tax.quantize(Decimal("0.01"))
+        final_tax = tax.quantize(Decimal("0.01"))
+        logger.info(
+            "Capital gains tax calculated",
+            extra={
+                "profit": float(profit),
+                "tax": float(final_tax),
+                "effective_rate": float(final_tax / profit) if profit > 0 else 0.0
+            }
+        )
+        return final_tax
 
     def calculate_dividend_tax(self, symbol: str, amount: Decimal) -> Decimal:
         """
@@ -115,10 +135,29 @@ class SpainTaxEngineImpl(ISpainTaxEngine):
         Returns:
             Impuesto retenido
         """
-        if self.is_eu_country(symbol):
+        is_eu = self.is_eu_country(symbol)
+        logger.debug(
+            "Calculating dividend tax",
+            extra={
+                "symbol": symbol,
+                "amount": float(amount),
+                "is_eu": is_eu,
+                "operation": "calculate_dividend_tax"
+            }
+        )
+        if is_eu:
+            logger.info(
+                "EU dividend - no withholding tax",
+                extra={"symbol": symbol, "amount": float(amount), "tax": 0.0, "is_eu": True}
+            )
             return Decimal("0")
         else:
-            return (amount * Decimal("0.19")).quantize(Decimal("0.01"))
+            tax = (amount * Decimal("0.19")).quantize(Decimal("0.01"))
+            logger.info(
+                "Non-EU dividend tax calculated",
+                extra={"symbol": symbol, "amount": float(amount), "tax": float(tax), "is_eu": False}
+            )
+            return tax
 
     def is_eu_country(self, symbol: str) -> bool:
         """
@@ -191,7 +230,17 @@ class SpainTaxEngineImpl(ISpainTaxEngine):
         Returns:
             True si > €50,000 (requiere Modelo 720)
         """
-        return foreign_assets > self.MODELO_720_THRESHOLD
+        exceeds = foreign_assets > self.MODELO_720_THRESHOLD
+        logger.info(
+            "Modelo 720 threshold check",
+            extra={
+                "foreign_assets": float(foreign_assets),
+                "threshold": float(self.MODELO_720_THRESHOLD),
+                "exceeds_threshold": exceeds,
+                "operation": "check_modelo_720_threshold"
+            }
+        )
+        return exceeds
 
     def generate_modelo_720_report(self, foreign_assets_data: Optional[dict] = None) -> dict:
         """
@@ -226,6 +275,13 @@ class SpainTaxEngineImpl(ISpainTaxEngine):
             ...     "cash_accounts": {}
             ... })
         """
+        logger.info(
+            "Generating Modelo 720 report",
+            extra={
+                "has_data": foreign_assets_data is not None,
+                "operation": "generate_modelo_720_report"
+            }
+        )
         current_year = datetime.now().year
 
         # If no data provided, return template structure
@@ -251,7 +307,7 @@ class SpainTaxEngineImpl(ISpainTaxEngine):
                     )
                 )
 
-        return {
+        report = {
             "report_type": "MODELO_720",
             "year": current_year,
             "deadline": f"{current_year + 1}-03-31",  # Always before March 31st
@@ -260,6 +316,15 @@ class SpainTaxEngineImpl(ISpainTaxEngine):
             "above_threshold": total_value > self.MODELO_720_THRESHOLD,
             "foreign_assets": foreign_assets_data,
         }
+        logger.info(
+            "Modelo 720 report generated",
+            extra={
+                "year": current_year,
+                "total_value_eur": float(total_value),
+                "above_threshold": total_value > self.MODELO_720_THRESHOLD
+            }
+        )
+        return report
 
     def record_loss(self, year: int, loss: Decimal) -> None:
         """
@@ -269,10 +334,18 @@ class SpainTaxEngineImpl(ISpainTaxEngine):
             year: Año de la pérdida
             loss: Importe de la pérdida
         """
+        logger.info(
+            "Recording loss for carryforward",
+            extra={"year": year, "loss": float(loss), "operation": "record_loss"}
+        )
         if year not in self._losses_by_year:
             self._losses_by_year[year] = Decimal("0")
 
         self._losses_by_year[year] += loss
+        logger.debug(
+            "Loss recorded",
+            extra={"year": year, "total_loss_for_year": float(self._losses_by_year[year])}
+        )
 
     def get_available_losses(self, current_year: int) -> Decimal:
         """
@@ -309,10 +382,37 @@ class SpainTaxEngineImpl(ISpainTaxEngine):
             (profit_after_losses, losses_used)
         """
         available_losses = self.get_available_losses(current_year)
+        logger.debug(
+            "Applying loss carryforward",
+            extra={
+                "profit": float(profit),
+                "current_year": current_year,
+                "available_losses": float(available_losses),
+                "operation": "apply_loss_carryforward"
+            }
+        )
 
         if available_losses >= profit:
             # Usar solo lo necesario
-            return Decimal("0"), profit
+            result = (Decimal("0"), profit)
+            logger.info(
+                "Loss carryforward applied - full profit offset",
+                extra={
+                    "original_profit": float(profit),
+                    "losses_used": float(profit),
+                    "remaining_profit": 0.0
+                }
+            )
+            return result
         else:
             # Usar todas las pérdidas disponibles
-            return (profit - available_losses), available_losses
+            result = (profit - available_losses), available_losses
+            logger.info(
+                "Loss carryforward applied - partial offset",
+                extra={
+                    "original_profit": float(profit),
+                    "losses_used": float(available_losses),
+                    "remaining_profit": float(result[0])
+                }
+            )
+            return result

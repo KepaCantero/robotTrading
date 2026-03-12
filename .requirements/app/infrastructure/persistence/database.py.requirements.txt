@@ -6,15 +6,33 @@ Domain: Data
 Generated: 2026-03-09
 
 ## 2. Dependencies
-- `config`
-- `contextlib`
-- `logging`
-- `sqlalchemy`
+
+### Python Modules (Internal)
+- `config` (internal)
+- `contextlib` (stdlib)
+- `logging` (stdlib)
+- `typing` (stdlib)
+
+### External Packages (pip install)
+```
+# Core Database
+sqlalchemy>=2.0.0          # ORM with async support
+asyncpg>=0.29.0            # PostgreSQL async driver
+aiosqlite>=0.19.0          # SQLite async driver (for testing)
+greenlet>=3.0.0            # Required by SQLAlchemy async
+
+# Migrations
+alembic>=1.13.0            # Database migrations
+
+# Sync fallback (for PositionMonitor)
+psycopg2-binary>=2.9.9     # PostgreSQL sync driver
+```
+
+### SQLAlchemy Submodules
 - `sqlalchemy.exc`
 - `sqlalchemy.ext.asyncio`
 - `sqlalchemy.orm`
 - `sqlalchemy.pool`
-- `typing`
 
 ## 3. Core Components
 ### Classes

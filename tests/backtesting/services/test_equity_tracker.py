@@ -351,3 +351,31 @@ class TestEquityCurveTracker:
 
         # Should have both entries
         assert len(equity_tracker.equity_curve) == 2
+
+    def test_update_equity_curve_raises_error_on_missing_price(self, equity_tracker):
+        """Test that missing price raises ValueError instead of using zero."""
+        # Add a position but don't provide its price
+        equity_tracker.position_manager.update_position("AAPL", Decimal("100"))
+
+        timestamp = datetime(2024, 1, 1, 10, 0)
+        capital = Decimal("85000")
+        prices = {}  # Empty prices dict
+
+        # Should raise ValueError when no price is available
+        with pytest.raises(ValueError, match="No entry price found for AAPL"):
+            equity_tracker.update_equity_curve(timestamp, capital, prices)
+
+    def test_update_equity_curve_uses_last_known_price_as_fallback(self, equity_tracker):
+        """Test that last_known_price is used as fallback when available."""
+        equity_tracker.position_manager.update_position("AAPL", Decimal("100"))
+
+        timestamp = datetime(2024, 1, 1, 10, 0)
+        capital = Decimal("85000")
+        # Price is available in last_known_prices
+        prices = {"AAPL": Decimal("150")}
+
+        equity_tracker.update_equity_curve(timestamp, capital, prices)
+
+        expected_value = Decimal("85000") + Decimal("100") * Decimal("150")
+        assert equity_tracker.equity_curve[0] == (timestamp, expected_value)
+
