@@ -382,6 +382,7 @@ def example_custom_template():
     # Note: Custom template needs to match expected variables
     # For simplicity, this example shows the pattern
     logger.info(f"Profile: {profile.objetivo_inversion}, Results: {len(baseline_results)} + {len(optimized_results)} scenarios")
+    logger.info(f"Reporter initialized with custom template: {reporter.template_path}")
 
     logger.info(f"✅ Custom template example created at: {template_path}")
 
