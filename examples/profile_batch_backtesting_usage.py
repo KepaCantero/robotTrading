@@ -116,6 +116,7 @@ def example_3_get_best_strategy():
     for profile in profiles:
         try:
             result = backtester.run_single_profile(profile)
+            print(f"  Completed profile: {profile.nombre_perfil} - {result.get('status', 'unknown')}")
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Profile failed: {e}")
 

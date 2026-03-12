@@ -218,6 +218,7 @@ def test_jwt_token_manager_module():
         custom_token = manager.create_access_token(
             token_data, expires_delta=timedelta(hours=1)
         )
+        assert custom_token is not None
         print("✓ Token created with custom expiration")
 
         # Test token refresh
