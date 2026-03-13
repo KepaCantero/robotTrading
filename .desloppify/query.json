@@ -1,57 +1,9 @@
 {
-  "command": "next",
-  "items": [
-    {
-      "id": "workflow::deferred-disposition",
-      "confidence": "high",
-      "detector": "workflow",
-      "file": ".",
-      "summary": "Deferred backlog decision required: 2 clusters + 20 individual items must be reactivated or marked wontfix.",
-      "detail": {
-        "temporary_skipped_count": 603,
-        "deferred_cluster_count": 2,
-        "deferred_individual_count": 20,
-        "reactivate_command": "desloppify plan unskip \"*\"",
-        "wontfix_command": "desloppify plan skip --permanent \"*\" --note \"<why this deferred work should stay wontfix>\" --attest \"I have actually reviewed these deferred items and I am not gaming the score by skipping them permanently.\" --confirm",
-        "planning_tools": [
-          {
-            "label": "Review deferred backlog",
-            "command": "desloppify plan queue --include-skipped"
-          },
-          {
-            "label": "Inspect a specific cluster or item",
-            "command": "desloppify show <cluster-or-id>"
-          },
-          {
-            "label": "Reactivate a subset",
-            "command": "desloppify plan unskip <cluster-or-id>"
-          },
-          {
-            "label": "Mark a subset as permanent wontfix",
-            "command": "desloppify plan skip --permanent <cluster-or-id> --note \"<why this deferred work should stay wontfix>\" --attest \"I have actually reviewed these deferred items and I am not gaming the score by skipping them permanently.\""
-          }
-        ],
-        "decision_options": [
-          {
-            "label": "Reactivate deferred work",
-            "command": "desloppify plan unskip \"*\""
-          },
-          {
-            "label": "Convert deferred work to wontfix",
-            "command": "desloppify plan skip --permanent \"*\" --note \"<why this deferred work should stay wontfix>\" --attest \"I have actually reviewed these deferred items and I am not gaming the score by skipping them permanently.\" --confirm"
-          }
-        ]
-      },
-      "status": null,
-      "kind": "workflow_action",
-      "primary_command": "desloppify plan unskip \"*\"",
-      "queue_position": 1
-    }
-  ],
-  "queue": {
-    "total": 1,
-    "mode": "execution"
-  },
+  "command": "show",
+  "query": "subjective",
+  "status_filter": "open",
+  "total": 0,
+  "issues": [],
   "narrative": {
     "phase": "stagnation",
     "headline": "All T1 items cleared!",
@@ -82,7 +34,15 @@
           "impact_description": "re-review to improve"
         }
       ],
-      "biggest_gap_dimensions": [],
+      "biggest_gap_dimensions": [
+        {
+          "name": "Test health",
+          "lenient": 100.0,
+          "strict": 49.1,
+          "gap": 50.9,
+          "wontfix_count": 581
+        }
+      ],
       "stagnant_dimensions": [
         {
           "name": "Security",
@@ -303,28 +263,13 @@
       },
       {
         "type": "refactor",
-        "detector": "test_coverage",
-        "count": 581,
-        "description": "581 test_coverage issues in 1 cluster(s) \u2014 run `desloppify next`",
-        "command": "desloppify next",
-        "impact": 0.0,
-        "dimension": "Test health",
-        "priority": 10,
-        "clusters": [
-          "auto/test_coverage"
-        ],
-        "cluster_count": 1,
-        "lane": "test_coverage"
-      },
-      {
-        "type": "refactor",
         "detector": "signature",
         "count": 258,
         "description": "258 signature issues \u2014 consolidate inconsistent function signatures",
         "command": "desloppify show signature --status open",
         "impact": 0.0,
         "dimension": "Unknown",
-        "priority": 11,
+        "priority": 10,
         "lane": "refactor_0"
       },
       {
@@ -335,7 +280,7 @@
         "command": "desloppify show responsibility_cohesion --status open",
         "impact": 0.0,
         "dimension": "Code quality",
-        "priority": 12,
+        "priority": 11,
         "lane": "refactor_0"
       },
       {
@@ -346,7 +291,7 @@
         "command": "desloppify show boilerplate_duplication --status open",
         "impact": 0.0,
         "dimension": "Duplication",
-        "priority": 13,
+        "priority": 12,
         "lane": "refactor_0"
       },
       {
@@ -357,7 +302,7 @@
         "command": "desloppify show smells --status open",
         "impact": 0.0,
         "dimension": "Code quality",
-        "priority": 14,
+        "priority": 13,
         "lane": "refactor_0"
       },
       {
@@ -368,22 +313,18 @@
         "command": "desloppify show global_mutable_config --status open",
         "impact": 0.0,
         "dimension": "Code quality",
-        "priority": 15,
+        "priority": 14,
         "lane": "refactor_0"
       },
       {
         "type": "manual_fix",
         "detector": "stale_exclude",
         "count": 2,
-        "description": "2 stale_exclude issues in 1 cluster(s) \u2014 run `desloppify next`",
-        "command": "desloppify next",
+        "description": "2 stale_exclude issues \u2014 remove stale exclusion or verify it's still needed",
+        "command": "desloppify show stale_exclude --status open",
         "impact": 0.0,
         "dimension": "Code quality",
-        "priority": 16,
-        "clusters": [
-          "auto/stale_exclude"
-        ],
-        "cluster_count": 1,
+        "priority": 15,
         "lane": "refactor_1"
       },
       {
@@ -394,14 +335,23 @@
         "command": "desloppify review --prepare",
         "impact": 0.0,
         "dimension": "Unknown",
-        "priority": 17,
+        "priority": 16,
         "lane": "refactor_2"
+      },
+      {
+        "type": "debt_review",
+        "detector": null,
+        "description": "2.1 pts of wontfix debt \u2014 review stale decisions",
+        "command": "desloppify show --status wontfix",
+        "gap": 2.1,
+        "priority": 17,
+        "lane": "debt_review"
       }
     ],
     "strategy": {
       "fixer_leverage": {
         "auto_fixable_count": 0,
-        "total_count": 4095,
+        "total_count": 3514,
         "coverage": 0.0,
         "impact_ratio": 0.0,
         "recommendation": "none"
@@ -426,11 +376,11 @@
             7,
             8,
             9,
+            10,
             11,
             12,
             13,
-            14,
-            15
+            14
           ],
           "file_count": 1064,
           "total_impact": 0.0,
@@ -439,7 +389,7 @@
         },
         "refactor_1": {
           "actions": [
-            16
+            15
           ],
           "file_count": 2,
           "total_impact": 0.0,
@@ -448,25 +398,25 @@
         },
         "refactor_2": {
           "actions": [
-            17
+            16
           ],
           "file_count": 1,
           "total_impact": 0.0,
           "automation": "manual",
           "run_first": false
         },
-        "test_coverage": {
+        "debt_review": {
           "actions": [
-            10
+            17
           ],
-          "file_count": 572,
+          "file_count": 0,
           "total_impact": 0.0,
           "automation": "manual",
           "run_first": false
         }
       },
       "can_parallelize": true,
-      "hint": "5 independent workstreams, safe to parallelize. Rescan after each phase to verify."
+      "hint": "4 independent workstreams, safe to parallelize. Rescan after each phase to verify."
     },
     "tools": {
       "fixers": [],
@@ -488,10 +438,10 @@
       }
     },
     "debt": {
-      "overall_gap": 0.0,
-      "wontfix_count": 0,
-      "worst_dimension": null,
-      "worst_gap": 0.0,
+      "overall_gap": 2.1,
+      "wontfix_count": 581,
+      "worst_dimension": "Test health",
+      "worst_gap": 50.9,
       "trend": "stable"
     },
     "milestone": "All T1 items cleared!",
@@ -499,12 +449,18 @@
       "command": "desloppify show flat_dirs --status open",
       "description": "21 flat_dirs issues \u2014 create subdirectories and use `desloppify move`"
     },
-    "why_now": "5 independent workstreams, safe to parallelize. Rescan after each phase to verify.",
+    "why_now": "4 independent workstreams, safe to parallelize. Rescan after each phase to verify.",
     "verification_step": {
       "command": "desloppify scan",
       "reason": "revalidate after changes"
     },
-    "risk_flags": [],
+    "risk_flags": [
+      {
+        "type": "wontfix_gap",
+        "severity": "high",
+        "message": "Strict/lenient gap is 2.1 pts with 581 wontfix issues"
+      }
+    ],
     "strict_target": {
       "target": 95.0,
       "current": 20.3,
@@ -520,96 +476,6 @@
       "stagnant_nudge": 24
     }
   },
-  "agent_notes": [
-    "Do NOT use `desloppify plan skip` unless the user explicitly asks you to skip an item.",
-    "If you cannot fix an item, report it and move to the next one.",
-    "For cluster items: if the autofix_hint finds 0 results, drill into individual issues with the primary_command."
-  ],
-  "plan": {
-    "active": true,
-    "focus": null,
-    "clusters": [
-      {
-        "name": "auto/unused",
-        "description": "Remove 320 unused issues",
-        "item_count": 0
-      },
-      {
-        "name": "auto/test_coverage",
-        "description": "Fix 581 test coverage issues",
-        "item_count": 581
-      },
-      {
-        "name": "auto/security",
-        "description": "Fix 339 security issues",
-        "item_count": 0
-      },
-      {
-        "name": "auto/unused_enums",
-        "description": "Fix 57 unused enums issues",
-        "item_count": 0
-      },
-      {
-        "name": "auto/stale_exclude",
-        "description": "Fix 2 stale exclude issues",
-        "item_count": 2
-      }
-    ],
-    "total_ordered": 0,
-    "total_skipped": 603,
-    "plan_overrides_narrative": true
-  },
-  "overall_score": 20.3,
-  "objective_score": 81.3,
-  "strict_score": 20.3,
-  "scorecard_dimensions": [
-    {
-      "name": "File health",
-      "score": 76.6,
-      "strict": 76.6,
-      "checks": 1261,
-      "failing": 419,
-      "tier": 3,
-      "subjective": false
-    },
-    {
-      "name": "Code quality",
-      "score": 89.3,
-      "strict": 89.3,
-      "checks": 9225,
-      "failing": 1798,
-      "tier": 3,
-      "subjective": false
-    },
-    {
-      "name": "Duplication",
-      "score": 96.0,
-      "strict": 96.0,
-      "checks": 11247,
-      "failing": 611,
-      "tier": 3,
-      "subjective": false
-    },
-    {
-      "name": "Security",
-      "score": 100.0,
-      "strict": 100.0,
-      "checks": 3168,
-      "failing": 1,
-      "tier": 4,
-      "subjective": false
-    },
-    {
-      "name": "Test health",
-      "score": 49.1,
-      "strict": 49.1,
-      "checks": 20901,
-      "failing": 581,
-      "tier": 4,
-      "subjective": false
-    }
-  ],
-  "subjective_measures": [],
   "config": {
     "target_strict_score": 95,
     "review_max_age_days": 30,
@@ -624,7 +490,6 @@
       ".pytest_cache",
       ".mypy_cache",
       ".ruff_cache",
-      ".benchmarks",
       ".hypothesis",
       "coverage",
       "logs",
@@ -633,7 +498,6 @@
       ".ralph",
       ".memory",
       ".drift",
-      ".gap_reports",
       ".tasks"
     ],
     "ignore": [],
