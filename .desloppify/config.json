@@ -12,7 +12,6 @@
     ".pytest_cache",
     ".mypy_cache",
     ".ruff_cache",
-    ".benchmarks",
     ".hypothesis",
     "coverage",
     "logs",
@@ -21,7 +20,6 @@
     ".ralph",
     ".memory",
     ".drift",
-    ".gap_reports",
     ".tasks"
   ],
   "ignore": [],
