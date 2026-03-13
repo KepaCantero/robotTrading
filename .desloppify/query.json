@@ -2,270 +2,50 @@
   "command": "next",
   "items": [
     {
-      "id": "auto/unused",
-      "action_type": "auto_fix",
-      "summary": "Remove 320 unused issues",
-      "member_count": 320,
-      "members": [
-        {
-          "id": "unused::examples/baseline_optimization_reporter_example.py::reporter:370",
-          "confidence": "high",
-          "detector": "unused",
-          "file": "examples/baseline_optimization_reporter_example.py",
-          "summary": "Unused vars: reporter",
-          "status": "open",
-          "kind": "issue",
-          "primary_command": "desloppify plan resolve \"unused::examples/baseline_optimization_reporter_example.py::reporter:370\" --note \"<what you did>\" --confirm"
-        },
-        {
-          "id": "unused::examples/tier_mapping_usage.py::spanish_tiers:203",
-          "confidence": "high",
-          "detector": "unused",
-          "file": "examples/tier_mapping_usage.py",
-          "summary": "Unused vars: spanish_tiers",
-          "status": "open",
-          "kind": "issue",
-          "primary_command": "desloppify plan resolve \"unused::examples/tier_mapping_usage.py::spanish_tiers:203\" --note \"<what you did>\" --confirm"
-        },
-        {
-          "id": "unused::examples/toil_tracker_example.py::json_data:234",
-          "confidence": "high",
-          "detector": "unused",
-          "file": "examples/toil_tracker_example.py",
-          "summary": "Unused vars: json_data",
-          "status": "open",
-          "kind": "issue",
-          "primary_command": "desloppify plan resolve \"unused::examples/toil_tracker_example.py::json_data:234\" --note \"<what you did>\" --confirm"
-        },
-        {
-          "id": "unused::examples/trading_metrics_example.py::metrics:277",
-          "confidence": "high",
-          "detector": "unused",
-          "file": "examples/trading_metrics_example.py",
-          "summary": "Unused vars: metrics",
-          "status": "open",
-          "kind": "issue",
-          "primary_command": "desloppify plan resolve \"unused::examples/trading_metrics_example.py::metrics:277\" --note \"<what you did>\" --confirm"
-        },
-        {
-          "id": "unused::examples/triple_barrier_example.py::fig:469",
-          "confidence": "high",
-          "detector": "unused",
-          "file": "examples/triple_barrier_example.py",
-          "summary": "Unused vars: fig",
-          "status": "open",
-          "kind": "issue",
-          "primary_command": "desloppify plan resolve \"unused::examples/triple_barrier_example.py::fig:469\" --note \"<what you did>\" --confirm"
-        },
-        {
-          "id": "unused::examples/using_new_backtesting_core.py::results:176",
-          "confidence": "high",
-          "detector": "unused",
-          "file": "examples/using_new_backtesting_core.py",
-          "summary": "Unused vars: results",
-          "status": "open",
-          "kind": "issue",
-          "primary_command": "desloppify plan resolve \"unused::examples/using_new_backtesting_core.py::results:176\" --note \"<what you did>\" --confirm"
-        },
-        {
-          "id": "unused::scripts/audit_logging_consistency.py::):105",
-          "confidence": "high",
-          "detector": "unused",
-          "file": "scripts/audit_logging_consistency.py",
-          "summary": "Unused vars: )",
-          "status": "open",
-          "kind": "issue",
-          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::):105\" --note \"<what you did>\" --confirm"
-        },
-        {
-          "id": "unused::scripts/audit_logging_consistency.py::):125",
-          "confidence": "high",
-          "detector": "unused",
-          "file": "scripts/audit_logging_consistency.py",
-          "summary": "Unused vars: )",
-          "status": "open",
-          "kind": "issue",
-          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::):125\" --note \"<what you did>\" --confirm"
-        },
-        {
-          "id": "unused::scripts/audit_logging_consistency.py::):138",
-          "confidence": "high",
-          "detector": "unused",
-          "file": "scripts/audit_logging_consistency.py",
-          "summary": "Unused vars: )",
-          "status": "open",
-          "kind": "issue",
-          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::):138\" --note \"<what you did>\" --confirm"
-        },
-        {
-          "id": "unused::scripts/audit_logging_consistency.py::):155",
-          "confidence": "high",
-          "detector": "unused",
-          "file": "scripts/audit_logging_consistency.py",
-          "summary": "Unused vars: )",
-          "status": "open",
-          "kind": "issue",
-          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::):155\" --note \"<what you did>\" --confirm"
-        },
-        {
-          "id": "unused::scripts/audit_logging_consistency.py::):159",
-          "confidence": "high",
-          "detector": "unused",
-          "file": "scripts/audit_logging_consistency.py",
-          "summary": "Unused vars: )",
-          "status": "open",
-          "kind": "issue",
-          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::):159\" --note \"<what you did>\" --confirm"
-        },
-        {
-          "id": "unused::scripts/audit_logging_consistency.py::):59",
-          "confidence": "high",
-          "detector": "unused",
-          "file": "scripts/audit_logging_consistency.py",
-          "summary": "Unused vars: )",
-          "status": "open",
-          "kind": "issue",
-          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::):59\" --note \"<what you did>\" --confirm"
-        },
-        {
-          "id": "unused::scripts/audit_logging_consistency.py::):79",
-          "confidence": "high",
-          "detector": "unused",
-          "file": "scripts/audit_logging_consistency.py",
-          "summary": "Unused vars: )",
-          "status": "open",
-          "kind": "issue",
-          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::):79\" --note \"<what you did>\" --confirm"
-        },
-        {
-          "id": "unused::scripts/audit_logging_consistency.py::,:105",
-          "confidence": "high",
-          "detector": "unused",
-          "file": "scripts/audit_logging_consistency.py",
-          "summary": "Unused vars: ,",
-          "status": "open",
-          "kind": "issue",
-          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::,:105\" --note \"<what you did>\" --confirm"
-        },
-        {
-          "id": "unused::scripts/audit_logging_consistency.py::,:106",
-          "confidence": "high",
-          "detector": "unused",
-          "file": "scripts/audit_logging_consistency.py",
-          "summary": "Unused vars: ,",
-          "status": "open",
-          "kind": "issue",
-          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::,:106\" --note \"<what you did>\" --confirm"
-        },
-        {
-          "id": "unused::scripts/audit_logging_consistency.py::,:118",
-          "confidence": "high",
-          "detector": "unused",
-          "file": "scripts/audit_logging_consistency.py",
-          "summary": "Unused vars: ,",
-          "status": "open",
-          "kind": "issue",
-          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::,:118\" --note \"<what you did>\" --confirm"
-        },
-        {
-          "id": "unused::scripts/audit_logging_consistency.py::,:120",
-          "confidence": "high",
-          "detector": "unused",
-          "file": "scripts/audit_logging_consistency.py",
-          "summary": "Unused vars: ,",
-          "status": "open",
-          "kind": "issue",
-          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::,:120\" --note \"<what you did>\" --confirm"
-        },
-        {
-          "id": "unused::scripts/audit_logging_consistency.py::,:125",
-          "confidence": "high",
-          "detector": "unused",
-          "file": "scripts/audit_logging_consistency.py",
-          "summary": "Unused vars: ,",
-          "status": "open",
-          "kind": "issue",
-          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::,:125\" --note \"<what you did>\" --confirm"
-        },
-        {
-          "id": "unused::scripts/audit_logging_consistency.py::,:137",
-          "confidence": "high",
-          "detector": "unused",
-          "file": "scripts/audit_logging_consistency.py",
-          "summary": "Unused vars: ,",
-          "status": "open",
-          "kind": "issue",
-          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::,:137\" --note \"<what you did>\" --confirm"
-        },
-        {
-          "id": "unused::scripts/audit_logging_consistency.py::,:138",
-          "confidence": "high",
-          "detector": "unused",
-          "file": "scripts/audit_logging_consistency.py",
-          "summary": "Unused vars: ,",
-          "status": "open",
-          "kind": "issue",
-          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::,:138\" --note \"<what you did>\" --confirm"
-        },
-        {
-          "id": "unused::scripts/audit_logging_consistency.py::,:142",
-          "confidence": "high",
-          "detector": "unused",
-          "file": "scripts/audit_logging_consistency.py",
-          "summary": "Unused vars: ,",
-          "status": "open",
-          "kind": "issue",
-          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::,:142\" --note \"<what you did>\" --confirm"
-        },
-        {
-          "id": "unused::scripts/audit_logging_consistency.py::,:146",
-          "confidence": "high",
-          "detector": "unused",
-          "file": "scripts/audit_logging_consistency.py",
-          "summary": "Unused vars: ,",
-          "status": "open",
-          "kind": "issue",
-          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::,:146\" --note \"<what you did>\" --confirm"
-        },
-        {
-          "id": "unused::scripts/audit_logging_consistency.py::,:147",
-          "confidence": "high",
-          "detector": "unused",
-          "file": "scripts/audit_logging_consistency.py",
-          "summary": "Unused vars: ,",
-          "status": "open",
-          "kind": "issue",
-          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::,:147\" --note \"<what you did>\" --confirm"
-        },
-        {
-          "id": "unused::scripts/audit_logging_consistency.py::,:149",
-          "confidence": "high",
-          "detector": "unused",
-          "file": "scripts/audit_logging_consistency.py",
-          "summary": "Unused vars: ,",
-          "status": "open",
-          "kind": "issue",
-          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::,:149\" --note \"<what you did>\" --confirm"
-        },
-        {
-          "id": "unused::scripts/audit_logging_consistency.py::,:152",
-          "confidence": "high",
-          "detector": "unused",
-          "file": "scripts/audit_logging_consistency.py",
-          "summary": "Unused vars: ,",
-          "status": "open",
-          "kind": "issue",
-          "primary_command": "desloppify plan resolve \"unused::scripts/audit_logging_consistency.py::,:152\" --note \"<what you did>\" --confirm"
-        }
-      ],
-      "cluster_name": "auto/unused",
-      "cluster_auto": true,
-      "detector": "unused",
-      "kind": "cluster",
-      "primary_command": "desloppify next --cluster auto/unused --count 10",
-      "members_truncated": true,
-      "members_sample_limit": 25,
-      "autofix_hint": "desloppify autofix unused-imports --dry-run"
+      "id": "workflow::deferred-disposition",
+      "confidence": "high",
+      "detector": "workflow",
+      "file": ".",
+      "summary": "Deferred backlog decision required: 2 clusters + 20 individual items must be reactivated or marked wontfix.",
+      "detail": {
+        "temporary_skipped_count": 603,
+        "deferred_cluster_count": 2,
+        "deferred_individual_count": 20,
+        "reactivate_command": "desloppify plan unskip \"*\"",
+        "wontfix_command": "desloppify plan skip --permanent \"*\" --note \"<why this deferred work should stay wontfix>\" --attest \"I have actually reviewed these deferred items and I am not gaming the score by skipping them permanently.\" --confirm",
+        "planning_tools": [
+          {
+            "label": "Review deferred backlog",
+            "command": "desloppify plan queue --include-skipped"
+          },
+          {
+            "label": "Inspect a specific cluster or item",
+            "command": "desloppify show <cluster-or-id>"
+          },
+          {
+            "label": "Reactivate a subset",
+            "command": "desloppify plan unskip <cluster-or-id>"
+          },
+          {
+            "label": "Mark a subset as permanent wontfix",
+            "command": "desloppify plan skip --permanent <cluster-or-id> --note \"<why this deferred work should stay wontfix>\" --attest \"I have actually reviewed these deferred items and I am not gaming the score by skipping them permanently.\""
+          }
+        ],
+        "decision_options": [
+          {
+            "label": "Reactivate deferred work",
+            "command": "desloppify plan unskip \"*\""
+          },
+          {
+            "label": "Convert deferred work to wontfix",
+            "command": "desloppify plan skip --permanent \"*\" --note \"<why this deferred work should stay wontfix>\" --attest \"I have actually reviewed these deferred items and I am not gaming the score by skipping them permanently.\" --confirm"
+          }
+        ]
+      },
+      "status": null,
+      "kind": "workflow_action",
+      "primary_command": "desloppify plan unskip \"*\"",
+      "queue_position": 1
     }
   ],
   "queue": {
@@ -274,7 +54,7 @@
   },
   "narrative": {
     "phase": "stagnation",
-    "headline": "\u26a0 339 security issues \u2014 review before other cleanup. All T1 items cleared!",
+    "headline": "All T1 items cleared!",
     "dimensions": {
       "lowest_dimensions": [
         {
@@ -306,7 +86,7 @@
       "stagnant_dimensions": [
         {
           "name": "Security",
-          "strict": 97.4,
+          "strict": 100.0,
           "stuck_scans": 5
         },
         {
@@ -571,43 +351,13 @@
       },
       {
         "type": "manual_fix",
-        "detector": "unused",
-        "count": 320,
-        "description": "320 unused issues in 1 cluster(s) \u2014 run `desloppify next`",
-        "command": "desloppify next",
-        "impact": 0.0,
-        "dimension": "Code quality",
-        "priority": 14,
-        "clusters": [
-          "auto/unused"
-        ],
-        "cluster_count": 1,
-        "lane": "refactor_0"
-      },
-      {
-        "type": "manual_fix",
         "detector": "smells",
         "count": 1134,
         "description": "1134 smells issues \u2014 inspect with `desloppify next` and fix manually",
         "command": "desloppify show smells --status open",
         "impact": 0.0,
         "dimension": "Code quality",
-        "priority": 15,
-        "lane": "refactor_0"
-      },
-      {
-        "type": "manual_fix",
-        "detector": "unused_enums",
-        "count": 57,
-        "description": "57 unused_enums issues in 1 cluster(s) \u2014 run `desloppify next`",
-        "command": "desloppify next",
-        "impact": 0.0,
-        "dimension": "Unknown",
-        "priority": 16,
-        "clusters": [
-          "auto/unused_enums"
-        ],
-        "cluster_count": 1,
+        "priority": 14,
         "lane": "refactor_0"
       },
       {
@@ -618,7 +368,7 @@
         "command": "desloppify show global_mutable_config --status open",
         "impact": 0.0,
         "dimension": "Code quality",
-        "priority": 17,
+        "priority": 15,
         "lane": "refactor_0"
       },
       {
@@ -629,27 +379,12 @@
         "command": "desloppify next",
         "impact": 0.0,
         "dimension": "Code quality",
-        "priority": 18,
+        "priority": 16,
         "clusters": [
           "auto/stale_exclude"
         ],
         "cluster_count": 1,
         "lane": "refactor_1"
-      },
-      {
-        "type": "manual_fix",
-        "detector": "security",
-        "count": 339,
-        "description": "339 security issues in 1 cluster(s) \u2014 run `desloppify next`",
-        "command": "desloppify next",
-        "impact": 0.0,
-        "dimension": "Security",
-        "priority": 19,
-        "clusters": [
-          "auto/security"
-        ],
-        "cluster_count": 1,
-        "lane": "refactor_0"
       },
       {
         "type": "manual_fix",
@@ -659,14 +394,14 @@
         "command": "desloppify review --prepare",
         "impact": 0.0,
         "dimension": "Unknown",
-        "priority": 20,
+        "priority": 17,
         "lane": "refactor_2"
       }
     ],
     "strategy": {
       "fixer_leverage": {
         "auto_fixable_count": 0,
-        "total_count": 4811,
+        "total_count": 4095,
         "coverage": 0.0,
         "impact_ratio": 0.0,
         "recommendation": "none"
@@ -695,19 +430,16 @@
             12,
             13,
             14,
-            15,
-            16,
-            17,
-            19
+            15
           ],
-          "file_count": 1083,
+          "file_count": 1064,
           "total_impact": 0.0,
           "automation": "manual",
           "run_first": false
         },
         "refactor_1": {
           "actions": [
-            18
+            16
           ],
           "file_count": 2,
           "total_impact": 0.0,
@@ -716,7 +448,7 @@
         },
         "refactor_2": {
           "actions": [
-            20
+            17
           ],
           "file_count": 1,
           "total_impact": 0.0,
@@ -775,8 +507,8 @@
     "risk_flags": [],
     "strict_target": {
       "target": 95.0,
-      "current": 20.1,
-      "gap": 74.9,
+      "current": 20.3,
+      "gap": 74.7,
       "state": "below",
       "warning": null
     },
@@ -800,7 +532,7 @@
       {
         "name": "auto/unused",
         "description": "Remove 320 unused issues",
-        "item_count": 320
+        "item_count": 0
       },
       {
         "name": "auto/test_coverage",
@@ -810,12 +542,12 @@
       {
         "name": "auto/security",
         "description": "Fix 339 security issues",
-        "item_count": 339
+        "item_count": 0
       },
       {
         "name": "auto/unused_enums",
         "description": "Fix 57 unused enums issues",
-        "item_count": 57
+        "item_count": 0
       },
       {
         "name": "auto/stale_exclude",
@@ -827,9 +559,9 @@
     "total_skipped": 603,
     "plan_overrides_narrative": true
   },
-  "overall_score": 20.1,
-  "objective_score": 80.3,
-  "strict_score": 20.1,
+  "overall_score": 20.3,
+  "objective_score": 81.3,
+  "strict_score": 20.3,
   "scorecard_dimensions": [
     {
       "name": "File health",
@@ -842,10 +574,10 @@
     },
     {
       "name": "Code quality",
-      "score": 86.3,
-      "strict": 86.3,
+      "score": 89.3,
+      "strict": 89.3,
       "checks": 9225,
-      "failing": 2081,
+      "failing": 1798,
       "tier": 3,
       "subjective": false
     },
@@ -860,10 +592,10 @@
     },
     {
       "name": "Security",
-      "score": 97.4,
-      "strict": 97.4,
+      "score": 100.0,
+      "strict": 100.0,
       "checks": 3168,
-      "failing": 340,
+      "failing": 1,
       "tier": 4,
       "subjective": false
     },
