@@ -75,7 +75,9 @@ class SupervisedLearningEngine(BaseLearningEngine):
         )
 
         # López de Prado sample weights (Chapter 4)
-        self.sample_weights_ = None  # Stores sample weights from uniqueness calculation
+        self.sample_weights_: Optional[
+            np.ndarray
+        ] = None  # Stores sample weights from uniqueness calculation
 
     def train(
         self,
@@ -126,7 +128,7 @@ class SupervisedLearningEngine(BaseLearningEngine):
         # Validar que hay suficientes datos y múltiples clases
         if len(X_train) == 0 or len(y_train) == 0:
             logger.warning("Datos de entrenamiento vacíos")
-            return {'error': 'empty_data'}
+            return {'error': 0.0, 'empty_data': 0.0}
 
         unique_labels = len(np.unique(y_train))
         if unique_labels < 2:
@@ -138,10 +140,10 @@ class SupervisedLearningEngine(BaseLearningEngine):
             )
             # No podemos entrenar sin múltiples clases - retornar error
             return {
-                'error': 'insufficient_classes',
-                'message': f'Solo hay {unique_labels} clase(s) en los labels. Se necesita al menos 2 clases.',
-                'unique_labels': int(unique_labels),
-                'total_samples': len(y_train),
+                'error': 0.0,
+                'insufficient_classes': 0.0,
+                'unique_labels': float(unique_labels),
+                'total_samples': float(len(y_train)),
             }
 
         # Calculate López de Prado sample weights by uniqueness (Chapter 4)
@@ -170,6 +172,8 @@ class SupervisedLearningEngine(BaseLearningEngine):
                         f"min={self.sample_weights_.min():.4f}, "
                         f"max={self.sample_weights_.max():.4f}, "
                         f"std={self.sample_weights_.std():.4f}"
+                        if self.sample_weights_ is not None
+                        else "sample_weights_ is None"
                     )
 
                     # We'll apply weights after the train/val split

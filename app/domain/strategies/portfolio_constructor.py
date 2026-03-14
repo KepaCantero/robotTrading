@@ -171,7 +171,7 @@ class FactorPortfolioConstructor:
 
         # Select top N stocks with sector diversification
         selected_profiles = []
-        sector_counts = {}  # Track stocks per sector
+        sector_counts: Dict[str, int] = {}  # Track stocks per sector
 
         # Target max stocks per sector (based on max_sector_weight)
         # If max_sector_weight is 0.25 and portfolio_size is 20, max 5 stocks per sector
@@ -380,7 +380,7 @@ class FactorPortfolioConstructor:
         # Ensure weights are non-negative and sum to 1
         # Note: _apply_sector_constraints already normalizes, so just ensure non-negative
         weights = np.maximum(weights, 0)
-        total_weight = np.sum(weights)
+        total_weight: float = np.sum(weights)
         if total_weight > 0:
             weights = weights / total_weight
 
@@ -409,7 +409,7 @@ class FactorPortfolioConstructor:
                     other_mask = np.ones(len(weights), dtype=bool)
                     other_mask[i] = False
                     other_weights = weights[other_mask]
-                    other_total = np.sum(other_weights)
+                    other_total: float = np.sum(other_weights)
 
                     if other_total > 0:
                         # Redistribute proportionally
@@ -631,7 +631,7 @@ class FactorPortfolioConstructor:
             # Check each sector and cap if needed
             for sector in unique_sectors:
                 sector_mask = np.array([s == sector for s in sectors])
-                sector_total = np.sum(adjusted_weights[sector_mask])
+                sector_total: float = np.sum(adjusted_weights[sector_mask])
 
                 if sector_total > effective_max:
                     violation = sector_total - effective_max

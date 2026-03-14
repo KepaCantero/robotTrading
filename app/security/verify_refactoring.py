@@ -5,8 +5,8 @@ This script verifies the file structure and syntax without triggering
 circular imports in the existing codebase.
 """
 
-import os
 import ast
+import os
 import sys
 
 
@@ -54,14 +54,16 @@ def extract_exports(filepath: str) -> list[str]:
             for target in node.targets:
                 if isinstance(target, ast.Name) and target.id == '__all__':
                     if isinstance(node.value, ast.List):
-                        return [elt.value for elt in node.value.elts if isinstance(elt, ast.Constant)]
+                        return [
+                            elt.value for elt in node.value.elts if isinstance(elt, ast.Constant)
+                        ]
     return []
 
 
 def main():
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("SOLID REFACTORING VERIFICATION")
-    print("="*70)
+    print("=" * 70)
 
     base_path = "/Users/kepa.cantero/Projects/algoTrading/app/security"
 
@@ -113,7 +115,9 @@ def main():
             class_count = count_classes(filepath)
             lines = count_lines(filepath)
             status = "✓" if class_count <= 2 else "⚠"
-            print(f"  {status} {os.path.basename(filepath):35} {class_count} classes, {lines} lines")
+            print(
+                f"  {status} {os.path.basename(filepath):35} {class_count} classes, {lines} lines"
+            )
 
     original_file = f"{base_path}/auth.py"
     original_lines = count_lines(original_file)
@@ -131,11 +135,7 @@ def main():
     with open(interface_file, 'r') as f:
         content = f.read()
 
-    protocols = [
-        "UserStoreProtocol",
-        "JWTTokenManagerProtocol",
-        "AuthAttemptTrackerProtocol"
-    ]
+    protocols = ["UserStoreProtocol", "JWTTokenManagerProtocol", "AuthAttemptTrackerProtocol"]
 
     for protocol in protocols:
         if f"class {protocol}" in content:
@@ -188,12 +188,18 @@ def main():
     auth_exports = extract_exports(auth_file)
 
     expected_exports = [
-        "User", "UserRoles",
-        "UserStore", "get_user_store",
-        "JWTTokenManager", "get_token_manager",
-        "AuthAttemptTracker", "get_attempt_tracker",
-        "get_current_user", "get_current_user_optional",
-        "require_roles", "require_permissions",
+        "User",
+        "UserRoles",
+        "UserStore",
+        "get_user_store",
+        "JWTTokenManager",
+        "get_token_manager",
+        "AuthAttemptTracker",
+        "get_attempt_tracker",
+        "get_current_user",
+        "get_current_user_optional",
+        "require_roles",
+        "require_permissions",
     ]
 
     missing = []
@@ -229,7 +235,7 @@ def main():
 
     # Calculate separation metrics
     auth_lines = count_lines(f"{base_path}/auth.py")
-    separation_pct = ((total_lines - auth_lines) / total_lines * 100)
+    separation_pct = (total_lines - auth_lines) / total_lines * 100
 
     print(f"\n  Code separation: {separation_pct:.1f}% moved to dedicated modules")
     print(f"  Main auth.py: {auth_lines} lines ({auth_lines/total_lines*100:.1f}% of total)")
@@ -245,9 +251,9 @@ def main():
 
     print("\n✓ Well-organized, modular structure")
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("VERIFICATION SUMMARY")
-    print("="*70)
+    print("=" * 70)
 
     checks = [
         ("File structure", all_exist),
@@ -266,9 +272,9 @@ def main():
         print(f"  {status} {check}")
 
     if all_passed:
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print("✓ ALL CHECKS PASSED!")
-        print("="*70)
+        print("=" * 70)
         print("\nRefactoring successfully completed:")
         print("  ✓ SOLID principles implemented")
         print("  ✓ Backward compatibility maintained")

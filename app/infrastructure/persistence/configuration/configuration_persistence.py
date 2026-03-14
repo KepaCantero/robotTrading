@@ -46,7 +46,7 @@ class ConfigurationPersistence:
                 "config_id": config_id,
                 "strategy_name": request.strategy_name,
                 "version": request.version or "1.0",
-            }
+            },
         )
 
         config = StrategyConfiguration(
@@ -65,7 +65,7 @@ class ConfigurationPersistence:
                 "config_id": config_id,
                 "strategy_name": request.strategy_name,
                 "total_configurations": len(self._configurations),
-            }
+            },
         )
 
         return config
@@ -74,7 +74,7 @@ class ConfigurationPersistence:
         """Load a strategy configuration."""
         logger.debug(
             "Loading configuration",
-            extra={"strategy_name": request.strategy_name, "version": request.version}
+            extra={"strategy_name": request.strategy_name, "version": request.version},
         )
 
         # Find configuration by strategy name
@@ -86,7 +86,7 @@ class ConfigurationPersistence:
                         extra={
                             "strategy_name": request.strategy_name,
                             "version": config.version,
-                        }
+                        },
                     )
                     return ConfigurationLoadResponse(
                         success=True,
@@ -96,7 +96,7 @@ class ConfigurationPersistence:
 
         logger.warning(
             "Configuration not found",
-            extra={"strategy_name": request.strategy_name, "version": request.version}
+            extra={"strategy_name": request.strategy_name, "version": request.version},
         )
 
         return ConfigurationLoadResponse(
@@ -107,10 +107,7 @@ class ConfigurationPersistence:
 
     def list_configurations(self, strategy_name: Optional[str] = None) -> ConfigurationListResponse:
         """List all configurations, optionally filtered by strategy."""
-        logger.debug(
-            "Listing configurations",
-            extra={"strategy_name_filter": strategy_name}
-        )
+        logger.debug("Listing configurations", extra={"strategy_name_filter": strategy_name})
 
         configs = list(self._configurations.values())
 
@@ -122,7 +119,7 @@ class ConfigurationPersistence:
             extra={
                 "total_count": len(configs),
                 "strategy_name_filter": strategy_name,
-            }
+            },
         )
 
         return ConfigurationListResponse(
@@ -132,10 +129,7 @@ class ConfigurationPersistence:
 
     def delete_configuration(self, strategy_name: str) -> bool:
         """Delete a configuration by strategy name."""
-        logger.debug(
-            "Deleting configuration",
-            extra={"strategy_name": strategy_name}
-        )
+        logger.debug("Deleting configuration", extra={"strategy_name": strategy_name})
 
         to_delete = [
             config_id
@@ -154,12 +148,11 @@ class ConfigurationPersistence:
                 extra={
                     "strategy_name": strategy_name,
                     "deleted_count": len(to_delete),
-                }
+                },
             )
         else:
             logger.warning(
-                "No configuration found to delete",
-                extra={"strategy_name": strategy_name}
+                "No configuration found to delete", extra={"strategy_name": strategy_name}
             )
 
         return deleted

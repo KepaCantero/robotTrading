@@ -204,7 +204,7 @@ class ComplianceServiceRegistry:
             # Clear cached service if exists
             if service_name in self._services:
                 del self._services[service_name]
-        logger.info("Registered service factory", service_name=service_name)
+        logger.info("Registered service factory: %s", service_name)
 
     # =========================================================================
     # SERVICE ACCESS
@@ -227,7 +227,7 @@ class ComplianceServiceRegistry:
 
             # Check if factory exists
             if service_name not in self._factories:
-                logger.warning("Service factory not found", service_name=service_name)
+                logger.warning("Service factory not found: %s", service_name)
                 return None
 
             # Create service using factory
@@ -236,10 +236,10 @@ class ComplianceServiceRegistry:
                 service = factory()
                 self._services[service_name] = service
                 self._availability[service_name] = service is not None
-                logger.debug("Created service", service_name=service_name)
+                logger.debug("Created service: %s", service_name)
                 return service
             except Exception as e:
-                logger.warning("Failed to create service", service_name=service_name, error=str(e))
+                logger.warning("Failed to create service %s: %s", service_name, str(e))
                 self._availability[service_name] = False
                 return None
 
@@ -339,9 +339,9 @@ class ComplianceServiceRegistry:
 
     def _create_portfolio_optimizer(self) -> Optional[Any]:
         try:
-            from app.services.optimization_chan import get_portfolio_optimizer
+            from app.services.optimization_chan import optimize_portfolio
 
-            return get_portfolio_optimizer(method="mean_variance")
+            return lambda: optimize_portfolio
         except ImportError:
             return None
 

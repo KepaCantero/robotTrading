@@ -84,7 +84,7 @@ def create_stock_contract(
             "base_symbol": base_symbol,
             "currency": currency,
             "exchange": exchange,
-        }
+        },
     )
 
     contract = Stock(symbol=base_symbol, exchange=exchange, currency=currency)
@@ -97,7 +97,7 @@ def create_stock_contract(
             "symbol": base_symbol,
             "currency": currency,
             "exchange": exchange,
-        }
+        },
     )
 
     return contract
@@ -124,7 +124,7 @@ def create_index_contract() -> IBContract:
             "index": "IBEX",
             "exchange": "Meff",
             "currency": "EUR",
-        }
+        },
     )
 
     contract = Index(symbol="IBEX", exchange="Meff", currency="EUR")  # Spanish derivatives exchange
@@ -135,7 +135,7 @@ def create_index_contract() -> IBContract:
             "component": "ibex35_contracts",
             "operation": "create_index_contract",
             "contract_symbol": "IBEX",
-        }
+        },
     )
 
     return contract
@@ -158,7 +158,7 @@ def get_ibex35_symbols() -> List[str]:
             "component": "ibex35_contracts",
             "operation": "get_ibex35_symbols",
             "symbols_count": len(IBEX35_SYMBOLS),
-        }
+        },
     )
 
     return IBEX35_SYMBOLS.copy()
@@ -189,7 +189,7 @@ def is_ibex35_symbol(symbol: str) -> bool:
             "input_symbol": symbol,
             "normalized_symbol": normalized,
             "is_ibex35": result,
-        }
+        },
     )
 
     return result
@@ -208,7 +208,7 @@ def get_spanish_exchange_suffix() -> str:
             "component": "ibex35_contracts",
             "operation": "get_spanish_exchange_suffix",
             "suffix": ".MC",
-        }
+        },
     )
 
     return ".MC"

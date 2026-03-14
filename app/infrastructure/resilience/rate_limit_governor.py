@@ -129,7 +129,7 @@ class TokenBucketAlgorithm:
                         "tokens_remaining": self.state.tokens,
                         "tokens_capacity": self.state.capacity,
                         "total_requests": self.state.total_requests,
-                    }
+                    },
                 )
                 return True
 
@@ -145,7 +145,7 @@ class TokenBucketAlgorithm:
                     "tokens_remaining": self.state.tokens,
                     "tokens_capacity": self.state.capacity,
                     "blocked_requests": self.state.blocked_requests,
-                }
+                },
             )
 
             if timeout is not None and wait_time > timeout:
@@ -187,7 +187,7 @@ class TokenBucketAlgorithm:
                     "elapsed_seconds": elapsed,
                     "tokens_current": self.state.tokens,
                     "tokens_capacity": self.state.capacity,
-                }
+                },
             )
 
     def _calculate_wait_time(self) -> float:
@@ -294,7 +294,7 @@ class WebSocketFirstStrategy:
                 "symbol": symbol,
                 "subscription_count": len(self._subscriptions[symbol]),
                 "total_symbols": len(self._subscriptions),
-            }
+            },
         )
 
     async def start_websocket(self, websocket_url: str):
@@ -305,16 +305,10 @@ class WebSocketFirstStrategy:
             websocket_url: URL del WebSocket del broker
         """
         if not self._use_websocket:
-            logger.info(
-                "WebSocket disabled, using REST only",
-                extra={"websocket_enabled": False}
-            )
+            logger.info("WebSocket disabled, using REST only", extra={"websocket_enabled": False})
             return
 
-        logger.debug(
-            "Starting WebSocket connection",
-            extra={"websocket_url": websocket_url}
-        )
+        logger.debug("Starting WebSocket connection", extra={"websocket_url": websocket_url})
         try:
             import aiohttp
 
@@ -326,7 +320,7 @@ class WebSocketFirstStrategy:
                 extra={
                     "websocket_url": websocket_url,
                     "connected": True,
-                }
+                },
             )
 
             # Task para procesar mensajes
@@ -338,7 +332,7 @@ class WebSocketFirstStrategy:
                 extra={
                     "websocket_url": websocket_url,
                     "error_type": type(e).__name__,
-                }
+                },
             )
             self._is_connected = False
 
@@ -358,14 +352,13 @@ class WebSocketFirstStrategy:
                     logger.error(
                         f"WebSocket error: {self._websocket.exception()}",
                         extra={"error_type": "websocket_error"},
-                        exc_info=True
+                        exc_info=True,
                     )
                     break
 
         except OSError as e:
             logger.error(
-                "Error processing WebSocket messages",
-                extra={"error_type": type(e).__name__}
+                "Error processing WebSocket messages", extra={"error_type": type(e).__name__}
             )
         finally:
             self._is_connected = False
@@ -395,7 +388,7 @@ class WebSocketFirstStrategy:
                             extra={
                                 "symbol": symbol,
                                 "error_type": type(e).__name__,
-                            }
+                            },
                         )
 
     async def stop_websocket(self):
@@ -403,10 +396,7 @@ class WebSocketFirstStrategy:
         if self._websocket:
             await self._websocket.close()
             self._is_connected = False
-            logger.info(
-                "WebSocket connection closed",
-                extra={"connected": False}
-            )
+            logger.info("WebSocket connection closed", extra={"connected": False})
 
 
 class AdaptiveRateLimiter:
@@ -456,7 +446,7 @@ class AdaptiveRateLimiter:
                     "new_rate": self.current_rate,
                     "429_count": self._429_count,
                     "reduction_pct": 50,
-                }
+                },
             )
 
             self._429_count = 0
@@ -475,7 +465,7 @@ class AdaptiveRateLimiter:
                     "new_rate": self.current_rate,
                     "success_count": self._success_count,
                     "increase_pct": 10,
-                }
+                },
             )
 
             self._success_count = 0
@@ -534,7 +524,7 @@ class RateLimitGovernor:
                 "refill_rate": self.config.refill_rate,
                 "websocket_enabled": self.config.websocket_enabled,
                 "adaptive_mode": self.config.adaptive_mode,
-            }
+            },
         )
 
     async def acquire_token(self, timeout: Optional[float] = None) -> bool:
@@ -557,7 +547,7 @@ class RateLimitGovernor:
             extra={
                 "broker_name": self.broker_name,
                 "timeout": timeout,
-            }
+            },
         )
         return await self.token_bucket.acquire(timeout=timeout)
 
@@ -596,7 +586,7 @@ class RateLimitGovernor:
             extra={
                 "broker_name": self.broker_name,
                 "status_code": status_code,
-            }
+            },
         )
         await self.adaptive_limiter.record_response(status_code)
 

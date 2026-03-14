@@ -116,7 +116,7 @@ class PerformanceMetricsCalculator(_PerformanceMetricsCalculator):
                 "trading_days": td,
                 "use_empyrical": use_empyrical,
                 "config_source": "CentralizedConfig",
-            }
+            },
         )
 
         return cls(
@@ -135,7 +135,7 @@ def _to_float_array(
         extra={
             "input_type": type(returns).__name__,
             "input_length": len(returns) if hasattr(returns, '__len__') else 'N/A',
-        }
+        },
     )
     if isinstance(returns, pd.Series):
         arr = returns.values.astype(np.float64)
@@ -153,7 +153,7 @@ def _to_float_array(
         extra={
             "output_length": len(result),
             "nan_removed": len(arr) - len(result),
-        }
+        },
     )
     return result
 
@@ -180,7 +180,7 @@ def sharpe_ratio(
             "returns_length": len(returns) if hasattr(returns, '__len__') else 'N/A',
             "risk_free_rate": risk_free_rate,
             "annualize": annualize,
-        }
+        },
     )
     calc = PerformanceMetricsCalculator.from_config(risk_free_rate=risk_free_rate)
     result = calc.sharpe_ratio(returns, risk_free_rate=risk_free_rate, annualize=annualize)
@@ -189,7 +189,7 @@ def sharpe_ratio(
         extra={
             "sharpe_ratio": result,
             "annualized": annualize,
-        }
+        },
     )
     return result
 

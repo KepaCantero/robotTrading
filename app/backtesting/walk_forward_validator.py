@@ -177,14 +177,17 @@ class ValidationWindow:
     # Out-of-Sample (OOS) metrics alias (same as main metrics)
     @property
     def oos_total_return(self) -> float:
+        """Return out-of-sample total return (alias for total_return)."""
         return self.total_return
 
     @property
     def oos_sharpe_ratio(self) -> float:
+        """Return out-of-sample Sharpe ratio (alias for sharpe_ratio)."""
         return self.sharpe_ratio
 
     @property
     def oos_max_drawdown(self) -> float:
+        """Return out-of-sample max drawdown (alias for max_drawdown)."""
         return self.max_drawdown
 
 
@@ -262,6 +265,7 @@ class SyntheticDataGenerator:
         self.annual_drift = config.get("annual_drift", 0.05)
         self.random_state = config.get("random_state", 42)
 
+    # pylint: disable=R0913
     def generate_gbm_prices(
         self,
         n_days: int,
@@ -341,6 +345,7 @@ class SyntheticDataGenerator:
             initial_regime=MarketRegime.SIDEWAYS,
         )
 
+    # pylint: disable=R0913
     def generate_jump_diffusion_prices(
         self,
         n_days: int,
@@ -386,6 +391,7 @@ class SyntheticDataGenerator:
             initial_regime=MarketRegime.VOLATILE,
         )
 
+    # pylint: disable=R0913
     def generate_flash_crash_scenario(
         self,
         n_days: int,
@@ -487,6 +493,7 @@ class SyntheticDataGenerator:
             initial_regime=MarketRegime.BULL,
         )
 
+    # pylint: disable=R0913
     def generate_gap_scenario(
         self,
         n_days: int,
@@ -538,9 +545,7 @@ class SyntheticDataGenerator:
 
         This method simply wraps the realistic generator.
         """
-        logger.warning(
-            "_prices_to_quotes is deprecated. " "Using realistic data generator instead."
-        )
+        logger.warning("_prices_to_quotes is deprecated. Using realistic data generator instead.")
 
         # Use realistic generator for proper OHLC
         return self.realistic_generator.generate_realistic_quotes(
@@ -635,6 +640,7 @@ class WalkForwardValidator:
 
         return windows
 
+    # pylint: disable=R0913,R0914,R0915
     def validate_strategy(
         self,
         quotes: List[Quote],
@@ -663,7 +669,9 @@ class WalkForwardValidator:
             logger.warning(f"Insufficient windows: {len(windows)} < {min_cycles}")
             return {
                 "passed": False,
-                "reason": f"Insufficient windows for robust validation: {len(windows)} < {min_cycles}",
+                "reason": (
+                    f"Insufficient windows for robust validation: " f"{len(windows)} < {min_cycles}"
+                ),
                 "windows": [],
                 "is_oos_analysis": None,
             }
@@ -863,7 +871,8 @@ class WalkForwardValidator:
         if consistency_ratio < consistency_ratio_threshold:
             passed = False
             failures.append(
-                f"Consistency Ratio (Sharpe OOS/IS) {consistency_ratio:.2f} < {consistency_ratio_threshold}"
+                f"Consistency Ratio (Sharpe OOS/IS) {consistency_ratio:.2f} < "
+                f"{consistency_ratio_threshold}"
             )
 
         # Req #2: Degradation threshold (< 30%)
@@ -871,7 +880,8 @@ class WalkForwardValidator:
         if sharpe_degradation > max_degradation:
             passed = False
             failures.append(
-                f"Sharpe degradation {sharpe_degradation:.1%} exceeds {max_degradation:.0%} threshold"
+                f"Sharpe degradation {sharpe_degradation:.1%} exceeds "
+                f"{max_degradation:.0%} threshold"
             )
 
         # Req #2: Negative windows threshold (< 50%)
@@ -879,7 +889,8 @@ class WalkForwardValidator:
         if negative_window_pct > max_negative_windows:
             passed = False
             failures.append(
-                f"Negative windows {negative_window_pct:.1%} > {max_negative_windows:.0%} (strategy rejected)"
+                f"Negative windows {negative_window_pct:.1%} > "
+                f"{max_negative_windows:.0%} (strategy rejected)"
             )
 
         return {
@@ -1045,6 +1056,7 @@ class CrossValidationTemporal:
 
         return folds
 
+    # pylint: disable=R0913,R0914
     def cross_validate(
         self,
         quotes: List[Quote],
@@ -1115,7 +1127,8 @@ class CrossValidationTemporal:
         if consistency_score < self.thresholds.get("min_consistency_score", 0.6):
             passed = False
             failures.append(
-                f"Consistency {consistency_score:.2%} < {self.thresholds['min_consistency_score']:.2%}"
+                f"Consistency {consistency_score:.2%} < "
+                f"{self.thresholds['min_consistency_score']:.2%}"
             )
 
         if return_variance > self.thresholds.get("max_return_variance", 0.25):
@@ -1178,6 +1191,7 @@ class StressTester:
         full_config = load_validation_config(config_path)
         self.data_generator = SyntheticDataGenerator(full_config.get("synthetic_data", {}))
 
+    # pylint: disable=R0913
     def _generate_scenario(
         self,
         scenario_type: str,
@@ -1243,6 +1257,7 @@ class StressTester:
         # Default: GBM
         return self.data_generator.generate_gbm_prices(n_days, start_date, symbol)
 
+    # pylint: disable=R0914,R0915
     def run_stress_tests(
         self,
         strategy,
@@ -1433,6 +1448,7 @@ class MonteCarloSimulator:
         self.random_state = config.get("random_state", 42)
         self._rng = np.random.default_rng(self.random_state)
 
+    # pylint: disable=R0914
     def run_simulation(
         self,
         historical_returns: List[float],
@@ -1570,6 +1586,7 @@ class ComprehensiveValidator:
         self.stress_tester = StressTester(config_path=config_path)
         self.monte_carlo = MonteCarloSimulator(config_path=config_path)
 
+    # pylint: disable=R0913
     def run_full_validation(
         self,
         strategy,

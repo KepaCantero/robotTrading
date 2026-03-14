@@ -24,7 +24,6 @@ __all__ = [
     "OrderTypePreference",
     "TradingProfile",
     "NotificationSettings",
-    "BrokerSettings",
     "OrderPreferences",
     "TradingHours",
     "RiskLimits",

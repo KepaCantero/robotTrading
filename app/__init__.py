@@ -19,7 +19,7 @@ APP_DESCRIPTION = __description__
 
 # Initialize DI container on import
 # This ensures all dependencies are available throughout the application
-from app.shared.config.di_config import initialize_container  # noqa: F401
+from app.shared.config.di_container import get_container  # noqa: F401
 
 _container = None
 
@@ -28,7 +28,7 @@ def get_di_container():
     """Get the global DI container instance."""
     global _container
     if _container is None:
-        _container = initialize_container()
+        _container = get_container()
     return _container
 
 

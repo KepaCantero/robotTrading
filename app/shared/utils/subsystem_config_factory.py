@@ -46,7 +46,7 @@ class SubsystemConfigFactory:
         if cls._instance is None:
             logger.debug(
                 "Creating new SubsystemConfigFactory instance",
-                extra={"operation": "singleton_creation"}
+                extra={"operation": "singleton_creation"},
             )
             cls._instance = super().__new__(cls)
             cls._instance._initialized = False
@@ -56,10 +56,7 @@ class SubsystemConfigFactory:
         """Initialize factory with default configurations."""
         if self._initialized:
             return
-        logger.info(
-            "Initializing SubsystemConfigFactory",
-            extra={"operation": "factory_init"}
-        )
+        logger.info("Initializing SubsystemConfigFactory", extra={"operation": "factory_init"})
         self._initialized = True
 
     # ==========================================================================
@@ -75,7 +72,7 @@ class SubsystemConfigFactory:
         """
         logger.debug(
             "Getting backtest config",
-            extra={"subsystem": "backtesting_engine", "operation": "get_backtest_config"}
+            extra={"subsystem": "backtesting_engine", "operation": "get_backtest_config"},
         )
         from app.backtesting.models import BacktestConfig
 
@@ -92,8 +89,8 @@ class SubsystemConfigFactory:
             extra={
                 "strategy_name": config.strategy_name,
                 "initial_capital": float(config.initial_capital),
-                "subsystem": "backtesting_engine"
-            }
+                "subsystem": "backtesting_engine",
+            },
         )
         return config
 
@@ -110,7 +107,7 @@ class SubsystemConfigFactory:
         """
         logger.debug(
             "Getting risk engine config",
-            extra={"subsystem": "risk_engine", "operation": "get_risk_engine_config"}
+            extra={"subsystem": "risk_engine", "operation": "get_risk_engine_config"},
         )
         config = {
             "max_portfolio_var": 0.15,
@@ -134,8 +131,8 @@ class SubsystemConfigFactory:
             extra={
                 "max_portfolio_var": config["max_portfolio_var"],
                 "var_confidence_level": config["var_confidence_level"],
-                "subsystem": "risk_engine"
-            }
+                "subsystem": "risk_engine",
+            },
         )
         return config
 
@@ -289,7 +286,7 @@ class SubsystemConfigFactory:
         """
         logger.debug(
             "Getting config for subsystem",
-            extra={"subsystem_name": subsystem_name, "operation": "get_config_by_name"}
+            extra={"subsystem_name": subsystem_name, "operation": "get_config_by_name"},
         )
         config_map = {
             "backtesting_engine": self.get_backtest_config,
@@ -309,12 +306,15 @@ class SubsystemConfigFactory:
             config = getter()
             logger.info(
                 "Config retrieved for subsystem",
-                extra={"subsystem_name": subsystem_name, "config_type": type(config).__name__}
+                extra={"subsystem_name": subsystem_name, "config_type": type(config).__name__},
             )
             return config
         logger.warning(
             "No config found for subsystem",
-            extra={"subsystem_name": subsystem_name, "available_subsystems": list(config_map.keys())}
+            extra={
+                "subsystem_name": subsystem_name,
+                "available_subsystems": list(config_map.keys()),
+            },
         )
         return None
 
@@ -334,7 +334,7 @@ def get_subsystem_config_factory() -> SubsystemConfigFactory:
     if _factory is None:
         logger.info(
             "Creating SubsystemConfigFactory singleton",
-            extra={"operation": "get_subsystem_config_factory"}
+            extra={"operation": "get_subsystem_config_factory"},
         )
         _factory = SubsystemConfigFactory()
     return _factory

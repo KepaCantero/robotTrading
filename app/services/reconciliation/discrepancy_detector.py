@@ -60,7 +60,7 @@ class DiscrepancyDetector:
                 "quantity_tolerance": str(self.QUANTITY_TOLERANCE),
                 "price_tolerance_pct": str(self.PRICE_TOLERANCE_PCT),
                 "value_tolerance_pct": str(self.VALUE_TOLERANCE_PCT),
-            }
+            },
         )
 
     def detect_position_mismatch(
@@ -88,7 +88,7 @@ class DiscrepancyDetector:
         """
         logger.debug(
             "detect_position_mismatch called",
-            extra={"broker_qty": str(broker_qty), "internal_qty": str(internal_qty)}
+            extra={"broker_qty": str(broker_qty), "internal_qty": str(internal_qty)},
         )
         diff = abs(broker_qty - internal_qty)
 
@@ -114,7 +114,11 @@ class DiscrepancyDetector:
             }
             logger.warning(
                 "Quantity mismatch detected",
-                extra={"discrepancy_type": "QUANTITY_MISMATCH", "severity": severity, "difference": str(diff)}
+                extra={
+                    "discrepancy_type": "QUANTITY_MISMATCH",
+                    "severity": severity,
+                    "difference": str(diff),
+                },
             )
             return result
 
@@ -145,7 +149,7 @@ class DiscrepancyDetector:
         """
         logger.debug(
             "detect_price_mismatch called",
-            extra={"broker_price": str(broker_price), "internal_price": str(internal_price)}
+            extra={"broker_price": str(broker_price), "internal_price": str(internal_price)},
         )
         # Handle zero price case
         if internal_price == 0:
@@ -153,7 +157,7 @@ class DiscrepancyDetector:
                 return None  # Both zero - no discrepancy
             logger.warning(
                 "Price mismatch detected: internal price is zero",
-                extra={"discrepancy_type": "PRICE_MISMATCH", "broker_price": str(broker_price)}
+                extra={"discrepancy_type": "PRICE_MISMATCH", "broker_price": str(broker_price)},
             )
             return {
                 "type": "PRICE_MISMATCH",
@@ -188,7 +192,11 @@ class DiscrepancyDetector:
             }
             logger.warning(
                 "Price mismatch detected",
-                extra={"discrepancy_type": "PRICE_MISMATCH", "severity": severity, "diff_pct": f"{diff_pct * 100:.3f}%"}
+                extra={
+                    "discrepancy_type": "PRICE_MISMATCH",
+                    "severity": severity,
+                    "diff_pct": f"{diff_pct * 100:.3f}%",
+                },
             )
             return result
 
@@ -327,7 +335,7 @@ class DiscrepancyDetector:
             extra={
                 "broker_positions_count": len(broker_positions),
                 "internal_positions_count": len(internal_positions),
-            }
+            },
         )
         result = {
             "quantity_mismatches": [],
@@ -393,7 +401,7 @@ class DiscrepancyDetector:
                 "price_mismatches": len(result["price_mismatches"]),
                 "value_mismatches": len(result["value_mismatches"]),
                 "missing_positions": len(result["missing_positions"]),
-            }
+            },
         )
 
         return result

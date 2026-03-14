@@ -6,16 +6,19 @@ for the algorithmic trading system.
 """
 
 import logging
-
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional, Union
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 logger = logging.getLogger(__name__)
+
+# Type alias for metadata values
+MetadataValue = Union[str, int, float, bool]
+MetadataDict = Dict[str, MetadataValue]
 
 
 class DataFeedType(str, Enum):
@@ -89,7 +92,7 @@ class Quote(BaseModel):
         default=DataFeedType.YAHOO_FINANCE, description="Data feed source"
     )
     status: MarketDataStatus = Field(default=MarketDataStatus.ACTIVE, description="Quote status")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    metadata: MetadataDict = Field(default_factory=dict, description="Additional metadata")
 
     @field_validator("bid", "ask", "last")
     @classmethod
@@ -328,7 +331,7 @@ class HistoricalData(BaseModel):
     # Metadata
     feed_type: DataFeedType = Field(..., description="Data feed source")
     frequency: DataFrequency = Field(..., description="Data frequency")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    metadata: MetadataDict = Field(default_factory=dict, description="Additional metadata")
 
     @field_validator("open", "high", "low", "close", "adjusted_close")
     @classmethod
@@ -446,7 +449,7 @@ class DataFeedConfig(BaseModel):
     error_count: int = Field(default=0, ge=0, description="Number of consecutive errors")
 
     # Metadata
-    metadata: Dict[str, Any] = Field(
+    metadata: MetadataDict = Field(
         default_factory=dict, description="Additional configuration metadata"
     )
 
@@ -476,7 +479,7 @@ class MarketDataSubscription(BaseModel):
     error_count: int = Field(default=0, ge=0, description="Number of errors encountered")
 
     # Metadata
-    metadata: Dict[str, Any] = Field(
+    metadata: MetadataDict = Field(
         default_factory=dict, description="Additional subscription metadata"
     )
 
@@ -489,7 +492,9 @@ class MarketDataCache(BaseModel):
     data_type: str = Field(..., description="Type of cached data (quote, historical)")
 
     # Cache data
-    data: Any = Field(..., description="Cached market data (can be dict or list)")
+    data: Union[MetadataDict, List[MetadataDict]] = Field(
+        ..., description="Cached market data (dict or list of dicts)"
+    )
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Cache timestamp")
 
     # Cache settings
@@ -498,7 +503,7 @@ class MarketDataCache(BaseModel):
 
     # Metadata
     feed_type: DataFeedType = Field(..., description="Data feed source")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional cache metadata")
+    metadata: MetadataDict = Field(default_factory=dict, description="Additional cache metadata")
 
     def is_cache_valid(self) -> bool:
         """Check if cache is still valid."""

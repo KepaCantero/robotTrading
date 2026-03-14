@@ -66,81 +66,60 @@ class CostBreakdownModel(BaseModel):
     @classmethod
     def validate_total_cost(cls, v, info=None):
         """Validate that total cost equals sum of components."""
-        if (
-            info
-            and hasattr(info, "data")
-            and "commission" in info.data
-            and "slippage" in info.data
-            and "market_impact" in info.data
-        ):
-            expected_total = (
-                info.data["commission"]
-                if info and hasattr(info, "data") and "commission" in info.data
-                else (
-                    None + info.data["slippage"]
-                    if info and hasattr(info, "data") and "slippage" in info.data
-                    else (
-                        None + info.data["market_impact"]
-                        if info and hasattr(info, "data") and "market_impact" in info.data
-                        else None
-                        + info.data.get(
-                            "infrastructure_cost",
-                            Decimal("0") if info and hasattr(info, "data") else None,
-                        )
-                        + info.data.get(
-                            "borrowing_cost",
-                            Decimal("0") if info and hasattr(info, "data") else None,
-                        )
-                    )
-                )
-            )
-            if abs(v - expected_total) > Decimal("0.01"):
-                logger.error(
-                    "Cost validation failed: total cost mismatch",
-                    extra={
-                        "trade_id": info.data.get("trade_id") if info else None,
-                        "expected_total": float(expected_total) if expected_total else None,
-                        "actual_total": float(v),
-                    },
-                )
-                raise ValueError("Total cost does not match sum of components")
-            logger.debug(
-                "Cost breakdown validated successfully",
+        if not cls._has_validation_data(info, ["commission", "slippage", "market_impact"]):
+            return v
+
+        data = info.data
+        expected_total = (
+            data["commission"]
+            + data["slippage"]
+            + data["market_impact"]
+            + data.get("infrastructure_cost", Decimal("0"))
+            + data.get("borrowing_cost", Decimal("0"))
+        )
+
+        if abs(v - expected_total) > Decimal("0.01"):
+            logger.error(
+                "Cost validation failed: total cost mismatch",
                 extra={
-                    "trade_id": info.data.get("trade_id") if info else None,
-                    "total_cost": float(v),
+                    "trade_id": data.get("trade_id"),
+                    "expected_total": float(expected_total),
+                    "actual_total": float(v),
                 },
             )
+            raise ValueError("Total cost does not match sum of components")
+
+        logger.debug(
+            "Cost breakdown validated successfully",
+            extra={
+                "trade_id": data.get("trade_id"),
+                "total_cost": float(v),
+            },
+        )
         return v
+
+    @staticmethod
+    def _has_validation_data(info, required_keys: List[str]) -> bool:
+        """Check if validation info contains all required keys."""
+        if info is None or not hasattr(info, "data"):
+            return False
+        return all(key in info.data for key in required_keys)
 
     @field_validator("cost_percentage")
     @classmethod
     def validate_cost_percentage(cls, v, info=None):
         """Validate cost percentage calculation."""
-        if (
-            info
-            and hasattr(info, "data")
-            and "total_cost" in info.data
-            and "execution_price" in info.data
-            and "quantity" in info.data
-        ):
-            trade_value = (
-                info.data["execution_price"]
-                if info and hasattr(info, "data") and "execution_price" in info.data
-                else (
-                    None * info.data["quantity"]
-                    if info and hasattr(info, "data") and "quantity" in info.data
-                    else None
-                )
-            )
-            if trade_value > 0:
-                expected_percentage = (
-                    info.data["total_cost"]
-                    if info and hasattr(info, "data") and "total_cost" in info.data
-                    else None / trade_value
-                ) * 100
-                if abs(v - expected_percentage) > Decimal("0.01"):
-                    raise ValueError("Cost percentage calculation is incorrect")
+        required_keys = ["total_cost", "execution_price", "quantity"]
+        if not cls._has_validation_data(info, required_keys):
+            return v
+
+        data = info.data
+        trade_value = data["execution_price"] * data["quantity"]
+
+        if trade_value > 0:
+            expected_percentage = (data["total_cost"] / trade_value) * 100
+            if abs(v - expected_percentage) > Decimal("0.01"):
+                raise ValueError("Cost percentage calculation is incorrect")
         return v
 
 
@@ -198,129 +177,101 @@ class CostAnalysisResultModel(BaseModel):
     @classmethod
     def validate_total_costs(cls, v, info=None):
         """Validate that total costs equal sum of components."""
-        if (
-            info
-            and hasattr(info, "data")
-            and all(
-                key in info.data
-                for key in [
-                    "total_commission",
-                    "total_slippage",
-                    "total_market_impact",
-                    "total_infrastructure",
-                    "total_borrowing",
-                ]
-            )
-        ):
-            expected_total = (
-                info.data["total_commission"]
-                if info and hasattr(info, "data") and "total_commission" in info.data
-                else (
-                    None + info.data["total_slippage"]
-                    if info and hasattr(info, "data") and "total_slippage" in info.data
-                    else (
-                        None + info.data["total_market_impact"]
-                        if info and hasattr(info, "data") and "total_market_impact" in info.data
-                        else (
-                            None + info.data["total_infrastructure"]
-                            if info
-                            and hasattr(info, "data")
-                            and "total_infrastructure" in info.data
-                            else (
-                                None + info.data["total_borrowing"]
-                                if info and hasattr(info, "data") and "total_borrowing" in info.data
-                                else None
-                            )
-                        )
-                    )
-                )
-            )
-            if abs(v - expected_total) > Decimal("0.01"):
-                logger.error(
-                    "Cost analysis validation failed: total costs mismatch",
-                    extra={
-                        "strategy_name": info.data.get("strategy_name") if info else None,
-                        "expected_total": float(expected_total) if expected_total else None,
-                        "actual_total": float(v),
-                    },
-                )
-                raise ValueError("Total costs do not match sum of components")
-            logger.debug(
-                "Cost analysis total costs validated",
+        cost_keys = [
+            "total_commission",
+            "total_slippage",
+            "total_market_impact",
+            "total_infrastructure",
+            "total_borrowing",
+        ]
+        if not cls._has_validation_data(info, cost_keys):
+            return v
+
+        data = info.data
+        expected_total = (
+            data["total_commission"]
+            + data["total_slippage"]
+            + data["total_market_impact"]
+            + data["total_infrastructure"]
+            + data["total_borrowing"]
+        )
+
+        if abs(v - expected_total) > Decimal("0.01"):
+            logger.error(
+                "Cost analysis validation failed: total costs mismatch",
                 extra={
-                    "strategy_name": info.data.get("strategy_name") if info else None,
-                    "total_costs": float(v),
+                    "strategy_name": data.get("strategy_name"),
+                    "expected_total": float(expected_total),
+                    "actual_total": float(v),
                 },
             )
+            raise ValueError("Total costs do not match sum of components")
+
+        logger.debug(
+            "Cost analysis total costs validated",
+            extra={
+                "strategy_name": data.get("strategy_name"),
+                "total_costs": float(v),
+            },
+        )
         return v
 
     @field_validator("net_profit")
     @classmethod
     def validate_net_profit(cls, v, info=None):
         """Validate net profit calculation."""
-        if (
-            info
-            and hasattr(info, "data")
-            and "gross_profit" in info.data
-            and "total_costs" in info.data
-        ):
-            expected_net = (
-                info.data["gross_profit"]
-                if info and hasattr(info, "data") and "gross_profit" in info.data
-                else (
-                    None - info.data["total_costs"]
-                    if info and hasattr(info, "data") and "total_costs" in info.data
-                    else None
-                )
-            )
-            if abs(v - expected_net) > Decimal("0.01"):
-                logger.error(
-                    "Net profit validation failed: calculation mismatch",
-                    extra={
-                        "strategy_name": info.data.get("strategy_name") if info else None,
-                        "gross_profit": float(info.data.get("gross_profit", 0)),
-                        "total_costs": float(info.data.get("total_costs", 0)),
-                        "expected_net": float(expected_net) if expected_net else None,
-                        "actual_net": float(v),
-                    },
-                )
-                raise ValueError("Net profit calculation is incorrect")
-            logger.debug(
-                "Net profit validated",
+        required_keys = ["gross_profit", "total_costs"]
+        if not cls._has_validation_data(info, required_keys):
+            return v
+
+        data = info.data
+        expected_net = data["gross_profit"] - data["total_costs"]
+
+        if abs(v - expected_net) > Decimal("0.01"):
+            logger.error(
+                "Net profit validation failed: calculation mismatch",
                 extra={
-                    "strategy_name": info.data.get("strategy_name") if info else None,
-                    "net_profit": float(v),
+                    "strategy_name": data.get("strategy_name"),
+                    "gross_profit": float(data.get("gross_profit", 0)),
+                    "total_costs": float(data.get("total_costs", 0)),
+                    "expected_net": float(expected_net),
+                    "actual_net": float(v),
                 },
             )
+            raise ValueError("Net profit calculation is incorrect")
+
+        logger.debug(
+            "Net profit validated",
+            extra={
+                "strategy_name": data.get("strategy_name"),
+                "net_profit": float(v),
+            },
+        )
         return v
 
     @field_validator("cost_impact_ratio")
     @classmethod
     def validate_cost_impact_ratio(cls, v, info=None):
         """Validate Cost Impact Ratio calculation."""
-        if (
-            info
-            and hasattr(info, "data")
-            and "total_costs" in info.data
-            and "gross_profit" in info.data
-        ):
-            if (
-                info.data["gross_profit"]
-                if info and hasattr(info, "data") and "gross_profit" in info.data
-                else None > 0
-            ):
-                expected_cir = (
-                    info.data["total_costs"]
-                    if info and hasattr(info, "data") and "total_costs" in info.data
-                    else (
-                        None / info.data["gross_profit"]
-                        if info and hasattr(info, "data") and "gross_profit" in info.data
-                        else None
-                    )
-                ) * 100
-                if abs(v - expected_cir) > Decimal("0.01"):
-                    raise ValueError("Cost Impact Ratio calculation is incorrect")
+        required_keys = ["total_costs", "gross_profit"]
+        if not cls._has_validation_data(info, required_keys):
+            return v
+
+        data = info.data
+        gross_profit = data["gross_profit"]
+
+        if gross_profit > 0:
+            expected_cir = (data["total_costs"] / gross_profit) * 100
+            if abs(v - expected_cir) > Decimal("0.01"):
+                raise ValueError("Cost Impact Ratio calculation is incorrect")
         return v
+
+    @staticmethod
+    def _has_validation_data(info, required_keys: List[str]) -> bool:
+        """Check if validation info contains all required keys."""
+        if info is None or not hasattr(info, "data"):
+            return False
+        return all(key in info.data for key in required_keys)
 
 
 class TradeCostAnalysisRequest(BaseModel):

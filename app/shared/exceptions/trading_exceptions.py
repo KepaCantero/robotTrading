@@ -61,7 +61,7 @@ class AlgoTradingError(Exception):
                 "category": category.value,
                 "severity": severity.value,
                 "message": message,
-            }
+            },
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -105,7 +105,7 @@ class ValidationError(AlgoTradingError):
                 "error_type": "ValidationError",
                 "field": field,
                 "value": str(value)[:100] if value is not None else None,  # Truncate for logging
-            }
+            },
         )
 
 
@@ -158,7 +158,7 @@ class ExternalAPIError(AlgoTradingError):
                 "api_name": api_name,
                 "status_code": status_code,
                 "message": message,
-            }
+            },
         )
 
 
@@ -246,7 +246,7 @@ class SecurityError(AlgoTradingError):
                 "error_type": "SecurityError",
                 "violation_type": violation_type,
                 "message": message,
-            }
+            },
         )
 
 

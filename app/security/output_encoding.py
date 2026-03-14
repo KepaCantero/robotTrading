@@ -23,7 +23,14 @@ import json
 import logging
 import re
 import urllib.parse
-from typing import Any, Dict, List
+from typing import Dict, List, Union
+
+# Type alias for values that can be encoded
+EncodableValue = Union[str, int, float, bool, None]
+# Type alias for recursive data structures
+RecursiveDict = Dict[str, "RecursiveValue"]
+RecursiveList = List["RecursiveValue"]
+RecursiveValue = Union[EncodableValue, RecursiveDict, RecursiveList]
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +68,7 @@ class OutputEncoder:
     ]
 
     @staticmethod
-    def encode_for_html(value: Any) -> str:
+    def encode_for_html(value: Union[str, int, float, bool, None]) -> str:
         """
         Encode value for safe HTML context.
 
@@ -90,7 +97,7 @@ class OutputEncoder:
         return encoded
 
     @staticmethod
-    def encode_for_html_attribute(value: Any) -> str:
+    def encode_for_html_attribute(value: Union[str, int, float, bool, None]) -> str:
         """
         Encode value for safe HTML attribute context.
 
@@ -125,7 +132,7 @@ class OutputEncoder:
         return encoded
 
     @staticmethod
-    def encode_for_javascript(value: Any) -> str:
+    def encode_for_javascript(value: Union[str, int, float, bool, None, object]) -> str:
         """
         Encode value for safe JavaScript context.
 
@@ -188,7 +195,7 @@ class OutputEncoder:
         return f'\'{"".join(encoded)}\''
 
     @staticmethod
-    def encode_for_css(value: Any) -> str:
+    def encode_for_css(value: EncodableValue) -> str:
         """
         Encode value for safe CSS context.
 
@@ -227,7 +234,7 @@ class OutputEncoder:
         return "".join(encoded)
 
     @staticmethod
-    def encode_for_url(value: Any) -> str:
+    def encode_for_url(value: EncodableValue) -> str:
         """
         Encode value for safe URL context.
 
@@ -253,7 +260,7 @@ class OutputEncoder:
         return urllib.parse.quote_plus(text, safe='')
 
     @staticmethod
-    def encode_json(data: Any) -> str:
+    def encode_json(data: Union[EncodableValue, RecursiveDict, RecursiveList]) -> str:
         """
         Encode data as safe JSON string.
 
@@ -275,7 +282,7 @@ class OutputEncoder:
             raise ValueError(f"Cannot encode data as JSON: {e}")
 
     @staticmethod
-    def encode_for_xml(value: Any, attribute: bool = False) -> str:
+    def encode_for_xml(value: EncodableValue, attribute: bool = False) -> str:
         """
         Encode value for safe XML context.
 
@@ -313,7 +320,9 @@ class OutputEncoder:
         return text
 
     @staticmethod
-    def encode_for_csv(value: Any, field_delimiter: str = ",", record_delimiter: str = "\n") -> str:
+    def encode_for_csv(
+        value: EncodableValue, field_delimiter: str = ",", record_delimiter: str = "\n"
+    ) -> str:
         """
         Encode value for safe CSV context.
 
@@ -355,7 +364,7 @@ class OutputEncoder:
         return text
 
     @staticmethod
-    def encode_for_sql_like(value: Any) -> str:
+    def encode_for_sql_like(value: EncodableValue) -> str:
         """
         Encode value for safe SQL LIKE context.
 
@@ -385,7 +394,7 @@ class OutputEncoder:
         return text
 
     @staticmethod
-    def encode_for_log(value: Any, max_length: int = 1000) -> str:
+    def encode_for_log(value: EncodableValue, max_length: int = 1000) -> str:
         """
         Encode value for safe logging.
 
@@ -488,7 +497,7 @@ class OutputEncoder:
 
         return False
 
-    def encode_dict(self, data: Dict[str, Any], context: str = "html") -> Dict[str, Any]:
+    def encode_dict(self, data: RecursiveDict, context: str = "html") -> RecursiveDict:
         """
         Recursively encode dictionary values.
 
@@ -499,23 +508,23 @@ class OutputEncoder:
         Returns:
             Dictionary with encoded values
         """
-        encoded = {}
+        encoded: RecursiveDict = {}
 
         for key, value in data.items():
             # Encode key
-            encoded_key = self._encode_value(key, context)
+            encoded_key = str(self._encode_value(key, context))
 
             # Encode value
             if isinstance(value, dict):
-                encoded[encoded_key] = self.encode_dict(value, context)  # type: ignore
+                encoded[encoded_key] = self.encode_dict(value, context)
             elif isinstance(value, list):
-                encoded[encoded_key] = self.encode_list(value, context)  # type: ignore
+                encoded[encoded_key] = self.encode_list(value, context)
             else:
                 encoded[encoded_key] = self._encode_value(value, context)
 
         return encoded
 
-    def encode_list(self, data: List[Any], context: str = "html") -> List[Any]:
+    def encode_list(self, data: RecursiveList, context: str = "html") -> RecursiveList:
         """
         Recursively encode list values.
 
@@ -526,19 +535,19 @@ class OutputEncoder:
         Returns:
             List with encoded values
         """
-        encoded = []
+        encoded: RecursiveList = []
 
         for item in data:
             if isinstance(item, dict):
-                encoded.append(self.encode_dict(item, context))  # type: ignore
+                encoded.append(self.encode_dict(item, context))
             elif isinstance(item, list):
-                encoded.append(self.encode_list(item, context))  # type: ignore
+                encoded.append(self.encode_list(item, context))
             else:
                 encoded.append(self._encode_value(item, context))
 
         return encoded
 
-    def _encode_value(self, value: Any, context: str) -> Any:
+    def _encode_value(self, value: RecursiveValue, context: str) -> RecursiveValue:
         """
         Encode a single value based on context.
 
@@ -651,37 +660,39 @@ class ContentSecurityPolicy:
 encoder = OutputEncoder()
 
 
-def encode_for_html(value: Any) -> str:
+def encode_for_html(value: EncodableValue) -> str:
     """Encode value for HTML context."""
     return encoder.encode_for_html(value)
 
 
-def encode_for_html_attribute(value: Any) -> str:
+def encode_for_html_attribute(value: EncodableValue) -> str:
     """Encode value for HTML attribute context."""
     return encoder.encode_for_html_attribute(value)
 
 
-def encode_for_css(value: Any) -> str:
+def encode_for_css(value: EncodableValue) -> str:
     """Encode value for CSS context."""
     return encoder.encode_for_css(value)
 
 
-def encode_for_javascript(value: Any) -> str:
+def encode_for_javascript(value: Union[EncodableValue, object]) -> str:
     """Encode value for JavaScript context."""
     return encoder.encode_for_javascript(value)
 
 
-def encode_for_url(value: Any) -> str:
+def encode_for_url(value: EncodableValue) -> str:
     """Encode value for URL context."""
     return encoder.encode_for_url(value)
 
 
-def safe_json_dumps(data: Any) -> str:
+def safe_json_dumps(data: Union[EncodableValue, RecursiveDict, RecursiveList]) -> str:
     """Safely encode data as JSON."""
     return encoder.encode_json(data)
 
 
-def sanitize_output(data: Any, context: str = "html") -> Any:
+def sanitize_output(
+    data: Union[EncodableValue, RecursiveDict, RecursiveList], context: str = "html"
+) -> Union[EncodableValue, RecursiveDict, RecursiveList]:
     """
     Sanitize output data based on context.
 
@@ -707,22 +718,24 @@ def sanitize_output(data: Any, context: str = "html") -> Any:
         return encoder._encode_value(data, context)
 
 
-def encode_for_xml(value: Any, attribute: bool = False) -> str:
+def encode_for_xml(value: EncodableValue, attribute: bool = False) -> str:
     """Encode value for XML context."""
     return encoder.encode_for_xml(value, attribute)
 
 
-def encode_for_csv(value: Any, field_delimiter: str = ",", record_delimiter: str = "\n") -> str:
+def encode_for_csv(
+    value: EncodableValue, field_delimiter: str = ",", record_delimiter: str = "\n"
+) -> str:
     """Encode value for CSV context."""
     return encoder.encode_for_csv(value, field_delimiter, record_delimiter)
 
 
-def encode_for_sql_like(value: Any) -> str:
+def encode_for_sql_like(value: EncodableValue) -> str:
     """Encode value for SQL LIKE context."""
     return encoder.encode_for_sql_like(value)
 
 
-def encode_for_log(value: Any, max_length: int = 1000) -> str:
+def encode_for_log(value: EncodableValue, max_length: int = 1000) -> str:
     """Encode value for safe logging."""
     return encoder.encode_for_log(value, max_length)
 

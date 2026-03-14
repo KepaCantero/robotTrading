@@ -68,7 +68,7 @@ class DIContainer:
         """
         logger.debug(
             "registering_singleton",
-            extra={"interface": interface.__name__, "instance_type": type(instance).__name__}
+            extra={"interface": interface.__name__, "instance_type": type(instance).__name__},
         )
         self._singletons[interface] = instance
 
@@ -82,7 +82,7 @@ class DIContainer:
         """
         logger.debug(
             "registering_transient",
-            extra={"interface": interface.__name__, "implementation": implementation.__name__}
+            extra={"interface": interface.__name__, "implementation": implementation.__name__},
         )
         self._transient[interface] = implementation
 
@@ -96,7 +96,10 @@ class DIContainer:
         """
         logger.debug(
             "registering_factory",
-            extra={"name": name, "factory": factory.__name__ if hasattr(factory, "__name__") else "lambda"}
+            extra={
+                "name": name,
+                "factory": factory.__name__ if hasattr(factory, "__name__") else "lambda",
+            },
         )
         self._factories[name] = factory
 
@@ -165,14 +168,14 @@ class DIContainer:
                 if param.default != inspect.Parameter.empty:
                     logger.debug(
                         "using_default_parameter_value",
-                        extra={"class": cls.__name__, "param": param_name}
+                        extra={"class": cls.__name__, "param": param_name},
                     )
                     kwargs[param_name] = param.default
                 else:
                     # Required dependency not found
                     logger.error(
                         "required_dependency_not_found",
-                        extra={"class": cls.__name__, "param": param_name}
+                        extra={"class": cls.__name__, "param": param_name},
                     )
                     raise
 

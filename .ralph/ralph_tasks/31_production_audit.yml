@@ -1,0 +1,288 @@
+# ============================================
+# Ralph Task 31: Production Code Audit & Fix
+# ============================================
+# VERSION: 1.0
+# Audita y arregla TODOS los archivos de producción en app/
+# Usa scripts/validate_file_complete.sh para validar
+# ============================================================================
+
+event_loop:
+  prompt_file: ".ralph/ralph_tasks/prompts/31_production_audit.md"
+  completion_promise: "PRODUCTION_AUDIT_COMPLETE"
+  max_iterations: 3000
+  max_runtime_seconds: 259200  # 3 days
+  checkpoint_interval: 5
+  starting_event: "production_audit.start"
+  checkpoint_file: ".ralph/checkpoints/31_production_audit_checkpoint.json"
+
+cli:
+  backend: "claude"
+
+core:
+  specs_dir: "./specs/"
+
+shared_vars:
+  OUTPUT_DIR: ".ralph/outputs"
+  APP_DIR: "app"
+  TASK_PREFIX: "production_audit"
+  TASK_NAME: "Production Code Audit & Fix"
+  TASK_ID: "31"
+  VALIDATE_SCRIPT: "scripts/validate_file_complete.sh"
+
+exclude:
+  directory_patterns:
+    - "tests/"
+    - "test/"
+    - "__pycache__/"
+    - "migrations/"
+    - "venv/"
+    - ".venv/"
+    - ".pytest_cache/"
+    - ".mypy_cache/"
+    - "integration/"
+    - "integrations/"
+    - "*_test.py"
+    - "test_*.py"
+    - "conftest.py"
+
+# ============================================================================
+# HATS - Using Ralph hat templates
+# ============================================================================
+
+hats:
+  # ==========================================================================
+  # HAT 1: File Discovery (base_processor_hat template)
+  # ==========================================================================
+  file_discovery:
+    name: "File Discovery"
+    description: "Enumerate all production Python files in app/"
+    hat_template: ".ralph/ralph_templates/hats/base_processor_hat.yml"
+    triggers: ["production_audit.start"]
+    publishes: ["files.discovered"]
+
+    instructions: |
+      Glob → find .py files in app/
+      EXCLUDE patterns:
+      - tests/, test/, __pycache__/, migrations/
+      - .venv/, .pytest_cache/, .mypy_cache/
+      - integration/, integrations/
+      - *_test.py, test_*.py, conftest.py
+
+      Sort by dependency order:
+      1. config (app/core/config/)
+      2. protocols (app/core/protocols/, app/interfaces/)
+      3. utils (app/utils/, app/core/utils/)
+      4. models (app/models/, app/domain/entities/)
+      5. services (app/services/, app/domain/services/)
+      6. strategies (app/strategies/, app/domain/strategies/)
+      7. analysis (app/analysis/)
+      8. backtesting (app/backtesting/)
+      9. rest of app/
+
+      Save to .ralph/outputs/PRODUCTION_FILE_LIST.json
+
+      Emit "files.discovered"
+
+  # ==========================================================================
+  # HAT 2: Initial Audit (base_processor_hat template)
+  # ==========================================================================
+  initial_audit:
+    name: "Initial Audit"
+    description: "Run validation on all files to identify which ones need fixing"
+    hat_template: ".ralph/ralph_templates/hats/base_processor_hat.yml"
+    triggers: ["files.discovered"]
+    publishes: ["audit.complete"]
+
+    instructions: |
+      FOR EACH FILE in PRODUCTION_FILE_LIST.json:
+
+      Run validation:
+      ```bash
+      bash scripts/validate_file_complete.sh <file_path>
+      ```
+
+      Parse JSON output:
+      - If summary.success == true: mark as PASSED
+      - If summary.success == false: mark as FAILED, record which checks failed
+
+      Generate audit report: .ralph/outputs/PRODUCTION_AUDIT_REPORT.json
+      ```json
+      {
+        "total_files": 400,
+        "passed": 250,
+        "failed": 150,
+        "failed_files": [
+          {
+            "file": "app/services/example.py",
+            "failed_checks": ["black", "isort", "ruff"],
+            "summary": {"passed": 5, "failed": 3}
+          }
+        ]
+      }
+      ```
+
+      Emit "audit.complete"
+
+  # ==========================================================================
+  # HAT 3: Code Fixer (implementer_hat template)
+  # ==========================================================================
+  code_fixer:
+    name: "Code Fixer"
+    description: "Fix all files that failed validation"
+    hat_template: ".ralph/ralph_templates/hats/implementer_hat.yml"
+    triggers: ["audit.complete"]
+    publishes: ["files.fixed"]
+
+    template_vars:
+      TASK_PREFIX: "production_audit"
+      OBJECTIVE: "Fix all validation failures in each file"
+      VALIDATE_SCRIPT: "scripts/validate_file_complete.sh"
+
+    instructions: |
+      FOR EACH FAILED FILE (in dependency order):
+
+      ## Step 1: Read file
+      ```bash
+      cat <file_path>
+      ```
+
+      ## Step 2: Run auto-formatters first
+      ```bash
+      .venv/bin/black <file_path>
+      .venv/bin/isort <file_path>
+      .venv/bin/ruff check <file_path> --fix
+      ```
+
+      ## Step 3: Validate after auto-fix
+      ```bash
+      bash scripts/validate_file_complete.sh <file_path>
+      ```
+
+      ## Step 4: If still failing, manually fix
+      Parse which checks failed from JSON output:
+
+      ### If black failed:
+      - Check for syntax issues blocking black
+      - Fix syntax, re-run black
+
+      ### If isort failed:
+      - Check import order manually
+      - Ensure stdlib → third-party → local order
+
+      ### If ruff failed:
+      - Read ruff errors: `.venv/bin/ruff check <file_path>`
+      - Fix each error manually
+
+      ### If flake8 failed:
+      - Read flake8 errors: `.venv/bin/flake8 <file_path>`
+      - Fix line length, unused imports, etc.
+
+      ### If pylint failed:
+      - Read pylint errors: `.venv/bin/pylint <file_path>`
+      - Fix naming, unused variables, etc.
+
+      ### If mypy failed:
+      - Read mypy errors: `.venv/bin/mypy --no-incremental --follow-imports=skip <file_path>`
+      - Add missing type hints
+
+      ### If bandit failed:
+      - Read bandit errors: `.venv/bin/bandit <file_path> -ll`
+      - Fix security issues (hardcoded passwords, SQL injection, etc.)
+
+      ### If radon_cc failed (CC > 10):
+      - Identify complex functions: `.venv/bin/radon cc <file_path> -s`
+      - Refactor complex functions into smaller ones
+
+      ### If radon_mi failed (MI < 20):
+      - Check maintainability: `.venv/bin/radon mi <file_path> -s`
+      - Improve comments, reduce coupling, simplify logic
+
+      ### If syntax failed:
+      - Run: `python -m py_compile <file_path>` to see syntax errors
+      - Fix syntax errors (missing colons, unclosed brackets, etc.)
+
+      ### If imports failed (AST parsing):
+      - Check for invalid import statements
+      - Check for circular imports or missing module references
+
+      ## Step 5: Re-validate after manual fixes
+      ```bash
+      bash scripts/validate_file_complete.sh <file_path>
+      ```
+
+      ## Step 6: If still failing, try again (max 3 attempts)
+      - If 3 attempts fail: mark as BLOCKED, continue to next file
+
+      ## Step 7: When success, mark as FIXED
+      Update progress file: .ralph/outputs/PRODUCTION_FIX_PROGRESS.json
+
+      Emit "files.fixed" when all files processed
+
+  # ==========================================================================
+  # HAT 4: Final Validator (validation_hat template)
+  # ==========================================================================
+  final_validator:
+    name: "Final Quality Validator"
+    description: "Validate all files pass all checks"
+    hat_template: ".ralph/ralph_templates/hats/validation_hat.yml"
+    triggers: ["files.fixed"]
+    publishes: ["production_audit.validation_complete", "production_audit.blocked"]
+
+    instructions: |
+      ## Final Validation
+
+      FOR EACH FILE in original file list:
+
+      ```bash
+      bash scripts/validate_file_complete.sh <file_path>
+      ```
+
+      Verify: summary.success == true
+
+      ## Generate Final Report: .ralph/outputs/PRODUCTION_AUDIT_FINAL.json
+
+      ```json
+      {
+        "task": "PRODUCTION_AUDIT",
+        "status": "COMPLETE",
+        "timestamp": "2026-03-14T10:00:00Z",
+        "summary": {
+          "total_files": 400,
+          "all_passed": 398,
+          "blocked": 2
+        },
+        "blocked_files": [
+          {
+            "file": "app/complex_file.py",
+            "reason": "Could not reduce cyclomatic complexity below 10"
+          }
+        ],
+        "validation_details": {
+          "black": {"passed": 400, "failed": 0},
+          "isort": {"passed": 400, "failed": 0},
+          "ruff": {"passed": 398, "failed": 2},
+          "flake8": {"passed": 400, "failed": 0},
+          "pylint": {"passed": 395, "failed": 5},
+          "mypy": {"passed": 380, "failed": 20},
+          "bandit": {"passed": 400, "failed": 0},
+          "radon_cc": {"passed": 398, "failed": 2},
+          "radon_mi": {"passed": 395, "failed": 5},
+          "syntax": {"passed": 400, "failed": 0},
+          "imports": {"passed": 400, "failed": 0}
+        }
+      }
+      ```
+
+      Emit "production_audit.validation_complete" with status=COMPLETE
+      If blocked files > 5%: emit "production_audit.blocked" instead
+
+# ============================================================================
+# TASK CONFIGURATION
+# ============================================================================
+tasks:
+  enabled: true
+
+memories:
+  enabled: true
+  inject: auto
+  budget: 5000

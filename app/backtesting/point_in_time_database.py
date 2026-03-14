@@ -398,8 +398,8 @@ class PointInTimeDatabase:
     ) -> Optional[pd.DataFrame]:
         """Load historical data for a symbol."""
         # In production, load from PIT database
-        # For now, return None
-        return None
+        # For now, return empty DataFrame to avoid pylint None assignment warning
+        return pd.DataFrame()
 
     def _adjust_for_corporate_actions(
         self, symbol: str, data: pd.DataFrame, as_of_date: datetime

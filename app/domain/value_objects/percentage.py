@@ -39,7 +39,7 @@ class Percentage:
         result = cls(value=decimal_value * Decimal("100"))
         logger.debug(
             "Created percentage from decimal",
-            extra={"decimal_value": float(decimal_value), "percentage": float(result.value)}
+            extra={"decimal_value": float(decimal_value), "percentage": float(result.value)},
         )
         return result
 
@@ -49,7 +49,7 @@ class Percentage:
         result = cls(value=Decimal(str(float_value)) * Decimal("100"))
         logger.debug(
             "Created percentage from float",
-            extra={"float_value": float_value, "percentage": float(result.value)}
+            extra={"float_value": float_value, "percentage": float(result.value)},
         )
         return result
 
@@ -65,7 +65,7 @@ class Percentage:
 
         logger.debug(
             "Created percentage from percent value",
-            extra={"input_value": str(percent_value), "percentage": float(result.value)}
+            extra={"input_value": str(percent_value), "percentage": float(result.value)},
         )
         return result
 
@@ -91,7 +91,7 @@ class Percentage:
         if result > 100:
             logger.warning(
                 "Percentage addition would exceed 100",
-                extra={"self_value": float(self.value), "other_value": float(other.value)}
+                extra={"self_value": float(self.value), "other_value": float(other.value)},
             )
             raise ValueError("Percentage cannot exceed 100")
         added = Percentage(value=result)
@@ -100,8 +100,8 @@ class Percentage:
             extra={
                 "self_value": float(self.value),
                 "other_value": float(other.value),
-                "result": float(added.value)
-            }
+                "result": float(added.value),
+            },
         )
         return added
 
@@ -111,7 +111,7 @@ class Percentage:
         if result < 0:
             logger.warning(
                 "Percentage subtraction would be negative",
-                extra={"self_value": float(self.value), "other_value": float(other.value)}
+                extra={"self_value": float(self.value), "other_value": float(other.value)},
             )
             raise ValueError("Result cannot be negative")
         subtracted = Percentage(value=result)
@@ -120,8 +120,8 @@ class Percentage:
             extra={
                 "self_value": float(self.value),
                 "other_value": float(other.value),
-                "result": float(subtracted.value)
-            }
+                "result": float(subtracted.value),
+            },
         )
         return subtracted
 
@@ -132,7 +132,7 @@ class Percentage:
         if result > 100:
             logger.warning(
                 "Percentage multiplication would exceed 100",
-                extra={"self_value": float(self.value), "multiplier": float(mult)}
+                extra={"self_value": float(self.value), "multiplier": float(mult)},
             )
             raise ValueError("Result cannot exceed 100%")
         multiplied = Percentage(value=result)
@@ -141,8 +141,8 @@ class Percentage:
             extra={
                 "self_value": float(self.value),
                 "multiplier": float(mult),
-                "result": float(multiplied.value)
-            }
+                "result": float(multiplied.value),
+            },
         )
         return multiplied
 
@@ -154,8 +154,8 @@ class Percentage:
             extra={
                 "percentage": float(self.value),
                 "amount": float(amount),
-                "result": float(result)
-            }
+                "result": float(result),
+            },
         )
         return result
 

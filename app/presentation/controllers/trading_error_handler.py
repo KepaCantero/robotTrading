@@ -14,7 +14,6 @@ from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 from requests.exceptions import HTTPError, RequestException
 
-from app.exceptions.trading_exceptions import ErrorCategory
 from app.services.trading_error_handler import (
     ErrorAction,
     ErrorContext,
@@ -23,6 +22,7 @@ from app.services.trading_error_handler import (
     reset_circuit_breaker,
     trading_error_handler,
 )
+from app.shared.exceptions.trading_exceptions import ErrorCategory
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

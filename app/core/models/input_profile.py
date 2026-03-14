@@ -10,7 +10,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 logger = logging.getLogger(__name__)
 
@@ -45,8 +45,10 @@ class InputProfile(BaseModel):
         default_factory=datetime.utcnow, description="Profile creation timestamp"
     )
 
-    @validator("capital_must_be_positive")
-    def validate_capital(cls, v: Decimal) -> bool:
+    @field_validator("capital_initial")
+    @classmethod
+    def validate_capital(cls, v: Decimal) -> Decimal:
+        """Validate that capital is positive."""
         logger.debug("Validating capital value", extra={"capital": float(v)})
         if v <= 0:
             logger.error("Capital validation failed: must be positive", extra={"capital": float(v)})
@@ -54,11 +56,16 @@ class InputProfile(BaseModel):
         logger.debug("Capital validation passed", extra={"capital": float(v)})
         return v
 
-    @validator("horizon_must_be_valid")
-    def validate_horizon(cls, v: int) -> bool:
+    @field_validator("investment_horizon")
+    @classmethod
+    def validate_horizon(cls, v: int) -> int:
+        """Validate that investment horizon is within acceptable range."""
         logger.debug("Validating investment horizon", extra={"horizon_months": v})
         if v < 1 or v > 600:
-            logger.error("Horizon validation failed: must be between 1 and 600 months", extra={"horizon_months": v})
+            logger.error(
+                "Horizon validation failed: must be between 1 and 600 months",
+                extra={"horizon_months": v},
+            )
             raise ValueError("Investment horizon must be between 1 and 600 months")
         logger.debug("Horizon validation passed", extra={"horizon_months": v})
         return v

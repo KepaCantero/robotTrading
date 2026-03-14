@@ -276,8 +276,7 @@ class ForexDataFetcher:
         # 1. Exchange API credentials (OANDA, FXCM)
         # 2. Historical price data endpoints
         # 3. Correlation calculation using pandas/numpy
-        # For now, return None to trigger fallback to DEFAULT_CORRELATIONS
-        return None
+        # For now, implicitly return None to trigger fallback to DEFAULT_CORRELATIONS
 
     def _fetch_rate_from_api(self, pair: str) -> Optional[Decimal]:
         """
@@ -297,8 +296,7 @@ class ForexDataFetcher:
         # 1. Exchange API credentials (OANDA, FXCM)
         # 2. Real-time price endpoints
         # 3. Rate limiting and error handling
-        # For now, return None to trigger fallback to default rates
-        return None
+        # For now, implicitly return None to trigger fallback to default rates
 
     def _get_fallback_rate(self, pair: str) -> Decimal:
         """

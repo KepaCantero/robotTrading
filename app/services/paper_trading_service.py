@@ -93,7 +93,10 @@ class PaperTradingService:
         initial_cash: Optional[Decimal] = None,
     ) -> PaperPortfolio:
         """Create a new paper trading portfolio."""
-        logger.debug("create_portfolio called", extra={"name": name, "config_id": str(config_id), "initial_cash": str(initial_cash)})
+        logger.debug(
+            "create_portfolio called",
+            extra={"name": name, "config_id": str(config_id), "initial_cash": str(initial_cash)},
+        )
         if config_id is None:
             config_id = list(self.configs.keys())[0]  # Use default config
 
@@ -111,7 +114,14 @@ class PaperTradingService:
         )
 
         self.portfolios[portfolio.id] = portfolio
-        logger.info("Portfolio created", extra={"portfolio_id": str(portfolio.id), "name": name, "initial_cash": str(portfolio.initial_cash)})
+        logger.info(
+            "Portfolio created",
+            extra={
+                "portfolio_id": str(portfolio.id),
+                "name": name,
+                "initial_cash": str(portfolio.initial_cash),
+            },
+        )
         return portfolio
 
     async def create_session(
@@ -122,7 +132,9 @@ class PaperTradingService:
         config_id: Optional[UUID] = None,
     ) -> PaperTradingSession:
         """Create a new paper trading session."""
-        logger.debug("create_session called", extra={"portfolio_id": str(portfolio_id), "name": name})
+        logger.debug(
+            "create_session called", extra={"portfolio_id": str(portfolio_id), "name": name}
+        )
         if portfolio_id not in self.portfolios:
             logger.error("Portfolio not found", extra={"portfolio_id": str(portfolio_id)})
             raise ValueError(f"Portfolio {portfolio_id} not found")
@@ -138,7 +150,10 @@ class PaperTradingService:
         )
 
         self.sessions[session.id] = session
-        logger.info("Session created", extra={"session_id": str(session.id), "portfolio_id": str(portfolio_id), "name": name})
+        logger.info(
+            "Session created",
+            extra={"session_id": str(session.id), "portfolio_id": str(portfolio_id), "name": name},
+        )
         return session
 
     async def execute_trade(
@@ -154,7 +169,15 @@ class PaperTradingService:
         signal_id: Optional[UUID] = None,
     ) -> PaperTrade:
         """Execute a paper trade with realistic simulation."""
-        logger.debug("execute_trade called", extra={"portfolio_id": str(portfolio_id), "symbol": symbol, "side": str(side), "quantity": str(quantity)})
+        logger.debug(
+            "execute_trade called",
+            extra={
+                "portfolio_id": str(portfolio_id),
+                "symbol": symbol,
+                "side": str(side),
+                "quantity": str(quantity),
+            },
+        )
         if portfolio_id not in self.portfolios:
             logger.error("Portfolio not found for trade", extra={"portfolio_id": str(portfolio_id)})
             raise ValueError(f"Portfolio {portfolio_id} not found")
@@ -194,7 +217,14 @@ class PaperTradingService:
 
         # Check if trade can be executed
         if not await self._can_execute_trade(portfolio, trade, config, current_price):
-            logger.warning("Trade rejected due to risk limits", extra={"trade_id": str(trade.id), "portfolio_id": str(portfolio_id), "symbol": symbol})
+            logger.warning(
+                "Trade rejected due to risk limits",
+                extra={
+                    "trade_id": str(trade.id),
+                    "portfolio_id": str(portfolio_id),
+                    "symbol": symbol,
+                },
+            )
             trade.status = TradeStatus.REJECTED
             self.trades[trade.id] = trade
             return trade
@@ -210,7 +240,17 @@ class PaperTradingService:
             await self._update_session_stats(session_id, trade)
 
         self.trades[trade.id] = trade
-        logger.info("Trade executed", extra={"trade_id": str(trade.id), "portfolio_id": str(portfolio_id), "symbol": symbol, "side": str(side), "quantity": str(quantity), "status": str(trade.status)})
+        logger.info(
+            "Trade executed",
+            extra={
+                "trade_id": str(trade.id),
+                "portfolio_id": str(portfolio_id),
+                "symbol": symbol,
+                "side": str(side),
+                "quantity": str(quantity),
+                "status": str(trade.status),
+            },
+        )
         return trade
 
     async def _get_current_price(self, symbol: str) -> Optional[Decimal]:
@@ -512,7 +552,14 @@ class PaperTradingService:
         session.status = "closed"
         session.ended_at = datetime.utcnow()
 
-        logger.info("Session closed", extra={"session_id": str(session_id), "total_trades": session.total_trades, "successful_trades": session.successful_trades})
+        logger.info(
+            "Session closed",
+            extra={
+                "session_id": str(session_id),
+                "total_trades": session.total_trades,
+                "successful_trades": session.successful_trades,
+            },
+        )
         return session
 
     def _calculate_dynamic_slippage(
@@ -523,7 +570,10 @@ class PaperTradingService:
         config: PaperTradingConfig,
     ) -> Decimal:
         """Calcular slippage dinámico basado en volatilidad y liquidez."""
-        logger.debug("Calculating dynamic slippage", extra={"symbol": trade.symbol, "quantity": str(trade.quantity)})
+        logger.debug(
+            "Calculating dynamic slippage",
+            extra={"symbol": trade.symbol, "quantity": str(trade.quantity)},
+        )
         try:
             # Obtener datos necesarios para el análisis
             asset_symbol = trade.symbol
@@ -560,12 +610,22 @@ class PaperTradingService:
             # Convertir slippage porcentual a cantidad absoluta
             slippage_amount = order_size * slippage_analysis.total_slippage / Decimal("100")
 
-            logger.debug("Dynamic slippage calculated", extra={"symbol": trade.symbol, "slippage_amount": str(slippage_amount), "total_slippage_pct": str(slippage_analysis.total_slippage)})
+            logger.debug(
+                "Dynamic slippage calculated",
+                extra={
+                    "symbol": trade.symbol,
+                    "slippage_amount": str(slippage_amount),
+                    "total_slippage_pct": str(slippage_analysis.total_slippage),
+                },
+            )
             return slippage_amount
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             # Fallback al slippage fijo si hay error
-            logger.warning("Dynamic slippage calculation failed, using fallback", extra={"symbol": trade.symbol, "error": str(e)})
+            logger.warning(
+                "Dynamic slippage calculation failed, using fallback",
+                extra={"symbol": trade.symbol, "error": str(e)},
+            )
             return trade.quantity * market_price * config.slippage_rate
 
     def _get_price_history(self, symbol: str, days: int = 30) -> List[Decimal]:
@@ -594,7 +654,14 @@ class PaperTradingService:
         Returns:
             Dictionary with execution result
         """
-        logger.debug("execute_order called", extra={"symbol": order.symbol, "side": str(order.side), "quantity": str(order.quantity)})
+        logger.debug(
+            "execute_order called",
+            extra={
+                "symbol": order.symbol,
+                "side": str(order.side),
+                "quantity": str(order.quantity),
+            },
+        )
         try:
             # Create a default portfolio if none exists
             portfolio_id = list(self.portfolios.keys())[0] if self.portfolios else None
@@ -606,7 +673,10 @@ class PaperTradingService:
                     initial_cash=Decimal("100000"),
                 )
                 portfolio_id = portfolio.id
-                logger.info("Created default portfolio for order execution", extra={"portfolio_id": str(portfolio_id)})
+                logger.info(
+                    "Created default portfolio for order execution",
+                    extra={"portfolio_id": str(portfolio_id)},
+                )
 
             # Execute the trade using the existing execute_trade method
             trade = await self.execute_trade(
@@ -625,11 +695,22 @@ class PaperTradingService:
                 "executed_quantity": trade.quantity,
                 "status": trade.status.value,
             }
-            logger.info("Order executed", extra={"trade_id": str(trade.id), "symbol": order.symbol, "success": result["success"], "status": result["status"]})
+            logger.info(
+                "Order executed",
+                extra={
+                    "trade_id": str(trade.id),
+                    "symbol": order.symbol,
+                    "success": result["success"],
+                    "status": result["status"],
+                },
+            )
             return result
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error("Order execution failed", extra={"symbol": order.symbol, "error": str(e), "error_type": type(e).__name__})
+            logger.error(
+                "Order execution failed",
+                extra={"symbol": order.symbol, "error": str(e), "error_type": type(e).__name__},
+            )
             return {"success": False, "error": str(e), "status": "failed"}
 
 

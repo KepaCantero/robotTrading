@@ -13,7 +13,7 @@ from __future__ import annotations
 import logging
 from collections import deque
 from decimal import Decimal
-from typing import Any
+from typing import Any, Optional
 
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import Portfolio
@@ -117,7 +117,13 @@ class MomentumStrategy(BaseStrategy):
         else:
             # Fallback to config or defaults
             self.rsi_threshold = Decimal(str(config.get("rsi_threshold", 40)))
-            self.momentum_threshold = getattr(config.trading, 'max_risk_per_trade', 0.02)
+            trading_cfg = config.get("trading", {})
+            risk_value = (
+                trading_cfg.get('max_risk_per_trade', 0.02)
+                if isinstance(trading_cfg, dict)
+                else 0.02
+            )
+            self.momentum_threshold = Decimal(str(risk_value))
             self.stop_loss = Decimal(
                 str(config.get("stop_loss", get_trading_threshold("stop_loss_pct")))
             )
@@ -141,21 +147,21 @@ class MomentumStrategy(BaseStrategy):
         rsi_history_len = self.tt.rsi_history_length
         atr_history_len = self.tt.atr_history_length
 
-        self.price_history = deque(maxlen=price_history_len)
-        self.high_history = deque(maxlen=price_history_len)
-        self.low_history = deque(maxlen=price_history_len)
-        self.volume_history = deque(maxlen=price_history_len)
+        self.price_history: deque = deque(maxlen=price_history_len)
+        self.high_history: deque = deque(maxlen=price_history_len)
+        self.low_history: deque = deque(maxlen=price_history_len)
+        self.volume_history: deque = deque(maxlen=price_history_len)
         self.last_rsi = None
         self.last_ema = None
-        self.rsi_history = deque(maxlen=rsi_history_len)
+        self.rsi_history: deque = deque(maxlen=rsi_history_len)
 
         # ATR volatility filter settings
-        self.atr_history = deque(maxlen=atr_history_len)
+        self.atr_history: deque = deque(maxlen=atr_history_len)
         # Note: min_atr_threshold, atr_filter_enabled, use_relative_atr already initialized above
 
         # Cooldown para evitar señales repetidas - use config value
-        self.last_signal_bar_index = None
-        self.last_signal_type = None
+        self.last_signal_bar_index: Optional[int] = None
+        self.last_signal_type: Optional[str] = None
         self.current_bar_index = 0
         self.cooldown_bars = config.get("cooldown_bars", 5)  # Número de barras para cooldown
 

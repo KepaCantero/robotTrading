@@ -28,7 +28,9 @@ import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, TypeVar
+from typing import Dict, List, Optional, TypeVar, Union
+
+from typing_extensions import Protocol, runtime_checkable
 
 from ..entities.order import Order, OrderSide, OrderStatus, OrderType
 from ..entities.portfolio import Portfolio, PortfolioStatus, Position
@@ -39,6 +41,53 @@ from ..value_objects.risk_parameters import RiskParameters
 logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
+
+
+# ============================================================================
+# TYPE DEFINITIONS
+# ============================================================================
+
+
+# Protocol for factory interface
+@runtime_checkable
+class EntityFactoryProtocol(Protocol):
+    """Protocol for entity factory implementations."""
+
+    def create_order(
+        self,
+        symbol: str,
+        quantity: Decimal,
+        side: str = "buy",
+        order_type: str = "market",
+        price: Optional[Decimal] = None,
+        stop_price: Optional[Decimal] = None,
+        portfolio_id: Optional[str] = None,
+        **kwargs,
+    ) -> Order:
+        """Create an Order entity."""
+        ...
+
+    def create_portfolio(
+        self,
+        portfolio_id: str,
+        initial_capital: Decimal,
+        currency: str = "USD",
+        **kwargs,
+    ) -> Portfolio:
+        """Create a Portfolio entity."""
+        ...
+
+    def create_position(
+        self,
+        symbol: str,
+        quantity: Decimal,
+        entry_price: Decimal,
+        currency: str = "USD",
+        side: Optional[str] = None,
+        **kwargs,
+    ) -> Position:
+        """Create a Position entity."""
+        ...
 
 
 # ============================================================================
@@ -66,15 +115,41 @@ class AbstractEntityFactory(ABC):
     """
 
     @abstractmethod
-    def create_order(self, **kwargs) -> Order:
+    def create_order(
+        self,
+        symbol: str,
+        quantity: Decimal,
+        side: str = "buy",
+        order_type: str = "market",
+        price: Optional[Decimal] = None,
+        stop_price: Optional[Decimal] = None,
+        portfolio_id: Optional[str] = None,
+        **kwargs,
+    ) -> Order:
         """Create an Order entity."""
 
     @abstractmethod
-    def create_portfolio(self, **kwargs) -> Portfolio:
+    def create_portfolio(
+        self,
+        portfolio_id: str,
+        initial_capital: Decimal,
+        currency: str = "USD",
+        max_position_size_pct: Decimal = Decimal('0.2'),
+        max_portfolio_exposure_pct: Decimal = Decimal('0.8'),
+        **kwargs,
+    ) -> Portfolio:
         """Create a Portfolio entity."""
 
     @abstractmethod
-    def create_position(self, **kwargs) -> Position:
+    def create_position(
+        self,
+        symbol: str,
+        quantity: Decimal,
+        entry_price: Decimal,
+        currency: str = "USD",
+        side: Optional[str] = None,
+        **kwargs,
+    ) -> Position:
         """Create a Position entity."""
 
 
@@ -112,7 +187,7 @@ class TradingEntityFactory(AbstractEntityFactory):
         ```
     """
 
-    def create_order(  # type: ignore[override]
+    def create_order(
         self,
         symbol: str,
         quantity: Decimal,
@@ -181,7 +256,7 @@ class TradingEntityFactory(AbstractEntityFactory):
         logger.debug(f"Created order {order_id} for {symbol}")
         return order
 
-    def create_portfolio(  # type: ignore[override]
+    def create_portfolio(
         self,
         portfolio_id: str,
         initial_capital: Decimal,
@@ -235,7 +310,7 @@ class TradingEntityFactory(AbstractEntityFactory):
         logger.debug(f"Created portfolio {portfolio_id} with capital {initial_capital}")
         return portfolio
 
-    def create_position(  # type: ignore[override]
+    def create_position(
         self,
         symbol: str,
         quantity: Decimal,
@@ -608,62 +683,81 @@ class OrderPrototype:
         price: Optional[Decimal] = None,
     ):
         """Initialize prototype with base parameters."""
-        self._base_params: dict[str, Any] = {
-            'symbol': symbol,
-            'quantity': quantity,
-            'side': side,
-            'order_type': order_type,
-            'portfolio_id': portfolio_id,
-            'price': price,
-        }
+        self._symbol: str = symbol
+        self._quantity: Decimal = quantity
+        self._side: str = side
+        self._order_type: str = order_type
+        self._portfolio_id: Optional[str] = portfolio_id
+        self._price: Optional[Decimal] = price
         self._factory = TradingEntityFactory()
 
     def with_price(self, price: Decimal) -> "OrderPrototype":
         """Create prototype with specific price."""
         return OrderPrototype(
-            symbol=self._base_params['symbol'],  # type: ignore[arg-type]
-            quantity=self._base_params['quantity'],  # type: ignore[arg-type]
-            side=self._base_params['side'],  # type: ignore[arg-type]
+            symbol=self._symbol,
+            quantity=self._quantity,
+            side=self._side,
             order_type='limit',
-            portfolio_id=self._base_params['portfolio_id'],  # type: ignore[arg-type]
+            portfolio_id=self._portfolio_id,
             price=price,
         )
 
     def with_quantity(self, quantity: Decimal) -> "OrderPrototype":
         """Create prototype with specific quantity."""
         return OrderPrototype(
-            symbol=self._base_params['symbol'],  # type: ignore[arg-type]
+            symbol=self._symbol,
             quantity=quantity,
-            side=self._base_params['side'],  # type: ignore[arg-type]
-            order_type=self._base_params['order_type'],  # type: ignore[arg-type]
-            portfolio_id=self._base_params['portfolio_id'],  # type: ignore[arg-type]
-            price=self._base_params.get('price'),  # type: ignore[arg-type]
+            side=self._side,
+            order_type=self._order_type,
+            portfolio_id=self._portfolio_id,
+            price=self._price,
         )
 
     def for_symbol(self, symbol: str) -> "OrderPrototype":
         """Create prototype for different symbol."""
         return OrderPrototype(
             symbol=symbol,
-            quantity=self._base_params['quantity'],  # type: ignore[arg-type]
-            side=self._base_params['side'],  # type: ignore[arg-type]
-            order_type=self._base_params['order_type'],  # type: ignore[arg-type]
-            portfolio_id=self._base_params['portfolio_id'],  # type: ignore[arg-type]
-            price=self._base_params.get('price'),  # type: ignore[arg-type]
+            quantity=self._quantity,
+            side=self._side,
+            order_type=self._order_type,
+            portfolio_id=self._portfolio_id,
+            price=self._price,
         )
 
-    def build(self, **overrides) -> Order:
+    def build(
+        self,
+        symbol: Optional[str] = None,
+        quantity: Optional[Decimal] = None,
+        side: Optional[str] = None,
+        order_type: Optional[str] = None,
+        portfolio_id: Optional[str] = None,
+        price: Optional[Decimal] = None,
+        **kwargs,
+    ) -> Order:
         """
         Build order from prototype with optional overrides.
 
         Args:
-            **overrides: Parameters to override from prototype
+            symbol: Override symbol
+            quantity: Override quantity
+            side: Override side
+            order_type: Override order type
+            portfolio_id: Override portfolio ID
+            price: Override price
+            **kwargs: Additional parameters
 
         Returns:
             Order entity
         """
-        params = self._base_params.copy()
-        params.update(overrides)
-        return self._factory.create_order(**params)
+        return self._factory.create_order(
+            symbol=symbol or self._symbol,
+            quantity=quantity or self._quantity,
+            side=side or self._side,
+            order_type=order_type or self._order_type,
+            portfolio_id=portfolio_id or self._portfolio_id,
+            price=price or self._price,
+            **kwargs,
+        )
 
 
 # ============================================================================
@@ -689,11 +783,17 @@ class FactoryRegistry:
         ```
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize empty registry."""
-        self._factories: Dict[str, Any] = {}
+        self._factories: Dict[
+            str, Union[AbstractEntityFactory, "OrderFactory", "OrderBuilder", "OrderPrototype"]
+        ] = {}
 
-    def register(self, name: str, factory: Any) -> None:
+    def register(
+        self,
+        name: str,
+        factory: Union[AbstractEntityFactory, "OrderFactory", "OrderBuilder", "OrderPrototype"],
+    ) -> None:
         """
         Register a factory.
 
@@ -704,7 +804,9 @@ class FactoryRegistry:
         self._factories[name] = factory
         logger.debug(f"Registered factory: {name}")
 
-    def get(self, name: str) -> Any:
+    def get(
+        self, name: str
+    ) -> Union[AbstractEntityFactory, "OrderFactory", "OrderBuilder", "OrderPrototype"]:
         """
         Get a registered factory.
 
@@ -736,7 +838,9 @@ _default_registry.register('entity', TradingEntityFactory())
 _default_registry.register('order', OrderFactory())
 
 
-def get_factory(name: str) -> Any:
+def get_factory(
+    name: str,
+) -> Union[AbstractEntityFactory, "OrderFactory", "OrderBuilder", "OrderPrototype"]:
     """
     Get a factory from the default registry.
 
@@ -749,7 +853,10 @@ def get_factory(name: str) -> Any:
     return _default_registry.get(name)
 
 
-def register_factory(name: str, factory: Any) -> None:
+def register_factory(
+    name: str,
+    factory: Union[AbstractEntityFactory, "OrderFactory", "OrderBuilder", "OrderPrototype"],
+) -> None:
     """
     Register a factory in the default registry.
 

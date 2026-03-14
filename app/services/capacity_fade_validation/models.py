@@ -142,5 +142,5 @@ logger.debug(
             "CapacityFadeRequest",
             "CapacityFadeResponse",
         ],
-    }
+    },
 )

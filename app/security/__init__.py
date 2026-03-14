@@ -58,6 +58,28 @@ Security Compliance: 95%
 - SOLID Principles
 """
 
+# Authentication components (SOLID-compliant refactored)
+from app.security.auth import (
+    AuthAttemptTracker,
+    JWTTokenManager,
+    User,
+    UserRoles,
+    UserStore,
+    create_access_token_for_user,
+    get_admin_user,
+    get_attempt_tracker,
+    get_current_user,
+    get_current_user_optional,
+    get_deployer_user,
+    get_token_manager,
+    get_trader_user,
+    get_user_id,
+    get_user_store,
+    get_username,
+    require_permissions,
+    require_roles,
+    verify_token_and_get_user,
+)
 from app.security.csrf_protection import (
     CSRFTokenManager,
     DoubleSubmitCookieCSRF,
@@ -75,6 +97,11 @@ from app.security.input_validation import (
     ValidationError,
     validate_and_sanitize_input,
     validator,
+)
+from app.security.interfaces import (
+    AuthAttemptTrackerProtocol,
+    JWTTokenManagerProtocol,
+    UserStoreProtocol,
 )
 from app.security.output_encoding import (
     ContentSecurityPolicy,
@@ -95,33 +122,6 @@ from app.security.security_headers import (
     XFrameOptions,
     add_security_headers,
     get_security_headers,
-)
-
-# Authentication components (SOLID-compliant refactored)
-from app.security.auth import (
-    AuthAttemptTracker,
-    JWTTokenManager,
-    User,
-    UserRoles,
-    UserStore,
-    create_access_token_for_user,
-    get_admin_user,
-    get_attempt_tracker,
-    get_current_user,
-    get_current_user_optional,
-    get_deployer_user,
-    get_token_manager,
-    get_user_id,
-    get_user_store,
-    get_username,
-    require_permissions,
-    require_roles,
-    verify_token_and_get_user,
-)
-from app.security.interfaces import (
-    AuthAttemptTrackerProtocol,
-    JWTTokenManagerProtocol,
-    UserStoreProtocol,
 )
 
 # Optional imports - secrets_manager requires cryptography

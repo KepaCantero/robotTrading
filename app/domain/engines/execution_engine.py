@@ -5,14 +5,15 @@ Engine for executing trades with optimal execution strategies.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
 
 class ExecutionMode(str, Enum):
     """Execution mode enumeration."""
+
     MARKET = "market"
     LIMIT = "limit"
     TWAP = "twap"
@@ -36,10 +37,7 @@ class ExecutionEngine:
             config: Configuration dictionary for the engine.
         """
         self.config = config or {}
-        logger.info(
-            "ExecutionEngine initialized",
-            extra={"config_keys": list(self.config.keys())}
-        )
+        logger.info("ExecutionEngine initialized", extra={"config_keys": list(self.config.keys())})
 
     def execute_order(
         self,
@@ -47,7 +45,7 @@ class ExecutionEngine:
         side: str,
         quantity: float,
         mode: ExecutionMode = ExecutionMode.MARKET,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """
         Execute a trade order.
@@ -64,12 +62,7 @@ class ExecutionEngine:
         """
         logger.info(
             "Starting order execution",
-            extra={
-                "symbol": symbol,
-                "side": side,
-                "quantity": quantity,
-                "mode": mode.value
-            }
+            extra={"symbol": symbol, "side": side, "quantity": quantity, "mode": mode.value},
         )
 
         result = {
@@ -78,25 +71,17 @@ class ExecutionEngine:
             "quantity": quantity,
             "mode": mode.value,
             "status": "pending",
-            "fills": []
+            "fills": [],
         }
 
         logger.debug(
             "Order execution prepared",
-            extra={
-                "symbol": symbol,
-                "order_id": id(result),
-                "mode": mode.value
-            }
+            extra={"symbol": symbol, "order_id": id(result), "mode": mode.value},
         )
 
         return result
 
-    def execute_batch(
-        self,
-        orders: List[Dict[str, Any]],
-        **kwargs
-    ) -> List[Dict[str, Any]]:
+    def execute_batch(self, orders: List[Dict[str, Any]], **kwargs) -> List[Dict[str, Any]]:
         """
         Execute a batch of orders.
 
@@ -108,11 +93,7 @@ class ExecutionEngine:
             List of execution results.
         """
         logger.info(
-            "Starting batch execution",
-            extra={
-                "orders_count": len(orders),
-                "batch_mode": True
-            }
+            "Starting batch execution", extra={"orders_count": len(orders), "batch_mode": True}
         )
 
         results = []
@@ -122,7 +103,7 @@ class ExecutionEngine:
                 side=order.get("side"),
                 quantity=order.get("quantity"),
                 mode=ExecutionMode(order.get("mode", "market")),
-                **kwargs
+                **kwargs,
             )
             results.append(result)
 
@@ -130,18 +111,17 @@ class ExecutionEngine:
             "Batch execution completed",
             extra={
                 "orders_executed": len(results),
-                "success_rate": sum(1 for r in results if r.get("status") == "filled") / len(results) if results else 0
-            }
+                "success_rate": sum(1 for r in results if r.get("status") == "filled")
+                / len(results)
+                if results
+                else 0,
+            },
         )
 
         return results
 
     def calculate_market_impact(
-        self,
-        symbol: str,
-        quantity: float,
-        side: str,
-        **kwargs
+        self, symbol: str, quantity: float, side: str, **kwargs
     ) -> Dict[str, Any]:
         """
         Calculate estimated market impact for an order.
@@ -157,11 +137,7 @@ class ExecutionEngine:
         """
         logger.debug(
             "Calculating market impact",
-            extra={
-                "symbol": symbol,
-                "quantity": quantity,
-                "side": side
-            }
+            extra={"symbol": symbol, "quantity": quantity, "side": side},
         )
 
         impact = {
@@ -169,7 +145,7 @@ class ExecutionEngine:
             "quantity": quantity,
             "side": side,
             "estimated_impact_bps": 0.0,
-            "confidence": 0.0
+            "confidence": 0.0,
         }
 
         logger.info(
@@ -177,8 +153,8 @@ class ExecutionEngine:
             extra={
                 "symbol": symbol,
                 "estimated_impact_bps": impact["estimated_impact_bps"],
-                "confidence": impact["confidence"]
-            }
+                "confidence": impact["confidence"],
+            },
         )
 
         return impact

@@ -105,7 +105,8 @@ def _calculate_rsi_numba(prices: np.ndarray, period: int) -> float:
             return 100.0
 
     rs = avg_gain / avg_loss
-    return 100.0 - (100.0 / (1.0 + rs))
+    rsi_value = 100.0 - (100.0 / (1.0 + rs))
+    return float(rsi_value)
 
 
 @jit(nopython=True, cache=True)

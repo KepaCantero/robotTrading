@@ -110,9 +110,9 @@ class CarverRobustRulesStrategy(BaseStrategy):
         self.use_decay = config.get("use_decay", True)
 
         # Price history for calculations - use config value
-        self.price_history = deque(maxlen=tt.default_price_history_length)
-        self.high_history = deque(maxlen=tt.default_price_history_length)
-        self.low_history = deque(maxlen=tt.default_price_history_length)
+        self.price_history: deque[float] = deque(maxlen=tt.default_price_history_length)
+        self.high_history: deque[float] = deque(maxlen=tt.default_price_history_length)
+        self.low_history: deque[float] = deque(maxlen=tt.default_price_history_length)
 
         # Indicator calculator
         self.indicator_calculator = TechnicalIndicatorCalculator()
@@ -183,7 +183,7 @@ class CarverRobustRulesStrategy(BaseStrategy):
             # Check if we should execute (fixed timestamp rule)
             if not self._should_execute_at_fixed_timestamp():
                 logger.debug(
-                    "CARVER skipping - not at fixed execution time", symbol=market_data.symbol
+                    "CARVER skipping - not at fixed execution time for %s", market_data.symbol
                 )
                 return []
 

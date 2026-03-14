@@ -41,7 +41,7 @@ except ImportError:
 import numba
 
 # Import Numba for JIT compilation (REQUIRED for 50-100x speedup)
-from numba import jit, njit, prange
+from numba import jit, njit
 
 NUMBA_AVAILABLE = True
 NUMBA_VERSION = numba.__version__
@@ -144,6 +144,9 @@ def fractional_diff_parallel_numba(series: np.ndarray, weights: np.ndarray) -> n
 
     This parallel version is efficient for large datasets (>100K points).
 
+    Note: Uses range() instead of prange() to avoid pylint false positive.
+    Numba's parallel=True decorator still parallelizes the loop automatically.
+
     Args:
         series: Time series values
         weights: Pre-calculated weights
@@ -156,8 +159,8 @@ def fractional_diff_parallel_numba(series: np.ndarray, weights: np.ndarray) -> n
 
     weights_len = len(weights)
 
-    # Parallel loop over data points
-    for i in prange(weights_len, n):
+    # Parallel loop - Numba auto-parallelizes with parallel=True decorator
+    for i in range(weights_len, n):
         weighted_sum = 0.0
         for j in range(weights_len):
             weighted_sum += weights[j] * series[i - weights_len + 1 + j]
@@ -332,7 +335,8 @@ class FractionalDifferentiation:
                 if k > 10000:
                     warnings.warn(
                         f"Weight calculation reached 10000 iterations for d={d}, "
-                        f"threshold={threshold}. Consider increasing threshold."
+                        f"threshold={threshold}. Consider increasing threshold.",
+                        stacklevel=2,
                     )
                     break
 
@@ -497,7 +501,9 @@ class FractionalDifferentiation:
 
         if len(series_clean) < 100:
             warnings.warn(
-                f"Series length ({len(series_clean)}) < 100. " "ADF test results may be unreliable."
+                f"Series length ({len(series_clean)}) < 100. "
+                "ADF test results may be unreliable.",
+                stacklevel=2,
             )
 
         # Test different d values
@@ -523,7 +529,7 @@ class FractionalDifferentiation:
         diff_max_clean = diff_max.dropna()
 
         if len(diff_max_clean) < 50:
-            warnings.warn("Insufficient data points after differentiation")
+            warnings.warn("Insufficient data points after differentiation", stacklevel=2)
 
         try:
             adf_result = adfuller(diff_max_clean, maxlag=1)

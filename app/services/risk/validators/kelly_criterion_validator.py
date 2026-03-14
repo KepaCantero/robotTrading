@@ -62,7 +62,7 @@ class KellyCriterionValidator:
                 "avg_win": str(self.avg_win),
                 "avg_loss": str(self.avg_loss),
                 "max_risk_pct": self.MAX_RISK_PCT,
-            }
+            },
         )
 
     def calculate_kelly_fraction(self) -> Decimal:
@@ -92,7 +92,7 @@ class KellyCriterionValidator:
                 "loss_rate": str(loss_rate),
                 "numerator": str(numerator),
                 "kelly_fraction": str(kelly_fraction),
-            }
+            },
         )
 
         return kelly_fraction
@@ -140,7 +140,7 @@ class KellyCriterionValidator:
                 "passes_kelly": passes_kelly,
                 "passes_2pct": passes_2pct,
                 "passes": passes,
-            }
+            },
         )
 
         if not passes:
@@ -152,7 +152,7 @@ class KellyCriterionValidator:
                     "order_value": str(order_value),
                     "max_allowed": str(max_position),
                     "excess_amount": str(order_value - max_position),
-                }
+                },
             )
 
         return KellyResult(
@@ -199,5 +199,5 @@ class KellyCriterionValidator:
                 "new_avg_win": str(self.avg_win),
                 "old_avg_loss": str(old_avg_loss),
                 "new_avg_loss": str(self.avg_loss),
-            }
+            },
         )

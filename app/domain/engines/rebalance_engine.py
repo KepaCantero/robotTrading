@@ -5,14 +5,15 @@ Engine for portfolio rebalancing operations.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
 
 class RebalanceTrigger(str, Enum):
     """Rebalance trigger enumeration."""
+
     SCHEDULED = "scheduled"
     THRESHOLD = "threshold"
     DRIFT = "drift"
@@ -41,15 +42,15 @@ class RebalanceEngine:
             "RebalanceEngine initialized",
             extra={
                 "config_keys": list(self.config.keys()),
-                "drift_threshold": self.drift_threshold
-            }
+                "drift_threshold": self.drift_threshold,
+            },
         )
 
     def check_rebalance_needed(
         self,
         current_weights: Dict[str, float],
         target_weights: Dict[str, float],
-        trigger: RebalanceTrigger = RebalanceTrigger.DRIFT
+        trigger: RebalanceTrigger = RebalanceTrigger.DRIFT,
     ) -> Dict[str, Any]:
         """
         Check if portfolio rebalancing is needed.
@@ -64,10 +65,7 @@ class RebalanceEngine:
         """
         logger.debug(
             "Checking rebalance need",
-            extra={
-                "symbols_count": len(current_weights),
-                "trigger": trigger.value
-            }
+            extra={"symbols_count": len(current_weights), "trigger": trigger.value},
         )
 
         drifts = {}
@@ -89,7 +87,7 @@ class RebalanceEngine:
             "rebalance_needed": rebalance_needed,
             "max_drift": max_drift,
             "drifts": drifts,
-            "trigger": trigger.value
+            "trigger": trigger.value,
         }
 
         logger.info(
@@ -97,17 +95,14 @@ class RebalanceEngine:
             extra={
                 "rebalance_needed": rebalance_needed,
                 "max_drift": max_drift,
-                "trigger": trigger.value
-            }
+                "trigger": trigger.value,
+            },
         )
 
         return result
 
     def generate_rebalance_orders(
-        self,
-        current_portfolio: Dict[str, Any],
-        target_weights: Dict[str, float],
-        **kwargs
+        self, current_portfolio: Dict[str, Any], target_weights: Dict[str, float], **kwargs
     ) -> List[Dict[str, Any]]:
         """
         Generate rebalancing orders to reach target weights.
@@ -124,17 +119,17 @@ class RebalanceEngine:
             "Generating rebalance orders",
             extra={
                 "current_holdings": len(current_portfolio.get("holdings", [])),
-                "target_symbols": len(target_weights)
-            }
+                "target_symbols": len(target_weights),
+            },
         )
 
-        orders = []
+        orders: List[Dict[str, Any]] = []
         total_value = current_portfolio.get("total_value", 0)
 
         if total_value <= 0:
             logger.warning(
                 "Cannot generate rebalance orders: invalid portfolio value",
-                extra={"total_value": total_value}
+                extra={"total_value": total_value},
             )
             return orders
 
@@ -148,7 +143,7 @@ class RebalanceEngine:
                     "symbol": symbol,
                     "side": "buy" if diff > 0 else "sell",
                     "value": abs(diff),
-                    "reason": "rebalance"
+                    "reason": "rebalance",
                 }
                 orders.append(order)
 
@@ -156,8 +151,8 @@ class RebalanceEngine:
             "Rebalance orders generated",
             extra={
                 "orders_count": len(orders),
-                "total_rebalance_value": sum(abs(o.get("value", 0)) for o in orders)
-            }
+                "total_rebalance_value": sum(abs(o.get("value", 0)) for o in orders),
+            },
         )
 
         return orders
@@ -167,7 +162,7 @@ class RebalanceEngine:
         current_portfolio: Dict[str, Any],
         target_weights: Dict[str, float],
         trigger: RebalanceTrigger = RebalanceTrigger.MANUAL,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """
         Execute a full portfolio rebalance.
@@ -185,29 +180,27 @@ class RebalanceEngine:
             "Starting portfolio rebalance",
             extra={
                 "trigger": trigger.value,
-                "portfolio_value": current_portfolio.get("total_value", 0)
-            }
+                "portfolio_value": current_portfolio.get("total_value", 0),
+            },
         )
 
         # Check if rebalance is needed
         check_result = self.check_rebalance_needed(
             current_weights=current_portfolio.get("weights", {}),
             target_weights=target_weights,
-            trigger=trigger
+            trigger=trigger,
         )
 
-        result = {
+        result: Dict[str, Any] = {
             "trigger": trigger.value,
             "check_result": check_result,
             "orders": [],
-            "status": "skipped"
+            "status": "skipped",
         }
 
         if check_result["rebalance_needed"]:
             orders = self.generate_rebalance_orders(
-                current_portfolio=current_portfolio,
-                target_weights=target_weights,
-                **kwargs
+                current_portfolio=current_portfolio, target_weights=target_weights, **kwargs
             )
             result["orders"] = orders
             result["status"] = "orders_generated"
@@ -217,16 +210,13 @@ class RebalanceEngine:
                 extra={
                     "trigger": trigger.value,
                     "orders_count": len(orders),
-                    "status": result["status"]
-                }
+                    "status": result["status"],
+                },
             )
         else:
             logger.info(
                 "Rebalance not needed",
-                extra={
-                    "trigger": trigger.value,
-                    "max_drift": check_result["max_drift"]
-                }
+                extra={"trigger": trigger.value, "max_drift": check_result["max_drift"]},
             )
 
         return result

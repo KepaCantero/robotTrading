@@ -8,7 +8,7 @@ All imports from potentially circular modules are now deferred or type-only.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable
+from typing import Callable
 
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
@@ -16,16 +16,6 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 # Direct import from independent exceptions module (no circular dependency)
 from app.shared.exceptions.exceptions import AlgoTradingError
-
-# Use TYPE_CHECKING for type hints only (no runtime import)
-if TYPE_CHECKING:
-    from app.infrastructure.middleware.error_middleware import (
-        ErrorHandlingMiddleware as ErrorHandlingMiddleware,
-        HealthCheckMiddleware as HealthCheckMiddleware,
-        RateLimitingMiddleware as RateLimitingMiddleware,
-        RequestContextMiddleware as RequestContextMiddleware,
-        SecurityHeadersMiddleware as SecurityHeadersMiddleware,
-    )
 
 
 def _get_error_handlers() -> (
@@ -43,7 +33,7 @@ def _get_error_handlers() -> (
         Tuple of error handler functions
     """
     # Lazy import - only loaded when actually needed
-    from app.exceptions.error_handler import (
+    from app.shared.exceptions.error_handler import (
         algotrading_exception_handler,
         generic_exception_handler,
         starlette_http_exception_handler,
@@ -96,6 +86,8 @@ def setup_error_handling(app: FastAPI) -> None:
 
     Uses lazy imports internally to avoid circular dependencies at module load time.
     """
+    from typing import Callable, Union
+
     # Lazily load error handlers (avoids circular import at module load)
     (
         algotrading_handler,
@@ -104,27 +96,37 @@ def setup_error_handling(app: FastAPI) -> None:
         validation_handler,
     ) = _get_error_handlers()
 
-    # Add exception handlers
-    app.add_exception_handler(AlgoTradingError, algotrading_handler)  # type: ignore
-    app.add_exception_handler(RequestValidationError, validation_handler)  # type: ignore
-    app.add_exception_handler(StarletteHTTPException, starlette_handler)  # type: ignore
-    app.add_exception_handler(Exception, generic_handler)
+    # Define proper type for exception handlers
+    ExceptionHandlerType = Callable[
+        [type[Exception], Union[Exception, RequestValidationError]], None
+    ]
+
+    # Add exception handlers with proper type annotations
+    handler_algotrading: ExceptionHandlerType = algotrading_handler
+    handler_validation: ExceptionHandlerType = validation_handler
+    handler_starlette: ExceptionHandlerType = starlette_handler
+    handler_generic: ExceptionHandlerType = generic_handler
+
+    app.add_exception_handler(AlgoTradingError, handler_algotrading)
+    app.add_exception_handler(RequestValidationError, handler_validation)
+    app.add_exception_handler(StarletteHTTPException, handler_starlette)
+    app.add_exception_handler(Exception, handler_generic)
 
     # Lazily load middleware classes (avoids circular import at module load)
     (
-        ErrorHandlingMiddleware,
-        HealthCheckMiddleware,
-        RateLimitingMiddleware,
-        RequestContextMiddleware,
-        SecurityHeadersMiddleware,
+        error_handling_middleware,
+        health_check_middleware,
+        rate_limiting_middleware,
+        request_context_middleware,
+        security_headers_middleware,
     ) = _get_middleware_classes()
 
     # Add middleware (order matters!)
-    app.add_middleware(HealthCheckMiddleware)
-    app.add_middleware(SecurityHeadersMiddleware, enable_cors=True)
-    app.add_middleware(RateLimitingMiddleware, requests_per_minute=100)
-    app.add_middleware(RequestContextMiddleware)
-    app.add_middleware(ErrorHandlingMiddleware, enable_request_logging=True)
+    app.add_middleware(health_check_middleware)
+    app.add_middleware(security_headers_middleware, enable_cors=True)
+    app.add_middleware(rate_limiting_middleware, requests_per_minute=100)
+    app.add_middleware(request_context_middleware)
+    app.add_middleware(error_handling_middleware, enable_request_logging=True)
 
 
 def create_error_handling_app() -> FastAPI:

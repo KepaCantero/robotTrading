@@ -11,7 +11,6 @@ import logging
 from copy import deepcopy
 from typing import Any, Dict
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -21,9 +20,7 @@ class RecursiveConfigMerger:
     Handles nested structures and preserves base values when not overridden.
     """
 
-    def merge(
-        self, base: Dict[str, Any], override: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def merge(self, base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
         """
         Merge two configuration dictionaries recursively.
 
@@ -46,11 +43,7 @@ class RecursiveConfigMerger:
         result = deepcopy(base)
 
         for key, value in override.items():
-            if (
-                key in result
-                and isinstance(result[key], dict)
-                and isinstance(value, dict)
-            ):
+            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
                 # Recursively merge nested dictionaries
                 result[key] = self.merge(result[key], value)
             else:
@@ -71,9 +64,7 @@ class ReplaceConfigMerger:
     Does not perform recursive merging.
     """
 
-    def merge(
-        self, base: Dict[str, Any], override: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def merge(self, base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
         """
         Merge by replacing base sections with override sections.
 

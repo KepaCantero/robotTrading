@@ -38,9 +38,14 @@ class VolatilityCalculator:
 
     def calculate_volatility(self, price_history: List[Decimal]) -> VolatilityMetrics:
         """Calcular métricas de volatilidad."""
-        logger.debug("Calculating volatility metrics", extra={"price_history_length": len(price_history)})
+        logger.debug(
+            "Calculating volatility metrics", extra={"price_history_length": len(price_history)}
+        )
         if len(price_history) < 2:
-            logger.error("Insufficient price history for volatility calculation", extra={"price_history_length": len(price_history)})
+            logger.error(
+                "Insufficient price history for volatility calculation",
+                extra={"price_history_length": len(price_history)},
+            )
             raise ValueError("Insufficient price history for volatility calculation")
 
         # Convertir a numpy para cálculos
@@ -72,7 +77,14 @@ class VolatilityCalculator:
         # Regimen de volatilidad
         volatility_regime = self._determine_volatility_regime(current_volatility)
 
-        logger.debug("Volatility metrics calculated", extra={"current_volatility": float(current_volatility), "historical_volatility": float(historical_volatility), "regime": str(volatility_regime.value)})
+        logger.debug(
+            "Volatility metrics calculated",
+            extra={
+                "current_volatility": float(current_volatility),
+                "historical_volatility": float(historical_volatility),
+                "regime": str(volatility_regime.value),
+            },
+        )
         return VolatilityMetrics(
             current_volatility=current_volatility,
             historical_volatility=historical_volatility,
@@ -130,7 +142,10 @@ class LiquidityCalculator:
         self, quote: Quote, volume_24h: Decimal, order_book_depth: Decimal
     ) -> LiquidityMetrics:
         """Calcular métricas de liquidez."""
-        logger.debug("Calculating liquidity metrics", extra={"symbol": quote.symbol, "volume_24h": str(volume_24h)})
+        logger.debug(
+            "Calculating liquidity metrics",
+            extra={"symbol": quote.symbol, "volume_24h": str(volume_24h)},
+        )
         # Calcular spread bid-ask
         if quote.bid and quote.ask and quote.bid > 0:
             spread = ((quote.ask - quote.bid) / quote.bid) * Decimal("100")
@@ -143,7 +158,14 @@ class LiquidityCalculator:
         # Determinar régimen de liquidez
         liquidity_regime = self._determine_liquidity_regime(liquidity_score, spread)
 
-        logger.debug("Liquidity metrics calculated", extra={"spread": float(spread), "liquidity_score": liquidity_score, "regime": str(liquidity_regime.value)})
+        logger.debug(
+            "Liquidity metrics calculated",
+            extra={
+                "spread": float(spread),
+                "liquidity_score": liquidity_score,
+                "regime": str(liquidity_regime.value),
+            },
+        )
         return LiquidityMetrics(
             bid_ask_spread=spread,
             volume_24h=volume_24h,
@@ -197,14 +219,23 @@ class OrderSizeCalculator:
         self, order_size: Decimal, market_cap: Decimal, current_price: Decimal
     ) -> OrderSizeImpact:
         """Calcular impacto del tamaño de orden."""
-        logger.debug("Calculating order impact", extra={"order_size": str(order_size), "market_cap": str(market_cap)})
+        logger.debug(
+            "Calculating order impact",
+            extra={"order_size": str(order_size), "market_cap": str(market_cap)},
+        )
         # Calcular ratio orden/capitalización
         market_cap_ratio = order_size / market_cap if market_cap > 0 else Decimal("0")
 
         # Calcular multiplicador de impacto
         impact_multiplier = self._calculate_impact_multiplier(market_cap_ratio)
 
-        logger.debug("Order impact calculated", extra={"market_cap_ratio": float(market_cap_ratio), "impact_multiplier": impact_multiplier})
+        logger.debug(
+            "Order impact calculated",
+            extra={
+                "market_cap_ratio": float(market_cap_ratio),
+                "impact_multiplier": impact_multiplier,
+            },
+        )
         return OrderSizeImpact(
             order_size=order_size,
             market_cap_ratio=market_cap_ratio,
@@ -233,7 +264,10 @@ class DynamicSlippageService:
         self.liquidity_calculator = LiquidityCalculator()
         self.order_size_calculator = OrderSizeCalculator()
         self.slippage_history: Dict[str, SlippageHistory] = {}
-        logger.info("DynamicSlippageService initialized", extra={"volatility_lookback_days": self.params.volatility_lookback_days})
+        logger.info(
+            "DynamicSlippageService initialized",
+            extra={"volatility_lookback_days": self.params.volatility_lookback_days},
+        )
 
     def calculate_dynamic_slippage(
         self,
@@ -248,7 +282,14 @@ class DynamicSlippageService:
         market_cap: Decimal,
     ) -> DynamicSlippageAnalysis:
         """Calcular slippage dinámico completo."""
-        logger.debug("calculate_dynamic_slippage called", extra={"asset_symbol": asset_symbol, "order_side": order_side, "order_size": str(order_size)})
+        logger.debug(
+            "calculate_dynamic_slippage called",
+            extra={
+                "asset_symbol": asset_symbol,
+                "order_side": order_side,
+                "order_size": str(order_size),
+            },
+        )
 
         # Calcular métricas de entrada
         volatility_metrics = self.volatility_calculator.calculate_volatility(price_history)
@@ -291,7 +332,15 @@ class DynamicSlippageService:
         # Guardar en historial
         self._add_to_history(analysis)
 
-        logger.info("Dynamic slippage calculated", extra={"asset_symbol": asset_symbol, "total_slippage": float(total_slippage), "market_condition": str(market_condition.value), "confidence": confidence})
+        logger.info(
+            "Dynamic slippage calculated",
+            extra={
+                "asset_symbol": asset_symbol,
+                "total_slippage": float(total_slippage),
+                "market_condition": str(market_condition.value),
+                "confidence": confidence,
+            },
+        )
         return analysis
 
     def _calculate_slippage_components(
@@ -465,6 +514,13 @@ class DynamicSlippageService:
         history = self.get_slippage_history(asset_symbol)
         if history:
             avg_slippage = history.get_average_slippage(days)
-            logger.debug("Average slippage retrieved", extra={"asset_symbol": asset_symbol, "days": days, "average_slippage": str(avg_slippage) if avg_slippage else None})
+            logger.debug(
+                "Average slippage retrieved",
+                extra={
+                    "asset_symbol": asset_symbol,
+                    "days": days,
+                    "average_slippage": str(avg_slippage) if avg_slippage else None,
+                },
+            )
             return avg_slippage
         return None

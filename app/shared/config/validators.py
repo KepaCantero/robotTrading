@@ -82,9 +82,7 @@ class RiskPercentageValidator:
                 self._errors.append(f"Risk percentage '{key}' is not a number")
                 is_valid = False
             elif not (0 < value <= 1.0):
-                self._errors.append(
-                    f"Risk percentage '{key}' must be between 0 and 1, got {value}"
-                )
+                self._errors.append(f"Risk percentage '{key}' must be between 0 and 1, got {value}")
                 is_valid = False
 
         return is_valid

@@ -75,7 +75,7 @@ async def get_momentum_overview(
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(
             "Error getting momentum overview",
-            extra={"error": str(e), "error_type": type(e).__name__}
+            extra={"error": str(e), "error_type": type(e).__name__},
         )
         raise HTTPException(
             status_code=DEFAULT_VALUE_500, detail=f"Error getting momentum overview: {str(e)}"
@@ -129,8 +129,8 @@ async def analyze_asset_momentum_post(
                 "symbol": symbol,
                 "timeframe": timeframe.value,
                 "overall_momentum": analysis.overall_momentum,
-                "signal_count": analysis.signal_count
-            }
+                "signal_count": analysis.signal_count,
+            },
         )
         return {
             "success": True,
@@ -181,7 +181,7 @@ async def analyze_asset_momentum_post(
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(
             "Error analyzing asset momentum",
-            extra={"error": str(e), "error_type": type(e).__name__}
+            extra={"error": str(e), "error_type": type(e).__name__},
         )
         raise HTTPException(
             status_code=DEFAULT_VALUE_500, detail=f"Error analyzing momentum for {symbol}: {str(e)}"
@@ -252,7 +252,7 @@ async def analyze_asset_momentum(
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(
             "Error analyzing asset momentum",
-            extra={"symbol": symbol, "error": str(e), "error_type": type(e).__name__}
+            extra={"symbol": symbol, "error": str(e), "error_type": type(e).__name__},
         )
         raise HTTPException(
             status_code=DEFAULT_VALUE_500, detail=f"Error analyzing momentum for {symbol}: {str(e)}"
@@ -271,7 +271,7 @@ async def get_momentum_signals_for_symbol(
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(
             "Error getting momentum signals",
-            extra={"symbol": symbol, "error": str(e), "error_type": type(e).__name__}
+            extra={"symbol": symbol, "error": str(e), "error_type": type(e).__name__},
         )
         raise HTTPException(
             status_code=DEFAULT_VALUE_500,
@@ -286,7 +286,7 @@ async def get_momentum_signals_for_symbol(
 
     logger.info(
         "Retrieved momentum signals for symbol",
-        extra={"symbol": symbol, "signal_count": len(signals)}
+        extra={"symbol": symbol, "signal_count": len(signals)},
     )
     return {
         "success": True,
@@ -509,8 +509,8 @@ async def create_momentum_strategy(
             extra={
                 "strategy_name": created_strategy.name,
                 "momentum_type": created_strategy.momentum_type.value,
-                "timeframe": created_strategy.timeframe.value
-            }
+                "timeframe": created_strategy.timeframe.value,
+            },
         )
         return {
             "success": True,
@@ -541,7 +541,7 @@ async def create_momentum_strategy(
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(
             "Error creating momentum strategy",
-            extra={"error": str(e), "error_type": type(e).__name__}
+            extra={"error": str(e), "error_type": type(e).__name__},
         )
         raise HTTPException(
             status_code=DEFAULT_VALUE_500, detail=f"Error creating momentum strategy: {str(e)}"
@@ -699,7 +699,7 @@ async def delete_momentum_strategy(
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(
             "Error deleting momentum strategy",
-            extra={"strategy_name": strategy_name, "error": str(e), "error_type": type(e).__name__}
+            extra={"strategy_name": strategy_name, "error": str(e), "error_type": type(e).__name__},
         )
         raise HTTPException(
             status_code=DEFAULT_VALUE_500, detail=f"Error deleting momentum strategy: {str(e)}"
@@ -813,13 +813,13 @@ async def analyze_multiple_assets(
     """Analyze momentum for multiple assets."""
     logger.debug(
         "Batch momentum analysis requested",
-        extra={"symbols": symbols, "timeframe": timeframe.value}
+        extra={"symbols": symbols, "timeframe": timeframe.value},
     )
     try:
         if len(symbols) > DEFAULT_VALUE_20:
             logger.warning(
                 "Batch size exceeds limit",
-                extra={"requested": len(symbols), "limit": DEFAULT_VALUE_20}
+                extra={"requested": len(symbols), "limit": DEFAULT_VALUE_20},
             )
             raise HTTPException(status_code=400, detail="Maximum MAX_20 symbols allowed per batch")
 
@@ -847,8 +847,8 @@ async def analyze_multiple_assets(
             extra={
                 "successful_count": len(analyses),
                 "error_count": len(errors),
-                "timeframe": timeframe.value
-            }
+                "timeframe": timeframe.value,
+            },
         )
         return {
             "success": True,
@@ -864,7 +864,7 @@ async def analyze_multiple_assets(
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(
             "Error analyzing multiple assets",
-            extra={"error": str(e), "error_type": type(e).__name__}
+            extra={"error": str(e), "error_type": type(e).__name__},
         )
         raise HTTPException(
             status_code=DEFAULT_VALUE_500, detail=f"Error analyzing multiple assets: {str(e)}"

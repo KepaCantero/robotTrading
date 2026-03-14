@@ -148,5 +148,5 @@ logger.debug(
             "DeploymentRationale",
             "DeploymentDecision",
         ],
-    }
+    },
 )

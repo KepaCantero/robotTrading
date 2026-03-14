@@ -35,11 +35,7 @@ from app.shared.audit import AuditAction, AuditLogger, get_audit_logger
 
 # Import extracted components
 from .auth_attempt_tracker import AuthAttemptTracker, get_attempt_tracker
-from .interfaces import (
-    AuthAttemptTrackerProtocol,
-    JWTTokenManagerProtocol,
-    UserStoreProtocol,
-)
+from .interfaces import AuthAttemptTrackerProtocol, JWTTokenManagerProtocol, UserStoreProtocol
 from .jwt_token_manager import JWTTokenManager, get_token_manager
 from .user import User, UserRoles
 from .user_store import UserStore, get_user_store

@@ -44,7 +44,7 @@ class DrawdownValidator:
                 "component": "drawdown_validator",
                 "operation": "init",
                 "max_drawdown_pct": str(self.MAX_DRAWDOWN_PCT),
-            }
+            },
         )
 
     def update_equity(self, current_equity: Decimal) -> None:
@@ -68,7 +68,7 @@ class DrawdownValidator:
                     "current_equity": str(current_equity),
                     "old_peak": str(old_peak) if old_peak else None,
                     "new_peak": str(self._peak_equity),
-                }
+                },
             )
 
         # Si hay nuevo peak, resetear kill switch
@@ -80,7 +80,7 @@ class DrawdownValidator:
                         "component": "drawdown_validator",
                         "operation": "update_equity",
                         "peak_equity": str(self._peak_equity),
-                    }
+                    },
                 )
             self._kill_switch_active = False
             self._kill_switch_activated_at = None
@@ -119,8 +119,10 @@ class DrawdownValidator:
                     "max_drawdown_pct": str(self.MAX_DRAWDOWN_PCT * 100),
                     "peak_equity": str(self._peak_equity),
                     "current_equity": str(current_equity),
-                    "kill_switch_activated_at": self._kill_switch_activated_at.isoformat() if self._kill_switch_activated_at else None,
-                }
+                    "kill_switch_activated_at": self._kill_switch_activated_at.isoformat()
+                    if self._kill_switch_activated_at
+                    else None,
+                },
             )
 
         logger.debug(
@@ -131,7 +133,7 @@ class DrawdownValidator:
                 "current_drawdown_pct": str(current_drawdown * 100),
                 "passes": passes,
                 "kill_switch_active": self._kill_switch_active,
-            }
+            },
         )
 
         return DrawdownResult(
@@ -174,8 +176,10 @@ class DrawdownValidator:
                 "component": "drawdown_validator",
                 "operation": "activate_kill_switch",
                 "reason": reason,
-                "activated_at": self._kill_switch_activated_at.isoformat() if self._kill_switch_activated_at else None,
-            }
+                "activated_at": self._kill_switch_activated_at.isoformat()
+                if self._kill_switch_activated_at
+                else None,
+            },
         )
 
     def deactivate_kill_switch(self) -> bool:
@@ -191,7 +195,7 @@ class DrawdownValidator:
                 extra={
                     "component": "drawdown_validator",
                     "operation": "deactivate_kill_switch",
-                }
+                },
             )
             return False
 
@@ -203,7 +207,7 @@ class DrawdownValidator:
             extra={
                 "component": "drawdown_validator",
                 "operation": "deactivate_kill_switch",
-            }
+            },
         )
 
         return True

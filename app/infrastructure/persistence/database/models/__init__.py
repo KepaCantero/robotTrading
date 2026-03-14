@@ -239,19 +239,9 @@ def __getattr__(name: str):
 
 
 # For explicit exports and type hints
+# Note: Model classes are dynamically loaded via __getattr__
+# Only export the protocols which are defined at module level
 __all__ = [
-    "User",
-    "APIKey",
-    "Portfolio",
-    "Asset",
-    "Position",
-    "Trade",
-    "MarketData",
-    "Signal",
-    "Backtest",
-    "RiskMetrics",
-    "SystemLog",
-    "PositionState",
     # Protocols for type hints
     "UserModelProtocol",
     "APIKeyModelProtocol",

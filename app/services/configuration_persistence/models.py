@@ -124,5 +124,5 @@ logger.debug(
             "ConfigurationListResponse",
             "VersionedConfiguration",
         ],
-    }
+    },
 )

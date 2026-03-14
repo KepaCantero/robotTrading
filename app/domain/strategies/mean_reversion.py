@@ -100,7 +100,7 @@ class MeanReversionStrategy(BaseStrategy):
         # Initialize price history for logging purposes - use config value
         from collections import deque
 
-        self.price_history = deque(maxlen=tt.default_price_history_length)
+        self.price_history: deque = deque(maxlen=tt.default_price_history_length)
 
         # ✅ USE LIBRARY: Initialize TechnicalIndicatorCalculator (uses pandas-ta-classic)
         self.indicator_calculator = TechnicalIndicatorCalculator()

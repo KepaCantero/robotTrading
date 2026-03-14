@@ -5,17 +5,17 @@ Proporciona endpoints REST para gestionar el sistema de estrategias múltiples,
 incluyendo carga, activación, métricas y configuración.
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-from app.domain.strategies import (
-    ExecutionEngine,
-    StrategyConfigLoader,
-    StrategyLogger,
-    StrategyRegistry,
+from app.domain.strategies.protocols import (
+    StrategyLoggerProto as StrategyLogger,
+    StrategyRegistryProto as StrategyRegistry,
 )
 
 # Constants
@@ -29,46 +29,58 @@ router = APIRouter(prefix="/strategies", tags=["Strategies"])
 
 # Instancias globales (en producción usar dependency injection)
 _strategy_registry: Optional[StrategyRegistry] = None
-_config_loader: Optional[StrategyConfigLoader] = None
-_execution_engine: Optional[ExecutionEngine] = None
+_config_loader: Optional[Any] = None
+_execution_engine: Optional[Any] = None
 _strategy_logger: Optional[StrategyLogger] = None
 
 
-def get_strategy_registry() -> StrategyRegistry:
+def get_strategy_registry() -> "StrategyRegistry":
     """Obtener instancia del registry de estrategias."""
     global _strategy_registry
     if _strategy_registry is None:
-        _strategy_registry = StrategyRegistry()
+        # Lazy import to avoid circular dependencies
+        from app.domain.strategies.strategy_registry import StrategyRegistry as SR
+
+        _strategy_registry = SR()
 
     return _strategy_registry
 
 
-def get_config_loader() -> StrategyConfigLoader:
+def get_config_loader():
     """Obtener instancia del cargador de configuración."""
     global _config_loader
     if _config_loader is None:
-        _config_loader = StrategyConfigLoader()
+        # Lazy import to avoid circular dependencies
+        from app.domain.strategies.config_loader import StrategyConfigLoader as SCL
+
+        _config_loader = SCL()
 
     return _config_loader
 
 
-def get_strategy_logger() -> StrategyLogger:
+def get_strategy_logger() -> "StrategyLogger":
     """Obtener instancia del logger de estrategias."""
     global _strategy_logger
     if _strategy_logger is None:
-        _strategy_logger = StrategyLogger()
+        # Lazy import to avoid circular dependencies
+        from app.domain.strategies.strategy_logger import StrategyLogger as SL
+
+        _strategy_logger = SL()
 
     return _strategy_logger
 
 
-def get_execution_engine() -> ExecutionEngine:
+def get_execution_engine():
     """Obtener instancia del motor de ejecución."""
     global _execution_engine
 
     if _execution_engine is None:
+        # Lazy import to avoid circular dependencies
+        from app.domain.strategies.execution_engine import ExecutionEngine as EE
+
         registry = get_strategy_registry()
         strategy_logger = get_strategy_logger()
-        _execution_engine = ExecutionEngine(registry, strategy_logger)
+        _execution_engine = EE(registry, strategy_logger)
         logging.getLogger(__name__).info("ExecutionEngine singleton initialized")
 
     return _execution_engine
@@ -391,7 +403,7 @@ async def get_all_metrics(
 
 
 @router.get("/execution/stats", response_model=ExecutionStatsResponse)
-async def get_execution_stats(engine: ExecutionEngine = Depends(get_execution_engine)):
+async def get_execution_stats(engine=Depends(get_execution_engine)):
     """Obtener estadísticas del motor de ejecución."""
     try:
         stats = engine.get_execution_stats()
@@ -415,7 +427,7 @@ async def get_execution_stats(engine: ExecutionEngine = Depends(get_execution_en
 
 @router.post("/execution/start", response_model=Dict[str, str])
 async def start_execution_engine(
-    engine: ExecutionEngine = Depends(get_execution_engine),
+    engine=Depends(get_execution_engine),
 ):
     """Iniciar motor de ejecución."""
     try:
@@ -431,7 +443,7 @@ async def start_execution_engine(
 
 @router.post("/execution/stop", response_model=Dict[str, str])
 async def stop_execution_engine(
-    engine: ExecutionEngine = Depends(get_execution_engine),
+    engine=Depends(get_execution_engine),
 ):
     """Detener motor de ejecución."""
     try:
@@ -447,7 +459,7 @@ async def stop_execution_engine(
 
 @router.post("/execution/reset-stats", response_model=Dict[str, str])
 async def reset_execution_stats(
-    engine: ExecutionEngine = Depends(get_execution_engine),
+    engine=Depends(get_execution_engine),
 ):
     """Resetear estadísticas del motor de ejecución."""
     try:

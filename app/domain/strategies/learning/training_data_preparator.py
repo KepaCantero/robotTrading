@@ -610,7 +610,7 @@ class TrainingDataPreparator:
 
     def _create_trades_timestamp_map(self, trades: List, df: pd.DataFrame) -> Dict[datetime, List]:
         """Crear mapa de trades por timestamp."""
-        trades_map = {}
+        trades_map: Dict[datetime, List] = {}
 
         for trade in trades:
             # Manejar tanto dicts como objetos Trade

@@ -75,29 +75,20 @@ class ObjectiveConfig(BaseModel):
         if not all(isinstance(w, (int, float)) for w in v):
             logger.warning(
                 "Invalid weight types detected",
-                extra={"weights": v, "weight_types": [type(w).__name__ for w in v]}
+                extra={"weights": v, "weight_types": [type(w).__name__ for w in v]},
             )
             raise ValueError("All weights must be numbers")
 
         total = sum(v)
         if abs(total - 1.0) > 0.01:
-            logger.warning(
-                "Weights do not sum to 1.0",
-                extra={"weights": v, "total": total}
-            )
+            logger.warning("Weights do not sum to 1.0", extra={"weights": v, "total": total})
             raise ValueError(f"Weights must sum to 1.0, got {total}")
 
         if any(w < 0 for w in v):
-            logger.warning(
-                "Negative weights detected",
-                extra={"weights": v}
-            )
+            logger.warning("Negative weights detected", extra={"weights": v})
             raise ValueError("Weights cannot be negative")
 
-        logger.debug(
-            "Weights validated successfully",
-            extra={"weights": v, "total": total}
-        )
+        logger.debug("Weights validated successfully", extra={"weights": v, "total": total})
         return v
 
     @field_validator("objectives")
@@ -112,17 +103,14 @@ class ObjectiveConfig(BaseModel):
                 extra={
                     "objectives_count": len(v),
                     "weights_count": len(info.data["weights"]),
-                    "objectives": [obj.value for obj in v]
-                }
+                    "objectives": [obj.value for obj in v],
+                },
             )
             raise ValueError(
                 f"Number of objectives ({len(v)}) must match "
                 f"number of weights ({len(info.data['weights'])})"
             )
-        logger.debug(
-            "Objectives validated successfully",
-            extra={"objectives_count": len(v)}
-        )
+        logger.debug("Objectives validated successfully", extra={"objectives_count": len(v)})
         return v
 
 
@@ -198,20 +186,20 @@ class ParetoSolution(BaseModel):
         if abs(total - 1.0) > 0.01:
             logger.warning(
                 "Strategy weights do not sum to 1.0",
-                extra={"weights": {k: str(v) for k, v in v.items()}, "total": total}
+                extra={"weights": {k: str(v) for k, v in v.items()}, "total": total},
             )
             raise ValueError(f"Strategy weights must sum to 1.0, got {total}")
 
         if any(w < 0 for w in v.values()):
             logger.warning(
                 "Negative strategy weights detected",
-                extra={"weights": {k: str(v) for k, v in v.items()}}
+                extra={"weights": {k: str(v) for k, v in v.items()}},
             )
             raise ValueError("Strategy weights cannot be negative")
 
         logger.debug(
             "Pareto solution strategy weights validated",
-            extra={"strategies": list(v.keys()), "total": total}
+            extra={"strategies": list(v.keys()), "total": total},
         )
         return v
 
@@ -311,20 +299,17 @@ class EnsembleConfig(BaseModel):
         if abs(total - 1.0) > 0.01:
             logger.warning(
                 "Ensemble config strategy weights do not sum to 1.0",
-                extra={"weights": v, "total": total}
+                extra={"weights": v, "total": total},
             )
             raise ValueError(f"Strategy weights must sum to 1.0, got {total}")
 
         if any(w < 0 for w in v.values()):
-            logger.warning(
-                "Negative strategy weights in ensemble config",
-                extra={"weights": v}
-            )
+            logger.warning("Negative strategy weights in ensemble config", extra={"weights": v})
             raise ValueError("Strategy weights cannot be negative")
 
         logger.debug(
             "Ensemble config strategy weights validated",
-            extra={"strategies": list(v.keys()), "total": total}
+            extra={"strategies": list(v.keys()), "total": total},
         )
         return v
 

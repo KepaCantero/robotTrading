@@ -55,7 +55,7 @@ class LogEntry:
                 "correlation_id": correlation_id,
                 "event_type": event_type,
                 "timestamp": timestamp,
-            }
+            },
         )
 
         entry = cls(
@@ -73,7 +73,7 @@ class LogEntry:
                 "operation": "create_complete",
                 "correlation_id": correlation_id,
                 "event_type": event_type,
-            }
+            },
         )
 
         return entry
@@ -95,7 +95,7 @@ class LogEntry:
                 "operation": "to_dict",
                 "correlation_id": self.correlation_id,
                 "event_type": self.event_type,
-            }
+            },
         )
 
         return result
@@ -119,7 +119,7 @@ class LogEntry:
                 "operation": "with_correlation_id",
                 "correlation_id": correlation_id,
                 "event_type": self.event_type,
-            }
+            },
         )
 
         entry = LogEntry(
@@ -137,7 +137,7 @@ class LogEntry:
                 "operation": "with_correlation_id_complete",
                 "correlation_id": correlation_id,
                 "event_type": self.event_type,
-            }
+            },
         )
 
         return entry

@@ -202,7 +202,7 @@ class OrderFlowAnalyzer:
         self._order_history: list[Order] = []
         logger.info(
             "OrderFlowAnalyzer initialized",
-            extra={"lookback_seconds": lookback_seconds, "alpha_threshold": alpha_threshold}
+            extra={"lookback_seconds": lookback_seconds, "alpha_threshold": alpha_threshold},
         )
 
     def add_order(self, order: Order) -> None:
@@ -218,8 +218,8 @@ class OrderFlowAnalyzer:
                 "side": order.side.value,
                 "order_type": order.order_type.value,
                 "size": str(order.size),
-                "history_size": len(self._order_history)
-            }
+                "history_size": len(self._order_history),
+            },
         )
 
     def calculate_order_imbalance(self, window_seconds: int | None = None) -> Decimal:
@@ -272,7 +272,7 @@ class OrderFlowAnalyzer:
         """
         logger.debug(
             "Estimating order flow toxicity",
-            extra={"num_trades": len(recent_trades), "num_price_changes": len(price_changes)}
+            extra={"num_trades": len(recent_trades), "num_price_changes": len(price_changes)},
         )
         if recent_trades.empty:
             logger.debug("Empty trades data, returning toxicity 0.0")
@@ -305,7 +305,7 @@ class OrderFlowAnalyzer:
 
         logger.info(
             "Order flow toxicity calculated",
-            extra={"toxicity": float(toxicity), "correlation": float(correlation)}
+            extra={"toxicity": float(toxicity), "correlation": float(correlation)},
         )
 
         return float(toxicity)
@@ -387,7 +387,7 @@ class OrderFlowAnalyzer:
         """
         logger.debug(
             "Detecting informed trading",
-            extra={"num_orders": len(current_orders), "price_history_length": len(price_history)}
+            extra={"num_orders": len(current_orders), "price_history_length": len(price_history)},
         )
         if not current_orders or price_history.empty:
             logger.debug("Insufficient data for informed trading detection")
@@ -424,8 +424,8 @@ class OrderFlowAnalyzer:
                         "confidence": confidence,
                         "imbalance": imbalance,
                         "momentum": float(momentum),
-                        "explanation": f"Order flow ({imbalance:+.2f}) aligns with price momentum ({momentum:+.4f})"
-                    }
+                        "explanation": f"Order flow ({imbalance:+.2f}) aligns with price momentum ({momentum:+.4f})",
+                    },
                 )
                 return (
                     True,
@@ -457,7 +457,7 @@ class OrderFlowAnalyzer:
         """
         logger.debug(
             "Measuring adverse selection cost",
-            extra={"num_executions": len(executions), "num_prices": len(subsequent_prices)}
+            extra={"num_executions": len(executions), "num_prices": len(subsequent_prices)},
         )
         if executions.empty or subsequent_prices.empty:
             logger.debug("Empty data, returning zero adverse selection metrics")
@@ -513,10 +513,7 @@ class OrderFlowAnalyzer:
             'adverse_selection_rate': adverse_count / len(executions),
             'total_adverse_cost_usd': total_cost,
         }
-        logger.info(
-            "Adverse selection cost measured",
-            extra=result
-        )
+        logger.info("Adverse selection cost measured", extra=result)
         return result
 
     def forecast_order_flow(
@@ -541,13 +538,13 @@ class OrderFlowAnalyzer:
         """
         logger.debug(
             "Forecasting order flow",
-            extra={"horizon_seconds": forecast_horizon_seconds, "method": method}
+            extra={"horizon_seconds": forecast_horizon_seconds, "method": method},
         )
         if len(self._order_history) < 10:
             # Not enough data, return neutral forecast
             logger.warning(
                 "Insufficient order history for forecasting",
-                extra={"history_size": len(self._order_history), "required_min": 10}
+                extra={"history_size": len(self._order_history), "required_min": 10},
             )
             now = datetime.now()
             future = now + timedelta(seconds=forecast_horizon_seconds)
@@ -642,8 +639,8 @@ class OrderFlowAnalyzer:
                 "expected_buy_volume": float(buy_forecast),
                 "expected_sell_volume": float(sell_forecast),
                 "expected_imbalance": expected_imbalance,
-                "method": method
-            }
+                "method": method,
+            },
         )
 
         return OrderFlowForecast(
@@ -745,7 +742,7 @@ class OrderFlowAnalyzer:
         """
         logger.info(
             "Generating order flow report",
-            extra={"num_orders": len(current_orders), "price_history_length": len(price_history)}
+            extra={"num_orders": len(current_orders), "price_history_length": len(price_history)},
         )
         # Add orders to history
         for order in current_orders:
@@ -799,8 +796,8 @@ class OrderFlowAnalyzer:
             extra={
                 "order_imbalance": float(imbalance),
                 "informed_trading_detected": is_informed,
-                "risk_level": risk_level
-            }
+                "risk_level": risk_level,
+            },
         )
         return report
 
@@ -860,8 +857,8 @@ class OrderFlowSimulator:
             "OrderFlowSimulator initialized",
             extra={
                 "informed_trader_probability": informed_trader_probability,
-                "information_event_probability": information_event_probability
-            }
+                "information_event_probability": information_event_probability,
+            },
         )
 
     def generate_order_flow(
@@ -885,7 +882,7 @@ class OrderFlowSimulator:
         """
         logger.debug(
             "Generating simulated order flow",
-            extra={"num_orders": num_orders, "base_price": base_price}
+            extra={"num_orders": num_orders, "base_price": base_price},
         )
         # Get default spread from config if not provided
         if spread_bps is None:
@@ -946,10 +943,7 @@ class OrderFlowSimulator:
 
             orders.append(order)
 
-        logger.info(
-            "Order flow simulation completed",
-            extra={"num_orders_generated": len(orders)}
-        )
+        logger.info("Order flow simulation completed", extra={"num_orders_generated": len(orders)})
 
         return orders
 

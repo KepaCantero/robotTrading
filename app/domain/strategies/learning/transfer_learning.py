@@ -15,6 +15,9 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 import numpy as np
 
+# Type alias for training metrics (heterogeneous dict with floats, lists, and strings)
+TrainingMetrics = Dict[str, Any]
+
 if TYPE_CHECKING:
     import torch.nn as nn
 
@@ -27,7 +30,7 @@ try:
     import torch
 
     PYTORCH_AVAILABLE = True
-except (ImportError, ModuleNotFoundError):
+except ImportError:
     torch = None  # type: ignore
     PYTORCH_AVAILABLE = False
 
@@ -35,7 +38,7 @@ try:
     import joblib
 
     JOBLIB_AVAILABLE = True
-except (ImportError, ModuleNotFoundError):
+except ImportError:
     joblib = None  # type: ignore
     JOBLIB_AVAILABLE = False
 
@@ -43,7 +46,7 @@ try:
     import msgpack
 
     MSGPACK_AVAILABLE = True
-except (ImportError, ModuleNotFoundError):
+except ImportError:
     msgpack = None  # type: ignore
     MSGPACK_AVAILABLE = False
 
@@ -80,7 +83,7 @@ class ModelRegistry:
             try:
                 with open(self.registry_file, 'r') as f:
                     return json.load(f)
-            except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+            except OSError as e:
                 logger.warning(f"Error cargando registry: {e}")
                 return {}
         return {}
@@ -90,7 +93,7 @@ class ModelRegistry:
         try:
             with open(self.registry_file, 'w') as f:
                 json.dump(self.registry, f, indent=2, default=str)
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             logger.error(f"Error guardando registry: {e}", exc_info=True)
             # No raise - registry sigue funcionando en memoria aunque no se guarde
 
@@ -357,7 +360,7 @@ class ModelRegistry:
 
             logger.info(f"Modelo {model_id} cargado desde {model_path}")
             return model
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             logger.error(f"Error cargando modelo {model_id}: {e}", exc_info=True)
             return None
 
@@ -465,7 +468,7 @@ class FineTuner:
         training_data: Dict[str, Any],
         validation_data: Optional[Dict[str, Any]] = None,
         model_type: str = "auto",
-    ) -> Tuple[Any, Dict[str, float]]:
+    ) -> Tuple[Any, TrainingMetrics]:
         """
         Fine-tune un modelo pre-entrenado.
 
@@ -556,7 +559,7 @@ class FineTuner:
 
             # Training loop
             fine_tuned_model.train()
-            metrics = {'train_loss': []}
+            metrics: TrainingMetrics = {'train_loss': []}
 
             for epoch in range(self.fine_tune_epochs):
                 optimizer.zero_grad()
@@ -625,7 +628,7 @@ class FineTuner:
         model: Any,
         training_data: Dict[str, Any],
         validation_data: Optional[Dict[str, Any]] = None,
-    ) -> Tuple[Any, Dict[str, float]]:
+    ) -> Tuple[Any, TrainingMetrics]:
         """
         Fine-tune modelo tree-based (continuar entrenamiento).
 
@@ -654,12 +657,8 @@ class FineTuner:
                 # XGBoost: continuar entrenamiento
                 model.fit(X_train, y_train, xgb_model=model.get_booster())
                 metrics = {'status': 'continued_training'}
-            elif 'lightgbm' in model_type:
-                # LightGBM: continuar entrenamiento
-                # (Requiere implementación específica)
-                metrics = {'status': 'tree_based_continued'}
-            elif 'catboost' in model_type:
-                # CatBoost: continuar entrenamiento
+            elif 'lightgbm' in model_type or 'catboost' in model_type:
+                # LightGBM/CatBoost: continuar entrenamiento
                 # (Requiere implementación específica)
                 metrics = {'status': 'tree_based_continued'}
             else:
@@ -700,7 +699,7 @@ class KnowledgeDistiller:
         student_model: Any,
         training_data: Dict[str, Any],
         validation_data: Optional[Dict[str, Any]] = None,
-    ) -> Tuple[Any, Dict[str, float]]:
+    ) -> Tuple[Any, TrainingMetrics]:
         """
         Distilar conocimiento de teacher a student.
 
@@ -805,7 +804,7 @@ class KnowledgeDistiller:
                 # Combinar
                 return alpha * soft_loss + (1 - alpha) * hard_loss
 
-            metrics = {'train_loss': [], 'distillation_loss': []}
+            metrics: TrainingMetrics = {'train_loss': [], 'distillation_loss': []}
 
             # Training loop
             for epoch in range(self.distillation_epochs):
@@ -860,7 +859,7 @@ class KnowledgeDistiller:
         student: Any,
         training_data: Dict[str, Any],
         validation_data: Optional[Dict[str, Any]] = None,
-    ) -> Tuple[Any, Dict[str, float]]:
+    ) -> Tuple[Any, TrainingMetrics]:
         """
         Distillation para modelos tree-based.
 
@@ -989,7 +988,7 @@ class TransferLearningManager:
         model_id: str,
         training_data: Dict[str, Any],
         validation_data: Optional[Dict[str, Any]] = None,
-    ) -> Tuple[Any, Dict[str, float]]:
+    ) -> Tuple[Any, TrainingMetrics]:
         """
         Cargar modelo pre-entrenado y hacer fine-tuning.
 
@@ -1058,7 +1057,7 @@ class TransferLearningManager:
         student_model: Any,
         training_data: Dict[str, Any],
         validation_data: Optional[Dict[str, Any]] = None,
-    ) -> Tuple[Any, Dict[str, float]]:
+    ) -> Tuple[Any, TrainingMetrics]:
         """
         Distilar conocimiento de un modelo teacher a student.
 

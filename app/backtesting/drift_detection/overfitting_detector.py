@@ -185,6 +185,7 @@ class OverfittingDetector:
             'gap_threshold': self.max_acceptable_gap,
         }
 
+    # pylint: disable=R0913
     def _apply_oos_degradation(
         self,
         val_result: BacktestResultValue,
@@ -223,6 +224,7 @@ class OverfittingDetector:
 
         return severity, is_overfitting, details
 
+    # pylint: disable=R0913
     def _log_detection_result(
         self,
         result: OverfittingResult,

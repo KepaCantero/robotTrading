@@ -21,21 +21,45 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from types import ModuleType
+from typing import Dict, List, Optional, Protocol, Tuple, Union, runtime_checkable
 
 import numpy as np
+from numpy.typing import NDArray
 
 logger = logging.getLogger(__name__)
 
+# Type aliases for clarity
+ArrayLike = Union[NDArray[np.floating], NDArray[np.integer]]
+ModelType = object  # Base type for ML models - too varied to type precisely
+ExplainerType = object  # Base type for SHAP explainers
+SelectorType = object  # Base type for sklearn selectors
+FloatArray = NDArray[np.floating]
+IntArray = NDArray[np.integer]
+
+# Configuration types
+ConfigValue = Union[str, int, float, bool]
+ConfigDict = Dict[str, ConfigValue]
+NestedConfigDict = Dict[str, Union[ConfigValue, ConfigDict]]
+
+# Result types for dictionaries
+FeatureImportanceDict = Dict[str, float]
+FeatureDetailsDict = Dict[str, Dict[str, float]]
+CorrelationMatrixDict = Dict[str, Dict[str, float]]
+StabilityResultDict = Dict[str, Dict[str, Union[float, bool, str, int]]]
+
+# Generic result dictionary type
+ResultDict = Dict[str, object]
+
 # ============================================================================
-# Optional Dependencies
+# Optional Dependencies - Use proper Optional types
 # ============================================================================
 try:
     import shap
 
     SHAP_AVAILABLE = True
 except (ImportError, ModuleNotFoundError, OSError):
-    shap = None  # type: ignore
+    shap: Optional[ModuleType] = None
     SHAP_AVAILABLE = False
 
 try:
@@ -52,16 +76,16 @@ try:
 
     SKLEARN_FEATURE_SELECTION_AVAILABLE = True
 except (ImportError, ModuleNotFoundError, OSError):
-    SelectKBest = None  # type: ignore
-    SelectFromModel = None  # type: ignore
-    RFE = None  # type: ignore
-    mutual_info_classif = None  # type: ignore
-    mutual_info_regression = None  # type: ignore
-    permutation_importance = None  # type: ignore
-    f_classif = None  # type: ignore
-    f_regression = None  # type: ignore
-    RandomForestClassifier = None  # type: ignore
-    RandomForestRegressor = None  # type: ignore
+    SelectKBest: Optional[type] = None
+    SelectFromModel: Optional[type] = None
+    RFE: Optional[type] = None
+    mutual_info_classif: Optional[callable] = None
+    mutual_info_regression: Optional[callable] = None
+    permutation_importance: Optional[callable] = None
+    f_classif: Optional[callable] = None
+    f_regression: Optional[callable] = None
+    RandomForestClassifier: Optional[type] = None
+    RandomForestRegressor: Optional[type] = None
     SKLEARN_FEATURE_SELECTION_AVAILABLE = False
 
 
@@ -70,7 +94,7 @@ except (ImportError, ModuleNotFoundError, OSError):
 # ============================================================================
 def load_feature_importance_config(
     config_path: Optional[str] = None,
-) -> Dict[str, Any]:
+) -> NestedConfigDict:
     """
     Load feature importance configuration from YAML file.
 
@@ -105,7 +129,7 @@ def load_feature_importance_config(
     return get_default_feature_importance_config()
 
 
-def get_default_feature_importance_config() -> Dict[str, Any]:
+def get_default_feature_importance_config() -> NestedConfigDict:
     """Get default feature importance configuration."""
     return {
         "enabled": True,
@@ -179,7 +203,11 @@ class FeatureImportanceResult:
     correlation_with_target: Optional[float] = None
     recommendation: Optional[str] = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(
+        self,
+    ) -> Dict[
+        str, Union[str, int, float, List[str], Dict[str, float], Optional[float], Optional[str]]
+    ]:
         """Convert to dictionary."""
         return {
             "feature_name": self.feature_name,
@@ -209,7 +237,26 @@ class ComprehensiveImportanceReport:
     methods_used: List[str]
     analysis_time_seconds: float
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(
+        self,
+    ) -> Dict[
+        str,
+        Union[
+            str,
+            int,
+            List[str],
+            List[Dict[str, Union[str, float]]],
+            float,
+            List[
+                Dict[
+                    str,
+                    Union[
+                        str, int, float, List[str], Dict[str, float], Optional[float], Optional[str]
+                    ],
+                ]
+            ],
+        ],
+    ]:
         """Convert to dictionary."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -241,7 +288,7 @@ class SHAPAnalyzer:
     - Neural networks (PyTorch, TensorFlow)
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[Dict[str, Union[str, int, float, bool]]] = None):
         """
         Inicializar analizador SHAP.
 
@@ -258,11 +305,11 @@ class SHAPAnalyzer:
 
     def explain_model(
         self,
-        model: Any,
-        X: np.ndarray,
+        model: ModelType,
+        X: FloatArray,
         feature_names: Optional[List[str]] = None,
         model_type: str = "auto",
-    ) -> Dict[str, Any]:
+    ) -> Dict[str, Union[str, float, List[str], Dict[str, float], FloatArray, Optional[List[str]]]]:
         """
         Explicar modelo usando SHAP values.
 
@@ -354,7 +401,7 @@ class SHAPAnalyzer:
             logger.error(f"Error calculando SHAP values: {e}", exc_info=True)
             return {'error': str(e), 'error_type': type(e).__name__}
 
-    def _create_explainer(self, model: Any, X: np.ndarray, model_type: str) -> Any:
+    def _create_explainer(self, model: ModelType, X: FloatArray, model_type: str) -> ExplainerType:
         """
         Crear explainer SHAP apropiado para el modelo.
 
@@ -394,7 +441,7 @@ class SHAPAnalyzer:
             # Fallback genérico
             return shap.KernelExplainer(model.predict, background)
 
-    def _detect_model_type(self, model: Any) -> str:
+    def _detect_model_type(self, model: ModelType) -> str:
         """
         Detectar tipo de modelo automáticamente.
 
@@ -417,11 +464,11 @@ class SHAPAnalyzer:
 
     def explain_prediction(
         self,
-        model: Any,
-        X: np.ndarray,
+        model: ModelType,
+        X: FloatArray,
         instance_idx: int,
         feature_names: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+    ) -> Dict[str, Union[str, Dict[str, float], List[Tuple[str, float]]]]:
         """
         Explicar una predicción individual.
 
@@ -485,7 +532,7 @@ class AttentionWeightsAnalyzer:
     de la secuencia temporal son más importantes.
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[Dict[str, Union[str, bool]]] = None):
         """
         Inicializar analizador de attention weights.
 
@@ -497,8 +544,8 @@ class AttentionWeightsAnalyzer:
         self.normalize = config.get("normalize", True)
 
     def extract_attention_weights(
-        self, model: Any, sequence: np.ndarray, layer_idx: Optional[int] = None
-    ) -> Dict[str, Any]:
+        self, model: ModelType, sequence: FloatArray, layer_idx: Optional[int] = None
+    ) -> Dict[str, Union[str, Optional[FloatArray], FloatArray, Dict[int, float], List[int], int]]:
         """
         Extraer attention weights de un modelo Transformer.
 
@@ -532,7 +579,6 @@ class AttentionWeightsAnalyzer:
                 sequence_tensor = sequence
 
             # Obtener attention weights - returns None or np.ndarray
-            # pylint: disable=assignment-from-none
             # This is a placeholder implementation that will be extended
             attention_weights = self._get_attention_from_model(model, sequence_tensor, layer_idx)
 
@@ -550,8 +596,7 @@ class AttentionWeightsAnalyzer:
                     'attention_weights': attention_weights,
                 }
 
-            # pylint: disable=unsubscriptable-object
-            # We've verified attention_weights has __getitem__ above
+            # We've verified attention_weights has __getitem__ above via hasattr check
             if self.aggregation_method == "mean":
                 aggregated = np.mean(attention_weights, axis=(0, 1))  # Promediar heads y layers
             elif self.aggregation_method == "max":
@@ -587,8 +632,8 @@ class AttentionWeightsAnalyzer:
             return {'error': str(e)}
 
     def _get_attention_from_model(
-        self, model: Any, sequence: Any, layer_idx: Optional[int] = None
-    ) -> Optional[np.ndarray]:
+        self, model: ModelType, sequence: Union[FloatArray, object], layer_idx: Optional[int] = None
+    ) -> Optional[FloatArray]:
         """
         Extraer attention weights del modelo.
 
@@ -647,7 +692,7 @@ class FeatureSelector:
     - Model-based selection (SelectFromModel)
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[Dict[str, Union[str, int, float, bool]]] = None):
         """
         Inicializar selector de features.
 
@@ -665,12 +710,12 @@ class FeatureSelector:
 
     def select_features(
         self,
-        X: np.ndarray,
-        y: np.ndarray,
+        X: FloatArray,
+        y: FloatArray,
         feature_names: Optional[List[str]] = None,
-        model: Optional[Any] = None,
+        model: Optional[ModelType] = None,
         task_type: str = "classification",  # classification o regression
-    ) -> Dict[str, Any]:
+    ) -> Dict[str, Union[str, List[int], List[str], Dict[str, float], int, SelectorType]]:
         """
         Seleccionar features más importantes.
 
@@ -765,8 +810,8 @@ class FeatureSelector:
             }
 
     def _univariate_selection(
-        self, X: np.ndarray, y: np.ndarray, n_features: int, task_type: str
-    ) -> Tuple[Any, np.ndarray]:
+        self, X: FloatArray, y: FloatArray, n_features: int, task_type: str
+    ) -> Tuple[SelectorType, FloatArray]:
         """Selección univariante usando SelectKBest."""
         if task_type == "classification":
             score_func = f_classif
@@ -780,8 +825,13 @@ class FeatureSelector:
         return selector, scores
 
     def _rfe_selection(
-        self, X: np.ndarray, y: np.ndarray, n_features: int, model: Optional[Any], task_type: str
-    ) -> Tuple[Any, Optional[np.ndarray]]:
+        self,
+        X: FloatArray,
+        y: FloatArray,
+        n_features: int,
+        model: Optional[ModelType],
+        task_type: str,
+    ) -> Tuple[SelectorType, Optional[FloatArray]]:
         """Recursive Feature Elimination."""
         # Crear modelo base si no se proporciona
         if model is None:
@@ -798,8 +848,8 @@ class FeatureSelector:
         return selector, scores
 
     def _model_based_selection(
-        self, X: np.ndarray, y: np.ndarray, model: Optional[Any], task_type: str
-    ) -> Tuple[Any, Optional[np.ndarray]]:
+        self, X: FloatArray, y: FloatArray, model: Optional[ModelType], task_type: str
+    ) -> Tuple[SelectorType, Optional[FloatArray]]:
         """Selección basada en importancia del modelo."""
         # Crear modelo base si no se proporciona
         if model is None:
@@ -839,7 +889,12 @@ class FeatureImportanceAnalyzer:
     Combina SHAP, attention weights y feature selection.
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(
+        self,
+        config: Optional[
+            Dict[str, Union[str, int, float, bool, Dict[str, Union[str, int, float, bool]]]]
+        ] = None,
+    ):
         """
         Inicializar analizador unificado.
 
@@ -853,15 +908,15 @@ class FeatureImportanceAnalyzer:
 
     def analyze(
         self,
-        model: Any,
-        X: np.ndarray,
-        y: Optional[np.ndarray] = None,
+        model: ModelType,
+        X: FloatArray,
+        y: Optional[FloatArray] = None,
         feature_names: Optional[List[str]] = None,
         model_type: str = "auto",
         include_shap: bool = True,
         include_attention: bool = False,
         include_selection: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> Dict[str, Union[List[str], Optional[Dict[str, object]], Dict[str, float]]]:
         """
         Análisis completo de importancia de features.
 
@@ -947,7 +1002,7 @@ class PermutationImportanceAnalyzer:
     the decrease in model performance. Works with any model.
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[Dict[str, Union[str, int, float, bool]]] = None):
         """
         Initialize permutation importance analyzer.
 
@@ -963,12 +1018,22 @@ class PermutationImportanceAnalyzer:
 
     def calculate_importance(
         self,
-        model: Any,
-        X: np.ndarray,
-        y: np.ndarray,
+        model: ModelType,
+        X: FloatArray,
+        y: FloatArray,
         feature_names: Optional[List[str]] = None,
         scoring: Optional[str] = None,
-    ) -> Dict[str, Any]:
+    ) -> Dict[
+        str,
+        Union[
+            str,
+            Dict[str, float],
+            Dict[str, Dict[str, float]],
+            List[Tuple[str, float]],
+            List[str],
+            int,
+        ],
+    ]:
         """
         Calculate permutation importance for all features.
 
@@ -1057,11 +1122,11 @@ class PermutationImportanceAnalyzer:
 
     def _fallback_permutation_importance(
         self,
-        model: Any,
-        X: np.ndarray,
-        y: np.ndarray,
+        model: ModelType,
+        X: FloatArray,
+        y: FloatArray,
         feature_names: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+    ) -> Dict[str, Union[str, Dict[str, float], List[Tuple[str, float]]]]:
         """
         Fallback implementation without sklearn.inspection.
 
@@ -1145,7 +1210,7 @@ class BuiltInImportanceAnalyzer:
     - CatBoost
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[Dict[str, Union[str, int, float, bool]]] = None):
         """
         Initialize built-in importance analyzer.
 
@@ -1157,9 +1222,9 @@ class BuiltInImportanceAnalyzer:
 
     def calculate_importance(
         self,
-        model: Any,
+        model: ModelType,
         feature_names: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+    ) -> Dict[str, Union[str, bool, Dict[str, float], List[Tuple[str, float]], List[str]]]:
         """
         Extract feature importance from model.
 
@@ -1214,7 +1279,7 @@ class BuiltInImportanceAnalyzer:
             logger.error(f"Error extracting built-in importance: {e}")
             return {"error": str(e), "supported": False}
 
-    def get_importance_type(self, model: Any) -> str:
+    def get_importance_type(self, model: ModelType) -> str:
         """
         Determine the type of importance for this model.
 
@@ -1253,7 +1318,7 @@ class CorrelationAnalyzer:
     - Mutual information
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[Dict[str, Union[str, int, float, bool]]] = None):
         """
         Initialize correlation analyzer.
 
@@ -1269,10 +1334,20 @@ class CorrelationAnalyzer:
 
     def analyze(
         self,
-        X: np.ndarray,
-        y: np.ndarray,
+        X: FloatArray,
+        y: FloatArray,
         feature_names: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+    ) -> Dict[
+        str,
+        Union[
+            str,
+            Dict[str, float],
+            List[str],
+            List[Tuple[str, str, float]],
+            Dict[str, Dict[str, float]],
+            Optional[Dict[str, Dict[str, float]]],
+        ],
+    ]:
         """
         Perform comprehensive correlation analysis.
 
@@ -1334,8 +1409,8 @@ class CorrelationAnalyzer:
 
     def _calculate_target_correlations(
         self,
-        X: np.ndarray,
-        y: np.ndarray,
+        X: FloatArray,
+        y: FloatArray,
         feature_names: List[str],
     ) -> Dict[str, float]:
         """Calculate correlations between features and target."""
@@ -1360,7 +1435,7 @@ class CorrelationAnalyzer:
 
     def _calculate_feature_correlations(
         self,
-        X: np.ndarray,
+        X: FloatArray,
         feature_names: List[str],
     ) -> Tuple[Dict[str, Dict[str, float]], List[Tuple[str, str, float]]]:
         """Calculate feature-feature correlations and identify highly correlated pairs."""
@@ -1398,8 +1473,8 @@ class CorrelationAnalyzer:
 
     def _calculate_mutual_information(
         self,
-        X: np.ndarray,
-        y: np.ndarray,
+        X: FloatArray,
+        y: FloatArray,
         feature_names: List[str],
     ) -> Dict[str, float]:
         """Calculate mutual information between features and target."""
@@ -1435,7 +1510,7 @@ class FeatureStabilityTracker:
     - Trend detection (increasing/decreasing importance)
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[Dict[str, Union[str, int, float, bool]]] = None):
         """
         Initialize stability tracker.
 
@@ -1481,7 +1556,9 @@ class FeatureStabilityTracker:
             self._rank_history.pop(0)
             self._timestamps.pop(0)
 
-    def analyze_stability(self) -> Dict[str, Any]:
+    def analyze_stability(
+        self,
+    ) -> Dict[str, Union[str, int, Dict[str, Dict[str, Union[float, bool, str, int]]], List[str]]]:
         """
         Analyze feature importance stability.
 
@@ -1632,7 +1709,12 @@ class ComprehensiveFeatureAnalyzer:
     - Feature selection recommendations
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self,
+        config: Optional[
+            Dict[str, Union[str, int, float, bool, Dict[str, Union[str, int, float, bool]]]]
+        ] = None,
+    ):
         """
         Initialize comprehensive analyzer.
 
@@ -1659,9 +1741,9 @@ class ComprehensiveFeatureAnalyzer:
 
     def analyze(
         self,
-        model: Any,
-        X: np.ndarray,
-        y: Optional[np.ndarray] = None,
+        model: ModelType,
+        X: FloatArray,
+        y: Optional[FloatArray] = None,
         feature_names: Optional[List[str]] = None,
         include_shap: bool = True,
         include_permutation: bool = True,
@@ -1827,8 +1909,22 @@ class ComprehensiveFeatureAnalyzer:
         self,
         combined_importance: Dict[str, float],
         all_importances: Dict[str, Dict[str, float]],
-        correlation_result: Optional[Dict[str, Any]],
-        stability_result: Dict[str, Any],
+        correlation_result: Optional[
+            Dict[
+                str,
+                Union[
+                    str,
+                    Dict[str, float],
+                    List[str],
+                    List[Tuple[str, str, float]],
+                    Dict[str, Dict[str, float]],
+                    Optional[Dict[str, Dict[str, float]]],
+                ],
+            ]
+        ],
+        stability_result: Dict[
+            str, Union[str, int, Dict[str, Dict[str, Union[float, bool, str, int]]], List[str]]
+        ],
         feature_names: List[str],
     ) -> List[FeatureImportanceResult]:
         """Create FeatureImportanceResult for each feature."""
@@ -1931,7 +2027,9 @@ class ComprehensiveFeatureAnalyzer:
         self,
         feature_results: List[FeatureImportanceResult],
         highly_correlated: List[Tuple[str, str, float]],
-        stability_result: Dict[str, Any],
+        stability_result: Dict[
+            str, Union[str, int, Dict[str, Dict[str, Union[float, bool, str, int]]], List[str]]
+        ],
     ) -> List[str]:
         """Generate overall recommendations."""
         recommendations = []

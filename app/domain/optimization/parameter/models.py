@@ -90,7 +90,7 @@ class ParameterRange:
                 "parameter_name": self.name,
                 "parameter_type": self.parameter_type.value,
                 "scale": self.scale.value,
-            }
+            },
         )
 
         # Auto-detect parameter type if not specified
@@ -100,21 +100,20 @@ class ParameterRange:
                     self.parameter_type = ParameterType.CATEGORICAL
                     logger.debug(
                         f"Auto-detected parameter type as {ParameterType.CATEGORICAL.value}",
-                        extra={"parameter_name": self.name}
+                        extra={"parameter_name": self.name},
                     )
                 elif all(isinstance(v, int) for v in self.values):
                     self.parameter_type = ParameterType.DISCRETE
                     logger.debug(
                         f"Auto-detected parameter type as {ParameterType.DISCRETE.value}",
-                        extra={"parameter_name": self.name}
+                        extra={"parameter_name": self.name},
                     )
 
         # Validate based on type
         if self.parameter_type == ParameterType.CATEGORICAL:
             if not self.values:
                 logger.error(
-                    "Categorical parameter missing values",
-                    extra={"parameter_name": self.name}
+                    "Categorical parameter missing values", extra={"parameter_name": self.name}
                 )
                 raise ValueError(f"Categorical parameter '{self.name}' must have values")
 
@@ -125,7 +124,7 @@ class ParameterRange:
                     extra={
                         "parameter_name": self.name,
                         "parameter_type": self.parameter_type.value,
-                    }
+                    },
                 )
                 raise ValueError(
                     f"Parameter '{self.name}' of type {self.parameter_type} "
@@ -138,7 +137,7 @@ class ParameterRange:
                         "parameter_name": self.name,
                         "min_value": float(self.min_value),
                         "max_value": float(self.max_value),
-                    }
+                    },
                 )
                 raise ValueError(
                     f"Parameter '{self.name}': min_value ({self.min_value}) "
@@ -150,7 +149,7 @@ class ParameterRange:
                     extra={
                         "parameter_name": self.name,
                         "min_value": float(self.min_value),
-                    }
+                    },
                 )
                 raise ValueError(f"Parameter '{self.name}': log scale requires positive min_value")
 
@@ -159,7 +158,7 @@ class ParameterRange:
             extra={
                 "parameter_name": self.name,
                 "parameter_type": self.parameter_type.value,
-            }
+            },
         )
 
     def sample(self) -> Any:
@@ -179,22 +178,21 @@ class ParameterRange:
             extra={
                 "parameter_name": self.name,
                 "parameter_type": self.parameter_type.value,
-            }
+            },
         )
 
         if self.parameter_type == ParameterType.CATEGORICAL:
             value = random.choice(self.values)  # type: ignore
             logger.debug(
                 "Sampled categorical value",
-                extra={"parameter_name": self.name, "value": str(value)}
+                extra={"parameter_name": self.name, "value": str(value)},
             )
             return value
 
         elif self.parameter_type == ParameterType.DISCRETE:
             value = random.choice(self.values)  # type: ignore
             logger.debug(
-                "Sampled discrete value",
-                extra={"parameter_name": self.name, "value": str(value)}
+                "Sampled discrete value", extra={"parameter_name": self.name, "value": str(value)}
             )
             return value
 
@@ -211,8 +209,7 @@ class ParameterRange:
                 value = min_val + random_step * step
 
             logger.debug(
-                "Sampled integer value",
-                extra={"parameter_name": self.name, "value": value}
+                "Sampled integer value", extra={"parameter_name": self.name, "value": value}
             )
             return value
 
@@ -229,8 +226,7 @@ class ParameterRange:
                 value = random.uniform(min_val, max_val)
 
             logger.debug(
-                "Sampled continuous value",
-                extra={"parameter_name": self.name, "value": value}
+                "Sampled continuous value", extra={"parameter_name": self.name, "value": value}
             )
             return value
 
@@ -239,7 +235,7 @@ class ParameterRange:
             extra={
                 "parameter_name": self.name,
                 "parameter_type": self.parameter_type.value,
-            }
+            },
         )
         raise ValueError(f"Cannot sample parameter '{self.name}' of type {self.parameter_type}")
 
@@ -374,7 +370,7 @@ class ParameterConstraint:
                         "constraint_name": self.name,
                         "description": self.description,
                         "params": {k: str(v) for k, v in params.items()},
-                    }
+                    },
                 )
             return result
         except Exception as e:
@@ -384,7 +380,7 @@ class ParameterConstraint:
                     "constraint_name": self.name,
                     "error_type": type(e).__name__,
                     "error_message": str(e),
-                }
+                },
             )
             return False
 
@@ -418,10 +414,7 @@ class ParameterGrid:
 
     def __post_init__(self):
         """Validate parameter grid."""
-        logger.debug(
-            "Initializing parameter grid",
-            extra={"parameter_count": len(self.parameters)}
-        )
+        logger.debug("Initializing parameter grid", extra={"parameter_count": len(self.parameters)})
 
         if not self.parameters:
             logger.error("Parameter grid has no parameters")
@@ -430,10 +423,7 @@ class ParameterGrid:
         # Check for duplicate parameter names
         names = [p.name for p in self.parameters]
         if len(names) != len(set(names)):
-            logger.error(
-                "Duplicate parameter names found",
-                extra={"parameter_names": names}
-            )
+            logger.error("Duplicate parameter names found", extra={"parameter_names": names})
             raise ValueError("Duplicate parameter names in ParameterGrid")
 
         logger.info(
@@ -442,7 +432,7 @@ class ParameterGrid:
                 "parameter_count": len(self.parameters),
                 "constraint_count": len(self.constraints),
                 "parameter_names": names,
-            }
+            },
         )
 
     def generate_combinations(self) -> List[Dict[str, Any]]:
@@ -456,7 +446,7 @@ class ParameterGrid:
 
         logger.debug(
             "Generating parameter combinations for grid search",
-            extra={"parameter_count": len(self.parameters)}
+            extra={"parameter_count": len(self.parameters)},
         )
 
         grid_values = [p.get_grid_values() for p in self.parameters]
@@ -474,7 +464,7 @@ class ParameterGrid:
             extra={
                 "total_combinations": len(combinations),
                 "parameter_count": len(self.parameters),
-            }
+            },
         )
 
         return combinations
@@ -486,10 +476,7 @@ class ParameterGrid:
         Returns:
             Random parameter dictionary
         """
-        logger.debug(
-            "Sampling random parameter combination",
-            extra={"max_attempts": 100}
-        )
+        logger.debug("Sampling random parameter combination", extra={"max_attempts": 100})
 
         max_attempts = 100
         for attempt in range(max_attempts):
@@ -500,14 +487,14 @@ class ParameterGrid:
                     extra={
                         "attempt": attempt + 1,
                         "params": {k: str(v) for k, v in params.items()},
-                    }
+                    },
                 )
                 return params
 
         # If no valid combination found after many attempts, return without constraints
         logger.warning(
             "Failed to find valid parameter combination after max attempts",
-            extra={"max_attempts": max_attempts}
+            extra={"max_attempts": max_attempts},
         )
         return {p.name: p.sample() for p in self.parameters}
 

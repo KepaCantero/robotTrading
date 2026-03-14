@@ -110,7 +110,9 @@ class Portfolio:
     # Optional logger for audit logging
     _audit_logger: Optional[logging.Logger] = field(default=None, repr=False, compare=False)
     # Optional config provider for dynamic configuration access
-    _config_provider: Optional[TradingConfigProvider] = field(default=None, repr=False, compare=False)
+    _config_provider: Optional[TradingConfigProvider] = field(
+        default=None, repr=False, compare=False
+    )
 
     def __post_init__(self):
         """Validate portfolio invariants."""

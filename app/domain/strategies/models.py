@@ -632,7 +632,10 @@ class FactorPortfolio(BaseModel):
         """Calculate Herfindahl-Hirschman Index (concentration measure)."""
         if not self.positions:
             return Decimal("0")
-        hhi = sum(pos.weight**2 for pos in self.positions)
+        # Calculate sum of squared weights
+        hhi = Decimal("0")
+        for pos in self.positions:
+            hhi += pos.weight**2
         return hhi
 
 
@@ -900,6 +903,34 @@ class LowVolatilityStock:
     is_defensive_sector: bool = False
 
 
+@dataclass
+class LowVolatilityStockResult:
+    """Low volatility stock with decision information."""
+
+    profile: LowVolatilityProfile
+    decision_score: Decimal
+    decision_reason: str
+    recommendation: str
+
+
+@dataclass
+class LowVolatilityScreeningResult:
+    """Result of low volatility stock screening operation."""
+
+    passed_stocks: List[LowVolatilityStockResult]
+    failed_stocks: Dict[str, List[str]]
+    total_evaluated: int
+    screening_time_ms: float
+    criteria: "LowVolatilityScreeningCriteria"
+
+    @property
+    def pass_rate(self) -> float:
+        """Calculate the percentage of stocks that passed screening."""
+        if self.total_evaluated == 0:
+            return 0.0
+        return (len(self.passed_stocks) / self.total_evaluated) * 100.0
+
+
 class LowVolatilityStrategyConfig(BaseModel):
     """Configuration for low volatility strategy."""
 
@@ -1086,3 +1117,193 @@ class ScreeningResult:
     score: Decimal
     reasons: List[str]
     details: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class DividendStockResult:
+    """Dividend stock with decision information."""
+
+    profile: DividendProfile
+    decision_score: Decimal
+    decision_reason: str
+    recommendation: str
+
+
+@dataclass
+class DividendScreeningResult:
+    """Result of dividend stock screening operation."""
+
+    passed_stocks: List[DividendStockResult]
+    failed_stocks: Dict[str, List[str]]
+    total_evaluated: int
+    screening_time_ms: float
+    criteria: DividendScreeningCriteria
+
+    @property
+    def pass_rate(self) -> float:
+        """Calculate the percentage of stocks that passed screening."""
+        if self.total_evaluated == 0:
+            return 0.0
+        return (len(self.passed_stocks) / self.total_evaluated) * 100.0
+
+
+# =============================================================================
+# OPTION STRATEGY MODELS
+# =============================================================================
+
+
+class Moneyness(str, Enum):
+    """Option moneyness classification."""
+
+    ITM = "in_the_money"  # In-the-money
+    ATM = "at_the_money"  # At-the-money
+    OTM = "out_of_the_money"  # Out-of-the-money
+    DEEP_ITM = "deep_in_the_money"  # Deep in-the-money
+    DEEP_OTM = "deep_out_of_the_money"  # Deep out-of-the-money
+
+
+class AssignmentProbability(str, Enum):
+    """Probability of option assignment."""
+
+    VERY_LOW = "very_low"  # < 10%
+    LOW = "low"  # 10-25%
+    MODERATE = "moderate"  # 25-50%
+    HIGH = "high"  # 50-75%
+    VERY_HIGH = "very_high"  # > 75%
+
+
+@dataclass
+class OptionGreeks:
+    """Option Greeks (sensitivities)."""
+
+    delta: Decimal  # Price sensitivity to underlying
+    gamma: Decimal  # Delta sensitivity to underlying
+    theta: Decimal  # Price sensitivity to time (daily decay)
+    vega: Decimal  # Price sensitivity to volatility
+    rho: Decimal = Decimal("0")  # Price sensitivity to interest rate
+
+
+@dataclass
+class CallOption:
+    """Call option data for covered call screening."""
+
+    # Basic option data
+    symbol: str  # Underlying symbol
+    option_symbol: Optional[str]  # Option ticker/symbol
+    strike: Decimal  # Strike price
+    expiry: datetime  # Expiration date
+    option_type: str = "call"  # Option type (call/put)
+
+    # Price data
+    bid: Optional[Decimal] = None  # Bid price
+    ask: Optional[Decimal] = None  # Ask price
+    last_price: Optional[Decimal] = None  # Last trade price
+    mid_price: Optional[Decimal] = None  # Mid price (bid+ask)/2
+
+    # Greeks and metrics
+    implied_volatility: Optional[Decimal] = None  # Implied volatility
+    delta: Optional[Decimal] = None  # Option delta
+    gamma: Optional[Decimal] = None  # Option gamma
+    theta: Optional[Decimal] = None  # Option theta
+    vega: Optional[Decimal] = None  # Option vega
+
+    # Liquidity metrics
+    volume: Optional[int] = None  # Trading volume
+    open_interest: Optional[int] = None  # Open interest
+
+    # Calculated fields
+    days_to_expiry: int = 0  # Days until expiration
+    underlying_price: Optional[Decimal] = None  # Current underlying price
+    moneyness: Moneyness = Moneyness.ATM  # Moneyness classification
+    intrinsic_value: Optional[Decimal] = None  # Intrinsic value
+    time_value: Optional[Decimal] = None  # Time value
+    metadata: Dict[str, Any] = field(default_factory=dict)  # Additional metadata
+
+    def __post_init__(self):
+        """Calculate derived fields after initialization."""
+        # Calculate days to expiry
+        if self.expiry:
+            time_diff = self.expiry - datetime.utcnow()
+            self.days_to_expiry = max(0, time_diff.days)
+
+        # Calculate mid price if not provided
+        if self.mid_price is None and self.bid is not None and self.ask is not None:
+            self.mid_price = (self.bid + self.ask) / Decimal("2")
+
+        # Calculate moneyness
+        if self.underlying_price is not None:
+            moneyness_ratio = self.strike / self.underlying_price
+            if moneyness_ratio < Decimal("0.95"):
+                self.moneyness = Moneyness.DEEP_ITM
+            elif moneyness_ratio < Decimal("0.98"):
+                self.moneyness = Moneyness.ITM
+            elif moneyness_ratio <= Decimal("1.02"):
+                self.moneyness = Moneyness.ATM
+            elif moneyness_ratio <= Decimal("1.05"):
+                self.moneyness = Moneyness.OTM
+            else:
+                self.moneyness = Moneyness.DEEP_OTM
+
+            # Calculate intrinsic value for call
+            intrinsic = max(Decimal("0"), self.underlying_price - self.strike)
+            self.intrinsic_value = intrinsic
+
+            # Calculate time value
+            if self.mid_price is not None:
+                self.time_value = max(Decimal("0"), self.mid_price - intrinsic)
+
+
+@dataclass
+class OptionScreeningCriteria:
+    """Screening criteria for covered call options."""
+
+    # Days to expiry
+    min_days_to_expiry: int = 30
+    max_days_to_expiry: int = 45
+
+    # Moneyness (as decimal, e.g., 0.02 = 2% OTM)
+    min_moneyness: Decimal = Decimal("0.02")  # 2% OTM minimum
+    max_moneyness: Decimal = Decimal("0.05")  # 5% OTM maximum
+
+    # Premium
+    min_premium: Decimal = Decimal("0.01")  # Minimum 1% premium
+
+    # Liquidity
+    min_open_interest: int = 100  # Minimum open interest
+    min_volume: int = 10  # Minimum daily volume
+
+    # Greeks (optional)
+    target_delta: Optional[Decimal] = None  # Target delta (e.g., 0.30)
+    max_theta_decay: Optional[Decimal] = None  # Maximum theta decay
+
+    # Risk management
+    avoid_earnings: bool = True  # Avoid options before earnings
+    avoid_events: bool = True  # Avoid options before major events
+
+
+@dataclass
+class OptionScreenerResult:
+    """Result of option screening operation."""
+
+    symbol: str  # Underlying symbol
+    underlying_price: Decimal  # Current price
+    options_passed: List[CallOption]  # Options that passed screening
+    options_failed: Dict[str, List[str]]  # Options that failed with reasons
+    total_evaluated: int  # Total options evaluated
+    screening_time_ms: float  # Screening time in milliseconds
+    criteria: OptionScreeningCriteria  # Criteria used for screening
+
+    @property
+    def pass_rate(self) -> float:
+        """Calculate the percentage of options that passed screening."""
+        if self.total_evaluated == 0:
+            return 0.0
+        return (len(self.options_passed) / self.total_evaluated) * 100.0
+
+    @property
+    def best_option(self) -> Optional[CallOption]:
+        """Get the best option from passed options."""
+        if not self.options_passed:
+            return None
+        # Return option with highest premium (could use other criteria)
+        return max(self.options_passed, key=lambda opt: opt.mid_price or Decimal("0"))

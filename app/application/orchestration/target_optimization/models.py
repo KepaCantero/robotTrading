@@ -87,7 +87,10 @@ class StrategyFeatures(BaseModel):
     def enabled_modules(self) -> List[str]:
         """Return list of enabled module names."""
         modules = [k for k, v in self.dict().items() if v]
-        logger.debug("Getting enabled strategy modules", extra={"enabled_modules": modules, "total_count": len(modules)})
+        logger.debug(
+            "Getting enabled strategy modules",
+            extra={"enabled_modules": modules, "total_count": len(modules)},
+        )
         return modules
 
 
@@ -142,8 +145,8 @@ class AbsoluteReturnTarget(BaseModel):
                 "target_monthly_euros": float(self.target_euros_monthly),
                 "annual_target_euros": float(annual_target),
                 "capital": float(self.capital),
-                "annual_return_pct": float(result)
-            }
+                "annual_return_pct": float(result),
+            },
         )
         return result
 
@@ -158,8 +161,8 @@ class AbsoluteReturnTarget(BaseModel):
             extra={
                 "target_monthly_euros": float(self.target_euros_monthly),
                 "monthly_total_cost": float(monthly_total_cost),
-                "required_alpha_monthly": float(result)
-            }
+                "required_alpha_monthly": float(result),
+            },
         )
         return result
 

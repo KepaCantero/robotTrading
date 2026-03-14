@@ -48,6 +48,7 @@ except ImportError:
             "statsmodels not installed - ADF test not available. "
             "Install statsmodels for cointegration testing: pip install statsmodels",
             ImportWarning,
+            stacklevel=2,
         )
         # Return p-value of 1.0 (fail to reject null hypothesis of non-stationarity)
         return (None, 1.0, None, None, None, None, None)

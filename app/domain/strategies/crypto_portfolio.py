@@ -12,22 +12,121 @@ momentum strategies, with specific considerations for crypto markets:
 """
 
 import logging
+from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Dict, List, Optional
+from enum import Enum
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 
-from .models import (
-    CryptoAsset,
-    CryptoAssetType,
-    CryptoMomentumConfig,
-    CryptoMomentumScore,
-    CryptoPortfolio,
-    CryptoPosition,
-)
-
 logger = logging.getLogger(__name__)
+
+
+class CryptoAssetType(str, Enum):
+    """Types of crypto assets."""
+
+    BITCOIN = "bitcoin"
+    ETHEREUM = "ethereum"
+    ALTCOIN = "altcoin"
+    STABLECOIN = "stablecoin"
+
+
+@dataclass
+class CryptoAsset:
+    """Represents a cryptocurrency asset."""
+
+    symbol: str
+    name: str
+    asset_type: CryptoAssetType
+    current_price: Decimal
+    market_cap: Optional[Decimal] = None
+    volume_24h: Optional[Decimal] = None
+    volatility_30d: Optional[Decimal] = None
+    volatility_90d: Optional[Decimal] = None
+    liquidity_score: Decimal = Decimal("100")  # Default to full liquidity
+
+
+@dataclass
+class CryptoMomentumScore:
+    """Momentum score for a crypto asset."""
+
+    symbol: str
+    score: Decimal
+    price_momentum: Decimal = Decimal("0")
+    volume_momentum: Decimal = Decimal("0")
+    timestamp: Optional[datetime] = None
+
+    @property
+    def final_score(self) -> Decimal:
+        """Get the final combined score."""
+        return self.score
+
+
+@dataclass
+class CryptoMomentumConfig:
+    """Configuration for crypto momentum strategy."""
+
+    btc_weight: Decimal = Decimal("0.5")
+    portfolio_size: int = 10
+    rebalance_threshold: Decimal = Decimal("0.05")
+    max_position_weight: Decimal = Decimal("0.15")
+    max_position_size: Decimal = Decimal("0.15")  # Alias for compatibility
+    min_momentum_score: Decimal = Decimal("0")
+
+
+@dataclass
+class CryptoPosition:
+    """Represents a position in a crypto asset."""
+
+    symbol: str
+    quantity: Decimal
+    entry_price: Decimal
+    current_price: Decimal
+    value: Decimal
+    weight: Decimal
+    entry_date: Optional[date] = None
+
+    @property
+    def unrealized_pnl(self) -> Decimal:
+        """Calculate unrealized PnL."""
+        return (self.current_price - self.entry_price) * self.quantity
+
+    @property
+    def unrealized_pnl_pct(self) -> Decimal:
+        """Calculate unrealized PnL percentage."""
+        if self.entry_price == 0:
+            return Decimal("0")
+        return (self.current_price - self.entry_price) / self.entry_price
+
+
+@dataclass
+class CryptoPortfolio:
+    """Represents a crypto portfolio."""
+
+    positions: List[CryptoPosition]
+    total_value: Decimal
+    cash: Decimal
+    btc_weight: Decimal
+    altcoin_weight: Decimal
+    last_rebalance: Optional[date] = None
+    rebalance_threshold: Decimal = Decimal("0.05")
+    expected_volatility: Optional[Decimal] = None
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def btc_position(self) -> Optional[CryptoPosition]:
+        """Get BTC position if exists."""
+        for pos in self.positions:
+            if pos.symbol == "BTC":
+                return pos
+        return None
+
+    @property
+    def invested_value(self) -> Decimal:
+        """Get total invested value."""
+        total = sum(pos.value for pos in self.positions)
+        return Decimal(str(total)) if total else Decimal("0")
 
 
 class CryptoPortfolioConstructor:

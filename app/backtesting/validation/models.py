@@ -27,8 +27,6 @@ except ImportError:
     # Fallback to standard library
     PYDANTIC_AVAILABLE = False
 
-    from dataclasses import field
-
 
 class OverfittingLevel(str, Enum):
     """Severity levels for overfitting detection."""

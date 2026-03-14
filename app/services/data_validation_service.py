@@ -9,7 +9,6 @@ Provides comprehensive data quality checks for market data before backtesting:
 """
 
 import logging
-
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal

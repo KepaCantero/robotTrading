@@ -20,5 +20,5 @@ logger.debug(
         "component": "providers",
         "operation": "module_init",
         "exports": __all__,
-    }
+    },
 )

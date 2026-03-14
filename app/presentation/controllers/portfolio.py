@@ -103,13 +103,17 @@ async def get_portfolio_summary(
         summary = service.get_portfolio_summary(portfolio)
         logger.info(
             "Portfolio summary retrieved",
-            extra={"total_equity": float(portfolio.total_equity) if hasattr(portfolio, 'total_equity') else None}
+            extra={
+                "total_equity": float(portfolio.total_equity)
+                if hasattr(portfolio, 'total_equity')
+                else None
+            },
         )
         return summary
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         logger.error(
             "Error getting portfolio summary",
-            extra={"error_type": type(e).__name__, "error_message": str(e)}
+            extra={"error_type": type(e).__name__, "error_message": str(e)},
         )
         raise HTTPException(
             status_code=DEFAULT_VALUE_500, detail=f"Error getting portfolio: {str(e)}"
@@ -176,7 +180,7 @@ async def get_position(
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         logger.error(
             "Error getting position",
-            extra={"symbol": symbol, "error_type": type(e).__name__, "error_message": str(e)}
+            extra={"symbol": symbol, "error_type": type(e).__name__, "error_message": str(e)},
         )
         raise HTTPException(
             status_code=DEFAULT_VALUE_500, detail=f"Error getting position: {str(e)}"
@@ -260,7 +264,11 @@ async def simulate_trade(
     """
     logger.info(
         "simulate_trade called",
-        extra={"symbol": trade_request.symbol, "quantity": trade_request.quantity, "price": trade_request.price}
+        extra={
+            "symbol": trade_request.symbol,
+            "quantity": trade_request.quantity,
+            "price": trade_request.price,
+        },
     )
     try:
         quantity = Decimal(str(trade_request.quantity))
@@ -271,7 +279,7 @@ async def simulate_trade(
         if success:
             logger.info(
                 "Trade simulated successfully",
-                extra={"symbol": trade_request.symbol, "quantity": trade_request.quantity}
+                extra={"symbol": trade_request.symbol, "quantity": trade_request.quantity},
             )
             return TradeResponse(
                 success=True,
@@ -283,7 +291,7 @@ async def simulate_trade(
         else:
             logger.warning(
                 "Trade simulation failed",
-                extra={"symbol": trade_request.symbol, "quantity": trade_request.quantity}
+                extra={"symbol": trade_request.symbol, "quantity": trade_request.quantity},
             )
             return TradeResponse(
                 success=False,
@@ -296,7 +304,11 @@ async def simulate_trade(
     except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
         logger.error(
             "Error simulating trade",
-            extra={"symbol": trade_request.symbol, "error_type": type(e).__name__, "error_message": str(e)}
+            extra={
+                "symbol": trade_request.symbol,
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+            },
         )
         raise HTTPException(
             status_code=DEFAULT_VALUE_500, detail=f"Error simulating trade: {str(e)}"
@@ -353,7 +365,11 @@ async def reset_circuit_breaker(
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(
             "Error resetting circuit breaker",
-            extra={"circuit_breaker_name": name, "error_type": type(e).__name__, "error_message": str(e)}
+            extra={
+                "circuit_breaker_name": name,
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+            },
         )
         raise HTTPException(
             status_code=DEFAULT_VALUE_500, detail=f"Error resetting circuit breaker: {str(e)}"
@@ -381,8 +397,7 @@ async def portfolio_health_check(
 
         if open_breakers:
             logger.warning(
-                "Health check: circuit breakers open",
-                extra={"open_breakers": open_breakers}
+                "Health check: circuit breakers open", extra={"open_breakers": open_breakers}
             )
             return {
                 "status": "degraded",
@@ -398,7 +413,10 @@ async def portfolio_health_check(
 
         logger.info(
             "Health check passed",
-            extra={"portfolio_equity": float(portfolio.total_equity), "positions_count": len(portfolio.positions)}
+            extra={
+                "portfolio_equity": float(portfolio.total_equity),
+                "positions_count": len(portfolio.positions),
+            },
         )
         return {
             "status": "healthy",
@@ -409,7 +427,6 @@ async def portfolio_health_check(
 
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         logger.error(
-            "Health check failed",
-            extra={"error_type": type(e).__name__, "error_message": str(e)}
+            "Health check failed", extra={"error_type": type(e).__name__, "error_message": str(e)}
         )
         return {"status": "unhealthy", "message": f"Portfolio service error: {str(e)}"}

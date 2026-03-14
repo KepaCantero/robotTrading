@@ -220,7 +220,7 @@ class MultiObjectiveOptimizer:
         self.normalize_objectives = config.get('normalize_objectives', True)
 
         # Historial para adaptación de pesos
-        self.objective_history = defaultdict(list)
+        self.objective_history: Dict[str, List[float]] = defaultdict(list)
 
     def compute_weighted_loss(
         self,
@@ -265,11 +265,11 @@ class MultiObjectiveOptimizer:
             return self.weights
 
         # Calcular tendencias recientes
-        trends = {}
+        trends: Dict[str, float] = {}
         for objective, history in performance_history.items():
             if len(history) >= window_size:
                 recent = history[-window_size:]
-                trend = np.mean(np.diff(recent))  # Tendencia (positiva = mejorando)
+                trend = float(np.mean(np.diff(recent)))  # Tendencia (positiva = mejorando)
                 trends[objective] = trend
             else:
                 trends[objective] = 0.0
@@ -317,8 +317,8 @@ class MultiTaskLearningEngine:
             config: Configuración
         """
         self.config = config
-        self.model = None
-        self.optimizer = None
+        self.model: Optional["MultiTaskModel"] = None
+        self.optimizer: Optional[Any] = None  # optim.Adam when torch is available
         self.multi_objective_optimizer = MultiObjectiveOptimizer(
             config.get('multi_objective_config', {})
         )
@@ -382,7 +382,7 @@ class MultiTaskLearningEngine:
 
     def train(
         self, training_data: Dict[str, Any], validation_data: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, float]:
+    ) -> Dict[str, Any]:
         """
         Entrenar modelo multi-tarea.
 
@@ -408,10 +408,12 @@ class MultiTaskLearningEngine:
                     self.task_configs,
                     dropout=self.config.get('dropout', 0.1),
                 )
+            model = self.model  # Local reference for type narrowing
 
             # Optimizer
             if self.optimizer is None:
-                self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
+                self.optimizer = optim.Adam(model.parameters(), lr=self.learning_rate)
+            optimizer = self.optimizer  # Local reference for type narrowing
 
             # Loss functions por tarea
             loss_functions = {}
@@ -423,14 +425,14 @@ class MultiTaskLearningEngine:
                     loss_functions[task_name] = nn.BCELoss()
 
             # Training loop
-            metrics = defaultdict(list)
-            self.model.train()
+            metrics: Dict[str, List[float]] = defaultdict(list)
+            model.train()
 
             for epoch in range(self.epochs):
-                self.optimizer.zero_grad()
+                optimizer.zero_grad()
 
                 # Forward pass
-                predictions = self.model(X_train)
+                predictions = model(X_train)
 
                 # Calcular pérdidas por tarea
                 task_losses = {}
@@ -448,7 +450,7 @@ class MultiTaskLearningEngine:
 
                 # Backward pass
                 total_loss.backward()
-                self.optimizer.step()
+                optimizer.step()
 
                 metrics['total_loss'].append(float(total_loss.item()))
 
@@ -475,7 +477,8 @@ class MultiTaskLearningEngine:
             # Validation
             if validation_data:
                 val_metrics = self._evaluate(validation_data)
-                metrics.update({f'val_{k}': v for k, v in val_metrics.items()})
+                for k, v in val_metrics.items():
+                    metrics[f'val_{k}'] = [v]
 
             self.is_trained = True
 
@@ -565,8 +568,8 @@ class MultiTaskLearningEngine:
                 if len(result) >= 2:
                     # Confidence = inverso de varianza de predicciones normalizadas
                     values = list(result.values())
-                    normalized = np.array(values) / (np.max(np.abs(values)) + 1e-8)
-                    confidence = 1.0 - min(1.0, np.std(normalized))
+                    normalized = np.array(values) / (float(np.max(np.abs(values))) + 1e-8)
+                    confidence = 1.0 - min(1.0, float(np.std(normalized)))
                     result['confidence'] = float(confidence)
                 else:
                     result['confidence'] = 0.5

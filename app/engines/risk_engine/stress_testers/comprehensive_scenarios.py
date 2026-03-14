@@ -515,7 +515,7 @@ class ComprehensiveStressScenarios:
         elif worst_loss > 15:
             overall_risk = 'MODERATE'
             recommendation = (
-                'Portfolio has moderate stress vulnerability. ' 'Consider reducing exposure.'
+                'Portfolio has moderate stress vulnerability. Consider reducing exposure.'
             )
         else:
             overall_risk = 'ACCEPTABLE'

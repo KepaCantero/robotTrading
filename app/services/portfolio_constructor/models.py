@@ -92,5 +92,5 @@ logger.debug(
             "RiskScalingRequest",
             "RiskAdjustedPortfolio",
         ],
-    }
+    },
 )

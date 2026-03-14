@@ -963,7 +963,7 @@ class MicrostructureModelComparator:
                 "kyle_market_depth_lambda": results['kyle']['market_depth_lambda'],
                 "interpretation": results['kyle']['interpretation'],
             },
-        )        # Kyle market depth
+        )  # Kyle market depth
         lambda_kyle = self.kyle_model.calculate_market_depth()
         results['kyle'] = {
             'market_depth_lambda': lambda_kyle,

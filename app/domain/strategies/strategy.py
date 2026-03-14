@@ -192,17 +192,17 @@ class ModularMomentumStrategy(BaseStrategy):
 
         # Históricos para indicadores
         self.indicator_calculator = TechnicalIndicatorCalculator()
-        self.price_history = deque(maxlen=200)
-        self.high_history = deque(maxlen=200)
-        self.low_history = deque(maxlen=200)
-        self.volume_history = deque(maxlen=200)
-        self.atr_history = deque(maxlen=100)
+        self.price_history: deque[float] = deque(maxlen=200)
+        self.high_history: deque[float] = deque(maxlen=200)
+        self.low_history: deque[float] = deque(maxlen=200)
+        self.volume_history: deque[float] = deque(maxlen=200)
+        self.atr_history: deque[float] = deque(maxlen=100)
 
         # Histórico de trades para metadata
         self.recent_trades: deque = deque(maxlen=10)
 
         # Histórico de features para Deep Learning / Transformer (secuencias)
-        self.features_history = deque(
+        self.features_history: deque[Dict[str, Any]] = deque(
             maxlen=200
         )  # Almacena dicts con indicators, filter_results, market_context, metadata
 
@@ -921,9 +921,9 @@ class ModularMomentumStrategy(BaseStrategy):
                 base_confidence * self._cfg.learning_filter_weight
                 + learning_confidence * self._cfg.learning_confidence_weight
             )
-            return min(100.0, max(0.0, combined * 100))
+            return float(min(100.0, max(0.0, combined * 100)))
 
-        return min(100.0, max(0.0, base_confidence * 100))
+        return float(min(100.0, max(0.0, base_confidence * 100)))
 
     def _auto_train_learning_engine(self) -> None:
         """
@@ -1188,8 +1188,8 @@ class ModularMomentumStrategy(BaseStrategy):
         """
         # Build RSI history from price history
         if not hasattr(self, '_rsi_history'):
-            self._rsi_history = deque(maxlen=period + smooth_k + smooth_d)
-            self._stoch_k_history = deque(maxlen=smooth_d)
+            self._rsi_history: deque[float] = deque(maxlen=period + smooth_k + smooth_d)
+            self._stoch_k_history: deque[float] = deque(maxlen=smooth_d)
 
         # Add current RSI to history
         if current_rsi is not None:
@@ -1219,25 +1219,25 @@ class ModularMomentumStrategy(BaseStrategy):
         # Calculate smoothed %K (SMA of raw StochRSI)
         if len(self._stoch_k_history) >= smooth_k:
             k_values = list(self._stoch_k_history)[-smooth_k:]
-            stoch_rsi_k = np.mean(k_values)
+            stoch_rsi_k = float(np.mean(k_values))
         else:
-            stoch_rsi_k = stoch_rsi_raw
+            stoch_rsi_k = float(stoch_rsi_raw)
 
         # Calculate %D (SMA of %K) - signal line
         if not hasattr(self, '_stoch_d_history'):
-            self._stoch_d_history = deque(maxlen=smooth_d)
+            self._stoch_d_history: deque[float] = deque(maxlen=smooth_d)
 
         self._stoch_d_history.append(stoch_rsi_k)
 
         if len(self._stoch_d_history) >= smooth_d:
             d_values = list(self._stoch_d_history)[-smooth_d:]
-            stoch_rsi_d = np.mean(d_values)
+            stoch_rsi_d = float(np.mean(d_values))
         else:
-            stoch_rsi_d = stoch_rsi_k
+            stoch_rsi_d = float(stoch_rsi_k)
 
         # Clamp values to 0-100 range
-        stoch_rsi_k = max(0.0, min(100.0, stoch_rsi_k))
-        stoch_rsi_d = max(0.0, min(100.0, stoch_rsi_d))
+        stoch_rsi_k = float(max(0.0, min(100.0, float(stoch_rsi_k))))
+        stoch_rsi_d = float(max(0.0, min(100.0, float(stoch_rsi_d))))
 
         return round(stoch_rsi_k, 2), round(stoch_rsi_d, 2)
 
@@ -1268,7 +1268,7 @@ class ModularMomentumStrategy(BaseStrategy):
 
         # Store MACD history for signal calculation
         if not hasattr(self, '_macd_history'):
-            self._macd_history = deque(maxlen=signal_period * 2)
+            self._macd_history: deque[float] = deque(maxlen=signal_period * 2)
 
         self._macd_history.append(macd_line)
 
@@ -1330,7 +1330,7 @@ class ModularMomentumStrategy(BaseStrategy):
 
         # Initialize history storage
         if not hasattr(self, '_adx_data'):
-            self._adx_data = {
+            self._adx_data: Dict[str, deque[float]] = {
                 'plus_dm': deque(maxlen=period * 2),
                 'minus_dm': deque(maxlen=period * 2),
                 'tr': deque(maxlen=period * 2),
@@ -1366,9 +1366,9 @@ class ModularMomentumStrategy(BaseStrategy):
         plus_dm_list = list(self._adx_data['plus_dm'])[-period:]
         minus_dm_list = list(self._adx_data['minus_dm'])[-period:]
 
-        atr_smoothed = np.mean(tr_list)
-        plus_di = 100 * np.mean(plus_dm_list) / atr_smoothed if atr_smoothed > 0 else 0
-        minus_di = 100 * np.mean(minus_dm_list) / atr_smoothed if atr_smoothed > 0 else 0
+        atr_smoothed = float(np.mean(tr_list))
+        plus_di = 100 * float(np.mean(plus_dm_list)) / atr_smoothed if atr_smoothed > 0 else 0
+        minus_di = 100 * float(np.mean(minus_dm_list)) / atr_smoothed if atr_smoothed > 0 else 0
 
         # DX and ADX
         di_diff = abs(plus_di - minus_di)
@@ -1377,7 +1377,7 @@ class ModularMomentumStrategy(BaseStrategy):
 
         # Store DX for ADX calculation
         if not hasattr(self, '_dx_history'):
-            self._dx_history = deque(maxlen=period)
+            self._dx_history: deque[float] = deque(maxlen=period)
 
         self._dx_history.append(dx)
         adx = np.mean(list(self._dx_history)) if self._dx_history else 25.0
@@ -1452,7 +1452,7 @@ class ModularMomentumStrategy(BaseStrategy):
 
         # Initialize OBV history
         if not hasattr(self, '_obv_history'):
-            self._obv_history = deque(maxlen=ema_period * 2)
+            self._obv_history: deque[float] = deque(maxlen=ema_period * 2)
             self._obv_value = 0.0
 
         # Calculate incremental OBV
@@ -1471,11 +1471,11 @@ class ModularMomentumStrategy(BaseStrategy):
         obv_list = list(self._obv_history)
         if len(obv_list) >= ema_period:
             multiplier = 2 / (ema_period + 1)
-            obv_ema = obv_list[0]
+            obv_ema = float(obv_list[0])
             for obv in obv_list[1:]:
                 obv_ema = (obv - obv_ema) * multiplier + obv_ema
         else:
-            obv_ema = np.mean(obv_list)
+            obv_ema = float(np.mean(obv_list)) if obv_list else 0.0
 
         # Calculate OBV trend (divergence from price direction)
         if len(prices) >= 5 and len(obv_list) >= 5:

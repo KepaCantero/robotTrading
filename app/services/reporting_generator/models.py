@@ -126,5 +126,5 @@ logger.debug(
             "ReportGenerationRequest",
             "PerformanceReport",
         ],
-    }
+    },
 )

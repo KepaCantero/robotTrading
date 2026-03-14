@@ -96,7 +96,7 @@ logger.info(
         "operation": "module_init",
         "phases_defined": [phase.value for phase in CapitalPhase],
         "rules_implemented": ["R25", "R26", "R27"],
-    }
+    },
 )
 
 logger.debug(
@@ -106,6 +106,8 @@ logger.debug(
         "operation": "log_configs",
         "survival_max_risk": str(PHASE_CONFIGS[CapitalPhase.SURVIVAL].max_risk_per_trade_pct),
         "growth_max_risk": str(PHASE_CONFIGS[CapitalPhase.GROWTH].max_risk_per_trade_pct),
-        "optimization_max_risk": str(PHASE_CONFIGS[CapitalPhase.OPTIMIZATION].max_risk_per_trade_pct),
-    }
+        "optimization_max_risk": str(
+            PHASE_CONFIGS[CapitalPhase.OPTIMIZATION].max_risk_per_trade_pct
+        ),
+    },
 )

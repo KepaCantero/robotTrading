@@ -1,12 +1,260 @@
 {
-  "command": "show",
-  "query": "subjective",
-  "status_filter": "open",
-  "total": 0,
-  "issues": [],
+  "command": "next",
+  "items": [
+    {
+      "id": "security::app/domain/services/compliance/compliance_engine.py::security::B324::app/domain/services/compliance/compliance_engine.py::3589",
+      "confidence": "high",
+      "detector": "security",
+      "file": "app/domain/services/compliance/compliance_engine.py",
+      "summary": "[B324] Use of weak MD5 hash for security. Consider usedforsecurity=False",
+      "detail": {
+        "kind": "B324",
+        "severity": "high",
+        "line": 3589,
+        "content": "3588         alert_str = json.dumps(alert, sort_keys=True)\n3589         return hashlib.md5(alert_str.encode()).hexdigest()\n3590 \n",
+        "remediation": "https://bandit.readthedocs.io/en/1.8.6/plugins/b324_hashlib.html",
+        "test_name": "hashlib",
+        "source": "bandit"
+      },
+      "status": "open",
+      "kind": "issue",
+      "primary_command": "desloppify plan resolve \"security::app/domain/services/compliance/compliance_engine.py::security::B324::app/domain/services/compliance/compliance_engine.py::3589\" --note \"<what you did>\" --confirm",
+      "queue_position": 322,
+      "plan_cluster": {
+        "name": "auto/security",
+        "description": "Fix 339 security issues",
+        "total_items": 339,
+        "action_steps": []
+      }
+    },
+    {
+      "id": "security::app/infrastructure/logging/logging_config.py::security::hardcoded_secret_name::app/infrastructure/logging/logging_config.py::263",
+      "confidence": "high",
+      "detector": "security",
+      "file": "app/infrastructure/logging/logging_config.py",
+      "summary": "Hardcoded secret in variable 'password'",
+      "detail": {
+        "kind": "hardcoded_secret_name",
+        "severity": "high",
+        "line": 263,
+        "content": "            logger.info(\"Message\", password=\"secret123\")",
+        "remediation": "Move secret to environment variable or secrets manager"
+      },
+      "status": "open",
+      "kind": "issue",
+      "primary_command": "desloppify plan resolve \"security::app/infrastructure/logging/logging_config.py::security::hardcoded_secret_name::app/infrastructure/logging/logging_config.py::263\" --note \"<what you did>\" --confirm",
+      "queue_position": 323,
+      "plan_cluster": {
+        "name": "auto/security",
+        "description": "Fix 339 security issues",
+        "total_items": 339,
+        "action_steps": []
+      }
+    },
+    {
+      "id": "security::app/infrastructure/resilience/rate_limit_governor.py::security::hardcoded_secret_name::app/infrastructure/resilience/rate_limit_governor.py::38",
+      "confidence": "high",
+      "detector": "security",
+      "file": "app/infrastructure/resilience/rate_limit_governor.py",
+      "summary": "Hardcoded secret in variable 'TOKEN_BUCKET'",
+      "detail": {
+        "kind": "hardcoded_secret_name",
+        "severity": "high",
+        "line": 38,
+        "content": "    TOKEN_BUCKET = \"token_bucket\"  # Token Bucket Algorithm",
+        "remediation": "Move secret to environment variable or secrets manager"
+      },
+      "status": "open",
+      "kind": "issue",
+      "primary_command": "desloppify plan resolve \"security::app/infrastructure/resilience/rate_limit_governor.py::security::hardcoded_secret_name::app/infrastructure/resilience/rate_limit_governor.py::38\" --note \"<what you did>\" --confirm",
+      "queue_position": 324,
+      "plan_cluster": {
+        "name": "auto/security",
+        "description": "Fix 339 security issues",
+        "total_items": 339,
+        "action_steps": []
+      }
+    },
+    {
+      "id": "security::app/security/user_store.py::security::hardcoded_secret_name::app/security/user_store.py::113",
+      "confidence": "high",
+      "detector": "security",
+      "file": "app/security/user_store.py",
+      "summary": "Hardcoded secret in variable 'api_key_prefix'",
+      "detail": {
+        "kind": "hardcoded_secret_name",
+        "severity": "high",
+        "line": 113,
+        "content": "        api_key_prefix = \"AUTH_API_KEY_\"",
+        "remediation": "Move secret to environment variable or secrets manager"
+      },
+      "status": "open",
+      "kind": "issue",
+      "primary_command": "desloppify plan resolve \"security::app/security/user_store.py::security::hardcoded_secret_name::app/security/user_store.py::113\" --note \"<what you did>\" --confirm",
+      "queue_position": 325,
+      "plan_cluster": {
+        "name": "auto/security",
+        "description": "Fix 339 security issues",
+        "total_items": 339,
+        "action_steps": []
+      }
+    },
+    {
+      "id": "security::scripts/setup_telegram.py::security::hardcoded_secret_name::scripts/setup_telegram.py::38",
+      "confidence": "high",
+      "detector": "security",
+      "file": "scripts/setup_telegram.py",
+      "summary": "Hardcoded secret in variable 'telegram_bot_token'",
+      "detail": {
+        "kind": "hardcoded_secret_name",
+        "severity": "high",
+        "line": 38,
+        "content": "        print(f'  telegram_bot_token: \"{config[\"bot_token\"]}\"')",
+        "remediation": "Move secret to environment variable or secrets manager"
+      },
+      "status": "open",
+      "kind": "issue",
+      "primary_command": "desloppify plan resolve \"security::scripts/setup_telegram.py::security::hardcoded_secret_name::scripts/setup_telegram.py::38\" --note \"<what you did>\" --confirm",
+      "queue_position": 326,
+      "plan_cluster": {
+        "name": "auto/security",
+        "description": "Fix 339 security issues",
+        "total_items": 339,
+        "action_steps": []
+      }
+    },
+    {
+      "id": "security::scripts/setup_telegram.py::security::hardcoded_secret_name::scripts/setup_telegram.py::41",
+      "confidence": "high",
+      "detector": "security",
+      "file": "scripts/setup_telegram.py",
+      "summary": "Hardcoded secret in variable 'TELEGRAM_BOT_TOKEN'",
+      "detail": {
+        "kind": "hardcoded_secret_name",
+        "severity": "high",
+        "line": 41,
+        "content": "        print(f'export TELEGRAM_BOT_TOKEN=\"{config[\"bot_token\"]}\"')",
+        "remediation": "Move secret to environment variable or secrets manager"
+      },
+      "status": "open",
+      "kind": "issue",
+      "primary_command": "desloppify plan resolve \"security::scripts/setup_telegram.py::security::hardcoded_secret_name::scripts/setup_telegram.py::41\" --note \"<what you did>\" --confirm",
+      "queue_position": 327,
+      "plan_cluster": {
+        "name": "auto/security",
+        "description": "Fix 339 security issues",
+        "total_items": 339,
+        "action_steps": []
+      }
+    },
+    {
+      "id": "security::app.py::security::B104::app.py::76",
+      "confidence": "medium",
+      "detector": "security",
+      "file": "app.py",
+      "summary": "[B104] Possible binding to all interfaces.",
+      "detail": {
+        "kind": "B104",
+        "severity": "medium",
+        "line": 76,
+        "content": "75         \"--reload\",\n76         \"--host\", \"0.0.0.0\",\n77         \"--port\", \"8000\",\n78     ])\n79 \n80 def main():\n81     \"\"\"Main entry point.\"\"\"\n82     command = sys.argv[1] if len(sys.argv) > 1 else \"",
+        "remediation": "https://bandit.readthedocs.io/en/1.8.6/plugins/b104_hardcoded_bind_all_interfaces.html",
+        "test_name": "hardcoded_bind_all_interfaces",
+        "source": "bandit"
+      },
+      "status": "open",
+      "kind": "issue",
+      "primary_command": "desloppify plan resolve \"security::app.py::security::B104::app.py::76\" --note \"<what you did>\" --confirm",
+      "queue_position": 328,
+      "plan_cluster": {
+        "name": "auto/security",
+        "description": "Fix 339 security issues",
+        "total_items": 339,
+        "action_steps": []
+      }
+    },
+    {
+      "id": "security::app/backtesting/meta_analyzer/learning_storage.py::security::B301::app/backtesting/meta_analyzer/learning_storage.py::483",
+      "confidence": "medium",
+      "detector": "security",
+      "file": "app/backtesting/meta_analyzer/learning_storage.py",
+      "summary": "[B301] Pickle and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue.",
+      "detail": {
+        "kind": "B301",
+        "severity": "medium",
+        "line": 483,
+        "content": "482             with open(pkl_path, 'rb') as f:\n483                 data = pickle.load(f)  # noqa: S301 - Trusted migration only\n484 \n",
+        "remediation": "https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b301-pickle",
+        "test_name": "blacklist",
+        "source": "bandit"
+      },
+      "status": "open",
+      "kind": "issue",
+      "primary_command": "desloppify plan resolve \"security::app/backtesting/meta_analyzer/learning_storage.py::security::B301::app/backtesting/meta_analyzer/learning_storage.py::483\" --note \"<what you did>\" --confirm",
+      "queue_position": 329,
+      "plan_cluster": {
+        "name": "auto/security",
+        "description": "Fix 339 security issues",
+        "total_items": 339,
+        "action_steps": []
+      }
+    },
+    {
+      "id": "security::app/domain/strategies/crypto_indicators.py::security::log_sensitive::app/domain/strategies/crypto_indicators.py::386",
+      "confidence": "medium",
+      "detector": "security",
+      "file": "app/domain/strategies/crypto_indicators.py",
+      "summary": "Sensitive data may be logged",
+      "detail": {
+        "kind": "log_sensitive",
+        "severity": "medium",
+        "line": 386,
+        "content": "        logger.debug(f\"Token velocity: {velocity:.2f}\")",
+        "remediation": "Remove sensitive data from log statements"
+      },
+      "status": "open",
+      "kind": "issue",
+      "primary_command": "desloppify plan resolve \"security::app/domain/strategies/crypto_indicators.py::security::log_sensitive::app/domain/strategies/crypto_indicators.py::386\" --note \"<what you did>\" --confirm",
+      "queue_position": 330,
+      "plan_cluster": {
+        "name": "auto/security",
+        "description": "Fix 339 security issues",
+        "total_items": 339,
+        "action_steps": []
+      }
+    },
+    {
+      "id": "security::app/engines/data_engine/sources/sentiment_sources.py::security::log_sensitive::app/engines/data_engine/sources/sentiment_sources.py::262",
+      "confidence": "medium",
+      "detector": "security",
+      "file": "app/engines/data_engine/sources/sentiment_sources.py",
+      "summary": "Sensitive data may be logged",
+      "detail": {
+        "kind": "log_sensitive",
+        "severity": "medium",
+        "line": 262,
+        "content": "                    logger.debug(\"Reddit access token obtenido\")",
+        "remediation": "Remove sensitive data from log statements"
+      },
+      "status": "open",
+      "kind": "issue",
+      "primary_command": "desloppify plan resolve \"security::app/engines/data_engine/sources/sentiment_sources.py::security::log_sensitive::app/engines/data_engine/sources/sentiment_sources.py::262\" --note \"<what you did>\" --confirm",
+      "queue_position": 331,
+      "plan_cluster": {
+        "name": "auto/security",
+        "description": "Fix 339 security issues",
+        "total_items": 339,
+        "action_steps": []
+      }
+    }
+  ],
+  "queue": {
+    "total": 10,
+    "mode": "execution"
+  },
   "narrative": {
     "phase": "stagnation",
-    "headline": "All T1 items cleared!",
+    "headline": "\u26a0 339 security issues \u2014 review before other cleanup. All T1 items cleared!",
     "dimensions": {
       "lowest_dimensions": [
         {
@@ -37,16 +285,16 @@
       "biggest_gap_dimensions": [
         {
           "name": "Test health",
-          "lenient": 100.0,
+          "lenient": 99.8,
           "strict": 49.1,
-          "gap": 50.9,
+          "gap": 50.7,
           "wontfix_count": 581
         }
       ],
       "stagnant_dimensions": [
         {
           "name": "Security",
-          "strict": 100.0,
+          "strict": 97.4,
           "stuck_scans": 5
         },
         {
@@ -263,13 +511,28 @@
       },
       {
         "type": "refactor",
+        "detector": "test_coverage",
+        "count": 2,
+        "description": "2 test_coverage issues in 1 cluster(s) \u2014 run `desloppify next`",
+        "command": "desloppify next",
+        "impact": 0.0,
+        "dimension": "Test health",
+        "priority": 10,
+        "clusters": [
+          "auto/test_coverage"
+        ],
+        "cluster_count": 1,
+        "lane": "test_coverage"
+      },
+      {
+        "type": "refactor",
         "detector": "signature",
         "count": 258,
         "description": "258 signature issues \u2014 consolidate inconsistent function signatures",
         "command": "desloppify show signature --status open",
         "impact": 0.0,
         "dimension": "Unknown",
-        "priority": 10,
+        "priority": 11,
         "lane": "refactor_0"
       },
       {
@@ -280,7 +543,7 @@
         "command": "desloppify show responsibility_cohesion --status open",
         "impact": 0.0,
         "dimension": "Code quality",
-        "priority": 11,
+        "priority": 12,
         "lane": "refactor_0"
       },
       {
@@ -291,7 +554,22 @@
         "command": "desloppify show boilerplate_duplication --status open",
         "impact": 0.0,
         "dimension": "Duplication",
-        "priority": 12,
+        "priority": 13,
+        "lane": "refactor_0"
+      },
+      {
+        "type": "manual_fix",
+        "detector": "unused",
+        "count": 319,
+        "description": "319 unused issues in 1 cluster(s) \u2014 run `desloppify next`",
+        "command": "desloppify next",
+        "impact": 0.0,
+        "dimension": "Code quality",
+        "priority": 14,
+        "clusters": [
+          "auto/unused"
+        ],
+        "cluster_count": 1,
         "lane": "refactor_0"
       },
       {
@@ -302,7 +580,22 @@
         "command": "desloppify show smells --status open",
         "impact": 0.0,
         "dimension": "Code quality",
-        "priority": 13,
+        "priority": 15,
+        "lane": "refactor_0"
+      },
+      {
+        "type": "manual_fix",
+        "detector": "unused_enums",
+        "count": 57,
+        "description": "57 unused_enums issues in 1 cluster(s) \u2014 run `desloppify next`",
+        "command": "desloppify next",
+        "impact": 0.0,
+        "dimension": "Unknown",
+        "priority": 16,
+        "clusters": [
+          "auto/unused_enums"
+        ],
+        "cluster_count": 1,
         "lane": "refactor_0"
       },
       {
@@ -313,19 +606,38 @@
         "command": "desloppify show global_mutable_config --status open",
         "impact": 0.0,
         "dimension": "Code quality",
-        "priority": 14,
+        "priority": 17,
         "lane": "refactor_0"
       },
       {
         "type": "manual_fix",
         "detector": "stale_exclude",
         "count": 2,
-        "description": "2 stale_exclude issues \u2014 remove stale exclusion or verify it's still needed",
-        "command": "desloppify show stale_exclude --status open",
+        "description": "2 stale_exclude issues in 1 cluster(s) \u2014 run `desloppify next`",
+        "command": "desloppify next",
         "impact": 0.0,
         "dimension": "Code quality",
-        "priority": 15,
+        "priority": 18,
+        "clusters": [
+          "auto/stale_exclude"
+        ],
+        "cluster_count": 1,
         "lane": "refactor_1"
+      },
+      {
+        "type": "manual_fix",
+        "detector": "security",
+        "count": 339,
+        "description": "339 security issues in 1 cluster(s) \u2014 run `desloppify next`",
+        "command": "desloppify next",
+        "impact": 0.0,
+        "dimension": "Security",
+        "priority": 19,
+        "clusters": [
+          "auto/security"
+        ],
+        "cluster_count": 1,
+        "lane": "refactor_0"
       },
       {
         "type": "manual_fix",
@@ -335,7 +647,7 @@
         "command": "desloppify review --prepare",
         "impact": 0.0,
         "dimension": "Unknown",
-        "priority": 16,
+        "priority": 20,
         "lane": "refactor_2"
       },
       {
@@ -344,14 +656,14 @@
         "description": "2.1 pts of wontfix debt \u2014 review stale decisions",
         "command": "desloppify show --status wontfix",
         "gap": 2.1,
-        "priority": 17,
+        "priority": 21,
         "lane": "debt_review"
       }
     ],
     "strategy": {
       "fixer_leverage": {
         "auto_fixable_count": 0,
-        "total_count": 3514,
+        "total_count": 4231,
         "coverage": 0.0,
         "impact_ratio": 0.0,
         "recommendation": "none"
@@ -376,20 +688,23 @@
             7,
             8,
             9,
-            10,
             11,
             12,
             13,
-            14
+            14,
+            15,
+            16,
+            17,
+            19
           ],
-          "file_count": 1064,
+          "file_count": 1083,
           "total_impact": 0.0,
           "automation": "manual",
           "run_first": false
         },
         "refactor_1": {
           "actions": [
-            15
+            18
           ],
           "file_count": 2,
           "total_impact": 0.0,
@@ -398,16 +713,25 @@
         },
         "refactor_2": {
           "actions": [
-            16
+            20
           ],
           "file_count": 1,
           "total_impact": 0.0,
           "automation": "manual",
           "run_first": false
         },
+        "test_coverage": {
+          "actions": [
+            10
+          ],
+          "file_count": 2,
+          "total_impact": 0.0,
+          "automation": "manual",
+          "run_first": false
+        },
         "debt_review": {
           "actions": [
-            17
+            21
           ],
           "file_count": 0,
           "total_impact": 0.0,
@@ -416,7 +740,7 @@
         }
       },
       "can_parallelize": true,
-      "hint": "4 independent workstreams, safe to parallelize. Rescan after each phase to verify."
+      "hint": "5 independent workstreams, safe to parallelize. Rescan after each phase to verify."
     },
     "tools": {
       "fixers": [],
@@ -441,15 +765,15 @@
       "overall_gap": 2.1,
       "wontfix_count": 581,
       "worst_dimension": "Test health",
-      "worst_gap": 50.9,
-      "trend": "stable"
+      "worst_gap": 50.7,
+      "trend": "growing"
     },
     "milestone": "All T1 items cleared!",
     "primary_action": {
       "command": "desloppify show flat_dirs --status open",
       "description": "21 flat_dirs issues \u2014 create subdirectories and use `desloppify move`"
     },
-    "why_now": "4 independent workstreams, safe to parallelize. Rescan after each phase to verify.",
+    "why_now": "5 independent workstreams, safe to parallelize. Rescan after each phase to verify.",
     "verification_step": {
       "command": "desloppify scan",
       "reason": "revalidate after changes"
@@ -463,19 +787,118 @@
     ],
     "strict_target": {
       "target": 95.0,
-      "current": 20.3,
-      "gap": 74.7,
+      "current": 20.1,
+      "gap": 74.9,
       "state": "below",
       "warning": null
     },
-    "reminders": [],
+    "reminders": [
+      {
+        "type": "wontfix_growing",
+        "message": "Wontfix debt is growing. Review stale decisions: `desloppify show --status wontfix`.",
+        "command": "desloppify show --status wontfix",
+        "priority": 2,
+        "severity": "medium"
+      }
+    ],
     "reminder_history": {
       "zone_classification": 3,
-      "report_scores": 5,
+      "report_scores": 6,
       "feedback_nudge": 3,
-      "stagnant_nudge": 24
+      "stagnant_nudge": 24,
+      "wontfix_growing": 2
     }
   },
+  "agent_notes": [
+    "Do NOT use `desloppify plan skip` unless the user explicitly asks you to skip an item.",
+    "If you cannot fix an item, report it and move to the next one.",
+    "For cluster items: if the autofix_hint finds 0 results, drill into individual issues with the primary_command."
+  ],
+  "plan": {
+    "active": true,
+    "focus": null,
+    "clusters": [
+      {
+        "name": "auto/unused",
+        "description": "Remove 319 unused issues",
+        "item_count": 319
+      },
+      {
+        "name": "auto/test_coverage",
+        "description": "Fix 2 test coverage issues",
+        "item_count": 2
+      },
+      {
+        "name": "auto/security",
+        "description": "Fix 339 security issues",
+        "item_count": 339
+      },
+      {
+        "name": "auto/unused_enums",
+        "description": "Fix 57 unused enums issues",
+        "item_count": 57
+      },
+      {
+        "name": "auto/stale_exclude",
+        "description": "Fix 2 stale exclude issues",
+        "item_count": 2
+      }
+    ],
+    "total_ordered": 0,
+    "total_skipped": 26,
+    "plan_overrides_narrative": true
+  },
+  "overall_score": 22.2,
+  "objective_score": 88.8,
+  "strict_score": 20.1,
+  "scorecard_dimensions": [
+    {
+      "name": "File health",
+      "score": 76.6,
+      "strict": 76.6,
+      "checks": 1261,
+      "failing": 419,
+      "tier": 3,
+      "subjective": false
+    },
+    {
+      "name": "Code quality",
+      "score": 86.3,
+      "strict": 86.3,
+      "checks": 9225,
+      "failing": 2080,
+      "tier": 3,
+      "subjective": false
+    },
+    {
+      "name": "Duplication",
+      "score": 96.0,
+      "strict": 96.0,
+      "checks": 11247,
+      "failing": 611,
+      "tier": 3,
+      "subjective": false
+    },
+    {
+      "name": "Security",
+      "score": 97.4,
+      "strict": 97.4,
+      "checks": 3168,
+      "failing": 340,
+      "tier": 4,
+      "subjective": false
+    },
+    {
+      "name": "Test health",
+      "score": 99.8,
+      "strict": 49.1,
+      "checks": 20901,
+      "failing": 2,
+      "tier": 4,
+      "subjective": false
+    }
+  ],
+  "subjective_measures": [],
   "config": {
     "target_strict_score": 95,
     "review_max_age_days": 30,

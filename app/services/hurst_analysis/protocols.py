@@ -116,5 +116,5 @@ logger.debug(
             "HistoricalTrackerProtocol",
             "ChangeDetectorProtocol",
         ],
-    }
+    },
 )

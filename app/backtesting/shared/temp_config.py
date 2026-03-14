@@ -117,8 +117,8 @@ def temp_config_file(
             results = runner.run_baseline_backtest()
     """
     manager = TempConfigManager(config, output_dir, prefix=prefix)
-    yield manager.__enter__()
-    manager.__exit__(None, None, None)
+    with manager:
+        yield manager
 
 
 class TempConfigFactory:

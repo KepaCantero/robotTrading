@@ -231,9 +231,7 @@ class RegimeDetectable(ComplianceService, Protocol):
         logger.debug(
             "Detecting market regime",
             extra={
-                "price_history_shape": (
-                    price_history.shape if price_history is not None else None
-                ),
+                "price_history_shape": (price_history.shape if price_history is not None else None),
             },
         )
         ...

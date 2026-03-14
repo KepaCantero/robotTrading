@@ -40,8 +40,8 @@ async def analyze_trade_costs(
             "trade_id": trade_data.get("id"),
             "symbol": trade_data.get("symbol"),
             "endpoint": "analyze_trade_costs",
-            "operation": "cost_analysis_api"
-        }
+            "operation": "cost_analysis_api",
+        },
     )
     try:
         # Convert trade data to Trade object
@@ -72,8 +72,8 @@ async def analyze_trade_costs(
                 "trade_id": breakdown.trade_id,
                 "symbol": breakdown.symbol,
                 "total_cost": float(breakdown.total_cost),
-                "cost_impact_ratio": float(breakdown.cost_impact_ratio)
-            }
+                "cost_impact_ratio": float(breakdown.cost_impact_ratio),
+            },
         )
 
         return {
@@ -103,8 +103,8 @@ async def analyze_trade_costs(
             extra={
                 "trade_id": trade_data.get("id"),
                 "error": str(e),
-                "error_type": type(e).__name__
-            }
+                "error_type": type(e).__name__,
+            },
         )
         raise HTTPException(status_code=400, detail=f"Error analyzing trade costs: {str(e)}")
 
@@ -122,8 +122,8 @@ async def analyze_strategy_costs(
             "strategy_name": strategy_name,
             "trades_count": len(strategy_data.get("trades", [])),
             "endpoint": "analyze_strategy_costs",
-            "operation": "cost_analysis_api"
-        }
+            "operation": "cost_analysis_api",
+        },
     )
     try:
         strategy_name = strategy_data["strategy_name"]
@@ -162,8 +162,8 @@ async def analyze_strategy_costs(
                 "total_trades": result.total_trades,
                 "total_costs": float(result.total_costs),
                 "is_profitable": result.is_profitable,
-                "cost_impact_ratio": float(result.cost_impact_ratio)
-            }
+                "cost_impact_ratio": float(result.cost_impact_ratio),
+            },
         )
 
         return {
@@ -208,11 +208,7 @@ async def analyze_strategy_costs(
     except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(
             "Error analyzing strategy costs",
-            extra={
-                "strategy_name": strategy_name,
-                "error": str(e),
-                "error_type": type(e).__name__
-            }
+            extra={"strategy_name": strategy_name, "error": str(e), "error_type": type(e).__name__},
         )
         raise HTTPException(status_code=400, detail=f"Error analyzing strategy costs: {str(e)}")
 
@@ -229,8 +225,8 @@ async def validate_profitability(
         extra={
             "strategy_name": strategy_name,
             "endpoint": "validate_profitability",
-            "operation": "cost_analysis_api"
-        }
+            "operation": "cost_analysis_api",
+        },
     )
     try:
         # Create CostAnalysisResult from input data
@@ -267,8 +263,8 @@ async def validate_profitability(
                 "strategy_name": result.strategy_name,
                 "is_profitable": result.is_profitable,
                 "is_valid": is_valid,
-                "cost_impact_ratio": float(result.cost_impact_ratio)
-            }
+                "cost_impact_ratio": float(result.cost_impact_ratio),
+            },
         )
 
         return {
@@ -284,11 +280,7 @@ async def validate_profitability(
     except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(
             "Error validating profitability",
-            extra={
-                "strategy_name": strategy_name,
-                "error": str(e),
-                "error_type": type(e).__name__
-            }
+            extra={"strategy_name": strategy_name, "error": str(e), "error_type": type(e).__name__},
         )
         raise HTTPException(status_code=400, detail=f"Error validating profitability: {str(e)}")
 
@@ -325,8 +317,8 @@ async def update_cost_parameters(
         extra={
             "parameters_keys": list(parameters.keys()),
             "endpoint": "update_cost_parameters",
-            "operation": "cost_analysis_api"
-        }
+            "operation": "cost_analysis_api",
+        },
     )
     try:
         if "commission_rates" in parameters:
@@ -370,7 +362,7 @@ async def update_cost_parameters(
 
         logger.info(
             "Cost parameters updated successfully",
-            extra={"updated_parameters": list(parameters.keys())}
+            extra={"updated_parameters": list(parameters.keys())},
         )
 
         return {
@@ -381,10 +373,7 @@ async def update_cost_parameters(
     except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(
             "Error updating cost parameters",
-            extra={
-                "error": str(e),
-                "error_type": type(e).__name__
-            }
+            extra={"error": str(e), "error_type": type(e).__name__},
         )
         raise HTTPException(status_code=400, detail=f"Error updating cost parameters: {str(e)}")
 

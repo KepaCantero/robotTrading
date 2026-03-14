@@ -141,7 +141,7 @@ async def create_portfolio(
             "portfolio_name": request.name,
             "config_id": str(request.config_id) if request.config_id else None,
             "initial_cash": float(request.initial_cash) if request.initial_cash else None,
-        }
+        },
     )
     try:
         portfolio = await service.create_portfolio(
@@ -155,7 +155,7 @@ async def create_portfolio(
                 "portfolio_id": str(portfolio.id),
                 "portfolio_name": portfolio.name,
                 "initial_cash": float(portfolio.cash_balance),
-            }
+            },
         )
         return PortfolioResponse(success=True, portfolio=portfolio)
     except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
@@ -165,7 +165,7 @@ async def create_portfolio(
                 "portfolio_name": request.name,
                 "error_type": type(e).__name__,
                 "error_message": str(e),
-            }
+            },
         )
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -176,16 +176,10 @@ async def get_portfolio(
     service: PaperTradingService = Depends(get_paper_trading_service),
 ) -> PortfolioResponse:
     """Get portfolio by ID."""
-    logger.debug(
-        "Fetching portfolio by ID",
-        extra={"portfolio_id": str(portfolio_id)}
-    )
+    logger.debug("Fetching portfolio by ID", extra={"portfolio_id": str(portfolio_id)})
     portfolio = await service.get_portfolio(portfolio_id)
     if not portfolio:
-        logger.warning(
-            "Portfolio not found",
-            extra={"portfolio_id": str(portfolio_id)}
-        )
+        logger.warning("Portfolio not found", extra={"portfolio_id": str(portfolio_id)})
         raise HTTPException(status_code=404, detail="Portfolio not found")
 
     logger.info(
@@ -194,7 +188,7 @@ async def get_portfolio(
             "portfolio_id": str(portfolio_id),
             "portfolio_name": portfolio.name,
             "total_equity": float(portfolio.total_equity),
-        }
+        },
     )
     return PortfolioResponse(success=True, portfolio=portfolio)
 
@@ -221,7 +215,7 @@ async def create_session(
             "portfolio_id": str(request.portfolio_id),
             "session_name": request.name,
             "config_id": str(request.config_id) if request.config_id else None,
-        }
+        },
     )
     try:
         session = await service.create_session(
@@ -236,7 +230,7 @@ async def create_session(
                 "session_id": str(session.id),
                 "session_name": session.name,
                 "portfolio_id": str(session.portfolio_id),
-            }
+            },
         )
         return SessionResponse(success=True, session=session)
     except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
@@ -247,7 +241,7 @@ async def create_session(
                 "session_name": request.name,
                 "error_type": type(e).__name__,
                 "error_message": str(e),
-            }
+            },
         )
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -313,7 +307,7 @@ async def execute_trade(
             "quantity": float(request.quantity),
             "price": float(request.price) if request.price else None,
             "session_id": str(session_id) if session_id else None,
-        }
+        },
     )
     try:
         trade = await service.execute_trade(
@@ -334,7 +328,7 @@ async def execute_trade(
                 "portfolio_id": str(portfolio_id),
                 "symbol": request.symbol,
                 "status": trade.status.value,
-            }
+            },
         )
         return TradeResponse(success=True, trade=trade)
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
@@ -345,7 +339,7 @@ async def execute_trade(
                 "symbol": request.symbol,
                 "error_type": type(e).__name__,
                 "error_message": str(e),
-            }
+            },
         )
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -413,10 +407,7 @@ async def update_market_prices(
     service: PaperTradingService = Depends(get_paper_trading_service),
 ) -> MarketUpdateResponse:
     """Update market prices for all symbols."""
-    logger.info(
-        "Updating market prices",
-        extra={"symbol_count": len(request.quotes)}
-    )
+    logger.info("Updating market prices", extra={"symbol_count": len(request.quotes)})
     try:
         await service.update_market_prices(request.quotes)
         updated_symbols = list(request.quotes.keys())
@@ -425,7 +416,7 @@ async def update_market_prices(
             extra={
                 "updated_count": len(updated_symbols),
                 "symbols": updated_symbols[:10],  # Log first 10 to avoid huge logs
-            }
+            },
         )
         return MarketUpdateResponse(
             success=True, updated_symbols=updated_symbols, count=len(updated_symbols)
@@ -437,7 +428,7 @@ async def update_market_prices(
                 "symbol_count": len(request.quotes),
                 "error_type": type(e).__name__,
                 "error_message": str(e),
-            }
+            },
         )
         raise HTTPException(status_code=400, detail=str(e))
 

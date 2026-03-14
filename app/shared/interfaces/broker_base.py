@@ -86,8 +86,8 @@ class Balance:
                     "available": str(self.available),
                     "locked": str(self.locked),
                     "total": str(self.total),
-                    "sum": str(self.available + self.locked)
-                }
+                    "sum": str(self.available + self.locked),
+                },
             )
             raise ValueError(
                 f"Balance inconsistency: available ({self.available}) + "
@@ -615,33 +615,32 @@ def validate_order(order: Order) -> Tuple[bool, Optional[str]]:
             "symbol": order.symbol,
             "side": order.side.value,
             "type": order.type.value,
-            "quantity": str(order.quantity)
-        }
+            "quantity": str(order.quantity),
+        },
     )
     if order.quantity <= 0:
         logger.warning(
             "Order validation failed: quantity must be positive",
-            extra={"order_id": order.order_id, "quantity": str(order.quantity)}
+            extra={"order_id": order.order_id, "quantity": str(order.quantity)},
         )
         return False, "Quantity must be positive"
 
     if order.type == OrderType.LIMIT and order.price is None:
         logger.warning(
             "Order validation failed: limit order requires price",
-            extra={"order_id": order.order_id, "order_type": order.type.value}
+            extra={"order_id": order.order_id, "order_type": order.type.value},
         )
         return False, "Limit orders require a price"
 
     if order.type in [OrderType.STOP_LOSS, OrderType.STOP_LIMIT] and order.stop_price is None:
         logger.warning(
             "Order validation failed: stop order requires stop_price",
-            extra={"order_id": order.order_id, "order_type": order.type.value}
+            extra={"order_id": order.order_id, "order_type": order.type.value},
         )
         return False, "Stop orders require a stop_price"
 
     logger.debug(
-        "Order validation passed",
-        extra={"order_id": order.order_id, "symbol": order.symbol}
+        "Order validation passed", extra={"order_id": order.order_id, "symbol": order.symbol}
     )
     return True, None
 
@@ -673,7 +672,6 @@ def normalize_symbol(symbol: str) -> str:
     normalized = symbol.upper()
     if original_symbol != normalized:
         logger.debug(
-            "Symbol normalized",
-            extra={"original": original_symbol, "normalized": normalized}
+            "Symbol normalized", extra={"original": original_symbol, "normalized": normalized}
         )
     return normalized

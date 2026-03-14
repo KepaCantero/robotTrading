@@ -474,10 +474,10 @@ class ParameterStabilityAnalyzer:
         redundant_pairs = []
 
         # Find high correlations
-        for i in range(len(corr_matrix.columns)):
-            for j in range(i + 1, len(corr_matrix.columns)):
-                param1 = corr_matrix.columns[i]
-                param2 = corr_matrix.columns[j]
+        columns = list(corr_matrix.columns)
+        for i, param1 in enumerate(columns):
+            for j in range(i + 1, len(columns)):
+                param2 = columns[j]
 
                 corr_value = corr_matrix.iloc[i, j]
 

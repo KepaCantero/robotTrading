@@ -107,24 +107,21 @@ class ASConfig:
         """Validate time horizon is reasonable."""
         logger.debug(
             "Validating time horizon",
-            extra={"time_horizon": float(v), "validator": "validate_time_horizon"}
+            extra={"time_horizon": float(v), "validator": "validate_time_horizon"},
         )
         if v < Decimal("1"):
             logger.warning(
                 "Time horizon validation failed - too short",
-                extra={"time_horizon": float(v), "min_allowed": 1.0}
+                extra={"time_horizon": float(v), "min_allowed": 1.0},
             )
             raise ValueError("Time horizon must be at least 1 second")
         if v > Decimal("604800"):  # 1 week
             logger.warning(
                 "Time horizon validation failed - too long",
-                extra={"time_horizon": float(v), "max_allowed": 604800.0}
+                extra={"time_horizon": float(v), "max_allowed": 604800.0},
             )
             raise ValueError("Time horizon should not exceed 1 week")
-        logger.debug(
-            "Time horizon validated successfully",
-            extra={"time_horizon": float(v)}
-        )
+        logger.debug("Time horizon validated successfully", extra={"time_horizon": float(v)})
         return v
 
 
@@ -214,8 +211,8 @@ class ASQuote:
                 "symbol": self.symbol,
                 "half_spread_bps": float(self.optimal_spread_bps),
                 "full_spread_bps": float(full_spread),
-                "operation": "get_full_spread_bps"
-            }
+                "operation": "get_full_spread_bps",
+            },
         )
         return full_spread
 
@@ -229,8 +226,8 @@ class ASQuote:
                 "bid": float(self.optimal_bid),
                 "ask": float(self.optimal_ask),
                 "spread_value": float(spread_value),
-                "operation": "get_spread_value"
-            }
+                "operation": "get_spread_value",
+            },
         )
         return spread_value
 
@@ -243,16 +240,15 @@ class ASQuote:
                 "symbol": self.symbol,
                 "inventory_skew": float(self.inventory_skew),
                 "is_neutral": is_neutral,
-                "operation": "is_inventory_neutral"
-            }
+                "operation": "is_inventory_neutral",
+            },
         )
         return is_neutral
 
     def to_dict(self) -> dict[str, str | float | int | bool]:
         """Convert quote to dictionary for serialization."""
         logger.debug(
-            "Converting quote to dict",
-            extra={"symbol": self.symbol, "operation": "quote_to_dict"}
+            "Converting quote to dict", extra={"symbol": self.symbol, "operation": "quote_to_dict"}
         )
         return {
             "symbol": self.symbol,
@@ -332,7 +328,11 @@ class InventoryState:
         if max_abs == 0:
             logger.warning(
                 "Inventory utilization calculation - max_abs is zero",
-                extra={"symbol": self.symbol, "max_inventory": self.max_inventory, "min_inventory": self.min_inventory}
+                extra={
+                    "symbol": self.symbol,
+                    "max_inventory": self.max_inventory,
+                    "min_inventory": self.min_inventory,
+                },
             )
             return Decimal("0")
         utilization = Decimal(abs(self.current_inventory)) / Decimal(max_abs)
@@ -343,8 +343,8 @@ class InventoryState:
                 "current_inventory": self.current_inventory,
                 "max_abs": max_abs,
                 "utilization": float(utilization),
-                "operation": "get_inventory_utilization"
-            }
+                "operation": "get_inventory_utilization",
+            },
         )
         return utilization
 
@@ -359,8 +359,8 @@ class InventoryState:
                     "current_inventory": self.current_inventory,
                     "is_at_warning_level": self.is_at_warning_level,
                     "is_at_liquidation_level": self.is_at_liquidation_level,
-                    "operation": "needs_inventory_reduction"
-                }
+                    "operation": "needs_inventory_reduction",
+                },
             )
         return needs_reduction
 
@@ -368,7 +368,7 @@ class InventoryState:
         """Convert state to dictionary for serialization."""
         logger.debug(
             "Converting inventory state to dict",
-            extra={"symbol": self.symbol, "operation": "inventory_state_to_dict"}
+            extra={"symbol": self.symbol, "operation": "inventory_state_to_dict"},
         )
         return {
             "symbol": self.symbol,

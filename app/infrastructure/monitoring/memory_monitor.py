@@ -115,16 +115,13 @@ class MemoryMonitor:
                 "warning_threshold_mb": self.config.warning_threshold_mb,
                 "action": self.config.action.value,
                 "check_interval_seconds": self.config.check_interval_seconds,
-            }
+            },
         )
 
     async def start(self) -> bool:
         """Start memory monitoring."""
         if self._is_monitoring:
-            logger.warning(
-                "MemoryMonitor already running",
-                extra={"action": "start_skipped"}
-            )
+            logger.warning("MemoryMonitor already running", extra={"action": "start_skipped"})
             return False
 
         self._is_monitoring = True
@@ -134,17 +131,14 @@ class MemoryMonitor:
 
         logger.info(
             "MemoryMonitor started",
-            extra={"check_interval_seconds": self.config.check_interval_seconds}
+            extra={"check_interval_seconds": self.config.check_interval_seconds},
         )
         return True
 
     async def stop(self) -> bool:
         """Stop memory monitoring."""
         if not self._is_monitoring:
-            logger.warning(
-                "MemoryMonitor not running",
-                extra={"action": "stop_skipped"}
-            )
+            logger.warning("MemoryMonitor not running", extra={"action": "stop_skipped"})
             return False
 
         self._is_monitoring = False
@@ -153,10 +147,7 @@ class MemoryMonitor:
             self._monitor_task.cancel()
             self._monitor_task = None
 
-        logger.info(
-            "MemoryMonitor stopped",
-            extra={"restart_count": self._restart_count}
-        )
+        logger.info("MemoryMonitor stopped", extra={"restart_count": self._restart_count})
         return True
 
     async def _monitor_loop(self) -> None:
@@ -173,7 +164,7 @@ class MemoryMonitor:
                             "current_memory_mb": memory_mb,
                             "limit_mb": self.config.memory_limit_mb,
                             "action": self.config.action.value,
-                        }
+                        },
                     )
                     await self.trigger_action(memory_mb)
                 elif memory_mb > self.config.warning_threshold_mb:
@@ -184,7 +175,7 @@ class MemoryMonitor:
                             "current_memory_mb": memory_mb,
                             "warning_threshold_mb": self.config.warning_threshold_mb,
                             "limit_mb": self.config.memory_limit_mb,
-                        }
+                        },
                     )
 
                     if self.config.alert_callback:
@@ -195,10 +186,7 @@ class MemoryMonitor:
             except asyncio.CancelledError:
                 break
             except (asyncio.TimeoutError, ConnectionError, OSError) as e:
-                logger.error(
-                    "Error in memory monitor loop",
-                    extra={"error_type": type(e).__name__}
-                )
+                logger.error("Error in memory monitor loop", extra={"error_type": type(e).__name__})
                 await asyncio.sleep(self.config.check_interval_seconds)
 
     def get_memory_usage(self) -> float:
@@ -227,10 +215,7 @@ class MemoryMonitor:
                 "warning_mb": self.config.warning_threshold_mb,
             }
         except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
-            logger.error(
-                "Error getting memory stats",
-                extra={"error_type": type(e).__name__}
-            )
+            logger.error("Error getting memory stats", extra={"error_type": type(e).__name__})
             return {}
 
     async def trigger_action(self, current_memory_mb: float) -> None:
@@ -243,7 +228,7 @@ class MemoryMonitor:
                 "action": action.value,
                 "current_memory_mb": current_memory_mb,
                 "limit_mb": self.config.memory_limit_mb,
-            }
+            },
         )
 
         if action == MemoryAction.GARBAGE_COLLECT:
@@ -254,7 +239,7 @@ class MemoryMonitor:
                 extra={
                     "collected_objects": collected,
                     "action": "garbage_collect",
-                }
+                },
             )
 
             # Check if memory freed
@@ -266,7 +251,7 @@ class MemoryMonitor:
                         "before_mb": current_memory_mb,
                         "after_mb": new_memory,
                         "freed_mb": current_memory_mb - new_memory,
-                    }
+                    },
                 )
                 return
 
@@ -275,30 +260,24 @@ class MemoryMonitor:
             if self.position_closer:
                 try:
                     logger.info(
-                        "Closing positions before restart",
-                        extra={"action": "close_positions"}
+                        "Closing positions before restart", extra={"action": "close_positions"}
                     )
                     await self.position_closer()
                 except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                     logger.error(
                         "Error closing positions",
                         extra={"error_type": type(e).__name__},
-                        exc_info=True
+                        exc_info=True,
                     )
 
         # Save state if configured
         if self.config.save_state_before_restart and self.state_saver:
             try:
-                logger.info(
-                    "Saving state before restart",
-                    extra={"action": "save_state"}
-                )
+                logger.info("Saving state before restart", extra={"action": "save_state"})
                 await self.state_saver()
             except (asyncio.TimeoutError, ConnectionError, OSError) as e:
                 logger.error(
-                    "Error saving state",
-                    extra={"error_type": type(e).__name__},
-                    exc_info=True
+                    "Error saving state", extra={"error_type": type(e).__name__}, exc_info=True
                 )
 
         # Send alert
@@ -306,16 +285,13 @@ class MemoryMonitor:
             try:
                 logger.debug(
                     "Sending memory alert",
-                    extra={"action": action.value, "memory_mb": current_memory_mb}
+                    extra={"action": action.value, "memory_mb": current_memory_mb},
                 )
                 self.config.alert_callback(
                     f"Memory action: {action.value} ({current_memory_mb:.2f}MB)"
                 )
             except (asyncio.TimeoutError, ConnectionError, OSError) as e:
-                logger.error(
-                    "Error in alert callback",
-                    extra={"error_type": type(e).__name__}
-                )
+                logger.error("Error in alert callback", extra={"error_type": type(e).__name__})
 
         # Restart if configured
         if action == MemoryAction.RESTART:
@@ -328,7 +304,7 @@ class MemoryMonitor:
             extra={
                 "restart_count": self._restart_count + 1,
                 "last_restart": self._last_restart.isoformat() if self._last_restart else None,
-            }
+            },
         )
 
         # Update restart stats
@@ -342,15 +318,12 @@ class MemoryMonitor:
         # Restart process
         try:
             logger.info(
-                "Executing process restart",
-                extra={"executable": sys.executable, "argv": sys.argv}
+                "Executing process restart", extra={"executable": sys.executable, "argv": sys.argv}
             )
             os.execv(sys.executable, [sys.executable] + sys.argv)
         except (asyncio.TimeoutError, ConnectionError, OSError) as e:
             logger.error(
-                "Error restarting process",
-                extra={"error_type": type(e).__name__},
-                exc_info=True
+                "Error restarting process", extra={"error_type": type(e).__name__}, exc_info=True
             )
 
     def take_snapshot(self) -> MemorySnapshot:
@@ -378,10 +351,7 @@ class MemoryMonitor:
             return snapshot
 
         except (RuntimeError, ValueError, TypeError, KeyError) as e:
-            logger.error(
-                "Error taking snapshot",
-                extra={"error_type": type(e).__name__}
-            )
+            logger.error("Error taking snapshot", extra={"error_type": type(e).__name__})
             return MemorySnapshot(
                 timestamp=utc_now(),
                 rss_mb=0,
@@ -436,10 +406,7 @@ def get_memory_monitor(
     """
     global _memory_monitor
 
-    logger.debug(
-        "Getting memory monitor instance",
-        extra={"exists": _memory_monitor is not None}
-    )
+    logger.debug("Getting memory monitor instance", extra={"exists": _memory_monitor is not None})
 
     if _memory_monitor is None:
         _memory_monitor = MemoryMonitor(
@@ -454,8 +421,5 @@ def get_memory_monitor(
 def reset_memory_monitor() -> None:
     """Reset the global MemoryMonitor instance (for testing)."""
     global _memory_monitor
-    logger.debug(
-        "Resetting memory monitor instance",
-        extra={"action": "reset"}
-    )
+    logger.debug("Resetting memory monitor instance", extra={"action": "reset"})
     _memory_monitor = None

@@ -365,7 +365,7 @@ class LearningEngineUpdater:
 
         total_checks = len(self._drift_history)
         drift_detected_count = sum(1 for r in self._drift_history if r.overall_drift_detected)
-        severity_counts = {}
+        severity_counts: Dict[str, int] = {}
         for report in self._drift_history:
             sev = report.overall_severity.value
             severity_counts[sev] = severity_counts.get(sev, 0) + 1

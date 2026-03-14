@@ -678,7 +678,7 @@ class TradingMetricsMonitor:
             missing_positions=missing,
             ghost_positions=ghost,
             largest_quantity_delta=max(deltas) if deltas else 0.0,
-            avg_quantity_delta=np.mean(deltas) if deltas else 0.0,
+            avg_quantity_delta=float(np.mean(deltas)) if deltas else 0.0,
             timestamp=datetime.utcnow(),
         )
 
@@ -757,7 +757,7 @@ class TradingMetricsMonitor:
             )
 
         scores = list(self._strategy_health.values())
-        overall_score = np.mean(scores) if scores else 100.0
+        overall_score = float(np.mean(scores)) if scores else 100.0
 
         healthy = sum(1 for s in scores if s >= 80)
         degraded = sum(1 for s in scores if 50 <= s < 80)
@@ -824,9 +824,68 @@ class TradingMetricsMonitor:
             limits_warning=warning,
             critical_violations=critical,
             max_breach_pct=max(breaches) if breaches else 0.0,
-            avg_utilization_pct=np.mean(utilizations) if utilizations else 0.0,
+            avg_utilization_pct=float(np.mean(utilizations)) if utilizations else 0.0,
             timestamp=datetime.utcnow(),
         )
+
+    def _count_health_issues(self, metrics: TradingMetrics) -> tuple[int, int]:
+        """
+        Count critical and warning health issues.
+
+        Returns:
+            Tuple of (critical_count, warning_count)
+        """
+        critical_count = 0
+        warning_count = 0
+
+        # Define threshold checks as (value, critical_threshold, warning_threshold, is_lower_better)
+        checks = [
+            (
+                metrics.order_execution.fill_rate_pct,
+                self.config.fill_rate_critical_pct,
+                self.config.fill_rate_warning_pct,
+                True,
+            ),
+            (
+                metrics.slippage.avg_slippage_bps,
+                self.config.slippage_critical_bps,
+                self.config.slippage_warning_bps,
+                False,
+            ),
+            (
+                metrics.order_execution.p95_latency_ms,
+                self.config.order_latency_critical_ms,
+                self.config.order_latency_warning_ms,
+                False,
+            ),
+            (
+                metrics.position_sync.sync_health_pct,
+                self.config.position_sync_critical_pct,
+                self.config.position_sync_warning_pct,
+                True,
+            ),
+            (
+                metrics.strategy_health.overall_health_score,
+                self.config.strategy_health_critical_score,
+                self.config.strategy_health_warning_score,
+                True,
+            ),
+            (metrics.market_data.data_freshness_pct, 80, 90, True),
+        ]
+
+        for value, critical_thresh, warning_thresh, lower_is_better in checks:
+            if lower_is_better:
+                if value < critical_thresh:
+                    critical_count += 1
+                elif value < warning_thresh:
+                    warning_count += 1
+            else:
+                if value > critical_thresh:
+                    critical_count += 1
+                elif value > warning_thresh:
+                    warning_count += 1
+
+        return critical_count, warning_count
 
     def _evaluate_overall_health(self, metrics: TradingMetrics) -> TradingHealthStatus:
         """
@@ -835,52 +894,14 @@ class TradingMetricsMonitor:
         Returns:
             TradingHealthStatus indicating system health
         """
-        critical_count = 0
-        warning_count = 0
+        critical_count, warning_count = self._count_health_issues(metrics)
 
-        # Check fill rate
-        if metrics.order_execution.fill_rate_pct < self.config.fill_rate_critical_pct:
-            critical_count += 1
-        elif metrics.order_execution.fill_rate_pct < self.config.fill_rate_warning_pct:
-            warning_count += 1
+        # Check for risk limit violations
+        if metrics.risk_limits.critical_violations > 0:
+            return TradingHealthStatus.CRITICAL
 
-        # Check slippage
-        if metrics.slippage.avg_slippage_bps > self.config.slippage_critical_bps:
-            critical_count += 1
-        elif metrics.slippage.avg_slippage_bps > self.config.slippage_warning_bps:
-            warning_count += 1
-
-        # Check order latency
-        if metrics.order_execution.p95_latency_ms > self.config.order_latency_critical_ms:
-            critical_count += 1
-        elif metrics.order_execution.p95_latency_ms > self.config.order_latency_warning_ms:
-            warning_count += 1
-
-        # Check position sync
-        if metrics.position_sync.sync_health_pct < self.config.position_sync_critical_pct:
-            critical_count += 1
-        elif metrics.position_sync.sync_health_pct < self.config.position_sync_warning_pct:
-            warning_count += 1
-
-        # Check strategy health
-        if (
-            metrics.strategy_health.overall_health_score
-            < self.config.strategy_health_critical_score
-        ):
-            critical_count += 1
-        elif (
-            metrics.strategy_health.overall_health_score < self.config.strategy_health_warning_score
-        ):
-            warning_count += 1
-
-        # Check market data freshness
-        if metrics.market_data.data_freshness_pct < 80:
-            critical_count += 1
-        elif metrics.market_data.data_freshness_pct < 90:
-            warning_count += 1
-
-        # Determine overall health
-        if critical_count >= 2 or metrics.risk_limits.critical_violations > 0:
+        # Determine overall health based on issue counts
+        if critical_count >= 2:
             return TradingHealthStatus.CRITICAL
         elif critical_count >= 1 or warning_count >= 3:
             return TradingHealthStatus.DEGRADED
@@ -1142,7 +1163,7 @@ class TradingMetricsMonitor:
         if not self._slippages:
             return 0.0
 
-        return np.mean(self._slippages)
+        return float(np.mean(self._slippages))
 
     def check_position_sync(self) -> float:
         """

@@ -30,17 +30,11 @@ class TaxOptimizationEngine:
         self.config = config or {}
         logger.info(
             "TaxOptimizationEngine initialized",
-            extra={
-                "tax_residence": tax_residence,
-                "config_keys": list(self.config.keys())
-            }
+            extra={"tax_residence": tax_residence, "config_keys": list(self.config.keys())},
         )
 
     def optimize_for_taxes(
-        self,
-        current_portfolio: Dict[str, Any],
-        proposed_changes: Dict[str, Any],
-        **kwargs
+        self, current_portfolio: Dict[str, Any], proposed_changes: Dict[str, Any], **kwargs
     ) -> Dict[str, Any]:
         """
         Optimize proposed portfolio changes for tax efficiency.
@@ -57,30 +51,33 @@ class TaxOptimizationEngine:
             "Starting tax optimization",
             extra={
                 "current_holdings": len(current_portfolio.get("holdings", [])),
-                "proposed_changes_count": len(proposed_changes)
-            }
+                "proposed_changes_count": len(proposed_changes),
+            },
         )
 
-        result = {
+        result: Dict[str, Any] = {
             "optimized_changes": proposed_changes,
             "tax_impact": {"estimated_tax": 0.0},
-            "tax_residence": self.tax_residence
+            "tax_residence": self.tax_residence,
         }
+
+        tax_impact = result["tax_impact"]
+        estimated_tax = tax_impact["estimated_tax"] if isinstance(tax_impact, dict) else 0.0
 
         logger.info(
             "Tax optimization completed",
             extra={
-                "optimized_changes_count": len(result["optimized_changes"]),
-                "estimated_tax": result["tax_impact"]["estimated_tax"]
-            }
+                "optimized_changes_count": len(result["optimized_changes"])
+                if isinstance(result["optimized_changes"], (list, dict))
+                else 0,
+                "estimated_tax": estimated_tax,
+            },
         )
 
         return result
 
     def detect_wash_sales(
-        self,
-        trades: List[Dict[str, Any]],
-        lookback_days: int = 30
+        self, trades: List[Dict[str, Any]], lookback_days: int = 30
     ) -> List[Dict[str, Any]]:
         """
         Detect potential wash sale violations.
@@ -94,28 +91,20 @@ class TaxOptimizationEngine:
         """
         logger.info(
             "Starting wash sale detection",
-            extra={
-                "trades_count": len(trades),
-                "lookback_days": lookback_days
-            }
+            extra={"trades_count": len(trades), "lookback_days": lookback_days},
         )
 
-        wash_sales = []
+        wash_sales: List[Dict[str, Any]] = []
 
         logger.debug(
             "Wash sale detection completed",
-            extra={
-                "violations_found": len(wash_sales),
-                "lookback_days": lookback_days
-            }
+            extra={"violations_found": len(wash_sales), "lookback_days": lookback_days},
         )
 
         return wash_sales
 
     def harvest_tax_losses(
-        self,
-        portfolio: Dict[str, Any],
-        min_loss_threshold: float = 0.0
+        self, portfolio: Dict[str, Any], min_loss_threshold: float = 0.0
     ) -> Dict[str, Any]:
         """
         Identify opportunities for tax-loss harvesting.
@@ -130,23 +119,28 @@ class TaxOptimizationEngine:
         logger.info(
             "Starting tax-loss harvesting analysis",
             extra={
-                "holdings_count": len(portfolio.get("holdings", [])),
-                "min_loss_threshold": min_loss_threshold
-            }
+                "holdings_count": len(portfolio.get("holdings", []))
+                if isinstance(portfolio.get("holdings"), list)
+                else 0,
+                "min_loss_threshold": min_loss_threshold,
+            },
         )
 
-        recommendations = {
+        recommendations: Dict[str, Any] = {
             "positions_to_sell": [],
             "estimated_tax_savings": 0.0,
-            "total_harvestable_loss": 0.0
+            "total_harvestable_loss": 0.0,
         }
+
+        positions_to_sell = recommendations["positions_to_sell"]
+        positions_count = len(positions_to_sell) if isinstance(positions_to_sell, list) else 0
 
         logger.debug(
             "Tax-loss harvesting analysis completed",
             extra={
-                "positions_identified": len(recommendations["positions_to_sell"]),
-                "estimated_savings": recommendations["estimated_tax_savings"]
-            }
+                "positions_identified": positions_count,
+                "estimated_savings": recommendations["estimated_tax_savings"],
+            },
         )
 
         return recommendations

@@ -71,7 +71,7 @@ class CostBreakdown(BaseModel):
                 "market_impact": str(self.market_impact),
                 "infrastructure": str(self.infrastructure),
                 "total_costs": str(total),
-            }
+            },
         )
         return total
 
@@ -93,7 +93,7 @@ class CostBreakdown(BaseModel):
                     "validator": "validate_positive_amount",
                     "value": str(v),
                     "error": "Cost amounts must be non-negative",
-                }
+                },
             )
             raise ValueError("Cost amounts must be non-negative")
         return v
@@ -167,7 +167,7 @@ class ProfitabilityValidation(BaseModel):
                 "risk_level": self.risk_level,
                 "period_start": str(self.period_start),
                 "period_end": str(self.period_end),
-            }
+            },
         )
 
     strategy_name: str = Field(..., description="Nombre de la estrategia")
@@ -207,7 +207,7 @@ class ProfitabilityValidation(BaseModel):
                     "validator": "validate_positive_capital",
                     "value": str(v),
                     "error": "Capital amounts must be positive",
-                }
+                },
             )
             raise ValueError("Capital amounts must be positive")
         return v

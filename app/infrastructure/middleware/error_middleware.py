@@ -8,7 +8,6 @@ The centralized_logging and error_handler modules are imported only when needed.
 
 from __future__ import annotations
 
-# pylint: disable=import-error
 import logging
 import time
 import uuid
@@ -54,7 +53,7 @@ def _get_error_handler():
     Returns:
         ErrorHandler instance
     """
-    from app.exceptions.error_handler import error_handler
+    from app.shared.exceptions.error_handler import error_handler
 
     return error_handler
 

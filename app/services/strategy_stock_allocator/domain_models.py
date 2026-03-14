@@ -57,7 +57,10 @@ class StockMetrics:
         """Convert to dictionary."""
         logger.debug(
             "Converting StockMetrics to dict",
-            extra={"ticker": self.ticker, "strategy": self.strategy.value if self.strategy else None}
+            extra={
+                "ticker": self.ticker,
+                "strategy": self.strategy.value if self.strategy else None,
+            },
         )
         return {
             'ticker': self.ticker,
@@ -95,7 +98,7 @@ class PairMetrics:
         """Convert to dictionary."""
         logger.debug(
             "Converting PairMetrics to dict",
-            extra={"ticker1": self.ticker1, "ticker2": self.ticker2}
+            extra={"ticker1": self.ticker1, "ticker2": self.ticker2},
         )
         return {
             'ticker1': self.ticker1,
@@ -128,7 +131,7 @@ class AllocationResult:
         total = sum(m.capital for m in self.allocations.values())
         logger.debug(
             "Calculated total allocated capital",
-            extra={"total_capital": float(total), "allocations_count": len(self.allocations)}
+            extra={"total_capital": float(total), "allocations_count": len(self.allocations)},
         )
         return total
 
@@ -151,8 +154,8 @@ class AllocationResult:
             extra={
                 "allocations_count": len(self.allocations),
                 "pairs_count": len(self.pairs),
-                "validation_passed": self.validation_passed
-            }
+                "validation_passed": self.validation_passed,
+            },
         )
         return {
             'allocations': {
@@ -201,25 +204,25 @@ class AllocationConfig:
                 "max_positions": max_positions,
                 "max_position_size": float(max_position_size),
                 "min_position_size": float(min_position_size),
-                "reserve_ratio": float(reserve_ratio)
-            }
+                "reserve_ratio": float(reserve_ratio),
+            },
         )
         if initial_capital <= 0:
             logger.error(
                 "AllocationConfig validation failed - invalid initial_capital",
-                extra={"initial_capital": float(initial_capital)}
+                extra={"initial_capital": float(initial_capital)},
             )
             raise ValueError("Initial capital must be positive")
         if max_positions <= 0:
             logger.error(
                 "AllocationConfig validation failed - invalid max_positions",
-                extra={"max_positions": max_positions}
+                extra={"max_positions": max_positions},
             )
             raise ValueError("Max positions must be positive")
         if max_position_size <= 0 or max_position_size > 1:
             logger.error(
                 "AllocationConfig validation failed - invalid max_position_size",
-                extra={"max_position_size": float(max_position_size)}
+                extra={"max_position_size": float(max_position_size)},
             )
             raise ValueError("Max position size must be between 0 and 1")
         if min_position_size <= 0 or min_position_size > max_position_size:
@@ -227,14 +230,14 @@ class AllocationConfig:
                 "AllocationConfig validation failed - invalid min_position_size",
                 extra={
                     "min_position_size": float(min_position_size),
-                    "max_position_size": float(max_position_size)
-                }
+                    "max_position_size": float(max_position_size),
+                },
             )
             raise ValueError("Min position size must be positive and <= max position size")
         if reserve_ratio < 0 or reserve_ratio >= 1:
             logger.error(
                 "AllocationConfig validation failed - invalid reserve_ratio",
-                extra={"reserve_ratio": float(reserve_ratio)}
+                extra={"reserve_ratio": float(reserve_ratio)},
             )
             raise ValueError("Reserve ratio must be between 0 and 1")
 
@@ -247,25 +250,21 @@ class AllocationConfig:
             "AllocationConfig initialized successfully",
             extra={
                 "initial_capital": float(initial_capital),
-                "allocatable_capital": float(self.get_allocatable_capital())
-            }
+                "allocatable_capital": float(self.get_allocatable_capital()),
+            },
         )
 
     def get_reservable_capital(self) -> Decimal:
         """Calculate capital to keep in reserve."""
         reserve = self.initial_capital * self.reserve_ratio
-        logger.debug(
-            "Calculated reservable capital",
-            extra={"reservable_capital": float(reserve)}
-        )
+        logger.debug("Calculated reservable capital", extra={"reservable_capital": float(reserve)})
         return reserve
 
     def get_allocatable_capital(self) -> Decimal:
         """Calculate capital available for allocation."""
         allocatable = self.initial_capital - self.get_reservable_capital()
         logger.debug(
-            "Calculated allocatable capital",
-            extra={"allocatable_capital": float(allocatable)}
+            "Calculated allocatable capital", extra={"allocatable_capital": float(allocatable)}
         )
         return allocatable
 

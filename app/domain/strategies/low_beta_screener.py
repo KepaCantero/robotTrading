@@ -24,9 +24,9 @@ from typing import Dict, List, Optional
 from .models import (
     LowVolatilityProfile,
     LowVolatilityScreeningCriteria,
-    LowVolatilityStock,
+    LowVolatilityScreeningResult,
+    LowVolatilityStockResult,
     LowVolatilityStrategyConfig,
-    ScreeningResult,
     SectorDefensiveLevel,
 )
 
@@ -97,7 +97,7 @@ class LowBetaScreener:
     def screen(
         self,
         profiles: List[LowVolatilityProfile],
-    ) -> ScreeningResult:
+    ) -> LowVolatilityScreeningResult:
         """
         Aplicar screening a lista de perfiles.
 
@@ -109,7 +109,7 @@ class LowBetaScreener:
         """
         start_time = time.time()
 
-        passed: List[LowVolatilityStock] = []
+        passed: List[LowVolatilityStockResult] = []
         failed: Dict[str, List[str]] = {}
         total_evaluated = len(profiles)
 
@@ -122,7 +122,7 @@ class LowBetaScreener:
             failure_reasons = self._evaluate_profile(profile)
 
             if not failure_reasons:
-                # Crear LowVolatilityStock con score inicial
+                # Crear LowVolatilityStockResult con score inicial
                 stock = self._create_low_vol_stock(profile)
                 passed.append(stock)
             else:
@@ -130,7 +130,7 @@ class LowBetaScreener:
 
         elapsed_ms = (time.time() - start_time) * 1000
 
-        result = ScreeningResult(
+        result = LowVolatilityScreeningResult(
             passed_stocks=passed,
             failed_stocks=failed,
             total_evaluated=total_evaluated,
@@ -261,22 +261,22 @@ class LowBetaScreener:
 
         return failures
 
-    def _create_low_vol_stock(self, profile: LowVolatilityProfile) -> LowVolatilityStock:
+    def _create_low_vol_stock(self, profile: LowVolatilityProfile) -> LowVolatilityStockResult:
         """
-        Crear LowVolatilityStock desde profile.
+        Crear LowVolatilityStockResult desde profile.
 
         Args:
             profile: Perfil de acción
 
         Returns:
-            LowVolatilityStock con score de decisión
+            LowVolatilityStockResult con score de decisión
         """
         # Calcular score de decisión
         decision_score = self._calculate_decision_score(profile)
         decision_reason = self._get_decision_reason(profile)
         recommendation = self._get_recommendation(decision_score)
 
-        return LowVolatilityStock(
+        return LowVolatilityStockResult(
             profile=profile,
             decision_score=decision_score,
             decision_reason=decision_reason,
