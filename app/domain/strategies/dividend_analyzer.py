@@ -434,12 +434,12 @@ class DividendAnalyzer:
             return "stable"
 
         # Comparar promedio reciente vs histórico
-        recent_avg = sum(payouts[-3:]) / 3
-        historical_avg = sum(payouts[:-3]) / max(1, len(payouts) - 3)
+        recent_avg: Decimal = sum(payouts[-3:]) / Decimal(3)
+        historical_avg: Decimal = sum(payouts[:-3]) / Decimal(max(1, len(payouts) - 3))
 
-        if recent_avg < historical_avg * 0.9:
+        if recent_avg < historical_avg * Decimal("0.9"):
             return "improving"
-        elif recent_avg > historical_avg * 1.1:
+        elif recent_avg > historical_avg * Decimal("1.1"):
             return "declining"
         else:
             return "stable"

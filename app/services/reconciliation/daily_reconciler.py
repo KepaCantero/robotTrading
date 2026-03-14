@@ -8,7 +8,6 @@ to detect discrepancies and ensure data consistency.
 """
 
 import logging
-
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal

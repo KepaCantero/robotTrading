@@ -173,13 +173,10 @@ class UserSettings(BaseModel):
         if v.upper() not in valid_levels:
             logger.warning(
                 "Invalid log level provided",
-                extra={"provided_level": v, "valid_levels": valid_levels}
+                extra={"provided_level": v, "valid_levels": valid_levels},
             )
             raise ValueError(f"Invalid log level: {v}. Must be one of {valid_levels}")
-        logger.debug(
-            "Log level validated",
-            extra={"log_level": v.upper()}
-        )
+        logger.debug("Log level validated", extra={"log_level": v.upper()})
         return v.upper()
 
     def get_allowed_symbols(self) -> List[str]:
@@ -187,7 +184,7 @@ class UserSettings(BaseModel):
         symbols = self.symbol_universe.allowed_symbols
         logger.debug(
             "Retrieved allowed symbols",
-            extra={"symbol_count": len(symbols), "user_id": self.user_id}
+            extra={"symbol_count": len(symbols), "user_id": self.user_id},
         )
         return symbols
 
@@ -200,7 +197,7 @@ class UserSettings(BaseModel):
                 "symbol": symbol,
                 "allowed": allowed,
                 "user_id": self.user_id,
-            }
+            },
         )
         return allowed
 
@@ -209,6 +206,6 @@ class UserSettings(BaseModel):
         is_paper = self.broker_settings.paper_trading
         logger.debug(
             "Paper trading mode check",
-            extra={"is_paper_trading": is_paper, "user_id": self.user_id}
+            extra={"is_paper_trading": is_paper, "user_id": self.user_id},
         )
         return is_paper

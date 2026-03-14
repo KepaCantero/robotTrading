@@ -285,8 +285,8 @@ class QualityInvesting:
                 "max_debt_to_equity": max_debt_to_equity,
                 "min_interest_coverage": min_interest_coverage,
                 "quality_weight": quality_weight,
-                "value_weight": value_weight
-            }
+                "value_weight": value_weight,
+            },
         )
 
     def screen_quality_stocks(
@@ -303,8 +303,7 @@ class QualityInvesting:
             List of symbols that pass screening
         """
         logger.debug(
-            "Starting quality stock screening",
-            extra={"total_stocks": len(quality_metrics)}
+            "Starting quality stock screening", extra={"total_stocks": len(quality_metrics)}
         )
         qualified = []
 
@@ -317,8 +316,8 @@ class QualityInvesting:
             extra={
                 "total_stocks": len(quality_metrics),
                 "qualified_stocks": len(qualified),
-                "pass_rate": len(qualified) / len(quality_metrics) if quality_metrics else 0
-            }
+                "pass_rate": len(qualified) / len(quality_metrics) if quality_metrics else 0,
+            },
         )
         return qualified
 
@@ -361,10 +360,7 @@ class QualityInvesting:
         Returns:
             List of (symbol, score) tuples sorted by score (highest first)
         """
-        logger.debug(
-            "Starting quality stock ranking",
-            extra={"total_stocks": len(quality_metrics)}
-        )
+        logger.debug("Starting quality stock ranking", extra={"total_stocks": len(quality_metrics)})
         scores = []
 
         for symbol, metrics in quality_metrics.items():
@@ -383,8 +379,8 @@ class QualityInvesting:
                 "total_stocks": len(quality_metrics),
                 "ranked_stocks": len(scores),
                 "top_score": scores[0][1] if scores else None,
-                "bottom_score": scores[-1][1] if scores else None
-            }
+                "bottom_score": scores[-1][1] if scores else None,
+            },
         )
 
         return scores
@@ -443,8 +439,8 @@ class QualityInvesting:
                 "max_positions": max_positions,
                 "min_weight": min_weight,
                 "max_weight": max_weight,
-                "available_stocks": len(quality_metrics)
-            }
+                "available_stocks": len(quality_metrics),
+            },
         )
         # Get min_weight from config if not provided
         if min_weight is None:
@@ -464,7 +460,7 @@ class QualityInvesting:
         if not selected:
             logger.warning(
                 "No quality stocks selected for portfolio",
-                extra={"capital": capital, "max_positions": max_positions}
+                extra={"capital": capital, "max_positions": max_positions},
             )
             return QualityPortfolio(
                 positions={},
@@ -516,8 +512,8 @@ class QualityInvesting:
                 "portfolio_quality_score": portfolio_quality,
                 "portfolio_profitability": portfolio_profitability,
                 "portfolio_financial_health": portfolio_health,
-                "capital": capital
-            }
+                "capital": capital,
+            },
         )
 
         return QualityPortfolio(
@@ -565,8 +561,8 @@ class QualityInvesting:
                 "symbol": metrics.symbol,
                 "current_price": current_price,
                 "fair_value": fair_value,
-                "quality_score": metrics.overall_quality_score
-            }
+                "quality_score": metrics.overall_quality_score,
+            },
         )
         # Get quality category
         category = metrics.quality_category
@@ -600,8 +596,8 @@ class QualityInvesting:
                 extra={
                     "symbol": metrics.symbol,
                     "category": category.value,
-                    "quality_score": metrics.overall_quality_score
-                }
+                    "quality_score": metrics.overall_quality_score,
+                },
             )
             return QualitySignal.POOR_QUALITY  # Avoid
 
@@ -611,8 +607,8 @@ class QualityInvesting:
                 extra={
                     "symbol": metrics.symbol,
                     "category": category.value,
-                    "valuation_ratio": valuation_ratio
-                }
+                    "valuation_ratio": valuation_ratio,
+                },
             )
             return category
 
@@ -635,10 +631,7 @@ class QualityInvesting:
         """
         logger.debug(
             "Calculating gross profitability premium",
-            extra={
-                "stocks_count": len(quality_metrics),
-                "returns_count": len(returns)
-            }
+            extra={"stocks_count": len(quality_metrics), "returns_count": len(returns)},
         )
         # Split by gross profit margin
         high_gp = []
@@ -663,8 +656,8 @@ class QualityInvesting:
                 "low_gp_stocks": len(low_gp),
                 "high_gp_return": float(high_gp_return),
                 "low_gp_return": float(low_gp_return),
-                "premium": float(high_gp_return - low_gp_return)
-            }
+                "premium": float(high_gp_return - low_gp_return),
+            },
         )
 
         return float(high_gp_return), float(low_gp_return)

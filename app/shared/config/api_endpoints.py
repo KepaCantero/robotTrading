@@ -144,7 +144,11 @@ class EndpointRegistry:
     """
 
     _instance: Optional["EndpointRegistry"] = None
-    _endpoints: Dict[str, EndpointConfig] = field(default_factory=dict)
+    _endpoints: Dict[str, EndpointConfig]
+
+    def __init__(self) -> None:
+        """Initialize the endpoint registry."""
+        self._endpoints = {}
 
     def __new__(cls) -> "EndpointRegistry":
         """Singleton pattern for consistent endpoint configuration."""

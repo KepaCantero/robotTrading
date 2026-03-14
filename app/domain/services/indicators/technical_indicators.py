@@ -425,8 +425,20 @@ class TechnicalIndicators:
         return_components: bool,
     ):
         """Native implementation of MACD."""
-        fast_ema = self._ema_native(prices, fast_period, return_array=True)
-        slow_ema = self._ema_native(prices, slow_period, return_array=True)
+        fast_ema_result = self._ema_native(prices, fast_period, return_array=True)
+        slow_ema_result = self._ema_native(prices, slow_period, return_array=True)
+
+        # Type narrowing - when return_array=True, result is np.ndarray or None
+        if fast_ema_result is None or slow_ema_result is None:
+            if return_components:
+                return (None, None, None)
+            return None
+
+        # At this point, both are np.ndarray (not float) since return_array=True
+        assert isinstance(fast_ema_result, np.ndarray)
+        assert isinstance(slow_ema_result, np.ndarray)
+        fast_ema = fast_ema_result
+        slow_ema = slow_ema_result
 
         macd_line = np.full(len(prices), np.nan)
         for i in range(len(prices)):
@@ -1134,7 +1146,7 @@ class TechnicalIndicators:
                 'williams_r',
             ]
 
-        results = {}
+        results: Dict[str, Optional[Union[float, np.ndarray]]] = {}
 
         # Ensure we have required columns
         has_close = 'close' in df.columns
@@ -1152,22 +1164,32 @@ class TechnicalIndicators:
                 elif indicator == 'sma_20' and has_close:
                     results['sma_20'] = self.sma(df['close'], period=20)
                 elif indicator == 'macd' and has_close:
-                    results['macd'], results['macd_signal'], results['macd_histogram'] = self.macd(
-                        df['close'], return_components=True
-                    )
+                    macd_result = self.macd(df['close'], return_components=True)
+                    if isinstance(macd_result, tuple) and len(macd_result) == 3:
+                        results['macd'] = macd_result[0]
+                        results['macd_signal'] = macd_result[1]
+                        results['macd_histogram'] = macd_result[2]
                 elif indicator == 'atr' and has_ohlc:
                     results['atr'] = self.atr(df['high'], df['low'], df['close'])
                 elif indicator == 'bollinger' and has_close:
                     bands = self.bollinger_bands(df['close'], return_components=False)
-                    results.update(bands)
+                    if isinstance(bands, dict):
+                        results.update(bands)
                 elif indicator == 'adx' and has_ohlc:
-                    results['adx'], results['plus_di'], results['minus_di'] = self.adx(
+                    adx_result = self.adx(
                         df['high'], df['low'], df['close'], return_components=True
                     )
+                    if isinstance(adx_result, tuple) and len(adx_result) == 3:
+                        results['adx'] = adx_result[0]
+                        results['plus_di'] = adx_result[1]
+                        results['minus_di'] = adx_result[2]
                 elif indicator == 'stochastic' and has_ohlc:
-                    results['stoch_k'], results['stoch_d'] = self.stochastic(
+                    stoch_result = self.stochastic(
                         df['high'], df['low'], df['close'], return_components=True
                     )
+                    if isinstance(stoch_result, tuple) and len(stoch_result) == 2:
+                        results['stoch_k'] = stoch_result[0]
+                        results['stoch_d'] = stoch_result[1]
                 elif indicator == 'cci' and has_ohlc:
                     results['cci'] = self.cci(df['high'], df['low'], df['close'])
                 elif indicator == 'williams_r' and has_ohlc:

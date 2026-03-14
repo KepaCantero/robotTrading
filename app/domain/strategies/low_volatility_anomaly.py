@@ -327,7 +327,7 @@ class LowVolatilityAnomaly:
         vol_array = np.array(volatilities)
 
         for metrics in volatility_metrics.values():
-            rank = np.np.mean(vol_array <= metrics.annualized_volatility)
+            rank = np.mean(vol_array <= metrics.annualized_volatility)
             metrics.percentile_rank = float(rank)
 
         # Screen stocks

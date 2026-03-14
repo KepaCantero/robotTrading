@@ -67,7 +67,7 @@ class HyperparameterOptimizer:
         # Espacio de búsqueda de parámetros
         self.parameter_space = self._define_parameter_space()
 
-    def _define_parameter_space(self) -> Dict[str, List[Any]]:
+    def _define_parameter_space(self) -> Dict[str, Any]:
         """Definir espacio de búsqueda de parámetros."""
         return {
             # Presets de estrategia
@@ -210,9 +210,13 @@ class HyperparameterOptimizer:
 
             # Learning algorithm
             if config['enable_learning'] and config['learning_engine_type']:
-                algorithms = self.parameter_space['learning_algorithm'].get(
-                    config['learning_engine_type'], []
-                )
+                learning_algos = self.parameter_space['learning_algorithm']
+                if isinstance(learning_algos, dict):
+                    algorithms = learning_algos.get(
+                        config['learning_engine_type'], []
+                    )
+                else:
+                    algorithms = []
                 if algorithms:
                     config['learning_algorithm'] = random.choice(algorithms)
                     config['min_success_probability'] = random.choice(
@@ -260,9 +264,13 @@ class HyperparameterOptimizer:
                 config['learning_engine_type'] = random.choice(
                     self.parameter_space['learning_engine_type']
                 )
-                algorithms = self.parameter_space['learning_algorithm'].get(
-                    config['learning_engine_type'], []
-                )
+                learning_algos = self.parameter_space.get('learning_algorithm', {})
+                if isinstance(learning_algos, dict):
+                    algorithms = learning_algos.get(
+                        config['learning_engine_type'], []
+                    )
+                else:
+                    algorithms = []
                 if algorithms:
                     config['learning_algorithm'] = random.choice(algorithms)
                     config['min_success_probability'] = random.choice(
@@ -413,7 +421,7 @@ class HyperparameterOptimizer:
             / "strategies"
             / "momentum_modular.yaml"
         )
-        base_config = {}
+        base_config: Dict[str, Any] = {}
         if config_path.exists():
             with open(config_path, 'r') as f:
                 base_config = yaml.safe_load(f) or {}

@@ -14,7 +14,6 @@ from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 from app.backtesting.liquidity_validator import LiquidityValidator
-from app.shared.config.centralized_config import get_config
 from app.backtesting.models import (
     BacktestConfig,
     BacktestResult,
@@ -40,6 +39,7 @@ from app.domain.models.signal import Signal
 from app.domain.services.compliance.compliance_engine import ComplianceEngine
 from app.domain.services.trading_validators import TradingValidator
 from app.services.dynamic_capital_reallocation import DynamicCapitalReallocationEngine
+from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -478,9 +478,7 @@ class BacktestEngine:
         ):
             return
 
-        from app.domain.strategies.momentum_modular.learning.learning_updater import (
-            LearningEngineUpdater,
-        )
+        from app.domain.strategies.learning.learning_updater import LearningEngineUpdater
 
         if not hasattr(self.strategy, '_learning_updater'):
             self.strategy._learning_updater = LearningEngineUpdater(

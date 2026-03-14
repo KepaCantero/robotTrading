@@ -735,7 +735,7 @@ class RegularizationAnalyzer:
         test_score = lasso.score(X_test, y_test)
 
         # Sparsity
-        n_nonzero = np.sum(coef != 0)
+        n_nonzero: int = int(np.sum(coef != 0))
         n_features = len(coef)
         sparsity_ratio = 1.0 - (n_nonzero / n_features)
 
@@ -748,7 +748,7 @@ class RegularizationAnalyzer:
 
         # Explained variance
         y_pred = lasso.predict(X_test)
-        explained_var = 1 - np.var(y_test - y_pred) / np.var(y_test)
+        explained_var = float(1 - np.var(y_test - y_pred) / np.var(y_test))
 
         result = RegularizationResult(
             timestamp=datetime.now(),
@@ -814,7 +814,7 @@ class RegularizationAnalyzer:
 
         # All features retained
         n_features = len(coef)
-        n_nonzero = n_features
+        n_nonzero: int = n_features
         sparsity_ratio = 0.0
 
         # Feature importance
@@ -825,7 +825,7 @@ class RegularizationAnalyzer:
 
         # Explained variance
         y_pred = ridge.predict(X_test)
-        explained_var = 1 - np.var(y_test - y_pred) / np.var(y_test)
+        explained_var = float(1 - np.var(y_test - y_pred) / np.var(y_test))
 
         result = RegularizationResult(
             timestamp=datetime.now(),
@@ -891,7 +891,7 @@ class RegularizationAnalyzer:
         test_score = enet.score(X_test, y_test)
 
         # Sparsity
-        n_nonzero = np.sum(coef != 0)
+        n_nonzero: int = int(np.sum(coef != 0))
         n_features = len(coef)
         sparsity_ratio = 1.0 - (n_nonzero / n_features)
 
@@ -904,7 +904,7 @@ class RegularizationAnalyzer:
 
         # Explained variance
         y_pred = enet.predict(X_test)
-        explained_var = 1 - np.var(y_test - y_pred) / np.var(y_test)
+        explained_var = float(1 - np.var(y_test - y_pred) / np.var(y_test))
 
         result = RegularizationResult(
             timestamp=datetime.now(),
@@ -977,7 +977,9 @@ class RegularizationAnalyzer:
             try:
                 # Fit model with this alpha
                 if regularization_type == RegularizationType.L1:
-                    model = L1Regularization(alpha=alpha, random_state=self.random_state)
+                    model: Union[
+                        L1Regularization, L2Regularization, ElasticNetRegularization
+                    ] = L1Regularization(alpha=alpha, random_state=self.random_state)
                 elif regularization_type == RegularizationType.L2:
                     model = L2Regularization(alpha=alpha)
                 else:  # ELASTIC_NET
@@ -989,7 +991,7 @@ class RegularizationAnalyzer:
 
                 # Get coefficients
                 coef = model.get_coefficients()
-                n_nonzero = np.sum(coef != 0)
+                n_nonzero: int = int(np.sum(coef != 0))
 
                 # Score
                 score = model.score(X_test, y_test)
@@ -1066,7 +1068,7 @@ class RegularizationAnalyzer:
         if l1_ratios is None:
             l1_ratios = [0.2, 0.5, 0.8]
 
-        results = {
+        results: Dict[str, List[RegularizationResult]] = {
             "l1": [],
             "l2": [],
             "elastic_net": [],
@@ -1178,7 +1180,7 @@ def optimize_regularization(
     test_score = lasso.score(X_test, y_test) if method == "lasso" else ridge.score(X_test, y_test)
 
     n_features = len(coef)
-    n_nonzero = np.sum(coef != 0)
+    n_nonzero: int = int(np.sum(coef != 0))
     sparsity_ratio = 1.0 - (n_nonzero / n_features)
 
     # Feature importance

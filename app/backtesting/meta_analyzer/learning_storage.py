@@ -477,10 +477,10 @@ class LearningEngineStorage:
             # SECURITY: One-time migration from pickle to secure format
             # This is the only place where we still use pickle.load, and it's
             # only for migrating existing trusted files to the secure format
-            import pickle  # noqa: S403 - Only for migration of trusted files
+            import pickle  # nosec B403 # Only for migration of trusted files
 
             with open(pkl_path, 'rb') as f:
-                data = pickle.load(f)  # noqa: S301 - Trusted migration only
+                data = pickle.load(f)  # nosec B301 # Trusted migration only
 
             # Determinar nuevo formato
             new_format = self._detect_format(data.get('weights', None))

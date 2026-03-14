@@ -23,8 +23,6 @@ except ImportError:
     # Fallback to standard library
     PYDANTIC_AVAILABLE = False
 
-    from dataclasses import field
-
 
 class CorporateActionType(str, Enum):
     """Types of corporate actions that affect stock prices and positions."""

@@ -171,6 +171,7 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
     - Subclasses implement specific steps without changing the structure
     """
 
+    # pylint: disable=R0913
     def __init__(
         self,
         config: ConfigType,
@@ -314,9 +315,6 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
         Raises:
             ValueError: If signals are invalid
         """
-        if signals is None:
-            return
-
         # Subclasses can add specific validation
 
     # =========================================================================
@@ -329,6 +327,7 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
             return self.config.initial_capital
         return Decimal("100000")
 
+    # pylint: disable=R0913
     def _apply_slippage(
         self,
         price: Decimal,
@@ -370,6 +369,7 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
             # Fallback to local implementation
             return self._apply_slippage_local(price, is_buy, slippage_pct, is_stop, is_volatile)
 
+    # pylint: disable=R0913
     def _apply_slippage_local(
         self,
         price: Decimal,
@@ -571,10 +571,11 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
         level: int = logging.INFO,
     ) -> None:
         """Log trade execution details."""
+        pnl_str = f"{trade.pnl:.2f}" if trade.pnl else "N/A"
         logger.log(
             level,
             f"{self.strategy_name} {action}: {trade.side.upper()} {trade.quantity} "
-            f"{trade.symbol} @ {trade.entry_price:.2f} (PnL={trade.pnl:.2f if trade.pnl else 'N/A'})",
+            f"{trade.symbol} @ {trade.entry_price:.2f} (PnL={pnl_str})",
         )
 
     def _log_signal_rejected(

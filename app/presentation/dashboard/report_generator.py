@@ -33,12 +33,7 @@ def save_backtest_result(
     """
     logger.debug(
         "Saving backtest result",
-        extra={
-            "result_key": result_key,
-            "module": module,
-            "config": config,
-            "symbol": symbol
-        }
+        extra={"result_key": result_key, "module": module, "config": config, "symbol": symbol},
     )
     # Create directory structure
     results_dir = project_root / "docs" / "BACKTEST_RESULTS" / module.lower()
@@ -87,11 +82,7 @@ def save_backtest_result(
 
     logger.info(
         "Backtest result saved",
-        extra={
-            "module": module,
-            "config": config,
-            "files_saved": len(files)
-        }
+        extra={"module": module, "config": config, "files_saved": len(files)},
     )
     return files
 
@@ -219,10 +210,7 @@ def update_summary_index(
     project_root: Path,
 ):
     """Update the summary_index.md with new backtest result."""
-    logger.debug(
-        "Updating summary index",
-        extra={"module": module, "config": config}
-    )
+    logger.debug("Updating summary index", extra={"module": module, "config": config})
 
     index_file = project_root / "docs" / "BACKTEST_RESULTS" / "summary_index.md"
 
@@ -265,7 +253,7 @@ def update_summary_index(
 
     logger.info(
         "Summary index updated",
-        extra={"module": module, "config": config, "index_file": str(index_file)}
+        extra={"module": module, "config": config, "index_file": str(index_file)},
     )
 
 
@@ -304,8 +292,8 @@ def generate_backend_test_summary(
             "strategy": strategy,
             "preset": preset,
             "symbol": symbol,
-            "results_count": len(all_results)
-        }
+            "results_count": len(all_results),
+        },
     )
     # If this is a multi-strategy backtest, generate different summary
     if multi_strategy_results and strategy == "all_strategies":
@@ -365,11 +353,7 @@ def generate_backend_test_summary(
 
     logger.info(
         "Backend test summary generated",
-        extra={
-            "strategy": strategy,
-            "preset": preset,
-            "summary_file": str(summary_file)
-        }
+        extra={"strategy": strategy, "preset": preset, "summary_file": str(summary_file)},
     )
     return summary_file
 
@@ -422,11 +406,7 @@ def _generate_comprehensive_backend_report(
     """Generate comprehensive backend test report."""
     logger.debug(
         "Generating comprehensive backend report",
-        extra={
-            "strategy": strategy,
-            "preset": preset,
-            "symbol": symbol
-        }
+        extra={"strategy": strategy, "preset": preset, "symbol": symbol},
     )
 
     (end_date - start_date).days
@@ -906,10 +886,7 @@ def _generate_findings_and_recommendations(
     metrics: Dict, all_results: List[Dict], preset: str
 ) -> str:
     """Generate findings and recommendations."""
-    logger.debug(
-        "Generating findings and recommendations",
-        extra={"preset": preset}
-    )
+    logger.debug("Generating findings and recommendations", extra={"preset": preset})
     avg_win_rate = metrics.get("avg_win_rate", 0)
     avg_return = metrics.get("avg_total_return", 0)
 
@@ -1002,8 +979,7 @@ def _generate_findings_and_recommendations(
 def _generate_conclusion(metrics: Dict, avg_return: float, avg_win_rate: float) -> str:
     """Generate final conclusion."""
     logger.debug(
-        "Generating conclusion",
-        extra={"avg_return": avg_return, "avg_win_rate": avg_win_rate}
+        "Generating conclusion", extra={"avg_return": avg_return, "avg_win_rate": avg_win_rate}
     )
 
     # Determine status

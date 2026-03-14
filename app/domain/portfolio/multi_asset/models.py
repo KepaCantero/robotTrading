@@ -183,7 +183,7 @@ class MultiAssetAllocation:
         """
         logger.debug(
             "Validating allocation",
-            extra={"asset_class": self.asset_class.name, "weight": float(self.weight)}
+            extra={"asset_class": self.asset_class.name, "weight": float(self.weight)},
         )
         # Check weight is in valid range
         if self.weight < 0 or self.weight > 1:
@@ -373,8 +373,8 @@ class MultiAssetPortfolio:
             extra={
                 "portfolio_name": self.name,
                 "asset_class": allocation.asset_class.name,
-                "weight": float(allocation.weight)
-            }
+                "weight": float(allocation.weight),
+            },
         )
         # Validate before adding
         allocation.validate()
@@ -393,7 +393,7 @@ class MultiAssetPortfolio:
         """
         logger.info(
             "Removing allocation from portfolio",
-            extra={"portfolio_name": self.name, "asset_class": asset_class_name}
+            extra={"portfolio_name": self.name, "asset_class": asset_class_name},
         )
         if asset_class_name in self.allocations:
             del self.allocations[asset_class_name]

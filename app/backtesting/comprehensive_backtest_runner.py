@@ -189,8 +189,8 @@ class ComprehensiveBacktestRunner:
             self.meta_analyzer = meta['analyzer']  # Store analyzer instance
             self.audit_hash = meta['audit_hash']
 
-            if self.audit_hash:
-                hash_display = self.audit_hash[:16]
+            if self.audit_hash and isinstance(self.audit_hash, str):
+                hash_display = str(self.audit_hash)[:16]  # pylint: disable=unsubscriptable-object
                 logger.info(f"Meta-analyzer integrated (Hash: {hash_display}...)")
 
                 if self.audit_trail:
@@ -1316,8 +1316,8 @@ class ComprehensiveBacktestRunner:
             # Step 12: Validate out-of-sample performance
             oos_validation = validate_out_of_sample_performance(
                 train_sharpe=baseline_sharpe,
+                val_sharpe=optimized_sharpe,
                 test_sharpe=optimized_sharpe,
-                confidence=0.95,
             )
 
             result_dict = {
@@ -3816,7 +3816,7 @@ class ComprehensiveBacktestRunner:
             train_sharpe=best_result['train_sharpe'],
             val_sharpe=best_result['val_sharpe'],
             test_sharpe=test_sharpe,
-            degradation_tolerance=0.5,
+            min_performance_ratio=0.5,
         )
 
         optimization_result = {

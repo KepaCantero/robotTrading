@@ -297,7 +297,7 @@ class YAMLConfigLoader:
             "lookback_min_days": lambda v: isinstance(v, int) and v >= 0,
             # Thresholds: can be numeric OR dict (for optimization ranges or nested threshold configs)
             # Dicts are valid if they contain threshold-related keys or are nested configurations
-            "threshold": lambda v: isinstance(v, (int, float)) or isinstance(v, dict),
+            "threshold": lambda v: isinstance(v, (int, float, dict)),
             "enabled": lambda v: isinstance(v, bool),
             # Tier validation - only validate string values, not tier config dicts
             "tier": lambda v: (isinstance(v, str) and v in ["micro", "small", "medium", "large"])

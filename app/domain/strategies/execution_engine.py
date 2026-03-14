@@ -85,7 +85,7 @@ class ExecutionEngine:
             logger.warning("Execution engine not running, skipping cycle")
             return []
 
-        signals = []
+        signals: List[Signal] = []
         self.cycle_count += 1
 
         # Obtener estrategia activa
@@ -100,9 +100,7 @@ class ExecutionEngine:
             self.total_signals_generated += len(strategy_signals)
 
             logger.debug(
-                "Strategy generated signals",
-                strategy=active_strategy.name,
-                count=len(strategy_signals),
+                f"Strategy {active_strategy.name} generated {len(strategy_signals)} signals"
             )
 
             # Validar señales con risk check
@@ -112,28 +110,24 @@ class ExecutionEngine:
                         signals.append(signal)
                         self.logger.log_signal_generated(active_strategy.name, signal)
                         logger.debug(
-                            "Signal validated",
-                            symbol=signal.symbol,
-                            signal_type=str(signal.signal_type),
+                            f"Signal validated: {signal.symbol} ({signal.signal_type})"
                         )
                     else:
                         self.logger.log_signal_rejected(
                             active_strategy.name, signal, "Risk check failed"
                         )
-                        logger.debug("Signal rejected by risk check", symbol=signal.symbol)
+                        logger.debug(f"Signal rejected by risk check: {signal.symbol}")
 
                 except (ValueError, TypeError, KeyError, AttributeError) as e:
                     self.logger.log_strategy_error(active_strategy.name, str(e), "risk_check")
                     logger.error(
-                        "Risk check error", symbol=signal.symbol, error=str(e), exc_info=True
+                        f"Risk check error for {signal.symbol}: {e}", exc_info=True
                     )
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.log_strategy_error(active_strategy.name, str(e), "generate_signals")
             logger.error(
-                "Error generating signals",
-                strategy=active_strategy.name,
-                error=str(e),
+                f"Error generating signals for {active_strategy.name}: {e}",
                 exc_info=True,
             )
 
@@ -164,10 +158,7 @@ class ExecutionEngine:
             self.total_signals_executed += 1
 
             logger.info(
-                "Signal executed",
-                symbol=signal.symbol,
-                signal_type=str(signal.signal_type),
-                price=str(execution_price or signal.price),
+                f"Signal executed: {signal.symbol} ({signal.signal_type}) at {execution_price or signal.price}"
             )
             return True
 
@@ -177,7 +168,7 @@ class ExecutionEngine:
             strategy_name = active_strategy.name if active_strategy else "unknown"
             self.logger.log_execution_error(strategy_name, signal, str(e))
 
-            logger.error("Execution error", symbol=signal.symbol, error=str(e), exc_info=True)
+            logger.error(f"Execution error for {signal.symbol}: {e}", exc_info=True)
             return False
 
     def execute_signals(

@@ -34,7 +34,7 @@ def demo_code_auditing() -> None:
     logger.debug("=" * 70)
     logger.debug("DEMO: Code Auditing for Vectorization Issues")
     logger.debug("=" * 70)
-    logger.debug("")  # type: ignore[arg-type]
+    logger.debug("")
 
     # Non-vectorized code sample
     bad_code = '''
@@ -73,40 +73,40 @@ def iterate_rows(df):
     logger.debug("-" * 70)
     logger.debug(bad_code)
     logger.debug("-" * 70)
-    logger.debug("")  # type: ignore[arg-type]
+    logger.debug("")
 
     # Audit the code
     auditor = VectorizationAuditor()
     issues = auditor.audit_code_snippet(bad_code, filename="demo.py")
 
     logger.debug(f"Found {len(issues)} vectorization issues:")
-    logger.debug("")  # type: ignore[arg-type]
+    logger.debug("")
 
     for i, issue in enumerate(issues, 1):
         logger.debug(f"{i}. [{issue.severity.upper()}] Line {issue.line_number}")
         logger.debug(f"   Type: {issue.issue_type}")
         logger.debug(f"   Description: {issue.description}")
         logger.debug(f"   Suggestion: {issue.suggestion}")
-        logger.debug("")  # type: ignore[arg-type]
+        logger.debug("")
 
     # Calculate score
     score = auditor.calculate_score(issues)
     logger.debug(f"Vectorization Score: {score}/100")
-    logger.debug("")  # type: ignore[arg-type]
+    logger.debug("")
 
 
 def demo_benchmarking() -> None:
     """Demonstrate benchmarking of vectorized vs non-vectorized code."""
-    logger.debug("")  # type: ignore[arg-type]
+    logger.debug("")
     logger.debug("=" * 70)
     logger.debug("DEMO: Benchmarking Vectorized vs Non-Vectorized Code")
     logger.debug("=" * 70)
-    logger.debug("")  # type: ignore[arg-type]
+    logger.debug("")
 
     benchmark = VectorizationBenchmark(verbose=False)
 
     logger.debug("Running benchmarks...")
-    logger.debug("")  # type: ignore[arg-type]
+    logger.debug("")
 
     # Run a few key benchmarks
     results = [
@@ -117,21 +117,21 @@ def demo_benchmarking() -> None:
 
     for result in results:
         logger.debug(result.get_summary())
-        logger.debug("")  # type: ignore[arg-type]
+        logger.debug("")
 
     # Generate summary
     avg_speedup = np.mean([r.speedup for r in results])
     logger.debug(f"Average speedup: {avg_speedup:.2f}x")
-    logger.debug("")  # type: ignore[arg-type]
+    logger.debug("")
 
 
 def demo_patterns() -> None:
     """Demonstrate vectorization patterns library."""
-    logger.debug("")  # type: ignore[arg-type]
+    logger.debug("")
     logger.debug("=" * 70)
     logger.debug("DEMO: Vectorization Patterns Library")
     logger.debug("=" * 70)
-    logger.debug("")  # type: ignore[arg-type]
+    logger.debug("")
 
     # Show key patterns
     patterns = [
@@ -143,7 +143,7 @@ def demo_patterns() -> None:
     for name, pattern in patterns:
         logger.debug(f"{name}:")
         logger.debug(pattern)
-        logger.debug("")  # type: ignore[arg-type]
+        logger.debug("")
 
     # Show trading-specific examples
     logger.debug("Trading-Specific Examples:")
@@ -152,32 +152,32 @@ def demo_patterns() -> None:
     for name, example in list(trading_examples.items())[:3]:
         logger.debug(f"{name.replace('_', ' ').title()}:")
         logger.debug(example)
-        logger.debug("")  # type: ignore[arg-type]
+        logger.debug("")
 
 
 def main() -> None:
     """Run all demos."""
-    logger.debug("")  # type: ignore[arg-type]
+    logger.debug("")
     logger.debug("*" * 70)
     logger.debug(" VECTORIZATION VERIFICATION MODULE - DEMONSTRATION")
     logger.debug("*" * 70)
-    logger.debug("")  # type: ignore[arg-type]
+    logger.debug("")
 
     try:
         demo_code_auditing()
         demo_benchmarking()
         demo_patterns()
 
-        logger.debug("")  # type: ignore[arg-type]
+        logger.debug("")
         logger.debug("=" * 70)
         logger.debug("DEMO COMPLETE")
         logger.debug("=" * 70)
-        logger.debug("")  # type: ignore[arg-type]
+        logger.debug("")
         logger.debug("Key Takeaways:")
         logger.debug("1. Vectorization issues are automatically detected in code")
         logger.debug("2. Vectorized code is typically 10-100x faster")
         logger.debug("3. Pattern library provides concrete examples for refactoring")
-        logger.debug("")  # type: ignore[arg-type]
+        logger.debug("")
 
     except Exception as e:
         logger.debug(f"Error during demo: {e}")

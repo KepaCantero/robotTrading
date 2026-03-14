@@ -48,7 +48,7 @@ class SHAPExplanation(BaseModel):
                 "prediction_id": self.prediction_id,
                 "num_features_requested": n,
                 "total_features": len(self.shap_values),
-            }
+            },
         )
         sorted_values = sorted(self.shap_values, key=lambda x: abs(x.shap_value), reverse=True)
         top_features = sorted_values[:n]
@@ -58,7 +58,7 @@ class SHAPExplanation(BaseModel):
                 "prediction_id": self.prediction_id,
                 "num_features_returned": len(top_features),
                 "top_feature_names": [f.feature_name for f in top_features],
-            }
+            },
         )
         return top_features
 
@@ -138,7 +138,7 @@ class FeatureImportanceReport(BaseModel):
                 "method": self.method,
                 "num_features_requested": n,
                 "total_features": self.total_features,
-            }
+            },
         )
         sorted_features = sorted(self.features, key=lambda x: x.importance_score, reverse=True)
         top_features = sorted_features[:n]
@@ -148,7 +148,7 @@ class FeatureImportanceReport(BaseModel):
                 "model_name": self.model_name,
                 "num_features_returned": len(top_features),
                 "top_feature_names": [f.feature_name for f in top_features[:5]],
-            }
+            },
         )
         return top_features
 

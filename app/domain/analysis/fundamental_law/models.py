@@ -107,21 +107,30 @@ class FundamentalLawComponents:
                 "ic": float(self.information_coefficient),
                 "breadth": float(self.breadth),
                 "tc": float(self.transfer_coefficient),
-            }
+            },
         )
 
         # Validate all components are non-negative
         if self.information_ratio < 0:
-            logger.error("Information Ratio cannot be negative", extra={"value": float(self.information_ratio)})
+            logger.error(
+                "Information Ratio cannot be negative",
+                extra={"value": float(self.information_ratio)},
+            )
             raise ValueError("Information Ratio cannot be negative")
         if self.information_coefficient < 0:
-            logger.error("Information Coefficient cannot be negative", extra={"value": float(self.information_coefficient)})
+            logger.error(
+                "Information Coefficient cannot be negative",
+                extra={"value": float(self.information_coefficient)},
+            )
             raise ValueError("Information Coefficient cannot be negative")
         if self.breadth < 0:
             logger.error("Breadth cannot be negative", extra={"value": float(self.breadth)})
             raise ValueError("Breadth cannot be negative")
         if self.transfer_coefficient < 0:
-            logger.error("Transfer Coefficient cannot be negative", extra={"value": float(self.transfer_coefficient)})
+            logger.error(
+                "Transfer Coefficient cannot be negative",
+                extra={"value": float(self.transfer_coefficient)},
+            )
             raise ValueError("Transfer Coefficient cannot be negative")
 
         # Calculate expected IR from components
@@ -143,7 +152,7 @@ class FundamentalLawComponents:
                 "is_valid": is_valid,
                 "difference": float(difference),
                 "tolerance": float(tolerance),
-            }
+            },
         )
 
         return is_valid
@@ -270,7 +279,7 @@ class ICMetrics:
                 "p_value": self.statistical_significance,
                 "alpha": alpha,
                 "is_significant": is_sig,
-            }
+            },
         )
         return is_sig
 
@@ -306,7 +315,7 @@ class ICMetrics:
             extra={
                 "ic": float(self.ic),
                 "skill_level": skill_level,
-            }
+            },
         )
         return skill_level
 
@@ -383,7 +392,7 @@ class ICMetrics:
                 "initial_ic": float(initial_ic),
                 "final_ic": float(final_ic),
                 "persistence": persistence,
-            }
+            },
         )
 
         return persistence
@@ -461,7 +470,7 @@ class BreadthMetrics:
                 "annual_breadth": float(self.annual_breadth),
                 "independence_factor": float(self.independence_factor),
                 "category": category,
-            }
+            },
         )
 
         return category

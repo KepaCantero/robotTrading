@@ -275,7 +275,11 @@ class Trade(Base):
         """
         logger.debug(
             "converting_trade_to_pydantic",
-            extra={"trade_id": str(self.id), "symbol": self.asset.symbol if self.asset else None, "side": self.side}
+            extra={
+                "trade_id": str(self.id),
+                "symbol": self.asset.symbol if self.asset else None,
+                "side": self.side,
+            },
         )
         from app.backtesting.models import Trade as PydanticTrade, TradeStatus
 
@@ -300,7 +304,7 @@ class Trade(Base):
         )
         logger.debug(
             "trade_converted_to_pydantic",
-            extra={"trade_id": str(self.id), "pydantic_trade_id": result.trade_id}
+            extra={"trade_id": str(self.id), "pydantic_trade_id": result.trade_id},
         )
         return result
 
@@ -330,8 +334,8 @@ class Trade(Base):
                 "pydantic_trade_id": pydantic_trade.trade_id,
                 "portfolio_id": str(portfolio_id),
                 "asset_id": str(asset_id),
-                "order_id": order_id
-            }
+                "order_id": order_id,
+            },
         )
         from app.backtesting.models import TradeStatus
 
@@ -359,7 +363,7 @@ class Trade(Base):
         )
         logger.debug(
             "sqlalchemy_trade_created_from_pydantic",
-            extra={"trade_id": str(result.id), "side": result.side, "status": result.status}
+            extra={"trade_id": str(result.id), "side": result.side, "status": result.status},
         )
         return result
 
@@ -567,8 +571,7 @@ class PositionState(Base):
 
     def __repr__(self):
         logger.debug(
-            "position_state_repr",
-            extra={"monitor_id": self.monitor_id, "version": self.version}
+            "position_state_repr", extra={"monitor_id": self.monitor_id, "version": self.version}
         )
         return f"<PositionState(monitor_id={self.monitor_id}, version={self.version})>"
 

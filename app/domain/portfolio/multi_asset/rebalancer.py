@@ -14,10 +14,11 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List
 
+from app.backtesting.models import Trade
 from app.shared.config.centralized_config import get_config
 
 from .asset_class import AssetClass, AssetClassType
-from .models import MultiAssetAllocation, MultiAssetPortfolio, Trade
+from .models import MultiAssetAllocation, MultiAssetPortfolio
 
 logger = logging.getLogger(__name__)
 

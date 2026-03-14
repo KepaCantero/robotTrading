@@ -84,7 +84,7 @@ class VectorizationAuditor:
         self.patterns = VectorizationPatterns()
         logger.info(
             "VectorizationAuditor initialized",
-            extra={"exclude_dirs": list(self.exclude_dirs), "file_patterns": self.file_patterns}
+            extra={"exclude_dirs": list(self.exclude_dirs), "file_patterns": self.file_patterns},
         )
 
     def audit_file(
@@ -133,8 +133,7 @@ class VectorizationAuditor:
         issues.extend(self._check_while_loops(tree, str(file_path), source_code))
 
         logger.info(
-            "File audit completed",
-            extra={"file_path": str(file_path), "issues_found": len(issues)}
+            "File audit completed", extra={"file_path": str(file_path), "issues_found": len(issues)}
         )
 
         return issues
@@ -160,7 +159,7 @@ class VectorizationAuditor:
 
         logger.info(
             "Starting directory audit",
-            extra={"directory": str(directory), "pattern": pattern, "recursive": recursive}
+            extra={"directory": str(directory), "pattern": pattern, "recursive": recursive},
         )
 
         if not directory.exists():
@@ -225,8 +224,8 @@ class VectorizationAuditor:
                 "total_files_scanned": total_files,
                 "total_issues_found": total_issues,
                 "vectorization_score": float(vectorization_score),
-                "scan_duration_seconds": scan_duration
-            }
+                "scan_duration_seconds": scan_duration,
+            },
         )
 
         return VectorizationReport(
@@ -809,7 +808,7 @@ class VectorizationAuditor:
 
         logger.info(
             "Code snippet audit completed",
-            extra={"filename": filename, "issues_found": len(issues)}
+            extra={"filename": filename, "issues_found": len(issues)},
         )
 
         return issues

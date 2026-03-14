@@ -220,7 +220,7 @@ class PreTradeComplianceChecker:
                 reasons.append("Insufficient liquidity")
 
         except Exception as e:
-            logger.warning("Harris pre-trade check error:", error=e)
+            logger.warning("Harris pre-trade check error: %s", e)
 
     def _check_ohara_liquidity(
         self,
@@ -261,7 +261,7 @@ class PreTradeComplianceChecker:
                     reasons.append(f"Low liquidity regime: {regime.value}")
 
         except Exception as e:
-            logger.warning("O'Hara liquidity analysis error:", error=e)
+            logger.warning("O'Hara liquidity analysis error: %s", e)
 
     def _check_chan_regime(
         self,
@@ -292,7 +292,7 @@ class PreTradeComplianceChecker:
                     result.confidence += 0.05
 
         except Exception as e:
-            logger.warning("Chan regime detection error:", error=e)
+            logger.warning("Chan regime detection error: %s", e)
 
     def _check_narang_alpha(
         self,
@@ -326,7 +326,7 @@ class PreTradeComplianceChecker:
                 reasons.append(f"Low alpha confidence: {alpha_signal.confidence:.2f}")
 
         except Exception as e:
-            logger.warning("Narang alpha generation error:", error=e)
+            logger.warning("Narang alpha generation error: %s", e)
 
     def _check_hull_risk(
         self,
@@ -354,7 +354,7 @@ class PreTradeComplianceChecker:
                 reasons.append(f"High VaR: {float(var_95):.2%}")
 
         except Exception as e:
-            logger.warning("Hull risk calculation error:", error=e)
+            logger.warning("Hull risk calculation error: %s", e)
 
     # =========================================================================
     # HELPER METHODS

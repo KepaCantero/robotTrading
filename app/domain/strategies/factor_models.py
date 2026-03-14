@@ -69,6 +69,10 @@ class BaseFactorModel:
         self.name = name
         self.calculator = FactorCalculator()
 
+    def _ols_regression(self, y: np.ndarray, X: np.ndarray) -> "SimpleOLSResult":
+        """Perform OLS regression using SimpleOLSResult."""
+        return SimpleOLSResult(X, y)
+
     def fit(
         self,
         returns: np.ndarray,
@@ -412,8 +416,8 @@ class SimpleOLSResult:
         self.resid = y - self.fitted_values
 
         # R-squared
-        ss_res = np.sum(self.resid**2)
-        ss_tot = np.sum((y - np.mean(y)) ** 2)
+        ss_res: float = float(np.sum(self.resid**2))
+        ss_tot: float = float(np.sum((y - np.mean(y)) ** 2))
         self.rsquared = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0
 
         # MSE
@@ -426,10 +430,6 @@ class SimpleOLSResult:
         from scipy.stats import f
 
         self.f_pvalue = 1 - f.cdf(f_stat, k - 1, n - k)
-
-
-# Update BaseFactorModel to use SimpleOLSResult
-BaseFactorModel._ols_regression = lambda self, y, X: SimpleOLSResult(X, y)
 
 
 class FactorModelManager:

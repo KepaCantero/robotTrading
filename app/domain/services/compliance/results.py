@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 
 
-@dataclass(frozen=True)
+@dataclass
 class CheckResult:
     """
     Base result for all compliance checks.
@@ -49,7 +49,7 @@ class CheckResult:
                 "passed": self.passed,
                 "confidence": self.confidence,
                 "reasons_count": len(self.reasons),
-            }
+            },
         )
         return {
             "passed": self.passed,
@@ -59,7 +59,7 @@ class CheckResult:
         }
 
 
-@dataclass(frozen=True)
+@dataclass
 class PreTradeCheckResult(CheckResult):
     """
     Result from pre-trade compliance check.
@@ -113,7 +113,7 @@ class PreTradeCheckResult(CheckResult):
                 "liquidity_regime": self.liquidity_regime,
                 "estimated_total_cost_bps": self.estimated_total_cost_bps,
                 "recommended_venue": self.recommended_venue,
-            }
+            },
         )
         base_dict.update(
             {
@@ -149,7 +149,7 @@ class PreTradeCheckResult(CheckResult):
 # =============================================================================
 
 
-@dataclass(frozen=True)
+@dataclass
 class PostTradeCheckResult(CheckResult):
     """
     Result from post-trade compliance analysis.
@@ -190,7 +190,7 @@ class PostTradeCheckResult(CheckResult):
                 "execution_quality_score": self.execution_quality_score,
                 "implementation_shortfall_bps": self.implementation_shortfall_bps,
                 "fill_rate": self.fill_rate,
-            }
+            },
         )
         base_dict.update(
             {
@@ -217,7 +217,7 @@ class PostTradeCheckResult(CheckResult):
 # =============================================================================
 
 
-@dataclass(frozen=True)
+@dataclass
 class OptimizeResult(CheckResult):
     """
     Result from portfolio optimization.
@@ -259,7 +259,7 @@ class OptimizeResult(CheckResult):
 # =============================================================================
 
 
-@dataclass(frozen=True)
+@dataclass
 class ComprehensivePreTradeAnalysis(PreTradeCheckResult):
     """
     Legacy compatibility wrapper for existing code.
@@ -268,7 +268,7 @@ class ComprehensivePreTradeAnalysis(PreTradeCheckResult):
     """
 
 
-@dataclass(frozen=True)
+@dataclass
 class ComprehensivePostTradeAnalysis(PostTradeCheckResult):
     """
     Legacy compatibility wrapper for existing code.
@@ -277,8 +277,8 @@ class ComprehensivePostTradeAnalysis(PostTradeCheckResult):
     """
 
 
-@dataclass(frozen=True)
-class PortfolioOptimizationResult(OptimizeResult):
+@dataclass
+class PortfolioOptimizationResult(CheckResult):
     """
     Legacy compatibility wrapper for existing code.
 
@@ -286,9 +286,25 @@ class PortfolioOptimizationResult(OptimizeResult):
     """
 
     weights: Dict[str, Decimal] = field(default_factory=dict)
+    expected_return: float = 0.0
+    expected_risk: float = 0.0
+    sharpe_ratio: float = 0.0
+
+    # Factor exposures (Narang)
+    factor_exposures: Dict[str, float] = field(default_factory=dict)
+
+    # Regime awareness (Chan)
+    regime: str = "UNKNOWN"
+    regime_adjusted: bool = False
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary with Decimal weights."""
         base_dict = super().to_dict()
         base_dict["weights"] = {k: str(v) for k, v in self.weights.items()}
+        base_dict["expected_return"] = self.expected_return
+        base_dict["expected_risk"] = self.expected_risk
+        base_dict["sharpe_ratio"] = self.sharpe_ratio
+        base_dict["factor_exposures"] = self.factor_exposures
+        base_dict["regime"] = self.regime
+        base_dict["regime_adjusted"] = self.regime_adjusted
         return base_dict

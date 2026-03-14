@@ -26,9 +26,9 @@ from .models import (
     DividendProfile,
     DividendSafety,
     DividendScreeningCriteria,
-    DividendStock,
+    DividendScreeningResult,
+    DividendStockResult,
     DividendStrategyConfig,
-    ScreeningResult,
 )
 
 logger = logging.getLogger(__name__)
@@ -84,7 +84,7 @@ class DividendScreener:
     def screen(
         self,
         profiles: List[DividendProfile],
-    ) -> ScreeningResult:
+    ) -> DividendScreeningResult:
         """
         Aplicar screening a lista de perfiles.
 
@@ -96,7 +96,7 @@ class DividendScreener:
         """
         start_time = time.time()
 
-        passed: List[DividendStock] = []
+        passed: List[DividendStockResult] = []
         failed: Dict[str, List[str]] = {}
         total_evaluated = len(profiles)
 
@@ -109,7 +109,7 @@ class DividendScreener:
             failure_reasons = self._evaluate_profile(profile)
 
             if not failure_reasons:
-                # Crear DividendStock con score inicial
+                # Crear DividendStockResult con score inicial
                 stock = self._create_dividend_stock(profile)
                 passed.append(stock)
             else:
@@ -117,7 +117,7 @@ class DividendScreener:
 
         elapsed_ms = (time.time() - start_time) * 1000
 
-        result = ScreeningResult(
+        result = DividendScreeningResult(
             passed_stocks=passed,
             failed_stocks=failed,
             total_evaluated=total_evaluated,
@@ -252,22 +252,22 @@ class DividendScreener:
 
         return failures
 
-    def _create_dividend_stock(self, profile: DividendProfile) -> DividendStock:
+    def _create_dividend_stock(self, profile: DividendProfile) -> DividendStockResult:
         """
-        Crear DividendStock desde profile.
+        Crear DividendStockResult desde profile.
 
         Args:
             profile: Perfil de acción
 
         Returns:
-            DividendStock con score de decisión
+            DividendStockResult con score de decisión
         """
         # Calcular score de decisión preliminar (se refinará en analyzer)
         decision_score = self._calculate_preliminary_score(profile)
         decision_reason = f"Paso screening con yield {profile.dividend_data.dividend_yield:.2f}%"
         recommendation = self._get_recommendation(decision_score)
 
-        return DividendStock(
+        return DividendStockResult(
             profile=profile,
             decision_score=Decimal(str(round(decision_score, 2))),
             decision_reason=decision_reason,

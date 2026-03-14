@@ -81,7 +81,7 @@ class SpainDividendTaxCalculator:
                 "ue_withholding": str(self.UE_WITHHOLDING),
                 "non_ue_withholding": str(self.NON_EU_WITHHOLDING),
                 "ticker_mappings_count": len(self._ticker_to_country),
-            }
+            },
         )
 
     def calculate_withholding(self, symbol: str, gross_amount: Decimal) -> dict:
@@ -125,7 +125,7 @@ class SpainDividendTaxCalculator:
                 "withholding_rate": str(rate),
                 "withholding_amount": str(withholding_amount),
                 "net_amount": str(net_amount),
-            }
+            },
         )
 
         return {
@@ -165,7 +165,7 @@ class SpainDividendTaxCalculator:
                 "symbol": symbol,
                 "country": country,
                 "found": country != "UNKNOWN",
-            }
+            },
         )
 
         return country
@@ -183,5 +183,5 @@ class SpainDividendTaxCalculator:
                 "symbol": symbol,
                 "old_country": old_country,
                 "new_country": country,
-            }
+            },
         )

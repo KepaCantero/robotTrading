@@ -43,7 +43,7 @@ class ExtendedPortfolio(BasePortfolio):
                 "portfolio_id": str(self.id),
                 "portfolio_name": self.name,
                 "total_value": float(self.total_value),
-            }
+            },
         )
 
         cfg = get_config()
@@ -55,7 +55,7 @@ class ExtendedPortfolio(BasePortfolio):
                     "portfolio_id": str(self.id),
                     "cash_balance": float(self.cash_balance),
                     "cash": float(self.cash),
-                }
+                },
             )
             raise ValueError("Cash balance must match cash field")
 
@@ -74,7 +74,7 @@ class ExtendedPortfolio(BasePortfolio):
                     "expected_total": float(calculated_total),
                     "actual_total": float(self.total_value),
                     "tolerance": float(tolerance),
-                }
+                },
             )
             raise ValueError(
                 f"Total value mismatch. Expected: {calculated_total}, Got: {self.total_value}"
@@ -86,7 +86,7 @@ class ExtendedPortfolio(BasePortfolio):
                 "portfolio_id": str(self.id),
                 "total_value": float(self.total_value),
                 "position_count": len(self.positions),
-            }
+            },
         )
 
         return self
@@ -222,7 +222,7 @@ class PerformanceMetrics(BaseModel):
                 "period": self.period.value,
                 "start_date": self.start_date.isoformat(),
                 "end_date": self.end_date.isoformat(),
-            }
+            },
         )
 
         if self.start_date >= self.end_date:
@@ -232,7 +232,7 @@ class PerformanceMetrics(BaseModel):
                     "portfolio_id": str(self.portfolio_id),
                     "start_date": self.start_date.isoformat(),
                     "end_date": self.end_date.isoformat(),
-                }
+                },
             )
             raise ValueError("Start date must be before end date")
 
@@ -244,7 +244,7 @@ class PerformanceMetrics(BaseModel):
                     "cash_value": float(self.cash_value),
                     "equity_value": float(self.equity_value),
                     "total_value": float(self.total_value),
-                }
+                },
             )
             raise ValueError("Cash + Equity must equal total value")
 
@@ -255,7 +255,7 @@ class PerformanceMetrics(BaseModel):
                 "total_return": float(self.total_return),
                 "sharpe_ratio": float(self.sharpe_ratio),
                 "max_drawdown": float(self.max_drawdown),
-            }
+            },
         )
 
         return self
@@ -430,7 +430,7 @@ class PortfolioAllocation(BaseModel):
                 "fixed_income_allocation": float(self.fixed_income_allocation),
                 "cash_allocation": float(self.cash_allocation),
                 "alternative_allocation": float(self.alternative_allocation),
-            }
+            },
         )
 
         cfg = get_config()
@@ -451,7 +451,7 @@ class PortfolioAllocation(BaseModel):
                     "portfolio_id": str(self.portfolio_id),
                     "total_allocation": float(total_allocation),
                     "tolerance": float(tolerance),
-                }
+                },
             )
             raise ValueError(f"Asset class allocations must sum to 100%, got {total_allocation}")
 
@@ -460,7 +460,7 @@ class PortfolioAllocation(BaseModel):
             extra={
                 "portfolio_id": str(self.portfolio_id),
                 "total_allocation": float(total_allocation),
-            }
+            },
         )
 
         return self
@@ -544,7 +544,7 @@ class PortfolioComparison(BaseModel):
             extra={
                 "comparison_id": str(self.id),
                 "portfolio_count": len(self.portfolio_ids),
-            }
+            },
         )
 
         if len(self.portfolio_ids) < 2:
@@ -553,7 +553,7 @@ class PortfolioComparison(BaseModel):
                 extra={
                     "comparison_id": str(self.id),
                     "portfolio_count": len(self.portfolio_ids),
-                }
+                },
             )
             raise ValueError("At least 2 portfolios required for comparison")
 
@@ -564,7 +564,7 @@ class PortfolioComparison(BaseModel):
                     "comparison_id": str(self.id),
                     "portfolio_count": len(self.portfolio_ids),
                     "comparison_count": len(self.performance_comparison),
-                }
+                },
             )
             raise ValueError("Performance comparison must include all portfolios")
 
@@ -574,7 +574,7 @@ class PortfolioComparison(BaseModel):
                 "comparison_id": str(self.id),
                 "portfolio_count": len(self.portfolio_ids),
                 "best_performer": str(self.best_performer),
-            }
+            },
         )
 
         return self

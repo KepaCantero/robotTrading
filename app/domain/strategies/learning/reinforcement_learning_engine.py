@@ -21,6 +21,7 @@ os.environ.setdefault('OMP_NUM_THREADS', '1')  # Reducir threads para evitar blo
 import gymnasium as gym
 import gymnasium.spaces
 from stable_baselines3 import A2C, DDPG, DQN, PPO, SAC, TD3
+from stable_baselines3.common.base_class import BaseAlgorithm
 from stable_baselines3.common.callbacks import BaseCallback
 
 
@@ -329,8 +330,8 @@ class ReinforcementLearningEngine(BaseLearningEngine):
         self.training_steps = config.get("training_steps", 100000)
         self.learning_rate = config.get("learning_rate", 3e-4)
 
-        self.env = None
-        self.agent = None
+        self.env: Optional[TradingEnv] = None
+        self.agent: Optional[BaseAlgorithm] = None
 
     def train(
         self,
@@ -471,6 +472,10 @@ class ReinforcementLearningEngine(BaseLearningEngine):
         total_reward = 0.0
         episodes = 0
 
+        # Assert env and agent are initialized
+        assert self.env is not None, "Environment not initialized"
+        assert self.agent is not None, "Agent not initialized"
+
         for episode in range(min(self.training_steps // 1000, 100)):  # Limitar episodios para demo
             obs = self.env.reset()
             done = False
@@ -481,7 +486,8 @@ class ReinforcementLearningEngine(BaseLearningEngine):
                     market_data = market_sequences[step]
 
                     action, _ = self.agent.predict(obs, deterministic=False)
-                    obs, reward, done, info = self.env.step(action, market_data)
+                    obs, reward, terminated, truncated, info = self.env.step(action, market_data)
+                    done = terminated or truncated
 
                     total_reward += reward
                     step += 1
@@ -557,6 +563,10 @@ class ReinforcementLearningEngine(BaseLearningEngine):
                 'risk_adjustments': {},
             }
 
+        # Assert env and agent are initialized
+        assert self.env is not None, "Environment not initialized"
+        assert self.agent is not None, "Agent not initialized"
+
         market_data = features['market_data']
 
         # Obtener observación
@@ -591,6 +601,10 @@ class ReinforcementLearningEngine(BaseLearningEngine):
 
     def evaluate(self, test_data: Dict[str, Any]) -> Dict[str, float]:
         """Evaluar agente en datos de prueba."""
+        # Assert env and agent are initialized
+        assert self.env is not None, "Environment not initialized"
+        assert self.agent is not None, "Agent not initialized"
+
         # Ejecutar agente en entorno de prueba
         obs = self.env.reset()
         total_reward = 0.0
@@ -600,7 +614,8 @@ class ReinforcementLearningEngine(BaseLearningEngine):
 
         for market_data in market_sequences:
             action, _ = self.agent.predict(obs, deterministic=True)
-            obs, reward, done, info = self.env.step(action, market_data)
+            obs, reward, terminated, truncated, info = self.env.step(action, market_data)
+            done = terminated or truncated
             total_reward += reward
             steps += 1
 

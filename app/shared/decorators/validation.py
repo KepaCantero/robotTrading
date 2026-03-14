@@ -92,14 +92,13 @@ def validate_symbol(func: Callable) -> Callable:
     @wraps(func)
     async def wrapper(*args, symbol: str = None, **kwargs):
         logger.debug(
-            "Validating symbol parameter",
-            extra={"symbol": symbol, "function": func.__name__}
+            "Validating symbol parameter", extra={"symbol": symbol, "function": func.__name__}
         )
         if symbol:
             kwargs['symbol'] = validator.trading.validate_symbol(symbol)
             logger.debug(
                 "Symbol validated successfully",
-                extra={"symbol": kwargs['symbol'], "function": func.__name__}
+                extra={"symbol": kwargs['symbol'], "function": func.__name__},
             )
         return await func(*args, **kwargs)
 
@@ -116,13 +115,12 @@ def validate_order_params(func: Callable) -> Callable:
             extra={
                 "function": func.__name__,
                 "symbol": kwargs.get('symbol'),
-                "side": kwargs.get('side')
-            }
+                "side": kwargs.get('side'),
+            },
         )
         if not kwargs.get('symbol'):
             logger.error(
-                "Order validation failed - symbol required",
-                extra={"function": func.__name__}
+                "Order validation failed - symbol required", extra={"function": func.__name__}
             )
             raise ValidationError("symbol is required")
 
@@ -138,8 +136,8 @@ def validate_order_params(func: Callable) -> Callable:
             extra={
                 "function": func.__name__,
                 "symbol": validated.get('symbol'),
-                "side": validated.get('side')
-            }
+                "side": validated.get('side'),
+            },
         )
         return await func(*args, **kwargs)
 
@@ -153,7 +151,7 @@ def validate_and_sanitize_input_decorator(func: Callable) -> Callable:
     async def wrapper(*args, **kwargs):
         logger.debug(
             "Validating and sanitizing inputs",
-            extra={"function": func.__name__, "keys": list(kwargs.keys())}
+            extra={"function": func.__name__, "keys": list(kwargs.keys())},
         )
         if 'symbol' in kwargs:
             original = kwargs.get('symbol')
@@ -163,8 +161,8 @@ def validate_and_sanitize_input_decorator(func: Callable) -> Callable:
                 extra={
                     "function": func.__name__,
                     "original": original,
-                    "sanitized": kwargs['symbol']
-                }
+                    "sanitized": kwargs['symbol'],
+                },
             )
         return await func(*args, **kwargs)
 
@@ -181,8 +179,8 @@ def validate_list_input(func: Callable) -> Callable:
             extra={
                 "function": func.__name__,
                 "value_type": type(value).__name__ if value is not None else None,
-                "sanitize_elements": sanitize_elements
-            }
+                "sanitize_elements": sanitize_elements,
+            },
         )
         if value is None:
             value = []
@@ -192,8 +190,8 @@ def validate_list_input(func: Callable) -> Callable:
                 extra={
                     "function": func.__name__,
                     "expected": "list",
-                    "actual": type(value).__name__
-                }
+                    "actual": type(value).__name__,
+                },
             )
             raise ValidationError(f"Expected list, got {type(value).__name__}")
 
@@ -209,8 +207,8 @@ def validate_list_input(func: Callable) -> Callable:
             extra={
                 "function": func.__name__,
                 "original_count": len(value),
-                "validated_count": len(validated)
-            }
+                "validated_count": len(validated),
+            },
         )
         return await func(*args, **kwargs)
 
@@ -240,13 +238,12 @@ def validate_request_model(
         extra={
             "model_class": model_class.__name__,
             "sanitize": sanitize,
-            "data_keys": list(data.keys())
-        }
+            "data_keys": list(data.keys()),
+        },
     )
     result = model_class(**data)
     logger.debug(
-        "Request model validated successfully",
-        extra={"model_class": model_class.__name__}
+        "Request model validated successfully", extra={"model_class": model_class.__name__}
     )
     return result
 
@@ -268,8 +265,8 @@ def validate_and_sanitize_input(data: Any, input_type: str = "auto", **constrain
         extra={
             "input_type": input_type,
             "data_type": type(data).__name__,
-            "constraints": constraints
-        }
+            "constraints": constraints,
+        },
     )
     if input_type == "symbol":
         result = TradingValidator.validate_symbol(data)
@@ -296,6 +293,6 @@ def validate_and_sanitize_input(data: Any, input_type: str = "auto", **constrain
 
     logger.debug(
         "Input validated and sanitized",
-        extra={"input_type": input_type, "result_type": type(result).__name__}
+        extra={"input_type": input_type, "result_type": type(result).__name__},
     )
     return result

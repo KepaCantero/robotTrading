@@ -46,12 +46,71 @@ from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Dict, List, Protocol, Union, runtime_checkable
+
+import numpy as np
+
+from .alert_system import AlertSystem
+from .correlation_analyzers import CorrelationAnalyzer
+from .drawdown_controllers import DrawdownController
+from .exposure_managers import ExposureManager
+from .greeks_calculator import GreeksCalculator
+from .risk_attribution import RiskAttributor
+from .risk_limits_enforcer import RiskLimitsEnforcer
+from .stress_testers import StressTester
+from .stress_testers.comprehensive_scenarios import ComprehensiveStressScenarios
+from .stress_testers.correlation_stress import CorrelationStressTester
+from .stress_testers.portfolio_variance_stress import PortfolioVarianceStressTester
+from .var_calculators.component_var import ComponentVaRCalculator
+from .var_calculators.ewma_var import EWMAVaRCalculator
 
 # Use TYPE_CHECKING for type hints only - no runtime import
 if TYPE_CHECKING:
     from app.domain.models.portfolio import Portfolio
-    from app.domain.services.risk.portfolio import PortfolioRiskManager as PortfolioRiskManager
+
+
+logger = logging.getLogger(__name__)
+
+# Required dependencies - with proper import handling
+try:
+    pass
+
+    ARCH_AVAILABLE = True
+except ImportError:
+    ARCH_AVAILABLE = False
+    logger.warning("arch package not available. GARCH models will be limited.")
+
+try:
+    pass
+
+    STATSMODELS_AVAILABLE = True
+except ImportError:
+    pass
+
+    STATSMODELS_AVAILABLE = False
+    logger.warning(
+        "statsmodels package not available. Using fallback implementations from scipy/numpy. Some statistical features will be limited."
+    )
+
+__all__ = [
+    "RiskEngine",
+    "BaseRiskEngine",
+    "PortfolioProtocol",  # Protocol for dependency injection
+    "AlertSystem",
+    "DrawdownController",
+    "CorrelationAnalyzer",
+    "ExposureManager",
+    "RiskAttributor",
+    "StressTester",
+    # New Hull-compliant components
+    "ComponentVaRCalculator",
+    "EWMAVaRCalculator",
+    "GreeksCalculator",
+    "CorrelationStressTester",
+    "PortfolioVarianceStressTester",
+    "ComprehensiveStressScenarios",
+    "RiskLimitsEnforcer",
+]
 
 
 # Define a Protocol for Portfolio to use at runtime instead of placeholder
@@ -65,8 +124,86 @@ class PortfolioProtocol(Protocol):
         ...
 
     @property
-    def capital(self) -> Any:
+    def capital(self) -> Union[float, int]:
         """Current capital."""
+        ...
+
+
+@runtime_checkable
+class VaRCalculatorProtocol(Protocol):
+    """Protocol for VaR Calculator to enable dependency injection."""
+
+    def calculate_var(
+        self, returns: np.ndarray, portfolio_value: Union[float, None] = None
+    ) -> Dict[str, Any]:
+        """Calculate Value at Risk."""
+        ...
+
+
+@runtime_checkable
+class StressTesterProtocol(Protocol):
+    """Protocol for Stress Tester to enable dependency injection."""
+
+    def run_stress_tests(self, portfolio: "Portfolio") -> Dict[str, Any]:
+        """Run stress tests on portfolio."""
+        ...
+
+
+@runtime_checkable
+class ExposureManagerProtocol(Protocol):
+    """Protocol for Exposure Manager to enable dependency injection."""
+
+    def analyze_exposure(self, portfolio: "Portfolio") -> Dict[str, Any]:
+        """Analyze portfolio exposure."""
+        ...
+
+
+@runtime_checkable
+class DrawdownControllerProtocol(Protocol):
+    """Protocol for Drawdown Controller to enable dependency injection."""
+
+    def assess_drawdown(self, portfolio: "Portfolio") -> Dict[str, Any]:
+        """Assess portfolio drawdown."""
+        ...
+
+
+@runtime_checkable
+class CorrelationAnalyzerProtocol(Protocol):
+    """Protocol for Correlation Analyzer to enable dependency injection."""
+
+    def analyze_correlations(
+        self, portfolio: "Portfolio", prices_history: Union[np.ndarray, Dict[str, np.ndarray]]
+    ) -> Dict[str, Any]:
+        """Analyze portfolio correlations."""
+        ...
+
+
+@runtime_checkable
+class RiskAttributorProtocol(Protocol):
+    """Protocol for Risk Attributor to enable dependency injection."""
+
+    def attribute_risk(
+        self,
+        portfolio: "Portfolio",
+        returns_history: Union[np.ndarray, None] = None,
+        prices_history: Union[np.ndarray, None] = None,
+    ) -> Dict[str, Any]:
+        """Attribute risk by factor."""
+        ...
+
+
+@runtime_checkable
+class AlertSystemProtocol(Protocol):
+    """Protocol for Alert System to enable dependency injection."""
+
+    def check_thresholds(
+        self, assessment: Dict[str, Any], portfolio: "Portfolio"
+    ) -> List[Dict[str, Any]]:
+        """Check risk thresholds."""
+        ...
+
+    def send_alerts(self, alerts: List[Dict[str, Any]]) -> None:
+        """Send alerts."""
         ...
 
 
@@ -100,9 +237,9 @@ def _get_portfolio_risk_manager():
         PortfolioRiskManager class or a minimal placeholder if import fails
     """
     try:
-        from app.domain.services.risk.portfolio import PortfolioRiskManager
+        from app.domain.services.risk.portfolio import PortfolioRiskManager as RiskMgr
 
-        return PortfolioRiskManager
+        return RiskMgr
     except ImportError:
         # Create a minimal placeholder
         class _PortfolioRiskManagerPlaceholder:
@@ -112,66 +249,6 @@ def _get_portfolio_risk_manager():
                 return {'risk_level': 'unknown'}
 
         return _PortfolioRiskManagerPlaceholder
-
-
-from .alert_system import AlertSystem
-from .correlation_analyzers import CorrelationAnalyzer
-from .drawdown_controllers import DrawdownController
-from .exposure_managers import ExposureManager
-from .greeks_calculator import GreeksCalculator
-from .risk_attribution import RiskAttributor
-from .risk_limits_enforcer import RiskLimitsEnforcer
-from .stress_testers import StressTester
-from .stress_testers.comprehensive_scenarios import ComprehensiveStressScenarios
-from .stress_testers.correlation_stress import CorrelationStressTester
-from .stress_testers.portfolio_variance_stress import PortfolioVarianceStressTester
-
-# New Hull-compliant components
-from .var_calculators.component_var import ComponentVaRCalculator
-from .var_calculators.ewma_var import EWMAVaRCalculator
-
-logger = logging.getLogger(__name__)
-
-__all__ = [
-    "RiskEngine",
-    "BaseRiskEngine",
-    "PortfolioProtocol",  # Protocol for dependency injection
-    "AlertSystem",
-    "DrawdownController",
-    "CorrelationAnalyzer",
-    "ExposureManager",
-    "RiskAttributor",
-    "StressTester",
-    # New Hull-compliant components
-    "ComponentVaRCalculator",
-    "EWMAVaRCalculator",
-    "GreeksCalculator",
-    "CorrelationStressTester",
-    "PortfolioVarianceStressTester",
-    "ComprehensiveStressScenarios",
-    "RiskLimitsEnforcer",
-]
-
-# Required dependencies - with proper import handling
-try:
-    pass
-
-    ARCH_AVAILABLE = True
-except ImportError:
-    ARCH_AVAILABLE = False
-    logger.warning("arch package not available. GARCH models will be limited.")
-
-try:
-    pass
-
-    STATSMODELS_AVAILABLE = True
-except ImportError:
-    pass
-
-    STATSMODELS_AVAILABLE = False
-    logger.warning(
-        "statsmodels package not available. Using fallback implementations from scipy/numpy. Some statistical features will be limited."
-    )
 
 
 class BaseRiskEngine(ABC):
@@ -242,8 +319,8 @@ class RiskEngine(BaseRiskEngine):
     def risk_manager(self):
         """Lazy load PortfolioRiskManager to avoid circular dependencies."""
         if self._risk_manager is None:
-            PortfolioRiskManager = _get_portfolio_risk_manager()
-            self._risk_manager = PortfolioRiskManager()
+            RiskManagerClass = _get_portfolio_risk_manager()
+            self._risk_manager = RiskManagerClass()
         return self._risk_manager
 
     def initialize(self) -> None:
@@ -375,37 +452,37 @@ class RiskEngine(BaseRiskEngine):
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             self.logger.warning(f"Error verificando alertas: {e}")
 
-    def set_var_calculator(self, var_calculator: Any) -> None:
+    def set_var_calculator(self, var_calculator: VaRCalculatorProtocol) -> None:
         """Establecer calculador de VaR."""
         self.var_calculator = var_calculator
         self.logger.info(f"VaR calculator configurado: {type(var_calculator).__name__}")
 
-    def set_stress_tester(self, stress_tester: Any) -> None:
+    def set_stress_tester(self, stress_tester: StressTesterProtocol) -> None:
         """Establecer stress tester."""
         self.stress_tester = stress_tester
         self.logger.info(f"Stress tester configurado: {type(stress_tester).__name__}")
 
-    def set_exposure_manager(self, exposure_manager: Any) -> None:
+    def set_exposure_manager(self, exposure_manager: ExposureManagerProtocol) -> None:
         """Establecer exposure manager."""
         self.exposure_manager = exposure_manager
         self.logger.info(f"Exposure manager configurado: {type(exposure_manager).__name__}")
 
-    def set_drawdown_controller(self, drawdown_controller: Any) -> None:
+    def set_drawdown_controller(self, drawdown_controller: DrawdownControllerProtocol) -> None:
         """Establecer drawdown controller."""
         self.drawdown_controller = drawdown_controller
         self.logger.info(f"Drawdown controller configurado: {type(drawdown_controller).__name__}")
 
-    def set_correlation_analyzer(self, correlation_analyzer: Any) -> None:
+    def set_correlation_analyzer(self, correlation_analyzer: CorrelationAnalyzerProtocol) -> None:
         """Establecer correlation analyzer."""
         self.correlation_analyzer = correlation_analyzer
         self.logger.info(f"Correlation analyzer configurado: {type(correlation_analyzer).__name__}")
 
-    def set_risk_attributor(self, risk_attributor: Any) -> None:
+    def set_risk_attributor(self, risk_attributor: RiskAttributorProtocol) -> None:
         """Establecer risk attributor."""
         self.risk_attributor = risk_attributor
         self.logger.info(f"Risk attributor configurado: {type(risk_attributor).__name__}")
 
-    def set_alert_system(self, alert_system: Any) -> None:
+    def set_alert_system(self, alert_system: AlertSystemProtocol) -> None:
         """Establecer sistema de alertas."""
         self.alert_system = alert_system
         self.logger.info(f"Alert system configurado: {type(alert_system).__name__}")

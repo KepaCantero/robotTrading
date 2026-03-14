@@ -51,7 +51,10 @@ class ParameterOptimizationService:
 
     def __init__(self, cost_analysis_service: Optional[CostAnalysisService] = None):
         """Initialize the parameter optimization service."""
-        logger.debug("Initializing ParameterOptimizationService", extra={"has_cost_analysis_service": cost_analysis_service is not None})
+        logger.debug(
+            "Initializing ParameterOptimizationService",
+            extra={"has_cost_analysis_service": cost_analysis_service is not None},
+        )
         self.cost_analysis_service = cost_analysis_service or CostAnalysisService()
         self.optimization_artifacts: Dict[str, OptimizationArtifact] = {}
         self.optimization_summary = OptimizationSummary(
@@ -82,8 +85,21 @@ class ParameterOptimizationService:
             ValueError: If optimization configuration is invalid
             RuntimeError: If optimization fails
         """
-        logger.debug("optimize_parameters called", extra={"strategy_name": request.strategy_name, "method": str(request.optimization_config.method)})
-        logger.info("Starting parameter optimization", extra={"strategy_name": request.strategy_name, "method": str(request.optimization_config.method), "parameters_count": len(request.parameters)})
+        logger.debug(
+            "optimize_parameters called",
+            extra={
+                "strategy_name": request.strategy_name,
+                "method": str(request.optimization_config.method),
+            },
+        )
+        logger.info(
+            "Starting parameter optimization",
+            extra={
+                "strategy_name": request.strategy_name,
+                "method": str(request.optimization_config.method),
+                "parameters_count": len(request.parameters),
+            },
+        )
         start_time = datetime.now()
 
         try:
@@ -121,42 +137,80 @@ class ParameterOptimizationService:
             # Store artifact
             await self._store_optimization_artifact(request, result)
 
-            logger.info("Parameter optimization completed", extra={"strategy_name": request.strategy_name, "best_score": result.best_score, "optimization_time": optimization_time, "iterations": result.iterations_completed})
+            logger.info(
+                "Parameter optimization completed",
+                extra={
+                    "strategy_name": request.strategy_name,
+                    "best_score": result.best_score,
+                    "optimization_time": optimization_time,
+                    "iterations": result.iterations_completed,
+                },
+            )
             return result
 
         except (asyncio.TimeoutError, ConnectionError, OSError) as e:
-            logger.error("Parameter optimization failed", extra={"strategy_name": request.strategy_name, "error": str(e), "error_type": type(e).__name__})
+            logger.error(
+                "Parameter optimization failed",
+                extra={
+                    "strategy_name": request.strategy_name,
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                },
+            )
             self.optimization_summary.failed_optimizations += 1
             raise RuntimeError(f"Parameter optimization failed: {str(e)}")
 
     async def _validate_optimization_request(self, request: ParameterOptimizationRequest) -> None:
         """Validate the optimization request."""
-        logger.debug("Validating optimization request", extra={"strategy_name": request.strategy_name})
+        logger.debug(
+            "Validating optimization request", extra={"strategy_name": request.strategy_name}
+        )
         if not request.parameters:
-            logger.error("Validation failed: no parameters specified", extra={"strategy_name": request.strategy_name})
+            logger.error(
+                "Validation failed: no parameters specified",
+                extra={"strategy_name": request.strategy_name},
+            )
             raise ValueError("At least one parameter must be specified for optimization")
 
         if request.data_end_date <= request.data_start_date:
-            logger.error("Validation failed: invalid date range", extra={"strategy_name": request.strategy_name, "start_date": str(request.data_start_date), "end_date": str(request.data_end_date)})
+            logger.error(
+                "Validation failed: invalid date range",
+                extra={
+                    "strategy_name": request.strategy_name,
+                    "start_date": str(request.data_start_date),
+                    "end_date": str(request.data_end_date),
+                },
+            )
             raise ValueError("data_end_date must be after data_start_date")
 
         # Validate optimization config based on method
         if request.optimization_config.method == OptimizationMethod.WALK_FORWARD:
             if not request.optimization_config.walk_forward_config:
-                logger.error("Validation failed: missing walk_forward_config", extra={"strategy_name": request.strategy_name})
+                logger.error(
+                    "Validation failed: missing walk_forward_config",
+                    extra={"strategy_name": request.strategy_name},
+                )
                 raise ValueError("walk_forward_config is required for walk-forward optimization")
 
         elif request.optimization_config.method == OptimizationMethod.PURGED_K_FOLD:
             if not request.optimization_config.purged_k_fold_config:
-                logger.error("Validation failed: missing purged_k_fold_config", extra={"strategy_name": request.strategy_name})
+                logger.error(
+                    "Validation failed: missing purged_k_fold_config",
+                    extra={"strategy_name": request.strategy_name},
+                )
                 raise ValueError("purged_k_fold_config is required for purged K-fold optimization")
-        logger.debug("Optimization request validated successfully", extra={"strategy_name": request.strategy_name})
+        logger.debug(
+            "Optimization request validated successfully",
+            extra={"strategy_name": request.strategy_name},
+        )
 
     async def _walk_forward_optimization(
         self, request: ParameterOptimizationRequest, state: OptimizationState
     ) -> OptimizationResult:
         """Perform walk-forward optimization."""
-        logger.debug("Starting walk-forward optimization", extra={"strategy_name": request.strategy_name})
+        logger.debug(
+            "Starting walk-forward optimization", extra={"strategy_name": request.strategy_name}
+        )
         config = request.optimization_config.walk_forward_config
         current_date = request.data_start_date + timedelta(days=config.initial_train_period)
 
@@ -196,10 +250,23 @@ class ParameterOptimizationService:
 
             # Check convergence
             if state.convergence_count >= 3:
-                logger.info("Walk-forward optimization converged early", extra={"strategy_name": request.strategy_name, "iteration": state.current_iteration})
+                logger.info(
+                    "Walk-forward optimization converged early",
+                    extra={
+                        "strategy_name": request.strategy_name,
+                        "iteration": state.current_iteration,
+                    },
+                )
                 break
 
-        logger.info("Walk-forward optimization completed", extra={"strategy_name": request.strategy_name, "iterations": state.current_iteration, "best_score": state.best_score})
+        logger.info(
+            "Walk-forward optimization completed",
+            extra={
+                "strategy_name": request.strategy_name,
+                "iterations": state.current_iteration,
+                "best_score": state.best_score,
+            },
+        )
         return OptimizationResult(
             optimized_parameters=state.best_parameters or {},
             best_score=state.best_score,
@@ -214,7 +281,9 @@ class ParameterOptimizationService:
         self, request: ParameterOptimizationRequest, state: OptimizationState
     ) -> OptimizationResult:
         """Perform purged K-fold cross validation optimization."""
-        logger.debug("Starting purged K-fold optimization", extra={"strategy_name": request.strategy_name})
+        logger.debug(
+            "Starting purged K-fold optimization", extra={"strategy_name": request.strategy_name}
+        )
         config = request.optimization_config.purged_k_fold_config
 
         # Generate K-fold splits with purging
@@ -225,7 +294,10 @@ class ParameterOptimizationService:
             config.purged_period,
             config.embargo_period,
         )
-        logger.debug("Generated purged splits", extra={"strategy_name": request.strategy_name, "n_splits": len(splits)})
+        logger.debug(
+            "Generated purged splits",
+            extra={"strategy_name": request.strategy_name, "n_splits": len(splits)},
+        )
 
         for fold_idx, (train_start, train_end, test_start, test_end) in enumerate(splits):
             # Optimize parameters for this fold
@@ -253,7 +325,14 @@ class ParameterOptimizationService:
 
             state.current_iteration += 1
 
-        logger.info("Purged K-fold optimization completed", extra={"strategy_name": request.strategy_name, "folds_processed": state.current_iteration, "best_score": state.best_score})
+        logger.info(
+            "Purged K-fold optimization completed",
+            extra={
+                "strategy_name": request.strategy_name,
+                "folds_processed": state.current_iteration,
+                "best_score": state.best_score,
+            },
+        )
         return OptimizationResult(
             optimized_parameters=state.best_parameters or {},
             best_score=state.best_score,
@@ -268,7 +347,9 @@ class ParameterOptimizationService:
         self, request: ParameterOptimizationRequest, state: OptimizationState
     ) -> OptimizationResult:
         """Perform out-of-sample optimization."""
-        logger.debug("Starting out-of-sample optimization", extra={"strategy_name": request.strategy_name})
+        logger.debug(
+            "Starting out-of-sample optimization", extra={"strategy_name": request.strategy_name}
+        )
         # Split data into training and testing periods
         total_days = (request.data_end_date - request.data_start_date).days
         train_days = int(total_days * 0.7)  # 70% for training
@@ -308,7 +389,14 @@ class ParameterOptimizationService:
         state.best_score = test_result["score"]
         state.best_parameters = test_result["parameters"]
 
-        logger.info("Out-of-sample optimization completed", extra={"strategy_name": request.strategy_name, "train_score": train_result["score"], "test_score": test_result["score"]})
+        logger.info(
+            "Out-of-sample optimization completed",
+            extra={
+                "strategy_name": request.strategy_name,
+                "train_score": train_result["score"],
+                "test_score": test_result["score"],
+            },
+        )
         return OptimizationResult(
             optimized_parameters=state.best_parameters or {},
             best_score=state.best_score,
@@ -323,7 +411,13 @@ class ParameterOptimizationService:
         self, request: ParameterOptimizationRequest, state: OptimizationState
     ) -> OptimizationResult:
         """Perform Monte Carlo optimization."""
-        logger.debug("Starting Monte Carlo optimization", extra={"strategy_name": request.strategy_name, "max_iterations": request.optimization_config.max_iterations})
+        logger.debug(
+            "Starting Monte Carlo optimization",
+            extra={
+                "strategy_name": request.strategy_name,
+                "max_iterations": request.optimization_config.max_iterations,
+            },
+        )
         max_iterations = request.optimization_config.max_iterations
         convergence_threshold = request.optimization_config.convergence_threshold
 
@@ -352,14 +446,28 @@ class ParameterOptimizationService:
                 if improvement < convergence_threshold:
                     state.convergence_count += 1
                     if state.convergence_count >= 5:
-                        logger.info("Monte Carlo optimization converged early", extra={"strategy_name": request.strategy_name, "iteration": iteration + 1})
+                        logger.info(
+                            "Monte Carlo optimization converged early",
+                            extra={
+                                "strategy_name": request.strategy_name,
+                                "iteration": iteration + 1,
+                            },
+                        )
                         break
                 else:
                     state.convergence_count = 0
 
             state.current_iteration += 1
 
-        logger.info("Monte Carlo optimization completed", extra={"strategy_name": request.strategy_name, "iterations": state.current_iteration, "best_score": state.best_score, "converged": state.convergence_count >= 5})
+        logger.info(
+            "Monte Carlo optimization completed",
+            extra={
+                "strategy_name": request.strategy_name,
+                "iterations": state.current_iteration,
+                "best_score": state.best_score,
+                "converged": state.convergence_count >= 5,
+            },
+        )
         return OptimizationResult(
             optimized_parameters=state.best_parameters or {},
             best_score=state.best_score,
@@ -548,8 +656,17 @@ class ParameterOptimizationService:
             ValueError: If test configuration is invalid
             RuntimeError: If test fails
         """
-        logger.debug("perform_out_of_sample_test called", extra={"strategy_name": request.test_config.strategy_name})
-        logger.info("Starting out-of-sample test", extra={"strategy_name": request.test_config.strategy_name, "cost_analysis_enabled": request.cost_analysis_enabled})
+        logger.debug(
+            "perform_out_of_sample_test called",
+            extra={"strategy_name": request.test_config.strategy_name},
+        )
+        logger.info(
+            "Starting out-of-sample test",
+            extra={
+                "strategy_name": request.test_config.strategy_name,
+                "cost_analysis_enabled": request.cost_analysis_enabled,
+            },
+        )
         try:
             # Validate test configuration
             await self._validate_out_of_sample_test(request.test_config)
@@ -572,10 +689,24 @@ class ParameterOptimizationService:
                 calmar_ratio=test_results["calmar_ratio"],
                 sortino_ratio=test_results["sortino_ratio"],
             )
-            logger.info("Out-of-sample test completed", extra={"strategy_name": request.test_config.strategy_name, "total_return": test_results["total_return"], "sharpe_ratio": test_results["sharpe_ratio"]})
+            logger.info(
+                "Out-of-sample test completed",
+                extra={
+                    "strategy_name": request.test_config.strategy_name,
+                    "total_return": test_results["total_return"],
+                    "sharpe_ratio": test_results["sharpe_ratio"],
+                },
+            )
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error("Out-of-sample test failed", extra={"strategy_name": request.test_config.strategy_name, "error": str(e), "error_type": type(e).__name__})
+            logger.error(
+                "Out-of-sample test failed",
+                extra={
+                    "strategy_name": request.test_config.strategy_name,
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                },
+            )
             raise RuntimeError(f"Out-of-sample test failed: {str(e)}")
 
     async def _validate_out_of_sample_test(self, test_config: OutOfSampleTest) -> None:

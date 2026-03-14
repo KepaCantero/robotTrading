@@ -551,25 +551,29 @@ trading_hours = df.between_time('09:30', '16:00')
         """
         logger.debug(
             "Retrieving all vectorization patterns",
-            extra={"pattern_count": len([
-                cls.elementwise_operation,
-                cls.filtering,
-                cls.rolling_calculation,
-                cls.groupby_aggregation,
-                cls.correlation_matrix,
-                cls.conditional_assignment,
-                cls.exponential_weighted,
-                cls.percentage_change,
-                cls.cumulative_operations,
-                cls.shift_lag,
-                cls.rank_percentile,
-                cls.distance_matrix,
-                cls.interpolation,
-                cls.difference_operations,
-                cls.value_counts_mode,
-                cls.outer_product,
-                cls.datetime_operations,
-            ])}
+            extra={
+                "pattern_count": len(
+                    [
+                        cls.elementwise_operation,
+                        cls.filtering,
+                        cls.rolling_calculation,
+                        cls.groupby_aggregation,
+                        cls.correlation_matrix,
+                        cls.conditional_assignment,
+                        cls.exponential_weighted,
+                        cls.percentage_change,
+                        cls.cumulative_operations,
+                        cls.shift_lag,
+                        cls.rank_percentile,
+                        cls.distance_matrix,
+                        cls.interpolation,
+                        cls.difference_operations,
+                        cls.value_counts_mode,
+                        cls.outer_product,
+                        cls.datetime_operations,
+                    ]
+                )
+            },
         )
         methods = [
             cls.elementwise_operation,
@@ -598,7 +602,7 @@ trading_hours = df.between_time('09:30', '16:00')
 
         logger.debug(
             "All vectorization patterns retrieved successfully",
-            extra={"pattern_names": list(patterns.keys())}
+            extra={"pattern_names": list(patterns.keys())},
         )
 
         return patterns
@@ -613,10 +617,7 @@ trading_hours = df.between_time('09:30', '16:00')
         Returns:
             Suggested pattern documentation.
         """
-        logger.debug(
-            "Getting vectorization suggestion for issue",
-            extra={"issue_type": issue_type}
-        )
+        logger.debug("Getting vectorization suggestion for issue", extra={"issue_type": issue_type})
         suggestions: dict[str, str] = {
             "for_loop": cls.elementwise_operation(),
             "list_comp": cls.elementwise_operation(),
@@ -632,7 +633,7 @@ trading_hours = df.between_time('09:30', '16:00')
         suggestion = suggestions.get(issue_type, cls.elementwise_operation())
         logger.debug(
             "Vectorization suggestion found",
-            extra={"issue_type": issue_type, "has_suggestion": issue_type in suggestions}
+            extra={"issue_type": issue_type, "has_suggestion": issue_type in suggestions},
         )
 
         return suggestion
@@ -646,7 +647,17 @@ trading_hours = df.between_time('09:30', '16:00')
         """
         logger.debug(
             "Retrieving trading-specific vectorization examples",
-            extra={"example_types": ["simple_returns", "log_returns", "moving_average", "volatility", "sharpe_ratio", "bollinger_bands", "rsi"]}
+            extra={
+                "example_types": [
+                    "simple_returns",
+                    "log_returns",
+                    "moving_average",
+                    "volatility",
+                    "sharpe_ratio",
+                    "bollinger_bands",
+                    "rsi",
+                ]
+            },
         )
         return {
             "simple_returns": """
@@ -759,10 +770,7 @@ rsi = 100 - (100 / (1 + rs))
         Returns:
             Dictionary mapping operations to (non_vectorized, vectorized) time estimates.
         """
-        logger.debug(
-            "Retrieving performance comparison data",
-            extra={"operation_count": 7}
-        )
+        logger.debug("Retrieving performance comparison data", extra={"operation_count": 7})
         return {
             "Sum 1M elements": ("~100ms", "~1ms"),
             "Mean 1M elements": ("~100ms", "~1ms"),

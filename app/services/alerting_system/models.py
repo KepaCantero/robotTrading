@@ -103,8 +103,8 @@ class ThresholdRule:
                 "operator": self.operator.value,
                 "threshold": str(self.threshold),
                 "value": str(value),
-                "operation": "threshold_evaluate"
-            }
+                "operation": "threshold_evaluate",
+            },
         )
         if self.operator == ComparisonOperator.GREATER_THAN:
             result = value > self.threshold
@@ -123,11 +123,7 @@ class ThresholdRule:
 
         logger.debug(
             "Threshold rule evaluation result",
-            extra={
-                "metric_name": self.metric_name,
-                "triggered": result,
-                "symbol": self.symbol
-            }
+            extra={"metric_name": self.metric_name, "triggered": result, "symbol": self.symbol},
         )
         return result
 
@@ -303,20 +299,23 @@ class AlertEvaluationContext:
             extra={
                 "metric_name": self.metric_name,
                 "window_data_length": len(self.window_data),
-                "operation": "calculate_change_percent"
-            }
+                "operation": "calculate_change_percent",
+            },
         )
         if not self.window_data or len(self.window_data) < 2:
             logger.debug(
                 "Insufficient data for change calculation",
-                extra={"metric_name": self.metric_name, "window_data_length": len(self.window_data)}
+                extra={
+                    "metric_name": self.metric_name,
+                    "window_data_length": len(self.window_data),
+                },
             )
             return None
         first_value = self.window_data[0]
         if first_value == 0:
             logger.debug(
                 "First value is zero, cannot calculate change",
-                extra={"metric_name": self.metric_name}
+                extra={"metric_name": self.metric_name},
             )
             return None
         change = ((self.current_value - first_value) / first_value) * 100
@@ -326,8 +325,8 @@ class AlertEvaluationContext:
                 "metric_name": self.metric_name,
                 "change_percent": float(change),
                 "first_value": float(first_value),
-                "current_value": float(self.current_value)
-            }
+                "current_value": float(self.current_value),
+            },
         )
         return change
 

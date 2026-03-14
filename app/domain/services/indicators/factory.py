@@ -464,35 +464,39 @@ def get_available_backends() -> dict:
 
 
 # For backward compatibility with existing code
-def calculate_rsi(prices: list, period: int = 14) -> Optional[float]:
+def calculate_rsi(prices: list, period: int = 14) -> Union[Optional[float], Optional[np.ndarray]]:
     """Convenience function for RSI calculation."""
     return get_indicator_calculator().rsi(prices, period)
 
 
-def calculate_ema(prices: list, period: int = 20) -> Optional[float]:
+def calculate_ema(prices: list, period: int = 20) -> Union[Optional[float], Optional[np.ndarray]]:
     """Convenience function for EMA calculation."""
     return get_indicator_calculator().ema(prices, period)
 
 
-def calculate_sma(prices: list, period: int = 20) -> Optional[float]:
+def calculate_sma(prices: list, period: int = 20) -> Union[Optional[float], Optional[np.ndarray]]:
     """Convenience function for SMA calculation."""
     return get_indicator_calculator().sma(prices, period)
 
 
 def calculate_macd(
     prices: list, fast_period: int = 12, slow_period: int = 26, signal_period: int = 9
-) -> tuple:
+) -> Union[Optional[float], tuple]:
     """Convenience function for MACD calculation."""
     return get_indicator_calculator().macd(
         prices, fast_period, slow_period, signal_period, return_components=True
     )
 
 
-def calculate_atr(high: list, low: list, close: list, period: int = 14) -> Optional[float]:
+def calculate_atr(
+    high: list, low: list, close: list, period: int = 14
+) -> Union[Optional[float], Optional[np.ndarray]]:
     """Convenience function for ATR calculation."""
     return get_indicator_calculator().atr(high, low, close, period)
 
 
-def calculate_bollinger_bands(prices: list, period: int = 20, std_dev: float = 2.0) -> tuple:
+def calculate_bollinger_bands(
+    prices: list, period: int = 20, std_dev: float = 2.0
+) -> Union[tuple, dict]:
     """Convenience function for Bollinger Bands calculation."""
     return get_indicator_calculator().bollinger_bands(prices, period, std_dev)

@@ -19,7 +19,6 @@ try:
     PYDANTIC_AVAILABLE = True
 except ImportError:
     PYDANTIC_AVAILABLE = False
-    from dataclasses import dataclass
 
     # Create pydantic-like API using dataclasses
     class Field:

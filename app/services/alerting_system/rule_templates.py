@@ -375,8 +375,15 @@ class AlertRuleTemplates:
             "Default alert templates loaded",
             extra={
                 "total_templates": len(templates),
-                "categories": ["portfolio_risk", "market_conditions", "execution_quality", "performance", "trading_quality", "system_health"],
-            }
+                "categories": [
+                    "portfolio_risk",
+                    "market_conditions",
+                    "execution_quality",
+                    "performance",
+                    "trading_quality",
+                    "system_health",
+                ],
+            },
         )
 
         return templates
@@ -384,10 +391,7 @@ class AlertRuleTemplates:
     @staticmethod
     def get_template_by_id(rule_id: str) -> AlertRule:
         """Get a specific template by rule ID."""
-        logger.debug(
-            "Looking up alert template by ID",
-            extra={"rule_id": rule_id}
-        )
+        logger.debug("Looking up alert template by ID", extra={"rule_id": rule_id})
 
         templates = {
             # Portfolio Risk
@@ -415,7 +419,7 @@ class AlertRuleTemplates:
                 extra={
                     "rule_id": rule_id,
                     "available_templates": list(templates.keys()),
-                }
+                },
             )
             raise ValueError(f"Unknown rule template ID: {rule_id}")
 
@@ -425,17 +429,14 @@ class AlertRuleTemplates:
                 "rule_id": rule_id,
                 "rule_name": templates[rule_id].name,
                 "severity": templates[rule_id].severity.value,
-            }
+            },
         )
         return templates[rule_id]
 
     @staticmethod
     def get_templates_by_category(category: str) -> List[AlertRule]:
         """Get all templates for a specific category."""
-        logger.debug(
-            "Fetching templates by category",
-            extra={"category": category}
-        )
+        logger.debug("Fetching templates by category", extra={"category": category})
 
         all_templates = AlertRuleTemplates.get_all_default_templates()
         filtered = [t for t in all_templates if t.tags.get("category") == category]
@@ -445,7 +446,7 @@ class AlertRuleTemplates:
             extra={
                 "category": category,
                 "templates_found": len(filtered),
-            }
+            },
         )
         return filtered
 
@@ -462,6 +463,6 @@ class AlertRuleTemplates:
             extra={
                 "critical_count": len(critical),
                 "rule_ids": [t.rule_id for t in critical],
-            }
+            },
         )
         return critical

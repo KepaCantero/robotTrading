@@ -127,15 +127,12 @@ class RealMarketDataFetcher:
                 "cache_dir": cache_dir,
                 "rate_limit_calls": rate_limit_calls,
                 "rate_limit_period": rate_limit_period,
-            }
+            },
         )
 
         self.api_key = api_key or os.getenv("ALPHA_VANTAGE_API_KEY")
         if not self.api_key:
-            logger.error(
-                "Alpha Vantage API key not found",
-                extra={"error": "api_key_missing"}
-            )
+            logger.error("Alpha Vantage API key not found", extra={"error": "api_key_missing"})
             raise ValueError(
                 "Alpha Vantage API key not found. "
                 "Set ALPHA_VANTAGE_API_KEY environment variable or pass api_key parameter."
@@ -156,11 +153,11 @@ class RealMarketDataFetcher:
         self.session: Optional[aiohttp.ClientSession] = None
 
         logger.info(
-            f"RealMarketDataFetcher initialized successfully",
+            "RealMarketDataFetcher initialized successfully",
             extra={
                 "cache_dir": str(self.cache_dir),
                 "rate_limit": f"{rate_limit_calls} calls per {rate_limit_period}s",
-            }
+            },
         )
 
     async def __aenter__(self):
@@ -175,14 +172,13 @@ class RealMarketDataFetcher:
     async def connect(self) -> bool:
         """Connect to Alpha Vantage API."""
         logger.debug(
-            "Attempting to connect to Alpha Vantage API",
-            extra={"base_url": self.base_url}
+            "Attempting to connect to Alpha Vantage API", extra={"base_url": self.base_url}
         )
         try:
             self.session = aiohttp.ClientSession()
             logger.info(
                 "Connected to Alpha Vantage API successfully",
-                extra={"base_url": self.base_url, "connected": True}
+                extra={"base_url": self.base_url, "connected": True},
             )
             return True
         except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
@@ -191,7 +187,7 @@ class RealMarketDataFetcher:
                 extra={
                     "base_url": self.base_url,
                     "error_type": type(e).__name__,
-                }
+                },
             )
             return False
 
@@ -200,10 +196,7 @@ class RealMarketDataFetcher:
         if self.session:
             await self.session.close()
             self.session = None
-            logger.info(
-                "Disconnected from Alpha Vantage API",
-                extra={"connected": False}
-            )
+            logger.info("Disconnected from Alpha Vantage API", extra={"connected": False})
         return True
 
     async def _wait_for_rate_limit(self):
@@ -214,7 +207,7 @@ class RealMarketDataFetcher:
                 "rate_limit_calls": self.rate_limit_calls,
                 "rate_limit_period": self.rate_limit_period,
                 "current_calls": len(self.call_timestamps),
-            }
+            },
         )
         now = datetime.now()
 
@@ -233,7 +226,7 @@ class RealMarketDataFetcher:
                         "wait_time_seconds": wait_time,
                         "calls_in_window": len(self.call_timestamps),
                         "rate_limit": self.rate_limit_calls,
-                    }
+                    },
                 )
                 await asyncio.sleep(wait_time)
                 # Clean up old timestamps after waiting
@@ -250,8 +243,7 @@ class RealMarketDataFetcher:
             Raw JSON response or None if error
         """
         logger.debug(
-            "Fetching data from Alpha Vantage",
-            extra={"symbol": symbol, "base_url": self.base_url}
+            "Fetching data from Alpha Vantage", extra={"symbol": symbol, "base_url": self.base_url}
         )
         await self._wait_for_rate_limit()
 
@@ -278,14 +270,14 @@ class RealMarketDataFetcher:
                     if "Error Message" in data:
                         logger.error(
                             f"Alpha Vantage API error for {symbol}: {data['Error Message']}",
-                            extra={"symbol": symbol, "api_error": data['Error Message']}
+                            extra={"symbol": symbol, "api_error": data['Error Message']},
                         )
                         return None
 
                     if "Note" in data:
                         logger.warning(
                             f"Alpha Vantage rate limit note for {symbol}: {data['Note']}",
-                            extra={"symbol": symbol, "rate_limit_note": data['Note']}
+                            extra={"symbol": symbol, "rate_limit_note": data['Note']},
                         )
                         return None
 
@@ -296,20 +288,20 @@ class RealMarketDataFetcher:
                 else:
                     logger.error(
                         f"HTTP {response.status} for {symbol}",
-                        extra={"symbol": symbol, "status_code": response.status}
+                        extra={"symbol": symbol, "status_code": response.status},
                     )
                     return None
 
         except asyncio.TimeoutError:
             logger.error(
                 f"Timeout fetching data for {symbol}",
-                extra={"symbol": symbol, "error_type": "TimeoutError"}
+                extra={"symbol": symbol, "error_type": "TimeoutError"},
             )
             return None
         except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.error(
                 f"Error fetching data for {symbol}: {e}",
-                extra={"symbol": symbol, "error_type": type(e).__name__}
+                extra={"symbol": symbol, "error_type": type(e).__name__},
             )
             return None
 
@@ -330,8 +322,7 @@ class RealMarketDataFetcher:
             DataFrame with OHLCV data or None
         """
         logger.debug(
-            "Loading data from cache",
-            extra={"symbol": symbol, "cache_dir": str(self.cache_dir)}
+            "Loading data from cache", extra={"symbol": symbol, "cache_dir": str(self.cache_dir)}
         )
         # First try JSON cache (Alpha Vantage format)
         cache_path = self._get_cache_path(symbol)
@@ -346,13 +337,13 @@ class RealMarketDataFetcher:
                 if (datetime.now() - cache_time).days < 1:
                     logger.debug(
                         f"Loading {symbol} from JSON cache",
-                        extra={"symbol": symbol, "cache_type": "json"}
+                        extra={"symbol": symbol, "cache_type": "json"},
                     )
                     return self._parse_alpha_vantage_data(data, symbol)
             except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
                 logger.debug(
                     f"Failed to load JSON cache for {symbol}: {e}",
-                    extra={"symbol": symbol, "error_type": type(e).__name__}
+                    extra={"symbol": symbol, "error_type": type(e).__name__},
                 )
 
         # Try CSV cache (fallback for existing cached data)
@@ -361,7 +352,7 @@ class RealMarketDataFetcher:
             try:
                 logger.debug(
                     f"Loading {symbol} from CSV cache",
-                    extra={"symbol": symbol, "cache_type": "csv"}
+                    extra={"symbol": symbol, "cache_type": "csv"},
                 )
                 df = pd.read_csv(csv_path, parse_dates=['date'], index_col='date')
                 # Ensure we have the right columns
@@ -369,14 +360,14 @@ class RealMarketDataFetcher:
                 if all(col in df.columns for col in required_cols):
                     logger.info(
                         f"Loaded {symbol} from CSV cache ({len(df)} rows)",
-                        extra={"symbol": symbol, "cache_type": "csv", "rows": len(df)}
+                        extra={"symbol": symbol, "cache_type": "csv", "rows": len(df)},
                     )
                     # Don't check staleness for CSV files - they can be used for backtesting
                     return df.sort_index()
             except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
                 logger.warning(
                     f"Failed to load CSV cache for {symbol}: {e}",
-                    extra={"symbol": symbol, "error_type": type(e).__name__}
+                    extra={"symbol": symbol, "error_type": type(e).__name__},
                 )
 
         return None
@@ -395,13 +386,12 @@ class RealMarketDataFetcher:
             with open(cache_path, 'w') as f:
                 json.dump(data, f, indent=2)
             logger.debug(
-                f"Cached data for {symbol}",
-                extra={"symbol": symbol, "cache_path": str(cache_path)}
+                f"Cached data for {symbol}", extra={"symbol": symbol, "cache_path": str(cache_path)}
             )
         except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
             logger.warning(
                 f"Failed to cache data for {symbol}: {e}",
-                extra={"symbol": symbol, "error_type": type(e).__name__}
+                extra={"symbol": symbol, "error_type": type(e).__name__},
             )
 
     def _parse_alpha_vantage_data(self, data: Dict, symbol: str) -> Optional[pd.DataFrame]:
@@ -416,8 +406,7 @@ class RealMarketDataFetcher:
             DataFrame with columns: open, high, low, close, volume
         """
         logger.debug(
-            "Parsing Alpha Vantage data",
-            extra={"symbol": symbol, "data_keys": list(data.keys())}
+            "Parsing Alpha Vantage data", extra={"symbol": symbol, "data_keys": list(data.keys())}
         )
         try:
             # Find the time series key
@@ -430,7 +419,7 @@ class RealMarketDataFetcher:
             if not time_series_key:
                 logger.warning(
                     f"No time series data for {symbol}",
-                    extra={"symbol": symbol, "data_keys": list(data.keys())}
+                    extra={"symbol": symbol, "data_keys": list(data.keys())},
                 )
                 return None
 
@@ -459,7 +448,7 @@ class RealMarketDataFetcher:
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(
                 f"Failed to parse data for {symbol}: {e}",
-                extra={"symbol": symbol, "error_type": type(e).__name__}
+                extra={"symbol": symbol, "error_type": type(e).__name__},
             )
             return None
 
@@ -489,7 +478,7 @@ class RealMarketDataFetcher:
                 "use_cache": use_cache,
                 "start_date": start_date.isoformat() if start_date else None,
                 "end_date": end_date.isoformat() if end_date else None,
-            }
+            },
         )
 
         # Try cache first
@@ -497,8 +486,7 @@ class RealMarketDataFetcher:
             cached_df = self._load_from_cache(symbol)
             if cached_df is not None:
                 logger.debug(
-                    f"Using cached data for {symbol}",
-                    extra={"symbol": symbol, "cache_hit": True}
+                    f"Using cached data for {symbol}", extra={"symbol": symbol, "cache_hit": True}
                 )
                 return self._filter_by_date(cached_df, start_date, end_date)
 
@@ -507,8 +495,7 @@ class RealMarketDataFetcher:
 
         if raw_data is None:
             logger.warning(
-                f"Failed to fetch data for {symbol}",
-                extra={"symbol": symbol, "cache_hit": False}
+                f"Failed to fetch data for {symbol}", extra={"symbol": symbol, "cache_hit": False}
             )
             return None
 
@@ -516,10 +503,7 @@ class RealMarketDataFetcher:
         df = self._parse_alpha_vantage_data(raw_data, symbol)
 
         if df is None:
-            logger.error(
-                f"Failed to parse data for {symbol}",
-                extra={"symbol": symbol}
-            )
+            logger.error(f"Failed to parse data for {symbol}", extra={"symbol": symbol})
             return None
 
         # Save to cache
@@ -535,7 +519,7 @@ class RealMarketDataFetcher:
                 "data_points": len(df),
                 "start": df.index[0].isoformat() if len(df) > 0 else None,
                 "end": df.index[-1].isoformat() if len(df) > 0 else None,
-            }
+            },
         )
         return df
 
@@ -579,7 +563,7 @@ class RealMarketDataFetcher:
                 "symbol_count": len(symbols),
                 "use_cache": use_cache,
                 "show_progress": show_progress,
-            }
+            },
         )
 
         # Set default date range
@@ -597,8 +581,8 @@ class RealMarketDataFetcher:
                     extra={
                         "symbol": symbol,
                         "progress": f"{i+1}/{len(symbols)}",
-                        "progress_pct": round((i+1)/len(symbols)*100, 1),
-                    }
+                        "progress_pct": round((i + 1) / len(symbols) * 100, 1),
+                    },
                 )
 
             df = await self.fetch_symbol_data(
@@ -611,18 +595,15 @@ class RealMarketDataFetcher:
             if df is not None and len(df) > 0:
                 results[symbol] = df
             else:
-                logger.warning(
-                    f"Failed to fetch data for {symbol}",
-                    extra={"symbol": symbol}
-                )
+                logger.warning(f"Failed to fetch data for {symbol}", extra={"symbol": symbol})
 
         logger.info(
             f"Successfully fetched data for {len(results)}/{len(symbols)} symbols",
             extra={
                 "success_count": len(results),
                 "total_count": len(symbols),
-                "success_rate": round(len(results)/len(symbols)*100, 1) if symbols else 0,
-            }
+                "success_rate": round(len(results) / len(symbols) * 100, 1) if symbols else 0,
+            },
         )
 
         return results
@@ -647,10 +628,7 @@ class RealMarketDataFetcher:
             Dict of symbol -> DataFrame with OHLCV data
         """
         symbols = SP500_TOP_50[:n]
-        logger.info(
-            f"Fetching top {n} S&P 500 stocks...",
-            extra={"n": n, "symbols": symbols}
-        )
+        logger.info(f"Fetching top {n} S&P 500 stocks...", extra={"n": n, "symbols": symbols})
 
         return await self.fetch_multiple_symbols(
             symbols,
@@ -666,10 +644,7 @@ class RealMarketDataFetcher:
         Returns:
             Dict with cache statistics
         """
-        logger.debug(
-            "Getting cache statistics",
-            extra={"cache_dir": str(self.cache_dir)}
-        )
+        logger.debug("Getting cache statistics", extra={"cache_dir": str(self.cache_dir)})
         cache_files = list(self.cache_dir.glob("*_daily.json"))
 
         stats = {
@@ -697,8 +672,7 @@ class RealMarketDataFetcher:
             if cache_path.exists():
                 cache_path.unlink()
                 logger.info(
-                    f"Cleared cache for {symbol}",
-                    extra={"symbol": symbol, "action": "clear_cache"}
+                    f"Cleared cache for {symbol}", extra={"symbol": symbol, "action": "clear_cache"}
                 )
         else:
             # Clear all cache files
@@ -707,7 +681,7 @@ class RealMarketDataFetcher:
                 f.unlink()
             logger.info(
                 f"Cleared {len(cache_files)} cached files",
-                extra={"files_cleared": len(cache_files), "action": "clear_all_cache"}
+                extra={"files_cleared": len(cache_files), "action": "clear_all_cache"},
             )
 
 

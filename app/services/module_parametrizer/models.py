@@ -172,5 +172,5 @@ logger.debug(
             "ParameterizationRequest",
             "ParameterizationResult",
         ],
-    }
+    },
 )

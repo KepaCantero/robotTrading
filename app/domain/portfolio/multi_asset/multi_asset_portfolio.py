@@ -18,14 +18,10 @@ import numpy as np
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.backtesting.models import Trade
+
 from .asset_class import AssetClass, AssetClassConfig, AssetClassType
-from .models import (
-    MultiAssetAllocation,
-    MultiAssetPortfolio,
-    PortfolioMetrics,
-    RiskTolerance,
-    Trade,
-)
+from .models import MultiAssetAllocation, MultiAssetPortfolio, PortfolioMetrics, RiskTolerance
 
 logger = logging.getLogger(__name__)
 

@@ -52,12 +52,12 @@ class EarlyStoppingAdaptive:
         self.mode = config.get('mode', 'min')  # 'min' o 'max'
         self.adaptive_patience = config.get('adaptive_patience', True)
 
-        self.best_score = None
+        self.best_score: Optional[float] = None
         self.best_epoch = 0
         self.current_epoch = 0
         self.wait = 0
         self.stopped_epoch = 0
-        self.improvement_history = []
+        self.improvement_history: List[float] = []
 
     def __call__(self, score: float) -> bool:
         """
@@ -144,7 +144,7 @@ class ResourceAwareTuner:
         self.max_time_seconds = config.get('max_time_seconds', 3600)  # 1 hora default
         self.max_memory_gb = config.get('max_memory_gb', 8.0)
 
-        self.start_time = None
+        self.start_time: Optional[float] = None
         self.trials_run = 0
         self.gpu_available = self._check_gpu()
 
@@ -250,7 +250,7 @@ class HyperparameterTuner:
         self.resource_manager = ResourceAwareTuner(config.get('resource_config', {}))
 
         # Callback para training
-        self.training_callback = None
+        self.training_callback: Optional[Callable[..., float]] = None
 
     def set_training_callback(self, callback: Callable) -> None:
         """

@@ -40,7 +40,7 @@ class ExtendedPortfolio(BasePortfolio):
         """Validate portfolio consistency."""
         logger.debug(
             "Validating extended portfolio consistency",
-            extra={"portfolio_id": str(self.id), "name": self.name}
+            extra={"portfolio_id": str(self.id), "name": self.name},
         )
         from app.shared.config.centralized_config import get_config
 
@@ -52,8 +52,8 @@ class ExtendedPortfolio(BasePortfolio):
                 extra={
                     "portfolio_id": str(self.id),
                     "cash_balance": str(self.cash_balance),
-                    "cash": str(self.cash)
-                }
+                    "cash": str(self.cash),
+                },
             )
             raise ValueError("Cash balance must match cash field")
 
@@ -71,17 +71,14 @@ class ExtendedPortfolio(BasePortfolio):
                     "portfolio_id": str(self.id),
                     "expected_total_value": str(calculated_total),
                     "actual_total_value": str(self.total_value),
-                    "tolerance": str(tolerance)
-                }
+                    "tolerance": str(tolerance),
+                },
             )
             raise ValueError(
                 f"Total value mismatch. Expected: {calculated_total}, Got: {self.total_value}"
             )
 
-        logger.debug(
-            "ExtendedPortfolio validation passed",
-            extra={"portfolio_id": str(self.id)}
-        )
+        logger.debug("ExtendedPortfolio validation passed", extra={"portfolio_id": str(self.id)})
         return self
 
     @property
@@ -219,7 +216,7 @@ class PortfolioPerformanceRecord(BaseModel):
         """Validate consistency between metrics."""
         logger.debug(
             "Validating portfolio performance record consistency",
-            extra={"portfolio_id": str(self.portfolio_id), "period": self.period.value}
+            extra={"portfolio_id": str(self.portfolio_id), "period": self.period.value},
         )
         if self.start_date >= self.end_date:
             logger.error(
@@ -227,8 +224,8 @@ class PortfolioPerformanceRecord(BaseModel):
                 extra={
                     "portfolio_id": str(self.portfolio_id),
                     "start_date": str(self.start_date),
-                    "end_date": str(self.end_date)
-                }
+                    "end_date": str(self.end_date),
+                },
             )
             raise ValueError("Start date must be before end date")
 
@@ -239,14 +236,14 @@ class PortfolioPerformanceRecord(BaseModel):
                     "portfolio_id": str(self.portfolio_id),
                     "cash_value": str(self.cash_value),
                     "equity_value": str(self.equity_value),
-                    "total_value": str(self.total_value)
-                }
+                    "total_value": str(self.total_value),
+                },
             )
             raise ValueError("Cash + Equity must equal total value")
 
         logger.debug(
             "PortfolioPerformanceRecord validation passed",
-            extra={"portfolio_id": str(self.portfolio_id)}
+            extra={"portfolio_id": str(self.portfolio_id)},
         )
         return self
 
@@ -417,8 +414,7 @@ class PortfolioAllocation(BaseModel):
     def validate_allocation_sum(self) -> "PortfolioAllocation":
         """Validate that allocations sum to 100%."""
         logger.debug(
-            "Validating portfolio allocation sum",
-            extra={"portfolio_id": str(self.portfolio_id)}
+            "Validating portfolio allocation sum", extra={"portfolio_id": str(self.portfolio_id)}
         )
         from app.shared.config.centralized_config import get_config
 
@@ -439,14 +435,17 @@ class PortfolioAllocation(BaseModel):
                 extra={
                     "portfolio_id": str(self.portfolio_id),
                     "total_allocation": str(total_allocation),
-                    "tolerance": str(tolerance)
-                }
+                    "tolerance": str(tolerance),
+                },
             )
             raise ValueError(f"Asset class allocations must sum to 100%, got {total_allocation}")
 
         logger.debug(
             "PortfolioAllocation validation passed",
-            extra={"portfolio_id": str(self.portfolio_id), "total_allocation": str(total_allocation)}
+            extra={
+                "portfolio_id": str(self.portfolio_id),
+                "total_allocation": str(total_allocation),
+            },
         )
         return self
 
@@ -526,12 +525,12 @@ class PortfolioComparison(BaseModel):
         """Validate comparison data consistency."""
         logger.debug(
             "Validating portfolio comparison data",
-            extra={"num_portfolios": len(self.portfolio_ids)}
+            extra={"num_portfolios": len(self.portfolio_ids)},
         )
         if len(self.portfolio_ids) < 2:
             logger.error(
                 "PortfolioComparison validation failed: insufficient portfolios",
-                extra={"num_portfolios": len(self.portfolio_ids)}
+                extra={"num_portfolios": len(self.portfolio_ids)},
             )
             raise ValueError("At least 2 portfolios required for comparison")
 
@@ -540,13 +539,13 @@ class PortfolioComparison(BaseModel):
                 "PortfolioComparison validation failed: missing performance data",
                 extra={
                     "num_portfolios": len(self.portfolio_ids),
-                    "num_performance_records": len(self.performance_comparison)
-                }
+                    "num_performance_records": len(self.performance_comparison),
+                },
             )
             raise ValueError("Performance comparison must include all portfolios")
 
         logger.debug(
             "PortfolioComparison validation passed",
-            extra={"num_portfolios": len(self.portfolio_ids)}
+            extra={"num_portfolios": len(self.portfolio_ids)},
         )
         return self

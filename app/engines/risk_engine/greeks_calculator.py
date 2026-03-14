@@ -3,21 +3,66 @@ Options Greeks Calculator - Hull Chapters 17 and 19
 
 Implements comprehensive Greeks calculation for options risk management.
 
-Greeks measure the sensitivity of option prices to various factors:
-- Delta (Δ): Price sensitivity to underlying price changes
-- Gamma (Γ): Delta sensitivity to underlying price changes (convexity)
-- Theta (Θ): Time sensitivity (time decay)
-- Vega (ν): Volatility sensitivity
-- Rho (ρ): Interest rate sensitivity
+Module Overview:
+    This module provides a complete implementation of options Greeks calculations
+    following the Black-Scholes-Merton option pricing model. It includes both
+    primary Greeks (Delta, Gamma, Theta, Vega, Rho) and higher-order Greeks
+    (Vanna, Vomma, Charm, Veta).
+
+Primary Greeks:
+    Delta (Δ): Price sensitivity to underlying price changes.
+        - Call options: 0 to 1 (increases with price)
+        - Put options: -1 to 0 (decreases with price)
+
+    Gamma (Γ): Delta sensitivity to underlying price changes (convexity).
+        - Always positive for long options
+        - Highest for at-the-money options near expiration
+
+    Theta (Θ): Time sensitivity (time decay).
+        - Typically negative for long options (value decreases over time)
+        - Expressed as per-day decay
+
+    Vega (ν): Volatility sensitivity.
+        - Always positive for long options
+        - Expressed as change per 1% volatility move
+
+    Rho (ρ): Interest rate sensitivity.
+        - Positive for calls, negative for puts
+        - Expressed as change per 1% rate move
 
 Higher-order Greeks:
-- Vanna: Delta sensitivity to volatility
-- Vomma: Vega sensitivity to volatility (volga)
-- Charm: Delta sensitivity to time
-- Veta: Vega sensitivity to time
+    Vanna: Delta sensitivity to volatility (= Vega sensitivity to spot).
+        Measures how delta changes as volatility changes.
+
+    Vomma (Volga): Vega sensitivity to volatility.
+        Measures convexity of option price with respect to volatility.
+
+    Charm: Delta sensitivity to time (delta decay).
+        Measures how delta changes as time passes.
+
+    Veta: Vega sensitivity to time.
+        Measures how vega changes as time passes.
+
+Key Classes:
+    GreeksCalculator: Main class for calculating all Greeks for European options.
+
+Key Functions:
+    get_greeks_calculator: Factory function to create a GreeksCalculator instance.
 
 Reference:
-- Hull, Options, Futures, and Other Derivatives, Chapters 17-19
+    Hull, Options, Futures, and Other Derivatives, Chapters 17-19
+    https://en.wikipedia.org/wiki/The_Greeks_(finance)
+
+Example:
+    >>> calculator = GreeksCalculator({'risk_free_rate': 0.05})
+    >>> greeks = calculator.calculate_all_greeks(
+    ...     option_type='call',
+    ...     spot_price=100,
+    ...     strike_price=95,
+    ...     time_to_expiry=0.25,
+    ...     volatility=0.20
+    ... )
+    >>> print(f"Delta: {greeks['primary_greeks']['delta']:.4f}")
 """
 
 import logging
@@ -32,17 +77,58 @@ logger = logging.getLogger(__name__)
 
 class GreeksCalculator:
     """
-    Options Greeks Calculator.
+    Options Greeks Calculator using Black-Scholes-Merton model.
 
-    Calculates all major Greeks for European options using Black-Scholes-Merton.
+    This class provides comprehensive Greeks calculations for European-style
+    options. It implements both primary Greeks (Delta, Gamma, Theta, Vega, Rho)
+    and higher-order Greeks (Vanna, Vomma, Charm, Veta).
+
+    The calculator follows the Black-Scholes-Merton framework and includes
+    support for dividend-yielding assets through the Merton extension.
+
+    Attributes:
+        risk_free_rate (float): Default risk-free interest rate (annualized).
+        dividend_yield (float): Default continuous dividend yield (annualized).
+        logger: Logger instance for this class.
+
+    Key Methods:
+        calculate_all_greeks: Calculate all Greeks for a single option.
+        calculate_portfolio_greeks: Aggregate Greeks across multiple positions.
+        calculate_delta_hedge_ratio: Determine shares needed for delta hedge.
+        validate_greeks_consistency: Check Greeks for internal consistency.
+        validate_greeks_risk_limits: Compare portfolio Greeks against limits.
+        calculate_greeks_sensitivity_analysis: Analyze Greek sensitivities.
+        calculate_greeks_implied_values: Calculate implied volatility.
+
+    Example:
+        >>> calc = GreeksCalculator({'risk_free_rate': 0.05, 'dividend_yield': 0.02})
+        >>> greeks = calc.calculate_all_greeks(
+        ...     option_type='call',
+        ...     spot_price=100.0,
+        ...     strike_price=100.0,
+        ...     time_to_expiry=0.5,
+        ...     volatility=0.25
+        ... )
+        >>> print(f"Delta: {greeks['primary_greeks']['delta']:.4f}")
+        >>> print(f"Gamma: {greeks['primary_greeks']['gamma']:.4f}")
+
+    Note:
+        All calculations assume European-style options that can only be
+        exercised at expiration. For American-style options, numerical
+        methods would be required.
     """
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         """
-        Initialize Greeks calculator.
+        Initialize Greeks calculator with optional configuration.
 
         Args:
-            config: Configuration dictionary
+            config: Configuration dictionary with optional keys:
+                - risk_free_rate: Annual risk-free rate (default: 0.05)
+                - dividend_yield: Annual dividend yield (default: 0.0)
+
+        Example:
+            >>> calc = GreeksCalculator({'risk_free_rate': 0.04})
         """
         config = config or {}
         self.risk_free_rate = config.get('risk_free_rate', 0.05)
@@ -60,19 +146,47 @@ class GreeksCalculator:
         dividend_yield: Optional[float] = None,
     ) -> Dict[str, Any]:
         """
-        Calculate all Greeks for an option.
+        Calculate all Greeks for an option using Black-Scholes-Merton model.
+
+        This is the primary method for Greeks calculation, computing both
+        primary Greeks (Delta, Gamma, Theta, Vega, Rho) and higher-order
+        Greeks (Vanna, Vomma, Charm, Veta) in a single call.
+
+        The method also calculates the option price and risk metrics for
+        comprehensive risk assessment.
 
         Args:
-            option_type: 'call' or 'put'
-            spot_price: Current underlying price
-            strike_price: Option strike price
-            time_to_expiry: Time to expiration (years)
-            volatility: Implied volatility (decimal)
-            risk_free_rate: Risk-free rate (optional, uses default if None)
-            dividend_yield: Dividend yield (optional, uses default if None)
+            option_type: Option type, either 'call' or 'put' (case-sensitive).
+            spot_price: Current price of the underlying asset.
+            strike_price: Strike price of the option contract.
+            time_to_expiry: Time to expiration in years (e.g., 0.25 = 3 months).
+            volatility: Annualized implied volatility as decimal (e.g., 0.20 = 20%).
+            risk_free_rate: Risk-free interest rate as decimal. Uses default if None.
+            dividend_yield: Continuous dividend yield as decimal. Uses default if None.
 
         Returns:
-            Dict with all Greeks values
+            Dict containing:
+                - option_type: The option type provided
+                - spot_price: Underlying price
+                - strike_price: Strike price
+                - time_to_expiry: Time to expiration
+                - volatility: Implied volatility
+                - option_price: Black-Scholes option price
+                - primary_greeks: Dict with delta, gamma, theta, vega, rho
+                - higher_order_greeks: Dict with vanna, vomma, charm, veta
+                - risk_metrics: Dict with delta_exposure, gamma_profile, vega_profile
+                - timestamp: Calculation timestamp
+
+        Raises:
+            ValueError: If option_type is not 'call' or 'put'.
+            ZeroDivisionError: If time_to_expiry or volatility is zero.
+
+        Example:
+            >>> calc = GreeksCalculator()
+            >>> result = calc.calculate_all_greeks(
+            ...     'call', 100.0, 95.0, 0.25, 0.20
+            ... )
+            >>> delta = result['primary_greeks']['delta']
         """
         try:
             r = risk_free_rate if risk_free_rate is not None else self.risk_free_rate
@@ -145,7 +259,28 @@ class GreeksCalculator:
         q: float,
         T: float,
     ) -> float:
-        """Calculate Delta."""
+        """
+        Calculate Delta (price sensitivity to underlying).
+
+        Delta measures the rate of change of option price with respect to
+        the underlying asset price. It represents the hedge ratio - the
+        number of shares needed to hedge the option.
+
+        For calls: Delta = e^(-qT) * N(d1), ranges from 0 to 1
+        For puts: Delta = e^(-qT) * (N(d1) - 1), ranges from -1 to 0
+
+        Args:
+            option_type: 'call' or 'put'
+            d1: Black-Scholes d1 parameter
+            q: Dividend yield (continuous)
+            T: Time to expiration (years)
+
+        Returns:
+            Delta value as a float.
+
+        Raises:
+            ValueError: If option_type is invalid.
+        """
         if option_type == 'call':
             return np.exp(-q * T) * norm.cdf(d1)
         elif option_type == 'put':
@@ -160,7 +295,26 @@ class GreeksCalculator:
         sigma: float,
         T: float,
     ) -> float:
-        """Calculate Gamma (same for calls and puts)."""
+        """
+        Calculate Gamma (delta sensitivity to underlying).
+
+        Gamma measures the rate of change of delta with respect to the
+        underlying price. It represents the convexity of the position.
+
+        Gamma is always positive for long options and is highest for
+        at-the-money options near expiration.
+
+        Formula: Gamma = N'(d1) / (S * sigma * sqrt(T))
+
+        Args:
+            d1: Black-Scholes d1 parameter
+            S: Spot price of underlying
+            sigma: Volatility (annualized)
+            T: Time to expiration (years)
+
+        Returns:
+            Gamma value as a float (always positive for long options).
+        """
         return norm.pdf(d1) / (S * sigma * np.sqrt(T))
 
     def _calculate_theta(
@@ -176,9 +330,33 @@ class GreeksCalculator:
         d2: float,
     ) -> float:
         """
-        Calculate Theta (per day).
+        Calculate Theta (time sensitivity / time decay).
 
-        Returns negative value representing time decay.
+        Theta measures the rate of change of option price with respect to
+        time passage. It is typically negative for long options, representing
+        the daily erosion of option value due to time decay.
+
+        The formula includes three components:
+        1. Volatility term: -S * N'(d1) * sigma / (2 * sqrt(T))
+        2. Interest rate term: -r * K * e^(-rT) * N(+/-d2)
+        3. Dividend term: +/- q * S * e^(-qT) * N(+/-d1)
+
+        Args:
+            option_type: 'call' or 'put'
+            S: Spot price of underlying
+            K: Strike price
+            r: Risk-free interest rate
+            q: Dividend yield (continuous)
+            sigma: Volatility (annualized)
+            T: Time to expiration (years)
+            d1: Black-Scholes d1 parameter
+            d2: Black-Scholes d2 parameter
+
+        Returns:
+            Theta per day (typically negative for long options).
+
+        Raises:
+            ValueError: If option_type is invalid.
         """
         term1 = -(S * norm.pdf(d1) * sigma) / (2 * np.sqrt(T))
 
@@ -202,9 +380,21 @@ class GreeksCalculator:
         T: float,
     ) -> float:
         """
-        Calculate Vega.
+        Calculate Vega (volatility sensitivity).
 
-        Represents change in option price for 1% (0.01) change in volatility.
+        Vega measures the rate of change of option price with respect to
+        volatility. It is always positive for long options, meaning higher
+        volatility increases option value.
+
+        Formula: Vega = S * N'(d1) * sqrt(T) / 100
+
+        Args:
+            S: Spot price of underlying
+            d1: Black-Scholes d1 parameter
+            T: Time to expiration (years)
+
+        Returns:
+            Vega per 1% change in volatility (always positive for long options).
         """
         return S * norm.pdf(d1) * np.sqrt(T) / 100  # Per 1% change
 
@@ -217,9 +407,27 @@ class GreeksCalculator:
         d2: float,
     ) -> float:
         """
-        Calculate Rho.
+        Calculate Rho (interest rate sensitivity).
 
-        Represents change in option price for 1% (0.01) change in interest rate.
+        Rho measures the rate of change of option price with respect to
+        the risk-free interest rate. It is positive for calls and negative
+        for puts, reflecting the impact of discounting on option values.
+
+        For calls: Higher rates increase call value (stock more expensive to buy)
+        For puts: Higher rates decrease put value (strike worth less in present value)
+
+        Args:
+            option_type: 'call' or 'put'
+            K: Strike price
+            r: Risk-free interest rate
+            T: Time to expiration (years)
+            d2: Black-Scholes d2 parameter
+
+        Returns:
+            Rho per 1% change in interest rate.
+
+        Raises:
+            ValueError: If option_type is invalid.
         """
         if option_type == 'call':
             rho = K * T * np.exp(-r * T) * norm.cdf(d2)
@@ -232,17 +440,45 @@ class GreeksCalculator:
 
     def _calculate_vanna(self, d1: float, d2: float, sigma: float) -> float:
         """
-        Calculate Vanna.
+        Calculate Vanna (delta sensitivity to volatility).
 
-        Vanna = Delta sensitivity to volatility = Vega sensitivity to spot price.
+        Vanna is a second-order Greek that measures the sensitivity of delta
+        to changes in volatility. Equivalently, it measures the sensitivity
+        of vega to changes in the underlying price.
+
+        Formula: Vanna = -N'(d1) * d2 / sigma
+
+        Practical use: Helps adjust delta hedges when volatility changes.
+
+        Args:
+            d1: Black-Scholes d1 parameter
+            d2: Black-Scholes d2 parameter
+            sigma: Volatility (annualized)
+
+        Returns:
+            Vanna value as a float.
         """
         return -norm.pdf(d1) * d2 / sigma
 
     def _calculate_vomma(self, d1: float, d2: float, sigma: float) -> float:
         """
-        Calculate Vomma (Volga).
+        Calculate Vomma/Volga (vega sensitivity to volatility).
 
-        Vomma = Vega sensitivity to volatility (volatility convexity).
+        Vomma is a second-order Greek that measures the sensitivity of vega
+        to changes in volatility. It represents volatility convexity.
+
+        Formula: Vomma = N'(d1) * d1 * d2 / sigma
+
+        Positive vomma: Long volatility of volatility
+        Negative vomma: Short volatility of volatility
+
+        Args:
+            d1: Black-Scholes d1 parameter
+            d2: Black-Scholes d2 parameter
+            sigma: Volatility (annualized)
+
+        Returns:
+            Vomma value as a float.
         """
         return norm.pdf(d1) * d1 * d2 / sigma
 
@@ -257,9 +493,28 @@ class GreeksCalculator:
         q: float,
     ) -> float:
         """
-        Calculate Charm.
+        Calculate Charm (delta sensitivity to time / delta decay).
 
-        Charm = Delta sensitivity to time passage.
+        Charm measures the rate of change of delta over time. It is important
+        for delta hedgers as it indicates how much the delta hedge needs to
+        be adjusted purely due to time passage.
+
+        Also known as delta bleed or delta decay.
+
+        Args:
+            option_type: 'call' or 'put'
+            d1: Black-Scholes d1 parameter
+            d2: Black-Scholes d2 parameter
+            sigma: Volatility (annualized)
+            T: Time to expiration (years)
+            r: Risk-free interest rate
+            q: Dividend yield (continuous)
+
+        Returns:
+            Charm per day.
+
+        Raises:
+            ValueError: If option_type is invalid.
         """
         term1 = norm.pdf(d1) * (2 * r * T - d2 * sigma * np.sqrt(T)) / (2 * T * sigma * np.sqrt(T))
 
@@ -281,9 +536,23 @@ class GreeksCalculator:
         q: float,
     ) -> float:
         """
-        Calculate Veta.
+        Calculate Veta (vega sensitivity to time).
 
-        Veta = Vega sensitivity to time.
+        Veta measures the rate of change of vega over time. It helps
+        understand how the option's volatility sensitivity changes
+        as expiration approaches.
+
+        Important for understanding vega risk near expiration.
+
+        Args:
+            d1: Black-Scholes d1 parameter
+            sigma: Volatility (annualized)
+            T: Time to expiration (years)
+            r: Risk-free interest rate
+            q: Dividend yield (continuous)
+
+        Returns:
+            Veta per day.
         """
         term = norm.pdf(d1) * (r - q + (d1 / (2 * T)) * sigma**2) / (sigma * T)
         return term / 365  # Per day
@@ -300,7 +569,31 @@ class GreeksCalculator:
         d1: float,
         d2: float,
     ) -> float:
-        """Calculate Black-Scholes option price."""
+        """
+        Calculate Black-Scholes option price.
+
+        Uses the Black-Scholes-Merton formula with dividend yield adjustment.
+
+        Call: C = S * e^(-qT) * N(d1) - K * e^(-rT) * N(d2)
+        Put: P = K * e^(-rT) * N(-d2) - S * e^(-qT) * N(-d1)
+
+        Args:
+            option_type: 'call' or 'put'
+            S: Spot price of underlying
+            K: Strike price
+            T: Time to expiration (years)
+            r: Risk-free interest rate
+            q: Dividend yield (continuous)
+            sigma: Volatility (annualized) - not used directly but kept for consistency
+            d1: Black-Scholes d1 parameter
+            d2: Black-Scholes d2 parameter
+
+        Returns:
+            Option price as a float.
+
+        Raises:
+            ValueError: If option_type is invalid.
+        """
         if option_type == 'call':
             price = S * np.exp(-q * T) * norm.cdf(d1) - K * np.exp(-r * T) * norm.cdf(d2)
         elif option_type == 'put':
@@ -317,7 +610,25 @@ class GreeksCalculator:
         vega: float,
         spot_price: float,
     ) -> Dict[str, Any]:
-        """Calculate portfolio risk metrics from Greeks."""
+        """
+        Calculate portfolio risk metrics from Greeks.
+
+        Transforms raw Greeks values into interpretable risk metrics that
+        help traders understand their exposure profile.
+
+        Args:
+            delta: Option delta value
+            gamma: Option gamma value
+            vega: Option vega value
+            spot_price: Current underlying price
+
+        Returns:
+            Dict containing:
+                - delta_exposure: Dollar equivalent of delta position
+                - gamma_profile: 'long_gamma' or 'short_gamma'
+                - vega_profile: 'long_vega' or 'short_vega'
+                - risk_interpretation: Human-readable risk summary
+        """
         # Delta-adjusted exposure
         delta_exposure = delta * spot_price
 
@@ -344,7 +655,20 @@ class GreeksCalculator:
         gamma: float,
         vega: float,
     ) -> str:
-        """Generate human-readable interpretation of Greeks profile."""
+        """
+        Generate human-readable interpretation of Greeks profile.
+
+        Creates a plain English description of the option's risk characteristics
+        based on its Greek values.
+
+        Args:
+            delta: Option delta value
+            gamma: Option gamma value
+            vega: Option vega value
+
+        Returns:
+            String with period-separated interpretations of each Greek.
+        """
         interpretations = []
 
         # Delta interpretation
@@ -380,13 +704,37 @@ class GreeksCalculator:
         """
         Calculate aggregate Greeks for an options portfolio.
 
+        Aggregates Greeks across multiple option positions, taking into
+        account position quantities. Provides portfolio-level risk metrics.
+
         Args:
-            positions: List of position dicts with:
-                - option_type, spot_price, strike_price, time_to_expiry,
-                  volatility, quantity, etc.
+            positions: List of position dictionaries, each containing:
+                - option_type: 'call' or 'put'
+                - spot_price: Current underlying price
+                - strike_price: Strike price
+                - time_to_expiry: Time to expiration (years)
+                - volatility: Implied volatility
+                - quantity: Number of contracts (default: 1)
+                - symbol: Optional position identifier
+                - risk_free_rate: Optional override
+                - dividend_yield: Optional override
 
         Returns:
-            Portfolio-level Greeks
+            Dict containing:
+                - total_delta: Sum of delta * quantity
+                - total_gamma: Sum of gamma * quantity
+                - total_theta: Sum of theta * quantity (per day)
+                - total_vega: Sum of vega * quantity
+                - total_rho: Sum of rho * quantity
+                - positions: List of individual position Greeks
+                - analysis: Portfolio-level risk analysis
+
+        Example:
+            >>> calc = GreeksCalculator()
+            >>> result = calc.calculate_portfolio_greeks([
+            ...     {'option_type': 'call', 'spot_price': 100, 'strike_price': 95,
+            ...      'time_to_expiry': 0.25, 'volatility': 0.20, 'quantity': 10}
+            ... ])
         """
         try:
             portfolio_greeks = {
@@ -440,7 +788,25 @@ class GreeksCalculator:
             return {'error': str(e)}
 
     def _analyze_portfolio_greeks(self, portfolio_greeks: Dict[str, Any]) -> Dict[str, Any]:
-        """Analyze portfolio Greeks profile."""
+        """
+        Analyze portfolio Greeks profile for risk assessment.
+
+        Evaluates the portfolio's exposure profile and generates warnings
+        for excessive risk in any Greek dimension.
+
+        Args:
+            portfolio_greeks: Dict with total_delta, total_gamma, total_theta, total_vega
+
+        Returns:
+            Dict with:
+                - delta_neutral: Whether portfolio is approximately delta neutral
+                - gamma_exposure: 'long_gamma' or 'short_gamma'
+                - theta_profile: 'positive' or 'negative'
+                - vega_exposure: 'long_vega' or 'short_vega'
+                - daily_theta_decay: Daily theta value
+                - risk_warnings: List of risk warning messages
+                - overall_risk: 'HIGH', 'MODERATE', or 'LOW'
+        """
         analysis = {
             'delta_neutral': abs(portfolio_greeks['total_delta']) < 0.1,
             'gamma_exposure': (
@@ -479,13 +845,32 @@ class GreeksCalculator:
         """
         Calculate delta hedge ratio for neutralizing directional risk.
 
-        Determines how many shares of underlying to buy/sell to hedge an option position.
+        Determines how many shares of underlying to buy/sell to hedge an
+        option position. This is fundamental for delta-neutral strategies.
+
+        The hedge ratio is calculated as: -delta * quantity
 
         Args:
-            option_position: Option position details
+            option_position: Dict with option parameters for calculate_all_greeks
+                plus optional 'quantity' field (default: 1)
 
         Returns:
-            Hedge ratio and recommendations
+            Dict containing:
+                - option_delta: Delta of the option
+                - option_quantity: Number of options
+                - hedge_ratio: Number of shares to hedge (negative means sell)
+                - shares_to_trade: Absolute number of shares
+                - action: 'BUY' or 'SELL_SHORT'
+                - hedge_effectiveness: Assessment of hedge quality
+
+        Example:
+            >>> calc = GreeksCalculator()
+            >>> result = calc.calculate_delta_hedge_ratio({
+            ...     'option_type': 'call', 'spot_price': 100,
+            ...     'strike_price': 100, 'time_to_expiry': 0.25,
+            ...     'volatility': 0.20, 'quantity': 100
+            ... })
+            >>> print(f"Buy {result['shares_to_trade']} shares")
         """
         try:
             greeks = self.calculate_all_greeks(**option_position)
@@ -513,7 +898,17 @@ class GreeksCalculator:
             return {'error': str(e)}
 
     def _evaluate_hedge_effectiveness(self, greeks: Dict[str, Any]) -> str:
-        """Evaluate delta hedge effectiveness considering gamma."""
+        """
+        Evaluate delta hedge effectiveness considering gamma.
+
+        Higher gamma means the hedge will need more frequent rebalancing.
+
+        Args:
+            greeks: Dict containing gamma in primary_greeks
+
+        Returns:
+            String describing hedge effectiveness: 'EXCELLENT', 'GOOD', or 'POOR'
+        """
         gamma = greeks['primary_greeks']['gamma']
 
         if abs(gamma) < 0.001:
@@ -531,19 +926,36 @@ class GreeksCalculator:
         """
         Validate Greeks calculations for consistency and correctness.
 
-        Performs several validation checks:
-        1. Put-call parity for matching options
-        2. Gamma positivity (should always be positive)
-        3. Vega positivity (should always be positive)
-        4. Reasonable Greeks ranges
-        5. Cross-Greek relationships
+        Performs comprehensive validation checks on calculated Greeks to
+        catch calculation errors or unusual market conditions.
+
+        Validation checks include:
+        1. Gamma positivity (should always be positive for long options)
+        2. Vega positivity (should always be positive)
+        3. Delta range validation (call: [0,1], put: [-1,0])
+        4. Theta sign check (typically negative for long options)
+        5. Reasonable magnitude checks
+        6. Cross-Greek relationships (gamma/vega correlation near ATM)
+        7. Higher-order Greeks validation
 
         Args:
-            greeks_result: Result from calculate_all_greeks
+            greeks_result: Result dictionary from calculate_all_greeks
             tolerance: Tolerance for numerical comparisons
 
         Returns:
-            Validation results with any issues found
+            Dict containing:
+                - valid: True if no validation issues
+                - validation_issues: List of critical issues found
+                - warnings: List of non-critical warnings
+                - greeks_checked: Dict of validated Greek values
+                - validation_timestamp: Timestamp of validation
+
+        Example:
+            >>> calc = GreeksCalculator()
+            >>> greeks = calc.calculate_all_greeks('call', 100, 100, 0.25, 0.20)
+            >>> validation = calc.validate_greeks_consistency(greeks)
+            >>> if not validation['valid']:
+            ...     print(f"Issues: {validation['validation_issues']}")
         """
         if 'error' in greeks_result:
             return {'valid': False, 'error': greeks_result['error']}
@@ -634,12 +1046,39 @@ class GreeksCalculator:
         """
         Validate portfolio Greeks against risk limits.
 
+        Checks each portfolio Greek against predefined or custom limits,
+        generating violations and calculating an overall risk score.
+
+        Default limits:
+            - max_delta: 100 (net delta exposure)
+            - max_gamma: 5 (gamma exposure)
+            - max_theta: -1000 (daily theta decay)
+            - max_vega: 500 (vega exposure)
+            - max_rho: 200 (rho exposure)
+
         Args:
             portfolio_greeks: Result from calculate_portfolio_greeks
-            limits: Risk limits for each Greek
+            limits: Optional custom limits dict with keys:
+                - max_delta, max_gamma, max_theta, max_vega, max_rho
 
         Returns:
-            Risk limit validation results
+            Dict containing:
+                - within_limits: True if no violations
+                - violations: List of limit violation details
+                - warnings: List of warning-level issues
+                - risk_score: Numerical risk score (higher = riskier)
+                - risk_level: 'CRITICAL', 'HIGH', 'MODERATE', or 'LOW'
+                - portfolio_greeks: Summary of portfolio Greek values
+                - limits_applied: The limits used for validation
+                - recommendation: Plain English recommendation
+
+        Example:
+            >>> calc = GreeksCalculator()
+            >>> portfolio = calc.calculate_portfolio_greeks([...])
+            >>> risk = calc.validate_greeks_risk_limits(
+            ...     portfolio,
+            ...     limits={'max_delta': 50, 'max_gamma': 2}
+            ... )
         """
         if 'error' in portfolio_greeks:
             return {'valid': False, 'error': portfolio_greeks['error']}
@@ -769,7 +1208,19 @@ class GreeksCalculator:
     def _generate_limit_recommendation(
         self, violations: List[Dict[str, Any]], risk_level: str
     ) -> str:
-        """Generate recommendation based on limit violations."""
+        """
+        Generate actionable recommendation based on limit violations.
+
+        Creates a plain English recommendation for addressing risk limit
+        breaches, prioritized by severity.
+
+        Args:
+            violations: List of violation dictionaries with 'severity' and 'greek'
+            risk_level: Overall risk level ('CRITICAL', 'HIGH', 'MODERATE', 'LOW')
+
+        Returns:
+            String with actionable recommendation.
+        """
         if not violations:
             return 'Portfolio Greeks within acceptable limits'
 
@@ -1233,19 +1684,25 @@ class GreeksCalculator:
 
 def get_greeks_calculator(config: Optional[Dict[str, Any]] = None) -> GreeksCalculator:
     """
-    Get a GreeksCalculator instance for Hull's options risk management.
+    Factory function to get a GreeksCalculator instance.
 
-    This is a convenience function for the compliance engine to check if
-    Hull systems are available.
+    This is a convenience function for creating GreeksCalculator instances,
+    particularly useful for the compliance engine to check if Hull systems
+    are available and properly configured.
 
     Args:
-        config: Optional configuration for the Greeks calculator
+        config: Optional configuration dictionary with keys:
+            - risk_free_rate: Annual risk-free rate (default: 0.05)
+            - dividend_yield: Annual dividend yield (default: 0.0)
 
     Returns:
-        GreeksCalculator instance
+        Configured GreeksCalculator instance ready for calculations.
 
     Example:
-        >>> calculator = get_greeks_calculator()
-        >>> greeks = calculator.calculate_all_greeks('call', 100, 95, 0.25, 0.2)
+        >>> calculator = get_greeks_calculator({'risk_free_rate': 0.04})
+        >>> greeks = calculator.calculate_all_greeks(
+        ...     'call', 100, 95, 0.25, 0.2
+        ... )
+        >>> print(f"Delta: {greeks['primary_greeks']['delta']:.4f}")
     """
     return GreeksCalculator(config=config)

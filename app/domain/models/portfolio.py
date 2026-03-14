@@ -74,7 +74,7 @@ class HedgingMetadata(BaseModel):
         if v > max_hedge_cost:
             logger.error(
                 "HedgingMetadata validation failed: hedge cost exceeds limit",
-                extra={"hedge_cost_bps": str(v), "max_hedge_cost": str(max_hedge_cost)}
+                extra={"hedge_cost_bps": str(v), "max_hedge_cost": str(max_hedge_cost)},
             )
             raise ValueError(f"Hedge cost exceeds maximum limit of {max_hedge_cost} bps, got {v}")
 
@@ -138,13 +138,13 @@ class Position(BaseModel):
         if v > Decimal("1000000"):  # 1M shares limit
             logger.error(
                 "Position validation failed: quantity exceeds limit",
-                extra={"quantity": str(v), "limit": "1000000"}
+                extra={"quantity": str(v), "limit": "1000000"},
             )
             raise ValueError(f"Quantity exceeds maximum limit of 1M shares, got {v}")
         if v < Decimal("-1000000"):  # -1M shares limit
             logger.error(
                 "Position validation failed: quantity below limit",
-                extra={"quantity": str(v), "limit": "-1000000"}
+                extra={"quantity": str(v), "limit": "-1000000"},
             )
             raise ValueError(f"Quantity below minimum limit of -1M shares, got {v}")
 
@@ -187,20 +187,20 @@ class Position(BaseModel):
         """Validate position consistency rules."""
         logger.debug(
             "Validating position consistency",
-            extra={"symbol": self.symbol, "quantity": str(self.quantity)}
+            extra={"symbol": self.symbol, "quantity": str(self.quantity)},
         )
         # Validate quantity and prices are consistent
         if self.quantity != 0 and self.avg_price <= 0:
             logger.error(
                 "Position consistency validation failed: non-positive avg price",
-                extra={"symbol": self.symbol, "avg_price": str(self.avg_price)}
+                extra={"symbol": self.symbol, "avg_price": str(self.avg_price)},
             )
             raise ValueError("Average price must be positive for non-zero positions")
 
         if self.quantity != 0 and self.market_price <= 0:
             logger.error(
                 "Position consistency validation failed: non-positive market price",
-                extra={"symbol": self.symbol, "market_price": str(self.market_price)}
+                extra={"symbol": self.symbol, "market_price": str(self.market_price)},
             )
             raise ValueError("Market price must be positive for non-zero positions")
 
@@ -218,18 +218,15 @@ class Position(BaseModel):
                         "symbol": self.symbol,
                         "expected_unrealized_pnl": str(expected_unrealized),
                         "actual_unrealized_pnl": str(self.unrealized_pnl),
-                        "tolerance": str(tolerance)
-                    }
+                        "tolerance": str(tolerance),
+                    },
                 )
                 raise ValueError(
                     "Unrealized P&L calculation mismatch. "
                     f"Expected: {expected_unrealized}, Got: {self.unrealized_pnl}"
                 )
 
-        logger.debug(
-            "Position consistency validation passed",
-            extra={"symbol": self.symbol}
-        )
+        logger.debug("Position consistency validation passed", extra={"symbol": self.symbol})
         return self
 
     @property
@@ -400,8 +397,8 @@ class CircuitBreaker(BaseModel):
                 "name": self.name,
                 "error_count": self.error_count + 1,
                 "max_errors": self.max_errors,
-                "state": self.state.value
-            }
+                "state": self.state.value,
+            },
         )
         self.error_count += 1
         self.last_error_time = datetime.utcnow()
@@ -410,11 +407,7 @@ class CircuitBreaker(BaseModel):
         if self.should_trigger():
             logger.error(
                 "Circuit breaker triggered",
-                extra={
-                    "name": self.name,
-                    "error_count": self.error_count,
-                    "state": "OPEN"
-                }
+                extra={"name": self.name, "error_count": self.error_count, "state": "OPEN"},
             )
             self.state = CircuitBreakerState.OPEN
 
@@ -425,8 +418,8 @@ class CircuitBreaker(BaseModel):
             extra={
                 "name": self.name,
                 "success_count": self.success_count + 1,
-                "state": self.state.value
-            }
+                "state": self.state.value,
+            },
         )
         self.success_count += 1
         self.last_success_time = datetime.utcnow()
@@ -434,14 +427,14 @@ class CircuitBreaker(BaseModel):
         if self.state == CircuitBreakerState.HALF_OPEN and self.success_count >= 2:
             logger.info(
                 "Circuit breaker closed after recovery",
-                extra={"name": self.name, "state": "CLOSED"}
+                extra={"name": self.name, "state": "CLOSED"},
             )
             self.state = CircuitBreakerState.CLOSED
             self.error_count = 0
         elif self.state == CircuitBreakerState.OPEN:
             logger.info(
                 "Circuit breaker entering half-open state",
-                extra={"name": self.name, "state": "HALF_OPEN"}
+                extra={"name": self.name, "state": "HALF_OPEN"},
             )
             self.state = CircuitBreakerState.HALF_OPEN
 

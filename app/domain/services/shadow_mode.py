@@ -66,6 +66,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
+import aiofiles
 import numpy as np
 
 from app.shared.config.centralized_config import get_config
@@ -645,7 +646,7 @@ class ShadowModeExecutor:
         logger.critical("THIS IS A CRITICAL OPERATION - VALIDATING...")
         logger.critical("=" * 80)
 
-        report = {
+        report: Dict[str, Any] = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "validation_period_minutes": validation_period_minutes,
             "can_transition": False,
@@ -855,8 +856,6 @@ class ShadowModeExecutor:
             result: Shadow execution result
         """
         import json
-
-        import aiofiles
 
         try:
             async with aiofiles.open(self.config.audit_log_path, mode="a") as f:

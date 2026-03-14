@@ -1,7 +1,7 @@
+import logging
 from decimal import Decimal
 from typing import List, Optional
 
-import logging
 from pydantic import BaseModel, Field
 
 from app.services.portfolio_constructor import AllocationWeight, PortfolioAllocation
@@ -79,5 +79,5 @@ logger.debug(
             "AdjustedAllocationWeight",
             "RiskAdjustedPortfolio",
         ],
-    }
+    },
 )

@@ -703,8 +703,8 @@ class CumulativeOFI:
             extra={
                 "symbol": self.symbol,
                 "ofi_value": ofi_value,
-                "current_cofi": self.current_cofi
-            }
+                "current_cofi": self.current_cofi,
+            },
         )
         new_cofi = self.current_cofi + ofi_value
         new_history = self.history + ((timestamp, new_cofi),)
@@ -764,7 +764,7 @@ class CumulativeOFI:
         """
         logger.info(
             "Resetting CumulativeOFI tracker",
-            extra={"symbol": self.symbol, "new_start_time": new_start_time.isoformat()}
+            extra={"symbol": self.symbol, "new_start_time": new_start_time.isoformat()},
         )
         return CumulativeOFI(
             symbol=self.symbol,

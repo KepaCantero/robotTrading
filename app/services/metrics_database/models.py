@@ -326,7 +326,7 @@ class CollectorSource:
                     "source_name": self.name,
                     "priority": self.priority,
                     "timeout_seconds": self.timeout_seconds,
-                }
+                },
             )
             result = await self.collector_fn()
             logger.info(
@@ -334,7 +334,7 @@ class CollectorSource:
                 extra={
                     "source_name": self.name,
                     "metrics_collected": len(result),
-                }
+                },
             )
             return result
         except (asyncio.TimeoutError, OSError) as e:
@@ -344,7 +344,7 @@ class CollectorSource:
                     "source_name": self.name,
                     "error_type": type(e).__name__,
                     "error_message": str(e),
-                }
+                },
             )
             # Log error but don't raise to allow other sources to continue
             return []
@@ -383,7 +383,7 @@ class QuestDBConfig:
                 "port": self.port,
                 "database": self.database,
                 "user": self.user,
-            }
+            },
         )
 
         # Rule 28: Read password from environment if not provided
@@ -397,7 +397,7 @@ class QuestDBConfig:
                 extra={
                     "host": self.host,
                     "environment_variable": "QUESTDB_PASSWORD",
-                }
+                },
             )
             warnings.warn(
                 "QUESTDB_PASSWORD not set. QuestDB features may not work correctly.",
@@ -420,7 +420,7 @@ class QuestDBConfig:
                     "host": self.host,
                     "port": self.port,
                     "database": self.database,
-                }
+                },
             )
             raise ValueError(
                 "QUESTDB_PASSWORD environment variable not set. "
@@ -432,7 +432,7 @@ class QuestDBConfig:
                 "host": self.host,
                 "port": self.port,
                 "database": self.database,
-            }
+            },
         )
         return (
             f"postgresql://{self.user}:{self.password}@" f"{self.host}:{self.port}/{self.database}"

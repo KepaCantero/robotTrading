@@ -176,7 +176,7 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
         """Return the engine type identifier."""
         return EngineType.STANDARD
 
-    def run_backtest(
+    def run_backtest(  # pylint: disable=signature-differs
         self,
         market_data: List,
         signals: List[Signal],
@@ -310,7 +310,7 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
             annualized_return=annualized_return,
         )
 
-    def _create_result(
+    def _create_result(  # pylint: disable=arguments-differ
         self,
         performance: PerformanceMetrics,
         trades: List[Trade],
@@ -802,9 +802,7 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
         ):
             return
 
-        from app.domain.strategies.momentum_modular.learning.learning_updater import (
-            LearningEngineUpdater,
-        )
+        from app.domain.strategies.learning.learning_updater import LearningEngineUpdater
 
         if not hasattr(self.strategy, "_learning_updater"):
             self.strategy._learning_updater = LearningEngineUpdater(

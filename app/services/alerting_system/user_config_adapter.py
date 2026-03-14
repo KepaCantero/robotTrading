@@ -28,7 +28,7 @@ def user_settings_to_notification_targets(settings: UserSettings) -> List[Notifi
             "operation": "convert_settings",
             "telegram_enabled": settings.notifications.enable_telegram,
             "email_enabled": settings.notifications.enable_email,
-        }
+        },
     )
 
     targets = []
@@ -46,7 +46,7 @@ def user_settings_to_notification_targets(settings: UserSettings) -> List[Notifi
                 "operation": "add_telegram_target",
                 "chat_id_configured": bool(notifications.telegram_chat_id),
                 "bot_token_configured": bool(bot_token),
-            }
+            },
         )
 
         targets.append(
@@ -78,7 +78,7 @@ def user_settings_to_notification_targets(settings: UserSettings) -> List[Notifi
                 "email_address": notifications.email_address,
                 "smtp_host": smtp_host,
                 "smtp_port": smtp_port,
-            }
+            },
         )
 
         targets.append(
@@ -103,7 +103,7 @@ def user_settings_to_notification_targets(settings: UserSettings) -> List[Notifi
             "component": "user_config_adapter",
             "operation": "convert_settings_complete",
             "total_targets": len(targets),
-        }
+        },
     )
 
     return targets

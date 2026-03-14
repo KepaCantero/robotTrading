@@ -176,7 +176,7 @@ class PostTradeComplianceChecker:
             result.price_improvement_bps = harris_analysis.price_improvement_bps
 
         except Exception as e:
-            logger.warning("Harris post-trade analysis error:", error=e)
+            logger.warning("Harris post-trade analysis error: %s", e)
 
     def track_slo_compliance(
         self,
@@ -230,7 +230,7 @@ class PostTradeComplianceChecker:
             }
 
         except Exception as e:
-            logger.warning("SLO tracking error:", error=e)
+            logger.warning("SLO tracking error: %s", e)
             return {"tracked": False, "error": str(e)}
 
     # =========================================================================

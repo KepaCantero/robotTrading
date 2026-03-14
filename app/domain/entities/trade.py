@@ -98,40 +98,33 @@ class Trade:
 
     def __post_init__(self):
         """Validate trade invariants."""
-        logger.debug(
-            "Validating trade",
-            extra={"trade_id": self.trade_id, "symbol": self.symbol}
-        )
+        logger.debug("Validating trade", extra={"trade_id": self.trade_id, "symbol": self.symbol})
         if not self.trade_id:
             logger.error("Trade validation failed: empty trade ID")
             raise ValueError("Trade ID cannot be empty")
         if not self.symbol:
-            logger.error(
-                "Trade validation failed: empty symbol",
-                extra={"trade_id": self.trade_id}
-            )
+            logger.error("Trade validation failed: empty symbol", extra={"trade_id": self.trade_id})
             raise ValueError("Symbol cannot be empty")
         if self.quantity <= 0:
             logger.error(
                 "Trade validation failed: invalid quantity",
-                extra={"trade_id": self.trade_id, "quantity": str(self.quantity)}
+                extra={"trade_id": self.trade_id, "quantity": str(self.quantity)},
             )
             raise ValueError("Quantity must be positive")
         if self.entry_price < 0:
             logger.error(
                 "Trade validation failed: negative entry price",
-                extra={"trade_id": self.trade_id, "entry_price": str(self.entry_price)}
+                extra={"trade_id": self.trade_id, "entry_price": str(self.entry_price)},
             )
             raise ValueError("Entry price cannot be negative")
         if self.exit_price < 0:
             logger.error(
                 "Trade validation failed: negative exit price",
-                extra={"trade_id": self.trade_id, "exit_price": str(self.exit_price)}
+                extra={"trade_id": self.trade_id, "exit_price": str(self.exit_price)},
             )
             raise ValueError("Exit price cannot be negative")
         logger.debug(
-            "Trade validation passed",
-            extra={"trade_id": self.trade_id, "symbol": self.symbol}
+            "Trade validation passed", extra={"trade_id": self.trade_id, "symbol": self.symbol}
         )
 
     # ==========================================================================
@@ -327,8 +320,8 @@ class Trade:
                 "side": side.value,
                 "quantity": str(position_quantity),
                 "entry_price": str(entry_price),
-                "exit_price": str(exit_price)
-            }
+                "exit_price": str(exit_price),
+            },
         )
         return cls(
             trade_id=trade_id,
@@ -369,8 +362,8 @@ class Trade:
                 "side": "LONG",
                 "quantity": str(quantity),
                 "entry_price": str(entry_price),
-                "exit_price": str(exit_price)
-            }
+                "exit_price": str(exit_price),
+            },
         )
         return cls(
             trade_id=trade_id,
@@ -412,8 +405,8 @@ class Trade:
                 "side": "SHORT",
                 "quantity": str(quantity),
                 "entry_price": str(entry_price),
-                "exit_price": str(exit_price)
-            }
+                "exit_price": str(exit_price),
+            },
         )
         return cls(
             trade_id=trade_id,

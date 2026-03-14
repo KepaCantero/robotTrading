@@ -34,6 +34,13 @@ import yaml
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
+# Import modular components (OCP)
+from app.shared.config.cache import FileBasedConfigCache
+from app.shared.config.defaults import get_default_magic_values
+from app.shared.config.legacy_wrapper import Configuration
+from app.shared.config.loaders import ConfigLoaderRegistry
+from app.shared.config.mergers import RecursiveConfigMerger
+
 # Import extracted configuration groups (SRP)
 from app.shared.config.params.backtest_config import BacktestingConfig
 from app.shared.config.params.infrastructure_config import (
@@ -52,13 +59,6 @@ from app.shared.config.params.shadow_mode_config import ShadowModeConfigParams
 from app.shared.config.params.strategy_config import StrategyConfig
 from app.shared.config.params.trading_thresholds import TradingThresholds
 from app.shared.config.signal_risk import MarketMicrostructureThresholds
-
-# Import modular components (OCP)
-from app.shared.config.cache import FileBasedConfigCache
-from app.shared.config.defaults import get_default_magic_values
-from app.shared.config.legacy_wrapper import Configuration
-from app.shared.config.loaders import ConfigLoaderRegistry
-from app.shared.config.mergers import RecursiveConfigMerger
 from app.shared.config.validators import CompositeConfigValidator
 
 if TYPE_CHECKING:
@@ -206,9 +206,7 @@ class CentralizedConfig(BaseSettings):
                 extra={"loaded_count": loaded_count},
             )
         else:
-            logger.debug(
-                "Strategies directory does not exist, skipping strategy config loading"
-            )
+            logger.debug("Strategies directory does not exist, skipping strategy config loading")
 
     # =========================================================================
     # Public API Methods
@@ -278,9 +276,7 @@ class CentralizedConfig(BaseSettings):
             },
             "strategies": {
                 "count": len(self.strategies),
-                "enabled": [
-                    name for name, config in self.strategies.items() if config.enabled
-                ],
+                "enabled": [name for name, config in self.strategies.items() if config.enabled],
                 "all": list(self.strategies.keys()),
             },
             "database": {
@@ -553,9 +549,7 @@ def validate_config_object(config: Configuration) -> bool:
 # =============================================================================
 
 
-def merge_configs(
-    base_config: Dict[str, Any], override_config: Dict[str, Any]
-) -> Dict[str, Any]:
+def merge_configs(base_config: Dict[str, Any], override_config: Dict[str, Any]) -> Dict[str, Any]:
     """
     Merge two configuration dictionaries recursively.
 
@@ -652,9 +646,7 @@ def get_date_order_property(start_date: str, end_date: str) -> bool:
 # =============================================================================
 
 
-def update_atr_multiplier(
-    config: Configuration, multiplier_name: str, value: float
-) -> None:
+def update_atr_multiplier(config: Configuration, multiplier_name: str, value: float) -> None:
     """
     Update ATR multiplier in configuration.
 
@@ -666,9 +658,7 @@ def update_atr_multiplier(
     config.set_atr_multiplier(multiplier_name, value)
 
 
-def update_nested_value(
-    config: Configuration, key_path: str, value: Any
-) -> None:
+def update_nested_value(config: Configuration, key_path: str, value: Any) -> None:
     """
     Update nested configuration value.
 

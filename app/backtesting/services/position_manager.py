@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Callable, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -137,7 +137,7 @@ class PositionManager:
         """
         return len(self.get_symbols_with_positions())
 
-    def get_total_position_value(self, price_func: callable[[str], Optional[Decimal]]) -> Decimal:
+    def get_total_position_value(self, price_func: Callable[[str], Optional[Decimal]]) -> Decimal:
         """
         Calculate total value of all open positions.
 

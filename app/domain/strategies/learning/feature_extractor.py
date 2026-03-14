@@ -539,7 +539,7 @@ class FeatureExtractor:
         """
         if len(historical_data) < sequence_length:
             # Rellenar con ceros al principio
-            padding = [{}] * (sequence_length - len(historical_data))
+            padding: List[Dict[str, Any]] = [{}] * (sequence_length - len(historical_data))
             historical_data = padding + historical_data
 
         # Tomar últimos sequence_length elementos

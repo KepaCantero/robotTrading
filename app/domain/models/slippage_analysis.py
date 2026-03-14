@@ -146,7 +146,7 @@ class DynamicSlippageAnalysis(BaseModel):
         """Obtener componente de slippage por tipo."""
         logger.debug(
             "Looking up slippage component",
-            extra={"slippage_type": slippage_type.value, "asset_symbol": self.asset_symbol}
+            extra={"slippage_type": slippage_type.value, "asset_symbol": self.asset_symbol},
         )
         for component in self.slippage_components:
             if component.slippage_type == slippage_type:
@@ -155,13 +155,13 @@ class DynamicSlippageAnalysis(BaseModel):
                     extra={
                         "slippage_type": slippage_type.value,
                         "value": float(component.value),
-                        "confidence": component.confidence
-                    }
+                        "confidence": component.confidence,
+                    },
                 )
                 return component
         logger.debug(
             "Slippage component not found",
-            extra={"slippage_type": slippage_type.value, "asset_symbol": self.asset_symbol}
+            extra={"slippage_type": slippage_type.value, "asset_symbol": self.asset_symbol},
         )
         return None
 
@@ -179,8 +179,8 @@ class DynamicSlippageAnalysis(BaseModel):
                 "order_side": self.order_side,
                 "base_price": float(self.base_price),
                 "total_slippage": float(self.total_slippage),
-                "adjusted_price": float(adjusted)
-            }
+                "adjusted_price": float(adjusted),
+            },
         )
         return adjusted
 
@@ -194,8 +194,8 @@ class DynamicSlippageAnalysis(BaseModel):
                 "base_price": float(self.base_price),
                 "order_size": float(self.order_size),
                 "total_slippage": float(self.total_slippage),
-                "slippage_cost": float(cost)
-            }
+                "slippage_cost": float(cost),
+            },
         )
         return cost
 
@@ -249,17 +249,14 @@ class SlippageHistory(BaseModel):
                 "asset_symbol": self.asset_symbol,
                 "total_slippage": float(analysis.total_slippage),
                 "market_condition": analysis.market_condition.value,
-                "analyses_count": len(self.analyses)
-            }
+                "analyses_count": len(self.analyses),
+            },
         )
 
     def get_latest_analysis(self) -> Optional[DynamicSlippageAnalysis]:
         """Obtener el análisis más reciente."""
         if not self.analyses:
-            logger.debug(
-                "No analyses available",
-                extra={"asset_symbol": self.asset_symbol}
-            )
+            logger.debug("No analyses available", extra={"asset_symbol": self.asset_symbol})
             return None
         latest = max(self.analyses, key=lambda x: x.calculation_timestamp)
         logger.debug(
@@ -267,8 +264,8 @@ class SlippageHistory(BaseModel):
             extra={
                 "asset_symbol": self.asset_symbol,
                 "total_slippage": float(latest.total_slippage),
-                "timestamp": latest.calculation_timestamp.isoformat()
-            }
+                "timestamp": latest.calculation_timestamp.isoformat(),
+            },
         )
         return latest
 
@@ -280,20 +277,20 @@ class SlippageHistory(BaseModel):
         if not recent_analyses:
             logger.debug(
                 "No recent analyses for average calculation",
-                extra={"asset_symbol": self.asset_symbol, "days": days}
+                extra={"asset_symbol": self.asset_symbol, "days": days},
             )
             return None
 
         total_slippage = sum(a.total_slippage for a in recent_analyses)
-        avg = total_slippage / len(recent_analyses)
+        avg = total_slippage / Decimal(len(recent_analyses))
         logger.info(
             "Calculated average slippage",
             extra={
                 "asset_symbol": self.asset_symbol,
                 "days": days,
                 "average_slippage": float(avg),
-                "analyses_count": len(recent_analyses)
-            }
+                "analyses_count": len(recent_analyses),
+            },
         )
         return avg
 
@@ -302,7 +299,7 @@ class SlippageHistory(BaseModel):
         if len(self.analyses) < 2:
             logger.debug(
                 "Insufficient data for trend analysis",
-                extra={"asset_symbol": self.asset_symbol, "analyses_count": len(self.analyses)}
+                extra={"asset_symbol": self.asset_symbol, "analyses_count": len(self.analyses)},
             )
             return "insufficient_data"
 
@@ -322,7 +319,7 @@ class SlippageHistory(BaseModel):
                 "asset_symbol": self.asset_symbol,
                 "trend": trend,
                 "recent_slippage": float(recent),
-                "previous_slippage": float(previous)
-            }
+                "previous_slippage": float(previous),
+            },
         )
         return trend

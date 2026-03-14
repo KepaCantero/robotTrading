@@ -549,9 +549,9 @@ class TrialContext:
                 extra={
                     "trial_id": self.trial_id,
                     "iteration": self.iteration,
-                    "duration_seconds": (
-                        self.end_time - self.start_time
-                    ).total_seconds() if self.start_time else 0,
+                    "duration_seconds": (self.end_time - self.start_time).total_seconds()
+                    if self.start_time
+                    else 0,
                 },
             )
 

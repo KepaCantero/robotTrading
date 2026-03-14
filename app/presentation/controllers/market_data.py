@@ -123,8 +123,7 @@ async def get_quote(
 ):
     """Get real-time quote for a symbol."""
     logger.debug(
-        "get_quote called",
-        extra={"symbol": symbol, "feed_id": str(feed_id) if feed_id else None}
+        "get_quote called", extra={"symbol": symbol, "feed_id": str(feed_id) if feed_id else None}
     )
     try:
         quote = await service.get_quote(symbol, feed_id)
@@ -132,13 +131,13 @@ async def get_quote(
         if quote:
             logger.info(
                 "Quote retrieved successfully",
-                extra={"symbol": symbol, "feed_id": str(feed_id) if feed_id else None}
+                extra={"symbol": symbol, "feed_id": str(feed_id) if feed_id else None},
             )
             return QuoteResponse(success=True, data=quote, timestamp=datetime.utcnow())
         else:
             logger.warning(
                 "No quote data available",
-                extra={"symbol": symbol, "feed_id": str(feed_id) if feed_id else None}
+                extra={"symbol": symbol, "feed_id": str(feed_id) if feed_id else None},
             )
             return QuoteResponse(
                 success=False,
@@ -148,7 +147,7 @@ async def get_quote(
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(
             "Error getting quote",
-            extra={"symbol": symbol, "error_type": type(e).__name__, "error_message": str(e)}
+            extra={"symbol": symbol, "error_type": type(e).__name__, "error_message": str(e)},
         )
         raise HTTPException(status_code=500, detail=f"Error getting quote for {symbol}: {str(e)}")
 
@@ -211,22 +210,26 @@ async def get_historical_data(
             "start_date": start_date.isoformat(),
             "end_date": end_date.isoformat(),
             "frequency": frequency.value if hasattr(frequency, 'value') else str(frequency),
-            "feed_id": str(feed_id) if feed_id else None
-        }
+            "feed_id": str(feed_id) if feed_id else None,
+        },
     )
     try:
         # Validate date range
         if start_date >= end_date:
             logger.warning(
                 "Invalid date range",
-                extra={"symbol": symbol, "start_date": start_date.isoformat(), "end_date": end_date.isoformat()}
+                extra={
+                    "symbol": symbol,
+                    "start_date": start_date.isoformat(),
+                    "end_date": end_date.isoformat(),
+                },
             )
             raise HTTPException(status_code=400, detail="Start date must be before end date")
 
         if (end_date - start_date).days > 365:
             logger.warning(
                 "Date range exceeds 365 days",
-                extra={"symbol": symbol, "days": (end_date - start_date).days}
+                extra={"symbol": symbol, "days": (end_date - start_date).days},
             )
             raise HTTPException(status_code=400, detail="Date range cannot exceed 365 days")
 
@@ -236,7 +239,7 @@ async def get_historical_data(
 
         logger.info(
             "Historical data retrieved",
-            extra={"symbol": symbol, "data_points": len(historical_data)}
+            extra={"symbol": symbol, "data_points": len(historical_data)},
         )
 
         return HistoricalDataResponse(
@@ -248,7 +251,7 @@ async def get_historical_data(
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(
             "Error getting historical data",
-            extra={"symbol": symbol, "error_type": type(e).__name__, "error_message": str(e)}
+            extra={"symbol": symbol, "error_type": type(e).__name__, "error_message": str(e)},
         )
         raise HTTPException(
             status_code=500,
@@ -264,7 +267,12 @@ async def create_feed_config(
     """Create a new data feed configuration."""
     logger.info(
         "create_feed_config called",
-        extra={"feed_name": request.name, "feed_type": request.feed_type.value if hasattr(request.feed_type, 'value') else str(request.feed_type)}
+        extra={
+            "feed_name": request.name,
+            "feed_type": request.feed_type.value
+            if hasattr(request.feed_type, 'value')
+            else str(request.feed_type),
+        },
     )
     try:
         config = DataFeedConfig(
@@ -287,14 +295,18 @@ async def create_feed_config(
 
         logger.info(
             "Feed configuration created",
-            extra={"config_id": str(config_id), "feed_name": request.name}
+            extra={"config_id": str(config_id), "feed_name": request.name},
         )
 
         return FeedConfigResponse(success=True, data=config, timestamp=datetime.utcnow())
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(
             "Error creating feed configuration",
-            extra={"feed_name": request.name, "error_type": type(e).__name__, "error_message": str(e)}
+            extra={
+                "feed_name": request.name,
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+            },
         )
         raise HTTPException(status_code=500, detail=f"Error creating feed configuration: {str(e)}")
 
@@ -352,7 +364,11 @@ async def connect_feed(
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(
             "Error connecting to feed",
-            extra={"config_id": str(config_id), "error_type": type(e).__name__, "error_message": str(e)}
+            extra={
+                "config_id": str(config_id),
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+            },
         )
         raise HTTPException(status_code=500, detail=f"Error connecting to feed: {str(e)}")
 

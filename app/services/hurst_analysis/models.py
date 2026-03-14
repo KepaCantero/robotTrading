@@ -120,5 +120,5 @@ logger.debug(
             "HurstResult",
             "RegimeChange",
         ],
-    }
+    },
 )

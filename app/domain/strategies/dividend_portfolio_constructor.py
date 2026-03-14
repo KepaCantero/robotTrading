@@ -17,11 +17,20 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any, Dict, List
+from typing import Any, DefaultDict, Dict, List, TypedDict
 
 from .models import DividendStock, DividendStrategyConfig
 
 logger = logging.getLogger(__name__)
+
+
+class _DriftedPosition(TypedDict):
+    """Type for drifted position dict."""
+
+    symbol: str
+    target_weight: float
+    current_weight: float
+    drift: float
 
 
 @dataclass
@@ -288,7 +297,7 @@ class DividendPortfolioConstructor:
         max_iterations = 10
         for _ in range(max_iterations):
             # Calcular peso por sector
-            sector_weights = defaultdict(Decimal)
+            sector_weights: DefaultDict[str, Decimal] = defaultdict(Decimal)
 
             for symbol, weight in adjusted.items():
                 sector = symbol_to_sector.get(symbol)
@@ -377,7 +386,7 @@ class DividendPortfolioConstructor:
             for stock in stocks:
                 symbol_to_sector[stock.profile.symbol] = sector
 
-        sector_sums = defaultdict(Decimal)
+        sector_sums: DefaultDict[str, Decimal] = defaultdict(Decimal)
         for symbol, weight in weights.items():
             sector = symbol_to_sector.get(symbol)
             if sector:
@@ -487,12 +496,12 @@ class DividendPortfolioConstructor:
             Objeto DividendPortfolio
         """
         # Calcular valores totales
-        total_value = sum(pos.current_value for pos in positions)
-        annual_income = sum(pos.annual_income for pos in positions)
+        total_value: Decimal = sum((pos.current_value for pos in positions), Decimal("0"))
+        annual_income: Decimal = sum((pos.annual_income for pos in positions), Decimal("0"))
 
         # Portfolio yield ponderado
         if total_value > 0:
-            portfolio_yield = (annual_income / total_value) * 100
+            portfolio_yield: Decimal = (annual_income / total_value) * Decimal("100")
         else:
             portfolio_yield = Decimal("0")
 
@@ -500,7 +509,7 @@ class DividendPortfolioConstructor:
         sector_weights = self._calculate_sector_weights(positions, stocks)
 
         # Ingreso mensual esperado
-        expected_monthly_income = annual_income / 12
+        expected_monthly_income: Decimal = annual_income / Decimal("12")
 
         # Metadatos
         construction_metadata = {
@@ -543,7 +552,7 @@ class DividendPortfolioConstructor:
         # Sumar pesos por sector usando pos.weight
         # pos.weight ya está expresado como proporción del capital total (0-1)
         # No necesitamos normalizar de nuevo
-        sector_weights = defaultdict(Decimal)
+        sector_weights: DefaultDict[str, Decimal] = defaultdict(Decimal)
 
         for pos in positions:
             sector = symbol_to_sector.get(pos.symbol, "Unknown")
@@ -607,7 +616,7 @@ class DividendPortfolioConstructor:
         }
 
         # Detectar drift significativo
-        drifted_positions = []
+        drifted_positions: List[_DriftedPosition] = []
 
         for pos in portfolio.positions:
             drift = abs(pos.weight - current_weights.get(pos.symbol, Decimal("0")))

@@ -31,7 +31,7 @@ class Modelo720Generator:
             extra={
                 "component": "modelo_720_generator",
                 "operation": "init",
-            }
+            },
         )
 
     def add_stock(self, symbol: str, isin: str, value: Decimal) -> None:
@@ -53,7 +53,7 @@ class Modelo720Generator:
                 "isin": isin,
                 "value": str(value),
                 "country": country,
-            }
+            },
         )
 
     def add_fund(self, name: str, isin: str, value: Decimal) -> None:
@@ -75,7 +75,7 @@ class Modelo720Generator:
                 "isin": isin,
                 "value": str(value),
                 "country": country,
-            }
+            },
         )
 
     def _get_country_from_isin(self, isin: str) -> str:
@@ -108,7 +108,7 @@ class Modelo720Generator:
                 "operation": "get_country_from_isin",
                 "isin": isin,
                 "country": country,
-            }
+            },
         )
 
         return country
@@ -129,7 +129,7 @@ class Modelo720Generator:
                 "component": "modelo_720_generator",
                 "operation": "generate_report",
                 "year": year,
-            }
+            },
         )
 
         total_value = sum(
@@ -164,7 +164,7 @@ class Modelo720Generator:
                 "above_threshold": above_threshold,
                 "stocks_count": len(self.assets["stocks"]),
                 "funds_count": len(self.assets["funds"]),
-            }
+            },
         )
 
         if above_threshold:
@@ -175,7 +175,7 @@ class Modelo720Generator:
                     "operation": "generate_report",
                     "total_value_eur": total_value,
                     "threshold": 50000,
-                }
+                },
             )
 
         return report

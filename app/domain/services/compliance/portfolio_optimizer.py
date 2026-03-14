@@ -167,7 +167,7 @@ class PortfolioComplianceOptimizer:
             return True
 
         except Exception as e:
-            logger.warning("Chan portfolio optimization error:", error=e)
+            logger.warning("Chan portfolio optimization error: %s", e)
             return False
 
     def _apply_equal_weights(
@@ -220,7 +220,7 @@ class PortfolioComplianceOptimizer:
                     result.reasons.append("Weights increased for bull regime")
 
         except Exception as e:
-            logger.warning("Regime adjustment error:", error=e)
+            logger.warning("Regime adjustment error: %s", e)
 
     def _apply_constraints(
         self,
@@ -315,7 +315,7 @@ class PortfolioComplianceOptimizer:
             }
 
         except Exception as e:
-            logger.warning("Portfolio metrics calculation error:", error=e)
+            logger.warning("Portfolio metrics calculation error: %s", e)
             return {
                 "expected_return": 0.0,
                 "risk": 0.0,

@@ -1256,7 +1256,7 @@ if session_state.backtest_results:
                                 return 'background-color: #fff3cd; color: #856404'
                             else:
                                 return 'background-color: #f8d7da; color: #721c24'
-                    except (ValueError, TypeError, KeyError, AttributeError):  # noqa: E722
+                    except (ValueError, TypeError, KeyError, AttributeError):
                         pass
                 return ''
 

@@ -197,10 +197,7 @@ async def calculate_performance_metrics(
     """Calculate performance metrics for a portfolio."""
     logger.debug(
         "Calculating performance metrics",
-        extra={
-            "portfolio_id": str(request.portfolio_id),
-            "period": request.period.value
-        }
+        extra={"portfolio_id": str(request.portfolio_id), "period": request.period.value},
     )
     try:
         # Get portfolio data (mock for now)
@@ -215,15 +212,18 @@ async def calculate_performance_metrics(
         )
 
         logger.info(
-            "Performance metrics calculated",
-            extra={"portfolio_id": str(request.portfolio_id)}
+            "Performance metrics calculated", extra={"portfolio_id": str(request.portfolio_id)}
         )
         return PerformanceMetricsResponse(success=True, data=metrics, error=None)
 
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         logger.error(
             "Failed to calculate performance metrics",
-            extra={"portfolio_id": str(request.portfolio_id), "error": str(e), "error_type": type(e).__name__}
+            extra={
+                "portfolio_id": str(request.portfolio_id),
+                "error": str(e),
+                "error_type": type(e).__name__,
+            },
         )
         return PerformanceMetricsResponse(
             success=False, data=None, error=f"Failed to calculate performance metrics: {str(e)}"
@@ -276,7 +276,11 @@ async def get_risk_metrics(
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         logger.error(
             "Failed to get risk metrics",
-            extra={"portfolio_id": str(portfolio_id), "error": str(e), "error_type": type(e).__name__}
+            extra={
+                "portfolio_id": str(portfolio_id),
+                "error": str(e),
+                "error_type": type(e).__name__,
+            },
         )
         return RiskMetricsResponse(
             success=False, data=None, error=f"Failed to get risk metrics: {str(e)}"
@@ -303,7 +307,11 @@ async def get_portfolio_analytics(
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         logger.error(
             "Failed to get portfolio analytics",
-            extra={"portfolio_id": str(portfolio_id), "error": str(e), "error_type": type(e).__name__}
+            extra={
+                "portfolio_id": str(portfolio_id),
+                "error": str(e),
+                "error_type": type(e).__name__,
+            },
         )
         return PortfolioAnalyticsResponse(
             success=False, data=None, error=f"Failed to get portfolio analytics: {str(e)}"
@@ -338,8 +346,7 @@ async def get_rebalance_recommendation(
 ):
     """Get portfolio rebalancing recommendations."""
     logger.debug(
-        "Getting rebalance recommendation",
-        extra={"portfolio_id": str(request.portfolio_id)}
+        "Getting rebalance recommendation", extra={"portfolio_id": str(request.portfolio_id)}
     )
     try:
         # Get portfolio data (mock for now)
@@ -374,15 +381,18 @@ async def get_rebalance_recommendation(
         )
 
         logger.info(
-            "Rebalance recommendation generated",
-            extra={"portfolio_id": str(request.portfolio_id)}
+            "Rebalance recommendation generated", extra={"portfolio_id": str(request.portfolio_id)}
         )
         return RebalanceResponse(success=True, data=rebalance, error=None)
 
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         logger.error(
             "Failed to get rebalance recommendation",
-            extra={"portfolio_id": str(request.portfolio_id), "error": str(e), "error_type": type(e).__name__}
+            extra={
+                "portfolio_id": str(request.portfolio_id),
+                "error": str(e),
+                "error_type": type(e).__name__,
+            },
         )
         return RebalanceResponse(
             success=False, data=None, error=f"Failed to get rebalance recommendation: {str(e)}"
@@ -396,23 +406,18 @@ async def compare_portfolios(
 ):
     """Compare multiple portfolios."""
     logger.debug(
-        "Comparing portfolios",
-        extra={"portfolio_ids": [str(pid) for pid in request.portfolio_ids]}
+        "Comparing portfolios", extra={"portfolio_ids": [str(pid) for pid in request.portfolio_ids]}
     )
     try:
         # Generate comparison
         comparison = await analytics_service.compare_portfolios(request.portfolio_ids)
 
-        logger.info(
-            "Portfolios compared",
-            extra={"portfolio_count": len(request.portfolio_ids)}
-        )
+        logger.info("Portfolios compared", extra={"portfolio_count": len(request.portfolio_ids)})
         return PortfolioComparisonResponse(success=True, data=comparison, error=None)
 
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         logger.error(
-            "Failed to compare portfolios",
-            extra={"error": str(e), "error_type": type(e).__name__}
+            "Failed to compare portfolios", extra={"error": str(e), "error_type": type(e).__name__}
         )
         return PortfolioComparisonResponse(
             success=False, data=None, error=f"Failed to compare portfolios: {str(e)}"

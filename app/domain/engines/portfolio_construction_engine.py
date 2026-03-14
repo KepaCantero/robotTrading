@@ -28,14 +28,14 @@ class PortfolioConstructionEngine:
         self.config = config or {}
         logger.info(
             "PortfolioConstructionEngine initialized",
-            extra={"config_keys": list(self.config.keys())}
+            extra={"config_keys": list(self.config.keys())},
         )
 
     def construct_portfolio(
         self,
         target_weights: Dict[str, float],
         constraints: Optional[Dict[str, Any]] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """
         Construct a portfolio based on target weights and constraints.
@@ -52,31 +52,28 @@ class PortfolioConstructionEngine:
             "Starting portfolio construction",
             extra={
                 "target_weights_count": len(target_weights),
-                "has_constraints": constraints is not None
-            }
+                "has_constraints": constraints is not None,
+            },
         )
 
         result = {
             "allocations": target_weights,
             "constraints_applied": constraints or {},
-            "metadata": kwargs
+            "metadata": kwargs,
         }
 
         logger.info(
             "Portfolio construction completed",
             extra={
                 "allocations_count": len(result["allocations"]),
-                "total_weight": sum(target_weights.values())
-            }
+                "total_weight": sum(target_weights.values()),
+            },
         )
 
         return result
 
     def optimize_weights(
-        self,
-        symbols: List[str],
-        objective: str = "max_sharpe",
-        **kwargs
+        self, symbols: List[str], objective: str = "max_sharpe", **kwargs
     ) -> Dict[str, float]:
         """
         Optimize portfolio weights based on specified objective.
@@ -91,10 +88,7 @@ class PortfolioConstructionEngine:
         """
         logger.info(
             "Starting weight optimization",
-            extra={
-                "symbols_count": len(symbols),
-                "objective": objective
-            }
+            extra={"symbols_count": len(symbols), "objective": objective},
         )
 
         # Placeholder implementation
@@ -102,10 +96,7 @@ class PortfolioConstructionEngine:
 
         logger.debug(
             "Weight optimization completed",
-            extra={
-                "optimized_weights": optimized_weights,
-                "objective": objective
-            }
+            extra={"optimized_weights": optimized_weights, "objective": objective},
         )
 
         return optimized_weights

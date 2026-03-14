@@ -6,7 +6,6 @@ and parameter optimization to prevent overfitting in trading strategies.
 """
 
 import logging
-
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum

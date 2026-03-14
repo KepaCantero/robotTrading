@@ -101,8 +101,7 @@ class MomentumSignal(BaseModel):
         """Validate signal direction."""
         if v.upper() not in ["BUY", "SELL"]:
             logger.error(
-                "MomentumSignal validation failed: invalid direction",
-                extra={"direction": v}
+                "MomentumSignal validation failed: invalid direction", extra={"direction": v}
             )
             raise ValueError("Direction must be BUY or SELL")
         return v.upper()
@@ -180,14 +179,13 @@ class MarketData(BaseModel):
 
         if v <= 0:
             logger.error(
-                "MarketData validation failed: non-positive price",
-                extra={"price": str(v)}
+                "MarketData validation failed: non-positive price", extra={"price": str(v)}
             )
             raise ValueError(f"Price fields must be positive, got {v}")
         if v > Decimal("1000000"):  # $1M limit
             logger.error(
                 "MarketData validation failed: price exceeds limit",
-                extra={"price": str(v), "limit": "1000000"}
+                extra={"price": str(v), "limit": "1000000"},
             )
             raise ValueError(f"Price exceeds maximum limit of $1M, got {v}")
 
@@ -226,18 +224,15 @@ class MarketData(BaseModel):
     @model_validator(mode="after")
     def validate_price_consistency(self) -> "MarketData":
         """Validate consistency between high, low, open, and close prices."""
-        logger.debug(
-            "Validating market data price consistency",
-            extra={"symbol": self.symbol}
-        )
+        logger.debug("Validating market data price consistency", extra={"symbol": self.symbol})
         if self.high_price < self.low_price:
             logger.error(
                 "MarketData validation failed: high < low",
                 extra={
                     "symbol": self.symbol,
                     "high_price": str(self.high_price),
-                    "low_price": str(self.low_price)
-                }
+                    "low_price": str(self.low_price),
+                },
             )
             raise ValueError(
                 f"High price ({self.high_price}) cannot be less than low price ({self.low_price})."
@@ -250,8 +245,8 @@ class MarketData(BaseModel):
                     "symbol": self.symbol,
                     "open_price": str(self.open_price),
                     "low_price": str(self.low_price),
-                    "high_price": str(self.high_price)
-                }
+                    "high_price": str(self.high_price),
+                },
             )
             raise ValueError(
                 f"Open price ({self.open_price}) must be between low ({self.low_price}) and high ({self.high_price})."
@@ -264,8 +259,8 @@ class MarketData(BaseModel):
                     "symbol": self.symbol,
                     "close_price": str(self.close_price),
                     "low_price": str(self.low_price),
-                    "high_price": str(self.high_price)
-                }
+                    "high_price": str(self.high_price),
+                },
             )
             raise ValueError(
                 f"Close price ({self.close_price}) must be between low ({self.low_price}) and high ({self.high_price})."
@@ -274,11 +269,7 @@ class MarketData(BaseModel):
         if self.bid >= self.ask:
             logger.error(
                 "MarketData validation failed: bid >= ask",
-                extra={
-                    "symbol": self.symbol,
-                    "bid": str(self.bid),
-                    "ask": str(self.ask)
-                }
+                extra={"symbol": self.symbol, "bid": str(self.bid), "ask": str(self.ask)},
             )
             raise ValueError(f"Bid price ({self.bid}) must be less than ask price ({self.ask}).")
 
@@ -288,8 +279,8 @@ class MarketData(BaseModel):
                 extra={
                     "symbol": self.symbol,
                     "calculated_spread": str(self.ask - self.bid),
-                    "provided_spread": str(self.spread)
-                }
+                    "provided_spread": str(self.spread),
+                },
             )
             raise ValueError(
                 f"Calculated spread ({self.ask - self.bid}) does not match provided spread ({self.spread})."
@@ -298,27 +289,20 @@ class MarketData(BaseModel):
         if self.spread < 0:
             logger.error(
                 "MarketData validation failed: negative spread",
-                extra={"symbol": self.symbol, "spread": str(self.spread)}
+                extra={"symbol": self.symbol, "spread": str(self.spread)},
             )
             raise ValueError(f"Spread cannot be negative, got {self.spread}")
 
         if self.spread > self.ask * Decimal("0.1"):  # 10% spread limit
             logger.error(
                 "MarketData validation failed: excessive spread",
-                extra={
-                    "symbol": self.symbol,
-                    "spread": str(self.spread),
-                    "ask": str(self.ask)
-                }
+                extra={"symbol": self.symbol, "spread": str(self.spread), "ask": str(self.ask)},
             )
             raise ValueError(
                 f"Excessive spread ({self.spread}) detected for ask price ({self.ask})."
             )
 
-        logger.debug(
-            "MarketData validation passed",
-            extra={"symbol": self.symbol}
-        )
+        logger.debug("MarketData validation passed", extra={"symbol": self.symbol})
         return self
 
 
@@ -530,8 +514,8 @@ class MomentumAnalysis(BaseModel):
                 "symbol": self.symbol,
                 "signal_type": signal.signal_type.value,
                 "direction": signal.direction,
-                "strength": signal.strength
-            }
+                "strength": signal.strength,
+            },
         )
         self.signals.append(signal)
         self.signal_count = len(self.signals)
@@ -567,8 +551,8 @@ class MomentumFilter(BaseModel):
             extra={
                 "signal_symbol": signal.symbol,
                 "signal_strength": signal.strength,
-                "signal_confidence": signal.confidence
-            }
+                "signal_confidence": signal.confidence,
+            },
         )
         if self.symbols and signal.symbol not in self.symbols:
             return False
@@ -593,8 +577,5 @@ class MomentumFilter(BaseModel):
             if age_hours > self.max_age_hours:
                 return False
 
-        logger.debug(
-            "Signal matches filter criteria",
-            extra={"signal_symbol": signal.symbol}
-        )
+        logger.debug("Signal matches filter criteria", extra={"signal_symbol": signal.symbol})
         return True

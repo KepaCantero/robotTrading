@@ -58,9 +58,7 @@ class ConfigValidator(Protocol):
 class ConfigMerger(Protocol):
     """Protocol for configuration mergers."""
 
-    def merge(
-        self, base: Dict[str, Any], override: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def merge(self, base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
         """Merge two configurations."""
         ...
 

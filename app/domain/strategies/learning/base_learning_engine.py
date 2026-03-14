@@ -414,8 +414,8 @@ class BaseLearningEngine(ABC):
             )
 
         # Analyze feature importance stability
-        feature_changes = {}
-        all_features = set()
+        feature_changes: Dict[str, float] = {}
+        all_features: set[str] = set()
 
         for snapshot in self._training_history:
             all_features.update(snapshot.feature_importance.keys())
@@ -429,13 +429,13 @@ class BaseLearningEngine(ABC):
                 # Calculate coefficient of variation
                 mean_val = np.mean(values)
                 std_val = np.std(values)
-                cv = std_val / (abs(mean_val) + 1e-8)
+                cv = float(std_val / (abs(mean_val) + 1e-8))
                 feature_changes[feature] = cv
 
         # Calculate overall stability score
         if feature_changes:
             mean_cv = np.mean(list(feature_changes.values()))
-            stability_score = max(0, 1 - mean_cv)
+            stability_score: float = max(0.0, float(1 - mean_cv))
         else:
             stability_score = 0.5
 
@@ -459,7 +459,7 @@ class BaseLearningEngine(ABC):
             for s in self._training_history
             if primary_metric in s.validation_metrics
         ]
-        confidence_degradation = np.std(val_scores) if val_scores else 0.0
+        confidence_degradation: float = float(np.std(val_scores)) if val_scores else 0.0
 
         # Determine stability status
         if stability_score > 0.8 and abs(performance_drift) < 0.1:

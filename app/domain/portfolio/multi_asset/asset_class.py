@@ -40,7 +40,7 @@ def _get_asset_config(attr_name: str, default_value: float) -> float:
     except (AttributeError, ValueError, TypeError) as e:
         logger.debug(
             "Config attribute not found, using default",
-            extra={"attr_name": attr_name, "default_value": default_value, "error": str(e)}
+            extra={"attr_name": attr_name, "default_value": default_value, "error": str(e)},
         )
         return default_value
 
@@ -678,8 +678,8 @@ class AssetClass:
                 "name": self.name,
                 "expected_return": float(self.expected_return),
                 "volatility": float(self.volatility),
-                "risk_free_rate": risk_free_rate
-            }
+                "risk_free_rate": risk_free_rate,
+            },
         )
 
         rf = Decimal(str(risk_free_rate))

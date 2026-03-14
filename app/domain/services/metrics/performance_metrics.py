@@ -240,9 +240,9 @@ class PerformanceMetricsCalculator:
         daily_sharpe = (mean_return - daily_rf) / std_return
 
         if annualize:
-            return daily_sharpe * np.sqrt(periods_per_year)
+            return float(daily_sharpe * np.sqrt(periods_per_year))
 
-        return daily_sharpe
+        return float(daily_sharpe)
 
     def sharpe_ratio_with_confidence(
         self,
@@ -436,9 +436,9 @@ class PerformanceMetricsCalculator:
             cumulative_return = (1 + returns_array).prod() - 1
             years = len(returns_array) / self.trading_days
             if years > 0 and cumulative_return > -1:
-                cagr = (1 + cumulative_return) ** (1 / years) - 1
+                cagr = float((1 + cumulative_return) ** (1 / years) - 1)
             else:
-                cagr = np.mean(returns_array) * self.trading_days
+                cagr = float(np.mean(returns_array) * self.trading_days)
 
         # Calculate max drawdown if not provided
         if max_drawdown is None:

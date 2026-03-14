@@ -481,10 +481,7 @@ class FIFOProcessor:
 
     def __init__(self, session):
         self.session = session
-        logger.debug(
-            "FIFOProcessor initialized",
-            extra={"session_type": type(session).__name__}
-        )
+        logger.debug("FIFOProcessor initialized", extra={"session_type": type(session).__name__})
 
     def process_buy(self, transaction: Transaction) -> Lot:
         """
@@ -502,8 +499,8 @@ class FIFOProcessor:
                 "transaction_id": str(transaction.id),
                 "symbol": transaction.symbol,
                 "quantity": str(transaction.quantity),
-                "tx_type": transaction.tx_type.value
-            }
+                "tx_type": transaction.tx_type.value,
+            },
         )
         lot = Lot(
             account_id=transaction.account_id,
@@ -525,8 +522,8 @@ class FIFOProcessor:
                 "transaction_id": str(transaction.id),
                 "symbol": transaction.symbol,
                 "quantity_opened": str(transaction.quantity),
-                "cost_basis": str(transaction.cost_basis)
-            }
+                "cost_basis": str(transaction.cost_basis),
+            },
         )
         return lot
 
@@ -550,8 +547,8 @@ class FIFOProcessor:
                 "transaction_id": str(transaction.id),
                 "symbol": transaction.symbol,
                 "quantity": str(transaction.quantity),
-                "strict_fifo": strict_fifo
-            }
+                "strict_fifo": strict_fifo,
+            },
         )
         # Query open lots for this symbol, ordered by opened_at (FIFO)
         open_lots = (
@@ -571,8 +568,8 @@ class FIFOProcessor:
             extra={
                 "symbol": transaction.symbol,
                 "open_lots_count": len(open_lots),
-                "total_available": str(sum(lot.quantity_remaining for lot in open_lots))
-            }
+                "total_available": str(sum(lot.quantity_remaining for lot in open_lots)),
+            },
         )
 
         quantity_to_close = transaction.quantity
@@ -611,8 +608,8 @@ class FIFOProcessor:
                     "symbol": transaction.symbol,
                     "quantity_requested": str(transaction.quantity),
                     "quantity_missing": str(quantity_to_close),
-                    "available_quantity": str(sum([lot.quantity_remaining for lot in open_lots]))
-                }
+                    "available_quantity": str(sum([lot.quantity_remaining for lot in open_lots])),
+                },
             )
             raise ValueError(
                 f"Insufficient lots to sell {transaction.quantity} {transaction.symbol}. "
@@ -654,8 +651,8 @@ class FIFOProcessor:
                 "cost_basis": str(total_cost_basis),
                 "proceeds": str(proceeds),
                 "gain": str(gain),
-                "loss": str(loss)
-            }
+                "loss": str(loss),
+            },
         )
 
         return fifo_calc
@@ -680,8 +677,8 @@ class FIFOProcessor:
                 "symbol": transaction.symbol,
                 "from_account_id": str(from_account.id),
                 "to_account_id": str(to_account.id),
-                "quantity": str(transaction.quantity)
-            }
+                "quantity": str(transaction.quantity),
+            },
         )
         # For tracking, we create a "virtual" lot in the destination
         # with the SAME cost basis as the source
@@ -712,8 +709,7 @@ class Modelo721Generator:
     def __init__(self, session):
         self.session = session
         logger.debug(
-            "Modelo721Generator initialized",
-            extra={"session_type": type(session).__name__}
+            "Modelo721Generator initialized", extra={"session_type": type(session).__name__}
         )
 
     def generate_annual_report(self, user_id: UUID, year: int) -> TaxReport:
@@ -728,8 +724,7 @@ class Modelo721Generator:
             TaxReport con datos completos
         """
         logger.info(
-            "Generating Modelo 721 annual report",
-            extra={"user_id": str(user_id), "tax_year": year}
+            "Generating Modelo 721 annual report", extra={"user_id": str(user_id), "tax_year": year}
         )
         # Get all crypto accounts
         crypto_accounts = (
@@ -748,8 +743,8 @@ class Modelo721Generator:
                 "user_id": str(user_id),
                 "tax_year": year,
                 "accounts_count": len(crypto_accounts),
-                "exchanges": [a.exchange_name for a in crypto_accounts]
-            }
+                "exchanges": [a.exchange_name for a in crypto_accounts],
+            },
         )
 
         # For each symbol, calculate balance at Dec 31
@@ -794,8 +789,8 @@ class Modelo721Generator:
                 "tax_year": year,
                 "total_gain": str(total_gain),
                 "total_loss": str(total_loss),
-                "closed_lots_count": len(closed_lots)
-            }
+                "closed_lots_count": len(closed_lots),
+            },
         )
 
         # Create report
@@ -823,8 +818,8 @@ class Modelo721Generator:
                 "report_id": str(report.id),
                 "total_holdings_eur": str(report.total_holdings_eur),
                 "total_gain_eur": str(total_gain),
-                "total_loss_eur": str(total_loss)
-            }
+                "total_loss_eur": str(total_loss),
+            },
         )
 
         return report

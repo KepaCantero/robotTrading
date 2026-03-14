@@ -9,6 +9,8 @@ GAP Fixes:
 - API-005: FIXED - Added security decorators (rate_limit, require_auth, audit_log)
 """
 
+from __future__ import annotations
+
 import logging
 import traceback
 from typing import Any, Dict, List, Optional
@@ -16,11 +18,11 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
-from app.domain.strategies import (
-    ExecutionEngine,
-    StrategyConfigLoader,
-    StrategyLogger,
-    StrategyRegistry,
+# Import protocols for type hints in Depends annotations
+# These are imported to avoid circular dependencies
+from app.domain.strategies.protocols import (
+    StrategyLoggerProto as StrategyLogger,
+    StrategyRegistryProto as StrategyRegistry,
 )
 from app.shared.config.di_container import (
     get_execution_engine as di_get_execution_engine,
@@ -38,22 +40,22 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/strategies", tags=["Strategies"])
 
 
-def get_strategy_registry() -> StrategyRegistry:
+def get_strategy_registry() -> "StrategyRegistry":
     """Obtener instancia del registry de estrategias desde el contenedor de DI."""
     return di_get_strategy_registry()
 
 
-def get_config_loader() -> StrategyConfigLoader:
+def get_config_loader():
     """Obtener instancia del cargador de configuración desde el contenedor de DI."""
     return di_get_strategy_config_loader()
 
 
-def get_strategy_logger() -> StrategyLogger:
+def get_strategy_logger() -> "StrategyLogger":
     """Obtener instancia del logger de estrategias desde el contenedor de DI."""
     return di_get_strategy_logger()
 
 
-def get_execution_engine() -> ExecutionEngine:
+def get_execution_engine():
     """Obtener instancia del motor de ejecución desde el contenedor de DI."""
     return di_get_execution_engine()
 
@@ -425,7 +427,7 @@ async def get_all_metrics(
 
 
 @router.get("/execution/stats", response_model=ExecutionStatsResponse)
-async def get_execution_stats(engine: ExecutionEngine = Depends(get_execution_engine)):
+async def get_execution_stats(engine=Depends(get_execution_engine)):
     """Obtener estadísticas del motor de ejecución."""
     try:
         stats = engine.get_execution_stats()
@@ -452,7 +454,7 @@ async def get_execution_stats(engine: ExecutionEngine = Depends(get_execution_en
 @require_auth(roles=["admin"])
 @audit_log("execution_engine_started")
 async def start_execution_engine(
-    engine: ExecutionEngine = Depends(get_execution_engine),
+    engine=Depends(get_execution_engine),
 ):
     """Iniciar motor de ejecución."""
     try:
@@ -471,7 +473,7 @@ async def start_execution_engine(
 @require_auth(roles=["admin"])
 @audit_log("execution_engine_stopped")
 async def stop_execution_engine(
-    engine: ExecutionEngine = Depends(get_execution_engine),
+    engine=Depends(get_execution_engine),
 ):
     """Detener motor de ejecución."""
     try:
@@ -490,7 +492,7 @@ async def stop_execution_engine(
 @require_auth(roles=["admin"])
 @audit_log("execution_stats_reset")
 async def reset_execution_stats(
-    engine: ExecutionEngine = Depends(get_execution_engine),
+    engine=Depends(get_execution_engine),
 ):
     """Resetear estadísticas del motor de ejecución."""
     try:

@@ -43,7 +43,7 @@ try:
     NUMBA_VERSION = numba_version
 except ImportError as e:
     error_message = (
-        "CRITICAL: numba is REQUIRED for numba_metrics module. " "Install with: pip install numba"
+        "CRITICAL: numba is REQUIRED for numba_metrics module. Install with: pip install numba"
     )
     logger.error(error_message)
     raise RuntimeError(error_message) from e

@@ -187,9 +187,7 @@ class AlphaModel(ABC):
                     if signal and signal.confidence >= self.min_confidence:
                         signals.append(signal)
                 except (ValueError, TypeError, KeyError) as e:
-                    logger.error(
-                        "Error generating alpha", symbol=symbol, error=str(e), exc_info=True
-                    )
+                    logger.error(f"Error generating alpha for {symbol}: {e}", exc_info=True)
         return signals
 
     def analyze_alpha_decay(
@@ -407,8 +405,8 @@ class AlphaModel(ABC):
         winning_signals = [s for s in signals if s.direction == direction]
 
         # Average metrics from winning signals
-        avg_confidence = np.mean([s.confidence for s in winning_signals])
-        avg_expected_return = np.mean([s.expected_return for s in winning_signals])
+        avg_confidence = float(np.mean([s.confidence for s in winning_signals]))
+        avg_expected_return = float(np.mean([s.expected_return for s in winning_signals]))
         avg_holding = int(np.mean([s.holding_period_days for s in winning_signals]))
 
         return AlphaSignal(
@@ -620,9 +618,7 @@ class MultiFactorAlphaModel(AlphaModel):
                 if signal:
                     signals.append(signal)
             except (ValueError, TypeError, KeyError, IndexError, AttributeError) as e:
-                logger.error(
-                    "Error in sub-model", model_name=model.name, error=str(e), exc_info=True
-                )
+                logger.error(f"Error in sub-model {model.name}: {str(e)}", exc_info=True)
 
         if not signals:
             return None

@@ -100,5 +100,5 @@ logger.debug(
             "StrategyRecommendationRequest",
             "StrategyRecommendation",
         ],
-    }
+    },
 )

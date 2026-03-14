@@ -8,6 +8,7 @@ backtest types while maintaining clean separation from UI/infrastructure.
 from __future__ import annotations
 
 import logging
+from decimal import Decimal
 from typing import Any, Dict, List
 
 from ...domain.value_objects.backtest_config import BacktestConfigValue
@@ -88,13 +89,16 @@ class BacktestOrchestrator:
             # For now, return a placeholder result
             # In a full implementation, this would load data and execute the backtest
             result = BacktestResultValue(
-                total_return=0.0,
-                sharpe_ratio=0.0,
-                max_drawdown=0.0,
-                win_rate=0.0,
-                profit_factor=0.0,
+                initial_capital=Decimal("100000"),
+                final_capital=Decimal("100000"),
+                total_return=Decimal("0.0"),
+                total_return_pct=Decimal("0.0"),
+                sharpe_ratio=Decimal("0.0"),
+                max_drawdown=Decimal("0.0"),
+                win_rate=Decimal("0.0"),
+                profit_factor=Decimal("0.0"),
                 total_trades=0,
-                profitable_trades=0,
+                winning_trades=0,
                 losing_trades=0,
             )
 
@@ -133,13 +137,16 @@ class BacktestOrchestrator:
 
                 # Create result for this engine
                 result = BacktestResultValue(
-                    total_return=0.0,
-                    sharpe_ratio=0.0,
-                    max_drawdown=0.0,
-                    win_rate=0.0,
-                    profit_factor=0.0,
+                    initial_capital=Decimal("100000"),
+                    final_capital=Decimal("100000"),
+                    total_return=Decimal("0.0"),
+                    total_return_pct=Decimal("0.0"),
+                    sharpe_ratio=Decimal("0.0"),
+                    max_drawdown=Decimal("0.0"),
+                    win_rate=Decimal("0.0"),
+                    profit_factor=Decimal("0.0"),
                     total_trades=0,
-                    profitable_trades=0,
+                    winning_trades=0,
                     losing_trades=0,
                 )
                 results.append(result)
@@ -172,13 +179,16 @@ class BacktestOrchestrator:
 
             # Create result
             result = BacktestResultValue(
-                total_return=0.0,
-                sharpe_ratio=0.0,
-                max_drawdown=0.0,
-                win_rate=0.0,
-                profit_factor=0.0,
+                initial_capital=Decimal("100000"),
+                final_capital=Decimal("100000"),
+                total_return=Decimal("0.0"),
+                total_return_pct=Decimal("0.0"),
+                sharpe_ratio=Decimal("0.0"),
+                max_drawdown=Decimal("0.0"),
+                win_rate=Decimal("0.0"),
+                profit_factor=Decimal("0.0"),
                 total_trades=0,
-                profitable_trades=0,
+                winning_trades=0,
                 losing_trades=0,
             )
 
@@ -212,13 +222,16 @@ class BacktestOrchestrator:
 
                 # Create result for this simulation
                 result = BacktestResultValue(
-                    total_return=0.0,
-                    sharpe_ratio=0.0,
-                    max_drawdown=0.0,
-                    win_rate=0.0,
-                    profit_factor=0.0,
+                    initial_capital=Decimal("100000"),
+                    final_capital=Decimal("100000"),
+                    total_return=Decimal("0.0"),
+                    total_return_pct=Decimal("0.0"),
+                    sharpe_ratio=Decimal("0.0"),
+                    max_drawdown=Decimal("0.0"),
+                    win_rate=Decimal("0.0"),
+                    profit_factor=Decimal("0.0"),
                     total_trades=0,
-                    profitable_trades=0,
+                    winning_trades=0,
                     losing_trades=0,
                 )
                 results.append(result)
@@ -254,26 +267,32 @@ class BacktestOrchestrator:
 
                 # Create result for this ablation
                 result = BacktestResultValue(
-                    total_return=0.0,
-                    sharpe_ratio=0.0,
-                    max_drawdown=0.0,
-                    win_rate=0.0,
-                    profit_factor=0.0,
+                    initial_capital=Decimal("100000"),
+                    final_capital=Decimal("100000"),
+                    total_return=Decimal("0.0"),
+                    total_return_pct=Decimal("0.0"),
+                    sharpe_ratio=Decimal("0.0"),
+                    max_drawdown=Decimal("0.0"),
+                    win_rate=Decimal("0.0"),
+                    profit_factor=Decimal("0.0"),
                     total_trades=0,
-                    profitable_trades=0,
+                    winning_trades=0,
                     losing_trades=0,
                 )
                 results[f"without_{module}"] = result
 
             # Add baseline (all modules)
             results["baseline"] = BacktestResultValue(
-                total_return=0.0,
-                sharpe_ratio=0.0,
-                max_drawdown=0.0,
-                win_rate=0.0,
-                profit_factor=0.0,
+                initial_capital=Decimal("100000"),
+                final_capital=Decimal("100000"),
+                total_return=Decimal("0.0"),
+                total_return_pct=Decimal("0.0"),
+                sharpe_ratio=Decimal("0.0"),
+                max_drawdown=Decimal("0.0"),
+                win_rate=Decimal("0.0"),
+                profit_factor=Decimal("0.0"),
                 total_trades=0,
-                profitable_trades=0,
+                winning_trades=0,
                 losing_trades=0,
             )
 
@@ -311,13 +330,16 @@ class BacktestOrchestrator:
             logger.info(f"Grid search: {total_combinations} parameter combinations to evaluate")
 
             best_result = BacktestResultValue(
-                total_return=0.0,
-                sharpe_ratio=0.0,
-                max_drawdown=0.0,
-                win_rate=0.0,
-                profit_factor=0.0,
+                initial_capital=Decimal("100000"),
+                final_capital=Decimal("100000"),
+                total_return=Decimal("0.0"),
+                total_return_pct=Decimal("0.0"),
+                sharpe_ratio=Decimal("0.0"),
+                max_drawdown=Decimal("0.0"),
+                win_rate=Decimal("0.0"),
+                profit_factor=Decimal("0.0"),
                 total_trades=0,
-                profitable_trades=0,
+                winning_trades=0,
                 losing_trades=0,
             )
 
@@ -347,13 +369,16 @@ class BacktestOrchestrator:
             logger.info(f"Out-of-sample validation ratio: {oos_ratio}")
 
             result = BacktestResultValue(
-                total_return=0.0,
-                sharpe_ratio=0.0,
-                max_drawdown=0.0,
-                win_rate=0.0,
-                profit_factor=0.0,
+                initial_capital=Decimal("100000"),
+                final_capital=Decimal("100000"),
+                total_return=Decimal("0.0"),
+                total_return_pct=Decimal("0.0"),
+                sharpe_ratio=Decimal("0.0"),
+                max_drawdown=Decimal("0.0"),
+                win_rate=Decimal("0.0"),
+                profit_factor=Decimal("0.0"),
                 total_trades=0,
-                profitable_trades=0,
+                winning_trades=0,
                 losing_trades=0,
             )
 
@@ -387,13 +412,16 @@ class BacktestOrchestrator:
                 logger.info(f"Running backtest for strategy: {strategy_name}")
 
                 result = BacktestResultValue(
-                    total_return=0.0,
-                    sharpe_ratio=0.0,
-                    max_drawdown=0.0,
-                    win_rate=0.0,
-                    profit_factor=0.0,
+                    initial_capital=Decimal("100000"),
+                    final_capital=Decimal("100000"),
+                    total_return=Decimal("0.0"),
+                    total_return_pct=Decimal("0.0"),
+                    sharpe_ratio=Decimal("0.0"),
+                    max_drawdown=Decimal("0.0"),
+                    win_rate=Decimal("0.0"),
+                    profit_factor=Decimal("0.0"),
                     total_trades=0,
-                    profitable_trades=0,
+                    winning_trades=0,
                     losing_trades=0,
                 )
                 results.append(result)
@@ -426,13 +454,16 @@ class BacktestOrchestrator:
                 logger.info(f"Analyzing performance for regime: {regime}")
 
                 result = BacktestResultValue(
-                    total_return=0.0,
-                    sharpe_ratio=0.0,
-                    max_drawdown=0.0,
-                    win_rate=0.0,
-                    profit_factor=0.0,
+                    initial_capital=Decimal("100000"),
+                    final_capital=Decimal("100000"),
+                    total_return=Decimal("0.0"),
+                    total_return_pct=Decimal("0.0"),
+                    sharpe_ratio=Decimal("0.0"),
+                    max_drawdown=Decimal("0.0"),
+                    win_rate=Decimal("0.0"),
+                    profit_factor=Decimal("0.0"),
                     total_trades=0,
-                    profitable_trades=0,
+                    winning_trades=0,
                     losing_trades=0,
                 )
                 results[regime] = result

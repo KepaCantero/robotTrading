@@ -43,8 +43,7 @@ async def get_assets_overview(
 
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         logger.error(
-            "Error getting assets overview",
-            extra={"error": str(e), "error_type": type(e).__name__}
+            "Error getting assets overview", extra={"error": str(e), "error_type": type(e).__name__}
         )
         raise HTTPException(status_code=500, detail=f"Error getting assets overview: {str(e)}")
 
@@ -56,16 +55,13 @@ async def get_liquid_assets(
     service: AssetIdentificationService = Depends(get_asset_identification_service),
 ):
     """Get top liquid assets for a specific asset class."""
-    logger.debug(
-        "Getting liquid assets",
-        extra={"asset_class": asset_class.value, "limit": limit}
-    )
+    logger.debug("Getting liquid assets", extra={"asset_class": asset_class.value, "limit": limit})
     try:
         assets = await service.get_top_liquid_assets(asset_class, limit)
 
         logger.info(
             "Liquid assets retrieved",
-            extra={"asset_class": asset_class.value, "count": len(assets)}
+            extra={"asset_class": asset_class.value, "count": len(assets)},
         )
         return {
             "success": True,
@@ -93,7 +89,11 @@ async def get_liquid_assets(
     except (asyncio.TimeoutError, ConnectionError, OSError) as e:
         logger.error(
             "Error getting liquid assets",
-            extra={"asset_class": asset_class.value, "error": str(e), "error_type": type(e).__name__}
+            extra={
+                "asset_class": asset_class.value,
+                "error": str(e),
+                "error_type": type(e).__name__,
+            },
         )
         raise HTTPException(status_code=500, detail=f"Error getting liquid assets: {str(e)}")
 
@@ -159,7 +159,7 @@ async def get_asset_details(
     except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(
             "Error getting asset details",
-            extra={"symbol": symbol, "error": str(e), "error_type": type(e).__name__}
+            extra={"symbol": symbol, "error": str(e), "error_type": type(e).__name__},
         )
         raise HTTPException(status_code=500, detail=f"Error getting asset details: {str(e)}")
 
@@ -310,8 +310,7 @@ async def identify_liquid_assets(
 ):
     """Identify and rank liquid assets for a specific asset class."""
     logger.debug(
-        "Identifying liquid assets",
-        extra={"asset_class": asset_class.value, "limit": limit}
+        "Identifying liquid assets", extra={"asset_class": asset_class.value, "limit": limit}
     )
     try:
         # Identify liquid assets
@@ -322,7 +321,7 @@ async def identify_liquid_assets(
 
         logger.info(
             "Liquid assets identified",
-            extra={"asset_class": asset_class.value, "count": len(assets)}
+            extra={"asset_class": asset_class.value, "count": len(assets)},
         )
         return {
             "success": True,
@@ -348,7 +347,11 @@ async def identify_liquid_assets(
     except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(
             "Error identifying liquid assets",
-            extra={"asset_class": asset_class.value, "error": str(e), "error_type": type(e).__name__}
+            extra={
+                "asset_class": asset_class.value,
+                "error": str(e),
+                "error_type": type(e).__name__,
+            },
         )
         raise HTTPException(status_code=500, detail=f"Error identifying liquid assets: {str(e)}")
 

@@ -371,8 +371,7 @@ class CryptoDataFetcher:
         # 1. Exchange API credentials (Binance, Coinbase, Kraken)
         # 2. Rate limiting and error handling
         # 3. WebSocket for real-time updates
-        # For now, return None to trigger fallback pricing
-        return None
+        # For now, implicitly return None to trigger fallback pricing
 
     def _fetch_ohlcv_from_api(self, pair: str, interval: str, limit: int) -> Optional[List[Dict]]:
         """
@@ -394,8 +393,7 @@ class CryptoDataFetcher:
         # 1. Exchange API credentials (Binance, Coinbase, Kraken)
         # 2. Rate limiting and error handling
         # 3. Historical data endpoints (klines/candles)
-        # For now, return None to trigger synthetic data generation
-        return None
+        # For now, implicitly return None to trigger synthetic data generation
 
     def _get_fallback_price(self, symbol: str) -> Decimal:
         """

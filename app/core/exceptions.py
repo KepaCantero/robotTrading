@@ -31,7 +31,7 @@ class AlgoTradingError(Exception):
                 "exception_type": self.__class__.__name__,
                 "error_code": error_code,
                 "message": message,
-            }
+            },
         )
 
 
