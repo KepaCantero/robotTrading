@@ -466,7 +466,7 @@ def main():
     df, signals, results = example_custom_configuration()
 
     # Example 4: Visualization
-    fig = example_visualization(df, signals, labels)
+    example_visualization(df, signals, labels)
 
     # Example 5: ML integration
     features, y_binary = example_ml_integration(df, signals, labels)

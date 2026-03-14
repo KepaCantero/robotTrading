@@ -231,7 +231,7 @@ async def main():
     # -----------------------------------------------------------------
     print("Exporting to JSON...")
 
-    json_data = tracker.export_to_json(days=30, filepath="data/toil_report.json")
+    tracker.export_to_json(days=30, filepath="data/toil_report.json")
 
     print("Exported to data/toil_report.json")
     print()
