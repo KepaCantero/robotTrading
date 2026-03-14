@@ -200,7 +200,6 @@ def example_7_mapping_table():
     # Get all unique tiers
     yaml_tiers = ["micro", "small", "medium", "large"]
     capital_flags = ["small", "medium", "large"]
-    spanish_tiers = ["bajo", "medio", "alto"]
 
     print("\nCapital Ranges and Tier Mappings:")
     print(f"\n{'Capital Range':<25} {'YAML':<10} {'Cap Flag':<10} {'Spanish':<10}")
