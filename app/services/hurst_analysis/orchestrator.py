@@ -18,7 +18,7 @@ from datetime import datetime
 
 import pandas as pd
 
-from app.services.hurst_analysis import utils
+from app.services.hurst_analysis import hurst_calculations as utils
 from app.services.hurst_analysis.models import HurstResult, RegimeChange
 from app.services.hurst_analysis.protocols import (
     ChangeDetectorProtocol,
