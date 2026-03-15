@@ -44,10 +44,11 @@ from __future__ import annotations
 
 import logging
 import sys
+from dataclasses import dataclass, field as dataclass_field
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
 
 import empyrical  # Financial metrics library (annual_volatility, sharpe_ratio, etc.)
 import numpy as np
@@ -57,12 +58,40 @@ from pydantic import BaseModel, Field, field_validator
 if TYPE_CHECKING:
     from app.services.live_trading.alert_to_trade_mapper import TradeSignal
 
-    # Forward declarations for locally-defined result classes
-    class TradeResult:
-        pass
 
-    class CycleResult:
-        pass
+# =============================================================================
+# RESULT DATACLASSES (Module-level for type safety)
+# =============================================================================
+
+
+@dataclass
+class TradeResult:
+    """Result of trade execution with P&L and tax calculations."""
+
+    success: bool
+    order_id: str
+    symbol: str
+    side: str
+    quantity: Decimal
+    gross_pnl: Decimal
+    spain_tax: Decimal
+    net_pnl: Decimal
+    correlation_id: str
+    error: Optional[str] = None
+
+
+@dataclass
+class CycleResult:
+    """Result of strategy cycle execution with aggregated metrics."""
+
+    success: bool
+    total_signals: int
+    executed_signals: int
+    failed_signals: int
+    total_value: Decimal
+    execution_time_seconds: float
+    errors: List[str] = dataclass_field(default_factory=list)
+    order_ids: List[str] = dataclass_field(default_factory=list)
 
 
 # Add project root to path
@@ -322,7 +351,7 @@ class SystemAvailability:
             return find_spec("app.microstructure") is not None
         except ImportError as e:
             if self.enable_logging:
-                logger.debug(f"Execution engine not available: {e}")
+                logger.debug("Execution engine not available: %s", e)
             return False
 
     def _check_chan(self) -> bool:
@@ -573,7 +602,7 @@ class SystemBus:
 
             except Exception as e:
                 failures.append((system_name, str(e)))
-                logger.warning(f"SystemBus: {system_name} failed: {e}")
+                logger.warning("SystemBus: %s failed: %s", system_name, e)
 
                 # Handle critical failures
                 if self._is_critical_failure(system_name):
@@ -592,8 +621,11 @@ class SystemBus:
         # Log summary
         if self.engine.enable_logging:
             logger.info(
-                f"SystemBus: Executed {systems_executed}/{len(self._execution_order)} systems, "
-                f"{len(failures)} failures, can_execute={result.can_execute}"
+                "SystemBus: Executed %d/%d systems, %d failures, can_execute=%s",
+                systems_executed,
+                len(self._execution_order),
+                len(failures),
+                result.can_execute,
             )
 
         return result
@@ -673,15 +705,15 @@ class SystemBus:
 
     def _handle_data_engine(
         self,
-        subsystem,
+        _subsystem,
         result,
-        symbol,
-        side,
-        quantity,
-        price,
+        _symbol,
+        _side,
+        _quantity,
+        _price,
         price_history,
-        urgency,
-        signal_time,
+        _urgency,
+        _signal_time,
     ) -> bool:
         """
         Handle Data Engine checks.
@@ -744,20 +776,20 @@ class SystemBus:
 
             return True
         except Exception as e:
-            logger.warning(f"Data engine analysis failed: {e}")
+            logger.warning("Data engine analysis failed: %s", e)
             return False
 
     def _handle_context_engine(
         self,
         subsystem,
         result,
-        symbol,
-        side,
-        quantity,
-        price,
+        _symbol,
+        _side,
+        _quantity,
+        _price,
         price_history,
-        urgency,
-        signal_time,
+        _urgency,
+        _signal_time,
     ) -> bool:
         """
         Handle Context Engine analysis.
@@ -810,20 +842,20 @@ class SystemBus:
 
             return True
         except Exception as e:
-            logger.warning(f"Context engine analysis failed: {e}")
+            logger.warning("Context engine analysis failed: %s", e)
             return False
 
     def _handle_ernest_chan(
         self,
         subsystem,
         result,
-        symbol,
-        side,
-        quantity,
-        price,
+        _symbol,
+        _side,
+        _quantity,
+        _price,
         price_history,
-        urgency,
-        signal_time,
+        _urgency,
+        _signal_time,
     ) -> bool:
         """
         Handle Ernest Chan analysis.
@@ -851,20 +883,20 @@ class SystemBus:
 
             return True
         except Exception as e:
-            logger.warning(f"Ernest Chan analysis failed: {e}")
+            logger.warning("Ernest Chan analysis failed: %s", e)
             return False
 
     def _handle_risk_engine(
         self,
         subsystem,
         result,
-        symbol,
-        side,
+        _symbol,
+        _side,
         quantity,
         price,
         price_history,
-        urgency,
-        signal_time,
+        _urgency,
+        _signal_time,
     ) -> bool:
         """
         Handle Risk Engine checks with REAL validations.
@@ -975,7 +1007,7 @@ class SystemBus:
                 data_is_stale = data_age > engine.config.max_data_age_days
 
                 # Use configured quality penalties (addresses GAP-CFG-002)
-                quality_deductions = 0
+                quality_deductions: float = 0.0
                 if has_nan:
                     quality_deductions += engine.config.data_quality_nan_penalty
                     result.reasons.append("Price history contains NaN values")
@@ -1019,7 +1051,7 @@ class SystemBus:
 
             return True
         except Exception as e:
-            logger.warning(f"Risk engine validation failed: {e}")
+            logger.warning("Risk engine validation failed: %s", e)
             result.can_execute = False
             result.reasons.append(f"Risk engine error: {str(e)}")
             return False
@@ -1028,13 +1060,13 @@ class SystemBus:
         self,
         subsystem,
         result,
-        symbol,
-        side,
-        quantity,
-        price,
+        _symbol,
+        _side,
+        _quantity,
+        _price,
         price_history,
-        urgency,
-        signal_time,
+        _urgency,
+        _signal_time,
     ) -> bool:
         """Handle Hull risk metrics."""
         try:
@@ -1072,15 +1104,15 @@ class SystemBus:
 
     def _handle_strategies(
         self,
-        subsystem,
+        _subsystem,
         result,
-        symbol,
-        side,
-        quantity,
-        price,
+        _symbol,
+        _side,
+        _quantity,
+        _price,
         price_history,
-        urgency,
-        signal_time,
+        _urgency,
+        _signal_time,
     ) -> bool:
         """
         Handle Strategy analysis.
@@ -1132,7 +1164,7 @@ class SystemBus:
 
             return True
         except Exception as e:
-            logger.warning(f"Strategy analysis failed: {e}")
+            logger.warning("Strategy analysis failed: %s", e)
             return False
 
     def _handle_narang(
@@ -1140,12 +1172,12 @@ class SystemBus:
         subsystem,
         result,
         symbol,
-        side,
-        quantity,
-        price,
+        _side,
+        _quantity,
+        _price,
         price_history,
-        urgency,
-        signal_time,
+        _urgency,
+        _signal_time,
     ) -> bool:
         """
         Handle Narang analysis.
@@ -1185,20 +1217,20 @@ class SystemBus:
 
             return True
         except Exception as e:
-            logger.warning(f"Narang analysis failed: {e}")
+            logger.warning("Narang analysis failed: %s", e)
             return False
 
     def _handle_lopez_de_prado(
         self,
         subsystem,
         result,
-        symbol,
-        side,
-        quantity,
-        price,
-        price_history,
-        urgency,
-        signal_time,
+        _symbol,
+        _side,
+        _quantity,
+        _price,
+        _price_history,
+        _urgency,
+        _signal_time,
     ) -> bool:
         """
         Handle Lopez de Prado analysis.
@@ -1236,20 +1268,20 @@ class SystemBus:
 
             return True
         except Exception as e:
-            logger.warning(f"Lopez de Prado analysis failed: {e}")
+            logger.warning("Lopez de Prado analysis failed: %s", e)
             return False
 
     def _handle_hastie(
         self,
-        subsystem,
+        _subsystem,
         result,
-        symbol,
-        side,
-        quantity,
-        price,
+        _symbol,
+        _side,
+        _quantity,
+        _price,
         price_history,
-        urgency,
-        signal_time,
+        _urgency,
+        _signal_time,
     ) -> bool:
         """
         Handle Hastie statistical learning checks.
@@ -1311,7 +1343,7 @@ class SystemBus:
 
             return True
         except Exception as e:
-            logger.warning(f"Hastie analysis failed: {e}")
+            logger.warning("Hastie analysis failed: %s", e)
             return False
 
     def _handle_harris(
@@ -1386,20 +1418,20 @@ class SystemBus:
 
             return True
         except Exception as e:
-            logger.warning(f"Harris analysis failed: {e}")
+            logger.warning("Harris analysis failed: %s", e)
             return False
 
     def _handle_ohara(
         self,
         subsystem,
         result,
-        symbol,
-        side,
-        quantity,
-        price,
+        _symbol,
+        _side,
+        _quantity,
+        _price,
         price_history,
-        urgency,
-        signal_time,
+        _urgency,
+        _signal_time,
     ) -> bool:
         """
         Handle O'Hara microstructure analysis.
@@ -1494,20 +1526,20 @@ class SystemBus:
 
             return True
         except Exception as e:
-            logger.warning(f"O'Hara analysis failed: {e}")
+            logger.warning("O'Hara analysis failed: %s", e)
             return False
 
     def _handle_portfolio_engine(
         self,
         subsystem,
         result,
-        symbol,
-        side,
-        quantity,
-        price,
-        price_history,
-        urgency,
-        signal_time,
+        _symbol,
+        _side,
+        _quantity,
+        _price,
+        _price_history,
+        _urgency,
+        _signal_time,
     ) -> bool:
         """
         Handle Portfolio Engine analysis.
@@ -1577,20 +1609,20 @@ class SystemBus:
 
             return True
         except Exception as e:
-            logger.warning(f"Portfolio engine analysis failed: {e}")
+            logger.warning("Portfolio engine analysis failed: %s", e)
             return False
 
     def _handle_backtesting_engine(
         self,
-        subsystem,
+        _subsystem,
         result,
-        symbol,
-        side,
-        quantity,
-        price,
+        _symbol,
+        _side,
+        _quantity,
+        _price,
         price_history,
-        urgency,
-        signal_time,
+        _urgency,
+        _signal_time,
     ) -> bool:
         """
         Handle Backtesting Engine checks.
@@ -1652,7 +1684,7 @@ class SystemBus:
 
             return True
         except Exception as e:
-            logger.warning(f"Backtesting engine analysis failed: {e}")
+            logger.warning("Backtesting engine analysis failed: %s", e)
             return False
 
     def _handle_execution_engine(
@@ -1663,9 +1695,9 @@ class SystemBus:
         side,
         quantity,
         price,
-        price_history,
+        _price_history,
         urgency,
-        signal_time,
+        _signal_time,
     ) -> bool:
         """
         Handle Execution Engine checks.
@@ -1719,20 +1751,20 @@ class SystemBus:
 
             return True
         except Exception as e:
-            logger.warning(f"Execution engine analysis failed: {e}")
+            logger.warning("Execution engine analysis failed: %s", e)
             return False
 
     def _handle_tomasini(
         self,
         subsystem,
         result,
-        symbol,
-        side,
-        quantity,
-        price,
-        price_history,
-        urgency,
-        signal_time,
+        _symbol,
+        _side,
+        _quantity,
+        _price,
+        _price_history,
+        _urgency,
+        _signal_time,
     ) -> bool:
         """
         Handle Tomasini architecture checks.
@@ -1759,20 +1791,20 @@ class SystemBus:
 
             return True
         except Exception as e:
-            logger.warning(f"Tomasini analysis failed: {e}")
+            logger.warning("Tomasini analysis failed: %s", e)
             return False
 
     def _handle_live_trading(
         self,
         subsystem,
         result,
-        symbol,
-        side,
-        quantity,
-        price,
-        price_history,
-        urgency,
-        signal_time,
+        _symbol,
+        _side,
+        _quantity,
+        _price,
+        _price_history,
+        _urgency,
+        _signal_time,
     ) -> bool:
         """
         Handle Live Trading checks.
@@ -1808,20 +1840,20 @@ class SystemBus:
 
             return True
         except Exception as e:
-            logger.warning(f"Live trading checks failed: {e}")
+            logger.warning("Live trading checks failed: %s", e)
             return False
 
     def _handle_paper_trading(
         self,
-        subsystem,
+        _subsystem,
         result,
-        symbol,
-        side,
-        quantity,
-        price,
-        price_history,
-        urgency,
-        signal_time,
+        _symbol,
+        _side,
+        _quantity,
+        _price,
+        _price_history,
+        _urgency,
+        _signal_time,
     ) -> bool:
         """
         Handle Paper Trading checks.
@@ -1838,20 +1870,20 @@ class SystemBus:
 
             return True
         except Exception as e:
-            logger.warning(f"Paper trading checks failed: {e}")
+            logger.warning("Paper trading checks failed: %s", e)
             return False
 
     def _handle_percival(
         self,
         subsystem,
         result,
-        symbol,
-        side,
-        quantity,
-        price,
-        price_history,
-        urgency,
-        signal_time,
+        _symbol,
+        _side,
+        _quantity,
+        _price,
+        _price_history,
+        _urgency,
+        _signal_time,
     ) -> bool:
         """
         Handle Percival architecture checks.
@@ -1880,20 +1912,20 @@ class SystemBus:
 
             return True
         except Exception as e:
-            logger.warning(f"Percival analysis failed: {e}")
+            logger.warning("Percival analysis failed: %s", e)
             return False
 
     def _handle_google_sre(
         self,
         subsystem,
         result,
-        symbol,
-        side,
-        quantity,
-        price,
-        price_history,
-        urgency,
-        signal_time,
+        _symbol,
+        _side,
+        _quantity,
+        _price,
+        _price_history,
+        _urgency,
+        _signal_time,
     ) -> bool:
         """
         Handle Google SRE checks.
@@ -1930,20 +1962,20 @@ class SystemBus:
 
             return True
         except Exception as e:
-            logger.warning(f"Google SRE checks failed: {e}")
+            logger.warning("Google SRE checks failed: %s", e)
             return False
 
     def _handle_beck_tdd(
         self,
         subsystem,
         result,
-        symbol,
-        side,
-        quantity,
-        price,
-        price_history,
-        urgency,
-        signal_time,
+        _symbol,
+        _side,
+        _quantity,
+        _price,
+        _price_history,
+        _urgency,
+        _signal_time,
     ) -> bool:
         """
         Handle Beck TDD checks.
@@ -1969,20 +2001,20 @@ class SystemBus:
 
             return True
         except Exception as e:
-            logger.warning(f"Beck TDD checks failed: {e}")
+            logger.warning("Beck TDD checks failed: %s", e)
             return False
 
     def _handle_martin_arch(
         self,
         subsystem,
         result,
-        symbol,
-        side,
-        quantity,
-        price,
-        price_history,
-        urgency,
-        signal_time,
+        _symbol,
+        _side,
+        _quantity,
+        _price,
+        _price_history,
+        _urgency,
+        _signal_time,
     ) -> bool:
         """
         Handle Martin Clean Architecture checks.
@@ -2008,7 +2040,7 @@ class SystemBus:
 
             return True
         except Exception as e:
-            logger.warning(f"Martin architecture checks failed: {e}")
+            logger.warning("Martin architecture checks failed: %s", e)
             return False
 
 
@@ -2072,6 +2104,7 @@ class ComplianceEngine:
         # Trade tracking for SLO
         self._active_orders: Dict[str, Dict[str, Any]] = {}
         self._completed_trades: List[Dict[str, Any]] = []
+        self._alert_hashes: set[str] = set()
 
         # Kill Switch tracking (Hull Rule 13.1)
         self._daily_pnl_tracking: List[Dict[str, Any]] = []
@@ -2093,12 +2126,14 @@ class ComplianceEngine:
         logger.info("=" * 80)
 
         summary = self.availability.get_summary()
-        logger.info(f"Systems Available: {summary['available_systems']}/{summary['total_systems']}")
-        logger.info(f"Availability: {summary['availability_percentage']:.0f}%")
+        logger.info(
+            "Systems Available: %d/%d", summary['available_systems'], summary['total_systems']
+        )
+        logger.info("Availability: %.0f%%", summary['availability_percentage'])
 
         for system, available in summary['systems'].items():
             status = "✅" if available else "❌"
-            logger.info(f"  {status} {system}")
+            logger.info("  %s %s", status, system)
 
         logger.info("=" * 80)
 
@@ -2142,7 +2177,8 @@ class ComplianceEngine:
         self.__dict__.update(state)
         # Reinitialize the engine components
         self.availability = SystemAvailability(enable_logging=self.enable_logging)
-        self._subsystems: Dict[str, Any] = {}
+        # Reset subsystems dict (type already declared in __init__)
+        self._subsystems = {}
         self._system_bus = SystemBus(self)
         self._initialized = True
 
@@ -2170,9 +2206,12 @@ class ComplianceEngine:
         if daily_return_pct <= self.config.kill_switch_threshold:
             threshold_pct = abs(self.config.kill_switch_threshold)
             logger.critical(
-                f"KILL SWITCH TRIGGERED: Daily loss {daily_return_pct:.2%} exceeds "
-                f"{threshold_pct:.1%} threshold. "
-                f"Total P&L: ${total_pnl:,.2f}, Starting Capital: ${self._starting_capital:,.2f}"
+                "KILL SWITCH TRIGGERED: Daily loss %.2f%% exceeds "
+                "%.1f%% threshold. Total P&L: $%.2f, Starting Capital: $%.2f",
+                daily_return_pct * 100,
+                threshold_pct * 100,
+                total_pnl,
+                self._starting_capital,
             )
             return True
 
@@ -2227,8 +2266,12 @@ class ComplianceEngine:
                 total_pnl / self._starting_capital if self._starting_capital > 0 else 0
             )
             logger.info(
-                f"Daily P&L tracked: {symbol} {side} ${pnl:,.2f} | "
-                f"Total Daily: ${total_pnl:,.2f} ({daily_return_pct:.2%})"
+                "Daily P&L tracked: %s %s $%.2f | Total Daily: $%.2f (%.2f%%)",
+                symbol,
+                side,
+                pnl,
+                total_pnl,
+                daily_return_pct * 100,
             )
 
     def reset_daily_tracking(self, new_starting_capital: Optional[float] = None) -> None:
@@ -2244,14 +2287,16 @@ class ComplianceEngine:
                 total_pnl / self._starting_capital if self._starting_capital > 0 else 0
             )
             logger.info(
-                f"Resetting daily tracking. Previous day P&L: ${total_pnl:,.2f} ({daily_return_pct:.2%})"
+                "Resetting daily tracking. Previous day P&L: $%.2f (%.2f%%)",
+                total_pnl,
+                daily_return_pct * 100,
             )
 
         self._daily_pnl_tracking.clear()
 
         if new_starting_capital is not None:
             self._starting_capital = new_starting_capital
-            logger.info(f"Updated starting capital to ${new_starting_capital:,.2f}")
+            logger.info("Updated starting capital to $%.2f", new_starting_capital)
 
     def set_starting_capital(self, capital: float) -> None:
         """
@@ -2267,7 +2312,7 @@ class ComplianceEngine:
         self._starting_capital = capital
 
         if self.enable_logging:
-            logger.info(f"Starting capital updated: ${old_capital:,.2f} -> ${capital:,.2f}")
+            logger.info("Starting capital updated: $%.2f -> $%.2f", old_capital, capital)
 
     def get_daily_pnl_summary(self) -> Dict[str, Any]:
         """
@@ -2340,160 +2385,186 @@ class ComplianceEngine:
         return subsystem
 
     def _load_subsystem(self, name: str) -> Optional[Any]:
-        """Load a specific subsystem from ALL 17 systems."""
-        # Get config factory for subsystem configurations
-        config_factory = get_subsystem_config_factory()
+        """
+        Load a specific subsystem from ALL 17 systems.
 
-        # -------------------------------------------------------------------------
-        # 8 MAIN SYSTEMS
-        # -------------------------------------------------------------------------
+        Uses dictionary dispatch pattern to reduce cyclomatic complexity.
+        Each subsystem loader is encapsulated in a callable for maintainability.
+
+        Args:
+            name: Name of the subsystem to load
+
+        Returns:
+            The loaded subsystem instance or None if not found
+        """
+        loaders = self._get_subsystem_loaders()
+
+        if name not in loaders:
+            return None
 
         try:
-            if name == "backtesting_engine":
-                from app.backtesting.engine import BacktestEngine
-
-                config = config_factory.get_backtest_config()
-                return BacktestEngine(config=config)
-
-            elif name == "live_trading":
-                from app.services.live_trading.broker_connector import BrokerConnector
-
-                return BrokerConnector()  # Has default broker_type
-
-            elif name == "paper_trading":
-                from app.services.live_trading.broker_adapters.paper_adapter import PaperAdapter
-
-                return PaperAdapter()  # pylint: disable=no-value-for-parameter
-
-            elif name == "strategies":
-                # BaseStrategy is abstract - this is a placeholder
-                # In real usage, concrete strategy implementations should be used
-                return None
-
-            elif name == "risk_engine":
-                from app.engines.risk_engine import RiskEngine
-
-                config = config_factory.get_risk_engine_config()
-                return RiskEngine(config=config)
-
-            elif name == "portfolio_engine":
-                from app.engines.portfolio_engine import PortfolioEngine
-
-                config = config_factory.get_portfolio_engine_config()
-                return PortfolioEngine(config=config)
-
-            elif name == "data_engine":
-                from app.engines.data_engine import DataEngine
-
-                return DataEngine()
-
-            elif name == "context_engine":
-                from app.engines.context_engine import ContextEngine
-
-                return ContextEngine()
-
-            elif name == "execution_engine":
-                from app.engines.execution_engine.microstructure import (
-                    get_market_microstructure_engine,
-                )
-
-                return get_market_microstructure_engine()
-
-            # -------------------------------------------------------------------------
-            # 12 COMPLIANCE SYSTEMS
-            # -------------------------------------------------------------------------
-
-            elif name == "ernest_chan":
-                from app.services.execution_algorithms import get_execution_algorithm
-                from app.services.regime_detection_chan import get_regime_detector
-
-                return {
-                    "regime": get_regime_detector(),
-                    "vwap": get_execution_algorithm("vwap"),
-                    "twap": get_execution_algorithm("twap"),
-                }
-
-            elif name == "narang":
-                from app.domain.strategies.alpha_models import get_alpha_model
-                from app.services.portfolio_construction_narang import get_portfolio_constructor
-
-                # Use correct model_type: "multi_factor" not "multifactor"
-                alpha_config = config_factory.get_alpha_model_config()
-                portfolio_config = config_factory.get_portfolio_constructor_config()
-
-                return {
-                    "alpha": get_alpha_model(alpha_config),
-                    "portfolio": get_portfolio_constructor(portfolio_config),
-                }
-
-            elif name == "lopez_de_prado":
-                from app.backtesting.labeling.meta_labeling import get_meta_labeling
-
-                return get_meta_labeling()
-
-            elif name == "tomasini":
-                # Tomasini is about architecture patterns - always available
-                return {"architecture_compliant": True}
-
-            elif name == "hastie":
-                from app.backtesting.validation.cross_validation import PurgedKFold
-
-                return PurgedKFold(n_splits=5)
-
-            elif name == "harris":
-                from app.engines.execution_engine.microstructure.harris_integration import (
-                    get_harris_integrator,
-                )
-
-                return get_harris_integrator(asset_class=self.asset_class)
-
-            elif name == "ohara":
-                from app.domain.market_analysis.microstructure.liquidity import (
-                    get_liquidity_analyzer,
-                )
-                from app.domain.market_analysis.microstructure.order_flow import (
-                    get_order_flow_analyzer,
-                )
-
-                return {
-                    "liquidity": get_liquidity_analyzer(),
-                    "order_flow": get_order_flow_analyzer(),
-                }
-
-            elif name == "percival":
-                # Percival is about architecture patterns - always available
-                return {"architecture_compliant": True}
-
-            elif name == "hull":
-                from app.engines.risk_engine.var_calculators.var_calculators import calculate_var
-
-                return calculate_var
-
-            elif name == "google_sre":
-                from app.sre.monitoring.golden_signals import get_golden_signals_monitor
-
-                return get_golden_signals_monitor(
-                    service_name="compliance_engine"
-                )  # pylint: disable=no-value-for-parameter
-
-            elif name == "beck_tdd":
-                # Beck is about TDD patterns - always available
-                return {"tdd_compliant": True}
-
-            elif name == "martin_arch":
-                # Martin is about clean architecture - always available
-                return {"clean_arch_compliant": True}
-
+            return loaders[name]()
         except ImportError as e:
             if self.enable_logging:
-                logger.warning(f"Could not load subsystem {name}: {e}")
+                logger.warning("Could not load subsystem %s: %s", name, e)
             return None
         except Exception as e:
             if self.enable_logging:
-                logger.warning(f"Error loading subsystem {name}: {e}")
+                logger.warning("Error loading subsystem %s: %s", name, e)
             return None
 
-        return None
+    def _get_subsystem_loaders(self) -> Dict[str, Callable[[], Any]]:
+        """
+        Get dictionary of subsystem loader functions.
+
+        Returns a dictionary mapping subsystem names to their loader
+        functions. This pattern reduces CC by replacing a long if-elif
+        chain with a dictionary lookup.
+
+        Returns:
+            Dictionary of subsystem name to loader callable
+        """
+        config_factory = get_subsystem_config_factory()
+
+        def load_backtesting_engine() -> Any:
+            from app.backtesting.engine import BacktestEngine
+
+            config = config_factory.get_backtest_config()
+            return BacktestEngine(config=config)
+
+        def load_live_trading() -> Any:
+            from app.services.live_trading.broker_connector import BrokerConnector
+
+            return BrokerConnector()
+
+        def load_paper_trading() -> Any:
+            from app.services.live_trading.broker_adapters.paper_adapter import PaperAdapter
+
+            return PaperAdapter()
+
+        def load_strategies() -> Any:
+            return None
+
+        def load_risk_engine() -> Any:
+            from app.engines.risk_engine import RiskEngine
+
+            config = config_factory.get_risk_engine_config()
+            return RiskEngine(config=config)
+
+        def load_portfolio_engine() -> Any:
+            from app.engines.portfolio_engine import PortfolioEngine
+
+            config = config_factory.get_portfolio_engine_config()
+            return PortfolioEngine(config=config)
+
+        def load_data_engine() -> Any:
+            from app.engines.data_engine import DataEngine
+
+            return DataEngine()
+
+        def load_context_engine() -> Any:
+            from app.engines.context_engine import ContextEngine
+
+            return ContextEngine()
+
+        def load_execution_engine() -> Any:
+            from app.engines.execution_engine.microstructure import get_market_microstructure_engine
+
+            return get_market_microstructure_engine()
+
+        def load_ernest_chan() -> Any:
+            from app.services.execution_algorithms import get_execution_algorithm
+            from app.services.regime_detection_chan import get_regime_detector
+
+            return {
+                "regime": get_regime_detector(),
+                "vwap": get_execution_algorithm("vwap"),
+                "twap": get_execution_algorithm("twap"),
+            }
+
+        def load_narang() -> Any:
+            from app.domain.strategies.alpha_models import get_alpha_model
+            from app.services.portfolio_construction_narang import get_portfolio_constructor
+
+            alpha_config = config_factory.get_alpha_model_config()
+            portfolio_config = config_factory.get_portfolio_constructor_config()
+
+            return {
+                "alpha": get_alpha_model(alpha_config),
+                "portfolio": get_portfolio_constructor(portfolio_config),
+            }
+
+        def load_lopez_de_prado() -> Any:
+            from app.backtesting.labeling.meta_labeling import get_meta_labeling
+
+            return get_meta_labeling()
+
+        def load_tomasini() -> Any:
+            return {"architecture_compliant": True}
+
+        def load_hastie() -> Any:
+            from app.backtesting.validation.cross_validation import PurgedKFold
+
+            return PurgedKFold(n_splits=5)
+
+        def load_harris() -> Any:
+            from app.engines.execution_engine.microstructure.harris_integration import (
+                get_harris_integrator,
+            )
+
+            return get_harris_integrator(asset_class=self.asset_class)
+
+        def load_ohara() -> Any:
+            from app.domain.market_analysis.microstructure.liquidity import get_liquidity_analyzer
+            from app.domain.market_analysis.microstructure.order_flow import get_order_flow_analyzer
+
+            return {
+                "liquidity": get_liquidity_analyzer(),
+                "order_flow": get_order_flow_analyzer(),
+            }
+
+        def load_percival() -> Any:
+            return {"architecture_compliant": True}
+
+        def load_hull() -> Any:
+            from app.engines.risk_engine.var_calculators.var_calculators import calculate_var
+
+            return calculate_var
+
+        def load_google_sre() -> Any:
+            from app.sre.monitoring.golden_signals import get_golden_signals_monitor
+
+            return get_golden_signals_monitor(service_name="compliance_engine")
+
+        def load_beck_tdd() -> Any:
+            return {"tdd_compliant": True}
+
+        def load_martin_arch() -> Any:
+            return {"clean_arch_compliant": True}
+
+        return {
+            "backtesting_engine": load_backtesting_engine,
+            "live_trading": load_live_trading,
+            "paper_trading": load_paper_trading,
+            "strategies": load_strategies,
+            "risk_engine": load_risk_engine,
+            "portfolio_engine": load_portfolio_engine,
+            "data_engine": load_data_engine,
+            "context_engine": load_context_engine,
+            "execution_engine": load_execution_engine,
+            "ernest_chan": load_ernest_chan,
+            "narang": load_narang,
+            "lopez_de_prado": load_lopez_de_prado,
+            "tomasini": load_tomasini,
+            "hastie": load_hastie,
+            "harris": load_harris,
+            "ohara": load_ohara,
+            "percival": load_percival,
+            "hull": load_hull,
+            "google_sre": load_google_sre,
+            "beck_tdd": load_beck_tdd,
+            "martin_arch": load_martin_arch,
+        }
 
     # ==========================================================================
     # POSITION SIZING - For Backtesting to be "Stupid"
@@ -2541,11 +2612,11 @@ class ComplianceEngine:
 
         # Validation
         if price <= 0:
-            logger.warning(f"Invalid price {price} for {symbol}, returning 0")
+            logger.warning("Invalid price %s for %s, returning 0", price, symbol)
             return Decimal("0")
 
         if capital <= 0:
-            logger.warning(f"Invalid capital {capital}, returning 0")
+            logger.warning("Invalid capital %s, returning 0", capital)
             return Decimal("0")
 
         # Get max position ratio from config or parameter
@@ -2629,7 +2700,7 @@ class ComplianceEngine:
                 f"trade=${trade_value:.2f})"
             )
             if self.enable_logging:
-                logger.warning(f"RISK ENVELOPE REJECTED: {symbol} {reason}")
+                logger.warning("RISK ENVELOPE REJECTED: %s %s", symbol, reason)
             return False, reason
 
         # Check 2: Strategy-level exposure limit
@@ -2646,7 +2717,7 @@ class ComplianceEngine:
                 f"(strategy capital=${strategy_capital:.2f})"
             )
             if self.enable_logging:
-                logger.warning(f"RISK ENVELOPE REJECTED: {reason}")
+                logger.warning("RISK ENVELOPE REJECTED: %s", reason)
             return False, reason
 
         # Check 3: Portfolio-level exposure limit
@@ -2663,15 +2734,17 @@ class ComplianceEngine:
                 f"(current total=${total_current_exposure:.2f}, trade=${trade_value:.2f})"
             )
             if self.enable_logging:
-                logger.warning(f"RISK ENVELOPE REJECTED: {reason}")
+                logger.warning("RISK ENVELOPE REJECTED: %s", reason)
             return False, reason
 
         # All checks passed
         if self.enable_logging:
             logger.debug(
-                f"RISK ENVELOPE PASSED: {symbol} "
-                f"(symbol={symbol_exposure_pct:.1%}, strategy={strategy_exposure_pct:.1%}, "
-                f"portfolio={portfolio_exposure_pct:.1%})"
+                "RISK ENVELOPE PASSED: %s (symbol=%.1f%%, strategy=%.1f%%, portfolio=%.1f%%)",
+                symbol,
+                float(symbol_exposure_pct) * 100,
+                float(strategy_exposure_pct) * 100,
+                float(portfolio_exposure_pct) * 100,
             )
         return True, "OK"
 
@@ -2749,8 +2822,12 @@ class ComplianceEngine:
             threshold_pct = abs(self.config.kill_switch_threshold)
             if self.enable_logging:
                 logger.critical(
-                    f"TRADE BLOCKED by kill switch: {symbol} {side} {quantity}. "
-                    f"Daily loss exceeded {threshold_pct:.1%} threshold."
+                    "TRADE BLOCKED by kill switch: %s %s %s. "
+                    "Daily loss exceeded %.1f%% threshold.",
+                    symbol,
+                    side,
+                    quantity,
+                    threshold_pct * 100,
                 )
             return PreTradeAnalysis(
                 can_execute=False,
@@ -2859,7 +2936,7 @@ class ComplianceEngine:
                 )
 
             except Exception as e:
-                logger.warning(f"Harris post-trade analysis failed: {e}")
+                logger.warning("Harris post-trade analysis failed: %s", e)
 
         # Fallback
         return PostTradeAnalysis(
@@ -2880,7 +2957,7 @@ class ComplianceEngine:
         self,
         symbols: List[str],
         returns: pd.DataFrame,
-        current_prices: Dict[str, Decimal],
+        _current_prices: Dict[str, Decimal],
     ) -> PortfolioOptimization:
         """
         THE ONLY portfolio optimization method.
@@ -2936,7 +3013,7 @@ class ComplianceEngine:
             )
 
         except Exception as e:
-            logger.error(f"Portfolio optimization failed: {e}")
+            logger.error("Portfolio optimization failed: %s", e)
             weight = Decimal("1") / Decimal(str(len(symbols)))
             return PortfolioOptimization(
                 weights={s: weight for s in symbols},
@@ -2979,7 +3056,7 @@ class ComplianceEngine:
         config = get_compliance_config()
 
         if order_id not in self._active_orders:
-            logger.warning(f"Unknown order ID: {order_id}")
+            logger.warning("Unknown order ID: %s", order_id)
             return
 
         order = self._active_orders[order_id]
@@ -3010,7 +3087,7 @@ class ComplianceEngine:
 
         # Log if SLO not met
         if not slo_met and self.enable_logging:
-            logger.warning(f"SLO VIOLATION: {order_id} latency {latency_ms:.0f}ms")
+            logger.warning("SLO VIOLATION: %s latency %.0fms", order_id, latency_ms)
 
     def get_slo_metrics(self) -> Dict[str, Any]:
         """Get current SLO metrics."""
@@ -3058,7 +3135,7 @@ class ComplianceEngine:
             # Validate alert format
             if not await self._validate_alert_format(alert):
                 if self.enable_logging:
-                    logger.warning(f"Invalid alert format: {alert}")
+                    logger.warning("Invalid alert format: %s", alert)
                 return None
 
             symbol = alert.get("symbol")
@@ -3069,7 +3146,7 @@ class ComplianceEngine:
             alert_hash = self._hash_alert(alert)
             if await self._is_duplicate_alert(alert_hash):
                 if self.enable_logging:
-                    logger.debug(f"Duplicate alert filtered: {symbol}")
+                    logger.debug("Duplicate alert filtered: %s", symbol)
                 return None
 
             # Get current price from alert or market data
@@ -3080,7 +3157,7 @@ class ComplianceEngine:
                 if price_history is not None and len(price_history) > 0:
                     current_price = Decimal(str(price_history["close"].iloc[-1]))
                 else:
-                    logger.warning(f"Cannot determine price for alert: {symbol}")
+                    logger.warning("Cannot determine price for alert: %s", symbol)
                     return None
 
             # Generate signal using alert-to-trade mapping
@@ -3102,13 +3179,13 @@ class ComplianceEngine:
             )
 
             if signal and self.enable_logging:
-                logger.info(f"✅ Alert processed: {symbol} → {signal.signal_type.value}")
+                logger.info("Alert processed: %s -> %s", symbol, signal.signal_type.value)
 
             return signal
 
         except Exception as e:
             if self.enable_logging:
-                logger.error(f"Error processing alert: {e}")
+                logger.error("Error processing alert: %s", e)
             return None
 
     async def validate_alert(self, alert: dict) -> bool:
@@ -3143,7 +3220,7 @@ class ComplianceEngine:
 
         return sorted(alerts, key=get_priority)
 
-    async def get_alert_history(self, symbol: str, days: int) -> list:
+    async def get_alert_history(self, _symbol: str, _days: int) -> list:
         """Get alert history for symbol (last N days)."""
         # This would integrate with alert history storage
         # For now, return empty list
@@ -3153,7 +3230,7 @@ class ComplianceEngine:
         self,
         signal: "TradeSignal",
         portfolio_value: Optional[Decimal] = None,
-        price_history: Optional[pd.DataFrame] = None,
+        _price_history: Optional[pd.DataFrame] = None,
         decision_logger: Optional[Any] = None,
         tax_engine: Optional[Any] = None,
         broker_connector: Optional[Any] = None,
@@ -3179,18 +3256,19 @@ class ComplianceEngine:
         Returns:
             TradeResult with execution details
         """
-        # Use injected dependencies or create defaults (late import to avoid layer violation)
-        if decision_logger is None or tax_engine is None or broker_connector is None:
-            from app.domain.services.tax.efficiency.engines.spain_tax_engine_impl import (
-                SpainTaxEngineImpl,
-            )
-            from app.infrastructure.logging.trading_decision_logger import TradingDecisionLogger
-            from app.services.live_trading.broker_connector import BrokerConnector
+        # Late imports to avoid layer violation (dependency inversion)
+        # Import unconditionally to avoid "possibly used before assignment" errors
+        from app.infrastructure.logging.trading_decision_logger import TradingDecisionLogger
+        from app.services.live_trading.broker_connector import BrokerConnector
+        from app.services.tax_efficiency.engines.spain_tax_engine_impl import SpainTaxEngineImpl
 
+        # Use injected dependencies or create defaults
         if decision_logger is None:
             decision_logger = TradingDecisionLogger()
         if tax_engine is None:
             tax_engine = SpainTaxEngineImpl()
+        if broker_connector is None:
+            broker_connector = BrokerConnector()
 
         # Convert signal to dict format for logger
         signal_dict = {
@@ -3249,7 +3327,7 @@ class ComplianceEngine:
             if order_value > max_risk:
                 error_msg = f"Kelly validation failed: {order_value} > {max_risk} ({config.KELLY_MAX_POSITION_PCT:.1%} max)"
                 if self.enable_logging:
-                    logger.warning(f"{error_msg} for {signal.symbol}")
+                    logger.warning("%s for %s", error_msg, signal.symbol)
 
                 decision_logger.log_validation_result(
                     correlation_id=correlation_id,
@@ -3276,7 +3354,7 @@ class ComplianceEngine:
                     if rr_ratio < min_rr:
                         error_msg = f"R:R validation failed: {rr_ratio:.2f} < {config.MIN_RISK_REWARD_RATIO} minimum"
                         if self.enable_logging:
-                            logger.warning(f"{error_msg} for {signal.symbol}")
+                            logger.warning("%s for %s", error_msg, signal.symbol)
 
                         decision_logger.log_validation_result(
                             correlation_id=correlation_id,
@@ -3298,9 +3376,8 @@ class ComplianceEngine:
                 details={"all_validations": "passed"},
             )
 
-            # Execute via broker
-            broker = BrokerConnector()
-            order_id = await self._submit_to_broker(broker, signal)
+            # Execute via broker (use injected connector)
+            order_id = await self._submit_to_broker(broker_connector, signal)
 
             # Calculate gross P&L (estimate)
             gross_pnl = Decimal("0")  # Will be updated on fill
@@ -3324,28 +3401,14 @@ class ComplianceEngine:
 
             if self.enable_logging:
                 logger.info(
-                    f"✅ Trade executed: {signal.symbol} {signal.order_side.value} "
-                    f"{signal.quantity} (ID: {order_id})"
+                    "Trade executed: %s %s %s (ID: %s)",
+                    signal.symbol,
+                    signal.order_side.value,
+                    signal.quantity,
+                    order_id,
                 )
 
-            # Create success result
-            from dataclasses import dataclass
-
-            @dataclass
-            class TradeResult:
-                """Result of trade execution."""
-
-                success: bool
-                order_id: str
-                symbol: str
-                side: str
-                quantity: Decimal
-                gross_pnl: Decimal
-                spain_tax: Decimal
-                net_pnl: Decimal
-                correlation_id: str
-                error: Optional[str] = None
-
+            # Return success result using module-level TradeResult dataclass
             return TradeResult(
                 success=True,
                 order_id=order_id,
@@ -3361,7 +3424,7 @@ class ComplianceEngine:
         except Exception as e:
             error_msg = f"Trade execution failed: {str(e)}"
             if self.enable_logging:
-                logger.error(f"{error_msg} for {signal.symbol}")
+                logger.error("%s for %s", error_msg, signal.symbol)
 
             decision_logger.log_execution(
                 correlation_id=correlation_id,
@@ -3378,27 +3441,40 @@ class ComplianceEngine:
         try:
             result = await broker.cancel_order(order_id)
             if self.enable_logging:
-                logger.info(f"Order cancelled: {order_id} -> {result}")
+                logger.info("Order cancelled: %s -> %s", order_id, result)
             return result
         except Exception as e:
             if self.enable_logging:
-                logger.error(f"Cancel order failed for {order_id}: {e}")
+                logger.error("Cancel order failed for %s: %s", order_id, e)
             return False
 
     async def modify_order(self, order_id: str, new_price: Decimal) -> bool:
-        """Modify order price."""
-        from app.services.live_trading.broker_connector import BrokerConnector
+        """
+        Modify order price using cancel-and-replace pattern.
 
-        broker = BrokerConnector()
-        try:
-            result = await broker.modify_order(order_id, new_price)
-            if self.enable_logging:
-                logger.info(f"Order modified: {order_id} -> {new_price}")
-            return result
-        except Exception as e:
-            if self.enable_logging:
-                logger.error(f"Modify order failed for {order_id}: {e}")
-            return False
+        Note: BrokerConnector does not support direct order modification.
+        This method cancels the existing order and requires the caller
+        to submit a new order with the updated price.
+
+        Args:
+            order_id: The ID of the order to modify
+            new_price: The new price for the order
+
+        Returns:
+            bool: True if cancel succeeded (caller must resubmit order)
+        """
+        # BrokerConnector doesn't have modify_order - use cancel pattern
+        # Log warning that modify isn't directly supported
+        if self.enable_logging:
+            logger.warning(
+                "modify_order: Direct modification not supported. "
+                "Use cancel_order + submit_order pattern instead. "
+                "order_id=%s, new_price=%s",
+                order_id,
+                new_price,
+            )
+        # Cancel the order - caller must resubmit with new price
+        return await self.cancel_order(order_id)
 
     async def get_order_status(self, order_id: str) -> str:
         """Get order status."""
@@ -3418,7 +3494,7 @@ class ComplianceEngine:
     async def run_cycle(
         self,
         signals: list["TradeSignal"],
-        portfolio_value: Optional[Decimal] = None,
+        _portfolio_value: Optional[Decimal] = None,
     ) -> "CycleResult":
         """
         Run complete strategy cycle (IStrategyCycleRunner protocol).
@@ -3436,21 +3512,6 @@ class ComplianceEngine:
         Returns:
             CycleResult with execution metrics
         """
-        from dataclasses import dataclass, field
-
-        @dataclass
-        class CycleResult:
-            """Result of strategy cycle execution."""
-
-            success: bool
-            total_signals: int
-            executed_signals: int
-            failed_signals: int
-            total_value: Decimal
-            execution_time_seconds: float
-            errors: List[str] = field(default_factory=list)
-            order_ids: List[str] = field(default_factory=list)
-
         start_time = datetime.now()
 
         # Validate input
@@ -3500,8 +3561,11 @@ class ComplianceEngine:
 
         if self.enable_logging:
             logger.info(
-                f"✅ Cycle complete: {executed}/{len(signals)} executed, "
-                f"{failed} failed, {execution_time:.2f}s"
+                "Cycle complete: %d/%d executed, %d failed, %.2fs",
+                executed,
+                len(signals),
+                failed,
+                execution_time,
             )
 
         return CycleResult(
@@ -3560,7 +3624,7 @@ class ComplianceEngine:
     async def handle_cycle_error(self, error: Exception) -> None:
         """Handle cycle execution error."""
         if self.enable_logging:
-            logger.error(f"Cycle error: {error}")
+            logger.error("Cycle error: %s", error)
 
     async def get_cycle_metrics(self) -> dict:
         """Get cycle execution metrics."""
@@ -3586,14 +3650,10 @@ class ComplianceEngine:
         import json
 
         alert_str = json.dumps(alert, sort_keys=True)
-        return hashlib.md5(alert_str.encode()).hexdigest()
+        return hashlib.sha256(alert_str.encode()).hexdigest()
 
     async def _is_duplicate_alert(self, alert_hash: str) -> bool:
         """Check if alert is duplicate."""
-        # Simple in-memory check (would use persistent storage in production)
-        if not hasattr(self, "_alert_hashes"):
-            self._alert_hashes = set()
-
         is_dup = alert_hash in self._alert_hashes
         self._alert_hashes.add(alert_hash)
 
@@ -3603,7 +3663,7 @@ class ComplianceEngine:
 
         return is_dup
 
-    async def _submit_to_broker(self, broker, signal: "TradeSignal") -> str:
+    async def _submit_to_broker(self, _broker, _signal: "TradeSignal") -> str:
         """Submit order to broker."""
         # Convert TradeSignal to broker format
 
@@ -3619,24 +3679,19 @@ class ComplianceEngine:
         error_msg: str,
         correlation_id: Optional[str] = None,
     ) -> "TradeResult":
-        """Create failed trade result."""
-        from dataclasses import dataclass
+        """
+        Create failed trade result.
 
-        @dataclass
-        class TradeResult:
-            """Result of trade execution."""
+        Constructs a TradeResult indicating failed execution with error details.
 
-            success: bool
-            order_id: str
-            symbol: str
-            side: str
-            quantity: Decimal
-            gross_pnl: Decimal
-            spain_tax: Decimal
-            net_pnl: Decimal
-            correlation_id: str
-            error: Optional[str] = None
+        Args:
+            signal: The original TradeSignal that failed
+            error_msg: Description of what caused the failure
+            correlation_id: Optional correlation ID for traceability
 
+        Returns:
+            TradeResult with success=False and error details populated
+        """
         return TradeResult(
             success=False,
             order_id="",
