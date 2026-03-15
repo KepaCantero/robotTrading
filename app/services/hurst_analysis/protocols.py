@@ -1,4 +1,3 @@
-# pylint: disable=unsupported-binary-operation
 """Protocol interfaces for Hurst Analysis components.
 
 This module defines all Protocol interfaces used throughout the hurst_analysis module.
