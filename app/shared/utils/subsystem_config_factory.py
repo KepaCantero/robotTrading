@@ -40,6 +40,7 @@ class SubsystemConfigFactory:
     """
 
     _instance: Optional["SubsystemConfigFactory"] = None
+    _initialized: bool
 
     def __new__(cls) -> "SubsystemConfigFactory":
         """Singleton pattern for consistent config access."""
@@ -48,8 +49,9 @@ class SubsystemConfigFactory:
                 "Creating new SubsystemConfigFactory instance",
                 extra={"operation": "singleton_creation"},
             )
-            cls._instance = super().__new__(cls)
-            cls._instance._initialized = False
+            instance = super().__new__(cls)
+            instance._initialized = False
+            cls._instance = instance
         return cls._instance
 
     def __init__(self):
