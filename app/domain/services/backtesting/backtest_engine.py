@@ -466,7 +466,7 @@ class BacktestEngine:
                         break
 
         if trade_returns:
-            win_rate = np.mean([1 for r in trade_returns if r > 0])
+            win_rate = float(np.mean([1 for r in trade_returns if r > 0]))
             winning_trades = [r for r in trade_returns if r > 0]
             losing_trades = [r for r in trade_returns if r < 0]
 
