@@ -7,6 +7,10 @@
 
 ## Patterns
 
+### mem-1773595899-f4e0
+> Phase 1 Compliance Fix COMPLETE: FS-BAN-001 (2 files renamed), FS-DIR-004 (app.py moved to scripts/), FS-DIR-005 (30+ to 2 deep dirs, 95%+ improvement). ARCH-DEP-001/ARCH-ANTI-006 deferred to Phase 2 (requires Protocol creation + DI refactoring). Report: .ralph/outputs/COMPLIANCE_FIX_REPORT.md
+<!-- tags: aaa, compliance, phase1 | created: 2026-03-15 -->
+
 ### mem-1773556121-6054
 > Phase 5.1 - execution adapters: 3 files fixed ( TradeResultDataclass moved to module level, dataclasses.asdict() converts to dict via dataclasses.asdict() for protocol compatibility. fixed union-attr issues by extracting order_side safely before accessing .value. refact exception handling to complex union-attr access patterns. commit: bcdcfe8e
 <!-- tags:  | created: 2026-03-15 -->
@@ -46,6 +50,18 @@
 ---
 
 ## Fixes
+
+### mem-1773595090-0ad8
+> HAT 6 FS-DIR-004: Moved app.py to scripts/launcher.py. Root app.py was a convenience launcher script for dashboard/api, not imported anywhere. Moved to scripts/ to comply with FS-DIR-004 (no code in root). Usage: python scripts/launcher.py [dashboard|api]
+<!-- tags: aaa, compliance, fs-dir-004 | created: 2026-03-15 -->
+
+### mem-1773594866-87ac
+> HAT 6 FS-BAN-001: Renamed prohibited file names - app/presentation/api/utils.py -> api_helpers.py, app/services/hurst_analysis/utils.py -> hurst_calculations.py. Updated import in orchestrator.py using alias pattern to preserve 'utils' namespace usage.
+<!-- tags: aaa, compliance, fs-ban-001 | created: 2026-03-15 -->
+
+### mem-1773594615-c8f5
+> Phase 5.3 - compliance_engine.py: Fixed W0613 (unused args prefixed with underscore), W1203 (f-string logging converted to lazy %). Pylint 10/10. C0415 (imports outside toplevel) left as-is for lazy loading pattern.
+<!-- tags: aaa, production-audit, phase5, compliance | created: 2026-03-15 -->
 
 ### mem-1773553724-3d1f
 > Phase 3 utilities audit: 8 files audited (core/utils, shared/utils), 5 passed initially, 3 fixed. Fixes: decimal_utils.py sum() Decimal type, subsystem_config_factory.py singleton pattern, symbol_mapper.py @abstractmethod + removed forbidden pylint disables

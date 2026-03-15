@@ -1,0 +1,12 @@
+{
+  "loops": [
+    {
+      "id": "grand-lion",
+      "pid": 7601,
+      "started": "2026-03-15T07:36:08.016293Z",
+      "prompt": "# Architecture & File System Compliance Fix - Ralph Task Prompts\n\n# Version: 2.0\n# Created: 2026-...",
+      "worktree_path": "/Users/kepa.cantero/Projects/algoTrading/.worktrees/grand-lion",
+      "workspace": "/Users/kepa.cantero/Projects/algoTrading/.worktrees/grand-lion"
+    }
+  ]
+}
