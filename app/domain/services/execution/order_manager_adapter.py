@@ -12,7 +12,7 @@ the compliance coordinator layer.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
@@ -20,13 +20,37 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 if TYPE_CHECKING:
     from app.services.live_trading.alert_to_trade_mapper import TradeSignal
 
-    TradeResult = dict  # Type alias for trade execution results
-
 from app.services.live_trading.broker_connector import OrderSide, OrderStatus
 from app.services.live_trading.order_manager import OrderManager, get_order_manager
 from app.shared.protocols import ITradeExecutor
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class TradeResultData:
+    """
+    Result data structure for trade execution.
+
+    Contains all execution details returned by the ITradeExecutor protocol.
+    Converted to dict for protocol compatibility.
+    """
+
+    success: bool
+    order_id: str
+    symbol: str
+    side: str
+    quantity: Decimal
+    execution_price: Decimal
+    status: str
+    commission: Decimal
+    slippage_bps: Decimal
+    signal_price: Decimal
+    error: Optional[str] = None
+
+
+# Type alias for protocol compatibility (dict is expected by ITradeExecutor)
+TradeResult = Dict[str, Any]
 
 
 class OrderManagerAdapter(ITradeExecutor):
@@ -116,25 +140,8 @@ class OrderManagerAdapter(ITradeExecutor):
             ...     signal_id="signal_123",
             ... )
             >>> result = await adapter.execute_order(signal)
-            >>> assert result.success or result.error
+            >>> assert result["success"] or result["error"]
         """
-
-        @dataclass
-        class TradeResult:
-            """Result of trade execution via ITradeExecutor."""
-
-            success: bool
-            order_id: str
-            symbol: str
-            side: str
-            quantity: Decimal
-            execution_price: Decimal
-            status: str
-            commission: Decimal
-            slippage_bps: Decimal
-            signal_price: Decimal
-            error: Optional[str] = None
-
         try:
             manager = self._get_manager()
 
@@ -175,7 +182,7 @@ class OrderManagerAdapter(ITradeExecutor):
                 if self.enable_logging:
                     logger.warning(f"OrderManagerAdapter: {error_msg}")
 
-                return TradeResult(
+                result = TradeResultData(
                     success=False,
                     order_id="",
                     symbol=symbol,
@@ -188,6 +195,7 @@ class OrderManagerAdapter(ITradeExecutor):
                     signal_price=signal_price,
                     error=error_msg,
                 )
+                return asdict(result)
 
             # Map signal to order for tracking
             self._signal_to_order_map[signal_id] = broker_order.order_id
@@ -227,7 +235,7 @@ class OrderManagerAdapter(ITradeExecutor):
                     f"{symbol} {side.value} {quantity} @ {execution_price}"
                 )
 
-            return TradeResult(
+            result = TradeResultData(
                 success=broker_order.status in (OrderStatus.FILLED, OrderStatus.PARTIALLY_FILLED),
                 order_id=broker_order.order_id,
                 symbol=symbol,
@@ -239,10 +247,11 @@ class OrderManagerAdapter(ITradeExecutor):
                 slippage_bps=slippage_bps,
                 signal_price=signal_price,
             )
+            return asdict(result)
 
         except Exception as e:
             logger.error(f"OrderManagerAdapter.execute_order failed: {e}")
-            return TradeResult(
+            result = TradeResultData(
                 success=False,
                 order_id="",
                 symbol=getattr(signal, "symbol", "UNKNOWN"),
@@ -255,6 +264,7 @@ class OrderManagerAdapter(ITradeExecutor):
                 signal_price=Decimal("0"),
                 error=str(e),
             )
+            return asdict(result)
 
     async def cancel_order(self, order_id: str) -> bool:
         """

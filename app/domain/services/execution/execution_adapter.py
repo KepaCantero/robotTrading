@@ -10,6 +10,7 @@ Purpose: Integrate ExecutionEngine with ComplianceEngine (Req #10 - Pessimistic 
 from __future__ import annotations
 
 import logging
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Dict, Optional
@@ -17,12 +18,37 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 if TYPE_CHECKING:
     from app.services.live_trading.alert_to_trade_mapper import TradeSignal
 
-    TradeResult = dict  # Type alias for trade execution results
-
 from app.backtesting.engines.execution_engine import PessimisticExecutionEngine
+from app.backtesting.models import BacktestConfig
 from app.shared.protocols import ITradeExecutor
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class TradeResultData:
+    """
+    Result data structure for trade execution.
+
+    Contains all execution details returned by the ITradeExecutor protocol.
+    Converted to dict for protocol compatibility.
+    """
+
+    success: bool
+    order_id: str
+    symbol: str
+    side: str
+    quantity: Decimal
+    execution_price: Decimal
+    status: str
+    commission: Decimal
+    slippage_bps: Decimal
+    signal_price: Decimal
+    error: Optional[str] = None
+
+
+# Type alias for protocol compatibility (dict is expected by ITradeExecutor)
+TradeResult = Dict[str, Any]
 
 
 class ExecutionEngineAdapter(ITradeExecutor):
@@ -55,7 +81,10 @@ class ExecutionEngineAdapter(ITradeExecutor):
                              (defaults to new instance with standard config)
             enable_logging: Enable detailed logging for execution events
         """
-        self.execution_engine = execution_engine or PessimisticExecutionEngine()
+        if execution_engine is None:
+            default_config = BacktestConfig(initial_capital=Decimal("100000"))
+            execution_engine = PessimisticExecutionEngine(config=default_config)
+        self.execution_engine = execution_engine
         self.enable_logging = enable_logging
         self._active_positions: Dict[str, Any] = {}
         self._order_history: Dict[str, Dict[str, Any]] = {}
@@ -102,26 +131,8 @@ class ExecutionEngineAdapter(ITradeExecutor):
             ...     price=Decimal("150"),
             ... )
             >>> result = await adapter.execute_order(signal)
-            >>> assert result.status == "FILLED"
+            >>> assert result["status"] == "FILLED"
         """
-        from dataclasses import dataclass
-
-        @dataclass
-        class TradeResult:
-            """Result of trade execution via ITradeExecutor."""
-
-            success: bool
-            order_id: str
-            symbol: str
-            side: str
-            quantity: Decimal
-            execution_price: Decimal
-            status: str
-            commission: Decimal
-            slippage_bps: Decimal
-            signal_price: Decimal
-            error: Optional[str] = None
-
         try:
             # Extract signal data
             symbol = signal.symbol
@@ -173,7 +184,7 @@ class ExecutionEngineAdapter(ITradeExecutor):
                     f"(signal: {signal_price}, slippage: {slippage_bps} bps)"
                 )
 
-            return TradeResult(
+            result = TradeResultData(
                 success=True,
                 order_id=order_id,
                 symbol=symbol,
@@ -185,16 +196,18 @@ class ExecutionEngineAdapter(ITradeExecutor):
                 slippage_bps=slippage_bps,
                 signal_price=signal_price,
             )
+            return asdict(result)
 
         except Exception as e:
             logger.error(f"ExecutionEngineAdapter.execute_order failed: {e}")
-            return TradeResult(
+            # Extract order_side safely for error case
+            order_side = getattr(signal, "order_side", None)
+            side_value = order_side.value if order_side else "BUY"
+            result = TradeResultData(
                 success=False,
                 order_id="",
                 symbol=getattr(signal, "symbol", "UNKNOWN"),
-                side=getattr(signal, "order_side", "BUY").value
-                if hasattr(signal, "order_side")
-                else "BUY",
+                side=side_value,
                 quantity=getattr(signal, "quantity", Decimal("0")),
                 execution_price=Decimal("0"),
                 status="FAILED",
@@ -203,6 +216,7 @@ class ExecutionEngineAdapter(ITradeExecutor):
                 signal_price=Decimal("0"),
                 error=str(e),
             )
+            return asdict(result)
 
     async def cancel_order(self, order_id: str) -> bool:
         """
