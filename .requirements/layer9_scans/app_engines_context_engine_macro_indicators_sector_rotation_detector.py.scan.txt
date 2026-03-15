@@ -1,5 +1,0 @@
-## Scan: app/engines/context_engine/macro_indicators/sector_rotation_detector.py
-Lines: 32
-Functions: 1
-Classes: 1
-Status: Processed
