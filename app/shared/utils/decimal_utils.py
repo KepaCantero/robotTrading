@@ -550,8 +550,8 @@ def safe_mean(
     if not decimal_values:
         return default
 
-    # Use built-in sum which is optimized in Python
-    return sum(decimal_values) / len(decimal_values)
+    # Use Decimal(0) as start to ensure sum returns Decimal
+    return sum(decimal_values, Decimal(0)) / len(decimal_values)
 
 
 def safe_variance(
@@ -591,7 +591,7 @@ def safe_variance(
     # Calculate variance
     squared_diffs = [(v - mean_val) ** 2 for v in decimal_values]
     denominator = n - 1 if sample else n
-    return sum(squared_diffs) / denominator
+    return sum(squared_diffs, Decimal(0)) / denominator
 
 
 def safe_std(

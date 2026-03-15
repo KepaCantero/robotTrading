@@ -27,6 +27,7 @@ Status: PRODUCTION - Critical for Tax Compliance
 
 import logging
 import re
+from abc import abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -645,10 +646,7 @@ class SymbolMapper:
             )
             return broker_symbol
 
-        except ValidationError:  # pylint: disable=try-except-raise
-            # Re-raise ValidationError as-is for test validation
-            raise
-        except (ConnectionError, TimeoutError, ValueError) as e:  # pylint: disable=try-except-raise
+        except (ConnectionError, TimeoutError, ValueError) as e:
             logger.error(f"Error mapping {internal_symbol} to {broker_name}: {e}", exc_info=True)
             raise
 
@@ -722,10 +720,7 @@ class SymbolMapper:
             logger.info(f"Mapped {broker_symbol} -> {internal_symbol} ({broker_name})")
             return internal_symbol
 
-        except (UnknownSymbolError, ValidationError):  # pylint: disable=try-except-raise
-            # Re-raise UnknownSymbolError and ValidationError as-is
-            raise
-        except (ConnectionError, TimeoutError, ValueError) as e:  # pylint: disable=try-except-raise
+        except (ConnectionError, TimeoutError, ValueError) as e:
             logger.error(f"Error mapping {broker_symbol} from {broker_name}: {e}", exc_info=True)
             raise
 
@@ -815,9 +810,6 @@ class SymbolMapper:
 
             return mapping
 
-        except (ValidationError, SymbolMappingError):  # pylint: disable=try-except-raise
-            # Re-raise validation and mapping errors as-is
-            raise
         except (ConnectionError, TimeoutError, ValueError) as e:
             logger.error(
                 f"Error adding mapping {internal_symbol} -> {broker_symbol}: {e}", exc_info=True
@@ -866,9 +858,6 @@ class SymbolMapper:
             logger.info(f"Found {len(broker_symbols)} broker mappings for {internal_symbol}")
             return broker_symbols
 
-        except ValidationError:  # pylint: disable=try-except-raise
-            # Re-raise validation errors
-            raise
         except (ConnectionError, TimeoutError, ValueError) as e:
             logger.error(f"Error getting brokers for {internal_symbol}: {e}", exc_info=True)
             return {}
@@ -1042,6 +1031,16 @@ class SymbolMapperMixin:
                 )
         ```
     """
+
+    symbol_mapper: "SymbolMapper"
+
+    @abstractmethod
+    def get_broker_name(self) -> str:
+        """Return the broker name for mapping purposes.
+
+        This method must be implemented by the class that uses this mixin.
+        """
+        raise NotImplementedError("Subclasses must implement get_broker_name()")
 
     def __init__(self):
         self.symbol_mapper = SymbolMapper()
