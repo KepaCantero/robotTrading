@@ -10,13 +10,12 @@ Purpose: Integrate TradingBridge with ComplianceEngine for live trading executio
 from __future__ import annotations
 
 import logging
+from dataclasses import asdict, dataclass
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 if TYPE_CHECKING:
     from app.services.live_trading.alert_to_trade_mapper import TradeSignal
-
-    TradeResult = dict  # Type alias for trade execution results
 
 from app.services.alerting_system import AlertEvent, AlertSeverity
 from app.services.live_trading.trading_bridge_orchestrator import (
@@ -26,6 +25,32 @@ from app.services.live_trading.trading_bridge_orchestrator import (
 from app.shared.protocols import ITradeExecutor
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class TradeResultData:
+    """
+    Result data structure for trade execution.
+
+    Contains all execution details returned by the ITradeExecutor protocol.
+    Converted to dict for protocol compatibility.
+    """
+
+    success: bool
+    order_id: str
+    symbol: str
+    side: str
+    quantity: Decimal
+    execution_price: Decimal
+    status: str
+    commission: Decimal
+    slippage_bps: Decimal
+    signal_price: Decimal
+    error: Optional[str] = None
+
+
+# Type alias for protocol compatibility (dict is expected by ITradeExecutor)
+TradeResult = Dict[str, Any]
 
 
 class TradingBridgeAdapter(ITradeExecutor):
@@ -99,24 +124,6 @@ class TradingBridgeAdapter(ITradeExecutor):
                 - commission: Calculated commission
                 - slippage_bps: Applied slippage in basis points
         """
-        from dataclasses import dataclass
-
-        @dataclass
-        class TradeResult:
-            """Result of trade execution via ITradeExecutor."""
-
-            success: bool
-            order_id: str
-            symbol: str
-            side: str
-            quantity: Decimal
-            execution_price: Decimal
-            status: str
-            commission: Decimal
-            slippage_bps: Decimal
-            signal_price: Decimal
-            error: Optional[str] = None
-
         try:
             # Extract signal data
             symbol = signal.symbol
@@ -138,7 +145,7 @@ class TradingBridgeAdapter(ITradeExecutor):
 
             if not execution:
                 # Failed to execute
-                return TradeResult(
+                result = TradeResultData(
                     success=False,
                     order_id="",
                     symbol=symbol,
@@ -151,6 +158,7 @@ class TradingBridgeAdapter(ITradeExecutor):
                     signal_price=signal_price,
                     error="Trading bridge did not return execution",
                 )
+                return asdict(result)
 
             # Map order_id to execution_id
             self._order_mapping[execution.order_id] = execution.execution_id
@@ -161,7 +169,7 @@ class TradingBridgeAdapter(ITradeExecutor):
                     f"(order_id: {execution.order_id}, execution_id: {execution.execution_id})"
                 )
 
-            return TradeResult(
+            result = TradeResultData(
                 success=True,
                 order_id=execution.order_id,
                 symbol=execution.symbol,
@@ -173,16 +181,18 @@ class TradingBridgeAdapter(ITradeExecutor):
                 slippage_bps=Decimal("0"),  # Slippage handled by broker
                 signal_price=signal_price,
             )
+            return asdict(result)
 
         except Exception as e:
             logger.error(f"TradingBridgeAdapter.execute_order failed: {e}")
-            return TradeResult(
+            # Extract order_side safely for error case
+            order_side = getattr(signal, "order_side", None)
+            side_value = order_side.value if order_side else "BUY"
+            result = TradeResultData(
                 success=False,
                 order_id="",
                 symbol=getattr(signal, "symbol", "UNKNOWN"),
-                side=getattr(signal, "order_side", "BUY").value
-                if hasattr(signal, "order_side")
-                else "BUY",
+                side=side_value,
                 quantity=getattr(signal, "quantity", Decimal("0")),
                 execution_price=Decimal("0"),
                 status="FAILED",
@@ -191,6 +201,7 @@ class TradingBridgeAdapter(ITradeExecutor):
                 signal_price=Decimal("0"),
                 error=str(e),
             )
+            return asdict(result)
 
     async def cancel_order(self, order_id: str) -> bool:
         """
