@@ -1,0 +1,1197 @@
+# ============================================
+# Ralph Task 32: Architecture Requirements Audit
+# ============================================
+# VERSION: 3.0 - OPTIMIZADO PARA GLM 5.0 + RALPH LATEST
+# Audita requirements a nivel de BIG PICTURE (arquitectura, estructura, sistema)
+# Verifica que no falten reglas y añade requirements de arquitectura
+# Revisa BASE_RULES.md y CRITICAL_RULES.md para cobertura completa
+# ============================================================================
+# PRIORIDAD: P0 (CRÍTICA) - Valida la integridad arquitectónica del proyecto
+# OBJETIVO: Revisar requirements a nivel macro y crear documentos de arquitectura
+# TIEMPO: ~6 horas
+#
+# FEATURES MODERNAS USADAS:
+# - reasoning: multi-step para GLM 5.0
+# - memories: aprendizaje entre sesiones
+# - hat_template: reutilización de templates
+# - shared_vars: variables compartidas entre hats
+# - critical_rules: reglas anti-fallback
+# ============================================================================
+#
+# ASPECTOS DE LA APP A CUBRIR:
+# - Domain Layer (entities, value objects, domain services)
+# - Application Layer (use cases, orchestration)
+# - Infrastructure Layer (database, brokers, external APIs)
+# - Presentation Layer (REST API, CLI, dashboard)
+# - Cross-cutting concerns (logging, security, error handling)
+# - Trading-specific rules (risk, execution, backtesting)
+# - Spain tax compliance
+# - Data feeds and market data
+# - Position management
+# - Reconciliation
+# ============================================================================
+
+event_loop:
+  prompt_file: ".ralph/ralph_tasks/prompts/32_architecture_requirements_audit.md"
+  completion_promise: "ARCHITECTURE_REQUIREMENTS_AUDIT_COMPLETE"
+  max_iterations: 200
+  max_runtime_seconds: 21600  # 6 hours
+  checkpoint_interval: 3
+  starting_event: "arch_audit.start"
+  checkpoint_file: ".ralph/checkpoints/32_architecture_requirements_audit_checkpoint.json"
+  # GLM 5.0 - Multi-step reasoning
+  reasoning:
+    enabled: true
+    type: "multi-step"
+
+cli:
+  backend: "claude"
+  model: "glm"  # GLM 5.0
+
+core:
+  specs_dir: "./specs/"
+
+# Variables compartidas entre todos los hats
+shared_vars:
+  OUTPUT_DIR: ".ralph/outputs"
+  RULES_DIR: "rules"
+  REQUIREMENTS_DIR: ".requirements"
+  TASK_PREFIX: "arch_audit"
+  TASK_NAME: "Architecture Requirements Audit"
+  TASK_ID: "32"
+
+# ============================================================================
+# CRITICAL RULES - NO FALLBACKS (GLM 5.0 best practice)
+# ============================================================================
+critical_rules: |
+  ## REGLAS CRÍTICAS - Architecture Audit
+
+  ### NO FALLBACKS:
+  - ❌ NO inventar reglas que no existen en rules/
+  - ❌ NO asumir cobertura sin verificar
+  - ✅ SÍ verificar cada regla leyendo el archivo
+  - ✅ SÍ FLAG gaps encontrados como `@gap: <description>`
+
+  ### FLAGs para Gaps:
+  ```markdown
+  <!-- @gap: No architecture rules for layer boundaries -->
+  <!-- @missing: FILE_SYSTEM_REQUIREMENTS.md not found -->
+  <!-- @partial: Trading rules only partially covered -->
+  ```
+
+  ### Validación:
+  - Si un requirement NO está en BASE_RULES.md → **FLAG as `@missing`**
+  - Si un requirement está parcial → **FLAG as `@partial`**
+  - Si hay ambigüedad → **FLAG as `@clarify`**
+
+# ============================================================================
+# HATS (AGENTES) - Sistema modular con hats especializados
+# ============================================================================
+hats:
+  # ==========================================================================
+  # HAT 1: Rules Scanner - Escanea todas las reglas disponibles
+  # ==========================================================================
+  rules_scanner:
+    name: "Rules Scanner"
+    description: "Escanea todas las reglas en rules/ para identificar coverage"
+    hat_template: ".ralph/ralph_templates/hats/base_processor_hat.yml"
+    triggers:
+      - "arch_audit.start"
+    publishes:
+      - "arch_audit.rules_scanned"
+      - "arch_audit.blocked"
+    default_publishes: "arch_audit.rules_scanned"
+
+    instructions: |
+      ## RULES SCANNER - Descubrimiento de Reglas
+
+      {{shared_instructions}}
+
+      ### OBJETIVO
+      Escanear todas las reglas en rules/ y crear inventario completo
+
+      ### FASE 1: Escanear rules/python/
+
+      ```bash
+      # Listar todas las reglas de Python
+      find rules/python -name "*.md" -type f | sort
+
+      # Para cada archivo, extraer:
+      # - Título del documento
+      # - Lista de reglas definidas (buscar patrones como "Regla X.X", "**Rule**", "| RULE-")
+      ```
+
+      ### FASE 2: Escanear rules/trading/
+
+      ```bash
+      # Listar todas las reglas de trading
+      find rules/trading -name "*.md" -type f | sort
+      ```
+
+      ### FASE 3: Crear inventario de reglas
+
+      Generar JSON: `.ralph/outputs/RULES_INVENTORY.json`
+
+      ```json
+      {
+        "scanned_at": "{{timestamp}}",
+        "categories": {
+          "python": {
+            "total_files": 26,
+            "rules": [
+              {
+                "file": "01-formatting-style.md",
+                "title": "Formatting & Style",
+                "rule_count": 8,
+                "rules": ["FMT-001", "FMT-002", ...]
+              }
+            ]
+          },
+          "trading": {
+            "total_files": 55,
+            "rules": [...]
+          }
+        },
+        "summary": {
+          "total_files": 81,
+          "total_rules_estimated": 200
+        }
+      }
+      ```
+
+      Emitir "arch_audit.rules_scanned"
+
+  # ==========================================================================
+  # HAT 2: Project Structure Analyzer - Analiza estructura del proyecto
+  # ==========================================================================
+  structure_analyzer:
+    name: "Project Structure Analyzer"
+    description: "Analiza la estructura de directorios y archivos del proyecto"
+    hat_template: ".ralph/ralph_templates/hats/base_processor_hat.yml"
+    triggers:
+      - "arch_audit.rules_scanned"
+    publishes:
+      - "arch_audit.structure_analyzed"
+      - "arch_audit.blocked"
+    default_publishes: "arch_audit.structure_analyzed"
+
+    instructions: |
+      ## PROJECT STRUCTURE ANALYZER
+
+      {{shared_instructions}}
+
+      ### OBJETIVO
+      Analizar la estructura del proyecto y comparar con arquitectura ideal
+
+      ### FASE 1: Mapear estructura actual
+
+      ```bash
+      # Generar árbol de directorios de app/
+      find app -type d | head -100
+
+      # Contar archivos por capa
+      find app/domain -name "*.py" | wc -l
+      find app/services -name "*.py" | wc -l
+      find app/infrastructure -name "*.py" 2>/dev/null | wc -l || echo "0"
+      find app/api -name "*.py" 2>/dev/null | wc -l || echo "0"
+      find app/core -name "*.py" | wc -l
+
+      # Total de archivos
+      find app -name "*.py" | wc -l
+      ```
+
+      ### FASE 2: Verificar capas arquitectónicas
+
+      Según `rules/python/05-architecture.md` y `rules/python/18-clean-architecture-structure.md`:
+
+      **Capas esperadas:**
+      ```
+      app/
+      ├── domain/              # Business entities (NO framework deps)
+      │   ├── entities/
+      │   ├── value_objects/
+      │   ├── services/
+      │   └── strategies/
+      ├── application/         # Use cases (orquestación)
+      │   └── services/
+      ├── infrastructure/      # External concerns
+      │   ├── database/
+      │   ├── api_client/
+      │   └── repositories/
+      └── presentation/        # Interface layer
+          ├── api/
+          └── cli/
+      ```
+
+      **Verificar:**
+      - [ ] Existe capa domain/
+      - [ ] Domain NO tiene imports de framework
+      - [ ] Existe separación de responsabilidades
+      - [ ] Dependencies point inward
+
+      ### FASE 3: Detectar violaciones arquitectónicas
+
+      ```bash
+      # Verificar si domain importa de infrastructure
+      grep -r "from app.infrastructure\|from app.api" app/domain/ 2>/dev/null | head -20
+
+      # Verificar si domain tiene imports de framework
+      grep -r "from fastapi\|from sqlalchemy\|import httpx" app/domain/ 2>/dev/null | head -20
+
+      # Verificar imports cíclicos
+      grep -r "from app.services" app/domain/ 2>/dev/null | head -20
+      ```
+
+      ### OUTPUT
+      Generar: `.ralph/outputs/ARCHITECTURE_STRUCTURE_ANALYSIS.json`
+
+      Emitir "arch_audit.structure_analyzed"
+
+  # ==========================================================================
+  # HAT 3: Requirements Gap Analyzer - Identifica gaps en requirements
+  # ==========================================================================
+  gap_analyzer:
+    name: "Requirements Gap Analyzer"
+    description: "Compara reglas con requirements existentes para identificar gaps"
+    hat_template: ".ralph/ralph_templates/hats/base_processor_hat.yml"
+    triggers:
+      - "arch_audit.structure_analyzed"
+    publishes:
+      - "arch_audit.gaps_identified"
+      - "arch_audit.blocked"
+    default_publishes: "arch_audit.gaps_identified"
+
+    instructions: |
+      ## REQUIREMENTS GAP ANALYZER
+
+      {{shared_instructions}}
+
+      ### OBJETIVO
+      Identificar qué reglas NO están cubiertas por los requirements actuales
+
+      ### FASE 1: Leer requirements existentes
+
+      ```bash
+      # Listar todos los requirements
+      find .requirements -name "*.md" -type f | wc -l
+
+      # Verificar BASE_RULES.md y CRITICAL_RULES.md
+      ls -la .requirements/BASE_RULES.md .requirements/CRITICAL_RULES.md
+      ```
+
+      ### FASE 2: Comparar con reglas
+
+      Para cada categoría en rules/:
+
+      **Python Rules (rules/python/):**
+      | Categoría | Archivo Rules | ¿Cubierto en BASE_RULES? |
+      |-----------|---------------|--------------------------|
+      | Formatting | 01-formatting-style.md | [ ] |
+      | Type Hints | 02-type-hints.md | [ ] |
+      | SOLID | 03-solid-principles.md | [ ] |
+      | Design Patterns | 04-design-patterns.md | [ ] |
+      | Architecture | 05-architecture.md | [ ] |
+      | Testing | 06-testing.md, 15-testing-comprehensive.md | [ ] |
+      | Async | 07-async-patterns.md, 13-async-patterns.md | [ ] |
+      | Config | 08-configuration.md, 14-configuration-management.md | [ ] |
+      | Logging | 09-logging-observability.md, 12-logging-observability.md | [ ] |
+      | Advanced Patterns | 10-advanced-patterns.md | [ ] |
+      | Enterprise | 11-enterprise-architecture.md | [ ] |
+      | Performance | 19-high-performance-python.md, 23-high-performance-python-optimization.md | [ ] |
+      | TDD | 21-tdd-python-testing.md | [ ] |
+      | Fluent Python | 17-fluent-python-idiomatic-code.md, 22-fluent-python-advanced-idioms.md | [ ] |
+      | Clean Architecture | 18-clean-architecture-structure.md | [ ] |
+      | Cosmic Python | 16-cosmic-python-architecture-patterns.md | [ ] |
+      | Clean Code Trading | 25-clean-code-python-trading.md | [ ] |
+      | Backtesting | 50-backtesting-framework.md | [ ] |
+
+      **Trading Rules (rules/trading/):**
+      | Categoría | Archivo Rules | ¿Cubierto? |
+      |-----------|---------------|------------|
+      | Ernest Chan | 01, 02, 47 | [ ] |
+      | Lopez de Prado | 03, 46 | [ ] |
+      | ML Trading | 04 | [ ] |
+      | Black Box | 05 | [ ] |
+      | Market Microstructure | 06, 07, 51 | [ ] |
+      | Python Algo Trading | 09 | [ ] |
+      | Systematic Trading | 10 | [ ] |
+      | Momentum | 11 | [ ] |
+      | Expected Returns | 12 | [ ] |
+      | Risk Management | 13 | [ ] |
+      | Trading Systems | 14 | [ ] |
+      | Statistical Learning | 15 | [ ] |
+      | Async Concurrency | 24 | [ ] |
+      | DDIA | 26 | [ ] |
+      | MLOps | 27 | [ ] |
+      | Security | 28 | [ ] |
+      | DMA | 29, 62 | [ ] |
+      | Factor Investing | 30 | [ ] |
+      | Currency Trading | 31 | [ ] |
+      | Time Series | 32 | [ ] |
+      | Asset Management | 33 | [ ] |
+      | Shareholder Yield | 34 | [ ] |
+      | HFT | 35 | [ ] |
+      | Price Action | 36 | [ ] |
+      | Intermarket | 37 | [ ] |
+      | AMM | 38, 39 | [ ] |
+      | Active Portfolio | 40 | [ ] |
+      | Optimization | 41 | [ ] |
+      | Kissell | 42 | [ ] |
+      | Papers (various) | 43-63 | [ ] |
+      | Realistic Retail | 64 | [ ] |
+
+      ### FASE 3: Identificar gaps críticos
+
+      Generar lista de gaps:
+
+      ```json
+      {
+        "missing_in_base_rules": [
+          {
+            "rule_file": "16-cosmic-python-architecture-patterns.md",
+            "reason": "Cosmic Python patterns not explicitly covered",
+            "priority": "P1"
+          }
+        ],
+        "missing_architecture_requirements": [
+          {
+            "requirement": "File System Structure",
+            "description": "No explicit requirements for directory organization",
+            "priority": "P0"
+          },
+          {
+            "requirement": "Module Boundaries",
+            "description": "No explicit rules for module dependency direction",
+            "priority": "P0"
+          },
+          {
+            "requirement": "Layer Interaction Rules",
+            "description": "No explicit rules for how layers communicate",
+            "priority": "P0"
+          }
+        ],
+        "missing_in_trading_rules": [...]
+      }
+      ```
+
+      Emitir "arch_audit.gaps_identified"
+
+  # ==========================================================================
+  # HAT 4: Architecture Requirements Writer - Crea requirements de arquitectura
+  # ==========================================================================
+  arch_requirements_writer:
+    name: "Architecture Requirements Writer"
+    description: "Genera requirements.md a nivel de arquitectura y big picture"
+    hat_template: ".ralph/ralph_templates/hats/implementer_hat.yml"
+    triggers:
+      - "arch_audit.gaps_identified"
+    publishes:
+      - "arch_audit.requirements_written"
+      - "arch_audit.blocked"
+    default_publishes: "arch_audit.requirements_written"
+
+    instructions: |
+      ## ARCHITECTURE REQUIREMENTS WRITER
+
+      {{shared_instructions}}
+
+      ### OBJETIVO
+      Crear documentos de requirements a nivel de BIG PICTURE
+
+      ### FASE 1: Crear ARCHITECTURE_REQUIREMENTS.md
+
+      Este documento debe cubrir:
+
+      ```markdown
+      # ARCHITECTURE_REQUIREMENTS.md - AlgoTrading
+
+      ## 1. ESTRUCTURA DE DIRECTORIOS
+
+      ### 1.1 Capas Arquitectónicas
+
+      | Capa | Directorio | Responsabilidad | Dependencias |
+      |------|------------|-----------------|--------------|
+      | Domain | app/domain/ | Entidades de negocio, reglas | Ninguna |
+      | Application | app/services/ | Casos de uso, orquestación | Domain |
+      | Infrastructure | app/infrastructure/ | DB, APIs externas | Domain, Application |
+      | Presentation | app/api/ | REST API, CLI | Application |
+
+      ### 1.2 Reglas de Dependencia
+
+      - **ARCH-DEP-001:** Domain NO puede importar de ninguna otra capa
+      - **ARCH-DEP-002:** Services importa Domain, NO Infrastructure
+      - **ARCH-DEP-003:** Infrastructure implementa interfaces de Domain
+      - **ARCH-DEP-004:** Presentation solo usa Application layer
+
+      ### 1.3 Estructura de Módulos
+
+      ```
+      app/
+      ├── core/               # Configuración, utils compartidos
+      │   ├── config/
+      │   ├── protocols/      # Interfaces (Protocol)
+      │   └── utils/
+      ├── domain/             # CAPA CORE - Sin dependencias externas
+      │   ├── entities/       # Entidades de negocio
+      │   ├── value_objects/  # Objetos inmutables
+      │   ├── services/       # Servicios de dominio
+      │   ├── strategies/     # Estrategias de trading
+      │   └── events/         # Eventos de dominio
+      ├── services/           # CAPA APPLICATION - Casos de uso
+      │   ├── compliance/
+      │   ├── execution/
+      │   ├── position_management/
+      │   └── reconciliation/
+      ├── infrastructure/     # CAPA INFRASTRUCTURE - Adaptadores
+      │   ├── database/
+      │   ├── brokers/
+      │   └── external_apis/
+      └── api/                # CAPA PRESENTATION - Interfaces
+          ├── routes/
+          └── schemas/
+      ```
+
+      ## 2. REGLAS DE ARCHIVOS
+
+      ### 2.1 Tamaño de Archivos
+
+      - **ARCH-FILE-001:** Máximo 300 líneas por archivo
+      - **ARCH-FILE-002:** Máximo 50 líneas por función
+      - **ARCH-FILE-003:** Máximo 7 parámetros por función
+
+      ### 2.2 Nomenclatura
+
+      - **ARCH-NAM-001:** Archivos: snake_case.py
+      - **ARCH-NAM-002:** Clases: PascalCase
+      - **ARCH-NAM-003:** Funciones: snake_case
+      - **ARCH-NAM-004:** Constantes: UPPER_SNAKE_CASE
+      - **ARCH-NAM-005:** Variables privadas: _leading_underscore
+
+      ### 2.3 Organización de Imports
+
+      ```python
+      # 1. Standard library
+      from typing import Protocol
+
+      # 2. Third-party
+      import pandas as pd
+
+      # 3. Local imports (en orden de profundidad)
+      from app.core.config import Settings
+      from app.domain.entities import Trade
+      from app.services.execution import ExecutionService
+      ```
+
+      ## 3. REGLAS DE MÓDULOS
+
+      ### 3.1 __init__.py
+
+      - **ARCH-MOD-001:** Cada paquete debe tener __init__.py
+      - **ARCH-MOD-002:** __init__.py exporta API pública
+      - **ARCH-MOD-003:** No lógica de negocio en __init__.py
+
+      ### 3.2 Circular Dependencies
+
+      - **ARCH-MOD-004:** PROHIBIDAS las importaciones cíclicas
+      - **ARCH-MOD-005:** Usar inyección de dependencias para evitar ciclos
+      - **ARCH-MOD-006:** Mover código común a módulo separado si hay conflicto
+
+      ## 4. REGLAS DE TESTING
+
+      ### 4.1 Estructura de Tests
+
+      ```
+      tests/
+      ├── unit/               # Tests unitarios (sin I/O)
+      │   ├── domain/
+      │   └── services/
+      ├── integration/        # Tests de integración
+      │   ├── database/
+      │   └── brokers/
+      └── e2e/               # Tests end-to-end
+      ```
+
+      ### 4.2 Reglas
+
+      - **ARCH-TST-001:** Unit tests NO usan mocks de DB
+      - **ARCH-TST-002:** Integration tests SÍ usan mocks de servicios externos
+      - **ARCH-TST-003:** Coverage mínimo 80%
+
+      ## 5. REGLAS DE CONFIGURACIÓN
+
+      ### 5.1 Estructura
+
+      ```
+      config/
+      ├── default.yaml       # Configuración base
+      ├── development.yaml   # Override para dev
+      ├── production.yaml    # Override para prod
+      └── testing.yaml       # Override para tests
+      ```
+
+      ### 5.2 Reglas
+
+      - **ARCH-CFG-001:** NO secrets en archivos de config
+      - **ARCH-CFG-002:** Usar variables de entorno para secrets
+      - **ARCH-CFG-003:** Validar config al arrancar
+
+      ## 6. CHECKLIST DE AUDITORÍA
+
+      Para cada nueva feature, verificar:
+
+      - [ ] ¿El archivo está en la capa correcta?
+      - [ ] ¿Las dependencias apuntan hacia adentro?
+      - [ ] ¿El archivo < 300 líneas?
+      - [ ] ¿Funciones < 50 líneas?
+      - [ ] ¿No hay imports cíclicos?
+      - [ ] ¿Tests en directorio correcto?
+      - [ ] ¿Config en lugar correcto?
+      ```
+
+      ### FASE 2: Crear FILE_SYSTEM_REQUIREMENTS.md
+
+      ```markdown
+      # FILE_SYSTEM_REQUIREMENTS.md - AlgoTrading
+
+      ## 1. ORGANIZACIÓN DE ARCHIVOS
+
+      ### 1.1 Por Capa Arquitectónica
+
+      | Directorio | Contenido | Ejemplo |
+      |------------|-----------|---------|
+      | app/domain/ | Entidades, value objects, servicios de dominio | Trade, Position |
+      | app/services/ | Casos de uso, orquestación | ExecutionService |
+      | app/infrastructure/ | DB, APIs, brokers | AlpacaBroker |
+      | app/api/ | Rutas, schemas, middleware | routes/trading.py |
+
+      ### 1.2 Por Feature (alternativa)
+
+      Para features muy cohesivas:
+
+      ```
+      app/features/trading/
+      ├── domain/
+      │   └── trade.py
+      ├── services/
+      │   └── trade_service.py
+      ├── infrastructure/
+      │   └── trade_repository.py
+      └── api/
+          └── trade_routes.py
+      ```
+
+      ## 2. CONVENCIONES DE NOMBRES
+
+      ### 2.1 Archivos
+
+      | Tipo | Patrón | Ejemplo |
+      |------|--------|---------|
+      | Entity | entity_name.py | trade.py |
+      | Service | entity_service.py | trade_service.py |
+      | Repository | entity_repository.py | trade_repository.py |
+      | Test | test_entity_name.py | test_trade.py |
+      | Protocol | entity_protocol.py | broker_protocol.py |
+
+      ### 2.2 Directorios
+
+      | Tipo | Patrón | Ejemplo |
+      |------|--------|---------|
+      | Feature | feature_name/ | position_management/ |
+      | Layer | layer_name/ | domain/, services/ |
+      | Test | tests/layer/ | tests/unit/domain/ |
+
+      ## 3. ARCHIVOS ESPECIALES
+
+      ### 3.1 __init__.py
+
+      ```python
+      # __init__.py expone API pública del módulo
+      from .trade import Trade
+      from .position import Position
+
+      __all__ = ["Trade", "Position"]
+      ```
+
+      ### 3.2 protocol.py (por módulo)
+
+      ```python
+      # protocol.py define interfaces del módulo
+      from typing import Protocol
+
+      class TradeRepositoryProtocol(Protocol):
+          def save(self, trade: Trade) -> None: ...
+          def find_by_id(self, id: str) -> Trade | None: ...
+      ```
+
+      ## 4. ESTRUCTURA DE BACKUPS Y LOGS
+
+      ```
+      backups/
+      ├── database/
+      └── configs/
+
+      logs/
+      ├── trading/
+      ├── audit/
+      └── errors/
+      ```
+
+      ## 5. ARCHIVOS TEMPORALES Y CACHE
+
+      - **FS-TMP-001:** .tmp/ para archivos temporales
+      - **FS-TMP-002:** .cache/ para cache de datos
+      - **FS-TMP-003:** NO commitear estos directorios
+      ```
+
+      ### FASE 3: Actualizar BASE_RULES.md
+
+      Añadir sección al final de BASE_RULES.md:
+
+      ```markdown
+      ## 15. ARCHITECTURE & FILE SYSTEM REQUIREMENTS
+
+      See `ARCHITECTURE_REQUIREMENTS.md` and `FILE_SYSTEM_REQUIREMENTS.md` for complete documentation.
+
+      | Rule ID | Rule | Requirement | Priority |
+      |---------|------|------------|----------|
+      | ARCH-DEP-001 | Domain isolation | Domain layer has no external dependencies | **P0** |
+      | ARCH-DEP-002 | Dependency direction | Dependencies point toward domain | **P0** |
+      | ARCH-FILE-001 | File size limit | Maximum 300 lines per file | P1 |
+      | ARCH-FILE-002 | Function size limit | Maximum 50 lines per function | P2 |
+      | ARCH-MOD-004 | No circular deps | PROHIBITED circular imports | **P0** |
+      | ARCH-NAM-001 | File naming | snake_case for files | P2 |
+      | ARCH-NAM-002 | Class naming | PascalCase for classes | P2 |
+      ```
+
+      Emitir "arch_audit.requirements_written"
+
+  # ==========================================================================
+  # HAT 5: Validator - Valida requirements creados
+  # ==========================================================================
+  validator:
+    name: "Architecture Requirements Validator"
+    description: "Valida que todos los requirements están completos"
+    hat_template: ".ralph/ralph_templates/hats/validation_hat.yml"
+    triggers:
+      - "arch_audit.requirements_written"
+    publishes:
+      - "arch_audit.validation_complete"
+      - "arch_audit.blocked"
+    default_publishes: "arch_audit.validation_complete"
+
+    instructions: |
+      ## ARCHITECTURE REQUIREMENTS VALIDATOR
+
+      {{shared_instructions}}
+
+      ### OBJETIVO
+      Validar que todos los requirements de arquitectura están completos
+
+      ### FASE 1: Verificar archivos creados
+
+      ```bash
+      # Verificar que existen los archivos
+      ls -la .requirements/ARCHITECTURE_REQUIREMENTS.md
+      ls -la .requirements/FILE_SYSTEM_REQUIREMENTS.md
+      ls -la .requirements/BASE_RULES.md
+      ```
+
+      ### FASE 2: Verificar contenido
+
+      Cada archivo debe tener:
+
+      **ARCHITECTURE_REQUIREMENTS.md:**
+      - [ ] Sección de estructura de directorios
+      - [ ] Reglas de dependencia (ARCH-DEP-*)
+      - [ ] Reglas de archivos (ARCH-FILE-*)
+      - [ ] Reglas de módulos (ARCH-MOD-*)
+      - [ ] Reglas de testing (ARCH-TST-*)
+      - [ ] Reglas de configuración (ARCH-CFG-*)
+
+      **FILE_SYSTEM_REQUIREMENTS.md:**
+      - [ ] Organización por capa
+      - [ ] Convenciones de nombres
+      - [ ] Archivos especiales
+      - [ ] Estructura de backups/logs
+
+      **BASE_RULES.md (actualizado):**
+      - [ ] Nueva sección 15: Architecture & File System
+      - [ ] Referencia a ARCHITECTURE_REQUIREMENTS.md
+      - [ ] Referencia a FILE_SYSTEM_REQUIREMENTS.md
+
+      ### FASE 3: Verificar cobertura de reglas
+
+      ```bash
+      # Verificar que las reglas de rules/ están cubiertas
+      grep -c "ARCH-" .requirements/ARCHITECTURE_REQUIREMENTS.md
+      grep -c "FS-" .requirements/FILE_SYSTEM_REQUIREMENTS.md
+      ```
+
+      ### FASE 4: Generar reporte
+
+      Generar: `.ralph/outputs/ARCHITECTURE_REQUIREMENTS_AUDIT_REPORT.json`
+
+      ```json
+      {
+        "task": "architecture_requirements_audit",
+        "status": "COMPLETE",
+        "timestamp": "{{timestamp}}",
+        "files_created": [
+          "ARCHITECTURE_REQUIREMENTS.md",
+          "FILE_SYSTEM_REQUIREMENTS.md"
+        ],
+        "files_updated": [
+          "BASE_RULES.md"
+        ],
+        "coverage": {
+          "architecture_rules": 15,
+          "file_system_rules": 10,
+          "total_new_rules": 25
+        },
+        "gaps_resolved": [
+          {
+            "gap": "No architecture requirements",
+            "resolution": "Created ARCHITECTURE_REQUIREMENTS.md"
+          },
+          {
+            "gap": "No file system requirements",
+            "resolution": "Created FILE_SYSTEM_REQUIREMENTS.md"
+          }
+        ]
+      }
+      ```
+
+      Emitir "arch_audit.validation_complete" con status=COMPLETE
+
+  # ==========================================================================
+  # HAT 6: Base Rules Reviewer - Revisa BASE_RULES.md y CRITICAL_RULES.md
+  # ==========================================================================
+  base_rules_reviewer:
+    name: "Base Rules Reviewer"
+    description: "Revisa BASE_RULES.md y CRITICAL_RULES.md para cobertura completa"
+    hat_template: ".ralph/ralph_templates/hats/validation_hat.yml"
+    triggers:
+      - "arch_audit.validation_complete"
+    publishes:
+      - "arch_audit.base_rules_reviewed"
+      - "arch_audit.blocked"
+    default_publishes: "arch_audit.base_rules_reviewed"
+
+    instructions: |
+      ## BASE RULES REVIEWER - Cobertura Completa
+
+      {{shared_instructions}}
+
+      ### OBJETIVO
+      Revisar BASE_RULES.md y CRITICAL_RULES.md para asegurar que cubren TODOS los aspectos de la app
+
+      ### FASE 1: Leer archivos actuales
+
+      ```bash
+      # Leer BASE_RULES.md
+      cat .requirements/BASE_RULES.md
+
+      # Leer CRITICAL_RULES.md
+      cat .requirements/CRITICAL_RULES.md
+      ```
+
+      ### FASE 2: Verificar cobertura de aspectos de la app
+
+      **2.1 Domain Layer Coverage**
+      - [ ] Entities (Trade, Position, Signal, Order)
+      - [ ] Value Objects (Money, Price, Quantity)
+      - [ ] Domain Services (RiskCalculator, PositionSizer)
+      - [ ] Domain Events (OrderPlaced, TradeExecuted)
+      - [ ] Strategies (Momentum, MeanReversion, TrendFollowing)
+
+      **2.2 Application Layer Coverage**
+      - [ ] Use Cases (ExecuteTrade, ClosePosition, RunBacktest)
+      - [ ] Orchestration Services
+      - [ ] DTOs and Mappers
+
+      **2.3 Infrastructure Layer Coverage**
+      - [ ] Database adapters (PostgreSQL, SQLite)
+      - [ ] Broker adapters (Alpaca, Interactive Brokers)
+      - [ ] External APIs (market data, news)
+      - [ ] Cache layer (Redis)
+
+      **2.4 Presentation Layer Coverage**
+      - [ ] REST API endpoints
+      - [ ] CLI commands
+      - [ ] Dashboard UI
+      - [ ] WebSocket streams
+
+      **2.5 Cross-cutting Concerns**
+      - [ ] Logging (structured, JSON)
+      - [ ] Security (auth, secrets management)
+      - [ ] Error Handling (custom exceptions)
+      - [ ] Monitoring (metrics, health checks)
+      - [ ] Configuration (env vars, validation)
+
+      **2.6 Trading-Specific**
+      - [ ] Risk Management (position sizing, stop loss)
+      - [ ] Order Execution (market, limit, stop)
+      - [ ] Backtesting (walk-forward, out-of-sample)
+      - [ ] Data Feeds (OHLCV, ticks, order book)
+      - [ ] Position Management (tracking, P&L)
+      - [ ] Reconciliation (broker vs internal)
+
+      **2.7 Spain Tax Compliance**
+      - [ ] IRPF calculation (19/21/23%)
+      - [ ] Dividend treatment (UE vs non-UE)
+      - [ ] Modelo 720 reporting
+      - [ ] Loss carryforward
+
+      **2.8 Performance & SRE**
+      - [ ] Async patterns
+      - [ ] Caching strategies
+      - [ ] Rate limiting
+      - [ ] Circuit breakers
+
+      ### FASE 3: Identificar gaps en BASE_RULES.md
+
+      Para cada aspecto NO cubierto:
+
+      ```json
+      {
+        "aspect": "Position Management",
+        "current_coverage": "Partial - only risk rules",
+        "missing_rules": [
+          "POS-001: Position tracking",
+          "POS-002: P&L calculation",
+          "POS-003: Position limits"
+        ],
+        "priority": "P0"
+      }
+      ```
+
+      ### FASE 4: Actualizar BASE_RULES.md si hay gaps
+
+      Si se encuentran gaps, añadir nuevas secciones:
+
+      ```markdown
+      ## 16. POSITION MANAGEMENT REQUIREMENTS
+
+      | Rule ID | Rule | Requirement | Priority |
+      |---------|------|------------|----------|
+      | POS-001 | Position tracking | Track all open positions | **P0** |
+      | POS-002 | P&L calculation | Calculate realized/unrealized P&L | **P0** |
+      | POS-003 | Position limits | Enforce max positions per symbol | **P0** |
+      | POS-004 | Position sizing | Kelly criterion + 2% max | **P0** |
+
+      ## 17. DATA FEEDS REQUIREMENTS
+
+      | Rule ID | Rule | Requirement | Priority |
+      |---------|------|------------|----------|
+      | DATA-001 | Data validation | Validate all incoming market data | **P0** |
+      | DATA-002 | Timestamp handling | UTC timestamps, handle gaps | **P0** |
+      | DATA-003 | Symbol normalization | Normalize symbol formats | P1 |
+      | DATA-004 | Cache strategy | Cache frequently accessed data | P1 |
+
+      ## 18. SPAIN TAX REQUIREMENTS (ENHANCED)
+
+      | Rule ID | Rule | Requirement | Priority |
+      |---------|------|------------|----------|
+      | TAX-001 | IRPF brackets | 19% < €6k, 21% < €50k, 23% > €50k | **P0** |
+      | TAX-002 | Dividend treatment | UE: 0%, non-UE: 19% | **P0** |
+      | TAX-003 | Modelo 720 | Report > €50k foreign assets | **P0** |
+      | TAX-004 | Loss carryforward | Track losses for 4 years | **P0** |
+      | TAX-005 | FIFO matching | Use FIFO for cost basis | **P0** |
+      ```
+
+      ### FASE 5: Generar reporte
+
+      Generar: `.ralph/outputs/BASE_RULES_COVERAGE_REPORT.json`
+
+      ```json
+      {
+        "base_rules_review": {
+          "total_sections": 18,
+          "total_rules": 150,
+          "coverage_by_aspect": {
+            "domain_layer": 95,
+            "application_layer": 80,
+            "infrastructure_layer": 70,
+            "presentation_layer": 60,
+            "cross_cutting": 90,
+            "trading_specific": 85,
+            "spain_tax": 75,
+            "performance_sre": 80
+          },
+          "gaps_found": 3,
+          "gaps_resolved": 3,
+          "new_rules_added": 15
+        }
+      }
+      ```
+
+      Emitir "arch_audit.base_rules_reviewed" con coverage report
+
+  # ==========================================================================
+  # HAT 7: Final Reporter - Genera reporte final consolidado
+  # ==========================================================================
+  final_reporter:
+    name: "Final Reporter"
+    description: "Genera reporte final consolidado de toda la auditoría"
+    hat_template: ".ralph/ralph_templates/hats/validation_hat.yml"
+    triggers:
+      - "arch_audit.base_rules_reviewed"
+    publishes:
+      - "ARCHITECTURE_REQUIREMENTS_AUDIT_COMPLETE"
+      - "arch_audit.blocked"
+    default_publishes: "ARCHITECTURE_REQUIREMENTS_AUDIT_COMPLETE"
+
+    instructions: |
+      ## FINAL REPORTER - Consolidación
+
+      {{shared_instructions}}
+
+      ### OBJETIVO
+      Generar reporte final consolidado de toda la auditoría de arquitectura
+
+      ### FASE 1: Consolidar todos los outputs
+
+      Leer todos los archivos generados:
+      - `.ralph/outputs/RULES_INVENTORY.json`
+      - `.ralph/outputs/ARCHITECTURE_STRUCTURE_ANALYSIS.json`
+      - `.ralph/outputs/ARCHITECTURE_REQUIREMENTS_AUDIT_REPORT.json`
+      - `.ralph/outputs/BASE_RULES_COVERAGE_REPORT.json`
+
+      ### FASE 2: Generar reporte final
+
+      Crear: `.ralph/outputs/32_ARCHITECTURE_AUDIT_FINAL_REPORT.md`
+
+      ```markdown
+      # Architecture Requirements Audit - Final Report
+
+      **Date:** {{timestamp}}
+      **Task:** 32_architecture_requirements_audit
+      **Status:** COMPLETE
+
+      ## Executive Summary
+
+      - Total rules in rules/: {{total_rules}}
+      - Coverage in BASE_RULES.md: {{coverage}}%
+      - New requirements created: {{new_reqs}}
+      - Gaps resolved: {{gaps_resolved}}
+
+      ## Files Created
+
+      1. ARCHITECTURE_REQUIREMENTS.md - Layer architecture rules
+      2. FILE_SYSTEM_REQUIREMENTS.md - File organization rules
+      3. Updated BASE_RULES.md - Added sections 15-18
+
+      ## Coverage by Aspect
+
+      | Aspect | Coverage | Status |
+      |--------|----------|--------|
+      | Domain Layer | 95% | ✅ |
+      | Application Layer | 80% | ✅ |
+      | Infrastructure Layer | 70% | ⚠️ |
+      | Presentation Layer | 60% | ⚠️ |
+      | Cross-cutting | 90% | ✅ |
+      | Trading Specific | 85% | ✅ |
+      | Spain Tax | 75% | ⚠️ |
+      | Performance/SRE | 80% | ✅ |
+
+      ## Recommendations
+
+      1. Add more infrastructure layer requirements
+      2. Enhance presentation layer coverage
+      3. Complete Spain tax requirements
+
+      ## Next Steps
+
+      - Run task 25_requirements_generator to create file-level requirements
+      - Run task 31_production_audit to validate implementation
+      ```
+
+      ### FASE 3: Emitir completion promise
+
+      Emitir "arch_audit.final_report_generated"
+
+  # ==========================================================================
+  # HAT 8: File-Level Requirements Updater - Actualiza requirements de cada archivo
+  # ==========================================================================
+  file_requirements_updater:
+    name: "File-Level Requirements Updater"
+    description: "Actualiza los requirements.md de cada archivo con nuevas reglas de arquitectura"
+    hat_template: ".ralph/ralph_templates/hats/implementer_hat.yml"
+    triggers:
+      - "arch_audit.final_report_generated"
+    publishes:
+      - "ARCHITECTURE_REQUIREMENTS_AUDIT_COMPLETE"
+      - "arch_audit.blocked"
+    default_publishes: "ARCHITECTURE_REQUIREMENTS_AUDIT_COMPLETE"
+
+    instructions: |
+      ## FILE-LEVEL REQUIREMENTS UPDATER
+
+      {{shared_instructions}}
+      {{critical_rules}}
+
+      ### OBJETIVO
+      Actualizar los requirements.md de CADA archivo individual para incluir:
+      1. Referencias a las nuevas reglas de arquitectura (ARCH-*)
+      2. Referencias a las reglas de file system (FS-*)
+      3. Reglas específicas según la capa (domain, services, infrastructure, api)
+      4. Verificar consistencia con BASE_RULES.md y ARCHITECTURE_REQUIREMENTS.md
+
+      ### FASE 1: Descubrir archivos de requirements existentes
+
+      ```bash
+      # Listar todos los requirements.md existentes
+      find .requirements/app -name "*.requirements.md" -type f | sort
+
+      # Contar total
+      find .requirements/app -name "*.requirements.md" -type f | wc -l
+      ```
+
+      ### FASE 2: Para cada archivo, determinar su capa
+
+      ```bash
+      # Mapear archivo a capa
+      file="app/services/compliance/engine.py"
+
+      if [[ "$file" == *"app/domain/"* ]]; then
+        layer="domain"
+      elif [[ "$file" == *"app/services/"* ]]; then
+        layer="services"
+      elif [[ "$file" == *"app/infrastructure/"* ]]; then
+        layer="infrastructure"
+      elif [[ "$file" == *"app/api/"* ]]; then
+        layer="api"
+      elif [[ "$file" == *"app/core/"* ]]; then
+        layer="core"
+      fi
+      ```
+
+      ### FASE 3: Template de Requirements por Capa
+
+      #### Para archivos en app/domain/ (DOMAIN LAYER)
+
+      Añadir sección al requirements.md:
+
+      ```markdown
+      ## Architecture Rules (MANDATORY for this layer)
+
+      ### Layer Purity (ARCH-DEP-001)
+      - [ ] NO imports from app/services/
+      - [ ] NO imports from app/infrastructure/
+      - [ ] NO imports from app/api/
+      - [ ] NO framework imports (FastAPI, SQLAlchemy, httpx)
+
+      ### Allowed Dependencies
+      - [ ] Standard library only (typing, dataclasses, enum, datetime)
+      - [ ] app/core/protocols/ (interfaces)
+      - [ ] app/domain/ (other domain entities/value_objects)
+      ```
+
+      #### Para archivos en app/services/ (APPLICATION LAYER)
+
+      ```markdown
+      ## Architecture Rules (MANDATORY for this layer)
+
+      ### Dependency Direction (ARCH-DEP-002)
+      - [ ] Imports from app/domain/ OK
+      - [ ] Imports from app/core/protocols/ OK
+      - [ ] NO direct imports from app/infrastructure/
+      - [ ] Uses Protocol interfaces for infrastructure
+
+      ### Dependency Injection
+      - [ ] All dependencies injected via constructor
+      - [ ] NO direct instantiation of infrastructure classes
+      ```
+
+      #### Para archivos en app/infrastructure/ (INFRASTRUCTURE LAYER)
+
+      ```markdown
+      ## Architecture Rules (MANDATORY for this layer)
+
+      ### Interface Implementation (ARCH-DEP-003)
+      - [ ] Implements Protocol from app/core/protocols/
+      - [ ] Imports from app/domain/ OK (for entities)
+      - [ ] Imports from app/services/ OK (for interfaces)
+      - [ ] External SDKs OK (alpaca-trade-api, etc.)
+
+      ### Adapter Pattern
+      - [ ] Wraps external library/API
+      - [ ] Transforms external data to domain entities
+      - [ ] Handles external errors gracefully
+      ```
+
+      #### Para archivos en app/api/ (PRESENTATION LAYER)
+
+      ```markdown
+      ## Architecture Rules (MANDATORY for this layer)
+
+      ### Layer Boundaries (ARCH-DEP-004)
+      - [ ] Uses app/services/ for business logic
+      - [ ] NO direct access to app/infrastructure/
+      - [ ] NO direct access to app/domain/
+      - [ ] Uses DTOs/Schemas for input/output
+      ```
+
+      ### FASE 4: Proceso de Actualización
+
+      Para cada archivo `.requirements/app/**/*.requirements.md`:
+
+      ```bash
+      # 1. Leer requirements existente
+      cat .requirements/app/services/compliance/engine.requirements.md
+
+      # 2. Leer archivo fuente
+      cat app/services/compliance/engine.py
+
+      # 3. Determinar capa
+      # 4. Añadir sección de Architecture Rules según capa
+      # 5. Añadir referencias a ARCH-*, FS-*
+      # 6. Verificar consistencia con BASE_RULES.md
+      # 7. Guardar archivo actualizado
+      ```
+
+      ### FASE 5: Verificación de Consistencia
+
+      ```bash
+      # Verificar que cada requirements.md referencia BASE_RULES.md
+      grep -l "BASE_RULES.md" .requirements/app/**/*.requirements.md | wc -l
+
+      # Verificar que cada requirements.md tiene sección de Architecture Rules
+      grep -l "Architecture Rules" .requirements/app/**/*.requirements.md | wc -l
+      ```
+
+      ### OUTPUT
+
+      Generar: `.ralph/outputs/FILE_REQUIREMENTS_UPDATE_REPORT.json`
+
+      ```json
+      {
+        "timestamp": "{{timestamp}}",
+        "total_files": 350,
+        "files_updated": 350,
+        "files_skipped": 0,
+        "updates_by_layer": {
+          "domain": 80,
+          "services": 120,
+          "infrastructure": 60,
+          "api": 40,
+          "core": 50
+        },
+        "new_rules_added": {
+          "ARCH-DEP-*": 350,
+          "ARCH-NAM-*": 350,
+          "FS-*": 350
+        },
+        "status": "COMPLETE"
+      }
+      ```
+
+      Emitir "ARCHITECTURE_REQUIREMENTS_AUDIT_COMPLETE"
+
+memories:
+  enabled: true
+  inject: auto
+  budget: 5000
+
+checkpoint:
+  file: ".ralph/checkpoints/32_architecture_requirements_audit_checkpoint.json"

@@ -1,210 +1,31 @@
 {
   "version": 8,
   "created": "2026-03-12T04:26:53+00:00",
-  "updated": "2026-03-13T06:13:03+00:00",
-  "queue_order": [],
+  "updated": "2026-03-14T09:22:10+00:00",
+  "queue_order": [
+    "subjective::abstraction_fitness",
+    "subjective::ai_generated_debt",
+    "subjective::api_surface_coherence",
+    "subjective::authorization_consistency",
+    "subjective::contract_coherence",
+    "subjective::convention_outlier",
+    "subjective::cross_module_architecture",
+    "subjective::dependency_health",
+    "subjective::design_coherence",
+    "subjective::error_consistency",
+    "subjective::high_level_elegance",
+    "subjective::incomplete_migration",
+    "subjective::initialization_coupling",
+    "subjective::logic_clarity",
+    "subjective::low_level_elegance",
+    "subjective::mid_level_elegance",
+    "subjective::naming_quality",
+    "subjective::package_organization",
+    "subjective::test_strategy",
+    "subjective::type_safety"
+  ],
   "deferred": [],
   "skipped": {
-    "subjective::abstraction_fitness": {
-      "issue_id": "subjective::abstraction_fitness",
-      "kind": "temporary",
-      "reason": "Subjective review import failed due to missing batch files. Proceeding with mechanical fixes (security, unused imports, code smells) in production code first. Will rescan and re-review subjective dimensions after mechanical cleanup.",
-      "note": null,
-      "attestation": "I have actually reflected on the importance of subjective review and am not deferring this for lazy reasons. The import failed due to only 4 of 20 batch result files being created. The agents completed their analysis successfully, but the output files weren't all created properly. Rather than block progress, I'm proceeding with the 5068 mechanical issues that were successfully identified, which include 459 security issues, 822 unused imports, and 1124 code smells. These are concrete, actionable fixes that will significantly improve code quality while I troubleshoot the subjective review import process.",
-      "created_at": "2026-03-12T06:36:44+00:00",
-      "review_after": null,
-      "skipped_at_scan": 1
-    },
-    "subjective::ai_generated_debt": {
-      "issue_id": "subjective::ai_generated_debt",
-      "kind": "temporary",
-      "reason": "Subjective review import failed due to missing batch files. Proceeding with mechanical fixes (security, unused imports, code smells) in production code first. Will rescan and re-review subjective dimensions after mechanical cleanup.",
-      "note": null,
-      "attestation": "I have actually reflected on the importance of subjective review and am not deferring this for lazy reasons. The import failed due to only 4 of 20 batch result files being created. The agents completed their analysis successfully, but the output files weren't all created properly. Rather than block progress, I'm proceeding with the 5068 mechanical issues that were successfully identified, which include 459 security issues, 822 unused imports, and 1124 code smells. These are concrete, actionable fixes that will significantly improve code quality while I troubleshoot the subjective review import process.",
-      "created_at": "2026-03-12T06:36:44+00:00",
-      "review_after": null,
-      "skipped_at_scan": 1
-    },
-    "subjective::api_surface_coherence": {
-      "issue_id": "subjective::api_surface_coherence",
-      "kind": "temporary",
-      "reason": "Subjective review import failed due to missing batch files. Proceeding with mechanical fixes (security, unused imports, code smells) in production code first. Will rescan and re-review subjective dimensions after mechanical cleanup.",
-      "note": null,
-      "attestation": "I have actually reflected on the importance of subjective review and am not deferring this for lazy reasons. The import failed due to only 4 of 20 batch result files being created. The agents completed their analysis successfully, but the output files weren't all created properly. Rather than block progress, I'm proceeding with the 5068 mechanical issues that were successfully identified, which include 459 security issues, 822 unused imports, and 1124 code smells. These are concrete, actionable fixes that will significantly improve code quality while I troubleshoot the subjective review import process.",
-      "created_at": "2026-03-12T06:36:44+00:00",
-      "review_after": null,
-      "skipped_at_scan": 1
-    },
-    "subjective::authorization_consistency": {
-      "issue_id": "subjective::authorization_consistency",
-      "kind": "temporary",
-      "reason": "Subjective review import failed due to missing batch files. Proceeding with mechanical fixes (security, unused imports, code smells) in production code first. Will rescan and re-review subjective dimensions after mechanical cleanup.",
-      "note": null,
-      "attestation": "I have actually reflected on the importance of subjective review and am not deferring this for lazy reasons. The import failed due to only 4 of 20 batch result files being created. The agents completed their analysis successfully, but the output files weren't all created properly. Rather than block progress, I'm proceeding with the 5068 mechanical issues that were successfully identified, which include 459 security issues, 822 unused imports, and 1124 code smells. These are concrete, actionable fixes that will significantly improve code quality while I troubleshoot the subjective review import process.",
-      "created_at": "2026-03-12T06:36:44+00:00",
-      "review_after": null,
-      "skipped_at_scan": 1
-    },
-    "subjective::contract_coherence": {
-      "issue_id": "subjective::contract_coherence",
-      "kind": "temporary",
-      "reason": "Subjective review import failed due to missing batch files. Proceeding with mechanical fixes (security, unused imports, code smells) in production code first. Will rescan and re-review subjective dimensions after mechanical cleanup.",
-      "note": null,
-      "attestation": "I have actually reflected on the importance of subjective review and am not deferring this for lazy reasons. The import failed due to only 4 of 20 batch result files being created. The agents completed their analysis successfully, but the output files weren't all created properly. Rather than block progress, I'm proceeding with the 5068 mechanical issues that were successfully identified, which include 459 security issues, 822 unused imports, and 1124 code smells. These are concrete, actionable fixes that will significantly improve code quality while I troubleshoot the subjective review import process.",
-      "created_at": "2026-03-12T06:36:44+00:00",
-      "review_after": null,
-      "skipped_at_scan": 1
-    },
-    "subjective::convention_outlier": {
-      "issue_id": "subjective::convention_outlier",
-      "kind": "temporary",
-      "reason": "Subjective review import failed due to missing batch files. Proceeding with mechanical fixes (security, unused imports, code smells) in production code first. Will rescan and re-review subjective dimensions after mechanical cleanup.",
-      "note": null,
-      "attestation": "I have actually reflected on the importance of subjective review and am not deferring this for lazy reasons. The import failed due to only 4 of 20 batch result files being created. The agents completed their analysis successfully, but the output files weren't all created properly. Rather than block progress, I'm proceeding with the 5068 mechanical issues that were successfully identified, which include 459 security issues, 822 unused imports, and 1124 code smells. These are concrete, actionable fixes that will significantly improve code quality while I troubleshoot the subjective review import process.",
-      "created_at": "2026-03-12T06:36:44+00:00",
-      "review_after": null,
-      "skipped_at_scan": 1
-    },
-    "subjective::cross_module_architecture": {
-      "issue_id": "subjective::cross_module_architecture",
-      "kind": "temporary",
-      "reason": "Subjective review import failed due to missing batch files. Proceeding with mechanical fixes (security, unused imports, code smells) in production code first. Will rescan and re-review subjective dimensions after mechanical cleanup.",
-      "note": null,
-      "attestation": "I have actually reflected on the importance of subjective review and am not deferring this for lazy reasons. The import failed due to only 4 of 20 batch result files being created. The agents completed their analysis successfully, but the output files weren't all created properly. Rather than block progress, I'm proceeding with the 5068 mechanical issues that were successfully identified, which include 459 security issues, 822 unused imports, and 1124 code smells. These are concrete, actionable fixes that will significantly improve code quality while I troubleshoot the subjective review import process.",
-      "created_at": "2026-03-12T06:36:44+00:00",
-      "review_after": null,
-      "skipped_at_scan": 1
-    },
-    "subjective::dependency_health": {
-      "issue_id": "subjective::dependency_health",
-      "kind": "temporary",
-      "reason": "Subjective review import failed due to missing batch files. Proceeding with mechanical fixes (security, unused imports, code smells) in production code first. Will rescan and re-review subjective dimensions after mechanical cleanup.",
-      "note": null,
-      "attestation": "I have actually reflected on the importance of subjective review and am not deferring this for lazy reasons. The import failed due to only 4 of 20 batch result files being created. The agents completed their analysis successfully, but the output files weren't all created properly. Rather than block progress, I'm proceeding with the 5068 mechanical issues that were successfully identified, which include 459 security issues, 822 unused imports, and 1124 code smells. These are concrete, actionable fixes that will significantly improve code quality while I troubleshoot the subjective review import process.",
-      "created_at": "2026-03-12T06:36:44+00:00",
-      "review_after": null,
-      "skipped_at_scan": 1
-    },
-    "subjective::design_coherence": {
-      "issue_id": "subjective::design_coherence",
-      "kind": "temporary",
-      "reason": "Subjective review import failed due to missing batch files. Proceeding with mechanical fixes (security, unused imports, code smells) in production code first. Will rescan and re-review subjective dimensions after mechanical cleanup.",
-      "note": null,
-      "attestation": "I have actually reflected on the importance of subjective review and am not deferring this for lazy reasons. The import failed due to only 4 of 20 batch result files being created. The agents completed their analysis successfully, but the output files weren't all created properly. Rather than block progress, I'm proceeding with the 5068 mechanical issues that were successfully identified, which include 459 security issues, 822 unused imports, and 1124 code smells. These are concrete, actionable fixes that will significantly improve code quality while I troubleshoot the subjective review import process.",
-      "created_at": "2026-03-12T06:36:44+00:00",
-      "review_after": null,
-      "skipped_at_scan": 1
-    },
-    "subjective::error_consistency": {
-      "issue_id": "subjective::error_consistency",
-      "kind": "temporary",
-      "reason": "Subjective review import failed due to missing batch files. Proceeding with mechanical fixes (security, unused imports, code smells) in production code first. Will rescan and re-review subjective dimensions after mechanical cleanup.",
-      "note": null,
-      "attestation": "I have actually reflected on the importance of subjective review and am not deferring this for lazy reasons. The import failed due to only 4 of 20 batch result files being created. The agents completed their analysis successfully, but the output files weren't all created properly. Rather than block progress, I'm proceeding with the 5068 mechanical issues that were successfully identified, which include 459 security issues, 822 unused imports, and 1124 code smells. These are concrete, actionable fixes that will significantly improve code quality while I troubleshoot the subjective review import process.",
-      "created_at": "2026-03-12T06:36:44+00:00",
-      "review_after": null,
-      "skipped_at_scan": 1
-    },
-    "subjective::high_level_elegance": {
-      "issue_id": "subjective::high_level_elegance",
-      "kind": "temporary",
-      "reason": "Subjective review import failed due to missing batch files. Proceeding with mechanical fixes (security, unused imports, code smells) in production code first. Will rescan and re-review subjective dimensions after mechanical cleanup.",
-      "note": null,
-      "attestation": "I have actually reflected on the importance of subjective review and am not deferring this for lazy reasons. The import failed due to only 4 of 20 batch result files being created. The agents completed their analysis successfully, but the output files weren't all created properly. Rather than block progress, I'm proceeding with the 5068 mechanical issues that were successfully identified, which include 459 security issues, 822 unused imports, and 1124 code smells. These are concrete, actionable fixes that will significantly improve code quality while I troubleshoot the subjective review import process.",
-      "created_at": "2026-03-12T06:36:44+00:00",
-      "review_after": null,
-      "skipped_at_scan": 1
-    },
-    "subjective::incomplete_migration": {
-      "issue_id": "subjective::incomplete_migration",
-      "kind": "temporary",
-      "reason": "Subjective review import failed due to missing batch files. Proceeding with mechanical fixes (security, unused imports, code smells) in production code first. Will rescan and re-review subjective dimensions after mechanical cleanup.",
-      "note": null,
-      "attestation": "I have actually reflected on the importance of subjective review and am not deferring this for lazy reasons. The import failed due to only 4 of 20 batch result files being created. The agents completed their analysis successfully, but the output files weren't all created properly. Rather than block progress, I'm proceeding with the 5068 mechanical issues that were successfully identified, which include 459 security issues, 822 unused imports, and 1124 code smells. These are concrete, actionable fixes that will significantly improve code quality while I troubleshoot the subjective review import process.",
-      "created_at": "2026-03-12T06:36:44+00:00",
-      "review_after": null,
-      "skipped_at_scan": 1
-    },
-    "subjective::initialization_coupling": {
-      "issue_id": "subjective::initialization_coupling",
-      "kind": "temporary",
-      "reason": "Subjective review import failed due to missing batch files. Proceeding with mechanical fixes (security, unused imports, code smells) in production code first. Will rescan and re-review subjective dimensions after mechanical cleanup.",
-      "note": null,
-      "attestation": "I have actually reflected on the importance of subjective review and am not deferring this for lazy reasons. The import failed due to only 4 of 20 batch result files being created. The agents completed their analysis successfully, but the output files weren't all created properly. Rather than block progress, I'm proceeding with the 5068 mechanical issues that were successfully identified, which include 459 security issues, 822 unused imports, and 1124 code smells. These are concrete, actionable fixes that will significantly improve code quality while I troubleshoot the subjective review import process.",
-      "created_at": "2026-03-12T06:36:44+00:00",
-      "review_after": null,
-      "skipped_at_scan": 1
-    },
-    "subjective::logic_clarity": {
-      "issue_id": "subjective::logic_clarity",
-      "kind": "temporary",
-      "reason": "Subjective review import failed due to missing batch files. Proceeding with mechanical fixes (security, unused imports, code smells) in production code first. Will rescan and re-review subjective dimensions after mechanical cleanup.",
-      "note": null,
-      "attestation": "I have actually reflected on the importance of subjective review and am not deferring this for lazy reasons. The import failed due to only 4 of 20 batch result files being created. The agents completed their analysis successfully, but the output files weren't all created properly. Rather than block progress, I'm proceeding with the 5068 mechanical issues that were successfully identified, which include 459 security issues, 822 unused imports, and 1124 code smells. These are concrete, actionable fixes that will significantly improve code quality while I troubleshoot the subjective review import process.",
-      "created_at": "2026-03-12T06:36:44+00:00",
-      "review_after": null,
-      "skipped_at_scan": 1
-    },
-    "subjective::low_level_elegance": {
-      "issue_id": "subjective::low_level_elegance",
-      "kind": "temporary",
-      "reason": "Subjective review import failed due to missing batch files. Proceeding with mechanical fixes (security, unused imports, code smells) in production code first. Will rescan and re-review subjective dimensions after mechanical cleanup.",
-      "note": null,
-      "attestation": "I have actually reflected on the importance of subjective review and am not deferring this for lazy reasons. The import failed due to only 4 of 20 batch result files being created. The agents completed their analysis successfully, but the output files weren't all created properly. Rather than block progress, I'm proceeding with the 5068 mechanical issues that were successfully identified, which include 459 security issues, 822 unused imports, and 1124 code smells. These are concrete, actionable fixes that will significantly improve code quality while I troubleshoot the subjective review import process.",
-      "created_at": "2026-03-12T06:36:44+00:00",
-      "review_after": null,
-      "skipped_at_scan": 1
-    },
-    "subjective::mid_level_elegance": {
-      "issue_id": "subjective::mid_level_elegance",
-      "kind": "temporary",
-      "reason": "Subjective review import failed due to missing batch files. Proceeding with mechanical fixes (security, unused imports, code smells) in production code first. Will rescan and re-review subjective dimensions after mechanical cleanup.",
-      "note": null,
-      "attestation": "I have actually reflected on the importance of subjective review and am not deferring this for lazy reasons. The import failed due to only 4 of 20 batch result files being created. The agents completed their analysis successfully, but the output files weren't all created properly. Rather than block progress, I'm proceeding with the 5068 mechanical issues that were successfully identified, which include 459 security issues, 822 unused imports, and 1124 code smells. These are concrete, actionable fixes that will significantly improve code quality while I troubleshoot the subjective review import process.",
-      "created_at": "2026-03-12T06:36:44+00:00",
-      "review_after": null,
-      "skipped_at_scan": 1
-    },
-    "subjective::naming_quality": {
-      "issue_id": "subjective::naming_quality",
-      "kind": "temporary",
-      "reason": "Subjective review import failed due to missing batch files. Proceeding with mechanical fixes (security, unused imports, code smells) in production code first. Will rescan and re-review subjective dimensions after mechanical cleanup.",
-      "note": null,
-      "attestation": "I have actually reflected on the importance of subjective review and am not deferring this for lazy reasons. The import failed due to only 4 of 20 batch result files being created. The agents completed their analysis successfully, but the output files weren't all created properly. Rather than block progress, I'm proceeding with the 5068 mechanical issues that were successfully identified, which include 459 security issues, 822 unused imports, and 1124 code smells. These are concrete, actionable fixes that will significantly improve code quality while I troubleshoot the subjective review import process.",
-      "created_at": "2026-03-12T06:36:44+00:00",
-      "review_after": null,
-      "skipped_at_scan": 1
-    },
-    "subjective::package_organization": {
-      "issue_id": "subjective::package_organization",
-      "kind": "temporary",
-      "reason": "Subjective review import failed due to missing batch files. Proceeding with mechanical fixes (security, unused imports, code smells) in production code first. Will rescan and re-review subjective dimensions after mechanical cleanup.",
-      "note": null,
-      "attestation": "I have actually reflected on the importance of subjective review and am not deferring this for lazy reasons. The import failed due to only 4 of 20 batch result files being created. The agents completed their analysis successfully, but the output files weren't all created properly. Rather than block progress, I'm proceeding with the 5068 mechanical issues that were successfully identified, which include 459 security issues, 822 unused imports, and 1124 code smells. These are concrete, actionable fixes that will significantly improve code quality while I troubleshoot the subjective review import process.",
-      "created_at": "2026-03-12T06:36:44+00:00",
-      "review_after": null,
-      "skipped_at_scan": 1
-    },
-    "subjective::test_strategy": {
-      "issue_id": "subjective::test_strategy",
-      "kind": "temporary",
-      "reason": "Subjective review import failed due to missing batch files. Proceeding with mechanical fixes (security, unused imports, code smells) in production code first. Will rescan and re-review subjective dimensions after mechanical cleanup.",
-      "note": null,
-      "attestation": "I have actually reflected on the importance of subjective review and am not deferring this for lazy reasons. The import failed due to only 4 of 20 batch result files being created. The agents completed their analysis successfully, but the output files weren't all created properly. Rather than block progress, I'm proceeding with the 5068 mechanical issues that were successfully identified, which include 459 security issues, 822 unused imports, and 1124 code smells. These are concrete, actionable fixes that will significantly improve code quality while I troubleshoot the subjective review import process.",
-      "created_at": "2026-03-12T06:36:44+00:00",
-      "review_after": null,
-      "skipped_at_scan": 1
-    },
-    "subjective::type_safety": {
-      "issue_id": "subjective::type_safety",
-      "kind": "temporary",
-      "reason": "Subjective review import failed due to missing batch files. Proceeding with mechanical fixes (security, unused imports, code smells) in production code first. Will rescan and re-review subjective dimensions after mechanical cleanup.",
-      "note": null,
-      "attestation": "I have actually reflected on the importance of subjective review and am not deferring this for lazy reasons. The import failed due to only 4 of 20 batch result files being created. The agents completed their analysis successfully, but the output files weren't all created properly. Rather than block progress, I'm proceeding with the 5068 mechanical issues that were successfully identified, which include 459 security issues, 822 unused imports, and 1124 code smells. These are concrete, actionable fixes that will significantly improve code quality while I troubleshoot the subjective review import process.",
-      "created_at": "2026-03-12T06:36:44+00:00",
-      "review_after": null,
-      "skipped_at_scan": 1
-    },
     "stale_exclude::.benchmarks::.benchmarks": {
       "issue_id": "stale_exclude::.benchmarks::.benchmarks",
       "kind": "temporary",
@@ -21375,12 +21196,7 @@
     }
   },
   "promoted_ids": [],
-  "plan_start_scores": {
-    "strict": 20.1,
-    "overall": 20.1,
-    "objective": 80.5,
-    "verified": 80.5
-  },
+  "plan_start_scores": {},
   "refresh_state": {
     "lifecycle_phase": "review"
   },
@@ -38319,6 +38135,17 @@
       "detail": {
         "changes": true
       }
+    },
+    {
+      "timestamp": "2026-03-14T09:22:10+00:00",
+      "action": "sync_subjective",
+      "issue_ids": [],
+      "cluster_name": null,
+      "actor": "system",
+      "note": null,
+      "detail": {
+        "changes": true
+      }
     }
   ],
   "epic_triage_meta": {},
@@ -41789,6 +41616,5 @@
     "unused_enums::scripts/util/handle_blocked_files.py::BlockReason",
     "unused_enums::tests/mocks/__init__.py::MockConnectionStatus"
   ],
-  "commit_tracking_branch": null,
-  "scan_count_at_plan_start": 1
+  "commit_tracking_branch": null
 }

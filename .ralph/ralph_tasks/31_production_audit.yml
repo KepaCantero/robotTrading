@@ -1,26 +1,46 @@
 # ============================================
 # Ralph Task 31: Production Code Audit & Fix
 # ============================================
-# VERSION: 1.0
+# VERSION: 4.0 - ARCHITECTURE + FILE SYSTEM + HARDENED
 # Audita y arregla TODOS los archivos de producción en app/
-# Usa scripts/validate_file_complete.sh para validar
+# CONTRA los requirements.md generados + ARCHITECTURE + FILE SYSTEM
+# ============================================================================
+# FEATURES MODERNAS:
+# - reasoning: multi-step para GLM 5.0
+# - subagents: awesome-claude-code-archaeologist, python-expert
+# - backpressure: quality gates automáticos
+# - memories: aprendizaje entre sesiones
+# - desloppify: detección de code smells
+# - cross-model QA: revisión con contexto fresco
+# - architecture compliance: ARCHITECTURE_REQUIREMENTS.md
+# - file system compliance: FILE_SYSTEM_REQUIREMENTS.md
+# ============================================================================
+# PRIORIDAD: P0 (CRÍTICA) - Valida la integridad del código de producción
+# OBJETIVO: Código 100% compliant con requirements.md + architecture + file system
+# TIEMPO: ~10 horas
 # ============================================================================
 
 event_loop:
   prompt_file: ".ralph/ralph_tasks/prompts/31_production_audit.md"
   completion_promise: "PRODUCTION_AUDIT_COMPLETE"
-  max_iterations: 3000
-  max_runtime_seconds: 259200  # 3 days
-  checkpoint_interval: 5
+  max_iterations: 5000
+  max_runtime_seconds: 432000  # 5 days
+  checkpoint_interval: 3
   starting_event: "production_audit.start"
   checkpoint_file: ".ralph/checkpoints/31_production_audit_checkpoint.json"
+  # GLM 5.0 - Multi-step reasoning
+  reasoning:
+    enabled: true
+    type: "multi-step"
 
 cli:
   backend: "claude"
+  model: "glm"  # GLM 5.0
 
 core:
   specs_dir: "./specs/"
 
+# Variables compartidas entre todos los hats
 shared_vars:
   OUTPUT_DIR: ".ralph/outputs"
   APP_DIR: "app"
@@ -28,7 +48,49 @@ shared_vars:
   TASK_NAME: "Production Code Audit & Fix"
   TASK_ID: "31"
   VALIDATE_SCRIPT: "scripts/validate_file_complete.sh"
+  REQUIREMENTS_DIR: ".requirements"
+  # NEW: Architecture & File System Requirements
+  ARCHITECTURE_REQUIREMENTS: ".requirements/ARCHITECTURE_REQUIREMENTS.md"
+  FILE_SYSTEM_REQUIREMENTS: ".requirements/FILE_SYSTEM_REQUIREMENTS.md"
+  BASE_RULES: ".requirements/BASE_RULES.md"
+  CRITICAL_RULES: ".requirements/CRITICAL_RULES.md"
 
+# ============================================================================
+# CRITICAL RULES - ANTI-FALLBACK (Best Practices 2026)
+# ============================================================================
+critical_rules: |
+  ## REGLAS CRÍTICAS - Production Audit
+
+  ### FORBIDDEN PATTERNS (Usage = BLOCK):
+  - `# type: ignore` → REMOVE and add proper type
+  - `# pylint: disable` → REMOVE and fix the issue
+  - `# noqa` → REMOVE and fix the issue
+  - `# nosec` → REMOVE and fix the security issue
+  - `: Any` → REPLACE with proper type hint
+  - `pass` in production code → IMPLEMENT or raise NotImplementedError
+
+  ### NO SHORTCUTS:
+  - ❌ "I'll process 50 files for now" → Process ALL files
+  - ❌ "This is too many files" → Use checkpoints, resume later
+  - ❌ Skip large directories → Process one at a time, checkpoint each
+  - ❌ Batch files → Process individually for quality
+
+  ### VALIDATION REQUIREMENTS:
+  - ✅ Run validate_file_complete.sh for EVERY file
+  - ✅ Fix DEEPLY - no shallow fixes
+  - ✅ Check against requirements.md BEFORE marking complete
+  - ✅ Each fix attempt must be DIFFERENT approach
+
+  ### FLAGS FOR BLOCKED FILES:
+  ```markdown
+  <!-- @blocked: CC=18 after 5 refactoring attempts -->
+  <!-- @blocked: External dependency missing -->
+  <!-- @blocked: Requires architectural change -->
+  ```
+
+# ============================================================================
+# EXCLUDE PATTERNS
+# ============================================================================
 exclude:
   directory_patterns:
     - "tests/"
@@ -46,243 +108,1021 @@ exclude:
     - "conftest.py"
 
 # ============================================================================
-# HATS - Using Ralph hat templates
+# SUBAGENTS - Especialistas
 # ============================================================================
+subagents:
+  enabled: true
+  path: ~/.claude/agents/awesome-claude-agents
+  useful_for_production_audit:
+    - code-archaeologist     # Deep codebase exploration
+    - python-expert          # Python modern patterns
+    - code-reviewer          # Security-aware reviews
+    - performance-optimizer  # When slow code detected
 
+# ============================================================================
+# QUALITY GATES - Backpressure
+# ============================================================================
+quality:
+  enforce_solid: true
+  enforce_tests: true
+  enforce_typecheck: true
+  enforce_lint: true
+  enforce_requirements: true  # NEW: Check against requirements.md
+  min_coverage: 80
+
+# ============================================================================
+# HATS - Sistema modular con hats especializados
+# ============================================================================
 hats:
   # ==========================================================================
-  # HAT 1: File Discovery (base_processor_hat template)
+  # HAT 0: Discovery & Requirements Check
   # ==========================================================================
-  file_discovery:
-    name: "File Discovery"
-    description: "Enumerate all production Python files in app/"
+  discovery:
+    name: "Discovery & Requirements"
+    description: "Descubre archivos y verifica requirements.md existen"
     hat_template: ".ralph/ralph_templates/hats/base_processor_hat.yml"
     triggers: ["production_audit.start"]
-    publishes: ["files.discovered"]
+    publishes: ["files.discovered", "requirements.needed"]
+    default_publishes: "files.discovered"
 
     instructions: |
-      Glob → find .py files in app/
-      EXCLUDE patterns:
-      - tests/, test/, __pycache__/, migrations/
-      - .venv/, .pytest_cache/, .mypy_cache/
-      - integration/, integrations/
-      - *_test.py, test_*.py, conftest.py
+      ## DISCOVERY & REQUIREMENTS CHECK
 
-      Sort by dependency order:
-      1. config (app/core/config/)
-      2. protocols (app/core/protocols/, app/interfaces/)
-      3. utils (app/utils/, app/core/utils/)
-      4. models (app/models/, app/domain/entities/)
-      5. services (app/services/, app/domain/services/)
-      6. strategies (app/strategies/, app/domain/strategies/)
-      7. analysis (app/analysis/)
-      8. backtesting (app/backtesting/)
-      9. rest of app/
+      {{shared_instructions}}
 
-      Save to .ralph/outputs/PRODUCTION_FILE_LIST.json
+      ### OBJETIVO
+      Descubrir archivos y verificar que tienen requirements.md
 
-      Emit "files.discovered"
+      ### FASE 1: Descubrir archivos Python
 
-  # ==========================================================================
-  # HAT 2: Initial Audit (base_processor_hat template)
-  # ==========================================================================
-  initial_audit:
-    name: "Initial Audit"
-    description: "Run validation on all files to identify which ones need fixing"
-    hat_template: ".ralph/ralph_templates/hats/base_processor_hat.yml"
-    triggers: ["files.discovered"]
-    publishes: ["audit.complete"]
-
-    instructions: |
-      FOR EACH FILE in PRODUCTION_FILE_LIST.json:
-
-      Run validation:
       ```bash
-      bash scripts/validate_file_complete.sh <file_path>
+      # Listar archivos en orden de dependencia
+      find app -name "*.py" -type f | grep -v -E "tests/|test/|__pycache__|migrations/" | sort
       ```
 
-      Parse JSON output:
-      - If summary.success == true: mark as PASSED
-      - If summary.success == false: mark as FAILED, record which checks failed
+      Orden de procesamiento (por dependencia):
+      1. app/core/config/ → Sin dependencias internas
+      2. app/core/protocols/ → Solo config
+      3. app/core/utils/ → config, protocols
+      4. app/domain/entities/ → Sin framework deps
+      5. app/domain/value_objects/ → entities
+      6. app/domain/services/ → entities, value_objects
+      7. app/domain/strategies/ → domain services
+      8. app/services/ → domain layer
+      9. app/infrastructure/ → domain + services
+      10. app/api/ → services layer
 
-      Generate audit report: .ralph/outputs/PRODUCTION_AUDIT_REPORT.json
+      ### FASE 2: Verificar requirements.md existen
+
+      ```bash
+      # Para cada archivo, verificar si tiene requirements.md
+      for file in $(find app -name "*.py" -type f | grep -v test); do
+        req_file=".requirements/${file}.requirements.md"
+        if [[ ! -f "$req_file" ]]; then
+          echo "MISSING_REQUIREMENT: $file"
+        fi
+      done
+      ```
+
+      ### FASE 3: Generar lista de trabajo
+
+      Output: `.ralph/outputs/PRODUCTION_FILE_LIST.json`
+
       ```json
       {
-        "total_files": 400,
-        "passed": 250,
-        "failed": 150,
-        "failed_files": [
+        "discovered_at": "{{timestamp}}",
+        "total_files": 350,
+        "files_with_requirements": 300,
+        "files_missing_requirements": 50,
+        "files_by_layer": {
+          "config": 15,
+          "protocols": 8,
+          "domain": 80,
+          "services": 120,
+          "infrastructure": 60,
+          "api": 40
+        },
+        "files": [
           {
-            "file": "app/services/example.py",
-            "failed_checks": ["black", "isort", "ruff"],
-            "summary": {"passed": 5, "failed": 3}
+            "path": "app/core/config/settings.py",
+            "layer": "config",
+            "has_requirements": true,
+            "requirements_path": ".requirements/app/core/config/settings.requirements.md",
+            "priority": "P0"
           }
         ]
       }
       ```
 
-      Emit "audit.complete"
+      Si hay archivos SIN requirements.md:
+      - Emitir "requirements.needed" con lista de archivos faltantes
+      - El siguiente hat generará requirements.md antes de auditar
+
+      Emitir "files.discovered"
 
   # ==========================================================================
-  # HAT 3: Code Fixer (implementer_hat template)
+  # HAT 1: Requirements Generator (if needed)
   # ==========================================================================
-  code_fixer:
-    name: "Code Fixer"
-    description: "Fix all files that failed validation"
+  requirements_generator:
+    name: "Requirements Generator"
+    description: "Genera requirements.md faltantes antes de auditar"
     hat_template: ".ralph/ralph_templates/hats/implementer_hat.yml"
-    triggers: ["audit.complete"]
-    publishes: ["files.fixed"]
-
-    template_vars:
-      TASK_PREFIX: "production_audit"
-      OBJECTIVE: "Fix all validation failures in each file"
-      VALIDATE_SCRIPT: "scripts/validate_file_complete.sh"
+    triggers: ["requirements.needed"]
+    publishes: ["requirements.generated"]
+    default_publishes: "requirements.generated"
 
     instructions: |
-      FOR EACH FAILED FILE (in dependency order):
+      ## REQUIREMENTS GENERATOR
 
-      ## Step 1: Read file
+      {{shared_instructions}}
+
+      ### OBJETIVO
+      Generar requirements.md para archivos que no lo tienen
+
+      ### WORKFLOW
+
+      Para cada archivo sin requirements.md:
+
+      1. **Leer archivo fuente:**
       ```bash
-      cat <file_path>
+      cat {{file_path}}
       ```
 
-      ## Step 2: Run auto-formatters first
-      ```bash
-      .venv/bin/black <file_path>
-      .venv/bin/isort <file_path>
-      .venv/bin/ruff check <file_path> --fix
+      2. **Analizar estructura:**
+      - Extraer imports (grep "^import\|^from")
+      - Extraer clases (grep "^class ")
+      - Extraer funciones (grep "^def \|^async def ")
+      - Contar líneas (wc -l)
+
+      3. **Identificar reglas aplicables:**
+      - Usar rules/python/ para reglas generales
+      - Usar rules/trading/ para reglas de trading
+      - Mapear archivo a servicio correspondiente
+
+      4. **Generar requirements.md:**
+      ```markdown
+      # Requirements: {{file_path}}
+
+      ## Source Analysis
+      - **File**: {{file_path}}
+      - **Layer**: {{layer}}
+      - **LOC**: {{loc}}
+      - **Classes**: {{class_count}}
+      - **Functions**: {{function_count}}
+
+      ## Purpose
+      <From docstrings and code analysis>
+
+      ## Dependencies
+      ### Internal
+      - from app.xxx import Yyy
+
+      ### External
+      - import pandas as pd
+
+      ## Rules Compliance
+
+      ### SOLID
+      - [ ] SRP-001: Single Responsibility
+      - [ ] OCP-001: Open/Closed
+      - [ ] LSP-001: Liskov Substitution
+      - [ ] ISP-001: Interface Segregation
+      - [ ] DIP-001: Dependency Inversion
+
+      ### Code Quality
+      - [ ] GOD-CLASS: File < 300 lines
+      - [ ] GOD-FUNC: Functions < 50 lines
+      - [ ] COMPLEXITY: CC < 10
+      - [ ] TYPE-HINTS: All functions typed
+
+      ### Trading Rules (if applicable)
+      - [ ] R1: Kelly Criterion
+      - [ ] R2: Drawdown limit
+      - [ ] R3: Stop Loss
+      - [ ] R4: Risk/Reward ratio
+
+      ## Status: NEEDS_AUDIT
       ```
 
-      ## Step 3: Validate after auto-fix
+      5. **Guardar archivo:**
       ```bash
-      bash scripts/validate_file_complete.sh <file_path>
+      mkdir -p "$(dirname .requirements/{{file_path}})"
+      # Write requirements.md
       ```
 
-      ## Step 4: If still failing, manually fix
-      Parse which checks failed from JSON output:
-
-      ### If black failed:
-      - Check for syntax issues blocking black
-      - Fix syntax, re-run black
-
-      ### If isort failed:
-      - Check import order manually
-      - Ensure stdlib → third-party → local order
-
-      ### If ruff failed:
-      - Read ruff errors: `.venv/bin/ruff check <file_path>`
-      - Fix each error manually
-
-      ### If flake8 failed:
-      - Read flake8 errors: `.venv/bin/flake8 <file_path>`
-      - Fix line length, unused imports, etc.
-
-      ### If pylint failed:
-      - Read pylint errors: `.venv/bin/pylint <file_path>`
-      - Fix naming, unused variables, etc.
-
-      ### If mypy failed:
-      - Read mypy errors: `.venv/bin/mypy --no-incremental --follow-imports=skip <file_path>`
-      - Add missing type hints
-
-      ### If bandit failed:
-      - Read bandit errors: `.venv/bin/bandit <file_path> -ll`
-      - Fix security issues (hardcoded passwords, SQL injection, etc.)
-
-      ### If radon_cc failed (CC > 10):
-      - Identify complex functions: `.venv/bin/radon cc <file_path> -s`
-      - Refactor complex functions into smaller ones
-
-      ### If radon_mi failed (MI < 20):
-      - Check maintainability: `.venv/bin/radon mi <file_path> -s`
-      - Improve comments, reduce coupling, simplify logic
-
-      ### If syntax failed:
-      - Run: `python -m py_compile <file_path>` to see syntax errors
-      - Fix syntax errors (missing colons, unclosed brackets, etc.)
-
-      ### If imports failed (AST parsing):
-      - Check for invalid import statements
-      - Check for circular imports or missing module references
-
-      ## Step 5: Re-validate after manual fixes
-      ```bash
-      bash scripts/validate_file_complete.sh <file_path>
-      ```
-
-      ## Step 6: If still failing, try again (max 3 attempts)
-      - If 3 attempts fail: mark as BLOCKED, continue to next file
-
-      ## Step 7: When success, mark as FIXED
-      Update progress file: .ralph/outputs/PRODUCTION_FIX_PROGRESS.json
-
-      Emit "files.fixed" when all files processed
+      Emitir "requirements.generated"
 
   # ==========================================================================
-  # HAT 4: Final Validator (validation_hat template)
+  # HAT 2: Initial Audit - Valida estado actual
   # ==========================================================================
-  final_validator:
-    name: "Final Quality Validator"
-    description: "Validate all files pass all checks"
-    hat_template: ".ralph/ralph_templates/hats/validation_hat.yml"
-    triggers: ["files.fixed"]
-    publishes: ["production_audit.validation_complete", "production_audit.blocked"]
+  initial_audit:
+    name: "Initial Audit"
+    description: "Ejecuta validación completa en todos los archivos"
+    hat_template: ".ralph/ralph_templates/hats/base_processor_hat.yml"
+    triggers: ["files.discovered", "requirements.generated"]
+    publishes: ["audit.initial_complete"]
+    default_publishes: "audit.initial_complete"
 
     instructions: |
-      ## Final Validation
+      ## INITIAL AUDIT - Estado Actual
 
-      FOR EACH FILE in original file list:
+      {{shared_instructions}}
+
+      ### OBJETIVO
+      Identificar qué archivos pasan y cuáles fallan la validación
+
+      ### FASE 1: Validar cada archivo
 
       ```bash
-      bash scripts/validate_file_complete.sh <file_path>
+      for file in $(cat .ralph/outputs/PRODUCTION_FILE_LIST.json | jq -r '.files[].path'); do
+        echo "=== Validating: $file ==="
+        bash scripts/validate_file_complete.sh "$file"
+      done
       ```
 
-      Verify: summary.success == true
+      ### FASE 2: Parsear resultados
 
-      ## Generate Final Report: .ralph/outputs/PRODUCTION_AUDIT_FINAL.json
+      Para cada archivo, registrar:
+      - success: true/false
+      - failed_checks: ["black", "isort", "ruff", "mypy", ...]
+      - error_count: N
+
+      ### FASE 3: Desloppify Scan (Code Smells)
+
+      ```bash
+      # Ejecutar desloppify para detectar code smells
+      desloppify scan app/ --output .ralph/outputs/CODE_SMELLS.json
+      ```
+
+      Buscar:
+      - God classes (files > 300 lines)
+      - God functions (functions > 50 lines)
+      - Dead code (unused imports, variables)
+      - Code duplication
+      - Import cycles
+      - Naming issues
+
+      ### OUTPUT
+
+      `.ralph/outputs/INITIAL_AUDIT_REPORT.json`
 
       ```json
       {
-        "task": "PRODUCTION_AUDIT",
-        "status": "COMPLETE",
-        "timestamp": "2026-03-14T10:00:00Z",
-        "summary": {
-          "total_files": 400,
-          "all_passed": 398,
-          "blocked": 2
+        "timestamp": "{{timestamp}}",
+        "total_files": 350,
+        "passed": 180,
+        "failed": 170,
+        "code_smells": {
+          "god_classes": 15,
+          "god_functions": 25,
+          "dead_code": 40,
+          "duplicate_code": 10,
+          "import_cycles": 5
         },
-        "blocked_files": [
+        "failed_files": [
           {
-            "file": "app/complex_file.py",
-            "reason": "Could not reduce cyclomatic complexity below 10"
+            "file": "app/services/example.py",
+            "failed_checks": ["black", "isort", "ruff", "mypy"],
+            "error_count": 12,
+            "code_smells": ["god-function", "dead-code"],
+            "requirements_compliant": false
           }
-        ],
-        "validation_details": {
-          "black": {"passed": 400, "failed": 0},
-          "isort": {"passed": 400, "failed": 0},
-          "ruff": {"passed": 398, "failed": 2},
-          "flake8": {"passed": 400, "failed": 0},
-          "pylint": {"passed": 395, "failed": 5},
-          "mypy": {"passed": 380, "failed": 20},
-          "bandit": {"passed": 400, "failed": 0},
-          "radon_cc": {"passed": 398, "failed": 2},
-          "radon_mi": {"passed": 395, "failed": 5},
-          "syntax": {"passed": 400, "failed": 0},
-          "imports": {"passed": 400, "failed": 0}
+        ]
+      }
+      ```
+
+      Emitir "audit.initial_complete"
+
+  # ==========================================================================
+  # HAT 3: Requirements Compliance Checker
+  # ==========================================================================
+  requirements_checker:
+    name: "Requirements Compliance"
+    description: "Verifica cumplimiento contra requirements.md"
+    hat_template: ".ralph/ralph_templates/hats/validation_hat.yml"
+    triggers: ["audit.initial_complete"]
+    publishes: ["requirements.checked"]
+    default_publishes: "requirements.checked"
+
+    instructions: |
+      ## REQUIREMENTS COMPLIANCE CHECKER
+
+      {{shared_instructions}}
+
+      ### OBJETIVO
+      Verificar que cada archivo cumple sus requirements.md
+
+      ### FASE 1: Para cada archivo con requirements.md
+
+      ```bash
+      file="app/services/example.py"
+      req_file=".requirements/${file}.requirements.md"
+      ```
+
+      ### FASE 2: Verificar cada regla marcada
+
+      Leer requirements.md y verificar:
+      - [ ] SRP-001 → ¿Clase tiene una sola responsabilidad?
+      - [ ] GOD-CLASS → ¿Archivo < 300 líneas?
+      - [ ] GOD-FUNC → ¿Funciones < 50 líneas?
+      - [ ] TYPE-HINTS → ¿Todos los parámetros tienen tipo?
+      - [ ] R1-R4 → ¿Reglas de trading implementadas?
+
+      ### FASE 3: Marcar estado real
+
+      Actualizar requirements.md con estado real:
+      - [ ] → ❌ No implementado
+      - [x] → ✅ Implementado
+      - [?] → ⚠️ Parcialmente implementado
+
+      ### FASE 4: Generar compliance report
+
+      `.ralph/outputs/REQUIREMENTS_COMPLIANCE_REPORT.json`
+
+      ```json
+      {
+        "total_files": 350,
+        "files_checked": 350,
+        "fully_compliant": 120,
+        "partially_compliant": 150,
+        "non_compliant": 80,
+        "missing_requirements": 0,
+        "compliance_by_rule": {
+          "SRP-001": {"passed": 280, "failed": 70},
+          "GOD-CLASS": {"passed": 335, "failed": 15},
+          "GOD-FUNC": {"passed": 325, "failed": 25},
+          "TYPE-HINTS": {"passed": 300, "failed": 50},
+          "R1": {"passed": 200, "failed": 150}
         }
       }
       ```
 
-      Emit "production_audit.validation_complete" with status=COMPLETE
-      If blocked files > 5%: emit "production_audit.blocked" instead
+      Emitir "requirements.checked"
+
+  # ==========================================================================
+  # HAT 4: Architecture Compliance Checker
+  # ==========================================================================
+  architecture_compliance:
+    name: "Architecture Compliance"
+    description: "Verifica cumplimiento de ARCHITECTURE_REQUIREMENTS.md y FILE_SYSTEM_REQUIREMENTS.md"
+    hat_template: ".ralph/ralph_templates/hats/validation_hat.yml"
+    triggers: ["requirements.checked"]
+    publishes: ["architecture.checked", "architecture.violations_found"]
+    default_publishes: "architecture.checked"
+
+    instructions: |
+      ## ARCHITECTURE COMPLIANCE CHECKER
+
+      {{shared_instructions}}
+
+      ### OBJETIVO
+      Verificar que el código cumple con las reglas de arquitectura y sistema de archivos
+
+      ### FASE 0: Verificar que existen los archivos de requirements de arquitectura
+
+      ```bash
+      # Verificar existencia de ARCHITECTURE_REQUIREMENTS.md
+      if [[ ! -f ".requirements/ARCHITECTURE_REQUIREMENTS.md" ]]; then
+        echo "CREATING: .requirements/ARCHITECTURE_REQUIREMENTS.md"
+        # Crear archivo con estructura base
+      fi
+
+      # Verificar existencia de FILE_SYSTEM_REQUIREMENTS.md
+      if [[ ! -f ".requirements/FILE_SYSTEM_REQUIREMENTS.md" ]]; then
+        echo "CREATING: .requirements/FILE_SYSTEM_REQUIREMENTS.md"
+        # Crear archivo con estructura base
+      fi
+      ```
+
+      ### FASE 1: LAYER BOUNDARIES - Verificar límites de capas
+
+      #### ARCH-DEP-001: Domain layer NO depende de otras capas
+      ```bash
+      # Domain NO debe importar de services/infrastructure/api
+      grep -r "from app.services\|from app.infrastructure\|from app.api" app/domain/
+      # Expected: 0 matches
+      ```
+
+      #### ARCH-DEP-002: Domain layer NO tiene dependencias de framework
+      ```bash
+      # Domain NO debe importar FastAPI, SQLAlchemy, httpx, etc.
+      grep -r "from fastapi\|from sqlalchemy\|import httpx\|from pydantic" app/domain/
+      # Expected: 0 matches (except pydantic for value objects)
+      ```
+
+      #### ARCH-DEP-003: Services depende SOLO de Domain
+      ```bash
+      # Services NO debe importar de infrastructure directamente
+      grep -r "from app.infrastructure.database\|from app.infrastructure.brokers" app/services/
+      # Expected: 0 matches (debe usar interfaces/protocols)
+      ```
+
+      #### ARCH-DEP-004: Infrastructure implementa interfaces de Domain
+      ```bash
+      # Infrastructure debe importar de domain.protocols
+      grep -r "from app.domain\|from app.core.protocols" app/infrastructure/
+      # Expected: todos los archivos de infrastructure
+      ```
+
+      ### FASE 2: FILE NAMING - Verificar convenciones de nombres
+
+      #### ARCH-NAM-001: Archivos en snake_case
+      ```bash
+      # Buscar archivos que no cumplen snake_case
+      find app -name "*[A-Z]*.py" -o -name "*-[a-z]*.py"
+      # Expected: 0 matches
+      ```
+
+      #### ARCH-NAM-002: Clases en PascalCase
+      ```bash
+      # Verificar que las clases usan PascalCase
+      grep -r "^class [a-z]" app/ --include="*.py"
+      # Expected: 0 matches
+      ```
+
+      #### ARCH-NAM-003: Funciones en snake_case
+      ```bash
+      # Buscar funciones con camelCase
+      grep -rE "^def [a-z]+[A-Z]" app/ --include="*.py"
+      grep -rE "^async def [a-z]+[A-Z]" app/ --include="*.py"
+      # Expected: 0 matches
+      ```
+
+      #### ARCH-NAM-004: Constantes en UPPER_SNAKE_CASE
+      ```bash
+      # Verificar constantes en módulos
+      grep -rE "^[A-Z_]+ =" app/ --include="*.py"
+      # Expected: todas las constantes
+      ```
+
+      ### FASE 3: SIZE LIMITS - Verificar límites de tamaño
+
+      #### ARCH-FILE-001: Archivos < 300 líneas
+      ```bash
+      find app -name "*.py" -exec sh -c 'lines=$(wc -l < "$1"); if [ $lines -gt 300 ]; then echo "$1: $lines lines (GOD CLASS)"; fi' _ {} \;
+      ```
+
+      #### ARCH-FILE-002: Funciones < 50 líneas
+      ```bash
+      # Usar radon para detectar funciones largas
+      radon cc app/ -s -a | grep -E "\([0-9]+ lines\)"
+      ```
+
+      #### ARCH-FILE-003: Complejidad ciclomática < 10
+      ```bash
+      radon cc app/ -s -nc | grep -E "CC\s+[0-9]+"
+      ```
+
+      ### FASE 4: MODULE STRUCTURE - Verificar estructura de módulos
+
+      #### ARCH-MOD-001: Todos los paquetes tienen __init__.py
+      ```bash
+      # Buscar directorios sin __init__.py
+      find app -type d -not -path "*/\.*" | while read dir; do
+        if [[ ! -f "$dir/__init__.py" ]] && [[ $(find "$dir" -maxdepth 1 -name "*.py" | wc -l) -gt 0 ]]; then
+          echo "MISSING: $dir/__init__.py"
+        fi
+      done
+      ```
+
+      #### ARCH-MOD-002: No import cycles
+      ```bash
+      # Detectar ciclos de imports
+      python -c "import app" 2>&1 | grep -i "circular\|cycle"
+      # Expected: sin errores
+      ```
+
+      ### FASE 5: DIRECTORY STRUCTURE - Verificar estructura de directorios
+
+      Estructura esperada:
+      ```
+      app/
+      ├── core/           # Config, protocols, utils
+      │   ├── config/
+      │   ├── protocols/
+      │   └── utils/
+      ├── domain/         # Entities, value_objects, services, strategies
+      │   ├── entities/
+      │   ├── value_objects/
+      │   ├── services/
+      │   ├── strategies/
+      │   └── events/
+      ├── services/       # Application layer - use cases
+      │   ├── compliance/
+      │   ├── execution/
+      │   ├── position_management/
+      │   └── reconciliation/
+      ├── infrastructure/ # Adapters - DB, brokers, APIs
+      │   ├── database/
+      │   ├── brokers/
+      │   └── external_apis/
+      └── api/           # Presentation layer - REST, CLI
+          ├── routes/
+          └── schemas/
+      ```
+
+      ```bash
+      # Verificar que existen las capas principales
+      for layer in core domain services infrastructure api; do
+        if [[ ! -d "app/$layer" ]]; then
+          echo "MISSING LAYER: app/$layer"
+        fi
+      done
+      ```
+
+      ### OUTPUT
+
+      `.ralph/outputs/ARCHITECTURE_COMPLIANCE_REPORT.json`
+
+      ```json
+      {
+        "timestamp": "{{timestamp}}",
+        "layer_boundaries": {
+          "domain_pure": true,
+          "violations": []
+        },
+        "file_naming": {
+          "snake_case_files": {"passed": 350, "failed": 0},
+          "pascal_case_classes": {"passed": 500, "failed": 0},
+          "snake_case_functions": {"passed": 1200, "failed": 0}
+        },
+        "size_limits": {
+          "god_classes": [],
+          "god_functions": [],
+          "high_complexity": []
+        },
+        "module_structure": {
+          "missing_init": [],
+          "import_cycles": []
+        },
+        "directory_structure": {
+          "missing_layers": [],
+          "extra_directories": []
+        },
+        "status": "PASS",
+        "violations_count": 0
+      }
+      ```
+
+      Si violations_count > 0:
+      - Emitir "architecture.violations_found" con lista
+      - El siguiente hat (code_fixer) corregirá las violaciones
+
+      Si todo OK:
+      - Emitir "architecture.checked"
+
+  # ==========================================================================
+  # HAT 5: Code Fixer - DEEP FIXES ONLY
+  # ==========================================================================
+  code_fixer:
+    name: "Code Fixer"
+    description: "Arregla archivos con DEEP fixes - NO SHORTCUTS"
+    hat_template: ".ralph/ralph_templates/hats/implementer_hat.yml"
+    triggers: ["architecture.checked"]
+    publishes: ["files.fixed"]
+    default_publishes: "files.fixed"
+
+    instructions: |
+      ## CODE FIXER - DEEP FIXES ONLY
+
+      {{shared_instructions}}
+      {{critical_rules}}
+
+      ### CRITICAL: DEEP FIXES, NO SHORTCUTS
+
+      #### FORBIDDEN PATTERNS (Usage = BLOCK):
+      - `# type: ignore` → REMOVE and add proper type
+      - `# pylint: disable` → REMOVE and fix the issue
+      - `# noqa` → REMOVE and fix the issue
+      - `# nosec` → REMOVE and fix security issue
+      - `: Any` → REPLACE with proper type hint
+      - `pass` → IMPLEMENT or raise NotImplementedError
+
+      ### WORKFLOW FOR EACH FAILED FILE:
+
+      #### Step 1: Read requirements.md
+      ```bash
+      cat .requirements/{{file_path}}.requirements.md
+      ```
+      Understand WHAT needs to be compliant.
+
+      #### Step 2: Read source file completely
+      ```bash
+      cat {{file_path}}
+      ```
+      UNDERSTAND context before changes.
+
+      #### Step 3: Run auto-formatters
+      ```bash
+      .venv/bin/black {{file_path}}
+      .venv/bin/isort {{file_path}}
+      .venv/bin/ruff check {{file_path}} --fix
+      ```
+
+      #### Step 4: Validate after auto-fix
+      ```bash
+      bash scripts/validate_file_complete.sh {{file_path}}
+      ```
+
+      #### Step 5: DEEP Manual Fix (if still failing)
+
+      **Black failed:** Fix syntax issues
+      **Isort failed:** Fix import order: stdlib → third-party → local
+      **Ruff failed:** Read errors, fix each one - NO `# noqa`
+      **Flake8 failed:** Line too long → break lines; unused → remove
+      **Pylint failed:** Rename variables, add docstrings, refactor - NO `# pylint: disable`
+      **Mypy failed:** Add proper type hints - NO `Any` or `# type: ignore`
+      **Bandit failed:** FIX security issue - NO `# nosec`
+      **Radon CC failed (CC >= 10):** REFACTOR - extract helpers, early returns
+      **Radon MI failed (MI < 20):** Add docstrings, remove dead code
+
+      #### Step 6: Check code smells
+      ```bash
+      # Check for god classes
+      wc -l {{file_path}}
+
+      # Check for god functions
+      radon cc {{file_path}} -s
+
+      # Check for dead code
+      ruff check {{file_path}} --select F401,F841
+      ```
+
+      If god class (> 300 lines):
+      - Split into multiple modules
+      - Extract helper functions
+      - Use composition over inheritance
+
+      If god function (> 50 lines):
+      - Extract helper functions
+      - Use early returns
+      - Simplify conditionals
+
+      #### Step 7: Re-validate
+      ```bash
+      bash scripts/validate_file_complete.sh {{file_path}}
+      ```
+
+      Must return `summary.success == true`
+
+      #### Step 8: Update requirements.md
+      Mark rules as ✅ in requirements.md after verification
+
+      #### Step 9: Checkpoint progress
+      ```bash
+      # Update progress file
+      echo '{"file": "{{file_path}}", "status": "FIXED", "timestamp": "{{timestamp}}"}' >> .ralph/outputs/FIX_PROGRESS.jsonl
+      ```
+
+      #### Step 10: Handle Persistent Failures
+      - Max 5 attempts per file
+      - Each attempt must be DIFFERENT approach
+      - If still failing: mark as BLOCKED with detailed reason
+
+      Emit "files.fixed" when all processed
+
+  # ==========================================================================
+  # HAT 6: Anti-Pattern Scanner
+  # ==========================================================================
+  anti_pattern_scanner:
+    name: "Anti-Pattern Scanner"
+    description: "Escanea TODOS los archivos buscando patrones prohibidos"
+    hat_template: ".ralph/ralph_templates/hats/validation_hat.yml"
+    triggers: ["files.fixed"]
+    publishes: ["anti_patterns.scanned", "anti_patterns.found"]
+    default_publishes: "anti_patterns.scanned"
+
+    instructions: |
+      ## ANTI-PATTERN SCANNER
+
+      {{shared_instructions}}
+
+      ### OBJETIVO
+      Detectar TODOS los patrones prohibidos
+
+      ### SCAN PATTERNS
+
+      ```bash
+      # Forbidden patterns
+      grep -rn "# type: ignore" app/ --include="*.py"
+      grep -rn "# pylint: disable" app/ --include="*.py"
+      grep -rn "# noqa" app/ --include="*.py"
+      grep -rn "# nosec" app/ --include="*.py"
+      grep -rn ": Any" app/ --include="*.py"
+
+      # God classes
+      find app -name "*.py" -exec sh -c 'lines=$(wc -l < "$1"); if [ $lines -gt 300 ]; then echo "$1: $lines lines"; fi' _ {} \;
+
+      # God functions (complex)
+      radon cc app/ -s -a | grep -E "CC\s+[0-9]+\s+\(" | awk '$3 >= 10'
+
+      # Dead code
+      ruff check app/ --select F401,F841
+
+      # Import cycles
+      # Use pydeps or manual analysis
+      ```
+
+      ### OUTPUT
+
+      `.ralph/outputs/ANTI_PATTERN_REPORT.json`
+
+      ```json
+      {
+        "timestamp": "{{timestamp}}",
+        "patterns_found": {
+          "type_ignore": 0,
+          "pylint_disable": 0,
+          "noqa": 0,
+          "nosec": 0,
+          "any_type": 0,
+          "god_classes": 0,
+          "god_functions": 0,
+          "dead_code": 0
+        },
+        "files_with_patterns": [],
+        "status": "CLEAN"
+      }
+      ```
+
+      Si patterns_found > 0:
+      - Emitir "anti_patterns.found"
+      - Volver a code_fixer para esos archivos
+
+      Si todo limpio:
+      - Emitir "anti_patterns.scanned"
+
+  # ==========================================================================
+  # HAT 7: Cross-Model QA (Fresh Context Review)
+  # ==========================================================================
+  cross_model_qa:
+    name: "Cross-Model QA"
+    description: "Revisión con contexto fresco - detecta errores sesgados"
+    hat_template: ".ralph/ralph_templates/hats/validation_hat.yml"
+    triggers: ["anti_patterns.scanned"]
+    publishes: ["qa.cross_model_complete", "qa.issues_found"]
+    default_publishes: "qa.cross_model_complete"
+
+    instructions: |
+      ## CROSS-MODEL QA - Fresh Context Review
+
+      {{shared_instructions}}
+
+      ### OBJETIVO
+      Revisar cambios con contexto fresco para detectar errores sesgados
+
+      ### CONCEPTO
+      Después de trabajar en código, el modelo desarrolla "tunnel vision".
+      Una revisión con contexto fresco detecta errores que el autor no ve.
+
+      ### FASE 1: Generar diff de cambios
+
+      ```bash
+      git diff --stat > .ralph/outputs/CHANGES_DIFF.txt
+      git diff > .ralph/outputs/FULL_DIFF.patch
+      ```
+
+      ### FASE 2: Sample review (10% de archivos cambiados)
+
+      ```bash
+      # Seleccionar archivos aleatorios para revisión
+      changed_files=$(git diff --name-only)
+      sample=$(echo "$changed_files" | shuf | head -n $(( $(echo "$changed_files" | wc -l) / 10 )))
+      ```
+
+      ### FASE 3: Para cada archivo en sample, revisar:
+
+      1. **Leer archivo completo**
+      2. **Verificar contra requirements.md**
+      3. **Buscar:**
+         - Type hints faltantes
+         - Error handling insuficiente
+         - Lógica duplicada
+         - Nombres poco descriptivos
+         - Funciones demasiado largas
+
+      ### FASE 4: Si se encuentran issues
+
+      - Marcar archivos problemáticos
+      - Emitir "qa.issues_found" con lista
+      - Volver a code_fixer para esos archivos
+
+      ### OUTPUT
+
+      `.ralph/outputs/CROSS_MODEL_QA_REPORT.json`
+
+      ```json
+      {
+        "timestamp": "{{timestamp}}",
+        "files_reviewed": 35,
+        "issues_found": 5,
+        "issues": [
+          {
+            "file": "app/services/example.py",
+            "line": 42,
+            "issue": "Missing error handling for None case",
+            "severity": "medium"
+          }
+        ]
+      }
+      ```
+
+      Emitir "qa.cross_model_complete"
+
+  # ==========================================================================
+  # HAT 8: Test Structure Validator
+  # ==========================================================================
+  test_validator:
+    name: "Test Structure Validator"
+    description: "Verifica que tests espejean estructura de source"
+    hat_template: ".ralph/ralph_templates/hats/validation_hat.yml"
+    triggers: ["qa.cross_model_complete"]
+    publishes: ["tests.validated"]
+    default_publishes: "tests.validated"
+
+    instructions: |
+      ## TEST STRUCTURE VALIDATOR
+
+      {{shared_instructions}}
+
+      ### OBJETIVO
+      Verificar que los tests espejean la estructura del código fuente
+
+      ### FASE 1: Mapear estructura de tests
+
+      ```bash
+      # Listar archivos de source
+      find app -name "*.py" -type f | sort > /tmp/source_files.txt
+
+      # Listar archivos de test
+      find tests -name "test_*.py" -type f | sort > /tmp/test_files.txt
+      ```
+
+      ### FASE 2: Verificar correspondencia
+
+      Para cada archivo en app/:
+      - ¿Existe test correspondiente en tests/?
+      - test_unit_domain_trade.py para app/domain/trade.py
+
+      ### FASE 3: Ejecutar tests
+
+      ```bash
+      pytest tests/ -v --tb=short
+      ```
+
+      ### FASE 4: Verificar coverage
+
+      ```bash
+      pytest tests/ --cov=app --cov-report=json
+      ```
+
+      Coverage mínimo: 80%
+
+      ### OUTPUT
+
+      `.ralph/outputs/TEST_STRUCTURE_REPORT.json`
+
+      ```json
+      {
+        "source_files": 350,
+        "test_files": 280,
+        "coverage": 85.5,
+        "missing_tests": 70,
+        "failed_tests": 0,
+        "status": "PASS"
+      }
+      ```
+
+      Emitir "tests.validated"
+
+  # ==========================================================================
+  # HAT 9: Final Validator
+  # ==========================================================================
+  final_validator:
+    name: "Final Quality Validator"
+    description: "Validación final de todos los archivos"
+    hat_template: ".ralph/ralph_templates/hats/validation_hat.yml"
+    triggers: ["tests.validated"]
+    publishes: ["PRODUCTION_AUDIT_COMPLETE", "production_audit.blocked"]
+    default_publishes: "PRODUCTION_AUDIT_COMPLETE"
+
+    instructions: |
+      ## FINAL VALIDATION
+
+      {{shared_instructions}}
+
+      ### OBJETIVO
+      Validar que TODOS los archivos pasan TODAS las validaciones
+      Incluyendo: requirements.md + ARCHITECTURE_REQUIREMENTS.md + FILE_SYSTEM_REQUIREMENTS.md
+
+      ### FASE 1: Validación completa
+
+      ```bash
+      for file in $(cat .ralph/outputs/PRODUCTION_FILE_LIST.json | jq -r '.files[].path'); do
+        bash scripts/validate_file_complete.sh "$file"
+      done
+      ```
+
+      ### FASE 2: Verificar requisitos finales
+
+      - [ ] 0 anti-patterns
+      - [ ] 0 god classes
+      - [ ] 0 god functions
+      - [ ] 100% requirements compliance
+      - [ ] Tests passing
+      - [ ] Coverage >= 80%
+      - [ ] **Architecture layer boundaries OK** (domain pure, dependencies inward)
+      - [ ] **File naming conventions OK** (snake_case files, PascalCase classes)
+      - [ ] **Module structure OK** (all __init__.py present, no import cycles)
+
+      ### FASE 3: Verificar Architecture Compliance
+
+      ```bash
+      # Verificar que el reporte de arquitectura existe
+      cat .ralph/outputs/ARCHITECTURE_COMPLIANCE_REPORT.json | jq '.status'
+      # Expected: "PASS"
+
+      # Si hay violaciones, verificar que están documentadas
+      cat .ralph/outputs/ARCHITECTURE_COMPLIANCE_REPORT.json | jq '.violations_count'
+      # Expected: 0
+      ```
+
+      ### FASE 4: Generar reporte final
+
+      `.ralph/outputs/PRODUCTION_AUDIT_FINAL_REPORT.json`
+
+      ```json
+      {
+        "task": "PRODUCTION_AUDIT",
+        "version": "4.0",
+        "status": "COMPLETE",
+        "timestamp": "{{timestamp}}",
+        "summary": {
+          "total_files": 350,
+          "all_passed": 348,
+          "blocked": 2,
+          "pass_rate": "99.4%"
+        },
+        "validation_details": {
+          "black": {"passed": 350, "failed": 0},
+          "isort": {"passed": 350, "failed": 0},
+          "ruff": {"passed": 348, "failed": 2},
+          "mypy": {"passed": 340, "failed": 10},
+          "pylint": {"passed": 345, "failed": 5},
+          "bandit": {"passed": 350, "failed": 0},
+          "radon_cc": {"passed": 348, "failed": 2},
+          "syntax": {"passed": 350, "failed": 0}
+        },
+        "requirements_compliance": {
+          "fully_compliant": 300,
+          "partially_compliant": 48,
+          "non_compliant": 2
+        },
+        "architecture_compliance": {
+          "layer_boundaries_ok": true,
+          "file_naming_ok": true,
+          "module_structure_ok": true,
+          "violations": []
+        },
+        "file_system_compliance": {
+          "structure_matches_requirements": true,
+          "naming_conventions_followed": true
+        },
+        "code_smells_resolved": {
+          "god_classes_fixed": 15,
+          "god_functions_refactored": 25,
+          "dead_code_removed": 40,
+          "import_cycles_fixed": 5
+        },
+        "blocked_files": [
+          {
+            "file": "app/complex_file.py",
+            "reason": "CC=18 after 5 refactoring attempts",
+            "suggestions": ["Split into service classes", "Use strategy pattern"]
+          }
+        ]
+      }
+      ```
+
+      ### FASE 5: Emitir evento final
+
+      Si blocked < 2% Y architecture_compliance OK: Emitir "PRODUCTION_AUDIT_COMPLETE" con status=COMPLETE
+      Si blocked >= 2% O architecture violations > 0: Emitir "production_audit.blocked" con detalles
 
 # ============================================================================
-# TASK CONFIGURATION
+# MEMORIES - Aprendizaje persistente
 # ============================================================================
-tasks:
-  enabled: true
-
 memories:
   enabled: true
   inject: auto
-  budget: 5000
+  budget: 10000
+  file: .ralph/agent/memories.md
+  consolidation:
+    enabled: true
+    interval: 10
+
+# ============================================================================
+# CHECKPOINT
+# ============================================================================
+checkpoint:
+  file: ".ralph/checkpoints/31_production_audit_checkpoint.json"

@@ -1,0 +1,32 @@
+{
+  "generated_at": "2026-03-15T10:30:00Z",
+  "summary": {
+    "total_occurrences": 748,
+    "unique_files": 158
+  },
+  "by_pattern": {
+    "type_ignore": 21,
+    "pylint_disable": 111,
+    "noqa": 330,
+    "nosec": 129,
+    "any_type": 158
+  },
+  "severity": "CRITICAL",
+  "message": "Found 748 forbidden anti-patterns across 158 files. All must be removed.",
+  "top_offenders": [
+    {"file": "app/backtesting/walk_forward_validator.py", "count": 10, "types": ["pylint_disable"]},
+    {"file": "app/backtesting/robust_engine/robust_backtester.py", "count": 12, "types": ["any_type"]},
+    {"file": "app/core/__init__.py", "count": 12, "types": ["type_ignore"]},
+    {"file": "app/security/input_validation.py", "count": 12, "types": ["pylint_disable", "any_type"]},
+    {"file": "app/backtesting/engines/robust_engine.py", "count": 11, "types": ["any_type"]},
+    {"file": "app/domain/services/compliance/protocols.py", "count": 11, "types": ["any_type"]}
+  ],
+  "action_required": "Return to code_fixer hat to process these 158 files and remove all forbidden anti-patterns.",
+  "forbidden_patterns": [
+    "# type: ignore - Replace with proper type hints",
+    "# pylint: disable - Fix the linting issue properly",
+    "# noqa - Fix the underlying issue",
+    "# nosec - Fix the security vulnerability",
+    ": Any - Use specific types, Optional, or Union"
+  ]
+}

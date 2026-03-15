@@ -1,255 +1,131 @@
-# 📁 AlgoTrading Scripts - Índice Completo
+# AlgoTrading Scripts - Clean Architecture
 
-**Fecha:** 2026-02-08
-**Objetivo:** Documentación unificada de todos los scripts del proyecto
+**Last Updated:** 2026-03-15
+**Status:** Cleaned and Organized
 
 ---
 
-## 🎯 Estructura de Directorios
+## Structure
 
 ```
 scripts/
-├── README.md                   # ESTE ARCHIVO
-├── utils.py                    # CLI unificado
+├── validate_file_complete.sh    # Main validation script (used by Ralph)
+├── generate_requirements_v2.py  # Generate requirements.md files
+├── utils.py                  # Unified CLI
 │
-├── backtesting/                # Scripts de backtesting
-│   ├── README.md               # Documentación detallada de backtesting
-│   ├── simple/                 # Backtests sin optimización
-│   │   ├── run_simple_backtest.py
-│   │   ├── run_baseline_backtest.py
-│   │   ├── run_deep_learning_backtest.py
-│   │   └── ...
-│   └── optimization/           # Backtests con optimización
-│       ├── run_comprehensive_backtest.py
-│       ├── run_all_backtests.py
-│       ├── run_profile_batch_backtester.py
-│       └── ...
+├── backtesting/               # Backtesting scripts
+│   ├── simple/                # Simple backtests
+│   └── optimization/           # Backtests with optimization
 │
-├── validation/                 # Scripts de validación
-│   └── validate_file_complete.sh
-│
-├── audit/                      # Scripts de auditoría
-│   ├── get_critical_files.py
-│   ├── get_p1_files.py
-│   └── ...
-│
-└── processing/                # Scripts de procesamiento
-    ├── phase4_remove_all_fallbacks.py
-    └── ...
+├── data/                     # Data download scripts
+├── db/                      # Database scripts
+├── deployment/              # Deployment scripts
+├── optimization/            # Hyperparameter optimization
+└── validation/              # Validation scripts (if needed)
 ```
 
 ---
 
-## 🚀 CLI Unificado
+## Main Scripts
 
-### Uso
-
-```bash
-python scripts/utils.py <comando> [argumentos]
-```
-
-### Comandos Disponibles
-
-| Comando | Descripción | Ejemplo |
-|---------|-------------|---------|
-| `validate` | Validar archivo | `python scripts/utils.py validate app/file.py` |
-| `list_files` | Listar archivos por categoría | `python scripts/utils.py list_files --category critical` |
-| `audit_files` | Auditar archivos | `python scripts/utils.py audit_files --category p1` |
-| `check_progress` | Verificar progreso | `python scripts/utils.py check_progress --task compliance_refactor` |
-| `mark_files` | Marcar archivos con estado | `python scripts/utils.py mark_files --status PASSED` |
+| Script | Purpose | Usage |
+|--------|--------|------|
+| `validate_file_complete.sh` | Full QA validation (black, isort, ruff, flake8, pylint, mypy, bandit, radon) | `./scripts/validate_file_complete.sh app/file.py` |
+| `generate_requirements_v2.py` | Generate requirements.md for Python files | `python scripts/generate_requirements_v2.py` |
+| `utils.py` | Unified CLI for various operations | `python scripts/utils.py validate app/file.py` |
 
 ---
 
-## 📊 Scripts de Backtesting
-
-Ver documentación completa en `scripts/backtesting/README.md`
-
-### Simple Backtests (sin optimización)
-
-**run_simple_backtest.py** - Backtest básico de verificación
-```bash
-python scripts/backtesting/simple/run_simple_backtest.py
-```
-
-**run_baseline_backtest.py** - Backtest base sin ML/optimización
-```bash
-python scripts/backtesting/simple/run_baseline_backtest.py --symbol AAPL
-```
-
-### Optimization Backtests (con optimización)
-
-**run_comprehensive_backtest.py** - Pipeline completo con múltiples optimizaciones
-```bash
-python scripts/backtesting/optimization/run_comprehensive_backtest.py
-```
-
-**run_all_backtests.py** - Ejecutar TODOS los backtests con optimización
-```bash
-python scripts/backtesting/optimization/run_all_backtests.py
-```
-
-**run_profile_batch_backtester.py** - Batch de 180 perfiles con Bayesian optimization
-```bash
-python scripts/backtesting/optimization/run_profile_batch_backtester.py --all --parallel
-```
-
----
-
-## ✅ Scripts de Validación
+## Validation Script Details
 
 ### validate_file_complete.sh
 
-**Propósito:** Validación completa de archivos Python
+**Tools executed:**
+1. **black** - Code formatting
+2. **isort** - Import sorting
+3. **ruff** - Linting
+4. **flake8** - Style enforcement
+5. **pylint** - Code quality
+6. **mypy** - Type checking
+7. **bandit** - Security scanning
+8. **radon cc** - Cyclomatic complexity (CC < 10)
+9. **radon mi** - Maintainability index (MI > 20)
+10. **syntax** - Python syntax validation
+11. **imports** - AST import validation
 
-**Uso:**
+**Output:** JSON with pass/fail status for each check
+
+---
+
+## Backtesting Scripts
+
+### Simple Backtests (no optimization)
 ```bash
-scripts/validation/validate_file_complete.sh <archivo.py>
+python scripts/backtesting/simple/run_simple_backtest.py
+python scripts/backtesting/simple/run_baseline_backtest.py
+python scripts/backtesting/simple/run_deep_learning_backtest.py
 ```
 
-**Valida:**
-- Formato (black, isort)
-- Linting (ruff, flake8)
-- Type hints (mypy)
-- Seguridad (bandit)
-- Complejidad (radon)
-
-**Output:** JSON con `success: true/false`
-
----
-
-## 🔍 Scripts de Auditoría
-
-### get_critical_files.py
-
-**Propósito:** Listar archivos críticos (P0)
-
-**Uso:**
+### Optimization Backtests
 ```bash
-python scripts/audit/get_critical_files.py
+python scripts/backtesting/optimization/run_comprehensive_backtest.py
+python scripts/backtesting/optimization/run_all_backtests.py
+python scripts/backtesting/optimization/run_profile_batch_backtester.py
 ```
 
-### get_p1_files.py
+---
 
-**Propósito:** Listar archivos P1
+## Data Scripts
 
-**Uso:**
 ```bash
-python scripts/audit/get_p1_files.py
+python scripts/data/download_market_data.py
+python scripts/data/download_portfolio_data.py
 ```
 
 ---
 
-## 🔧 Scripts de Procesamiento
+## Deployment Scripts
 
-### phase4_remove_all_fallbacks.py
-
-**Propósito:** Eliminar todos los fallbacks de imports
-
-**Uso:**
 ```bash
-python scripts/processing/phase4_remove_all_fallbacks.py
-```
-
-**Qué hace:**
-- Busca `try/except ImportError` patterns
-- Reemplaza con `@skip-import` flags
-- Actualiza imports para usar TYPE_CHECKING
-
----
-
-## 📝 Estándares de Codificación
-
-### Formato de Scripts
-
-Todos los scripts deben seguir:
-
-```python
-#!/usr/bin/env python3
-"""
-Módulo: script_name.py
-Propósito: Descripción breve del script
-Uso: python scripts/utils.py <comando>
-"""
-```
-
-### Validaciones
-
-- ✅ Shebang `#!/usr/bin/env python3`
-- ✅ Docstring con propósito y uso
-- ✅ Type hints en funciones
-- ✅ Error handling con try/except
-- ✅ Logging con `structlog` si es necesario
-
----
-
-## 🔗 Integración con Ralph
-
-### Scripts como wrappers de tareas Ralph
-
-Los scripts pueden ejecutar tareas Ralph:
-
-```python
-def run_ralph_task(task_id: str) -> dict:
-    """Ejecuta tarea Ralph y retorna resultado"""
-    result = subprocess.run(
-        ["ralph", "run", f".ralph/ralph_tasks/{task_id}.yml"],
-        capture_output=True,
-        text=True
-    )
-    return json.loads(result.stdout)
+bash scripts/deployment/deploy_production.sh
+bash scripts/deployment/setup_environment.sh
 ```
 
 ---
 
-## ⚠️ Scripts Duplicados
+## Cleanup History
 
-Los siguientes scripts están duplicados y deben fusionarse:
+### 2026-03-15: Removed scripts/util/
 
-| Duplicado | Mantener | Eliminar |
-|-----------|---------|---------|
-| `phase4_remove_all_fallbacks.py` | ✅ | - |
-| `phase5_eliminate_all_import_fallbacks.py` | - | ❌ |
-| `run_comprehensive_backtest.py` | ✅ | - |
-| `run_backtest.py` | - | ❌ (funcionalidad en comprehensive) |
+Deleted 27 one-time utility scripts:
+- Phase 4/5 cleanup scripts (completed phases)
+- Batch creation scripts (one-time use)
+- AWS destruction scripts (one-time use)
+- Checkpoint trackers (moved to Ralph)
+- Progress checkers (consolidated)
+- Import fixers (one-time use)
 
----
-
-## 🚨 Scripts Sin Mantenimiento
-
-Los siguientes scripts necesitan actualización:
-
-| Script | Última actualización | Acción |
-|--------|---------------------|--------|
-| `generate_report.py` | 2024-06 | Actualizar para nuevos formatos |
-| `export_trades.py` | 2024-05 | Revisar para nuevo schema |
-| `calculate_metrics.py` | 2024-04 | Añadir métricas faltantes |
+**Reason:** These were all one-time scripts for completed phases of the project. Their functionality is now handled by Ralph tasks.
 
 ---
 
-## ✅ Checklist de Scripts
+## Integration with Ralph
 
-Antes de considerar el sistema de scripts completo:
+The validation script is used by Ralph task 31_production_audit.yml:
 
-- [ ] Todos los scripts tienen README individual
-- [ ] Todos los scripts tienen docstrings
-- [ ] Todos los scripts tienen type hints
-- [ ] No hay scripts duplicados
-- [ ] Todos los scripts están documentados aquí
-- [ ] CLI unificado (`utils.py`) funciona
-- [ ] Scripts de validación funcionan
-- [ ] Scripts están integrados con Ralph
+```bash
+# Ralph task uses this script
+ralph run -c .ralph/ralph_tasks/31_production_audit.yml
+```
 
 ---
 
-## 📈 Próximos Pasos
+## Adding New Scripts
 
-1. **Crear prompts faltantes** para tareas Ralph
-2. **Eliminar scripts duplicados**
-3. **Actualizar scripts desactualizados**
-4. **Crear scripts de wrappers** para tareas Ralph
-5. **Integrar sistema de checkpoints** con scripts
+When adding new scripts:
 
----
-
-**Última actualización:** 2026-02-08
-**Estado:** ✅ Documentación unificada creada
+1. Add shebang: `#!/usr/bin/env python3`
+2. Add docstring with purpose and usage
+3. Add type hints
+4. Handle errors gracefully
+5. Update this README.md
