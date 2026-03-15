@@ -1,22 +1,29 @@
 #!/usr/bin/env python3
 """
-AlgoTrading Main Entry Point
+AlgoTrading Launcher Script
 
-This script provides the main entry point for the AlgoTrading system.
+This script provides a convenience entry point for the AlgoTrading system.
 It can launch either the API server or the Dashboard depending on arguments.
 
 Usage:
     # Launch Dashboard (default)
-    python app.py
-    
+    python scripts/launcher.py
+
     # Launch Dashboard explicitly
-    python app.py dashboard
-    
+    python scripts/launcher.py dashboard
+
     # Launch API Server
-    python app.py api
-    
+    python scripts/launcher.py api
+
     # Launch both (requires two terminals or background processes)
-    python app.py all
+    python scripts/launcher.py all
+
+Alternative:
+    # Direct API launch (recommended for production)
+    uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+    # Direct Dashboard launch
+    streamlit run app/dashboard/main.py
 """
 
 # ============================================================================
@@ -87,15 +94,15 @@ def main():
         launch_api()
     elif command == "all":
         print("⚠️  Use two separate terminals:")
-        print("   Terminal 1: python app.py dashboard")
-        print("   Terminal 2: python app.py api")
+        print("   Terminal 1: python scripts/launcher.py dashboard")
+        print("   Terminal 2: python scripts/launcher.py api")
         sys.exit(1)
     else:
         print(f"❌ Unknown command: {command}")
         print("\nUsage:")
-        print("  python app.py          # Launch dashboard (default)")
-        print("  python app.py dashboard")
-        print("  python app.py api")
+        print("  python scripts/launcher.py          # Launch dashboard (default)")
+        print("  python scripts/launcher.py dashboard")
+        print("  python scripts/launcher.py api")
         sys.exit(1)
 
 if __name__ == "__main__":
