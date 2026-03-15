@@ -1,5 +1,0 @@
-## Scan: app/dashboard/production_dashboard.py
-Lines: 673
-Functions: 29
-Classes: 8
-Status: Processed

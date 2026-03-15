@@ -1,5 +1,0 @@
-## Scan: app/dashboard/report_generator.py
-Lines: 1002
-Functions: 33
-Classes: 0
-Status: Processed

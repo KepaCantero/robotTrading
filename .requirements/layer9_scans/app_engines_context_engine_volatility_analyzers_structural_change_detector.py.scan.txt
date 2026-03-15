@@ -1,5 +1,0 @@
-## Scan: app/engines/context_engine/volatility_analyzers/structural_change_detector.py
-Lines: 210
-Functions: 4
-Classes: 1
-Status: Processed
