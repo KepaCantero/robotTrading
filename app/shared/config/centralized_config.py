@@ -34,9 +34,10 @@ import yaml
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
+from app.shared.config.base.defaults import get_default_magic_values
+
 # Import modular components (OCP)
 from app.shared.config.cache import FileBasedConfigCache
-from app.shared.config.defaults import get_default_magic_values
 from app.shared.config.legacy_wrapper import Configuration
 from app.shared.config.loaders import ConfigLoaderRegistry
 from app.shared.config.mergers import RecursiveConfigMerger
@@ -764,7 +765,7 @@ def config_with_validation(config_dict: Dict[str, Any]) -> tuple:
 #   - Re-exported from defaults module (SRP)
 # =============================================================================
 
-from app.shared.config.defaults import (
+from app.shared.config.base.defaults import (
     get_default_atr_multiplier,
     get_default_max_position_size,
     get_default_risk_per_trade,

@@ -1,0 +1,149 @@
+# Ralph Task: Architecture & File System Compliance Fix
+# Version: 1.0
+# Created: 2026-03-15
+# Based on: ARCHITECTURE_AUDIT_REPORT.md + FILE_SYSTEM_AUDIT_REPORT.md
+
+name: "Architecture & File System Compliance Fix"
+description: "Fix all architecture and file system violations in app/"
+
+# Event flow:
+# audit.started -> scan_violations -> violations.scanned -> fix_architecture -> architecture.fixed
+#   -> fix_file_system -> filesystem.fixed -> verify_compliance -> compliance.verified -> audit.complete
+
+shared_vars:
+  ARCHITECTURE_REQUIREMENTS: ".requirements/ARCHITECTURE_REQUIREMENTS.md"
+  FILE_SYSTEM_REQUIREMENTS: ".requirements/FILE_SYSTEM_REQUIREMENTS.md"
+  BASE_RULES: ".requirements/BASE_RULES.md"
+  CRITICAL_RULES: ".requirements/CRITICAL_RULES.md"
+  AUDIT_REPORT: ".ralph/outputs/ARCHITECTURE_AUDIT_REPORT.md"
+  FS_AUDIT_REPORT: ".ralph/outputs/FILE_SYSTEM_AUDIT_REPORT.md"
+  VIOLATIONS_JSON: ".ralph/outputs/compliance_violations.json"
+  FIX_LOG: ".ralph/outputs/compliance_fixes.log"
+
+hats:
+  # HAT 1: Violation Scanner - Scans all files for violations
+  violation_scanner:
+    name: "Violation Scanner"
+    triggers: ["audit.started"]
+    publishes: ["violations.scanned"]
+    tools: ["Bash", "Grep", "Read", "Write"]
+    max_turns: 30
+    prompt_file: "prompts/33_architecture_compliance_fix.md"
+    role: "Scan all files for architecture and file system violations"
+
+  # HAT 2: Domain Purity Fixer - Fixes ARCH-DEP-001 violations
+  domain_purity_fixer:
+    name: "Domain Purity Fixer"
+    triggers: ["violations.scanned"]
+    publishes: ["domain.purified"]
+    tools: ["Read", "Edit", "Write", "Bash"]
+    max_turns: 50
+    prompt_file: "prompts/33_architecture_compliance_fix.md"
+    role: "Remove service/infrastructure imports from domain layer"
+
+  # HAT 3: Infrastructure Extractor - Moves misplaced files
+  infrastructure_extractor:
+    name: "Infrastructure Extractor"
+    triggers: ["domain.purified"]
+    publishes: ["infrastructure.extracted"]
+    tools: ["Read", "Edit", "Write", "Bash"]
+    max_turns: 30
+    prompt_file: "prompts/33_architecture_compliance_fix.md"
+    role: "Move infrastructure files out of domain (e.g., SQLAlchemy schemas)"
+
+  # HAT 4: Protocol Creator - Creates Protocol interfaces
+  protocol_creator:
+    name: "Protocol Creator"
+    triggers: ["infrastructure.extracted"]
+    publishes: ["protocols.created"]
+    tools: ["Read", "Edit", "Write"]
+    max_turns: 30
+    prompt_file: "prompts/33_architecture_compliance_fix.md"
+    role: "Create Protocol interfaces for domain dependencies"
+
+  # HAT 5: God File Splitter - Splits files > 300 lines
+  god_file_splitter:
+    name: "God File Splitter"
+    triggers: ["protocols.created"]
+    publishes: ["files.splitted"]
+    tools: ["Read", "Edit", "Write", "Bash"]
+    max_turns: 50
+    prompt_file: "prompts/33_architecture_compliance_fix.md"
+    role: "Split files exceeding 300 lines into smaller modules"
+
+  # HAT 6: File Renamer - Fixes file naming violations
+  file_renamer:
+    name: "File Renamer"
+    triggers: ["files.splitted"]
+    publishes: ["files.renamed"]
+    tools: ["Bash", "Read", "Edit", "Write"]
+    max_turns: 20
+    prompt_file: "prompts/33_architecture_compliance_fix.md"
+    role: "Rename prohibited files (utils.py, helpers.py, etc.)"
+
+  # HAT 7: Directory Consolidator - Merges overlapping directories
+  directory_consolidator:
+    name: "Directory Consolidator"
+    triggers: ["files.renamed"]
+    publishes: ["directories.consolidated"]
+    tools: ["Bash", "Read", "Edit", "Write"]
+    max_turns: 30
+    prompt_file: "prompts/33_architecture_compliance_fix.md"
+    role: "Merge overlapping directories (application->services, presentation->api)"
+
+  # HAT 8: Requirements Updater - Updates .requirements files
+  requirements_updater:
+    name: "Requirements Updater"
+    triggers: ["directories.consolidated"]
+    publishes: ["requirements.updated"]
+    tools: ["Read", "Edit", "Write", "Glob"]
+    max_turns: 30
+    prompt_file: "prompts/33_architecture_compliance_fix.md"
+    role: "Update .requirements/app/ files after structural changes"
+
+  # HAT 9: Import Fixer - Fixes all broken imports after moves
+  import_fixer:
+    name: "Import Fixer"
+    triggers: ["requirements.updated"]
+    publishes: ["imports.fixed"]
+    tools: ["Bash", "Grep", "Read", "Edit"]
+    max_turns: 50
+    prompt_file: "prompts/33_architecture_compliance_fix.md"
+    role: "Fix all broken imports after file moves and renames"
+
+  # HAT 10: Compliance Verifier - Final verification
+  compliance_verifier:
+    name: "Compliance Verifier"
+    triggers: ["imports.fixed"]
+    publishes: ["compliance.verified"]
+    tools: ["Bash", "Grep", "Read", "Write"]
+    max_turns: 20
+    prompt_file: "prompts/33_architecture_compliance_fix.md"
+    role: "Verify all violations are fixed, run validation"
+
+  # HAT 11: Final Reporter - Generate final report
+  final_reporter:
+    name: "Final Reporter"
+    triggers: ["compliance.verified"]
+    publishes: ["audit.complete"]
+    tools: ["Read", "Write", "Bash"]
+    max_turns: 10
+    prompt_file: "prompts/33_architecture_compliance_fix.md"
+    role: "Generate final compliance report with all fixes applied"
+
+# Configuration
+config:
+  max_retries: 3
+  timeout_per_hat: 600
+  parallel_hats: false
+  checkpoint_dir: ".ralph/checkpoints/33_compliance_fix"
+  error_handling: "continue"
+
+# Validation
+validation:
+  pre_conditions:
+    - "test -f .requirements/ARCHITECTURE_REQUIREMENTS.md"
+    - "test -f .requirements/FILE_SYSTEM_REQUIREMENTS.md"
+  post_conditions:
+    - "grep -r 'from app.services' app/domain/ || echo 'Domain purity OK'"
+    - "grep -r 'from sqlalchemy' app/domain/ || echo 'No SQLAlchemy in domain'"

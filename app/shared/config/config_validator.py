@@ -4,6 +4,33 @@ Phase 4.2: Production Config Management
 
 This module provides validation for YAML configuration files and environment
 variables to ensure production readiness.
+
+Classes:
+    ProfileOptimizationConfigValidator: Validates profile_optimization.yaml
+    BatchBacktestConfigValidator: Validates profile_batch_backtest.yaml
+    ValidationErrorDetail: Detailed validation error information
+    ValidationResult: Result of configuration validation
+    DatabaseConfigValidator: Database configuration validation rules
+    RiskConfigValidator: Risk management configuration validation rules
+    CircuitBreakerValidator: Circuit breaker configuration validation rules
+    ConfigValidator: Main configuration validator class
+
+Usage:
+    validator = ConfigValidator(config_dir=Path("config"))
+    result = validator.validate_production_config()
+    result.print_summary()
+
+Example:
+    from pathlib import Path
+    from app.shared.config.config_validator import ConfigValidator
+
+    validator = ConfigValidator(Path("config"))
+    result = validator.validate_batch_backtest_config()
+    if result.is_valid:
+        print("Configuration is valid")
+    else:
+        for error in result.errors:
+            print(f"Error: {error.field} - {error.message}")
 """
 
 import datetime
@@ -22,6 +49,13 @@ logger = logging.getLogger(__name__)
 
 # ============================================================================
 # PROFILE OPTIMIZATION CONFIG VALIDATION
+#
+# This section contains validators for the profile_optimization.yaml configuration
+# file which controls strategy optimization parameters including:
+# - Random state for reproducibility
+# - Cross-validation settings
+# - Threading and parallelization
+# - Validation thresholds for backtest results
 # ============================================================================
 
 
@@ -29,7 +63,19 @@ class ProfileOptimizationConfigValidator(BaseModel):
     """
     Validator for profile_optimization.yaml configuration.
 
-    Validates parameter ranges, model configurations, and optimization settings.
+    Validates parameter ranges, model configurations, and optimization settings
+    for profile-based trading strategy optimization.
+
+    Attributes:
+        common_random_state: Random seed for reproducibility
+        common_test_size: Fraction of data to use for testing (0-1)
+        common_cv_folds: Number of cross-validation folds
+        threading_max_workers: Maximum worker threads (None for auto)
+        threading_worker_multiplier: Multiplier for CPU count (0-1)
+        threading_batch_size: Batch size for parallel processing
+        validation_min_sharpe: Minimum acceptable Sharpe ratio
+        validation_max_drawdown: Maximum acceptable drawdown (0-1)
+        validation_min_win_rate: Minimum acceptable win rate (0-1)
     """
 
     # Common parameters
@@ -89,7 +135,22 @@ class BatchBacktestConfigValidator(BaseModel):
     """
     Validator for profile_batch_backtest.yaml configuration.
 
-    Validates workflow settings, database config, and profile generation.
+    Validates workflow settings, database configuration, and profile generation
+    parameters for batch backtesting across multiple trading profiles.
+
+    Attributes:
+        database_url: Database connection URL (sqlite/postgresql/mysql)
+        output_dir: Directory for backtest results
+        capital_tiers: Capital tier definitions (micro, small, medium, large)
+        investment_horizons: Investment horizon definitions (short, medium, long)
+        symbols: List of trading symbols to backtest
+        backtest_start_date: Backtest period start (YYYY-MM-DD)
+        backtest_end_date: Backtest period end (YYYY-MM-DD)
+        optimization_n_trials: Number of optimization trials
+        optimization_n_jobs: Number of parallel optimization jobs
+        validation_min_sharpe: Minimum Sharpe ratio for valid profiles
+        validation_max_drawdown: Maximum drawdown for valid profiles
+        parallelization_max_profiles: Maximum profiles to process in parallel
     """
 
     # Database
@@ -121,6 +182,12 @@ class BatchBacktestConfigValidator(BaseModel):
     @field_validator("database_url")
     @classmethod
     def validate_database_url(cls, v: str) -> str:
+        """
+        Validate database URL format and protocol.
+
+        Ensures the URL is not empty and uses one of the supported
+        database protocols: sqlite, postgresql, or mysql.
+        """
         if not v or not v.strip():
             raise ValueError("database_url cannot be empty")
         if not any(v.startswith(prefix) for prefix in ["sqlite://", "postgresql://", "mysql://"]):
@@ -174,7 +241,16 @@ class BatchBacktestConfigValidator(BaseModel):
 
 
 class ValidationErrorDetail(BaseModel):
-    """Detailed validation error information."""
+    """
+    Detailed validation error information.
+
+    Represents a single validation error or warning with associated metadata.
+
+    Attributes:
+        field: The field name or path that failed validation (e.g., 'database.url')
+        message: Human-readable error message describing the validation failure
+        severity: Error severity level - 'error', 'warning', or 'info'
+    """
 
     field: str = Field(description="Field name that failed validation")
     message: str = Field(description="Error message")
@@ -182,7 +258,18 @@ class ValidationErrorDetail(BaseModel):
 
 
 class ValidationResult(BaseModel):
-    """Result of configuration validation."""
+    """
+    Result of configuration validation.
+
+    Aggregates all validation errors and warnings from a configuration
+    validation run. Provides methods to add errors/warnings and print
+    a summary of the validation results.
+
+    Attributes:
+        is_valid: Whether the overall configuration is valid (no errors)
+        errors: List of validation errors that must be fixed
+        warnings: List of validation warnings that should be reviewed
+    """
 
     is_valid: bool = Field(default=True, description="Whether configuration is valid")
     errors: List[ValidationErrorDetail] = Field(
@@ -195,18 +282,41 @@ class ValidationResult(BaseModel):
     model_config = {"validate_default": False}
 
     def add_error(self, field: str, message: str) -> None:
-        """Add an error to the validation result."""
+        """
+        Add an error to the validation result.
+
+        Errors mark the configuration as invalid and must be fixed
+        before the configuration can be used.
+
+        Args:
+            field: The field name or path that failed validation
+            message: Human-readable description of the error
+        """
         self.errors.append(ValidationErrorDetail(field=field, message=message, severity="error"))
         self.is_valid = False
 
     def add_warning(self, field: str, message: str) -> None:
-        """Add a warning to the validation result."""
+        """
+        Add a warning to the validation result.
+
+        Warnings indicate potential issues that should be reviewed but
+        do not prevent the configuration from being used.
+
+        Args:
+            field: The field name or path with a potential issue
+            message: Human-readable description of the warning
+        """
         self.warnings.append(
             ValidationErrorDetail(field=field, message=message, severity="warning")
         )
 
     def print_summary(self) -> None:
-        """Print validation summary to console."""
+        """
+        Print validation summary to console.
+
+        Outputs a formatted summary of all validation errors and warnings
+        to the logger. If no errors or warnings exist, prints success message.
+        """
         if self.is_valid and not self.warnings:
             logger.info("Configuration validation passed: All checks OK")
             return
@@ -223,7 +333,19 @@ class ValidationResult(BaseModel):
 
 
 class DatabaseConfigValidator(BaseModel):
-    """Database configuration validation rules."""
+    """
+    Database configuration validation rules.
+
+    Validates database settings including path, backup configuration,
+    and retention policies.
+
+    Attributes:
+        path: Database file path or connection string
+        backup_enabled: Whether automatic backups are enabled
+        backup_interval_seconds: Interval between backups in seconds
+        backup_dir: Directory for backup files
+        retention_hours: How long to keep backups in hours
+    """
 
     path: str = Field(description="Database path")
     backup_enabled: bool = Field(default=True)
@@ -251,7 +373,18 @@ class DatabaseConfigValidator(BaseModel):
 
 
 class RiskConfigValidator(BaseModel):
-    """Risk management configuration validation rules."""
+    """
+    Risk management configuration validation rules.
+
+    Validates risk management parameters including VaR limits,
+    position sizing constraints, and leverage limits.
+
+    Attributes:
+        max_var_daily_pct: Maximum daily Value at Risk percentage (0-1)
+        max_position_size_pct: Maximum single position size percentage (0-1)
+        max_leverage: Maximum allowed leverage (1-10)
+        use_real_correlation: Whether to use real correlation matrix
+    """
 
     max_var_daily_pct: float = Field(description="Maximum daily VaR percentage")
     max_position_size_pct: float = Field(description="Maximum position size percentage")
@@ -276,7 +409,19 @@ class RiskConfigValidator(BaseModel):
 
 
 class CircuitBreakerValidator(BaseModel):
-    """Circuit breaker configuration validation rules."""
+    """
+    Circuit breaker configuration validation rules.
+
+    Validates circuit breaker thresholds for trading halts.
+    All thresholds must be negative values between -1.0 and 0.
+
+    Attributes:
+        enabled: Whether circuit breaker is enabled
+        level_1_threshold: First level threshold (e.g., -0.05 for 5% drop)
+        level_2_threshold: Second level threshold (e.g., -0.10 for 10% drop)
+        level_3_threshold: Third level threshold (e.g., -0.20 for 20% drop)
+        check_interval_seconds: How often to check thresholds
+    """
 
     enabled: bool = Field(default=True)
     level_1_threshold: float = Field(description="Level 1 threshold")
@@ -296,7 +441,28 @@ class ConfigValidator:
     """
     Main configuration validator class.
 
-    Validates YAML configuration files and environment-specific settings.
+    Validates YAML configuration files and environment-specific settings
+    for production readiness and backtesting configurations.
+
+    Attributes:
+        PLACEHOLDER_PATTERNS: List of regex patterns for detecting placeholder values
+        REQUIRED_SECTIONS: List of required sections in production config
+        config_dir: Directory containing configuration files
+        result: Current validation result
+
+    Methods:
+        validate_yaml_syntax: Validate YAML file syntax
+        validate_environment_value: Validate environment configuration value
+        validate_debug_mode: Validate debug mode setting for environment
+        validate_required_sections: Validate that required sections exist
+        validate_placeholders: Check for placeholder values
+        validate_environment_variables: Validate referenced environment variables
+        validate_database_config: Validate database configuration
+        validate_risk_config: Validate risk management configuration
+        validate_circuit_breaker_config: Validate circuit breaker configuration
+        validate_production_config: Validate production configuration file
+        validate_profile_optimization_config: Validate profile_optimization.yaml
+        validate_batch_backtest_config: Validate profile_batch_backtest.yaml
     """
 
     # Placeholders that should not be in production config
@@ -323,8 +489,12 @@ class ConfigValidator:
         """
         Initialize the configuration validator.
 
+        Creates a new validator instance pointing to the specified configuration
+        directory. If no directory is provided, defaults to 'config/'.
+
         Args:
-            config_dir: Directory containing configuration files. Defaults to config/
+            config_dir: Directory containing configuration files.
+                            Defaults to 'config' directory in the project root.
         """
         self.config_dir = config_dir or Path("config")
         self.result = ValidationResult(is_valid=True)
@@ -333,11 +503,17 @@ class ConfigValidator:
         """
         Validate YAML file syntax.
 
+        Attempts to parse the YAML file and reports any syntax errors.
+        This is the first validation step before processing configuration content.
+
         Args:
-            file_path: Path to YAML file
+            file_path: Path to YAML file to validate
 
         Returns:
-            True if valid, False otherwise
+            True if YAML syntax is valid, False otherwise
+
+        Raises:
+            No exceptions raised - errors are added to self.result
         """
         try:
             with open(file_path, "r") as f:
@@ -356,11 +532,14 @@ class ConfigValidator:
         """
         Validate environment configuration value.
 
+        Ensures the environment field is present and contains a valid
+        environment name (development, testing, staging, or production).
+
         Args:
-            config: Configuration dictionary
+            config: Configuration dictionary to validate
 
         Returns:
-            True if valid, False otherwise
+            True if environment value is valid, False otherwise
         """
         environment = config.get("environment")
 
@@ -382,11 +561,14 @@ class ConfigValidator:
         """
         Validate debug mode setting for environment.
 
+        Ensures debug mode is disabled in production environments.
+        Debug mode should only be enabled in development or testing.
+
         Args:
-            config: Configuration dictionary
+            config: Configuration dictionary containing 'debug' and 'environment' keys
 
         Returns:
-            True if valid, False otherwise
+            True if debug mode setting is valid, False if debug is enabled in production
         """
         debug = config.get("debug", True)
         environment = config.get("environment")
@@ -401,11 +583,14 @@ class ConfigValidator:
         """
         Validate that required sections exist in configuration.
 
+        Checks for the presence of all required configuration sections:
+        environment, database, brokers, risk, monitoring, tax, and compliance.
+
         Args:
-            config: Configuration dictionary
+            config: Configuration dictionary to validate
 
         Returns:
-            True if all sections present, False otherwise
+            True if all required sections are present, False otherwise
         """
         missing_sections = []
 
@@ -425,11 +610,15 @@ class ConfigValidator:
         """
         Check for placeholder values that should be replaced.
 
+        Scans configuration recursively for common placeholder patterns
+        like 'your_*_here', 'CHANGE*THIS', and example URLs.
+        Placeholders are warnings, not errors, as they may be intentional.
+
         Args:
-            config: Configuration dictionary
+            config: Configuration dictionary to scan for placeholders
 
         Returns:
-            True if no placeholders found, False otherwise
+            True if no placeholders found, False if placeholders detected
         """
         found_placeholders = []
 
@@ -464,12 +653,16 @@ class ConfigValidator:
         """
         Validate that referenced environment variables are defined.
 
+        Extracts environment variable references (${VAR_NAME}) from the
+        configuration and checks if they are defined either in the provided
+        env_file or in the system environment.
+
         Args:
-            config: Configuration dictionary
-            env_file: Path to .env file to check
+            config: Configuration dictionary to scan for env var references
+            env_file: Optional path to .env file to check for definitions
 
         Returns:
-            True if all variables defined, False otherwise
+            True if all referenced variables are defined, False otherwise
         """
         # Extract environment variable references
         env_refs = self._extract_env_references(config)
@@ -500,13 +693,16 @@ class ConfigValidator:
 
     def validate_database_config(self, config: Dict[str, Any]) -> bool:
         """
-        Validate database configuration.
+        Validate database configuration section.
+
+        Validates database path, backup settings, and retention policies
+        using the DatabaseConfigValidator pydantic model.
 
         Args:
-            config: Configuration dictionary
+            config: Configuration dictionary containing 'database' section
 
         Returns:
-            True if valid, False otherwise
+            True if database configuration is valid, False otherwise
         """
         if "database" not in config:
             return True
@@ -515,20 +711,21 @@ class ConfigValidator:
             DatabaseConfigValidator(**config["database"])
             return True
         except ValidationError as e:
-            for error in e.errors():
-                field = ".".join(str(x) for x in error["loc"])
-                self.result.add_error(f"database.{field}", error["msg"])
+            self._process_validation_errors(e, "database")
             return False
 
     def validate_risk_config(self, config: Dict[str, Any]) -> bool:
         """
-        Validate risk management configuration.
+        Validate risk management configuration section.
+
+        Validates VaR limits, position size limits, leverage constraints,
+        and correlation settings using the RiskConfigValidator pydantic model.
 
         Args:
-            config: Configuration dictionary
+            config: Configuration dictionary containing 'risk' section
 
         Returns:
-            True if valid, False otherwise
+            True if risk configuration is valid, False otherwise
         """
         if "risk" not in config:
             return True
@@ -537,20 +734,21 @@ class ConfigValidator:
             RiskConfigValidator(**config["risk"])
             return True
         except ValidationError as e:
-            for error in e.errors():
-                field = ".".join(str(x) for x in error["loc"])
-                self.result.add_error(f"risk.{field}", error["msg"])
+            self._process_validation_errors(e, "risk")
             return False
 
     def validate_circuit_breaker_config(self, config: Dict[str, Any]) -> bool:
         """
-        Validate circuit breaker configuration.
+        Validate circuit breaker configuration section.
+
+        Validates the three-level circuit breaker thresholds and check
+        interval settings using the CircuitBreakerValidator pydantic model.
 
         Args:
-            config: Configuration dictionary
+            config: Configuration dictionary containing 'circuit_breaker' section
 
         Returns:
-            True if valid, False otherwise
+            True if circuit breaker configuration is valid, False otherwise
         """
         if "circuit_breaker" not in config:
             return True
@@ -559,20 +757,42 @@ class ConfigValidator:
             CircuitBreakerValidator(**config["circuit_breaker"])
             return True
         except ValidationError as e:
-            for error in e.errors():
-                field = ".".join(str(x) for x in error["loc"])
-                self.result.add_error(f"circuit_breaker.{field}", error["msg"])
+            self._process_validation_errors(e, "circuit_breaker")
             return False
+
+    def _process_validation_errors(self, exc: ValidationError, prefix: str) -> None:
+        """
+        Process and record validation errors from pydantic ValidationError.
+
+        Extracts error details from a pydantic ValidationError and adds them
+        to the validation result with the appropriate field prefix.
+
+        Args:
+            exc: The ValidationError exception from pydantic validation
+            prefix: The prefix to prepend to field names (e.g., 'database', 'risk')
+        """
+        for error in exc.errors():
+            field = ".".join(str(x) for x in error["loc"])
+            self.result.add_error(f"{prefix}.{field}", error["msg"])
 
     def validate_production_config(self, env_file: Optional[Path] = None) -> ValidationResult:
         """
         Validate production configuration file.
 
+        Performs comprehensive validation of production.yaml including:
+        - YAML syntax validation
+        - Environment value validation (must be 'production')
+        - Debug mode validation (must be disabled)
+        - Required sections validation
+        - Placeholder detection
+        - Environment variable references
+        - Database, risk, and circuit breaker configuration validation
+
         Args:
-            env_file: Path to .env.prod file to validate against
+            env_file: Optional path to .env.prod file for env var validation
 
         Returns:
-            ValidationResult with details
+            ValidationResult containing all validation errors and warnings
         """
         self.result = ValidationResult(is_valid=True)
 
@@ -629,7 +849,18 @@ class ConfigValidator:
         return self.result
 
     def _extract_env_references(self, config: Any) -> List[str]:
-        """Extract environment variable references from configuration."""
+        """
+        Extract environment variable references from configuration.
+
+        Recursively scans the configuration for values in the format ${VAR_NAME}
+        and returns a list of all found references.
+
+        Args:
+            config: Configuration value (dict, list, or primitive) to scan
+
+        Returns:
+            List of environment variable reference strings (e.g., ['${API_KEY}'])
+        """
         refs = []
 
         def extract(value):
@@ -647,7 +878,18 @@ class ConfigValidator:
         return refs
 
     def _load_env_file(self, env_file: Path) -> Dict[str, str]:
-        """Load environment variables from file."""
+        """
+        Load environment variables from a .env file.
+
+        Parses the file line by line, skipping comments and empty lines,
+        and returns a dictionary of key-value pairs.
+
+        Args:
+            env_file: Path to the .env file to load
+
+        Returns:
+            Dictionary mapping environment variable names to their values
+        """
         env_vars = {}
         try:
             with open(env_file, "r") as f:
@@ -671,12 +913,19 @@ class ConfigValidator:
         """
         Validate profile_optimization.yaml configuration.
 
+        Validates the profile optimization configuration including:
+        - Common parameters (random_state, test_size, cv_folds)
+        - Threading settings (max_workers, worker_multiplier, batch_size)
+        - Validation thresholds (min_sharpe, max_drawdown, min_win_rate)
+        - Threshold optimization ranges
+        - Profile and tier-specific overrides
+
         Args:
-            config_path: Path to profile_optimization.yaml.
+            config_path: Path to profile_optimization.yaml file.
                         Defaults to config/backtesting/profile_optimization.yaml
 
         Returns:
-            ValidationResult with details
+            ValidationResult with validation errors and warnings
         """
         self.result = ValidationResult(is_valid=True)
 
@@ -762,7 +1011,16 @@ class ConfigValidator:
         return self.result
 
     def _validate_threshold_ranges(self, threshold_config: Dict[str, Any]) -> None:
-        """Validate threshold optimization ranges."""
+        """
+        Validate threshold optimization ranges.
+
+        Ensures that for each threshold parameter, the min value is less
+        than the max value. Adds errors to self.result for invalid ranges.
+
+        Args:
+            threshold_config: Dictionary of threshold configurations
+                             with min/max range values
+        """
         for indicator, params in threshold_config.items():
             if indicator == "optimization":
                 continue
@@ -781,7 +1039,16 @@ class ConfigValidator:
                                 )
 
     def _validate_profile_overrides(self, profiles: Dict[str, Any]) -> None:
-        """Validate profile-specific overrides."""
+        """
+        Validate profile-specific overrides.
+
+        Checks that profile names in the configuration match known valid
+        profiles: conservative, balanced, aggressive, income, growth, dividendos.
+        Unknown profiles generate warnings.
+
+        Args:
+            profiles: Dictionary mapping profile names to their override configurations
+        """
         valid_profiles = [
             "conservative",
             "balanced",
@@ -799,7 +1066,15 @@ class ConfigValidator:
                 )
 
     def _validate_tier_overrides(self, tiers: Dict[str, Any]) -> None:
-        """Validate tier-specific overrides."""
+        """
+        Validate tier-specific overrides.
+
+        Checks that tier names in the configuration match known valid
+        tiers: micro, small, medium, large. Unknown tiers generate warnings.
+
+        Args:
+            tiers: Dictionary mapping tier names to their override configurations
+        """
         valid_tiers = ["micro", "small", "medium", "large"]
 
         for tier_name in tiers:
@@ -819,12 +1094,22 @@ class ConfigValidator:
         """
         Validate profile_batch_backtest.yaml configuration.
 
+        Performs comprehensive validation of batch backtest configuration including:
+        - YAML syntax validation
+        - Required sections validation (database, symbols, backtest_period)
+        - Database URL validation (sqlite, postgresql, mysql protocols)
+        - Capital tiers and investment horizons validation
+        - Backtest date range validation
+        - Optimization settings validation (n_trials, n_jobs)
+        - Parallelization settings validation (max_profiles)
+        - Cross-configuration reference validation
+
         Args:
-            config_path: Path to profile_batch_backtest.yaml.
+            config_path: Path to profile_batch_backtest.yaml file.
                         Defaults to config/profile_batch_backtest.yaml
 
         Returns:
-            ValidationResult with details
+            ValidationResult containing all validation errors and warnings
         """
         self.result = ValidationResult(is_valid=True)
 
@@ -941,9 +1226,12 @@ class ConfigValidator:
         """
         Validate that references to profile_optimization.yaml are valid.
 
-        Checks for:
-        - Module enable flags that reference non-existent modules
-        - Validation methods that reference undefined parameters
+        Checks for cross-configuration consistency including:
+        - Module enable flags that reference non-existent filter modules
+        - Known filters: momentum, ema, rsi, volume, atr, stoch_rsi
+
+        Args:
+            batch_config: Batch backtest configuration dictionary to validate
         """
         # Check enabled modules against known modules
         if "modules" in batch_config:
@@ -960,7 +1248,23 @@ class ConfigValidator:
 
 
 def main():
-    """Command-line interface for configuration validation."""
+    """
+    Command-line interface for configuration validation.
+
+    Provides CLI access to validate various configuration files:
+    - Production configuration (production.yaml)
+    - Batch backtest configuration (profile_batch_backtest.yaml)
+    - Profile optimization configuration (profile_optimization.yaml)
+
+    Exit codes:
+        0: Validation passed
+        1: Validation failed or error occurred
+
+    Example usage:
+        python -m app.shared.config.config_validator --environment production
+        python -m app.shared.config.config_validator --batch-config
+        python -m app.shared.config.config_validator --all-backtesting
+    """
     import argparse
 
     parser = argparse.ArgumentParser(description="Validate AlgoTrading configuration")
