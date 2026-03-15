@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-03-15T05:45:00Z",
+  "total_files": 1152,
+  "phase": "Phase 1: Configuration",
+  "phase_files": 44,
+  "processed": 44,
+  "passed_initial": 31,
+  "fixed": 9,
+  "remaining_fails": 4,
+  "current_file": null,
+  "fixed_files": [
+    "app/shared/config/api_endpoints.py",
+    "app/shared/config/base/di_config.py",
+    "app/shared/config/centralized_config.py",
+    "app/shared/config/compliance.py",
+    "app/shared/config/config_validator.py"
+  ],
+  "in_progress": [],
+  "remaining_fails_details": {
+    "app/shared/config/di_container.py": {"checks": ["pylint"]},
+    "app/shared/config/infrastructure.py": {"checks": ["pylint", "bandit"]},
+    "app/shared/config/params/backtest_config.py": {"checks": ["unknown"]},
+    "app/shared/config/params/trading_thresholds.py": {"checks": ["unknown"]},
+    "app/shared/config/position_sizing.py": {"checks": ["unknown"]},
+    "app/shared/config/signal_risk.py": {"checks": ["unknown"]},
+    "app/shared/config/technical_indicators.py": {"checks": ["unknown"]},
+    "app/shared/config/timeout_config.py": {"checks": ["unknown"]},
+    "app/shared/config/trading_config.py": {"checks": ["unknown"]}
+  }
+}

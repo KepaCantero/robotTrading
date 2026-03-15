@@ -44,7 +44,9 @@ def configure_container() -> DIContainer:
         AbstractEntityFactory,
         TradingEntityFactory(),
     )
-    logger.info("Domain factory registered successfully", extra={"factory_type": "AbstractEntityFactory"})
+    logger.info(
+        "Domain factory registered successfully", extra={"factory_type": "AbstractEntityFactory"}
+    )
 
     # Repository registrations (to be added when implementations are available)
     # Example:
