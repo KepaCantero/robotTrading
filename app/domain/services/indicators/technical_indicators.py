@@ -605,11 +605,11 @@ class TechnicalIndicators:
                 logger.debug(f"pandas-ta Bollinger failed, using fallback: {e}")
 
         # Native implementation
-        middle = np.mean(prices[-period:])
-        std = np.std(prices[-period:])
+        middle: float(np.mean(prices[-period:]))
+        std = float(np.std(prices[-period:]))
         upper = middle + std_dev * std
         lower = middle - std_dev * std
-        width = (upper - lower) / middle if middle > 0 else 0.0
+        width = (upper - lower) / middle if middle > 0.0 else 0.0
         position = (prices[-1] - lower) / (upper - lower) if upper != lower else 0.5
 
         if return_components:

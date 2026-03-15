@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-03-15T05:45:00Z",
+  "total_files": 1152,
+  "phase": 1,
+  "phase_files": 44,
+  "processed": 44,
+  "passed_initial": 31,
+  "fixed": 8,
+  "remaining_fails": 5,
+  "fixed_files": [
+    "app/shared/config/api_endpoints.py",
+    " "app/shared/config/base/di_config.py",
+    "app/shared/config/centralized_config.py",
+    "app/shared/config/compliance.py",
+    "app/shared/config/config_validator.py"
+  ],
+  "remaining_fails": [
+    "app/shared/config/di_container.py",
+    "app/shared/config/infrastructure.py",
+    "app/shared/config/params/backtest_config.py",
+    "app/shared/config/params/trading_thresholds.py",
+    "app/shared/config/position_sizing.py",
+    "app/shared/config/signal_risk.py",
+    "app/shared/config/technical_indicators.py",
+    "app/shared/config/timeout_config.py",
+    "app/shared/config/trading_config.py"
+  ],
+  "current_file": null,
+  "blocked_files": []
+}
