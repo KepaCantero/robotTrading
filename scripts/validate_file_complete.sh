@@ -95,7 +95,7 @@ TOTAL=$((TOTAL + 1))
 # ============================================================================
 # 5. Pylint (code quality)
 # ============================================================================
-if "$PYLINT" "$FILE" --output-format=json >/dev/null 2>&1; then
+if PYTHONPATH=. "$PYLINT" "$FILE" --output-format=json >/dev/null 2>&1; then
     PYLINT_STATUS="\"status\": \"passed\""
     PASSED=$((PASSED + 1))
 else

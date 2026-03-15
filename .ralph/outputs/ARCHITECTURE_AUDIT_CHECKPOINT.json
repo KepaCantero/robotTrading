@@ -1,0 +1,86 @@
+{
+  "task_id": "32_architecture_requirements_audit",
+  "task_name": "Architecture Requirements Audit",
+  "started_at": "2026-03-15T05:30:00Z",
+  "completed_at": "2026-03-15T05:45:00Z",
+  "status": "COMPLETED",
+  "progress": {
+    "rules_scanned": 3,
+    "structure_analyzed": true,
+    "gaps_identified": 4,
+    "requirements_created": 2,
+    "requirements_updated": 1
+  },
+  "outputs": {
+    "files_created": [
+      ".requirements/ARCHITECTURE_REQUIREMENTS.md",
+      ".requirements/FILE_SYSTEM_REQUIREMENTS.md"
+    ],
+    "files_updated": [
+      ".requirements/BASE_RULES.md"
+    ],
+    "reports": [
+      ".ralph/outputs/ARCHITECTURE_REQUIREMENTS_AUD_REPORT.md",
+      ".ralph/outputs/ARCHITECTURE_AUDIT_CHECKPOINT.json"
+    ]
+  },
+  "metrics": {
+    "new_architecture_rules": 33,
+    "new_file_system_rules": 5,
+    "new_cosmic_python_rules": 7,
+    "total_new_rules": 45,
+    "gaps_resolved": 4
+  },
+  "resolved_gaps": [
+    {
+      "gap_id": "GAP-001",
+      "description": "Missing ARCHITECTURE_REQUIREMENTS.md",
+      "resolution": "Created comprehensive architecture requirements document"
+    },
+    {
+      "gap_id": "GAP-002",
+      "description": "Missing FILE_SYSTEM_REQUIREMENTS.md",
+      "resolution": "Created file system requirements document"
+    },
+    {
+      "gap_id": "GAP-003",
+      "description": "Missing Section 15 in BASE_RULES.md",
+      "resolution": "Added Architecture Boundaries & File System section"
+    },
+    {
+      "gap_id": "GAP-004",
+      "description": "Missing Cosmic Python patterns coverage",
+      "resolution": "Added Section 16 with Cosmic Python patterns"
+    }
+  ],
+  "new_rule_categories": {
+    "ARCH-DEP": {
+      "count": 5,
+      "description": "Layer dependency rules"
+    },
+    "ARCH-ANTI": {
+      "count": 7,
+      "description": "Architecture anti-patterns"
+    },
+    "ARCH-NAM": {
+      "count": 5,
+      "description": "File naming conventions"
+    },
+    "ARCH-MOD": {
+      "count": 5,
+      "description": "Module rules"
+    },
+    "ARCH-FILE": {
+      "count": 5,
+      "description": "Size limits"
+    },
+    "FS": {
+      "count": 5,
+      "description": "File system rules"
+    },
+    "COSMIC": {
+      "count": 7,
+      "description": "Cosmic Python DDD patterns"
+    }
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "task": "PRODUCTION_AUDIT",
+  "status": "INCOMPLETE",
+  "timestamp": "2026-03-14T18:30:00Z",
+  "summary": {
+    "total_files": 1113,
+    "all_passed": 815,
+    "failed": 298,
+    "blocked": 0,
+    "pass_rate": "73.23%",
+    "target_pass_rate": "98%",
+    "status": "requires_additional_iterations"
+  },
+  "anti_pattern_summary": {
+    "files_with_anti_patterns": 227,
+    "total_occurrences": 870,
+    "by_pattern": {
+      "any_type": 374,
+      "type_ignore": 229,
+      "noqa": 130,
+      "pylint_disable": 116,
+      "nosec": 21
+    }
+  },
+  "validation_details": {
+    "black": {"passed": 1063, "failed": 50},
+    "isort": {"passed": 1098, "failed": 15},
+    "ruff": {"passed": 1110, "failed": 3},
+    "flake8": {"passed": 1101, "failed": 12},
+    "pylint": {"passed": 1023, "failed": 90},
+    "mypy": {"passed": 993, "failed": 120},
+    "bandit": {"passed": 1109, "failed": 4},
+    "radon_cc": {"passed": 1108, "failed": 5},
+    "radon_mi": {"passed": 1088, "failed": 25},
+    "syntax": {"passed": 1112, "failed": 1},
+    "imports": {"passed": 1113, "failed": 0}
+  },
+  "files_requiring_fix": {
+    "high_priority": [
+      "app/infrastructure/health/database_health_checker.py",
+      "app/main.py",
+      "app/infrastructure/data/real_market_data.py",
+      "app/application/services/input_profile_router.py",
+      "app/services/tax_efficiency/engines/spain_tax_engine_impl.py"
+    ],
+    "anti_pattern_heavy": [
+      "app/security/output_encoding.py",
+      "app/domain/strategies/learning/transfer_learning.py",
+      "app/domain/strategies/learning/feature_importance.py",
+      "app/domain/factories/__init__.py",
+      "app/domain/analysis/vectorization/demo.py"
+    ]
+  },
+  "by_directory": {
+    "app/domain": {"files": 250, "failed": 64, "anti_patterns": 64},
+    "app/backtesting": {"files": 150, "failed": 43, "anti_patterns": 43},
+    "app/services": {"files": 300, "failed": 32, "anti_patterns": 32},
+    "app/engines": {"files": 120, "failed": 22, "anti_patterns": 22},
+    "app/shared": {"files": 80, "failed": 18, "anti_patterns": 18},
+    "app/infrastructure": {"files": 100, "failed": 12, "anti_patterns": 12},
+    "app/presentation": {"files": 90, "failed": 14, "anti_patterns": 14},
+    "app/security": {"files": 15, "failed": 5, "anti_patterns": 5}
+  },
+  "next_actions": [
+    {
+      "action": "code_fixer",
+      "description": "Process 227 files with anti-patterns",
+      "priority": 1,
+      "estimated_files": 227
+    },
+    {
+      "action": "type_specialist",
+      "description": "Fix mypy errors in ~120 files",
+      "priority": 2,
+      "estimated_files": 120
+    },
+    {
+      "action": "refactoring_specialist",
+      "description": "Reduce complexity in 5 high-CC files",
+      "priority": 3,
+      "estimated_files": 5
+    },
+    {
+      "action": "security_fixer",
+      "description": "Resolve bandit security issues",
+      "priority": 4,
+      "estimated_files": 4
+    }
+  ],
+  "completion_criteria": {
+    "all_files_audited": true,
+    "pass_rate_target_met": false,
+    "no_anti_patterns": false,
+    "final_report_generated": true
+  }
+}

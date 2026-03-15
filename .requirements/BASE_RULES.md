@@ -1,8 +1,8 @@
 # BASE_RULES.md - AlgoTrading Codebase
 
-**Last Updated:** 2026-02-01
+**Last Updated:** 2026-03-15
 **Total Rule Files:** 80
-**Total Rules Extracted:** 200+ rules organized
+**Total Rules Extracted:** 250+ rules organized
 
 ---
 
@@ -344,6 +344,121 @@ class Service:
 
 ---
 
+## 15. ARCHITECTURE BOUNDARIES & FILE SYSTEM (05-architecture.md, 16-cosmic-python-architecture-patterns.md, 18-clean-architecture-structure.md)
+
+**See also:**
+- `.requirements/ARCHITECTURE_REQUIREMENTS.md` - Detailed layer architecture rules
+- `.requirements/FILE_SYSTEM_REQUIREMENTS.md` - File naming and directory rules
+
+### 15.1 Layer Dependency Rules
+
+| Rule ID | Rule | Requirement | Priority |
+|---------|------|------------|----------|
+| ARCH-DEP-001 | Domain layer purity | Domain has NO dependencies on other layers | **P0** |
+| ARCH-DEP-002 | Application dependencies | Application depends ONLY on Domain + Core/Protocols | **P0** |
+| ARCH-DEP-003 | Infrastructure implements interfaces | Infrastructure implements Domain/Core Protocols | **P0** |
+| ARCH-DEP-004 | Presentation uses Application | Presentation layer uses Application services only | **P0** |
+| ARCH-DEP-005 | Dependency direction | All dependencies point INWARD toward Domain | **P0** |
+
+### 15.2 Architecture Anti-Patterns (PROHIBITED)
+
+| Rule ID | Anti-Pattern | Description | Priority |
+|---------|--------------|-------------|----------|
+| ARCH-ANTI-001 | Domain importing infrastructure | Domain files importing from app/infrastructure/ | **P0** |
+| ARCH-ANTI-002 | Domain importing services | Domain files importing from app/services/ | **P0** |
+| ARCH-ANTI-003 | Circular imports | Module A imports B, B imports A | **P0** |
+| ARCH-ANTI-004 | God classes | Classes > 300 lines | P1 |
+| ARCH-ANTI-005 | God functions | Functions > 50 lines | P1 |
+| ARCH-ANTI-006 | Framework in domain | FastAPI, SQLAlchemy, httpx imports in domain/ | **P0** |
+| ARCH-ANTI-007 | Hardcoded dependencies | Direct instantiation instead of DI | **P0** |
+
+### 15.3 File Naming Rules
+
+| Rule ID | Rule | Pattern | Priority |
+|---------|------|---------|----------|
+| ARCH-NAM-001 | File names | `snake_case.py` | P2 |
+| ARCH-NAM-002 | Class names | `PascalCase` | P2 |
+| ARCH-NAM-003 | Function names | `snake_case` | P2 |
+| ARCH-NAM-004 | Constants | `UPPER_SNAKE_CASE` | P2 |
+| ARCH-NAM-005 | Private members | `_leading_underscore` | P2 |
+
+### 15.4 Module Rules
+
+| Rule ID | Rule | Requirement | Priority |
+|---------|------|------------|----------|
+| ARCH-MOD-001 | Package initialization | Every package has `__init__.py` | P1 |
+| ARCH-MOD-002 | Public API exports | `__init__.py` exports public API with `__all__` | P1 |
+| ARCH-MOD-003 | No logic in init | No business logic in `__init__.py` | P1 |
+| ARCH-MOD-004 | No circular imports | PROHIBITED circular imports between modules | **P0** |
+| ARCH-MOD-005 | DI for cycles | Use dependency injection to avoid cycles | **P0** |
+
+### 15.5 Size Limits
+
+| Rule ID | Type | Limit | Priority |
+|---------|------|-------|----------|
+| ARCH-FILE-001 | File | 300 lines max | P1 |
+| ARCH-FILE-002 | Function | 50 lines max | P1 |
+| ARCH-FILE-003 | Class | 300 lines max | P1 |
+| ARCH-FILE-004 | Parameters | 7 max per function | P2 |
+| ARCH-FILE-005 | Complexity | 10 max cyclomatic | P1 |
+
+### 15.6 File System Rules
+
+| Rule ID | Rule | Requirement | Priority |
+|---------|------|------------|----------|
+| FS-001 | Package init | Every Python package has `__init__.py` | P1 |
+| FS-002 | No logic in init | No business logic in `__init__.py` | P1 |
+| FS-003 | Tests mirror source | `tests/unit/` mirrors `app/` structure | P1 |
+| FS-004 | Config separate | Config files in `config/`, not `app/` | P1 |
+| FS-005 | Logs dedicated | Log files in `logs/`, not scattered | P2 |
+
+**Verification Commands:**
+```bash
+# Domain layer purity - NO matches expected
+grep -r "from app.services\|from app.infrastructure\|from app.api" app/domain/
+
+# Domain no frameworks - NO matches expected
+grep -r "from fastapi\|from sqlalchemy\|import httpx" app/domain/
+
+# File size check
+find app -name "*.py" -exec wc -l {} \; | awk '$1 > 300 {print}'
+```
+
+---
+
+## 16. COSMIC PYTHON PATTERNS (16-cosmic-python-architecture-patterns.md)
+
+| Rule ID | Pattern | Requirement | Priority |
+|---------|---------|-------------|----------|
+| COSMIC-001 | Repository Pattern | Abstract data access behind Repository interface | **P0** |
+| COSMIC-002 | Service Layer | Use service layer for orchestration | P1 |
+| COSMIC-003 | Unit of Work | Atomic transactions with commit/rollback | **P0** |
+| COSMIC-004 | Domain Events | Publish events for cross-module communication | P2 |
+| COSMIC-005 | Value Objects | Immutable value objects for domain concepts | P1 |
+| COSMIC-006 | Aggregates | Group related entities with aggregate root | P1 |
+| COSMIC-007 | Message Bus | Decouple event handlers from publishers | P2 |
+
+**Critical Pattern:**
+```python
+# ✅ Repository Pattern (REQUIRED for data access)
+class TradeRepositoryProtocol(Protocol):
+    def save(self, trade: Trade) -> None: ...
+    def find_by_id(self, trade_id: str) -> Trade | None: ...
+
+# ✅ Service Layer (REQUIRED for use cases)
+class ExecutionService:
+    def __init__(self, broker: BrokerProtocol, repo: TradeRepositoryProtocol):
+        self._broker = broker
+        self._repo = repo
+
+    def execute(self, order: Order) -> Execution:
+        execution = self._broker.execute_order(order)
+        self._repo.save(Trade.from_execution(execution))
+        return execution
+```
+
+---
+
 ## ACCEPTANCE CRITERIA TEMPLATES
 
 For each `.requirements.md` file, define automatable acceptance criteria:
@@ -418,6 +533,8 @@ When creating a `.requirements.md` file:
 | Type Hints | 6 | 0 | 4 | 2 | 0 |
 | SOLID | 5 | 2 | 2 | 1 | 0 |
 | Architecture | 7 | 3 | 2 | 2 | 0 |
+| Architecture Boundaries | 33 | 15 | 14 | 4 | 0 |
+| Cosmic Python Patterns | 7 | 2 | 4 | 1 | 0 |
 | Testing | 8 | 1 | 5 | 2 | 0 |
 | Security | 10 | 7 | 3 | 0 | 0 |
 | Logging | 7 | 2 | 4 | 1 | 0 |
@@ -428,11 +545,11 @@ When creating a `.requirements.md` file:
 | Quality | 7 | 0 | 3 | 4 | 0 |
 | Trading | 15 | 10 | 5 | 0 | 0 |
 | Performance | 6 | 0 | 2 | 4 | 0 |
-| **TOTAL** | **96** | **23** | **51** | **21** | **1** |
+| **TOTAL** | **140** | **50** | **68** | **21** | **1** |
 
 ### By Priority
-- **P0 (Critical):** 23 rules - Security, data integrity, trading safety
-- **P1 (High):** 51 rules - Production incidents, debugging, performance
+- **P0 (Critical):** 50 rules - Security, data integrity, trading safety, architecture boundaries
+- **P1 (High):** 68 rules - Production incidents, debugging, performance
 - **P2 (Medium):** 21 rules - Maintainability, code quality
 - **P3 (Low):** 1 rule - Style preferences
 

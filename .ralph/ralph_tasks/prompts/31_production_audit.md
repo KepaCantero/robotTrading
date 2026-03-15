@@ -5,6 +5,23 @@ You are a specialized production code audit and fix agent. Your task is to audit
 
 ---
 
+## CRITICAL: THIS IS NOT A SHALLOW FIX TASK
+
+**You are NOT allowed to:**
+- Add `# type: ignore` comments
+- Add `# pylint: disable` comments
+- Add `# noqa` comments
+- Add `# nosec` comments
+- Use `Any` type hint
+- Skip files because they're "too complex"
+- Comment out code instead of fixing it
+- Add generic/useless docstrings
+- Mark files as fixed without running validation
+
+**If you do any of the above, the task has FAILED.**
+
+---
+
 ## OBJECTIVE
 
 Audit and fix all production Python files in `app/` to pass the following validation checks:
@@ -22,6 +39,126 @@ Audit and fix all production Python files in `app/` to pass the following valida
 | 9 | Maintainability | radon mi | MI >= 20 |
 | 10 | Syntax | py_compile | No syntax errors |
 | 11 | Imports Valid | AST parse | Valid import structure |
+
+---
+
+## ANTI-PATTERNS - DO NOT DO THESE
+
+### 1. Type Hints - FORBIDDEN patterns:
+```python
+# BAD - Do NOT do this
+def process(data: Any) -> Any:  # Lazy, not allowed
+    ...
+
+def process(data):  # type: ignore  # Skipping, not allowed
+    ...
+
+# GOOD - Do this instead
+from typing import Dict, List, Optional, Union
+from decimal import Decimal
+
+def process(data: Dict[str, Decimal]) -> List[Decimal]:
+    ...
+```
+
+### 2. Pylint - FORBIDDEN patterns:
+```python
+# BAD - Do NOT do this
+variable = 1  # pylint: disable=invalid-name
+
+# BAD - Do NOT do this
+# pylint: disable=all
+
+# GOOD - Do this instead
+position_count = 1  # Use descriptive names
+```
+
+### 3. Bandit Security - FORBIDDEN patterns:
+```python
+# BAD - Do NOT do this
+password = os.environ.get("PASSWORD")  # nosec
+
+# BAD - Do NOT do this
+eval(user_input)  # nosec  # Skipping security fix
+
+# GOOD - Do this instead
+import os
+from typing import Optional
+
+def get_password() -> Optional[str]:
+    """Get password from secure vault or environment."""
+    return os.environ.get("APP_PASSWORD")
+
+# For eval - DO NOT USE eval(), refactor to use ast.literal_eval() or a parser
+import ast
+result = ast.literal_eval(user_input)  # Safe alternative
+```
+
+### 4. Complexity - FORBIDDEN patterns:
+```python
+# BAD - Do NOT say "this file is too complex, skipping"
+# BAD - Do NOT add comments to "explain" complexity instead of reducing it
+
+# GOOD - Actually refactor:
+# Before (CC=15):
+def process_trade(signal, portfolio, risk, market):
+    if signal:
+        if portfolio.has_position:
+            if risk.ok:
+                if market.open:
+                    for order in orders:
+                        if order.valid:
+                            # ... more nested conditions
+
+# After (CC=5 per function):
+def process_trade(signal, portfolio, risk, market):
+    if not signal:
+        return None
+    if not _can_trade(portfolio, risk, market):
+        return None
+    return _execute_orders(orders)
+
+def _can_trade(portfolio, risk, market) -> bool:
+    return portfolio.has_position and risk.ok and market.open
+
+def _execute_orders(orders: List[Order]) -> List[Result]:
+    return [o for o in orders if o.valid]
+```
+
+### 5. Generic Docstrings - FORBIDDEN patterns:
+```python
+# BAD - Do NOT do this
+def calculate(x, y):
+    """Calculate something."""  # Useless
+    return x + y
+
+# GOOD - Do this instead
+def calculate(x: Decimal, y: Decimal) -> Decimal:
+    """
+    Calculate the sum of two decimal values.
+
+    Args:
+        x: First operand
+        y: Second operand
+
+    Returns:
+        The sum of x and y as a Decimal
+
+    Raises:
+        TypeError: If x or y are not Decimal instances
+    """
+    return x + y
+```
+
+### 6. Unused Imports/Variables - FORBIDDEN patterns:
+```python
+# BAD - Do NOT do this
+# import numpy  # Commented out instead of removing
+# x = 1  # unused
+
+# GOOD - Do this instead
+# Remove the import/variable entirely
+```
 
 ---
 
@@ -147,72 +284,103 @@ Record results in: `.ralph/outputs/PRODUCTION_AUDIT_REPORT.json`
 .venv/bin/ruff check <file_path> --fix
 ```
 
-### Step 4: Manual Fix (if auto-fix insufficient)
+### Step 4: DEEP Manual Fix (if auto-fix insufficient)
+
+**READ THE ENTIRE FILE before making changes. Understand the context.**
 
 #### Black failed:
 ```bash
 .venv/bin/black <file_path> --diff
 ```
-Fix syntax issues blocking black.
+Fix syntax issues blocking black. DO NOT skip.
 
 #### Isort failed:
 ```bash
 .venv/bin/isort <file_path> --diff
 ```
-Check import order: stdlib → third-party → local
+Check import order: stdlib → third-party → local.
+Remove unused imports entirely (do not comment them).
 
 #### Ruff failed:
 ```bash
 .venv/bin/ruff check <file_path>
 ```
-Fix each error manually.
+Fix each error properly. DO NOT add `# noqa` comments.
 
 #### Flake8 failed:
 ```bash
 .venv/bin/flake8 <file_path> --max-line-length=100
 ```
-Fix line length, unused imports, etc.
+- Line too long: Break into multiple lines properly
+- Unused import: Remove it
+- Unused variable: Either use it or remove it
+- DO NOT add `# noqa` comments
 
 #### Pylint failed:
 ```bash
 .venv/bin/pylint <file_path>
 ```
-Fix naming, unused variables, docstrings.
+- invalid-name: Rename to descriptive name
+- unused-argument: Remove if truly unused, or prefix with `_` if needed for interface
+- missing-docstring: Add proper docstring (not generic)
+- too-many-branches: Refactor into smaller functions
+- DO NOT add `# pylint: disable` comments
 
 #### Mypy failed:
 ```bash
 .venv/bin/mypy --no-incremental --follow-imports=skip --ignore-missing-imports <file_path>
 ```
-Add missing type hints.
+- Add proper type hints (not `Any`)
+- Use `Optional[T]` for nullable values
+- Use `Union[A, B]` for multiple types
+- Use specific types: `Dict[str, Decimal]` not `dict`
+- DO NOT add `# type: ignore` comments
 
 #### Bandit failed:
 ```bash
 .venv/bin/bandit <file_path> -ll
 ```
-Fix security issues:
-- Hardcoded passwords/secrets
-- SQL injection vulnerabilities
-- Unsafe deserialization
-- Weak cryptography
+Read the security issue and FIX IT:
+- Hardcoded password: Move to environment/config
+- SQL injection: Use parameterized queries
+- Unsafe deserialization: Use `ast.literal_eval()` or schema validation
+- Weak crypto: Use stronger algorithms
+- DO NOT add `# nosec` comments
 
 #### Radon CC failed (CC >= 10):
 ```bash
-.venv/bin/radon cc <file_path> -s
+.venv/bin/radon cc <file_path> -s -a
 ```
-Refactor complex functions:
-- Break into smaller functions
-- Reduce nested conditionals
-- Extract helper methods
+You MUST refactor. Identify the complex function and:
+1. Extract helper functions
+2. Use early returns to reduce nesting
+3. Use guard clauses
+4. Replace nested if with dictionary dispatch
+5. Extract complex conditions to well-named variables
+6. DO NOT skip or say "too complex"
+
+Example refactoring strategy:
+```python
+# Identify the complex function
+.venv/bin/radon cc <file_path> -s
+
+# Output: F 10:0 complex_function - CC=15
+# This means function at line 10 has CC=15
+
+# READ the function, UNDERSTAND it, then REFACTOR
+```
 
 #### Radon MI failed (MI < 20):
 ```bash
 .venv/bin/radon mi <file_path> -s
 ```
 Improve maintainability:
-- Add docstrings
-- Reduce coupling
-- Simplify logic
-- Remove dead code
+1. Add proper docstrings (not generic)
+2. Remove dead code
+3. Reduce coupling between functions
+4. Extract repeated code to utilities
+5. Add type hints
+6. Simplify complex expressions
 
 #### Syntax failed:
 ```bash
@@ -229,18 +397,32 @@ Check for:
 - Circular imports
 - Missing module references
 
-### Step 5: Re-Validate
+### Step 5: VERIFY FIX - NOT OPTIONAL
 ```bash
 bash scripts/validate_file_complete.sh <file_path>
 ```
 
-### Step 6: Handle Persistent Failures
-- Max 3 attempts per file
-- If still failing after 3 attempts: mark as BLOCKED
-- Record blocking reason
-- Continue to next file
+**You MUST verify after EVERY fix. If `summary.success == false`, the file is NOT fixed.**
 
-### Step 7: Track Progress
+### Step 6: Check for Anti-Patterns
+Before marking file as complete, verify:
+```bash
+# Check for forbidden patterns
+grep -E "# type: ignore|# pylint: disable|# noqa|# nosec|: Any" <file_path>
+```
+If ANY matches found: REMOVE THEM and re-fix properly.
+
+### Step 7: Handle Persistent Failures
+- Max 5 attempts per file (increased from 3)
+- Each attempt must be a DIFFERENT approach
+- If still failing after 5 attempts: mark as BLOCKED with DETAILED reason
+- Record:
+  - Exact error messages
+  - What you tried
+  - Why it didn't work
+  - What would be needed to fix it
+
+### Step 8: Track Progress
 Update: `.ralph/outputs/PRODUCTION_FIX_PROGRESS.json`
 
 ```json
@@ -255,8 +437,15 @@ Update: `.ralph/outputs/PRODUCTION_FIX_PROGRESS.json`
   "blocked_files": [
     {
       "file": "app/complex_file.py",
-      "reason": "Could not reduce CC below 10 after 3 attempts",
-      "failed_checks": ["radon_cc"]
+      "reason": "CC=18 after 5 refactoring attempts. Requires architectural redesign: split into 3 separate service classes.",
+      "failed_checks": ["radon_cc"],
+      "attempts": [
+        {"attempt": 1, "approach": "Extract helper functions", "result": "CC reduced from 22 to 18"},
+        {"attempt": 2, "approach": "Early returns", "result": "No improvement"},
+        {"attempt": 3, "approach": "Guard clauses", "result": "CC reduced to 18"},
+        {"attempt": 4, "approach": "Dictionary dispatch", "result": "Not applicable - no switch-like pattern"},
+        {"attempt": 5, "approach": "Extract class", "result": "Would break interface - needs architectural decision"}
+      ]
     }
   ]
 }
@@ -273,54 +462,45 @@ After all files processed, run final validation:
 for file in $(cat .ralph/outputs/PRODUCTION_FILE_LIST.json | jq -r '.files[]'); do
     bash scripts/validate_file_complete.sh "$file"
 done
+
+# Check for anti-patterns across all files
+grep -rE "# type: ignore|# pylint: disable|# noqa|# nosec|: Any" app/ --include="*.py"
 ```
 
 Generate final report: `.ralph/outputs/PRODUCTION_AUDIT_FINAL.json`
-
-```json
-{
-  "task": "PRODUCTION_AUDIT",
-  "status": "COMPLETE",
-  "timestamp": "2026-03-14T18:00:00Z",
-  "summary": {
-    "total_files": 400,
-    "all_passed": 395,
-    "blocked": 5,
-    "pass_rate": "98.75%"
-  },
-  "validation_details": {
-    "black": {"passed": 400, "failed": 0},
-    "isort": {"passed": 400, "failed": 0},
-    "ruff": {"passed": 398, "failed": 2},
-    "flake8": {"passed": 400, "failed": 0},
-    "pylint": {"passed": 395, "failed": 5},
-    "mypy": {"passed": 380, "failed": 20},
-    "bandit": {"passed": 400, "failed": 0},
-    "radon_cc": {"passed": 398, "failed": 2},
-    "radon_mi": {"passed": 395, "failed": 5},
-    "syntax": {"passed": 400, "failed": 0},
-    "imports": {"passed": 400, "failed": 0}
-  },
-  "blocked_files": [
-    {
-      "file": "app/complex_strategy.py",
-      "reason": "CC=15, architecture redesign required",
-      "failed_checks": ["radon_cc"]
-    }
-  ]
-}
-```
 
 ---
 
 ## GOLDEN RULES
 
-1. **NO EXCEPTIONS** - A file is only valid when `summary.success == true`
-2. **TRUST TOOLS** - Don't rely on judgment, rely on validation output
-3. **ONE FILE AT A TIME** - Complete full cycle before moving to next file
-4. **VALIDATE AFTER EVERY FIX** - Never assume a fix worked without validation
-5. **RECORD BLOCKED FILES** - If 3 attempts fail, record and continue
-6. **DEPENDENCY ORDER** - Process files in phases to avoid breaking changes
+1. **NO SHORTCUTS** - `# type: ignore`, `# pylint: disable`, `# noqa`, `# nosec` are FORBIDDEN
+2. **NO `Any` TYPE** - Use specific types, `Optional`, `Union`, or proper generics
+3. **NO SKIPPING** - Every file must be processed, even "complex" ones
+4. **NO BATCHING** - Process files ONE BY ONE, not in groups
+5. **NO PARTIAL TASKS** - You cannot say "I'll process 50 files" or "I'll do this later"
+6. **VERIFY EVERYTHING** - Run validation after EVERY change
+7. **UNDERSTAND BEFORE FIXING** - Read the entire file, understand context
+8. **REAL FIXES ONLY** - Fix the root cause, don't suppress the symptom
+9. **DOCUMENT BLOCKERS** - If truly blocked, document WHAT you tried and WHY it failed
+10. **CHECKPOINT OFTEN** - Save progress after EVERY file to allow resumption
+
+---
+
+## CRITICAL: YOU MUST PROCESS ALL FILES
+
+You CANNOT:
+- Say "I'll process 50 files for now"
+- Say "This is too many files, I'll do a subset"
+- Say "I'll skip large directories"
+- Say "I'll continue in another session"
+
+You MUST:
+- Process EVERY file in the discovery list
+- Save checkpoint after EVERY file
+- Resume from checkpoint if interrupted
+- Continue until ALL files pass OR are documented as blocked
+
+If you try to skip files, the task has FAILED.
 
 ---
 
@@ -328,10 +508,11 @@ Generate final report: `.ralph/outputs/PRODUCTION_AUDIT_FINAL.json`
 
 Task is COMPLETE when:
 - [ ] All `.py` files in `app/` (excluding tests) have been audited
-- [ ] All auto-fixable issues have been fixed
-- [ ] Blocked files have been documented with reasons
+- [ ] All files pass validation OR have documented blockers
+- [ ] NO anti-patterns exist (`# type: ignore`, `# pylint: disable`, etc.)
+- [ ] NO `Any` type hints in production code
 - [ ] Final report generated with complete statistics
-- [ ] Pass rate >= 95% OR blocked files documented
+- [ ] Pass rate >= 98% (blocked files must be < 2%)
 
 ---
 
@@ -341,6 +522,7 @@ If execution is interrupted:
 1. Load checkpoint from `.ralph/checkpoints/31_production_audit_checkpoint.json`
 2. Resume from first incomplete file
 3. Continue processing in dependency order
+4. Re-verify previous fixes (they may have regressed)
 
 ---
 
@@ -355,18 +537,21 @@ bash scripts/validate_file_complete.sh <file>
 .venv/bin/isort <file>
 .venv/bin/ruff check <file> --fix
 
-# Individual tools
+# Individual tools (read errors)
 .venv/bin/flake8 <file> --max-line-length=100
 .venv/bin/pylint <file>
 .venv/bin/mypy --no-incremental --follow-imports=skip <file>
 .venv/bin/bandit <file> -ll
-.venv/bin/radon cc <file> -s
+.venv/bin/radon cc <file> -s -a
 .venv/bin/radon mi <file> -s
 python -m py_compile <file>
+
+# Anti-pattern detection
+grep -E "# type: ignore|# pylint: disable|# noqa|# nosec|: Any" <file>
 ```
 
 ---
 
-Start with discovery, then audit systematically, fix file by file, and validate thoroughly.
+**REMEMBER: This task is about QUALITY, not speed. Take time to understand and fix properly.**
 
-**REMEMBER: Only trust the validation script output. If `summary.success == false`, the file is NOT fixed.**
+**A shallow fix is worse than no fix - it hides the problem.**
