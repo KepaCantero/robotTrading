@@ -12,7 +12,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
-from app.core.protocols.i_spain_tax_engine import ISpainTaxEngine  # @skip-import si no existe
+from app.shared.protocols.i_spain_tax_engine import ISpainTaxEngine
 
 logger = logging.getLogger(__name__)
 
@@ -207,7 +207,6 @@ class SpainTaxEngineImpl(ISpainTaxEngine):
             "ASML",
             "MC",
             "AIR",
-            "SAN",
             "ISP",
             "AI",
             "OR",
