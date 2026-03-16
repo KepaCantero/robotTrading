@@ -281,7 +281,7 @@ class SecretsManagerImpl:
         """Encrypt a secret value."""
         if self._fernet is None:
             raise SecretsError(
-                "Encryption not available. Set ALGOTRADING_ENCRYPTION_KEY " "environment variable."
+                "Encryption not available. Set ALGOTRADING_ENCRYPTION_KEY environment variable."
             )
         return self._fernet.encrypt(value.encode()).decode()
 
@@ -289,7 +289,7 @@ class SecretsManagerImpl:
         """Decrypt a secret value."""
         if self._fernet is None:
             raise SecretsError(
-                "Encryption not available. Set ALGOTRADING_ENCRYPTION_KEY " "environment variable."
+                "Encryption not available. Set ALGOTRADING_ENCRYPTION_KEY environment variable."
             )
         return self._fernet.decrypt(encrypted_value.encode()).decode()
 
