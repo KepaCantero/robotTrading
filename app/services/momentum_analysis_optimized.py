@@ -20,7 +20,7 @@ import numpy as np
 import pandas as pd
 
 # Import Numba accelerators for 10-100x speedup (REQUIRED)
-from app.core.numba_accelerators import (
+from app.shared.performance.numba_accelerators import (
     calculate_atr,
     calculate_bollinger_bands,
     calculate_cvar,

@@ -11,7 +11,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Set
 
 from app.backtesting.data_loader import DataLoader
-from app.models.market_data import Quote
+from app.domain.models.market_data import Quote
 from app.services.portfolio_config_manager import (
     PortfolioConfigManager,
     get_portfolio_config_manager,
