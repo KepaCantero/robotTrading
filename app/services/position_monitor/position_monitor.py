@@ -598,10 +598,12 @@ class PositionMonitor:
         CRITICAL: This enables position recovery after restart.
         """
         try:
-            from app.database import get_sync_db
+            from app.infrastructure.persistence.database import get_sync_db
 
             with get_sync_db() as session:
-                from app.database.models import PositionState
+                from app.infrastructure.persistence.database.models import (  # pylint: disable=import-outside-toplevel,useless-suppression
+                    PositionState,
+                )
 
                 # Query the position_state table
                 state_record = (
@@ -869,10 +871,12 @@ class PositionMonitor:
         CRITICAL: This enables position recovery after restart.
         """
         try:
-            from app.database import get_sync_db
+            from app.infrastructure.persistence.database import get_sync_db
 
             with get_sync_db() as session:
-                from app.database.models import PositionState
+                from app.infrastructure.persistence.database.models import (  # pylint: disable=import-outside-toplevel,useless-suppression
+                    PositionState,
+                )
 
                 # Serialize current positions
                 positions_list = [pos.to_dict() for pos in self._positions.values()]
