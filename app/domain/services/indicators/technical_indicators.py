@@ -22,7 +22,7 @@ Supported Indicators:
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -605,7 +605,7 @@ class TechnicalIndicators:
                 logger.debug(f"pandas-ta Bollinger failed, using fallback: {e}")
 
         # Native implementation
-        middle: float(np.mean(prices[-period:]))
+        middle = float(np.mean(prices[-period:]))
         std = float(np.std(prices[-period:]))
         upper = middle + std_dev * std
         lower = middle - std_dev * std
@@ -713,14 +713,18 @@ class TechnicalIndicators:
             minus_dm[i] = down_move if down_move > up_move and down_move > 0 else 0
 
         # Smoothed values
-        atr_smoothed = np.mean(tr[-period:])
-        plus_di = 100 * np.mean(plus_dm[-period:]) / atr_smoothed if atr_smoothed > 0 else 0
-        minus_di = 100 * np.mean(minus_dm[-period:]) / atr_smoothed if atr_smoothed > 0 else 0
+        atr_smoothed: float = float(np.mean(tr[-period:]))
+        plus_di: float = (
+            100 * float(np.mean(plus_dm[-period:])) / atr_smoothed if atr_smoothed > 0 else 0.0
+        )
+        minus_di: float = (
+            100 * float(np.mean(minus_dm[-period:])) / atr_smoothed if atr_smoothed > 0 else 0.0
+        )
 
         # DX and ADX
-        di_diff = abs(plus_di - minus_di)
-        di_sum = plus_di + minus_di
-        dx = 100 * di_diff / di_sum if di_sum > 0 else 0
+        di_diff: float = abs(plus_di - minus_di)
+        di_sum: float = plus_di + minus_di
+        dx: float = 100 * di_diff / di_sum if di_sum > 0 else 0.0
 
         # Use current DX as approximation (proper ADX needs more history)
         adx_val = dx
@@ -790,8 +794,8 @@ class TechnicalIndicators:
         # Native implementation
         recent_highs = highs[-k_period:]
         recent_lows = lows[-k_period:]
-        highest_high = np.max(recent_highs)
-        lowest_low = np.min(recent_lows)
+        highest_high: float = float(np.max(recent_highs))
+        lowest_low: float = float(np.min(recent_lows))
         current_close = closes[-1]
 
         if highest_high != lowest_low:
@@ -1065,9 +1069,9 @@ class TechnicalIndicators:
         # Native implementation
         recent_highs = highs[-period:]
         recent_lows = lows[-period:]
-        highest_high = np.max(recent_highs)
-        lowest_low = np.min(recent_lows)
-        current_close = closes[-1]
+        highest_high: float = float(np.max(recent_highs))
+        lowest_low: float = float(np.min(recent_lows))
+        current_close: float = float(closes[-1])
 
         if highest_high != lowest_low:
             return ((highest_high - current_close) / (highest_high - lowest_low)) * -100
@@ -1117,6 +1121,123 @@ class TechnicalIndicators:
     # Convenience Methods
     # ========================================================================
 
+    def _calculate_rsi_indicator(
+        self, df: pd.DataFrame
+    ) -> Dict[str, Optional[Union[float, np.ndarray]]]:
+        """Calculate RSI indicator if data permits."""
+        if 'close' not in df.columns:
+            return {}
+        return {'rsi': self.rsi(df['close'])}
+
+    def _calculate_ema_indicators(
+        self, df: pd.DataFrame
+    ) -> Dict[str, Optional[Union[float, np.ndarray]]]:
+        """Calculate EMA indicators if data permits."""
+        if 'close' not in df.columns:
+            return {}
+        return {
+            'ema_20': self.ema(df['close'], period=20),
+            'ema_50': self.ema(df['close'], period=50),
+        }
+
+    def _calculate_sma_indicators(
+        self, df: pd.DataFrame
+    ) -> Dict[str, Optional[Union[float, np.ndarray]]]:
+        """Calculate SMA indicators if data permits."""
+        if 'close' not in df.columns:
+            return {}
+        return {'sma_20': self.sma(df['close'], period=20)}
+
+    def _calculate_macd_indicator(
+        self, df: pd.DataFrame
+    ) -> Dict[str, Optional[Union[float, np.ndarray]]]:
+        """Calculate MACD indicator if data permits."""
+        if 'close' not in df.columns:
+            return {}
+        macd_result = self.macd(df['close'], return_components=True)
+        if isinstance(macd_result, tuple) and len(macd_result) == 3:
+            return {
+                'macd': macd_result[0],
+                'macd_signal': macd_result[1],
+                'macd_histogram': macd_result[2],
+            }
+        return {}
+
+    def _calculate_atr_indicator(
+        self, df: pd.DataFrame
+    ) -> Dict[str, Optional[Union[float, np.ndarray]]]:
+        """Calculate ATR indicator if OHLC data is available."""
+        if not all(col in df.columns for col in self.REQUIRED_OHLC):
+            return {}
+        return {'atr': self.atr(df['high'], df['low'], df['close'])}
+
+    def _calculate_bollinger_indicator(self, df: pd.DataFrame) -> Dict[str, Optional[float]]:
+        """Calculate Bollinger Bands if data permits."""
+        if 'close' not in df.columns:
+            return {}
+        bands = self.bollinger_bands(df['close'], return_components=False)
+        if isinstance(bands, dict):
+            return bands
+        return {}
+
+    def _calculate_adx_indicator(
+        self, df: pd.DataFrame
+    ) -> Dict[str, Optional[Union[float, np.ndarray]]]:
+        """Calculate ADX indicator if OHLC data is available."""
+        if not all(col in df.columns for col in self.REQUIRED_OHLC):
+            return {}
+        adx_result = self.adx(df['high'], df['low'], df['close'], return_components=True)
+        if isinstance(adx_result, tuple) and len(adx_result) == 3:
+            return {
+                'adx': adx_result[0],
+                'plus_di': adx_result[1],
+                'minus_di': adx_result[2],
+            }
+        return {}
+
+    def _calculate_stochastic_indicator(
+        self, df: pd.DataFrame
+    ) -> Dict[str, Optional[Union[float, np.ndarray]]]:
+        """Calculate Stochastic indicator if OHLC data is available."""
+        if not all(col in df.columns for col in self.REQUIRED_OHLC):
+            return {}
+        stoch_result = self.stochastic(df['high'], df['low'], df['close'], return_components=True)
+        if isinstance(stoch_result, tuple) and len(stoch_result) == 2:
+            return {'stoch_k': stoch_result[0], 'stoch_d': stoch_result[1]}
+        return {}
+
+    def _calculate_cci_indicator(
+        self, df: pd.DataFrame
+    ) -> Dict[str, Optional[Union[float, np.ndarray]]]:
+        """Calculate CCI indicator if OHLC data is available."""
+        if not all(col in df.columns for col in self.REQUIRED_OHLC):
+            return {}
+        return {'cci': self.cci(df['high'], df['low'], df['close'])}
+
+    def _calculate_williams_r_indicator(
+        self, df: pd.DataFrame
+    ) -> Dict[str, Optional[Union[float, np.ndarray]]]:
+        """Calculate Williams %R indicator if OHLC data is available."""
+        if not all(col in df.columns for col in self.REQUIRED_OHLC):
+            return {}
+        return {'williams_r': self.williams_r(df['high'], df['low'], df['close'])}
+
+    def _calculate_obv_indicator(
+        self, df: pd.DataFrame
+    ) -> Dict[str, Optional[Union[float, np.ndarray]]]:
+        """Calculate OBV indicator if close and volume data is available."""
+        if 'close' not in df.columns or 'volume' not in df.columns:
+            return {}
+        return {'obv': self.obv(df['close'], df['volume'])}
+
+    def _calculate_roc_indicator(
+        self, df: pd.DataFrame
+    ) -> Dict[str, Optional[Union[float, np.ndarray]]]:
+        """Calculate ROC indicator if data permits."""
+        if 'close' not in df.columns:
+            return {}
+        return {'roc': self.roc(df['close'])}
+
     def calculate_all(
         self, df: pd.DataFrame, indicators: Optional[List[str]] = None
     ) -> Dict[str, Any]:
@@ -1131,73 +1252,56 @@ class TechnicalIndicators:
         Returns:
             Dictionary with all calculated indicator values.
         """
-        if indicators is None:
-            indicators = [
-                'rsi',
-                'ema_20',
-                'ema_50',
-                'sma_20',
-                'macd',
-                'atr',
-                'bollinger',
-                'adx',
-                'stochastic',
-                'cci',
-                'williams_r',
-            ]
+        default_indicators = [
+            'rsi',
+            'ema_20',
+            'ema_50',
+            'sma_20',
+            'macd',
+            'atr',
+            'bollinger',
+            'adx',
+            'stochastic',
+            'cci',
+            'williams_r',
+        ]
+        indicators_to_calc = indicators if indicators is not None else default_indicators
+
+        indicator_calculators: Dict[
+            str,
+            Callable[[pd.DataFrame], Dict[str, Any]],
+        ] = {
+            'rsi': self._calculate_rsi_indicator,
+            'ema_20': self._calculate_ema_indicators,
+            'ema_50': self._calculate_ema_indicators,
+            'sma_20': self._calculate_sma_indicators,
+            'macd': self._calculate_macd_indicator,
+            'atr': self._calculate_atr_indicator,
+            'bollinger': self._calculate_bollinger_indicator,
+            'adx': self._calculate_adx_indicator,
+            'stochastic': self._calculate_stochastic_indicator,
+            'cci': self._calculate_cci_indicator,
+            'williams_r': self._calculate_williams_r_indicator,
+            'obv': self._calculate_obv_indicator,
+            'roc': self._calculate_roc_indicator,
+        }
 
         results: Dict[str, Optional[Union[float, np.ndarray]]] = {}
+        processed_calculators: set = set()
 
-        # Ensure we have required columns
-        has_close = 'close' in df.columns
-        has_ohlc = all(col in df.columns for col in self.REQUIRED_OHLC)
-        has_volume = 'volume' in df.columns
+        for indicator in indicators_to_calc:
+            calculator = indicator_calculators.get(indicator)
+            if calculator is None:
+                continue
 
-        for indicator in indicators:
+            calculator_key = calculator.__name__
+            if calculator_key in processed_calculators:
+                continue
+            processed_calculators.add(calculator_key)
+
             try:
-                if indicator == 'rsi' and has_close:
-                    results['rsi'] = self.rsi(df['close'])
-                elif indicator == 'ema_20' and has_close:
-                    results['ema_20'] = self.ema(df['close'], period=20)
-                elif indicator == 'ema_50' and has_close:
-                    results['ema_50'] = self.ema(df['close'], period=50)
-                elif indicator == 'sma_20' and has_close:
-                    results['sma_20'] = self.sma(df['close'], period=20)
-                elif indicator == 'macd' and has_close:
-                    macd_result = self.macd(df['close'], return_components=True)
-                    if isinstance(macd_result, tuple) and len(macd_result) == 3:
-                        results['macd'] = macd_result[0]
-                        results['macd_signal'] = macd_result[1]
-                        results['macd_histogram'] = macd_result[2]
-                elif indicator == 'atr' and has_ohlc:
-                    results['atr'] = self.atr(df['high'], df['low'], df['close'])
-                elif indicator == 'bollinger' and has_close:
-                    bands = self.bollinger_bands(df['close'], return_components=False)
-                    if isinstance(bands, dict):
-                        results.update(bands)
-                elif indicator == 'adx' and has_ohlc:
-                    adx_result = self.adx(
-                        df['high'], df['low'], df['close'], return_components=True
-                    )
-                    if isinstance(adx_result, tuple) and len(adx_result) == 3:
-                        results['adx'] = adx_result[0]
-                        results['plus_di'] = adx_result[1]
-                        results['minus_di'] = adx_result[2]
-                elif indicator == 'stochastic' and has_ohlc:
-                    stoch_result = self.stochastic(
-                        df['high'], df['low'], df['close'], return_components=True
-                    )
-                    if isinstance(stoch_result, tuple) and len(stoch_result) == 2:
-                        results['stoch_k'] = stoch_result[0]
-                        results['stoch_d'] = stoch_result[1]
-                elif indicator == 'cci' and has_ohlc:
-                    results['cci'] = self.cci(df['high'], df['low'], df['close'])
-                elif indicator == 'williams_r' and has_ohlc:
-                    results['williams_r'] = self.williams_r(df['high'], df['low'], df['close'])
-                elif indicator == 'obv' and has_close and has_volume:
-                    results['obv'] = self.obv(df['close'], df['volume'])
-                elif indicator == 'roc' and has_close:
-                    results['roc'] = self.roc(df['close'])
+                indicator_results = calculator(df)
+                results.update(indicator_results)
             except Exception as e:
                 logger.warning(f"Failed to calculate {indicator}: {e}")
                 results[indicator] = None
