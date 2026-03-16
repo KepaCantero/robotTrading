@@ -9,6 +9,7 @@ This is the main entry point for the profile-driven trading system.
 
 import asyncio
 import logging
+import random
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple  # noqa: F401
@@ -144,13 +145,13 @@ class ProfileDrivenTradingOrchestrator:
                 return None
 
             try:
-                from app.strategies.momentum_modular.learning.reinforcement_learning_engine import (
+                from app.domain.strategies.momentum_modular.learning.reinforcement_learning_engine import (
                     ReinforcementLearningEngine,
                 )
 
                 self._rl_engine = ReinforcementLearningEngine(config={})
                 logger.debug("✅ ReinforcementLearningEngine loaded")
-            except (ImportError, ModuleNotFoundError, Exception) as e:
+            except Exception as e:
                 # RL engine not available, return None and log warning
                 logger.warning(f"   ReinforcementLearningEngine not available: {type(e).__name__}")
                 logger.debug(f"   RL engine error details: {e}")
@@ -476,7 +477,7 @@ class ProfileDrivenTradingOrchestrator:
         logger.info(f"   Cache: {'Enabled' if use_cache else 'Disabled'}")
 
         # Import RealMarketDataFetcher
-        from app.data.real_market_data import RealMarketDataFetcher
+        from app.infrastructure.data.real_market_data import RealMarketDataFetcher
 
         # Set default date range
         if end_date is None:
@@ -655,8 +656,6 @@ class ProfileDrivenTradingOrchestrator:
                     for symbol in symbols:
                         # Placeholder: Use RL engine to predict action
                         # In production, would call: action = rl_engine.predict(observation)
-                        import random
-
                         action = random.choice(["BUY", "SELL", "HOLD"])
                         confidence = random.uniform(0.5, 0.9)
                         rl_signals[symbol] = (action, confidence)
@@ -668,8 +667,6 @@ class ProfileDrivenTradingOrchestrator:
         # Momentum signals
         for symbol in symbols:
             # Placeholder: Use technical indicators
-            import random
-
             action = random.choice(["BUY", "HOLD"])  # Bias towards buying
             confidence = random.uniform(0.6, 0.8)
             momentum_signals[symbol] = (action, confidence)
@@ -677,8 +674,6 @@ class ProfileDrivenTradingOrchestrator:
         # Mean reversion signals
         for symbol in symbols:
             # Placeholder: Use z-score, half-life
-            import random
-
             action = random.choice(["HOLD", "SELL"])  # Bias towards selling
             confidence = random.uniform(0.5, 0.7)
             mean_reversion_signals[symbol] = (action, confidence)
@@ -1031,7 +1026,7 @@ class ProfileDrivenTradingOrchestrator:
 
             return execution_result
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"   Trade execution failed: {e}")
             return ExecutionResult(
                 executed=False,
