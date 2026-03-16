@@ -212,9 +212,7 @@ class HyperparameterOptimizer:
             if config['enable_learning'] and config['learning_engine_type']:
                 learning_algos = self.parameter_space['learning_algorithm']
                 if isinstance(learning_algos, dict):
-                    algorithms = learning_algos.get(
-                        config['learning_engine_type'], []
-                    )
+                    algorithms = learning_algos.get(config['learning_engine_type'], [])
                 else:
                     algorithms = []
                 if algorithms:
@@ -266,9 +264,7 @@ class HyperparameterOptimizer:
                 )
                 learning_algos = self.parameter_space.get('learning_algorithm', {})
                 if isinstance(learning_algos, dict):
-                    algorithms = learning_algos.get(
-                        config['learning_engine_type'], []
-                    )
+                    algorithms = learning_algos.get(config['learning_engine_type'], [])
                 else:
                     algorithms = []
                 if algorithms:

@@ -109,9 +109,7 @@ class ExecutionEngine:
                     if active_strategy.risk_check(signal, portfolio):
                         signals.append(signal)
                         self.logger.log_signal_generated(active_strategy.name, signal)
-                        logger.debug(
-                            f"Signal validated: {signal.symbol} ({signal.signal_type})"
-                        )
+                        logger.debug(f"Signal validated: {signal.symbol} ({signal.signal_type})")
                     else:
                         self.logger.log_signal_rejected(
                             active_strategy.name, signal, "Risk check failed"
@@ -120,9 +118,7 @@ class ExecutionEngine:
 
                 except (ValueError, TypeError, KeyError, AttributeError) as e:
                     self.logger.log_strategy_error(active_strategy.name, str(e), "risk_check")
-                    logger.error(
-                        f"Risk check error for {signal.symbol}: {e}", exc_info=True
-                    )
+                    logger.error(f"Risk check error for {signal.symbol}: {e}", exc_info=True)
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.log_strategy_error(active_strategy.name, str(e), "generate_signals")

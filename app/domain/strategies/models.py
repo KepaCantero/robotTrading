@@ -837,6 +837,15 @@ class VolatilityMetrics:
     sortino_ratio: Decimal = Decimal("1.0")  # Sortino ratio
     volatility_regime: VolatilityRegime = VolatilityRegime.NORMAL  # Current regime
     calculated_at: Optional[datetime] = None
+    # Extended volatility metrics
+    historical_volatility_20d: Optional[Decimal] = None  # 20-day historical volatility (%)
+    historical_volatility_60d: Optional[Decimal] = None  # 60-day historical volatility (%)
+    historical_volatility_252d: Optional[Decimal] = None  # 252-day historical volatility (%)
+    sharpe_ratio: Optional[Decimal] = None  # Sharpe ratio
+    correlation_to_market: Optional[Decimal] = None  # Correlation with market
+    idiosyncratic_volatility: Optional[Decimal] = None  # Idiosyncratic volatility (%)
+    skewness: Optional[Decimal] = None  # Return distribution skewness
+    kurtosis: Optional[Decimal] = None  # Return distribution kurtosis
 
     def __post_init__(self):
         # Ensure all fields are properly initialized
