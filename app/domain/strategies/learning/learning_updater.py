@@ -1058,7 +1058,7 @@ class LearningEngineUpdater:
         recent_analyses = self._feature_importance_history[-5:]
 
         # Collect all top features from recent analyses
-        all_top_features = {}
+        all_top_features: Dict[str, List[float]] = {}
         for analysis_record in recent_analyses:
             analysis = analysis_record.get("analysis", {})
             top_features = analysis.get("top_features", {})
