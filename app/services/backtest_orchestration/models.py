@@ -29,10 +29,7 @@ def _get_default_slippage() -> Decimal:
 
     tt = get_config().trading_thresholds
     slippage = tt.base_slippage / Decimal("100")  # Convert % to decimal
-    logger.debug(
-        "Getting default slippage from config",
-        extra={"base_slippage": float(slippage)}
-    )
+    logger.debug("Getting default slippage from config", extra={"base_slippage": float(slippage)})
     return slippage
 
 
@@ -41,10 +38,7 @@ def _get_default_stop_loss() -> Decimal:
 
     tt = get_config().trading_thresholds
     stop_loss = Decimal(str(tt.stop_loss_pct))
-    logger.debug(
-        "Getting default stop loss from config",
-        extra={"stop_loss_pct": float(stop_loss)}
-    )
+    logger.debug("Getting default stop loss from config", extra={"stop_loss_pct": float(stop_loss)})
     return stop_loss
 
 
@@ -54,8 +48,7 @@ def _get_default_take_profit() -> Decimal:
     tt = get_config().trading_thresholds
     take_profit = Decimal(str(tt.take_profit_pct))
     logger.debug(
-        "Getting default take profit from config",
-        extra={"take_profit_pct": float(take_profit)}
+        "Getting default take profit from config", extra={"take_profit_pct": float(take_profit)}
     )
     return take_profit
 
@@ -67,7 +60,7 @@ def _get_default_max_loss() -> Decimal:
     max_loss = Decimal(str(tt.circuit_breaker_daily_loss))
     logger.debug(
         "Getting default max loss from config",
-        extra={"circuit_breaker_daily_loss": float(max_loss)}
+        extra={"circuit_breaker_daily_loss": float(max_loss)},
     )
     return max_loss
 
@@ -79,7 +72,7 @@ def _get_default_position_size() -> Decimal:
     position_size = Decimal(str(tt.max_position_size))
     logger.debug(
         "Getting default position size from config",
-        extra={"max_position_size": float(position_size)}
+        extra={"max_position_size": float(position_size)},
     )
     return position_size
 
@@ -210,8 +203,8 @@ class BacktestResult:
                 "test_id": self.test_id,
                 "profile_id": self.profile_id,
                 "status": self.status.value,
-                "success": self.success
-            }
+                "success": self.success,
+            },
         )
         result = {
             "test_id": self.test_id,

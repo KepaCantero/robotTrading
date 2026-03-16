@@ -485,7 +485,7 @@ class CorporateActionsHandler:
                 if force_close and self.broker:
                     # Place market order to close
                     # Note: For delisted symbols, this may fail
-                    from app.core.interfaces.broker_base import Order, OrderSide, OrderType
+                    from app.shared.interfaces.broker_base import Order, OrderSide, OrderType
 
                     order = Order(
                         order_id=f"DELIST_{symbol}_{position_id}",
