@@ -32,7 +32,7 @@ from app.backtesting.engines.multi_strategy_engine import MultiStrategyBackteste
 from app.backtesting.models import BacktestConfig  # noqa: E402
 from app.domain.strategies.mean_reversion import MeanReversionStrategy  # noqa: E402
 from app.domain.strategies.momentum import MomentumStrategy  # noqa: E402
-from app.domain.strategies.pairs_trading import PairsTradingStrategy  # noqa: E402
+from app.domain.strategies.pairs_trading import PairsTrading  # noqa: E402
 
 # IMPORTANT: Import logging_config FIRST to ensure all warnings/errors go to files
 from app.presentation.dashboard.comprehensive_data_loader import (  # noqa: E402
@@ -407,7 +407,7 @@ if execute_button:
                 # Multi-strategy mode: build portfolio from all strategy sectors
                 from decimal import Decimal
 
-                from app.domain.services.portfolio.builder import PortfolioBuilder
+                from app.services.portfolio_builder import PortfolioBuilder
                 from app.services.portfolio_config_manager import get_portfolio_config_manager
 
                 st.info("🏗️ Building portfolio from configured sectors...")
@@ -490,7 +490,7 @@ if execute_button:
                             config["pair_symbols"] = pair_symbols[:2]
                         else:
                             config["pair_symbols"] = ["AAPL", "MSFT"]  # Fallback
-                        all_strategies[strategy_type] = PairsTradingStrategy(config)
+                        all_strategies[strategy_type] = PairsTrading(config)
 
                 multi_backtester = MultiStrategyBacktester(
                     allocation_manager=allocation_manager,
@@ -588,7 +588,7 @@ if execute_button:
                 # Note: PairsTrading needs pair_symbols, set default
                 if "pair_symbols" not in strategy_config:
                     strategy_config["pair_symbols"] = ["AAPL", "MSFT"]
-                strategy = PairsTradingStrategy(strategy_config)
+                strategy = PairsTrading(strategy_config)
             else:
                 st.error(f"❌ Unknown strategy: {selected_strategy}")
                 st.stop()

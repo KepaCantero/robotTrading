@@ -4,7 +4,6 @@ FastAPI endpoints for momentum analysis and strategy management.
 This module provides REST API endpoints for momentum analysis,
 technical indicators, and momentum strategy management.
 """
-# mypy: ignore-errors
 
 from __future__ import annotations
 
@@ -18,10 +17,7 @@ from requests.exceptions import ConnectionError, HTTPError, RequestException
 logger = logging.getLogger(__name__)
 
 from app.domain.models.momentum import MomentumFilter, MomentumStrategy, MomentumType, Timeframe
-from app.domain.services.analysis.momentum import (
-    MomentumAnalysisService,
-    get_momentum_analysis_service,
-)
+from app.services.momentum_analysis import MomentumAnalysisService, get_momentum_analysis_service
 
 # Constants
 DEFAULT_VALUE_20 = 20
@@ -953,7 +949,7 @@ async def get_momentum_stats(
         expired_signals = total_signals - active_signals
 
         # Signal type distribution
-        signal_types = {}
+        signal_types: Dict[str, int] = {}
         for signal in all_signals:
             signal_type = signal.signal_type.value
             signal_types[signal_type] = signal_types.get(signal_type, 0) + 1

@@ -153,7 +153,7 @@ class AuditLogger:
             client_id: Optional client identifier
         """
         correlation_id = get_correlation_id()
-        log_data = {
+        log_data: Dict[str, Any] = {
             "event_type": "api_error",
             "correlation_id": correlation_id,
             "method": method,

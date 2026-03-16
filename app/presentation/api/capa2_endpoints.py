@@ -557,7 +557,7 @@ async def _execute_complete_workflow(workflow_id: str, request: CompleteWorkflow
     """Execute complete workflow in background."""
 
     try:
-        results = {}
+        results: Dict[str, Any] = {}
 
         # Stage 1: Process input (T1.1)
         _jobs[workflow_id]["stage"] = "input_processing"

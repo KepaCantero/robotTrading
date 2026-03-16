@@ -11,7 +11,7 @@ import time
 import uuid
 from contextlib import asynccontextmanager
 from functools import wraps
-from typing import Any, AsyncGenerator, Callable, Dict, Optional, TypeVar
+from typing import Any, AsyncGenerator, Awaitable, Callable, Dict, Optional, TypeVar, cast
 
 from fastapi import HTTPException, Request, Response, status
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -146,13 +146,14 @@ async def timeout_context(seconds: float) -> AsyncGenerator[None, None]:
         None
     """
     try:
-        async with asyncio.timeout(seconds):
-            yield
-    except TimeoutError:
+        yield
+    except asyncio.TimeoutError:
         raise asyncio.TimeoutError(f"Operation exceeded {seconds}s timeout")
 
 
-def with_timeout(seconds: float = 30.0) -> Callable[[Callable[..., T]], Callable[..., T]]:
+def with_timeout(
+    seconds: float = 30.0,
+) -> Callable[[Callable[..., Awaitable[T]]], Callable[..., Awaitable[T]]]:
     """
     Decorator to add timeout to async functions.
 
@@ -165,13 +166,15 @@ def with_timeout(seconds: float = 30.0) -> Callable[[Callable[..., T]], Callable
         Decorated function with timeout
     """
 
-    def decorator(func: Callable[..., T]) -> Callable[..., T]:
+    def decorator(func: Callable[..., Awaitable[T]]) -> Callable[..., Awaitable[T]]:
         @wraps(func)
         async def wrapper(*args: Any, **kwargs: Any) -> T:
             try:
-                async with asyncio.timeout(seconds):
-                    return await func(*args, **kwargs)
-            except TimeoutError:
+                return cast(
+                    T,
+                    await asyncio.wait_for(func(*args, **kwargs), timeout=seconds),
+                )
+            except asyncio.TimeoutError:
                 logger.error(
                     f"Function {func.__name__} exceeded {seconds}s timeout",
                     extra={"correlation_id": get_correlation_id()},
@@ -188,7 +191,7 @@ def with_rate_limit(
     max_tokens: int = 10,
     refill_rate: float = 1.0,
     tokens_per_request: int = 1,
-) -> Callable[[Callable[..., T]], Callable[..., T]]:
+) -> Callable[[Callable[..., Awaitable[T]]], Callable[..., Awaitable[T]]]:
     """
     Decorator to add rate limiting to endpoint functions.
 
@@ -204,7 +207,7 @@ def with_rate_limit(
         Decorated function with rate limiting
     """
 
-    def decorator(func: Callable[..., T]) -> Callable[..., T]:
+    def decorator(func: Callable[..., Awaitable[T]]) -> Callable[..., Awaitable[T]]:
         @wraps(func)
         async def wrapper(*args: Any, **kwargs: Any) -> T:
             # Try to find Request in args/kwargs
@@ -244,7 +247,7 @@ def with_rate_limit(
                         detail="Rate limit exceeded. Please try again later.",
                     )
 
-            return await func(*args, **kwargs)
+            return cast(T, await func(*args, **kwargs))
 
         return wrapper
 
@@ -254,7 +257,7 @@ def with_rate_limit(
 def log_endpoint_call(
     operation: str,
     service: str = "api",
-) -> Callable[[Callable[..., T]], Callable[..., T]]:
+) -> Callable[[Callable[..., Awaitable[T]]], Callable[..., Awaitable[T]]]:
     """
     Decorator to add structured logging to endpoint functions.
 
@@ -269,7 +272,7 @@ def log_endpoint_call(
         Decorated function with structured logging
     """
 
-    def decorator(func: Callable[..., T]) -> Callable[..., T]:
+    def decorator(func: Callable[..., Awaitable[T]]) -> Callable[..., Awaitable[T]]:
         @wraps(func)
         async def wrapper(*args: Any, **kwargs: Any) -> T:
             correlation_id = get_correlation_id()
@@ -286,7 +289,7 @@ def log_endpoint_call(
             )
 
             try:
-                result = await func(*args, **kwargs)
+                result = cast(T, await func(*args, **kwargs))
                 duration = (time.time() - start_time) * 1000
 
                 logger.info(
