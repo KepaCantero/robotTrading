@@ -14,7 +14,7 @@ import pandas as pd
 from app.backtesting.data_loader import DataLoader
 from app.backtesting.engine import SimpleBacktester
 from app.domain.models.market_data import Quote
-from app.domain.services.portfolio.builder import PortfolioBuilder
+from app.services.portfolio_builder import PortfolioBuilder
 from app.services.portfolio_config_manager import get_portfolio_config_manager
 
 # Los módulos y learning engines se importan internamente por ModularMomentumStrategy
@@ -220,7 +220,7 @@ class AutomatedBacktestRunner:
         self.quotes = self._load_historical_data()
 
         # Resultados
-        self.results = []
+        self.results: List[Dict[str, Any]] = []
 
     def _load_default_config(self) -> Dict:
         """Cargar configuración por defecto."""
@@ -469,9 +469,7 @@ class AutomatedBacktestRunner:
         """Preparar datos de entrenamiento según tipo de engine."""
         from app.backtesting.engine import SimpleBacktester
         from app.backtesting.models import BacktestConfig
-        from app.domain.strategies.momentum_modular.learning.training_data_preparator import (
-            TrainingDataPreparator,
-        )
+        from app.domain.strategies.learning.training_data_preparator import TrainingDataPreparator
 
         preparator = TrainingDataPreparator()
 
