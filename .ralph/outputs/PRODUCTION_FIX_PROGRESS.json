@@ -1,10 +1,10 @@
 {
-  "timestamp": "2026-03-16T08:10:00Z",
+  "timestamp": "2026-03-16T15:30:00Z",
   "total_files": 1113,
-  "processed": 34,
-  "passed": 33,
-  "fixed": 1,
-  "blocked": 3,
+  "processed": 362,
+  "passed": 340,
+  "fixed": 17,
+  "blocked": 11,
   "blocked_files": [
     {
       "file": "app/domain/services/compliance/compliance_engine.py",
@@ -15,7 +15,7 @@
     },
     {
       "file": "app/domain/services/compliance/system_bus_extracted.py",
-      "reason": "MI=16.04 due to 1592 lines. CC is acceptable (6.36). but local fixes won't help - requires file splitting",
+      "reason": "MI=16.04 due to 1592 lines. CC is acceptable (6.36). But local fixes won't help - requires file splitting",
       "failed_checks": ["radon_mi"],
       "loc": 1592,
       "cc": 6.36
@@ -26,14 +26,117 @@
       "failed_checks": ["radon_mi"],
       "loc": 1313,
       "cc": 7.08
+    },
+    {
+      "file": "app/domain/strategies/strategy.py",
+      "reason": "MI=3.22 due to 1539 lines. High CC functions (generate_signals=40, _determine_signal_type=27, _apply_learning_adjustments=24). Requires architectural refactoring to split file and reduce complexity",
+      "failed_checks": ["radon_mi", "radon_cc"],
+      "loc": 1539,
+      "cc": 8.7
+    },
+    {
+      "file": "app/domain/strategies/learning/drift_detector.py",
+      "reason": "MI=0.00 due to 2163 lines. Large file with complex type annotations. Requires architectural refactoring to split file",
+      "failed_checks": ["radon_mi", "mypy"],
+      "loc": 2163,
+      "cc": 4.33
+    },
+    {
+      "file": "app/domain/strategies/learning/feature_importance.py",
+      "reason": "MI=0.00 due to 2092 lines. Multiple mypy type errors (redefinitions, type mismatches). Requires architectural refactoring to split file and fix type issues",
+      "failed_checks": ["radon_mi", "mypy", "ruff", "flake8", "pylint"],
+      "loc": 2092,
+      "cc": 6.74
+    },
+    {
+      "file": "app/domain/strategies/learning/learning_updater.py",
+      "reason": "MI=18.99 (just below 20) due to 1151 lines. High CC functions (train=27, _analyze_and_log_feature_importance=21). Borderline case requiring architectural refactoring",
+      "failed_checks": ["radon_mi"],
+      "loc": 1151,
+      "cc": 6.63
+    },
+    {
+      "file": "app/domain/strategies/learning/transformer_engine.py",
+      "reason": "CC=12 due to complex train() method (CC=28). Nested class definitions (TransformerModel, TransformerDataset) inside train() method. Requires extracting classes to module level and refactoring train() into smaller helper methods",
+      "failed_checks": ["radon_cc"],
+      "loc": 680,
+      "cc": 12.0
+    },
+    {
+      "file": "app/domain/strategies/carry_calculator.py",
+      "reason": "Import error: References non-existent module 'app.domain.strategies.fx_carry_trade.models' (FXCarrySignal, FXPair classes don't exist). Requires creating fx_carry_trade package with models.py or refactoring imports",
+      "failed_checks": ["pylint"],
+      "loc": 442,
+      "cc": 4.0
+    },
+    {
+      "file": "app/domain/strategies/correlation_analyzer.py",
+      "reason": "Import error: References non-existent module 'app.domain.strategies.fx_intermarket.models'. Requires creating fx_intermarket package with models.py or refactoring imports",
+      "failed_checks": ["pylint"],
+      "loc": 0,
+      "cc": 0
+    },
+    {
+      "file": "app/domain/strategies/covered_call_strategy.py",
+      "reason": "Import error: References non-existent classes 'CoveredCallConfig', 'CoveredCallPosition', 'RollDecision' in app.domain.strategies.models. Also mypy errors with config.trading attribute access on dict[str, Any]. Requires adding missing model classes",
+      "failed_checks": ["pylint", "mypy"],
+      "loc": 0,
+      "cc": 0
     }
   ],
-  "current_phase": "Phase 6: Execution Services",
-  "current_file": null,
-  "last_fixed": "app/services/position_management/post_trade_analyzer_impl.py",
+  "fixed_files": [
+    {
+      "file": "app/services/tax_efficiency/engines/spain_dividend_tax.py",
+      "issue": "Wrong typing import: from typing import dict (should be Dict)",
+      "fix": "Changed to from typing import Dict and Dict[str, str] type hint"
+    },
+    {
+      "file": "app/services/tax_efficiency/engines/spain_tax_engine_impl.py",
+      "issue": "Wrong import path for ISpainTaxEngine; duplicate 'SAN' in eu_tickers set",
+      "fix": "Corrected import to app.shared.protocols.i_spain_tax_engine; removed duplicate ticker"
+    },
+    {
+      "file": "app/domain/strategies/strategy_logger.py",
+      "issue": "mypy errors: logging calls with unexpected keyword arguments (error=str(e))",
+      "fix": "Changed logging calls to use format strings: logger.warning('msg: %s', str(e))"
+    },
+    {
+      "file": "app/domain/strategies/strategy_registry.py",
+      "issue": "mypy errors: logging calls with unexpected keyword arguments (error=, name=, class_name=)",
+      "fix": "Changed logging calls to use format strings"
+    },
+    {
+      "file": "app/domain/strategies/learning/learning_updater.py",
+      "issue": "mypy: Need type annotation for 'all_top_features'",
+      "fix": "Added explicit type annotation: Dict[str, List[float]]"
+    },
+    {
+      "file": "app/domain/strategies/learning/transformer_engine.py",
+      "issue": "mypy: Multiple type errors with Optional[nn.Module] and return types",
+      "fix": "Added Optional[nn.Module] type annotation for self.model, added type guard assertions, changed return types from Dict[str, float] to Dict[str, Any]"
+    },
+    {
+      "file": "app/domain/strategies/automated_backtest.py",
+      "issue": "Wrong import paths: app.domain.services.portfolio.builder -> app.services.portfolio_builder; app.domain.strategies.momentum_modular.learning.training_data_preparator -> app.domain.strategies.learning.training_data_preparator. Also missing type annotation for 'results'",
+      "fix": "Corrected import paths and added List[Dict[str, Any]] type annotation for results"
+    }
+  ],
+  "passed_this_iteration": [
+    "app/domain/strategies/momentum_modular/__init__.py",
+    "app/domain/strategies/momentum_modular/strategy.py",
+    "app/domain/strategies/momentum_modular/learning/__init__.py",
+    "app/domain/strategies/momentum_modular/learning/feature_extractor.py",
+    "app/domain/strategies/momentum_modular/modules/__init__.py",
+    "app/domain/strategies/momentum_modular/modules/filters/__init__.py",
+    "app/domain/strategies/momentum_modular/modules/market_analyzer.py",
+    "app/domain/strategies/automated_backtest.py",
+    "app/domain/strategies/bollinger_bands.py",
+    "app/domain/strategies/carver_robust_rules.py"
+  ],
+  "files_with_issues": [],
   "next_files": [
-    "app/services/position_management/pyramiding_manager.py",
-    "app/services/validation_engine/validation_engine.py",
-    "app/services/live_trading/"
+    "app/domain/strategies/remaining_files/",
+    "app/backtesting/",
+    "app/analysis/"
   ]
 }
