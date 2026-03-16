@@ -122,7 +122,9 @@ class VolatilityCalculator:
 
         skewness, kurtosis = self.calculate_moments(stock_returns)
 
-        regime = self._determine_volatility_regime(vol_60d or vol_20d or 0)
+        regime = self._determine_volatility_regime(
+            vol_60d if vol_60d is not None else (vol_20d if vol_20d is not None else Decimal("0"))
+        )
 
         return VolatilityMetrics(
             symbol=symbol,
@@ -267,7 +269,7 @@ class VolatilityCalculator:
         cummax = np.maximum.accumulate(prices)
         drawdowns = (prices - cummax) / cummax * 100
 
-        max_dd = np.min(drawdowns)
+        max_dd: float = np.min(drawdowns)
 
         return Decimal(str(max_dd)).quantize(Decimal("0.01"))
 
