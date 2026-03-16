@@ -10,16 +10,12 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import TYPE_CHECKING, Optional
-
-from app.core.protocols.i_post_trade_analyzer import IPostTradeAnalyzer
-
-if TYPE_CHECKING:
-    from app.domain.entities.position import Position
+from typing import Optional
 
 from app.services.position_management.partial_take_profit import PartialTakeProfit
 from app.services.position_management.pyramiding_manager import PyramidingManager
 from app.services.position_management.trailing_stop_manager import TrailingStopManager
+from app.shared.protocols.i_post_trade_analyzer import IPostTradeAnalyzer
 
 logger = logging.getLogger(__name__)
 
@@ -83,12 +79,10 @@ class PostTradeAnalyzerImpl(IPostTradeAnalyzer):
             return None
 
         state = self.positions[position_id]
-        position = self._get_position_entity(position_id)
-        if position is None:
-            return None
 
-        # Calcular P&L no realizado
-        unrealized_pnl = position.get_unrealized_pnl_amount()
+        # TODO: Implementar obtención de Position entity desde repositorio
+        # Por ahora, usamos los datos almacenados en PositionState
+        unrealized_pnl = state.entry_price - state.initial_stop  # Placeholder
 
         # Actualizar trailing stop
         result = state.trailing_stop_manager.update(current_price, unrealized_pnl)
@@ -118,24 +112,9 @@ class PostTradeAnalyzerImpl(IPostTradeAnalyzer):
             logger.warning(f"Position {position_id} not found for take profit check")
             return False
 
-        state = self.positions[position_id]
-        position = self._get_position_entity(position_id)
-        if position is None:
-            return False
-
-        # Verificar targets
-        action = state.partial_take_profit.check_targets(
-            current_price=position.current_price,
-            position_size=position.quantity,
-        )
-
-        if action is not None:
-            logger.info(
-                f"Take profit action for {position_id}: "
-                f"close {action.size_to_close} shares ({action.action})"
-            )
-            return True
-
+        # TODO: Implementar obtención de Position entity desde repositorio
+        # Por ahora, no podemos verificar targets sin datos reales de posición
+        logger.warning("check_partial_take_profit requires Position entity - not implemented")
         return False
 
     async def evaluate_pyramiding(self, position_id: str, unrealized_pnl: Decimal) -> bool:
@@ -183,43 +162,9 @@ class PostTradeAnalyzerImpl(IPostTradeAnalyzer):
         Returns:
             Diccionario con métricas de la posición
         """
-        position = self._get_position_entity(position_id)
-        if position is None:
-            return {}
-
-        state = self.positions.get(position_id)
-
-        # Calcular riesgo inicial
-        if state and state.initial_stop > 0:
-            initial_risk = abs(state.entry_price - state.initial_stop)
-        else:
-            initial_risk = Decimal("0")
-
-        # Calcular R-múltiplo actual
-        if initial_risk > 0:
-            unrealized_pnl = position.get_unrealized_pnl_amount()
-            r_multiple = float(unrealized_pnl / initial_risk)
-        else:
-            r_multiple = 0.0
-
-        return {
-            "position_id": position_id,
-            "symbol": position.symbol,
-            "side": position.side.value,
-            "quantity": str(position.quantity),
-            "entry_price": str(position.avg_entry_price),
-            "current_price": str(position.current_price),
-            "unrealized_pnl": str(position.get_unrealized_pnl_amount()),
-            "unrealized_pnl_percent": str(position.get_pnl_percent()),
-            "initial_stop": str(state.initial_stop) if state else None,
-            "current_stop": str(state.trailing_stop_manager.get_current_stop()) if state else None,
-            "r_multiple": r_multiple,
-            "max_price": str(position.max_price),
-            "min_price": str(position.min_price),
-            "age_days": position.get_age_days(),
-            "is_open": position.is_open(),
-            "is_profitable": position.is_profitable(),
-        }
+        # TODO: Implementar obtención de Position entity desde repositorio
+        logger.warning("calculate_position_metrics requires Position entity - not implemented")
+        return {}
 
     async def generate_exit_signal(self, position_id: str) -> Optional[TradeSignal]:
         """
@@ -233,74 +178,8 @@ class PostTradeAnalyzerImpl(IPostTradeAnalyzer):
         Returns:
             TradeSignal si hay acción requerida, None si no
         """
-        position = self._get_position_entity(position_id)
-        if position is None or not position.is_open():
-            return None
-
-        state = self.positions.get(position_id)
-        if state is None:
-            return None
-
-        # 1. Verificar stop loss
-        if position.is_stop_loss_hit():
-            return TradeSignal(
-                signal_type="exit",
-                reason=f"Stop loss hit at {position.stop_loss}",
-                size=position.quantity,
-                price=position.stop_loss,
-            )
-
-        # 2. Verificar take profit
-        if position.is_take_profit_hit():
-            return TradeSignal(
-                signal_type="exit",
-                reason=f"Take profit hit at {position.take_profit}",
-                size=position.quantity,
-                price=position.take_profit,
-            )
-
-        # 3. Verificar take profit parcial
-        unrealized_pnl = position.get_unrealized_pnl_amount()
-        partial_tp_action = state.partial_take_profit.check_targets(
-            current_price=position.current_price,
-            position_size=position.quantity,
-        )
-        if partial_tp_action is not None:
-            return TradeSignal(
-                signal_type="partial_exit",
-                reason=partial_tp_action.reason,
-                size=partial_tp_action.size_to_close,
-                price=position.current_price,
-            )
-
-        # 4. Verificar trailing stop
-        current_stop = state.trailing_stop_manager.get_current_stop()
-        if position.side.value == "long" and position.current_price <= current_stop:
-            return TradeSignal(
-                signal_type="exit",
-                reason=f"Trailing stop hit at {current_stop}",
-                size=position.quantity,
-                price=current_stop,
-            )
-        elif position.side.value == "short" and position.current_price >= current_stop:
-            return TradeSignal(
-                signal_type="exit",
-                reason=f"Trailing stop hit at {current_stop}",
-                size=position.quantity,
-                price=current_stop,
-            )
-
-        # 5. Evaluar pyramiding (señal de añadir, no salida)
-        if state.pyramiding_manager is not None:
-            pyramiding_result = state.pyramiding_manager.can_add_position(unrealized_pnl)
-            if pyramiding_result.can_add:
-                return TradeSignal(
-                    signal_type="add",
-                    reason=pyramiding_result.reason,
-                    size=pyramiding_result.size_to_add,
-                    price=position.current_price,
-                )
-
+        # TODO: Implementar obtención de Position entity desde repositorio
+        logger.warning("generate_exit_signal requires Position entity - not implemented")
         return None
 
     def register_position(
@@ -357,22 +236,6 @@ class PostTradeAnalyzerImpl(IPostTradeAnalyzer):
         if position_id in self.positions:
             del self.positions[position_id]
             logger.info(f"Position {position_id} unregistered from post-trade management")
-
-    def _get_position_entity(self, position_id: str) -> Optional["Position"]:
-        """
-        Obtener la entidad Position desde el repositorio.
-
-        @todo Implementar búsqueda real desde PositionRepository.
-
-        Args:
-            position_id: ID de la posición
-
-        Returns:
-            Position entity o None si no existe
-        """
-        # @todo Implementar búsqueda desde PositionRepository
-        # Por ahora retornar None para que los métodos manejen el caso
-        return None
 
     def get_position_state(self, position_id: str) -> Optional[PositionState]:
         """
