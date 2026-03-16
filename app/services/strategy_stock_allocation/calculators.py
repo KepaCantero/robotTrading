@@ -30,47 +30,44 @@ try:
 
 except ImportError:
     STATSMODELS_AVAILABLE = False
+    _warnings_module = __import__("warnings")
 
-    def OLS(*args, **kwargs):
+    def OLS(*_args, **_kwargs):
         """Fallback OLS when statsmodels is not available."""
-        import warnings
-
-        warnings.warn(
+        _warnings_module.warn(
             "statsmodels not installed - OLS regression not available. "
             "Install statsmodels: pip install statsmodels",
             ImportWarning,
+            stacklevel=2,
         )
-        return None
 
     # Provide fallback implementations
-    def adfuller(*args, **kwargs):
+    def adfuller(*_args, **_kwargs):
         """
         Fallback adfuller function when statsmodels is not available.
 
         Returns a tuple indicating stationarity test failed.
         """
-        import warnings
-
-        warnings.warn(
+        _warnings_module.warn(
             "statsmodels not installed - ADF test not available. "
             "Install statsmodels for stationarity testing: pip install statsmodels",
             ImportWarning,
+            stacklevel=2,
         )
         # Return p-value of 1.0 (fail to reject null hypothesis of non-stationarity)
         return (None, 1.0, None, None, None, None, None)
 
-    def kpss(*args, **kwargs):
+    def kpss(*_args, **_kwargs):
         """
         Fallback kpss function when statsmodels is not available.
 
         Returns a tuple indicating stationarity test failed.
         """
-        import warnings
-
-        warnings.warn(
+        _warnings_module.warn(
             "statsmodels not installed - KPSS test not available. "
             "Install statsmodels for stationarity testing: pip install statsmodels",
             ImportWarning,
+            stacklevel=2,
         )
         # Return p-value of 0.0 (reject null hypothesis of stationarity)
         return (None, 0.0, None, None)
