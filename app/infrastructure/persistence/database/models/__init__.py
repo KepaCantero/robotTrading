@@ -255,4 +255,6 @@ __all__ = [
     "RiskMetricsModelProtocol",
     "SystemLogModelProtocol",
     "PositionStateModelProtocol",
+    # Model classes (dynamically loaded)
+    "PositionState",
 ]

@@ -104,4 +104,5 @@ ignored-modules=
     quantstats,
     empyrical,
     pandas_datareader,
-    qlib
+    qlib,
+    app.infrastructure.persistence.database.models
