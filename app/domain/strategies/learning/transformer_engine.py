@@ -88,7 +88,7 @@ class TransformerEngine(BaseLearningEngine):
             self.epochs = params.get("epochs", 50)
             self.batch_size = params.get("batch_size", 32)
             self.learning_rate = params.get("learning_rate", 0.0001)
-            self.model = None
+            self.model: Optional[nn.Module] = None
             self.scaler = None
             return
 
@@ -180,7 +180,7 @@ class TransformerEngine(BaseLearningEngine):
         self,
         training_data: Optional[Dict[str, Any]] = None,
         validation_data: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, float]:
+    ) -> Dict[str, Any]:
         """
         Entrenar el modelo Transformer.
 
@@ -343,6 +343,9 @@ class TransformerEngine(BaseLearningEngine):
             # PyTorch is imported at module level (lines 37-39)
             # Import Dataset and DataLoader from torch.utils.data
             from torch.utils.data import DataLoader as _DataLoader, Dataset as _Dataset
+
+            # Type guard - model should exist at this point
+            assert self.model is not None
 
             # Definir TransformerDataset lazy dentro de este contexto
             class TransformerDataset(_Dataset):
@@ -554,6 +557,7 @@ class TransformerEngine(BaseLearningEngine):
                 sequence = sequence.reshape((1,) + sequence.shape)
 
             # Predecir
+            assert self.model is not None  # Type guard
             self.model.eval()
             with torch.no_grad():
                 sequence_tensor = torch.FloatTensor(sequence).to(self.device)
@@ -570,7 +574,7 @@ class TransformerEngine(BaseLearningEngine):
             logger.error(f"Error en predicción Transformer: {e}", exc_info=True)
             return {'prediction': 0.0, 'confidence': 0.0, 'error': str(e)}
 
-    def evaluate(self, test_data: Dict[str, Any]) -> Dict[str, float]:
+    def evaluate(self, test_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Evaluar el modelo con datos de prueba.
 
@@ -640,6 +644,7 @@ class TransformerEngine(BaseLearningEngine):
             )
 
             criterion = nn.MSELoss()
+            assert self.model is not None  # Type guard
             self.model.eval()
 
             total_loss = 0.0
