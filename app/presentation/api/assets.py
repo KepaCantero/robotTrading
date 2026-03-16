@@ -1092,7 +1092,7 @@ async def get_asset_stats(
         extra={"correlation_id": correlation_id},
     )
     try:
-        stats = {
+        stats: Dict[str, Any] = {
             "total_asset_classes": len(AssetClass),
             "total_exchanges": len(Exchange),
             "universes": {},

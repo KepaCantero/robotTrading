@@ -66,9 +66,9 @@ class MetaDashboard:
         self.thresholds = self._load_thresholds()
 
         # Meta analyzer
-        self.analyzer = None
-        self.analysis_results = {}
-        self.df_results = None
+        self.analyzer: Optional[BacktestMetaAnalyzer] = None
+        self.analysis_results: Dict[str, Any] = {}
+        self.df_results: Optional[pd.DataFrame] = None
 
         logger.info(f"MetaDashboard inicializado: results_dir={results_dir}")
 
@@ -185,6 +185,9 @@ class MetaDashboard:
 
     def _render_alert_engine(self) -> None:
         """Renderizar sistema de alertas."""
+        if self.df_results is None:
+            return
+
         st.subheader("🚨 Alert Engine")
 
         alerts = []
@@ -246,6 +249,9 @@ class MetaDashboard:
 
     def _render_performance_matrix(self) -> None:
         """Renderizar matriz de rendimiento (heatmap)."""
+        if self.df_results is None:
+            return
+
         st.subheader("📊 Performance Matrix")
 
         if 'test_type' not in self.df_results.columns:
@@ -450,6 +456,9 @@ class MetaDashboard:
 
     def _calculate_stability_index(self) -> float:
         """Calcular Stability Index (correlación entre resultados consecutivos)."""
+        if self.df_results is None:
+            return 0.0
+
         if 'sharpe_ratio' not in self.df_results.columns:
             return 0.0
 
@@ -467,6 +476,9 @@ class MetaDashboard:
 
     def _calculate_cluster_quality(self) -> float:
         """Calcular calidad de clusters (silueta media)."""
+        if self.df_results is None:
+            return 0.0
+
         if not SKLEARN_AVAILABLE or 'cluster' not in self.df_results.columns:
             return 0.0
 
@@ -490,6 +502,9 @@ class MetaDashboard:
 
     def _calculate_profit_consistency(self) -> float:
         """Calcular % de tests con beneficio positivo."""
+        if self.df_results is None:
+            return 0.0
+
         if 'total_pnl' not in self.df_results.columns:
             return 0.0
 

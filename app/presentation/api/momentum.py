@@ -20,10 +20,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from requests.exceptions import ConnectionError, HTTPError, RequestException
 
 from app.domain.models.momentum import MomentumFilter, MomentumStrategy, MomentumType, Timeframe
-from app.domain.services.analysis.momentum import (
-    MomentumAnalysisService,
-    get_momentum_analysis_service,
-)
+from app.services.momentum_analysis import MomentumAnalysisService, get_momentum_analysis_service
 
 router = APIRouter(prefix="/momentum", tags=["momentum"])
 logger = logging.getLogger(__name__)
@@ -825,7 +822,7 @@ async def get_momentum_stats(
         expired_signals = total_signals - active_signals
 
         # Signal type distribution
-        signal_types = {}
+        signal_types: Dict[str, int] = {}
         for signal in all_signals:
             signal_type = signal.signal_type.value
             signal_types[signal_type] = signal_types.get(signal_type, 0) + 1
