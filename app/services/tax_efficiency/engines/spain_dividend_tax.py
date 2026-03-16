@@ -5,7 +5,7 @@ Calcula retenciones de dividendos para residentes espanoles
 """
 import logging
 from decimal import Decimal
-from typing import dict
+from typing import Dict
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ class SpainDividendTaxCalculator:
         For production use, integrate with a securities master database or broker API
         to maintain comprehensive ticker mappings.
         """
-        self._ticker_to_country: dict[str, str] = {
+        self._ticker_to_country: Dict[str, str] = {
             # IBEX35
             "SAN": "ES",
             "REE": "ES",
