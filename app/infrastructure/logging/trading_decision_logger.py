@@ -5,25 +5,15 @@ Logger append-only con correlation ID para todas las decisiones de trading.
 """
 import logging
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from app.infrastructure.logging.append_only_log import AppendOnlyLog
 from app.services.logging.log_entry import LogEntry
 
 logger = logging.getLogger(__name__)
 
-# @skip-import - Protocol import, skip if not available
-try:
-    from app.shared.protocols.i_trading_decision_logger import ITradingDecisionLogger
-except ImportError:
-    # Protocol not available yet, define placeholder for runtime
-    class ITradingDecisionLogger:
-        """Placeholder protocol when import fails"""
 
-        pass
-
-
-class TradingDecisionLogger(ITradingDecisionLogger):
+class TradingDecisionLogger:
     """
     Logger de decisiones de trading (R15, R28)
 
@@ -225,7 +215,7 @@ class TradingDecisionLogger(ITradingDecisionLogger):
         )
 
         # Agrupar por correlation_id y formatear para Hacienda
-        operations = {}
+        operations: Dict[str, List[Dict[str, Any]]] = {}
         for entry in entries:
             corr_id = entry["correlation_id"]
             if corr_id not in operations:

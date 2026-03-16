@@ -15,11 +15,14 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Callable, Dict, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
 
 from app.shared.utils.timezone_utils import utc_now
 
 logger = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    import ntplib
 
 
 # NTP Servers for time synchronization
@@ -99,7 +102,7 @@ class TimeSyncMonitor:
         self.config = config or TimeSyncConfig()
 
         # Lazy load ntplib to avoid import errors if not available
-        self._ntp_client = None
+        self._ntp_client: Optional[ntplib.NTPClient] = None
         self._ntp_available = False
 
         # State
@@ -219,6 +222,8 @@ class TimeSyncMonitor:
         for server in NTP_SERVERS:
             try:
                 # Get NTP time
+                if self._ntp_client is None:
+                    continue
                 response = await asyncio.to_thread(
                     self._ntp_client.request,
                     server,

@@ -206,9 +206,9 @@ class SensitiveDataFilter(logging.Filter):
             Dictionary with sensitive values redacted
         """
         if not isinstance(data, dict):
-            return data
+            return {}
 
-        redacted = {}
+        redacted: Dict[str, Any] = {}
         for key, value in data.items():
             key_lower = key.lower().replace("-", "_").replace(".", "")
 
@@ -475,10 +475,12 @@ def setup_file_logging(
     # Determine formatter based on use_json flag
     # LOG-001: Support JSON structured logging
     if use_json:
-        all_formatter = JSONFormatter()
-        warning_formatter = JSONFormatter()
-        error_formatter = JSONFormatter()
-        console_formatter = logging.Formatter('%(levelname)s - %(name)s - %(message)s')
+        all_formatter: logging.Formatter = JSONFormatter()
+        warning_formatter: logging.Formatter = JSONFormatter()
+        error_formatter: logging.Formatter = JSONFormatter()
+        console_formatter: logging.Formatter = logging.Formatter(
+            '%(levelname)s - %(name)s - %(message)s'
+        )
     else:
         # LOG-006: Use TimedFormatter for timing information
         all_formatter = TimedFormatter(
@@ -567,7 +569,7 @@ def setup_module_loggers(use_json: bool = False) -> None:
 
     # Choose formatter based on use_json flag
     if use_json:
-        formatter = JSONFormatter()
+        formatter: logging.Formatter = JSONFormatter()
     else:
         # LOG-006: Use TimedFormatter with timing info
         formatter = TimedFormatter(

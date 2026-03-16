@@ -9,7 +9,7 @@ import time
 from threading import Thread
 from typing import Any, Callable, Dict, Optional
 
-from .secure_serialization import sign_and_dump, verify_and_load
+from app.security.secure_serialization import sign_and_dump, verify_and_load
 
 # Fallback pattern: Try to import redis and zmq
 try:

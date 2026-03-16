@@ -17,7 +17,7 @@ import sys
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Awaitable, Callable, Dict, List, Optional
 
 import psutil
 
@@ -82,16 +82,16 @@ class MemoryMonitor:
     def __init__(
         self,
         config: Optional[MemoryConfig] = None,
-        state_saver: Optional[Callable[[], None]] = None,
-        position_closer: Optional[Callable[[], None]] = None,
+        state_saver: Optional[Callable[[], Awaitable[None]]] = None,
+        position_closer: Optional[Callable[[], Awaitable[None]]] = None,
     ):
         """
         Initialize memory monitor.
 
         Args:
             config: Memory monitoring configuration
-            state_saver: Callback to save state before restart
-            position_closer: Callback to close positions before restart
+            state_saver: Async callback to save state before restart
+            position_closer: Async callback to close positions before restart
         """
         self.config = config or MemoryConfig()
         self.state_saver = state_saver

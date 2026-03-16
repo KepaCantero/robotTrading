@@ -298,7 +298,7 @@ class RollAnalyzer:
                 Returns:
                     Lista de oportunidades de roll out
         """
-        opportunities = []
+        opportunities: List[RollOpportunity] = []
 
         # Días al vencimiento
         dte = position.call_option.days_to_expiry

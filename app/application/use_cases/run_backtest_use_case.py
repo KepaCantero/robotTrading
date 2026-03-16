@@ -166,40 +166,26 @@ class RunBacktestUseCase:
             BacktestError: If backtest execution fails
         """
         try:
-            # Import here to avoid circular dependencies
             from decimal import Decimal
 
-            from ....backtesting.core.executor import BacktestExecutorFactory
-            from ....backtesting.models import BacktestConfig as EngineBacktestConfig
-
-            # Convert value object to engine config
-            engine_config = EngineBacktestConfig(
-                initial_capital=Decimal(str(config.initial_capital)),
-                commission=float(getattr(config, 'commission', 0.001)),
-                slippage=float(getattr(config, 'slippage', 0.0001)),
-            )
-
-            # Create executor using factory
-            BacktestExecutorFactory.create_executor(executor_type='simple', config=engine_config)
+            # Get the initial capital for placeholder result
+            initial_capital_value = Decimal(str(config.initial_capital))
 
             # Import strategy from config if available
             # For now, we need to get the strategy from the config or use a default
             strategy_name = getattr(config, 'strategy_name', 'default')
 
-            # Get market data for the backtest
-            # This would typically come from a data service
-            # For now, we'll create a minimal placeholder
-
             # Create a placeholder result with the configured parameters
-            # In a full implementation, this would call executor.execute() with actual data
+            # In a full implementation, this would call the backtesting engine
             result_value = BacktestResultValue(
-                total_return=0.0,
-                sharpe_ratio=0.0,
-                max_drawdown=0.0,
-                win_rate=0.0,
-                profit_factor=0.0,
+                initial_capital=initial_capital_value,
+                final_capital=initial_capital_value,
+                total_return=Decimal("0.0"),
+                total_return_pct=Decimal("0.0"),
+                sharpe_ratio=Decimal("0.0"),
+                max_drawdown=Decimal("0.0"),
                 total_trades=0,
-                profitable_trades=0,
+                winning_trades=0,
                 losing_trades=0,
             )
 

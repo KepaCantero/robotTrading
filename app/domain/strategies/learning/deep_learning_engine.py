@@ -69,6 +69,10 @@ class DeepLearningEngine(BaseLearningEngine):
     Predice movimientos de mercado y ajusta parámetros dinámicos de filtros.
     """
 
+    # Type annotations for instance attributes
+    model: Optional[nn.Module]
+    scaler: Optional[Any]
+
     def __init__(self, config: Dict, defer_pytorch_init: bool = False):
         """
         Inicializar motor de deep learning.
@@ -127,7 +131,9 @@ class DeepLearningEngine(BaseLearningEngine):
         # Parámetros específicos para transformer y otras arquitecturas (si se usa)
         self.model_params = config.get("model_parameters", {})
 
-        self.scaler = None  # Para normalizar datos
+        # Scaler and model initialization (type annotations already set in defer block)
+        self.scaler = None
+        self.model = None
 
     def train(
         self,
@@ -492,6 +498,9 @@ class DeepLearningEngine(BaseLearningEngine):
                 ) from e
             raise
 
+        # Assert model was created successfully (for mypy)
+        assert self.model is not None, "Model creation failed"
+
         # Mover modelo a CPU explícitamente (sin CUDA para evitar bloqueos)
         device = torch.device("cpu")
         with torch.no_grad():
@@ -501,7 +510,7 @@ class DeepLearningEngine(BaseLearningEngine):
         criterion = nn.BCELoss() if output_size == 1 else nn.MSELoss()
         optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
 
-        metrics = {'train_loss': [], 'val_loss': []}
+        metrics: Dict[str, list] = {'train_loss': [], 'val_loss': []}
 
         for epoch in range(self.epochs):
             # Training
@@ -597,9 +606,7 @@ class DeepLearningEngine(BaseLearningEngine):
                 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
                 # Reimportar en el proceso hijo (fresh state)
-                from app.domain.strategies.momentum_modular.learning.deep_learning_engine import (
-                    DeepLearningEngine,
-                )
+                from app.domain.strategies.learning.deep_learning_engine import DeepLearningEngine
 
                 # Crear engine en el proceso hijo - NO usar defer_pytorch_init aquí
                 # porque estamos en un proceso completamente nuevo y aislado
@@ -654,7 +661,7 @@ class DeepLearningEngine(BaseLearningEngine):
         }
 
         # Crear queue para comunicación
-        result_queue = mp.Queue()
+        result_queue: mp.Queue = mp.Queue()
 
         # Crear proceso hijo con context 'spawn' (más seguro que 'fork')
         try:
@@ -792,15 +799,15 @@ class DeepLearningEngine(BaseLearningEngine):
 
     def _suggest_filter_adjustments(self, prediction: float) -> Dict[str, float]:
         """Sugerir ajustes de filtros basados en predicción."""
-        adjustments = {}
+        adjustments: Dict[str, float] = {}
 
         # Si predicción es muy alcista, relajar filtros de compra
         if prediction > 0.7:
-            adjustments['rsi_buy_min'] = -5  # Reducir threshold
+            adjustments['rsi_buy_min'] = -5.0  # Reducir threshold
             adjustments['momentum_threshold'] = -0.005  # Reducir
         elif prediction < 0.3:
-            adjustments['rsi_buy_min'] = +5  # Aumentar threshold (ser más estricto)
-            adjustments['momentum_threshold'] = +0.005
+            adjustments['rsi_buy_min'] = 5.0  # Aumentar threshold (ser más estricto)
+            adjustments['momentum_threshold'] = 0.005
 
         return adjustments
 
@@ -855,6 +862,9 @@ class DeepLearningEngine(BaseLearningEngine):
             pin_memory=False,  # Deshabilitar pin_memory para evitar bloqueos
             persistent_workers=False,
         )
+
+        # Assert model exists for evaluation
+        assert self.model is not None, "Model must be trained before evaluation"
 
         self.model.eval()
         predictions = []

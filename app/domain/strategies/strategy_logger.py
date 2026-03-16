@@ -45,7 +45,7 @@ class StrategyLogger:
                     self.logs = json.load(f)
                 logger.info(f"Loaded {len(self.logs)} existing logs from {self.log_path}")
             except (FileNotFoundError, PermissionError, IOError, OSError) as e:
-                logger.warning("Could not load existing logs", error=str(e), exc_info=True)
+                logger.warning("Could not load existing logs: %s", str(e), exc_info=True)
                 self.logs = []
         else:
             # Archivo no existe, inicializar lista vacía sin warning
@@ -57,7 +57,7 @@ class StrategyLogger:
             with open(self.log_path, "w", encoding="utf-8") as f:
                 json.dump(self.logs, f, indent=2, default=str)
         except (FileNotFoundError, PermissionError, IOError, OSError) as e:
-            logger.error("Failed to save logs", error=str(e), exc_info=True)
+            logger.error("Failed to save logs: %s", str(e), exc_info=True)
 
     def _create_log_entry(
         self, event: str, strategy_name: str, level: str = "INFO", **kwargs
@@ -339,7 +339,7 @@ class StrategyLogger:
                 json.dump(self.logs, f, indent=2, default=str)
             logger.info(f"Exported {len(self.logs)} logs to {export_path}")
         except (FileNotFoundError, PermissionError, IOError, OSError) as e:
-            logger.error("Failed to export logs", error=str(e), exc_info=True)
+            logger.error("Failed to export logs: %s", str(e), exc_info=True)
             raise
 
     def __str__(self) -> str:

@@ -16,7 +16,7 @@ SOLID Principles:
 import logging
 from datetime import date, timedelta
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from .greeks_calculator import GreeksCalculator
 from .models import (
@@ -423,7 +423,7 @@ class PositionManager:
 
         return itm_positions
 
-    def calculate_portfolio_pnl(self, current_prices: Dict[str, Decimal]) -> Dict[str, Decimal]:
+    def calculate_portfolio_pnl(self, current_prices: Dict[str, Decimal]) -> Dict[str, Any]:
         """
         Calcular P&L del portfolio.
 
@@ -456,7 +456,7 @@ class PositionManager:
             ),
         }
 
-    def get_position_metrics(self) -> Dict[str, any]:
+    def get_position_metrics(self) -> Dict[str, Any]:
         """
         Obtener métricas agregadas del portfolio.
 

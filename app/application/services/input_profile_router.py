@@ -320,18 +320,6 @@ class InputProfileRouter:
                 ),
             )
 
-        logger.info(
-            "Risk configuration selected",
-            extra={
-                "risk_tolerance": tolerance.value if tolerance else None,
-                "max_drawdown": float(risk_config.max_drawdown),
-                "max_position_size": float(risk_config.max_position_size),
-                "leverage_allowed": risk_config.leverage_allowed,
-            },
-        )
-
-        return risk_config
-
     def _select_optimization_config(
         self,
         horizon: InvestmentHorizon,
@@ -450,18 +438,6 @@ class InputProfileRouter:
                 tax_loss_harvesting=True,
                 witholding_tax_rate=Decimal("0.15"),
             )
-
-        logger.info(
-            "Tax configuration created",
-            extra={
-                "country": tax_config.country,
-                "method": tax_config.method,
-                "dividend_tax_rate": float(tax_config.dividend_tax_rate),
-                "capital_gains_tax_rate": float(tax_config.capital_gains_tax_rate),
-            },
-        )
-
-        return tax_config
 
     def _generate_constraints(self, profile: InputProfile) -> Dict[str, Any]:
         """
