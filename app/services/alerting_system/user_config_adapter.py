@@ -5,8 +5,8 @@ import logging
 import os
 from typing import List
 
+from app.infrastructure.config.user_settings import UserSettings
 from app.services.alerting_system.models import NotificationChannelType, NotificationTarget
-from app.user_config.user_settings import UserSettings
 
 logger = logging.getLogger(__name__)
 

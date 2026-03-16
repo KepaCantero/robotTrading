@@ -30,9 +30,7 @@ from uuid import UUID, uuid4
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.infrastructure.persistence.database import get_db_transaction
-from app.shared.config import get_settings
-from app.tax.database.fifo_schema import (
+from app.domain.tax.database.fifo_schema import (
     Account,
     AssetType,
     ExchangeType,
@@ -42,6 +40,8 @@ from app.tax.database.fifo_schema import (
     Transaction,
     TransactionType,
 )
+from app.infrastructure.persistence.database import get_db_transaction
+from app.shared.config import get_settings
 
 logger = logging.getLogger(__name__)
 
