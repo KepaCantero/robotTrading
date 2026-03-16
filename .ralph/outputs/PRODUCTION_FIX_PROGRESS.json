@@ -1,10 +1,31 @@
 {
-  "timestamp": "2026-03-16T22:30:00Z",
+  "timestamp": "2026-03-16T23:00:00Z",
   "total_files": 1113,
-  "processed": 568,
-  "passed": 528,
-  "fixed": 24,
-  "blocked": 16,
+  "processed": 644,
+  "passed": 601,
+  "fixed": 25,
+  "blocked": 19,
+  "current_phase": "Phase 10 - Services Files",
+  "recent_fix": {
+    "file": "app/services/portfolio_analytics_service.py",
+    "action": "Split into 4 smaller modules",
+    "new_files": [
+      "app/services/portfolio_analytics/__init__.py",
+      "app/services/portfolio_analytics/service.py",
+      "app/services/portfolio_analytics/_performance_calculations.py",
+      "app/services/portfolio_analytics/_risk_calculations.py",
+      "app/services/portfolio_analytics/_portfolio_calculations.py"
+    ],
+    "fixed_imports_in": [
+      "app/presentation/api/portfolio_analytics.py",
+      "app/presentation/controllers/portfolio_analytics.py"
+    ]
+  },
+  "phase_9_summary": {
+    "total_files": 63,
+    "passed": 60,
+    "blocked": 3
+  },
   "blocked_files": [
     {
       "file": "app/domain/services/compliance/compliance_engine.py",
@@ -101,114 +122,24 @@
       "reason": "MI=12.01 due to 2301 lines. Import errors: References non-existent app.optimization.parameter.* modules (should be app.domain.optimization.*). Requires file splitting and import path fixes",
       "failed_checks": ["radon_mi", "pylint"],
       "loc": 2301
-    }
-  ],
-  "next_files": [
-    "app/presentation/"
-  ],
-  "iteration_notes": "Fixed app/application/services/input_profile_router.py (unreachable code), app/infrastructure/logging/logging_config.py (type annotations), app/infrastructure/logging/trading_decision_logger.py (type annotations), app/infrastructure/messaging/messaging.py (import path), app/infrastructure/monitoring/memory_monitor.py (async callback types), app/infrastructure/monitoring/time_sync_monitor.py (ntp_client null check), app/infrastructure/persistence/database.py (type annotation), app/infrastructure/persistence/database/models.py (import path), app/infrastructure/resilience/reconnection_manager.py (async callback type). Validated app/application/services/, app/infrastructure/ subdirectories."
-}
-    {
-      "file": "app/domain/services/compliance/compliance_engine.py",
-      "reason": "MI=0.00 due to 3860 lines of code. Requires architectural refactoring",
-      "failed_checks": ["radon_mi"],
-      "loc": 3860
     },
     {
-      "file": "app/domain/services/compliance/system_bus_extracted.py",
-      "reason": "MI=16.04 due to 1592 lines. Requires file splitting",
+      "file": "app/presentation/dashboard/main.py",
+      "reason": "MI=15.54 due to 1359 lines. Requires file splitting into ~4-5 smaller modules",
       "failed_checks": ["radon_mi"],
-      "loc": 1592
+      "loc": 1359
     },
     {
-      "file": "app/domain/services/indicators/technical_indicators.py",
-      "reason": "MI=4.32 due to 1313 lines. Requires file splitting",
+      "file": "app/presentation/dashboard/objectives_dashboard.py",
+      "reason": "MI=0.00 due to large file size. Requires architectural refactoring",
       "failed_checks": ["radon_mi"],
-      "loc": 1313
+      "loc": 0
     },
     {
-      "file": "app/domain/strategies/strategy.py",
-      "reason": "MI=3.22 due to 1539 lines. High CC functions. Requires refactoring",
+      "file": "app/presentation/dashboard/advanced_dashboard.py",
+      "reason": "MI=0.00, CC=37.375. Complex and large file. Needs significant refactoring into multiple service classes",
       "failed_checks": ["radon_mi", "radon_cc"],
-      "loc": 1539
-    },
-    {
-      "file": "app/domain/strategies/learning/drift_detector.py",
-      "reason": "MI=0.00 due to 2163 lines. Requires architectural refactoring",
-      "failed_checks": ["radon_mi", "mypy"],
-      "loc": 2163
-    },
-    {
-      "file": "app/domain/strategies/learning/feature_importance.py",
-      "reason": "MI=0.00 due to 2092 lines. Requires architectural refactoring",
-      "failed_checks": ["radon_mi", "mypy"],
-      "loc": 2092
-    },
-    {
-      "file": "app/domain/strategies/learning/learning_updater.py",
-      "reason": "MI=18.99 due to 1151 lines. Borderline case requiring refactoring",
-      "failed_checks": ["radon_mi"],
-      "loc": 1151
-    },
-    {
-      "file": "app/domain/strategies/learning/transformer_engine.py",
-      "reason": "CC=12 due to complex train() method. Requires refactoring",
-      "failed_checks": ["radon_cc"],
-      "loc": 680
-    },
-    {
-      "file": "app/domain/strategies/carry_calculator.py",
-      "reason": "Import error: References non-existent fx_carry_trade.models module",
-      "failed_checks": ["pylint"],
-      "loc": 442
-    },
-    {
-      "file": "app/domain/strategies/correlation_analyzer.py",
-      "reason": "Import error: References non-existent fx_intermarket.models module",
-      "failed_checks": ["pylint"],
       "loc": 0
-    },
-    {
-      "file": "app/domain/strategies/covered_call_strategy.py",
-      "reason": "Import error: Missing model classes. mypy errors with config access",
-      "failed_checks": ["pylint", "mypy"],
-      "loc": 0
-    },
-    {
-      "file": "app/backtesting/backtest_optimizer.py",
-      "reason": "CC=16.14 due to run_ablation_backtest (CC=39) and run_grid_search_backtest (CC=30). Requires refactoring",
-      "failed_checks": ["radon_cc"],
-      "loc": 1138
-    },
-    {
-      "file": "app/backtesting/backtest_regime.py",
-      "reason": "CC=14.33. Requires refactoring to reduce complexity",
-      "failed_checks": ["radon_cc"],
-      "loc": 0
-    },
-    {
-      "file": "app/backtesting/comprehensive_backtest_runner.py",
-      "reason": "MI=0.00 due to 4533 lines. Requires architectural refactoring",
-      "failed_checks": ["radon_mi"],
-      "loc": 4533
-    },
-    {
-      "file": "app/backtesting/walk_forward_validator.py",
-      "reason": "MI=18.39 due to 1720 lines. Just below threshold - requires file splitting",
-      "failed_checks": ["radon_mi"],
-      "loc": 1720
-    },
-    {
-      "file": "app/application/use_cases/select_strategy.py",
-      "reason": "MI=12.01 due to 2301 lines. Import errors: References non-existent app.optimization.parameter.* modules (should be app.domain.optimization.*). Requires file splitting and import path fixes",
-      "failed_checks": ["radon_mi", "pylint"],
-      "loc": 2301
     }
-  ],
-  "next_files": [
-    "app/application/services/",
-    "app/infrastructure/",
-    "app/presentation/"
-  ],
-  "iteration_notes": "Fixed run_backtest_use_case.py. Added select_strategy.py to blocked list due to import errors and size."
+  ]
 }
