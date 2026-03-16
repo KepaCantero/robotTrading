@@ -11,7 +11,7 @@ import logging
 import random
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Awaitable, Callable, Dict, Optional
 
 from app.shared.config.centralized_config import get_config
 from app.shared.utils.timezone_utils import utc_now
@@ -266,7 +266,7 @@ class ReconnectionManager:
     async def maintain_connection(
         self,
         connect_func: Callable[[], Any],
-        check_func: Optional[Callable[[], bool]] = None,
+        check_func: Optional[Callable[[], Awaitable[bool]]] = None,
         reconnect_delay: Optional[float] = None,
     ):
         """

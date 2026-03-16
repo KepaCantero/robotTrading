@@ -195,7 +195,7 @@ class SubprocessLearningEngineWrapper:
         self.is_trained = False
 
         # Subprocess management
-        self._process: Optional[mp.Process] = None
+        self._process: Optional[mp.process.BaseProcess] = None
         self._request_queue: Optional[mp.Queue] = None
         self._response_queue: Optional[mp.Queue] = None
 
@@ -241,7 +241,7 @@ class SubprocessLearningEngineWrapper:
             except (TypeError, pickle.PicklingError, AttributeError):
                 return False
 
-        sanitized = {}
+        sanitized: Dict[str, Any] = {}
         for key, value in config.items():
             # Skip keys that typically contain unpicklable objects
             if key in ('connection', 'session', 'db', 'database', 'engine', 'pool'):
@@ -271,7 +271,7 @@ class SubprocessLearningEngineWrapper:
 
         return sanitized
 
-    def _create_engine_direct(self):
+    def _create_engine_direct(self) -> Optional[Any]:
         """Create engine directly (for non-macOS systems)."""
         try:
             if self.engine_type == "deep":
@@ -286,6 +286,7 @@ class SubprocessLearningEngineWrapper:
                 from .reinforcement_learning_engine import ReinforcementLearningEngine
 
                 return ReinforcementLearningEngine(self.config)
+            return None
         except ImportError as e:
             logger.warning(f"Could not create {self.engine_type} engine directly: {e}")
             return None
@@ -452,7 +453,7 @@ class SubprocessLearningEngineWrapper:
         self,
         training_data: Optional[Dict[str, Any]] = None,
         validation_data: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, float]:
+    ) -> Dict[str, Any]:
         """
         Train the model.
 
@@ -517,7 +518,7 @@ class SubprocessLearningEngineWrapper:
             "error": response.error,
         }
 
-    def evaluate(self, test_data: Dict[str, Any]) -> Dict[str, float]:
+    def evaluate(self, test_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Evaluate the model.
 

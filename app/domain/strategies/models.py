@@ -1316,3 +1316,317 @@ class OptionScreenerResult:
             return None
         # Return option with highest premium (could use other criteria)
         return max(self.options_passed, key=lambda opt: opt.mid_price or Decimal("0"))
+
+
+@dataclass
+class OnChainMetrics:
+    """
+    On-chain metrics for cryptocurrency assets.
+
+    Captures blockchain-specific data that provides insight into
+    network health, adoption, and market sentiment for crypto assets.
+
+    Attributes:
+        symbol: Cryptocurrency symbol (e.g., 'BTC', 'ETH')
+        active_addresses: Number of active addresses on the network
+        transaction_count: Number of transactions in the period
+        transaction_volume: Total transaction volume in native units
+        nvt_ratio: Network Value to Transactions ratio
+        network_health_score: Pre-calculated network health score (0-100)
+        hash_rate: Network hash rate (for PoW coins)
+        staking_ratio: Percentage of supply being staked (for PoS coins)
+        token_velocity: Token velocity metric
+        timestamp: When these metrics were recorded
+    """
+
+    symbol: str
+    active_addresses: Optional[int] = None
+    transaction_count: Optional[int] = None
+    transaction_volume: Optional[Decimal] = None
+    nvt_ratio: Optional[Decimal] = None
+    network_health_score: Optional[Decimal] = None
+    hash_rate: Optional[Decimal] = None
+    staking_ratio: Optional[Decimal] = None
+    token_velocity: Optional[Decimal] = None
+    timestamp: Optional[datetime] = None
+
+
+class CryptoAssetType(str, Enum):
+    """Types of cryptocurrency assets."""
+
+    BITCOIN = "bitcoin"
+    ETHEREUM = "ethereum"
+    STABLECOIN = "stablecoin"
+    DEFI = "defi"
+    L1_BLOCKCHAIN = "l1_blockchain"
+    L2_SCALING = "l2_scaling"
+    UTILITY = "utility"
+    EXCHANGE = "exchange"
+    NFT_PLATFORM = "nft_platform"
+    MEME = "meme"
+    PRIVACY = "privacy"
+    OTHER = "other"
+
+
+class CryptoExchange(str, Enum):
+    """Cryptocurrency exchanges."""
+
+    BINANCE = "binance"
+    COINBASE = "coinbase"
+    KRAKEN = "kraken"
+    BITSTAMP = "bitstamp"
+    GEMINI = "gemini"
+    BITFINEX = "bitfinex"
+    OKEX = "okex"
+    HUOBI = "huobi"
+    KUCOIN = "kucoin"
+
+
+@dataclass
+class CryptoAsset:
+    """
+    Cryptocurrency asset representation.
+
+    Captures essential data for crypto assets including market data,
+    listing information, and crypto-specific metrics.
+
+    Attributes:
+        symbol: Trading symbol (e.g., 'BTC', 'ETH')
+        name: Full name of the cryptocurrency
+        asset_type: Type classification of the asset
+        market_cap: Current market capitalization in USD
+        price: Current price in USD
+        avg_daily_volume: Average daily trading volume in USD
+        exchanges: List of exchanges where asset is listed
+        btc_correlation: Correlation with Bitcoin price
+        volatility_30d: 30-day volatility
+        circulating_supply: Circulating supply
+        total_supply: Total supply
+    """
+
+    symbol: str
+    name: str
+    asset_type: CryptoAssetType
+    market_cap: Decimal
+    price: Decimal
+    avg_daily_volume: Decimal
+    exchanges: List[CryptoExchange]
+    btc_correlation: Optional[float] = None
+    volatility_30d: Optional[Decimal] = None
+    circulating_supply: Optional[Decimal] = None
+    total_supply: Optional[Decimal] = None
+
+
+@dataclass
+class CryptoScreeningResult:
+    """
+    Result of crypto asset screening operation.
+
+    Attributes:
+        passed_assets: Assets that passed all screening criteria
+        failed_assets: Assets that failed with reasons
+        total_evaluated: Total number of assets evaluated
+        screening_time_ms: Time taken for screening in milliseconds
+        min_market_cap: Minimum market cap used for screening
+        min_daily_volume: Minimum daily volume used for screening
+        min_liquidity_score: Minimum liquidity score used for screening
+    """
+
+    passed_assets: List[CryptoAsset]
+    failed_assets: Dict[str, List[str]]
+    total_evaluated: int
+    screening_time_ms: float
+    min_market_cap: Optional[Decimal] = None
+    min_daily_volume: Optional[Decimal] = None
+    min_liquidity_score: Optional[Decimal] = None
+
+
+@dataclass
+class CryptoMomentumConfig:
+    """
+    Configuration for crypto momentum strategy.
+
+    Attributes:
+        min_market_cap: Minimum market cap for consideration
+        min_volume: Minimum daily volume
+        max_volatility: Maximum acceptable volatility
+        momentum_period_days: Lookback period for momentum calculation
+        rebalance_frequency: How often to rebalance
+        max_position_size: Maximum position size as decimal
+    """
+
+    min_market_cap: Decimal = Decimal("100000000")
+    min_volume: Decimal = Decimal("1000000")
+    max_volatility: Decimal = Decimal("2.0")
+    momentum_period_days: int = 30
+    rebalance_frequency: str = "weekly"
+    max_position_size: Decimal = Decimal("0.1")
+
+
+@dataclass
+class CryptoMomentumScore:
+    """
+    Momentum score for a crypto asset.
+
+    Attributes:
+        symbol: Asset symbol
+        raw_momentum: Raw momentum score
+        final_score: Final weighted score
+        confidence: Confidence level of the score
+        price_momentum: Price momentum score
+        volume_momentum: Volume momentum score
+        on_chain_momentum: On-chain activity momentum
+        social_momentum: Social sentiment momentum
+        composite_score: Weighted composite score
+        rank: Ranking within universe
+    """
+
+    symbol: str
+    raw_momentum: Decimal
+    final_score: Decimal
+    confidence: Decimal
+    volatility_adjusted_momentum: Optional[Decimal] = None
+    btc_adjusted_momentum: Optional[Decimal] = None
+    price_momentum: Optional[Decimal] = None
+    volume_momentum: Optional[Decimal] = None
+    on_chain_momentum: Optional[Decimal] = None
+    social_momentum: Optional[Decimal] = None
+    composite_score: Optional[Decimal] = None
+    rank: Optional[int] = None
+
+
+@dataclass
+class CryptoPortfolio:
+    """
+    Crypto portfolio representation.
+
+    Attributes:
+        positions: Current positions
+        total_value: Total portfolio value in USD
+        btc_weight: Weight of Bitcoin
+        eth_weight: Weight of Ethereum
+        altcoin_weight: Weight of altcoins
+        cash_weight: Cash/stablecoin weight
+        last_rebalanced: When portfolio was last rebalanced
+    """
+
+    positions: Dict[str, Decimal]
+    total_value: Decimal
+    btc_weight: Decimal
+    eth_weight: Decimal
+    altcoin_weight: Decimal
+    cash_weight: Decimal
+    last_rebalanced: Optional[datetime] = None
+
+
+class RollType(str, Enum):
+    """Types of covered call roll operations."""
+
+    ROLL_OUT = "roll_out"  # Extend to later expiry
+    ROLL_UP = "roll_up"  # Roll to higher strike
+    ROLL_DOWN = "roll_down"  # Roll to lower strike
+    ROLL_OUT_UP = "roll_out_up"  # Extend expiry and higher strike
+    ROLL_OUT_DOWN = "roll_out_down"  # Extend expiry and lower strike
+    CLOSE = "close"  # Close position without rolling
+
+
+@dataclass
+class CoveredCallConfig:
+    """
+    Configuration for covered call strategy.
+
+    Attributes:
+        min_premium: Minimum premium to collect
+        min_days_to_expiry: Minimum days to expiry
+        max_days_to_expiry: Maximum days to expiry
+        target_delta: Target delta for option selection
+        max_position_size: Maximum position size
+        roll_threshold: Threshold for rolling (as decimal of strike)
+        assignment_buffer: Buffer before assignment risk
+    """
+
+    min_premium: Decimal = Decimal("0.01")
+    min_days_to_expiry: int = 30
+    max_days_to_expiry: int = 45
+    target_delta: Decimal = Decimal("0.30")
+    max_position_size: Decimal = Decimal("0.05")
+    roll_threshold: Decimal = Decimal("0.02")
+    assignment_buffer: int = 7
+
+
+@dataclass
+class CoveredCallPosition:
+    """
+    Covered call position representation.
+
+    Attributes:
+        symbol: Underlying symbol
+        shares: Number of shares owned
+        strike: Option strike price
+        expiry: Option expiration date
+        premium_received: Premium received per share
+        contracts: Number of contracts
+        position_value: Current position value
+        unrealized_pnl: Unrealized profit/loss
+        status: Current position status
+    """
+
+    symbol: str
+    shares: int
+    strike: Decimal
+    expiry: datetime
+    premium_received: Decimal
+    contracts: int
+    position_value: Optional[Decimal] = None
+    unrealized_pnl: Optional[Decimal] = None
+    status: str = "active"
+
+
+@dataclass
+class RollDecision:
+    """
+    Decision on whether to roll a covered call position.
+
+    Attributes:
+        should_roll: Whether to roll the position
+        roll_type: Type of roll to execute
+        new_strike: New strike price (if rolling)
+        new_expiry: New expiration date (if rolling)
+        estimated_credit: Estimated credit/debit for roll
+        reasoning: Reasoning behind the decision
+    """
+
+    should_roll: bool
+    roll_type: Optional[RollType] = None
+    new_strike: Optional[Decimal] = None
+    new_expiry: Optional[datetime] = None
+    estimated_credit: Optional[Decimal] = None
+    reasoning: str = ""
+
+
+@dataclass
+class RollOpportunity:
+    """
+    Roll opportunity for a covered call position.
+
+    Attributes:
+        current_position: Current covered call position
+        current_price: Current underlying price
+        roll_type: Type of roll
+        new_strike: New strike price
+        new_expiry: New expiration date
+        estimated_credit: Estimated credit from roll
+        annualized_return: Estimated annualized return
+        days_to_expiry: Days to new expiry
+        probability_itm: Probability of finishing in the money
+    """
+
+    current_position: CoveredCallPosition
+    current_price: Decimal
+    roll_type: RollType
+    new_strike: Decimal
+    new_expiry: datetime
+    estimated_credit: Decimal
+    annualized_return: Optional[Decimal] = None
+    days_to_expiry: Optional[int] = None
+    probability_itm: Optional[Decimal] = None

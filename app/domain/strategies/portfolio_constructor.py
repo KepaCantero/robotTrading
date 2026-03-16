@@ -433,7 +433,7 @@ class FactorPortfolioConstructor:
 
         # If still violating position constraints, apply hard cap
         # This may result in weights summing to less than 1.0, which is acceptable
-        max_weight = np.max(weights)
+        max_weight: float = np.max(weights)
         if max_weight > max_single_pos:
             logger.warning(
                 f"Could not satisfy both position and sector constraints. "
@@ -651,7 +651,7 @@ class FactorPortfolioConstructor:
                         if other_sector == sector:
                             continue
                         other_sector_mask = np.array([s == other_sector for s in sectors])
-                        other_sector_total = np.sum(adjusted_weights[other_sector_mask])
+                        other_sector_total: float = np.sum(adjusted_weights[other_sector_mask])
                         other_sectors_info.append(
                             (other_sector, other_sector_mask, other_sector_total)
                         )
@@ -674,7 +674,7 @@ class FactorPortfolioConstructor:
             adjusted_weights = np.maximum(adjusted_weights, 0)
 
             # Renormalize to maintain sum = 1
-            total_weight = np.sum(adjusted_weights)
+            total_weight: float = np.sum(adjusted_weights)
             if total_weight > 0:
                 adjusted_weights = adjusted_weights / total_weight
 
@@ -965,11 +965,13 @@ class LowVolatilityPortfolioConstructor:
         # Calculate portfolio metrics
         if portfolio.positions:
             total_beta = sum(p.beta * p.weight for p in portfolio.positions)
-            portfolio.portfolio_beta = total_beta
+            portfolio.portfolio_beta = Decimal(str(total_beta))
 
             # Estimate portfolio volatility (simplified)
             avg_vol = sum(p.volatility for p in portfolio.positions) / len(portfolio.positions)
-            portfolio.expected_volatility = avg_vol * Decimal("0.7")  # Diversification benefit
+            portfolio.expected_volatility = Decimal(str(avg_vol)) * Decimal(
+                "0.7"
+            )  # Diversification benefit
 
         logger.info(
             f"Low volatility portfolio constructed: {len(portfolio.positions)} positions, "

@@ -246,7 +246,7 @@ class StrategyContext:
                     "error": str(e),
                 }
             )
-            logger.error("Strategy execution failed", error=str(e), exc_info=True)
+            logger.error("Strategy execution failed: %s", str(e), exc_info=True)
             raise
 
     def get_execution_history(self) -> List[Dict[str, Any]]:
@@ -377,9 +377,9 @@ class StrategyRegistry:
             required_params = temp_instance.get_required_parameters()
         except Exception as e:
             logger.warning(
-                "Could not instantiate for metadata",
-                class_name=strategy_class.__name__,
-                error=str(e),
+                "Could not instantiate %s for metadata: %s",
+                strategy_class.__name__,
+                str(e),
                 exc_info=True,
             )
             required_params = []
@@ -489,7 +489,7 @@ class StrategyRegistry:
             return strategy
 
         except Exception as e:
-            logger.error("Failed to create strategy", name=name, error=str(e), exc_info=True)
+            logger.error("Failed to create strategy '%s': %s", name, str(e), exc_info=True)
             raise ValueError(f"Failed to create strategy '{name}': {e}") from e
 
     def get_metadata(self, name: str) -> StrategyMetadata:

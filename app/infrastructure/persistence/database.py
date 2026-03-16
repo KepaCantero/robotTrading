@@ -7,7 +7,7 @@ with asyncpg driver, including session management and connection pooling.
 
 import logging
 from contextlib import asynccontextmanager, contextmanager
-from typing import AsyncGenerator, Optional
+from typing import Any, AsyncGenerator, Optional
 
 from sqlalchemy import MetaData
 from sqlalchemy.exc import (
@@ -346,7 +346,7 @@ async def execute_query(query: str, params: Optional[dict] = None) -> list:
             raise
 
 
-async def execute_scalar(query: str, params: Optional[dict] = None) -> any:
+async def execute_scalar(query: str, params: Optional[dict] = None) -> Any:
     """
     Execute a scalar query (returns single value).
 
@@ -355,7 +355,7 @@ async def execute_scalar(query: str, params: Optional[dict] = None) -> any:
         params: Query parameters
 
     Returns:
-        any: Scalar result
+        Scalar result
     """
     session_factory = get_session_factory()
 
