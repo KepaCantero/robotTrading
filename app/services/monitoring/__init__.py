@@ -10,13 +10,6 @@ from .alerting_rules_engine import (
 )
 from .metrics_exporter import MetricsExporter, get_metrics_exporter
 from .prometheus_collector import MetricType, PrometheusMetricsCollector, get_prometheus_collector
-from .time_sync_monitor import (
-    TimeSyncConfig,
-    TimeSyncMonitor,
-    TimeSyncStatus,
-    get_time_sync_monitor,
-    reset_time_sync_monitor,
-)
 
 __all__ = [
     "PrometheusMetricsCollector",
@@ -30,9 +23,4 @@ __all__ = [
     "reset_alerting_engine",
     "MetricsExporter",
     "get_metrics_exporter",
-    "TimeSyncMonitor",
-    "TimeSyncConfig",
-    "TimeSyncStatus",
-    "get_time_sync_monitor",
-    "reset_time_sync_monitor",
 ]

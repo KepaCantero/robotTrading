@@ -364,7 +364,7 @@ class PersistentTaskQueue:
 
                 # Mark as processing
                 now = datetime.now(timezone.utc)
-                await self._update_status(
+                await self._update_status_started(
                     db,
                     task.task_id,
                     TaskStatus.PROCESSING,
@@ -379,30 +379,44 @@ class PersistentTaskQueue:
         self.logger.debug(f"Dequeued task {task.task_id} ({task.name})")
         return task
 
-    async def _update_status(
+    async def _update_status_started(
         self,
         db: aiosqlite.Connection,
         task_id: str,
         status: TaskStatus,
-        **kwargs,
+        started_at: datetime,
     ) -> None:
-        """Update task status and optional fields."""
-        updates = ["status = ?"]
-        values = [status.value]
-
-        for key, value in kwargs.items():
-            if value is not None:
-                updates.append(f"{key} = ?")
-                if isinstance(value, datetime):
-                    values.append(serialize_datetime(value))
-                else:
-                    values.append(value)
-
-        values.append(task_id)
-
+        """Update task status to processing with started_at timestamp."""
         await db.execute(
-            f"UPDATE tasks SET {', '.join(updates)} WHERE task_id = ?",
-            values,
+            "UPDATE tasks SET status = ?, started_at = ? WHERE task_id = ?",
+            (status.value, serialize_datetime(started_at), task_id),
+        )
+
+    async def _update_status_completed(
+        self,
+        db: aiosqlite.Connection,
+        task_id: str,
+        status: TaskStatus,
+        completed_at: datetime,
+        result: Optional[str] = None,
+    ) -> None:
+        """Update task status to completed with completed_at and optional result."""
+        await db.execute(
+            "UPDATE tasks SET status = ?, completed_at = ?, result = ? WHERE task_id = ?",
+            (status.value, serialize_datetime(completed_at), result, task_id),
+        )
+
+    async def _update_status_simple(
+        self,
+        db: aiosqlite.Connection,
+        task_id: str,
+        status: TaskStatus,
+        completed_at: datetime,
+    ) -> None:
+        """Update task status with completed_at timestamp (for expired/cancelled)."""
+        await db.execute(
+            "UPDATE tasks SET status = ?, completed_at = ? WHERE task_id = ?",
+            (status.value, serialize_datetime(completed_at), task_id),
         )
 
     async def complete_task(self, task_id: str, result: Any = None) -> None:
@@ -428,7 +442,7 @@ class PersistentTaskQueue:
                     # For simple types, serialize and JSON encode
                     result_str = json.dumps(serialize_value(result))
 
-            await self._update_status(
+            await self._update_status_completed(
                 db,
                 task_id,
                 TaskStatus.COMPLETED,
@@ -604,7 +618,7 @@ class PersistentTaskQueue:
     async def _mark_as_expired(self, task_id: str) -> None:
         """Mark task as expired."""
         async with aiosqlite.connect(self.db_path) as db:
-            await self._update_status(
+            await self._update_status_simple(
                 db,
                 task_id,
                 TaskStatus.EXPIRED,
@@ -622,7 +636,7 @@ class PersistentTaskQueue:
             task_id: Task ID
         """
         async with aiosqlite.connect(self.db_path) as db:
-            await self._update_status(
+            await self._update_status_simple(
                 db,
                 task_id,
                 TaskStatus.CANCELLED,
