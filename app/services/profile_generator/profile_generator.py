@@ -14,14 +14,16 @@ from typing import Dict, List, Optional
 
 import yaml
 
-from app.maestro.phase_1 import (
-    AbsoluteReturnTarget,
+from app.application.orchestration.target_optimization.absolute_return_optimizer import (
     CapacityFadeAnalyzer,
-    CapitalTierSelector,
     FeasibilityValidator,
     ParameterOptimizer,
     TargetAlphaCalculator,
 )
+from app.application.orchestration.target_optimization.capital_tier_selector import (
+    CapitalTierSelector,
+)
+from app.application.orchestration.target_optimization.models import AbsoluteReturnTarget
 
 from .models import (
     CapitalTier,
@@ -345,7 +347,7 @@ class ProfileGenerator:
             )
             return result
 
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             logger.error(f"❌ Error generating profile: {e}")
             elapsed_ms = (datetime.utcnow() - start_time).total_seconds() * 1000
             return ProfileGenerationResult(
@@ -559,7 +561,7 @@ class ProfileGenerator:
                 f"  Feasibility: {validation_result.confidence_level}"
             )
 
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             logger.error(f"❌ Error integrating MAESTRO PHASE 1: {e}", exc_info=True)
             # Don't raise - allow profile generation to continue with partial data
 
