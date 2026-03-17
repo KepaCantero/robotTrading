@@ -526,7 +526,7 @@ class SignalScorer:
         time_decay = max(0, 100 - time_since_creation / 60)  # Decay over minutes
         urgency_factors.append(time_decay)
 
-        return np.mean(urgency_factors)
+        return float(np.mean(urgency_factors))
 
     def _calculate_market_condition_score(self, market_data: MarketData) -> float:
         """Calculate market condition score."""
@@ -544,7 +544,7 @@ class SignalPriorityQueue:
     def __init__(self, max_size: int = 1000):
         """Initialize priority queue."""
         self.max_size = max_size
-        self.queue = []
+        self.queue: list[tuple[float, int, Signal]] = []
         self.signal_count = 0
 
     def add_signal(self, signal: Signal) -> bool:
@@ -624,9 +624,9 @@ class SignalPriorityQueue:
                 "symbols": [],
             }
 
-        priorities = []
-        signal_types = {}
-        symbols = set()
+        priorities: list[float] = []
+        signal_types: dict[str, int] = {}
+        symbols: set[str] = set()
 
         for _, _, signal in self.queue:
             priorities.append(signal.priority_score)
@@ -784,7 +784,6 @@ class SignalPriorityQueue:
                 SignalType.BUY: 5.0,
                 SignalType.SELL: 5.0,
                 SignalType.HOLD: -10.0,
-                SignalType.EXIT: 15.0,
             }
 
             base_priority += type_adjustment.get(signal.signal_type, 0.0)
