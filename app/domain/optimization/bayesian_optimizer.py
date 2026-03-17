@@ -281,7 +281,7 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
             return await self._random_search_fallback(objective, search_space)
 
         self._start_time = datetime.now()
-        self._history = []
+        self._history: List[TrialResult] = []
         self._iteration_count = 0
         self._search_space = search_space
 
@@ -512,11 +512,11 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
                     params[name] = trial.suggest_categorical(name, values)
 
             elif param_type == ParameterType.CONTINUOUS:
-                min_val = float(defn["min"])
-                max_val = float(defn["max"])
+                min_val_float = float(defn["min"])
+                max_val_float = float(defn["max"])
                 log = defn.get("log", False)
 
-                params[name] = trial.suggest_float(name, min_val, max_val, log=log)
+                params[name] = trial.suggest_float(name, min_val_float, max_val_float, log=log)
 
         return params
 
@@ -717,7 +717,7 @@ class MultiObjectiveBayesianOptimizer(BaseOptimizer[SearchSpace]):
             raise RuntimeError("Optuna required for multi-objective optimization")
 
         self._start_time = datetime.now()
-        self._history = []
+        self._history: List[TrialResult] = []
         self._search_space = search_space
 
         # Create multi-objective study

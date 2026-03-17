@@ -6,9 +6,9 @@ to the UI layer. Implementations should be thin wrappers that
 delegate business logic to use cases.
 """
 
-import logging
 from __future__ import annotations
 
+import logging
 from abc import ABC, abstractmethod
 from typing import Any
 
