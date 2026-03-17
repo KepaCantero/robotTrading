@@ -148,9 +148,9 @@ from ...backtesting.validation.models import WalkForwardConfig
 from ...backtesting.validation.walk_forward import WalkForwardValidator
 from ...core.config.base import get_config
 from ...core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
-from ...optimization.parameter.base_optimizer import OptimizationConfig
-from ...optimization.parameter.bayesian_optimizer import BayesianOptimizer
-from ...optimization.parameter.models import ParameterGrid, ParameterRange, ParameterType
+from ...domain.optimization.parameter.base_optimizer import OptimizationConfig
+from ...domain.optimization.parameter.bayesian_optimizer import BayesianOptimizer
+from ...domain.optimization.parameter.models import ParameterGrid, ParameterRange, ParameterType
 from ...services.profile_driven_trading.profile_strategy_mapper import (
     ProfileStrategyMapper,
     StrategyMapping,

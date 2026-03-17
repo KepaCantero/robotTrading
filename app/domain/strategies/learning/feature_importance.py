@@ -22,7 +22,7 @@ from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from types import ModuleType
-from typing import Dict, List, Optional, Protocol, Tuple, Union, runtime_checkable
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 from numpy.typing import NDArray
