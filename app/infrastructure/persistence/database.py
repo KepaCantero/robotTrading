@@ -27,7 +27,7 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 from sqlalchemy.pool import NullPool, QueuePool
 
-from .config import get_settings
+from app.shared.config.config import get_settings
 
 # Configure logging
 logger = logging.getLogger(__name__)
