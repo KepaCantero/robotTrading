@@ -9,7 +9,7 @@ import logging
 
 from pydantic import Field
 
-from app.shared.config.base import ConfigBase
+from app.shared.config.base.base import ConfigBase
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ class TechnicalIndicatorThresholds(ConfigBase):
                 "rsi_oversold": self.rsi_oversold,
                 "rsi_overbought": self.rsi_overbought,
                 "mean_reversion_lookback": self.mean_reversion_lookback_period,
-            }
+            },
         )
 
     # RSI thresholds

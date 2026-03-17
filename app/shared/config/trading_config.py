@@ -25,7 +25,7 @@ import yaml
 from pydantic import BaseModel, Field
 
 # Import modular configuration components
-from app.shared.config.base import Environment, SettingsBase
+from app.shared.config.base.base import Environment, SettingsBase
 from app.shared.config.compliance import ComplianceConfig, SpainTaxConfig
 from app.shared.config.infrastructure import (
     APIConfig,
@@ -1706,20 +1706,6 @@ class TradingThresholds(BaseModel):
     )
     cost_max_slippage_rate: float = Field(
         default=0.05, ge=0.0, le=1.0, description="Maximum allowed slippage rate (5%)"
-    )
-    # Cost impact ratio threshold (Chan's 30% threshold for trade profitability)
-    max_cost_impact_ratio: float = Field(
-        default=0.30,
-        ge=0.0,
-        le=1.0,
-        description="Maximum cost impact ratio (Chan's 30% threshold) (0-1)",
-    )
-    # Portfolio rebalancing thresholds (multi-asset rebalancer)
-    portfolio_max_deviation_high: float = Field(
-        default=0.10, ge=0.0, le=1.0, description="High priority rebalancing threshold (10%)"
-    )
-    portfolio_max_deviation_moderate: float = Field(
-        default=0.05, ge=0.0, le=1.0, description="Medium priority rebalancing threshold (5%)"
     )
     # Multi-factor strategy thresholds
     factor_weights_tolerance: float = Field(

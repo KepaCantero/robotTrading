@@ -11,7 +11,7 @@ from typing import Dict
 
 from pydantic import Field, field_validator
 
-from app.shared.config.base import ConfigBase
+from app.shared.config.base.base import ConfigBase
 
 logger = logging.getLogger(__name__)
 

@@ -364,3 +364,78 @@ Started processing app/infrastructure/ directory: 45 files total
 - 2 files fixed, 1 blocked (MI threshold)
 - Continuing with remaining infrastructure files
 
+---
+
+## Phase 10: Iteration 8 (Resolving repositories.py MI blocker)
+
+### Progress This Iteration
+Completed refactoring of repositories.py to resolve MI=19.19 blocker.
+
+### Refactoring Completed
+1. **app/infrastructure/persistence/database/repositories.py**
+   - Converted to re-export module (42 lines, MI=100)
+   - All 4 repository files now pass 11/11 validation checks:
+     - `_base_repository.py` - MI=56.05 ✓
+     - `_user_portfolio_repositories.py` - MI=48+ ✓
+     - `_trading_repositories.py` - MI=47.23 ✓ (fixed pylint not-callable error)
+     - `_analytics_repositories.py` - MI=45+ ✓
+
+### Fixed Files This Iteration
+1. **app/infrastructure/persistence/database/_trading_repositories.py** - Pylint fix
+   - Issue: E1102 `func.count is not callable` (false positive)
+   - Fix: Changed `func.count`/`func.sum` to `sa_count`/`sa_sum` from `sqlalchemy.sql.functions`
+   - Removed unused `func` import
+
+### Commit
+- `0da8dbd1` - refactor: Split repositories.py into domain-specific modules
+
+### Remaining Blocked Files
+Per previous iterations, these files remain blocked:
+1. `app/presentation/dashboard/main.py` (MI=15.54, 1359 lines)
+2. `app/presentation/dashboard/objectives_dashboard.py` (MI=0.00)
+3. `app/presentation/dashboard/advanced_dashboard.py` (MI=0.00, CC=37.375)
+4. `app/services/strategy_stock_allocator.py` (MI=0.00, CC=17.19, 2099 lines)
+5. `app/application/use_cases/select_strategy.py` (MI=12.01, 2300 lines)
+6. `app/engines/strategy_engines/breakout_engine.py` (CC=10.22)
+7. `app/engines/strategy_engines/momentum_engine.py` (CC=14.5)
+8. `app/domain/models/signal.py` (MI=9.95, 1040 lines)
+
+### Next Steps
+- Continue validating remaining app/ directories
+- Process blocked files requiring architectural refactoring
+- Run final validation sweep
+
+
+---
+
+## Phase 10: Iteration 9 (Current)
+
+### Progress This Iteration
+Fixed mypy error in app/shared/config/trading_config.py:
+- Issue: Duplicate field definitions (max_cost_impact_ratio, portfolio_max_deviation_high, portfolio_max_deviation_moderate)
+- Fix: Removed duplicate field definitions that were redefining existing fields
+
+### Files Validated This Iteration
+- app/shared/config/position_sizing.py - PASS (11/11)
+- app/shared/config/signal_risk.py - PASS (11/11)
+- app/shared/config/technical_indicators.py - PASS (11/11)
+- app/shared/config/trading_config.py - PASS (11/11) - Fixed mypy no-redef errors
+- app/domain/strategies/learning/__init__.py - PASS (11/11)
+
+### Remaining Blocked Files (from previous iterations)
+1. `app/presentation/dashboard/main.py` (MI=15.54, 1359 lines)
+2. `app/presentation/dashboard/objectives_dashboard.py` (MI=0.00)
+3. `app/presentation/dashboard/advanced_dashboard.py` (MI=0.00, CC=37.375)
+4. `app/services/strategy_stock_allocator.py` (MI=0.00, CC=17.19, 2099 lines)
+5. `app/application/use_cases/select_strategy.py` (MI=12.01, 2300 lines)
+6. `app/engines/strategy_engines/breakout_engine.py` (CC=10.22)
+7. `app/engines/strategy_engines/momentum_engine.py` (CC=14.5)
+8. `app/domain/models/signal.py` (MI=9.95, 1040 lines)
+9. `app/domain/strategies/learning/feature_importance.py` (MI=0.00, 2092 lines, mypy errors)
+10. `app/domain/strategies/learning/drift_detector.py` (MI=0.00, 2163 lines, mypy errors)
+
+### Next Steps
+- Continue validating app/domain/ files
+- Focus on smaller files first
+- Large files requiring MI fixes need architectural refactoring
+
