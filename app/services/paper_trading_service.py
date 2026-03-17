@@ -15,9 +15,9 @@ from uuid import UUID
 
 logger = logging.getLogger(__name__)
 
+from app.domain.models.market_data import Quote
 from app.domain.models.order import Order
-from app.models.market_data import Quote
-from app.models.paper_trading import (
+from app.domain.models.paper_trading import (
     OrderSide,
     OrderType,
     PaperPortfolio,
@@ -28,7 +28,7 @@ from app.models.paper_trading import (
     PaperTradingSession,
     TradeStatus,
 )
-from app.models.slippage_analysis import SlippageCalculationParams
+from app.domain.models.slippage_analysis import SlippageCalculationParams
 from app.services.slippage_analysis_service import DynamicSlippageService
 from app.shared.config.centralized_config import get_config
 
@@ -332,8 +332,6 @@ class PaperTradingService:
 
             # Calculate dynamic slippage
             # Create a mock quote for slippage calculation
-            from app.models.market_data import Quote
-
             quote = Quote(
                 symbol=trade.symbol,
                 last=market_price,

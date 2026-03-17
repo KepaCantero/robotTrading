@@ -11,7 +11,7 @@ import statistics
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
-from app.models.profitability_validation import (
+from app.domain.models.profitability_validation import (
     CostBreakdown,
     HistoricalValidation,
     ProfitabilityMetrics,

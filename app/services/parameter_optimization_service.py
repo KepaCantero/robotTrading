@@ -676,6 +676,14 @@ class ParameterOptimizationService:
                 request.test_config, request.cost_analysis_enabled
             )
 
+            logger.info(
+                "Out-of-sample test completed",
+                extra={
+                    "strategy_name": request.test_config.strategy_name,
+                    "total_return": test_results["total_return"],
+                    "sharpe_ratio": test_results["sharpe_ratio"],
+                },
+            )
             return OutOfSampleResult(
                 test_config=request.test_config,
                 total_return=test_results["total_return"],
@@ -688,14 +696,6 @@ class ParameterOptimizationService:
                 volatility=test_results["volatility"],
                 calmar_ratio=test_results["calmar_ratio"],
                 sortino_ratio=test_results["sortino_ratio"],
-            )
-            logger.info(
-                "Out-of-sample test completed",
-                extra={
-                    "strategy_name": request.test_config.strategy_name,
-                    "total_return": test_results["total_return"],
-                    "sharpe_ratio": test_results["sharpe_ratio"],
-                },
             )
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
