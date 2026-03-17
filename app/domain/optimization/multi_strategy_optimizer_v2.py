@@ -20,7 +20,7 @@ from app.backtesting.engines.multi_strategy_engine import MultiStrategyBackteste
 from app.domain.models.market_data import Quote
 from app.domain.strategies.mean_reversion import MeanReversionStrategy
 from app.domain.strategies.momentum import MomentumStrategy
-from app.domain.strategies.pairs_trading import PairsTradingStrategy
+from app.domain.strategies.pairs_trading import PairsTrading as PairsTradingStrategy
 from app.services.multi_strategy_allocation import MultiStrategyAllocationManager
 from app.services.portfolio_config_manager import get_portfolio_config_manager
 
