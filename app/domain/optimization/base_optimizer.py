@@ -165,6 +165,7 @@ class TrialResult:
     iteration: int = 0
     error_message: Optional[str] = None
     metrics: Dict[str, Any] = field(default_factory=dict)
+    additional_info: Dict[str, Any] = field(default_factory=dict)
 
     @property
     def is_success(self) -> bool:
@@ -191,6 +192,7 @@ class TrialResult:
             "iteration": self.iteration,
             "error_message": self.error_message,
             "metrics": self.metrics,
+            "additional_info": self.additional_info,
         }
 
 
@@ -232,7 +234,7 @@ class OptimizationResult:
         """Get fraction of successful trials."""
         if not self.all_trials:
             return 0.0
-        return np.mean([1.0 for t in self.all_trials if t.is_success])
+        return float(np.mean([1.0 for t in self.all_trials if t.is_success]))
 
     @property
     def mean_score(self) -> float:

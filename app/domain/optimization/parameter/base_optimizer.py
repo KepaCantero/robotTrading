@@ -146,7 +146,7 @@ class OptimizationResult:
         """Get fraction of successful trials."""
         if not self.all_trials:
             return 0.0
-        return np.mean([1 for t in self.all_trials if t.is_success])
+        return float(np.mean([1 for t in self.all_trials if t.is_success]))
 
     @property
     def mean_score(self) -> float:
@@ -154,7 +154,7 @@ class OptimizationResult:
         successful = [t for t in self.all_trials if t.is_success]
         if not successful:
             return 0.0
-        return np.mean([t.objective_value for t in successful])
+        return float(np.mean([t.objective_value for t in successful]))
 
     @property
     def std_score(self) -> float:

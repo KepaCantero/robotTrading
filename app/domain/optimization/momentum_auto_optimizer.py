@@ -227,7 +227,7 @@ class MomentumAutoOptimizer:
             if not scores:
                 return -1000.0
 
-            return np.mean(scores)
+            return float(np.mean(scores))
 
         # Run optimization
         study.optimize(objective, n_trials=20)  # Limited trials for monthly updates

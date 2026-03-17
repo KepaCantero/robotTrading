@@ -143,7 +143,7 @@ class GridSearchOptimizer(BaseOptimizer[SearchSpace]):
             OptimizationResult with best parameters and all trials
         """
         self._start_time = datetime.now()
-        self._history = []
+        self._history: List[TrialResult] = []
         self._iteration_count = 0
         self._search_space = search_space
 
@@ -218,19 +218,21 @@ class GridSearchOptimizer(BaseOptimizer[SearchSpace]):
                 step = int(defn.get("step", 1))
                 values = list(range(min_val, max_val + 1, step))
             elif param_type == ParameterType.CONTINUOUS:
-                min_val = float(defn.get("min", 0.0))
-                max_val = float(defn.get("max", 1.0))
-                step = float(defn.get("step", (max_val - min_val) / 10))
+                min_val_float = float(defn.get("min", 0.0))
+                max_val_float = float(defn.get("max", 1.0))
+                step_float = float(defn.get("step", (max_val_float - min_val_float) / 10))
 
-                if step > 0:
-                    num_steps = int((max_val - min_val) / step) + 1
-                    values = [min_val + i * step for i in range(num_steps)]
+                if step_float > 0:
+                    num_steps = int((max_val_float - min_val_float) / step_float) + 1
+                    values = [min_val_float + i * step_float for i in range(num_steps)]
                     # Ensure max is included
-                    if values[-1] < max_val:
-                        values.append(max_val)
+                    if values[-1] < max_val_float:
+                        values.append(max_val_float)
                 else:
                     # Default to 10 steps
-                    values = [min_val + (max_val - min_val) * i / 10 for i in range(11)]
+                    values = [
+                        min_val_float + (max_val_float - min_val_float) * i / 10 for i in range(11)
+                    ]
             else:
                 values = []
 
@@ -413,7 +415,7 @@ class GridSearchOptimizer(BaseOptimizer[SearchSpace]):
 
         # Execute in parallel batches
         batch_size = self.config.n_parallel_jobs
-        results = []
+        results: List[TrialResult] = []
 
         for i in range(0, len(tasks), batch_size):
             batch = tasks[i : i + batch_size]
