@@ -13,8 +13,8 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
-from app.models.market_data import Quote
-from app.models.slippage_analysis import (
+from app.domain.models.market_data import Quote
+from app.domain.models.slippage_analysis import (
     DynamicSlippageAnalysis,
     LiquidityMetrics,
     MarketCondition,

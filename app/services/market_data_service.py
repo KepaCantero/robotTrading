@@ -13,16 +13,17 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from app.data.feeds import DataFeedInterface, create_data_feed
-from app.models.market_data import (
+from app.domain.models.market_data import (
     DataFeedConfig,
     DataFeedType,
     DataFrequency,
     HistoricalData,
     MarketDataCache,
+    MarketDataStatus,
     MarketDataSubscription,
     Quote,
 )
+from app.infrastructure.data.feeds import DataFeedInterface, create_data_feed
 
 logger = logging.getLogger(__name__)
 
@@ -297,12 +298,8 @@ class MarketDataService:
                 quote_data = cache_item.data
                 # Convert string enum values back to enum objects
                 if "feed_type" in quote_data and isinstance(quote_data["feed_type"], str):
-                    from app.models.market_data import DataFeedType
-
                     quote_data["feed_type"] = DataFeedType.YAHOO_FINANCE
                 if "status" in quote_data and isinstance(quote_data["status"], str):
-                    from app.models.market_data import MarketDataStatus
-
                     quote_data["status"] = MarketDataStatus(quote_data["status"])
                 return Quote(**quote_data)
             return None
