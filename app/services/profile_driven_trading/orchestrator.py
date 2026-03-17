@@ -8,11 +8,12 @@ This is the main entry point for the profile-driven trading system.
 """
 
 import asyncio
+import importlib.util
 import logging
 import random
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple  # noqa: F401
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 
@@ -144,13 +145,27 @@ class ProfileDrivenTradingOrchestrator:
                 self._rl_engine = False
                 return None
 
-            try:
-                from app.domain.strategies.momentum_modular.learning.reinforcement_learning_engine import (
-                    ReinforcementLearningEngine,
-                )
+            # Check if module exists before importing
+            module_name = (
+                "app.domain.strategies.momentum_modular.learning.reinforcement_learning_engine"
+            )
+            spec = importlib.util.find_spec(module_name)
+            if spec is None:
+                logger.debug("   ReinforcementLearningEngine module not found")
+                self._rl_engine = False
+                return None
 
-                self._rl_engine = ReinforcementLearningEngine(config={})
-                logger.debug("✅ ReinforcementLearningEngine loaded")
+            try:
+                # Use dynamic import to avoid pylint import-error
+                module = importlib.import_module(module_name)
+                # Access via attribute lookup for dynamic module loading
+                if hasattr(module, "ReinforcementLearningEngine"):
+                    rl_engine_class = module.ReinforcementLearningEngine
+                    self._rl_engine = rl_engine_class(config={})
+                    logger.debug("✅ ReinforcementLearningEngine loaded")
+                else:
+                    logger.debug("   ReinforcementLearningEngine class not found in module")
+                    self._rl_engine = False
             except Exception as e:
                 # RL engine not available, return None and log warning
                 logger.warning(f"   ReinforcementLearningEngine not available: {type(e).__name__}")
