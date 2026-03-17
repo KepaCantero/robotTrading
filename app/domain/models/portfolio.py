@@ -294,7 +294,7 @@ class Portfolio(BaseModel):
     @property
     def total_pnl(self) -> Decimal:
         """Calculate total portfolio P&L."""
-        return sum(pos.total_pnl for pos in self.positions)
+        return sum((pos.total_pnl for pos in self.positions), Decimal("0"))
 
     @property
     def total_pnl_percentage(self) -> Decimal:
@@ -306,7 +306,7 @@ class Portfolio(BaseModel):
     @property
     def positions_by_asset_class(self) -> dict:
         """Group positions by asset class."""
-        grouped = {}
+        grouped: dict[str, list] = {}
         for position in self.positions:
             if position.asset_class not in grouped:
                 grouped[position.asset_class] = []

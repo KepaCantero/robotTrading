@@ -521,8 +521,10 @@ class OrderSubmitHandler(OrderEventHandler):
         # If not found, return a placeholder order with the given ID
         # In production, this would fetch from a repository
         logger.warning(f"Order {order_id} not found in internal storage, using placeholder")
-        from app.domain.entities.order import OrderSide, OrderStatus, OrderType
         from decimal import Decimal
+
+        from app.domain.entities.order import OrderSide, OrderStatus, OrderType
+
         return Order(
             order_id=order_id,
             symbol="UNKNOWN",

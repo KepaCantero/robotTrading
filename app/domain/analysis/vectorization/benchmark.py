@@ -612,10 +612,10 @@ class VectorizationBenchmark:
         ]
 
         # Summary statistics
-        speedups = [r.speedup for r in results]
-        avg_speedup = np.mean(speedups)
-        max_speedup = np.max(speedups)
-        min_speedup = np.min(speedups)
+        speedups: list[float] = [r.speedup for r in results]
+        avg_speedup = float(np.mean(speedups))
+        max_speedup = float(np.max(speedups))
+        min_speedup = float(np.min(speedups))
 
         report_lines.extend(
             [

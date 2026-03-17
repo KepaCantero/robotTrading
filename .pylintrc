@@ -2,6 +2,7 @@
 # load-plugins=pylint_django  # Not installed, not needed for this project
 ignore-patterns=test_.*?\.py
 max-line-length=100
+extension-pkg-allow-list=numba
 
 [MESSAGES CONTROL]
 disable=
@@ -105,4 +106,5 @@ ignored-modules=
     empyrical,
     pandas_datareader,
     qlib,
-    app.infrastructure.persistence.database.models
+    app.infrastructure.persistence.database.models,
+    numba
