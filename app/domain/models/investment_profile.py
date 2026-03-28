@@ -18,7 +18,7 @@ from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.domain.models.input_profile import (  # pylint: disable=import-self,import-error
+from app.domain.models.input_profile import (
     InputProfile,
     ObjectivoInversion,
     RiskTolerance,
@@ -208,10 +208,7 @@ class ProfileGenerator:
             config: Investment profiles configuration (either raw dict or dict with 'profiles' key)
         """
         # Handle both formats: raw profiles dict or dict with 'profiles' key
-        if 'profiles' in config:
-            self.config = config['profiles']
-        else:
-            self.config = config
+        self.config = config.get('profiles', config)
         logger.info("ProfileGenerator initialized with configuration")
 
     @staticmethod
@@ -292,7 +289,7 @@ class ProfileGenerator:
 
             return investment_profile
 
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             logger.error(f"Failed to generate InvestmentProfile: {e}")
             raise
 

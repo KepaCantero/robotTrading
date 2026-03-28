@@ -142,7 +142,7 @@ class BlastRadiusController:
                 await self._init_database()
                 await self._load_active_containment()
                 self.logger.info("BlastRadiusController initialized")
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 self.logger.error(f"Error initializing: {e}")
                 raise
 
@@ -185,7 +185,7 @@ class BlastRadiusController:
 
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Database initialization failed: {e}")
             raise
 
@@ -228,7 +228,7 @@ class BlastRadiusController:
 
                     self.logger.info("Loaded active containment")
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error loading containment: {e}")
 
     async def apply_controls(self, config_dict: Dict[str, Any]) -> ContainmentState:
@@ -271,9 +271,8 @@ class BlastRadiusController:
     async def _validate_config(self, config: BlastRadiusConfig) -> None:
         """Validate blast radius configuration."""
         # Check minimum healthy pods
-        if config.scope in [BlastRadiusScope.SINGLE_POD, BlastRadiusScope.PERCENTAGE]:
-            if config.min_healthy_pods < 1:
-                raise ValueError("Must maintain at least 1 healthy pod")
+        if config.scope in [BlastRadiusScope.SINGLE_POD, BlastRadiusScope.PERCENTAGE] and config.min_healthy_pods < 1:
+            raise ValueError("Must maintain at least 1 healthy pod")
 
         # Check quorum requirements
         if config.require_quorum:
@@ -382,7 +381,7 @@ class BlastRadiusController:
                 )
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error saving containment: {e}")
 
     async def _mark_containment_removed(self) -> None:
@@ -399,7 +398,7 @@ class BlastRadiusController:
                 )
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error marking containment removed: {e}")
 
     async def get_active_containment(self) -> Optional[ContainmentState]:

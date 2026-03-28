@@ -396,7 +396,7 @@ class OverfittingDetector:
         p_value = np.mean(null_stats >= test_stat)
 
         # Significant if p < 0.05
-        is_significant = bool(p_value < 0.05)
+        is_significant = p_value < 0.05
 
         return p_value, is_significant
 
@@ -607,7 +607,7 @@ def detect_parameter_drift(param_values: List[float]) -> bool:
 
         # Test for significance (p < 0.05, two-tailed)
         # Critical value is approximately ±1.96
-        return bool(abs(z) > 1.96)
+        return abs(z) > 1.96
 
     return False
 

@@ -290,7 +290,7 @@ class HierarchicalRiskParity:
         [i for i in range(n)]
 
         # Process each merge in the linkage matrix
-        for i, row in enumerate(linkage_matrix):
+        for _i, row in enumerate(linkage_matrix):
             # Get the indices of clusters to merge
             idx1, idx2 = int(row[0]), int(row[1])
 
@@ -711,7 +711,7 @@ def plot_hrp_dendrogram(
         f"Cophenetic correlation: {dendro_data['cophenet_correlation']:.4f}",
         transform=ax.transAxes,
         verticalalignment="top",
-        bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5),
+        bbox={"boxstyle": "round", "facecolor": "wheat", "alpha": 0.5},
     )
 
     plt.tight_layout()

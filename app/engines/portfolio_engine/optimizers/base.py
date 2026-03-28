@@ -1,4 +1,3 @@
-# pylint: disable=useless-parent-delegation
 """
 Base Optimizer Module
 
@@ -9,9 +8,10 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
 import numpy as np
+from numpy.typing import NDArray
 
 from app.shared.config.centralized_config import get_config
 
@@ -39,18 +39,22 @@ class BaseOptimizer(ABC):
     @abstractmethod
     def optimize(
         self,
-        returns: np.ndarray,
+        returns: Optional[NDArray[np.floating]] = None,
         **kwargs,
-    ) -> np.ndarray:
+    ) -> Union[NDArray[np.floating], Dict[str, Any]]:
         """
         Optimize portfolio weights.
 
         Args:
-            returns: Asset returns matrix (T x N)
-            **kwargs: Additional optimizer-specific parameters
+            returns: Asset returns matrix (T x N) - optional, some optimizers
+                use cov_matrix or other parameters instead
+            **kwargs: Additional optimizer-specific parameters:
+                - cov_matrix: Covariance matrix for some optimizers
+                - expected_returns: Expected returns for some optimizers
+                - constraints: Dict of additional constraints
 
         Returns:
-            Optimal weights (N,)
+            Optimal weights (N,) or Dict with weights and metrics
         """
 
     def validate_weights(self, weights: np.ndarray) -> bool:
@@ -95,9 +99,9 @@ class MarkowitzOptimizer(BaseOptimizer):
 
     def optimize(
         self,
-        returns: np.ndarray,
+        returns: Optional[NDArray[np.floating]] = None,
         **kwargs,
-    ) -> np.ndarray:
+    ) -> NDArray[np.floating]:
         """
         Optimize using mean-variance framework.
 
@@ -109,6 +113,8 @@ class MarkowitzOptimizer(BaseOptimizer):
             Optimal weights
         """
         # Simple equal-weight fallback
+        if returns is None:
+            raise ValueError("returns is required for MarkowitzOptimizer")
         n_assets = returns.shape[1]
         return np.ones(n_assets) / n_assets
 
@@ -120,15 +126,11 @@ class RiskParityOptimizer(BaseOptimizer):
     Allocates weights based on risk contribution (inverse volatility).
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
-        """Initialize risk parity optimizer."""
-        super().__init__(config)
-
     def optimize(
         self,
-        returns: np.ndarray,
+        returns: Optional[NDArray[np.floating]] = None,
         **kwargs,
-    ) -> np.ndarray:
+    ) -> NDArray[np.floating]:
         """
         Optimize using risk parity.
 
@@ -139,6 +141,8 @@ class RiskParityOptimizer(BaseOptimizer):
         Returns:
             Optimal weights
         """
+        if returns is None:
+            raise ValueError("returns is required for RiskParityOptimizer")
         # Calculate volatilities
         vols = returns.std(axis=0)
 
@@ -156,15 +160,11 @@ class BlackLittermanOptimizer(BaseOptimizer):
     Incorporates views into portfolio optimization.
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
-        """Initialize Black-Litterman optimizer."""
-        super().__init__(config)
-
     def optimize(
         self,
-        returns: np.ndarray,
+        returns: Optional[NDArray[np.floating]] = None,
         **kwargs,
-    ) -> np.ndarray:
+    ) -> NDArray[np.floating]:
         """
         Optimize using Black-Litterman.
 
@@ -175,6 +175,8 @@ class BlackLittermanOptimizer(BaseOptimizer):
         Returns:
             Optimal weights
         """
+        if returns is None:
+            raise ValueError("returns is required for BlackLittermanOptimizer")
         n_assets = returns.shape[1]
         return np.ones(n_assets) / n_assets
 
@@ -186,15 +188,11 @@ class KellyCriterionOptimizer(BaseOptimizer):
     Maximizes long-term growth rate.
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
-        """Initialize Kelly criterion optimizer."""
-        super().__init__(config)
-
     def optimize(
         self,
-        returns: np.ndarray,
+        returns: Optional[NDArray[np.floating]] = None,
         **kwargs,
-    ) -> np.ndarray:
+    ) -> NDArray[np.floating]:
         """
         Optimize using Kelly criterion.
 
@@ -205,5 +203,7 @@ class KellyCriterionOptimizer(BaseOptimizer):
         Returns:
             Optimal weights
         """
+        if returns is None:
+            raise ValueError("returns is required for KellyCriterionOptimizer")
         n_assets = returns.shape[1]
         return np.ones(n_assets) / n_assets

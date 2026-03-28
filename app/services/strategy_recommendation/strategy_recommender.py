@@ -122,21 +122,13 @@ class StrategyRecommender:
         suitability = Decimal("50")  # Base score
 
         # Objective match scoring
-        if objective == "growth" and strategy.return_score > Decimal("70"):
-            suitability += Decimal("20")
-        elif objective == "income" and strategy.consistency_score > Decimal("70"):
-            suitability += Decimal("20")
-        elif objective == "preservation" and strategy.risk_score > Decimal("70"):
+        if objective == "growth" and strategy.return_score > Decimal("70") or objective == "income" and strategy.consistency_score > Decimal("70") or objective == "preservation" and strategy.risk_score > Decimal("70"):
             suitability += Decimal("20")
         elif objective == "balanced":
             suitability += Decimal("15")
 
         # Risk profile match
-        if risk_profile == "conservative" and strategy.risk_score > Decimal("70"):
-            suitability += Decimal("20")
-        elif risk_profile == "moderate" and Decimal("60") <= strategy.risk_score <= Decimal("80"):
-            suitability += Decimal("20")
-        elif risk_profile == "aggressive" and strategy.return_score > Decimal("70"):
+        if risk_profile == "conservative" and strategy.risk_score > Decimal("70") or risk_profile == "moderate" and Decimal("60") <= strategy.risk_score <= Decimal("80") or risk_profile == "aggressive" and strategy.return_score > Decimal("70"):
             suitability += Decimal("20")
 
         return min(Decimal("100"), suitability)

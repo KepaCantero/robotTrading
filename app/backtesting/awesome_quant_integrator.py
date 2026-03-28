@@ -390,50 +390,45 @@ class AwesomeQuantIntegrator:
         # pyfolio is REQUIRED
 
         try:
-            metrics = {}
-
-            # Basic metrics
-            metrics["total_return"] = float((1 + returns).prod() - 1)
-            metrics["annual_return"] = float(returns.mean() * TRADING_DAYS)
-            metrics["volatility"] = float(returns.std() * np.sqrt(TRADING_DAYS))
-
             # Sharpe and Sortino
             excess_returns = returns - (self.risk_free_rate / TRADING_DAYS)
-            metrics["sharpe_ratio"] = float(
-                excess_returns.mean() / excess_returns.std() * np.sqrt(TRADING_DAYS)
-            )
-
             downside = returns[returns < 0]
             downside_std = downside.std() if len(downside) > 0 else returns.std()
-            metrics["sortino_ratio"] = float(
-                excess_returns.mean() / downside_std * np.sqrt(TRADING_DAYS)
-            )
 
             # Drawdown
             cumulative = (1 + returns).cumprod()
             running_max = cumulative.expanding().max()
             drawdown = (cumulative - running_max) / running_max
-            metrics["max_drawdown"] = float(drawdown.min())
-            metrics["avg_drawdown"] = float(drawdown[drawdown < 0].mean())
 
-            # Win/Loss metrics
-            metrics["win_rate"] = float((returns > 0).mean())
-            metrics["best_return"] = float(returns.max())
-            metrics["worst_return"] = float(returns.min())
-            metrics["avg_positive_return"] = float(
-                returns[returns > 0].mean() if (returns > 0).any() else 0
-            )
-            metrics["avg_negative_return"] = float(
-                returns[returns < 0].mean() if (returns < 0).any() else 0
-            )
-
-            # Risk metrics
-            metrics["skewness"] = float(returns.skew())
-            metrics["kurtosis"] = float(returns.kurtosis())
-            metrics["var_95"] = float(np.percentile(returns.astype(float), 5))
-            metrics["cvar_95"] = float(
-                returns[returns <= np.percentile(returns.astype(float), 5)].astype(float).mean()
-            )
+            # Basic metrics
+            metrics = {
+                "total_return": float((1 + returns).prod() - 1),
+                "annual_return": float(returns.mean() * TRADING_DAYS),
+                "volatility": float(returns.std() * np.sqrt(TRADING_DAYS)),
+                "sharpe_ratio": float(
+                    excess_returns.mean() / excess_returns.std() * np.sqrt(TRADING_DAYS)
+                ),
+                "sortino_ratio": float(
+                    excess_returns.mean() / downside_std * np.sqrt(TRADING_DAYS)
+                ),
+                "max_drawdown": float(drawdown.min()),
+                "avg_drawdown": float(drawdown[drawdown < 0].mean()),
+                "win_rate": float((returns > 0).mean()),
+                "best_return": float(returns.max()),
+                "worst_return": float(returns.min()),
+                "avg_positive_return": float(
+                    returns[returns > 0].mean() if (returns > 0).any() else 0
+                ),
+                "avg_negative_return": float(
+                    returns[returns < 0].mean() if (returns < 0).any() else 0
+                ),
+                "skewness": float(returns.skew()),
+                "kurtosis": float(returns.kurtosis()),
+                "var_95": float(np.percentile(returns.astype(float), 5)),
+                "cvar_95": float(
+                    returns[returns <= np.percentile(returns.astype(float), 5)].astype(float).mean()
+                ),
+            }
 
             logger.info(f"Calculated {len(metrics)} pyfolio metrics")
             return metrics
@@ -522,13 +517,11 @@ class AwesomeQuantIntegrator:
         Returns:
             True if library is available
         """
-        if library == "quantstats":
-            return QUANTSTATS_AVAILABLE
-        elif library == "empyrical":
-            return EMPYRICAL_AVAILABLE
-        elif library == "pyfolio":
-            return PYFOLIO_AVAILABLE
-        return False
+        return {
+            "quantstats": QUANTSTATS_AVAILABLE,
+            "empyrical": EMPYRICAL_AVAILABLE,
+            "pyfolio": PYFOLIO_AVAILABLE,
+        }.get(library, False)
 
     def get_available_libraries(self) -> list:
         """Get list of available AWESOME-QUANT libraries."""

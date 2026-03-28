@@ -1,16 +1,16 @@
+from __future__ import annotations
+
 """
 Pareto Front Optimization for Multi-Objective Strategy Selection.
 
 This module implements NSGA-II (Non-dominated Sorting Genetic Algorithm II)
 for finding optimal strategy weight allocations across multiple objectives.
 """
-# mypy: ignore-errors
-# pylint: disable=unsupported-binary-operation  # For Python 3.10+ union syntax
 
 import logging
 import random
 from decimal import Decimal
-from typing import Callable, Dict, List, Optional, Tuple  # noqa: F401
+from typing import Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 
@@ -115,10 +115,12 @@ class ParetoFrontOptimizer:
                 np.random.seed(seed)
 
             # Initialize population
-            population = self._initialize_population()
+            initial_population: List[Dict[str, float]] = self._initialize_population()
 
             # Evaluate initial population
-            population = self._evaluate_population(population, returns_data, risk_data)
+            population: List[ParetoSolution] = self._evaluate_population(
+                initial_population, returns_data, risk_data
+            )
 
             # Filter out invalid solutions
             population = [s for s in population if s.objective_values]
@@ -220,24 +222,32 @@ class ParetoFrontOptimizer:
 
     def _evaluate_population(
         self,
-        population: List[Dict[str, float]],
+        population: Union[List[Dict[str, float]], List[ParetoSolution]],
         returns_data: Dict[str, np.ndarray],
         risk_data: Optional[Dict[str, np.ndarray]] = None,
     ) -> List[ParetoSolution]:
         """Evaluate objective functions for population.
 
         Args:
-            population: Population of weight allocations
+            population: Population of weight allocations or unevaluated ParetoSolutions
             returns_data: Historical returns data
             risk_data: Optional risk data
 
         Returns:
             List of evaluated solutions with objective values
         """
-        evaluated = []
+        evaluated: List[ParetoSolution] = []
 
-        for allocation in population:
+        for individual in population:
             try:
+                # Normalize to a dict[str, float] allocation
+                if isinstance(individual, ParetoSolution):
+                    allocation: Dict[str, float] = {
+                        k: float(v) for k, v in individual.strategy_weights.items()
+                    }
+                else:
+                    allocation = individual
+
                 # Calculate objective values
                 objective_values = self._calculate_objectives(allocation, returns_data, risk_data)
 
@@ -561,12 +571,12 @@ class ParetoFrontOptimizer:
         Returns:
             List of fronts (each front is a list of solutions)
         """
-        fronts = []
-        current_front = []
+        fronts: List[List[ParetoSolution]] = []
+        current_front: List[ParetoSolution] = []
 
         # Calculate domination counts and dominated sets using indices
-        domination_counts = {}
-        dominated_sets = {i: set() for i in range(len(population))}
+        domination_counts: Dict[int, int] = {}
+        dominated_sets: Dict[int, Set[int]] = {i: set() for i in range(len(population))}
 
         for i, solution_i in enumerate(population):
             domination_count = 0
@@ -592,7 +602,7 @@ class ParetoFrontOptimizer:
         # Build subsequent fronts
         i = 0
         while fronts[i]:
-            next_front = []
+            next_front: List[ParetoSolution] = []
 
             for solution in fronts[i]:
                 # Find the index of this solution
@@ -674,12 +684,12 @@ class ParetoFrontOptimizer:
         for front_idx, front in enumerate(fronts):
             if len(front) <= 2:
                 # Boundary solutions get infinite distance
-                new_front = []
+                boundary_front: List[ParetoSolution] = []
                 for solution in front:
-                    new_front.append(
+                    boundary_front.append(
                         solution.model_copy(update={"crowding_distance": float("inf")})
                     )
-                fronts[front_idx] = new_front
+                fronts[front_idx] = boundary_front
                 continue
 
             # Initialize distances
@@ -690,12 +700,10 @@ class ParetoFrontOptimizer:
                 obj_name = obj.value
 
                 # Sort front by this objective
-                sorted_indices = sorted(
-                    range(len(front)),
-                    key=lambda i, front=front, obj_name=obj_name: front[i].objective_values.get(
-                        obj_name, 0
-                    ),
-                )
+                obj_values = [
+                    front[idx].objective_values.get(obj_name, 0) for idx in range(len(front))
+                ]
+                sorted_indices = sorted(range(len(front)), key=obj_values.__getitem__)
 
                 # Boundary solutions get infinite distance
                 distances[sorted_indices[0]] = float("inf")
@@ -721,7 +729,7 @@ class ParetoFrontOptimizer:
                         distances[idx] += distance
 
             # Create new front with updated distances
-            new_front = []
+            new_front: List[ParetoSolution] = []
             for i, solution in enumerate(front):
                 new_front.append(solution.model_copy(update={"crowding_distance": distances[i]}))
 
@@ -736,7 +744,7 @@ class ParetoFrontOptimizer:
         Returns:
             List of offspring solutions
         """
-        offspring = []
+        offspring: List[ParetoSolution] = []
 
         while len(offspring) < self.population_size:
             # Tournament selection
@@ -854,8 +862,7 @@ class ParetoFrontOptimizer:
 
         # Polynomial mutation
         eta = 20  # Distribution index
-        # pylint: disable=consider-using-enumerate
-        for i in range(len(w)):
+        for i, weight in enumerate(w):
             if random.random() < 1.0 / len(w):
                 u = random.random()
 
@@ -864,7 +871,7 @@ class ParetoFrontOptimizer:
                 else:
                     delta = 1 - (2 * (1 - u)) ** (1 / (eta + 1))
 
-                w[i] = w[i] + delta
+                w[i] = weight + delta
 
         # Ensure non-negative
         w = np.maximum(w, 0)
@@ -891,7 +898,7 @@ class ParetoFrontOptimizer:
         self._calculate_crowding_distance(fronts)
 
         # Select from fronts until population is filled
-        new_population = []
+        new_population: List[ParetoSolution] = []
 
         for front in fronts:
             if len(new_population) + len(front) <= self.population_size:

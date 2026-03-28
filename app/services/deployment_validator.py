@@ -20,7 +20,7 @@ accounts than to slowly bleed capital on infrastructure costs that exceed return
 import logging
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 
 from app.services.capital_viability_gate import CapitalViabilityValidator
 from app.services.execution_cost_analyzer import ExecutionCostAnalyzer
@@ -56,8 +56,8 @@ class DeploymentValidator:
         capital: Decimal,
         monthly_profit_goal: Decimal,
         expected_monthly_alpha: Decimal,
-        tax_rate: Decimal = Decimal("0.40"),
-        commission_per_trade: Decimal = Decimal("15"),
+        tax_rate: Optional[Decimal] = None,
+        commission_per_trade: Optional[Decimal] = None,
         expected_trades_per_month: int = 10,
         learning_enabled: bool = True,
         expensive_modules_enabled: bool = True,
@@ -88,6 +88,10 @@ class DeploymentValidator:
             - recommendations: List of recommended actions
             - account_id: Account identifier (if provided)
         """
+        if tax_rate is None:
+            tax_rate = Decimal("0.40")
+        if commission_per_trade is None:
+            commission_per_trade = Decimal("15")
 
         analysis = {
             "account_id": account_id,
@@ -327,7 +331,7 @@ class DeploymentValidator:
     @staticmethod
     def get_minimum_capital_recommendation(
         monthly_profit_goal: Decimal,
-        expected_monthly_alpha: Decimal = Decimal("100"),
+        expected_monthly_alpha: Optional[Decimal] = None,
     ) -> Dict[str, Decimal]:
         """
         Calculate minimum capital needed based on goals and infrastructure requirements.
@@ -339,6 +343,8 @@ class DeploymentValidator:
             - for_expensive_modules: Capital needed for ML modules
             - recommended: Conservative recommendation
         """
+        if expected_monthly_alpha is None:
+            expected_monthly_alpha = Decimal("100")
         # For capital viability, estimate capital needed for goal
         # Assuming 3% monthly return on capital
         required_for_goal = monthly_profit_goal / Decimal("0.03")

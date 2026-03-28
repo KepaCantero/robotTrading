@@ -268,7 +268,9 @@ def run_backtest(
         "win_rate": float(perf.win_rate) if perf and perf.win_rate else 0,
         "sharpe_ratio": float(perf.sharpe_ratio) if perf and perf.sharpe_ratio else 0,
         "max_drawdown": float(perf.max_drawdown) if perf and perf.max_drawdown else 0,
-        "max_drawdown_pct": float(perf.max_drawdown_percentage) if perf and perf.max_drawdown_percentage else 0,
+        "max_drawdown_pct": float(perf.max_drawdown_percentage)
+        if perf and perf.max_drawdown_percentage
+        else 0,
         "duration_seconds": duration,
     }
 

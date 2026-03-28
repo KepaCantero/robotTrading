@@ -11,7 +11,7 @@ import time
 import uuid
 from contextlib import asynccontextmanager
 from functools import wraps
-from typing import Any, AsyncGenerator, Awaitable, Callable, Dict, Optional, TypeVar, cast
+from typing import AsyncGenerator, Awaitable, Callable, Dict, Optional, TypeVar, Union, cast
 
 from fastapi import HTTPException, Request, Response, status
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -32,9 +32,9 @@ class RateLimiter:
 
     def __init__(self) -> None:
         """Initialize rate limiter with empty buckets."""
-        self._buckets: Dict[str, Dict[str, Any]] = {}
+        self._buckets: Dict[str, Dict[str, Union[int, float]]] = {}
 
-    def _get_bucket(self, key: str) -> Dict[str, Any]:
+    def _get_bucket(self, key: str) -> Dict[str, Union[int, float]]:
         """Get or create bucket for key."""
         if key not in self._buckets:
             self._buckets[key] = {
@@ -45,7 +45,7 @@ class RateLimiter:
             }
         return self._buckets[key]
 
-    def _refill(self, bucket: Dict[str, Any]) -> None:
+    def _refill(self, bucket: Dict[str, Union[int, float]]) -> None:
         """Refill tokens based on elapsed time."""
         now = time.time()
         elapsed = now - bucket["last_update"]
@@ -168,7 +168,7 @@ def with_timeout(
 
     def decorator(func: Callable[..., Awaitable[T]]) -> Callable[..., Awaitable[T]]:
         @wraps(func)
-        async def wrapper(*args: Any, **kwargs: Any) -> T:
+        async def wrapper(*args: object, **kwargs: object) -> T:
             try:
                 return cast(
                     T,
@@ -209,7 +209,7 @@ def with_rate_limit(
 
     def decorator(func: Callable[..., Awaitable[T]]) -> Callable[..., Awaitable[T]]:
         @wraps(func)
-        async def wrapper(*args: Any, **kwargs: Any) -> T:
+        async def wrapper(*args: object, **kwargs: object) -> T:
             # Try to find Request in args/kwargs
             request: Optional[Request] = None
             for arg in args:
@@ -274,7 +274,7 @@ def log_endpoint_call(
 
     def decorator(func: Callable[..., Awaitable[T]]) -> Callable[..., Awaitable[T]]:
         @wraps(func)
-        async def wrapper(*args: Any, **kwargs: Any) -> T:
+        async def wrapper(*args: object, **kwargs: object) -> T:
             correlation_id = get_correlation_id()
             start_time = time.time()
 
@@ -332,7 +332,7 @@ def log_endpoint_call(
 
 def log_error_with_trace(
     error: Exception,
-    context: Dict[str, Any],
+    context: Dict[str, Union[str, int, float, bool]],
     service: str = "api",
 ) -> None:
     """

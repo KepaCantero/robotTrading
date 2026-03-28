@@ -175,28 +175,25 @@ class Signal(BaseModel):
     def validate_signal_consistency(self) -> "Signal":
         """Validate signal consistency rules."""
         # Strong signals should have high confidence
-        if self.strength in [SignalStrength.STRONG, SignalStrength.VERY_STRONG]:
-            if self.confidence < 70.0:
-                raise ValueError(
-                    f"Strong signal ({self.strength}) with low confidence ({self.confidence}). "
-                    "Strong signals should have confidence >= 70.0"
-                )
+        if self.strength in [SignalStrength.STRONG, SignalStrength.VERY_STRONG] and self.confidence < 70.0:
+            raise ValueError(
+                f"Strong signal ({self.strength}) with low confidence ({self.confidence}). "
+                "Strong signals should have confidence >= 70.0"
+            )
 
         # Weak signals should have low confidence
-        if self.strength == SignalStrength.WEAK:
-            if self.confidence > 80.0:
-                raise ValueError(
-                    f"Weak signal with high confidence ({self.confidence}). "
-                    "Weak signals should have confidence <= 80.0"
-                )
+        if self.strength == SignalStrength.WEAK and self.confidence > 80.0:
+            raise ValueError(
+                f"Weak signal with high confidence ({self.confidence}). "
+                "Weak signals should have confidence <= 80.0"
+            )
 
         # HOLD signals should have moderate confidence
-        if self.signal_type == SignalType.HOLD:
-            if self.confidence > 90.0:
-                raise ValueError(
-                    f"HOLD signal with very high confidence ({self.confidence}). "
-                    "HOLD signals should have moderate confidence"
-                )
+        if self.signal_type == SignalType.HOLD and self.confidence > 90.0:
+            raise ValueError(
+                f"HOLD signal with very high confidence ({self.confidence}). "
+                "HOLD signals should have moderate confidence"
+            )
 
         return self
 
@@ -889,7 +886,6 @@ class SignalPriorityQueue:
             if metadata is not None:
                 # Called with (market_data, metadata)
                 market_data = market_data_or_metadata
-                metadata = metadata
 
                 # Calculate volatility from market data price range
                 if (

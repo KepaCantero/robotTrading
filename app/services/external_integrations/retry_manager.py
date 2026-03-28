@@ -24,8 +24,8 @@ class RetryConfig:
         max_retries: int = 3,
         initial_delay_ms: int = 100,
         max_delay_ms: int = 10000,
-        exponential_base: Decimal = Decimal("2.0"),
-        jitter_factor: Decimal = Decimal("0.1"),
+        exponential_base: Optional[Decimal] = None,
+        jitter_factor: Optional[Decimal] = None,
     ):
         """
         Initialize retry configuration.
@@ -37,6 +37,10 @@ class RetryConfig:
             exponential_base: Base for exponential backoff
             jitter_factor: Jitter as fraction of delay (0.0-1.0)
         """
+        if exponential_base is None:
+            exponential_base = Decimal("2.0")
+        if jitter_factor is None:
+            jitter_factor = Decimal("0.1")
         self.max_retries = max_retries
         self.initial_delay_ms = initial_delay_ms
         self.max_delay_ms = max_delay_ms
@@ -108,7 +112,7 @@ class RetryManager:
 
                 await asyncio.sleep(delay_ms / 1000.0)
 
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 # Non-retryable exception
                 self.logger.error(
                     f"❌ {operation_name} failed with non-retryable exception: {str(e)}"

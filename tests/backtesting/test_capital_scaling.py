@@ -303,7 +303,9 @@ class TestFullPipelineNoMocks:
     5. Exact mathematical verification
     """
 
-    def test_full_pipeline_without_mocks(self, realistic_quotes, realistic_signals, test_config, default_symbol):
+    def test_full_pipeline_without_mocks(
+        self, realistic_quotes, realistic_signals, test_config, default_symbol
+    ):
         """
         Test complete workflow WITHOUT ANY MOCKS.
 
@@ -324,7 +326,9 @@ class TestFullPipelineNoMocks:
 
         # Verify realistic data was generated
         assert len(realistic_quotes) == 252, "Should generate 252 trading days"
-        assert all(q.symbol == default_symbol for q in realistic_quotes), f"All quotes should be {default_symbol}"
+        assert all(
+            q.symbol == default_symbol for q in realistic_quotes
+        ), f"All quotes should be {default_symbol}"
 
         # Verify realistic price movement (not too wild)
         prices = [float(q.close) for q in realistic_quotes]

@@ -3,7 +3,7 @@
 # ============================================
 # VERSION: 4.0 - ARCHITECTURE + FILE SYSTEM + HARDENED
 # Audita y arregla TODOS los archivos de producción en app/
-# CONTRA los requirements.md generados + ARCHITECTURE + FILE SYSTEM
+# CONTRA los requirements (.md o .txt) en .requirements/ + ARCHITECTURE + FILE SYSTEM
 # ============================================================================
 # FEATURES MODERNAS:
 # - reasoning: multi-step para GLM 5.0
@@ -16,7 +16,7 @@
 # - file system compliance: FILE_SYSTEM_REQUIREMENTS.md
 # ============================================================================
 # PRIORIDAD: P0 (CRÍTICA) - Valida la integridad del código de producción
-# OBJETIVO: Código 100% compliant con requirements.md + architecture + file system
+# OBJETIVO: Código 100% compliant con requirements (.md/.txt) + architecture + file system
 # TIEMPO: ~10 horas
 # ============================================================================
 
@@ -28,14 +28,14 @@ event_loop:
   checkpoint_interval: 3
   starting_event: "production_audit.start"
   checkpoint_file: ".ralph/checkpoints/31_production_audit_checkpoint.json"
-  # GLM 5.0 - Multi-step reasoning
+  # GLM 5.1 - Multi-step reasoning
   reasoning:
     enabled: true
     type: "multi-step"
 
 cli:
   backend: "claude"
-  model: "glm"  # GLM 5.0
+  model: "glm-5.1"  # GLM 5.1
 
 core:
   specs_dir: "./specs/"
@@ -48,8 +48,19 @@ shared_vars:
   TASK_NAME: "Production Code Audit & Fix"
   TASK_ID: "31"
   VALIDATE_SCRIPT: "scripts/validate_file_complete.sh"
+  # ============================================================================
+  # REQUIREMENTS DIRECTORY - IMPORTANT
+  # ============================================================================
+  # Los archivos de requirements se encuentran en el directorio .requirements/
+  # y pueden estar en dos formatos:
+  #   - .md  → Markdown (ej: .requirements/app/core/config/settings.requirements.md)
+  #   - .txt → Texto plano (ej: .requirements/app/core/config/settings.requirements.txt)
+  # Para cada archivo fuente en app/ puede existir su requirements correspondiente
+  # en AMBOS o en cualquiera de los dos formatos.
+  # ============================================================================
   REQUIREMENTS_DIR: ".requirements"
-  # NEW: Architecture & File System Requirements
+  REQUIREMENTS_FORMATS: [".md", ".txt"]  # Both formats are supported
+  # Architecture & File System Requirements (global rules)
   ARCHITECTURE_REQUIREMENTS: ".requirements/ARCHITECTURE_REQUIREMENTS.md"
   FILE_SYSTEM_REQUIREMENTS: ".requirements/FILE_SYSTEM_REQUIREMENTS.md"
   BASE_RULES: ".requirements/BASE_RULES.md"
@@ -78,7 +89,7 @@ critical_rules: |
   ### VALIDATION REQUIREMENTS:
   - ✅ Run validate_file_complete.sh for EVERY file
   - ✅ Fix DEEPLY - no shallow fixes
-  - ✅ Check against requirements.md BEFORE marking complete
+  - ✅ Check against requirements (.md/.txt) BEFORE marking complete
   - ✅ Each fix attempt must be DIFFERENT approach
 
   ### FLAGS FOR BLOCKED FILES:
@@ -127,7 +138,7 @@ quality:
   enforce_tests: true
   enforce_typecheck: true
   enforce_lint: true
-  enforce_requirements: true  # NEW: Check against requirements.md
+  enforce_requirements: true  # NEW: Check against requirements (.md/.txt)
   min_coverage: 80
 
 # ============================================================================
@@ -139,7 +150,7 @@ hats:
   # ==========================================================================
   discovery:
     name: "Discovery & Requirements"
-    description: "Descubre archivos y verifica requirements.md existen"
+    description: "Descubre archivos y verifica requirements (.md o .txt) existen en .requirements/"
     hat_template: ".ralph/ralph_templates/hats/base_processor_hat.yml"
     triggers: ["production_audit.start"]
     publishes: ["files.discovered", "requirements.needed"]
@@ -151,7 +162,7 @@ hats:
       {{shared_instructions}}
 
       ### OBJETIVO
-      Descubrir archivos y verificar que tienen requirements.md
+      Descubrir archivos y verificar que tienen requirements (.md o .txt) en .requirements/
 
       ### FASE 1: Descubrir archivos Python
 
@@ -172,14 +183,21 @@ hats:
       9. app/infrastructure/ → domain + services
       10. app/api/ → services layer
 
-      ### FASE 2: Verificar requirements.md existen
+      ### FASE 2: Verificar requirements existen (en .requirements/ - formatos .md y .txt)
 
       ```bash
-      # Para cada archivo, verificar si tiene requirements.md
+      # Para cada archivo, verificar si tiene requirements (.md o .txt)
+      # IMPORTANTE: Los requirements están en .requirements/ no en requirements/
       for file in $(find app -name "*.py" -type f | grep -v test); do
-        req_file=".requirements/${file}.requirements.md"
-        if [[ ! -f "$req_file" ]]; then
-          echo "MISSING_REQUIREMENT: $file"
+        req_md=".requirements/${file}.requirements.md"
+        req_txt=".requirements/${file}.requirements.txt"
+
+        if [[ ! -f "$req_md" ]] && [[ ! -f "$req_txt" ]]; then
+          echo "MISSING_REQUIREMENT: $file (checked .md and .txt)"
+        elif [[ -f "$req_md" ]]; then
+          echo "FOUND: $file -> $req_md"
+        elif [[ -f "$req_txt" ]]; then
+          echo "FOUND: $file -> $req_txt"
         fi
       done
       ```
@@ -208,15 +226,24 @@ hats:
             "layer": "config",
             "has_requirements": true,
             "requirements_path": ".requirements/app/core/config/settings.requirements.md",
+            "requirements_format": "md",
             "priority": "P0"
+          },
+          {
+            "path": "app/services/example.py",
+            "layer": "services",
+            "has_requirements": true,
+            "requirements_path": ".requirements/app/services/example.requirements.txt",
+            "requirements_format": "txt",
+            "priority": "P1"
           }
         ]
       }
       ```
 
-      Si hay archivos SIN requirements.md:
+      Si hay archivos SIN requirements (.md ni .txt):
       - Emitir "requirements.needed" con lista de archivos faltantes
-      - El siguiente hat generará requirements.md antes de auditar
+      - El siguiente hat generará requirements (.md preferiblemente) antes de auditar
 
       Emitir "files.discovered"
 
@@ -225,7 +252,7 @@ hats:
   # ==========================================================================
   requirements_generator:
     name: "Requirements Generator"
-    description: "Genera requirements.md faltantes antes de auditar"
+    description: "Genera requirements (.md o .txt) faltantes antes de auditar - guarda en .requirements/"
     hat_template: ".ralph/ralph_templates/hats/implementer_hat.yml"
     triggers: ["requirements.needed"]
     publishes: ["requirements.generated"]
@@ -237,11 +264,16 @@ hats:
       {{shared_instructions}}
 
       ### OBJETIVO
-      Generar requirements.md para archivos que no lo tienen
+      Generar requirements (.md o .txt) para archivos que no los tienen
+
+      ### FORMATOS SOPORTADOS
+      Los requirements se guardan en `.requirements/` y pueden ser:
+      - `.requirements.md` → Formato Markdown (preferido para documentación rica)
+      - `.requirements.txt` → Formato texto plano (para listas simples)
 
       ### WORKFLOW
 
-      Para cada archivo sin requirements.md:
+      Para cada archivo sin requirements (.md ni .txt):
 
       1. **Leer archivo fuente:**
       ```bash
@@ -259,7 +291,7 @@ hats:
       - Usar rules/trading/ para reglas de trading
       - Mapear archivo a servicio correspondiente
 
-      4. **Generar requirements.md:**
+      4. **Generar requirements (.md preferiblemente):**
       ```markdown
       # Requirements: {{file_path}}
 
@@ -307,7 +339,8 @@ hats:
       5. **Guardar archivo:**
       ```bash
       mkdir -p "$(dirname .requirements/{{file_path}})"
-      # Write requirements.md
+      # Write requirements (.md or .txt)
+      # Default: .requirements/{{file_path}}.requirements.md
       ```
 
       Emitir "requirements.generated"
@@ -398,7 +431,7 @@ hats:
   # ==========================================================================
   requirements_checker:
     name: "Requirements Compliance"
-    description: "Verifica cumplimiento contra requirements.md"
+    description: "Verifica cumplimiento contra requirements (.md o .txt) en .requirements/"
     hat_template: ".ralph/ralph_templates/hats/validation_hat.yml"
     triggers: ["audit.initial_complete"]
     publishes: ["requirements.checked"]
@@ -410,18 +443,26 @@ hats:
       {{shared_instructions}}
 
       ### OBJETIVO
-      Verificar que cada archivo cumple sus requirements.md
+      Verificar que cada archivo cumple sus requirements (.md o .txt)
 
-      ### FASE 1: Para cada archivo con requirements.md
+      ### FASE 1: Para cada archivo con requirements (.md o .txt)
 
       ```bash
       file="app/services/example.py"
-      req_file=".requirements/${file}.requirements.md"
+      req_md=".requirements/${file}.requirements.md"
+      req_txt=".requirements/${file}.requirements.txt"
+
+      # Usar el que exista (preferir .md si ambos existen)
+      if [[ -f "$req_md" ]]; then
+        req_file="$req_md"
+      elif [[ -f "$req_txt" ]]; then
+        req_file="$req_txt"
+      fi
       ```
 
       ### FASE 2: Verificar cada regla marcada
 
-      Leer requirements.md y verificar:
+      Leer requirements (.md o .txt) y verificar:
       - [ ] SRP-001 → ¿Clase tiene una sola responsabilidad?
       - [ ] GOD-CLASS → ¿Archivo < 300 líneas?
       - [ ] GOD-FUNC → ¿Funciones < 50 líneas?
@@ -430,7 +471,7 @@ hats:
 
       ### FASE 3: Marcar estado real
 
-      Actualizar requirements.md con estado real:
+      Actualizar requirements (.md o .txt) con estado real:
       - [ ] → ❌ No implementado
       - [x] → ✅ Implementado
       - [?] → ⚠️ Parcialmente implementado
@@ -700,9 +741,19 @@ hats:
 
       ### WORKFLOW FOR EACH FAILED FILE:
 
-      #### Step 1: Read requirements.md
+      #### Step 1: Read requirements (.md o .txt)
       ```bash
-      cat .requirements/{{file_path}}.requirements.md
+      # Buscar requirements en ambos formatos
+      req_md=".requirements/{{file_path}}.requirements.md"
+      req_txt=".requirements/{{file_path}}.requirements.txt"
+
+      if [[ -f "$req_md" ]]; then
+        cat "$req_md"
+      elif [[ -f "$req_txt" ]]; then
+        cat "$req_txt"
+      else
+        echo "WARNING: No requirements found for {{file_path}}"
+      fi
       ```
       Understand WHAT needs to be compliant.
 
@@ -765,8 +816,8 @@ hats:
 
       Must return `summary.success == true`
 
-      #### Step 8: Update requirements.md
-      Mark rules as ✅ in requirements.md after verification
+      #### Step 8: Update requirements (.md o .txt)
+      Mark rules as ✅ in requirements file after verification
 
       #### Step 9: Checkpoint progress
       ```bash
@@ -893,7 +944,7 @@ hats:
       ### FASE 3: Para cada archivo en sample, revisar:
 
       1. **Leer archivo completo**
-      2. **Verificar contra requirements.md**
+      2. **Verificar contra requirements (.md o .txt)**
       3. **Buscar:**
          - Type hints faltantes
          - Error handling insuficiente
@@ -1013,7 +1064,7 @@ hats:
 
       ### OBJETIVO
       Validar que TODOS los archivos pasan TODAS las validaciones
-      Incluyendo: requirements.md + ARCHITECTURE_REQUIREMENTS.md + FILE_SYSTEM_REQUIREMENTS.md
+      Incluyendo: requirements (.md/.txt en .requirements/) + ARCHITECTURE_REQUIREMENTS.md + FILE_SYSTEM_REQUIREMENTS.md
 
       ### FASE 1: Validación completa
 

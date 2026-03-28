@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-# pylint: disable=unsupported-binary-operation
-# mypy: ignore-errors
 """
 Data models for Order Flow Imbalance (OFI) module.
 

@@ -58,7 +58,7 @@ try:
     import shap
 
     SHAP_AVAILABLE = True
-except (ImportError, ModuleNotFoundError, OSError):
+except (ImportError, OSError):
     shap: Optional[ModuleType] = None
     SHAP_AVAILABLE = False
 
@@ -75,7 +75,7 @@ try:
     from sklearn.metrics import f_classif, f_regression
 
     SKLEARN_FEATURE_SELECTION_AVAILABLE = True
-except (ImportError, ModuleNotFoundError, OSError):
+except (ImportError, OSError):
     SelectKBest: Optional[type] = None
     SelectFromModel: Optional[type] = None
     RFE: Optional[type] = None
@@ -123,7 +123,7 @@ def load_feature_importance_config(
                 config = yaml.safe_load(f)
                 logger.info(f"Loaded feature importance config from {config_path}")
                 return config
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             logger.warning(f"Error loading config from {config_path}: {e}")
 
     return get_default_feature_importance_config()
@@ -661,14 +661,13 @@ class AttentionWeightsAnalyzer:
 
             # Buscar capas de transformer
             for name, module in model.named_modules():
-                if isinstance(module, nn.TransformerEncoderLayer):
-                    if layer_idx is None or name.endswith(f'[{layer_idx}]'):
-                        # Registrar hook
-                        hook = module.register_forward_hook(attention_hook)
-                        # Forward pass
-                        with torch.no_grad():
-                            module(sequence)
-                        hook.remove()
+                if isinstance(module, nn.TransformerEncoderLayer) and (layer_idx is None or name.endswith(f'[{layer_idx}]')):
+                    # Registrar hook
+                    hook = module.register_forward_hook(attention_hook)
+                    # Forward pass
+                    with torch.no_grad():
+                        module(sequence)
+                    hook.remove()
 
             # Alternativa: usar forward hook global
             # Por ahora, retornar None y usar método alternativo
@@ -973,7 +972,7 @@ class FeatureImportanceAnalyzer:
         if results['combined_importance']:
             # Promediar diferentes métodos de importancia
             all_importances = []
-            for method, importance_dict in results['combined_importance'].items():
+            for _method, importance_dict in results['combined_importance'].items():
                 all_importances.append(importance_dict)
 
             # Promediar
@@ -1893,7 +1892,7 @@ class ComprehensiveFeatureAnalyzer:
         combined = {}
         for feature in feature_names:
             values = []
-            for method, imp_dict in all_importances.items():
+            for _method, imp_dict in all_importances.items():
                 if feature in imp_dict:
                     values.append(imp_dict[feature])
             combined[feature] = float(np.mean(values)) if values else 0.0

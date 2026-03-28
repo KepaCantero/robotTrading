@@ -252,7 +252,7 @@ async def close_database() -> None:
     to properly close all database connections.
     """
     # # global _engine  # F824 removed, _session_factory
-    # F824 removed  # noqa: E114
+    # F824 removed
     try:
         if _engine:
             await _engine.dispose()

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import logging
 from functools import wraps
-from typing import Any, Callable, Dict, Type, TypeVar
+from typing import Callable, Dict, List, Type, TypeVar, Union
 
 T = TypeVar("T")
 
@@ -39,7 +39,7 @@ class _PlaceholderValidator:
         @staticmethod
         def validate_order_params(
             symbol: str, side: str, quantity: float, price: float
-        ) -> Dict[str, Any]:
+        ) -> Dict[str, object]:
             return {
                 "symbol": symbol,
                 "side": side,
@@ -227,7 +227,7 @@ def validate_request(func: Callable) -> Callable:
 
 def validate_request_model(
     model_class: Type[T],
-    data: Dict[str, Any],
+    data: Dict[str, object],
     sanitize: bool = True,
 ) -> T:
     """
@@ -248,7 +248,7 @@ def validate_request_model(
     return result
 
 
-def validate_and_sanitize_input(data: Any, input_type: str = "auto", **constraints) -> Any:
+def validate_and_sanitize_input(data: Union[str, int, float, Dict[str, object], List[object]], input_type: str = "auto", **constraints) -> Union[str, int, float, Dict[str, object], List[object]]:
     """
     Convenience function to validate and sanitize any input.
 

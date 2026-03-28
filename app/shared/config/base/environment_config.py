@@ -163,7 +163,7 @@ class APIConfig(BaseSettings):
     """API configuration."""
 
     # Server settings
-    api_host: str = Field(default="0.0.0.0", env="API_HOST")  # nosec B104
+    api_host: str = Field(default="127.0.0.1", env="API_HOST")
     api_port: int = Field(default=8000, env="API_PORT")
     api_workers: int = Field(default=1, env="API_WORKERS")
 

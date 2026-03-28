@@ -119,7 +119,9 @@ class TestProfitAndLossCalculator:
         assert result["avg_buy_price"] == Decimal("150")
         assert result["pnl_percentage"] < 0
 
-    def test_calculate_sell_pnl_different_quantities(self, pnl_calculator, sample_buy_trades, default_symbol):
+    def test_calculate_sell_pnl_different_quantities(
+        self, pnl_calculator, sample_buy_trades, default_symbol
+    ):
         """Test P&L calculation with different buy quantities."""
         # Create trades with different quantities
         trades = [
@@ -186,7 +188,9 @@ class TestProfitAndLossCalculator:
         assert result["total_commission"] == Decimal("0")
         assert result["entry_time"] is None
 
-    def test_calculate_close_position_pnl_loss(self, pnl_calculator, sample_buy_trades, default_symbol):
+    def test_calculate_close_position_pnl_loss(
+        self, pnl_calculator, sample_buy_trades, default_symbol
+    ):
         """Test close position P&L for losing trade."""
         result = pnl_calculator.calculate_close_position_pnl(
             symbol=default_symbol,
@@ -237,7 +241,9 @@ class TestProfitAndLossCalculator:
 
         assert avg_price == Decimal("150")
 
-    def test_calculate_average_entry_price_ignores_closed_trades(self, pnl_calculator, default_symbol):
+    def test_calculate_average_entry_price_ignores_closed_trades(
+        self, pnl_calculator, default_symbol
+    ):
         """Test average entry price ignores closed trades."""
         trades = [
             Trade(
@@ -267,9 +273,13 @@ class TestProfitAndLossCalculator:
         # Should only consider open trades
         assert avg_price == Decimal("150")
 
-    def test_calculate_round_trip_commission(self, pnl_calculator, sample_buy_trades, default_symbol):
+    def test_calculate_round_trip_commission(
+        self, pnl_calculator, sample_buy_trades, default_symbol
+    ):
         """Test round trip commission calculation."""
-        commission = pnl_calculator.calculate_round_trip_commission(sample_buy_trades, default_symbol)
+        commission = pnl_calculator.calculate_round_trip_commission(
+            sample_buy_trades, default_symbol
+        )
 
         # 3 trades with $1 commission each
         assert commission == Decimal("3")
@@ -293,7 +303,9 @@ class TestProfitAndLossCalculator:
 
         assert commission == Decimal("0")
 
-    def test_calculate_round_trip_commission_filters_by_symbol(self, pnl_calculator, default_symbol):
+    def test_calculate_round_trip_commission_filters_by_symbol(
+        self, pnl_calculator, default_symbol
+    ):
         """Test round trip commission filters by symbol."""
         trades = [
             Trade(
@@ -327,14 +339,20 @@ class TestProfitAndLossCalculator:
         """Test commission ratio calculation."""
         position_value = Decimal("15000")  # 100 shares at $150
 
-        ratio = pnl_calculator.calculate_commission_ratio(position_value, sample_buy_trades, default_symbol)
+        ratio = pnl_calculator.calculate_commission_ratio(
+            position_value, sample_buy_trades, default_symbol
+        )
 
         # $3 commission on $15000 = 0.0002
         assert ratio == Decimal("3") / Decimal("15000")
 
-    def test_calculate_commission_ratio_zero_position(self, pnl_calculator, sample_buy_trades, default_symbol):
+    def test_calculate_commission_ratio_zero_position(
+        self, pnl_calculator, sample_buy_trades, default_symbol
+    ):
         """Test commission ratio with zero position value."""
-        ratio = pnl_calculator.calculate_commission_ratio(Decimal("0"), sample_buy_trades, default_symbol)
+        ratio = pnl_calculator.calculate_commission_ratio(
+            Decimal("0"), sample_buy_trades, default_symbol
+        )
 
         assert ratio == Decimal("0")
 

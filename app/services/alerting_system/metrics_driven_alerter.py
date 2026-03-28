@@ -6,6 +6,7 @@ Provides the bridge between real-time metrics and rule-based alerting.
 """
 
 import asyncio
+import contextlib
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -201,7 +202,7 @@ class MetricsDrivenAlerter:
 
                 self.evaluation_stats.rules_evaluated += 1
 
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 error_msg = f"Error evaluating rule {rule_id}: {str(e)}"
                 self.logger.error(error_msg)
                 results["errors"].append(error_msg)
@@ -364,7 +365,7 @@ class MetricsDrivenAlerter:
                     # Evaluate all rules
                     await self.evaluate_metric_rules(metric_queries)
 
-                except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+                except (asyncio.TimeoutError, OSError) as e:
                     self.logger.error(f"Error in evaluation loop: {str(e)}")
                     self.evaluation_stats.evaluation_errors += 1
 
@@ -383,10 +384,8 @@ class MetricsDrivenAlerter:
 
         if self._evaluation_task:
             self._evaluation_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._evaluation_task
-            except asyncio.CancelledError:
-                pass
 
     def get_evaluation_statistics(self) -> Dict:
         """Get current evaluation statistics."""

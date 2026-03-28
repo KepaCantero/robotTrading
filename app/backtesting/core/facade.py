@@ -9,7 +9,7 @@ import logging
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Protocol, TypeVar, Union
+from typing import Callable, Dict, List, Optional, Protocol, TypeVar, Union
 
 import pandas as pd
 
@@ -269,7 +269,6 @@ class BacktestRunnerFacade:
 
         return result_dict
 
-    # pylint: disable=R0913
     def _log_custom_backtest_start(
         self,
         timestamp: str,
@@ -350,7 +349,6 @@ class BacktestRunnerFacade:
             },
         )
 
-    # pylint: disable=R0913
     def _execute_parameter_combinations(
         self,
         strategy_factory: StrategyFactory,
@@ -379,7 +377,7 @@ class BacktestRunnerFacade:
             test_name = f"{test_name_prefix}_{param_str}"
 
             result_dict = self.run_strategy_test(
-                strategy, test_name, test_type='parameter_sweep', **params  # type: ignore
+                strategy, test_name, test_type='parameter_sweep', **params
             )
             results.append(result_dict)
 
@@ -541,7 +539,9 @@ class BacktestRunnerFacade:
             return (final_capital - initial_capital) / result.performance.total_trades
         return 0.0
 
-    def get_best_result(self, metric: str = 'sharpe_ratio') -> Optional[Dict[str, Any]]:
+    def get_best_result(
+        self, metric: str = 'sharpe_ratio'
+    ) -> Optional[Dict[str, Union[float, int, str]]]:
         """
         Get best result by metric.
 

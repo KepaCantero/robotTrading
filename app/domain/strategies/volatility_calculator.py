@@ -63,7 +63,7 @@ class VolatilityCalculator:
 
     def __init__(
         self,
-        risk_free_rate: Decimal = Decimal("0.02"),
+        risk_free_rate: Optional[Decimal] = None,
         trading_days_per_year: int = 252,
     ):
         """
@@ -73,6 +73,8 @@ class VolatilityCalculator:
             risk_free_rate: Tasa libre de riesgo anual (2% por defecto)
             trading_days_per_year: Días de trading por año
         """
+        if risk_free_rate is None:
+            risk_free_rate = Decimal("0.02")
         self.risk_free_rate = risk_free_rate
         self.trading_days_per_year = trading_days_per_year
 

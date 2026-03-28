@@ -22,12 +22,13 @@ from pathlib import Path
 
 # Import fractional differentiation module
 import sys
+
 sys.path.append(str(Path(__file__).parent.parent))
 
 from app.backtesting.feature_engineering import (
     FractionalDifferentiation,
     FractionalDiffTransformer,
-    apply_frac_diff_to_dataframe
+    apply_frac_diff_to_dataframe,
 )
 from app.backtesting.feature_engineering.fracdiff_visualizations import (
     plot_frac_diff_comparison,
@@ -35,7 +36,7 @@ from app.backtesting.feature_engineering.fracdiff_visualizations import (
     plot_memory_preservation,
     plot_stationarity_test,
     plot_optimal_d_search,
-    create_summary_report
+    create_summary_report,
 )
 
 
@@ -59,34 +60,30 @@ def generate_synthetic_data(n_points: int = 1000, seed: int = 42) -> pd.DataFram
     # Mean-reverting (spread-like)
     spread = np.random.randn(n_points)
     for i in range(1, n_points):
-        spread[i] = 0.5 * spread[i-1] + 0.5 * np.random.randn()
+        spread[i] = 0.5 * spread[i - 1] + 0.5 * np.random.randn()
 
     # Returns with volatility clustering
     returns = np.random.randn(n_points) * 0.02
     volatility = np.ones(n_points)
     for i in range(10, n_points):
-        volatility[i] = 0.8 * volatility[i-1] + 0.2 * abs(returns[i-1])
+        volatility[i] = 0.8 * volatility[i - 1] + 0.2 * abs(returns[i - 1])
         returns[i] *= volatility[i]
 
     # Volume (log-normal)
     volume = np.exp(np.random.randn(n_points) * 0.5 + 10)
 
-    df = pd.DataFrame({
-        'date': dates,
-        'price': price,
-        'spread': spread,
-        'returns': returns,
-        'volume': volume
-    }).set_index('date')
+    df = pd.DataFrame(
+        {'date': dates, 'price': price, 'spread': spread, 'returns': returns, 'volume': volume}
+    ).set_index('date')
 
     return df
 
 
 def example_1_basic_fractional_diff():
     """Example 1: Basic fractional differentiation."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("EXAMPLE 1: Basic Fractional Differentiation")
-    print("="*70)
+    print("=" * 70)
 
     # Generate data
     df = generate_synthetic_data(n_points=500)
@@ -116,9 +113,9 @@ def example_1_basic_fractional_diff():
 
 def example_2_finding_optimal_d():
     """Example 2: Finding optimal differentiation order."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("EXAMPLE 2: Finding Optimal Differentiation Order")
-    print("="*70)
+    print("=" * 70)
 
     # Generate data
     df = generate_synthetic_data(n_points=1000)
@@ -131,10 +128,7 @@ def example_2_finding_optimal_d():
 
     # Find optimal d using binary search
     optimal_d, p_value, metadata = fd.find_optimal_d(
-        price_series,
-        min_d=0.0,
-        max_d=1.0,
-        method='binary'
+        price_series, min_d=0.0, max_d=1.0, method='binary'
     )
 
     print(f"\nResults:")
@@ -146,16 +140,20 @@ def example_2_finding_optimal_d():
     # Compare different d values
     print("\nComparing different d values:")
     comparison = fd.compare_d_values(price_series, d_values=[0.0, 0.3, 0.5, 0.7, 1.0])
-    print(comparison[['d', 'p_value', 'is_stationary', 'memory_preservation', 'memory_loss_pct']].to_string(index=False))
+    print(
+        comparison[
+            ['d', 'p_value', 'is_stationary', 'memory_preservation', 'memory_loss_pct']
+        ].to_string(index=False)
+    )
 
     print("\n✓ Example 2 completed successfully")
 
 
 def example_3_memory_preservation():
     """Example 3: Memory preservation analysis."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("EXAMPLE 3: Memory Preservation Analysis")
-    print("="*70)
+    print("=" * 70)
 
     # Generate data
     df = generate_synthetic_data(n_points=1000)
@@ -176,14 +174,18 @@ def example_3_memory_preservation():
             diff_series = fd.fractional_diff(price_series, d=d)
 
         memory_metrics = fd.calculate_memory_loss(price_series, diff_series)
-        memory_results.append({
-            'd': d,
-            'memory_preservation': memory_metrics['memory_preservation_ratio'],
-            'memory_loss_pct': memory_metrics['memory_loss_pct']
-        })
+        memory_results.append(
+            {
+                'd': d,
+                'memory_preservation': memory_metrics['memory_preservation_ratio'],
+                'memory_loss_pct': memory_metrics['memory_loss_pct'],
+            }
+        )
 
-        print(f"  d={d:.1f}: Memory preserved={memory_metrics['memory_preservation_ratio']:.3f}, "
-              f"Loss={memory_metrics['memory_loss_pct']:.1f}%")
+        print(
+            f"  d={d:.1f}: Memory preserved={memory_metrics['memory_preservation_ratio']:.3f}, "
+            f"Loss={memory_metrics['memory_loss_pct']:.1f}%"
+        )
 
     print("\nKey insight: Fractional differentiation (d<1) preserves significant memory")
     print("while achieving stationarity, unlike standard differentiation (d=1).")
@@ -193,9 +195,9 @@ def example_3_memory_preservation():
 
 def example_4_dataframe_application():
     """Example 4: Applying to DataFrame with multiple features."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("EXAMPLE 4: Applying to Multiple Features")
-    print("="*70)
+    print("=" * 70)
 
     # Generate multi-feature data
     df = generate_synthetic_data(n_points=1000)
@@ -205,10 +207,7 @@ def example_4_dataframe_application():
 
     # Apply fractional differentiation to all numeric columns
     df_fracdiff = apply_frac_diff_to_dataframe(
-        df,
-        d=0.4,
-        columns=['price', 'spread'],
-        threshold=1e-5
+        df, d=0.4, columns=['price', 'spread'], threshold=1e-5
     )
 
     print("\nDataFrame with fractional differentiation:")
@@ -223,9 +222,9 @@ def example_4_dataframe_application():
 
 def example_5_sklearn_transformer():
     """Example 5: Using scikit-learn compatible transformer."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("EXAMPLE 5: Scikit-learn Compatible Transformer")
-    print("="*70)
+    print("=" * 70)
 
     from sklearn.pipeline import Pipeline
     from sklearn.preprocessing import StandardScaler
@@ -237,11 +236,7 @@ def example_5_sklearn_transformer():
     print("\nOriginal features shape:", features.shape)
 
     # Create transformer
-    transformer = FractionalDiffTransformer(
-        d=0.4,
-        threshold=1e-5,
-        auto_find_d=False
-    )
+    transformer = FractionalDiffTransformer(d=0.4, threshold=1e-5, auto_find_d=False)
 
     # Fit and transform
     features_fracdiff = transformer.fit_transform(features)
@@ -250,10 +245,9 @@ def example_5_sklearn_transformer():
     print(f"Optimal d used: {transformer.optimal_d_:.4f}")
 
     # Create a pipeline
-    pipeline = Pipeline([
-        ('fracdiff', FractionalDiffTransformer(d=0.4)),
-        ('scaler', StandardScaler())
-    ])
+    pipeline = Pipeline(
+        [('fracdiff', FractionalDiffTransformer(d=0.4)), ('scaler', StandardScaler())]
+    )
 
     features_scaled = pipeline.fit_transform(features)
     print(f"Pipeline output shape: {features_scaled.shape}")
@@ -263,9 +257,9 @@ def example_5_sklearn_transformer():
 
 def example_6_visualizations():
     """Example 6: Creating visualizations."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("EXAMPLE 6: Visualizations and Analysis")
-    print("="*70)
+    print("=" * 70)
 
     # Generate data
     df = generate_synthetic_data(n_points=1000)
@@ -312,7 +306,7 @@ def example_6_visualizations():
     fig6 = create_summary_report(
         price_series,
         d_values=[0.0, 0.3, 0.5, 0.7, 1.0],
-        save_path=str(output_dir / "fracdiff_report.png")
+        save_path=str(output_dir / "fracdiff_report.png"),
     )
     plt.close(fig6)
 
@@ -322,9 +316,9 @@ def example_6_visualizations():
 
 def example_7_practical_trading_scenario():
     """Example 7: Practical trading scenario."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("EXAMPLE 7: Practical Trading Scenario")
-    print("="*70)
+    print("=" * 70)
 
     # Generate realistic price data
     np.random.seed(42)
@@ -361,12 +355,14 @@ def example_7_practical_trading_scenario():
 
     # Create additional features
     print("\nStep 4: Creating feature set...")
-    features = pd.DataFrame({
-        'price_fracdiff': frac_diff_price,
-        'price_ma': price_series.rolling(window=20).mean(),
-        'price_std': price_series.rolling(window=20).std(),
-        'returns': price_series.pct_change(),
-    })
+    features = pd.DataFrame(
+        {
+            'price_fracdiff': frac_diff_price,
+            'price_ma': price_series.rolling(window=20).mean(),
+            'price_std': price_series.rolling(window=20).std(),
+            'returns': price_series.pct_change(),
+        }
+    )
 
     print(f"  Features shape: {features.shape}")
     print(f"  Non-NaN values per feature:")
@@ -384,9 +380,9 @@ def example_7_practical_trading_scenario():
 
 def example_8_comparison_integer_vs_fractional():
     """Example 8: Integer vs Fractional differentiation comparison."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("EXAMPLE 8: Integer vs Fractional Differentiation")
-    print("="*70)
+    print("=" * 70)
 
     # Generate data
     df = generate_synthetic_data(n_points=1000)
@@ -424,9 +420,9 @@ def example_8_comparison_integer_vs_fractional():
 
 def main():
     """Run all examples."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("FRACTIONAL DIFFERENTIATION - COMPLETE EXAMPLE SUITE")
-    print("="*70)
+    print("=" * 70)
     print("\nBased on López de Prado, 'Advances in Financial Machine Learning'")
     print("Chapter 3, Section 3.4: Fractional Differentiation")
 
@@ -441,9 +437,9 @@ def main():
         example_7_practical_trading_scenario()
         example_8_comparison_integer_vs_fractional()
 
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print("ALL EXAMPLES COMPLETED SUCCESSFULLY!")
-        print("="*70)
+        print("=" * 70)
         print("\nKey Takeaways:")
         print("  1. Fractional differentiation creates stationary features")
         print("  2. Memory is preserved (unlike standard differentiation)")
@@ -457,6 +453,7 @@ def main():
     except Exception as e:
         print(f"\n❌ Error occurred: {e}")
         import traceback
+
         traceback.print_exc()
 
 

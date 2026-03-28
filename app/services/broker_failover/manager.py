@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional, Union
 
 from app.shared.utils.timezone_utils import utc_now
 
@@ -36,7 +36,7 @@ class BrokerConfig:
     """Configuration for a broker."""
 
     name: str
-    broker: Any  # Broker adapter instance
+    broker: object  # Broker adapter instance
     priority: int  # 1 = highest priority
     enabled: bool = True
     health_check_interval: float = 60.0  # seconds
@@ -56,7 +56,7 @@ class BrokerState:
     total_failures: int = 0
     last_error: Optional[str] = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Union[str, int, float, bool, datetime, None]]:
         """Convert to dictionary."""
         return {
             "name": self.name,
@@ -161,7 +161,7 @@ class BrokerFailoverManager:
         quantity: Decimal,
         order_type: str = "MARKET",
         price: Optional[Decimal] = None,
-    ) -> Optional[Any]:
+    ) -> Optional[object]:
         """
         Try primary broker, failover to secondary if needed.
 
@@ -214,7 +214,7 @@ class BrokerFailoverManager:
                     logger.info(f"Order executed via {broker_config.name}")
                     return execution
 
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.warning(f"Broker {broker_config.name} failed: {e}")
                 await self._mark_broker_unhealthy(broker_config.name, str(e))
                 continue
@@ -222,7 +222,7 @@ class BrokerFailoverManager:
         logger.error("All brokers failed")
         return None
 
-    async def sync_positions(self) -> Dict[str, Any]:
+    async def sync_positions(self) -> Dict[str, Dict[str, object]]:
         """
         Sync positions across all brokers.
 
@@ -242,13 +242,13 @@ class BrokerFailoverManager:
                 positions_by_broker[broker_config.name] = {pos.symbol: pos for pos in positions}
 
                 logger.debug(f"Synced {len(positions)} positions from {broker_config.name}")
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.error(f"Failed to sync positions from {broker_config.name}: {e}")
                 positions_by_broker[broker_config.name] = {}
 
         return positions_by_broker
 
-    async def get_account_info(self) -> Optional[Dict[str, Any]]:
+    async def get_account_info(self) -> Optional[Dict[str, Union[str, int, float, bool, Decimal]]]:
         """
         Get account info from active broker with failover.
 
@@ -261,7 +261,7 @@ class BrokerFailoverManager:
                 account = await self._active_broker.broker.get_account_info()
                 if account:
                     return account
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.warning(f"Failed to get account info from {self._active_broker.name}: {e}")
 
         # Try other brokers
@@ -276,7 +276,7 @@ class BrokerFailoverManager:
                 if account:
                     logger.info(f"Got account info from backup broker {broker_config.name}")
                     return account
-            except (ConnectionError, TimeoutError, OSError, ValueError):
+            except (OSError, ValueError):
                 continue
 
         return None
@@ -336,7 +336,7 @@ class BrokerFailoverManager:
 
             except asyncio.CancelledError:
                 break
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.error(f"Error in health check loop: {e}")
                 await asyncio.sleep(self.health_check_interval)
 
@@ -351,7 +351,7 @@ class BrokerFailoverManager:
 
             return account is not None
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.debug(f"Health check failed for {broker.name}: {e}")
             return False
 
@@ -391,14 +391,14 @@ class BrokerFailoverManager:
                 if self.on_failover:
                     try:
                         self.on_failover(old_broker.name, broker.name)
-                    except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+                    except (OSError, ValueError) as e:
                         logger.error(f"Error in failover callback: {e}")
 
                 return
 
         logger.error("No healthy broker available for failover")
 
-    def get_active_broker(self) -> Optional[Any]:
+    def get_active_broker(self) -> Optional[object]:
         """Get currently active broker."""
         return self._active_broker.broker if self._active_broker else None
 
@@ -410,7 +410,7 @@ class BrokerFailoverManager:
         """Get state of all brokers."""
         return self._broker_states.copy()
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> Dict[str, Union[str, int, bool, None]]:
         """Get failover statistics."""
         return {
             "active_broker": self._active_broker.name if self._active_broker else None,
@@ -424,7 +424,7 @@ class BrokerFailoverManager:
             "is_monitoring": self._is_monitoring,
         }
 
-    def get_health_report(self) -> Dict[str, Any]:
+    def get_health_report(self) -> Dict[str, Union[str, int, bool, None, Dict, List]]:
         """
         Generate a comprehensive health report.
 
@@ -490,7 +490,7 @@ class BrokerFailoverManager:
         if self.on_failover and old_broker:
             try:
                 self.on_failover(old_broker.name, target_broker.name)
-            except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+            except (OSError, ValueError) as e:
                 logger.error(f"Error in failover callback: {e}")
 
         return True

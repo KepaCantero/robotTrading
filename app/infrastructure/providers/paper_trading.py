@@ -27,8 +27,10 @@ from app.shared.config.centralized_config import get_config
 class PaperTradingPortfolioProvider:
     """Paper trading portfolio provider for testing and simulation."""
 
-    def __init__(self, initial_cash: Decimal = Decimal("100000")):
+    def __init__(self, initial_cash: Optional[Decimal] = None):
         """Initialize paper trading provider with initial cash."""
+        if initial_cash is None:
+            initial_cash = Decimal("100000")
         logger.info(
             "Initializing paper trading provider",
             extra={"initial_cash": float(initial_cash), "broker": "paper_trading"},

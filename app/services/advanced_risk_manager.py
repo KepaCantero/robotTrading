@@ -399,13 +399,12 @@ class CircuitBreaker:
             True if strategy is paused
         """
         # Check if pause time has expired (e.g., 1 hour cooldown)
-        if self.strategy_paused[strategy_name]:
-            if strategy_name in self.last_reset:
-                elapsed = (datetime.utcnow() - self.last_reset[strategy_name]).total_seconds()
-                # Reset after 1 hour
-                if elapsed > 3600:
-                    self.reset_stops(strategy_name)
-                    return False
+        if self.strategy_paused[strategy_name] and strategy_name in self.last_reset:
+            elapsed = (datetime.utcnow() - self.last_reset[strategy_name]).total_seconds()
+            # Reset after 1 hour
+            if elapsed > 3600:
+                self.reset_stops(strategy_name)
+                return False
 
         return self.strategy_paused[strategy_name]
 

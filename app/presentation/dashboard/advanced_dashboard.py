@@ -18,11 +18,11 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-import os  # noqa: E402
+import os
 
 # Ahora importar el resto
-import sys  # noqa: E402
-from pathlib import Path  # noqa: E402
+import sys
+from pathlib import Path
 
 # ============================================================================
 # SOLUCIÓN DEFINITIVA: Configurar variables de entorno ANTES de cualquier import
@@ -59,21 +59,21 @@ ComprehensiveBacktestRunner = None
 # Importar librerías básicas
 try:
     import yaml
-except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError):
+except OSError:
     yaml = None
 
 try:
     import plotly.express as px
     import plotly.graph_objects as go
     from plotly.subplots import make_subplots
-except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError):
+except OSError:
     make_subplots = None
     go = None
     px = None
 
 try:
     import pandas as pd
-except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError):
+except OSError:
     pd = None
 
 try:
@@ -81,9 +81,10 @@ try:
 except (FileNotFoundError, ValueError, KeyError, TypeError):
     setup_file_logging = None
 
-import logging  # noqa: E402
-from datetime import datetime, timedelta  # noqa: E402
-from typing import Any, Dict, Optional, Tuple  # noqa: E402
+import logging
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Tuple, Union
+import contextlib
 
 logger = logging.getLogger(__name__)
 
@@ -181,7 +182,7 @@ def get_metric_color(value: float, metric: str, thresholds: Dict) -> Tuple[str, 
 
 
 def render_metric_card(
-    label: str, value: Any, metric: str, thresholds: Dict, format_str: str = "{:.2f}"
+    label: str, value: Union[str, int, float, bool], metric: str, thresholds: Dict, format_str: str = "{:.2f}"
 ):
     """Renderizar card de métrica con color dinámico."""
     try:
@@ -193,9 +194,9 @@ def render_metric_card(
 
     if isinstance(value, (int, float)):
         if metric == 'return_pct' or metric == 'drawdown':
-            display_value = f"{value_float:.2f}%"  # noqa: F841
+            _ = f"{value_float:.2f}%"
         elif metric == 'winrate':
-            _display_value = f"{value_float:.1f}%"  # noqa: F841
+            _ = f"{value_float:.1f}%"
         else:
             format_str.format(value_float)
     else:
@@ -217,7 +218,7 @@ def render_metric_card(
 # ============================================================================
 
 
-def get_integration_test_objectives() -> Dict[str, Dict[str, Any]]:
+def get_integration_test_objectives() -> Dict[str, Dict[str, Union[str, int, float, bool]]]:
     """
     Define los objetivos de métricas para integration tests.
     Returns: Dict con objetivos por métrica
@@ -329,7 +330,7 @@ def evaluate_all_objectives(
     return results
 
 
-def extract_strategy_config(result_row: pd.Series) -> Dict[str, Any]:
+def extract_strategy_config(result_row: pd.Series) -> Dict[str, Union[str, int, float, bool, Dict, List, None]]:
     """
     Extrae la configuración de estrategia y parámetros de un resultado.
     Returns: Dict con información de estrategia, parámetros, módulos, etc.
@@ -370,7 +371,7 @@ def extract_strategy_config(result_row: pd.Series) -> Dict[str, Any]:
 
 
 # radon: ignore
-def main():  # noqa: C901  # pragma: no cover  # Streamlit dashboard - high complexity expected
+def main():
     """Dashboard principal."""
     try:
         logger.debug("🚀 Dashboard main() iniciado")
@@ -597,9 +598,8 @@ def main():  # noqa: C901  # pragma: no cover  # Streamlit dashboard - high comp
 
                 # If multi-strategy mode, ensure multi_strategy test is
                 # available
-                if use_multi_strategy:
-                    if selected_tests and "multi_strategy" not in selected_tests:
-                        st.info("💡 Tip: 'Multi-Strategy Baseline' recommended")
+                if use_multi_strategy and selected_tests and "multi_strategy" not in selected_tests:
+                    st.info("💡 Tip: 'Multi-Strategy Baseline' recommended")
 
             st.divider()
 
@@ -802,7 +802,7 @@ def main():  # noqa: C901  # pragma: no cover  # Streamlit dashboard - high comp
                         if 'available_tests' not in st.session_state
                         else st.session_state.get('available_tests', available_tests)
                     )
-                    for display_name, test_name in tests_to_check.items():
+                    for _display_name, test_name in tests_to_check.items():
                         checkbox_key = f"test_{test_name}_{use_multi_strategy}"
                         if st.session_state.get(checkbox_key, False):
                             selected_tests.append(test_name)
@@ -1860,7 +1860,7 @@ def main():  # noqa: C901  # pragma: no cover  # Streamlit dashboard - high comp
                     evaluation_results = []
 
                     # VECTORIZED: Usar to_dict('records') en lugar de iterrows
-                    for idx, row in enumerate(df.to_dict('records')):
+                    for _idx, row in enumerate(df.to_dict('records')):
                         # Extract metrics
                         metrics = {
                             'max_drawdown': row.get('max_drawdown', 0),
@@ -1976,7 +1976,7 @@ def main():  # noqa: C901  # pragma: no cover  # Streamlit dashboard - high comp
                                 metric_cols = st.columns(3)
                                 metric_idx = 0
 
-                                for metric_name, (passes, status, obj_config) in eval_result[
+                                for metric_name, (_passes, status, obj_config) in eval_result[
                                     'evaluations'
                                 ].items():
                                     with metric_cols[metric_idx % 3]:
@@ -2014,7 +2014,7 @@ def main():  # noqa: C901  # pragma: no cover  # Streamlit dashboard - high comp
                                 st.divider()
                                 st.subheader("📈 Resumen de Métricas")
                                 summary_data = []
-                                for metric_name, (passes, status, obj_config) in eval_result[
+                                for metric_name, (_passes, status, obj_config) in eval_result[
                                     'evaluations'
                                 ].items():
                                     metric_key = metric_name
@@ -2093,7 +2093,7 @@ def main():  # noqa: C901  # pragma: no cover  # Streamlit dashboard - high comp
                                     y=df_compare[metric],
                                     mode='lines+markers',
                                     name=metric.replace('_', ' ').title(),
-                                    marker=dict(size=10),
+                                    marker={"size": 10},
                                 )
                             )
 
@@ -2146,13 +2146,7 @@ def main():  # noqa: C901  # pragma: no cover  # Streamlit dashboard - high comp
                         st.dataframe(df_results.head(10))
                     else:
                         st.warning("No results found in the specified directory.")
-                except (
-                    FileNotFoundError,
-                    PermissionError,
-                    IOError,
-                    OSError,
-                    IsADirectoryError,
-                ) as e:
+                except OSError as e:
                     st.error(f"Error loading results: {e}")
                     logger.error(f"Error loading results: {e}", exc_info=True)
 
@@ -2534,10 +2528,8 @@ def main():  # noqa: C901  # pragma: no cover  # Streamlit dashboard - high comp
                         st.info(f"📁 Full results saved to: `{runner.output_dir}`")
 
                     # Clean up temp config
-                    try:
+                    with contextlib.suppress(FileNotFoundError, ValueError, KeyError, TypeError):
                         temp_config_path.unlink()
-                    except (FileNotFoundError, ValueError, KeyError, TypeError):
-                        pass
 
                     # Reset execute flag after successful execution
                     st.session_state.execute_tests = False

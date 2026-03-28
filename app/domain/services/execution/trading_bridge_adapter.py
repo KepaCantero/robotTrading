@@ -16,12 +16,10 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 if TYPE_CHECKING:
     from app.services.live_trading.alert_to_trade_mapper import TradeSignal
+    from app.services.live_trading.trading_bridge_orchestrator import (
+        TradingBridgeOrchestrator,
+    )
 
-from app.services.alerting_system import AlertEvent, AlertSeverity
-from app.services.live_trading.trading_bridge_orchestrator import (
-    TradingBridgeOrchestrator,
-    get_trading_bridge_orchestrator,
-)
 from app.shared.protocols import ITradeExecutor
 
 logger = logging.getLogger(__name__)
@@ -72,7 +70,7 @@ class TradingBridgeAdapter(ITradeExecutor):
 
     def __init__(
         self,
-        trading_bridge: Optional[TradingBridgeOrchestrator] = None,
+        trading_bridge: Optional["TradingBridgeOrchestrator"] = None,
         enable_logging: bool = False,
     ):
         """
@@ -83,6 +81,11 @@ class TradingBridgeAdapter(ITradeExecutor):
                              (defaults to singleton instance)
             enable_logging: Enable detailed logging for execution events
         """
+        # Late import to avoid domain layer depending on services layer
+        from app.services.live_trading.trading_bridge_orchestrator import (
+            get_trading_bridge_orchestrator,
+        )
+
         self.trading_bridge = trading_bridge or get_trading_bridge_orchestrator()
         self.enable_logging = enable_logging
         self._order_mapping: Dict[str, str] = {}  # Maps order_id to execution_id
@@ -125,6 +128,9 @@ class TradingBridgeAdapter(ITradeExecutor):
                 - slippage_bps: Applied slippage in basis points
         """
         try:
+            # Late import to avoid domain layer depending on services layer
+            from app.services.alerting_system import AlertEvent, AlertSeverity
+
             # Extract signal data
             symbol = signal.symbol
             side = signal.order_side.value

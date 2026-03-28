@@ -225,9 +225,8 @@ class SlippageCalculationParams(BaseModel):
     @classmethod
     def validate_extreme_threshold(cls, v, info):
         """Validar que el threshold extremo sea mayor que el alto."""
-        if "volatility_threshold_high" in info.data:
-            if v <= info.data["volatility_threshold_high"]:
-                raise ValueError("Extreme threshold must be greater than high threshold")
+        if "volatility_threshold_high" in info.data and v <= info.data["volatility_threshold_high"]:
+            raise ValueError("Extreme threshold must be greater than high threshold")
         return v
 
 

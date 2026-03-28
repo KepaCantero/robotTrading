@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from .backtest_type import BacktestType
+import contextlib
 
 
 @dataclass(frozen=True)
@@ -78,9 +79,8 @@ class BacktestConfigValue:
         if self.slippage < 0:
             raise ValueError("Slippage cannot be negative")
 
-        if self.start_date and self.end_date:
-            if self.start_date >= self.end_date:
-                raise ValueError("Start date must be before end date")
+        if self.start_date and self.end_date and self.start_date >= self.end_date:
+            raise ValueError("Start date must be before end date")
 
         if self.parallel_workers is not None and self.parallel_workers <= 0:
             raise ValueError("Parallel workers must be positive")
@@ -107,10 +107,8 @@ class BacktestConfigValue:
         # Parse backtest type
         backtest_type = BacktestType.BASELINE
         if 'backtest_type' in config_dict:
-            try:
+            with contextlib.suppress(ValueError):
                 backtest_type = BacktestType(config_dict['backtest_type'])
-            except ValueError:
-                pass
 
         # Parse output directory
         output_dir = None

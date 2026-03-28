@@ -9,7 +9,7 @@ Reference: Rule 05-architecture.md, Rule 11-enterprise-architecture.md
 
 import inspect
 import logging
-from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Type, TypeVar
+from typing import TYPE_CHECKING, Callable, Dict, Optional, Type, TypeVar, Union
 
 logger = logging.getLogger(__name__)
 
@@ -54,8 +54,8 @@ class DIContainer:
 
     def __init__(self) -> None:
         """Initialize empty container."""
-        self._singletons: Dict[Type, Any] = {}
-        self._factories: Dict[str, Callable[[DIContainer], Any]] = {}
+        self._singletons: Dict[Type, object] = {}
+        self._factories: Dict[str, Callable[[DIContainer], object]] = {}
         self._transient: Dict[Type, Type] = {}
 
     def register_singleton(self, interface: Type[T], instance: T) -> None:
@@ -103,7 +103,7 @@ class DIContainer:
         )
         self._factories[name] = factory
 
-    def get(self, key: Any) -> Any:
+    def get(self, key: Union[Type, str]) -> object:
         """
         Get a dependency by key.
 
@@ -183,7 +183,7 @@ class DIContainer:
         logger.debug("instance_created", extra={"class": cls.__name__})
         return instance
 
-    def get_optional(self, key: Any) -> Optional[Any]:
+    def get_optional(self, key: Union[Type, str]) -> Optional[object]:
         """
         Get a dependency, returning None if not found.
 

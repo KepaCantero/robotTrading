@@ -62,7 +62,9 @@ class CheckpointResult:
         if self.components_found:
             lines.append(f"\n✅ Components Found ({len(self.components_found)}):")
             for comp in self.components_found[:20]:  # Limit output
-                lines.append(f"  - {comp.component_type:10} {comp.name:30} @ line {comp.line_number}")
+                lines.append(
+                    f"  - {comp.component_type:10} {comp.name:30} @ line {comp.line_number}"
+                )
             if len(self.components_found) > 20:
                 lines.append(f"  ... and {len(self.components_found) - 20} more")
 
@@ -158,9 +160,7 @@ class SourceCodeParser:
 
             elif isinstance(node, ast.FunctionDef):
                 # Only module-level functions
-                if isinstance(
-                    node.parent if hasattr(node, "parent") else None, ast.Module
-                ):
+                if isinstance(node.parent if hasattr(node, "parent") else None, ast.Module):
                     sig = self._extract_signature(node, lines)
                     components.append(
                         Component(
@@ -199,14 +199,18 @@ class SourceCodeParser:
         for arg in node.args.args:
             param = arg.arg
             if arg.annotation:
-                annotation = ast.unparse(arg.annotation) if hasattr(ast, 'unparse') else str(arg.annotation)
+                annotation = (
+                    ast.unparse(arg.annotation) if hasattr(ast, 'unparse') else str(arg.annotation)
+                )
                 param += f": {annotation}"
             params.append(param)
 
         # Add return type if present
         returns = ""
         if node.returns:
-            returns = " -> " + (ast.unparse(node.returns) if hasattr(ast, 'unparse') else str(node.returns))
+            returns = " -> " + (
+                ast.unparse(node.returns) if hasattr(ast, 'unparse') else str(node.returns)
+            )
 
         return f"({', '.join(params)}){returns}"
 
@@ -320,6 +324,7 @@ class CheckpointVerifier:
     def verify_batch(self, pattern: str = "**/*.py") -> List[CheckpointResult]:
         """Verify multiple files matching a pattern."""
         import os
+
         results = []
         # Convert pattern to relative if it starts with app/
         if pattern.startswith("app/"):

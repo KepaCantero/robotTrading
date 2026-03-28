@@ -228,7 +228,7 @@ class DevelopmentGate:
 
                 return allowed, decisions, blocker
 
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 self.logger.error(f"Error checking deployment gates: {e}")
                 return False, decisions, None
 
@@ -290,7 +290,7 @@ class DevelopmentGate:
                     timestamp=datetime.utcnow(),
                 )
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error checking budget gate: {e}")
             return GateDecision(
                 gate_type=GateType.ERROR_BUDGET,
@@ -360,7 +360,7 @@ class DevelopmentGate:
                 timestamp=datetime.utcnow(),
             )
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error checking SLO gate: {e}")
             return GateDecision(
                 gate_type=GateType.SLO_COMPLIANCE,
@@ -412,7 +412,7 @@ class DevelopmentGate:
                 timestamp=datetime.utcnow(),
             )
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error checking violations gate: {e}")
             return GateDecision(
                 gate_type=GateType.ACTIVE_VIOLATIONS,
@@ -459,7 +459,7 @@ class DevelopmentGate:
                 timestamp=datetime.utcnow(),
             )
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error checking burn rate gate: {e}")
             return GateDecision(
                 gate_type=GateType.BURN_RATE,
@@ -513,10 +513,9 @@ class DevelopmentGate:
             return False
 
         # Check if user is approved
-        if self.config.override_require_approval:
-            if requesting_user not in self.config.override_approvers:
-                self.logger.warning(f"Override requested by non-approved user: {requesting_user}")
-                return False
+        if self.config.override_require_approval and requesting_user not in self.config.override_approvers:
+            self.logger.warning(f"Override requested by non-approved user: {requesting_user}")
+            return False
 
         # Check for duplicate override
         override_key = f"{requesting_user}_{datetime.utcnow().date()}"

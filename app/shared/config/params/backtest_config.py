@@ -274,7 +274,9 @@ class BacktestingConfig(BaseModel):
 
     # ========== DEFAULT PORTFOLIO SETTINGS ==========
 
-    default_broker_name: str = Field(default="backtester", description="Default broker name for backtests")
+    default_broker_name: str = Field(
+        default="backtester", description="Default broker name for backtests"
+    )
     default_currency: str = Field(default="USD", description="Default currency for backtests")
 
     # ========== TRADING CONSTANTS ==========

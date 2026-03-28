@@ -201,7 +201,10 @@ class MockIBKRClient:
                 if market_data:
                     current_price = market_data.close_price
                     if updated_order.side == OrderSide.BUY:
-                        if updated_order.price < current_price * self.config.limit_buy_rejection_threshold:
+                        if (
+                            updated_order.price
+                            < current_price * self.config.limit_buy_rejection_threshold
+                        ):
                             updated_order.status = OrderStatus.REJECTED
                             updated_order.rejected_reason = "Insufficient funds"
                             order.status = OrderStatus.REJECTED
@@ -210,7 +213,10 @@ class MockIBKRClient:
                             updated_order.status = OrderStatus.PENDING
                             order.status = OrderStatus.PENDING
                     else:
-                        if updated_order.price > current_price * self.config.limit_sell_rejection_threshold:
+                        if (
+                            updated_order.price
+                            > current_price * self.config.limit_sell_rejection_threshold
+                        ):
                             updated_order.status = OrderStatus.REJECTED
                             updated_order.rejected_reason = "Insufficient funds"
                             order.status = OrderStatus.REJECTED
@@ -488,7 +494,10 @@ class MockBinanceClient:
                 if market_data:
                     current_price = market_data.close_price
                     if updated_order.side == OrderSide.BUY:
-                        if updated_order.price < current_price * self.config.limit_buy_rejection_threshold:
+                        if (
+                            updated_order.price
+                            < current_price * self.config.limit_buy_rejection_threshold
+                        ):
                             updated_order.status = OrderStatus.REJECTED
                             updated_order.rejected_reason = "Insufficient funds"
                             order.status = OrderStatus.REJECTED
@@ -497,7 +506,10 @@ class MockBinanceClient:
                             updated_order.status = OrderStatus.PENDING
                             order.status = OrderStatus.PENDING
                     else:
-                        if updated_order.price > current_price * self.config.limit_sell_rejection_threshold:
+                        if (
+                            updated_order.price
+                            > current_price * self.config.limit_sell_rejection_threshold
+                        ):
                             updated_order.status = OrderStatus.REJECTED
                             updated_order.rejected_reason = "Insufficient funds"
                             order.status = OrderStatus.REJECTED

@@ -182,9 +182,7 @@ class TestITradeExecutorMethods:
     async def test_execute_trade_success(self, engine, mock_signal):
         """Test successful trade execution."""
         # Mock dependencies
-        with patch(
-            "app.core.compliance_engine.TradingDecisionLogger"
-        ) as mock_logger, patch(
+        with patch("app.core.compliance_engine.TradingDecisionLogger") as mock_logger, patch(
             "app.core.compliance_engine.SpainTaxEngineImpl"
         ) as mock_tax:
             # Setup mocks
@@ -204,9 +202,7 @@ class TestITradeExecutorMethods:
         engine.set_starting_capital(100000)
         engine.track_daily_pnl("TEST", "BUY", Decimal("100"), Decimal("100"), Decimal("90"))
 
-        with patch(
-            "app.core.compliance_engine.TradingDecisionLogger"
-        ) as mock_logger, patch(
+        with patch("app.core.compliance_engine.TradingDecisionLogger") as mock_logger, patch(
             "app.core.compliance_engine.SpainTaxEngineImpl"
         ):
             mock_logger.return_value.log_signal.return_value = "test_corr_id"
@@ -297,6 +293,7 @@ class TestIStrategyCycleRunnerMethods:
     @pytest.mark.asyncio
     async def test_run_cycle_success(self, engine, mock_signals):
         """Test successful cycle execution."""
+
         # Mock execute_trade to return success
         async def mock_execute(signal):
             result = Mock()
@@ -362,6 +359,7 @@ class TestIStrategyCycleRunnerMethods:
     @pytest.mark.asyncio
     async def test_execute_cycle_phase_execute(self, engine, mock_signals):
         """Test executing execute phase."""
+
         # Mock execute_trade
         async def mock_execute(signal):
             result = Mock()
@@ -416,9 +414,7 @@ class TestProtocolCompliance:
         for method_name in required_methods:
             assert hasattr(engine, method_name), f"Missing method: {method_name}"
             method = getattr(engine, method_name)
-            assert asyncio.iscoroutinefunction(
-                method
-            ), f"{method_name} should be async"
+            assert asyncio.iscoroutinefunction(method), f"{method_name} should be async"
 
     def test_i_trade_executor_compliance(self):
         """Verify ITradeExecutor protocol compliance."""
@@ -436,9 +432,7 @@ class TestProtocolCompliance:
         for method_name in required_methods:
             assert hasattr(engine, method_name), f"Missing method: {method_name}"
             method = getattr(engine, method_name)
-            assert asyncio.iscoroutinefunction(
-                method
-            ), f"{method_name} should be async"
+            assert asyncio.iscoroutinefunction(method), f"{method_name} should be async"
 
     def test_i_strategy_cycle_runner_compliance(self):
         """Verify IStrategyCycleRunner protocol compliance."""
@@ -456,9 +450,7 @@ class TestProtocolCompliance:
         for method_name in required_methods:
             assert hasattr(engine, method_name), f"Missing method: {method_name}"
             method = getattr(engine, method_name)
-            assert asyncio.iscoroutinefunction(
-                method
-            ), f"{method_name} should be async"
+            assert asyncio.iscoroutinefunction(method), f"{method_name} should be async"
 
     def test_max_methods_per_protocol(self):
         """Verify ISP compliance: max 5 methods per protocol."""

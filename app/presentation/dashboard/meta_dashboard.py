@@ -313,7 +313,7 @@ class MetaDashboard:
                 # Heatmap de Sharpe
                 fig = px.imshow(
                     df_matrix.pivot(index='Strategy', columns='Engine', values='Sharpe'),
-                    labels=dict(x="Engine", y="Strategy", color="Sharpe Ratio"),
+                    labels={"x": "Engine", "y": "Strategy", "color": "Sharpe Ratio"},
                     title="Performance Matrix - Sharpe Ratio",
                     color_continuous_scale='RdYlGn',
                     aspect="auto",
@@ -538,13 +538,13 @@ class MetaDashboard:
                             y=abs(self.df_results['max_drawdown']),
                             mode='markers',
                             text=self.df_results.get('test_type', 'unknown'),
-                            marker=dict(
-                                size=10,
-                                color=abs(self.df_results['max_drawdown']),
-                                colorscale='RdYlGn',
-                                showscale=True,
-                                colorbar=dict(title="Drawdown"),
-                            ),
+                            marker={
+                                "size": 10,
+                                "color": abs(self.df_results['max_drawdown']),
+                                "colorscale": 'RdYlGn',
+                                "showscale": True,
+                                "colorbar": {"title": "Drawdown"},
+                            },
                             name="Drawdown vs Sharpe",
                         )
                     )

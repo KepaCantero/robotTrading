@@ -71,11 +71,10 @@ class CircuitBreaker:
         self.success_count += 1
         self.last_success_time = utc_now()
 
-        if self.state == CircuitState.HALF_OPEN:
-            if self.success_count >= self.half_open_attempts:
-                self.state = CircuitState.CLOSED
-                self.failure_count = 0
-                logger.info(f"Circuit {self.name} recovered, transitioned to CLOSED")
+        if self.state == CircuitState.HALF_OPEN and self.success_count >= self.half_open_attempts:
+            self.state = CircuitState.CLOSED
+            self.failure_count = 0
+            logger.info(f"Circuit {self.name} recovered, transitioned to CLOSED")
 
     def record_failure(self) -> None:
         """Record a failed call."""

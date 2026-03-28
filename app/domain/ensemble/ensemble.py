@@ -122,7 +122,7 @@ class EnsembleVoting:
             Dictionary mapping strategy names to equal weights
         """
         weight = 1.0 / len(self.strategies)
-        return {strategy: weight for strategy in self.strategies}
+        return dict.fromkeys(self.strategies, weight)
 
     def _calculate_agreement(self, signals: List[Signal]) -> float:
         """Calculate agreement level among signals.

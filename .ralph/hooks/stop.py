@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 from datetime import datetime
 
+
 def main():
     # Read hook input from stdin
     input_data = json.load(sys.stdin)
@@ -23,7 +24,7 @@ def main():
         "timestamp": datetime.now().isoformat(),
         "session_id": session_id,
         "completion_status": completion_status,
-        "event": "session_end"
+        "event": "session_end",
     }
 
     with open(summary_file, "a") as f:
@@ -39,10 +40,7 @@ def main():
         scratchpad.rename(archive_dir / archive_name)
 
     # Allow stop
-    print(json.dumps({
-        "status": "allow",
-        "message": "Session cleanup completed"
-    }))
+    print(json.dumps({"status": "allow", "message": "Session cleanup completed"}))
 
 
 if __name__ == "__main__":

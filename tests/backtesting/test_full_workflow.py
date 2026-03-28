@@ -32,7 +32,11 @@ from bs4 import BeautifulSoup
 
 from app.backtesting.acceptance_criteria import AcceptanceCriteria, AcceptanceReport, VerdictStatus
 from app.backtesting.capital_scale_analyzer import CapitalScaleAnalysisReport, CapitalScaleAnalyzer
-from app.backtesting.engines.execution_engine import ExecutionType, PessimisticExecutionEngine, Position
+from app.backtesting.engines.execution_engine import (
+    ExecutionType,
+    PessimisticExecutionEngine,
+    Position,
+)
 from app.backtesting.models import BacktestConfig, BacktestResult, TradeStatus
 from app.backtesting.professional_reporter import ProfessionalReport, ProfessionalReporter
 from app.backtesting.robustness_tester import ParameterSensitivityResult, RobustnessTester
@@ -347,7 +351,9 @@ class TestEndToEndProfessionalBacktesting:
         )
 
         assert len(quotes) == 1000, "Should generate 1000 quotes"
-        assert all(q.symbol == default_symbol for q in quotes), f"All quotes should be {default_symbol}"
+        assert all(
+            q.symbol == default_symbol for q in quotes
+        ), f"All quotes should be {default_symbol}"
         assert quotes[0].timestamp < quotes[-1].timestamp, "Quotes should be chronological"
 
         # Verify price movement is realistic (not too wild)
@@ -791,7 +797,9 @@ class TestEdgeCases:
 
     def test_edge_case_100_percent_losses(self, default_symbol):
         """Test case: 100% losing trades (verify Sharpe doesn't explode)."""
-        quotes = generate_realistic_quotes(symbol=default_symbol, days=500, seed=123, drift=-0.10)  # Declining market
+        quotes = generate_realistic_quotes(
+            symbol=default_symbol, days=500, seed=123, drift=-0.10
+        )  # Declining market
 
         # Generate signals that will lose money
         signals = simple_sma_crossover_strategy(quotes)

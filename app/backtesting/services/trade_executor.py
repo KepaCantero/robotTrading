@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Any, Callable, Optional
+from typing import Callable, Optional
 from uuid import uuid4
 
 from app.backtesting.models import BacktestConfig, Trade, TradeStatus
@@ -60,8 +60,8 @@ class TradeExecutor:
         config: BacktestConfig,
         position_manager: PositionManager,
         pnl_calculator: ProfitAndLossCalculator,
-        diagnostic_logger: Optional[Any] = None,
-        strategy: Optional[Any] = None,
+        diagnostic_logger: Optional[object] = None,
+        strategy: Optional[object] = None,
         use_realistic_costs: bool = True,
         broker_type: BrokerType = BrokerType.INTERACTIVE_BROKERS,
     ):
@@ -110,7 +110,7 @@ class TradeExecutor:
     def execute_buy_signal(
         self,
         signal: Signal,
-        market_data: Any,
+        market_data: object,
         capital: Decimal,
         close_position_func: Callable,
         validate_profitability_func: Callable,
@@ -319,7 +319,7 @@ class TradeExecutor:
     def execute_sell_signal(
         self,
         signal: Signal,
-        market_data: Any,
+        market_data: object,
         capital: Decimal,
         trades: list[Trade],
     ) -> tuple[Optional[Trade], Decimal]:
@@ -541,7 +541,7 @@ class TradeExecutor:
             is_volatile=False,
         )
 
-    def _build_trade_reason(self, signal: Signal, market_data: Any) -> str:
+    def _build_trade_reason(self, signal: Signal, market_data: object) -> str:
         """
         Build human-readable reason for the trade from signal metadata.
 
@@ -557,7 +557,7 @@ class TradeExecutor:
         quantity: Decimal,
         price: Decimal,
         signal: Optional[Signal] = None,
-        market_data: Optional[Any] = None,
+        market_data: Optional[object] = None,
     ) -> TransactionCostResult:
         """
         Calculate transaction costs using TransactionCostModel.

@@ -14,8 +14,6 @@ import pandas as pd
 from app.backtesting.data_loader import DataLoader
 from app.backtesting.engine import SimpleBacktester
 from app.domain.models.market_data import Quote
-from app.services.portfolio_builder import PortfolioBuilder
-from app.services.portfolio_config_manager import get_portfolio_config_manager
 
 # Los módulos y learning engines se importan internamente por ModularMomentumStrategy
 # No necesitamos importarlos aquí directamente
@@ -28,6 +26,9 @@ class PortfolioAnalyzer:
 
     def __init__(self, portfolio_config_manager):
         self.portfolio_config = portfolio_config_manager
+        # Late import to avoid domain layer depending on services layer
+        from app.services.portfolio_builder import PortfolioBuilder
+
         self.portfolio_builder = PortfolioBuilder(portfolio_config=portfolio_config_manager)
 
     def select_best_stock(
@@ -198,10 +199,12 @@ class AutomatedBacktestRunner:
         symbol: str,
         start_date: datetime,
         end_date: datetime,
-        initial_capital: Decimal = Decimal("100000"),
+        initial_capital: Optional[Decimal] = None,
         config_path: Optional[str] = None,
     ):
         """Inicializar runner de backtest."""
+        if initial_capital is None:
+            initial_capital = Decimal("100000")
         self.symbol = symbol
         self.start_date = start_date
         self.end_date = end_date
@@ -573,7 +576,7 @@ def run_automated_backtest(
     criteria: str = "momentum_signal",
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
-    initial_capital: Decimal = Decimal("100000"),
+    initial_capital: Optional[Decimal] = None,
 ):
     """
     Ejecutar backtest automatizado completo.
@@ -585,8 +588,13 @@ def run_automated_backtest(
         end_date: Fecha fin (si None, usa hoy)
         initial_capital: Capital inicial
     """
+    if initial_capital is None:
+        initial_capital = Decimal("100000")
     # Seleccionar stock si no se proporciona
     if symbol is None:
+        # Late import to avoid domain layer depending on services layer
+        from app.services.portfolio_config_manager import get_portfolio_config_manager
+
         portfolio_config = get_portfolio_config_manager()
         analyzer = PortfolioAnalyzer(portfolio_config)
         symbol, metrics = analyzer.select_best_stock(criteria=criteria)

@@ -413,7 +413,7 @@ class TokenBucketRateLimiter:
                 if await self.acquire(tokens, priority=priority, timeout=timeout):
                     return True
 
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 if attempt < max_retries - 1:
                     # Exponential backoff with jitter - use centralized config for jitter pct
                     tt = get_config().trading_thresholds

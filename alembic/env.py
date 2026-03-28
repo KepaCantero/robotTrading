@@ -9,6 +9,7 @@ from sqlalchemy import engine_from_config, pool
 
 from alembic import context
 from app.core.environment_config import get_config
+
 # Import your models here
 from app.database import Base
 from app.database.models import *  # Import all models

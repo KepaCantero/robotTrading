@@ -273,7 +273,7 @@ class SecretManager:
         """Load secret metadata from environment or file."""
         # Initialize metadata for known secrets
         for definition in SECRET_DEFINITIONS:
-            value = os.getenv(definition.name)  # pylint: disable=invalid-envvar-value
+            value = os.getenv(definition.name)
             if value:
                 secret_hash = self._hash_secret(value)
                 now = time.time()
@@ -469,11 +469,10 @@ class SecretManager:
         value = os.getenv(definition.name)
 
         # Check if required in production
-        if definition.required_in_production and self._is_production:
-            if not value:
-                raise SecretValidationError(
-                    f"Required secret '{definition.name}' not configured for production"
-                )
+        if definition.required_in_production and self._is_production and not value:
+            raise SecretValidationError(
+                f"Required secret '{definition.name}' not configured for production"
+            )
 
         if not value:
             return True  # Optional secret not set
@@ -563,7 +562,7 @@ class SecretManager:
                         total_valid += 1
 
                     # Calculate strength score
-                    value = os.getenv(definition.name)  # pylint: disable=invalid-envvar-value
+                    value = os.getenv(definition.name)
                     if value:
                         strength = self.calculate_strength_score(value, definition)
                         report.strength_scores[definition.name] = strength

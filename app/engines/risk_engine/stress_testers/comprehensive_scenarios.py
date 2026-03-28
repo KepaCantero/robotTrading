@@ -421,7 +421,7 @@ class ComprehensiveStressScenarios:
         # Apply additional stress factors
         stress_factors = {
             'volatility_multiplier': scenario.get('volatility_multiplier', 1.0),
-            'correlation_target': scenario.get('correlation_target', None),
+            'correlation_target': scenario.get('correlation_target'),
             'liquidity_decrease': scenario.get('liquidity_decrease', 0.0),
         }
 

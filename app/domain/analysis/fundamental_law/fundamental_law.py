@@ -33,6 +33,8 @@ from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
+_DEFAULT_TRANSFER_COEFFICIENT = Decimal("1.0")
+
 
 class FundamentalLawCalculator:
     """
@@ -72,7 +74,7 @@ class FundamentalLawCalculator:
         information_ratio: Decimal,
         information_coefficient: Decimal,
         breadth: Decimal,
-        transfer_coefficient: Decimal = Decimal("1.0"),
+        transfer_coefficient: Decimal = _DEFAULT_TRANSFER_COEFFICIENT,
     ) -> "FundamentalLawComponents":
         """
         Calculate Fundamental Law components from known values.
@@ -343,7 +345,7 @@ class FundamentalLawCalculator:
         self,
         target_ir: Decimal,
         breadth: Decimal,
-        transfer_coefficient: Decimal = Decimal("1.0"),
+        transfer_coefficient: Decimal = _DEFAULT_TRANSFER_COEFFICIENT,
     ) -> Decimal:
         """
         Calculate required IC for a target Information Ratio.

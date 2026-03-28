@@ -78,9 +78,7 @@ class TestUserSettings:
 
     def test_get_allowed_symbols(self):
         """Test get_allowed_symbols method."""
-        settings = UserSettings(
-            symbol_universe={"allowed_symbols": ["AAPL", "MSFT", "GOOGL"]}
-        )
+        settings = UserSettings(symbol_universe={"allowed_symbols": ["AAPL", "MSFT", "GOOGL"]})
 
         symbols = settings.get_allowed_symbols()
         assert symbols == ["AAPL", "MSFT", "GOOGL"]

@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any
 
 
 @dataclass(frozen=True)
@@ -31,7 +30,7 @@ class Money:
         if not self.currency:
             raise ValueError("Currency cannot be empty")
 
-    def __add__(self, other: Any) -> Money:
+    def __add__(self, other: object) -> Money:
         """Add two Money instances."""
         if not isinstance(other, Money):
             return NotImplemented
@@ -39,7 +38,7 @@ class Money:
             raise ValueError("Cannot add different currencies")
         return Money(amount=self.amount + other.amount, currency=self.currency)
 
-    def __sub__(self, other: Any) -> Money:
+    def __sub__(self, other: object) -> Money:
         """Subtract two Money instances."""
         if not isinstance(other, Money):
             return NotImplemented
@@ -50,7 +49,7 @@ class Money:
             raise ValueError("Result cannot be negative")
         return Money(amount=result, currency=self.currency)
 
-    def __mul__(self, multiplier: Any) -> Money:
+    def __mul__(self, multiplier: object) -> Money:
         """Multiply Money by a scalar."""
         if not isinstance(multiplier, (int, float, Decimal)):
             return NotImplemented
@@ -59,7 +58,7 @@ class Money:
             raise ValueError("Result cannot be negative")
         return Money(amount=result, currency=self.currency)
 
-    def __truediv__(self, divisor: Any) -> Money:
+    def __truediv__(self, divisor: object) -> Money:
         """Divide Money by a scalar."""
         if not isinstance(divisor, (int, float, Decimal)):
             return NotImplemented
@@ -67,13 +66,13 @@ class Money:
             raise ZeroDivisionError("Cannot divide by zero")
         return Money(amount=self.amount / Decimal(str(divisor)), currency=self.currency)
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Compare Money instances."""
         if not isinstance(other, Money):
             return False
         return self.amount == other.amount and self.currency == other.currency
 
-    def __lt__(self, other: Any) -> bool:
+    def __lt__(self, other: object) -> bool:
         """Less than comparison."""
         if not isinstance(other, Money):
             return NotImplemented
@@ -81,7 +80,7 @@ class Money:
             raise ValueError("Cannot compare different currencies")
         return self.amount < other.amount
 
-    def __le__(self, other: Any) -> bool:
+    def __le__(self, other: object) -> bool:
         """Less than or equal comparison."""
         if not isinstance(other, Money):
             return NotImplemented
@@ -89,7 +88,7 @@ class Money:
             raise ValueError("Cannot compare different currencies")
         return self.amount <= other.amount
 
-    def __gt__(self, other: Any) -> bool:
+    def __gt__(self, other: object) -> bool:
         """Greater than comparison."""
         if not isinstance(other, Money):
             return NotImplemented
@@ -97,7 +96,7 @@ class Money:
             raise ValueError("Cannot compare different currencies")
         return self.amount > other.amount
 
-    def __ge__(self, other: Any) -> bool:
+    def __ge__(self, other: object) -> bool:
         """Greater than or equal comparison."""
         if not isinstance(other, Money):
             return NotImplemented

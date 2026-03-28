@@ -13,7 +13,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 
 import numpy as np
 from scipy.interpolate import griddata
@@ -29,8 +29,8 @@ class ParameterSensitivityResult:
     """Result of parameter sensitivity analysis."""
 
     parameter_name: str
-    base_value: Any
-    tested_values: List[Any]
+    base_value: Union[int, float, Decimal]
+    tested_values: List[Union[int, float, Decimal]]
     returns: List[float]  # Return for each parameter value
     sharpe_ratios: List[float]  # Sharpe for each parameter value
     max_drawdowns: List[float]  # Max DD for each parameter value
@@ -69,7 +69,7 @@ class StabilityMapResult:
     # Stability metrics
     has_plateau: bool  # True if stable plateau exists
     plateau_size: float  # Size of stable region as % of total
-    best_region: Dict[str, Any]  # Best performing region
+    best_region: Dict[str, float]  # Best performing region
 
     # Visualization data (for 3D plotting)
     mesh_x: np.ndarray = field(default_factory=lambda: np.array([]))
@@ -153,7 +153,7 @@ class RobustnessTester:
     def analyze_parameter_sensitivity(
         self,
         parameter_name: str,
-        base_value: Any,
+        base_value: Union[int, float, Decimal],
         param_type: str,  # "int", "float", "decimal"
         run_backtest_fn: callable,  # Function to run backtest with given param
         n_steps: int = 5,
@@ -363,7 +363,7 @@ class RobustnessTester:
     def analyze_start_date_sensitivity(
         self,
         quotes: List[Quote],
-        signals: List[Any],
+        signals: List[object],
         config: BacktestConfig,
         start_date_base: datetime,
         end_date: datetime,
@@ -487,7 +487,7 @@ class RobustnessTester:
         near_peak = sum(1 for r in returns if r >= threshold)
         return (near_peak / len(points)) * 100
 
-    def _find_best_region(self, points: List[StabilityMapPoint]) -> Dict[str, Any]:
+    def _find_best_region(self, points: List[StabilityMapPoint]) -> Dict[str, float]:
         """Find best performing region in parameter space."""
         if not points:
             return {}

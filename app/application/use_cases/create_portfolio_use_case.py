@@ -71,8 +71,8 @@ class CreatePortfolioUseCase:
         portfolio_id: str,
         initial_capital: Decimal,
         currency: str = "USD",
-        max_position_size_pct: Decimal = Decimal("0.2"),
-        max_portfolio_exposure_pct: Decimal = Decimal("0.8"),
+        max_position_size_pct: Optional[Decimal] = None,
+        max_portfolio_exposure_pct: Optional[Decimal] = None,
     ) -> Portfolio:
         """
         Execute the use case - create a portfolio.
@@ -90,6 +90,10 @@ class CreatePortfolioUseCase:
         Raises:
             ValueError: If any input validation fails
         """
+        if max_position_size_pct is None:
+            max_position_size_pct = Decimal("0.2")
+        if max_portfolio_exposure_pct is None:
+            max_portfolio_exposure_pct = Decimal("0.8")
         logger.info(
             "Creating portfolio",
             extra={

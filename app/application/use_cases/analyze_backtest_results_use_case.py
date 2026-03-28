@@ -8,7 +8,7 @@ including performance metrics, risk assessment, and comparison.
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any
+from typing import Any, Optional
 
 import numpy as np
 import structlog
@@ -141,7 +141,7 @@ class AnalyzeBacktestResultsUseCase:
         return risk_metrics
 
     def assess_acceptable_risk(
-        self, backtest_id: str, max_drawdown_threshold: Decimal = Decimal('0.20')
+        self, backtest_id: str, max_drawdown_threshold: Optional[Decimal] = None
     ) -> dict[str, Any] | None:
         """
         Assess if backtest results are within acceptable risk parameters.
@@ -153,6 +153,8 @@ class AnalyzeBacktestResultsUseCase:
         Returns:
             Risk assessment dictionary or None
         """
+        if max_drawdown_threshold is None:
+            max_drawdown_threshold = Decimal('0.20')
         logger = structlog.get_logger(__name__)
         logger.info(
             "assess_acceptable_risk.entry",

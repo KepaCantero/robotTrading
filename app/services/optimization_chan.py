@@ -1,5 +1,5 @@
-# mypy: ignore-errors
-# pylint: disable=unsupported-binary-operation  # For Python 3.10+ union syntax
+from __future__ import annotations
+
 """
 Ernest Chan - Quantitative Trading: Portfolio Optimization Implementation
 
@@ -26,7 +26,7 @@ Date: 2026-01-28
 
 import logging
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple  # noqa: F401
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -49,9 +49,8 @@ logger = logging.getLogger(__name__)
 def _check_cvxpy_available() -> None:
     """Check if cvxpy is available, raise ImportError if not."""
     if not CVXPY_AVAILABLE:
-        # pylint: disable=implicit-str-concat
         raise ImportError(
-            "cvxpy is required for portfolio optimization. " "Install it with: pip install cvxpy"
+            "cvxpy is required for portfolio optimization. Install it with: pip install cvxpy"
         )
 
 
@@ -143,7 +142,7 @@ class MeanVarianceOptimizer:
 
             # Add sector constraints if provided
             if sector_constraints:
-                for sector_name, (asset_indices, sector_max_weight) in sector_constraints.items():
+                for _sector_name, (asset_indices, sector_max_weight) in sector_constraints.items():
                     sector_weights = w[asset_indices]
                     constraint_list.append(cp.sum(sector_weights) <= sector_max_weight)
 

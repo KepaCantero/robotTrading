@@ -50,7 +50,7 @@ from pathlib import Path
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    force=True  # Forzar reconfiguración si ya estaba configurado
+    force=True,  # Forzar reconfiguración si ya estaba configurado
 )
 
 logger = logging.getLogger(__name__)
@@ -66,6 +66,7 @@ print("📦 Importando módulos (esto puede tardar 10-30 segundos)...", flush=Tr
 
 try:
     from app.backtesting.comprehensive_backtest_runner import ComprehensiveBacktestRunner
+
     logger.info("✅ ComprehensiveBacktestRunner importado correctamente")
     print("✅ Módulos importados correctamente", flush=True)
 except (ValueError, TypeError, KeyError, AttributeError) as e:
@@ -89,43 +90,45 @@ Ejemplos:
 
   # Ejecutar múltiples backtests
   python scripts/run_comprehensive_backtest.py baseline learning_engines ablation grid_search
-        """
+        """,
     )
-    
+
     parser.add_argument(
         'backtests',
         nargs='*',
         default=None,
-        help='Nombres de backtests específicos a ejecutar. Si no se especifica, ejecuta todos los habilitados en la configuración.'
+        help='Nombres de backtests específicos a ejecutar. Si no se especifica, ejecuta todos los habilitados en la configuración.',
     )
-    
+
     parser.add_argument(
         '--config',
         type=str,
         default=None,
-        help='Ruta al archivo de configuración YAML (default: config/backtesting/comprehensive_backtest.yaml)'
+        help='Ruta al archivo de configuración YAML (default: config/backtesting/comprehensive_backtest.yaml)',
     )
-    
+
     args = parser.parse_args()
-    
+
     # Ruta a la configuración
     if args.config:
         config_path = Path(args.config)
     else:
         config_path = project_root / "config" / "backtesting" / "comprehensive_backtest.yaml"
-    
+
     if not config_path.exists():
         logger.error(f"❌ Archivo de configuración no encontrado: {config_path}")
-        logger.info("💡 Crea el archivo de configuración en config/backtesting/comprehensive_backtest.yaml")
+        logger.info(
+            "💡 Crea el archivo de configuración en config/backtesting/comprehensive_backtest.yaml"
+        )
         return
-    
+
     logger.info("🚀 Iniciando Comprehensive Backtest Runner...")
     logger.info(f"📋 Configuración: {config_path}")
-    
+
     try:
         # Crear runner
         runner = ComprehensiveBacktestRunner(str(config_path))
-        
+
         # Ejecutar backtests
         if args.backtests:
             # Ejecutar backtests específicos
@@ -134,6 +137,7 @@ Ejemplos:
             # Convertir a DataFrame para mostrar
             if results:
                 import pandas as pd
+
                 results_df = pd.DataFrame(results)
             else:
                 results_df = pd.DataFrame()
@@ -144,10 +148,11 @@ Ejemplos:
             # Convertir a DataFrame para mostrar
             if results:
                 import pandas as pd
+
                 results_df = pd.DataFrame(results)
             else:
                 results_df = pd.DataFrame()
-        
+
         # Mostrar resumen
         print("\n" + "=" * 80)
         print("RESUMEN DE RESULTADOS")
@@ -167,10 +172,10 @@ Ejemplos:
                 print(f"  Max Drawdown: {row.get('max_drawdown', 0):.2f}%")
         else:
             print("⚠️ No se ejecutaron backtests. Verifica la configuración.")
-        
+
         print("\n" + "=" * 80)
         logger.info("✅ Pipeline completado exitosamente!")
-        
+
     except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"❌ Error ejecutando backtests: {e}", exc_info=True)
         raise
@@ -178,4 +183,3 @@ Ejemplos:
 
 if __name__ == "__main__":
     main()
-

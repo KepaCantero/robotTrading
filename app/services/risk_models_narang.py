@@ -293,7 +293,7 @@ class RiskModel:
 
         # Apply max exposure constraints iteratively
         max_iterations = 10
-        for iteration in range(max_iterations):
+        for _iteration in range(max_iterations):
             violations = []
 
             for constraint in constraints_to_apply:
@@ -464,9 +464,8 @@ class RiskModel:
         if hasattr(returns, 'columns'):
             # Use returns as proxy for factor loadings if none provided
             for constraint in self.risk_constraints:
-                if constraint.constraint_type == "max_beta" and constraint.max_value:
-                    if risk_metrics.beta > constraint.max_value:
-                        issues.append(f"Beta exceeds constraint: {constraint.name}")
+                if constraint.constraint_type == "max_beta" and constraint.max_value and risk_metrics.beta > constraint.max_value:
+                    issues.append(f"Beta exceeds constraint: {constraint.name}")
 
         return len(issues) == 0, issues
 

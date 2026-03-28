@@ -26,9 +26,7 @@ from pathlib import Path
 
 def parse_args():
     """Parse command line arguments."""
-    parser = argparse.ArgumentParser(
-        description="Upgrade database to latest or specific migration"
-    )
+    parser = argparse.ArgumentParser(description="Upgrade database to latest or specific migration")
     parser.add_argument(
         "--revision",
         "-r",

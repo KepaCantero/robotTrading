@@ -400,7 +400,10 @@ class TestAssetAPI:
         # Mock service to raise exception
         mock_service.refresh_liquidity_data.side_effect = Exception("Service error")
 
-        with patch("app.presentation.api.assets.get_asset_identification_service", return_value=mock_service):
+        with patch(
+            "app.presentation.api.assets.get_asset_identification_service",
+            return_value=mock_service,
+        ):
             response = client.post("/assets/refresh-liquidity")
 
             assert response.status_code == 500
@@ -468,7 +471,10 @@ class TestAssetAPIEdgeCases:
         mock_service = AsyncMock()
         mock_service.get_universe_summary.return_value = {}
 
-        with patch("app.presentation.api.assets.get_asset_identification_service", return_value=mock_service):
+        with patch(
+            "app.presentation.api.assets.get_asset_identification_service",
+            return_value=mock_service,
+        ):
             response = client.get("/assets/")
 
             assert response.status_code == 200
@@ -545,7 +551,10 @@ class TestAssetAPIEdgeCases:
         mock_service = AsyncMock()
         mock_service.filter_assets.return_value = []
 
-        with patch("app.presentation.api.assets.get_asset_identification_service", return_value=mock_service):
+        with patch(
+            "app.presentation.api.assets.get_asset_identification_service",
+            return_value=mock_service,
+        ):
             response = client.post(
                 "/assets/filter",
                 json={

@@ -155,11 +155,7 @@ def _generate_performance_summary(metrics: Dict) -> str:
     sharpe = metrics.get('sharpe_ratio', 0)
     float(metrics.get('max_drawdown_percentage', 0))
 
-    if sharpe and float(sharpe) > 2:
-        pass
-    elif sharpe and float(sharpe) > 1:
-        pass
-    elif sharpe and float(sharpe) > 0:
+    if sharpe and float(sharpe) > 2 or sharpe and float(sharpe) > 1 or sharpe and float(sharpe) > 0:
         pass
     else:
         pass
@@ -983,9 +979,7 @@ def _generate_conclusion(metrics: Dict, avg_return: float, avg_win_rate: float) 
     )
 
     # Determine status
-    if avg_return > 10 and avg_win_rate > 55:
-        pass
-    elif avg_return > 0 and avg_win_rate > 40:
+    if avg_return > 10 and avg_win_rate > 55 or avg_return > 0 and avg_win_rate > 40:
         pass
     else:
         pass

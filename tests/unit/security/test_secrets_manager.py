@@ -324,11 +324,7 @@ class TestSecretValue:
         """Test SecretValue has all required fields."""
         now = datetime.utcnow()
         value = SecretValue(
-            key="test_key",
-            value="encrypted_value",
-            version=1,
-            created_at=now,
-            updated_at=now
+            key="test_key", value="encrypted_value", version=1, created_at=now, updated_at=now
         )
 
         assert value.key == "test_key"

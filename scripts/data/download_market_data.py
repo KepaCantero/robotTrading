@@ -27,21 +27,23 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
 # Symbols to download (matching comprehensive_5day_test.py)
 SYMBOLS = [
     # ETFs
-    "SPY", "QQQ", "IWM",
+    "SPY",
+    "QQQ",
+    "IWM",
     # Tech stocks
-    "AAPL", "MSFT", "GOOGL",
+    "AAPL",
+    "MSFT",
+    "GOOGL",
     # Dividend stocks
-    "O", "MAIN",
+    "O",
+    "MAIN",
     # Crypto (yfinance format)
     "BTC-USD",
     # Forex (yfinance format)
@@ -51,11 +53,21 @@ SYMBOLS = [
 # Additional symbols for more comprehensive testing
 ADDITIONAL_SYMBOLS = [
     # More ETFs
-    "GLD", "TLT", "HYG", "LQD",
+    "GLD",
+    "TLT",
+    "HYG",
+    "LQD",
     # More stocks
-    "AMZN", "TSLA", "META", "NVDA", "JPM", "JNJ",
+    "AMZN",
+    "TSLA",
+    "META",
+    "NVDA",
+    "JPM",
+    "JNJ",
     # More dividend stocks
-    "NEE", "WMT", "PLD",
+    "NEE",
+    "WMT",
+    "PLD",
 ]
 
 # Download settings
@@ -65,7 +77,9 @@ DELAY_BETWEEN_REQUESTS = 1.0  # Seconds between requests to avoid rate limiting
 OUTPUT_DIR = Path("data/historical")
 
 
-def download_symbol(symbol: str, period: str = PERIOD, interval: str = INTERVAL) -> pd.DataFrame | None:
+def download_symbol(
+    symbol: str, period: str = PERIOD, interval: str = INTERVAL
+) -> pd.DataFrame | None:
     """Download data for a single symbol.
 
     Args:
@@ -240,7 +254,11 @@ def validate_data(data: dict[str, pd.DataFrame]) -> bool:
             issues.append(f"Insufficient data: {len(df)} < 252 days")
 
         # Check for NaN values
-        nan_counts = df[required_cols].isna().sum() if all(col in df.columns for col in required_cols) else {}
+        nan_counts = (
+            df[required_cols].isna().sum()
+            if all(col in df.columns for col in required_cols)
+            else {}
+        )
         if nan_counts.any():
             issues.append(f"NaN values found: {nan_counts[nan_counts > 0].to_dict()}")
 

@@ -195,25 +195,22 @@ class LowBetaScreener:
                 )
 
         # 6. Low vol score check
-        if profile.low_vol_score is not None:
-            if profile.low_vol_score < self.criteria.min_low_vol_score:
-                failures.append(
-                    f"Low vol score bajo: {profile.low_vol_score:.1f} < {self.criteria.min_low_vol_score}"
-                )
+        if profile.low_vol_score is not None and profile.low_vol_score < self.criteria.min_low_vol_score:
+            failures.append(
+                f"Low vol score bajo: {profile.low_vol_score:.1f} < {self.criteria.min_low_vol_score}"
+            )
 
         # 7. Defensive score check
-        if profile.defensive_score is not None:
-            if profile.defensive_score < self.criteria.min_defensive_score:
-                failures.append(
-                    f"Defensive score bajo: {profile.defensive_score:.1f} < {self.criteria.min_defensive_score}"
-                )
+        if profile.defensive_score is not None and profile.defensive_score < self.criteria.min_defensive_score:
+            failures.append(
+                f"Defensive score bajo: {profile.defensive_score:.1f} < {self.criteria.min_defensive_score}"
+            )
 
         # 8. Stability score check
-        if profile.stability_score is not None:
-            if profile.stability_score < self.criteria.min_stability_score:
-                failures.append(
-                    f"Stability score bajo: {profile.stability_score:.1f} < {self.criteria.min_stability_score}"
-                )
+        if profile.stability_score is not None and profile.stability_score < self.criteria.min_stability_score:
+            failures.append(
+                f"Stability score bajo: {profile.stability_score:.1f} < {self.criteria.min_stability_score}"
+            )
 
         # 9. Sector checks
         sector = profile.sector
@@ -234,24 +231,21 @@ class LowBetaScreener:
                     failures.append(f"Sector no defensivo: {sector}")
 
         # 10. Market cap check
-        if self.criteria.min_market_cap is not None and profile.market_cap is not None:
-            if profile.market_cap < self.criteria.min_market_cap:
-                failures.append(
-                    f"Market cap muy bajo: ${profile.market_cap:.0f}M < ${self.criteria.min_market_cap:.0f}M"
-                )
+        if self.criteria.min_market_cap is not None and profile.market_cap is not None and profile.market_cap < self.criteria.min_market_cap:
+            failures.append(
+                f"Market cap muy bajo: ${profile.market_cap:.0f}M < ${self.criteria.min_market_cap:.0f}M"
+            )
 
         # 11. Valuation checks (optional)
-        if self.config.max_pe_ratio is not None and profile.pe_ratio is not None:
-            if profile.pe_ratio > self.config.max_pe_ratio:
-                failures.append(
-                    f"P/E muy alto: {profile.pe_ratio:.1f} > {self.config.max_pe_ratio}"
-                )
+        if self.config.max_pe_ratio is not None and profile.pe_ratio is not None and profile.pe_ratio > self.config.max_pe_ratio:
+            failures.append(
+                f"P/E muy alto: {profile.pe_ratio:.1f} > {self.config.max_pe_ratio}"
+            )
 
-        if self.config.max_pb_ratio is not None and profile.pb_ratio is not None:
-            if profile.pb_ratio > self.config.max_pb_ratio:
-                failures.append(
-                    f"P/B muy alto: {profile.pb_ratio:.1f} > {self.config.max_pb_ratio}"
-                )
+        if self.config.max_pb_ratio is not None and profile.pb_ratio is not None and profile.pb_ratio > self.config.max_pb_ratio:
+            failures.append(
+                f"P/B muy alto: {profile.pb_ratio:.1f} > {self.config.max_pb_ratio}"
+            )
 
         if self.config.max_debt_to_equity is not None and profile.debt_to_equity is not None:
             if profile.debt_to_equity > self.config.max_debt_to_equity:

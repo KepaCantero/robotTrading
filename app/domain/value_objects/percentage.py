@@ -10,7 +10,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -167,49 +166,49 @@ class Percentage:
         """Check if percentage is positive."""
         return self.value > 0
 
-    def __add__(self, other: Any) -> Percentage:
+    def __add__(self, other: object) -> Percentage:
         """Add two percentages."""
         if not isinstance(other, Percentage):
             return NotImplemented
         return self.add(other)
 
-    def __sub__(self, other: Any) -> Percentage:
+    def __sub__(self, other: object) -> Percentage:
         """Subtract two percentages."""
         if not isinstance(other, Percentage):
             return NotImplemented
         return self.subtract(other)
 
-    def __mul__(self, other: Any) -> Percentage:
+    def __mul__(self, other: object) -> Percentage:
         """Multiply percentage by scalar."""
         if not isinstance(other, (int, float, Decimal)):
             return NotImplemented
         return self.multiply(other)
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Compare percentages."""
         if not isinstance(other, Percentage):
             return False
         return self.value == other.value
 
-    def __lt__(self, other: Any) -> bool:
+    def __lt__(self, other: object) -> bool:
         """Less than comparison."""
         if not isinstance(other, Percentage):
             return NotImplemented
         return self.value < other.value
 
-    def __le__(self, other: Any) -> bool:
+    def __le__(self, other: object) -> bool:
         """Less than or equal comparison."""
         if not isinstance(other, Percentage):
             return NotImplemented
         return self.value <= other.value
 
-    def __gt__(self, other: Any) -> bool:
+    def __gt__(self, other: object) -> bool:
         """Greater than comparison."""
         if not isinstance(other, Percentage):
             return NotImplemented
         return self.value > other.value
 
-    def __ge__(self, other: Any) -> bool:
+    def __ge__(self, other: object) -> bool:
         """Greater than or equal comparison."""
         if not isinstance(other, Percentage):
             return NotImplemented
@@ -264,7 +263,7 @@ class Weight:
         """Check if weight is valid for portfolio (0-1)."""
         return Decimal("0") <= self.value <= Decimal("1")
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Compare weights."""
         if not isinstance(other, Weight):
             return False

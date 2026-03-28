@@ -257,8 +257,8 @@ class AlphaTargetCalculator:
     @staticmethod
     def calculate_required_alpha(
         monthly_profit_goal: Decimal,
-        tax_rate: Decimal = Decimal("0.20"),
-        commission_per_trade: Decimal = Decimal("10"),
+        tax_rate: Optional[Decimal] = None,
+        commission_per_trade: Optional[Decimal] = None,
         expected_trades_per_month: int = 10,
     ) -> AlphaTarget:
         """
@@ -278,6 +278,10 @@ class AlphaTargetCalculator:
             → need €1000 gross (after tax)
             → need €1100+ alpha (after commissions)
         """
+        if tax_rate is None:
+            tax_rate = Decimal("0.20")
+        if commission_per_trade is None:
+            commission_per_trade = Decimal("10")
         if monthly_profit_goal <= Decimal("0"):
             raise ValueError("monthly_profit_goal must be > 0")
 
@@ -354,7 +358,7 @@ class CapacityFadeAnalyzer:
         capital: Decimal,
         base_monthly_alpha: Decimal,
         tier: AccountTier = None,
-        current_capital_reference: Decimal = Decimal("100000"),
+        current_capital_reference: Optional[Decimal] = None,
     ) -> CapacityFadeEstimate:
         """
         Estimate alpha decay from current to target capital.
@@ -368,6 +372,8 @@ class CapacityFadeAnalyzer:
         Returns:
             CapacityFadeEstimate with projections at 2x and 5x capital
         """
+        if current_capital_reference is None:
+            current_capital_reference = Decimal("100000")
         if base_monthly_alpha <= Decimal("0"):
             raise ValueError("base_monthly_alpha must be > 0")
 
@@ -564,9 +570,9 @@ class MonthlyProfitForecaster:
     def forecast_profit(
         position_size: Decimal,
         expected_win_rate: Decimal,
-        avg_win_loss_ratio: Decimal = Decimal("1.5"),
+        avg_win_loss_ratio: Optional[Decimal] = None,
         expected_monthly_trades: int = 15,
-        sharpe_ratio: Decimal = Decimal("1.5"),
+        sharpe_ratio: Optional[Decimal] = None,
     ) -> MonthlyProfitForecast:
         """
         Forecast monthly profit given trading parameters.
@@ -581,6 +587,10 @@ class MonthlyProfitForecaster:
         Returns:
             MonthlyProfitForecast with confidence intervals
         """
+        if avg_win_loss_ratio is None:
+            avg_win_loss_ratio = Decimal("1.5")
+        if sharpe_ratio is None:
+            sharpe_ratio = Decimal("1.5")
         if position_size <= Decimal("0"):
             raise ValueError("position_size must be > 0")
 
@@ -678,8 +688,8 @@ class AbsoluteReturnOptimizer:
         monthly_profit_goal: Decimal,
         expected_monthly_alpha: Decimal,
         risk_profile: Optional[RiskProfile] = None,
-        tax_rate: Decimal = Decimal("0.20"),
-        commission_per_trade: Decimal = Decimal("10"),
+        tax_rate: Optional[Decimal] = None,
+        commission_per_trade: Optional[Decimal] = None,
     ) -> Tuple[OptimizedParameters, FeasibilityReport]:
         """
         Optimize parameters to achieve monthly profit goal.
@@ -701,6 +711,10 @@ class AbsoluteReturnOptimizer:
         4. Scale parameters within constraints
         5. Generate forecast
         """
+        if tax_rate is None:
+            tax_rate = Decimal("0.20")
+        if commission_per_trade is None:
+            commission_per_trade = Decimal("10")
         # If no risk profile provided, use safe defaults
         if risk_profile is None:
             config = AccountConfiguration.get_configuration(self.capital)
@@ -838,7 +852,7 @@ class AbsoluteReturnOptimizer:
         self,
         position_size: Decimal,
         expected_win_rate: Decimal,
-        avg_win_loss_ratio: Decimal = Decimal("1.5"),
+        avg_win_loss_ratio: Optional[Decimal] = None,
         expected_monthly_trades: int = 15,
     ) -> MonthlyProfitForecast:
         """
@@ -853,6 +867,8 @@ class AbsoluteReturnOptimizer:
         Returns:
             MonthlyProfitForecast with confidence intervals
         """
+        if avg_win_loss_ratio is None:
+            avg_win_loss_ratio = Decimal("1.5")
         return MonthlyProfitForecaster.forecast_profit(
             position_size=position_size,
             expected_win_rate=expected_win_rate,

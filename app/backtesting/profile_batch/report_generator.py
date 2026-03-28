@@ -17,13 +17,20 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Dict, List, Union
 
 import numpy as np
 import pandas as pd
 from jinja2 import Template
 
 from app.domain.models.input_profile import ObjectivoInversion
+
+# Type alias for nested JSON-like result dictionaries
+JsonDict = Union[
+    int, float, str, bool, None,
+    Dict[str, "JsonDict"],
+    List["JsonDict"],
+]
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +53,7 @@ class ReportGenerator:
         self.output_dir = output_dir
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-    def generate_comparison_report(self, results: Dict[str, Any]) -> str:
+    def generate_comparison_report(self, results: JsonDict) -> str:
         """
         Generate HTML comparison report.
 
@@ -128,7 +135,7 @@ class ReportGenerator:
 
         return html
 
-    def _group_best_strategies(self, results_list: List[Any]) -> List[Dict[str, Any]]:
+    def _group_best_strategies(self, results_list: List[object]) -> List[JsonDict]:
         """Group best strategies by objective."""
         best_by_objective = []
 
@@ -169,7 +176,7 @@ class ReportGenerator:
         return best_by_objective
 
     def generate_batch_summary(
-        self, results: Dict[str, Any], fallback_metrics: Dict[str, int]
+        self, results: JsonDict, fallback_metrics: Dict[str, int]
     ) -> None:
         """
         Generate batch execution summary.
@@ -220,7 +227,7 @@ class ReportGenerator:
             },
         )
 
-    def export_results(self, results: Dict[str, Any], format: str = "json") -> Path:
+    def export_results(self, results: JsonDict, format: str = "json") -> Path:
         """
         Export results to file.
 
@@ -250,7 +257,7 @@ class ReportGenerator:
             )
             raise ValueError(f"Unsupported format: {format}")
 
-    def _export_json(self, results: Dict[str, Any], timestamp: str) -> Path:
+    def _export_json(self, results: JsonDict, timestamp: str) -> Path:
         """Export results to JSON."""
         output_path = self.output_dir / f"profile_batch_results_{timestamp}.json"
 
@@ -270,7 +277,7 @@ class ReportGenerator:
         )
         return output_path
 
-    def _export_csv(self, results: Dict[str, Any], timestamp: str) -> Path:
+    def _export_csv(self, results: JsonDict, timestamp: str) -> Path:
         """Export results to CSV."""
         output_path = self.output_dir / f"profile_batch_results_{timestamp}.csv"
 
@@ -305,7 +312,7 @@ class ReportGenerator:
         )
         return output_path
 
-    def _export_excel(self, results: Dict[str, Any], timestamp: str) -> Path:
+    def _export_excel(self, results: JsonDict, timestamp: str) -> Path:
         """Export results to Excel."""
         output_path = self.output_dir / f"profile_batch_results_{timestamp}.xlsx"
 
@@ -358,7 +365,7 @@ class ReportGenerator:
         )
         return output_path
 
-    def _result_to_dict(self, result: Any) -> Dict[str, Any]:
+    def _result_to_dict(self, result: object) -> JsonDict:
         """Convert ProfileResult to dictionary."""
         return {
             "profile_id": result.profile_id,

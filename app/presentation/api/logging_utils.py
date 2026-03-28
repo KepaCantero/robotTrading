@@ -8,7 +8,7 @@ to enable request tracking throughout the application.
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Optional
 
 from fastapi import Request
 
@@ -32,7 +32,7 @@ def log_with_context(
     request: Request,
     message: str,
     level: str = "info",
-    **kwargs: Any,
+    **kwargs: object,
 ) -> None:
     """
     Log message with correlation ID context.
@@ -70,7 +70,7 @@ def log_with_context(
 def log_info(
     request: Request,
     message: str,
-    **kwargs: Any,
+    **kwargs: object,
 ) -> None:
     """
     Log info level message with correlation ID.
@@ -86,7 +86,7 @@ def log_info(
 def log_warning(
     request: Request,
     message: str,
-    **kwargs: Any,
+    **kwargs: object,
 ) -> None:
     """
     Log warning level message with correlation ID.
@@ -103,7 +103,7 @@ def log_error(
     request: Request,
     message: str,
     exception: Optional[Exception] = None,
-    **kwargs: Any,
+    **kwargs: object,
 ) -> None:
     """
     Log error level message with correlation ID and optional exception details.
@@ -130,7 +130,7 @@ def log_error(
 def log_debug(
     request: Request,
     message: str,
-    **kwargs: Any,
+    **kwargs: object,
 ) -> None:
     """
     Log debug level message with correlation ID.

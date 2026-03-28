@@ -11,7 +11,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.domain.strategies.fx_carry_trade.carry_calculator import CarryCalculator, CarryTradeOpportunity
+from app.domain.strategies.fx_carry_trade.carry_calculator import (
+    CarryCalculator,
+    CarryTradeOpportunity,
+)
 from app.domain.strategies.fx_carry_trade.fx_carry_trade_strategy import (
     FXCarryTradeState,
     FXCarryTradeStrategy,

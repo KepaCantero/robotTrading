@@ -165,9 +165,8 @@ class ClusteringRegimeDetector:
         Returns:
             Dict con régimen detectado
         """
-        if not self.model:
-            if not self.fit(prices):
-                return {'regime': 'unknown', 'cluster': -1, 'confidence': 0.0}
+        if not self.model and not self.fit(prices):
+            return {'regime': 'unknown', 'cluster': -1, 'confidence': 0.0}
 
         try:
             # Extraer features recientes

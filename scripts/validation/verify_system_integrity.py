@@ -17,8 +17,7 @@ from app.system.verify_system_integrity import SystemIntegrityValidator
 if __name__ == "__main__":
     validator = SystemIntegrityValidator()
     results = validator.validate_all()
-    
+
     # Exit code based on status
     exit_code = 0 if results["overall_status"] in ["ok", "warning"] else 1
     sys.exit(exit_code)
-

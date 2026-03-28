@@ -176,7 +176,7 @@ class QlibConnector:
             logger.info(f"✅ Calculated {len(factors)} factors for {len(symbols)} symbols")
             return factor_data
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"❌ Failed to calculate factors: {str(e)}")
             return {}
 
@@ -201,7 +201,7 @@ class QlibConnector:
             logger.info("✅ Applied feature engineering to data")
             return engineered
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"❌ Feature engineering failed: {str(e)}")
             return {}
 

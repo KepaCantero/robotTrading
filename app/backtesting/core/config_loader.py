@@ -8,7 +8,7 @@ with support for backtest configuration, strategy parameters, and execution sett
 import logging
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Dict, Optional, Union
 
 import yaml
 
@@ -41,7 +41,7 @@ class BacktestConfigLoader:
             FileNotFoundError: If config file doesn't exist
         """
         self.config_path = Path(config_path)
-        self._raw_config: Dict[str, Any] = {}
+        self._raw_config: Dict[str, Union[str, int, float, bool, Dict, list]] = {}
         self._load()
 
     def _load(self) -> None:
@@ -55,7 +55,7 @@ class BacktestConfigLoader:
         logger.debug(f"Loaded configuration from {self.config_path}")
 
     def _validate_positive_decimal(
-        self, value: Any, name: str, allow_zero: bool = False
+        self, value: Union[str, int, float, Decimal], name: str, allow_zero: bool = False
     ) -> Decimal:
         """
         Validate that a value is a positive Decimal.
@@ -85,7 +85,7 @@ class BacktestConfigLoader:
         return decimal_value
 
     def _validate_percentage(
-        self, value: Any, name: str, max_value: Optional[Decimal] = None
+        self, value: Union[str, int, float, Decimal], name: str, max_value: Optional[Decimal] = None
     ) -> Decimal:
         """
         Validate that a value is a percentage (0-100 or 0-1).
@@ -112,11 +112,17 @@ class BacktestConfigLoader:
         return decimal_value
 
     @property
-    def raw_config(self) -> Dict[str, Any]:
+    def raw_config(
+        self,
+    ) -> Dict[str, Union[str, int, float, bool, Dict, list]]:
         """Get raw configuration dictionary."""
         return self._raw_config
 
-    def get_section(self, section: str, default: Optional[Dict] = None) -> Dict[str, Any]:
+    def get_section(
+        self,
+        section: str,
+        default: Optional[Dict[str, Union[str, int, float, bool, Dict, list]]] = None,
+    ) -> Dict[str, Union[str, int, float, bool, Dict, list]]:
         """
         Get configuration section.
 
@@ -207,7 +213,9 @@ class BacktestConfigLoader:
             risk_free_rate=risk_free_rate,
         )
 
-    def get_strategy_config(self) -> Dict[str, Any]:
+    def get_strategy_config(
+        self,
+    ) -> Dict[str, Union[str, int, float, bool, Dict, list]]:
         """
         Get strategy configuration section.
 
@@ -216,7 +224,9 @@ class BacktestConfigLoader:
         """
         return self.get_section('strategy')
 
-    def get_execution_config(self) -> Dict[str, Any]:
+    def get_execution_config(
+        self,
+    ) -> Dict[str, Union[str, int, float, bool, Dict, list]]:
         """
         Get execution configuration section.
 
@@ -225,7 +235,9 @@ class BacktestConfigLoader:
         """
         return self.get_section('execution')
 
-    def get_modules_config(self) -> Dict[str, Any]:
+    def get_modules_config(
+        self,
+    ) -> Dict[str, Union[str, int, float, bool, Dict, list]]:
         """
         Get modules configuration section.
 
@@ -234,7 +246,9 @@ class BacktestConfigLoader:
         """
         return self.get_section('modules')
 
-    def get_learning_engines_config(self) -> Dict[str, Any]:
+    def get_learning_engines_config(
+        self,
+    ) -> Dict[str, Union[str, int, float, bool, Dict, list]]:
         """
         Get learning engines configuration section.
 
@@ -243,7 +257,9 @@ class BacktestConfigLoader:
         """
         return self.get_section('learning_engines')
 
-    def get_parallelization_config(self) -> Dict[str, Any]:
+    def get_parallelization_config(
+        self,
+    ) -> Dict[str, Union[str, int, float, bool, Dict, list]]:
         """
         Get parallelization configuration section.
 
@@ -252,7 +268,9 @@ class BacktestConfigLoader:
         """
         return self.get_section('parallelization')
 
-    def get_reporting_config(self) -> Dict[str, Any]:
+    def get_reporting_config(
+        self,
+    ) -> Dict[str, Union[str, int, float, bool, Dict, list]]:
         """
         Get reporting configuration section.
 
@@ -261,7 +279,9 @@ class BacktestConfigLoader:
         """
         return self.get_section('reporting')
 
-    def get_meta_analysis_config(self) -> Dict[str, Any]:
+    def get_meta_analysis_config(
+        self,
+    ) -> Dict[str, Union[str, int, float, bool, Dict, list]]:
         """
         Get meta-analysis configuration section.
 
@@ -270,7 +290,9 @@ class BacktestConfigLoader:
         """
         return self.get_section('meta_analysis')
 
-    def get_input_config(self) -> Dict[str, Any]:
+    def get_input_config(
+        self,
+    ) -> Dict[str, Union[str, int, float, bool, Dict, list]]:
         """
         Get input configuration section.
 
@@ -279,7 +301,9 @@ class BacktestConfigLoader:
         """
         return self.get_section('input')
 
-    def get_backtests_config(self) -> Dict[str, Any]:
+    def get_backtests_config(
+        self,
+    ) -> Dict[str, Union[str, int, float, bool, Dict, list]]:
         """
         Get backtests configuration section.
 

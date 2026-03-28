@@ -9,7 +9,7 @@ Sub-components for capacity fade analysis:
 
 import logging
 from decimal import Decimal
-from typing import Dict
+from typing import Dict, Optional
 
 from .models import LiquidityReport
 
@@ -99,7 +99,7 @@ class LiquidityHeadroom:
         self,
         position_size_usd: Decimal,
         daily_volume_usd: Decimal,
-        max_allowed_pct: Decimal = Decimal("5.0"),
+        max_allowed_pct: Optional[Decimal] = None,
     ) -> LiquidityReport:
         """
         Calculate liquidity headroom for a position.
@@ -112,6 +112,8 @@ class LiquidityHeadroom:
         Returns:
             LiquidityReport with headroom analysis
         """
+        if max_allowed_pct is None:
+            max_allowed_pct = Decimal("5.0")
         try:
             # Calculate percentage of daily volume
             if daily_volume_usd <= 0:
@@ -170,7 +172,7 @@ class AlphaDecayEstimator:
         current_capital_usd: Decimal,
         target_capital_usd: Decimal,
         fade_model: str = "sqrt",
-        liquidity_penalty_pct: Decimal = Decimal("0"),
+        liquidity_penalty_pct: Optional[Decimal] = None,
     ) -> Dict:
         """
         Estimate alpha at target capital using decay model.
@@ -185,6 +187,8 @@ class AlphaDecayEstimator:
         Returns:
             Dict with estimated alpha and fade details
         """
+        if liquidity_penalty_pct is None:
+            liquidity_penalty_pct = Decimal("0")
         try:
             # Calculate capital scaling factor
             capital_ratio = target_capital_usd / current_capital_usd

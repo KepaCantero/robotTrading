@@ -62,9 +62,11 @@ async def simulate_trading_activity(monitor, duration_seconds: int = 60):
 
             # 2% chance of error
             success = random.random() > 0.02
-            error_type = None if success else random.choice([
-                "timeout", "connection_error", "critical_error"
-            ])
+            error_type = (
+                None
+                if success
+                else random.choice(["timeout", "connection_error", "critical_error"])
+            )
 
             # Record metrics
             monitor.record_latency(latency_ms)
@@ -165,9 +167,11 @@ async def main():
     print(f"    Used:        {metrics.saturation.disk_used_gb:.2f} GB")
     print(f"    Free:        {metrics.saturation.disk_free_gb:.2f} GB")
     print(f"  Network:       {metrics.saturation.network_utilization_pct:.1f}%")
-    print(f"  Load Average:  {metrics.saturation.load_average[0]:.2f}, "
-          f"{metrics.saturation.load_average[1]:.2f}, "
-          f"{metrics.saturation.load_average[2]:.2f}")
+    print(
+        f"  Load Average:  {metrics.saturation.load_average[0]:.2f}, "
+        f"{metrics.saturation.load_average[1]:.2f}, "
+        f"{metrics.saturation.load_average[2]:.2f}"
+    )
 
     print("\n" + "=" * 70)
     print(f"OVERALL HEALTH: {metrics.overall_health.value.upper()}")
@@ -190,10 +194,12 @@ async def main():
     history = await monitor.get_metrics_history(limit=5)
     print(f"\nRecent history ({len(history)} samples):")
     for i, hist in enumerate(history[-5:], 1):
-        print(f"  {i}. {hist.collected_at.strftime('%H:%M:%S')} - "
-              f"Health: {hist.overall_health.value}, "
-              f"Latency P99: {hist.latency.p99_ms:.1f}ms, "
-              f"Error Rate: {hist.errors.error_rate_pct:.2f}%")
+        print(
+            f"  {i}. {hist.collected_at.strftime('%H:%M:%S')} - "
+            f"Health: {hist.overall_health.value}, "
+            f"Latency P99: {hist.latency.p99_ms:.1f}ms, "
+            f"Error Rate: {hist.errors.error_rate_pct:.2f}%"
+        )
 
     print("\n8. Stopping collection...")
     await monitor.stop_collection()

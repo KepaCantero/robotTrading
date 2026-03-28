@@ -256,7 +256,7 @@ class SLOTracker:
                 await self._load_active_violations()
                 await self._register_default_slos()
                 self.logger.info("SLOTracker initialized")
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 self.logger.error(f"Error initializing: {e}")
                 raise
 
@@ -336,7 +336,7 @@ class SLOTracker:
 
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Database initialization failed: {e}")
             raise
 
@@ -367,7 +367,7 @@ class SLOTracker:
 
                 self.logger.info(f"Loaded {len(self._active_violations)} active violations")
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error loading violations: {e}")
 
     async def _register_default_slos(self) -> None:
@@ -440,7 +440,7 @@ class SLOTracker:
 
             self.logger.info(f"Registered SLO: {config.name}")
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error registering SLO: {e}")
 
     async def record_metric(self, metric: SLIMetric) -> None:
@@ -465,7 +465,7 @@ class SLOTracker:
                 if len(self._metric_buffer[metric.name]) > 1000:
                     self._metric_buffer[metric.name] = self._metric_buffer[metric.name][-500:]
 
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 self.logger.error(f"Error recording metric: {e}")
 
     async def _save_metric(self, metric: SLIMetric) -> None:
@@ -490,7 +490,7 @@ class SLOTracker:
                 )
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error saving metric: {e}")
 
     async def _check_slo_violations(self, metric_name: str) -> None:
@@ -615,14 +615,14 @@ class SLOTracker:
                 )
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error saving violation: {e}")
 
         # Trigger callback
         if self._on_violation:
             try:
                 self._on_violation(violation)
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 self.logger.error(f"Error in violation callback: {e}")
 
         self.logger.error(
@@ -656,7 +656,7 @@ class SLOTracker:
                 )
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error resolving violation: {e}")
 
         # Remove from active
@@ -666,7 +666,7 @@ class SLOTracker:
         if self._on_violation_resolved:
             try:
                 self._on_violation_resolved(violation)
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 self.logger.error(f"Error in resolve callback: {e}")
 
         self.logger.info(
@@ -712,7 +712,7 @@ class SLOTracker:
 
             return reports
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error generating report: {e}")
             return []
 
@@ -817,7 +817,7 @@ class SLOTracker:
                     calculated_at=datetime.utcnow(),
                 )
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error generating report for SLO {config.name}: {e}")
             raise
 

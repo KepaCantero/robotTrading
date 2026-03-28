@@ -178,7 +178,8 @@ def example_turnover_adjusted_metrics():
     if not turnover_metrics.is_cost_effective:
         degradation = (
             1 - turnover_metrics.turnover_adjusted_sharpe / turnover_metrics.raw_sharpe
-            if turnover_metrics.raw_sharpe > 0 else 0
+            if turnover_metrics.raw_sharpe > 0
+            else 0
         )
         print(f"\n  WARNING: Sharpe degrades by {degradation:.1%} after costs.")
     else:

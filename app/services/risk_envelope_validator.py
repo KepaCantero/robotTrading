@@ -42,7 +42,7 @@ warnings.warn(
 
 import logging
 from decimal import Decimal
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -56,9 +56,9 @@ class RiskEnvelopeValidator:
 
     def __init__(
         self,
-        max_total_exposure_pct: Decimal = Decimal("0.20"),  # 20% max per symbol
-        max_strategy_exposure_pct: Decimal = Decimal("0.70"),  # 70% max per strategy
-        max_portfolio_exposure_pct: Decimal = Decimal("0.95"),  # 95% max total portfolio
+        max_total_exposure_pct: Optional[Decimal] = None,  # 20% max per symbol
+        max_strategy_exposure_pct: Optional[Decimal] = None,  # 70% max per strategy
+        max_portfolio_exposure_pct: Optional[Decimal] = None,  # 95% max total portfolio
     ):
         """
         Initialize risk envelope validator.
@@ -68,6 +68,12 @@ class RiskEnvelopeValidator:
             max_strategy_exposure_pct: Maximum exposure per strategy (default 70%)
             max_portfolio_exposure_pct: Maximum total portfolio exposure (default 95%)
         """
+        if max_total_exposure_pct is None:
+            max_total_exposure_pct = Decimal("0.20")
+        if max_strategy_exposure_pct is None:
+            max_strategy_exposure_pct = Decimal("0.70")
+        if max_portfolio_exposure_pct is None:
+            max_portfolio_exposure_pct = Decimal("0.95")
         self.max_total_exposure_pct = max_total_exposure_pct
         self.max_strategy_exposure_pct = max_strategy_exposure_pct
         self.max_portfolio_exposure_pct = max_portfolio_exposure_pct

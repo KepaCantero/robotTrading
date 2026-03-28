@@ -483,13 +483,7 @@ class HybridRebalancer(BaseRebalancer):
     ) -> bool:
         """Verificar si se debe rebalancear usando estrategia híbrida."""
         # Si cualquier rebalancer recomienda rebalancear, hacerlo
-        for rebalancer in self.rebalancers:
-            if rebalancer.should_rebalance(
-                current_weights, target_weights, portfolio_value, **kwargs
-            ):
-                return True
-
-        return False
+        return any(rebalancer.should_rebalance(current_weights, target_weights, portfolio_value, **kwargs) for rebalancer in self.rebalancers)
 
     def calculate_rebalance_trades(
         self,

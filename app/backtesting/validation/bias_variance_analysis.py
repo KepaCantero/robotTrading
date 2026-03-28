@@ -182,7 +182,7 @@ class BiasVarianceAnalyzer:
 
     def decompose_bias_variance(
         self,
-        model: Any,
+        model: object,
         X: np.ndarray,
         y: np.ndarray,
         n_bootstrap: Optional[int] = None,
@@ -314,7 +314,7 @@ class BiasVarianceAnalyzer:
 
     def analyze_learning_curve(
         self,
-        model: Any,
+        model: object,
         X: np.ndarray,
         y: np.ndarray,
         train_sizes: Optional[np.ndarray] = None,
@@ -506,7 +506,7 @@ class BiasVarianceAnalyzer:
 
     def test_temporal_stability(
         self,
-        model: Any,
+        model: object,
         X: np.ndarray,
         y: np.ndarray,
         timestamps: np.ndarray,
@@ -606,7 +606,7 @@ class BiasVarianceAnalyzer:
 
     def test_bootstrap_stability(
         self,
-        model: Any,
+        model: object,
         X: np.ndarray,
         y: np.ndarray,
         n_bootstrap: Optional[int] = None,
@@ -713,7 +713,7 @@ class BiasVarianceAnalyzer:
 
     def comprehensive_analysis(
         self,
-        model: Any,
+        model: object,
         X: np.ndarray,
         y: np.ndarray,
         timestamps: Optional[np.ndarray] = None,
@@ -768,7 +768,7 @@ class BiasVarianceAnalyzer:
 
 
 def analyze_bias_variance(
-    model: Any,
+    model: object,
     X: np.ndarray,
     y: np.ndarray,
     config: Optional[Dict[str, Any]] = None,

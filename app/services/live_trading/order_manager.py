@@ -27,6 +27,8 @@ from .risk_gates import RiskCheckResult, RiskGates
 
 logger = logging.getLogger(__name__)
 
+_DEFAULT_FEES = Decimal("0")
+
 
 @dataclass
 class OrderExecution:
@@ -364,7 +366,7 @@ class OrderManager:
         symbol: str,
         quantity: Decimal,
         price: Decimal,
-        fees: Decimal = Decimal("0"),
+        fees: Decimal = _DEFAULT_FEES,
     ) -> Optional[OrderExecution]:
         """
         Record order execution.
@@ -529,8 +531,11 @@ class OrderManager:
 _manager: Optional[OrderManager] = None
 
 
+_DEFAULT_BROKER_DEPENDS = Depends(get_broker_connector)
+
+
 def get_order_manager(
-    broker: BrokerConnector = Depends(get_broker_connector),
+    broker: BrokerConnector = _DEFAULT_BROKER_DEPENDS,
 ) -> OrderManager:
     """Get or create singleton OrderManager."""
     global _manager

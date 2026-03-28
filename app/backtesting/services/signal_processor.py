@@ -9,7 +9,12 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Dict, Optional, Union
+
+if TYPE_CHECKING:
+    from app.domain.strategies.strategy_registry import BaseStrategy
+    from app.engines.portfolio_engine.portfolio_engine import Portfolio
+    from app.services.logging.trading_decision_logger import SignalDiagnosticLogger
 
 from app.backtesting.models import BacktestConfig
 from app.domain.models.signal import Signal, SignalType
@@ -38,10 +43,10 @@ class SignalProcessor:
     def __init__(
         self,
         config: BacktestConfig,
-        strategy: Optional[Any] = None,
+        strategy: Optional[Union["BaseStrategy", object]] = None,
         compliance_engine: Optional[ComplianceEngine] = None,
         enable_risk_envelope: bool = True,
-        diagnostic_logger: Optional[Any] = None,
+        diagnostic_logger: Optional["SignalDiagnosticLogger"] = None,
         total_portfolio_capital: Optional[Decimal] = None,
         strategy_name: str = "unknown",
     ):
@@ -78,12 +83,12 @@ class SignalProcessor:
     def process_signal(
         self,
         signal: Signal,
-        market_data: Any,
+        market_data: object,
         positions: Dict[str, Decimal],
         capital: Decimal,
         last_known_prices: Dict[str, Decimal],
-        create_portfolio_func,
-        validate_profitability_func,
+        create_portfolio_func: object,
+        validate_profitability_func: object,
     ) -> Optional[str]:
         """
         Process a trading signal with full validation pipeline.
@@ -139,10 +144,10 @@ class SignalProcessor:
     def _validate_strategy_risk_check(
         self,
         signal: Signal,
-        market_data: Any,
+        market_data: object,
         positions: Dict[str, Decimal],
         last_known_prices: Dict[str, Decimal],
-        create_portfolio_func,
+        create_portfolio_func: object,
     ) -> bool:
         """
         Validate signal using strategy's risk_check method.
@@ -232,7 +237,7 @@ class SignalProcessor:
         return True
 
     def _build_rejection_reason(
-        self, signal: Signal, portfolio: Any, current_price: Decimal
+        self, signal: Signal, portfolio: "Portfolio", current_price: Decimal
     ) -> str:
         """Build detailed rejection reason for logging."""
         rejection_reason = "Risk check failed"
@@ -257,11 +262,11 @@ class SignalProcessor:
     def _validate_risk_envelope(
         self,
         signal: Signal,
-        market_data: Any,
+        market_data: object,
         positions: Dict[str, Decimal],
         capital: Decimal,
         last_known_prices: Dict[str, Decimal],
-        create_portfolio_func,
+        create_portfolio_func: object,
     ) -> bool:
         """
         Validate signal using Risk Envelope constraints via ComplianceEngine.
@@ -294,11 +299,8 @@ class SignalProcessor:
                 # Get current price for this symbol
                 if symbol == signal.symbol:
                     pos_price = current_price
-                elif symbol in last_known_prices:
-                    pos_price = last_known_prices[symbol]
                 else:
-                    # Fallback: use current_price
-                    pos_price = current_price
+                    pos_price = last_known_prices.get(symbol, current_price)
 
                 position_value = quantity * pos_price
                 current_portfolio_exposure[symbol] = position_value

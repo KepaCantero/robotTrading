@@ -19,6 +19,7 @@ sys.path.insert(0, str(project_root))
 from app.core.compliance_engine import get_compliance_engine, ComplianceConfig
 from app.services.live_trading.broker_connector import get_broker_connector
 
+
 async def validate_config():
     """Validate all trading configuration."""
     print("Validating trading configuration...")
@@ -60,6 +61,7 @@ async def validate_config():
     print("\n3. Validating risk gates...")
     try:
         from app.services.live_trading.risk_gates import RiskGates
+
         risk_gates = RiskGates(broker)
         print("   RiskGates initialized: OK")
     except Exception as e:
@@ -69,7 +71,10 @@ async def validate_config():
     # 4. Validate trading bridge
     print("\n4. Validating trading bridge...")
     try:
-        from app.services.live_trading.trading_bridge_orchestrator import get_trading_bridge_orchestrator
+        from app.services.live_trading.trading_bridge_orchestrator import (
+            get_trading_bridge_orchestrator,
+        )
+
         bridge = get_trading_bridge_orchestrator()
         print(f"   Bridge status: {bridge.status.value}")
         print("   TradingBridge: OK")
@@ -115,6 +120,7 @@ async def validate_config():
     else:
         print("\nConfiguration validation: FAILED")
         return False
+
 
 if __name__ == "__main__":
     success = asyncio.run(validate_config())

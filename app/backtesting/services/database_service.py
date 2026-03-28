@@ -289,7 +289,7 @@ class DatabaseService:
         """
         try:
             return map_profile_tier_to_config(profile.capital_flag, target_format="spanish")
-        except (FileNotFoundError, PermissionError, IOError, OSError) as e:
+        except OSError as e:
             logger.warning(f"Tier mapper failed for {profile.capital_flag}, using fallback: {e}")
             tier_map = {"small": "bajo", "medium": "medio", "large": "alto"}
             return tier_map.get(profile.capital_flag, "medio")

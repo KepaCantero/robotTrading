@@ -27,7 +27,7 @@ import math
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from app.domain.strategies.fx_carry_trade.models import FXCarrySignal, FXPair
 
@@ -106,7 +106,7 @@ class CarryCalculator:
 
     def __init__(
         self,
-        signal_threshold: Decimal = Decimal("0.01"),
+        signal_threshold: Optional[Decimal] = None,
         signal_multiplier: float = 10.0,
     ) -> None:
         """
@@ -119,6 +119,8 @@ class CarryCalculator:
         Raises:
             ValueError: If signal_threshold is negative or signal_multiplier is not positive
         """
+        if signal_threshold is None:
+            signal_threshold = Decimal("0.01")
         if signal_threshold < 0:
             raise ValueError(f"signal_threshold must be non-negative, got {signal_threshold}")
 

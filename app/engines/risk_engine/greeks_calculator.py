@@ -988,9 +988,8 @@ class GreeksCalculator:
             if option_type == 'call':
                 if not (0 <= delta <= 1):
                     warnings.append(f'Call delta should be in [0,1], got {delta}')
-            elif option_type == 'put':
-                if not (-1 <= delta <= 0):
-                    warnings.append(f'Put delta should be in [-1,0], got {delta}')
+            elif option_type == 'put' and not (-1 <= delta <= 0):
+                warnings.append(f'Put delta should be in [-1,0], got {delta}')
 
         # 4. Theta should be negative (long options lose value with time)
         if theta is not None and theta > 0:
@@ -1013,9 +1012,8 @@ class GreeksCalculator:
             moneyness = spot_price / strike_price
 
             # Near ATM options should have higher gamma
-            if 0.9 <= moneyness <= 1.1 and time_to_expiry < 0.25:
-                if gamma is not None and gamma < 0.05:
-                    warnings.append(f'Low gamma {gamma} for near-term ATM option - expected higher')
+            if 0.9 <= moneyness <= 1.1 and time_to_expiry < 0.25 and gamma is not None and gamma < 0.05:
+                warnings.append(f'Low gamma {gamma} for near-term ATM option - expected higher')
 
         # 7. Higher-order Greeks validation
         vomma = higher_order.get('vomma')
@@ -1231,13 +1229,13 @@ class GreeksCalculator:
             return (
                 f'CRITICAL: {len(critical_violations)} critical violations. '
                 f'Immediate position reduction required. Focus on reducing '
-                f'{", ".join(set(v["greek"] for v in critical_violations))} exposure.'
+                f'{", ".join({v["greek"] for v in critical_violations})} exposure.'
             )
         elif high_violations:
             return (
                 f'HIGH: {len(high_violations)} high-severity violations. '
                 f'Significant de-risking recommended. Consider hedging '
-                f'{", ".join(set(v["greek"] for v in high_violations))}.'
+                f'{", ".join({v["greek"] for v in high_violations})}.'
             )
         else:
             return (

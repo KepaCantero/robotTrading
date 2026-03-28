@@ -1,5 +1,5 @@
-# mypy: ignore-errors
-# pylint: disable=unsupported-binary-operation  # For Python 3.10+ union syntax
+from __future__ import annotations
+
 """
 Ernest Chan - Quantitative Trading: Regime Detection Implementation
 
@@ -25,7 +25,7 @@ Date: 2026-01-28
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional, Tuple  # noqa: F401
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -525,7 +525,7 @@ class MarketRegimeDetector:
         else:
             # Map to general regime types
             regime_mapping = {}
-            for i, (label, chars) in enumerate(sorted_labels):
+            for i, (label, _chars) in enumerate(sorted_labels):
                 if i == 0:
                     regime_mapping[label] = RegimeType.BEAR.value
                 elif i == len(sorted_labels) - 1:

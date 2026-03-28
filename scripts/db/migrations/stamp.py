@@ -26,9 +26,7 @@ from pathlib import Path
 
 def parse_args():
     """Parse command line arguments."""
-    parser = argparse.ArgumentParser(
-        description="Stamp database with specific revision"
-    )
+    parser = argparse.ArgumentParser(description="Stamp database with specific revision")
     parser.add_argument(
         "--revision",
         "-r",

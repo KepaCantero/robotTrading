@@ -299,11 +299,9 @@ class SurvivorshipBiasCorrector:
         actions = self._corporate_actions.get(historical_symbol, [])
 
         for action in sorted(actions, key=lambda a: a.action_date):
-            if action.action_date <= as_of_date:
-                if action.action_type == CorporateActionType.SYMBOL_CHANGE:
-                    if action.new_symbol:
-                        # Recursively check new symbol
-                        return self.get_current_symbol(action.new_symbol, as_of_date)
+            if action.action_date <= as_of_date and action.action_type == CorporateActionType.SYMBOL_CHANGE and action.new_symbol:
+                # Recursively check new symbol
+                return self.get_current_symbol(action.new_symbol, as_of_date)
 
         return historical_symbol
 

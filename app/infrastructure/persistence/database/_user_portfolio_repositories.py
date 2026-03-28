@@ -22,8 +22,6 @@ from app.infrastructure.persistence.database._base_repository import BaseReposit
 from app.infrastructure.persistence.database.models import Asset, Portfolio, Position, User
 from app.shared.exceptions.exceptions import raise_database_error
 
-# pylint: disable=inconsistent-return-statements
-
 
 class UserRepository(BaseRepository[User]):
     """Repository for User model."""

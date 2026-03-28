@@ -8,7 +8,6 @@ Implements Bayesian optimization with:
 - Efficient for expensive evaluations
 """
 
-# mypy: ignore-errors
 import logging
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -346,42 +345,48 @@ class BayesianOptimizer(BaseOptimizer):
 
         Returns:
             Suggested parameter value
+
+        Raises:
+            ValueError: If parameter values are missing for categorical/discrete types
         """
         if param.parameter_type == ParameterType.CATEGORICAL:
-            return trial.suggest_categorical(param.name, param.values)  # type: ignore
+            if param.values is None:
+                raise ValueError(f"Categorical parameter '{param.name}' has no values")
+            return trial.suggest_categorical(param.name, param.values)
 
         elif param.parameter_type == ParameterType.DISCRETE:
-            return trial.suggest_categorical(param.name, param.values)  # type: ignore
+            if param.values is None:
+                raise ValueError(f"Discrete parameter '{param.name}' has no values")
+            return trial.suggest_categorical(param.name, param.values)
 
         elif param.parameter_type == ParameterType.INTEGER:
-            min_val = int(param.min_value)  # type: ignore
-            max_val = int(param.max_value)  # type: ignore
-            step = int(param.step) if param.step else 1  # type: ignore
+            if param.min_value is None or param.max_value is None:
+                raise ValueError(f"Integer parameter '{param.name}' missing min/max values")
+            int_min = int(param.min_value)
+            int_max = int(param.max_value)
+            step = int(param.step) if param.step is not None else 1
 
             if step == 1:
-                return trial.suggest_int(param.name, min_val, max_val)
+                return trial.suggest_int(param.name, int_min, int_max)
             else:
                 # For integer with step > 1, use categorical
-                values = list(range(min_val, max_val + 1, step))
+                values = list(range(int_min, int_max + 1, step))
                 return trial.suggest_categorical(param.name, values)
 
         elif param.parameter_type == ParameterType.CONTINUOUS:
-            min_val = float(param.min_value)  # type: ignore
-            max_val = float(param.max_value)  # type: ignore
-            step = float(param.step) if param.step else None  # type: ignore
+            if param.min_value is None or param.max_value is None:
+                raise ValueError(f"Continuous parameter '{param.name}' missing min/max values")
+            float_min = float(param.min_value)
+            float_max = float(param.max_value)
+            float_step = float(param.step) if param.step is not None else None
 
             if param.scale == ParameterScale.LOG:
-                if step:
-                    # Log-uniform with step
-                    return trial.suggest_float(param.name, min_val, max_val, log=True)
-                else:
-                    return trial.suggest_float(param.name, min_val, max_val, log=True)
+                return trial.suggest_float(param.name, float_min, float_max, log=True)
+            elif float_step is not None:
+                # Linear with step
+                return trial.suggest_float(param.name, float_min, float_max, step=float_step)
             else:
-                if step:
-                    # Linear with step
-                    return trial.suggest_float(param.name, min_val, max_val, step=step)
-                else:
-                    return trial.suggest_float(param.name, min_val, max_val)
+                return trial.suggest_float(param.name, float_min, float_max)
 
         raise ValueError(f"Unknown parameter type: {param.parameter_type}")
 
@@ -525,18 +530,24 @@ class MultiObjectiveBayesianOptimizer(BaseOptimizer):
     ) -> Any:
         """Suggest parameter using Optuna."""
         if param.parameter_type == ParameterType.CATEGORICAL:
-            return trial.suggest_categorical(param.name, param.values)  # type: ignore
+            if param.values is None:
+                raise ValueError(f"Categorical parameter '{param.name}' has no values")
+            return trial.suggest_categorical(param.name, param.values)
         elif param.parameter_type == ParameterType.INTEGER:
-            min_val = int(param.min_value)  # type: ignore
-            max_val = int(param.max_value)  # type: ignore
-            return trial.suggest_int(param.name, min_val, max_val)
+            if param.min_value is None or param.max_value is None:
+                raise ValueError(f"Integer parameter '{param.name}' missing min/max values")
+            int_min = int(param.min_value)
+            int_max = int(param.max_value)
+            return trial.suggest_int(param.name, int_min, int_max)
         elif param.parameter_type == ParameterType.CONTINUOUS:
-            min_val = float(param.min_value)  # type: ignore
-            max_val = float(param.max_value)  # type: ignore
+            if param.min_value is None or param.max_value is None:
+                raise ValueError(f"Continuous parameter '{param.name}' missing min/max values")
+            float_min = float(param.min_value)
+            float_max = float(param.max_value)
             if param.scale == ParameterScale.LOG:
-                return trial.suggest_float(param.name, min_val, max_val, log=True)
+                return trial.suggest_float(param.name, float_min, float_max, log=True)
             else:
-                return trial.suggest_float(param.name, min_val, max_val)
+                return trial.suggest_float(param.name, float_min, float_max)
 
         raise ValueError(f"Unknown parameter type: {param.parameter_type}")
 
@@ -546,8 +557,6 @@ class MultiObjectiveBayesianOptimizer(BaseOptimizer):
         objectives: List[Callable],
     ) -> "ParetoFront":
         """Extract Pareto front from Optuna study."""
-        from .multi_objective import ParetoFront, ParetoSolution
-
         best_trials = study.best_trials
 
         solutions = []
@@ -555,7 +564,6 @@ class MultiObjectiveBayesianOptimizer(BaseOptimizer):
 
         for trial in best_trials:
             if trial.state == optuna.trial.TrialState.COMPLETE:
-                # pylint: disable=unexpected-keyword-arg
                 solution = ParetoSolution(
                     params=trial.params,
                     objectives=trial.values,
@@ -564,7 +572,6 @@ class MultiObjectiveBayesianOptimizer(BaseOptimizer):
                 solutions.append(solution)
                 scores.append(tuple(trial.values))
 
-        # pylint: disable=unexpected-keyword-arg
         return ParetoFront(
             solutions=solutions,
             scores=scores,

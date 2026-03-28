@@ -28,19 +28,21 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 
 # SINGLE SOURCE OF TRUTH: Import CentralizedConfig
 from app.shared.config.centralized_config import get_config
 
+from app.domain.models.signal import Signal
+
 from ..point_in_time_database import PointInTimeDatabase
 from .corporate_actions import CorporateActionHandler
 from .dividend_handler import DividendHandler, DripConfig
 from .look_ahead_validator import LookAheadValidator, ValidationResult
 from .models import BacktestCheckpoint, CorporateAction, ProgressUpdate, StockSplit
-from .performance_tracker import PerformanceMetrics, PerformanceTracker
+from .performance_tracker import PerformanceMetrics, PerformanceTracker, RollingMetrics, YearlyBreakdown
 from .pit_database import PITDatabaseClient
 from .survivorship_adjuster import SurvivorshipAdjuster, SurvivorshipFreeResult
 
@@ -170,11 +172,11 @@ class RobustBacktestResult:
     config: RobustBacktestConfig = field(default_factory=RobustBacktestConfig)
     performance: PerformanceMetrics = field(default_factory=PerformanceMetrics)
     equity_curve: List[Tuple[date, Decimal]] = field(default_factory=list)
-    trades: List[Dict[str, Any]] = field(default_factory=list)
-    yearly_breakdown: List[Any] = field(default_factory=list)
-    rolling_metrics: Any = field(default=None)
+    trades: List[Dict[str, Union[str, int, float, datetime]]] = field(default_factory=list)
+    yearly_breakdown: List[YearlyBreakdown] = field(default_factory=list)
+    rolling_metrics: Optional[RollingMetrics] = field(default=None)
     survivorship_adjustment: Optional[SurvivorshipFreeResult] = field(default=None)
-    dividend_tracker: Any = field(default=None)
+    dividend_tracker: Optional[DividendHandler] = field(default=None)
     checkpoints_used: int = field(default=0)
     total_duration_seconds: float = field(default=0.0)
 
@@ -260,7 +262,7 @@ class RobustBacktester:
         self._capital: Decimal = config.initial_capital
         self._positions: Dict[str, Decimal] = {}
         self._cost_basis: Dict[str, Decimal] = {}  # Track cost basis per symbol for P&L calculation
-        self._trades: List[Dict[str, Any]] = []
+        self._trades: List[Dict[str, Union[str, int, float, datetime]]] = []
         self._current_date: Optional[date] = config.start_date
 
         # Checkpointing
@@ -279,9 +281,9 @@ class RobustBacktester:
 
     async def run_backtest(
         self,
-        strategy: Any,
-        market_data: Union[pd.DataFrame, List[Any]],
-        signals: Optional[List[Any]] = None,
+        strategy: object,
+        market_data: Union[pd.DataFrame, List[object]],
+        signals: Optional[List[Signal]] = None,
         resume_from_checkpoint: bool = False,
     ) -> RobustBacktestResult:
         """
@@ -353,7 +355,7 @@ class RobustBacktester:
 
     async def _perform_validation_if_enabled(
         self,
-        signals: Optional[List[Any]],
+        signals: Optional[List[Signal]],
         market_data: pd.DataFrame,
     ) -> None:
         """
@@ -427,9 +429,9 @@ class RobustBacktester:
 
     async def _process_backtest_chunks(
         self,
-        strategy: Any,
+        strategy: object,
         market_data: pd.DataFrame,
-        signals: Optional[List[Any]],
+        signals: Optional[List[Signal]],
     ) -> None:
         """
         Process backtest in chunks for memory efficiency.
@@ -459,8 +461,8 @@ class RobustBacktester:
         chunk_idx: int,
         total_chunks: int,
         chunk: pd.DataFrame,
-        strategy: Any,
-        signals: Optional[List[Any]],
+        strategy: object,
+        signals: Optional[List[Signal]],
     ) -> None:
         """
         Process a single chunk with progress tracking and checkpointing.
@@ -525,9 +527,9 @@ class RobustBacktester:
 
     async def _process_chunk(
         self,
-        strategy: Any,
+        strategy: object,
         chunk: pd.DataFrame,
-        signals: Optional[List[Any]],
+        signals: Optional[List[Signal]],
     ) -> None:
         """
         Process a single chunk of data.
@@ -561,11 +563,11 @@ class RobustBacktester:
 
     async def _process_signals_for_date(
         self,
-        strategy: Any,
+        strategy: object,
         chunk: pd.DataFrame,
-        idx: Any,
-        row: Any,
-        signals: Optional[List[Any]],
+        idx: Union[pd.Timestamp, int],
+        row: tuple,
+        signals: Optional[List[Signal]],
         current_date: date,
     ) -> None:
         """
@@ -592,7 +594,7 @@ class RobustBacktester:
 
     async def _process_signal(
         self,
-        signal: Any,
+        signal: Signal,
         market_data: pd.Series,
     ) -> None:
         """
@@ -630,7 +632,7 @@ class RobustBacktester:
         self,
         symbol: str,
         price: Decimal,
-        signal: Any,
+        signal: Signal,
     ) -> None:
         """Execute a buy order."""
         # Ensure we have a current date
@@ -687,7 +689,7 @@ class RobustBacktester:
         self,
         symbol: str,
         price: Decimal,
-        signal: Any,
+        signal: Signal,
     ) -> None:
         """Execute a sell order."""
         # Ensure we have a current date
@@ -772,7 +774,7 @@ class RobustBacktester:
 
     def _convert_to_dataframe(
         self,
-        data: List[Any],
+        data: List[object],
     ) -> pd.DataFrame:
         """
         Convert list of market data objects to DataFrame.
@@ -985,7 +987,7 @@ class RobustBacktester:
 
     def _validate_backtest_data(
         self,
-        signals: Union[List[Any], pd.DataFrame],
+        signals: Union[List[Signal], pd.DataFrame],
         market_data: pd.DataFrame,
     ) -> ValidationResult:
         """
@@ -1019,7 +1021,7 @@ class RobustBacktester:
 
     def _convert_signals_to_dataframe(
         self,
-        signals: List[Any],
+        signals: List[Signal],
     ) -> pd.DataFrame:
         """
         Convert list of signal objects to DataFrame.
@@ -1071,7 +1073,7 @@ class RobustBacktester:
         """
         return self._validation_result
 
-    def get_pit_cache_statistics(self) -> Dict[str, Any]:
+    def get_pit_cache_statistics(self) -> Dict[str, Union[bool, str, int, float]]:
         """
         Get PIT database cache statistics.
 

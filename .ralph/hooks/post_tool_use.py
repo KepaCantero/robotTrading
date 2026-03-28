@@ -44,17 +44,17 @@ def main():
 
     # Report issues
     if issues:
-        print(json.dumps({
-            "status": "warn",
-            "issues": issues,
-            "suggestion": "Review and fix the issues before continuing"
-        }))
+        print(
+            json.dumps(
+                {
+                    "status": "warn",
+                    "issues": issues,
+                    "suggestion": "Review and fix the issues before continuing",
+                }
+            )
+        )
     else:
-        print(json.dumps({
-            "status": "allow",
-            "issues": [],
-            "message": "Output validated"
-        }))
+        print(json.dumps({"status": "allow", "issues": [], "message": "Output validated"}))
 
 
 if __name__ == "__main__":

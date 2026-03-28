@@ -1,4 +1,3 @@
-# pylint: disable=unsupported-binary-operation
 """Data models for Hurst Exponent analysis.
 
 This module contains all data classes and enums used throughout

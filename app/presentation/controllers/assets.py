@@ -9,9 +9,9 @@ identifying liquid assets, and retrieving asset rankings.
 import asyncio
 import logging
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Annotated, Any, Dict, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 from requests.exceptions import HTTPError, RequestException
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ router = APIRouter(prefix="/assets", tags=["assets"])
 
 @router.get("/", response_model=Dict[str, Any])
 async def get_assets_overview(
-    service: AssetIdentificationService = Depends(get_asset_identification_service),
+    service: Annotated[AssetIdentificationService, epends(get_asset_identification_service)],
 ):
     """Get overview of all asset universes."""
     logger.debug("Getting assets overview")
@@ -41,7 +41,7 @@ async def get_assets_overview(
         logger.info("Assets overview retrieved", extra={"asset_classes": len(overview)})
         return {"success": True, "overview": overview, "timestamp": datetime.utcnow()}
 
-    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+    except (asyncio.TimeoutError, OSError) as e:
         logger.error(
             "Error getting assets overview", extra={"error": str(e), "error_type": type(e).__name__}
         )
@@ -51,8 +51,8 @@ async def get_assets_overview(
 @router.get("/liquid/{asset_class}", response_model=Dict[str, Any])
 async def get_liquid_assets(
     asset_class: AssetClass,
-    limit: int = Query(20, ge=1, le=100, description="Number of assets to return"),
-    service: AssetIdentificationService = Depends(get_asset_identification_service),
+    limit: Annotated[int, uery(20, ge=1, le=100, description="Number of assets to return")],
+    service: Annotated[AssetIdentificationService, epends(get_asset_identification_service)],
 ):
     """Get top liquid assets for a specific asset class."""
     logger.debug("Getting liquid assets", extra={"asset_class": asset_class.value, "limit": limit})
@@ -86,7 +86,7 @@ async def get_liquid_assets(
             "timestamp": datetime.utcnow(),
         }
 
-    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+    except (asyncio.TimeoutError, OSError) as e:
         logger.error(
             "Error getting liquid assets",
             extra={
@@ -101,7 +101,7 @@ async def get_liquid_assets(
 @router.get("/rankings/{asset_class}", response_model=Dict[str, Any])
 async def get_asset_rankings_by_class(
     asset_class: AssetClass,
-    service: AssetIdentificationService = Depends(get_asset_identification_service),
+    service: Annotated[AssetIdentificationService, epends(get_asset_identification_service)],
 ):
     """Get asset rankings for a specific asset class."""
     try:
@@ -116,14 +116,14 @@ async def get_asset_rankings_by_class(
             "timestamp": datetime.utcnow(),
         }
 
-    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+    except (asyncio.TimeoutError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Error getting asset rankings: {str(e)}")
 
 
 @router.get("/{symbol}", response_model=Dict[str, Any])
 async def get_asset_details(
     symbol: str,
-    service: AssetIdentificationService = Depends(get_asset_identification_service),
+    service: Annotated[AssetIdentificationService, epends(get_asset_identification_service)],
 ):
     """Get detailed asset information by symbol."""
     logger.debug("Getting asset details", extra={"symbol": symbol})
@@ -167,7 +167,7 @@ async def get_asset_details(
 @router.get("/{symbol}/liquidity", response_model=Dict[str, Any])
 async def get_liquidity_metrics(
     symbol: str,
-    service: AssetIdentificationService = Depends(get_asset_identification_service),
+    service: Annotated[AssetIdentificationService, epends(get_asset_identification_service)],
 ):
     """Get liquidity metrics for a specific asset."""
     try:
@@ -199,8 +199,8 @@ async def get_liquidity_metrics(
 
 @router.get("/rankings", response_model=Dict[str, Any])
 async def get_asset_rankings(
-    asset_class: Optional[AssetClass] = Query(None, description="Filter by asset class"),
-    service: AssetIdentificationService = Depends(get_asset_identification_service),
+    asset_class: Annotated[Optional[AssetClass], uery(None, description="Filter by asset class")],
+    service: Annotated[AssetIdentificationService, epends(get_asset_identification_service)],
 ):
     """Get asset rankings."""
     try:
@@ -214,14 +214,14 @@ async def get_asset_rankings(
 
         return {"success": True, "rankings": rankings, "timestamp": datetime.utcnow()}
 
-    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+    except (asyncio.TimeoutError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Error getting asset rankings: {str(e)}")
 
 
 @router.post("/filter", response_model=Dict[str, Any])
 async def filter_assets(
     filter_criteria: AssetFilter,
-    service: AssetIdentificationService = Depends(get_asset_identification_service),
+    service: Annotated[AssetIdentificationService, epends(get_asset_identification_service)],
 ):
     """Filter assets based on criteria."""
     try:
@@ -256,14 +256,14 @@ async def filter_assets(
             "timestamp": datetime.utcnow(),
         }
 
-    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+    except (asyncio.TimeoutError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Error filtering assets: {str(e)}")
 
 
 @router.post("/refresh-liquidity", response_model=Dict[str, Any])
 async def refresh_liquidity_data(
     background_tasks: BackgroundTasks,
-    service: AssetIdentificationService = Depends(get_asset_identification_service),
+    service: Annotated[AssetIdentificationService, epends(get_asset_identification_service)],
 ):
     """Refresh liquidity data for all assets."""
     try:
@@ -276,14 +276,14 @@ async def refresh_liquidity_data(
             "timestamp": datetime.utcnow(),
         }
 
-    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+    except (asyncio.TimeoutError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Error refreshing liquidity data: {str(e)}")
 
 
 @router.get("/universe", response_model=Dict[str, Any])
 async def get_asset_universe(
-    asset_class: Optional[AssetClass] = Query(None, description="Filter by asset class"),
-    service: AssetIdentificationService = Depends(get_asset_identification_service),
+    asset_class: Annotated[Optional[AssetClass], uery(None, description="Filter by asset class")],
+    service: Annotated[AssetIdentificationService, epends(get_asset_identification_service)],
 ):
     """Get asset universe."""
     try:
@@ -297,7 +297,7 @@ async def get_asset_universe(
 
         return {"success": True, "universe": universe, "timestamp": datetime.utcnow()}
 
-    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+    except (asyncio.TimeoutError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Error getting asset universe: {str(e)}")
 
 
@@ -305,8 +305,8 @@ async def get_asset_universe(
 async def identify_liquid_assets(
     asset_class: AssetClass,
     background_tasks: BackgroundTasks,
-    service: AssetIdentificationService = Depends(get_asset_identification_service),
-    limit: int = Query(20, ge=1, le=100, description="Number of assets to identify"),
+    service: Annotated[AssetIdentificationService, epends(get_asset_identification_service)],
+    limit: Annotated[int, uery(20, ge=1, le=100, description="Number of assets to identify")],
 ):
     """Identify and rank liquid assets for a specific asset class."""
     logger.debug(
@@ -360,7 +360,7 @@ async def identify_liquid_assets(
 async def filter_assets_by_class(
     asset_class: AssetClass,
     filter_criteria: AssetFilter,
-    service: AssetIdentificationService = Depends(get_asset_identification_service),
+    service: Annotated[AssetIdentificationService, epends(get_asset_identification_service)],
 ):
     """Filter assets based on criteria for a specific asset class."""
     try:
@@ -396,14 +396,14 @@ async def filter_assets_by_class(
             "timestamp": datetime.utcnow(),
         }
 
-    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+    except (asyncio.TimeoutError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Error filtering assets: {str(e)}")
 
 
 @router.get("/universe/{asset_class}", response_model=Dict[str, Any])
 async def get_universe_summary(
     asset_class: AssetClass,
-    service: AssetIdentificationService = Depends(get_asset_identification_service),
+    service: Annotated[AssetIdentificationService, epends(get_asset_identification_service)],
 ):
     """Get universe summary for a specific asset class."""
     try:
@@ -415,7 +415,7 @@ async def get_universe_summary(
             "timestamp": datetime.utcnow(),
         }
 
-    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+    except (asyncio.TimeoutError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Error getting universe summary: {str(e)}")
 
 
@@ -437,7 +437,7 @@ async def get_asset_classes():
             "timestamp": datetime.utcnow(),
         }
 
-    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+    except (asyncio.TimeoutError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Error getting asset classes: {str(e)}")
 
 
@@ -459,7 +459,7 @@ async def get_exchanges():
             "timestamp": datetime.utcnow(),
         }
 
-    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+    except (asyncio.TimeoutError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Error getting exchanges: {str(e)}")
 
 
@@ -482,7 +482,7 @@ async def health_check():
 
 @router.get("/stats", response_model=Dict[str, Any])
 async def get_asset_stats(
-    service: AssetIdentificationService = Depends(get_asset_identification_service),
+    service: Annotated[AssetIdentificationService, epends(get_asset_identification_service)],
 ):
     """Get asset statistics across all universes."""
     try:

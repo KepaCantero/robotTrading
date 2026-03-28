@@ -128,15 +128,14 @@ def validate_covariance_matrix(
         processed = (processed + processed.T) / 2
 
     # Check PSD
-    if check_psd:
-        if not is_positive_semidefinite(processed):
-            error_msg = "Covariance matrix is not positive semidefinite"
-            if enforce_psd:
-                logger.warning(f"{error_msg}, enforcing PSD via eigenvalue clipping...")
-                processed = enforce_positive_semidefinite(processed)
-            else:
-                logger.error(error_msg)
-                return False, processed, error_msg
+    if check_psd and not is_positive_semidefinite(processed):
+        error_msg = "Covariance matrix is not positive semidefinite"
+        if enforce_psd:
+            logger.warning(f"{error_msg}, enforcing PSD via eigenvalue clipping...")
+            processed = enforce_positive_semidefinite(processed)
+        else:
+            logger.error(error_msg)
+            return False, processed, error_msg
 
     return True, processed, None
 

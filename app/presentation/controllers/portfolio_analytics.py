@@ -11,7 +11,7 @@ import asyncio
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Annotated, Any, Dict, List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
@@ -192,7 +192,7 @@ def _get_mock_portfolio(portfolio_id: UUID) -> ExtendedPortfolio:
 @router.post("/performance-metrics", response_model=PerformanceMetricsResponse)
 async def calculate_performance_metrics(
     request: PerformanceMetricsRequest,
-    analytics_service: PortfolioAnalyticsService = Depends(get_portfolio_analytics_service),
+    analytics_service: Annotated[PortfolioAnalyticsService, epends(get_portfolio_analytics_service)],
 ):
     """Calculate performance metrics for a portfolio."""
     logger.debug(
@@ -216,7 +216,7 @@ async def calculate_performance_metrics(
         )
         return PerformanceMetricsResponse(success=True, data=metrics, error=None)
 
-    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+    except (asyncio.TimeoutError, OSError) as e:
         logger.error(
             "Failed to calculate performance metrics",
             extra={
@@ -233,10 +233,10 @@ async def calculate_performance_metrics(
 @router.get("/performance-metrics/{portfolio_id}", response_model=PerformanceMetricsResponse)
 async def get_performance_metrics(
     portfolio_id: UUID,
-    period: PerformancePeriod = Query(default=PerformancePeriod.MONTHLY),
-    start_date: Optional[datetime] = Query(None),
-    end_date: Optional[datetime] = Query(None),
-    analytics_service: PortfolioAnalyticsService = Depends(get_portfolio_analytics_service),
+    period: Annotated[PerformancePeriod, uery(default=PerformancePeriod.MONTHLY)],
+    start_date: Annotated[Optional[datetime], uery(None)],
+    end_date: Annotated[Optional[datetime], uery(None)],
+    analytics_service: Annotated[PortfolioAnalyticsService, epends(get_portfolio_analytics_service)],
 ):
     """Get performance metrics for a portfolio."""
     try:
@@ -250,7 +250,7 @@ async def get_performance_metrics(
 
         return PerformanceMetricsResponse(success=True, data=metrics, error=None)
 
-    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+    except (asyncio.TimeoutError, OSError) as e:
         return PerformanceMetricsResponse(
             success=False, data=None, error=f"Failed to get performance metrics: {str(e)}"
         )
@@ -259,7 +259,7 @@ async def get_performance_metrics(
 @router.get("/risk-metrics/{portfolio_id}", response_model=RiskMetricsResponse)
 async def get_risk_metrics(
     portfolio_id: UUID,
-    analytics_service: PortfolioAnalyticsService = Depends(get_portfolio_analytics_service),
+    analytics_service: Annotated[PortfolioAnalyticsService, epends(get_portfolio_analytics_service)],
 ):
     """Get risk metrics for a portfolio."""
     logger.debug("Getting risk metrics", extra={"portfolio_id": str(portfolio_id)})
@@ -273,7 +273,7 @@ async def get_risk_metrics(
         logger.info("Risk metrics calculated", extra={"portfolio_id": str(portfolio_id)})
         return RiskMetricsResponse(success=True, data=metrics, error=None)
 
-    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+    except (asyncio.TimeoutError, OSError) as e:
         logger.error(
             "Failed to get risk metrics",
             extra={
@@ -290,7 +290,7 @@ async def get_risk_metrics(
 @router.get("/analytics/{portfolio_id}", response_model=PortfolioAnalyticsResponse)
 async def get_portfolio_analytics(
     portfolio_id: UUID,
-    analytics_service: PortfolioAnalyticsService = Depends(get_portfolio_analytics_service),
+    analytics_service: Annotated[PortfolioAnalyticsService, epends(get_portfolio_analytics_service)],
 ):
     """Get comprehensive portfolio analytics."""
     logger.debug("Getting portfolio analytics", extra={"portfolio_id": str(portfolio_id)})
@@ -304,7 +304,7 @@ async def get_portfolio_analytics(
         logger.info("Portfolio analytics generated", extra={"portfolio_id": str(portfolio_id)})
         return PortfolioAnalyticsResponse(success=True, data=analytics, error=None)
 
-    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+    except (asyncio.TimeoutError, OSError) as e:
         logger.error(
             "Failed to get portfolio analytics",
             extra={
@@ -321,7 +321,7 @@ async def get_portfolio_analytics(
 @router.get("/allocation/{portfolio_id}", response_model=PortfolioAllocationResponse)
 async def get_portfolio_allocation(
     portfolio_id: UUID,
-    analytics_service: PortfolioAnalyticsService = Depends(get_portfolio_analytics_service),
+    analytics_service: Annotated[PortfolioAnalyticsService, epends(get_portfolio_analytics_service)],
 ):
     """Get portfolio allocation analysis."""
     try:
@@ -333,7 +333,7 @@ async def get_portfolio_allocation(
 
         return PortfolioAllocationResponse(success=True, data=allocation, error=None)
 
-    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+    except (asyncio.TimeoutError, OSError) as e:
         return PortfolioAllocationResponse(
             success=False, data=None, error=f"Failed to get portfolio allocation: {str(e)}"
         )
@@ -342,7 +342,7 @@ async def get_portfolio_allocation(
 @router.post("/rebalance", response_model=RebalanceResponse)
 async def get_rebalance_recommendation(
     request: RebalanceRequest,
-    analytics_service: PortfolioAnalyticsService = Depends(get_portfolio_analytics_service),
+    analytics_service: Annotated[PortfolioAnalyticsService, epends(get_portfolio_analytics_service)],
 ):
     """Get portfolio rebalancing recommendations."""
     logger.debug(
@@ -385,7 +385,7 @@ async def get_rebalance_recommendation(
         )
         return RebalanceResponse(success=True, data=rebalance, error=None)
 
-    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+    except (asyncio.TimeoutError, OSError) as e:
         logger.error(
             "Failed to get rebalance recommendation",
             extra={
@@ -402,7 +402,7 @@ async def get_rebalance_recommendation(
 @router.post("/compare", response_model=PortfolioComparisonResponse)
 async def compare_portfolios(
     request: PortfolioComparisonRequest,
-    analytics_service: PortfolioAnalyticsService = Depends(get_portfolio_analytics_service),
+    analytics_service: Annotated[PortfolioAnalyticsService, epends(get_portfolio_analytics_service)],
 ):
     """Compare multiple portfolios."""
     logger.debug(
@@ -415,7 +415,7 @@ async def compare_portfolios(
         logger.info("Portfolios compared", extra={"portfolio_count": len(request.portfolio_ids)})
         return PortfolioComparisonResponse(success=True, data=comparison, error=None)
 
-    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+    except (asyncio.TimeoutError, OSError) as e:
         logger.error(
             "Failed to compare portfolios", extra={"error": str(e), "error_type": type(e).__name__}
         )
@@ -427,7 +427,7 @@ async def compare_portfolios(
 @router.get("/summary/{portfolio_id}", response_model=AnalyticsSummaryResponse)
 async def get_analytics_summary(
     portfolio_id: UUID,
-    analytics_service: PortfolioAnalyticsService = Depends(get_portfolio_analytics_service),
+    analytics_service: Annotated[PortfolioAnalyticsService, epends(get_portfolio_analytics_service)],
 ):
     """Get portfolio analytics summary."""
     try:

@@ -276,14 +276,13 @@ class CarverRobustRulesStrategy(BaseStrategy):
                 )
 
                 # Execute if within 1 minute window and haven't executed today
-                if abs(time_diff) <= 1:
-                    if (
-                        self.last_execution_date is None
-                        or self.last_execution_date.date() != now.date()
-                    ):
-                        self.last_execution_time = current_time
-                        self.last_execution_date = now
-                        return True
+                if abs(time_diff) <= 1 and (
+                    self.last_execution_date is None
+                    or self.last_execution_date.date() != now.date()
+                ):
+                    self.last_execution_time = current_time
+                    self.last_execution_date = now
+                    return True
 
             except (ValueError, IndexError):
                 logger.warning(f"Invalid execution time format: {exec_time_str}")

@@ -268,7 +268,7 @@ class BudgetAlertManager:
 
                 return alerts
 
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 self.logger.error(f"Error checking and alerting: {e}")
                 return alerts
 
@@ -315,7 +315,7 @@ class BudgetAlertManager:
 
             return alert
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error triggering alert: {e}")
             return None
 
@@ -350,7 +350,7 @@ class BudgetAlertManager:
                 elif channel == AlertChannel.LOG:
                     self._log_alert(alert)
 
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 self.logger.error(f"Error sending {channel.value} alert: {e}")
 
     def _log_alert(self, alert: BudgetAlert) -> None:
@@ -423,7 +423,7 @@ class BudgetAlertManager:
                     else:
                         self.logger.error(f"Webhook alert failed: HTTP {response.status}")
 
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 self.logger.error(f"Webhook error for {url}: {e}")
 
     async def acknowledge_alert(self, alert_id: str) -> bool:

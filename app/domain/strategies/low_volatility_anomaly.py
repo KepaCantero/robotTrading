@@ -94,7 +94,7 @@ class LowVolatilityPortfolio:
         try:
             config = get_config()
             low_vol_threshold = getattr(config.trading, 'low_volatility_portfolio_threshold', 0.15)
-        except (AttributeError, Exception):
+        except Exception:
             low_vol_threshold = 0.15
         return self.portfolio_volatility < low_vol_threshold
 
@@ -175,7 +175,7 @@ class LowVolatilityAnomaly:
             try:
                 config = get_config()
                 risk_free_rate = float(getattr(config.trading, 'risk_free_rate', 0.02))
-            except (AttributeError, Exception):
+            except Exception:
                 risk_free_rate = 0.02
 
         # Input validation

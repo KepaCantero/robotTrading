@@ -15,7 +15,7 @@ This provides more meaningful labels for ML that account for:
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -27,13 +27,17 @@ HAS_NUMBA = True
 
 # Import matplotlib for visualization (OPTIONAL for plotting)
 try:
-    import matplotlib.pyplot as plt
+    import matplotlib.pyplot as _plt_module
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
 
     HAS_MATPLOTLIB = True
 except ImportError:
     # Matplotlib not installed
     HAS_MATPLOTLIB = False
-    plt = None
+    _plt_module = None
+    Axes = None
+    Figure = None
 
 # Import arch for GARCH volatility modeling (REQUIRED)
 try:
@@ -43,6 +47,9 @@ try:
 except ImportError:
     HAS_ARCH = False
     arch_model = None
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
 
 
 @dataclass
@@ -403,8 +410,8 @@ class TripleBarrierLabeler:
         all_barriers = []
         all_timing = []
 
-        for i, (event_idx, upper_mult, lower_mult) in enumerate(
-            zip(event_indices, upper_multipliers, lower_multipliers)
+        for event_idx, upper_mult, lower_mult in zip(
+            event_indices, upper_multipliers, lower_multipliers
         ):
             # event_idx should already be a positional integer at this point
             # But let's ensure it's the right type
@@ -576,8 +583,8 @@ def plot_triple_barrier(
     lower_barrier: float,
     vertical_barrier: int,
     label: int,
-    ax: Optional["plt.Axes"] = None,  # type: ignore
-) -> Optional["plt.Axes"]:  # type: ignore
+    ax: Optional["Axes"] = None,
+) -> Optional["Axes"]:
     """
     Visualize a triple barrier labeling event.
 
@@ -605,14 +612,14 @@ def plot_triple_barrier(
         >>> plot_triple_barrier(prices, event_idx, upper, lower, vertical, label, ax)
         >>> plt.show()
     """
-    if not HAS_MATPLOTLIB:
+    if not HAS_MATPLOTLIB or _plt_module is None or Axes is None:
         import warnings
 
         warnings.warn("Matplotlib not available, skipping visualization", UserWarning, stacklevel=2)
         return None
 
     if ax is None:
-        _, ax = plt.subplots(figsize=(12, 6))  # type: ignore
+        _, ax = _plt_module.subplots(figsize=(12, 6))
 
     # Get price slice for visualization
     end_idx = min(event_idx + vertical_barrier + 5, len(prices))

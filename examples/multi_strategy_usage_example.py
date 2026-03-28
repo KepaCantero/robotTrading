@@ -21,17 +21,16 @@ from app.core.models.input_profile import (
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
 
 def example_single_profile_multi_strategy():
     """Example: Run single profile with multi-strategy mode."""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("EXAMPLE 1: Single Profile Multi-Strategy Execution")
-    print("="*80 + "\n")
+    print("=" * 80 + "\n")
 
     # Create backtester
     backtester = ProfileBatchBacktester("config/profile_batch_backtest.yaml")
@@ -41,7 +40,7 @@ def example_single_profile_multi_strategy():
         capital_initial=Decimal("100000"),
         objetivo_inversion=ObjectivoInversion.MAXIMIZAR_CAPITAL,
         risk_tolerance=RiskTolerance.MEDIO,
-        investment_horizon=24
+        investment_horizon=24,
     )
 
     logger.info(f"Created profile: {profile.input_id}")
@@ -55,9 +54,9 @@ def example_single_profile_multi_strategy():
     result = backtester.run_single_profile(profile, multi_strategy=True)
 
     # Display results
-    logger.info("\n" + "-"*80)
+    logger.info("\n" + "-" * 80)
     logger.info("RESULTS SUMMARY")
-    logger.info("-"*80)
+    logger.info("-" * 80)
 
     if result.enabled_strategies:
         logger.info(f"Enabled Strategies: {', '.join(result.enabled_strategies)}")
@@ -92,7 +91,9 @@ def example_single_profile_multi_strategy():
     # Optimization results
     logger.info("\nOptimization Results:")
     logger.info(f"  Optimized Sharpe: {result.optimization_results.get('sharpe_ratio', 0):.2f}")
-    logger.info(f"  Sharpe Improvement: {result.improvement_metrics.get('sharpe_improvement', 0):.1f}%")
+    logger.info(
+        f"  Sharpe Improvement: {result.improvement_metrics.get('sharpe_improvement', 0):.1f}%"
+    )
 
     # Recommendation
     logger.info(f"\nRecommendation: {result.recommendation}")
@@ -103,9 +104,9 @@ def example_single_profile_multi_strategy():
 
 def example_batch_multi_strategy():
     """Example: Run multiple profiles with multi-strategy mode."""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("EXAMPLE 2: Batch Multi-Strategy Execution")
-    print("="*80 + "\n")
+    print("=" * 80 + "\n")
 
     # Create backtester
     backtester = ProfileBatchBacktester("config/profile_batch_backtest.yaml")
@@ -126,15 +127,17 @@ def example_batch_multi_strategy():
             result = backtester.run_single_profile(profile, multi_strategy=True)
             results[result.profile_id] = result
 
-            logger.info(f"  ✓ Completed: Sharpe={result.baseline_results.get('sharpe_ratio', 0):.2f}")
+            logger.info(
+                f"  ✓ Completed: Sharpe={result.baseline_results.get('sharpe_ratio', 0):.2f}"
+            )
 
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"  ✗ Failed: {e}")
 
     # Summary statistics
-    logger.info("\n" + "-"*80)
+    logger.info("\n" + "-" * 80)
     logger.info("BATCH SUMMARY")
-    logger.info("-"*80)
+    logger.info("-" * 80)
 
     if results:
         multi_strategy_count = sum(1 for r in results.values() if r.per_strategy_results)
@@ -143,21 +146,18 @@ def example_batch_multi_strategy():
         logger.info(f"Single-strategy results: {len(results) - multi_strategy_count}")
 
         # Average metrics
-        avg_sharpe = sum(
-            r.baseline_results.get('sharpe_ratio', 0) for r in results.values()
-        ) / len(results)
-        avg_return = sum(
-            r.baseline_results.get('return_pct', 0) for r in results.values()
-        ) / len(results)
+        avg_sharpe = sum(r.baseline_results.get('sharpe_ratio', 0) for r in results.values()) / len(
+            results
+        )
+        avg_return = sum(r.baseline_results.get('return_pct', 0) for r in results.values()) / len(
+            results
+        )
 
         logger.info(f"\nAverage Sharpe Ratio: {avg_sharpe:.2f}")
         logger.info(f"Average Return: {avg_return:.2f}%")
 
         # Best performing
-        best_result = max(
-            results.values(),
-            key=lambda r: r.baseline_results.get('sharpe_ratio', 0)
-        )
+        best_result = max(results.values(), key=lambda r: r.baseline_results.get('sharpe_ratio', 0))
         logger.info(f"\nBest Profile: {best_result.profile_id}")
         logger.info(f"  Sharpe: {best_result.baseline_results.get('sharpe_ratio', 0):.2f}")
         logger.info(f"  Return: {best_result.baseline_results.get('return_pct', 0):.2f}%")
@@ -170,9 +170,9 @@ def example_batch_multi_strategy():
 
 def example_ensemble_voting():
     """Example: Demonstrate ensemble voting logic."""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("EXAMPLE 3: Ensemble Voting Demonstration")
-    print("="*80 + "\n")
+    print("=" * 80 + "\n")
 
     # Create backtester
     backtester = ProfileBatchBacktester("config/profile_batch_backtest.yaml")
@@ -182,7 +182,7 @@ def example_ensemble_voting():
         capital_initial=Decimal("100000"),
         objetivo_inversion=ObjectivoInversion.CRECIMIENTO_BALANCEADO,
         risk_tolerance=RiskTolerance.MEDIO,
-        investment_horizon=24
+        investment_horizon=24,
     )
 
     # Get strategy mapping
@@ -204,7 +204,9 @@ def example_ensemble_voting():
 
         logger.info(f"\nStrategy Signals:")
         for strategy, signal in signals.items():
-            logger.info(f"  {strategy}: {signal['action']} (confidence: {signal['confidence']:.2f})")
+            logger.info(
+                f"  {strategy}: {signal['action']} (confidence: {signal['confidence']:.2f})"
+            )
 
         # Apply ensemble voting
         decision = backtester._apply_ensemble_voting(profile, strategy_mapping, signals)
@@ -220,9 +222,9 @@ def example_ensemble_voting():
 
 def example_comparison_single_vs_multi():
     """Example: Compare single-strategy vs multi-strategy execution."""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("EXAMPLE 4: Single vs Multi-Strategy Comparison")
-    print("="*80 + "\n")
+    print("=" * 80 + "\n")
 
     # Create backtester
     backtester = ProfileBatchBacktester("config/profile_batch_backtest.yaml")
@@ -232,7 +234,7 @@ def example_comparison_single_vs_multi():
         capital_initial=Decimal("100000"),
         objetivo_inversion=ObjectivoInversion.MAXIMIZAR_CAPITAL,
         risk_tolerance=RiskTolerance.MEDIO,
-        investment_horizon=24
+        investment_horizon=24,
     )
 
     # Run single-strategy
@@ -244,9 +246,9 @@ def example_comparison_single_vs_multi():
     multi_result = backtester.run_single_profile(profile, multi_strategy=True)
 
     # Compare results
-    logger.info("\n" + "-"*80)
+    logger.info("\n" + "-" * 80)
     logger.info("COMPARISON")
-    logger.info("-"*80)
+    logger.info("-" * 80)
 
     logger.info("\nSingle-Strategy Mode:")
     logger.info(f"  Sharpe: {single_result.baseline_results.get('sharpe_ratio', 0):.2f}")
@@ -257,14 +259,15 @@ def example_comparison_single_vs_multi():
     logger.info(f"  Sharpe: {multi_result.baseline_results.get('sharpe_ratio', 0):.2f}")
     logger.info(f"  Return: {multi_result.baseline_results.get('return_pct', 0):.2f}%")
     logger.info(f"  Max DD: {multi_result.baseline_results.get('max_drawdown', 0):.2f}%")
-    logger.info(f"  Strategies: {len(multi_result.enabled_strategies) if multi_result.enabled_strategies else 0}")
+    logger.info(
+        f"  Strategies: {len(multi_result.enabled_strategies) if multi_result.enabled_strategies else 0}"
+    )
 
     # Calculate improvement
     if multi_result.baseline_results.get('sharpe_ratio', 0) > 0:
-        sharpe_diff = (
-            multi_result.baseline_results.get('sharpe_ratio', 0) -
-            single_result.baseline_results.get('sharpe_ratio', 0)
-        )
+        sharpe_diff = multi_result.baseline_results.get(
+            'sharpe_ratio', 0
+        ) - single_result.baseline_results.get('sharpe_ratio', 0)
         logger.info(f"\nSharpe Ratio Difference: {sharpe_diff:+.2f}")
 
         if sharpe_diff > 0:
@@ -277,10 +280,10 @@ def example_comparison_single_vs_multi():
 
 def main():
     """Run all examples."""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("MULTI-STRATEGY EXECUTION EXAMPLES")
     print("ProfileBatchBacktester Demonstration")
-    print("="*80)
+    print("=" * 80)
 
     try:
         # Example 1: Single profile multi-strategy
@@ -295,9 +298,9 @@ def main():
         # Example 4: Comparison
         # example_comparison_single_vs_multi()  # Uncomment to run
 
-        print("\n" + "="*80)
+        print("\n" + "=" * 80)
         print("EXAMPLES COMPLETED")
-        print("="*80 + "\n")
+        print("=" * 80 + "\n")
 
     except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"Error running examples: {e}", exc_info=True)

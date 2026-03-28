@@ -207,11 +207,7 @@ def is_mutex_error(exception: Exception) -> bool:
     ]
 
     # Check error message
-    for keyword in mutex_keywords:
-        if keyword in error_str or keyword in error_type:
-            return True
-
-    return False
+    return any(keyword in error_str or keyword in error_type for keyword in mutex_keywords)
 
 
 @retry(

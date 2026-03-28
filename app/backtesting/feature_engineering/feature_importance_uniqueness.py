@@ -46,7 +46,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -118,7 +118,7 @@ class UniquenessResult:
     methods_used: List[str] = field(default_factory=list)
     timestamp: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Union[str, float, int, List[str], Dict[str, float], Dict[str, List[str]]]]:
         """Convert to dictionary."""
         return {
             "feature_names": self.feature_names,
@@ -308,7 +308,7 @@ class MDIWithUniqueness:
 
     def calculate(
         self,
-        model: Any,
+        model: object,
         X: Union[pd.DataFrame, np.ndarray],
         y: Union[pd.Series, np.ndarray],
         events: pd.Series,
@@ -405,7 +405,7 @@ class MDAWithUniqueness:
 
     def calculate(
         self,
-        model: Any,
+        model: object,
         X: Union[pd.DataFrame, np.ndarray],
         y: Union[pd.Series, np.ndarray],
         events: pd.Series,
@@ -488,7 +488,7 @@ class MDAWithUniqueness:
 
     def _score_model_weighted(
         self,
-        model: Any,
+        model: object,
         X: np.ndarray,
         y: np.ndarray,
         sample_weights: np.ndarray,
@@ -621,7 +621,7 @@ class FinancialMLFeatureImportanceWithUniqueness:
 
     def calculate_importance(
         self,
-        model: Any,
+        model: object,
         X: Union[pd.DataFrame, np.ndarray],
         y: Union[pd.Series, np.ndarray],
         events: pd.Series,
@@ -746,7 +746,7 @@ class FinancialMLFeatureImportanceWithUniqueness:
 
 
 def calculate_feature_importance_with_uniqueness(
-    model: Any,
+    model: object,
     X: Union[pd.DataFrame, np.ndarray],
     y: Union[pd.Series, np.ndarray],
     events: pd.Series,

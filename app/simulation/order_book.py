@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 Order Book Simulation - Larry Harris's Limit Order Book Dynamics
 
@@ -14,8 +16,6 @@ Key concepts implemented:
 Reference:
     Harris, L. (2003). Trading and Exchanges, Chapters 3-4.
 """
-# mypy: ignore-errors
-# pylint: disable=unsupported-binary-operation  # For Python 3.10+ union syntax
 
 import logging
 import uuid
@@ -24,7 +24,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Tuple  # noqa: F401
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -163,6 +163,8 @@ class Order:
     @property
     def is_marketable(self) -> bool:
         """Check if order can be immediately executed against existing book."""
+        if total_quantity is None:
+            total_quantity = Decimal("0")
         return self.order_type == OrderType.MARKET
 
 
@@ -181,7 +183,7 @@ class PriceLevel:
 
     price: Decimal
     orders: deque = field(default_factory=deque)
-    total_quantity: Decimal = Decimal("0")
+    total_quantity: Optional[Decimal] = None
 
     def add_order(self, order: Order) -> None:
         """
@@ -320,7 +322,7 @@ class LimitOrderBook:
     def __init__(
         self,
         symbol: str,
-        tick_size: Decimal = Decimal("0.01"),
+        tick_size: Optional[Decimal] = None,
         max_depth: int = 100,
     ):
         """
@@ -331,6 +333,8 @@ class LimitOrderBook:
             tick_size: Minimum price increment
             max_depth: Maximum number of price levels to track
         """
+        if tick_size is None:
+            tick_size = Decimal("0.01")
         self.symbol = symbol
         self.tick_size = tick_size
         self.max_depth = max_depth
@@ -630,11 +634,13 @@ class LimitOrderBook:
 
         if order.is_buy:
             # Match against asks
-            while (
-                remaining_qty > 0
-                and self._ask_prices
-                and (order.order_type == OrderType.MARKET or self._ask_prices[0] <= order.price)
-            ):  # type: ignore
+            while remaining_qty > 0 and self._ask_prices:
+                # For limit orders, check price compatibility
+                # For market orders, match regardless of price
+                limit_price = order.price
+                if order.order_type != OrderType.MARKET and (limit_price is None or self._ask_prices[0] > limit_price):
+                    break
+
                 best_ask_price = self._ask_prices[0]
                 ask_level = self._asks[best_ask_price]
 
@@ -674,11 +680,13 @@ class LimitOrderBook:
 
         else:  # Sell order
             # Match against bids
-            while (
-                remaining_qty > 0
-                and self._bid_prices
-                and (order.order_type == OrderType.MARKET or self._bid_prices[0] >= order.price)
-            ):  # type: ignore
+            while remaining_qty > 0 and self._bid_prices:
+                # For limit orders, check price compatibility
+                # For market orders, match regardless of price
+                limit_price = order.price
+                if order.order_type != OrderType.MARKET and (limit_price is None or self._bid_prices[0] < limit_price):
+                    break
+
                 best_bid_price = self._bid_prices[0]
                 bid_level = self._bids[best_bid_price]
 

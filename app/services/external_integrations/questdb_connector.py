@@ -114,7 +114,7 @@ class QuestDBConnector:
             logger.info(f"✅ Connected to QuestDB ({self.host}:{self.ilp_port})")
             return True
 
-        except (ConnectionError, OSError, Exception) as e:
+        except Exception as e:
             logger.error(f"❌ QuestDB connection failed: {str(e)}")
             self.connected = False
             if self.session:
@@ -132,7 +132,7 @@ class QuestDBConnector:
             self.connected = False
             logger.info("✅ Disconnected from QuestDB")
             return True
-        except (ConnectionError, OSError, Exception) as e:
+        except Exception as e:
             logger.error(f"❌ Disconnect failed: {str(e)}")
             return False
 
@@ -235,7 +235,7 @@ class QuestDBConnector:
             logger.debug(f"✅ Buffered trade: {trade.trade_id}")
             return True
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"❌ Insert trade failed: {str(e)}")
             return False
 
@@ -259,7 +259,7 @@ class QuestDBConnector:
                     logger.error(f"❌ Flush failed: HTTP {resp.status}")
                     return False
 
-        except (ConnectionError, OSError, Exception) as e:
+        except Exception as e:
             logger.error(f"❌ Buffer flush failed: {str(e)}")
             return False
 

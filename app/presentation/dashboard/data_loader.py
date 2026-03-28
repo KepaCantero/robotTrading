@@ -39,7 +39,7 @@ class DashboardDataLoader:
         try:
             with open(result_file, "r") as f:
                 return json.load(f)
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             logger.error(f"Error loading backtest results: {e}")
             return None
 
@@ -96,7 +96,7 @@ class DashboardDataLoader:
                     lines = f.readlines()[-10:] if f.readlines() else []
                 if lines and "running" in str(lines).lower():
                     return "Running"
-            except (FileNotFoundError, PermissionError, IOError, OSError):
+            except OSError:
                 pass
 
         # Default to Idle status
@@ -138,7 +138,7 @@ class DashboardDataLoader:
                         return float(pnl_match.group().split(':')[1].strip())
                     except (ValueError, IndexError):
                         pass
-            except (FileNotFoundError, PermissionError, IOError, OSError):
+            except OSError:
                 pass
 
         # Default to 0.0 if no PnL found

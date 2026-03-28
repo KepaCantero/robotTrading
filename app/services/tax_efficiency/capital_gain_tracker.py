@@ -283,8 +283,8 @@ class CapitalGainTracker:
 
     def project_annual_tax(
         self,
-        marginal_tax_rate_st: Decimal = Decimal("0.35"),  # Short-term
-        marginal_tax_rate_lt: Decimal = Decimal("0.15"),  # Long-term
+        marginal_tax_rate_st: Optional[Decimal] = None,  # Short-term
+        marginal_tax_rate_lt: Optional[Decimal] = None,  # Long-term
     ) -> Decimal:
         """
         Project annual tax liability from realized gains.
@@ -296,6 +296,10 @@ class CapitalGainTracker:
         Returns:
             Estimated annual tax liability
         """
+        if marginal_tax_rate_st is None:
+            marginal_tax_rate_st = Decimal("0.35")
+        if marginal_tax_rate_lt is None:
+            marginal_tax_rate_lt = Decimal("0.15")
         net_st = self.get_short_term_gains() - self.get_short_term_losses()
         net_lt = self.get_long_term_gains() - self.get_long_term_losses()
 

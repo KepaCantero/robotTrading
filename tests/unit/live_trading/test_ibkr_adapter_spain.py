@@ -40,7 +40,9 @@ def adapter(mock_ib):
         "account": "TEST123",
         "paper_trading": True,
     }
-    with patch("app.services.live_trading.broker_adapters.ibkr_adapter_spain.IB", return_value=mock_ib):
+    with patch(
+        "app.services.live_trading.broker_adapters.ibkr_adapter_spain.IB", return_value=mock_ib
+    ):
         adapter = IBKRSpainAdapter(config, ib_instance=mock_ib)
         adapter._connected = True
         yield adapter
@@ -155,7 +157,9 @@ class TestIBKRSpainAdapterConnect:
     async def test_connect_failure(self, mock_ib):
         """Test connection failure."""
         mock_ib.isConnected.return_value = False
-        with patch("app.services.live_trading.broker_adapters.ibkr_adapter_spain.IB", return_value=mock_ib):
+        with patch(
+            "app.services.live_trading.broker_adapters.ibkr_adapter_spain.IB", return_value=mock_ib
+        ):
             adapter = IBKRSpainAdapter(ib_instance=mock_ib)
             result = await adapter.connect()
             assert result is False
@@ -384,8 +388,9 @@ class TestIBKRSpainAdapterEURSupport:
 
     def test_adapter_default_currency_eur(self, adapter):
         """Test adapter defaults to EUR."""
-        assert adapter.config.get("currency", "EUR") == "EUR" or \
-            adapter.currency_converter is not None
+        assert (
+            adapter.config.get("currency", "EUR") == "EUR" or adapter.currency_converter is not None
+        )
 
 
 class TestHelperFunctions:

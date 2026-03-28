@@ -294,7 +294,7 @@ class ConfigLoader:
         default = MetaAnalyzerConfig()
         return default.model_dump()
 
-    def get(self, key: str, default: Any = None) -> Any:
+    def get(self, key: str, default: Optional[object] = None) -> Optional[object]:
         """
         Get configuration value by dot-separated key.
 

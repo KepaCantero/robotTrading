@@ -1,4 +1,3 @@
-# pylint: disable=arguments-differ
 """
 Factory Pattern - Domain entity factories following Percival's Architecture Patterns with Python
 
@@ -134,11 +133,15 @@ class AbstractEntityFactory(ABC):
         portfolio_id: str,
         initial_capital: Decimal,
         currency: str = "USD",
-        max_position_size_pct: Decimal = Decimal('0.2'),
-        max_portfolio_exposure_pct: Decimal = Decimal('0.8'),
+        max_position_size_pct: Optional[Decimal] = None,
+        max_portfolio_exposure_pct: Optional[Decimal] = None,
         **kwargs,
     ) -> Portfolio:
         """Create a Portfolio entity."""
+        if max_position_size_pct is None:
+            max_position_size_pct = Decimal('0.2')
+        if max_portfolio_exposure_pct is None:
+            max_portfolio_exposure_pct = Decimal('0.8')
 
     @abstractmethod
     def create_position(
@@ -261,8 +264,8 @@ class TradingEntityFactory(AbstractEntityFactory):
         portfolio_id: str,
         initial_capital: Decimal,
         currency: str = "USD",
-        max_position_size_pct: Decimal = Decimal('0.2'),
-        max_portfolio_exposure_pct: Decimal = Decimal('0.8'),
+        max_position_size_pct: Optional[Decimal] = None,
+        max_portfolio_exposure_pct: Optional[Decimal] = None,
         **kwargs,
     ) -> Portfolio:
         """
@@ -282,6 +285,10 @@ class TradingEntityFactory(AbstractEntityFactory):
         Raises:
             ValueError: If parameters are invalid
         """
+        if max_position_size_pct is None:
+            max_position_size_pct = Decimal('0.2')
+        if max_portfolio_exposure_pct is None:
+            max_portfolio_exposure_pct = Decimal('0.8')
         if not portfolio_id:
             raise ValueError("Portfolio ID is required")
         if initial_capital <= 0:

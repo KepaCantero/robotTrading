@@ -48,6 +48,7 @@ SAMPLE_TEST_SYMBOLS = QUICK_TEST_SYMBOLS
 # Fixtures
 # ==============================================================================
 
+
 @pytest.fixture(scope="session")
 def all_symbols() -> List[str]:
     """Return all available symbols from data/historical/."""

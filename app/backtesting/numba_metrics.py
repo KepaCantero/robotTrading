@@ -409,10 +409,9 @@ def calculate_cvar_numba(returns: np.ndarray, confidence_level: float = 0.95) ->
 
     # Calculate average of returns below VaR
     cvar_sum = 0.0
-    cvar_count = 0
     for i in range(var_index + 1):
         cvar_sum += sorted_returns[i]
-        cvar_count += 1
+    cvar_count = var_index + 1
 
     if cvar_count > 0:
         return cvar_sum / cvar_count

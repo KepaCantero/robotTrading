@@ -159,13 +159,12 @@ class UniverseManager:
                     period_end = datetime.strptime(entry[3], "%Y-%m-%d")
 
                     # Check if penny stock period overlaps with backtest period
-                    if period_start <= end_date and period_end >= start_date:
-                        if symbol not in symbols:  # Avoid duplicates
-                            symbols.append(symbol)
-                            logger.debug(
-                                f"Including penny stock period for {symbol} "
-                                f"({entry[4]}: {period_start.date()} to {period_end.date()})"
-                            )
+                    if period_start <= end_date and period_end >= start_date and symbol not in symbols:  # Avoid duplicates
+                        symbols.append(symbol)
+                        logger.debug(
+                            f"Including penny stock period for {symbol} "
+                            f"({entry[4]}: {period_start.date()} to {period_end.date()})"
+                        )
                 except ValueError as e:
                     logger.error(f"Failed to parse penny stock dates for {symbol}: {e}")
                     raise

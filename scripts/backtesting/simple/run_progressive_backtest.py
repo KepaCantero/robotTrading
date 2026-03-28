@@ -38,6 +38,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 # CONFIGURACIÓN
 # =============================================================================
 
+
 # Colores para output
 class Colors:
     GREEN = '\033[92m'
@@ -207,11 +208,7 @@ def run_command(cmd: list, timeout: int = 300) -> Tuple[bool, str, float]:
     start = time.time()
     try:
         result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            cwd=PROJECT_ROOT
+            cmd, capture_output=True, text=True, timeout=timeout, cwd=PROJECT_ROOT
         )
         duration = time.time() - start
         success = result.returncode == 0
@@ -250,16 +247,25 @@ def run_level_1(quick: bool = False) -> dict:
     print_header("1.1 Imports de Estrategias", 2)
     for strategy_name, strategy_info in STRATEGIES.items():
         success, output, duration = run_command(
-            ["python", "-c", f"from {strategy_info['module']} import {strategy_info['class']}; print('OK')"],
-            timeout=30
+            [
+                "python",
+                "-c",
+                f"from {strategy_info['module']} import {strategy_info['class']}; print('OK')",
+            ],
+            timeout=30,
         )
-        print_result(f"Import {strategy_info['class']}", success, duration, output if not success else "")
+        print_result(
+            f"Import {strategy_info['class']}", success, duration, output if not success else ""
+        )
         results[f"import_{strategy_name}"] = success
 
     # 1.2 Verificar perfiles de inversor
     print_header("1.2 Perfiles de Inversor", 2)
     success, output, duration = run_command(
-        ["python", "-c", """
+        [
+            "python",
+            "-c",
+            """
 from app.domain.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
 from decimal import Decimal
 
@@ -273,16 +279,22 @@ for obj in ObjectivoInversion:
             investment_horizon=12,
         )
         print(f'{obj.value}-{risk.value}: OK')
-"""],
-        timeout=30
+""",
+        ],
+        timeout=30,
     )
-    print_result("Todos los perfiles de inversor", success, duration, output[-300:] if not success else "")
+    print_result(
+        "Todos los perfiles de inversor", success, duration, output[-300:] if not success else ""
+    )
     results["profiles"] = success
 
     # 1.3 Verificar TradingThresholds
     print_header("1.3 Configuración TradingThresholds", 2)
     success, output, duration = run_command(
-        ["python", "-c", """
+        [
+            "python",
+            "-c",
+            """
 from app.shared.config.params.trading_thresholds import TradingThresholds
 tt = TradingThresholds()
 assert tt.default_price_history_length == 200
@@ -291,16 +303,22 @@ assert tt.atr_history_length == 14
 assert tt.rsi_oversold == 30.0
 assert tt.rsi_overbought == 70.0
 print('OK')
-"""],
-        timeout=30
+""",
+        ],
+        timeout=30,
     )
-    print_result("TradingThresholds config", success, duration, output[-200:] if not success else "")
+    print_result(
+        "TradingThresholds config", success, duration, output[-200:] if not success else ""
+    )
     results["trading_thresholds"] = success
 
     # 1.4 Verificar engine de backtest
     print_header("1.4 Engine de Backtest", 2)
     success, output, duration = run_command(
-        ["python", "-c", """
+        [
+            "python",
+            "-c",
+            """
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig
 from decimal import Decimal
@@ -310,8 +328,9 @@ config = BacktestConfig(
     initial_capital=Decimal('100000'),
 )
 print('OK')
-"""],
-        timeout=30
+""",
+        ],
+        timeout=30,
     )
     print_result("SimpleBacktester init", success, duration, output[-200:] if not success else "")
     results["backtest_engine"] = success
@@ -319,15 +338,19 @@ print('OK')
     # 1.5 Verificar DataLoader
     print_header("1.5 DataLoader", 2)
     success, output, duration = run_command(
-        ["python", "-c", """
+        [
+            "python",
+            "-c",
+            """
 from app.backtesting.data_loader import DataLoader
 from datetime import datetime
 loader = DataLoader()
 quotes = loader.load_market_data('AAPL', datetime(2024, 12, 1), datetime(2025, 1, 1))
 print(f'Loaded {len(quotes)} quotes')
 assert len(quotes) > 0, 'No quotes loaded'
-"""],
-        timeout=60
+""",
+        ],
+        timeout=60,
     )
     print_result("DataLoader (AAPL 1 mes)", success, duration, output[-200:] if not success else "")
     results["data_loader"] = success
@@ -357,10 +380,15 @@ def run_level_2(quick: bool = False, strategy_filter: str = None) -> dict:
     results = {}
     start_date, end_date = get_date_range(90 if not quick else 30)  # 3 meses o 1 mes
 
-    strategies_to_test = {k: v for k, v in STRATEGIES.items() if strategy_filter is None or k == strategy_filter}
+    strategies_to_test = {
+        k: v for k, v in STRATEGIES.items() if strategy_filter is None or k == strategy_filter
+    }
 
     for strategy_name, strategy_info in strategies_to_test.items():
-        print_header(f"2.{list(strategies_to_test.keys()).index(strategy_name)+1} Estrategia: {strategy_name.upper()}", 2)
+        print_header(
+            f"2.{list(strategies_to_test.keys()).index(strategy_name)+1} Estrategia: {strategy_name.upper()}",
+            2,
+        )
         print(f"      {strategy_info['description']}")
         print(f"      Módulo: {strategy_info['module']}")
         print(f"      Período: {start_date} a {end_date}")
@@ -368,10 +396,16 @@ def run_level_2(quick: bool = False, strategy_filter: str = None) -> dict:
 
         # Test 2.x.1: Import
         success, output, duration = run_command(
-            ["python", "-c", f"from {strategy_info['module']} import {strategy_info['class']}; print('OK')"],
-            timeout=30
+            [
+                "python",
+                "-c",
+                f"from {strategy_info['module']} import {strategy_info['class']}; print('OK')",
+            ],
+            timeout=30,
         )
-        print_result(f"Import {strategy_name}", success, duration, output[-100:] if not success else "")
+        print_result(
+            f"Import {strategy_name}", success, duration, output[-100:] if not success else ""
+        )
         results[f"{strategy_name}_import"] = success
 
         if not success:
@@ -379,7 +413,10 @@ def run_level_2(quick: bool = False, strategy_filter: str = None) -> dict:
 
         # Test 2.x.2: Generación de señales
         success, output, duration = run_command(
-            ["python", "-c", f"""
+            [
+                "python",
+                "-c",
+                f"""
 from app.backtesting.data_loader import DataLoader
 from {strategy_info['module']} import {strategy_info['class']}
 from datetime import datetime
@@ -409,15 +446,19 @@ except Exception as e:
     print(f'Error: {{e}}')
     traceback.print_exc()
     exit(1)
-"""],
-            timeout=90
+""",
+            ],
+            timeout=90,
         )
         print_result(f"Signal generation", success, duration, output[-200:] if not success else "")
         results[f"{strategy_name}_signals"] = success
 
         # Test 2.x.3: Backtest básico
         success, output, duration = run_command(
-            ["python", "-c", f"""
+            [
+                "python",
+                "-c",
+                f"""
 from app.backtesting.data_loader import DataLoader
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig
@@ -454,8 +495,9 @@ result = backtester.run_backtest(quotes, signals)
 print(f'Trades: {{result.performance.total_trades}}')
 print(f'Win Rate: {{result.performance.win_rate:.1f}}%')
 print(f'Return: {{result.total_return:.2f}}%')
-"""],
-            timeout=120
+""",
+            ],
+            timeout=120,
         )
         print_result(f"Backtest básico", success, duration, output[-200:] if not success else "")
         results[f"{strategy_name}_backtest"] = success
@@ -485,10 +527,15 @@ def run_level_3(quick: bool = False, profile_filter: str = None) -> dict:
     results = {}
     start_date, end_date = get_date_range(180 if not quick else 60)  # 6 meses o 2 meses
 
-    profiles_to_test = {k: v for k, v in PROFILES.items() if profile_filter is None or k == profile_filter}
+    profiles_to_test = {
+        k: v for k, v in PROFILES.items() if profile_filter is None or k == profile_filter
+    }
 
     for profile_name, profile_info in profiles_to_test.items():
-        print_header(f"3.{list(profiles_to_test.keys()).index(profile_name)+1} Perfil: {profile_name.upper()}", 2)
+        print_header(
+            f"3.{list(profiles_to_test.keys()).index(profile_name)+1} Perfil: {profile_name.upper()}",
+            2,
+        )
         print(f"      {profile_info['description']}")
         print(f"      Riesgo: {profile_info['risk']}")
         print(f"      Return mínimo: {profile_info['min_return']}%")
@@ -505,7 +552,10 @@ def run_level_3(quick: bool = False, profile_filter: str = None) -> dict:
 
             strategy_info = STRATEGIES[strategy_name]
             success, output, duration = run_command(
-                ["python", "-c", f"""
+                [
+                    "python",
+                    "-c",
+                    f"""
 from app.backtesting.data_loader import DataLoader
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig
@@ -550,8 +600,9 @@ metrics = {{
 }}
 
 print(json.dumps(metrics))
-"""],
-                timeout=120
+""",
+                ],
+                timeout=120,
             )
 
             # Parsear resultados
@@ -579,9 +630,12 @@ print(json.dumps(metrics))
                 drawdown_ok = drawdown_value <= profile_info['max_drawdown']
                 trades_ok = metrics.get('trades', 0) >= profile_info['min_trades']
 
-                if return_ok: passed_checks += 1
-                if drawdown_ok: passed_checks += 1
-                if trades_ok: passed_checks += 1
+                if return_ok:
+                    passed_checks += 1
+                if drawdown_ok:
+                    passed_checks += 1
+                if trades_ok:
+                    passed_checks += 1
 
                 profile_passed = passed_checks == total_checks
             else:
@@ -591,11 +645,13 @@ print(json.dumps(metrics))
                 f"{strategy_name} vs {profile_name}",
                 success and profile_passed,
                 duration,
-                output[-150:] if not success else ""
+                output[-150:] if not success else "",
             )
 
             if metrics:
-                print(f"          Trades: {metrics.get('trades', 0)}, WinRate: {metrics.get('win_rate', 0):.1f}%, Return: {metrics.get('return', 0):.2f}%")
+                print(
+                    f"          Trades: {metrics.get('trades', 0)}, WinRate: {metrics.get('win_rate', 0):.1f}%, Return: {metrics.get('return', 0):.2f}%"
+                )
 
             results[f"{profile_name}_{strategy_name}"] = success and profile_passed
             profile_results.append(success and profile_passed)
@@ -604,7 +660,11 @@ print(json.dumps(metrics))
         if profile_results:
             profile_ok = any(profile_results)
             results[f"{profile_name}_overall"] = profile_ok
-            status = f"{Colors.GREEN}✓ APTO{Colors.END}" if profile_ok else f"{Colors.RED}✗ NO APTO{Colors.END}"
+            status = (
+                f"{Colors.GREEN}✓ APTO{Colors.END}"
+                if profile_ok
+                else f"{Colors.RED}✗ NO APTO{Colors.END}"
+            )
             print(f"\n        Perfil {profile_name}: {status}")
 
     # Resumen
@@ -641,9 +701,14 @@ def run_level_4(quick: bool = False) -> dict:
     for symbol in symbols:
         print_header(f"4.{symbols.index(symbol)+1} Tests para {symbol}", 2)
 
-        for strategy_name, strategy_info in list(STRATEGIES.items())[:3]:  # Solo primeras 3 estrategias
+        for strategy_name, strategy_info in list(STRATEGIES.items())[
+            :3
+        ]:  # Solo primeras 3 estrategias
             success, output, duration = run_command(
-                ["python", "-c", f"""
+                [
+                    "python",
+                    "-c",
+                    f"""
 from app.backtesting.data_loader import DataLoader
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig
@@ -680,8 +745,9 @@ result = backtester.run_backtest(quotes, signals)
 print(f'Return: {{result.total_return:.2f}}%')
 print(f'Trades: {{result.performance.total_trades}}')
 print(f'WinRate: {{result.performance.win_rate:.1f}}%')
-"""],
-                timeout=90
+""",
+                ],
+                timeout=90,
             )
 
             # Parsear output simple
@@ -697,7 +763,7 @@ print(f'WinRate: {{result.performance.win_rate:.1f}}%')
                 f"{strategy_name:20} (Ret: {return_val}, Trades: {trades_val})",
                 success,
                 duration,
-                output[-100:] if not success else ""
+                output[-100:] if not success else "",
             )
             results[f"{symbol}_{strategy_name}"] = success
 
@@ -736,7 +802,10 @@ def run_level_5(quick: bool = False) -> dict:
     print_header("5.1 Backtest 1 Año - AAPL con Momentum", 2)
 
     success, output, duration = run_command(
-        ["python", "-c", f"""
+        [
+            "python",
+            "-c",
+            f"""
 from app.backtesting.data_loader import DataLoader
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig
@@ -781,8 +850,9 @@ metrics = {{
 }}
 
 print(json.dumps(metrics))
-"""],
-        timeout=180
+""",
+        ],
+        timeout=180,
     )
 
     # Parsear métricas
@@ -812,16 +882,36 @@ print(json.dumps(metrics))
 
         # Evaluar criterios
         checks = [
-            ("Win Rate", metrics.get('win_rate', 0) >= PAPER_TRADING_CRITERIA['min_win_rate'],
-             metrics.get('win_rate', 0), PAPER_TRADING_CRITERIA['min_win_rate']),
-            ("Trades", metrics.get('trades', 0) >= PAPER_TRADING_CRITERIA['min_trades'],
-             metrics.get('trades', 0), PAPER_TRADING_CRITERIA['min_trades']),
-            ("Max Drawdown", metrics.get('drawdown', 100) <= PAPER_TRADING_CRITERIA['max_drawdown'],
-             metrics.get('drawdown', 0), PAPER_TRADING_CRITERIA['max_drawdown']),
-            ("Sharpe Ratio", metrics.get('sharpe', -999) >= PAPER_TRADING_CRITERIA['min_sharpe'],
-             metrics.get('sharpe', 0), PAPER_TRADING_CRITERIA['min_sharpe']),
-            ("Return", metrics.get('return', -999) >= PAPER_TRADING_CRITERIA['min_return'],
-             metrics.get('return', 0), PAPER_TRADING_CRITERIA['min_return']),
+            (
+                "Win Rate",
+                metrics.get('win_rate', 0) >= PAPER_TRADING_CRITERIA['min_win_rate'],
+                metrics.get('win_rate', 0),
+                PAPER_TRADING_CRITERIA['min_win_rate'],
+            ),
+            (
+                "Trades",
+                metrics.get('trades', 0) >= PAPER_TRADING_CRITERIA['min_trades'],
+                metrics.get('trades', 0),
+                PAPER_TRADING_CRITERIA['min_trades'],
+            ),
+            (
+                "Max Drawdown",
+                metrics.get('drawdown', 100) <= PAPER_TRADING_CRITERIA['max_drawdown'],
+                metrics.get('drawdown', 0),
+                PAPER_TRADING_CRITERIA['max_drawdown'],
+            ),
+            (
+                "Sharpe Ratio",
+                metrics.get('sharpe', -999) >= PAPER_TRADING_CRITERIA['min_sharpe'],
+                metrics.get('sharpe', 0),
+                PAPER_TRADING_CRITERIA['min_sharpe'],
+            ),
+            (
+                "Return",
+                metrics.get('return', -999) >= PAPER_TRADING_CRITERIA['min_return'],
+                metrics.get('return', 0),
+                PAPER_TRADING_CRITERIA['min_return'],
+            ),
         ]
 
         print("    Evaluación de Criterios:")
@@ -845,7 +935,10 @@ print(json.dumps(metrics))
 
     for symbol in symbols_to_test:
         success, output, duration = run_command(
-            ["python", "-c", f"""
+            [
+                "python",
+                "-c",
+                f"""
 from app.backtesting.data_loader import DataLoader
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig
@@ -876,8 +969,9 @@ backtester = SimpleBacktester(config, strategy=strategy, strategy_name='momentum
 result = backtester.run_backtest(quotes, signals)
 
 print(f'{symbol}: Return={{result.total_return:.2f}}%, Trades={{result.performance.total_trades}}')
-"""],
-            timeout=90
+""",
+            ],
+            timeout=90,
         )
         print_result(f"Backtest {symbol}", success, duration, output[-100:] if not success else "")
         results[f"final_{symbol}"] = success
@@ -892,7 +986,9 @@ print(f'{symbol}: Return={{result.total_return:.2f}}%, Trades={{result.performan
 
     if approved:
         print(f"{Colors.BOLD}{Colors.GREEN}{'='*80}{Colors.END}")
-        print(f"{Colors.BOLD}{Colors.GREEN}  ✓✓✓ SISTEMA APROBADO PARA PAPER TRADING ✓✓✓{Colors.END}")
+        print(
+            f"{Colors.BOLD}{Colors.GREEN}  ✓✓✓ SISTEMA APROBADO PARA PAPER TRADING ✓✓✓{Colors.END}"
+        )
         print(f"{Colors.BOLD}{Colors.GREEN}{'='*80}{Colors.END}")
         print()
         print("    El sistema ha pasado todos los criterios de validación.")
@@ -915,18 +1011,34 @@ print(f'{symbol}: Return={{result.total_return:.2f}}%, Trades={{result.performan
 
 def main():
     parser = argparse.ArgumentParser(description="Progressive Backtest Runner - Tests Metódicos")
-    parser.add_argument("--level", type=int, choices=[1, 2, 3, 4, 5], default=5,
-                        help="Run tests up to this level (default: 5)")
-    parser.add_argument("--quick", action="store_true",
-                        help="Quick mode - reduced data ranges and fewer symbols")
-    parser.add_argument("--strategy", type=str, choices=list(STRATEGIES.keys()),
-                        help="Test only specific strategy (Level 2)")
-    parser.add_argument("--profile", type=str, choices=list(PROFILES.keys()),
-                        help="Test only specific profile (Level 3)")
+    parser.add_argument(
+        "--level",
+        type=int,
+        choices=[1, 2, 3, 4, 5],
+        default=5,
+        help="Run tests up to this level (default: 5)",
+    )
+    parser.add_argument(
+        "--quick", action="store_true", help="Quick mode - reduced data ranges and fewer symbols"
+    )
+    parser.add_argument(
+        "--strategy",
+        type=str,
+        choices=list(STRATEGIES.keys()),
+        help="Test only specific strategy (Level 2)",
+    )
+    parser.add_argument(
+        "--profile",
+        type=str,
+        choices=list(PROFILES.keys()),
+        help="Test only specific profile (Level 3)",
+    )
     args = parser.parse_args()
 
     print(f"\n{Colors.BOLD}{'='*80}{Colors.END}")
-    print(f"{Colors.BOLD}{Colors.MAGENTA}  PROGRESSIVE BACKTEST RUNNER - TESTS METÓDICOS{Colors.END}")
+    print(
+        f"{Colors.BOLD}{Colors.MAGENTA}  PROGRESSIVE BACKTEST RUNNER - TESTS METÓDICOS{Colors.END}"
+    )
     print(f"{Colors.BOLD}{'='*80}{Colors.END}")
     print(f"  Fecha: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"  Nivel máximo: {args.level}")
@@ -970,11 +1082,15 @@ def main():
         total = len(results)
         total_passed += passed
         total_tests += total
-        pct = (passed/total*100) if total > 0 else 0
-        status = f"{Colors.GREEN}✓{Colors.END}" if passed == total else f"{Colors.YELLOW}~{Colors.END}"
+        pct = (passed / total * 100) if total > 0 else 0
+        status = (
+            f"{Colors.GREEN}✓{Colors.END}" if passed == total else f"{Colors.YELLOW}~{Colors.END}"
+        )
         print(f"    {status} {level}: {passed}/{total} tests ({pct:.0f}%)")
 
-    print(f"\n    {Colors.BOLD}Total: {total_passed}/{total_tests} tests ({total_passed/total_tests*100:.0f}%){Colors.END}")
+    print(
+        f"\n    {Colors.BOLD}Total: {total_passed}/{total_tests} tests ({total_passed/total_tests*100:.0f}%){Colors.END}"
+    )
     print(f"    {Colors.BOLD}Duración total: {total_duration:.1f}s{Colors.END}")
 
     # Verificar aprobación para paper trading

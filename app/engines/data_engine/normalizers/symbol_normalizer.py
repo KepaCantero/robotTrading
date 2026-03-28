@@ -6,7 +6,7 @@ Normaliza símbolos de diferentes formatos a formato estándar.
 
 import logging
 import re
-from typing import Any, Dict, Optional
+from typing import Dict, Optional, Union
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ class SymbolNormalizer:
     Convierte símbolos a formato estándar y maneja variaciones.
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[Dict[str, Union[str, int, float, bool]]] = None):
         """
         Inicializar normalizador.
 
@@ -40,7 +40,7 @@ class SymbolNormalizer:
         )
         self.exchange_mappings = config.get('exchange_mappings', {})
 
-    def normalize(self, symbol: Any, source: Optional[str] = None) -> str:
+    def normalize(self, symbol: Union[str, int, float], source: Optional[str] = None) -> str:
         """
         Normalizar símbolo a formato estándar.
 

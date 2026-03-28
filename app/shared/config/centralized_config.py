@@ -28,7 +28,7 @@ SOLID COMPLIANCE:
 import logging
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 import yaml
 from pydantic import Field
@@ -222,13 +222,13 @@ class CentralizedConfig(BaseSettings):
         """Alias for trading property - backwards compatibility."""
         return self.trading
 
-    def get_trading_threshold(self, threshold_name: str) -> Any:
+    def get_trading_threshold(self, threshold_name: str) -> Union[int, float, str, bool]:
         """Get a specific trading threshold value."""
         if not hasattr(self.trading, threshold_name):
             raise AttributeError(f"Trading threshold '{threshold_name}' does not exist")
         return getattr(self.trading, threshold_name)
 
-    def update_strategy_config(self, strategy_name: str, updates: Dict[str, Any]) -> bool:
+    def update_strategy_config(self, strategy_name: str, updates: Dict[str, object]) -> bool:
         """Update configuration for a specific strategy."""
         if strategy_name in self.strategies:
             current_config = self.strategies[strategy_name]
@@ -262,7 +262,7 @@ class CentralizedConfig(BaseSettings):
             )
             return False
 
-    def get_config_summary(self) -> Dict[str, Any]:
+    def get_config_summary(self) -> Dict[str, object]:
         """Get a summary of the current configuration."""
         return {
             "environment": self.environment.value,
@@ -324,7 +324,7 @@ def get_config() -> CentralizedConfig:
     return _config
 
 
-def get_trading_threshold(threshold_name: str = None) -> Any:
+def get_trading_threshold(threshold_name: str = None) -> Union[int, float, str, bool, "TradingThresholds"]:
     """Get trading thresholds or specific threshold."""
     if threshold_name is None:
         return get_config().trading
@@ -342,7 +342,7 @@ def get_compliance_config() -> ComplianceConfig:
     return get_config().compliance
 
 
-def get_strategy_stock_allocator_config(tier: Optional[str] = None) -> Dict[str, Any]:
+def get_strategy_stock_allocator_config(tier: Optional[str] = None) -> Dict[str, object]:
     """
     Get Strategy Stock Allocator configuration.
 
@@ -378,7 +378,7 @@ def validate_config() -> bool:
     return get_config().validate_configuration()
 
 
-def get_config_summary() -> Dict[str, Any]:
+def get_config_summary() -> Dict[str, object]:
     """Get a summary of the current configuration."""
     return get_config().get_config_summary()
 
@@ -400,7 +400,7 @@ def update_strategy_config(strategy_name: str, new_config: dict) -> bool:
 # =============================================================================
 
 
-def load_config_from_yaml(config_path: Path) -> Dict[str, Any]:
+def load_config_from_yaml(config_path: Path) -> Dict[str, object]:
     """
     Load configuration from YAML file.
 
@@ -417,7 +417,7 @@ def load_config_from_yaml(config_path: Path) -> Dict[str, Any]:
     return _loader_registry.load(config_path)
 
 
-def load_config_from_json(config_path: Path) -> Dict[str, Any]:
+def load_config_from_json(config_path: Path) -> Dict[str, object]:
     """
     Load configuration from JSON file.
 
@@ -434,7 +434,7 @@ def load_config_from_json(config_path: Path) -> Dict[str, Any]:
     return _loader_registry.load(config_path)
 
 
-def load_config_with_cache(config_path: Path) -> Dict[str, Any]:
+def load_config_with_cache(config_path: Path) -> Dict[str, object]:
     """
     Load configuration with caching support.
 
@@ -550,7 +550,7 @@ def validate_config_object(config: Configuration) -> bool:
 # =============================================================================
 
 
-def merge_configs(base_config: Dict[str, Any], override_config: Dict[str, Any]) -> Dict[str, Any]:
+def merge_configs(base_config: Dict[str, object], override_config: Dict[str, object]) -> Dict[str, object]:
     """
     Merge two configuration dictionaries recursively.
 
@@ -659,7 +659,7 @@ def update_atr_multiplier(config: Configuration, multiplier_name: str, value: fl
     config.set_atr_multiplier(multiplier_name, value)
 
 
-def update_nested_value(config: Configuration, key_path: str, value: Any) -> None:
+def update_nested_value(config: Configuration, key_path: str, value: Union[str, int, float, bool, Dict[str, object], List[object]]) -> None:
     """
     Update nested configuration value.
 
@@ -712,7 +712,7 @@ def concurrent_read_access(config: Configuration, num_threads: int = 10) -> list
 # =============================================================================
 
 
-def full_config_workflow(config_path: Path) -> Dict[str, Any]:
+def full_config_workflow(config_path: Path) -> Dict[str, object]:
     """
     Test complete configuration workflow: load, access, validate.
 
@@ -744,7 +744,7 @@ def full_config_workflow(config_path: Path) -> Dict[str, Any]:
     }
 
 
-def config_with_validation(config_dict: Dict[str, Any]) -> tuple:
+def config_with_validation(config_dict: Dict[str, object]) -> tuple:
     """
     Create configuration and perform full validation.
 

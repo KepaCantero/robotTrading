@@ -24,7 +24,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, Optional, Union
+from typing import Dict, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -118,7 +118,7 @@ class MetaLabelingResult:
     n_features: int = 0
     timestamp: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Union[str, int, float, bool, list, Dict[str, float], None]]:
         """Convert to dictionary."""
         return {
             "primary_predictions": self.primary_predictions.tolist(),
@@ -371,7 +371,7 @@ class MetaLabeling:
 
         return result
 
-    def _create_model(self, model_type: str) -> Any:
+    def _create_model(self, model_type: str) -> object:
         """
         Create ML model based on type.
 
@@ -443,7 +443,7 @@ class MetaLabeling:
         else:
             raise DataValidationError(f"Unknown model type: {model_type}")
 
-    def _get_proba(self, model: Any, X: np.ndarray) -> np.ndarray:
+    def _get_proba(self, model: object, X: np.ndarray) -> np.ndarray:
         """
         Get probability predictions from model.
 

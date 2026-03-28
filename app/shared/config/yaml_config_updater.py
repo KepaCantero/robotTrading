@@ -28,7 +28,7 @@ class YAMLConfigUpdater:
     - Validación de parámetros de entrada (GAP fix)
     """
 
-    def __init__(self, config_dir: Path = Path("config"), backup_dir: Optional[Path] = None):
+    def __init__(self, config_dir: Optional[Path] = None, backup_dir: Optional[Path] = None):
         """
         Inicializar updater.
 
@@ -36,6 +36,8 @@ class YAMLConfigUpdater:
             config_dir: Directorio de configuración (default: "config")
             backup_dir: Directorio para backups (default: config/backups)
         """
+        if config_dir is None:
+            config_dir = Path("config")
         self.config_dir = Path(config_dir)
         self.backup_dir = Path(backup_dir) if backup_dir else self.config_dir / "backups"
         self.backup_dir.mkdir(parents=True, exist_ok=True)
@@ -118,19 +120,17 @@ class YAMLConfigUpdater:
 
             elif param_type == "detector":
                 # Detectors have various parameters
-                if "period" in key_lower or "window" in key_lower:
-                    if not isinstance(value, int) or value < 1:
-                        raise ValueError(
-                            f"Detector parameter '{key}' must be a positive integer, got {value}"
-                        )
+                if ("period" in key_lower or "window" in key_lower) and (not isinstance(value, int) or value < 1):
+                    raise ValueError(
+                        f"Detector parameter '{key}' must be a positive integer, got {value}"
+                    )
 
             elif param_type == "strategy":
                 # Strategy parameters
-                if "exposure" in key_lower:
-                    if not isinstance(value, (int, float)) or not (0 <= value <= 1):
-                        raise ValueError(
-                            f"Strategy exposure '{key}' must be between 0 and 1, got {value}"
-                        )
+                if "exposure" in key_lower and (not isinstance(value, (int, float)) or not (0 <= value <= 1)):
+                    raise ValueError(
+                        f"Strategy exposure '{key}' must be between 0 and 1, got {value}"
+                    )
 
             # General numeric validation
             if isinstance(value, (int, float)):
@@ -206,11 +206,10 @@ class YAMLConfigUpdater:
                 # Actualizar tier-specific overrides
                 if "tiers" in config and tier in config["tiers"]:
                     tier_config = config["tiers"][tier]
-                    if filter_name in tier_config:
-                        if "thresholds" in tier_config[filter_name]:
-                            tier_config[filter_name]["thresholds"].update(optimized_params)
-                            updated = True
-                            logger.info(f"Updated {filter_name} thresholds for tier={tier}")
+                    if filter_name in tier_config and "thresholds" in tier_config[filter_name]:
+                        tier_config[filter_name]["thresholds"].update(optimized_params)
+                        updated = True
+                        logger.info(f"Updated {filter_name} thresholds for tier={tier}")
             else:
                 # Actualizar parámetros base
                 if filter_name in config:

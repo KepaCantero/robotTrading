@@ -53,7 +53,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -118,12 +118,12 @@ class CVResult:
     test_indices: List[np.ndarray]
     """Test indices for each fold"""
 
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: Dict[str, Union[str, int, float, bool, None]] = field(default_factory=dict)
     """Additional metadata"""
 
     timestamp: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Union[str, int, float, bool, list, None]]:
         """Convert to dictionary."""
         return {
             "fold_scores": self.fold_scores,
@@ -381,8 +381,8 @@ class MetaLabelingCV:
 
     def cross_validate(
         self,
-        primary_model: Any,
-        meta_model: Any,
+        primary_model: object,
+        meta_model: object,
         X: Union[pd.DataFrame, np.ndarray],
         y: Union[pd.Series, np.ndarray],
         events: Optional[pd.Series] = None,
@@ -537,8 +537,8 @@ class MetaLabelingCV:
 
 
 def cv_score_meta_labeling(
-    primary_model: Any,
-    meta_model: Any,
+    primary_model: object,
+    meta_model: object,
     X: Union[pd.DataFrame, np.ndarray],
     y: Union[pd.Series, np.ndarray],
     events: Optional[pd.Series] = None,

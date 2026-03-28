@@ -184,12 +184,11 @@ class CorrelationAnalyzer(BaseCorrelationAnalyzer):
 
         for symbol1 in symbols:
             for symbol2 in symbols:
-                if symbol1 != symbol2 and symbol1 in correlation_matrix:
-                    if symbol2 in correlation_matrix[symbol1]:
-                        corr = correlation_matrix[symbol1][symbol2]
-                        # Skip None values (insufficient data)
-                        if corr is not None:
-                            correlations.append(corr)
+                if symbol1 != symbol2 and symbol1 in correlation_matrix and symbol2 in correlation_matrix[symbol1]:
+                    corr = correlation_matrix[symbol1][symbol2]
+                    # Skip None values (insufficient data)
+                    if corr is not None:
+                        correlations.append(corr)
 
         if not correlations:
             return {'average': None, 'max': None, 'min': None, 'std': None, 'count': 0}
@@ -210,21 +209,20 @@ class CorrelationAnalyzer(BaseCorrelationAnalyzer):
 
         for symbol1 in symbols:
             for symbol2 in symbols:
-                if symbol1 != symbol2 and symbol1 in correlation_matrix:
-                    if symbol2 in correlation_matrix[symbol1]:
-                        corr = abs(correlation_matrix[symbol1][symbol2])
+                if symbol1 != symbol2 and symbol1 in correlation_matrix and symbol2 in correlation_matrix[symbol1]:
+                    corr = abs(correlation_matrix[symbol1][symbol2])
 
-                        if corr > self.max_correlation:
-                            violations.append(
-                                {
-                                    'type': 'high_correlation',
-                                    'symbol1': symbol1,
-                                    'symbol2': symbol2,
-                                    'correlation': corr,
-                                    'limit': self.max_correlation,
-                                    'severity': 'high' if corr > 0.9 else 'medium',
-                                }
-                            )
+                    if corr > self.max_correlation:
+                        violations.append(
+                            {
+                                'type': 'high_correlation',
+                                'symbol1': symbol1,
+                                'symbol2': symbol2,
+                                'correlation': corr,
+                                'limit': self.max_correlation,
+                                'severity': 'high' if corr > 0.9 else 'medium',
+                            }
+                        )
 
         return violations
 
@@ -246,10 +244,9 @@ class CorrelationAnalyzer(BaseCorrelationAnalyzer):
         correlations = []
         for symbol1 in symbols:
             for symbol2 in symbols:
-                if symbol1 != symbol2 and symbol1 in correlation_matrix:
-                    if symbol2 in correlation_matrix[symbol1]:
-                        corr = abs(correlation_matrix[symbol1][symbol2])
-                        correlations.append(corr)
+                if symbol1 != symbol2 and symbol1 in correlation_matrix and symbol2 in correlation_matrix[symbol1]:
+                    corr = abs(correlation_matrix[symbol1][symbol2])
+                    correlations.append(corr)
 
         if not correlations:
             return 0.0

@@ -27,11 +27,11 @@ os.environ['MKL_INTERFACE_LAYER'] = 'LP64,GNU'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 # Ahora importar numpy y pandas DESPUÉS de configurar variables
-import numpy as np  # noqa: E402
+import numpy as np
 
-from app.security.secure_serialization import sign_and_dump, verify_and_load  # noqa: E402
+from app.security.secure_serialization import sign_and_dump, verify_and_load
 
-from .base_learning_engine import BaseLearningEngine  # noqa: E402
+from .base_learning_engine import BaseLearningEngine
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +40,7 @@ logger = logging.getLogger(__name__)
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import contextlib
 
 # Configure threading BEFORE any PyTorch operations
 torch.set_num_threads(1)
@@ -185,10 +186,8 @@ class DeepLearningEngine(BaseLearningEngine):
 
         # Asegurar threading ANTES de crear datasets
         torch.set_num_threads(1)
-        try:
+        with contextlib.suppress(RuntimeError):
             torch.set_num_interop_threads(1)
-        except RuntimeError:
-            pass
 
         # Import Dataset and DataLoader from torch.utils.data
         from torch.utils.data import DataLoader as _DataLoader, Dataset as _Dataset
@@ -199,14 +198,10 @@ class DeepLearningEngine(BaseLearningEngine):
 
             def __init__(self, sequences, labels):
                 # Asegurar threading antes de crear tensores
-                try:
+                with contextlib.suppress(RuntimeError):
                     torch.set_num_threads(1)
-                except RuntimeError:
-                    pass
-                try:
+                with contextlib.suppress(RuntimeError):
                     torch.set_num_interop_threads(1)
-                except RuntimeError:
-                    pass
                 # Usar numpy primero y luego convertir (más seguro)
                 import numpy as np
 
@@ -253,10 +248,8 @@ class DeepLearningEngine(BaseLearningEngine):
                 """Dataset para series de tiempo."""
 
                 def __init__(self, sequences, labels):
-                    try:
+                    with contextlib.suppress(RuntimeError):
                         torch.set_num_threads(1)
-                    except RuntimeError:
-                        pass
                     import numpy as np
 
                     sequences_np = np.array(sequences, dtype=np.float32)
@@ -623,7 +616,7 @@ class DeepLearningEngine(BaseLearningEngine):
                 metrics = engine.train(training_data, validation_data, use_subprocess=False)
 
                 # Guardar modelo en archivo temporal
-                import tempfile  # noqa: E402
+                import tempfile
 
                 model_file = tempfile.NamedTemporaryFile(delete=False, suffix='.pt')
                 model_path = model_file.name
@@ -636,7 +629,7 @@ class DeepLearningEngine(BaseLearningEngine):
 
                 # Retornar métricas y ruta del modelo
                 result_queue.put({'success': True, 'metrics': metrics, 'model_path': model_path})
-            except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+            except OSError as e:
                 result_queue.put(
                     {'success': False, 'error': str(e), 'error_type': type(e).__name__}
                 )
@@ -700,7 +693,7 @@ class DeepLearningEngine(BaseLearningEngine):
                         import os
 
                         os.unlink(model_path)
-                    except (RuntimeError, ValueError, TypeError, KeyError):  # noqa: E722
+                    except (RuntimeError, ValueError, TypeError, KeyError):
                         pass
 
                     self.is_trained = True
@@ -828,10 +821,8 @@ class DeepLearningEngine(BaseLearningEngine):
             """Dataset para series de tiempo."""
 
             def __init__(self, sequences, labels):
-                try:
+                with contextlib.suppress(RuntimeError):
                     torch.set_num_threads(1)
-                except RuntimeError:
-                    pass
                 import numpy as np
 
                 sequences_np = np.array(sequences, dtype=np.float32)

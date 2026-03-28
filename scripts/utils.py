@@ -32,12 +32,7 @@ from typing import List, Optional
 def run_command(cmd: List[str], capture: bool = True) -> subprocess.CompletedProcess:
     """Ejecuta comando y devuelve resultado"""
     try:
-        return subprocess.run(
-            cmd,
-            capture_output=capture,
-            text=True,
-            check=False
-        )
+        return subprocess.run(cmd, capture_output=capture, text=True, check=False)
     except Exception as e:
         print(f"Error ejecutando comando: {e}", file=sys.stderr)
         sys.exit(1)
@@ -46,6 +41,7 @@ def run_command(cmd: List[str], capture: bool = True) -> subprocess.CompletedPro
 # ============================================================================
 # VALIDATE
 # ============================================================================
+
 
 def validate_file(file_path: str, fix: bool = False) -> dict:
     """
@@ -95,6 +91,7 @@ def cmd_validate(args):
 # LIST FILES
 # ============================================================================
 
+
 def list_files(category: Optional[str] = None, pattern: str = "app/**/*.py") -> List[str]:
     """
     Lista archivos por categoría.
@@ -136,6 +133,7 @@ def cmd_list_files(args):
 # AUDIT FILES
 # ============================================================================
 
+
 def audit_files(files: List[str], parallel: int = 1) -> dict:
     """
     Audita archivos y genera reporte.
@@ -147,12 +145,7 @@ def audit_files(files: List[str], parallel: int = 1) -> dict:
     Returns:
         Dict con resultados de auditoría
     """
-    results = {
-        "total": len(files),
-        "passed": 0,
-        "failed": 0,
-        "files": {}
-    }
+    results = {"total": len(files), "passed": 0, "failed": 0, "files": {}}
 
     for file_path in files:
         result = validate_file(file_path)
@@ -192,6 +185,7 @@ def cmd_audit_files(args):
 # CHECK PROGRESS
 # ============================================================================
 
+
 def check_progress(task_name: str) -> dict:
     """
     Verifica progreso de una tarea.
@@ -219,6 +213,7 @@ def cmd_check_progress(args):
 # ============================================================================
 # MARK FILES
 # ============================================================================
+
 
 def mark_files(files: List[str], status: str) -> dict:
     """
@@ -263,11 +258,12 @@ def cmd_mark_files(args):
 # MAIN
 # ============================================================================
 
+
 def main():
     parser = argparse.ArgumentParser(
         description="AlgoTrading Scripts - Unified CLI",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=__doc__
+        epilog=__doc__,
     )
 
     subparsers = parser.add_subparsers(dest="command", help="Comando a ejecutar")
@@ -279,7 +275,9 @@ def main():
 
     # list_files
     parser_list = subparsers.add_parser("list_files", help="Listar archivos")
-    parser_list.add_argument("--category", choices=["critical", "p1", "p2", "all"], help="Categoría")
+    parser_list.add_argument(
+        "--category", choices=["critical", "p1", "p2", "all"], help="Categoría"
+    )
     parser_list.add_argument("--pattern", default="app/**/*.py", help="Patrón glob")
 
     # audit_files

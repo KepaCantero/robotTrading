@@ -447,7 +447,7 @@ class QualityInvesting:
             try:
                 config = get_config()
                 min_weight = float(getattr(config.trading, 'min_allocation_weight', 0.02))
-            except (AttributeError, Exception):
+            except Exception:
                 min_weight = 0.02
 
         # Rank stocks
@@ -471,7 +471,7 @@ class QualityInvesting:
 
         # Equal-weight with quality adjustments
         weights = {}
-        for symbol, score in selected:
+        for symbol, _score in selected:
             # Base equal weight
             base_weight = 1.0 / n_stocks
 

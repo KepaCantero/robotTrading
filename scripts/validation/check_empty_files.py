@@ -103,18 +103,11 @@ def mark_as_not_passed(req_file, reason):
     # Replace or add audit status
     if re.search(r'## Audit Status', content):
         content = re.sub(
-            r'## Audit Status.*?(?=##|\Z)',
-            new_audit_section,
-            content,
-            flags=re.DOTALL
+            r'## Audit Status.*?(?=##|\Z)', new_audit_section, content, flags=re.DOTALL
         )
     else:
         if re.search(r'## Critical Rules', content):
-            content = re.sub(
-                r'(## Critical Rules)',
-                new_audit_section + '\n\n\\1',
-                content
-            )
+            content = re.sub(r'(## Critical Rules)', new_audit_section + '\n\n\\1', content)
         else:
             content = content + '\n\n' + new_audit_section
 
@@ -153,7 +146,11 @@ def main():
                 with open(req_file, 'r', encoding='utf-8') as f:
                     content = f.read()
 
-                if re.search(r'## Audit Status.*?\*\*Status:\*\*\s*PASSED', content, re.DOTALL | re.IGNORECASE):
+                if re.search(
+                    r'## Audit Status.*?\*\*Status:\*\*\s*PASSED',
+                    content,
+                    re.DOTALL | re.IGNORECASE,
+                ):
                     passed_but_empty.append((py_file, req_file, reason))
                     print(f"   ⚠️  {py_file} - {reason}")
             except Exception:

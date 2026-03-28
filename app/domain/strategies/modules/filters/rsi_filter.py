@@ -19,18 +19,24 @@ This filter now uses centralized configuration from config/indicators.yaml:
 """
 
 import logging
-from typing import Dict, Optional
+from typing import Callable, Dict, Optional, Union
 
 from ..base_filter import BaseFilter
 
-# Try to import strategy config loader from centralized config
-try:
-    from app.shared.config.centralized_config import get_config
+# Type alias for the config loader function
+ConfigLoaderFunc = Callable[..., Dict]
 
+# Initialize get_config as None, then try to import
+get_config: Union[ConfigLoaderFunc, None] = None
+HAS_CONFIG_LOADER = False
+
+try:
+    from app.shared.config.centralized_config import get_config as _get_config
+
+    get_config = _get_config
     HAS_CONFIG_LOADER = True
 except ImportError:
-    get_config = None  # type: ignore
-    HAS_CONFIG_LOADER = False
+    pass  # get_config remains None, HAS_CONFIG_LOADER remains False
 
 logger = logging.getLogger(__name__)
 

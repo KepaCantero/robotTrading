@@ -17,7 +17,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 from jinja2 import Template
@@ -50,8 +50,8 @@ class ParameterChange:
     """A parameter that changed between baseline and optimization."""
 
     name: str
-    before: Any
-    after: Any
+    before: Union[int, float, str, bool]
+    after: Union[int, float, str, bool]
     impact: Optional[str] = None
     sensitivity: Optional[float] = None
 
@@ -119,11 +119,11 @@ class BaselineOptimizationReporter:
     def generate_report(
         self,
         profile: InputProfile,
-        baseline_results: Dict[str, Any],
-        optimization_results: Dict[str, Any],
-        comparison: Optional[Dict[str, Any]] = None,
-        walk_forward_results: Optional[Dict[str, Any]] = None,
-        sensitivity_results: Optional[Dict[str, Any]] = None,
+        baseline_results: Dict[str, Union[int, float, str, bool, list]],
+        optimization_results: Dict[str, Union[int, float, str, bool, list]],
+        comparison: Optional[Dict[str, Union[int, float, str, bool, list]]] = None,
+        walk_forward_results: Optional[Dict[str, Union[int, float, str, bool, list]]] = None,
+        sensitivity_results: Optional[Dict[str, Union[int, float, str, bool, list]]] = None,
     ) -> str:
         """
         Generate HTML comparison report.
@@ -269,7 +269,7 @@ class BaselineOptimizationReporter:
             with open(output_path, "w", encoding="utf-8") as f:
                 f.write(html)
             logger.info(f"Report saved to: {output_path}")
-        except (IOError, OSError) as e:
+        except OSError as e:
             logger.error(
                 f"Failed to write report to file: {output_path}",
                 extra={"error": str(e), "path": str(output_path)},
@@ -327,7 +327,7 @@ class BaselineOptimizationReporter:
             logger.error(f"Error generating PDF: {e}", exc_info=True)
             return b""
 
-    def _extract_metrics(self, results: Dict[str, Any]) -> Dict[str, float]:
+    def _extract_metrics(self, results: Dict[str, Union[int, float, str, bool, list]]) -> Dict[str, float]:
         """Extract key metrics from results dictionary."""
         performance = results.get("performance", {})
         equity_curve = results.get("equity_curve", [])
@@ -362,7 +362,7 @@ class BaselineOptimizationReporter:
 
     def _calculate_comparison(
         self, baseline: Dict[str, float], optimized: Dict[str, float]
-    ) -> Dict[str, Any]:
+    ) -> Dict[str, Union[int, float, str, bool, list]]:
         """Calculate comparison metrics."""
         return {
             "sharpe_improvement": self._pct_improvement(
@@ -473,9 +473,9 @@ class BaselineOptimizationReporter:
 
     def _extract_parameter_changes(
         self,
-        baseline_params: Dict[str, Any],
-        optimized_params: Dict[str, Any],
-        comparison: Dict[str, Any],
+        baseline_params: Dict[str, Union[int, float, str, bool, list]],
+        optimized_params: Dict[str, Union[int, float, str, bool, list]],
+        comparison: Dict[str, Union[int, float, str, bool, list]],
     ) -> List[ParameterChange]:
         """Extract and analyze parameter changes."""
         changes = []
@@ -502,7 +502,7 @@ class BaselineOptimizationReporter:
         return changes
 
     def _estimate_parameter_impact(
-        self, param_name: str, before: Any, after: Any, comparison: Dict[str, Any]
+        self, param_name: str, before: Union[int, float, str, bool], after: Union[int, float, str, bool], comparison: Dict[str, Union[int, float, str, bool, list]]
     ) -> str:
         """Estimate the impact of a parameter change."""
         # Simple heuristic-based impact estimation
@@ -529,8 +529,8 @@ class BaselineOptimizationReporter:
         self,
         baseline_metrics: Dict[str, float],
         optimized_metrics: Dict[str, float],
-        comparison: Dict[str, Any],
-        walk_forward_results: Optional[Dict[str, Any]],
+        comparison: Dict[str, Union[int, float, str, bool, list]],
+        walk_forward_results: Optional[Dict[str, Union[int, float, str, bool, list]]],
     ) -> Recommendation:
         """
         Generate recommendation with confidence score.
@@ -626,37 +626,28 @@ class BaselineOptimizationReporter:
         optimized_results: Dict,
         walk_forward_results: Optional[Dict] = None,
         sensitivity_results: Optional[Dict] = None,
-    ) -> Dict[str, Any]:
+    ) -> Dict[str, Union[int, float, str, bool, list]]:
         """Prepare Plotly chart data."""
-        chart_data = {}
-
-        # Baseline equity chart
-        chart_data["baseline_equity"] = self._create_equity_chart(
-            baseline_results.get("equity_curve", []), "Baseline", "#2c3e50"
-        )
-
-        # Optimized equity chart
-        chart_data["optimized_equity"] = self._create_equity_chart(
-            optimized_results.get("equity_curve", []), "Optimized", "#3498db"
-        )
-
-        # Dual equity chart
-        chart_data["dual_equity"] = self._create_dual_equity_chart(
-            baseline_results.get("equity_curve", []),
-            optimized_results.get("equity_curve", []),
-        )
-
-        # Drawdown chart
-        chart_data["drawdown"] = self._create_drawdown_chart(
-            baseline_results.get("equity_curve", []),
-            optimized_results.get("equity_curve", []),
-        )
-
-        # Risk radar chart
-        chart_data["risk_radar"] = self._create_risk_radar_chart(
-            self._extract_metrics(baseline_results),
-            self._extract_metrics(optimized_results),
-        )
+        chart_data = {
+            "baseline_equity": self._create_equity_chart(
+                baseline_results.get("equity_curve", []), "Baseline", "#2c3e50"
+            ),
+            "optimized_equity": self._create_equity_chart(
+                optimized_results.get("equity_curve", []), "Optimized", "#3498db"
+            ),
+            "dual_equity": self._create_dual_equity_chart(
+                baseline_results.get("equity_curve", []),
+                optimized_results.get("equity_curve", []),
+            ),
+            "drawdown": self._create_drawdown_chart(
+                baseline_results.get("equity_curve", []),
+                optimized_results.get("equity_curve", []),
+            ),
+            "risk_radar": self._create_risk_radar_chart(
+                self._extract_metrics(baseline_results),
+                self._extract_metrics(optimized_results),
+            ),
+        }
 
         # Walk-forward chart
         if walk_forward_results:
@@ -668,7 +659,7 @@ class BaselineOptimizationReporter:
 
         return chart_data
 
-    def _create_equity_chart(self, equity_curve: List, name: str, color: str) -> Dict[str, Any]:
+    def _create_equity_chart(self, equity_curve: List, name: str, color: str) -> Dict[str, Union[int, float, str, bool, list]]:
         """Create equity chart for single strategy."""
         if not equity_curve:
             logger.warning(f"Empty equity curve for {name}")
@@ -702,7 +693,7 @@ class BaselineOptimizationReporter:
 
     def _create_dual_equity_chart(
         self, baseline_curve: List, optimized_curve: List
-    ) -> Dict[str, Any]:
+    ) -> Dict[str, Union[int, float, str, bool, list]]:
         """Create dual equity chart overlay."""
         if not baseline_curve or not optimized_curve:
             logger.warning("Empty curve data for dual equity chart")
@@ -764,7 +755,7 @@ class BaselineOptimizationReporter:
             },
         }
 
-    def _create_drawdown_chart(self, baseline_curve: List, optimized_curve: List) -> Dict[str, Any]:
+    def _create_drawdown_chart(self, baseline_curve: List, optimized_curve: List) -> Dict[str, Union[int, float, str, bool, list]]:
         """Create underwater drawdown comparison chart."""
         if not baseline_curve or not optimized_curve:
             return {"data": [], "layout": {}}
@@ -825,7 +816,7 @@ class BaselineOptimizationReporter:
 
     def _create_risk_radar_chart(
         self, baseline_metrics: Dict, optimized_metrics: Dict
-    ) -> Dict[str, Any]:
+    ) -> Dict[str, Union[int, float, str, bool, list]]:
         """Create risk-adjusted returns radar chart."""
         # Normalize metrics to 0-1 scale for radar chart
         metrics_to_plot = ["sharpe_ratio", "sortino_ratio", "calmar_ratio", "omega_ratio"]
@@ -866,7 +857,7 @@ class BaselineOptimizationReporter:
             },
         }
 
-    def _create_walk_forward_chart(self, walk_forward_results: Dict) -> Dict[str, Any]:
+    def _create_walk_forward_chart(self, walk_forward_results: Dict) -> Dict[str, Union[int, float, str, bool, list]]:
         """Create walk-forward window performance chart."""
         windows = walk_forward_results.get("windows", [])
 
@@ -890,7 +881,7 @@ class BaselineOptimizationReporter:
             },
         }
 
-    def _create_sensitivity_heatmap(self, sensitivity_results: Dict) -> Dict[str, Any]:
+    def _create_sensitivity_heatmap(self, sensitivity_results: Dict) -> Dict[str, Union[int, float, str, bool, list]]:
         """Create parameter sensitivity heatmap."""
         # Placeholder - implement based on sensitivity data structure
         return {"data": [], "layout": {}}
@@ -900,7 +891,7 @@ class BaselineOptimizationReporter:
         baseline: Dict[str, float],
         optimized: Dict[str, float],
         significance_tests: Dict[str, StatisticalTest],
-    ) -> List[Dict[str, Any]]:
+    ) -> List[Dict[str, Union[int, float, str, bool, list]]]:
         """Prepare key metrics table data."""
         metrics_config = [
             ("Sharpe Ratio", "sharpe_ratio", "{:.2f}"),
@@ -951,7 +942,7 @@ class BaselineOptimizationReporter:
 
     def _prepare_drawdown_metrics(
         self, baseline: Dict[str, float], optimized: Dict[str, float]
-    ) -> List[Dict[str, Any]]:
+    ) -> List[Dict[str, Union[int, float, str, bool, list]]]:
         """Prepare drawdown metrics table data."""
         metrics = [
             ("Max Drawdown", "max_drawdown", "{:.2f}%"),
@@ -989,7 +980,7 @@ class BaselineOptimizationReporter:
 
     def _prepare_risk_metrics_table(
         self, baseline: Dict[str, float], optimized: Dict[str, float]
-    ) -> List[Dict[str, Any]]:
+    ) -> List[Dict[str, Union[int, float, str, bool, list]]]:
         """Prepare risk metrics table data."""
         metrics = [
             ("Sharpe Ratio", "sharpe_ratio", "{:.2f}", 1.0),
@@ -1030,7 +1021,7 @@ class BaselineOptimizationReporter:
 
         return table_data
 
-    def _prepare_walk_forward_metrics(self, walk_forward_results: Dict) -> List[Dict[str, Any]]:
+    def _prepare_walk_forward_metrics(self, walk_forward_results: Dict) -> List[Dict[str, Union[int, float, str, bool, list]]]:
         """Prepare walk-forward validation metrics table."""
         if not walk_forward_results:
             return []

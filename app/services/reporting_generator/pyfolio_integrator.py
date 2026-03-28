@@ -34,6 +34,8 @@ class FactorExposure:
 
     def to_dict(self) -> Dict:
         """Convert to dictionary."""
+        if model_r_squared is None:
+            model_r_squared = Decimal("0")
         return {
             "factor_name": self.factor_name,
             "coefficient": float(self.coefficient),
@@ -52,7 +54,7 @@ class FactorAnalysis:
     factors: List[FactorExposure] = field(default_factory=list)
     residual_return_pct: Decimal = Decimal("0")  # Unexplained return (alpha)
     residual_volatility_pct: Decimal = Decimal("0")  # Unexplained volatility
-    model_r_squared: Decimal = Decimal("0")  # How well factors explain returns
+    model_r_squared: Optional[Decimal] = None  # How well factors explain returns
     factor_contribution_pct: Dict[str, Decimal] = field(default_factory=dict)
 
     def to_dict(self) -> Dict:
@@ -107,6 +109,8 @@ class CapacityFade:
 
     def to_dict(self) -> Dict:
         """Convert to dictionary."""
+        if worst_day_pct is None:
+            worst_day_pct = Decimal("0")
         return {
             "backtest_period": self.backtest_period,
             "backtest_ann_return_pct": float(self.backtest_ann_return_pct),
@@ -159,7 +163,7 @@ class Tearsheet:
 
     # Best/worst days
     best_day_pct: Decimal = Decimal("0")
-    worst_day_pct: Decimal = Decimal("0")
+    worst_day_pct: Optional[Decimal] = None
 
     def to_dict(self) -> Dict:
         """Convert to dictionary."""
@@ -535,10 +539,10 @@ class PyFolioIntegrator:
         self,
         backtest_returns: List[Decimal],
         live_returns: Optional[List[Decimal]] = None,
-        backtest_capital: Decimal = Decimal("100000"),
-        current_capital: Decimal = Decimal("100000"),
-        target_capital: Decimal = Decimal("250000"),
-        required_return_pct: Decimal = Decimal("3.9"),
+        backtest_capital: Optional[Decimal] = None,
+        current_capital: Optional[Decimal] = None,
+        target_capital: Optional[Decimal] = None,
+        required_return_pct: Optional[Decimal] = None,
         backtest_sharpe: Optional[Decimal] = None,
         live_sharpe: Optional[Decimal] = None,
     ) -> CapacityFade:
@@ -561,6 +565,14 @@ class PyFolioIntegrator:
         Returns:
             CapacityFade analysis with projections
         """
+        if backtest_capital is None:
+            backtest_capital = Decimal("100000")
+        if current_capital is None:
+            current_capital = Decimal("100000")
+        if target_capital is None:
+            target_capital = Decimal("250000")
+        if required_return_pct is None:
+            required_return_pct = Decimal("3.9")
         try:
             # Calculate backtest metrics
             backtest_arr = np.array([float(r) for r in backtest_returns])

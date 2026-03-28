@@ -269,7 +269,7 @@ class AlertFatiguePreventer:
                 await self._load_false_positives()
                 await self._cleanup_old_data()
                 self.logger.info("AlertFatiguePreventer initialized")
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 self.logger.error(f"Error initializing: {e}")
                 raise
 
@@ -356,7 +356,7 @@ class AlertFatiguePreventer:
 
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Database initialization failed: {e}")
             raise
 
@@ -379,7 +379,7 @@ class AlertFatiguePreventer:
 
                 self.logger.info(f"Loaded {len(rows)} active suppressions")
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error loading suppression cache: {e}")
 
     async def _load_false_positives(self) -> None:
@@ -401,7 +401,7 @@ class AlertFatiguePreventer:
 
                 self.logger.info(f"Loaded {len(rows)} false positives")
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error loading false positives: {e}")
 
     async def _cleanup_old_data(self) -> None:
@@ -429,7 +429,7 @@ class AlertFatiguePreventer:
 
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error cleaning up data: {e}")
 
     async def process_alerts(
@@ -777,7 +777,7 @@ class AlertFatiguePreventer:
                 )
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error marking false positive: {e}")
 
     async def _save_alert(self, alert: ProcessedAlert) -> None:
@@ -808,7 +808,7 @@ class AlertFatiguePreventer:
                 )
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error saving alert: {e}")
 
     async def get_statistics(self) -> AlertStats:

@@ -169,7 +169,7 @@ class ForexRiskTracker:
         self,
         base_currency: str = "EUR",
         forex_service: Optional[Any] = None,
-        min_hedge_threshold: Decimal = Decimal("10000"),
+        min_hedge_threshold: Optional[Decimal] = None,
     ):
         """
         Initialize forex risk tracker.
@@ -179,6 +179,8 @@ class ForexRiskTracker:
             forex_service: Forex data service for rates (from forex_data_service)
             min_hedge_threshold: Minimum unhedged exposure to recommend hedge
         """
+        if min_hedge_threshold is None:
+            min_hedge_threshold = Decimal("10000")
         self.base_currency = base_currency.upper()
         self.forex_service = forex_service
         self.min_hedge_threshold = min_hedge_threshold
@@ -370,7 +372,7 @@ class ForexRiskTracker:
                         amount_eur=net_exposure,
                         months=3,
                     )
-                except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+                except (asyncio.TimeoutError, OSError) as e:
                     logger.warning(f"Could not calculate forward cost for {currency}: {e}")
                     forward_rate = None
                     cost_eur = None

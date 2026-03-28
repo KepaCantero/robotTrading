@@ -40,6 +40,7 @@ def test_domain_entities_importable():
 
     try:
         import importlib.util
+
         if importlib.util.find_spec("app.domain.entities.pre_trade_analysis"):
             print("  ✅ PreTradeAnalysis available")
         else:
@@ -50,6 +51,7 @@ def test_domain_entities_importable():
 
     try:
         import importlib.util
+
         if importlib.util.find_spec("app.domain.entities.post_trade_analysis"):
             print("  ✅ PostTradeAnalysis available")
         else:
@@ -60,6 +62,7 @@ def test_domain_entities_importable():
 
     try:
         import importlib.util
+
         if importlib.util.find_spec("app.domain.entities.portfolio_optimization"):
             print("  ✅ PortfolioOptimization available")
         else:
@@ -150,7 +153,10 @@ def test_compliance_engine_updated():
         return False
     print("  ✅ PostTradeAnalysis import found")
 
-    if "from app.domain.entities.portfolio_optimization import PortfolioOptimization" not in content:
+    if (
+        "from app.domain.entities.portfolio_optimization import PortfolioOptimization"
+        not in content
+    ):
         print("  ❌ PortfolioOptimization import not found in compliance_engine.py")
         return False
     print("  ✅ PortfolioOptimization import found")

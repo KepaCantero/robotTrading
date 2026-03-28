@@ -227,7 +227,7 @@ class RiskAdjustmentCalculator:
         self,
         recommended_stop_loss_pct: Decimal,
         risk_tolerance: int,
-        volatility_multiplier: Decimal = Decimal("1.0"),
+        volatility_multiplier: Optional[Decimal] = None,
     ) -> Decimal:
         """
         Calculate volatility-adjusted stop loss.
@@ -240,6 +240,8 @@ class RiskAdjustmentCalculator:
         Returns:
             Adjusted stop loss percentage
         """
+        if volatility_multiplier is None:
+            volatility_multiplier = Decimal("1.0")
         recommended_stop_loss_pct = Decimal(str(recommended_stop_loss_pct))
         volatility_multiplier = Decimal(str(volatility_multiplier))
 

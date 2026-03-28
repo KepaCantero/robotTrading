@@ -523,15 +523,15 @@ METRICAS DE CALIDAD OBJETIVO
 def print_all_diagrams():
     """Imprime todos los diagramas."""
     print(BEFORE_AFTER_DIAGRAM)
-    print("\n" + "="*80 + "\n")
+    print("\n" + "=" * 80 + "\n")
     print(DEPENDENCIES_DIAGRAM)
-    print("\n" + "="*80 + "\n")
+    print("\n" + "=" * 80 + "\n")
     print(HANDLER_PATTERN_DIAGRAM)
-    print("\n" + "="*80 + "\n")
+    print("\n" + "=" * 80 + "\n")
     print(FACADE_PATTERN_DIAGRAM)
-    print("\n" + "="*80 + "\n")
+    print("\n" + "=" * 80 + "\n")
     print(MIGRATION_PLAN_DIAGRAM)
-    print("\n" + "="*80 + "\n")
+    print("\n" + "=" * 80 + "\n")
     print(TESTING_STRATEGY_DIAGRAM)
 
 

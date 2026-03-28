@@ -329,7 +329,9 @@ def main():
     print()
 
     # Header
-    header = f"{'Profile':<15} {'Symbol':<8} {'Return%':>10} {'Sharpe':>8} {'Trades':>8} {'Win%':>8}"
+    header = (
+        f"{'Profile':<15} {'Symbol':<8} {'Return%':>10} {'Sharpe':>8} {'Trades':>8} {'Win%':>8}"
+    )
     print(header)
     print("-" * len(header))
 

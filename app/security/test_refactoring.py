@@ -19,9 +19,9 @@ from typing import Any
 
 def test_user_module():
     """Test User domain model."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("TEST 1: User Module")
-    print("="*70)
+    print("=" * 70)
 
     # Import module
     from app.security.user import User, UserRoles
@@ -69,9 +69,9 @@ def test_user_module():
 
 def test_interfaces_module():
     """Test Protocol interfaces."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("TEST 2: Protocol Interfaces")
-    print("="*70)
+    print("=" * 70)
 
     from app.security.interfaces import (
         AuthAttemptTrackerProtocol,
@@ -106,9 +106,9 @@ def test_interfaces_module():
 
 def test_user_store_module():
     """Test UserStore implementation."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("TEST 3: UserStore Module")
-    print("="*70)
+    print("=" * 70)
 
     from app.security.user import User, UserRoles
     from app.security.user_store import UserStore
@@ -117,8 +117,8 @@ def test_user_store_module():
     store = UserStore()
 
     print("✓ UserStore created successfully")
-    print(f"  - Thread-safe locks initialized")
-    print(f"  - Configuration loaded from environment")
+    print("  - Thread-safe locks initialized")
+    print("  - Configuration loaded from environment")
 
     # Add a test user manually
     test_user = User(
@@ -175,9 +175,9 @@ def test_user_store_module():
 
 def test_jwt_token_manager_module():
     """Test JWTTokenManager implementation."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("TEST 4: JWTTokenManager Module")
-    print("="*70)
+    print("=" * 70)
 
     from app.security.jwt_token_manager import JWTTokenManager
 
@@ -215,9 +215,7 @@ def test_jwt_token_manager_module():
         print("✓ Invalid token rejected")
 
         # Test custom expiration
-        custom_token = manager.create_access_token(
-            token_data, expires_delta=timedelta(hours=1)
-        )
+        custom_token = manager.create_access_token(token_data, expires_delta=timedelta(hours=1))
         assert custom_token is not None
         print("✓ Token created with custom expiration")
 
@@ -235,9 +233,9 @@ def test_jwt_token_manager_module():
 
 def test_auth_attempt_tracker_module():
     """Test AuthAttemptTracker implementation."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("TEST 5: AuthAttemptTracker Module")
-    print("="*70)
+    print("=" * 70)
 
     # Mock audit logger to avoid dependencies
     class MockAuditLogger:
@@ -284,7 +282,7 @@ def test_auth_attempt_tracker_module():
     print("✓ Successful attempt cleared lockout")
 
     # Test rate limiting
-    for i in range(tracker.MAX_REQUESTS_PER_WINDOW):
+    for _i in range(tracker.MAX_REQUESTS_PER_WINDOW):
         within_limit = tracker.check_rate_limit(test_id)
         assert within_limit is True
 
@@ -308,9 +306,9 @@ def test_auth_attempt_tracker_module():
 
 def test_backward_compatibility():
     """Test that all public API from original auth.py is still available."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("TEST 6: Backward Compatibility")
-    print("="*70)
+    print("=" * 70)
 
     # Import from main auth module
     from app.security import auth
@@ -356,9 +354,9 @@ def test_backward_compatibility():
 
 def test_dependency_injection():
     """Test that dependency injection works via setter functions."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("TEST 7: Dependency Injection")
-    print("="*70)
+    print("=" * 70)
 
     from app.security.user_store import UserStore, get_user_store, set_user_store
 
@@ -411,9 +409,9 @@ def test_dependency_injection():
 
 def test_solid_principles():
     """Verify SOLID principles are properly implemented."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("TEST 8: SOLID Principles Verification")
-    print("="*70)
+    print("=" * 70)
 
     from app.security.interfaces import (
         UserStoreProtocol,
@@ -466,10 +464,9 @@ def test_solid_principles():
 
 def test_metrics():
     """Display refactoring metrics."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("REFACTORING METRICS")
-    print("="*70)
-
+    print("=" * 70)
 
     # Original file
     original_file = "/Users/kepa.cantero/Projects/algoTrading/app/security/auth.py"
@@ -497,26 +494,30 @@ def test_metrics():
     print(f"\n  Total after refactoring: {total_loc} lines")
 
     print("\nFile Count:")
-    print(f"  Original: 1 file")
+    print("  Original: 1 file")
     print(f"  After refactoring: {len(files)} files")
 
     print("\nClasses per file (SRP compliance):")
-    print(f"  Original: ~6 classes in 1 file (violates SRP)")
-    print(f"  After refactoring: 1-2 classes per file (follows SRP)")
+    print("  Original: ~6 classes in 1 file (violates SRP)")
+    print("  After refactoring: 1-2 classes per file (follows SRP)")
 
     print("\nComplexity Reduction:")
-    print(f"  auth.py reduced from {original_loc} to {len(open(files['auth.py (refactored)']).readlines())} lines")
-    print(f"  Reduction: {((original_loc - len(open(files['auth.py (refactored)']).readlines())) / original_loc * 100):.1f}%")
+    print(
+        f"  auth.py reduced from {original_loc} to {len(open(files['auth.py (refactored)']).readlines())} lines"
+    )
+    print(
+        f"  Reduction: {((original_loc - len(open(files['auth.py (refactored)']).readlines())) / original_loc * 100):.1f}%"
+    )
 
     print("\n✓ Refactoring metrics calculated!")
 
 
 def main():
     """Run all tests."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("SOLID REFACTORING TEST SUITE")
     print("Testing app/security/auth.py refactoring")
-    print("="*70)
+    print("=" * 70)
 
     tests = [
         test_user_module,
@@ -545,9 +546,9 @@ def main():
             traceback.print_exc()
             failed += 1
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("TEST SUMMARY")
-    print("="*70)
+    print("=" * 70)
     print(f"Tests passed: {passed}/{len(tests)}")
     print(f"Tests failed: {failed}/{len(tests)}")
 

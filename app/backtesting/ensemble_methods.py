@@ -1090,12 +1090,12 @@ class EnsembleAnalyzer:
         base_estimator = base_estimator or DecisionTreeRegressor()
         base_estimators = base_estimators or self._get_default_base_estimators()
 
-        results = {}
-
-        results["bagging"] = self._safe_analyze_bagging(base_estimator, X, y, n_estimators)
-        results["random_forest"] = self._safe_analyze_random_forest(X, y, n_estimators)
-        results["boosting"] = self._safe_analyze_boosting(X, y, n_estimators)
-        results["stacking"] = self._safe_analyze_stacking(base_estimators, X, y)
+        results = {
+            "bagging": self._safe_analyze_bagging(base_estimator, X, y, n_estimators),
+            "random_forest": self._safe_analyze_random_forest(X, y, n_estimators),
+            "boosting": self._safe_analyze_boosting(X, y, n_estimators),
+            "stacking": self._safe_analyze_stacking(base_estimators, X, y),
+        }
 
         return results
 

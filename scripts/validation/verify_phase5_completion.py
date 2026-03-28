@@ -20,12 +20,7 @@ PROJECT_ROOT = Path("/Users/kepa.cantero/Projects/algoTrading")
 
 def run_command(cmd: list) -> tuple[int, str, str]:
     """Run command and return exit code, stdout, stderr."""
-    result = subprocess.run(
-        cmd,
-        cwd=PROJECT_ROOT,
-        capture_output=True,
-        text=True
-    )
+    result = subprocess.run(cmd, cwd=PROJECT_ROOT, capture_output=True, text=True)
     return result.returncode, result.stdout, result.stderr
 
 
@@ -35,9 +30,9 @@ def verify_import_error_count():
     print("VERIFICATION 1: Count except ImportError patterns")
     print("=" * 80)
 
-    exit_code, stdout, stderr = run_command([
-        "grep", "-r", "except ImportError", "app/", "--include=*.py"
-    ])
+    exit_code, stdout, stderr = run_command(
+        ["grep", "-r", "except ImportError", "app/", "--include=*.py"]
+    )
 
     lines = stdout.strip().split('\n') if stdout.strip() else []
     count = len([l for l in lines if l])
@@ -63,9 +58,9 @@ def verify_numba_enforcer_exceptions():
     print("VERIFICATION 2: Check patterns are in numba_enforcer.py")
     print("=" * 80)
 
-    exit_code, stdout, stderr = run_command([
-        "grep", "-n", "except ImportError", "app/core/numba_enforcer.py"
-    ])
+    exit_code, stdout, stderr = run_command(
+        ["grep", "-n", "except ImportError", "app/core/numba_enforcer.py"]
+    )
 
     lines = stdout.strip().split('\n') if stdout.strip() else []
     count = len([l for l in lines if l])
@@ -89,9 +84,9 @@ def verify_no_available_flags():
     print("VERIFICATION 3: Check for _AVAILABLE flag variables")
     print("=" * 80)
 
-    exit_code, stdout, stderr = run_command([
-        "grep", "-r", "_AVAILABLE\s*=", "app/", "--include=*.py"
-    ])
+    exit_code, stdout, stderr = run_command(
+        ["grep", "-r", "_AVAILABLE\s*=", "app/", "--include=*.py"]
+    )
 
     lines = stdout.strip().split('\n') if stdout.strip() else []
     # Filter out numba_enforcer.py (legitimate enforcement)
@@ -125,16 +120,11 @@ def verify_no_fallback_warnings():
     found_warnings = []
 
     for pattern in warning_patterns:
-        exit_code, stdout, stderr = run_command([
-            "grep", "-ri", pattern, "app/", "--include=*.py"
-        ])
+        exit_code, stdout, stderr = run_command(["grep", "-ri", pattern, "app/", "--include=*.py"])
 
         lines = stdout.strip().split('\n') if stdout.strip() else []
         # Filter out legitimate warnings and numba_enforcer.py
-        filtered = [
-            l for l in lines
-            if l and 'numba_enforcer.py' not in l
-        ]
+        filtered = [l for l in lines if l and 'numba_enforcer.py' not in l]
 
         if filtered:
             found_warnings.extend(filtered)
@@ -210,9 +200,7 @@ def verify_imports_work():
     failed_imports = []
 
     for imp in test_imports:
-        exit_code, stdout, stderr = run_command([
-            "python", "-c", imp
-        ])
+        exit_code, stdout, stderr = run_command(["python", "-c", imp])
 
         if exit_code != 0:
             failed_imports.append(imp)
@@ -274,4 +262,5 @@ def main():
 
 if __name__ == "__main__":
     import sys
+
     sys.exit(main())

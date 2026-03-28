@@ -12,7 +12,7 @@ import logging
 from typing import Any, Dict, List, Optional
 
 # REQUIRED: No fallbacks - aiohttp is required for async HTTP requests
-import aiohttp  # noqa: F401
+import aiohttp
 import numpy as np
 from requests.exceptions import HTTPError, RequestException
 from sqlalchemy.exc import (
@@ -260,7 +260,7 @@ class RedditSentimentSource(BaseDataSource):
                     data = await response.json()
                     self._access_token = data.get('access_token')
                     logger.debug("Reddit access token obtenido")
-        except (asyncio.TimeoutError, ConnectionError, OSError):
+        except (asyncio.TimeoutError, OSError):
             # Don't log exception details at warning level - could contain sensitive data
             logger.warning("Failed to obtain Reddit access token")
 
@@ -339,7 +339,7 @@ class RedditSentimentSource(BaseDataSource):
                                             'created_utc': post_data.get('created_utc', 0),
                                         }
                                     )
-                except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+                except (asyncio.TimeoutError, OSError) as e:
                     logger.warning(f"Error buscando en r/{subreddit}: {e}")
                     continue
 
@@ -437,7 +437,7 @@ class NewsSentimentSource(BaseDataSource):
             self.is_connected = False
             logger.info("Desconectado de News API")
             return True
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Error desconectando de News API: {e}")
             return False
 
@@ -473,7 +473,7 @@ class NewsSentimentSource(BaseDataSource):
                 logger.warning(f"Provider {self.provider} no implementado completamente")
                 return {'sentiment_score': 0.0, 'total_articles': 0, 'sample_articles': []}
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Error obteniendo sentimiento de noticias para {symbol}: {e}")
             return {'sentiment_score': 0.0, 'total_articles': 0, 'sample_articles': []}
 

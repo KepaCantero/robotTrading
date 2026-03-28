@@ -1,4 +1,3 @@
-# mypy: ignore-errors
 """
 Random Search Optimizer - FASE 6.1
 
@@ -247,11 +246,15 @@ class RandomSearchOptimizer(BaseOptimizer):
 
     def _sample_categorical(self, param: ParameterRange) -> Any:
         """Sample from categorical values."""
-        return random.choice(param.values)  # type: ignore
+        if param.values is None:
+            raise ValueError(f"Categorical parameter '{param.name}' has no values defined")
+        return random.choice(param.values)
 
     def _sample_discrete(self, param: ParameterRange) -> Any:
         """Sample from discrete values."""
-        return random.choice(param.values)  # type: ignore
+        if param.values is None:
+            raise ValueError(f"Discrete parameter '{param.name}' has no values defined")
+        return random.choice(param.values)
 
     def _sample_integer(self, param: ParameterRange) -> int:
         """
@@ -262,10 +265,15 @@ class RandomSearchOptimizer(BaseOptimizer):
 
         Returns:
             Random integer value
+
+        Raises:
+            ValueError: If min_value or max_value is None
         """
-        min_val = int(param.min_value)  # type: ignore
-        max_val = int(param.max_value)  # type: ignore
-        step = int(param.step) if param.step else 1  # type: ignore
+        if param.min_value is None or param.max_value is None:
+            raise ValueError(f"Integer parameter '{param.name}' requires min_value and max_value")
+        min_val = int(param.min_value)
+        max_val = int(param.max_value)
+        step = int(param.step) if param.step is not None else 1
 
         if step == 1:
             return random.randint(min_val, max_val)
@@ -285,10 +293,17 @@ class RandomSearchOptimizer(BaseOptimizer):
 
         Returns:
             Random float value
+
+        Raises:
+            ValueError: If min_value or max_value is None
         """
-        min_val = float(param.min_value)  # type: ignore
-        max_val = float(param.max_value)  # type: ignore
-        step = float(param.step) if param.step else None  # type: ignore
+        if param.min_value is None or param.max_value is None:
+            raise ValueError(
+                f"Continuous parameter '{param.name}' requires min_value and max_value"
+            )
+        min_val = float(param.min_value)
+        max_val = float(param.max_value)
+        step = float(param.step) if param.step is not None else None
 
         if param.scale == ParameterScale.LOG:
             # Log scale sampling
@@ -368,6 +383,9 @@ class RandomSearchOptimizerCV(RandomSearchOptimizer):
 
     Extends RandomSearchOptimizer to use cross-validation for more robust
     parameter selection.
+
+    Note: This class provides an extended optimize method (optimize_with_cv)
+    that uses a different objective signature for cross-validation support.
     """
 
     def __init__(
@@ -390,7 +408,27 @@ class RandomSearchOptimizerCV(RandomSearchOptimizer):
 
     async def optimize(
         self,
-        objective: Callable[[Dict[str, Any], int], float],
+        objective: Callable[[Dict[str, Any]], float],
+        param_grid: ParameterGrid,
+    ) -> OptimizationResult:
+        """
+        Run random search optimization.
+
+        This method wraps the base optimization to maintain LSP compatibility.
+        For cross-validation, Use optimize_with_cv() instead.
+
+        Args:
+            objective: Function to maximize/minimize
+            param_grid: Parameter search space
+
+        Returns:
+            OptimizationResult with best parameters and all trials
+        """
+        return await super().optimize(objective, param_grid)
+
+    async def optimize_with_cv(
+        self,
+        cv_objective: Callable[[Dict[str, Any], int], float],
         param_grid: ParameterGrid,
     ) -> OptimizationResult:
         """
@@ -399,7 +437,7 @@ class RandomSearchOptimizerCV(RandomSearchOptimizer):
         The objective function should accept (params, fold_index) arguments.
 
         Args:
-            objective: CV objective function
+            cv_objective: CV objective function
             param_grid: Parameter search space
 
         Returns:
@@ -410,7 +448,7 @@ class RandomSearchOptimizerCV(RandomSearchOptimizer):
         self._iteration_count = 0
         self._sampled_params = []
 
-        best_params = {}
+        best_params: Dict[str, Any] = {}
         best_cv_score = float("-inf") if self.config.maximize else float("inf")
 
         # Setup progress bar
@@ -432,10 +470,10 @@ class RandomSearchOptimizerCV(RandomSearchOptimizer):
                 self._sampled_params.append(params)
 
                 # Run CV
-                cv_scores = []
+                cv_scores: List[float] = []
                 for fold in range(self.cv_folds):
                     try:
-                        score = objective(params, fold)
+                        score = cv_objective(params, fold)
                         cv_scores.append(score)
                     except Exception as e:
                         logger.warning(f"CV fold {fold} failed: {e}")
@@ -499,7 +537,7 @@ class RandomSearchOptimizerCV(RandomSearchOptimizer):
             return float("-inf") if self.config.maximize else float("inf")
 
         if self.cv_metric == "mean":
-            return np.mean(cv_scores)
+            return float(np.mean(cv_scores))
         elif self.cv_metric == "min":
             return min(cv_scores)
         elif self.cv_metric == "median":
@@ -510,7 +548,7 @@ class RandomSearchOptimizerCV(RandomSearchOptimizer):
             else:
                 return (sorted_scores[mid - 1] + sorted_scores[mid]) / 2
         else:
-            return np.mean(cv_scores)
+            return float(np.mean(cv_scores))
 
     def _std(self, values: List[float]) -> float:
         """Calculate standard deviation."""

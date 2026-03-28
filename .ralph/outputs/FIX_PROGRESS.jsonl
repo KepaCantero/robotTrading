@@ -1,0 +1,79 @@
+{
+  "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'",
+  "file": "app/core/__init__.py",
+  "status": "FIXED",
+  "anti_patterns_removed": 11,
+  "approach": "Replaced type: ignore with Optional type annotations"
+}
+{
+  "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'",
+  "file": "app/main.py",
+  "status": "FIXED",
+  "anti_patterns_removed": 9,
+  "approach": "Replaced type: ignore with cast() for exception handlers"
+}
+{
+  "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'",
+  "file": "app/engines/portfolio_engine/optimizers/__init__.py",
+  "status": "FIXED",
+  "anti_patterns_removed": 10,
+  "approach": "Replaced type: ignore with Optional type annotations"
+}
+{
+  "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'",
+  "file": "app/engines/strategy_engines/base.py",
+  "status": "FIXED",
+  "anti_patterns_removed": 4,
+  "approach": "Replaced type: ignore with Optional type annotations"
+}
+{
+  "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'",
+  "file": "app/engines/data_engine/cache/distributed_cache.py",
+  "status": "FIXED",
+  "anti_patterns_removed": 1,
+  "approach": "Replaced type: ignore with Optional type annotation"
+}
+{
+  "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'",
+  "file": "app/engines/context_engine/regime_detectors/correlation_regime_detector.py",
+  "status": "FIXED",
+  "anti_patterns_removed": 1,
+  "approach": "Replaced type: ignore with Optional type annotation"
+}
+{
+  "timestamp": "2026-03-19T20:00:00Z",
+  "file": "app/domain/optimization/parameter/models.py",
+  "status": "FIXED",
+  "anti_patterns_removed": 10,
+  "approach": "Replaced Any with ParameterValue, ParameterDict, ParameterValuesList type aliases"
+}
+{
+  "timestamp": "2026-03-19T20:00:00Z",
+  "file": "app/domain/optimization/parameter/bayesian_optimizer.py",
+  "status": "FIXED",
+  "anti_patterns_removed": 15,
+  "approach": "Removed global mypy ignore, replaced type:ignore with runtime validation, removed pylint disable comments"
+}
+{
+  "timestamp": "2026-03-19T20:00:00Z",
+  "file": "app/domain/strategies/learning/transfer_learning.py",
+  "status": "REVIEWED",
+  "anti_patterns_kept": 11,
+  "approach": "Type ignores are legitimate for optional torch/joblib/msgpack dependencies",
+  "note": "Cannot remove type ignores without major refactoring for optional dependencies"
+}
+{"file": "app/domain/repositories/unit_of_work.py", "status": "FIXED", "patterns_removed": 2, "timestamp": "2026-03-19T20:56:12Z"}
+{"file": "app/domain/portfolio/multi_asset/asset_class.py", "status": "FIXED", "patterns_removed": 2, "timestamp": "2026-03-19T20:56:12Z"}
+{"file": "app/domain/optimization/multi_strategy_optimizer_v2.py", "status": "FIXED", "patterns_removed": 2, "timestamp": "2026-03-19T20:56:12Z"}
+{"file": "app/domain/optimization/multi_strategy_optimizer.py", "status": "FIXED", "timestamp": "2026-03-19T21:04:39Z", "patterns_removed": 2}
+{"file": "app/domain/optimization/momentum_auto_optimizer.py", "status": "FIXED", "timestamp": "2026-03-19T21:04:39Z", "patterns_removed": 2}
+{"file": "app/shared/exceptions/error_handler.py", "status": "FIXED", "timestamp": "2026-03-19T21:04:39Z", "patterns_removed": 1}
+{"file": "app/core/models/input_profile.py", "status": "FIXED", "timestamp": "2026-03-27T18:19:24Z"}
+{"file": "app/backtesting/drift_detection/overfitting_detector.py", "status": "BLACK_FIXED", "timestamp": "2026-03-27T18:25:11Z"}
+{"file": "app/backtesting/engine.py", "status": "BLACK_FIXED", "timestamp": "2026-03-27T18:25:11Z"}
+{"file": "app/backtesting/engines/execution_engine.py", "status": "BLACK_FIXED", "timestamp": "2026-03-27T18:25:11Z"}
+{"file": "app/backtesting/engines/standard_engine.py", "status": "BLACK_FIXED", "timestamp": "2026-03-27T18:25:11Z"}
+{"file": "app/backtesting/walk_forward_validator.py", "status": "BLACK_FIXED", "timestamp": "2026-03-27T18:25:11Z"}
+{"file": "app/core/protocols/signal_scoring.py", "status": "BLACK_FIXED", "timestamp": "2026-03-27T18:25:11Z"}
+{"file": "app/shared/config/infrastructure.py", "status": "FIXED", "timestamp": "2026-03-27T18:32:00Z"}
+{"file": "app/shared/config/base/__init__.py", "status": "FIXED", "timestamp": "2026-03-27T18:32:00Z"}

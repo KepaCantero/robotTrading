@@ -93,7 +93,8 @@ class AssetClassType(str, Enum):
         Returns:
             Dictionary with 'open' and 'close' times in UTC
         """
-        hours_map = {
+        default_hours: Dict[str, str] = {"open": "00:00", "close": "23:59"}
+        hours_map: Dict[AssetClassType, Dict[str, str]] = {
             cls.EQUITY: {"open": "14:30", "close": "21:00"},  # NYSE hours in UTC
             cls.CRYPTO: {"open": "00:00", "close": "23:59"},  # 24/7
             cls.FOREX: {"open": "00:00", "close": "23:59"},  # 24/5
@@ -102,7 +103,11 @@ class AssetClassType(str, Enum):
             cls.REAL_ESTATE: {"open": "14:30", "close": "21:00"},  # REITs trade like stocks
             cls.CASH: {"open": "00:00", "close": "23:59"},  # Always available
         }
-        return hours_map.get(asset_type, {"open": "00:00", "close": "23:59"})  # type: ignore
+        # Convert string to enum if needed and look up
+        for key, value in hours_map.items():
+            if key.value == asset_type:
+                return value
+        return default_hours
 
     @classmethod
     def get_settlement_period(cls, asset_type: str) -> timedelta:
@@ -115,7 +120,8 @@ class AssetClassType(str, Enum):
         Returns:
             Settlement period as timedelta
         """
-        settlement_map = {
+        default_period = timedelta(days=2)
+        settlement_map: Dict[AssetClassType, timedelta] = {
             cls.EQUITY: timedelta(days=2),  # T+2
             cls.CRYPTO: timedelta(seconds=0),  # Instant
             cls.FOREX: timedelta(days=2),  # T+2
@@ -124,7 +130,11 @@ class AssetClassType(str, Enum):
             cls.REAL_ESTATE: timedelta(days=2),  # T+2 like equities
             cls.CASH: timedelta(seconds=0),  # Instant
         }
-        return settlement_map.get(asset_type, timedelta(days=2))  # type: ignore
+        # Convert string to enum if needed and look up
+        for key, value in settlement_map.items():
+            if key.value == asset_type:
+                return value
+        return default_period
 
     @classmethod
     def get_typical_volatility(cls, asset_type: str) -> Tuple[Decimal, Decimal]:

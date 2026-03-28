@@ -523,7 +523,7 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
         )
 
         all_trades = []
-        for strategy_name, result in results_by_strategy.items():
+        for _strategy_name, result in results_by_strategy.items():
             all_trades.extend(result.trades)
 
         weighted_sharpe = self._calculate_weighted_sharpe(results_by_strategy, capital_allocations)

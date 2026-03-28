@@ -78,7 +78,7 @@ def get_capital_tier(capital: Decimal) -> str:
     try:
         # Use the centralized tier mapper
         return TierMapper.get_tier_from_capital(capital)
-    except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+    except OSError as e:
         # Fallback to manual calculation if tier mapper fails
         logger.warning(
             f"TierMapper.get_tier_from_capital failed for {capital}: {e}, using fallback"
@@ -218,7 +218,7 @@ class ProfileStrategyMapper:
                 data = yaml.safe_load(f) or {}
             logger.debug(f"Loaded configuration from {path}")
             return data
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             logger.error(f"Error loading {path}: {e}")
             return {}
 

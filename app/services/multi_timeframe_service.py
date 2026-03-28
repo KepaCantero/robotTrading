@@ -160,7 +160,7 @@ class MultiTimeframeConfirmation:
                 )
                 for signal_type in SignalType
             },
-            "unique_symbols": len(set(s["symbol"] for s in self.confirmed_signals)),
+            "unique_symbols": len({s["symbol"] for s in self.confirmed_signals}),
         }
 
 

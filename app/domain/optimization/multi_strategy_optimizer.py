@@ -8,7 +8,7 @@ considering capital allocation and maximizing combined Sharpe ratio.
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 import optuna
 
@@ -17,8 +17,10 @@ from app.backtesting.engines.multi_strategy_engine import MultiStrategyBackteste
 from app.domain.strategies.factory import StrategyFactory
 from app.domain.strategies.mean_reversion import MeanReversionStrategy
 from app.domain.strategies.momentum import MomentumStrategy
-from app.domain.strategies.pairs_trading import PairsTradingStrategy
-from app.services.multi_strategy_allocation import MultiStrategyAllocationManager
+from app.domain.strategies.pairs_trading import PairsTrading
+
+if TYPE_CHECKING:
+    from app.services.multi_strategy_allocation import MultiStrategyAllocationManager
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +38,7 @@ class MultiStrategyOptimizer:
 
     def __init__(
         self,
-        total_capital: Decimal = Decimal("100000"),
+        total_capital: Optional[Decimal] = None,
         symbol: str = "AAPL",
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
@@ -56,6 +58,8 @@ class MultiStrategyOptimizer:
             optimization_direction: "maximize" or "minimize"
             objective_metric: Metric to optimize ("sharpe", "return", "calmar")
         """
+        if total_capital is None:
+            total_capital = Decimal("100000")
         self.total_capital = total_capital
         self.symbol = symbol
 
@@ -92,21 +96,21 @@ class MultiStrategyOptimizer:
         Returns:
             Dictionary with strategy configs
         """
-        params = {}
-
         # Momentum Strategy Parameters
-        params["momentum"] = {
-            "name": "momentum",
-            "rsi_threshold": trial.suggest_float("momentum_rsi_threshold", 30.0, 50.0, step=1.0),
-            "momentum_threshold": trial.suggest_float(
-                "momentum_momentum_threshold", 0.01, 0.05, step=0.01
-            ),
-            "volume_threshold": trial.suggest_float(
-                "momentum_volume_threshold", 1.0, 2.5, step=0.1
-            ),
-            "ema_period": trial.suggest_int("momentum_ema_period", 10, 50, step=5),
-            "rsi_period": trial.suggest_int("momentum_rsi_period", 10, 20, step=2),
-            "lookback_period": trial.suggest_int("momentum_lookback_period", 3, 10, step=1),
+        params = {
+            "momentum": {
+                "name": "momentum",
+                "rsi_threshold": trial.suggest_float("momentum_rsi_threshold", 30.0, 50.0, step=1.0),
+                "momentum_threshold": trial.suggest_float(
+                    "momentum_momentum_threshold", 0.01, 0.05, step=0.01
+                ),
+                "volume_threshold": trial.suggest_float(
+                    "momentum_volume_threshold", 1.0, 2.5, step=0.1
+                ),
+                "ema_period": trial.suggest_int("momentum_ema_period", 10, 50, step=5),
+                "rsi_period": trial.suggest_int("momentum_rsi_period", 10, 20, step=2),
+                "lookback_period": trial.suggest_int("momentum_lookback_period", 3, 10, step=1),
+            },
         }
 
         # Mean Reversion Strategy Parameters
@@ -183,7 +187,7 @@ class MultiStrategyOptimizer:
                 "max_position_size": Decimal("0.08"),
             }
         )
-        strategies["mean_reversion"] = MeanReversionStrategy(mr_config)  # type: ignore
+        strategies["mean_reversion"] = MeanReversionStrategy(mr_config)
 
         # Create Pairs Trading strategy
         pt_config = params["pairs_trading"].copy()
@@ -197,13 +201,21 @@ class MultiStrategyOptimizer:
                 "hedge_ratio_threshold": Decimal("0.1"),
             }
         )
-        strategies["pairs_trading"] = PairsTradingStrategy(pt_config)  # type: ignore
+        # PairsTrading accepts individual keyword args, not a config dict
+        strategies["pairs_trading"] = PairsTrading(
+            formation_period=pt_config.get("lookback_period", 252),
+            z_score_entry=pt_config.get("spread_threshold", 2.0),
+            z_score_exit=0.5,
+            min_half_life=5.0,
+            max_half_life=60.0,
+            num_pairs=20,
+        )
 
         return strategies
 
     def _create_allocation_manager(
         self, allocation_params: Dict[str, float]
-    ) -> MultiStrategyAllocationManager:
+    ) -> "MultiStrategyAllocationManager":
         """
         Create allocation manager with optimized weights.
 
@@ -213,6 +225,9 @@ class MultiStrategyOptimizer:
         Returns:
             MultiStrategyAllocationManager instance
         """
+        # Late import to avoid domain layer depending on services layer
+        from app.services.multi_strategy_allocation import MultiStrategyAllocationManager
+
         manager = MultiStrategyAllocationManager(self.total_capital)
 
         # Update allocation weights

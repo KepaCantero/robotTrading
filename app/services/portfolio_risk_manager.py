@@ -442,7 +442,7 @@ class PortfolioRiskManager:
                 # Extract pairwise correlations from cached matrix
                 if self._correlation_cache is not None:
                     for i, pos1 in enumerate(positions):
-                        for j, pos2 in enumerate(positions[i + 1 :], i + 1):
+                        for _j, pos2 in enumerate(positions[i + 1 :], i + 1):
                             pair = f"{pos1.symbol}-{pos2.symbol}"
                             try:
                                 # Get correlation from matrix
@@ -462,7 +462,7 @@ class PortfolioRiskManager:
 
         # Fallback to simulated correlation
         for i, pos1 in enumerate(positions):
-            for j, pos2 in enumerate(positions[i + 1 :], i + 1):
+            for _j, pos2 in enumerate(positions[i + 1 :], i + 1):
                 pair = f"{pos1.symbol}-{pos2.symbol}"
                 correlations[pair] = self._get_fallback_correlation(pos1, pos2)
 
@@ -507,7 +507,7 @@ class PortfolioRiskManager:
 
         # Calcular correlaciones por pares
         for i, pos1 in enumerate(positions):
-            for j, pos2 in enumerate(positions[i + 1 :], i + 1):
+            for _j, pos2 in enumerate(positions[i + 1 :], i + 1):
                 pair = f"{pos1.symbol}-{pos2.symbol}"
                 # Use fallback correlation
                 correlations[pair] = self._get_fallback_correlation(pos1, pos2)

@@ -290,7 +290,7 @@ class Trade:
         entry_date: datetime,
         exit_date: datetime,
         exit_reason: Optional[ExitReason] = None,
-        commission: Decimal = Decimal("0"),
+        commission: Optional[Decimal] = None,
         strategy_name: Optional[str] = None,
     ) -> Trade:
         """
@@ -312,6 +312,8 @@ class Trade:
         Returns:
             Trade instance
         """
+        if commission is None:
+            commission = Decimal("0")
         logger.info(
             "Creating trade from position",
             extra={
@@ -350,10 +352,12 @@ class Trade:
         exit_date: Optional[datetime] = None,
         stop_loss: Optional[Decimal] = None,
         take_profit: Optional[Decimal] = None,
-        commission: Decimal = Decimal("0"),
+        commission: Optional[Decimal] = None,
         strategy_name: Optional[str] = None,
     ) -> Trade:
         """Create a long trade."""
+        if commission is None:
+            commission = Decimal("0")
         logger.info(
             "Creating long trade",
             extra={
@@ -393,10 +397,12 @@ class Trade:
         exit_date: Optional[datetime] = None,
         stop_loss: Optional[Decimal] = None,
         take_profit: Optional[Decimal] = None,
-        commission: Decimal = Decimal("0"),
+        commission: Optional[Decimal] = None,
         strategy_name: Optional[str] = None,
     ) -> Trade:
         """Create a short trade."""
+        if commission is None:
+            commission = Decimal("0")
         logger.info(
             "Creating short trade",
             extra={

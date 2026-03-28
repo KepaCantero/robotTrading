@@ -18,6 +18,29 @@ from app.domain.value_objects.backtest_result import BacktestResultValue
 
 logger = logging.getLogger(__name__)
 
+
+@dataclass
+class DegradationParams:
+    """Parameters for out-of-sample degradation assessment."""
+
+    val_result: BacktestResultValue
+    oos_result: BacktestResultValue
+    severity: str
+    is_overfitting: bool
+    details: Dict[str, Any]
+
+
+@dataclass
+class LogParams:
+    """Parameters for logging detection results."""
+
+    result: OverfittingResult
+    train_return: float
+    val_return: float
+    gap: float
+    has_oos: bool
+
+
 # Design Note: DOM-001 - OverfittingResult is a plain dataclass (not a domain Value Object)
 # Rationale: Overfitting detection is an analytical utility that operates on domain
 # objects (BacktestResultValue) but produces analysis results that are not themselves
@@ -101,9 +124,14 @@ class OverfittingDetector:
 
         # Apply OOS degradation if available
         if oos_result:
-            severity, is_overfitting, details = self._apply_oos_degradation(
-                val_result, oos_result, severity, is_overfitting, details
+            degradation_params = DegradationParams(
+                val_result=val_result,
+                oos_result=oos_result,
+                severity=severity,
+                is_overfitting=is_overfitting,
+                details=details,
             )
+            severity, is_overfitting, details = self._apply_oos_degradation(degradation_params)
 
         # Create result object
         result = OverfittingResult(
@@ -115,7 +143,14 @@ class OverfittingDetector:
         )
 
         # Log detection event
-        self._log_detection_result(result, train_return, val_return, gap, oos_result is not None)
+        log_params = LogParams(
+            result=result,
+            train_return=train_return,
+            val_return=val_return,
+            gap=gap,
+            has_oos=oos_result is not None,
+        )
+        self._log_detection_result(log_params)
 
         return result
 
@@ -185,31 +220,22 @@ class OverfittingDetector:
             'gap_threshold': self.max_acceptable_gap,
         }
 
-    # pylint: disable=R0913
-    def _apply_oos_degradation(
-        self,
-        val_result: BacktestResultValue,
-        oos_result: BacktestResultValue,
-        severity: str,
-        is_overfitting: bool,
-        details: Dict[str, Any],
-    ) -> tuple[str, bool, Dict[str, Any]]:
+    def _apply_oos_degradation(self, params: DegradationParams) -> tuple[str, bool, Dict[str, Any]]:
         """
         Apply out-of-sample degradation to severity assessment.
 
         Args:
-            val_result: Validation result
-            oos_result: Out-of-sample result
-            severity: Current severity level
-            is_overfitting: Current overfitting flag
-            details: Details dictionary to update
+            params: DegradationParams containing all parameters
 
         Returns:
             Updated tuple of (severity, is_overfitting, details)
         """
-        val_return = float(val_result.total_return_pct)
-        oos_return = float(oos_result.total_return_pct)
+        val_return = float(params.val_result.total_return_pct)
+        oos_return = float(params.oos_result.total_return_pct)
         oos_degradation = val_return - oos_return
+        severity = params.severity
+        is_overfitting = params.is_overfitting
+        details = params.details.copy()
 
         if oos_degradation > self.oos_threshold:
             severity = max(
@@ -224,54 +250,42 @@ class OverfittingDetector:
 
         return severity, is_overfitting, details
 
-    # pylint: disable=R0913
-    def _log_detection_result(
-        self,
-        result: OverfittingResult,
-        train_return: float,
-        val_return: float,
-        gap: float,
-        has_oos: bool,
-    ) -> None:
+    def _log_detection_result(self, params: LogParams) -> None:
         """
         Log overfitting detection result with structured logging.
 
         Args:
-            result: Overfitting detection result
-            train_return: Training return value
-            val_return: Validation return value
-            gap: Performance gap
-            has_oos: Whether OOS result was provided
+            params: LogParams containing all logging parameters
         """
         logger.info(
             "overfitting_detection_complete",
             extra={
                 "detector": "OverfittingDetector",
                 "method": "detect_from_results",
-                "is_overfitting": result.is_overfitting,
-                "severity": result.severity,
-                "confidence": result.confidence,
-                "train_return": train_return,
-                "val_return": val_return,
-                "gap": gap,
+                "is_overfitting": params.result.is_overfitting,
+                "severity": params.result.severity,
+                "confidence": params.result.confidence,
+                "train_return": params.train_return,
+                "val_return": params.val_return,
+                "gap": params.gap,
                 "gap_threshold": self.max_acceptable_gap,
-                "has_oos_result": has_oos,
+                "has_oos_result": params.has_oos,
             },
         )
 
-        if result.is_overfitting:
+        if params.result.is_overfitting:
             logger.warning(
                 "overfitting_detected",
                 extra={
                     "detector": "OverfittingDetector",
                     "method": "detect_from_results",
-                    "severity": result.severity,
-                    "confidence": result.confidence,
-                    "train_return": train_return,
-                    "val_return": val_return,
-                    "gap": gap,
+                    "severity": params.result.severity,
+                    "confidence": params.result.confidence,
+                    "train_return": params.train_return,
+                    "val_return": params.val_return,
+                    "gap": params.gap,
                     "gap_threshold": self.max_acceptable_gap,
-                    "oos_degradation": result.details.get('oos_degradation'),
+                    "oos_degradation": params.result.details.get('oos_degradation'),
                 },
             )
 

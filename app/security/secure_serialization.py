@@ -16,13 +16,13 @@ import hmac
 import json
 import logging
 import os
-from decimal import Decimal  # noqa: F401
-from typing import Any, Union
+from decimal import Decimal
+from typing import Union
 
 # REQUIRED: No fallbacks - fail fast if dependencies are missing
-import msgpack  # noqa: F401
-import numpy as np  # noqa: F401
-import pandas as pd  # noqa: F401
+import msgpack
+import numpy as np
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ def _get_secret_key() -> bytes:
     return secret_key.encode() if isinstance(secret_key, str) else secret_key
 
 
-def _is_json_serializable(obj: Any) -> bool:
+def _is_json_serializable(obj: object) -> bool:
     """
     Check if object is JSON-serializable without conversion.
 
@@ -90,10 +90,7 @@ def _is_json_serializable(obj: Any) -> bool:
     # Check list/tuple recursively (but not too deep)
     if isinstance(obj, (list, tuple)):
         try:
-            for item in obj:
-                if not _is_json_serializable(item):
-                    return False
-            return True
+            return all(_is_json_serializable(item) for item in obj)
         except (TypeError, ValueError):
             return False
 
@@ -102,7 +99,7 @@ def _is_json_serializable(obj: Any) -> bool:
     return False
 
 
-def _convert_for_msgpack(obj: Any) -> Any:
+def _convert_for_msgpack(obj: object) -> object:
     """
     Convert complex objects to msgpack-compatible format.
 
@@ -166,7 +163,7 @@ def _convert_for_msgpack(obj: Any) -> Any:
     return obj
 
 
-def _restore_from_msgpack(obj: Any) -> Any:
+def _restore_from_msgpack(obj: object) -> object:
     """
     Restore objects from msgpack-compatible format.
 
@@ -219,7 +216,7 @@ def _restore_from_msgpack(obj: Any) -> Any:
     return obj
 
 
-def sign_and_dump(data: Any, secret_key: Union[str, bytes] = None) -> str:
+def sign_and_dump(data: object, secret_key: Union[str, bytes, None] = None) -> str:
     """
     Sign and serialize data with automatic format detection.
 
@@ -278,7 +275,7 @@ def sign_and_dump(data: Any, secret_key: Union[str, bytes] = None) -> str:
         raise ValueError(f"Invalid data structure for serialization: {e}") from e
 
 
-def verify_and_load(signed_data: str, secret_key: Union[str, bytes] = None) -> Any:
+def verify_and_load(signed_data: str, secret_key: Union[str, bytes, None] = None) -> object:
     """
     Verify HMAC signature and deserialize data.
 

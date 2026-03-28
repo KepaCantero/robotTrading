@@ -44,7 +44,7 @@ class DatabaseConfig(SettingsBase):
 
     @field_validator("port", "questdb_port")
     @classmethod
-    def validate_port(cls, v):
+    def validate_port(cls, v: int) -> int:
         logger.debug("Validating port number", extra={"port": v})
         if not 1 <= v <= 65535:
             logger.error("Port validation failed: must be between 1 and 65535", extra={"port": v})
@@ -96,7 +96,8 @@ class RedisConfig(ConfigBase):
 
     @field_validator("port")
     @classmethod
-    def validate_port(cls, v):
+    def validate_port(cls, v: int) -> int:
+        """Validate Redis port is in valid range."""
         logger.debug("Validating Redis port number", extra={"port": v})
         if not 1 <= v <= 65535:
             logger.error(
@@ -130,13 +131,13 @@ class RedisConfig(ConfigBase):
 class APIConfig(SettingsBase):
     """API configuration."""
 
-    host: str = Field(default="0.0.0.0", description="API host")
+    host: str = Field(default="127.0.0.1", description="API host")
     port: int = Field(default=8000, description="API port")
     workers: int = Field(default=1, description="Number of workers")
 
     # Security
     secret_key: str = Field(
-        default="your-secret-key-change-in-production", description="Secret key for JWT"
+        default="", description="Secret key for JWT (from API_SECRET_KEY env var)"
     )
     access_token_expire_minutes: int = Field(
         default=30, description="Access token expiration in minutes"
@@ -153,7 +154,8 @@ class APIConfig(SettingsBase):
 
     @field_validator("port")
     @classmethod
-    def validate_port(cls, v):
+    def validate_port(cls, v: int) -> int:
+        """Validate API port is in valid range."""
         logger.debug("Validating API port number", extra={"port": v})
         if not 1 <= v <= 65535:
             logger.error(
@@ -166,7 +168,11 @@ class APIConfig(SettingsBase):
     @field_validator("secret_key")
     @classmethod
     def validate_secret_key(cls, v):
-        logger.debug("Validating API secret key length")
+        """Validate that secret key is set and sufficiently long."""
+        logger.debug("Validating API secret key")
+        if not v:
+            logger.error("Secret key validation failed: must be set via API_SECRET_KEY env var")
+            raise ValueError("Secret key must be set via API_SECRET_KEY environment variable")
         if len(v) < 16:
             logger.error(
                 "Secret key validation failed: must be at least 16 characters",
@@ -230,7 +236,8 @@ class MonitoringConfig(ConfigBase):
 
     @field_validator("prometheus_port", "grafana_port")
     @classmethod
-    def validate_port(cls, v):
+    def validate_port(cls, v: int) -> int:
+        """Validate monitoring port is in valid range."""
         logger.debug("Validating monitoring port number", extra={"port": v})
         if not 1 <= v <= 65535:
             logger.error(

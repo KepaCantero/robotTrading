@@ -40,7 +40,7 @@ class DataEngineConfigLoader:
                 self.config = yaml.safe_load(f) or {}
 
             logger.info(f"DataEngine config loaded from {self.config_path}")
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             logger.error(f"Error loading DataEngine config: {e}. Using defaults.")
             self.config = self._get_default_config()
 

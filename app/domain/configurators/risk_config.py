@@ -103,18 +103,17 @@ class RiskConfig(BaseModel):
     @classmethod
     def validate_leverage_consistency(cls, v: Decimal, info) -> Decimal:
         """Ensure max_leverage is 1.0 when leverage not allowed."""
-        if "leverage_allowed" in info.data and not info.data["leverage_allowed"]:
-            if v != Decimal("1.0"):
-                logger.warning(
-                    "Leverage validation failed",
-                    extra={
-                        "component": "RiskConfig",
-                        "validator": "validate_leverage_consistency",
-                        "max_leverage": str(v),
-                        "leverage_allowed": False,
-                    },
-                )
-                raise ValueError("max_leverage must be 1.0 when leverage_allowed is False")
+        if "leverage_allowed" in info.data and not info.data["leverage_allowed"] and v != Decimal("1.0"):
+            logger.warning(
+                "Leverage validation failed",
+                extra={
+                    "component": "RiskConfig",
+                    "validator": "validate_leverage_consistency",
+                    "max_leverage": str(v),
+                    "leverage_allowed": False,
+                },
+            )
+            raise ValueError("max_leverage must be 1.0 when leverage_allowed is False")
         return v
 
     @field_validator("trailing_stop_atr_multiplier")

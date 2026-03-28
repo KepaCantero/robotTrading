@@ -190,7 +190,7 @@ class ChaosOrchestrator:
                 await self._init_database()
                 await self._load_active_experiments()
                 self.logger.info("ChaosOrchestrator initialized successfully")
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 self.logger.error(f"Error initializing: {e}")
                 raise
 
@@ -235,7 +235,7 @@ class ChaosOrchestrator:
 
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Database initialization failed: {e}")
             raise
 
@@ -278,7 +278,7 @@ class ChaosOrchestrator:
 
                 self.logger.info(f"Loaded {len(self._active_experiments)} active experiments")
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error loading active experiments: {e}")
 
     async def run_experiment(
@@ -641,7 +641,7 @@ class ChaosOrchestrator:
                 )
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error saving experiment: {e}")
 
     async def get_active_experiments(self) -> List[ChaosExperiment]:

@@ -441,11 +441,10 @@ class SymbolValidator:
                     f"Invalid Kraken symbol format: {symbol}. " "Expected format: XXBTZUSD"
                 )
 
-        elif broker_name == 'coinbase':
-            if not re.match(cls.PATTERNS['coinbase_crypto'], symbol_upper):
-                raise ValidationError(
-                    f"Invalid Coinbase symbol format: {symbol}. " "Expected format: BTC-USD"
-                )
+        elif broker_name == 'coinbase' and not re.match(cls.PATTERNS['coinbase_crypto'], symbol_upper):
+            raise ValidationError(
+                f"Invalid Coinbase symbol format: {symbol}. " "Expected format: BTC-USD"
+            )
 
         return True
 

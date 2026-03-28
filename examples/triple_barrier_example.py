@@ -27,7 +27,9 @@ from app.backtesting.labeling.triple_barrier import (
 )
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -268,7 +270,9 @@ def example_custom_configuration():
         }
 
         logger.info(f"\n{strategy_name} Strategy:")
-        logger.info(f"  Config: {config.upper_barrier_pct:+.1%} / {config.lower_barrier_pct:+.1%} / {config.vertical_barrier_days}d")
+        logger.info(
+            f"  Config: {config.upper_barrier_pct:+.1%} / {config.lower_barrier_pct:+.1%} / {config.vertical_barrier_days}d"
+        )
         logger.info(f"  Win Rate: {results[strategy_name]['win_rate']:.1%}")
         logger.info(f"  Avg Holding: {results[strategy_name]['avg_holding']:.2f} bars")
 
@@ -364,7 +368,9 @@ def example_ml_integration(df: pd.DataFrame, signals: pd.Series, labels: pd.Data
     for signal_time in signals:
         if signal_time in rsi.index:
             features.loc[signal_time, "rsi"] = rsi.loc[signal_time]
-            features.loc[signal_time, "ma_ratio"] = ma_short.loc[signal_time] / ma_long.loc[signal_time]
+            features.loc[signal_time, "ma_ratio"] = (
+                ma_short.loc[signal_time] / ma_long.loc[signal_time]
+            )
             features.loc[signal_time, "momentum_5"] = (
                 df["close"].pct_change(5).loc[signal_time]
                 if signal_time in df["close"].index
@@ -383,7 +389,9 @@ def example_ml_integration(df: pd.DataFrame, signals: pd.Series, labels: pd.Data
     logger.info(f"  Samples: {len(features)}")
     logger.info(f"  Features: {features.shape[1]}")
     logger.info(f"  Positive class (profit): {y_binary.sum()} ({y_binary.mean():.1%})")
-    logger.info(f"  Negative class (loss/time): {(1 - y_binary).sum()} ({(1 - y_binary).mean():.1%})")
+    logger.info(
+        f"  Negative class (loss/time): {(1 - y_binary).sum()} ({(1 - y_binary).mean():.1%})"
+    )
 
     # Display feature statistics
     logger.info(f"\nFeature Statistics:")

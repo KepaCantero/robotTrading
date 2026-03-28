@@ -140,7 +140,7 @@ class BaseStrategyEnsemble(BaseStrategyEngine):
         """
         return []  # All parameters have sensible defaults
 
-    def risk_check(self, signal: Signal, portfolio: Any) -> bool:
+    def risk_check(self, signal: Signal, portfolio: object) -> bool:
         """
         Verificar criterios de riesgo para el ensemble.
 

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-# pylint: disable=import-error,unsupported-binary-operation
-# mypy: ignore-errors
 """
 Order Flow Imbalance (OFI) Calculator.
 
@@ -17,6 +15,7 @@ References:
 """
 
 import logging
+import math
 from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -210,8 +209,8 @@ class OFICalculator:
         if price == 0:
             raise InvalidPriceError("Price cannot be zero")
 
-        # Check if price is NaN (using comparison with itself)
-        if price != price:  # pylint: disable=comparison-with-itself; NaN != NaN is True
+        # Check if price is NaN
+        if math.isnan(price):
             raise InvalidPriceError(f"Price cannot be NaN: {price}")
 
     def _calculate_weighted_volumes(self, order_book: OrderBookSnapshot) -> tuple[int, int]:

@@ -127,8 +127,12 @@ class TestTradeExecutor:
             return True
 
         trade, new_capital = trade_executor.execute_buy_signal(
-            buy_signal, market_data, capital, mock_close_position, mock_validate_profitability,
-            position_size=position_size
+            buy_signal,
+            market_data,
+            capital,
+            mock_close_position,
+            mock_validate_profitability,
+            position_size=position_size,
         )
 
         assert trade is not None
@@ -162,15 +166,21 @@ class TestTradeExecutor:
             return True
 
         trade, new_capital = trade_executor.execute_buy_signal(
-            buy_signal, market_data, capital, mock_close_position, mock_validate_profitability,
-            position_size=position_size
+            buy_signal,
+            market_data,
+            capital,
+            mock_close_position,
+            mock_validate_profitability,
+            position_size=position_size,
         )
 
         # Trade should execute
         assert trade is not None
         assert trade.symbol == default_symbol
 
-    def test_execute_buy_signal_profitability_validation_fails(self, trade_executor, buy_signal, default_symbol):
+    def test_execute_buy_signal_profitability_validation_fails(
+        self, trade_executor, buy_signal, default_symbol
+    ):
         """Test buy execution fails profitability validation."""
         market_data = MockMarketData(default_symbol, 150)
         capital = Decimal("100000")
@@ -188,7 +198,9 @@ class TestTradeExecutor:
         assert trade is None
         assert new_capital == capital  # Capital unchanged
 
-    def test_execute_buy_signal_position_size_too_small(self, trade_executor, buy_signal, default_symbol):
+    def test_execute_buy_signal_position_size_too_small(
+        self, trade_executor, buy_signal, default_symbol
+    ):
         """Test buy execution with very small position size."""
         market_data = MockMarketData(default_symbol, 150)
         capital = Decimal("10")  # Very low capital
@@ -201,8 +213,12 @@ class TestTradeExecutor:
             return True
 
         trade, new_capital = trade_executor.execute_buy_signal(
-            buy_signal, market_data, capital, mock_close_position, mock_validate_profitability,
-            position_size=position_size
+            buy_signal,
+            market_data,
+            capital,
+            mock_close_position,
+            mock_validate_profitability,
+            position_size=position_size,
         )
 
         # Trade executes but with very small quantity
@@ -210,7 +226,9 @@ class TestTradeExecutor:
             # Quantity should match the position_size passed
             assert trade.quantity == position_size
 
-    def test_execute_buy_signal_position_size_validation_fails(self, trade_executor, buy_signal, default_symbol):
+    def test_execute_buy_signal_position_size_validation_fails(
+        self, trade_executor, buy_signal, default_symbol
+    ):
         """Test buy with position size that fails validation."""
         market_data = MockMarketData(default_symbol, 150)
         capital = Decimal("100000")
@@ -229,14 +247,20 @@ class TestTradeExecutor:
             side_effect=ValueError("Position too large"),
         ):
             trade, new_capital = trade_executor.execute_buy_signal(
-                buy_signal, market_data, capital, mock_close_position, mock_validate_profitability,
-                position_size=position_size
+                buy_signal,
+                market_data,
+                capital,
+                mock_close_position,
+                mock_validate_profitability,
+                position_size=position_size,
             )
 
         assert trade is None
         assert new_capital == capital
 
-    def test_execute_buy_signal_stop_loss_validation_fails(self, trade_executor, buy_signal, default_symbol):
+    def test_execute_buy_signal_stop_loss_validation_fails(
+        self, trade_executor, buy_signal, default_symbol
+    ):
         """Test buy with stop-loss that fails validation."""
         market_data = MockMarketData(default_symbol, 150)
         capital = Decimal("100000")
@@ -255,14 +279,20 @@ class TestTradeExecutor:
             side_effect=ValueError("Invalid SL"),
         ):
             trade, new_capital = trade_executor.execute_buy_signal(
-                buy_signal, market_data, capital, mock_close_position, mock_validate_profitability,
-                position_size=position_size
+                buy_signal,
+                market_data,
+                capital,
+                mock_close_position,
+                mock_validate_profitability,
+                position_size=position_size,
             )
 
         assert trade is None
         assert new_capital == capital
 
-    def test_execute_buy_signal_liquidity_rejected(self, trade_executor, buy_signal, default_symbol):
+    def test_execute_buy_signal_liquidity_rejected(
+        self, trade_executor, buy_signal, default_symbol
+    ):
         """Test buy with liquidity validation rejection."""
         market_data = MockMarketData(default_symbol, 150, volume=0)  # No volume
         capital = Decimal("100000")
@@ -275,8 +305,12 @@ class TestTradeExecutor:
             return True
 
         trade, new_capital = trade_executor.execute_buy_signal(
-            buy_signal, market_data, capital, mock_close_position, mock_validate_profitability,
-            position_size=position_size
+            buy_signal,
+            market_data,
+            capital,
+            mock_close_position,
+            mock_validate_profitability,
+            position_size=position_size,
         )
 
         # Liquidity validator should reject
@@ -301,8 +335,12 @@ class TestTradeExecutor:
         initial_position = position_manager.get_position(default_symbol)
 
         trade, new_capital = trade_executor.execute_buy_signal(
-            buy_signal, market_data, capital, mock_close_position, mock_validate_profitability,
-            position_size=position_size
+            buy_signal,
+            market_data,
+            capital,
+            mock_close_position,
+            mock_validate_profitability,
+            position_size=position_size,
         )
 
         final_position = position_manager.get_position(default_symbol)
@@ -526,8 +564,12 @@ class TestTradeExecutor:
             return True
 
         trade, new_capital = trade_executor.execute_buy_signal(
-            buy_signal, market_data, capital, mock_close_position, mock_validate_profitability,
-            position_size=position_size
+            buy_signal,
+            market_data,
+            capital,
+            mock_close_position,
+            mock_validate_profitability,
+            position_size=position_size,
         )
 
         if trade:
@@ -567,8 +609,12 @@ class TestTradeExecutor:
             return True
 
         trade, new_capital = trade_executor.execute_buy_signal(
-            buy_signal, market_data, capital, mock_close_position, mock_validate_profitability,
-            position_size=position_size
+            buy_signal,
+            market_data,
+            capital,
+            mock_close_position,
+            mock_validate_profitability,
+            position_size=position_size,
         )
 
         # Should adjust position to fit capital or reject

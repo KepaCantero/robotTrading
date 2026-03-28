@@ -124,9 +124,8 @@ class MarketAnalyzer:
         if vol_info.get('regime') == 'high':
             if market_type in ['trend_up', 'trend_down']:
                 market_type = 'high_vol'  # Priorizar volatilidad extrema
-        elif vol_info.get('regime') == 'low':
-            if market_type == 'range':
-                market_type = 'low_vol'
+        elif vol_info.get('regime') == 'low' and market_type == 'range':
+            market_type = 'low_vol'
 
         return {
             'type': market_type,

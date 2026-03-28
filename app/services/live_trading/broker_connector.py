@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Dict, Optional, Union
 
 from app.infrastructure.resilience.reconnection_manager import (
     ReconnectionConfig,
@@ -140,12 +140,12 @@ class BrokerConnector:
         if broker_type == BrokerType.ALPACA:
             from .broker_adapters.alpaca_adapter import AlpacaAdapter
 
-            self.adapter: Any = AlpacaAdapter()
+            self.adapter: object = AlpacaAdapter()
         else:
             # Default to paper trading for all other types
             from .broker_adapters.paper_adapter import PaperAdapter
 
-            self.adapter: Any = PaperAdapter()
+            self.adapter: object = PaperAdapter()
 
         # Initialize reconnection manager
         self.reconnection_manager = self._create_reconnection_manager()
@@ -276,8 +276,7 @@ class BrokerConnector:
         result = await self.reconnection_manager.connect_with_backoff(_connect)
         return result is not False
 
-    def get_connection_stats(self) -> Dict[str, Any]:
-        """Get reconnection statistics."""
+    def get_connection_stats(self) -> Dict[str, Union[str, int, float, bool]]:
         return self.reconnection_manager.get_stats()
 
     async def disconnect(self) -> bool:

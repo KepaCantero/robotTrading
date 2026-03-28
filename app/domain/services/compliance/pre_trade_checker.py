@@ -19,7 +19,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
 
@@ -69,7 +69,7 @@ class PreTradeComplianceChecker:
         order_book: Optional[Any] = None,
         urgency: float = 0.5,
         signal_time: Optional[datetime] = None,
-        **kwargs: Any,  # Extension point for additional params
+        **kwargs: Union[str, int, float, bool, Dict, List],  # Extension point for additional params
     ) -> PreTradeCheckResult:
         """
         Perform comprehensive pre-trade check using all available services.

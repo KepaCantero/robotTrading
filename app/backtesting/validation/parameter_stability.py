@@ -169,7 +169,7 @@ class ParameterStabilityAnalyzer:
         for params in os_params:
             param_names.update(params.keys())
 
-        return sorted(list(param_names))
+        return sorted(param_names)
 
     def _extract_param_values(
         self,
@@ -284,7 +284,7 @@ class ParameterStabilityAnalyzer:
 
             # Test for significance (p < 0.05, two-tailed)
             # Critical value is approximately ±1.96
-            return bool(abs(z) > 1.96)
+            return abs(z) > 1.96
 
         return False
 
@@ -561,7 +561,7 @@ def detect_parameter_drift_simple(
     # Calculate percent change
     if early_mean != 0:
         change_pct = abs(late_mean - early_mean) / abs(early_mean) * 100
-        return bool(change_pct > 20)  # 20% change threshold
+        return change_pct > 20  # 20% change threshold
 
     return False
 

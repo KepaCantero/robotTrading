@@ -476,7 +476,7 @@ class ReinforcementLearningEngine(BaseLearningEngine):
         assert self.env is not None, "Environment not initialized"
         assert self.agent is not None, "Agent not initialized"
 
-        for episode in range(min(self.training_steps // 1000, 100)):  # Limitar episodios para demo
+        for _episode in range(min(self.training_steps // 1000, 100)):  # Limitar episodios para demo
             obs = self.env.reset()
             done = False
             step = 0

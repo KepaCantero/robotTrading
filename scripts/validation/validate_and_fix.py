@@ -16,7 +16,13 @@ def run_mypy(file_path: Path) -> Dict[str, Any]:
     """Run mypy and return results."""
     try:
         result = subprocess.run(
-            ["mypy", "--no-error-summary", "--hide-error-context", "--show-error-codes", str(file_path)],
+            [
+                "mypy",
+                "--no-error-summary",
+                "--hide-error-context",
+                "--show-error-codes",
+                str(file_path),
+            ],
             capture_output=True,
             text=True,
             timeout=30,
@@ -26,12 +32,14 @@ def run_mypy(file_path: Path) -> Dict[str, Any]:
             if line.strip() and not line.startswith("Success"):
                 parts = line.split(':', 3)
                 if len(parts) >= 4:
-                    errors.append({
-                        "line": parts[1],
-                        "severity": "error",
-                        "code": parts[3].strip().split()[0] if parts[3] else "unknown",
-                        "message": parts[3].strip() if len(parts) > 3 else line,
-                    })
+                    errors.append(
+                        {
+                            "line": parts[1],
+                            "severity": "error",
+                            "code": parts[3].strip().split()[0] if parts[3] else "unknown",
+                            "message": parts[3].strip() if len(parts) > 3 else line,
+                        }
+                    )
         return {"success": result.returncode == 0, "errors": errors}
     except Exception as e:
         return {"success": False, "errors": [{"message": f"mypy failed: {e}"}]}
@@ -51,16 +59,25 @@ def run_ruff(file_path: Path) -> Dict[str, Any]:
             data = json.loads(result.stdout)
             if isinstance(data, list):
                 for error in data:
-                    errors.append({
-                        "line": error.get("location", {}).get("row", "?") if isinstance(error.get("location"), dict) else "?",
-                        "severity": "error",
-                        "code": error.get("code", "???"),
-                        "message": error.get("message", ""),
-                        "fixable": error.get("fix", {}).get("applicability", "") == "safe" if isinstance(error.get("fix"), dict) else False,
-                    })
+                    errors.append(
+                        {
+                            "line": error.get("location", {}).get("row", "?")
+                            if isinstance(error.get("location"), dict)
+                            else "?",
+                            "severity": "error",
+                            "code": error.get("code", "???"),
+                            "message": error.get("message", ""),
+                            "fixable": error.get("fix", {}).get("applicability", "") == "safe"
+                            if isinstance(error.get("fix"), dict)
+                            else False,
+                        }
+                    )
         return {"success": len(errors) == 0, "errors": errors}
     except json.JSONDecodeError as e:
-        return {"success": False, "errors": [{"message": f"ruff JSON decode failed: {e}", "tool": "ruff"}]}
+        return {
+            "success": False,
+            "errors": [{"message": f"ruff JSON decode failed: {e}", "tool": "ruff"}],
+        }
     except Exception as e:
         return {"success": False, "errors": [{"message": f"ruff failed: {e}", "tool": "ruff"}]}
 
@@ -94,12 +111,14 @@ def run_bandit(file_path: Path) -> Dict[str, Any]:
             errors = []
             for error in results:
                 if error.get("issue_severity") in ["MEDIUM", "HIGH"]:
-                    errors.append({
-                        "line": error.get("line_number", "?"),
-                        "severity": error.get("issue_severity", "UNKNOWN").lower(),
-                        "code": error.get("test_id", "BANDIT"),
-                        "message": error.get("issue_text", ""),
-                    })
+                    errors.append(
+                        {
+                            "line": error.get("line_number", "?"),
+                            "severity": error.get("issue_severity", "UNKNOWN").lower(),
+                            "code": error.get("test_id", "BANDIT"),
+                            "message": error.get("issue_text", ""),
+                        }
+                    )
             return {"success": len(errors) == 0, "errors": errors}
         return {"success": True, "errors": []}
     except json.JSONDecodeError:
@@ -131,7 +150,7 @@ def validate_file(file_path: str) -> Dict[str, Any]:
             "success": False,
             "file": file_path,
             "errors": [{"message": "File not found"}],
-            "tools": {}
+            "tools": {},
         }
 
     results = {
@@ -153,10 +172,10 @@ def validate_file(file_path: str) -> Dict[str, Any]:
 
     results["errors"] = all_errors
     results["success"] = (
-        results["syntax"]["success"] and
-        results["mypy"]["success"] and
-        results["ruff"]["success"] and
-        results["bandit"]["success"]
+        results["syntax"]["success"]
+        and results["mypy"]["success"]
+        and results["ruff"]["success"]
+        and results["bandit"]["success"]
     )
     results["error_count"] = len(all_errors)
 

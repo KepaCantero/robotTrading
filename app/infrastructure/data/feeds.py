@@ -20,6 +20,7 @@ from app.domain.models.market_data import (
     DataFeedType,
     DataFrequency,
     HistoricalData,
+    MetadataValue,
     Quote,
 )
 from app.shared.config.api_endpoints import ENDPOINTS
@@ -201,7 +202,11 @@ class AlphaVantageFeed(DataFeedInterface):
 
             quote_data = data["Global Quote"]
 
-            return Quote(  # type: ignore
+            # Convert raw_data to MetadataDict format (flatten nested values to strings)
+            raw_metadata: Dict[str, MetadataValue] = {
+                f"raw_{k}": str(v) for k, v in quote_data.items()
+            }
+            return Quote(
                 symbol=symbol,
                 bid=Decimal(quote_data.get("05. price", "0")),
                 ask=Decimal(quote_data.get("05. price", "0")),
@@ -215,7 +220,7 @@ class AlphaVantageFeed(DataFeedInterface):
                 change=Decimal(quote_data.get("09. change", "0")),
                 change_percent=Decimal(quote_data.get("10. change percent", "0").replace("%", "")),
                 feed_type=DataFeedType.ALPHA_VANTAGE,
-                metadata={"raw_data": quote_data},
+                metadata=raw_metadata,
             )
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(
@@ -284,8 +289,12 @@ class AlphaVantageFeed(DataFeedInterface):
                 date = datetime.strptime(date_str, "%Y-%m-%d")
 
                 if start_date <= date <= end_date:
+                    # Convert values to MetadataDict format
+                    values_metadata: Dict[str, MetadataValue] = {
+                        f"raw_{k}": str(v) for k, v in values.items()
+                    }
                     historical_data.append(
-                        HistoricalData(  # type: ignore
+                        HistoricalData(
                             symbol=symbol,
                             timestamp=date,
                             open=Decimal(values["1. open"]),
@@ -295,7 +304,7 @@ class AlphaVantageFeed(DataFeedInterface):
                             volume=Decimal(values["5. volume"]),
                             feed_type=DataFeedType.ALPHA_VANTAGE,
                             frequency=frequency,
-                            metadata={"raw_data": values},
+                            metadata=values_metadata,
                         )
                     )
 
@@ -387,7 +396,14 @@ class YahooFinanceFeed(DataFeedInterface):
                 logger.warning(f"No close price for {symbol}", extra={"symbol": symbol})
                 return None
 
-            return Quote(  # type: ignore
+            # Convert result to MetadataDict format (flatten nested structures)
+            yahoo_metadata: Dict[str, MetadataValue] = {
+                "symbol": str(meta.get("symbol", symbol)),
+                "currency": str(meta.get("currency", "USD")),
+                "exchangeName": str(meta.get("exchangeName", "")),
+                "regularMarketTime": int(meta.get("regularMarketTime", 0)),
+            }
+            return Quote(
                 symbol=symbol,
                 bid=Decimal(str(latest_close)),
                 ask=Decimal(str(latest_close)),
@@ -401,7 +417,7 @@ class YahooFinanceFeed(DataFeedInterface):
                 change=Decimal(str(meta.get("regularMarketChange", 0))),
                 change_percent=Decimal(str(meta.get("regularMarketChangePercent", 0))),
                 feed_type=DataFeedType.YAHOO_FINANCE,
-                metadata={"raw_data": result},
+                metadata=yahoo_metadata,
             )
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(
@@ -469,8 +485,13 @@ class YahooFinanceFeed(DataFeedInterface):
                 date = datetime.fromtimestamp(timestamp)
 
                 if start_date <= date <= end_date:
+                    # Create minimal metadata for historical data
+                    hist_metadata: Dict[str, MetadataValue] = {
+                        "data_index": i,
+                        "timestamp_unix": int(timestamp),
+                    }
                     historical_data.append(
-                        HistoricalData(  # type: ignore
+                        HistoricalData(
                             symbol=symbol,
                             timestamp=date,
                             open=Decimal(str(quote["open"][i] or 0)),
@@ -480,7 +501,7 @@ class YahooFinanceFeed(DataFeedInterface):
                             volume=Decimal(str(quote["volume"][i] or 0)),
                             feed_type=DataFeedType.YAHOO_FINANCE,
                             frequency=frequency,
-                            metadata={"raw_data": result},
+                            metadata=hist_metadata,
                         )
                     )
 
@@ -592,7 +613,14 @@ class PolygonFeed(DataFeedInterface):
             # Spread calculation
             calculated_spread = ask - bid if bid > 0 and ask > 0 else Decimal("0.01")
 
-            return Quote(  # type: ignore
+            # Convert snapshot to MetadataDict format
+            polygon_metadata: Dict[str, MetadataValue] = {
+                "ticker": str(snapshot.get("ticker", symbol)),
+                "day_volume": float(day_data.get("v", 0)),
+                "day_vwap": float(day_data.get("vw", 0)),
+                "prev_close": float(prev_day.get("c", 0)) if prev_day else 0.0,
+            }
+            return Quote(
                 symbol=symbol,
                 bid=bid if bid > 0 else close,
                 ask=ask if ask > 0 else close,
@@ -606,7 +634,7 @@ class PolygonFeed(DataFeedInterface):
                 change=change,
                 change_percent=change_percent,
                 feed_type=DataFeedType.POLYGON,
-                metadata={"raw_data": snapshot},
+                metadata=polygon_metadata,
             )
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(
@@ -678,8 +706,20 @@ class PolygonFeed(DataFeedInterface):
                 timestamp = datetime.fromtimestamp(result["t"] / 1000)
 
                 if start_date <= timestamp <= end_date:
+                    # Convert result dict to MetadataDict format (flatten nested values)
+                    raw_metadata: Dict[str, MetadataValue] = {
+                        "ticker": str(symbol),
+                        "open": float(result.get("o", 0)),
+                        "high": float(result.get("h", 0)),
+                        "low": float(result.get("l", 0)),
+                        "close": float(result.get("c", 0)),
+                        "volume": float(result.get("v", 0)),
+                        "timestamp_unix": int(result.get("t", 0)),
+                        "num_trades": int(result.get("n", 0)),
+                        "vwap": float(result.get("vw", 0)),
+                    }
                     historical_data.append(
-                        HistoricalData(  # type: ignore
+                        HistoricalData(
                             symbol=symbol,
                             timestamp=timestamp,
                             open=Decimal(str(result.get("o", 0))),
@@ -689,7 +729,7 @@ class PolygonFeed(DataFeedInterface):
                             volume=Decimal(str(result.get("v", 0))),
                             feed_type=DataFeedType.POLYGON,
                             frequency=frequency,
-                            metadata={"raw_data": result},
+                            metadata=raw_metadata,
                         )
                     )
 

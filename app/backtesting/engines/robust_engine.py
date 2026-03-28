@@ -24,16 +24,31 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 
 from app.backtesting.base_engine import BaseBacktestEngine, EngineType
+from app.domain.models.signal import Signal
+from app.domain.strategies.base import BaseStrategy
+from app.services.corporate_actions.handler import CorporateAction
 
 # SINGLE SOURCE OF TRUTH: Import CentralizedConfig
 from app.shared.config.centralized_config import get_config
 
+if TYPE_CHECKING:
+    from app.backtesting.robust_engine.look_ahead_validator import ValidationResult
+
 logger = logging.getLogger(__name__)
+
+# Type alias for performance metrics dictionary
+PerformanceMetrics = Dict[str, Optional[Union[float, int]]]
+YearlyBreakdown = Dict[str, Union[float, int, str]]
+RollingMetrics = Dict[str, Union[float, int]]
+SurvivorshipAdjustment = Dict[str, Union[float, int, str]]
+DividendTracker = Dict[str, Union[float, int, str, Decimal]]
+TradeRecord = Dict[str, Union[str, int, float, date, datetime, Decimal]]
+CheckpointData = Dict[str, Union[str, float, int, Dict[str, float], None]]
 
 
 class DecimalEncoder(json.JSONEncoder):
@@ -142,13 +157,13 @@ class RobustBacktestResult:
     """
 
     config: RobustBacktestConfig = field(default_factory=RobustBacktestConfig)
-    performance: Any = field(default=None)
+    performance: Optional[PerformanceMetrics] = field(default=None)
     equity_curve: List[Tuple[date, Decimal]] = field(default_factory=list)
-    trades: List[Dict[str, Any]] = field(default_factory=list)
-    yearly_breakdown: List[Any] = field(default_factory=list)
-    rolling_metrics: Any = field(default=None)
-    survivorship_adjustment: Optional[Any] = field(default=None)
-    dividend_tracker: Any = field(default=None)
+    trades: List[TradeRecord] = field(default_factory=list)
+    yearly_breakdown: List[YearlyBreakdown] = field(default_factory=list)
+    rolling_metrics: Optional[RollingMetrics] = field(default=None)
+    survivorship_adjustment: Optional[SurvivorshipAdjustment] = field(default=None)
+    dividend_tracker: Optional[DividendTracker] = field(default=None)
     checkpoints_used: int = field(default=0)
     total_duration_seconds: float = field(default=0.0)
 
@@ -204,15 +219,15 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
         self._capital: Decimal = config.initial_capital
         self._positions: Dict[str, Decimal] = {}
         self._cost_basis: Dict[str, Decimal] = {}
-        self._trades: List[Dict[str, Any]] = []
+        self._trades: List[TradeRecord] = []
         self._current_date: Optional[date] = config.start_date
 
         # Checkpointing
-        self._latest_checkpoint: Optional[Any] = None
+        self._latest_checkpoint: Optional[CheckpointData] = None
         self._checkpoint_count: int = 0
 
         # Validation
-        self._validation_result: Optional[Any] = None
+        self._validation_result: Optional[ValidationResult] = None
 
         # Timing
         self._start_time: Optional[datetime] = None
@@ -245,8 +260,8 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
 
     def run_backtest(
         self,
-        market_data: Union[pd.DataFrame, List[Any]],
-        signals: Optional[List[Any]] = None,
+        market_data: Union[pd.DataFrame, List[Signal]],
+        signals: Optional[List[Signal]] = None,
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
         resume_from_checkpoint: bool = False,
@@ -338,7 +353,7 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
         if self._performance_tracker:
             self._performance_tracker.reset()
 
-    def _convert_to_dataframe(self, data: List[Any]) -> pd.DataFrame:
+    def _convert_to_dataframe(self, data: List[Signal]) -> pd.DataFrame:
         """Convert list of market data objects to DataFrame."""
         records = []
         for item in data:
@@ -380,9 +395,9 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
 
     def _process_backtest_chunks(
         self,
-        strategy: Any,
+        strategy: Optional[BaseStrategy],
         market_data: pd.DataFrame,
-        signals: Optional[List[Any]],
+        signals: Optional[List[Signal]],
     ) -> None:
         """Process backtest in chunks for memory efficiency."""
         chunks = self._split_data_into_chunks(market_data)
@@ -404,8 +419,8 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
         chunk_idx: int,
         total_chunks: int,
         chunk: pd.DataFrame,
-        strategy: Any,
-        signals: Optional[List[Any]],
+        strategy: Optional[BaseStrategy],
+        signals: Optional[List[Signal]],
     ) -> None:
         """Process a single chunk with progress tracking."""
         chunk_start = datetime.utcnow()
@@ -440,7 +455,7 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
         chunk_duration = (datetime.utcnow() - chunk_start).total_seconds()
         logger.info(f"Chunk {chunk_idx}/{total_chunks} completed in {chunk_duration:.1f}s")
 
-    def _process_signal(self, signal: Any, market_data: Any) -> None:
+    def _process_signal(self, signal: Signal, market_data: object) -> None:
         """Process a trading signal."""
         try:
             signal_type = (
@@ -466,7 +481,7 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
         elif signal_type == "sell":
             self._execute_sell(symbol, price, signal)
 
-    def _execute_buy(self, symbol: str, price: Decimal, signal: Any) -> None:
+    def _execute_buy(self, symbol: str, price: Decimal, signal: Signal) -> None:
         """Execute a buy order."""
         if self._current_date is None:
             self._current_date = self.config.start_date
@@ -502,7 +517,7 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
             }
         )
 
-    def _execute_sell(self, symbol: str, price: Decimal, signal: Any) -> None:
+    def _execute_sell(self, symbol: str, price: Decimal, signal: Signal) -> None:
         """Execute a sell order."""
         if self._current_date is None:
             self._current_date = self.config.start_date
@@ -648,7 +663,7 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
 
     def _perform_validation(
         self,
-        signals: List[Any],
+        signals: List[Signal],
         market_data: pd.DataFrame,
     ) -> None:
         """Perform look-ahead bias validation."""
@@ -686,7 +701,7 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
             if self.config.validation_strict_mode:
                 raise ValueError(error_msg)
 
-    def _convert_signals_to_dataframe(self, signals: List[Any]) -> pd.DataFrame:
+    def _convert_signals_to_dataframe(self, signals: List[Signal]) -> pd.DataFrame:
         """Convert list of signal objects to DataFrame."""
         records = []
         for signal in signals:
@@ -722,7 +737,7 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
         # Placeholder - would integrate with SurvivorshipAdjuster
         return market_data
 
-    def _calculate_performance(self) -> Any:
+    def _calculate_performance(self) -> PerformanceMetrics:
         """Calculate final performance metrics."""
         # Simplified performance calculation
         total_return = (
@@ -739,7 +754,7 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
             "max_drawdown": None,
         }
 
-    def _build_result(self, performance: Any) -> RobustBacktestResult:
+    def _build_result(self, performance: PerformanceMetrics) -> RobustBacktestResult:
         """Build RobustBacktestResult from performance metrics."""
         return self._create_result(
             performance=performance,
@@ -751,7 +766,7 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
             dividend_tracker=None,
         )
 
-    def _log_completion_summary(self, performance: Any) -> None:
+    def _log_completion_summary(self, performance: PerformanceMetrics) -> None:
         """Log backtest completion summary."""
         logger.info(
             f"Backtest completed: {performance['total_return']:.2%} total return, "
@@ -759,7 +774,7 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
             f"final capital=${self._capital:,.2f}"
         )
 
-    def add_corporate_action(self, action: Any) -> None:
+    def add_corporate_action(self, action: CorporateAction) -> None:
         """Add a corporate action to the handler."""
         # Would integrate with CorporateActionHandler
         pass

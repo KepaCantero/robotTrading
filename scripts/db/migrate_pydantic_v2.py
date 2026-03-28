@@ -38,9 +38,7 @@ def migrate_pydantic_v2_file(file_path: Path) -> bool:
         )
 
         # Replace Field with env parameter
-        content = re.sub(
-            r'Field\(([^)]*),\s*env="([^"]+)"([^)]*)\)', r"Field(\1\3)", content
-        )
+        content = re.sub(r'Field\(([^)]*),\s*env="([^"]+)"([^)]*)\)', r"Field(\1\3)", content)
 
         # Add env parameter separately
         field_pattern = r"(\w+):\s*(\w+)\s*=\s*Field\(([^)]*)\)"

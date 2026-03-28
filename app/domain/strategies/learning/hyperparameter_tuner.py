@@ -443,7 +443,7 @@ class LearningEngineTuner:
         # Configurar callback
         self.tuner.set_training_callback(self._train_and_evaluate)
 
-    def _train_and_evaluate(self, trial: Any, params: Dict[str, Any]) -> float:
+    def _train_and_evaluate(self, trial: object, params: Dict[str, object]) -> float:
         """
         Entrenar y evaluar modelo con parámetros dados.
 

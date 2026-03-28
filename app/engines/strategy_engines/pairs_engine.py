@@ -16,7 +16,6 @@ from typing import Any, Dict, List, Optional, Sequence
 import numpy as np
 
 # Import scipy for cointegration tests (REQUIRED)
-import scipy.stats  # noqa: F401
 
 SCIPY_AVAILABLE = True
 
@@ -110,9 +109,8 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
 
         # Pair symbols configuration
         pair_symbols_raw = config.get("pair_symbols")
-        if pair_symbols_raw is None and strategy_config:
-            if hasattr(strategy_config, 'parameters'):
-                pair_symbols_raw = strategy_config.parameters.get("pair_symbols")
+        if pair_symbols_raw is None and strategy_config and hasattr(strategy_config, 'parameters'):
+            pair_symbols_raw = strategy_config.parameters.get("pair_symbols")
 
         if pair_symbols_raw is None:
             pair_symbols_raw = ["AAPL", "MSFT"]

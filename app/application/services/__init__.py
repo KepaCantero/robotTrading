@@ -28,7 +28,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Callable, Dict, Generic, List, Optional, TypeVar
+from typing import Callable, Dict, Generic, List, Optional, TypeVar, cast
 
 from app.domain.entities.order import Order, OrderSide, OrderType
 from app.domain.entities.portfolio import Portfolio, Position
@@ -200,7 +200,7 @@ class ApplicationService:  # Concrete base class with shared functionality
         ```
     """
 
-    def __init__(self, uow_factory: Any):
+    def __init__(self, uow_factory: Callable[..., AbstractUnitOfWork]):
         """
         Initialize service with Unit of Work factory.
 
@@ -211,7 +211,7 @@ class ApplicationService:  # Concrete base class with shared functionality
 
     async def _execute_in_transaction(
         self, operation: Callable, uow: Optional[AbstractUnitOfWork] = None
-    ) -> Any:
+    ) -> object:
         """
         Execute an operation within a transaction.
 
@@ -306,7 +306,11 @@ class GetPortfolioOrdersQuery(Query[List[Order]]):
 
     async def execute(self, uow: AbstractUnitOfWork) -> List[Order]:
         """Execute query to find portfolio orders."""
-        return await uow.orders.find_by_portfolio(self.portfolio_id)  # type: ignore[attr-defined]
+        # Cast to access domain-specific repository method
+        from app.domain.repositories.order_repository import OrderRepository
+
+        orders_repo = cast(OrderRepository, uow.orders)
+        return await orders_repo.find_by_portfolio(self.portfolio_id)
 
 
 # Service
@@ -515,12 +519,10 @@ class PortfolioApplicationService(ApplicationService):
         """
 
         async def _create(uow: AbstractUnitOfWork) -> str:
-            # pylint: disable=import-outside-toplevel
             from app.domain.value_objects.capital import Capital
             from app.domain.value_objects.risk_parameters import RiskParameters
 
             # Create portfolio entity
-            # pylint: disable=no-value-for-parameter
             capital = Capital.from_amount(amount=initial_capital, currency=currency)
             portfolio = Portfolio(
                 portfolio_id=portfolio_id,
@@ -573,7 +575,11 @@ class PortfolioApplicationService(ApplicationService):
 
             # Save changes
             await uow.portfolios.update(portfolio)
-            await uow.positions.save(portfolio_id, position)  # type: ignore[attr-defined]
+            # Cast to access domain-specific repository method
+            from app.domain.repositories.position_repository import PositionRepository
+
+            positions_repo = cast(PositionRepository, uow.positions)
+            await positions_repo.save(portfolio_id, position)
             logger.info(f"Added position {symbol} to portfolio {portfolio_id}")
 
         await self._execute_in_transaction(_add)
@@ -639,7 +645,7 @@ class ServiceOrchestrator:
         """Register an application service."""
         self._services[name] = service
 
-    async def execute_workflow(self, workflow_name: str, **kwargs) -> Any:
+    async def execute_workflow(self, workflow_name: str, **kwargs: object) -> object:
         """
         Execute a multi-service workflow.
 
@@ -666,11 +672,14 @@ class ServiceOrchestrator:
         if not order_service:
             raise ValueError("Order service not registered")
 
+        # Cast to OrderApplicationService to access specific methods
+        order_app_service = cast(OrderApplicationService, order_service)
+
         # Create order
-        order_id = await order_service.create_order(order_command)  # type: ignore[attr-defined]
+        order_id = await order_app_service.create_order(order_command)
 
         # Submit order (in same transaction if needed, or separate)
-        await order_service.submit_order(SubmitOrderCommand(order_id))  # type: ignore[attr-defined]
+        await order_app_service.submit_order(SubmitOrderCommand(order_id))
 
         return order_id
 
@@ -696,8 +705,7 @@ class NotFoundError(Exception):
 # INPUT PROFILE ROUTING & CONFIGURATION SERVICES
 # ============================================================================
 
-# pylint: disable=wrong-import-position  # Intentional: avoid circular imports
-from .input_profile_router import (  # noqa: E402
+from .input_profile_router import (
     InputProfileRouter,
     OptimizationConfig,
     OptimizationType,
@@ -707,7 +715,7 @@ from .input_profile_router import (  # noqa: E402
     SystemConfiguration,
     TaxConfig,
 )
-from .risk_configurator import (  # noqa: E402
+from .risk_configurator import (
     DrawdownMetrics,
     RiskBudget,
     RiskConfigurator,
@@ -716,7 +724,7 @@ from .risk_configurator import (  # noqa: E402
     StressTestScenario,
     VaRResult,
 )
-from .tax_optimizer import (  # noqa: E402
+from .tax_optimizer import (
     TaxCalculation,
     TaxJurisdiction,
     TaxLot,

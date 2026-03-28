@@ -77,9 +77,7 @@ def main():
     cursor = conn.cursor()
 
     # Get all tables
-    cursor.execute(
-        "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
-    )
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
     tables = cursor.fetchall()
 
     print(f"\n{GREEN}Created {len(tables)} tables:{RESET}")
@@ -104,9 +102,7 @@ def main():
     print(f"\n{YELLOW}5. Verifying expected tables exist...{RESET}")
     missing_tables = []
     for expected in expected_tables:
-        cursor.execute(
-            f"SELECT name FROM sqlite_master WHERE type='table' AND name='{expected}'"
-        )
+        cursor.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{expected}'")
         if cursor.fetchone():
             print(f"  {GREEN}✓{RESET} {expected}")
         else:

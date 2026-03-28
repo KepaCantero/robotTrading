@@ -27,7 +27,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 
 import numpy as np
 
@@ -1030,7 +1030,7 @@ def calculate_kelly_criterion(
 
 
 def calculate_bet_sizes_with_meta_model(
-    meta_model: Any,
+    meta_model: object,
     X: np.ndarray,
     primary_predictions: np.ndarray,
     expected_returns: Optional[np.ndarray] = None,

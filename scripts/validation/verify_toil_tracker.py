@@ -54,12 +54,14 @@ def verify_toil_tracker():
 
         # Initialize tracker (creates DB)
         import asyncio
+
         asyncio.run(tracker.initialize())
 
         checks.append(("Create tracker", True))
     except Exception as e:
         print(f"✗ Failed: {e}")
         import traceback
+
         traceback.print_exc()
         checks.append(("Create tracker", False))
         print()

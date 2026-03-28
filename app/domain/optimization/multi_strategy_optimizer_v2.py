@@ -21,8 +21,6 @@ from app.domain.models.market_data import Quote
 from app.domain.strategies.mean_reversion import MeanReversionStrategy
 from app.domain.strategies.momentum import MomentumStrategy
 from app.domain.strategies.pairs_trading import PairsTrading as PairsTradingStrategy
-from app.services.multi_strategy_allocation import MultiStrategyAllocationManager
-from app.services.portfolio_config_manager import get_portfolio_config_manager
 
 logger = logging.getLogger(__name__)
 
@@ -34,10 +32,14 @@ class MultiStrategyOptimizerV2:
         self,
         start_date: datetime,
         end_date: datetime,
-        total_capital: Decimal = Decimal("100000"),
-        output_dir: Path = Path("docs/OPTIMIZATION_RESULTS"),
+        total_capital: Optional[Decimal] = None,
+        output_dir: Optional[Path] = None,
         max_runs: int = 200,
     ):
+        if total_capital is None:
+            total_capital = Decimal("100000")
+        if output_dir is None:
+            output_dir = Path("docs/OPTIMIZATION_RESULTS")
         self.start_date = start_date
         self.end_date = end_date
         self.total_capital = total_capital
@@ -56,11 +58,14 @@ class MultiStrategyOptimizerV2:
 
     def _load_portfolio_data(self) -> None:
         """Load all portfolio symbols data."""
+        # Late import to avoid domain layer depending on services layer
+        from app.services.portfolio_config_manager import get_portfolio_config_manager
+
         config_manager = get_portfolio_config_manager()
         all_symbols = set()
 
         sector_symbols = config_manager.config.get("sectors", {})
-        for sector_name, sector_data in sector_symbols.items():
+        for _sector_name, sector_data in sector_symbols.items():
             symbols = sector_data.get("symbols", [])
             all_symbols.update(symbols)
 
@@ -123,10 +128,10 @@ class MultiStrategyOptimizerV2:
 
     def _create_strategies(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Create strategy instances with optimized parameters."""
-        strategies = {}
+        strategies: Dict[str, Any] = {}
 
         # Momentum
-        momentum_config = {
+        momentum_config: Dict[str, Any] = {
             "name": "momentum",
             "rsi_threshold": int(params.get("momentum.rsi_threshold", 40)),
             "momentum_threshold": params.get("momentum.momentum_threshold", 0.02),
@@ -140,7 +145,7 @@ class MultiStrategyOptimizerV2:
         strategies["momentum"] = MomentumStrategy(momentum_config)
 
         # Mean Reversion
-        mean_rev_config = {
+        mean_rev_config: Dict[str, Any] = {
             "name": "mean_reversion",
             "z_score_threshold": params.get("mean_reversion.z_score_threshold", 1.0),
             "lookback_period": int(params.get("mean_reversion.lookback_period", 20)),
@@ -148,20 +153,13 @@ class MultiStrategyOptimizerV2:
             "take_profit": params.get("mean_reversion.take_profit_pct", 0.12),
             "max_position_size": params.get("global.position_size_pct", 0.05),
         }
-        strategies["mean_reversion"] = MeanReversionStrategy(mean_rev_config)  # type: ignore
+        strategies["mean_reversion"] = MeanReversionStrategy(mean_rev_config)
 
-        # Pairs Trading
-        pairs_config = {
-            "name": "pairs_trading",
-            "spread_threshold": params.get("pairs_trading.spread_threshold", 1.0),
-            "lookback_period": int(params.get("pairs_trading.lookback_period", 30)),
-            "cointegration_threshold": params.get("pairs_trading.cointegration_threshold", 0.05),
-            "pair_symbols": [["AAPL", "MSFT"]],  # Default pair
-            "stop_loss": params.get("global.stop_loss_pct", 0.03),
-            "take_profit": 0.08,
-            "max_position_size": params.get("global.position_size_pct", 0.05),
-        }
-        strategies["pairs_trading"] = PairsTradingStrategy(pairs_config)  # type: ignore
+        # Pairs Trading - uses different constructor signature
+        strategies["pairs_trading"] = PairsTradingStrategy(
+            formation_period=int(params.get("pairs_trading.lookback_period", 30)),
+            z_score_entry=params.get("pairs_trading.spread_threshold", 1.0),
+        )
 
         return strategies
 
@@ -170,6 +168,9 @@ class MultiStrategyOptimizerV2:
         try:
             # Create strategies
             strategies = self._create_strategies(params)
+
+            # Late import to avoid domain layer depending on services layer
+            from app.services.multi_strategy_allocation import MultiStrategyAllocationManager
 
             # Create allocation manager (default weights: 50% momentum, 25% mean_reversion, 25% pairs_trading)
             allocation_manager = MultiStrategyAllocationManager(

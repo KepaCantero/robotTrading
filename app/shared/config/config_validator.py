@@ -39,7 +39,7 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 import yaml
 from pydantic import BaseModel, Field, ValidationError, field_validator
@@ -198,7 +198,7 @@ class BatchBacktestConfigValidator(BaseModel):
 
     @field_validator("capital_tiers", "investment_horizons")
     @classmethod
-    def validate_non_empty_dict(cls, v: Dict[str, Any]) -> Dict[str, Any]:
+    def validate_non_empty_dict(cls, v: Dict[str, object]) -> Dict[str, object]:
         if not v:
             raise ValueError("Must define at least one capital tier or investment horizon")
         return v
@@ -528,7 +528,7 @@ class ConfigValidator:
             self.result.is_valid = False
             return False
 
-    def validate_environment_value(self, config: Dict[str, Any]) -> bool:
+    def validate_environment_value(self, config: Dict[str, object]) -> bool:
         """
         Validate environment configuration value.
 
@@ -557,7 +557,7 @@ class ConfigValidator:
 
         return True
 
-    def validate_debug_mode(self, config: Dict[str, Any]) -> bool:
+    def validate_debug_mode(self, config: Dict[str, object]) -> bool:
         """
         Validate debug mode setting for environment.
 
@@ -579,7 +579,7 @@ class ConfigValidator:
 
         return True
 
-    def validate_required_sections(self, config: Dict[str, Any]) -> bool:
+    def validate_required_sections(self, config: Dict[str, object]) -> bool:
         """
         Validate that required sections exist in configuration.
 
@@ -606,7 +606,7 @@ class ConfigValidator:
 
         return True
 
-    def validate_placeholders(self, config: Dict[str, Any]) -> bool:
+    def validate_placeholders(self, config: Dict[str, object]) -> bool:
         """
         Check for placeholder values that should be replaced.
 
@@ -622,7 +622,7 @@ class ConfigValidator:
         """
         found_placeholders = []
 
-        def check_dict(d: Dict[str, Any], prefix: str = "") -> None:
+        def check_dict(d: Dict[str, object], prefix: str = "") -> None:
             """Recursively check dictionary for placeholders."""
             for key, value in d.items():
                 full_key = f"{prefix}.{key}" if prefix else key
@@ -648,7 +648,7 @@ class ConfigValidator:
         return True
 
     def validate_environment_variables(
-        self, config: Dict[str, Any], env_file: Optional[Path] = None
+        self, config: Dict[str, object], env_file: Optional[Path] = None
     ) -> bool:
         """
         Validate that referenced environment variables are defined.
@@ -691,7 +691,7 @@ class ConfigValidator:
 
         return True
 
-    def validate_database_config(self, config: Dict[str, Any]) -> bool:
+    def validate_database_config(self, config: Dict[str, object]) -> bool:
         """
         Validate database configuration section.
 
@@ -714,7 +714,7 @@ class ConfigValidator:
             self._process_validation_errors(e, "database")
             return False
 
-    def validate_risk_config(self, config: Dict[str, Any]) -> bool:
+    def validate_risk_config(self, config: Dict[str, object]) -> bool:
         """
         Validate risk management configuration section.
 
@@ -737,7 +737,7 @@ class ConfigValidator:
             self._process_validation_errors(e, "risk")
             return False
 
-    def validate_circuit_breaker_config(self, config: Dict[str, Any]) -> bool:
+    def validate_circuit_breaker_config(self, config: Dict[str, object]) -> bool:
         """
         Validate circuit breaker configuration section.
 
@@ -810,7 +810,7 @@ class ConfigValidator:
         try:
             with open(prod_config_path, "r") as f:
                 config = yaml.safe_load(f)
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             self.result.add_error("load", f"Failed to load configuration: {e}")
             return self.result
 
@@ -848,7 +848,7 @@ class ConfigValidator:
 
         return self.result
 
-    def _extract_env_references(self, config: Any) -> List[str]:
+    def _extract_env_references(self, config: Union[Dict[str, object], List[object], str, int, float, bool]) -> List[str]:
         """
         Extract environment variable references from configuration.
 
@@ -870,9 +870,8 @@ class ConfigValidator:
             elif isinstance(value, list):
                 for item in value:
                     extract(item)
-            elif isinstance(value, str):
-                if value.startswith("${") and value.endswith("}"):
-                    refs.append(value)
+            elif isinstance(value, str) and value.startswith("${") and value.endswith("}"):
+                refs.append(value)
 
         extract(config)
         return refs
@@ -898,7 +897,7 @@ class ConfigValidator:
                     if line and not line.startswith("#") and "=" in line:
                         key, value = line.split("=", 1)
                         env_vars[key.strip()] = value.strip()
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             logger.warning(f"Failed to load environment file {env_file}: {e}")
 
         return env_vars
@@ -943,7 +942,7 @@ class ConfigValidator:
         try:
             with open(config_path, "r") as f:
                 config = yaml.safe_load(f)
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             self.result.add_error("load", f"Failed to load configuration: {e}")
             return self.result
 
@@ -1010,7 +1009,7 @@ class ConfigValidator:
 
         return self.result
 
-    def _validate_threshold_ranges(self, threshold_config: Dict[str, Any]) -> None:
+    def _validate_threshold_ranges(self, threshold_config: Dict[str, object]) -> None:
         """
         Validate threshold optimization ranges.
 
@@ -1031,14 +1030,13 @@ class ConfigValidator:
                         min_val = param_range.get("min")
                         max_val = param_range.get("max")
 
-                        if min_val is not None and max_val is not None:
-                            if min_val >= max_val:
-                                self.result.add_error(
-                                    f"threshold_optimization.{indicator}.{param_name}",
-                                    f"min ({min_val}) must be less than max ({max_val})",
-                                )
+                        if min_val is not None and max_val is not None and min_val >= max_val:
+                            self.result.add_error(
+                                f"threshold_optimization.{indicator}.{param_name}",
+                                f"min ({min_val}) must be less than max ({max_val})",
+                            )
 
-    def _validate_profile_overrides(self, profiles: Dict[str, Any]) -> None:
+    def _validate_profile_overrides(self, profiles: Dict[str, object]) -> None:
         """
         Validate profile-specific overrides.
 
@@ -1065,7 +1063,7 @@ class ConfigValidator:
                     f"Unknown profile: {profile_name}. Valid profiles: {valid_profiles}",
                 )
 
-    def _validate_tier_overrides(self, tiers: Dict[str, Any]) -> None:
+    def _validate_tier_overrides(self, tiers: Dict[str, object]) -> None:
         """
         Validate tier-specific overrides.
 
@@ -1127,7 +1125,7 @@ class ConfigValidator:
         try:
             with open(config_path, "r") as f:
                 config = yaml.safe_load(f)
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             self.result.add_error("load", f"Failed to load configuration: {e}")
             return self.result
 
@@ -1222,7 +1220,7 @@ class ConfigValidator:
 
         return self.result
 
-    def _validate_cross_config_references(self, batch_config: Dict[str, Any]) -> None:
+    def _validate_cross_config_references(self, batch_config: Dict[str, object]) -> None:
         """
         Validate that references to profile_optimization.yaml are valid.
 

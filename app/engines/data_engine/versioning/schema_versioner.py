@@ -59,7 +59,7 @@ class SchemaVersioner:
             }
             with open(self.schema_registry_path, 'w') as f:
                 json.dump(registry, f, indent=2)
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             logger.error(f"Error guardando schema registry: {e}")
 
     def register_schema(

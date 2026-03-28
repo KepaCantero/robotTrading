@@ -408,7 +408,7 @@ class CorrelationAnalyzer:
                 return []
 
             # Count how many times each strategy appears in redundant pairs
-            removal_scores = {strategy: 0 for strategy in self.strategies}
+            removal_scores = dict.fromkeys(self.strategies, 0)
 
             for s1, s2, corr in metrics.redundant_pairs:
                 # Weight by correlation strength

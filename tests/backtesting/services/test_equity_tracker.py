@@ -378,4 +378,3 @@ class TestEquityCurveTracker:
 
         expected_value = Decimal("85000") + Decimal("100") * Decimal("150")
         assert equity_tracker.equity_curve[0] == (timestamp, expected_value)
-

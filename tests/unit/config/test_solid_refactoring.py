@@ -154,19 +154,13 @@ class TestValidators:
     def test_date_range_validator_valid(self):
         """Test date range validator accepts valid dates."""
         validator = DateRangeValidator()
-        assert validator.validate({
-            "start_date": "2020-01-01",
-            "end_date": "2024-12-31"
-        }) is True
+        assert validator.validate({"start_date": "2020-01-01", "end_date": "2024-12-31"}) is True
         assert validator.get_errors() == []
 
     def test_date_range_validator_invalid_order(self):
         """Test date range validator rejects invalid date order."""
         validator = DateRangeValidator()
-        assert validator.validate({
-            "start_date": "2024-12-31",
-            "end_date": "2020-01-01"
-        }) is False
+        assert validator.validate({"start_date": "2024-12-31", "end_date": "2020-01-01"}) is False
         assert len(validator.get_errors()) > 0
 
     def test_composite_validator(self):
@@ -176,15 +170,10 @@ class TestValidators:
         config = {
             "risk_management": {
                 "atr_multipliers": {"default_stop": 2.0},
-                "position_sizing": {"risk_per_trade": 0.02}
+                "position_sizing": {"risk_per_trade": 0.02},
             },
-            "trading": {
-                "symbols": ["AAPL", "MSFT"]
-            },
-            "backtesting": {
-                "start_date": "2020-01-01",
-                "end_date": "2024-12-31"
-            }
+            "trading": {"symbols": ["AAPL", "MSFT"]},
+            "backtesting": {"start_date": "2020-01-01", "end_date": "2024-12-31"},
         }
 
         assert validator.validate(config) is True
@@ -308,13 +297,7 @@ class TestBackwardCompatibility:
 
     def test_legacy_configuration_class(self):
         """Test legacy Configuration class works."""
-        config = Configuration({
-            "risk_management": {
-                "atr_multipliers": {
-                    "default_stop": 2.0
-                }
-            }
-        })
+        config = Configuration({"risk_management": {"atr_multipliers": {"default_stop": 2.0}}})
 
         assert config.get_atr_multiplier("default_stop") == 2.0
         assert config.get("risk_management.atr_multipliers.default_stop") == 2.0

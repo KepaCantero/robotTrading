@@ -52,11 +52,10 @@ def extract_exports(filepath: str) -> list[str]:
     for node in ast.walk(tree):
         if isinstance(node, ast.Assign):
             for target in node.targets:
-                if isinstance(target, ast.Name) and target.id == '__all__':
-                    if isinstance(node.value, ast.List):
-                        return [
-                            elt.value for elt in node.value.elts if isinstance(elt, ast.Constant)
-                        ]
+                if isinstance(target, ast.Name) and target.id == '__all__' and isinstance(node.value, ast.List):
+                    return [
+                        elt.value for elt in node.value.elts if isinstance(elt, ast.Constant)
+                    ]
     return []
 
 
@@ -94,7 +93,7 @@ def main():
     print("\n2. PYTHON SYNTAX VERIFICATION")
     print("-" * 70)
     all_valid = True
-    for name, filepath in files.items():
+    for _name, filepath in files.items():
         valid = verify_python_syntax(filepath)
         all_valid = all_valid and valid
         status = "✓" if valid else "✗"
@@ -223,7 +222,7 @@ def main():
     total_classes = 0
 
     print("  Module breakdown:")
-    for name, filepath in files.items():
+    for _name, filepath in files.items():
         lines = count_lines(filepath)
         classes = count_classes(filepath)
         total_lines += lines
@@ -244,7 +243,7 @@ def main():
     print("-" * 70)
     print("  Module structure:")
 
-    for name, filepath in files.items():
+    for _name, filepath in files.items():
         filename = os.path.basename(filepath)
         size = os.path.getsize(filepath)
         print(f"    {filename:35} {size:6} bytes")

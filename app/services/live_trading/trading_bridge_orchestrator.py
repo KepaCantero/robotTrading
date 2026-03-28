@@ -185,7 +185,7 @@ class TradingBridgeOrchestrator:
             if alert_event.event_id in self._processed_alert_ids:
                 logger.warning(f"⚠️ Alert already processed (idempotency): {alert_event.event_id}")
                 # Return existing execution if available
-                for exec_id, execution in self.executions.items():
+                for _exec_id, execution in self.executions.items():
                     if execution.alert_id == alert_event.event_id:
                         return execution
                 return None
@@ -266,7 +266,6 @@ class TradingBridgeOrchestrator:
                 AttributeError,
                 IndexError,
                 TypeError,
-                ConnectionError,
                 OSError,
             ) as e:
                 self.status = BridgeStatus.ERROR
@@ -409,7 +408,7 @@ class TradingBridgeOrchestrator:
 
             return execution
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"❌ Error executing trade: {str(e)}")
             return None
 
@@ -444,7 +443,7 @@ class TradingBridgeOrchestrator:
                 checks += 1
                 await asyncio.sleep(check_interval)
 
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.error(f"❌ Error monitoring order: {str(e)}")
                 break
 

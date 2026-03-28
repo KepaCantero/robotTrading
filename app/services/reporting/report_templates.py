@@ -321,7 +321,7 @@ class ReportTemplates:
             value = metrics.get(key, 0)
             if value is not None:
                 # formatter is a callable lambda function from metric_definitions
-                formatted = formatter(value)  # pylint: disable=not-callable
+                formatted = formatter(value)
                 rows.append(
                     """
                 <tr>
@@ -367,7 +367,7 @@ class ReportTemplates:
             value = risk_metrics.get(key, 0)
             if value is not None:
                 # formatter is a callable lambda function from risk_definitions
-                formatted = formatter(value)  # pylint: disable=not-callable
+                formatted = formatter(value)
                 rows.append(
                     """
                 <tr>

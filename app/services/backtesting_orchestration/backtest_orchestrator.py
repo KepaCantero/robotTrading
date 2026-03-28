@@ -231,7 +231,7 @@ class BacktestOrchestrator:
                     'baseline': {'enabled': True},
                 },
                 'reporting': {
-                    'output_directory': tempfile.gettempdir() + '/backtest_output',  # nosec B108
+                    'output_directory': tempfile.gettempdir() + '/backtest_output',
                 },
                 'parallelization': {
                     'enabled': False,

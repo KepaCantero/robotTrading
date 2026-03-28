@@ -268,9 +268,7 @@ class TestCancelOrder:
         assert adapter.get_order_id_for_signal("signal_001") is None
 
     @pytest.mark.asyncio
-    async def test_cancel_order_exception_handling(
-        self, adapter, mock_order_manager
-    ):
+    async def test_cancel_order_exception_handling(self, adapter, mock_order_manager):
         """Test exception handling in cancel_order."""
         mock_order_manager.cancel_order.side_effect = Exception("Network error")
 

@@ -88,7 +88,7 @@ def plot_frac_diff_comparison(
                 transform=ax.transAxes,
                 fontsize=8,
                 verticalalignment='top',
-                bbox=dict(boxstyle='round', facecolor='white', alpha=0.8),
+                bbox={'boxstyle': 'round', 'facecolor': 'white', 'alpha': 0.8},
             )
 
     axes[-1].set_xlabel('Time', fontsize=10)

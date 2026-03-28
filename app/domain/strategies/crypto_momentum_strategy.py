@@ -198,9 +198,8 @@ class CryptoMomentumStrategy(BaseStrategy):
         # Check if already at max position
         if self.current_portfolio:
             for pos in self.current_portfolio.positions:
-                if pos.symbol == asset.symbol:
-                    if pos.weight >= self.strategy_config.max_position_size:
-                        return False
+                if pos.symbol == asset.symbol and pos.weight >= self.strategy_config.max_position_size:
+                    return False
 
         # Get momentum score
         score = self.momentum_scores.get(asset.symbol)
@@ -366,14 +365,13 @@ class CryptoMomentumStrategy(BaseStrategy):
                 asset = a
                 break
 
-        if asset and self.strategy_config.max_volatility:
-            if asset.volatility_90d > self.strategy_config.max_volatility:
-                logger.debug(
-                    f"Volatility too high for {signal.symbol}: "
-                    f"{asset.volatility_90d:.1f}% > "
-                    f"{self.strategy_config.max_volatility:.1f}%"
-                )
-                return False
+        if asset and self.strategy_config.max_volatility and asset.volatility_90d > self.strategy_config.max_volatility:
+            logger.debug(
+                f"Volatility too high for {signal.symbol}: "
+                f"{asset.volatility_90d:.1f}% > "
+                f"{self.strategy_config.max_volatility:.1f}%"
+            )
+            return False
 
         return True
 

@@ -106,12 +106,12 @@ def print_results(
     app_violations: List,
     large_files: List,
     layer_counts: Dict[str, int],
-    project_root: Path
+    project_root: Path,
 ) -> None:
     """Print check results."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("CLEAN ARCHITECTURE COMPLIANCE REPORT")
-    print("="*70)
+    print("=" * 70)
 
     # Domain layer check
     print("\n1. DOMAIN LAYER INDEPENDENCE")
@@ -163,15 +163,11 @@ def print_results(
         print(f"   {layer:20s}: {count:4d} files ({percentage:5.1f}%)")
 
     # Overall compliance
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("OVERALL COMPLIANCE")
-    print("="*70)
+    print("=" * 70)
 
-    passed_checks = sum([
-        not domain_violations,
-        not app_violations,
-        not large_files
-    ])
+    passed_checks = sum([not domain_violations, not app_violations, not large_files])
     total_checks = 3
     compliance = (passed_checks / total_checks) * 100
 
@@ -186,7 +182,7 @@ def print_results(
     else:
         print("\n❌ NEEDS WORK: Multiple violations detected")
 
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
 
 def main():
@@ -202,13 +198,7 @@ def main():
     layer_counts = count_files_by_layer(project_root)
 
     # Print results
-    print_results(
-        domain_violations,
-        app_violations,
-        large_files,
-        layer_counts,
-        project_root
-    )
+    print_results(domain_violations, app_violations, large_files, layer_counts, project_root)
 
     # Exit with error code if any violations
     if domain_violations or app_violations:

@@ -185,7 +185,7 @@ class MemoryMonitor:
 
             except asyncio.CancelledError:
                 break
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.error("Error in memory monitor loop", extra={"error_type": type(e).__name__})
                 await asyncio.sleep(self.config.check_interval_seconds)
 
@@ -195,7 +195,7 @@ class MemoryMonitor:
         try:
             memory_info = self.process.memory_info()
             return memory_info.rss / (1024 * 1024)
-        except (asyncio.TimeoutError, ConnectionError, OSError):
+        except (asyncio.TimeoutError, OSError):
             return 0.0
 
     def get_detailed_stats(self) -> Dict[str, Any]:
@@ -263,7 +263,7 @@ class MemoryMonitor:
                         "Closing positions before restart", extra={"action": "close_positions"}
                     )
                     await self.position_closer()
-                except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+                except (asyncio.TimeoutError, OSError) as e:
                     logger.error(
                         "Error closing positions",
                         extra={"error_type": type(e).__name__},
@@ -275,7 +275,7 @@ class MemoryMonitor:
             try:
                 logger.info("Saving state before restart", extra={"action": "save_state"})
                 await self.state_saver()
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.error(
                     "Error saving state", extra={"error_type": type(e).__name__}, exc_info=True
                 )
@@ -290,7 +290,7 @@ class MemoryMonitor:
                 self.config.alert_callback(
                     f"Memory action: {action.value} ({current_memory_mb:.2f}MB)"
                 )
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.error("Error in alert callback", extra={"error_type": type(e).__name__})
 
         # Restart if configured
@@ -321,7 +321,7 @@ class MemoryMonitor:
                 "Executing process restart", extra={"executable": sys.executable, "argv": sys.argv}
             )
             os.execv(sys.executable, [sys.executable] + sys.argv)
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(
                 "Error restarting process", extra={"error_type": type(e).__name__}, exc_info=True
             )

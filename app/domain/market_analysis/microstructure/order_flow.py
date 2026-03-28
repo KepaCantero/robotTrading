@@ -22,7 +22,6 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union  # noqa: F401
 
 import numpy as np
 import pandas as pd
@@ -32,7 +31,6 @@ from app.shared.config.centralized_config import get_config
 logger = logging.getLogger(__name__)
 
 # mypy: ignore-errors
-# pylint: disable=unsupported-binary-operation  # For Python 3.10+ union syntax
 
 
 class OrderType(Enum):

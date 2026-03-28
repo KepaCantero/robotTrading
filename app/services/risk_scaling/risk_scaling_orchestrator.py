@@ -66,9 +66,11 @@ class RiskScalingOrchestrator:
         atr_period: int = 14,
         sharpe_window_days: int = 30,
         loss_reset_threshold: int = 3,
-        max_drawdown_limit: Decimal = Decimal("0.15"),
+        max_drawdown_limit: Optional[Decimal] = None,
     ):
         """Initialize orchestrator with all monitors."""
+        if max_drawdown_limit is None:
+            max_drawdown_limit = Decimal("0.15")
         self.volatility_monitor = VolatilityMonitor(atr_period=atr_period)
         self.sharpe_monitor = SharpeRatioMonitor()
         self.loss_monitor = LossMonitor(reset_threshold=loss_reset_threshold)
@@ -484,8 +486,8 @@ class RiskScalingOrchestrator:
         avg_win: Decimal,
         avg_loss: Decimal,
         current_price: Decimal,
-        max_position_pct: Decimal = Decimal("0.10"),
-        min_position_value: Decimal = Decimal("100"),
+        max_position_pct: Optional[Decimal] = None,
+        min_position_value: Optional[Decimal] = None,
         scaling_factors: Optional[RiskScalingFactors] = None,
     ) -> Decimal:
         """
@@ -516,6 +518,10 @@ class RiskScalingOrchestrator:
         Raises:
             ValueError: If inputs are invalid
         """
+        if max_position_pct is None:
+            max_position_pct = Decimal("0.10")
+        if min_position_value is None:
+            min_position_value = Decimal("100")
         # Input validation
         if capital <= Decimal("0"):
             raise ValueError(f"Capital must be positive, got: {capital}")
@@ -592,9 +598,9 @@ class RiskScalingOrchestrator:
         capital: Decimal,
         current_price: Decimal,
         atr: Decimal,
-        risk_per_trade_pct: Decimal = Decimal("0.01"),
-        atr_multiplier: Decimal = Decimal("2.0"),
-        max_position_pct: Decimal = Decimal("0.10"),
+        risk_per_trade_pct: Optional[Decimal] = None,
+        atr_multiplier: Optional[Decimal] = None,
+        max_position_pct: Optional[Decimal] = None,
     ) -> Decimal:
         """
         Calculate position size based on ATR (Average True Range) volatility.
@@ -615,6 +621,12 @@ class RiskScalingOrchestrator:
         Returns:
             Decimal: Position size in shares
         """
+        if risk_per_trade_pct is None:
+            risk_per_trade_pct = Decimal("0.01")
+        if atr_multiplier is None:
+            atr_multiplier = Decimal("2.0")
+        if max_position_pct is None:
+            max_position_pct = Decimal("0.10")
         if capital <= Decimal("0") or current_price <= Decimal("0"):
             return Decimal("0")
 

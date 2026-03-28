@@ -25,7 +25,7 @@ def sample_equity_curve():
         ("start", Decimal("10000")),
         ("t1", Decimal("10500")),  # Peak
         ("t2", Decimal("10000")),  # -4.76% drawdown
-        ("t3", Decimal("9500")),   # -9.52% drawdown (max)
+        ("t3", Decimal("9500")),  # -9.52% drawdown (max)
         ("t4", Decimal("10000")),  # Recovery
         ("t5", Decimal("11000")),  # New peak
     ]
@@ -157,7 +157,12 @@ def test_validate_max_drawdown_from_trades(validator, sample_trades):
     """Test validation of max drawdown calculated from trades."""
     curve = validator.calculate_equity_curve(sample_trades, Decimal("10000"))
     _, max_dd = validator.calculate_drawdown(curve)
-    assert validator.validate_max_drawdown(max_dd, trades=sample_trades, initial_capital=Decimal("10000")) is True
+    assert (
+        validator.validate_max_drawdown(
+            max_dd, trades=sample_trades, initial_capital=Decimal("10000")
+        )
+        is True
+    )
 
 
 def test_validate_max_drawdown_missing_inputs(validator):
@@ -254,7 +259,7 @@ def test_get_drawdown_statistics_all_losses(validator, default_symbol):
             exit_price=Decimal("95"),
             pnl=Decimal("-500"),
             entry_time=datetime(2024, 1, i, tzinfo=timezone.utc),
-            exit_time=datetime(2024, 1, i+1, tzinfo=timezone.utc),
+            exit_time=datetime(2024, 1, i + 1, tzinfo=timezone.utc),
             status=TradeStatus.CLOSED,
         )
         for i in range(1, 6)
@@ -299,8 +304,8 @@ def test_calculate_drawdown_negative_equity(validator):
     """Test drawdown with negative equity values."""
     curve = [
         ("start", Decimal("10000")),
-        ("t1", Decimal("5000")),   # Large drawdown
-        ("t2", Decimal("2000")),   # Even more negative
+        ("t1", Decimal("5000")),  # Large drawdown
+        ("t2", Decimal("2000")),  # Even more negative
     ]
     drawdowns, max_dd = validator.calculate_drawdown(curve)
     # Calculate from peak of 10000

@@ -82,13 +82,13 @@ def main():
         default="optimized_strategy_config.json",
         help="Output file for best configuration (default: optimized_strategy_config.json)",
     )
-    
+
     args = parser.parse_args()
-    
+
     # Calculate dates
     end_date = datetime.now()
     start_date = end_date - timedelta(days=365 * args.years)
-    
+
     logger.info("=" * 80)
     logger.info("Multi-Strategy Parameter Optimization")
     logger.info("=" * 80)
@@ -98,7 +98,7 @@ def main():
     logger.info(f"Trials: {args.trials}")
     logger.info(f"Metric: {args.metric}")
     logger.info("=" * 80)
-    
+
     # Create optimizer
     optimizer = MultiStrategyOptimizer(
         total_capital=Decimal(str(args.capital)),
@@ -108,28 +108,28 @@ def main():
         n_trials=args.trials,
         objective_metric=args.metric,
     )
-    
+
     # Run optimization
     study = optimizer.optimize(
         storage=args.storage,
         study_name=args.study_name,
         resume=args.resume,
     )
-    
+
     # Get best configuration
     best_config = optimizer.get_best_config()
-    
+
     # Run final backtest
     logger.info("\nRunning final backtest with optimized parameters...")
     final_results = optimizer.run_backtest_with_best_params()
-    
+
     # Print summary
     logger.info("\n" + "=" * 80)
     logger.info("OPTIMIZATION SUMMARY")
     logger.info("=" * 80)
     logger.info(f"Best {args.metric}: {optimizer.best_value:.4f}")
     logger.info(f"\nBest Parameters:")
-    
+
     # Strategy parameters
     for strategy_name, strategy_params in best_config.items():
         if strategy_name == "allocation":
@@ -137,20 +137,20 @@ def main():
         logger.info(f"\n{strategy_name.upper()}:")
         for param, value in strategy_params.items():
             logger.info(f"  {param}: {value}")
-    
+
     # Allocation
     logger.info(f"\nCAPITAL ALLOCATION:")
     for strategy_name, weight in best_config["allocation"].items():
         allocated = args.capital * weight
         logger.info(f"  {strategy_name}: {weight:.1%} (${allocated:,.2f})")
-    
+
     # Final results
     logger.info(f"\nFINAL BACKTEST RESULTS:")
     logger.info(f"  Total Return: {final_results['combined']['total_return']:.2f}%")
     logger.info(f"  Total Trades: {final_results['combined']['total_trades']}")
     logger.info(f"  Weighted Sharpe: {final_results['combined']['weighted_sharpe']:.4f}")
     logger.info(f"  Weighted Max DD: {final_results['combined']['weighted_max_dd']:.2f}%")
-    
+
     # Per-strategy results
     logger.info(f"\nPER-STRATEGY RESULTS:")
     for strategy_name, result in final_results["per_strategy"].items():
@@ -161,27 +161,27 @@ def main():
         if result.get('sharpe_ratio'):
             logger.info(f"    Sharpe: {result['sharpe_ratio']:.4f}")
         logger.info(f"    Max DD: {result.get('max_drawdown', 0):.2f}%")
-    
+
     # Save best configuration
     output_path = Path(args.output)
     with open(output_path, "w") as f:
         json.dump(best_config, f, indent=2, default=str)
-    
+
     logger.info(f"\nBest configuration saved to: {output_path}")
-    
+
     # Save study visualization
     try:
         import optuna.visualization as vis
-        
+
         # Create output directory
         output_dir = Path("docs/OPTIMIZATION_RESULTS")
         output_dir.mkdir(exist_ok=True)
-        
+
         # Save optimization history plot
         fig = vis.plot_optimization_history(study)
         fig.write_html(str(output_dir / "optimization_history.html"))
         logger.info(f"Optimization history saved to: {output_dir / 'optimization_history.html'}")
-        
+
         # Save parameter importance plot
         try:
             fig = vis.plot_param_importances(study)
@@ -189,10 +189,10 @@ def main():
             logger.info(f"Parameter importance saved to: {output_dir / 'param_importances.html'}")
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.warning(f"Could not generate parameter importance plot: {e}")
-        
+
     except ImportError:
         logger.warning("optuna.visualization not available, skipping plots")
-    
+
     logger.info("\n" + "=" * 80)
     logger.info("Optimization complete!")
     logger.info("=" * 80)
@@ -200,4 +200,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

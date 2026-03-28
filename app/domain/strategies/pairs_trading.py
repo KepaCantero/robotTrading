@@ -575,20 +575,18 @@ class PairsTrading:
                 # Close if Z-score crossed zero or reached exit threshold
                 if abs(z_score) < self._z_exit:
                     return PairSignal.CLOSE_LONG_SHORT
-            elif current_position.is_short_long():
-                if abs(z_score) < self._z_exit:
-                    return PairSignal.CLOSE_SHORT_LONG
+            elif current_position.is_short_long() and abs(z_score) < self._z_exit:
+                return PairSignal.CLOSE_SHORT_LONG
 
             # Check stop loss / take profit
-            if current_position.stop_loss_spread and current_position.take_profit_spread:
-                if (
-                    spread >= current_position.take_profit_spread
-                    or spread <= current_position.stop_loss_spread
-                ):
-                    if current_position.is_long_short():
-                        return PairSignal.CLOSE_LONG_SHORT
-                    else:
-                        return PairSignal.CLOSE_SHORT_LONG
+            if current_position.stop_loss_spread and current_position.take_profit_spread and (
+                spread >= current_position.take_profit_spread
+                or spread <= current_position.stop_loss_spread
+            ):
+                if current_position.is_long_short():
+                    return PairSignal.CLOSE_LONG_SHORT
+                else:
+                    return PairSignal.CLOSE_SHORT_LONG
 
             return PairSignal.NO_ACTION
 

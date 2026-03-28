@@ -140,8 +140,8 @@ def safe_decimal_divide(
 
 def validate_price(
     value: Union[int, float, str, Decimal],
-    min_value: Decimal = Decimal("0.01"),
-    max_value: Decimal = Decimal("1000000"),
+    min_value: Optional[Decimal] = None,
+    max_value: Optional[Decimal] = None,
 ) -> Decimal:
     """
     Validate that a value is a valid price within acceptable bounds.
@@ -163,6 +163,10 @@ def validate_price(
         >>> validate_price("0")
         ValueError: Price must be at least 0.01
     """
+    if min_value is None:
+        min_value = Decimal("0.01")
+    if max_value is None:
+        max_value = Decimal("1000000")
     price = to_decimal_required(value)
 
     if price < min_value:
@@ -175,8 +179,8 @@ def validate_price(
 
 def validate_quantity(
     value: Union[int, float, str, Decimal],
-    min_value: Decimal = Decimal("0.001"),
-    max_value: Decimal = Decimal("1000000000"),
+    min_value: Optional[Decimal] = None,
+    max_value: Optional[Decimal] = None,
 ) -> Decimal:
     """
     Validate that a value is a valid quantity within acceptable bounds.
@@ -198,6 +202,10 @@ def validate_quantity(
         >>> validate_quantity("-10")
         ValueError: Quantity must be non-negative
     """
+    if min_value is None:
+        min_value = Decimal("0.001")
+    if max_value is None:
+        max_value = Decimal("1000000000")
     quantity = to_decimal_required(value)
 
     if quantity < min_value:

@@ -13,7 +13,7 @@ then the optimal action is to HOLD CASH, not trade.
 
 import logging
 from decimal import Decimal
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -37,9 +37,9 @@ class OpportunityCostValidator:
     def is_active_trading_worthwhile(
         capital: Decimal,
         monthly_risk_free_rate: Decimal = None,
-        expected_monthly_alpha: Decimal = Decimal("0"),
+        expected_monthly_alpha: Optional[Decimal] = None,
         expected_trades_per_month: int = 10,
-        commission_per_trade: Decimal = Decimal("15"),
+        commission_per_trade: Optional[Decimal] = None,
         cost_of_capital_pct: Decimal = None,
     ) -> Tuple[bool, Dict]:
         """
@@ -66,6 +66,10 @@ class OpportunityCostValidator:
             - reason: Human-readable comparison
             - recommendation: TRADE | HOLD_CASH | CONSIDER_ALTERNATIVES
         """
+        if expected_monthly_alpha is None:
+            expected_monthly_alpha = Decimal("0")
+        if commission_per_trade is None:
+            commission_per_trade = Decimal("15")
 
         # Use default if not provided
         if monthly_risk_free_rate is None:
@@ -160,7 +164,7 @@ class OpportunityCostValidator:
         capital: Decimal,
         monthly_risk_free_rate: Decimal = None,
         expected_trades_per_month: int = 10,
-        commission_per_trade: Decimal = Decimal("15"),
+        commission_per_trade: Optional[Decimal] = None,
     ) -> Decimal:
         """
         Calculate minimum alpha needed to justify trading vs passive holding.
@@ -174,6 +178,8 @@ class OpportunityCostValidator:
         Returns:
             Minimum monthly alpha required to beat passive return
         """
+        if commission_per_trade is None:
+            commission_per_trade = Decimal("15")
 
         if monthly_risk_free_rate is None:
             monthly_risk_free_rate = OpportunityCostValidator.DEFAULT_RISK_FREE_RATE / 12
@@ -193,8 +199,8 @@ class OpportunityCostValidator:
     def capital_inflection_point(
         monthly_risk_free_rate: Decimal = None,
         expected_trades_per_month: int = 10,
-        commission_per_trade: Decimal = Decimal("15"),
-        target_alpha_pct_monthly: Decimal = Decimal("0.02"),  # 2% monthly
+        commission_per_trade: Optional[Decimal] = None,
+        target_alpha_pct_monthly: Optional[Decimal] = None,  # 2% monthly
     ) -> Decimal:
         """
         Calculate the capital amount where trading becomes viable.
@@ -211,6 +217,10 @@ class OpportunityCostValidator:
         Returns:
             Minimum capital threshold for trading viability
         """
+        if commission_per_trade is None:
+            commission_per_trade = Decimal("15")
+        if target_alpha_pct_monthly is None:
+            target_alpha_pct_monthly = Decimal("0.02")
 
         if monthly_risk_free_rate is None:
             monthly_risk_free_rate = OpportunityCostValidator.DEFAULT_RISK_FREE_RATE / 12
@@ -237,7 +247,7 @@ class OpportunityCostValidator:
     def analyze_capital_tier_viability(
         capital: Decimal,
         expected_trades_per_month: int = 10,
-        commission_per_trade: Decimal = Decimal("15"),
+        commission_per_trade: Optional[Decimal] = None,
     ) -> Dict:
         """
         Analyze viability of trading for a given capital tier.
@@ -250,6 +260,8 @@ class OpportunityCostValidator:
         Returns:
             Dict with viability analysis for this capital tier
         """
+        if commission_per_trade is None:
+            commission_per_trade = Decimal("15")
 
         monthly_rf_rate = OpportunityCostValidator.DEFAULT_RISK_FREE_RATE / 12
 

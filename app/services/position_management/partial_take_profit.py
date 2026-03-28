@@ -158,7 +158,7 @@ class PartialTakeProfit:
 
     def get_executed_targets(self) -> List[float]:
         """Obtener lista de targets ya ejecutados."""
-        return sorted(list(self.executed_targets))
+        return sorted(self.executed_targets)
 
     def get_remaining_targets(self) -> List[ProfitTarget]:
         """Obtener lista de targets pendientes."""
@@ -181,7 +181,7 @@ class PartialTakeProfit:
                 }
                 for t in self.targets
             ],
-            "executed_targets": sorted(list(self.executed_targets)),
+            "executed_targets": sorted(self.executed_targets),
         }
 
     @classmethod

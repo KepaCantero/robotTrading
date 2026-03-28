@@ -32,6 +32,7 @@ from app.services.security.secrets_manager_impl import (
 def encryption_key():
     """Generate a test encryption key."""
     from cryptography.fernet import Fernet
+
     return Fernet.generate_key()
 
 
@@ -66,9 +67,7 @@ class TestKeyRotationManager:
     def test_schedule_rotation(self, rotation_manager):
         """Test scheduling a rotation."""
         schedule = rotation_manager.schedule_rotation(
-            key_id="test_key_id",
-            interval_days=30,
-            grace_period_days=7
+            key_id="test_key_id", interval_days=30, grace_period_days=7
         )
 
         assert schedule.key_id == "test_key_id"
@@ -86,9 +85,7 @@ class TestKeyRotationManager:
         start_date = datetime(2026, 1, 1, 12, 0, 0)
 
         schedule = rotation_manager.schedule_rotation(
-            key_id="test_key_id",
-            interval_days=30,
-            start_from=start_date
+            key_id="test_key_id", interval_days=30, start_from=start_date
         )
 
         assert schedule.last_rotation == start_date
@@ -97,16 +94,10 @@ class TestKeyRotationManager:
     def test_schedule_rotation_invalid_interval(self, rotation_manager):
         """Test scheduling rotation with invalid interval."""
         with pytest.raises(RotationError, match="Rotation interval must be positive"):
-            rotation_manager.schedule_rotation(
-                key_id="test_key_id",
-                interval_days=0
-            )
+            rotation_manager.schedule_rotation(key_id="test_key_id", interval_days=0)
 
         with pytest.raises(RotationError, match="Rotation interval must be positive"):
-            rotation_manager.schedule_rotation(
-                key_id="test_key_id",
-                interval_days=-5
-            )
+            rotation_manager.schedule_rotation(key_id="test_key_id", interval_days=-5)
 
     def test_check_rotations_due_empty(self, rotation_manager):
         """Test checking due rotations when none are scheduled."""
@@ -116,8 +107,7 @@ class TestKeyRotationManager:
     def test_check_rotations_due_not_due(self, rotation_manager):
         """Test checking due rotations when none are due yet."""
         rotation_manager.schedule_rotation(
-            key_id="test_key_id",
-            interval_days=30  # Not due for 30 days
+            key_id="test_key_id", interval_days=30  # Not due for 30 days
         )
 
         due_keys = rotation_manager.check_rotations_due()
@@ -128,9 +118,7 @@ class TestKeyRotationManager:
         # Use a past start date to make rotation due
         past_date = datetime.utcnow() - timedelta(days=35)
         rotation_manager.schedule_rotation(
-            key_id="test_key_id",
-            interval_days=30,
-            start_from=past_date
+            key_id="test_key_id", interval_days=30, start_from=past_date
         )
 
         due_keys = rotation_manager.check_rotations_due()
@@ -157,7 +145,7 @@ class TestKeyRotationManager:
         key_id = api_key_manager.add_key(
             key_name="test_key",
             api_key="initial_key_value_123456789",
-            permission=KeyPermission.READ_ONLY
+            permission=KeyPermission.READ_ONLY,
         )
 
         # Schedule rotation
@@ -165,9 +153,7 @@ class TestKeyRotationManager:
 
         # Rotate the key
         result = rotation_manager.rotate_key(
-            key_id=key_id,
-            new_value="new_key_value_987654321",
-            api_key_manager=api_key_manager
+            key_id=key_id, new_value="new_key_value_987654321", api_key_manager=api_key_manager
         )
 
         assert result.success is True
@@ -181,16 +167,13 @@ class TestKeyRotationManager:
         key_id = api_key_manager.add_key(
             key_name="test_key",
             api_key="initial_key_value_123456789",
-            permission=KeyPermission.READ_ONLY
+            permission=KeyPermission.READ_ONLY,
         )
 
         rotation_manager.schedule_rotation(key_id=key_id, interval_days=30)
 
         # Rotate without providing new value
-        result = rotation_manager.rotate_key(
-            key_id=key_id,
-            api_key_manager=api_key_manager
-        )
+        result = rotation_manager.rotate_key(key_id=key_id, api_key_manager=api_key_manager)
 
         assert result.success is True
         assert result.new_key_id is not None
@@ -198,8 +181,7 @@ class TestKeyRotationManager:
     def test_rotate_key_not_found(self, rotation_manager, api_key_manager):
         """Test rotating a non-existent key."""
         result = rotation_manager.rotate_key(
-            key_id="non_existent_id",
-            api_key_manager=api_key_manager
+            key_id="non_existent_id", api_key_manager=api_key_manager
         )
 
         assert result.success is False
@@ -212,9 +194,7 @@ class TestKeyRotationManager:
         rotation_manager.schedule_rotation(key_id="test_secret", interval_days=30)
 
         result = rotation_manager.rotate_key(
-            key_id="test_secret",
-            new_value="new_value",
-            secrets_manager=secrets_manager
+            key_id="test_secret", new_value="new_value", secrets_manager=secrets_manager
         )
 
         assert result.success is True
@@ -232,10 +212,7 @@ class TestKeyRotationManager:
 
     def test_get_rotation_schedule(self, rotation_manager):
         """Test getting a rotation schedule."""
-        rotation_manager.schedule_rotation(
-            key_id="test_key_id",
-            interval_days=30
-        )
+        rotation_manager.schedule_rotation(key_id="test_key_id", interval_days=30)
 
         schedule = rotation_manager.get_rotation_schedule("test_key_id")
 
@@ -264,10 +241,7 @@ class TestKeyRotationManager:
 
     def test_cancel_schedule(self, rotation_manager):
         """Test cancelling a rotation schedule."""
-        rotation_manager.schedule_rotation(
-            key_id="test_key_id",
-            interval_days=30
-        )
+        rotation_manager.schedule_rotation(key_id="test_key_id", interval_days=30)
 
         result = rotation_manager.cancel_schedule("test_key_id")
 
@@ -281,15 +255,9 @@ class TestKeyRotationManager:
 
     def test_update_schedule_interval(self, rotation_manager):
         """Test updating rotation interval."""
-        rotation_manager.schedule_rotation(
-            key_id="test_key_id",
-            interval_days=30
-        )
+        rotation_manager.schedule_rotation(key_id="test_key_id", interval_days=30)
 
-        result = rotation_manager.update_schedule(
-            key_id="test_key_id",
-            interval_days=60
-        )
+        result = rotation_manager.update_schedule(key_id="test_key_id", interval_days=60)
 
         assert result is True
 
@@ -299,15 +267,10 @@ class TestKeyRotationManager:
     def test_update_schedule_grace_period(self, rotation_manager):
         """Test updating grace period."""
         rotation_manager.schedule_rotation(
-            key_id="test_key_id",
-            interval_days=30,
-            grace_period_days=7
+            key_id="test_key_id", interval_days=30, grace_period_days=7
         )
 
-        result = rotation_manager.update_schedule(
-            key_id="test_key_id",
-            grace_period_days=14
-        )
+        result = rotation_manager.update_schedule(key_id="test_key_id", grace_period_days=14)
 
         assert result is True
 
@@ -316,23 +279,14 @@ class TestKeyRotationManager:
 
     def test_update_schedule_not_found(self, rotation_manager):
         """Test updating a non-existent schedule."""
-        result = rotation_manager.update_schedule(
-            key_id="non_existent",
-            interval_days=60
-        )
+        result = rotation_manager.update_schedule(key_id="non_existent", interval_days=60)
         assert result is False
 
     def test_update_schedule_invalid_interval(self, rotation_manager):
         """Test updating schedule with invalid interval."""
-        rotation_manager.schedule_rotation(
-            key_id="test_key_id",
-            interval_days=30
-        )
+        rotation_manager.schedule_rotation(key_id="test_key_id", interval_days=30)
 
-        result = rotation_manager.update_schedule(
-            key_id="test_key_id",
-            interval_days=0
-        )
+        result = rotation_manager.update_schedule(key_id="test_key_id", interval_days=0)
         assert result is False
 
     def test_get_rotation_history(self, rotation_manager, api_key_manager):
@@ -340,16 +294,14 @@ class TestKeyRotationManager:
         key_id = api_key_manager.add_key(
             key_name="test_key",
             api_key="initial_key_value_123456789",
-            permission=KeyPermission.READ_ONLY
+            permission=KeyPermission.READ_ONLY,
         )
 
         rotation_manager.schedule_rotation(key_id=key_id, interval_days=30)
 
         # Perform rotation
         result1 = rotation_manager.rotate_key(
-            key_id=key_id,
-            new_value="new_value_1",
-            api_key_manager=api_key_manager
+            key_id=key_id, new_value="new_value_1", api_key_manager=api_key_manager
         )
 
         # Get all history
@@ -377,7 +329,7 @@ class TestRotationSchedule:
             key_id="test_key",
             rotation_interval_days=30,
             last_rotation=datetime.utcnow() - timedelta(days=31),
-            next_rotation=datetime.utcnow() - timedelta(days=1)  # Past
+            next_rotation=datetime.utcnow() - timedelta(days=1),  # Past
         )
 
         assert schedule.is_due() is True
@@ -388,7 +340,7 @@ class TestRotationSchedule:
             key_id="test_key",
             rotation_interval_days=30,
             last_rotation=datetime.utcnow(),
-            next_rotation=datetime.utcnow() + timedelta(days=30)  # Future
+            next_rotation=datetime.utcnow() + timedelta(days=30),  # Future
         )
 
         assert schedule.is_due() is False
@@ -401,7 +353,7 @@ class TestRotationSchedule:
             last_rotation=datetime.utcnow() - timedelta(days=1),
             next_rotation=datetime.utcnow() + timedelta(days=29),
             grace_period_days=7,
-            rotation_status=RotationStatus.COMPLETED
+            rotation_status=RotationStatus.COMPLETED,
         )
 
         assert schedule.is_in_grace_period() is True
@@ -414,7 +366,7 @@ class TestRotationSchedule:
             last_rotation=datetime.utcnow() - timedelta(days=10),
             next_rotation=datetime.utcnow() + timedelta(days=20),
             grace_period_days=7,
-            rotation_status=RotationStatus.COMPLETED
+            rotation_status=RotationStatus.COMPLETED,
         )
 
         assert schedule.is_in_grace_period() is False
@@ -427,7 +379,7 @@ class TestRotationSchedule:
             last_rotation=datetime.utcnow(),
             next_rotation=datetime.utcnow() + timedelta(days=30),
             grace_period_days=7,
-            rotation_status=RotationStatus.PENDING
+            rotation_status=RotationStatus.PENDING,
         )
 
         assert schedule.is_in_grace_period() is False
@@ -444,7 +396,7 @@ class TestRotationResult:
             old_key_id="old_id",
             new_key_id="new_id",
             rotated_at=now,
-            success=True
+            success=True,
         )
 
         assert result.key_id == "test_key"
@@ -465,7 +417,7 @@ class TestRotationResult:
             rotated_at=now,
             success=False,
             error_message="Key not found",
-            status=RotationStatus.FAILED
+            status=RotationStatus.FAILED,
         )
 
         assert result.success is False

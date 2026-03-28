@@ -654,19 +654,18 @@ def create_bias_correction_pipeline(
                 )
 
         # Step 2: Calculate total return (if dividends available)
-        if dividend_data is not None and not dividend_data.empty:
-            if "close" in adjusted_data.columns:
-                prices = adjusted_data["close"]
-                dividends = (
-                    dividend_data.set_index("date")["amount"]
-                    if "date" in dividend_data.columns
-                    else dividend_data["amount"]
-                )
+        if dividend_data is not None and not dividend_data.empty and "close" in adjusted_data.columns:
+            prices = adjusted_data["close"]
+            dividends = (
+                dividend_data.set_index("date")["amount"]
+                if "date" in dividend_data.columns
+                else dividend_data["amount"]
+            )
 
-                total_returns = adjuster.calculate_total_return(prices, dividends)
+            total_returns = adjuster.calculate_total_return(prices, dividends)
 
-                # Add total return column
-                adjusted_data["total_return"] = total_returns
+            # Add total return column
+            adjusted_data["total_return"] = total_returns
 
         logger.info("Bias correction pipeline completed successfully")
 

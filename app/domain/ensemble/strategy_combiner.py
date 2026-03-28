@@ -149,7 +149,7 @@ class StrategyCombiner:
     def _initialize_allocation(self) -> Dict[str, Decimal]:
         """Initialize equal allocation."""
         weight = Decimal(str(1.0 / len(self.strategies)))
-        return {strategy: weight for strategy in self.strategies}
+        return dict.fromkeys(self.strategies, weight)
 
     def _validate_returns_data(self, returns_data: Dict[str, np.ndarray]) -> None:
         """Validate returns data.
@@ -180,7 +180,7 @@ class StrategyCombiner:
             Dictionary of equal weights for each strategy
         """
         weight = 1.0 / len(self.strategies)
-        return {strategy: weight for strategy in self.strategies}
+        return dict.fromkeys(self.strategies, weight)
 
     def _mean_variance_allocation(self, returns_data: Dict[str, np.ndarray]) -> Dict[str, float]:
         """Calculate mean-variance optimal allocation (Markowitz).
@@ -356,7 +356,7 @@ class StrategyCombiner:
             }
         else:  # UNKNOWN
             # Use equal weights
-            adjustments = {s: 1.0 for s in self.strategies}
+            adjustments = dict.fromkeys(self.strategies, 1.0)
 
         # Fill in missing strategies
         for strategy in self.strategies:
@@ -651,10 +651,7 @@ class StrategyCombiner:
         Returns:
             True if rebalancing is needed
         """
-        for alloc in allocation:
-            if alloc.needs_rebalance:
-                return True
-        return False
+        return any(alloc.needs_rebalance for alloc in allocation)
 
     def rebalance(
         self,

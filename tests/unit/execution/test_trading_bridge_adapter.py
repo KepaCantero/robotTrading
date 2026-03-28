@@ -82,9 +82,7 @@ class TestTradingBridgeAdapter:
         assert result.status == "filled"  # OrderStatus.FILLED.value returns lowercase
 
     @pytest.mark.asyncio
-    async def test_execute_order_failure_no_execution(
-        self, mock_trading_bridge, mock_signal
-    ):
+    async def test_execute_order_failure_no_execution(self, mock_trading_bridge, mock_signal):
         """Test order execution when trading bridge returns None."""
         mock_trading_bridge.process_alert = AsyncMock(return_value=None)
         adapter = TradingBridgeAdapter(trading_bridge=mock_trading_bridge)
@@ -140,16 +138,12 @@ class TestTradingBridgeAdapter:
         result = await adapter.get_order_status("order_123")
 
         assert result == "filled"  # OrderStatus.FILLED.value returns lowercase
-        adapter.trading_bridge.broker.get_order_status.assert_called_once_with(
-            "order_123"
-        )
+        adapter.trading_bridge.broker.get_order_status.assert_called_once_with("order_123")
 
     @pytest.mark.asyncio
     async def test_get_open_orders(self, adapter):
         """Test getting open orders."""
-        adapter.trading_bridge.broker.get_open_orders = AsyncMock(
-            return_value=["order1", "order2"]
-        )
+        adapter.trading_bridge.broker.get_open_orders = AsyncMock(return_value=["order1", "order2"])
 
         result = await adapter.get_open_orders()
 
@@ -165,9 +159,7 @@ class TestTradingBridgeAdapter:
         result = adapter.get_execution_history()
 
         assert result == ["exec1", "exec2"]
-        adapter.trading_bridge.get_recent_executions.assert_called_once_with(
-            limit=100
-        )
+        adapter.trading_bridge.get_recent_executions.assert_called_once_with(limit=100)
 
     def test_get_bridge_statistics(self, adapter):
         """Test getting bridge statistics."""

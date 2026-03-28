@@ -308,20 +308,18 @@ class ValidationEngine:
         warnings = []
 
         # Validate Sharpe ratio
-        if request.backtest_sharpe_ratio is not None:
-            if request.backtest_sharpe_ratio < Decimal("1.0"):
-                warnings.append(
-                    f"⚠️  Low Sharpe ratio ({request.backtest_sharpe_ratio:.2f}) - "
-                    "consider adjusting parameters"
-                )
+        if request.backtest_sharpe_ratio is not None and request.backtest_sharpe_ratio < Decimal("1.0"):
+            warnings.append(
+                f"⚠️  Low Sharpe ratio ({request.backtest_sharpe_ratio:.2f}) - "
+                "consider adjusting parameters"
+            )
 
         # Validate max drawdown
-        if request.backtest_max_drawdown_pct is not None:
-            if request.backtest_max_drawdown_pct > Decimal("20"):
-                warnings.append(
-                    f"⚠️  High max drawdown ({request.backtest_max_drawdown_pct:.2f}%) - "
-                    "consider adding risk management"
-                )
+        if request.backtest_max_drawdown_pct is not None and request.backtest_max_drawdown_pct > Decimal("20"):
+            warnings.append(
+                f"⚠️  High max drawdown ({request.backtest_max_drawdown_pct:.2f}%) - "
+                "consider adding risk management"
+            )
 
         return warnings
 

@@ -793,7 +793,7 @@ class BacktestValidator:
         count = 0
 
         modules = self.raw_config.get('modules', {})
-        for module_name, module_config in modules.items():
+        for _module_name, module_config in modules.items():
             if isinstance(module_config, dict):
                 if 'thresholds' in module_config:
                     count += len(module_config['thresholds'])
@@ -801,10 +801,9 @@ class BacktestValidator:
                     count += len(module_config['parameters'])
 
         learning_engines = self.raw_config.get('learning_engines', {})
-        for engine_name, engine_config in learning_engines.items():
-            if isinstance(engine_config, dict) and engine_config.get('enabled', False):
-                if 'config' in engine_config:
-                    count += len(engine_config['config'])
+        for _engine_name, engine_config in learning_engines.items():
+            if isinstance(engine_config, dict) and engine_config.get('enabled', False) and 'config' in engine_config:
+                count += len(engine_config['config'])
 
         # Base backtest parameters
         count += 6

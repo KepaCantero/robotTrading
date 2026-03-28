@@ -189,7 +189,7 @@ class PortfolioConfigManager:
             symbols = sector_data.get("symbols", [])
             allowed_symbols.update(symbols)
 
-        return sorted(list(allowed_symbols))
+        return sorted(allowed_symbols)
 
     def should_filter_symbol(self, symbol: str, strategy_name: str) -> bool:
         """

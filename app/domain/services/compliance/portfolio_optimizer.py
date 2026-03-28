@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -64,7 +64,7 @@ class PortfolioComplianceOptimizer:
         current_prices: Dict[str, Decimal],
         price_histories: Optional[Dict[str, pd.DataFrame]] = None,
         constraints: Optional[Dict[str, Any]] = None,
-        **kwargs: Any,  # Extension point for additional params
+        **kwargs: Union[str, int, float, bool, Dict, List],  # Extension point for additional params
     ) -> OptimizeResult:
         """
         Perform comprehensive portfolio optimization using all available services.
@@ -177,7 +177,7 @@ class PortfolioComplianceOptimizer:
     ) -> None:
         """Apply equal weights as fallback."""
         equal_weight = 1.0 / len(symbols)
-        result.weights = {symbol: equal_weight for symbol in symbols}
+        result.weights = dict.fromkeys(symbols, equal_weight)
         result.expected_return = 0.0
         result.expected_risk = 0.0
         result.sharpe_ratio = 0.0

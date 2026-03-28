@@ -65,9 +65,9 @@ class RebalancingEngine:
     def __init__(
         self,
         frequency: RebalancingFrequency = RebalancingFrequency.MONTHLY,
-        drift_threshold: Decimal = Decimal("0.05"),
-        min_trade_value: Decimal = Decimal("100"),
-        transaction_cost_rate: Decimal = Decimal("0.001"),  # 0.1%
+        drift_threshold: Optional[Decimal] = None,
+        min_trade_value: Optional[Decimal] = None,
+        transaction_cost_rate: Optional[Decimal] = None,  # 0.1%
     ):
         """
         Initialize rebalancing engine.
@@ -78,6 +78,12 @@ class RebalancingEngine:
             min_trade_value: Minimum trade value to execute
             transaction_cost_rate: Transaction cost as % of trade value
         """
+        if drift_threshold is None:
+            drift_threshold = Decimal("0.05")
+        if min_trade_value is None:
+            min_trade_value = Decimal("100")
+        if transaction_cost_rate is None:
+            transaction_cost_rate = Decimal("0.001")
         self.frequency = frequency
         self.drift_threshold = drift_threshold
         self.min_trade_value = min_trade_value
@@ -297,9 +303,11 @@ _engine: Optional[RebalancingEngine] = None
 
 def get_rebalancing_engine(
     frequency: RebalancingFrequency = RebalancingFrequency.MONTHLY,
-    drift_threshold: Decimal = Decimal("0.05"),
+    drift_threshold: Optional[Decimal] = None,
 ) -> RebalancingEngine:
     """Get or create singleton RebalancingEngine."""
+    if drift_threshold is None:
+        drift_threshold = Decimal("0.05")
     global _engine
     if _engine is None:
         _engine = RebalancingEngine()

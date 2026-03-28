@@ -248,7 +248,7 @@ class CanaryDeployment:
             try:
                 await self._init_database()
                 self.logger.info("CanaryDeployment initialized")
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 self.logger.error(f"Error initializing: {e}")
                 raise
 
@@ -317,7 +317,7 @@ class CanaryDeployment:
 
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Database initialization failed: {e}")
             raise
 
@@ -562,16 +562,15 @@ class CanaryDeployment:
                 )
 
         # Check latency increase
-        if metrics.latency_delta and metrics.baseline_latency_p95 > 0:
-            if metrics.latency_delta > self.config.rollback_on_latency_increase:
-                return CanaryRollbackDecision(
-                    should_rollback=True,
-                    reason=f"Latency increased by {metrics.latency_delta * 100:.1f}%",
-                    trigger_metric="latency",
-                    canary_value=Decimal(str(metrics.canary_latency_p95)),
-                    baseline_value=Decimal(str(metrics.baseline_latency_p95)),
-                    threshold_exceeded=self.config.rollback_on_latency_increase,
-                )
+        if metrics.latency_delta and metrics.baseline_latency_p95 > 0 and metrics.latency_delta > self.config.rollback_on_latency_increase:
+            return CanaryRollbackDecision(
+                should_rollback=True,
+                reason=f"Latency increased by {metrics.latency_delta * 100:.1f}%",
+                trigger_metric="latency",
+                canary_value=Decimal(str(metrics.canary_latency_p95)),
+                baseline_value=Decimal(str(metrics.baseline_latency_p95)),
+                threshold_exceeded=self.config.rollback_on_latency_increase,
+            )
 
         # All checks passed
         return CanaryRollbackDecision(
@@ -631,7 +630,7 @@ class CanaryDeployment:
 
                 return cursor.lastrowid
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error saving deployment: {e}")
             raise
 
@@ -657,7 +656,7 @@ class CanaryDeployment:
                 )
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error updating deployment: {e}")
 
     async def _save_metrics(self, deployment_id: int, metrics: CanaryMetrics) -> None:
@@ -701,7 +700,7 @@ class CanaryDeployment:
                 )
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error saving metrics: {e}")
 
     def set_stage_complete_callback(self, callback: Callable) -> None:

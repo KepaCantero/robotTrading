@@ -23,11 +23,12 @@ The Unit of Work pattern is especially valuable for:
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from abc import ABC, abstractmethod
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Type, TypeVar
+from typing import AsyncIterator, Dict, List, Optional, Protocol, Type, TypeVar, runtime_checkable
 
 from .base_repository import AbstractRepository
 
@@ -46,9 +47,9 @@ class TrackedEntity:
     need to be performed during commit.
     """
 
-    entity: Any
+    entity: object
     state: str  # 'new', 'clean', 'dirty', 'deleted'
-    original_state: Optional[Dict[str, Any]] = None
+    original_state: Optional[Dict[str, object]] = None
 
 
 class AbstractUnitOfWork(ABC):
@@ -125,7 +126,7 @@ class AbstractUnitOfWork(ABC):
         """
 
     @abstractmethod
-    def collect_new_events(self) -> List[Any]:
+    def collect_new_events(self) -> List[Dict[str, object]]:
         """
         Collect all domain events from tracked entities.
 
@@ -218,7 +219,7 @@ class GenericUnitOfWork(AbstractUnitOfWork):
         self._repositories[name] = repository
         setattr(self, name, repository)
 
-    def track_entity(self, entity: Any, state: str = 'new') -> None:
+    def track_entity(self, entity: object, state: str = 'new') -> None:
         """
         Track an entity for Unit of Work management.
 
@@ -275,14 +276,14 @@ class GenericUnitOfWork(AbstractUnitOfWork):
         self._committed = False
         logger.info("Rolled back Unit of Work changes")
 
-    def collect_new_events(self) -> List[Any]:
+    def collect_new_events(self) -> List[Dict[str, object]]:
         """
         Collect domain events from tracked entities.
 
         Returns:
             List of events from all tracked entities
         """
-        events = []
+        events: List[Dict[str, object]] = []
         for tracked in self._tracked_entities.values():
             entity = tracked.entity
             if hasattr(entity, 'events'):
@@ -290,13 +291,13 @@ class GenericUnitOfWork(AbstractUnitOfWork):
                 entity.events.clear()  # Clear after collecting
         return events
 
-    def mark_dirty(self, entity: Any) -> None:
+    def mark_dirty(self, entity: object) -> None:
         """Mark an entity as modified."""
         entity_id = self._get_entity_id(entity)
         if entity_id in self._tracked_entities:
             self._tracked_entities[entity_id].state = 'dirty'
 
-    def mark_deleted(self, entity: Any) -> None:
+    def mark_deleted(self, entity: object) -> None:
         """Mark an entity as deleted."""
         entity_id = self._get_entity_id(entity)
         if entity_id in self._tracked_entities:
@@ -327,7 +328,7 @@ class GenericUnitOfWork(AbstractUnitOfWork):
         if repo:
             logger.debug(f"Deleting entity: {tracked.entity}")
 
-    def _find_repository_for_entity(self, entity: Any) -> Optional[AbstractRepository]:
+    def _find_repository_for_entity(self, entity: object) -> Optional[AbstractRepository]:
         """Find the appropriate repository for an entity."""
         entity_class = entity.__class__.__name__
         for repo in self._repositories.values():
@@ -337,7 +338,7 @@ class GenericUnitOfWork(AbstractUnitOfWork):
                 return repo
         return None
 
-    def _get_entity_id(self, entity: Any) -> str:
+    def _get_entity_id(self, entity: object) -> str:
         """Extract unique ID from entity."""
         id_field = (
             getattr(entity, 'id', None)
@@ -348,7 +349,7 @@ class GenericUnitOfWork(AbstractUnitOfWork):
         )
         return f"{entity.__class__.__name__}:{id_field}"
 
-    def _snapshot_entity(self, entity: Any) -> Dict[str, Any]:
+    def _snapshot_entity(self, entity: object) -> Dict[str, object]:
         """Create snapshot of entity state for change detection."""
         return {k: v for k, v in entity.__dict__.items() if not k.startswith('_')}
 
@@ -357,8 +358,23 @@ class GenericUnitOfWork(AbstractUnitOfWork):
         self._tracked_entities.clear()
 
 
+@runtime_checkable
+class AsyncUnitOfWorkProtocol(Protocol):
+    """Protocol for async-capable Unit of Work implementations."""
+
+    def commit(self) -> Optional[object]:
+        """Commit changes. May be sync or async."""
+        ...
+
+    def rollback(self) -> Optional[object]:
+        """Rollback changes. May be sync or async."""
+        ...
+
+
 @asynccontextmanager
-async def unit_of_work_context(uow_factory: Type[AbstractUnitOfWork]):
+async def unit_of_work_context(
+    uow_factory: Type[AbstractUnitOfWork],
+) -> AsyncIterator[AbstractUnitOfWork]:
     """
     Async context manager for Unit of Work.
 
@@ -378,9 +394,17 @@ async def unit_of_work_context(uow_factory: Type[AbstractUnitOfWork]):
     uow = uow_factory()
     try:
         yield uow
-        await uow.commit()  # type: ignore[attr-defined]
+        # Handle both sync and async commit methods
+        if isinstance(uow, AsyncUnitOfWorkProtocol):
+            result = uow.commit()
+            if result is not None and asyncio.iscoroutine(result):
+                await result
     except Exception:
-        await uow.rollback()  # type: ignore[attr-defined]
+        # Handle both sync and async rollback methods
+        if isinstance(uow, AsyncUnitOfWorkProtocol):
+            result = uow.rollback()
+            if result is not None and asyncio.iscoroutine(result):
+                await result
         raise
 
 
@@ -469,7 +493,7 @@ class TradingUnitOfWork(GenericUnitOfWork):
         self.portfolios: Optional[AbstractRepository] = None
         self.positions: Optional[AbstractRepository] = None
 
-    def collect_new_events(self) -> List[Any]:
+    def collect_new_events(self) -> List[Dict[str, object]]:
         """
         Collect events from all tracked entities.
 
@@ -481,7 +505,7 @@ class TradingUnitOfWork(GenericUnitOfWork):
         - PositionClosed
         - RiskLimitBreached
         """
-        events = []
+        events: List[Dict[str, object]] = []
         for tracked in self._tracked_entities.values():
             entity = tracked.entity
 

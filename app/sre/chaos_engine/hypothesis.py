@@ -171,7 +171,7 @@ class HypothesisValidator:
         try:
             await self._init_database()
             self.logger.info("HypothesisValidator initialized")
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error initializing: {e}")
             raise
 
@@ -220,7 +220,7 @@ class HypothesisValidator:
 
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Database initialization failed: {e}")
             raise
 
@@ -497,7 +497,7 @@ class HypothesisValidator:
                 )
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error saving result: {e}")
 
     async def get_hypothesis_history(self, limit: int = 100) -> List[Dict[str, Any]]:
@@ -528,7 +528,7 @@ class HypothesisValidator:
                     for row in rows
                 ]
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error getting history: {e}")
             return []
 
@@ -563,6 +563,6 @@ class HypothesisValidator:
                     "pass_rate": f"{(passed / total * 100):.1f}%" if total > 0 else "N/A",
                 }
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error getting summary: {e}")
             return {}

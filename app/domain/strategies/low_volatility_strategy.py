@@ -186,9 +186,8 @@ class LowVolatilityStrategy(BaseStrategy):
                 "target_volatility",
                 "min_market_cap",
             ]:
-                if key in merged and merged[key] is not None:
-                    if not isinstance(merged[key], Decimal):
-                        merged[key] = Decimal(str(merged[key]))
+                if key in merged and merged[key] is not None and not isinstance(merged[key], Decimal):
+                    merged[key] = Decimal(str(merged[key]))
 
             return LowVolatilityStrategyConfig(**merged)
 
@@ -269,19 +268,16 @@ class LowVolatilityStrategy(BaseStrategy):
                     return False  # Ya tenemos posición
 
         # Evaluar score de baja volatilidad
-        if profile.low_vol_score is not None:
-            if profile.low_vol_score < self.strategy_config.min_low_vol_score:
-                return False
+        if profile.low_vol_score is not None and profile.low_vol_score < self.strategy_config.min_low_vol_score:
+            return False
 
         # Evaluar score defensivo
-        if profile.defensive_score is not None:
-            if profile.defensive_score < self.strategy_config.min_defensive_score:
-                return False
+        if profile.defensive_score is not None and profile.defensive_score < self.strategy_config.min_defensive_score:
+            return False
 
         # Evaluar score de estabilidad
-        if profile.stability_score is not None:
-            if profile.stability_score < self.strategy_config.min_stability_score:
-                return False
+        if profile.stability_score is not None and profile.stability_score < self.strategy_config.min_stability_score:
+            return False
 
         # Verificar que sea baja volatilidad
         if not profile.is_defensive_stock:
@@ -458,13 +454,12 @@ class LowVolatilityStrategy(BaseStrategy):
                 current_allocation = pos.value / portfolio.total_value
 
         # Si ya tenemos posición, verificar si podemos aumentar
-        if current_allocation > 0:
-            if current_allocation >= max_pos:
-                logger.debug(
-                    f"Posición máxima alcanzada para {signal.symbol}: "
-                    f"{current_allocation:.1%} >= {max_pos:.1%}"
-                )
-                return False
+        if current_allocation > 0 and current_allocation >= max_pos:
+            logger.debug(
+                f"Posición máxima alcanzada para {signal.symbol}: "
+                f"{current_allocation:.1%} >= {max_pos:.1%}"
+            )
+            return False
 
         # Verificar exposición sectorial
         if self.current_portfolio and signal.signal_type == SignalType.BUY:

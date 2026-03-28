@@ -206,7 +206,9 @@ class TestSignalProcessor:
 
         assert result is None  # HOLD signals are skipped
 
-    def test_process_signal_risk_check_failed(self, signal_processor, buy_signal, mock_strategy, default_symbol):
+    def test_process_signal_risk_check_failed(
+        self, signal_processor, buy_signal, mock_strategy, default_symbol
+    ):
         """Test signal rejection when risk check fails."""
         mock_strategy.risk_check.return_value = False  # Risk check fails
 
@@ -233,7 +235,9 @@ class TestSignalProcessor:
 
         assert result is None  # Signal rejected
 
-    def test_process_signal_profitability_failed(self, signal_processor, buy_signal, default_symbol):
+    def test_process_signal_profitability_failed(
+        self, signal_processor, buy_signal, default_symbol
+    ):
         """Test signal rejection when profitability validation fails."""
         market_data = MockMarketData(default_symbol, 150)
         positions = {}
@@ -286,7 +290,9 @@ class TestSignalProcessor:
         # Should pass without strategy (no risk_check)
         assert result == "BUY"
 
-    def test_validate_strategy_risk_check_error_handling(self, signal_processor, buy_signal, default_symbol):
+    def test_validate_strategy_risk_check_error_handling(
+        self, signal_processor, buy_signal, default_symbol
+    ):
         """Test risk check error handling."""
         # Make risk_check raise an exception
         signal_processor.strategy.risk_check.side_effect = ValueError("Test error")
@@ -315,7 +321,9 @@ class TestSignalProcessor:
         # Should reject signal on error
         assert result is None
 
-    def test_validate_risk_envelope_rejection(self, config, mock_strategy, buy_signal, default_symbol):
+    def test_validate_risk_envelope_rejection(
+        self, config, mock_strategy, buy_signal, default_symbol
+    ):
         """Test risk envelope validation rejection."""
         # Create mock compliance engine
         mock_compliance_engine = MagicMock()
@@ -352,7 +360,9 @@ class TestSignalProcessor:
 
         assert result is None  # Rejected by risk envelope
 
-    def test_validate_risk_envelope_disabled(self, config, mock_strategy, buy_signal, default_symbol):
+    def test_validate_risk_envelope_disabled(
+        self, config, mock_strategy, buy_signal, default_symbol
+    ):
         """Test with risk envelope disabled."""
         processor = SignalProcessor(
             config=config, strategy=mock_strategy, enable_risk_envelope=False
@@ -382,7 +392,9 @@ class TestSignalProcessor:
         # Should pass when risk envelope disabled
         assert result == "BUY"
 
-    def test_diagnostic_logger_signal_rejection(self, config, mock_strategy, buy_signal, default_symbol):
+    def test_diagnostic_logger_signal_rejection(
+        self, config, mock_strategy, buy_signal, default_symbol
+    ):
         """Test diagnostic logger is called on rejection."""
         mock_logger = MagicMock()
         mock_strategy.risk_check.return_value = False
@@ -430,7 +442,9 @@ class TestSignalProcessor:
         assert "cash=" in reason
         assert "required=" in reason
 
-    def test_build_rejection_reason_sell_with_position(self, signal_processor, sell_signal, default_symbol):
+    def test_build_rejection_reason_sell_with_position(
+        self, signal_processor, sell_signal, default_symbol
+    ):
         """Test building rejection reason for sell with position."""
         portfolio = MockPortfolio(
             cash=Decimal("100000"), positions=[MockPortfolio.Position(default_symbol, 100)]
@@ -491,7 +505,9 @@ class TestSignalProcessor:
 
         assert result == "BUY"
 
-    def test_process_signal_with_last_known_prices(self, signal_processor, buy_signal, default_symbol):
+    def test_process_signal_with_last_known_prices(
+        self, signal_processor, buy_signal, default_symbol
+    ):
         """Test signal processing with last known prices."""
         market_data = MockMarketData(default_symbol, 150)
         positions = {"MSFT": Decimal("50")}

@@ -36,6 +36,7 @@ from typing import Any, Callable, Dict, Optional
 
 import aiosqlite
 import numpy as np
+import contextlib
 
 logger = logging.getLogger(__name__)
 
@@ -396,7 +397,7 @@ class TradingMetricsMonitor:
                 await self._init_database()
                 self.logger.info("TradingMetricsMonitor initialized successfully")
 
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 self.logger.error(f"Error initializing: {e}")
                 raise
 
@@ -467,7 +468,7 @@ class TradingMetricsMonitor:
 
             self.logger.debug("Database schema initialized")
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Database initialization failed: {e}")
             raise
 
@@ -486,10 +487,8 @@ class TradingMetricsMonitor:
         self._is_running = False
         if self._collection_task:
             self._collection_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._collection_task
-            except asyncio.CancelledError:
-                pass
         self.logger.info("Stopped metrics collection")
 
     async def _collection_loop(self) -> None:
@@ -704,7 +703,7 @@ class TradingMetricsMonitor:
         stale_count = 0
         ages = []
 
-        for symbol, timestamp in self._market_data_timestamps.items():
+        for _symbol, timestamp in self._market_data_timestamps.items():
             age = now - timestamp
             ages.append(age.total_seconds())
             if age > stale_threshold:
@@ -799,7 +798,7 @@ class TradingMetricsMonitor:
         breaches = []
         utilizations = []
 
-        for limit_name, limit_data in self._risk_limits.items():
+        for _limit_name, limit_data in self._risk_limits.items():
             utilization = limit_data.get("utilization_pct", 0.0)
             utilizations.append(utilization)
 
@@ -960,7 +959,7 @@ class TradingMetricsMonitor:
                 )
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error persisting metrics: {e}")
 
     def record_order(

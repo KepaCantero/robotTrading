@@ -86,7 +86,7 @@ class WebhookChannel(NotificationChannel):
                     )
                     return False
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Webhook error: {target.endpoint} - {e}")
             return False
 
@@ -119,8 +119,20 @@ class EmailChannel(NotificationChannel):
 
         from email.mime.multipart import MIMEMultipart
         from email.mime.text import MIMEText
+        from types import ModuleType
+        from typing import Union
 
-        import aiosmtplib  # type: ignore # pylint: disable=import-error
+        aiosmtplib: Union[ModuleType, None] = None
+        try:
+            import aiosmtplib as _aiosmtplib
+
+            aiosmtplib = _aiosmtplib
+        except ImportError:
+            logger.warning("aiosmtplib not installed, email notifications will not work")
+            return False
+
+        # At this point aiosmtplib is guaranteed to be not None
+        assert aiosmtplib is not None
 
         try:
             # Extract SMTP configuration from target headers
@@ -225,7 +237,7 @@ This is an automated alert from the AlgoTrading system.
             logger.info(f"✅ Email sent to: {target.endpoint}")
             return True
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Email error: {target.endpoint} - {e}")
             return False
 
@@ -299,7 +311,7 @@ class SlackChannel(NotificationChannel):
                     logger.warning(f"Slack send failed (status: {response.status_code})")
                     return False
 
-        except (ConnectionError, TimeoutError, OSError) as e:
+        except OSError as e:
             logger.error(f"Slack error: {e}")
             return False
 
@@ -372,7 +384,7 @@ class DiscordChannel(NotificationChannel):
                     logger.warning(f"Discord send failed (status: {response.status_code})")
                     return False
 
-        except (ConnectionError, TimeoutError, OSError) as e:
+        except OSError as e:
             logger.error(f"Discord error: {e}")
             return False
 
@@ -441,7 +453,7 @@ class TelegramChannel(NotificationChannel):
                     )
                     return False
 
-        except (ConnectionError, TimeoutError, OSError) as e:
+        except OSError as e:
             logger.error(f"Telegram error: {e}")
             return False
 
@@ -515,7 +527,7 @@ class NotificationDispatcher:
                 if attempt < target.retry_count - 1:
                     await asyncio.sleep(2**attempt)  # Exponential backoff
 
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.error(f"Retry {attempt + 1} failed: {e}")
                 if attempt == target.retry_count - 1:
                     return False

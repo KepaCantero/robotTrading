@@ -76,12 +76,17 @@ def get_app():
 
 # Import models that don't depend on matplotlib/numpy 2.x compatibility
 from app.domain.models.assets import Asset, AssetClass, AssetRanking, Exchange  # noqa: E402
-from app.domain.models.momentum import MomentumStrategy, TechnicalIndicators, Timeframe  # noqa: E402
+from app.domain.models.momentum import (
+    MomentumStrategy,
+    TechnicalIndicators,
+    Timeframe,
+)  # noqa: E402
 
 
 # ==============================================================================
 # Symbol Fixtures - Use ALL downloaded symbols by default
 # ==============================================================================
+
 
 @pytest.fixture(scope="session")
 def all_available_symbols() -> List[str]:
@@ -193,7 +198,11 @@ def mock_momentum_service():
     service.get_technical_indicators.return_value = indicators
 
     # Mock analyze_asset_momentum
-    from app.domain.models.momentum import MomentumAnalysis, MomentumSignal, MomentumType  # noqa: E402
+    from app.domain.models.momentum import (
+        MomentumAnalysis,
+        MomentumSignal,
+        MomentumType,
+    )  # noqa: E402
 
     analysis = MomentumAnalysis(
         symbol="AAPL",

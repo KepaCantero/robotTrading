@@ -96,6 +96,8 @@ class PairMetrics:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
+        if residual_capital is None:
+            residual_capital = Decimal('0')
         logger.debug(
             "Converting PairMetrics to dict",
             extra={"ticker1": self.ticker1, "ticker2": self.ticker2},
@@ -121,7 +123,7 @@ class AllocationResult:
 
     allocations: Dict[str, StockMetrics] = field(default_factory=dict)
     pairs: List[PairMetrics] = field(default_factory=list)
-    residual_capital: Decimal = Decimal('0')
+    residual_capital: Optional[Decimal] = None
     decision_logs: List[str] = field(default_factory=list)
     validation_passed: bool = False
     validation_errors: List[str] = field(default_factory=list)
@@ -183,9 +185,9 @@ class AllocationConfig:
         self,
         initial_capital: Decimal,
         max_positions: int = 10,
-        max_position_size: Decimal = Decimal('0.10'),
-        min_position_size: Decimal = Decimal('0.05'),
-        reserve_ratio: Decimal = Decimal('0.10'),
+        max_position_size: Optional[Decimal] = None,
+        min_position_size: Optional[Decimal] = None,
+        reserve_ratio: Optional[Decimal] = None,
     ):
         """
         Initialize allocation configuration.
@@ -197,6 +199,12 @@ class AllocationConfig:
             min_position_size: Minimum size of any position (as decimal)
             reserve_ratio: Ratio of capital to keep in reserve
         """
+        if max_position_size is None:
+            max_position_size = Decimal('0.10')
+        if min_position_size is None:
+            min_position_size = Decimal('0.05')
+        if reserve_ratio is None:
+            reserve_ratio = Decimal('0.10')
         logger.debug(
             "Initializing AllocationConfig",
             extra={

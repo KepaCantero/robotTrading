@@ -10,10 +10,13 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 import numpy as np
 
+
 # Test the TrendDetector's EMA calculation
 def test_ema_calculation():
     """Test EMA calculation with sample data."""
-    from app.domain.strategies.momentum_modular.modules.market_detectors.trend_detector import TrendDetector
+    from app.domain.strategies.momentum_modular.modules.market_detectors.trend_detector import (
+        TrendDetector,
+    )
 
     # Create sample price data that's trending UP
     # Simulate a bull market: prices going from 100 to 150
@@ -28,7 +31,9 @@ def test_ema_calculation():
     print("EMA CALCULATION TEST (Bull Market Data)")
     print("=" * 60)
     print(f"Prices: {prices[0]:.2f} -> {prices[-1]:.2f}")
-    print(f"Price range: {prices[-1] - prices[0]:.2f} ({((prices[-1] - prices[0]) / prices[0] * 100):.1f}% increase)")
+    print(
+        f"Price range: {prices[-1] - prices[0]:.2f} ({((prices[-1] - prices[0]) / prices[0] * 100):.1f}% increase)"
+    )
     print()
 
     if ema_fast is not None and ema_slow is not None:
@@ -74,7 +79,9 @@ def test_ema_calculation():
     ema_slow_down = detector._ema_vectorized(prices_down, 26)
 
     print(f"Prices: {prices_down[0]:.2f} -> {prices_down[-1]:.2f}")
-    print(f"Price range: {prices_down[-1] - prices_down[0]:.2f} ({((prices_down[-1] - prices_down[0]) / prices_down[0] * 100):.1f}% decrease)")
+    print(
+        f"Price range: {prices_down[-1] - prices_down[0]:.2f} ({((prices_down[-1] - prices_down[0]) / prices_down[0] * 100):.1f}% decrease)"
+    )
     print()
 
     if ema_fast_down is not None and ema_slow_down is not None:
@@ -114,7 +121,9 @@ def test_with_real_data():
         print("yfinance not installed, skipping real data test")
         return
 
-    from app.domain.strategies.momentum_modular.modules.market_detectors.trend_detector import TrendDetector
+    from app.domain.strategies.momentum_modular.modules.market_detectors.trend_detector import (
+        TrendDetector,
+    )
 
     print("=" * 60)
     print("REAL DATA TEST (AAPL 2021)")
@@ -166,7 +175,9 @@ def test_with_real_data():
 
 def test_short_sequences():
     """Test with short price sequences like at backtest start."""
-    from app.domain.strategies.momentum_modular.modules.market_detectors.trend_detector import TrendDetector
+    from app.domain.strategies.momentum_modular.modules.market_detectors.trend_detector import (
+        TrendDetector,
+    )
 
     print("=" * 60)
     print("SHORT SEQUENCE TEST (Early Backtest)")
@@ -188,8 +199,10 @@ def test_short_sequences():
             distance = abs(ema_fast[-1] - ema_slow[-1]) / min(ema_fast[-1], ema_slow[-1])
             strength = min(1.0, distance / 0.25)
 
-            print(f"Length={length}: Type={result['type']}, Strength={result['strength']:.4f}, "
-                  f"Distance={distance*100:.2f}%, CalcStrength={strength:.4f}")
+            print(
+                f"Length={length}: Type={result['type']}, Strength={result['strength']:.4f}, "
+                f"Distance={distance*100:.2f}%, CalcStrength={strength:.4f}"
+            )
         else:
             print(f"Length={length}: EMAs not available")
 
@@ -198,7 +211,9 @@ def test_short_sequences():
 
 def test_volatile_data():
     """Test with volatile/choppy data that might cause extreme strength values."""
-    from app.domain.strategies.momentum_modular.modules.market_detectors.trend_detector import TrendDetector
+    from app.domain.strategies.momentum_modular.modules.market_detectors.trend_detector import (
+        TrendDetector,
+    )
 
     print("=" * 60)
     print("VOLATILE DATA TEST")
@@ -209,7 +224,7 @@ def test_volatile_data():
     # Test with data that has a sharp drop (like a crash)
     np.random.seed(42)
     base = np.array([100 + i * 0.3 for i in range(60)])  # Slow uptrend
-    crash = np.array([100 - i * 5 for i in range(20)])    # Sharp crash
+    crash = np.array([100 - i * 5 for i in range(20)])  # Sharp crash
     prices = np.concatenate([base, crash])
 
     print(f"Prices: {prices[0]:.2f} -> {prices[-1]:.2f}")

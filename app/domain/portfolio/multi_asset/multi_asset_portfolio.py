@@ -431,7 +431,7 @@ class MultiAssetPortfolioManager:
                 contribution = (
                     Decimal("1") / Decimal(str(n_classes)) if n_classes > 0 else Decimal("0")
                 )
-                return {name: contribution for name in portfolio.allocations}
+                return dict.fromkeys(portfolio.allocations, contribution)
 
             # Calculate covariance matrix
             cov_matrix = portfolio_returns.cov().values
@@ -445,7 +445,7 @@ class MultiAssetPortfolioManager:
                 contribution = (
                     Decimal("1") / Decimal(str(n_classes)) if n_classes > 0 else Decimal("0")
                 )
-                return {name: contribution for name in portfolio.allocations}
+                return dict.fromkeys(portfolio.allocations, contribution)
 
             # Calculate marginal contribution to risk for each asset
             # MCTR_i = (w_i * (Σw)_i) / σ_p^2
@@ -476,7 +476,7 @@ class MultiAssetPortfolioManager:
                 equal_contrib = (
                     Decimal("1") / Decimal(str(n_classes)) if n_classes > 0 else Decimal("0")
                 )
-                risk_contributions = {name: equal_contrib for name in portfolio.allocations}
+                risk_contributions = dict.fromkeys(portfolio.allocations, equal_contrib)
 
             return risk_contributions
 
@@ -487,7 +487,7 @@ class MultiAssetPortfolioManager:
             equal_contrib = (
                 Decimal("1") / Decimal(str(n_classes)) if n_classes > 0 else Decimal("0")
             )
-            return {name: equal_contrib for name in portfolio.allocations}
+            return dict.fromkeys(portfolio.allocations, equal_contrib)
 
     def _validate_target_weights(self, target_weights: Dict[str, Decimal]) -> None:
         """
@@ -682,17 +682,16 @@ class MultiAssetPortfolioManager:
         trades = []
 
         for class_name, alloc in portfolio.allocations.items():
-            for symbol, weight in alloc.assets.items():
+            for symbol, _weight in alloc.assets.items():
                 if symbol == "CASH":
                     continue
 
                 # Get price from market data
                 price = Decimal("100")  # Default
 
-                if class_name in market_data and not market_data[class_name].empty:
-                    if symbol in market_data[class_name].columns:
-                        # Get last price
-                        price = Decimal(str(market_data[class_name][symbol].iloc[-1]))
+                if class_name in market_data and not market_data[class_name].empty and symbol in market_data[class_name].columns:
+                    # Get last price
+                    price = Decimal(str(market_data[class_name][symbol].iloc[-1]))
 
                 # Calculate position size
                 position_value = portfolio.total_value * alloc.get_absolute_weight(symbol)

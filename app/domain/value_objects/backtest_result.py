@@ -87,7 +87,7 @@ class BacktestResultValue:
         """Check if backtest was profitable."""
         return self.total_return > 0
 
-    def has_acceptable_drawdown(self, threshold: Decimal = Decimal('0.20')) -> bool:
+    def has_acceptable_drawdown(self, threshold: Optional[Decimal] = None) -> bool:
         """
         Check if drawdown is within acceptable threshold.
 
@@ -97,6 +97,8 @@ class BacktestResultValue:
         Returns:
             True if drawdown is acceptable
         """
+        if threshold is None:
+            threshold = Decimal('0.20')
         if self.max_drawdown is None:
             return True
         return abs(self.max_drawdown) <= threshold

@@ -11,7 +11,7 @@ import logging
 from collections import deque
 from decimal import Decimal
 from threading import Lock
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 import numpy as np
 
@@ -25,6 +25,9 @@ if TYPE_CHECKING:
     from app.backtesting.core.executor import BacktestExecutor
 
 logger = logging.getLogger(__name__)
+
+# Type alias for backtest results (can be BacktestResult or dict)
+BacktestResultItem = Union[BacktestResult, Dict[str, Union[int, float, str, bool]]]
 
 
 def _get_backtesting_config():
@@ -111,7 +114,7 @@ class BoundedResults:
         self._lock = Lock()
         self._maxlen = maxlen
 
-    def add(self, result: Dict[str, Any]) -> None:
+    def add(self, result: Dict[str, Union[int, float, str, bool]]) -> None:
         """
         Add result thread-safely.
 
@@ -122,7 +125,7 @@ class BoundedResults:
             self._results.append(result)
             self._cleanup_if_needed()
 
-    def extend(self, results: List[Dict[str, Any]]) -> None:
+    def extend(self, results: List[Dict[str, Union[int, float, str, bool]]]) -> None:
         """
         Extend results thread-safely.
 
@@ -133,7 +136,7 @@ class BoundedResults:
             self._results.extend(results)
             self._cleanup_if_needed()
 
-    def get_all(self) -> List[Dict[str, Any]]:
+    def get_all(self) -> List[Dict[str, Union[int, float, str, bool]]]:
         """
         Get all results.
 
@@ -143,7 +146,7 @@ class BoundedResults:
         with self._lock:
             return list(self._results)
 
-    def get_latest(self, n: int) -> List[Dict[str, Any]]:
+    def get_latest(self, n: int) -> List[Dict[str, Union[int, float, str, bool]]]:
         """
         Get latest n results.
 
@@ -187,7 +190,7 @@ class OrchestrationResult:
     providing summary statistics and access to individual results.
     """
 
-    def __init__(self, results: List[Any], config: Optional[BacktestConfig] = None):
+    def __init__(self, results: List[BacktestResultItem], config: Optional[BacktestConfig] = None):
         """
         Initialize orchestration result.
 
@@ -201,13 +204,13 @@ class OrchestrationResult:
         self._summary = None
 
     @property
-    def summary(self) -> Dict[str, Any]:
+    def summary(self) -> Dict[str, Union[int, float, str, bool]]:
         """Get summary statistics."""
         if self._summary is None:
             self._summary = self._calculate_summary()
         return self._summary
 
-    def _calculate_summary(self) -> Dict[str, Any]:
+    def _calculate_summary(self) -> Dict[str, Union[int, float, str, bool]]:
         """Calculate summary statistics from results."""
         if not self.results:
             return {
@@ -254,7 +257,7 @@ class OrchestrationResult:
         return summary
 
     @staticmethod
-    def _is_successful(result: Any) -> bool:
+    def _is_successful(result: BacktestResultItem) -> bool:
         """Check if backtest result is successful."""
         # For dictionaries, any result is considered successful
         # unless explicitly marked as failed
@@ -265,7 +268,7 @@ class OrchestrationResult:
             return result.final_capital > 0
         return False
 
-    def get_best_result(self, metric: str = 'sharpe_ratio') -> Optional[Any]:
+    def get_best_result(self, metric: str = 'sharpe_ratio') -> Optional[BacktestResultItem]:
         """
         Get best result by metric.
 
@@ -278,7 +281,7 @@ class OrchestrationResult:
         if not self.results:
             return None
 
-        def get_metric(r: Any) -> float:
+        def get_metric(r: BacktestResultItem) -> float:
             if isinstance(r, BacktestResult):
                 if metric == 'total_return':
                     return float(r.total_return)
@@ -291,7 +294,7 @@ class OrchestrationResult:
 
         return max(self.results, key=get_metric)
 
-    def filter_results(self, **criteria) -> List[Any]:
+    def filter_results(self, **criteria) -> List[BacktestResultItem]:
         """
         Filter results by criteria.
 
@@ -348,7 +351,7 @@ class BacktestOrchestrator:
             },
         )
 
-    def run_all(self, quotes: List[Any], strategies: List[Any], **kwargs) -> OrchestrationResult:
+    def run_all(self, quotes: List[object], strategies: List[object], **kwargs) -> OrchestrationResult:
         """
         Run all backtests with given quotes and strategies.
 
@@ -405,7 +408,7 @@ class BacktestOrchestrator:
 
         return OrchestrationResult(results=all_results, config=self.config)
 
-    def _run_single(self, quotes: List[Any], strategy: Any, **kwargs) -> BacktestResult:
+    def _run_single(self, quotes: List[object], strategy: object, **kwargs) -> BacktestResult:
         """Run single backtest."""
         strategy_name = getattr(strategy, 'name', 'unknown')
 
@@ -441,7 +444,7 @@ class BacktestOrchestrator:
         return result
 
     @staticmethod
-    def _result_to_dict(result: BacktestResult) -> Dict[str, Any]:
+    def _result_to_dict(result: BacktestResult) -> Dict[str, Union[int, float, str, bool]]:
         """Convert BacktestResult to dictionary."""
         if not isinstance(result, BacktestResult):
             return result if isinstance(result, dict) else {}

@@ -18,7 +18,9 @@ logger = logging.getLogger(__name__)
 class SignalDiagnosticLogger:
     """Diagnostic logger for signal generation and rejection tracking."""
 
-    def __init__(self, output_dir: Path = Path("docs/BACKTEST_RESULTS/diagnostics")):
+    def __init__(self, output_dir: Optional[Path] = None):
+        if output_dir is None:
+            output_dir = Path("docs/BACKTEST_RESULTS/diagnostics")
         self.output_dir = output_dir
         self.output_dir.mkdir(parents=True, exist_ok=True)
 

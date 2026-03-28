@@ -633,7 +633,7 @@ class PaperTradingService:
         base_price = Decimal("100.0")
         prices = []
 
-        for i in range(days):
+        for _i in range(days):
             # Simular variación de precios con tendencia aleatoria
             variation = Decimal(str(random.uniform(-0.05, 0.05)))  # ±5% variación
             price = base_price * (1 + variation)

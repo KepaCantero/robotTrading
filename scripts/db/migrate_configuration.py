@@ -73,9 +73,7 @@ class MagicValueDetector:
 
         return magic_values
 
-    def _analyze_ast(
-        self, tree: ast.AST, file_path: Path, lines: List[str]
-    ) -> List[MagicValue]:
+    def _analyze_ast(self, tree: ast.AST, file_path: Path, lines: List[str]) -> List[MagicValue]:
         """Analyze AST for magic values."""
         magic_values = []
 
@@ -127,9 +125,7 @@ class MagicValueDetector:
         for keyword in node.keywords:
             if isinstance(keyword.value, ast.Constant):
                 if isinstance(keyword.value.value, (int, float)):
-                    category = self._categorize_numeric(
-                        keyword.arg, keyword.value.value
-                    )
+                    category = self._categorize_numeric(keyword.arg, keyword.value.value)
                     if category:
                         magic_values.append(
                             MagicValue(
@@ -146,9 +142,7 @@ class MagicValueDetector:
 
         return magic_values
 
-    def _analyze_regex(
-        self, content: str, file_path: Path, lines: List[str]
-    ) -> List[MagicValue]:
+    def _analyze_regex(self, content: str, file_path: Path, lines: List[str]) -> List[MagicValue]:
         """Fallback regex analysis for magic values."""
         magic_values = []
 
@@ -190,9 +184,7 @@ class MagicValueDetector:
         var_lower = var_name.lower()
 
         # Thresholds
-        if any(
-            keyword in var_lower for keyword in ["threshold", "limit", "max", "min"]
-        ):
+        if any(keyword in var_lower for keyword in ["threshold", "limit", "max", "min"]):
             return "threshold"
 
         # Percentages

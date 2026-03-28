@@ -651,7 +651,7 @@ class SystemBus:
         # Dispatch to appropriate handler
         handler = getattr(self, f"_handle_{system_name}", None)
         if handler:
-            return handler(  # pylint: disable=not-callable
+            return handler(
                 subsystem=subsystem,
                 result=result,
                 symbol=symbol,
@@ -2656,9 +2656,9 @@ class ComplianceEngine:
         strategy_positions: Dict[str, Decimal],
         total_capital: Decimal,
         strategy_capital: Decimal,
-        max_symbol_exposure_pct: Decimal = Decimal("0.30"),  # Increased from 20% to 30%
-        max_strategy_exposure_pct: Decimal = Decimal("0.80"),  # Increased from 70% to 80%
-        max_portfolio_exposure_pct: Decimal = Decimal("0.95"),
+        max_symbol_exposure_pct: Optional[Decimal] = None,  # Increased from 20% to 30%
+        max_strategy_exposure_pct: Optional[Decimal] = None,  # Increased from 70% to 80%
+        max_portfolio_exposure_pct: Optional[Decimal] = None,
     ) -> Tuple[bool, str]:
         """
         Validate if a trade would exceed risk envelope constraints.
@@ -2686,6 +2686,12 @@ class ComplianceEngine:
         Returns:
             Tuple of (is_valid, reason)
         """
+        if max_symbol_exposure_pct is None:
+            max_symbol_exposure_pct = Decimal("0.30")
+        if max_strategy_exposure_pct is None:
+            max_strategy_exposure_pct = Decimal("0.80")
+        if max_portfolio_exposure_pct is None:
+            max_portfolio_exposure_pct = Decimal("0.95")
         # Check 1: Symbol-level exposure limit
         current_symbol_exposure = current_portfolio.get(symbol, Decimal("0"))
         new_symbol_exposure = current_symbol_exposure + trade_value
@@ -2978,7 +2984,7 @@ class ComplianceEngine:
             # Equal weight fallback
             weight = Decimal("1") / Decimal(str(len(symbols)))
             return PortfolioOptimization(
-                weights={s: weight for s in symbols},
+                weights=dict.fromkeys(symbols, weight),
                 expected_return=0.0,
                 expected_risk=0.0,
                 sharpe_ratio=0.0,
@@ -2986,7 +2992,6 @@ class ComplianceEngine:
 
         try:
             # Use Chan's optimization (integrates with Narang's constraints)
-            # pylint: disable=no-name-in-module
             from app.services.optimization_chan import get_portfolio_optimizer
 
             optimizer = get_portfolio_optimizer(method="mean_variance")
@@ -3016,7 +3021,7 @@ class ComplianceEngine:
             logger.error("Portfolio optimization failed: %s", e)
             weight = Decimal("1") / Decimal(str(len(symbols)))
             return PortfolioOptimization(
-                weights={s: weight for s in symbols},
+                weights=dict.fromkeys(symbols, weight),
                 expected_return=0.0,
                 expected_risk=0.0,
                 sharpe_ratio=0.0,

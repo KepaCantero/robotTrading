@@ -258,7 +258,9 @@ def _calculate_universe_statistics(universe_data: dict) -> dict:
     return {
         "total_symbols": len(universe_data),
         "total_data_points": total_data_points,
-        "avg_data_points_per_symbol": total_data_points / len(universe_data) if universe_data else 0,
+        "avg_data_points_per_symbol": total_data_points / len(universe_data)
+        if universe_data
+        else 0,
         "date_range": {
             "start": min_date.isoformat() if min_date else None,
             "end": max_date.isoformat() if max_date else None,
@@ -284,7 +286,12 @@ def cli():
 @click.option(
     '--objective',
     type=click.Choice(
-        ['maximizar_capital', 'maximizar_dividendos', 'preservar_capital', 'crecimiento_equilibrado'],
+        [
+            'maximizar_capital',
+            'maximizar_dividendos',
+            'preservar_capital',
+            'crecimiento_equilibrado',
+        ],
         case_sensitive=False,
     ),
     default='maximizar_capital',
@@ -575,7 +582,9 @@ def run(
         logger.info("Stages:")
         for stage_result in result.stage_results:
             status = "✅" if stage_result.success else "❌"
-            logger.info(f"  {status} {stage_result.stage_type.value}: {stage_result.duration_ms:.2f}ms")
+            logger.info(
+                f"  {status} {stage_result.stage_type.value}: {stage_result.duration_ms:.2f}ms"
+            )
 
         logger.info("")
 
@@ -679,10 +688,22 @@ async def run_lifecycle_with_real_data(
     try:
         # Execute stages with real data
         stages = [
-            (StageType.PROFILE_GENERATION, orchestrator.stage_1_generate_profile, {"input_profile": input_profile}),
+            (
+                StageType.PROFILE_GENERATION,
+                orchestrator.stage_1_generate_profile,
+                {"input_profile": input_profile},
+            ),
             # Skip Stage 2 (we already have real universe data)
-            (StageType.CAPITAL_ALLOCATION, orchestrator.stage_3_allocate_capital, {"universe": universe_data}),
-            (StageType.SIGNAL_GENERATION, orchestrator.stage_4_generate_signals, {"allocation": None}),
+            (
+                StageType.CAPITAL_ALLOCATION,
+                orchestrator.stage_3_allocate_capital,
+                {"universe": universe_data},
+            ),
+            (
+                StageType.SIGNAL_GENERATION,
+                orchestrator.stage_4_generate_signals,
+                {"allocation": None},
+            ),
             (StageType.TAX_OPTIMIZATION, orchestrator.stage_5_optimize_taxes, {"allocation": None}),
             (StageType.RISK_VALIDATION, orchestrator.stage_6_validate_risk, {"allocation": None}),
             (StageType.BACKTEST_VALIDATION, orchestrator.stage_7_backtest_validate, {}),
@@ -743,7 +764,9 @@ async def run_lifecycle_with_real_data(
         # Collect warnings and errors
         for stage_result in result.stage_results:
             result.warnings.extend(stage_result.warnings)
-        for stage_result in result.get_failed_stages() if hasattr(result, 'get_failed_stages') else []:
+        for stage_result in (
+            result.get_failed_stages() if hasattr(result, 'get_failed_stages') else []
+        ):
             result.errors.extend(stage_result.errors)
 
     except (ValueError, TypeError, KeyError, AttributeError) as e:

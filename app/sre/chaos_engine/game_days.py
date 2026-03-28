@@ -234,7 +234,7 @@ class GameDay:
         try:
             await self._init_database()
             self.logger.info("GameDay initialized")
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error initializing: {e}")
             raise
 
@@ -298,7 +298,7 @@ class GameDay:
 
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Database initialization failed: {e}")
             raise
 
@@ -483,7 +483,7 @@ class GameDay:
                 )
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error saving game day: {e}")
 
     async def _save_game_day_complete(self, report: GameDayReport) -> None:
@@ -509,7 +509,7 @@ class GameDay:
                 )
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error updating game day: {e}")
 
     async def _save_scenario(self, scenario: GameDayScenario) -> None:
@@ -543,7 +543,7 @@ class GameDay:
                 )
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error saving scenario: {e}")
 
     def set_scenario_complete_callback(self, callback: Callable) -> None:

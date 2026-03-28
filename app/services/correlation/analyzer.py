@@ -9,6 +9,7 @@ efficient calculation.
 """
 
 import asyncio
+import contextlib
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -296,10 +297,8 @@ class CorrelationAnalyzer:
 
         if self._update_task:
             self._update_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._update_task
-            except asyncio.CancelledError:
-                pass
             self._update_task = None
 
         logger.info("Stopped background correlation updates")
@@ -504,7 +503,7 @@ class CorrelationAnalyzer:
                 logger.info("Correlation update loop cancelled")
                 break
 
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.error(f"Error in correlation update loop: {e}")
                 # Wait before retrying
                 await asyncio.sleep(60)

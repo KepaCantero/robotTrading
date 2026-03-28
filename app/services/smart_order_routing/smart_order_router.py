@@ -285,7 +285,7 @@ class SmartOrderRouter:
             "window_costs": {},
         }
 
-        for time_ms, cost_data in window_costs.items():
+        for _time_ms, cost_data in window_costs.items():
             total_cost = cost_data["slippage_usd"] + commission_cost
             total_cost_bps = (total_cost / total_size) * Decimal("10000")
 

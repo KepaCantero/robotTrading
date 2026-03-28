@@ -55,13 +55,15 @@ def main():
     print("\nBuilding initial order book...")
 
     # Add bids (buy orders)
-    for i, (price, qty) in enumerate([
-        (149.50, 500),
-        (149.45, 300),
-        (149.40, 200),
-        (149.35, 400),
-        (149.30, 600),
-    ]):
+    for i, (price, qty) in enumerate(
+        [
+            (149.50, 500),
+            (149.45, 300),
+            (149.40, 200),
+            (149.35, 400),
+            (149.30, 600),
+        ]
+    ):
         order = Order(
             order_id=f"bid_{i}",
             symbol="AAPL",
@@ -74,13 +76,15 @@ def main():
         print(f"  Added BID: {qty} @ ${price}")
 
     # Add asks (sell orders)
-    for i, (price, qty) in enumerate([
-        (150.50, 400),
-        (150.55, 300),
-        (150.60, 500),
-        (150.65, 200),
-        (150.70, 600),
-    ]):
+    for i, (price, qty) in enumerate(
+        [
+            (150.50, 400),
+            (150.55, 300),
+            (150.60, 500),
+            (150.65, 200),
+            (150.70, 600),
+        ]
+    ):
         order = Order(
             order_id=f"ask_{i}",
             symbol="AAPL",
@@ -182,8 +186,10 @@ def main():
     quotes = exchange.get_market_maker_quotes()
     for i, (bid, ask, size) in enumerate(quotes, 1):
         spread_bps = (ask - bid) / bid * 10000
-        print(f"  MM{i}: Bid ${bid:.2f} - Ask ${ask:.2f} "
-              f"({size:.0f} shares, spread: {spread_bps:.1f} bps)")
+        print(
+            f"  MM{i}: Bid ${bid:.2f} - Ask ${ask:.2f} "
+            f"({size:.0f} shares, spread: {spread_bps:.1f} bps)"
+        )
 
     # Submit a market order
     print("\nSubmitting market buy order for 500 shares...")

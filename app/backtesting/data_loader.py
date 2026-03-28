@@ -20,7 +20,7 @@ from app.domain.models.market_data import Quote
 logger = logging.getLogger(__name__)
 
 # REQUIRED: Yahoo Finance libraries (no fallbacks)
-import yfinance as yf  # noqa: F401
+import yfinance as yf
 
 # Fallback pattern for yahoo_fin
 try:

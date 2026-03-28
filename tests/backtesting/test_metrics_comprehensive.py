@@ -861,7 +861,9 @@ class TestMetricsCalculatorProperties:
         num_trades=st.integers(min_value=1, max_value=100),
     )
     @settings(max_examples=50, suppress_health_check=[HealthCheck.function_scoped_fixture])
-    def test_win_rate_always_between_0_and_100(self, calculator, default_symbol, initial_capital, num_trades):
+    def test_win_rate_always_between_0_and_100(
+        self, calculator, default_symbol, initial_capital, num_trades
+    ):
         """Property: Win rate should always be between 0 and 100."""
         base_time = datetime(2024, 1, 1)
         trades = []
@@ -920,7 +922,9 @@ class TestMetricsCalculatorProperties:
         num_losing=st.integers(min_value=0, max_value=50),
     )
     @settings(max_examples=30, suppress_health_check=[HealthCheck.function_scoped_fixture])
-    def test_total_trades_equals_sum_of_wins_and_losses(self, calculator, default_symbol, num_winning, num_losing):
+    def test_total_trades_equals_sum_of_wins_and_losses(
+        self, calculator, default_symbol, num_winning, num_losing
+    ):
         """Property: Total trades should equal wins + losses."""
         base_time = datetime(2024, 1, 1)
         trades = []

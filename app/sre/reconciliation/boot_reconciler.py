@@ -1,4 +1,3 @@
-# pylint: disable=eval-used
 # mypy: ignore-errors
 """
 Boot-up Reconciliation System
@@ -28,7 +27,10 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional, Union
+
+# Position dictionaries contain heterogeneous values from broker/DB
+PositionDict = Dict[str, Union[str, int, float, Decimal, None]]
 
 import aiosqlite
 from requests.exceptions import HTTPError
@@ -69,7 +71,7 @@ class BootReconciler:
     No trading should occur until reconciliation completes successfully.
     """
 
-    def __init__(self, broker_client: Any, db_path: str, emergency_handler: Optional[Any] = None):
+    def __init__(self, broker_client: object, db_path: str, emergency_handler: Optional[object] = None):
         """
         Initialize reconciler.
 
@@ -82,7 +84,7 @@ class BootReconciler:
         self.db_path = db_path
         self.emergency_handler = emergency_handler
 
-    async def reconcile_on_startup(self) -> Dict[str, Any]:
+    async def reconcile_on_startup(self) -> Dict[str, Union[str, int, List[PositionDict]]]:
         """
         Perform full reconciliation on system startup.
 
@@ -195,16 +197,16 @@ class BootReconciler:
             report['error'] = str(e)
             raise
 
-    async def _get_broker_positions(self) -> List[Dict[str, Any]]:
+    async def _get_broker_positions(self) -> List[PositionDict]:
         """Fetch all open positions from broker."""
         try:
             positions = await self.broker.get_all_open_positions()
             return positions
-        except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+        except (OSError, ValueError) as e:
             logger.error(f"Failed to fetch broker positions: {e}")
             raise
 
-    async def _get_local_positions(self) -> List[Dict[str, Any]]:
+    async def _get_local_positions(self) -> List[PositionDict]:
         """Fetch all open positions from local database."""
         try:
             async with aiosqlite.connect(self.db_path) as db:
@@ -242,8 +244,8 @@ class BootReconciler:
             raise
 
     async def _identify_discrepancies(
-        self, broker_positions: List[Dict[str, Any]], local_positions: List[Dict[str, Any]]
-    ) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+        self, broker_positions: List[PositionDict], local_positions: List[PositionDict]
+    ) -> tuple[List[PositionDict], List[PositionDict]]:
         """
         Identify orphaned and phantom positions.
 
@@ -290,8 +292,8 @@ class BootReconciler:
         return orphaned, phantom
 
     async def _protect_orphaned_positions(
-        self, orphaned: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+        self, orphaned: List[PositionDict]
+    ) -> List[PositionDict]:
         """
         Take immediate action to protect orphaned positions.
 
@@ -373,7 +375,7 @@ class BootReconciler:
                 # Add to database
                 await self._add_orphaned_position_to_db(pos)
 
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.error(f"Error protecting orphaned position: {e}")
                 actions.append(
                     {
@@ -387,8 +389,8 @@ class BootReconciler:
         return actions
 
     async def _resolve_phantom_positions(
-        self, phantom: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+        self, phantom: List[PositionDict]
+    ) -> List[PositionDict]:
         """
         Resolve phantom positions (local thinks open, broker says closed).
 
@@ -439,7 +441,6 @@ class BootReconciler:
             except (
                 aiosqlite.Error,
                 asyncio.TimeoutError,
-                ConnectionError,
                 OSError,
             ) as e:
                 logger.error(f"Error resolving phantom position: {e}")
@@ -454,7 +455,7 @@ class BootReconciler:
 
         return actions
 
-    async def _add_orphaned_position_to_db(self, pos: Dict[str, Any]):
+    async def _add_orphaned_position_to_db(self, pos: PositionDict):
         """Add orphaned position to database."""
         try:
             async with aiosqlite.connect(self.db_path) as db:
@@ -481,10 +482,10 @@ class BootReconciler:
 
                 logger.info(f"Added orphaned position to database: {pos['symbol']}")
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             logger.error(f"Failed to add orphaned position to DB: {e}")
 
-    async def _sync_database_to_broker(self, broker_positions: List[Dict[str, Any]]):
+    async def _sync_database_to_broker(self, broker_positions: List[PositionDict]):
         """
         Sync local database to match broker reality.
 
@@ -499,8 +500,8 @@ class BootReconciler:
 
 
 async def run_reconciliation_on_startup(
-    broker_client: Any, db_path: str, emergency_handler: Optional[Any] = None
-) -> Dict[str, Any]:
+    broker_client: object, db_path: str, emergency_handler: Optional[object] = None
+) -> PositionDict:
     """
     Convenience function to run reconciliation on startup.
 

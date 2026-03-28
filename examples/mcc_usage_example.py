@@ -18,7 +18,9 @@ Reference:
 """
 
 import numpy as np
-from app.strategies.momentum_modular.learning.supervised_learning_engine import SupervisedLearningEngine
+from app.strategies.momentum_modular.learning.supervised_learning_engine import (
+    SupervisedLearningEngine,
+)
 
 
 def example_mcc_integration():
@@ -39,7 +41,7 @@ def example_mcc_integration():
             'n_estimators': 100,
             'max_depth': 6,
             'learning_rate': 0.1,
-        }
+        },
     }
 
     # Create engine
@@ -52,13 +54,17 @@ def example_mcc_integration():
     training_data = {
         'features': np.random.randn(n_samples, n_features),
         'labels': np.array([1] * 100 + [0] * 900),  # 10% winners, 90% losers
-        'metadata': {}
+        'metadata': {},
     }
 
     print("Training Scenario:")
     print(f"  Total samples: {n_samples}")
-    print(f"  Winning trades: {np.sum(training_data['labels'])} ({np.mean(training_data['labels'])*100:.1f}%)")
-    print(f"  Losing trades: {n_samples - np.sum(training_data['labels'])} ({(1-np.mean(training_data['labels']))*100:.1f}%)")
+    print(
+        f"  Winning trades: {np.sum(training_data['labels'])} ({np.mean(training_data['labels'])*100:.1f}%)"
+    )
+    print(
+        f"  Losing trades: {n_samples - np.sum(training_data['labels'])} ({(1-np.mean(training_data['labels']))*100:.1f}%)"
+    )
     print()
 
     # Train model

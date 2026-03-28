@@ -7,8 +7,7 @@ Maneja ajustes por splits, dividendos y corporate actions.
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List
-
+from typing import Any, Dict, List, Union
 logger = logging.getLogger(__name__)
 
 
@@ -33,7 +32,7 @@ class PriceNormalizer:
 
     def normalize(
         self,
-        price: Any,
+        price: Union[Decimal, int, float, str],
         symbol: str,
         timestamp: datetime,
         adjust_for_splits: bool = True,

@@ -27,14 +27,12 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 # Thread safety (CRITICAL - must be BEFORE imports)
 import os
+
 os.environ['OMP_NUM_THREADS'] = '1'
 os.environ['OPENBLAS_NUM_THREADS'] = '1'
 os.environ['MKL_NUM_THREADS'] = '1'
@@ -47,10 +45,9 @@ from app.services.strategy_stock_allocator import StrategyStockAllocator
 # Data Download with Yahoo Finance
 # ============================================================================
 
+
 def download_yfinance_data(
-    symbols: list[str],
-    period: str = "1y",
-    interval: str = "1d"
+    symbols: list[str], period: str = "1y", interval: str = "1d"
 ) -> dict[str, pd.DataFrame]:
     """
     Load historical data from CSV files or download from Yahoo Finance.
@@ -131,6 +128,7 @@ def download_yfinance_data(
 # Test StrategyStockAllocator
 # ============================================================================
 
+
 def test_strategy_stock_allocator(
     data: dict[str, pd.DataFrame],
     total_capital: float = 100000,
@@ -174,10 +172,10 @@ def test_strategy_stock_allocator(
         historical_data=filtered,
         total_capital=total_capital,
         strategy_allocations={
-            "momentum": 0.40,      # 40% to momentum
+            "momentum": 0.40,  # 40% to momentum
             "mean_reversion": 0.35,  # 35% to mean reversion
-            "pairs_trading": 0.25,   # 25% to pairs trading
-        }
+            "pairs_trading": 0.25,  # 25% to pairs trading
+        },
     )
 
     # Step 3: Display results
@@ -192,7 +190,7 @@ def test_strategy_stock_allocator(
         "momentum": [],
         "mean_reversion": [],
         "pairs_trading": [],
-        "unassigned": []
+        "unassigned": [],
     }
 
     for symbol, metrics in result.allocations.items():
@@ -241,6 +239,7 @@ def test_strategy_stock_allocator(
 # Simple Backtest with Allocated Stocks
 # ============================================================================
 
+
 def run_simple_backtest(
     data: dict[str, pd.DataFrame],
     allocations: dict,
@@ -266,7 +265,9 @@ def run_simple_backtest(
     # Get the most common data length
     min_length = min(len(df) for df in data.values())
     if min_length < test_days + 50:
-        logger.warning(f"Insufficient data for {test_days}-day backtest (need at least {test_days + 50} days)")
+        logger.warning(
+            f"Insufficient data for {test_days}-day backtest (need at least {test_days + 50} days)"
+        )
         return {"success": False, "error": "Insufficient data"}
 
     # Calculate returns for each allocated stock
@@ -302,10 +303,7 @@ def run_simple_backtest(
         return {"success": False, "error": "No stocks to backtest"}
 
     # Calculate portfolio return
-    portfolio_return = sum(
-        r["return_pct"] * r["weight"]
-        for r in stock_returns.values()
-    )
+    portfolio_return = sum(r["return_pct"] * r["weight"] for r in stock_returns.values())
 
     # Calculate total capital
     total_capital = sum(r["capital"] for r in stock_returns.values())
@@ -319,9 +317,7 @@ def run_simple_backtest(
 
     logger.info(f"\nIndividual Stock Returns:")
     for symbol, result in sorted(
-        stock_returns.items(),
-        key=lambda x: x[1]["return_pct"],
-        reverse=True
+        stock_returns.items(), key=lambda x: x[1]["return_pct"], reverse=True
     ):
         logger.info(
             f"  {symbol}: {result['return_pct']:+.2%} "
@@ -341,6 +337,7 @@ def run_simple_backtest(
 # ============================================================================
 # Document Unintegrated Services
 # ============================================================================
+
 
 def document_unintegrated_services() -> dict:
     """
@@ -369,7 +366,6 @@ def document_unintegrated_services() -> dict:
             "integration_status": "NOT INTEGRATED - Symbols are hardcoded in config",
             "benefit": "Would automatically select best stocks based on liquidity/volatility",
         },
-
         "asset_identification": {
             "service": "AssetIdentificationService",
             "file": "app/services/asset_identification.py",
@@ -383,7 +379,6 @@ def document_unintegrated_services() -> dict:
             "integration_status": "NOT INTEGRATED - No dynamic asset selection",
             "benefit": "Would provide ranked list of liquid assets for each class",
         },
-
         "strategy_stock_allocator": {
             "service": "StrategyStockAllocator",
             "file": "app/services/strategy_stock_allocator.py",
@@ -399,7 +394,6 @@ def document_unintegrated_services() -> dict:
             "integration_status": "NOT INTEGRATED - This test validates it separately",
             "benefit": "Would scientifically select best stocks for each strategy",
         },
-
         "profile_driven_trading": {
             "service": "ProfileDrivenTradingOrchestrator",
             "file": "app/services/profile_driven_trading/orchestrator.py",
@@ -417,7 +411,6 @@ def document_unintegrated_services() -> dict:
             "integration_status": "NOT INTEGRATED - Comprehensive test uses hardcoded approach",
             "benefit": "Would provide end-to-end profile-driven trading",
         },
-
         "market_universe_orchestrator": {
             "service": "MarketUniverseOrchestrator",
             "file": "app/services/market_universe_orchestrator.py",
@@ -430,7 +423,6 @@ def document_unintegrated_services() -> dict:
             "integration_status": "NOT INTEGRATED",
             "benefit": "Centralized universe management",
         },
-
         "tax_optimization": {
             "service": "TaxOptimizer (referenced in orchestrator)",
             "file": "Unknown (likely app/services/tax_optimizer.py or similar)",
@@ -443,7 +435,6 @@ def document_unintegrated_services() -> dict:
             "integration_status": "NOT INTEGRATED",
             "benefit": "Would improve after-tax returns",
         },
-
         "risk_gates": {
             "service": "RiskGates (referenced in orchestrator)",
             "file": "Unknown",
@@ -473,6 +464,7 @@ def document_unintegrated_services() -> dict:
 # Main Entry Point
 # ============================================================================
 
+
 def main() -> int:
     """Main entry point."""
     logger.info("=" * 80)
@@ -483,27 +475,50 @@ def main() -> int:
     # These are the CSV files we have available
     symbols = [
         # Tech
-        "AAPL", "MSFT", "GOOGL", "META", "NVDA",
+        "AAPL",
+        "MSFT",
+        "GOOGL",
+        "META",
+        "NVDA",
         # Finance
-        "JPM", "BAC", "WFC", "GS",
+        "JPM",
+        "BAC",
+        "WFC",
+        "GS",
         # Healthcare
-        "ABT", "JNJ", "PFE", "TMO", "UNH",
+        "ABT",
+        "JNJ",
+        "PFE",
+        "TMO",
+        "UNH",
         # Consumer/Discretionary
-        "AMZN", "TSLA", "HD", "NKE", "SBUX",
+        "AMZN",
+        "TSLA",
+        "HD",
+        "NKE",
+        "SBUX",
         # Industrial/Other
-        "CAT", "CRM", "CVX", "CSCO", "INTC", "ORCL",
+        "CAT",
+        "CRM",
+        "CVX",
+        "CSCO",
+        "INTC",
+        "ORCL",
         # Dividend stocks
-        "MAIN", "O", "NEE", "PLD", "WMT", "XOM",
+        "MAIN",
+        "O",
+        "NEE",
+        "PLD",
+        "WMT",
+        "XOM",
         # Communication
-        "CMCSA", "DIS", "NFLX",
+        "CMCSA",
+        "DIS",
+        "NFLX",
     ]
 
     # Step 1: Download data
-    data = download_yfinance_data(
-        symbols=symbols,
-        period="1y",  # 1 year of data
-        interval="1d"
-    )
+    data = download_yfinance_data(symbols=symbols, period="1y", interval="1d")  # 1 year of data
 
     if not data:
         logger.error("❌ No data downloaded, exiting")
@@ -534,7 +549,9 @@ def main() -> int:
     logger.info("TEST SUMMARY")
     logger.info("=" * 80)
     logger.info(f"✅ Data downloaded: {len(data)}/{len(symbols)} symbols")
-    logger.info(f"✅ Filtered stocks: {allocator_result['filtered_count']}/{allocator_result['total_count']}")
+    logger.info(
+        f"✅ Filtered stocks: {allocator_result['filtered_count']}/{allocator_result['total_count']}"
+    )
     logger.info(f"✅ Allocations made: {len(allocator_result['allocations'])} stocks")
     logger.info(f"✅ Pairs found: {len(allocator_result['pairs'])} pairs")
     logger.info(f"✅ Backtest return: {backtest_result['portfolio_return']:.2%}")

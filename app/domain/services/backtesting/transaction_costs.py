@@ -113,10 +113,10 @@ class LinearCostModel(TransactionCostModel):
 
     def __init__(
         self,
-        commission_per_share: Decimal = Decimal("0.005"),
-        min_commission: Decimal = Decimal("1.0"),
-        exchange_fee_rate: Decimal = Decimal("0.00023"),  # $0.00023 per share
-        sec_fee_rate: Decimal = Decimal("0.0000082"),  # SEC fee for sells only
+        commission_per_share: Optional[Decimal] = None,
+        min_commission: Optional[Decimal] = None,
+        exchange_fee_rate: Optional[Decimal] = None,  # $0.00023 per share
+        sec_fee_rate: Optional[Decimal] = None,  # SEC fee for sells only
     ):
         """
         Initialize linear cost model.
@@ -127,6 +127,14 @@ class LinearCostModel(TransactionCostModel):
             exchange_fee_rate: Exchange fee rate per share
             sec_fee_rate: SEC fee rate (for sell orders)
         """
+        if commission_per_share is None:
+            commission_per_share = Decimal("0.005")
+        if min_commission is None:
+            min_commission = Decimal("1.0")
+        if exchange_fee_rate is None:
+            exchange_fee_rate = Decimal("0.00023")
+        if sec_fee_rate is None:
+            sec_fee_rate = Decimal("0.0000082")
         self._commission_per_share = commission_per_share
         self._min_commission = min_commission
         self._exchange_fee_rate = exchange_fee_rate
@@ -199,7 +207,7 @@ class PiecewiseLinearCostModel(TransactionCostModel):
     def __init__(
         self,
         tiers: List[Tuple[Decimal, Decimal]],
-        min_commission: Decimal = Decimal("1.0"),
+        min_commission: Optional[Decimal] = None,
     ):
         """
         Initialize piecewise linear cost model.
@@ -211,6 +219,8 @@ class PiecewiseLinearCostModel(TransactionCostModel):
                              (Decimal("999999999"), Decimal("0.001"))]
             min_commission: Minimum commission per trade
         """
+        if min_commission is None:
+            min_commission = Decimal("1.0")
         self._tiers = sorted(tiers, key=lambda x: x[0])
         self._min_commission = min_commission
 
@@ -445,6 +455,8 @@ class SquareRootImpactModel(MarketImpactModel):
         Returns:
             Market impact cost (per share)
         """
+        if price is None:
+            price = Decimal("0")
         # Daily volatility
         daily_vol = volatility / np.sqrt(252)
 
@@ -468,7 +480,7 @@ class ImpactParameters:
     volatility: float  # Annualized volatility
     market_cap: Optional[Decimal] = None  # Market capitalization
     spread: Optional[Decimal] = None  # Bid-ask spread
-    price: Decimal = Decimal("0")  # Current price
+    price: Optional[Decimal] = None  # Current price
 
 
 @dataclass

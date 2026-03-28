@@ -42,6 +42,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import aiosqlite
 import psutil
+import contextlib
 
 logger = logging.getLogger(__name__)
 
@@ -466,7 +467,7 @@ class GoldenSignalsMonitor:
 
                 self.logger.info("GoldenSignalsMonitor initialized successfully")
 
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 self.logger.error(f"Error initializing: {e}")
                 raise
 
@@ -508,7 +509,7 @@ class GoldenSignalsMonitor:
 
             self.logger.debug("Database schema initialized")
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Database initialization failed: {e}")
             raise
 
@@ -539,10 +540,8 @@ class GoldenSignalsMonitor:
         self._is_running = False
         if self._collection_task:
             self._collection_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._collection_task
-            except asyncio.CancelledError:
-                pass
         self.logger.info("Stopped metrics collection")
 
     async def _collection_loop(self) -> None:
@@ -908,7 +907,7 @@ class GoldenSignalsMonitor:
                 )
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error persisting metrics: {e}")
 
     def record_request(self, success: bool = True, error_type: Optional[str] = None) -> None:

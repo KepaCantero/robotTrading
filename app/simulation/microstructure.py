@@ -599,7 +599,7 @@ class LiquidityProvider:
     def __init__(
         self,
         symbol: str,
-        max_position: Decimal = Decimal("10000"),
+        max_position: Optional[Decimal] = None,
         risk_tolerance: float = 0.02,
         target_spread_bps: float = 10.0,
         min_profit_bps: float = 2.0,
@@ -616,6 +616,8 @@ class LiquidityProvider:
             min_profit_bps: Minimum profit per trade
             adverse_selection_threshold: Toxicity threshold for pausing
         """
+        if max_position is None:
+            max_position = Decimal("10000")
         self.symbol = symbol
         self.max_position = max_position
         self.risk_tolerance = Decimal(str(risk_tolerance))

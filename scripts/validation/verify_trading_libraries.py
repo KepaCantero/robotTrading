@@ -33,7 +33,7 @@ libraries_to_check = {
         'import_name': 'quantstats',
         'version_attr': '__version__',
         'test_function': lambda: hasattr(__import__('quantstats'), 'reports'),
-        'required': True
+        'required': True,
     },
     'empyrical-reloaded': {
         'import_name': 'empyrical',
@@ -41,7 +41,7 @@ libraries_to_check = {
         'test_function': lambda: __import__('empyrical').sharpe_ratio(
             pd.Series([0.01, -0.02, 0.03, -0.01, 0.02])
         ),
-        'required': True
+        'required': True,
     },
     'pyfolio-reloaded': {
         'import_name': 'pyfolio',
@@ -49,31 +49,32 @@ libraries_to_check = {
         'test_function': lambda: __import__('pyfolio').timeseries.perf_stats(
             pd.Series([0.01, -0.02, 0.03, -0.01, 0.02])
         ),
-        'required': True
+        'required': True,
     },
     'FinRL': {
         'import_name': 'finrl',
         'version_attr': '__version__',
         'test_function': lambda: hasattr(__import__('finrl'), 'env'),
-        'required': False  # Fase 2
+        'required': False,  # Fase 2
     },
     'PyPortfolioOpt': {
         'import_name': 'pypfopt',
         'version_attr': '__version__',
         'test_function': lambda: hasattr(__import__('pypfopt'), 'EfficientFrontier'),
-        'required': False  # Fase 2
+        'required': False,  # Fase 2
     },
     'alphalens-reloaded': {
         'import_name': 'alphalens',
         'version_attr': '__version__',
         'test_function': lambda: hasattr(__import__('alphalens'), 'performance'),
-        'required': False  # Fase 2
-    }
+        'required': False,  # Fase 2
+    },
 }
 
 # Importar pandas y numpy que son dependencias comunes
 try:
     import pandas as pd
+
     print("✅ Dependencias base (pandas) disponibles")
 except ImportError as e:
     print(f"❌ Error importando dependencias base: {e}")
@@ -89,19 +90,20 @@ for lib_name, lib_info in libraries_to_check.items():
         'version': None,
         'test_passed': False,
         'error': None,
-        'required': lib_info.get('required', False)
+        'required': lib_info.get('required', False),
     }
-    
+
     print(f"📦 Verificando {lib_name}...")
-    
+
     # 1. Verificar instalación con pip
     try:
         import subprocess
+
         result = subprocess.run(
             [sys.executable, '-m', 'pip', 'show', lib_info['import_name']],
             capture_output=True,
             text=True,
-            timeout=10
+            timeout=10,
         )
         if result.returncode == 0:
             status['installed'] = True
@@ -113,12 +115,12 @@ for lib_name, lib_info in libraries_to_check.items():
             status['error'] = f"No instalado según pip"
     except (ValueError, TypeError, KeyError, AttributeError) as e:
         status['error'] = f"Error verificando instalación: {e}"
-    
+
     # 2. Intentar importar
     try:
         module = __import__(lib_info['import_name'])
         status['importable'] = True
-        
+
         # 3. Obtener versión si está disponible
         if status['version'] is None:
             try:
@@ -126,25 +128,27 @@ for lib_name, lib_info in libraries_to_check.items():
                     status['version'] = getattr(module, lib_info['version_attr'])
             except:
                 pass
-        
+
         # 4. Ejecutar función de prueba
         try:
             test_result = lib_info['test_function']()
             status['test_passed'] = True
-            print(f"   ✅ Test pasado: {test_result if not isinstance(test_result, pd.Series) else 'OK'}")
+            print(
+                f"   ✅ Test pasado: {test_result if not isinstance(test_result, pd.Series) else 'OK'}"
+            )
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             status['error'] = f"Error en test: {type(e).__name__}: {str(e)[:100]}"
             print(f"   ⚠️  Test falló: {e}")
-        
+
     except ImportError as e:
         status['error'] = f"No se puede importar: {e}"
         print(f"   ❌ No se puede importar: {e}")
     except (ValueError, TypeError, KeyError, AttributeError) as e:
         status['error'] = f"Error inesperado: {type(e).__name__}: {str(e)[:100]}"
         print(f"   ❌ Error: {e}")
-    
+
     results[lib_name] = status
-    
+
     # Mostrar resumen por librería
     if status['importable'] and status['test_passed']:
         print(f"   ✅ {lib_name} OK (versión: {status['version'] or 'N/A'})")
@@ -212,10 +216,14 @@ print("RECOMENDACIONES")
 print("=" * 80)
 
 # Mostrar comandos de instalación para librerías faltantes
-missing_required = [lib for lib, status in results.items() 
-                   if status['required'] and not (status['importable'] and status['test_passed'])]
-missing_optional = [lib for lib, status in results.items() 
-                    if not status['required'] and not status['importable']]
+missing_required = [
+    lib
+    for lib, status in results.items()
+    if status['required'] and not (status['importable'] and status['test_passed'])
+]
+missing_optional = [
+    lib for lib, status in results.items() if not status['required'] and not status['importable']
+]
 
 if missing_required:
     print("\n📦 Instalar librerías requeridas faltantes:")
@@ -223,7 +231,7 @@ if missing_required:
         lib_map = {
             'quantstats': 'quantstats',
             'empyrical-reloaded': 'empyrical-reloaded',
-            'pyfolio-reloaded': 'pyfolio-reloaded'
+            'pyfolio-reloaded': 'pyfolio-reloaded',
         }
         print(f"   pip install {lib_map.get(lib, lib)}")
 
@@ -233,11 +241,10 @@ if missing_optional:
         lib_map = {
             'FinRL': 'finrl',
             'PyPortfolioOpt': 'PyPortfolioOpt',
-            'alphalens-reloaded': 'alphalens-reloaded'
+            'alphalens-reloaded': 'alphalens-reloaded',
         }
         print(f"   pip install {lib_map.get(lib, lib)}")
 
 print()
 
 sys.exit(exit_code)
-

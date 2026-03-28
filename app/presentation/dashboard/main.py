@@ -20,29 +20,29 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-import pandas as pd  # noqa: E402
-import plotly.express as px  # noqa: E402
-import plotly.graph_objects as go  # noqa: E402
-import streamlit as st  # noqa: E402
-from streamlit import session_state  # noqa: E402
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import streamlit as st
+from streamlit import session_state
 
-from app.backtesting.data_loader import DataLoader  # noqa: E402
-from app.backtesting.engine import SimpleBacktester  # noqa: E402
-from app.backtesting.engines.multi_strategy_engine import MultiStrategyBacktester  # noqa: E402
-from app.backtesting.models import BacktestConfig  # noqa: E402
-from app.domain.strategies.mean_reversion import MeanReversionStrategy  # noqa: E402
-from app.domain.strategies.momentum import MomentumStrategy  # noqa: E402
-from app.domain.strategies.pairs_trading import PairsTrading  # noqa: E402
+from app.backtesting.data_loader import DataLoader
+from app.backtesting.engine import SimpleBacktester
+from app.backtesting.engines.multi_strategy_engine import MultiStrategyBacktester
+from app.backtesting.models import BacktestConfig
+from app.domain.strategies.mean_reversion import MeanReversionStrategy
+from app.domain.strategies.momentum import MomentumStrategy
+from app.domain.strategies.pairs_trading import PairsTrading
 
 # IMPORTANT: Import logging_config FIRST to ensure all warnings/errors go to files
-from app.presentation.dashboard.comprehensive_data_loader import (  # noqa: E402
+from app.presentation.dashboard.comprehensive_data_loader import (
     ComprehensiveBacktestLoader,
 )
-from app.presentation.dashboard.multi_strategy_utils import (  # noqa: E402
+from app.presentation.dashboard.multi_strategy_utils import (
     generate_multi_strategy_summary_text,
     save_multi_strategy_results,
 )
-from app.presentation.dashboard.report_generator import (  # noqa: E402
+from app.presentation.dashboard.report_generator import (
     generate_backend_test_summary,
     save_backtest_result,
 )
@@ -465,7 +465,7 @@ if execute_button:
                     st.stop()
 
                 st.success(
-                    f"✅ Portfolio built: {len(set(q.symbol for q in portfolio_quotes))} symbols, "
+                    f"✅ Portfolio built: {len({q.symbol for q in portfolio_quotes})} symbols, "
                     f"{len(portfolio_quotes)} quotes"
                 )
 
@@ -731,17 +731,11 @@ if execute_button:
                             mime="text/markdown",
                         )
 
-            except (
-                FileNotFoundError,
-                PermissionError,
-                IOError,
-                OSError,
-                IsADirectoryError,
-            ) as summary_error:
+            except OSError as summary_error:
                 logger.warning(f"Failed to generate backend test summary: {summary_error}")
                 st.warning("⚠️ Could not generate comprehensive summary report")
 
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             st.error(f"❌ Error: {e}")
             logger.exception("Backtest failed")
 
@@ -1287,7 +1281,7 @@ if session_state.backtest_results:
                             y=values,
                             mode='lines',
                             name=key,
-                            line=dict(color=colors[idx]),
+                            line={"color": colors[idx]},
                         )
                     )
 
@@ -1296,7 +1290,7 @@ if session_state.backtest_results:
                 xaxis_title="Date",
                 yaxis_title="Portfolio Value ($)",
                 height=400,
-                legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01),
+                legend={"yanchor": "top", "y": 0.99, "xanchor": "left", "x": 0.01},
             )
             st.plotly_chart(fig, use_container_width=True)
     else:

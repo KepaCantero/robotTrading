@@ -139,7 +139,7 @@ class ResultAggregator:
         # Add summary counts
         aggregated['_summary'] = {
             'total_backtests': len(results),
-            'backtest_types': list(set(r.get('test_type', 'unknown') for r in results)),
+            'backtest_types': list({r.get('test_type', 'unknown') for r in results}),
         }
 
         return aggregated

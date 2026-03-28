@@ -1,0 +1,130 @@
+{
+  "timestamp": "2026-03-28T08:30:00Z",
+  "layer_boundaries": {
+    "domain_pure": false,
+    "violations": {
+      "ARCH-DEP-001": {
+        "rule": "Domain layer NO depende de otras capas",
+        "count": 43,
+        "severity": "P0",
+        "files": [
+          "app/domain/strategies/automated_backtest.py - imports app.services",
+          "app/domain/strategies/optimization/hyperparameter_optimizer.py - imports app.infrastructure",
+          "app/domain/strategies/momentum.py - imports app.services",
+          "app/domain/optimization/multi_strategy_optimizer_v2.py - imports app.services",
+          "app/domain/optimization/multi_strategy_optimizer.py - imports app.services",
+          "app/domain/repositories/unit_of_work.py - imports app.infrastructure",
+          "app/domain/services/signals/scoring.py - imports app.services",
+          "app/domain/services/signals/__init__.py - imports app.services",
+          "app/domain/services/compliance/compliance_engine.py - imports app.services multiple times",
+          "app/domain/services/compliance/service_registry.py - imports app.services multiple times"
+        ]
+      },
+      "ARCH-DEP-002": {
+        "rule": "Domain layer NO tiene dependencias de framework",
+        "count": 0,
+        "severity": "P0",
+        "files": [],
+        "note": "Previously 3 violations in fifo_schema.py - file deleted (D app/domain/tax/database/fifo_schema.py)"
+      },
+      "ARCH-DEP-003": {
+        "rule": "Services depende SOLO de Domain",
+        "count": 0,
+        "severity": "P0",
+        "files": []
+      },
+      "ARCH-DEP-004": {
+        "rule": "Infrastructure implementa interfaces de Domain",
+        "count": 3,
+        "severity": "INFO",
+        "note": "Infrastructure correctly imports from domain/protocols"
+      }
+    }
+  },
+  "file_naming": {
+    "snake_case_files": {
+      "passed": "ALL",
+      "failed": 0,
+      "note": "All .py files use snake_case naming"
+    },
+    "pascal_case_classes": {
+      "passed": "ALL",
+      "failed": 0,
+      "note": "No violations detected - all classes use PascalCase"
+    },
+    "snake_case_functions": {
+      "passed": "ALL",
+      "failed": 0,
+      "note": "No violations detected - all functions use snake_case"
+    }
+  },
+  "size_limits": {
+    "god_classes": {
+      "threshold": 300,
+      "count": 645,
+      "severity": "P1",
+      "note": "645 files exceed 300 lines - architectural debt requiring systematic refactoring",
+      "top_violations": [
+        {"file": "app/backtesting/comprehensive_backtest_runner.py", "lines": 4531},
+        {"file": "app/domain/services/compliance/compliance_engine.py", "lines": 3859},
+        {"file": "app/presentation/dashboard/advanced_dashboard.py", "lines": 2610},
+        {"file": "app/application/use_cases/select_strategy.py", "lines": 2289},
+        {"file": "app/domain/strategies/learning/drift_detector.py", "lines": 2160},
+        {"file": "app/domain/strategies/learning/feature_importance.py", "lines": 2091}
+      ]
+    },
+    "god_functions": {
+      "threshold": 50,
+      "count": "multiple",
+      "note": "Many functions exceed 50 lines - check radon output for details"
+    },
+    "high_complexity": {
+      "threshold": 10,
+      "count": 327,
+      "severity": "P1",
+      "note": "327 files have functions with CC >= 10 per production audit"
+    }
+  },
+  "module_structure": {
+    "missing_init": {
+      "count": 1,
+      "files": [
+        "app/core/models/__/__init__.py (artifact - directory has init__.py instead, likely corrupted)"
+      ],
+      "note": "16 of 17 previously missing __init__.py files have been created"
+    },
+    "import_cycles": {
+      "detected": false,
+      "note": "No circular import errors at module load time"
+    }
+  },
+  "directory_structure": {
+    "missing_layers": [],
+    "extra_directories": [],
+    "note": "All required layers exist: core, domain, services, infrastructure, api"
+  },
+  "status": "FAIL",
+  "violations_count": {
+    "P0_critical": 43,
+    "P1_important": 645,
+    "P2_moderate": 1
+  },
+  "summary": {
+    "layer_boundaries": "FAIL - 43 violations (all from domain importing services/infrastructure)",
+    "file_naming": "PASS - No violations detected",
+    "size_limits": "FAIL - 645 files exceed 300 lines, 327 high complexity functions",
+    "module_structure": "PASS - Only 1 artifact directory missing init, no circular imports",
+    "directory_structure": "PASS - All required layers exist"
+  },
+  "improvements_since_last_report": [
+    "ARCH-DEP-002: Fixed 3 framework violations (fifo_schema.py deleted)",
+    "ARCH-MOD-001: Created 16 missing __init__.py files (was 17, now 1 artifact)"
+  ],
+  "recommendations": [
+    "CRITICAL: Fix 43 domain layer purity violations - move services imports out of domain",
+    "HIGH: Refactor top god classes (compliance_engine 3859 lines, select_strategy 2289 lines, drift_detector 2160 lines)",
+    "HIGH: Plan systematic refactoring of 645 files exceeding 300 lines",
+    "MEDIUM: Clean up app/core/models/__ artifact directory",
+    "MEDIUM: Fix 327 files with high complexity functions"
+  ]
+}

@@ -97,8 +97,12 @@ def main() -> None:
     print(f"Max Drawdown: {config3.risk_config.max_drawdown:.1%}")
     print(f"Max Position Size: {config3.risk_config.max_position_size:.1%}")
     print(f"Leverage Allowed: {config3.risk_config.leverage_allowed}")
-    print(f"Tax Long-term Advantage: {config3.tax_config.has_long_term_advantage if config3.tax_config else False}")
-    print(f"Tax Advantage: {config3.tax_config.long_term_advantage:.1%}" if config3.tax_config else "")
+    print(
+        f"Tax Long-term Advantage: {config3.tax_config.has_long_term_advantage if config3.tax_config else False}"
+    )
+    print(
+        f"Tax Advantage: {config3.tax_config.long_term_advantage:.1%}" if config3.tax_config else ""
+    )
     print(f"Requires Long-term Focus: {config3.requires_long_term_focus}")
     print()
 
@@ -120,7 +124,11 @@ def main() -> None:
     print(f"Description: {config4.strategy_type.description}")
     print(f"Max Drawdown: {config4.risk_config.max_drawdown:.1%}")
     print(f"Max Portfolio Volatility: {config4.risk_config.max_portfolio_volatility:.1%}")
-    print(f"Volatility Target: {config4.risk_config.volatility_target:.1%}" if config4.risk_config.volatility_target else "Volatility Target: None")
+    print(
+        f"Volatility Target: {config4.risk_config.volatility_target:.1%}"
+        if config4.risk_config.volatility_target
+        else "Volatility Target: None"
+    )
     print(f"Rebalance Frequency: {config4.rebalance_frequency_days} days")
     print(f"Is Conservative: {config4.risk_config.is_conservative}")
     print()

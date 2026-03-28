@@ -198,7 +198,7 @@ class WashSaleDetector:
         self,
         symbol1: str,
         symbol2: str,
-        price_correlation: Decimal = Decimal("0.85"),  # threshold
+        price_correlation: Optional[Decimal] = None,  # threshold
     ) -> bool:
         """
         Check if two symbols are substantially identical for tax purposes.
@@ -217,6 +217,8 @@ class WashSaleDetector:
         Returns:
             True if substantially identical, False otherwise
         """
+        if price_correlation is None:
+            price_correlation = Decimal("0.85")
         # Exact match
         if symbol1 == symbol2:
             return True
@@ -234,7 +236,7 @@ class WashSaleDetector:
         return (symbol1, symbol2) in identical_pairs or (symbol2, symbol1) in identical_pairs
 
     def get_cost_basis_per_share(
-        self, symbol: str, quantity_owned: Decimal = Decimal("1")
+        self, symbol: str, quantity_owned: Optional[Decimal] = None
     ) -> Decimal:
         """
         Get adjusted cost basis per share.
@@ -248,6 +250,8 @@ class WashSaleDetector:
         Returns:
             Cost per share
         """
+        if quantity_owned is None:
+            quantity_owned = Decimal("1")
         if symbol not in self.cost_basis_adjustments:
             return Decimal("0")
 

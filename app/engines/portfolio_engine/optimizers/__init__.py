@@ -11,7 +11,7 @@ Implementa diferentes métodos de optimización de portfolio:
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, Optional, Type, Union
 
 import numpy as np
 
@@ -24,8 +24,8 @@ try:
     HANDCRAFTED_AVAILABLE = True
 except ImportError:
     HANDCRAFTED_AVAILABLE = False
-    HandcraftedWeightsOptimizer = None  # type: ignore
-    create_handcrafted_weights = None  # type: ignore
+    HandcraftedWeightsOptimizer: Optional[Type[Any]] = None
+    create_handcrafted_weights: Optional[Callable[..., Dict[str, float]]] = None
 
 # Import HRP optimizer from separate file
 try:
@@ -40,10 +40,10 @@ try:
     logger.info("Hierarchical Risk Parity (HRP) optimizer is available")
 except ImportError:
     HRP_AVAILABLE = False
-    HierarchicalRiskParity = None  # type: ignore
-    HRPOptimizer = None  # type: ignore
-    compute_hrp_weights = None  # type: ignore
-    plot_hrp_dendrogram = None  # type: ignore
+    HierarchicalRiskParity: Optional[Type[Any]] = None
+    HRPOptimizer: Optional[Type[Any]] = None
+    compute_hrp_weights: Optional[Callable[..., np.ndarray]] = None
+    plot_hrp_dendrogram: Optional[Callable[..., Any]] = None
     logger.warning(
         "Hierarchical Risk Parity (HRP) optimizer could not be imported. "
         "Check scipy installation."
@@ -56,7 +56,7 @@ try:
     CVXPY_AVAILABLE = True
     logger.info("cvxpy is available for convex optimization")
 except ImportError:
-    cp = None  # type: ignore
+    cp: Optional[Any] = None
     CVXPY_AVAILABLE = False
     logger.warning(
         "cvxpy is not installed. Portfolio optimization will use scipy-based fallbacks. "
@@ -70,7 +70,7 @@ try:
     PYPFOPT_AVAILABLE = True
     logger.info("PyPortfolioOpt is available for efficient frontier optimization")
 except ImportError:
-    EfficientFrontier = None  # type: ignore
+    EfficientFrontier: Optional[Type[Any]] = None
     PYPFOPT_AVAILABLE = False
     logger.warning(
         "PyPortfolioOpt is not installed. Portfolio optimization will use basic methods. "
@@ -84,7 +84,7 @@ try:
     SCIPY_AVAILABLE = True
     logger.info("scipy.optimize is available")
 except ImportError:
-    minimize = None  # type: ignore
+    minimize: Optional[Callable[..., Any]] = None
     SCIPY_AVAILABLE = False
     logger.error(
         "scipy is not installed and is REQUIRED for optimization. "
@@ -818,7 +818,7 @@ class BlackLittermanOptimizer(BaseOptimizer):
 
         return P, Q, Omega
 
-    def _parse_asset_index(self, key: Any, n: int) -> Optional[int]:
+    def _parse_asset_index(self, key: Union[str, int], n: int) -> Optional[int]:
         """Parse asset key to index."""
         try:
             if isinstance(key, int):

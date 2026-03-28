@@ -1,5 +1,3 @@
-# pylint: disable=import-error,unsupported-binary-operation
-# mypy: ignore-errors
 """
 Order Flow Imbalance (OFI) Signal Generator.
 
@@ -524,7 +522,7 @@ class OFISignalGenerator:
             "sell": sell_count,
             "hold": hold_count,
             "avg_confidence": avg_conf,
-            "symbols": list(set(s.symbol for s in signals)),
+            "symbols": list({s.symbol for s in signals}),
         }
 
     def update_config(self, **kwargs) -> None:

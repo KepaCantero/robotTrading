@@ -247,7 +247,7 @@ class DividendPortfolioConstructor:
 
         # Iteratively enforce constraints until convergence or max iterations
         max_iterations = 10
-        for iteration in range(max_iterations):
+        for _iteration in range(max_iterations):
             old_weights = weights.copy()
 
             # Aplicar límites sectoriales iterativamente

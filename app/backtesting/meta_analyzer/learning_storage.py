@@ -11,7 +11,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 import aiofiles
 
@@ -53,9 +53,9 @@ class LearningEngineStorage:
     def save_weights(
         self,
         engine_name: str,
-        weights: Any,
+        weights: object,
         test_id: str,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[Dict[str, Union[int, float, str, bool, list]]] = None,
         format: Optional[str] = None,
     ) -> str:
         """
@@ -148,9 +148,9 @@ class LearningEngineStorage:
     async def save_weights_async(
         self,
         engine_name: str,
-        weights: Any,
+        weights: object,
         test_id: str,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[Dict[str, Union[int, float, str, bool, list]]] = None,
         format: Optional[str] = None,
     ) -> str:
         """
@@ -240,7 +240,7 @@ class LearningEngineStorage:
 
     def load_weights(
         self, engine_name: str, test_id: Optional[str] = None, latest: bool = True
-    ) -> Dict[str, Any]:
+    ) -> Dict[str, Union[int, float, str, bool, list]]:
         """
         Cargar pesos de un learning engine usando serialización segura.
 
@@ -293,7 +293,7 @@ class LearningEngineStorage:
         # Cargar según extensión
         try:
             if file_path.suffix in ['.pt', '.pth']:
-                data = torch.load(file_path, map_location='cpu')  # nosec B614 - torch is safe
+                data = torch.load(file_path, map_location='cpu', weights_only=True)
             elif file_path.suffix == '.joblib':
                 data = joblib.load(file_path)
             elif file_path.suffix == '.msgpack':
@@ -315,7 +315,7 @@ class LearningEngineStorage:
 
     def list_available_weights(
         self, engine_name: str, test_id_filter: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+    ) -> List[Dict[str, Union[int, float, str, bool, list]]]:
         """
         Listar pesos disponibles para un engine (solo formatos seguros).
 
@@ -339,7 +339,7 @@ class LearningEngineStorage:
             + list(engine_dir.glob("*.msgpack"))
         )
 
-        weights_info: List[Dict[str, Any]] = []
+        weights_info: List[Dict[str, Union[int, float, str, bool, list]]] = []
         for file_path in files:
             # Extraer test_id del nombre
             filename = file_path.stem
@@ -403,27 +403,27 @@ class LearningEngineStorage:
             try:
                 Path(info['file_path']).unlink()
                 deleted += 1
-            except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+            except OSError as e:
                 logger.error(f"Error eliminando {info['file_path']}: {e}")
 
         logger.info(f"✅ Eliminados {deleted} archivos de pesos")
 
         return deleted
 
-    def _detect_format(self, weights: Any) -> str:
+    def _detect_format(self, weights: object) -> str:
         """Detectar formato óptimo y seguro según tipo de pesos (REQUIRED)."""
         if isinstance(weights, (torch.nn.Module, torch.Tensor)):
             return 'pt'
         else:
             return 'joblib'  # Seguro para sklearn y numpy (REQUIRED - joblib must be available)
 
-    def _save_msgpack(self, path: Path, data: Dict[str, Any]) -> None:
+    def _save_msgpack(self, path: Path, data: Dict[str, Union[int, float, str, bool, list]]) -> None:
         """Guardar datos usando msgpack."""
         packed = msgpack.packb(data, default=str)
         with open(path, 'wb') as f:
             f.write(packed)
 
-    def _load_msgpack(self, path: Path) -> Dict[str, Any]:
+    def _load_msgpack(self, path: Path) -> Dict[str, Union[int, float, str, bool, list]]:
         """Cargar datos usando msgpack."""
         with open(path, 'rb') as f:
             return msgpack.unpackb(f.read(), raw=False)
@@ -458,7 +458,7 @@ class LearningEngineStorage:
                 migrated_path = self._migrate_pkl_weights(pkl_file)
                 if migrated_path:
                     migrated_files.append(migrated_path)
-            except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+            except OSError as e:
                 logger.error(f"Error migrating {pkl_file}: {e}")
 
         return migrated_files
@@ -475,15 +475,60 @@ class LearningEngineStorage:
         """
         try:
             # SECURITY: One-time migration from pickle to secure format
-            # This is the only place where we still use pickle.load, and it's
-            # only for migrating existing trusted files to the secure format
-            import pickle  # nosec B403 # Only for migration of trusted files
+            # Using RestrictedUnpickler to prevent arbitrary code execution
+            import pickle
+
+            class _MigrationUnpickler(pickle.Unpickler):
+                """Restrict pickle deserialization to known safe classes for migration."""
+
+                ALLOWED_CLASSES = {
+                    ('builtins', 'dict'): dict,
+                    ('builtins', 'list'): list,
+                    ('builtins', 'tuple'): tuple,
+                    ('builtins', 'set'): set,
+                    ('builtins', 'frozenset'): frozenset,
+                    ('builtins', 'str'): str,
+                    ('builtins', 'int'): int,
+                    ('builtins', 'float'): float,
+                    ('builtins', 'bool'): bool,
+                    ('builtins', 'bytes'): bytes,
+                    ('builtins', 'bytearray'): bytearray,
+                    ('builtins', 'NoneType'): type(None),
+                    ('collections', 'OrderedDict'): None,
+                    ('collections', 'defaultdict'): None,
+                    ('numpy.core.multiarray', '_reconstruct'): None,
+                    ('numpy', 'dtype'): None,
+                    ('numpy', 'ndarray'): None,
+                }
+
+                def find_class(self, module: str, name: str) -> type:
+                    key = (module, name)
+                    if key in self.ALLOWED_CLASSES:
+                        cls = self.ALLOWED_CLASSES[key]
+                        if cls is not None:
+                            return cls
+                        # For numpy types, import dynamically
+                        try:
+                            mod = __import__(module, fromlist=[name])
+                            return getattr(mod, name)
+                        except (ImportError, AttributeError):
+                            pass
+                    raise pickle.UnpicklingError(
+                        f"Forbidden class during migration: {module}.{name}. "
+                        f"Only basic Python and numpy types are allowed."
+                    )
 
             with open(pkl_path, 'rb') as f:
-                data = pickle.load(f)  # nosec B301 # Trusted migration only
+                data = _MigrationUnpickler(f).load()
+
+            # Validate that loaded data is a dict with expected keys
+            if not isinstance(data, dict):
+                raise ValueError(
+                    f"Migration failed: expected dict, got {type(data).__name__}"
+                )
 
             # Determinar nuevo formato
-            new_format = self._detect_format(data.get('weights', None))
+            new_format = self._detect_format(data.get("weights"))
 
             # Crear nuevo path
             new_path = pkl_path.with_suffix(f'.{new_format}')
@@ -504,15 +549,15 @@ class LearningEngineStorage:
             logger.info(f"Successfully migrated {pkl_path} to {new_path}")
             return new_path
 
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             logger.error(f"Error migrating .pkl file {pkl_path}: {e}")
             return None
 
-    def _save_metadata(self, metadata_path: Path, metadata: Dict[str, Any]) -> None:
+    def _save_metadata(self, metadata_path: Path, metadata: Dict[str, Union[int, float, str, bool, list]]) -> None:
         """Guardar metadatos en JSON separado."""
 
         try:
             with open(metadata_path, 'w') as f:
                 json.dump(metadata, f, indent=2, default=str)
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             logger.warning(f"No se pudieron guardar metadatos: {e}")

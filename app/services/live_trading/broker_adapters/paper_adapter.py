@@ -30,13 +30,15 @@ logger = logging.getLogger(__name__)
 class PaperAdapter:
     """Adapter that simulates broker for paper trading."""
 
-    def __init__(self, initial_cash: Decimal = Decimal("100000"), auto_fill_orders: bool = False):
+    def __init__(self, initial_cash: Optional[Decimal] = None, auto_fill_orders: bool = False):
         """Initialize paper trading adapter.
 
         Args:
             initial_cash: Starting cash balance (default $100,000)
             auto_fill_orders: Whether to automatically fill market orders (default False for testing)
         """
+        if initial_cash is None:
+            initial_cash = Decimal("100000")
         self.account: Optional[BrokerAccount] = None
         self.positions: Dict[str, BrokerPosition] = {}
         self.orders: Dict[str, BrokerOrder] = {}

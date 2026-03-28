@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Tuple  # noqa: F401
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -87,6 +87,8 @@ class CostBreakdown:
     @property
     def cost_percentage(self) -> Decimal:
         """Total cost as percentage of notional value."""
+        if implementation_shortfall_bps is None:
+            implementation_shortfall_bps = Decimal("0")
         notional = self.quantity * self.benchmark_price
         if notional == 0:
             return Decimal("0")
@@ -121,7 +123,7 @@ class ExecutionQualityMetrics:
     price_improvement_bps: Decimal = Decimal("0")
     timing_cost_bps: Decimal = Decimal("0")
     market_impact_bps: Decimal = Decimal("0")
-    implementation_shortfall_bps: Decimal = Decimal("0")
+    implementation_shortfall_bps: Optional[Decimal] = None
     execution_score: float = 0.0
 
     @property
@@ -473,8 +475,8 @@ class TradingCostAnalyzer:
         benchmark_price: Decimal,
         arrival_price: Optional[Decimal] = None,
         decision_price: Optional[Decimal] = None,
-        commission: Decimal = Decimal("0"),
-        fees: Decimal = Decimal("0"),
+        commission: Optional[Decimal] = None,
+        fees: Optional[Decimal] = None,
         adv: Optional[float] = None,
         volatility: Optional[float] = None,
         bid_at_arrival: Optional[Decimal] = None,
@@ -507,6 +509,10 @@ class TradingCostAnalyzer:
             Harris, L. (2003). Trading and Exchanges, Chapter 9,
             "The Cost of Trading"
         """
+        if commission is None:
+            commission = Decimal("0")
+        if fees is None:
+            fees = Decimal("0")
         components = {}
         is_buy = side.upper() == "BUY"
 
@@ -597,7 +603,7 @@ class TradingCostAnalyzer:
     def evaluate_execution_quality(
         self,
         cost_breakdown: CostBreakdown,
-        fill_rate: Decimal = Decimal("100"),
+        fill_rate: Optional[Decimal] = None,
         peer_fill_rate: Optional[Decimal] = None,
         market_conditions: Optional[Dict[str, float]] = None,
     ) -> ExecutionQualityMetrics:
@@ -617,6 +623,8 @@ class TradingCostAnalyzer:
             Harris, L. (2003). Trading and Exchanges, Chapter 9,
             "Execution Quality"
         """
+        if fill_rate is None:
+            fill_rate = Decimal("100")
         # Calculate effective spread in bps
         effective_spread_bps = abs(cost_breakdown.effective_spread)
 

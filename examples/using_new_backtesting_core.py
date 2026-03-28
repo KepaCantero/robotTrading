@@ -8,6 +8,7 @@ with the new core modules (config_loader, executor, orchestrator, facade).
 import asyncio
 from pathlib import Path
 
+
 # Example 1: Using the Facade (simplest approach)
 def example_using_facade():
     """Example using BacktestRunnerFacade for simple backtesting."""
@@ -30,7 +31,7 @@ def example_using_facade():
                 'ema_filter': {'enabled': True},
                 'rsi_filter': {'enabled': True},
             }
-        }
+        },
     }
     strategy = ModularMomentumStrategy(strategy_config)
 
@@ -86,9 +87,7 @@ def example_using_executor():
     # Load data
     data_loader = DataLoader()
     quotes = data_loader.load_data(
-        symbol='AAPL',
-        start_date=datetime(2023, 1, 1),
-        end_date=datetime(2023, 12, 31)
+        symbol='AAPL', start_date=datetime(2023, 1, 1), end_date=datetime(2023, 12, 31)
     )
 
     # Create strategy
@@ -176,7 +175,7 @@ def example_parameter_sweep():
     results = runner.run_parameter_sweep(
         strategy_factory=strategy_factory,
         parameters=parameters,
-        test_name_prefix='preset_comparison'
+        test_name_prefix='preset_comparison',
     )
 
     # Find best result
@@ -191,14 +190,14 @@ if __name__ == "__main__":
     # Example 1: Using defaults
     print("Example 1: BacktestDefaults")
     example_using_defaults()
-    print("\n" + "="*50 + "\n")
+    print("\n" + "=" * 50 + "\n")
 
     # Example 2: Using config loader (if config exists)
     config_file = Path("config/backtesting/comprehensive_backtest.yaml")
     if config_file.exists():
         print("Example 2: BacktestConfigLoader")
         example_using_config_loader()
-        print("\n" + "="*50 + "\n")
+        print("\n" + "=" * 50 + "\n")
     else:
         print(f"Config file not found: {config_file}")
         print("Skipping config loader example.\n")

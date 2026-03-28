@@ -8,7 +8,7 @@ import warnings
 from contextvars import ContextVar
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from typing import Any, Dict, Optional, Pattern
+from typing import Dict, List, Optional, Pattern, Union
 
 """
 Logging Configuration Module
@@ -195,7 +195,7 @@ class SensitiveDataFilter(logging.Filter):
 
         return redacted
 
-    def _redact_dict(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def _redact_dict(self, data: Dict[str, Union[str, int, float, bool, List, Dict, None]]) -> Dict[str, Union[str, int, float, bool, List, Dict, None]]:
         """
         Redact sensitive values from a dictionary.
 
@@ -208,7 +208,7 @@ class SensitiveDataFilter(logging.Filter):
         if not isinstance(data, dict):
             return {}
 
-        redacted: Dict[str, Any] = {}
+        redacted: Dict[str, Union[str, int, float, bool, List, Dict, None]] = {}
         for key, value in data.items():
             key_lower = key.lower().replace("-", "_").replace(".", "")
 
@@ -339,7 +339,7 @@ class JSONFormatter(logging.Formatter):
     LOG-006: Includes timing_ms field for operation timing
     """
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: object, **kwargs: object) -> None:
         super().__init__(*args, **kwargs)
         self._start_time: float = time.time()
 
@@ -359,7 +359,7 @@ class JSONFormatter(logging.Formatter):
         timing_ms = (time.time() - self._start_time) * 1000
 
         # Create structured log data
-        log_data: Dict[str, Any] = {
+        log_data: Dict[str, Union[str, int, float, List, Dict, None]] = {
             "timestamp": self.formatTime(record, self.datefmt),
             "level": record.levelname,
             "logger": record.name,

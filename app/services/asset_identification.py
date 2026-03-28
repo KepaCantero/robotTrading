@@ -61,7 +61,7 @@ class AssetIdentificationService:
             sorted_assets = sorted(liquid_assets, key=lambda x: x.liquidity_score, reverse=True)
             return sorted_assets[:limit]
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Error identifying liquid assets for {asset_class}: {e}")
             return []
 
@@ -359,7 +359,7 @@ class AssetIdentificationService:
 
             self.liquidity_metrics[asset.symbol] = metrics
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Error calculating liquidity score for {asset.symbol}: {e}")
             asset.liquidity_score = 0.0
 
@@ -380,7 +380,7 @@ class AssetIdentificationService:
 
             return True
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Error updating universe for {asset_class}: {e}")
             return False
 
@@ -406,7 +406,7 @@ class AssetIdentificationService:
                     spread_score=asset.spread_score,
                 )
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Error updating rankings for {asset_class}: {e}")
 
     async def get_top_liquid_assets(self, asset_class: AssetClass, limit: int = 20) -> List[Asset]:
@@ -415,7 +415,7 @@ class AssetIdentificationService:
             universe = self.asset_universes[asset_class]
             return universe.get_top_liquid_assets(limit)
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Error getting top liquid assets for {asset_class}: {e}")
             return []
 
@@ -424,7 +424,7 @@ class AssetIdentificationService:
         try:
             return self.rankings[asset_class]
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Error getting rankings for {asset_class}: {e}")
             return AssetRanking(asset_class=asset_class)
 
@@ -442,7 +442,7 @@ class AssetIdentificationService:
 
             return filtered_assets
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Error filtering assets for {asset_class}: {e}")
             return []
 

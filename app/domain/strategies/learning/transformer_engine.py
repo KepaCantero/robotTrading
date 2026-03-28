@@ -27,9 +27,9 @@ os.environ['MKL_INTERFACE_LAYER'] = 'LP64,GNU'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 # Ahora importar numpy y pandas DESPUÉS de configurar variables
-import numpy as np  # noqa: E402
+import numpy as np
 
-from .base_learning_engine import BaseLearningEngine  # noqa: E402
+from .base_learning_engine import BaseLearningEngine
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +37,7 @@ logger = logging.getLogger(__name__)
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import contextlib
 
 # Configure threading BEFORE any PyTorch operations
 torch.set_num_threads(1)
@@ -112,14 +113,10 @@ class TransformerEngine(BaseLearningEngine):
         logger.info(f"TransformerEngine inicializado (device: {self.device})")
 
         # Configurar threading de PyTorch
-        try:
+        with contextlib.suppress(RuntimeError):
             torch.set_num_threads(1)
-        except RuntimeError:
-            pass
-        try:
+        with contextlib.suppress(RuntimeError):
             torch.set_num_interop_threads(1)
-        except RuntimeError:
-            pass
 
     def _prepare_sequences(
         self, data: List[Dict[str, Any]], sequence_length: int = 30, target_key: str = "target"
@@ -176,7 +173,7 @@ class TransformerEngine(BaseLearningEngine):
 
         return sequences, labels
 
-    def train(  # noqa: C901 - Complex training loop (PyTorch patterns require complexity)
+    def train(
         self,
         training_data: Optional[Dict[str, Any]] = None,
         validation_data: Optional[Dict[str, Any]] = None,
@@ -236,14 +233,10 @@ class TransformerEngine(BaseLearningEngine):
 
                 # CRÍTICO: Asegurar threading antes de crear modelo
 
-                try:
+                with contextlib.suppress(RuntimeError):
                     torch.set_num_threads(1)
-                except RuntimeError:
-                    pass
-                try:
+                with contextlib.suppress(RuntimeError):
                     torch.set_num_interop_threads(1)
-                except RuntimeError:
-                    pass
 
                 torch.backends.cudnn.enabled = False
                 torch.backends.cudnn.benchmark = False
@@ -352,14 +345,10 @@ class TransformerEngine(BaseLearningEngine):
                 """Dataset para sequences de tiempo para Transformer."""
 
                 def __init__(self, sequences, labels):
-                    try:
+                    with contextlib.suppress(RuntimeError):
                         torch.set_num_threads(1)
-                    except RuntimeError:
-                        pass
-                    try:
+                    with contextlib.suppress(RuntimeError):
                         torch.set_num_interop_threads(1)
-                    except RuntimeError:
-                        pass
                     import numpy as np
 
                     sequences_np = np.array(sequences, dtype=np.float32)
@@ -442,10 +431,8 @@ class TransformerEngine(BaseLearningEngine):
                         """Dataset para sequences de tiempo para Transformer."""
 
                         def __init__(self, sequences, labels):
-                            try:
+                            with contextlib.suppress(RuntimeError):
                                 torch.set_num_threads(1)
-                            except RuntimeError:
-                                pass
                             import numpy as np
 
                             sequences_np = np.array(sequences, dtype=np.float32)
@@ -603,10 +590,8 @@ class TransformerEngine(BaseLearningEngine):
                 """Dataset para sequences de tiempo para Transformer."""
 
                 def __init__(self, sequences, labels):
-                    try:
+                    with contextlib.suppress(RuntimeError):
                         torch.set_num_threads(1)
-                    except RuntimeError:
-                        pass
                     import numpy as np
 
                     sequences_np = np.array(sequences, dtype=np.float32)

@@ -57,9 +57,9 @@ class LimitAdjuster:
 
     def __init__(
         self,
-        default_position_limit: Decimal = Decimal("50000"),
-        default_max_leverage: Decimal = Decimal("2.0"),
-        default_max_allocation: Decimal = Decimal("25"),  # % of portfolio
+        default_position_limit: Optional[Decimal] = None,
+        default_max_leverage: Optional[Decimal] = None,
+        default_max_allocation: Optional[Decimal] = None,  # % of portfolio
     ):
         """
         Initialize limit adjuster.
@@ -69,6 +69,12 @@ class LimitAdjuster:
             default_max_leverage: Default max portfolio leverage
             default_max_allocation: Default max % of portfolio per module
         """
+        if default_position_limit is None:
+            default_position_limit = Decimal("50000")
+        if default_max_leverage is None:
+            default_max_leverage = Decimal("2.0")
+        if default_max_allocation is None:
+            default_max_allocation = Decimal("25")
         self.default_position_limit = default_position_limit
         self.default_max_leverage = default_max_leverage
         self.default_max_allocation = default_max_allocation

@@ -22,10 +22,6 @@ from structlog import get_logger
 
 from app.shared.exceptions.exceptions import raise_database_error
 
-# pylint: disable=inconsistent-return-statements
-# The raise_database_error function always raises an exception, so pylint
-# incorrectly reports inconsistent return statements. This is intentional.
-
 
 @runtime_checkable
 class HasIdAndTableName(Protocol):
@@ -72,14 +68,18 @@ class BaseRepository(Generic[T]):
                 self.model_class.__tablename__,
             )
 
-    def get_by_id(self, id: uuid.UUID) -> T | None:  # pylint: disable=redefined-builtin
+    def get_by_id(self, record_id: uuid.UUID) -> T | None:
         """Get record by ID."""
         try:
-            result = self.session.query(self.model_class).filter(self.model_class.id == id).first()
+            result = (
+                self.session.query(self.model_class)
+                .filter(self.model_class.id == record_id)
+                .first()
+            )
             logger.debug(
                 "queried_by_id",
                 model=self.model_class.__name__,
-                id=str(id),
+                id=str(record_id),
                 found=result is not None,
             )
             return result
@@ -87,7 +87,7 @@ class BaseRepository(Generic[T]):
             logger.error(
                 "get_by_id_failed",
                 model=self.model_class.__name__,
-                id=str(id),
+                id=str(record_id),
                 error=str(e),
             )
             raise_database_error(

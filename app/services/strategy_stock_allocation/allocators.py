@@ -193,7 +193,7 @@ class ERCCapitalAllocator:
             return {}
 
         equal_weight = min(1.0 / len(tickers), self.config.MAX_STRATEGY_EXPOSURE)
-        allocations = {ticker: total_capital * equal_weight for ticker in tickers}
+        allocations = dict.fromkeys(tickers, total_capital * equal_weight)
 
         # Normalize if needed
         total_allocated = sum(allocations.values())

@@ -12,6 +12,7 @@ USE ComplianceEngine FOR EVERYTHING.
 """
 
 import logging
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -53,14 +54,14 @@ except ImportError:
     # Import error - likely due to NumPy/matplotlib compatibility issues
     # Set these to None to prevent import errors when only using other core modules
     logger.error("Failed to import ComplianceEngine", exc_info=True)
-    ComplianceEngine = None  # type: ignore
-    PreTradeAnalysis = None  # type: ignore
-    PostTradeAnalysis = None  # type: ignore
-    PortfolioOptimization = None  # type: ignore
-    get_compliance_engine = None  # type: ignore
-    quick_check = None  # type: ignore
-    get_execution_plan = None  # type: ignore
-    SystemAvailability = None  # type: ignore
+    ComplianceEngine: Optional[type[Any]] = None
+    PreTradeAnalysis: Optional[type[Any]] = None
+    PostTradeAnalysis: Optional[type[Any]] = None
+    PortfolioOptimization: Optional[type[Any]] = None
+    get_compliance_engine: Optional[Callable[..., Any]] = None
+    quick_check: Optional[Callable[..., Any]] = None
+    get_execution_plan: Optional[Callable[..., Any]] = None
+    SystemAvailability: Optional[type[Any]] = None
     _compliance_engine_available = False
 
 # Legacy support (DEPRECATED - use ComplianceEngine instead)
@@ -76,10 +77,10 @@ try:
 except ImportError:
     # Import error - likely due to NumPy/matplotlib compatibility issues
     logger.error("Failed to import ComplianceIntegrationEngine (legacy)", exc_info=True)
-    ComplianceIntegrationEngineDeprecated = None  # type: ignore
-    get_compliance_integration_engine_deprecated = None  # type: ignore
-    quick_pre_trade_check = None  # type: ignore
-    get_execution_recommendation = None  # type: ignore
+    ComplianceIntegrationEngineDeprecated: Optional[type[Any]] = None
+    get_compliance_integration_engine_deprecated: Optional[Callable[..., Any]] = None
+    quick_pre_trade_check: Optional[Callable[..., Any]] = None
+    get_execution_recommendation: Optional[Callable[..., Any]] = None
     _compliance_integration_available = False
 
 __all__ = [

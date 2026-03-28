@@ -180,7 +180,7 @@ class SpainTaxEngine(TaxEngine):
     def calculate_tax_with_deductions(
         self,
         gain: Decimal,
-        deductions: Decimal = Decimal("0"),
+        deductions: Optional[Decimal] = None,
     ) -> Decimal:
         """
         Calculate tax with allowable deductions.
@@ -195,6 +195,8 @@ class SpainTaxEngine(TaxEngine):
         Returns:
             Tax amount
         """
+        if deductions is None:
+            deductions = Decimal("0")
         taxable_gain = max(gain - deductions, Decimal("0"))
         return self.calculate_capital_gains_tax(taxable_gain)
 
@@ -263,8 +265,8 @@ class SpainTaxEngine(TaxEngine):
         self,
         capital_gains: Decimal,
         dividends: Decimal,
-        other_income: Decimal = Decimal("0"),
-        deductions: Decimal = Decimal("0"),
+        other_income: Optional[Decimal] = None,
+        deductions: Optional[Decimal] = None,
     ) -> Decimal:
         """
         Calculate total tax liability for a year.
@@ -281,6 +283,10 @@ class SpainTaxEngine(TaxEngine):
         Returns:
             Total tax liability from savings income (capital gains + dividends)
         """
+        if other_income is None:
+            other_income = Decimal("0")
+        if deductions is None:
+            deductions = Decimal("0")
         # Spain: Capital gains and dividends taxed together as "ahorro"
         total_savings_income = capital_gains + dividends
         taxable_income = max(total_savings_income - deductions, Decimal("0"))
@@ -373,7 +379,7 @@ class SpainTaxEngine(TaxEngine):
     def estimate_annual_tax(
         self,
         unrealized_gains: Decimal,
-        estimated_dividends: Decimal = Decimal("0"),
+        estimated_dividends: Optional[Decimal] = None,
     ) -> Dict:
         """
         Estimate annual tax liability based on current positions.
@@ -385,6 +391,8 @@ class SpainTaxEngine(TaxEngine):
         Returns:
             Dictionary with tax estimate breakdown
         """
+        if estimated_dividends is None:
+            estimated_dividends = Decimal("0")
         total_savings_income = unrealized_gains + estimated_dividends
 
         return {

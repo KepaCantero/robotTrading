@@ -271,9 +271,7 @@ class BidAskBounceRemover:
         # Count crossings
         crossings = 0
         for i in range(1, len(df)):
-            if buy_mask.iloc[i] and sell_mask.iloc[i - 1]:
-                crossings += 1
-            elif sell_mask.iloc[i] and buy_mask.iloc[i - 1]:
+            if buy_mask.iloc[i] and sell_mask.iloc[i - 1] or sell_mask.iloc[i] and buy_mask.iloc[i - 1]:
                 crossings += 1
 
         # Calculate crossing rate

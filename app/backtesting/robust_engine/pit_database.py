@@ -235,9 +235,7 @@ class PITDatabaseClient:
         before_count = len(data)
         # Properly check for DatetimeIndex - isinstance check is more reliable than hasattr
         # because .date is an accessor property on DatetimeIndex, not a direct attribute
-        if isinstance(data.index, pd.DatetimeIndex):
-            data = data[data.index.date < query_date]
-        elif hasattr(data.index, 'date'):
+        if isinstance(data.index, pd.DatetimeIndex) or hasattr(data.index, 'date'):
             data = data[data.index.date < query_date]
         else:
             data = data[data.index < query_date]
