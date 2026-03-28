@@ -154,15 +154,14 @@ def _calculate_hurst_variance_numba(series: np.ndarray) -> float:
 
         # Calculate incremental variance at this lag
         sum_sq_diff = 0.0
-        count = 0
+        num_pairs = n - lag
 
-        for j in range(n - lag):
+        for j in range(num_pairs):
             diff = series[j + lag] - series[j]
             sum_sq_diff += diff * diff
-            count += 1
 
-        if count > 0:
-            variances[i] = sum_sq_diff / count
+        if num_pairs > 0:
+            variances[i] = sum_sq_diff / num_pairs
             if variances[i] > 0:
                 valid_count += 1
             else:

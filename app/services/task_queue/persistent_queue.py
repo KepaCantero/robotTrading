@@ -8,6 +8,7 @@ and provides comprehensive task lifecycle management for 24/7 trading operations
 """
 
 import asyncio
+import contextlib
 import json
 import logging
 import uuid
@@ -93,7 +94,7 @@ def deserialize_payload(payload: Dict[str, Union[str, int, float, bool, None]]) 
             except (ValueError, AttributeError):
                 pass
             # Try to parse as Decimal (only if it looks like a number)
-            try:
+            with contextlib.suppress(ValueError, TypeError, AttributeError):
                 # Check if string looks like a number first
                 if value.replace(".", "", 1).replace("-", "", 1).isdigit() or (
                     value.startswith("-")
@@ -101,8 +102,6 @@ def deserialize_payload(payload: Dict[str, Union[str, int, float, bool, None]]) 
                 ):
                     result[key] = Decimal(str(value))
                     continue
-            except (ValueError, TypeError, AttributeError):
-                pass
         result[key] = value
     return result
 
@@ -675,17 +674,16 @@ class PersistentTaskQueue:
             )
             rows = await cursor.fetchall()
 
-            count = 0
             for row in rows:
                 task_id = row[0]
                 await db.execute(
                     "UPDATE tasks SET status = ? WHERE task_id = ?",
                     (TaskStatus.PENDING.value, task_id),
                 )
-                count += 1
 
             await db.commit()
 
+        count = len(rows)
         if count > 0:
             self.logger.info(f"Reprocessed {count} stuck tasks")
 

@@ -275,11 +275,10 @@ class BlastRadiusController:
             raise ValueError("Must maintain at least 1 healthy pod")
 
         # Check quorum requirements
-        if config.require_quorum:
+        if config.require_quorum and config.percentage > Decimal("50"):
             # Ensure majority remains healthy
             # This is a simplified check
-            if config.percentage > Decimal("50"):
-                raise ValueError("Cannot fail majority when quorum required")
+            raise ValueError("Cannot fail majority when quorum required")
 
     async def _apply_containment(self, config: BlastRadiusConfig) -> ContainmentState:
         """Apply containment controls."""

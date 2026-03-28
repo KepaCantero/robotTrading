@@ -694,16 +694,14 @@ class AlertFatiguePreventer:
 
         # Look for existing group
         for group_id, group in self._active_groups.items():
-            if len(group.alerts) < self.config.max_group_size:
+            if len(group.alerts) < self.config.max_group_size and datetime.utcnow() - group.last_updated < timedelta(
+                seconds=self.config.group_window_seconds
+            ) and group.alerts and group.alerts[0].similarity_hash == similarity_hash:
                 # Check if recent
-                if datetime.utcnow() - group.last_updated < timedelta(
-                    seconds=self.config.group_window_seconds
-                ):
-                    # Check similarity
-                    if group.alerts and group.alerts[0].similarity_hash == similarity_hash:
-                        group_id = group.group_id
-                        # Note: We'd add the alert to the group in the calling code
-                        return group_id
+                # Check similarity
+                group_id = group.group_id
+                # Note: We'd add the alert to the group in the calling code
+                return group_id
 
         # No group found, would create new group
         # (Group creation logic would be here)

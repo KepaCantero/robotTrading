@@ -20,7 +20,7 @@ from decimal import Decimal
 from typing import Annotated, Any, Dict, List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Depends, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.exc import (
     DatabaseError,
@@ -144,7 +144,7 @@ class MarketUpdateResponse(BaseModel):
 @audit_log("portfolio_created", log_args=True)
 async def create_portfolio(
     request: CreatePortfolioRequest,
-    service: Annotated[PaperTradingService, epends(get_paper_trading_service)],
+    service: Annotated[PaperTradingService, Depends(get_paper_trading_service)],
 ) -> PortfolioResponse:
     """Create a new paper trading portfolio."""
     try:
@@ -161,7 +161,7 @@ async def create_portfolio(
 @router.get("/portfolios/{portfolio_id}", response_model=PortfolioResponse)
 async def get_portfolio(
     portfolio_id: UUID,
-    service: Annotated[PaperTradingService, epends(get_paper_trading_service)],
+    service: Annotated[PaperTradingService, Depends(get_paper_trading_service)],
 ) -> PortfolioResponse:
     """Get portfolio by ID."""
     portfolio = await service.get_portfolio(portfolio_id)
@@ -173,7 +173,7 @@ async def get_portfolio(
 
 @router.get("/portfolios", response_model=List[PortfolioResponse])
 async def list_portfolios(
-    service: Annotated[PaperTradingService, epends(get_paper_trading_service)],
+    service: Annotated[PaperTradingService, Depends(get_paper_trading_service)],
 ) -> List[PortfolioResponse]:
     """List all portfolios."""
     portfolios = list(service.portfolios.values())
@@ -184,7 +184,7 @@ async def list_portfolios(
 @router.post("/sessions", response_model=SessionResponse)
 async def create_session(
     request: CreateSessionRequest,
-    service: Annotated[PaperTradingService, epends(get_paper_trading_service)],
+    service: Annotated[PaperTradingService, Depends(get_paper_trading_service)],
 ) -> SessionResponse:
     """Create a new trading session."""
     try:
@@ -201,7 +201,8 @@ async def create_session(
 
 @router.get("/sessions/{session_id}", response_model=SessionResponse)
 async def get_session(
-    service: Annotated[PaperTradingService, epends(get_paper_trading_service)]
+    session_id: UUID,
+    service: Annotated[PaperTradingService, Depends(get_paper_trading_service)]
 ) -> SessionResponse:
     """Get session by ID."""
     session = await service.get_session(session_id)
@@ -213,7 +214,8 @@ async def get_session(
 
 @router.post("/sessions/{session_id}/close", response_model=SessionResponse)
 async def close_session(
-    service: Annotated[PaperTradingService, epends(get_paper_trading_service)]
+    session_id: UUID,
+    service: Annotated[PaperTradingService, Depends(get_paper_trading_service)]
 ) -> SessionResponse:
     """Close a trading session."""
     try:
@@ -225,9 +227,9 @@ async def close_session(
 
 @router.get("/sessions", response_model=List[SessionResponse])
 async def list_sessions(
-    portfolio_id: Annotated[Optional[UUID], uery(None, description="Filter by portfolio ID")],
-    is_active: Annotated[Optional[bool], uery(None, description="Filter by active status")],
-    service: Annotated[PaperTradingService, epends(get_paper_trading_service)],
+    portfolio_id: Annotated[Optional[UUID], Query(None, description="Filter by portfolio ID")],
+    is_active: Annotated[Optional[bool], Query(None, description="Filter by active status")],
+    service: Annotated[PaperTradingService, Depends(get_paper_trading_service)],
 ) -> List[SessionResponse]:
     """List sessions with optional filters."""
     sessions = list(service.sessions.values())
@@ -249,8 +251,8 @@ async def list_sessions(
 async def execute_trade(
     portfolio_id: UUID,
     request: ExecuteTradeRequest,
-    session_id: Annotated[Optional[UUID], uery(None, description="Session ID")],
-    service: Annotated[PaperTradingService, epends(get_paper_trading_service)],
+    session_id: Annotated[Optional[UUID], Query(None, description="Session ID")],
+    service: Annotated[PaperTradingService, Depends(get_paper_trading_service)],
     http_request: Request = None,
 ) -> TradeResponse:
     """Execute a paper trade."""
@@ -340,11 +342,11 @@ async def execute_trade(
 @router.get("/portfolios/{portfolio_id}/trades", response_model=TradesResponse)
 async def get_trades(
     portfolio_id: UUID,
-    symbol: Annotated[Optional[str], uery(None, description="Filter by symbol")],
-    status: Annotated[Optional[TradeStatus], uery(None, description="Filter by status")],
-    session_id: Annotated[Optional[UUID], uery(None, description="Filter by session ID")],
-    limit: Annotated[int, uery(100, ge=1, le=1000, description="Maximum number of trades")],
-    service: Annotated[PaperTradingService, epends(get_paper_trading_service)],
+    symbol: Annotated[Optional[str], Query(None, description="Filter by symbol")],
+    status: Annotated[Optional[TradeStatus], Query(None, description="Filter by status")],
+    session_id: Annotated[Optional[UUID], Query(None, description="Filter by session ID")],
+    limit: Annotated[int, Query(100, ge=1, le=1000, description="Maximum number of trades")],
+    service: Annotated[PaperTradingService, Depends(get_paper_trading_service)],
 ) -> TradesResponse:
     """Get trades for a portfolio with optional filters."""
     trades = await service.get_trades(
@@ -359,7 +361,8 @@ async def get_trades(
 
 @router.get("/trades/{trade_id}", response_model=TradeResponse)
 async def get_trade(
-    service: Annotated[PaperTradingService, epends(get_paper_trading_service)]
+    trade_id: UUID,
+    service: Annotated[PaperTradingService, Depends(get_paper_trading_service)]
 ) -> TradeResponse:
     """Get trade by ID."""
     trade = service.trades.get(trade_id)
@@ -373,7 +376,7 @@ async def get_trade(
 @router.get("/portfolios/{portfolio_id}/positions", response_model=PositionsResponse)
 async def get_positions(
     portfolio_id: UUID,
-    service: Annotated[PaperTradingService, epends(get_paper_trading_service)],
+    service: Annotated[PaperTradingService, Depends(get_paper_trading_service)],
 ) -> PositionsResponse:
     """Get all positions for a portfolio."""
     positions = await service.get_positions(portfolio_id)
@@ -384,7 +387,7 @@ async def get_positions(
 async def get_position(
     portfolio_id: UUID,
     symbol: str,
-    service: Annotated[PaperTradingService, epends(get_paper_trading_service)],
+    service: Annotated[PaperTradingService, Depends(get_paper_trading_service)],
 ) -> PositionsResponse:
     """Get position for a specific symbol."""
     positions = await service.get_positions(portfolio_id)
@@ -397,7 +400,7 @@ async def get_position(
 @router.post("/market/update", response_model=MarketUpdateResponse)
 async def update_market_prices(
     request: UpdateMarketPricesRequest,
-    service: Annotated[PaperTradingService, epends(get_paper_trading_service)],
+    service: Annotated[PaperTradingService, Depends(get_paper_trading_service)],
 ) -> MarketUpdateResponse:
     """Update market prices for all symbols."""
     try:
@@ -411,7 +414,7 @@ async def update_market_prices(
 # Configuration Endpoints
 @router.get("/configs", response_model=List[PaperTradingConfig])
 async def list_configs(
-    service: Annotated[PaperTradingService, epends(get_paper_trading_service)],
+    service: Annotated[PaperTradingService, Depends(get_paper_trading_service)],
 ) -> List[PaperTradingConfig]:
     """List all paper trading configurations."""
     return list(service.configs.values())
@@ -419,7 +422,8 @@ async def list_configs(
 
 @router.get("/configs/{config_id}", response_model=PaperTradingConfig)
 async def get_config(
-    service: Annotated[PaperTradingService, epends(get_paper_trading_service)]
+    config_id: UUID,
+    service: Annotated[PaperTradingService, Depends(get_paper_trading_service)]
 ) -> PaperTradingConfig:
     """Get configuration by ID."""
     config = service.configs.get(config_id)
@@ -433,7 +437,7 @@ async def get_config(
 @router.get("/portfolios/{portfolio_id}/stats")
 async def get_portfolio_stats(
     portfolio_id: UUID,
-    service: Annotated[PaperTradingService, epends(get_paper_trading_service)],
+    service: Annotated[PaperTradingService, Depends(get_paper_trading_service)],
 ) -> Dict[str, Any]:
     """Get portfolio statistics."""
     portfolio = await service.get_portfolio(portfolio_id)

@@ -191,15 +191,14 @@ class MultiStrategyAllocationManager:
         total_allocated = sum(allocations.values())
         if total_allocated != self.total_capital:
             difference = self.total_capital - total_allocated
-            if abs(difference) > Decimal("0"):
+            if abs(difference) > Decimal("0") and allocations:
                 # Add the difference to the largest allocation to minimize relative impact
-                if allocations:
-                    largest_strategy = max(allocations.keys(), key=lambda k: allocations[k])
-                    allocations[largest_strategy] += difference
-                    logger.debug(
-                        f"Adjusted {largest_strategy} by ${difference:,.2f} "
-                        f"to match total capital"
-                    )
+                largest_strategy = max(allocations.keys(), key=lambda k: allocations[k])
+                allocations[largest_strategy] += difference
+                logger.debug(
+                    f"Adjusted {largest_strategy} by ${difference:,.2f} "
+                    f"to match total capital"
+                )
 
         return allocations
 

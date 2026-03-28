@@ -340,7 +340,7 @@ async def get_signal_statistics(
             },
         )
 
-    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+    except (asyncio.TimeoutError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Error getting statistics: {str(e)}")
 
 
@@ -365,7 +365,7 @@ async def get_signals_by_symbol(
         signals = await service.get_signals_by_symbol(symbol.upper())
         return signals
 
-    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+    except (asyncio.TimeoutError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Error getting signals for {symbol}: {str(e)}")
 
 
@@ -394,7 +394,7 @@ async def clear_expired_signals(
             "message": f"Cleared signals older than {max_age_minutes} minutes",
         }
 
-    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+    except (asyncio.TimeoutError, OSError) as e:
         raise HTTPException(status_code=500, detail=f"Error clearing expired signals: {str(e)}")
 
 

@@ -328,15 +328,12 @@ class SurvivorshipBiasCorrector:
             # Check if symbol exists (not yet delisted or delisted after lookback)
             delisting = self._delistings.get(symbol)
 
-            if delisting is None:
-                # Never delisted (or still trading)
-                tradable.append(symbol)
-            elif delisting.delisting_date > date(
+            if delisting is None or delisting.delisting_date > date(
                 current_date.year - lookback_days // 365,
                 current_date.month,
                 current_date.day,
             ):
-                # Delisted but within lookback period
+                # Never delisted (or still trading) or delisted but within lookback period
                 tradable.append(symbol)
 
         return tradable

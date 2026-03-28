@@ -530,14 +530,14 @@ class StrategyStockAllocator:
                 return result
 
             adf_result = adfuller(clean_series, autolag='AIC')
-            adf_statistic, adf_pvalue = adf_result[0], adf_result[1]  # noqa: F841
+            adf_pvalue = adf_result[1]
             result["adf_pvalue"] = float(adf_pvalue)
             result["adf_stationary"] = adf_pvalue < self.config.ADF_P_VALUE_THRESHOLD
 
             # KPSS Test (null hypothesis: stationary) - REQUIRED: use statsmodels
             try:
                 kpss_result = kpss(clean_series, regression='ct', nlags='auto')
-                kpss_statistic, kpss_pvalue = kpss_result[0], kpss_result[1]  # noqa: F841
+                kpss_pvalue = kpss_result[1]
                 result["kpss_pvalue"] = float(kpss_pvalue)
                 result["kpss_stationary"] = kpss_pvalue > self.config.KPSS_P_VALUE_THRESHOLD
             except (ValueError, TypeError, KeyError, AttributeError) as e:
@@ -863,20 +863,7 @@ class StrategyStockAllocator:
                     liquidity_score = min(1.0, avg_volume / self.config.MIN_LIQUIDITY_USD)
 
             # Normalize metrics for scoring
-            (rsi / 100.0) if rsi is not None else 0.5
-            _macd_norm = (  # noqa: F841
-                1.0
-                if (macd is not None and macd > macd_signal)
-                else 0.0
-                if macd is not None
-                else 0.5
-            )
-            _roc_norm = (  # noqa: F841
-                min(1.0, max(0.0, (roc_optimal + 0.1) / 0.2)) if roc_optimal is not None else 0.5
-            )
             sortino_norm = min(1.0, max(0.0, sortino / 2.0)) if sortino is not None else 0.5
-            min(1.0, max(0.0, (slope_pct + 0.1) / 0.2))
-            min(1.0, max(0.0, (spearman_rho + 1) / 2))
             h_long_norm = (
                 (h_long - 0.3) / 0.4 if h_long is not None else 0.5
             )  # Normalize 0.3-0.7 to 0-1
@@ -993,10 +980,6 @@ class StrategyStockAllocator:
                 inv_tau = 1.0 / half_life
                 inv_tau_norm = min(1.0, max(0.0, (inv_tau - 0.01) / 0.1))  # 0.01-0.11 range
 
-            _z_score_norm = min(1.0, abs(z_score) / 3.0)  # Normalize |Z-score|  # noqa: F841
-            _garch_norm = (  # noqa: F841
-                min(1.0, max(0.0, (garch_vol - 0.1) / 0.3)) if garch_vol is not None else 0.5
-            )
             sortino_norm = min(1.0, max(0.0, sortino / 2.0)) if sortino is not None else 0.5
             h_long_norm = (
                 max(0.0, (0.5 - h_long) / 0.2) if h_long is not None else 0.5
@@ -1610,11 +1593,10 @@ class StrategyStockAllocator:
                     )
 
                 # Check half-life if mean reversion
-                if alloc.strategy == "mean_reversion" and alloc.half_life_tau is not None:
-                    if alloc.half_life_tau > self.config.MAX_HALF_LIFE_DAYS:
-                        errors.append(
-                            f"{ticker}: Half-life {alloc.half_life_tau:.2f} > max {self.config.MAX_HALF_LIFE_DAYS}"
-                        )
+                if alloc.strategy == "mean_reversion" and alloc.half_life_tau is not None and alloc.half_life_tau > self.config.MAX_HALF_LIFE_DAYS:
+                    errors.append(
+                        f"{ticker}: Half-life {alloc.half_life_tau:.2f} > max {self.config.MAX_HALF_LIFE_DAYS}"
+                    )
 
             # Check strategy exposure limits
             strategy_totals = defaultdict(float)
@@ -1671,7 +1653,7 @@ class StrategyStockAllocator:
         """
         rows = []
 
-        for ticker, alloc in allocations.items():
+        for _ticker, alloc in allocations.items():
             row = {
                 "Ticker": alloc.ticker,
                 "Estrategia": alloc.strategy or "unassigned",
@@ -2003,7 +1985,7 @@ class StrategyStockAllocator:
                     if total_weight > max_weight_per_ticker:
                         # Reduce all allocations in this strategy proportionally
                         reduction_factor = max_weight_per_ticker / total_weight
-                        for ticker, alloc in final_allocations.items():
+                        for _ticker, alloc in final_allocations.items():
                             if alloc.strategy == strategy:
                                 alloc.capital *= reduction_factor
                                 alloc.weight = (
@@ -2044,7 +2026,7 @@ class StrategyStockAllocator:
                     if len(truly_available) > 0:
                         # Distribute proportionally based on remaining capacity
                         total_capacity = sum(cap for _, _, cap in truly_available)
-                        for ticker, alloc, capacity in truly_available:
+                        for _ticker, alloc, capacity in truly_available:
                             share = capacity / total_capacity
                             additional = min(
                                 remaining_unused * share, max_capital_per_ticker - alloc.capital

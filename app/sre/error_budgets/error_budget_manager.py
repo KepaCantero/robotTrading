@@ -185,8 +185,6 @@ class ErrorBudgetState:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
-        if high_burn_rate_threshold is None:
-            high_burn_rate_threshold = Decimal("2.0")
         return {
             "service_name": self.service_name,
             "period": self.allowance.period.value,

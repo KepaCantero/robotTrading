@@ -341,26 +341,25 @@ class WashSaleTracker:
         window_start = position.trade_date - timedelta(days=self.WASH_SALE_WINDOW_DAYS)
 
         for prev_position in self._positions_by_symbol.get(position.symbol, []):
-            if prev_position.side == "BUY" and prev_position != position:
-                if window_start <= prev_position.trade_date <= position.trade_date:
-                    # This is a wash sale
-                    loss = (prev_position.price - position.price) * position.quantity
+            if prev_position.side == "BUY" and prev_position != position and window_start <= prev_position.trade_date <= position.trade_date:
+                # This is a wash sale
+                loss = (prev_position.price - position.price) * position.quantity
 
-                    if loss > 0:
-                        wash_sale = WashSale(
-                            symbol=position.symbol,
-                            sale_date=position.trade_date,
-                            sale_price=position.price,
-                            loss_amount=loss,
-                            disallowed_loss=loss,
-                            replacement_buy_date=prev_position.trade_date,
-                            replacement_price=prev_position.price,
-                        )
+                if loss > 0:
+                    wash_sale = WashSale(
+                        symbol=position.symbol,
+                        sale_date=position.trade_date,
+                        sale_price=position.price,
+                        loss_amount=loss,
+                        disallowed_loss=loss,
+                        replacement_buy_date=prev_position.trade_date,
+                        replacement_price=prev_position.price,
+                    )
 
-                        self._wash_sales.append(wash_sale)
-                        position.is_wash_sale = True
+                    self._wash_sales.append(wash_sale)
+                    position.is_wash_sale = True
 
-                        return True
+                    return True
 
         return False
 

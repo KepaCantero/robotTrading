@@ -586,7 +586,7 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
         # Verificar learning engine (si está disponible y entrenado)
         if self.learning_enabled and self.learning_engine and hasattr(self.learning_engine, 'is_ready') and self.learning_engine.is_ready():
             # Si el learning engine sugiere HOLD, rechazar señal
-            prediction = self.get_learning_prediction(signal.metadata.get('quote', None))
+            prediction = self.get_learning_prediction(signal.metadata.get('quote'))
             if prediction and prediction.get('recommended_action') == 'HOLD':
                 logger.debug("Risk check fallido: learning engine recomienda HOLD")
                 return False

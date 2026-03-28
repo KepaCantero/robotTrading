@@ -18,7 +18,7 @@ from decimal import Decimal
 from typing import Annotated, Any, Dict, List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Depends, Query
 from pydantic import BaseModel, Field
 
 from app.domain.models.portfolio_analytics import (
@@ -202,7 +202,7 @@ def _get_mock_portfolio(portfolio_id: UUID) -> ExtendedPortfolio:
 async def calculate_performance_metrics(
     request: PerformanceMetricsRequest,
     http_request: Request,
-    analytics_service: Annotated[PortfolioAnalyticsService, epends(get_portfolio_analytics_service)],
+    analytics_service: Annotated[PortfolioAnalyticsService, Depends(get_portfolio_analytics_service)],
 ):
     """Calculate performance metrics for a portfolio."""
     correlation_id = get_correlation_id()
@@ -301,10 +301,10 @@ async def calculate_performance_metrics(
 @router.get("/performance-metrics/{portfolio_id}", response_model=PerformanceMetricsResponse)
 async def get_performance_metrics(
     portfolio_id: UUID,
-    period: Annotated[PerformancePeriod, uery(default=PerformancePeriod.MONTHLY)],
-    start_date: Annotated[Optional[datetime], uery(None)],
-    end_date: Annotated[Optional[datetime], uery(None)],
-    analytics_service: Annotated[PortfolioAnalyticsService, epends(get_portfolio_analytics_service)],
+    period: Annotated[PerformancePeriod, Query(default=PerformancePeriod.MONTHLY)],
+    start_date: Annotated[Optional[datetime], Query(None)],
+    end_date: Annotated[Optional[datetime], Query(None)],
+    analytics_service: Annotated[PortfolioAnalyticsService, Depends(get_portfolio_analytics_service)],
 ):
     """Get performance metrics for a portfolio."""
     try:
@@ -327,7 +327,7 @@ async def get_performance_metrics(
 @router.get("/risk-metrics/{portfolio_id}", response_model=RiskMetricsResponse)
 async def get_risk_metrics(
     portfolio_id: UUID,
-    analytics_service: Annotated[PortfolioAnalyticsService, epends(get_portfolio_analytics_service)],
+    analytics_service: Annotated[PortfolioAnalyticsService, Depends(get_portfolio_analytics_service)],
 ):
     """Get risk metrics for a portfolio."""
     try:
@@ -346,7 +346,7 @@ async def get_risk_metrics(
 @router.get("/analytics/{portfolio_id}", response_model=PortfolioAnalyticsResponse)
 async def get_portfolio_analytics(
     portfolio_id: UUID,
-    analytics_service: Annotated[PortfolioAnalyticsService, epends(get_portfolio_analytics_service)],
+    analytics_service: Annotated[PortfolioAnalyticsService, Depends(get_portfolio_analytics_service)],
 ):
     """Get comprehensive portfolio analytics."""
     try:
@@ -367,7 +367,7 @@ async def get_portfolio_analytics(
 @router.get("/allocation/{portfolio_id}", response_model=PortfolioAllocationResponse)
 async def get_portfolio_allocation(
     portfolio_id: UUID,
-    analytics_service: Annotated[PortfolioAnalyticsService, epends(get_portfolio_analytics_service)],
+    analytics_service: Annotated[PortfolioAnalyticsService, Depends(get_portfolio_analytics_service)],
 ):
     """Get portfolio allocation analysis."""
     try:
@@ -391,7 +391,7 @@ async def get_portfolio_allocation(
 @audit_log("rebalance_recommendation_generated", log_args=True)
 async def get_rebalance_recommendation(
     request: RebalanceRequest,
-    analytics_service: Annotated[PortfolioAnalyticsService, epends(get_portfolio_analytics_service)],
+    analytics_service: Annotated[PortfolioAnalyticsService, Depends(get_portfolio_analytics_service)],
 ):
     """Get portfolio rebalancing recommendations."""
     try:
@@ -435,7 +435,7 @@ async def get_rebalance_recommendation(
 @router.post("/compare", response_model=PortfolioComparisonResponse)
 async def compare_portfolios(
     request: PortfolioComparisonRequest,
-    analytics_service: Annotated[PortfolioAnalyticsService, epends(get_portfolio_analytics_service)],
+    analytics_service: Annotated[PortfolioAnalyticsService, Depends(get_portfolio_analytics_service)],
 ):
     """Compare multiple portfolios."""
     try:
@@ -453,7 +453,7 @@ async def compare_portfolios(
 @router.get("/summary/{portfolio_id}", response_model=AnalyticsSummaryResponse)
 async def get_analytics_summary(
     portfolio_id: UUID,
-    analytics_service: Annotated[PortfolioAnalyticsService, epends(get_portfolio_analytics_service)],
+    analytics_service: Annotated[PortfolioAnalyticsService, Depends(get_portfolio_analytics_service)],
 ):
     """Get portfolio analytics summary."""
     try:

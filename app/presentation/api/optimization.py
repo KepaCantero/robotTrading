@@ -35,7 +35,7 @@ from .security import audit_log, rate_limit, require_auth
 
 logger = logging.getLogger(__name__)
 
-from app.domain.models.optimization import (  # noqa: E402
+from app.domain.models.optimization import (
     OptimizationArtifact,
     OptimizationConfig,
     OptimizationMethod,
@@ -49,8 +49,8 @@ from app.domain.models.optimization import (  # noqa: E402
     ParameterOptimizationRequest,
     ParameterType,
 )
-from app.services.cost_analysis_service import CostAnalysisService  # noqa: E402
-from app.services.parameter_optimization_service import ParameterOptimizationService  # noqa: E402
+from app.services.cost_analysis_service import CostAnalysisService
+from app.services.parameter_optimization_service import ParameterOptimizationService
 
 router = APIRouter(prefix="/optimization", tags=["Parameter Optimization"])
 
@@ -70,7 +70,7 @@ async def optimize_parameters(
     request: ParameterOptimizationRequest,
     background_tasks: BackgroundTasks,
     http_request: Request,
-    service: ParameterOptimizationService = Depends(get_optimization_service),  # noqa: B008
+    service: ParameterOptimizationService = Depends(get_optimization_service),
 ):
     """
     Optimize parameters for a trading strategy.
@@ -205,7 +205,7 @@ async def optimize_parameters(
 @router.post("/out-of-sample-test", response_model=OutOfSampleResult)
 async def perform_out_of_sample_test(
     request: OutOfSampleTestRequest,
-    service: ParameterOptimizationService = Depends(get_optimization_service),  # noqa: B008
+    service: ParameterOptimizationService = Depends(get_optimization_service),
 ):
     """
     Perform out-of-sample testing for a strategy.
@@ -238,7 +238,7 @@ async def perform_out_of_sample_test(
 @router.get("/artifacts", response_model=List[OptimizationArtifact])
 async def get_optimization_artifacts(
     strategy_name: Optional[str] = None,
-    service: ParameterOptimizationService = Depends(get_optimization_service),  # noqa: B008
+    service: ParameterOptimizationService = Depends(get_optimization_service),
 ):
     """
     Get optimization artifacts.
@@ -261,7 +261,7 @@ async def get_optimization_artifacts(
 @router.get("/artifacts/{artifact_id}", response_model=OptimizationArtifact)
 async def get_optimization_artifact(
     artifact_id: str,
-    service: ParameterOptimizationService = Depends(get_optimization_service),  # noqa: B008
+    service: ParameterOptimizationService = Depends(get_optimization_service),
 ):
     """
     Get a specific optimization artifact.
@@ -291,7 +291,7 @@ async def get_optimization_artifact(
 
 @router.get("/summary", response_model=OptimizationSummary)
 async def get_optimization_summary(
-    service: ParameterOptimizationService = Depends(get_optimization_service),  # noqa: B008
+    service: ParameterOptimizationService = Depends(get_optimization_service),
 ):
     """
     Get optimization summary.
@@ -313,7 +313,7 @@ async def get_optimization_summary(
 @router.get("/artifacts/{artifact_id}/metrics", response_model=OptimizationMetrics)
 async def get_optimization_metrics(
     artifact_id: str,
-    service: ParameterOptimizationService = Depends(get_optimization_service),  # noqa: B008
+    service: ParameterOptimizationService = Depends(get_optimization_service),
 ):
     """
     Get optimization metrics for an artifact.
@@ -367,7 +367,7 @@ async def get_parameter_types():
 @router.post("/validate-config")
 async def validate_optimization_config(
     config: OptimizationConfig,
-    service: ParameterOptimizationService = Depends(get_optimization_service),  # noqa: B008
+    service: ParameterOptimizationService = Depends(get_optimization_service),
 ):
     """
     Validate optimization configuration.
@@ -418,7 +418,7 @@ async def validate_optimization_config(
 @router.get("/strategies/{strategy_name}/best-parameters")
 async def get_best_parameters(
     strategy_name: str,
-    service: ParameterOptimizationService = Depends(get_optimization_service),  # noqa: B008
+    service: ParameterOptimizationService = Depends(get_optimization_service),
 ):
     """
     Get best parameters for a strategy.
@@ -463,7 +463,7 @@ async def get_best_parameters(
 @audit_log("optimization_artifact_deleted", log_args=True)
 async def delete_optimization_artifact(
     artifact_id: str,
-    service: ParameterOptimizationService = Depends(get_optimization_service),  # noqa: B008
+    service: ParameterOptimizationService = Depends(get_optimization_service),
 ):
     """
     Delete an optimization artifact.

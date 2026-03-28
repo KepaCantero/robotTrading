@@ -502,10 +502,9 @@ class SymbolValidator:
                     symbol = 'BTC'
                 return symbol
 
-            elif broker_name == 'coinbase':
+            elif broker_name == 'coinbase' and broker_symbol.endswith('-USD'):
                 # Remove -USD suffix (-USD = 4 characters)
-                if broker_symbol.endswith('-USD'):
-                    return broker_symbol[:-4]
+                return broker_symbol[:-4]
 
             # Default: return as-is
             return broker_symbol
@@ -946,19 +945,13 @@ class SymbolMapper:
         internal_symbol = internal_symbol.upper()
 
         # Broker-specific construction rules
-        if broker_name == 'binance':
-            return f"{internal_symbol}USDT"
-        elif broker_name == 'oanda':
-            return f"{internal_symbol}_USD"
-        elif broker_name == 'ibkr':
-            return f"IBKR:{internal_symbol}"
-        elif broker_name == 'kraken':
-            return f"X{internal_symbol}ZUSD"
-        elif broker_name == 'coinbase':
-            return f"{internal_symbol}-USD"
-        else:
-            # Default: return as-is
-            return internal_symbol
+        return {
+            'binance': f"{internal_symbol}USDT",
+            'oanda': f"{internal_symbol}_USD",
+            'ibkr': f"IBKR:{internal_symbol}",
+            'kraken': f"X{internal_symbol}ZUSD",
+            'coinbase': f"{internal_symbol}-USD",
+        }.get(broker_name, internal_symbol)
 
     def get_supported_brokers(self) -> List[str]:
         """

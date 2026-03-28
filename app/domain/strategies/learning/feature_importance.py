@@ -1596,8 +1596,8 @@ class FeatureStabilityTracker:
             # Calculate stability score (lower is more stable)
             stability_score = importance_cv + (rank_std / len(all_features))
 
-            # Determine if feature is stable (ensure Python bool, not np.bool_)
-            is_stable = bool(stability_score < self.stability_threshold)
+            # Determine if feature is stable
+            is_stable = stability_score < self.stability_threshold
 
             stability_results[feature] = {
                 "importance_mean": float(importance_mean),

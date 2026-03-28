@@ -382,7 +382,7 @@ class RiskGates:
             (passed, adjusted_quantity)
         """
         positions = await self.broker.get_positions()
-        current_qty = positions.get(symbol, None)
+        current_qty = positions.get(symbol)
         current_qty = current_qty.quantity if current_qty else Decimal("0")
 
         # Max position quantity (assume €100 per share average)

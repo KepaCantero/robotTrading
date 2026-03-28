@@ -276,12 +276,11 @@ class CorrelationAnalyzer:
             asset_returns = asset_returns.tail(self.lookback_days)
 
         # Ensure series are aligned
-        if len(fx_returns) != len(asset_returns):
+        if len(fx_returns) != len(asset_returns) and isinstance(fx_returns, pd.Series) and isinstance(asset_returns, pd.Series):
             # Align by index if both are Series with datetime index
-            if isinstance(fx_returns, pd.Series) and isinstance(asset_returns, pd.Series):
-                aligned = pd.concat([fx_returns, asset_returns], axis=1, join="inner")
-                fx_returns = aligned.iloc[:, 0]
-                asset_returns = aligned.iloc[:, 1]
+            aligned = pd.concat([fx_returns, asset_returns], axis=1, join="inner")
+            fx_returns = aligned.iloc[:, 0]
+            asset_returns = aligned.iloc[:, 1]
 
         # Calculate correlation
         correlation, p_value = self.calculate_correlation(fx_returns, asset_returns)

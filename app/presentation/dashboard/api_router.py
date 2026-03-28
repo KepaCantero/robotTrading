@@ -1,4 +1,3 @@
-# pylint: disable=try-except-raise
 """Production Dashboard API Router.
 
 Provides FastAPI endpoints for the production dashboard including:
@@ -8,6 +7,7 @@ Provides FastAPI endpoints for the production dashboard including:
 """
 
 import asyncio
+import contextlib
 import logging
 from pathlib import Path
 from typing import Dict, List
@@ -223,10 +223,8 @@ async def websocket_endpoint(
         logger.info("WebSocket disconnected normally")
     except (asyncio.TimeoutError, OSError) as e:
         logger.error(f"WebSocket error: {e}", exc_info=True)
-        try:
+        with contextlib.suppress(asyncio.TimeoutError, OSError):
             await websocket.close()
-        except (asyncio.TimeoutError, OSError):
-            pass
 
 
 @router.get("/connections")
@@ -241,7 +239,7 @@ async def get_active_connections(
     """
     try:
         return {"active_connections": dashboard.get_connection_count()}
-    except (ConnectionError, TimeoutError, OSError) as e:
+    except OSError as e:
         logger.error(f"Error getting connection count: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 

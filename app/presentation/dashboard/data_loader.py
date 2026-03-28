@@ -4,6 +4,7 @@ Data Loader for Dashboard
 Loads data from backtesting results and paper trading logs.
 """
 
+import contextlib
 import json
 import logging
 from pathlib import Path
@@ -118,10 +119,8 @@ class DashboardDataLoader:
             # Look for PnL in various possible fields
             pnl = results.get("total_pnl") or results.get("pnl") or results.get("final_pnl")
             if pnl is not None:
-                try:
+                with contextlib.suppress(ValueError, TypeError):
                     return float(pnl)
-                except (ValueError, TypeError):
-                    pass
 
         # Try to load from paper trading logs
         paper_log = self.paper_trading_path.parent / f"paper_trading_{strategy_name}.log"
@@ -134,10 +133,8 @@ class DashboardDataLoader:
 
                 pnl_match = re.search(r'[Pp][Nn][Ll]:\s*[-+]?\d*\.?\d+', content)
                 if pnl_match:
-                    try:
+                    with contextlib.suppress(ValueError, IndexError):
                         return float(pnl_match.group().split(':')[1].strip())
-                    except (ValueError, IndexError):
-                        pass
             except OSError:
                 pass
 

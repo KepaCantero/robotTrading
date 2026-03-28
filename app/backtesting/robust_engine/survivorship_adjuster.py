@@ -138,7 +138,7 @@ class SurvivorshipAdjuster:
             df["delisting_date"] = pd.to_datetime(df["delisting_date"]).dt.date
 
             # Use itertuples instead of iterrows for better performance
-            for count, row in enumerate(df.itertuples()):
+            for _count, row in enumerate(df.itertuples()):
                 stock = DelistedStock(
                     symbol=row.symbol,
                     delisting_date=row.delisting_date,

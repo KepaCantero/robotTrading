@@ -362,9 +362,9 @@ class DistributedCache:
         Returns:
             Número de entradas eliminadas
         """
-        count = 0
         now = datetime.utcnow()
 
+        count = 0
         # PostgreSQL
         if self.use_postgres and self.postgres_session:
             try:
@@ -392,7 +392,7 @@ class DistributedCache:
         ]
         for key in expired_keys:
             del self.memory_cache[key]
-            count += 1
+        count += len(expired_keys)
 
         return count
 

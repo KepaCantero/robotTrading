@@ -34,8 +34,6 @@ class FactorExposure:
 
     def to_dict(self) -> Dict:
         """Convert to dictionary."""
-        if model_r_squared is None:
-            model_r_squared = Decimal("0")
         return {
             "factor_name": self.factor_name,
             "coefficient": float(self.coefficient),
@@ -109,8 +107,6 @@ class CapacityFade:
 
     def to_dict(self) -> Dict:
         """Convert to dictionary."""
-        if worst_day_pct is None:
-            worst_day_pct = Decimal("0")
         return {
             "backtest_period": self.backtest_period,
             "backtest_ann_return_pct": float(self.backtest_ann_return_pct),

@@ -42,6 +42,20 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/live-trading", tags=["live-trading"])
 
+# Module-level defaults for FastAPI dependencies (B008 fix)
+_DEFAULT_ORCHESTRATOR = Depends(get_trading_bridge_orchestrator)
+_DEFAULT_ORDER_MANAGER = Depends(get_order_manager)
+_DEFAULT_BROKER = Depends(get_broker_connector)
+_DEFAULT_RISK_GATES = Depends(get_risk_gates)
+_DEFAULT_AUDIT_TRAIL = Depends(get_trading_audit_trail)
+_DEFAULT_ACCOUNT_SYNC = Depends(get_account_synchronizer)
+_DEFAULT_ALERT_MAPPER = Depends(get_alert_to_trade_mapper)
+_DEFAULT_LIMIT_100 = Query(100, ge=1, le=1000)
+_DEFAULT_LIMIT_100_AUDIT = Query(100, ge=1, le=1000)
+_DEFAULT_DAYS_30 = Query(30, ge=1, le=365)
+_DEFAULT_LIMIT_100_PENDING = Query(100, ge=1, le=1000)
+_DEFAULT_LIMIT_100_NON_COMPLIANT = Query(100, ge=1, le=1000)
+
 
 # ============================================================================
 # BRIDGE LIFECYCLE ENDPOINTS
@@ -50,7 +64,7 @@ router = APIRouter(prefix="/live-trading", tags=["live-trading"])
 
 @router.post("/start")
 async def start_live_trading(
-    orchestrator: TradingBridgeOrchestrator = Depends(get_trading_bridge_orchestrator),
+    orchestrator: TradingBridgeOrchestrator = _DEFAULT_ORCHESTRATOR,
 ) -> dict:
     """Start the live trading bridge.
 

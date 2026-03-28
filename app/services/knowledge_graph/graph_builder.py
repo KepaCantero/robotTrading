@@ -93,8 +93,6 @@ class KnowledgeGraphBuilder:
             return 0
 
         try:
-            count = 0
-
             for _asset in assets:
                 # In production:
                 # self.execute_query("""
@@ -102,9 +100,9 @@ class KnowledgeGraphBuilder:
                 # """, asset)
 
                 # Simulated: increment counter
-                count += 1
                 self.nodes_created += 1
 
+            count = len(assets)
             logger.info(f"✅ Created {count} asset nodes")
             return count
 
@@ -134,17 +132,15 @@ class KnowledgeGraphBuilder:
             return 0
 
         try:
-            count = 0
-
             for _strategy in strategies:
                 # In production:
                 # self.execute_query("""
                 #     CREATE (s:Strategy {name: $name, type: $type, risk_level: $risk, created: $created})
                 # """, strategy)
 
-                count += 1
                 self.nodes_created += 1
 
+            count = len(strategies)
             logger.info(f"✅ Created {count} strategy nodes")
             return count
 
@@ -169,8 +165,6 @@ class KnowledgeGraphBuilder:
             return 0
 
         try:
-            count = 0
-
             for _corr in correlations:
                 # In production:
                 # self.execute_query("""
@@ -178,9 +172,9 @@ class KnowledgeGraphBuilder:
                 #     CREATE (a1)-[:CORRELATED_WITH {strength: $strength}]->(a2)
                 # """, corr)
 
-                count += 1
                 self.relationships_created += 1
 
+            count = len(correlations)
             logger.info(f"✅ Created {count} correlation relationships")
             return count
 
@@ -205,8 +199,6 @@ class KnowledgeGraphBuilder:
             return 0
 
         try:
-            count = 0
-
             for _rel in relationships:
                 # In production:
                 # self.execute_query("""
@@ -214,9 +206,9 @@ class KnowledgeGraphBuilder:
                 #     CREATE (s)-[:TRADES {weight: $weight}]->(a)
                 # """, rel)
 
-                count += 1
                 self.relationships_created += 1
 
+            count = len(relationships)
             logger.info(f"✅ Created {count} strategy-asset relationships")
             return count
 
@@ -241,8 +233,6 @@ class KnowledgeGraphBuilder:
             return 0
 
         try:
-            count = 0
-
             for _perf in performances:
                 # In production:
                 # self.execute_query("""
@@ -254,9 +244,9 @@ class KnowledgeGraphBuilder:
                 #     })
                 # """, perf)
 
-                count += 1
                 self.nodes_created += 1
 
+            count = len(performances)
             logger.info(f"✅ Created {count} performance nodes")
             return count
 

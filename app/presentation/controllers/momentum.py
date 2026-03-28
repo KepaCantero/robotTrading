@@ -710,7 +710,7 @@ async def get_momentum_strategies(
     try:
         strategies = []
 
-        for name, strategy in service.strategies.items():
+        for _name, strategy in service.strategies.items():
             strategies.append(
                 {
                     "name": strategy.name,
@@ -802,8 +802,8 @@ async def get_strategy_signals(
 @router.post("/analyze/batch", response_model=Dict[str, Any])
 async def analyze_multiple_assets(
     symbols: List[str],
+    background_tasks: BackgroundTasks,
     timeframe: Timeframe = Query(Timeframe.DAILY, description="Analysis timeframe"),
-    background_tasks: BackgroundTasks = BackgroundTasks(),
     service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
 ):
     """Analyze momentum for multiple assets."""

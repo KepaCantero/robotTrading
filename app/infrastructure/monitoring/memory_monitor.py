@@ -255,20 +255,19 @@ class MemoryMonitor:
                 )
                 return
 
-        elif action == MemoryAction.CLOSE_POSITIONS:
+        elif action == MemoryAction.CLOSE_POSITIONS and self.position_closer:
             # Close positions before restart
-            if self.position_closer:
-                try:
-                    logger.info(
-                        "Closing positions before restart", extra={"action": "close_positions"}
-                    )
-                    await self.position_closer()
-                except (asyncio.TimeoutError, OSError) as e:
-                    logger.error(
-                        "Error closing positions",
-                        extra={"error_type": type(e).__name__},
-                        exc_info=True,
-                    )
+            try:
+                logger.info(
+                    "Closing positions before restart", extra={"action": "close_positions"}
+                )
+                await self.position_closer()
+            except (asyncio.TimeoutError, OSError) as e:
+                logger.error(
+                    "Error closing positions",
+                    extra={"error_type": type(e).__name__},
+                    exc_info=True,
+                )
 
         # Save state if configured
         if self.config.save_state_before_restart and self.state_saver:

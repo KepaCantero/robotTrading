@@ -1607,11 +1607,10 @@ class StrategyStockAllocator:
                     )
 
                 # Check half-life if mean reversion
-                if alloc.strategy == "mean_reversion" and alloc.half_life_tau is not None:
-                    if alloc.half_life_tau > self.config.MAX_HALF_LIFE_DAYS:
-                        errors.append(
-                            f"{ticker}: Half-life {alloc.half_life_tau:.2f} > max {self.config.MAX_HALF_LIFE_DAYS}"
-                        )
+                if alloc.strategy == "mean_reversion" and alloc.half_life_tau is not None and alloc.half_life_tau > self.config.MAX_HALF_LIFE_DAYS:
+                    errors.append(
+                        f"{ticker}: Half-life {alloc.half_life_tau:.2f} > max {self.config.MAX_HALF_LIFE_DAYS}"
+                    )
 
             # Check strategy exposure limits
             strategy_totals = defaultdict(float)

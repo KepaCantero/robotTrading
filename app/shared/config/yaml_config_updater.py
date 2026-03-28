@@ -125,12 +125,11 @@ class YAMLConfigUpdater:
                         f"Detector parameter '{key}' must be a positive integer, got {value}"
                     )
 
-            elif param_type == "strategy":
+            elif param_type == "strategy" and "exposure" in key_lower and (not isinstance(value, (int, float)) or not (0 <= value <= 1)):
                 # Strategy parameters
-                if "exposure" in key_lower and (not isinstance(value, (int, float)) or not (0 <= value <= 1)):
-                    raise ValueError(
-                        f"Strategy exposure '{key}' must be between 0 and 1, got {value}"
-                    )
+                raise ValueError(
+                    f"Strategy exposure '{key}' must be between 0 and 1, got {value}"
+                )
 
             # General numeric validation
             if isinstance(value, (int, float)):
@@ -212,12 +211,11 @@ class YAMLConfigUpdater:
                         logger.info(f"Updated {filter_name} thresholds for tier={tier}")
             else:
                 # Actualizar parámetros base
-                if filter_name in config:
+                if filter_name in config and "thresholds" in config[filter_name]:
                     # Buscar sección de thresholds
-                    if "thresholds" in config[filter_name]:
-                        config[filter_name]["thresholds"].update(optimized_params)
-                        updated = True
-                        logger.info(f"Updated {filter_name} base thresholds")
+                    config[filter_name]["thresholds"].update(optimized_params)
+                    updated = True
+                    logger.info(f"Updated {filter_name} base thresholds")
 
             # Si no se encontró thresholds, crear la sección
             if not updated and filter_name in config:

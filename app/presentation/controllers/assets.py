@@ -11,7 +11,7 @@ import logging
 from datetime import datetime
 from typing import Annotated, Any, Dict, Optional
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Depends, Query
 from requests.exceptions import HTTPError, RequestException
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ router = APIRouter(prefix="/assets", tags=["assets"])
 
 @router.get("/", response_model=Dict[str, Any])
 async def get_assets_overview(
-    service: Annotated[AssetIdentificationService, epends(get_asset_identification_service)],
+    service: Annotated[AssetIdentificationService, Depends(get_asset_identification_service)],
 ):
     """Get overview of all asset universes."""
     logger.debug("Getting assets overview")
@@ -51,8 +51,8 @@ async def get_assets_overview(
 @router.get("/liquid/{asset_class}", response_model=Dict[str, Any])
 async def get_liquid_assets(
     asset_class: AssetClass,
-    limit: Annotated[int, uery(20, ge=1, le=100, description="Number of assets to return")],
-    service: Annotated[AssetIdentificationService, epends(get_asset_identification_service)],
+    limit: Annotated[int, Query(20, ge=1, le=100, description="Number of assets to return")],
+    service: Annotated[AssetIdentificationService, Depends(get_asset_identification_service)],
 ):
     """Get top liquid assets for a specific asset class."""
     logger.debug("Getting liquid assets", extra={"asset_class": asset_class.value, "limit": limit})
@@ -101,7 +101,7 @@ async def get_liquid_assets(
 @router.get("/rankings/{asset_class}", response_model=Dict[str, Any])
 async def get_asset_rankings_by_class(
     asset_class: AssetClass,
-    service: Annotated[AssetIdentificationService, epends(get_asset_identification_service)],
+    service: Annotated[AssetIdentificationService, Depends(get_asset_identification_service)],
 ):
     """Get asset rankings for a specific asset class."""
     try:
@@ -123,7 +123,7 @@ async def get_asset_rankings_by_class(
 @router.get("/{symbol}", response_model=Dict[str, Any])
 async def get_asset_details(
     symbol: str,
-    service: Annotated[AssetIdentificationService, epends(get_asset_identification_service)],
+    service: Annotated[AssetIdentificationService, Depends(get_asset_identification_service)],
 ):
     """Get detailed asset information by symbol."""
     logger.debug("Getting asset details", extra={"symbol": symbol})
@@ -167,7 +167,7 @@ async def get_asset_details(
 @router.get("/{symbol}/liquidity", response_model=Dict[str, Any])
 async def get_liquidity_metrics(
     symbol: str,
-    service: Annotated[AssetIdentificationService, epends(get_asset_identification_service)],
+    service: Annotated[AssetIdentificationService, Depends(get_asset_identification_service)],
 ):
     """Get liquidity metrics for a specific asset."""
     try:
@@ -199,8 +199,8 @@ async def get_liquidity_metrics(
 
 @router.get("/rankings", response_model=Dict[str, Any])
 async def get_asset_rankings(
-    asset_class: Annotated[Optional[AssetClass], uery(None, description="Filter by asset class")],
-    service: Annotated[AssetIdentificationService, epends(get_asset_identification_service)],
+    asset_class: Annotated[Optional[AssetClass], Query(None, description="Filter by asset class")],
+    service: Annotated[AssetIdentificationService, Depends(get_asset_identification_service)],
 ):
     """Get asset rankings."""
     try:
@@ -221,7 +221,7 @@ async def get_asset_rankings(
 @router.post("/filter", response_model=Dict[str, Any])
 async def filter_assets(
     filter_criteria: AssetFilter,
-    service: Annotated[AssetIdentificationService, epends(get_asset_identification_service)],
+    service: Annotated[AssetIdentificationService, Depends(get_asset_identification_service)],
 ):
     """Filter assets based on criteria."""
     try:
@@ -263,7 +263,7 @@ async def filter_assets(
 @router.post("/refresh-liquidity", response_model=Dict[str, Any])
 async def refresh_liquidity_data(
     background_tasks: BackgroundTasks,
-    service: Annotated[AssetIdentificationService, epends(get_asset_identification_service)],
+    service: Annotated[AssetIdentificationService, Depends(get_asset_identification_service)],
 ):
     """Refresh liquidity data for all assets."""
     try:
@@ -282,8 +282,8 @@ async def refresh_liquidity_data(
 
 @router.get("/universe", response_model=Dict[str, Any])
 async def get_asset_universe(
-    asset_class: Annotated[Optional[AssetClass], uery(None, description="Filter by asset class")],
-    service: Annotated[AssetIdentificationService, epends(get_asset_identification_service)],
+    asset_class: Annotated[Optional[AssetClass], Query(None, description="Filter by asset class")],
+    service: Annotated[AssetIdentificationService, Depends(get_asset_identification_service)],
 ):
     """Get asset universe."""
     try:
@@ -305,8 +305,8 @@ async def get_asset_universe(
 async def identify_liquid_assets(
     asset_class: AssetClass,
     background_tasks: BackgroundTasks,
-    service: Annotated[AssetIdentificationService, epends(get_asset_identification_service)],
-    limit: Annotated[int, uery(20, ge=1, le=100, description="Number of assets to identify")],
+    service: Annotated[AssetIdentificationService, Depends(get_asset_identification_service)],
+    limit: Annotated[int, Query(20, ge=1, le=100, description="Number of assets to identify")],
 ):
     """Identify and rank liquid assets for a specific asset class."""
     logger.debug(
@@ -360,7 +360,7 @@ async def identify_liquid_assets(
 async def filter_assets_by_class(
     asset_class: AssetClass,
     filter_criteria: AssetFilter,
-    service: Annotated[AssetIdentificationService, epends(get_asset_identification_service)],
+    service: Annotated[AssetIdentificationService, Depends(get_asset_identification_service)],
 ):
     """Filter assets based on criteria for a specific asset class."""
     try:
@@ -403,7 +403,7 @@ async def filter_assets_by_class(
 @router.get("/universe/{asset_class}", response_model=Dict[str, Any])
 async def get_universe_summary(
     asset_class: AssetClass,
-    service: Annotated[AssetIdentificationService, epends(get_asset_identification_service)],
+    service: Annotated[AssetIdentificationService, Depends(get_asset_identification_service)],
 ):
     """Get universe summary for a specific asset class."""
     try:
@@ -482,7 +482,7 @@ async def health_check():
 
 @router.get("/stats", response_model=Dict[str, Any])
 async def get_asset_stats(
-    service: Annotated[AssetIdentificationService, epends(get_asset_identification_service)],
+    service: Annotated[AssetIdentificationService, Depends(get_asset_identification_service)],
 ):
     """Get asset statistics across all universes."""
     try:

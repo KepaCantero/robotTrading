@@ -134,12 +134,10 @@ class TradingEnv:
             take_profit_adjust = action[2]
 
             # Convertir position_size a acción discreta
-            if position_size > 0.3:  # Threshold para comprar
-                if self.position == 0:
-                    self._execute_buy(price, market_data)
-            elif position_size < -0.3:  # Threshold para vender
-                if self.position != 0:
-                    self._execute_sell(price, market_data)
+            if position_size > 0.3 and self.position == 0:  # Threshold para comprar
+                self._execute_buy(price, market_data)
+            elif position_size < -0.3 and self.position != 0:  # Threshold para vender
+                self._execute_sell(price, market_data)
             # Si está entre -0.3 y 0.3, mantener posición actual
 
             # Aplicar ajustes de stop-loss y take-profit
@@ -470,13 +468,13 @@ class ReinforcementLearningEngine(BaseLearningEngine):
 
         # Entrenamiento simplificado: iterar sobre secuencias
         total_reward = 0.0
-        episodes = 0
 
         # Assert env and agent are initialized
         assert self.env is not None, "Environment not initialized"
         assert self.agent is not None, "Agent not initialized"
 
-        for _episode in range(min(self.training_steps // 1000, 100)):  # Limitar episodios para demo
+        max_episodes = min(self.training_steps // 1000, 100)
+        for _episode in range(max_episodes):  # Limitar episodios para demo
             obs = self.env.reset()
             done = False
             step = 0
@@ -495,15 +493,13 @@ class ReinforcementLearningEngine(BaseLearningEngine):
                     # Aprender (usar learn() del agente)
                     # En producción, usar callback o método learn() directo
 
-            episodes += 1
-
         # Entrenar usando método learn() del agente
         self.agent.learn(total_timesteps=self.training_steps, callback=callback)
 
         self.is_trained = True
 
         # Evaluar en datos de validación
-        metrics = {'total_reward': total_reward, 'episodes': episodes}
+        metrics = {'total_reward': total_reward, 'episodes': max_episodes}
 
         if validation_data:
             eval_metrics = self._evaluate_on_data(validation_data)
@@ -608,16 +604,14 @@ class ReinforcementLearningEngine(BaseLearningEngine):
         # Ejecutar agente en entorno de prueba
         obs = self.env.reset()
         total_reward = 0.0
-        steps = 0
 
         market_sequences = test_data.get('market_sequences', [])
 
-        for market_data in market_sequences:
+        for _steps, market_data in enumerate(market_sequences):
             action, _ = self.agent.predict(obs, deterministic=True)
             obs, reward, terminated, truncated, info = self.env.step(action, market_data)
             done = terminated or truncated
             total_reward += reward
-            steps += 1
 
             if done:
                 break

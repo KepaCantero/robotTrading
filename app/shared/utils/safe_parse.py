@@ -15,6 +15,7 @@ Usage:
 """
 
 import ast
+import contextlib
 import json
 import logging
 from typing import Union
@@ -119,16 +120,12 @@ def safe_parse_with_fallback(value: str, default: Union[str, int, float, bool, l
         return default
 
     # Try literal_eval first (for Python-format data)
-    try:
+    with contextlib.suppress(ValueError, SyntaxError):
         return ast.literal_eval(value)
-    except (ValueError, SyntaxError):
-        pass
 
     # Try JSON (for JSON-format data)
-    try:
+    with contextlib.suppress(json.JSONDecodeError):
         return json.loads(value)
-    except json.JSONDecodeError:
-        pass
 
     logger.debug(f"Failed to parse value with both literal_eval and JSON: {value[:50]}...")
     return default

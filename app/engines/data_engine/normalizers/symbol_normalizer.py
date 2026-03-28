@@ -69,10 +69,10 @@ class SymbolNormalizer:
                         symbol_str = symbol_str[: -len(suffix)] + replacement
 
             # Aplicar mapeos específicos de exchange
-            if source and source in self.exchange_mappings:
-                mapping = self.exchange_mappings[source]
-                if symbol_str in mapping:
-                    symbol_str = mapping[symbol_str]
+            if source:
+                mapping = self.exchange_mappings.get(source)
+                if mapping:
+                    symbol_str = mapping.get(symbol_str, symbol_str)
 
             # Limpiar caracteres especiales (mantener letras, números, puntos, guiones)
             symbol_str = re.sub(r'[^A-Z0-9.\-]', '', symbol_str)

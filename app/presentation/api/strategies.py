@@ -132,7 +132,7 @@ class ExecutionStatsResponse(BaseModel):
 @router.get("/", response_model=Dict[str, Any])
 @rate_limit(max_requests=100, window_seconds=60)
 async def get_strategies_overview(
-    registry: Annotated[StrategyRegistry, epends(get_strategy_registry)],
+    registry: Annotated[StrategyRegistry, Depends(get_strategy_registry)],
 ):
     """Obtener resumen de todas las estrategias."""
     try:
@@ -147,7 +147,7 @@ async def get_strategies_overview(
 
 @router.get("/available", response_model=List[str])
 async def get_available_strategies(
-    registry: Annotated[StrategyRegistry, epends(get_strategy_registry)],
+    registry: Annotated[StrategyRegistry, Depends(get_strategy_registry)],
 ):
     """Obtener lista de estrategias disponibles."""
     try:
@@ -162,7 +162,7 @@ async def get_available_strategies(
 
 @router.get("/loaded", response_model=List[str])
 async def get_loaded_strategies(
-    registry: Annotated[StrategyRegistry, epends(get_strategy_registry)],
+    registry: Annotated[StrategyRegistry, Depends(get_strategy_registry)],
 ):
     """Obtener lista de estrategias cargadas."""
     try:
@@ -182,8 +182,8 @@ async def get_loaded_strategies(
 async def load_strategy(
     request: StrategyLoadRequest,
     http_request: Request,
-    registry: Annotated[StrategyRegistry, epends(get_strategy_registry)],
-    logger_instance: Annotated[StrategyLogger, epends(get_strategy_logger)],
+    registry: Annotated[StrategyRegistry, Depends(get_strategy_registry)],
+    logger_instance: Annotated[StrategyLogger, Depends(get_strategy_logger)],
 ):
     """Cargar una estrategia."""
     correlation_id = get_correlation_id()
@@ -251,8 +251,8 @@ async def load_strategy(
 @audit_log("strategy_activated", log_args=True)
 async def activate_strategy(
     request: StrategyActivateRequest,
-    registry: Annotated[StrategyRegistry, epends(get_strategy_registry)],
-    logger_instance: Annotated[StrategyLogger, epends(get_strategy_logger)],
+    registry: Annotated[StrategyRegistry, Depends(get_strategy_registry)],
+    logger_instance: Annotated[StrategyLogger, Depends(get_strategy_logger)],
 ):
     """Activar una estrategia."""
     try:
@@ -275,8 +275,8 @@ async def activate_strategy(
 @require_auth(roles=["admin", "trader"])
 @audit_log("strategy_deactivated")
 async def deactivate_strategy(
-    registry: Annotated[StrategyRegistry, epends(get_strategy_registry)],
-    logger_instance: Annotated[StrategyLogger, epends(get_strategy_logger)],
+    registry: Annotated[StrategyRegistry, Depends(get_strategy_registry)],
+    logger_instance: Annotated[StrategyLogger, Depends(get_strategy_logger)],
 ):
     """Desactivar estrategia activa."""
     try:
@@ -308,8 +308,8 @@ async def deactivate_strategy(
 @audit_log("strategy_unloaded", log_args=True)
 async def unload_strategy(
     strategy_name: str,
-    registry: Annotated[StrategyRegistry, epends(get_strategy_registry)],
-    logger_instance: Annotated[StrategyLogger, epends(get_strategy_logger)],
+    registry: Annotated[StrategyRegistry, Depends(get_strategy_registry)],
+    logger_instance: Annotated[StrategyLogger, Depends(get_strategy_logger)],
 ):
     """Descargar una estrategia."""
     try:
@@ -329,7 +329,8 @@ async def unload_strategy(
 
 @router.get("/{strategy_name}", response_model=StrategyResponse)
 async def get_strategy(
-    registry: Annotated[StrategyRegistry, epends(get_strategy_registry)]
+    strategy_name: str,
+    registry: Annotated[StrategyRegistry, Depends(get_strategy_registry)]
 ):
     """Obtener información de una estrategia."""
     try:
@@ -358,7 +359,7 @@ async def get_strategy(
 async def update_strategy_parameters(
     strategy_name: str,
     request: StrategyUpdateRequest,
-    registry: Annotated[StrategyRegistry, epends(get_strategy_registry)],
+    registry: Annotated[StrategyRegistry, Depends(get_strategy_registry)],
 ):
     """Actualizar parámetros de una estrategia."""
     try:
@@ -384,7 +385,8 @@ async def update_strategy_parameters(
 
 @router.get("/{strategy_name}/metrics", response_model=StrategyMetricsResponse)
 async def get_strategy_metrics(
-    logger_instance: Annotated[StrategyLogger, epends(get_strategy_logger)]
+    strategy_name: str,
+    logger_instance: Annotated[StrategyLogger, Depends(get_strategy_logger)]
 ):
     """Obtener métricas de una estrategia."""
     try:
@@ -413,7 +415,7 @@ async def get_strategy_metrics(
 
 @router.get("/metrics/all", response_model=Dict[str, Any])
 async def get_all_metrics(
-    logger_instance: Annotated[StrategyLogger, epends(get_strategy_logger)],
+    logger_instance: Annotated[StrategyLogger, Depends(get_strategy_logger)],
 ):
     """Obtener métricas de todas las estrategias."""
     try:

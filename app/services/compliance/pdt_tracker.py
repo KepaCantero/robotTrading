@@ -234,21 +234,20 @@ class PDTTracker:
         # Track positions for day trade detection
         if side == "BUY":
             self._open_positions[symbol].append(trade)
-        elif side == "SELL":
+        elif side == "SELL" and self._open_positions[symbol]:
             # Check if this closes a position opened today (day trade)
-            if self._open_positions[symbol]:
-                open_trade = self._open_positions[symbol].pop(0)
+            open_trade = self._open_positions[symbol].pop(0)
 
-                # Check if opened today
-                if open_trade["trade_date"] == trade_date:
-                    # This is a day trade!
-                    self._record_day_trade(
-                        symbol=symbol,
-                        open_price=open_trade["price"],
-                        close_price=price,
-                        quantity=quantity,
-                        trade_date=trade_date,
-                    )
+            # Check if opened today
+            if open_trade["trade_date"] == trade_date:
+                # This is a day trade!
+                self._record_day_trade(
+                    symbol=symbol,
+                    open_price=open_trade["price"],
+                    close_price=price,
+                    quantity=quantity,
+                    trade_date=trade_date,
+                )
 
         logger.debug(f"Recorded trade: {side} {quantity} {symbol} @ {price}")
 

@@ -209,10 +209,9 @@ class ValueSignalEnhancer:
             scores = []
             for metric in self.metrics:
                 if metric in row and not pd.isna(row[metric]):
-                    if metric in ["dividend_yield", "fcf_yield"]:
-                        raw_score = row[metric]
-                    else:
-                        raw_score = 1 / (row[metric] + 1e-8)
+                    raw_score = {"dividend_yield": row[metric], "fcf_yield": row[metric]}.get(
+                        metric, 1 / (row[metric] + 1e-8)
+                    )
 
                     cross_sectional = data[metric].dropna()
                     winsorized = self._winsorize(cross_sectional, self.outlier_threshold)

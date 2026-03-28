@@ -557,11 +557,9 @@ class DividendInvesting:
             score > self._tt.dividend_score_good and valuation_ratio < self._tt.valuation_ratio_fair
         ):
             return DividendSignal.BUY
-        elif score < 0.3 or payout_ratio > 0.9:
+        elif (score < 0.3 or payout_ratio > 0.9) or valuation_ratio > 1.2:
             # Risk of dividend cut (0.3 and 0.9 are business logic, not config)
-            return DividendSignal.SELL
-        elif valuation_ratio > 1.2:
-            # Overvalued (1.2 is business logic, not config)
+            # or Overvalued (1.2 is business logic, not config)
             return DividendSignal.SELL
         else:
             return DividendSignal.HOLD

@@ -520,43 +520,41 @@ class MetaDashboard:
         if self.df_results is None or self.df_results.empty:
             return
 
-        if PLOTLY_AVAILABLE:
-            # Gráfico overlay: Drawdown vs Volatility (si está disponible)
-            if 'max_drawdown' in self.df_results.columns:
-                fig = go.Figure()
+        if PLOTLY_AVAILABLE and 'max_drawdown' in self.df_results.columns:
+            fig = go.Figure()
 
-                # Drawdown timeline (si hay timestamps)
-                if 'timestamp' in self.df_results.columns:
-                    # Agrupar por fecha para ver evolución
-                    pass  # Implementar si hay datos temporales
+            # Drawdown timeline (si hay timestamps)
+            if 'timestamp' in self.df_results.columns:
+                # Agrupar por fecha para ver evolución
+                pass  # Implementar si hay datos temporales
 
-                # Scatter: Drawdown vs Sharpe (proxy de volatilidad)
-                if 'sharpe_ratio' in self.df_results.columns:
-                    fig.add_trace(
-                        go.Scatter(
-                            x=self.df_results['sharpe_ratio'],
-                            y=abs(self.df_results['max_drawdown']),
-                            mode='markers',
-                            text=self.df_results.get('test_type', 'unknown'),
-                            marker={
-                                "size": 10,
-                                "color": abs(self.df_results['max_drawdown']),
-                                "colorscale": 'RdYlGn',
-                                "showscale": True,
-                                "colorbar": {"title": "Drawdown"},
-                            },
-                            name="Drawdown vs Sharpe",
-                        )
+            # Scatter: Drawdown vs Sharpe (proxy de volatilidad)
+            if 'sharpe_ratio' in self.df_results.columns:
+                fig.add_trace(
+                    go.Scatter(
+                        x=self.df_results['sharpe_ratio'],
+                        y=abs(self.df_results['max_drawdown']),
+                        mode='markers',
+                        text=self.df_results.get('test_type', 'unknown'),
+                        marker={
+                            "size": 10,
+                            "color": abs(self.df_results['max_drawdown']),
+                            "colorscale": 'RdYlGn',
+                            "showscale": True,
+                            "colorbar": {"title": "Drawdown"},
+                        },
+                        name="Drawdown vs Sharpe",
                     )
+                )
 
-                    fig.update_layout(
-                        title="Volatility Context: Drawdown vs Sharpe Ratio",
-                        xaxis_title="Sharpe Ratio",
-                        yaxis_title="Max Drawdown (%)",
-                        height=400,
-                    )
+                fig.update_layout(
+                    title="Volatility Context: Drawdown vs Sharpe Ratio",
+                    xaxis_title="Sharpe Ratio",
+                    yaxis_title="Max Drawdown (%)",
+                    height=400,
+                )
 
-                    st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, use_container_width=True)
 
     def _render_drilldown_panel(self) -> None:
         """Renderizar panel de drilldown (selector)."""

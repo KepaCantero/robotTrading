@@ -366,14 +366,11 @@ class TimeoutManager:
             return getattr(config, attr_name)
 
         # Fallback to general HTTP timeout
-        if operation == "connect":
-            return config.http_connect
-        elif operation == "read":
-            return config.http_read
-        elif operation == "write":
-            return config.http_write
-        else:
-            return config.http_timeout
+        return {
+            "connect": config.http_connect,
+            "read": config.http_read,
+            "write": config.http_write,
+        }.get(operation, config.http_timeout)
 
 
 # Module-level convenience

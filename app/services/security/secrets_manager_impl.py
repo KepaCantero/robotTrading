@@ -11,6 +11,7 @@ This module provides secure storage and retrieval of secrets with:
 R29: Security Hardening
 """
 
+import contextlib
 import json
 import logging
 import os
@@ -337,18 +338,14 @@ class SecretsManagerImpl:
         """
         # First check in-memory cache
         if key in self._secrets:
-            try:
+            with contextlib.suppress(Exception):
                 return self._decrypt(self._secrets[key].value)
-            except Exception:
-                pass
 
         # Fall back to storage backend
         encrypted_value = self._storage.retrieve(key)
         if encrypted_value:
-            try:
+            with contextlib.suppress(Exception):
                 return self._decrypt(encrypted_value)
-            except Exception:
-                pass
 
         return None
 

@@ -452,14 +452,13 @@ class TierMapper:
 
         # Check YAML to Spanish mappings
         for yaml_tier, spanish_tier in cls.YAML_TO_SPANISH.items():
-            if spanish_tier in cls.SPANISH_TO_YAML and cls.SPANISH_TO_YAML[spanish_tier] != yaml_tier:
+            if spanish_tier in cls.SPANISH_TO_YAML and cls.SPANISH_TO_YAML[spanish_tier] != yaml_tier and not (yaml_tier == "micro" and spanish_tier == "bajo"):
                 # This is expected for bajo -> small (not micro)
-                if not (yaml_tier == "micro" and spanish_tier == "bajo"):
-                    warnings.append(
-                        f"YAML-Spanish mapping inconsistency: "
-                        f"{yaml_tier} -> {spanish_tier} but "
-                        f"{spanish_tier} -> {cls.SPANISH_TO_YAML[spanish_tier]}"
-                    )
+                warnings.append(
+                    f"YAML-Spanish mapping inconsistency: "
+                    f"{yaml_tier} -> {spanish_tier} but "
+                    f"{spanish_tier} -> {cls.SPANISH_TO_YAML[spanish_tier]}"
+                )
 
         # Validate capital thresholds are in order
         threshold_values = list(cls.THRESHOLDS.values())

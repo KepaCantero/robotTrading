@@ -4,6 +4,7 @@ TimestampNormalizer - Normalización de timestamps.
 Convierte timestamps de diferentes formatos y timezones a UTC estándar.
 """
 
+import contextlib
 import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional, Union
@@ -90,10 +91,8 @@ class TimestampNormalizer:
         Soporta múltiples formatos comunes.
         """
         # Formato ISO
-        try:
+        with contextlib.suppress(ValueError, TypeError, KeyError, AttributeError):
             return datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
-        except (ValueError, TypeError, KeyError, AttributeError):
-            pass
 
         # Formato común: YYYY-MM-DD HH:MM:SS
         formats = [

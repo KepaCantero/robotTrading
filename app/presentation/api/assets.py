@@ -112,7 +112,7 @@ async def get_assets_overview(
             stack_trace=traceback.format_exc(),
         )
         raise HTTPException(status_code=504, detail=f"Timeout getting assets overview: {str(e)}")
-    except (ConnectionError, OSError) as e:
+    except OSError as e:
         logger.error(
             "Error fetching assets overview",
             extra={
@@ -196,7 +196,7 @@ async def get_liquid_assets(
             stack_trace=traceback.format_exc(),
         )
         raise HTTPException(status_code=504, detail=f"Timeout getting liquid assets: {str(e)}")
-    except (ConnectionError, OSError) as e:
+    except OSError as e:
         logger.error(
             "Error fetching liquid assets",
             extra={
@@ -264,7 +264,7 @@ async def get_asset_rankings_by_class(
             stack_trace=traceback.format_exc(),
         )
         raise HTTPException(status_code=504, detail=f"Timeout getting asset rankings: {str(e)}")
-    except (ConnectionError, OSError) as e:
+    except OSError as e:
         logger.error(
             "Error fetching asset rankings",
             extra={
@@ -511,7 +511,7 @@ async def get_asset_rankings(
             stack_trace=traceback.format_exc(),
         )
         raise HTTPException(status_code=504, detail=f"Timeout getting asset rankings: {str(e)}")
-    except (ConnectionError, OSError) as e:
+    except OSError as e:
         logger.error(
             "Error fetching asset rankings",
             extra={
@@ -602,7 +602,7 @@ async def filter_assets(
             stack_trace=traceback.format_exc(),
         )
         raise HTTPException(status_code=504, detail=f"Timeout filtering assets: {str(e)}")
-    except (ConnectionError, OSError) as e:
+    except OSError as e:
         logger.error(
             "Error filtering assets",
             extra={
@@ -666,7 +666,7 @@ async def refresh_liquidity_data(
             "timestamp": datetime.utcnow(),
         }
 
-    except (ConnectionError, OSError) as e:
+    except OSError as e:
         logger.error(
             "Error refreshing liquidity data",
             extra={
@@ -735,7 +735,7 @@ async def get_asset_universe(
             stack_trace=traceback.format_exc(),
         )
         raise HTTPException(status_code=504, detail=f"Timeout getting asset universe: {str(e)}")
-    except (ConnectionError, OSError) as e:
+    except OSError as e:
         logger.error(
             "Error fetching asset universe",
             extra={
@@ -928,7 +928,7 @@ async def filter_assets_by_class(
             stack_trace=traceback.format_exc(),
         )
         raise HTTPException(status_code=504, detail=f"Timeout filtering assets: {str(e)}")
-    except (ConnectionError, OSError) as e:
+    except OSError as e:
         logger.error(
             "Error filtering assets by class",
             extra={
@@ -994,7 +994,7 @@ async def get_universe_summary(
             stack_trace=traceback.format_exc(),
         )
         raise HTTPException(status_code=504, detail=f"Timeout getting universe summary: {str(e)}")
-    except (ConnectionError, OSError) as e:
+    except OSError as e:
         logger.error(
             "Error fetching universe summary",
             extra={

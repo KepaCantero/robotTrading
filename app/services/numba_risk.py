@@ -195,13 +195,12 @@ def calculate_historical_cvar_numba(returns: np.ndarray, confidence_level: float
 
     # Calculate average of returns below VaR
     cvar_sum = 0.0
-    cvar_count = 0
-    for i in range(var_index + 1):
+    num_returns = var_index + 1
+    for i in range(num_returns):
         cvar_sum += sorted_returns[i]
-        cvar_count += 1
 
-    if cvar_count > 0:
-        return cvar_sum / cvar_count
+    if num_returns > 0:
+        return cvar_sum / num_returns
     else:
         return np.nan
 

@@ -47,6 +47,10 @@ logger = logging.getLogger(__name__)
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 http_bearer = HTTPBearer(auto_error=False)
 
+# Module-level security dependencies (avoids B008 function call in argument defaults)
+_api_key_security = Security(api_key_header)
+_bearer_security = Security(http_bearer)
+
 # Re-export for backward compatibility
 __all__ = [
     # User classes
@@ -161,8 +165,8 @@ def _audit_auth_context(
 
 async def get_current_user_optional(
     request_id: str = "unknown",
-    api_key: str | None = Security(api_key_header),
-    auth_header: HTTPAuthorizationCredentials | None = Security(http_bearer),
+    api_key: str | None = _api_key_security,
+    auth_header: HTTPAuthorizationCredentials | None = _bearer_security,
     user_store: UserStoreProtocol | None = None,
     token_manager: JWTTokenManagerProtocol | None = None,
     attempt_tracker: AuthAttemptTrackerProtocol | None = None,
@@ -282,8 +286,11 @@ async def get_current_user_optional(
     return None
 
 
+_optional_user_dep = Depends(get_current_user_optional)
+
+
 async def get_current_user(
-    current_user: User | None = Depends(get_current_user_optional),
+    current_user: User | None = _optional_user_dep,
 ) -> User:
     """
     Get authenticated user (required).
@@ -307,8 +314,11 @@ async def get_current_user(
     return current_user
 
 
+_current_user_dep = Depends(get_current_user)
+
+
 async def get_admin_user(
-    current_user: User = Depends(get_current_user),
+    current_user: User = _current_user_dep,
 ) -> User:
     """
     Get authenticated admin user.
@@ -330,7 +340,7 @@ async def get_admin_user(
 
 
 async def get_trader_user(
-    current_user: User = Depends(get_current_user),
+    current_user: User = _current_user_dep,
 ) -> User:
     """
     Get authenticated trader user.
@@ -352,7 +362,7 @@ async def get_trader_user(
 
 
 async def get_deployer_user(
-    current_user: User = Depends(get_current_user),
+    current_user: User = _current_user_dep,
 ) -> User:
     """
     Get authenticated deployment user.
@@ -385,7 +395,7 @@ def require_roles(*roles: str) -> Callable[[User], User]:
             ...
     """
 
-    async def role_checker(current_user: User = Depends(get_current_user)) -> User:
+    async def role_checker(current_user: User = _current_user_dep) -> User:
         if not any(current_user.has_role(role) for role in roles):
             logger.warning(
                 f"Role check failed for {current_user.username}",
@@ -416,7 +426,7 @@ def require_permissions(*permissions: str) -> Callable[[User], User]:
             ...
     """
 
-    async def permission_checker(current_user: User = Depends(get_current_user)) -> User:
+    async def permission_checker(current_user: User = _current_user_dep) -> User:
         if not any(
             current_user.has_permission(perm) or current_user.has_permission("*")
             for perm in permissions
@@ -438,7 +448,7 @@ def require_permissions(*permissions: str) -> Callable[[User], User]:
     return permission_checker
 
 
-def get_user_id(current_user: User = Depends(get_current_user)) -> str:
+def get_user_id(current_user: User = _current_user_dep) -> str:
     """
     Get user ID from authenticated user.
 
@@ -447,7 +457,7 @@ def get_user_id(current_user: User = Depends(get_current_user)) -> str:
     return current_user.user_id
 
 
-def get_username(current_user: User = Depends(get_current_user)) -> str:
+def get_username(current_user: User = _current_user_dep) -> str:
     """
     Get username from authenticated user.
 

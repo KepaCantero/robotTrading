@@ -16,6 +16,7 @@ FIX: Added proper initialization handshake, config sanitization, and better
 timeout handling to prevent hangs.
 """
 
+import contextlib
 import logging
 import multiprocessing as mp
 import platform
@@ -366,19 +367,15 @@ class SubprocessLearningEngineWrapper:
         except Exception as e:
             logger.debug(f"Error cleaning up subprocess: {e}")
 
-        try:
+        with contextlib.suppress(Exception):
             if self._request_queue is not None:
                 self._request_queue.close()
                 self._request_queue = None
-        except Exception:
-            pass
 
-        try:
+        with contextlib.suppress(Exception):
             if self._response_queue is not None:
                 self._response_queue.close()
                 self._response_queue = None
-        except Exception:
-            pass
 
     def _send_request(self, request: SubprocessRequest) -> SubprocessResponse:
         """Send a request to the subprocess and wait for response."""
@@ -619,7 +616,5 @@ class SubprocessLearningEngineWrapper:
 
     def __del__(self):
         """Cleanup on destruction."""
-        try:
+        with contextlib.suppress(Exception):
             self.shutdown()
-        except Exception:
-            pass  # Ignore errors during destruction

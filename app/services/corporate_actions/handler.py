@@ -63,7 +63,7 @@ class CorporateAction:
     payable_date: Optional[date] = None
     processed_at: Optional[datetime] = None
 
-    def to_dict(self) -> Dict[str, Union[str, None]]:
+    def to_dict(self) -> Dict[str, Optional[str]]:
         """Convert to dictionary."""
         return {
             "action_type": self.action_type.value,
@@ -264,7 +264,7 @@ class CorporateActionsHandler:
         ex_date: date,
         record_date: Optional[date] = None,
         payable_date: Optional[date] = None,
-    ) -> Dict[str, Union[str, None]]:
+    ) -> Dict[str, Optional[str]]:
         """
         Record dividend payment.
 
@@ -449,7 +449,7 @@ class CorporateActionsHandler:
         delist_date: date,
         reason: Optional[str] = None,
         force_close: bool = True,
-    ) -> Dict[str, Union[str, None, int, List[Dict[str, Union[str, None]]]]]:
+    ) -> Dict[str, Optional[Union[str, int, List[Dict[str, Optional[str]]]]]]:
         """
         Handle delisting - close positions.
 
