@@ -1,5 +1,4 @@
 # mypy: ignore-errors
-# pylint: disable=unsupported-binary-operation  # For Python 3.10+ union syntax
 """
 Strategy Stock Allocator Module
 
@@ -19,7 +18,7 @@ Implementa arquitectura profesional, verificable y auditable con:
 
 import logging
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Tuple  # noqa: F401
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -1058,7 +1057,6 @@ class StrategyStockAllocator:
             cointegration_score = 0.0
             half_life = None
             hedge_ratio = 1.0
-            spread_residuals = None  # noqa: F841
             spread_z_score = None
             garch_normalized_z = None
 
@@ -1079,7 +1077,6 @@ class StrategyStockAllocator:
                     model = OLS(prices2, prices1).fit()
                     hedge_ratio = float(model.params[0])
                     residuals = model.resid
-                    _spread_residuals = residuals  # Store for GARCH normalization  # noqa: F841
 
                     # ADF test on residuals - STRICT: p < 0.01 to avoid spurious relationships
                     adf_result = adfuller(residuals, autolag='AIC')
