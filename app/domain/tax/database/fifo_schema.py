@@ -1,4 +1,3 @@
-# mypy: disable-error-code="valid-type,misc,assignment,attr-defined"
 """
 FIFO Trading Database Schema - Spain Tax Compliance (Modelo 721)
 
@@ -34,10 +33,13 @@ logger = logging.getLogger(__name__)
 
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import DeclarativeBase
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    """SQLAlchemy declarative base with proper type support."""
+    pass
 
 
 # ============================================================================
@@ -93,7 +95,7 @@ class LotStatus(str, Enum):
 # ============================================================================
 
 
-class Account(Base):  # type: ignore[valid-type]
+class Account(Base):
     """
     Cuenta de trading/broker.
 
@@ -158,7 +160,7 @@ class Account(Base):  # type: ignore[valid-type]
     )
 
 
-class Transaction(Base):  # type: ignore[valid-type]
+class Transaction(Base):
     """
     Transacción individual con tracking FIFO.
 
@@ -279,7 +281,7 @@ class Transaction(Base):  # type: ignore[valid-type]
             return Decimal("0")
 
 
-class Lot(Base):  # type: ignore[valid-type]
+class Lot(Base):
     """
     Lote FIFO para tracking de cost basis.
 
@@ -352,7 +354,7 @@ class Lot(Base):  # type: ignore[valid-type]
         return (self.closed_at - self.opened_at).days >= 365
 
 
-class BalanceSnapshot(Base):  # type: ignore[valid-type]
+class BalanceSnapshot(Base):
     """
     Snapshot de balance para tracking histórico.
 
@@ -388,7 +390,7 @@ class BalanceSnapshot(Base):  # type: ignore[valid-type]
     )
 
 
-class TaxReport(Base):  # type: ignore[valid-type]
+class TaxReport(Base):
     """
     Reporte fiscal generado (Modelo 721/720).
 
@@ -756,9 +758,9 @@ class Modelo721Generator:
                 self.session.query(BalanceSnapshot)
                 .filter(
                     BalanceSnapshot.account_id == account.id,
-                    sa.extract('year', BalanceSnapshot.captured_at) == year,  # type: ignore[arg-type]
+                    sa.extract('year', BalanceSnapshot.captured_at) == year,
                 )
-                .order_by(sa.desc(BalanceSnapshot.captured_at))  # type: ignore[arg-type]
+                .order_by(sa.desc(BalanceSnapshot.captured_at))
                 .first()
             )
 
