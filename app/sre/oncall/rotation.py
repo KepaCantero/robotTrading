@@ -819,9 +819,8 @@ class OncallRotation:
             if not slot.is_active:
                 continue
 
-            if slot.primary_engineer_id == engineer_id or slot.backup_engineer_id == engineer_id:
-                if unavailable_slot.overlaps(slot.time_slot):
-                    conflicts.append(slot)
+            if (slot.primary_engineer_id == engineer_id or slot.backup_engineer_id == engineer_id) and unavailable_slot.overlaps(slot.time_slot):
+                conflicts.append(slot)
 
         if conflicts:
             self.logger.warning(

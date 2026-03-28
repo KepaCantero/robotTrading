@@ -339,7 +339,7 @@ def extract_strategy_config(result_row: pd.Series) -> Dict[str, Union[str, int, 
         'test_name': result_row.get('test_name', 'Unknown'),
         'test_type': result_row.get('test_type', 'Unknown'),
         'strategy': result_row.get('strategy', 'Unknown'),
-        'learning_engine': result_row.get('learning_engine', None),
+        'learning_engine': result_row.get('learning_engine'),
         'modules_active': result_row.get('modules_active', []),
         'parameters': {},
     }
@@ -1974,11 +1974,10 @@ def main():
                                 st.subheader("📊 Evaluación Detallada de Métricas")
 
                                 metric_cols = st.columns(3)
-                                metric_idx = 0
 
-                                for metric_name, (_passes, status, obj_config) in eval_result[
+                                for metric_idx, (metric_name, (_passes, status, obj_config)) in enumerate(eval_result[
                                     'evaluations'
-                                ].items():
+                                ].items()):
                                     with metric_cols[metric_idx % 3]:
                                         # Get actual value
                                         metric_key = metric_name
@@ -2007,8 +2006,6 @@ def main():
                                         st.write(f"**Objetivo:** {target_str}")
                                         st.write(f"**Estado:** {status}")
                                         st.write(f"*{obj_config['description']}*")
-
-                                    metric_idx += 1
 
                                 # Metrics summary table
                                 st.divider()

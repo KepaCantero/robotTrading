@@ -16,6 +16,7 @@ Basado en reglas de:
 
 from __future__ import annotations
 
+import contextlib
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
@@ -656,10 +657,8 @@ class ProfileBasedRegimeSelector(BaseStrategyEngine):
         strategy_name = signal.metadata.get("selected_strategy")
         if strategy_name and strategy_name in self.strategies:
             strategy = self.strategies[strategy_name]
-            try:
+            with contextlib.suppress(Exception):
                 return strategy.risk_check(signal, portfolio)
-            except Exception:
-                pass
 
         return True
 

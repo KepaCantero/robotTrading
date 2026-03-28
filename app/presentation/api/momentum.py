@@ -613,7 +613,7 @@ async def get_momentum_strategies(
     try:
         strategies = []
 
-        for name, strategy in service.strategies.items():
+        for _name, strategy in service.strategies.items():
             strategies.append(
                 {
                     "name": strategy.name,

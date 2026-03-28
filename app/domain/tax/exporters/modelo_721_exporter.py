@@ -218,18 +218,17 @@ class Modelo721Exporter:
 
         # Calculate gains for sells
         for tx in transactions:
-            if tx.side == "SELL":
+            if tx.side == "SELL" and tx.symbol in lots and lots[tx.symbol]:
                 # Find matching BUY lot (FIFO)
-                if tx.symbol in lots and lots[tx.symbol]:
-                    buy_tx = lots[tx.symbol].pop(0)
+                buy_tx = lots[tx.symbol].pop(0)
 
-                    # Calculate capital gain
-                    tx.cost_basis_eur = buy_tx.cost_basis_eur
-                    tx.proceeds_eur = tx.cost_basis_eur  # For sells
-                    tx.capital_gain_eur = tx.proceeds_eur - tx.cost_basis_eur
+                # Calculate capital gain
+                tx.cost_basis_eur = buy_tx.cost_basis_eur
+                tx.proceeds_eur = tx.cost_basis_eur  # For sells
+                tx.capital_gain_eur = tx.proceeds_eur - tx.cost_basis_eur
 
-                    tx.lot_id = buy_tx.lot_id
-                    tx.acquisition_date = buy_tx.date
+                tx.lot_id = buy_tx.lot_id
+                tx.acquisition_date = buy_tx.date
 
         return transactions
 

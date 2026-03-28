@@ -46,7 +46,7 @@ from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Protocol, Union, runtime_checkable
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Protocol, Union, runtime_checkable
 
 import numpy as np
 
@@ -134,7 +134,7 @@ class VaRCalculatorProtocol(Protocol):
     """Protocol for VaR Calculator to enable dependency injection."""
 
     def calculate_var(
-        self, returns: np.ndarray, portfolio_value: Union[float, None] = None
+        self, returns: np.ndarray, portfolio_value: Optional[float] = None
     ) -> Dict[str, Any]:
         """Calculate Value at Risk."""
         ...
@@ -185,8 +185,8 @@ class RiskAttributorProtocol(Protocol):
     def attribute_risk(
         self,
         portfolio: "Portfolio",
-        returns_history: Union[np.ndarray, None] = None,
-        prices_history: Union[np.ndarray, None] = None,
+        returns_history: Optional[np.ndarray] = None,
+        prices_history: Optional[np.ndarray] = None,
     ) -> Dict[str, Any]:
         """Attribute risk by factor."""
         ...

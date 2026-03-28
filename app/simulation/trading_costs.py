@@ -87,8 +87,6 @@ class CostBreakdown:
     @property
     def cost_percentage(self) -> Decimal:
         """Total cost as percentage of notional value."""
-        if implementation_shortfall_bps is None:
-            implementation_shortfall_bps = Decimal("0")
         notional = self.quantity * self.benchmark_price
         if notional == 0:
             return Decimal("0")

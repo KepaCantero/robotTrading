@@ -453,102 +453,99 @@ class ModularMomentumStrategy(BaseStrategy):
                     f"⚠️ {self._learning_engine_type} engine - usando predicción neutral (previene mutex.cc blocking)"
                 )
             # Solo usar learning engine si YA está inicializado (no intentar inicializar aquí)
-            elif self.learning_engine is not None and self.learning_engine.enabled:
+            elif self.learning_engine is not None and self.learning_engine.enabled and learning_prediction is None:
                 # Para otros engines (supervised, reinforcement), proceder normalmente
-                if learning_prediction is None:
-                    # Si no está entrenado pero está habilitado, intentar entrenar automáticamente
-                    if not self.learning_engine.is_ready():
-                        # Intentar entrenar con datos históricos si hay suficientes
-                        if (
-                            len(self.price_history) >= self._cfg.auto_train_min_history
-                        ):  # Use config value
-                            try:
-                                self._auto_train_learning_engine()
-                            except (RuntimeError, ValueError, TypeError, KeyError) as e:
-                                logger.debug(
-                                    f"No se pudo entrenar learning engine automáticamente: {e}"
-                                )
+                # Si no está entrenado pero está habilitado, intentar entrenar automáticamente
+                if not self.learning_engine.is_ready() and (
+                    len(self.price_history) >= self._cfg.auto_train_min_history
+                ):  # Use config value
+                    try:
+                        self._auto_train_learning_engine()
+                    except (RuntimeError, ValueError, TypeError, KeyError) as e:
+                        logger.debug(
+                            f"No se pudo entrenar learning engine automáticamente: {e}"
+                        )
 
-                    # Preparar metadata
-                    metadata = {
-                        'timestamp': (
-                            market_data.timestamp
-                            if hasattr(market_data, 'timestamp')
-                            else datetime.now()
-                        ),
-                        'symbol': market_data.symbol,
-                        'recent_trades': list(self.recent_trades),
-                        'recent_win_rate': self._calculate_recent_win_rate(),
+                # Preparar metadata
+                metadata = {
+                    'timestamp': (
+                        market_data.timestamp
+                        if hasattr(market_data, 'timestamp')
+                        else datetime.now()
+                    ),
+                    'symbol': market_data.symbol,
+                    'recent_trades': list(self.recent_trades),
+                    'recent_win_rate': self._calculate_recent_win_rate(),
+                }
+
+                # Preparar features según el tipo de learning engine
+                learning_engine_type = self.learning_engine.__class__.__name__
+
+                if learning_engine_type in ['DeepLearningEngine', 'TransformerEngine']:
+                    # Para Deep Learning y Transformer, necesitamos una secuencia histórica
+                    features = self._prepare_sequence_features_for_learning(
+                        indicators, filter_results, market_context, metadata
+                    )
+                else:
+                    # Para Supervised y Reinforcement, usar features estándar
+                    features = {
+                        'indicators': indicators,
+                        'filter_results': filter_results,
+                        'market_context': market_context,
+                        'metadata': metadata,
                     }
 
-                    # Preparar features según el tipo de learning engine
-                    learning_engine_type = self.learning_engine.__class__.__name__
-
-                    if learning_engine_type in ['DeepLearningEngine', 'TransformerEngine']:
-                        # Para Deep Learning y Transformer, necesitamos una secuencia histórica
-                        features = self._prepare_sequence_features_for_learning(
-                            indicators, filter_results, market_context, metadata
-                        )
-                    else:
-                        # Para Supervised y Reinforcement, usar features estándar
-                        features = {
-                            'indicators': indicators,
-                            'filter_results': filter_results,
-                            'market_context': market_context,
-                            'metadata': metadata,
-                        }
-
-                    if self.learning_engine.is_ready():
-                        # Learning engine entrenado - usar predicción real
-                        try:
-                            learning_prediction = self.learning_engine.predict(features)
-                        except KeyError as e:
-                            if 'sequence' in str(e):
-                                logger.warning(
-                                    f"⚠️ Learning engine {learning_engine_type} necesita 'sequence' pero no está disponible. Usando predicción neutral."
-                                )
-                                learning_prediction = {
-                                    'success_probability': 0.5,
-                                    'confidence': 0.0,
-                                    'recommended_action': 'HOLD',
-                                }
-                            else:
-                                raise
-                        except (RuntimeError, ValueError, TypeError) as e:
-                            logger.warning(f"⚠️ Error en predicción de learning engine: {e}")
+                if self.learning_engine.is_ready():
+                    # Learning engine entrenado - usar predicción real
+                    try:
+                        learning_prediction = self.learning_engine.predict(features)
+                    except KeyError as e:
+                        if 'sequence' in str(e):
+                            logger.warning(
+                                f"⚠️ Learning engine {learning_engine_type} necesita 'sequence' pero no está disponible. Usando predicción neutral."
+                            )
                             learning_prediction = {
                                 'success_probability': 0.5,
                                 'confidence': 0.0,
                                 'recommended_action': 'HOLD',
                             }
-
-                        # Filtrar señal si probabilidad es baja
-                        if self.learning_engine.__class__.__name__ in [
-                            'SupervisedLearningEngine',
-                            'DeepLearningEngine',
-                        ]:
-                            success_prob = learning_prediction.get(
-                                'success_probability', learning_prediction.get('confidence', 0.5)
-                            )
-                            if success_prob < self.min_success_probability:
-                                logger.debug(
-                                    f"🚫 Señal rechazada por learning engine: prob={success_prob:.2f} < {self.min_success_probability:.2f}"
-                                )
-                                return []
-
-                        # Aplicar ajustes sugeridos por learning engine
-                        self._apply_learning_adjustments(learning_prediction)
-                    else:
-                        # Learning engine no entrenado - usar predicción neutral
+                        else:
+                            raise
+                    except (RuntimeError, ValueError, TypeError) as e:
+                        logger.warning(f"⚠️ Error en predicción de learning engine: {e}")
                         learning_prediction = {
                             'success_probability': 0.5,
                             'confidence': 0.0,
                             'recommended_action': 'HOLD',
                         }
-                        logger.debug(
-                            f"⚠️ Learning engine ({self.learning_engine.__class__.__name__}) no entrenado - usando predicción neutral. "
-                            f"Estado: enabled={self.learning_engine.enabled}, is_trained={self.learning_engine.is_trained}, model={'exists' if self.learning_engine.model else 'None'}"
+
+                    # Filtrar señal si probabilidad es baja
+                    if self.learning_engine.__class__.__name__ in [
+                        'SupervisedLearningEngine',
+                        'DeepLearningEngine',
+                    ]:
+                        success_prob = learning_prediction.get(
+                            'success_probability', learning_prediction.get('confidence', 0.5)
                         )
+                        if success_prob < self.min_success_probability:
+                            logger.debug(
+                                f"🚫 Señal rechazada por learning engine: prob={success_prob:.2f} < {self.min_success_probability:.2f}"
+                            )
+                            return []
+
+                    # Aplicar ajustes sugeridos por learning engine
+                    self._apply_learning_adjustments(learning_prediction)
+                else:
+                    # Learning engine no entrenado - usar predicción neutral
+                    learning_prediction = {
+                        'success_probability': 0.5,
+                        'confidence': 0.0,
+                        'recommended_action': 'HOLD',
+                    }
+                    logger.debug(
+                        f"⚠️ Learning engine ({self.learning_engine.__class__.__name__}) no entrenado - usando predicción neutral. "
+                        f"Estado: enabled={self.learning_engine.enabled}, is_trained={self.learning_engine.is_trained}, model={'exists' if self.learning_engine.model else 'None'}"
+                    )
 
             # 7. Crear señal
             confidence = self._calculate_signal_confidence(filter_results, learning_prediction)

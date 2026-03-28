@@ -13,6 +13,7 @@ Características principales:
 - Gestión de conflictos entre estrategias
 """
 
+import contextlib
 import logging
 from abc import abstractmethod
 from collections import defaultdict
@@ -163,10 +164,8 @@ class BaseStrategyEnsemble(BaseStrategyEngine):
         strategy_name = signal.metadata.get("selected_strategy")
         if strategy_name and strategy_name in self.strategies:
             strategy = self.strategies[strategy_name]
-            try:
+            with contextlib.suppress(ValueError, TypeError, KeyError, AttributeError, IndexError):
                 return strategy.risk_check(signal, portfolio)
-            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
-                pass
 
         return True
 

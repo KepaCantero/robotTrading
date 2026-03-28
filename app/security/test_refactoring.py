@@ -470,7 +470,8 @@ def test_metrics():
 
     # Original file
     original_file = "/Users/kepa.cantero/Projects/algoTrading/app/security/auth.py"
-    original_loc = len(open(original_file).readlines())
+    with open(original_file) as f:
+        original_loc = len(f.readlines())
 
     # New files
     files = {
@@ -487,7 +488,8 @@ def test_metrics():
 
     total_loc = 0
     for name, path in files.items():
-        loc = len(open(path).readlines())
+        with open(path) as f:
+            loc = len(f.readlines())
         total_loc += loc
         print(f"  {name}: {loc} lines")
 
@@ -502,11 +504,13 @@ def test_metrics():
     print("  After refactoring: 1-2 classes per file (follows SRP)")
 
     print("\nComplexity Reduction:")
+    with open(files['auth.py (refactored)']) as f:
+        refactored_loc = len(f.readlines())
     print(
-        f"  auth.py reduced from {original_loc} to {len(open(files['auth.py (refactored)']).readlines())} lines"
+        f"  auth.py reduced from {original_loc} to {refactored_loc} lines"
     )
     print(
-        f"  Reduction: {((original_loc - len(open(files['auth.py (refactored)']).readlines())) / original_loc * 100):.1f}%"
+        f"  Reduction: {((original_loc - refactored_loc) / original_loc * 100):.1f}%"
     )
 
     print("\n✓ Refactoring metrics calculated!")

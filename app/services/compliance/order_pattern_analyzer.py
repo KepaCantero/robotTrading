@@ -453,13 +453,18 @@ class OrderPatternAnalyzer:
         symbol_orders = self._orders_by_symbol.get(symbol, [])
 
         # Count orders in last 60 seconds
-        recent_count = 0
-        for order in reversed(symbol_orders):
-            if (now - order.timestamp).total_seconds() > 60:
-                break
-            recent_count += 1
+        if not symbol_orders:
+            return False
 
-        return recent_count > self.RAPID_ORDER_THRESHOLD
+        # Count how many consecutive recent orders (within 60s) from the end
+        recent_orders = list(reversed(symbol_orders))
+        cutoff_idx = len(recent_orders)
+        for i, order in enumerate(recent_orders):
+            if (now - order.timestamp).total_seconds() > 60:
+                cutoff_idx = i
+                break
+
+        return cutoff_idx > self.RAPID_ORDER_THRESHOLD
 
     def _detect_momentum_ignition(self, symbol: str) -> bool:
         """

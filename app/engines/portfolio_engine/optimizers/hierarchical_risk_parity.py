@@ -287,7 +287,7 @@ class HierarchicalRiskParity:
         clusters = [{i} for i in range(n)]
 
         # Track cluster indices
-        [i for i in range(n)]
+        list(range(n))
 
         # Process each merge in the linkage matrix
         for _i, row in enumerate(linkage_matrix):

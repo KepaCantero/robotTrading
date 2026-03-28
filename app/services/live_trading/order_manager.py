@@ -255,7 +255,7 @@ class OrderManager:
                 self.order_history.append(order)
                 logger.info(f"✅ Order canceled: {order_id}")
             return success
-        except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+        except (OSError, ValueError) as e:
             logger.error(f"❌ Error canceling order: {str(e)}")
             return False
 

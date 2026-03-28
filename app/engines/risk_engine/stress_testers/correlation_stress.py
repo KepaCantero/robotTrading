@@ -214,15 +214,7 @@ class CorrelationStressTester:
                     stressed_matrix[symbol1][symbol2] = None
 
         # Apply scenario rules
-        if scenario.get('apply_to_all', False):
-            target_corr = scenario['correlation_target']
-            for symbol1 in portfolio_symbols:
-                for symbol2 in portfolio_symbols:
-                    if symbol1 != symbol2:
-                        stressed_matrix[symbol1][symbol2] = target_corr
-
-        elif scenario.get('apply_to_sectors', False):
-            # Apply within sectors (simplified: all same sector for now)
+        if scenario.get('apply_to_all', False) or scenario.get('apply_to_sectors', False):
             target_corr = scenario['correlation_target']
             for symbol1 in portfolio_symbols:
                 for symbol2 in portfolio_symbols:

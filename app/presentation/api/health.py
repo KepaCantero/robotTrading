@@ -282,9 +282,7 @@ async def health_check() -> HealthCheckResponse:
     result["timestamp"] = datetime.now().isoformat()
 
     # Return appropriate HTTP status
-    if result["status"] == "unhealthy":
-        pass
-    elif result["status"] == "degraded":
+    if result["status"] == "unhealthy" or result["status"] == "degraded":
         pass  # Still return 200 for degraded
 
     return HealthCheckResponse(**result)

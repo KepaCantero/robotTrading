@@ -361,12 +361,12 @@ class VectorizationAuditor:
                     node.func, ast.Name
                 ) and node.func.id == "len":
                     return True
-                for child in ast.walk(node):
-                    if isinstance(child, ast.Call) and isinstance(
+                return any(
+                    isinstance(child, ast.Call) and isinstance(
                         child.func, ast.Name
-                    ) and child.func.id == "len":
-                        return True
-                return False
+                    ) and child.func.id == "len"
+                    for child in ast.walk(node)
+                )
 
             def _check_for_subscript_operations(self, node: ast.For) -> bool:
                 """Check if loop body contains array subscript operations."""
@@ -385,12 +385,12 @@ class VectorizationAuditor:
 
             def _check_for_numerical_operations(self, node: ast.For) -> bool:
                 """Check if loop body contains numerical operations."""
-                for child in ast.walk(node):
-                    if isinstance(child, (ast.BinOp, ast.AugAssign)) and isinstance(
+                return any(
+                    isinstance(child, (ast.BinOp, ast.AugAssign)) and isinstance(
                         child.op, (ast.Add, ast.Sub, ast.Mult, ast.Div, ast.Pow)
-                    ):
-                        return True
-                return False
+                    )
+                    for child in ast.walk(node)
+                )
 
         visitor = ForLoopVisitor(self)
         visitor.visit(tree)

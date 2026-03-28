@@ -162,15 +162,14 @@ class HMMRegimeDetector:
                 - regime_probabilities: Dict[str, float] - Probabilidades por régimen
                 - confidence: float - Confianza en la detección
         """
-        if not self.model:
+        if not self.model and not self.fit(prices):
             # Intentar entrenar si no está entrenado
-            if not self.fit(prices):
-                return {
-                    'regime': 'unknown',
-                    'probability': 0.0,
-                    'regime_probabilities': {},
-                    'confidence': 0.0,
-                }
+            return {
+                'regime': 'unknown',
+                'probability': 0.0,
+                'regime_probabilities': {},
+                'confidence': 0.0,
+            }
 
         try:
             # Calcular features recientes

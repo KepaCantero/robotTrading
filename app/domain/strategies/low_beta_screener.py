@@ -247,11 +247,10 @@ class LowBetaScreener:
                 f"P/B muy alto: {profile.pb_ratio:.1f} > {self.config.max_pb_ratio}"
             )
 
-        if self.config.max_debt_to_equity is not None and profile.debt_to_equity is not None:
-            if profile.debt_to_equity > self.config.max_debt_to_equity:
-                failures.append(
-                    f"D/E muy alto: {profile.debt_to_equity:.1f} > {self.config.max_debt_to_equity}"
-                )
+        if self.config.max_debt_to_equity is not None and profile.debt_to_equity is not None and profile.debt_to_equity > self.config.max_debt_to_equity:
+            failures.append(
+                f"D/E muy alto: {profile.debt_to_equity:.1f} > {self.config.max_debt_to_equity}"
+            )
 
         return failures
 

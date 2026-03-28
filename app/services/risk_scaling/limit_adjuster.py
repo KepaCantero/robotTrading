@@ -80,26 +80,24 @@ class LimitAdjuster:
             Dict with limit values for the tier
         """
         tier = tier.lower()
-        if tier == "micro":
-            return {
+        tier_limits = {
+            "micro": {
                 "stop_loss_pct": _get_config_limit("limit_micro_stop_loss_pct", 0.02),
                 "daily_loss_limit_pct": _get_config_limit("limit_micro_daily_loss_limit_pct", 0.05),
                 "max_position_pct": _get_config_limit("limit_micro_max_position_pct", 0.10),
                 "leverage": _get_config_limit("limit_micro_leverage", 1.0),
                 "margin_requirement": _get_config_limit("limit_micro_margin_requirement", 0.50),
                 "max_drawdown_pct": _get_config_limit("limit_micro_max_drawdown_pct", 0.10),
-            }
-        elif tier == "small":
-            return {
+            },
+            "small": {
                 "stop_loss_pct": _get_config_limit("limit_small_stop_loss_pct", 0.025),
                 "daily_loss_limit_pct": _get_config_limit("limit_small_daily_loss_limit_pct", 0.08),
                 "max_position_pct": _get_config_limit("limit_small_max_position_pct", 0.15),
                 "leverage": _get_config_limit("limit_small_leverage", 1.0),
                 "margin_requirement": _get_config_limit("limit_small_margin_requirement", 0.33),
                 "max_drawdown_pct": _get_config_limit("limit_small_max_drawdown_pct", 0.15),
-            }
-        elif tier == "medium":
-            return {
+            },
+            "medium": {
                 "stop_loss_pct": _get_config_limit("limit_medium_stop_loss_pct", 0.03),
                 "daily_loss_limit_pct": _get_config_limit(
                     "limit_medium_daily_loss_limit_pct", 0.10
@@ -108,19 +106,18 @@ class LimitAdjuster:
                 "leverage": _get_config_limit("limit_medium_leverage", 1.5),
                 "margin_requirement": _get_config_limit("limit_medium_margin_requirement", 0.25),
                 "max_drawdown_pct": _get_config_limit("limit_medium_max_drawdown_pct", 0.20),
-            }
-        elif tier == "large":
-            return {
+            },
+            "large": {
                 "stop_loss_pct": _get_config_limit("limit_large_stop_loss_pct", 0.035),
                 "daily_loss_limit_pct": _get_config_limit("limit_large_daily_loss_limit_pct", 0.15),
                 "max_position_pct": _get_config_limit("limit_large_max_position_pct", 0.25),
                 "leverage": _get_config_limit("limit_large_leverage", 2.0),
                 "margin_requirement": _get_config_limit("limit_large_margin_requirement", 0.20),
                 "max_drawdown_pct": _get_config_limit("limit_large_max_drawdown_pct", 0.25),
-            }
-        else:
-            # Default to medium tier for unknown tiers
-            return self._get_tier_limits("medium")
+            },
+        }
+        # Default to medium tier for unknown tiers
+        return tier_limits.get(tier, self._get_tier_limits("medium"))
 
     def _get_volatility_multipliers(self) -> Dict[str, Decimal]:
         """

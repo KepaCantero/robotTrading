@@ -11,6 +11,7 @@ This REPLACES insecure pickle usage with a secure alternative.
 """
 
 import base64
+import contextlib
 import hashlib
 import hmac
 import json
@@ -189,11 +190,8 @@ def _restore_from_msgpack(obj: object) -> object:
         # Restore dtypes if available
         if 'dtypes' in obj:
             for col, dtype_str in zip(obj['columns'], obj['dtypes']):
-                try:
+                with contextlib.suppress(ValueError, TypeError):
                     df[col] = df[col].astype(dtype_str)
-                except (ValueError, TypeError):
-                    # If conversion fails, keep as-is
-                    pass
         return df
 
     # Restore pandas Series

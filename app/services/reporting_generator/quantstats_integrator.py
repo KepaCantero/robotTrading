@@ -271,12 +271,12 @@ class QuantStatsIntegrator:
         # Calculate monthly returns distribution
         monthly_dist = self._calculate_monthly_distribution(returns_array)
         best_month = (
-            Decimal(str(np.max([v for v in monthly_dist.values()]) * 100))
+            Decimal(str(np.max(list(monthly_dist.values())) * 100))
             if monthly_dist
             else Decimal("0")
         )
         worst_month = (
-            Decimal(str(np.min([v for v in monthly_dist.values()]) * 100))
+            Decimal(str(np.min(list(monthly_dist.values())) * 100))
             if monthly_dist
             else Decimal("0")
         )

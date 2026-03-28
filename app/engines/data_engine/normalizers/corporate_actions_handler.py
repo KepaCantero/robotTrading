@@ -149,20 +149,19 @@ class CorporateActionsHandler:
                 change_ratio = abs(curr_price / prev_price - 1)
 
                 # Si el cambio es muy grande, podría ser un split
-                if change_ratio > threshold:
+                if change_ratio > threshold and curr_price < prev_price:
                     # Calcular ratio del split (aproximado)
-                    if curr_price < prev_price:
-                        # Split hacia abajo (ej: 2:1)
-                        ratio = prev_price / curr_price
-                        if 1.5 <= ratio <= 10:  # Ratios razonables
-                            detected_splits.append(
-                                {
-                                    'type': 'split',
-                                    'date': timestamps[i],
-                                    'ratio': ratio,
-                                    'description': f"Auto-detectado: {ratio:.2f}:1 split",
-                                }
-                            )
+                    # Split hacia abajo (ej: 2:1)
+                    ratio = prev_price / curr_price
+                    if 1.5 <= ratio <= 10:  # Ratios razonables
+                        detected_splits.append(
+                            {
+                                'type': 'split',
+                                'date': timestamps[i],
+                                'ratio': ratio,
+                                'description': f"Auto-detectado: {ratio:.2f}:1 split",
+                            }
+                        )
 
         # Registrar splits detectados
         for split in detected_splits:

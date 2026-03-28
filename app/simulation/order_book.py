@@ -163,8 +163,6 @@ class Order:
     @property
     def is_marketable(self) -> bool:
         """Check if order can be immediately executed against existing book."""
-        if total_quantity is None:
-            total_quantity = Decimal("0")
         return self.order_type == OrderType.MARKET
 
 

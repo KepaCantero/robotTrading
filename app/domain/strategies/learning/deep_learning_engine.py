@@ -44,10 +44,8 @@ import contextlib
 
 # Configure threading BEFORE any PyTorch operations
 torch.set_num_threads(1)
-try:
+with contextlib.suppress(RuntimeError):
     torch.set_num_interop_threads(1)
-except RuntimeError:
-    pass  # Already configured
 
 torch.backends.cudnn.enabled = False
 torch.backends.cudnn.benchmark = False
@@ -283,15 +281,11 @@ class DeepLearningEngine(BaseLearningEngine):
 
         # Asegurar configuración de threading antes de crear modelo
         # CRÍTICO: Configurar threading ANTES de cualquier operación
-        try:
+        with contextlib.suppress(RuntimeError):
             torch.set_num_threads(1)
-        except RuntimeError:
-            pass  # Ya configurado, ignorar error
 
-        try:
+        with contextlib.suppress(RuntimeError):
             torch.set_num_interop_threads(1)
-        except RuntimeError:
-            pass  # Ya configurado, ignorar error
 
         # Deshabilitar cualquier uso de CUDA o threading paralelo
         torch.backends.cudnn.enabled = False

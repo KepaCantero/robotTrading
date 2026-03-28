@@ -87,8 +87,6 @@ class ExecutionQuality:
     @property
     def cost_bps(self) -> Decimal:
         """Cost in basis points."""
-        if fees is None:
-            fees = Decimal("0")
         return (self.total_cost / self.benchmark_price) * Decimal("10000")
 
 

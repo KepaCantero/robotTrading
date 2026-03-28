@@ -41,10 +41,8 @@ import contextlib
 
 # Configure threading BEFORE any PyTorch operations
 torch.set_num_threads(1)
-try:
+with contextlib.suppress(RuntimeError):
     torch.set_num_interop_threads(1)
-except RuntimeError:
-    pass  # Already configured
 
 torch.backends.cudnn.enabled = False
 torch.backends.cudnn.benchmark = False
@@ -395,9 +393,8 @@ class TransformerEngine(BaseLearningEngine):
             train_losses = []
 
             for epoch in range(self.epochs):
-                epoch_loss = 0.0
-                num_batches = 0
 
+                batch_losses = []
                 for batch_sequences, batch_labels in train_loader:
                     batch_sequences = batch_sequences.to(self.device)
                     batch_labels = batch_labels.to(self.device).unsqueeze(1)
@@ -408,10 +405,9 @@ class TransformerEngine(BaseLearningEngine):
                     loss.backward()
                     optimizer.step()
 
-                    epoch_loss += loss.item()
-                    num_batches += 1
+                    batch_losses.append(loss.item())
 
-                avg_loss = epoch_loss / num_batches if num_batches > 0 else 0.0
+                avg_loss = sum(batch_losses) / len(batch_losses) if batch_losses else 0.0
                 train_losses.append(avg_loss)
 
                 if (epoch + 1) % 10 == 0:

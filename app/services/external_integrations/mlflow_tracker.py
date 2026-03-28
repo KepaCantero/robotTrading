@@ -6,6 +6,7 @@ Upgraded to use real MLflow server for production-grade experiment tracking.
 """
 
 import asyncio
+import contextlib
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -111,7 +112,7 @@ class MLflowTracker:
         try:
             if self.active_run_id and self.connected and self.session:
                 # End active run before disconnecting
-                try:
+                with contextlib.suppress(asyncio.TimeoutError, OSError):
                     async with self.session.post(
                         urljoin(
                             self.base_url,
@@ -121,8 +122,6 @@ class MLflowTracker:
                     ) as resp:
                         if resp.status == 200:
                             logger.info(f"✅ Ended active run: {self.active_run_id}")
-                except (asyncio.TimeoutError, OSError):
-                    pass
 
             if self.session:
                 await self.session.close()

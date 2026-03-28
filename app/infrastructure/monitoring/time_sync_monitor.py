@@ -415,16 +415,15 @@ def get_time_sync_monitor(config: Optional[TimeSyncConfig] = None) -> TimeSyncMo
 def reset_time_sync_monitor() -> None:
     """Reset the singleton TimeSyncMonitor (mainly for testing)."""
     global _monitor
-    if _monitor is not None:
+    if _monitor is not None and _monitor._is_monitoring:
         # Stop monitoring if running
-        if _monitor._is_monitoring:
-            try:
-                loop = asyncio.get_event_loop()
-                if loop.is_running():
-                    loop.create_task(_monitor.stop())
-                else:
-                    loop.run_until_complete(_monitor.stop())
-            except (asyncio.TimeoutError, OSError) as e:
-                logger.warning(f"Error stopping monitor during reset: {e}")
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                loop.create_task(_monitor.stop())
+            else:
+                loop.run_until_complete(_monitor.stop())
+        except (asyncio.TimeoutError, OSError) as e:
+            logger.warning(f"Error stopping monitor during reset: {e}")
     _monitor = None
     logger.info("TimeSyncMonitor singleton reset")

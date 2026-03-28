@@ -848,13 +848,12 @@ class AlpacaAdapter:
             account = await self.get_account_info()
             if account:
                 estimated_cost = quantity * (price or Decimal("0"))
-                if price is None:
+                if price is None and estimated_cost > account.buying_power:
                     # For market orders, we need current price estimate
                     # Using buying power check only
-                    if estimated_cost > account.buying_power:
-                        raise ValueError(
-                            f"Insufficient buying power: {account.buying_power} < estimated cost"
-                        )
+                    raise ValueError(
+                        f"Insufficient buying power: {account.buying_power} < estimated cost"
+                    )
 
         execution_result = {
             "symbol": symbol,

@@ -20,6 +20,7 @@ Usage:
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -402,11 +403,9 @@ class GameDay:
             self.logger.error(f"Scenario {scenario.name} error: {e}")
 
             # Attempt rollback
-            try:
+            with contextlib.suppress(Exception):
                 if injector:
                     await injector.rollback()
-            except Exception:
-                pass
 
             scenario.status = ScenarioStatus.FAILED
             scenario.completed_at = datetime.utcnow()

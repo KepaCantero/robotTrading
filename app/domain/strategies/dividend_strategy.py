@@ -293,10 +293,9 @@ class DividendStrategy(BaseStrategy):
             return True
 
         # Dividend coverage bajo - use config value
-        if profile.dividend_data.dividend_coverage_ratio is not None:
-            if profile.dividend_data.dividend_coverage_ratio < self._cfg.min_coverage_ratio:
-                logger.warning(f"⚠️ Cobertura insuficiente: {profile.symbol}")
-                return True
+        if profile.dividend_data.dividend_coverage_ratio is not None and profile.dividend_data.dividend_coverage_ratio < self._cfg.min_coverage_ratio:
+            logger.warning(f"⚠️ Cobertura insuficiente: {profile.symbol}")
+            return True
 
         # Calidad baja - use config multiplier
         if profile.quality_score is not None and (
@@ -514,14 +513,13 @@ class DividendStrategy(BaseStrategy):
                 current_allocation = pos.value / portfolio.total_value
 
         # Si ya tenemos posición, verificar si podemos aumentar
-        if current_allocation > 0:
+        if current_allocation > 0 and current_allocation >= max_pos:
             # No exceder máximo
-            if current_allocation >= max_pos:
-                logger.debug(
-                    f"Posición máxima alcanzada para {signal.symbol}: "
-                    f"{current_allocation:.1%} >= {max_pos:.1%}"
-                )
-                return False
+            logger.debug(
+                f"Posición máxima alcanzada para {signal.symbol}: "
+                f"{current_allocation:.1%} >= {max_pos:.1%}"
+            )
+            return False
 
         # Verificar exposición sectorial
         if self.current_portfolio and signal.signal_type == SignalType.BUY:

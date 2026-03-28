@@ -349,7 +349,7 @@ class VWAPExecution(ExecutionAlgoBase):
 
         return IntradayVolumeProfile(
             symbol=symbol,
-            time_bins=[t for t in time_bins],
+            time_bins=list(time_bins),
             volume_distribution=volume_dist,
             total_daily_volume=total_daily_volume,
         )

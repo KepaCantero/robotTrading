@@ -97,6 +97,12 @@ class MultiStrategyOptimizer:
             Dictionary with strategy configs
         """
         # Momentum Strategy Parameters
+        # Capital Allocation Weights (must sum to 1.0)
+        momentum_weight = trial.suggest_float("alloc_momentum", 0.4, 0.7, step=0.05)
+        mean_reversion_weight = trial.suggest_float("alloc_mean_reversion", 0.15, 0.4, step=0.05)
+        # Pairs trading gets remainder to ensure sum = 1.0
+        pairs_weight = max(0.05, 1.0 - momentum_weight - mean_reversion_weight)
+
         params = {
             "momentum": {
                 "name": "momentum",
@@ -111,46 +117,35 @@ class MultiStrategyOptimizer:
                 "rsi_period": trial.suggest_int("momentum_rsi_period", 10, 20, step=2),
                 "lookback_period": trial.suggest_int("momentum_lookback_period", 3, 10, step=1),
             },
-        }
-
-        # Mean Reversion Strategy Parameters
-        params["mean_reversion"] = {
-            "name": "mean_reversion",
-            "z_score_threshold": trial.suggest_float("mr_z_score_threshold", 0.5, 3.0, step=0.25),
-            "volatility_threshold": trial.suggest_float(
-                "mr_volatility_threshold", 0.01, 0.05, step=0.01
-            ),
-            "lookback_period": trial.suggest_int("mr_lookback_period", 10, 30, step=5),
-            "mean_reversion_speed": trial.suggest_float(
-                "mr_mean_reversion_speed", 0.05, 0.2, step=0.05
-            ),
-            "min_z_score": trial.suggest_float("mr_min_z_score", 1.0, 2.5, step=0.25),
-        }
-
-        # Pairs Trading Strategy Parameters (simplified)
-        params["pairs_trading"] = {
-            "name": "pairs_trading",
-            "spread_threshold": trial.suggest_float("pt_spread_threshold", 0.1, 1.0, step=0.1),
-            "cointegration_threshold": trial.suggest_float(
-                "pt_cointegration_threshold", 0.01, 0.1, step=0.01
-            ),
-            "min_correlation": trial.suggest_float("pt_min_correlation", 0.3, 0.8, step=0.1),
-            "lookback_period": trial.suggest_int("pt_lookback_period", 20, 50, step=5),
-            "pair_symbols": ["AAPL", "MSFT"],  # Fixed pair for now
-            "hedge_ratio": Decimal("1.0"),
-            "max_spread_deviation": Decimal("3.0"),
-        }
-
-        # Capital Allocation Weights (must sum to 1.0)
-        momentum_weight = trial.suggest_float("alloc_momentum", 0.4, 0.7, step=0.05)
-        mean_reversion_weight = trial.suggest_float("alloc_mean_reversion", 0.15, 0.4, step=0.05)
-        # Pairs trading gets remainder to ensure sum = 1.0
-        pairs_weight = max(0.05, 1.0 - momentum_weight - mean_reversion_weight)
-
-        params["allocation"] = {
-            "momentum": momentum_weight,
-            "mean_reversion": mean_reversion_weight,
-            "pairs_trading": pairs_weight,
+            "mean_reversion": {
+                "name": "mean_reversion",
+                "z_score_threshold": trial.suggest_float("mr_z_score_threshold", 0.5, 3.0, step=0.25),
+                "volatility_threshold": trial.suggest_float(
+                    "mr_volatility_threshold", 0.01, 0.05, step=0.01
+                ),
+                "lookback_period": trial.suggest_int("mr_lookback_period", 10, 30, step=5),
+                "mean_reversion_speed": trial.suggest_float(
+                    "mr_mean_reversion_speed", 0.05, 0.2, step=0.05
+                ),
+                "min_z_score": trial.suggest_float("mr_min_z_score", 1.0, 2.5, step=0.25),
+            },
+            "pairs_trading": {
+                "name": "pairs_trading",
+                "spread_threshold": trial.suggest_float("pt_spread_threshold", 0.1, 1.0, step=0.1),
+                "cointegration_threshold": trial.suggest_float(
+                    "pt_cointegration_threshold", 0.01, 0.1, step=0.01
+                ),
+                "min_correlation": trial.suggest_float("pt_min_correlation", 0.3, 0.8, step=0.1),
+                "lookback_period": trial.suggest_int("pt_lookback_period", 20, 50, step=5),
+                "pair_symbols": ["AAPL", "MSFT"],  # Fixed pair for now
+                "hedge_ratio": Decimal("1.0"),
+                "max_spread_deviation": Decimal("3.0"),
+            },
+            "allocation": {
+                "momentum": momentum_weight,
+                "mean_reversion": mean_reversion_weight,
+                "pairs_trading": pairs_weight,
+            },
         }
 
         return params
@@ -371,32 +366,37 @@ class MultiStrategyOptimizer:
             raise ValueError("No optimization has been run yet")
 
         # Reconstruct best config from best params
-        best_config = {}
-
         # Extract strategy params
-        best_config["momentum"] = {
+        momentum_config = {
             k.replace("momentum_", ""): v
             for k, v in self.best_params.items()
             if k.startswith("momentum_")
         }
-        best_config["momentum"]["name"] = "momentum"
+        momentum_config["name"] = "momentum"
 
-        best_config["mean_reversion"] = {
+        mean_reversion_config = {
             k.replace("mr_", ""): v for k, v in self.best_params.items() if k.startswith("mr_")
         }
-        best_config["mean_reversion"]["name"] = "mean_reversion"
+        mean_reversion_config["name"] = "mean_reversion"
 
-        best_config["pairs_trading"] = {
+        pairs_trading_config = {
             k.replace("pt_", ""): v for k, v in self.best_params.items() if k.startswith("pt_")
         }
-        best_config["pairs_trading"]["name"] = "pairs_trading"
-        best_config["pairs_trading"]["pair_symbols"] = ["AAPL", "MSFT"]
+        pairs_trading_config["name"] = "pairs_trading"
+        pairs_trading_config["pair_symbols"] = ["AAPL", "MSFT"]
 
         # Extract allocation
-        best_config["allocation"] = {
+        allocation_config = {
             k.replace("alloc_", ""): v
             for k, v in self.best_params.items()
             if k.startswith("alloc_")
+        }
+
+        best_config = {
+            "momentum": momentum_config,
+            "mean_reversion": mean_reversion_config,
+            "pairs_trading": pairs_trading_config,
+            "allocation": allocation_config,
         }
 
         return best_config

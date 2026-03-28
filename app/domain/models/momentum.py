@@ -132,13 +132,11 @@ class MomentumSignal(BaseModel):
 
         # Technical momentum score (based on RSI and MACD)
         technical_score = 0
-        if self.rsi is not None:
-            if (self.direction == "BUY" and self.rsi < 30) or (self.direction == "SELL" and self.rsi > 70):
-                technical_score += 30  # Oversold/Overbought
+        if self.rsi is not None and ((self.direction == "BUY" and self.rsi < 30) or (self.direction == "SELL" and self.rsi > 70)):
+            technical_score += 30  # Oversold/Overbought
 
-        if self.macd_histogram is not None:
-            if (self.direction == "BUY" and self.macd_histogram > 0) or (self.direction == "SELL" and self.macd_histogram < 0):
-                technical_score += 20  # Bullish/Bearish MACD
+        if self.macd_histogram is not None and ((self.direction == "BUY" and self.macd_histogram > 0) or (self.direction == "SELL" and self.macd_histogram < 0)):
+            technical_score += 20  # Bullish/Bearish MACD
 
         return (
             price_score * price_weight

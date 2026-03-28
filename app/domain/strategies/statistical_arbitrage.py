@@ -428,7 +428,7 @@ class StatisticalArbitrage:
             variance_ratio = long_var / short_var
 
             # Rough approximation
-            is_stationary_vr: bool = bool(variance_ratio < 1.0)
+            is_stationary_vr: bool = variance_ratio < 1.0
 
             return is_stationary_vr, float(variance_ratio)
 

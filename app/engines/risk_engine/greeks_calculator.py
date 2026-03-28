@@ -1017,10 +1017,9 @@ class GreeksCalculator:
 
         # 7. Higher-order Greeks validation
         vomma = higher_order.get('vomma')
-        if vomma is not None:
+        if vomma is not None and abs(vomma) > 1.0:
             # Vomma can be positive or negative, but extreme values warrant warning
-            if abs(vomma) > 1.0:
-                warnings.append(f'Extreme vomma value: {vomma}')
+            warnings.append(f'Extreme vomma value: {vomma}')
 
         return {
             'valid': len(validation_issues) == 0,

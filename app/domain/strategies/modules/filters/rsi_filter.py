@@ -19,7 +19,7 @@ This filter now uses centralized configuration from config/indicators.yaml:
 """
 
 import logging
-from typing import Callable, Dict, Optional, Union
+from typing import Callable, Dict, Optional
 
 from ..base_filter import BaseFilter
 
@@ -27,7 +27,7 @@ from ..base_filter import BaseFilter
 ConfigLoaderFunc = Callable[..., Dict]
 
 # Initialize get_config as None, then try to import
-get_config: Union[ConfigLoaderFunc, None] = None
+get_config: Optional[ConfigLoaderFunc] = None
 HAS_CONFIG_LOADER = False
 
 try:

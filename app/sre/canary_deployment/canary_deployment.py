@@ -550,16 +550,15 @@ class CanaryDeployment:
             )
 
         # Check error rate increase
-        if metrics.error_rate_delta and metrics.baseline_error_rate > 0:
-            if metrics.error_rate_delta > self.config.rollback_on_error_rate_increase:
-                return CanaryRollbackDecision(
-                    should_rollback=True,
-                    reason=f"Error rate increased by {metrics.error_rate_delta * 100:.1f}%",
-                    trigger_metric="error_rate",
-                    canary_value=metrics.canary_error_rate,
-                    baseline_value=metrics.baseline_error_rate,
-                    threshold_exceeded=self.config.rollback_on_error_rate_increase,
-                )
+        if metrics.error_rate_delta and metrics.baseline_error_rate > 0 and metrics.error_rate_delta > self.config.rollback_on_error_rate_increase:
+            return CanaryRollbackDecision(
+                should_rollback=True,
+                reason=f"Error rate increased by {metrics.error_rate_delta * 100:.1f}%",
+                trigger_metric="error_rate",
+                canary_value=metrics.canary_error_rate,
+                baseline_value=metrics.baseline_error_rate,
+                threshold_exceeded=self.config.rollback_on_error_rate_increase,
+            )
 
         # Check latency increase
         if metrics.latency_delta and metrics.baseline_latency_p95 > 0 and metrics.latency_delta > self.config.rollback_on_latency_increase:

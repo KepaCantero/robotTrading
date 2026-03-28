@@ -316,19 +316,15 @@ class AlertingRulesEngine:
 
     def _evaluate_threshold(self, value: float, threshold: float, op: str) -> bool:
         """Evaluate threshold condition."""
-        if op == ">":
-            return value > threshold
-        elif op == "<":
-            return value < threshold
-        elif op == ">=":
-            return value >= threshold
-        elif op == "<=":
-            return value <= threshold
-        elif op == "==":
-            return value == threshold
-        elif op == "!=":
-            return value != threshold
-        return False
+        ops = {
+            ">": lambda v, t: v > t,
+            "<": lambda v, t: v < t,
+            ">=": lambda v, t: v >= t,
+            "<=": lambda v, t: v <= t,
+            "==": lambda v, t: v == t,
+            "!=": lambda v, t: v != t,
+        }
+        return ops.get(op, lambda v, t: False)(value, threshold)
 
     def _evaluate_change(self, rule: AlertRule) -> bool:
         """Evaluate percentage change condition."""

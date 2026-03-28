@@ -12,7 +12,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Annotated, Any, Dict
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 
 from app.backtesting.models import Trade, TradeStatus
 from app.services.cost_analysis_service import CostAnalysisResult, CostAnalysisService
@@ -31,7 +31,7 @@ def get_cost_analysis_service() -> CostAnalysisService:
 @router.post("/analyze-trade")
 async def analyze_trade_costs(
     trade_data: Dict[str, Any],
-    service: Annotated[CostAnalysisService, epends(get_cost_analysis_service)],
+    service: Annotated[CostAnalysisService, Depends(get_cost_analysis_service)],
 ):
     """Analyze costs for a single trade."""
     logger.info(
@@ -112,7 +112,7 @@ async def analyze_trade_costs(
 @router.post("/analyze-strategy")
 async def analyze_strategy_costs(
     strategy_data: Dict[str, Any],
-    service: Annotated[CostAnalysisService, epends(get_cost_analysis_service)],
+    service: Annotated[CostAnalysisService, Depends(get_cost_analysis_service)],
 ):
     """Analyze costs for an entire trading strategy."""
     strategy_name = strategy_data.get("strategy_name", "unknown")
@@ -216,7 +216,7 @@ async def analyze_strategy_costs(
 @router.post("/validate-profitability")
 async def validate_profitability(
     analysis_data: Dict[str, Any],
-    service: Annotated[CostAnalysisService, epends(get_cost_analysis_service)],
+    service: Annotated[CostAnalysisService, Depends(get_cost_analysis_service)],
 ):
     """Validate profitability of a trading strategy."""
     strategy_name = analysis_data.get("strategy_name", "unknown")
@@ -287,7 +287,7 @@ async def validate_profitability(
 
 @router.get("/cost-parameters")
 async def get_cost_parameters(
-    service: Annotated[CostAnalysisService, epends(get_cost_analysis_service)],
+    service: Annotated[CostAnalysisService, Depends(get_cost_analysis_service)],
 ):
     """Get current cost parameters configuration."""
     return {
@@ -309,7 +309,7 @@ async def get_cost_parameters(
 @router.post("/cost-parameters")
 async def update_cost_parameters(
     parameters: Dict[str, Any],
-    service: Annotated[CostAnalysisService, epends(get_cost_analysis_service)],
+    service: Annotated[CostAnalysisService, Depends(get_cost_analysis_service)],
 ):
     """Update cost parameters configuration."""
     logger.info(
@@ -380,7 +380,8 @@ async def update_cost_parameters(
 
 @router.get("/cost-breakdown/{trade_id}")
 async def get_cost_breakdown(
-    service: Annotated[CostAnalysisService, epends(get_cost_analysis_service)]
+    trade_id: str,
+    service: Annotated[CostAnalysisService, Depends(get_cost_analysis_service)]
 ):
     """Get detailed cost breakdown for a specific trade."""
     # This would typically fetch from database
@@ -395,7 +396,7 @@ async def get_cost_breakdown(
 @router.get("/strategy-costs/{strategy_name}")
 async def get_strategy_costs(
     strategy_name: str,
-    service: Annotated[CostAnalysisService, epends(get_cost_analysis_service)],
+    service: Annotated[CostAnalysisService, Depends(get_cost_analysis_service)],
 ):
     """Get cost analysis results for a specific strategy."""
     # This would typically fetch from database

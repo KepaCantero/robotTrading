@@ -358,9 +358,8 @@ class AlertManager:
         keys_to_remove = []
 
         for key, event in self.active_alerts.items():
-            if event.state in [AlertState.RESOLVED, AlertState.RESOLVED_ACKNOWLEDGED]:
-                if event.resolved_at and event.resolved_at < cutoff:
-                    keys_to_remove.append(key)
+            if event.state in [AlertState.RESOLVED, AlertState.RESOLVED_ACKNOWLEDGED] and event.resolved_at and event.resolved_at < cutoff:
+                keys_to_remove.append(key)
 
         for key in keys_to_remove:
             del self.active_alerts[key]

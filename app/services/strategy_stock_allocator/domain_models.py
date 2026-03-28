@@ -96,8 +96,6 @@ class PairMetrics:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
-        if residual_capital is None:
-            residual_capital = Decimal('0')
         logger.debug(
             "Converting PairMetrics to dict",
             extra={"ticker1": self.ticker1, "ticker2": self.ticker2},

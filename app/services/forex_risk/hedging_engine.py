@@ -730,14 +730,11 @@ class HedgingEngine:
         Returns:
             Roll schedule string
         """
-        if tenor_months == 1:
-            return "Roll monthly, 1 week before expiry"
-        elif tenor_months == 3:
-            return "Roll quarterly, 2 weeks before expiry"
-        elif tenor_months == 6:
-            return "Roll semi-annually, 1 month before expiry"
-        else:
-            return "Roll annually, 2 months before expiry"
+        return {
+            1: "Roll monthly, 1 week before expiry",
+            3: "Roll quarterly, 2 weeks before expiry",
+            6: "Roll semi-annually, 1 month before expiry",
+        }.get(tenor_months, "Roll annually, 2 months before expiry")
 
     def _generate_reasoning(
         self,

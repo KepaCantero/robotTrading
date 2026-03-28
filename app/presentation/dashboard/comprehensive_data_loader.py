@@ -113,7 +113,7 @@ class ComprehensiveBacktestLoader:
                 json_files.extend(list(reports_dir.rglob("learning_engine_*.json")))
 
         # Eliminar duplicados y filtrar solo archivos que existen
-        json_files = list(set([f for f in json_files if f.exists() and f.is_file()]))
+        json_files = list({f for f in json_files if f.exists() and f.is_file()})
 
         # Ordenar por fecha de modificación (más recientes primero)
         json_files = sorted(
@@ -140,10 +140,7 @@ class ComprehensiveBacktestLoader:
                         file_results = data
                     elif isinstance(data, dict):
                         # Si tiene 'results', usar eso
-                        if 'results' in data:
-                            file_results = data['results']
-                        else:
-                            file_results = [data]
+                        file_results = data.get('results', [data])
 
                     # Parsear campos de learning engines si vienen como strings
                     for result in file_results:
