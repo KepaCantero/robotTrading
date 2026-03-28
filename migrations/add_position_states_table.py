@@ -33,10 +33,12 @@ def upgrade():
 
         # Verify table creation
         with db_manager.get_sync_session() as session:
-            result = session.execute(text(
-                "SELECT COUNT(*) FROM information_schema.tables "
-                "WHERE table_name = 'position_states'"
-            ))
+            result = session.execute(
+                text(
+                    "SELECT COUNT(*) FROM information_schema.tables "
+                    "WHERE table_name = 'position_states'"
+                )
+            )
             count = result.scalar()
             if count > 0:
                 logger.info("✓ Migration verification successful")
@@ -75,8 +77,7 @@ def downgrade():
 
 if __name__ == "__main__":
     logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
 
     import sys

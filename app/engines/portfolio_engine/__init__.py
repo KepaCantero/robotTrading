@@ -13,10 +13,14 @@ import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 from app.domain.models.portfolio import Portfolio, PortfolioProvider
+from app.engines.portfolio_engine.meta_learners.meta_learners import BaseMetaLearner
+from app.engines.portfolio_engine.optimizers.base import BaseOptimizer
+from app.engines.portfolio_engine.rebalancers.rebalancers import BaseRebalancer
 from app.services.portfolio_service import PortfolioService
+import contextlib
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +34,7 @@ class BasePortfolioEngine(ABC):
     Define la interfaz común para todos los engines de portfolio.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: Dict[str, object]):
         """
         Inicializar Portfolio Engine.
 
@@ -47,10 +51,10 @@ class BasePortfolioEngine(ABC):
         """Inicializar el engine."""
 
     @abstractmethod
-    def process(self, input_data: Any) -> Any:
+    def process(self, input_data: object) -> Optional[Portfolio]:
         """Procesar datos de entrada."""
 
-    def health_check(self) -> Dict[str, Any]:
+    def health_check(self) -> Dict[str, Union[bool, str]]:
         """Verificar salud del engine."""
         return {
             'status': 'healthy' if self.enabled else 'disabled',
@@ -71,7 +75,7 @@ class PortfolioEngine(BasePortfolioEngine):
     - Rebalanceo dinámico
     """
 
-    def __init__(self, config: Dict[str, Any], provider: Optional[PortfolioProvider] = None):
+    def __init__(self, config: Dict[str, object], provider: Optional[PortfolioProvider] = None):
         """
         Inicializar Portfolio Engine.
 
@@ -92,8 +96,8 @@ class PortfolioEngine(BasePortfolioEngine):
 
         # Estado del engine
         self.current_portfolio: Optional[Portfolio] = None
-        self.allocation_history: List[Dict[str, Any]] = []
-        self.rebalance_history: List[Dict[str, Any]] = []
+        self.allocation_history: List[Dict[str, object]] = []
+        self.rebalance_history: List[Dict[str, object]] = []
 
         # Métricas
         self.total_allocation_operations = 0
@@ -120,7 +124,7 @@ class PortfolioEngine(BasePortfolioEngine):
             self.logger.error(f"Error inicializando PortfolioEngine: {e}", exc_info=True)
             self._initialized = False
 
-    def process(self, input_data: Any) -> Any:
+    def process(self, input_data: object) -> Optional[Portfolio]:
         """
         Procesar datos de entrada.
 
@@ -139,7 +143,7 @@ class PortfolioEngine(BasePortfolioEngine):
 
         return self._process_portfolio(input_data)
 
-    def _process_portfolio(self, portfolio_data: Any) -> Optional[Portfolio]:
+    def _process_portfolio(self, portfolio_data: object) -> Optional[Portfolio]:
         """Procesar datos de portfolio."""
         try:
             if isinstance(portfolio_data, Portfolio):
@@ -180,7 +184,7 @@ class PortfolioEngine(BasePortfolioEngine):
             self.failed_operations += 1
             return None
 
-    def set_optimizer(self, optimizer: Any) -> None:
+    def set_optimizer(self, optimizer: BaseOptimizer) -> None:
         """
         Establecer optimizer para asignación de capital.
 
@@ -190,7 +194,7 @@ class PortfolioEngine(BasePortfolioEngine):
         self.optimizer = optimizer
         self.logger.info(f"Optimizer configurado: {type(optimizer).__name__}")
 
-    def set_rebalancer(self, rebalancer: Any) -> None:
+    def set_rebalancer(self, rebalancer: BaseRebalancer) -> None:
         """
         Establecer rebalancer para rebalanceo dinámico.
 
@@ -200,7 +204,7 @@ class PortfolioEngine(BasePortfolioEngine):
         self.rebalancer = rebalancer
         self.logger.info(f"Rebalancer configurado: {type(rebalancer).__name__}")
 
-    def set_meta_learner(self, meta_learner: Any) -> None:
+    def set_meta_learner(self, meta_learner: BaseMetaLearner) -> None:
         """
         Establecer meta-learner para asignación adaptativa.
 
@@ -210,7 +214,7 @@ class PortfolioEngine(BasePortfolioEngine):
         self.meta_learner = meta_learner
         self.logger.info(f"Meta-learner configurado: {type(meta_learner).__name__}")
 
-    def get_allocation_by_asset_class(self) -> Dict[str, Dict[str, Any]]:
+    def get_allocation_by_asset_class(self) -> Dict[str, Dict[str, Union[Decimal, float, int, List[str], str]]]:
         """
         Obtener asignación agrupada por clase de activo.
 
@@ -250,7 +254,7 @@ class PortfolioEngine(BasePortfolioEngine):
 
         return allocation
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> Dict[str, Union[bool, str, int, None, Dict[str, int]]]:
         """
         Obtener estado del engine.
 
@@ -274,13 +278,11 @@ class PortfolioEngine(BasePortfolioEngine):
         }
 
         if self.portfolio_service:
-            try:
+            with contextlib.suppress(ValueError, TypeError, KeyError, AttributeError, IndexError):
                 status['portfolio_service_status'] = {
                     'operations_count': self.portfolio_service.operations_count,
                     'successful_operations': self.portfolio_service.successful_operations,
                     'failed_operations': self.portfolio_service.failed_operations,
                 }
-            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
-                pass
 
         return status

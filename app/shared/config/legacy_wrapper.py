@@ -8,7 +8,7 @@ TASK-24: SRP Compliance - Legacy wrapper for backward compatibility
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -30,11 +30,11 @@ class Configuration:
         2.0
     """
 
-    def __init__(self, config_dict: Dict[str, Any]):
+    def __init__(self, config_dict: Dict[str, object]):
         self._config = config_dict if config_dict is not None else {}
         self._lock = None  # For thread safety
 
-    def get(self, key: str, default: Any = None) -> Any:
+    def get(self, key: str, default: Optional[object] = None) -> Optional[object]:
         """
         Get configuration value by key (supports dot notation).
 
@@ -61,7 +61,7 @@ class Configuration:
 
         return value
 
-    def set(self, key: str, value: Any) -> None:
+    def set(self, key: str, value: object) -> None:
         """
         Set configuration value by key (supports dot notation).
 
@@ -118,7 +118,7 @@ class Configuration:
         """
         self.set(f"risk_management.atr_multipliers.{multiplier_name}", value)
 
-    def get_risk_config(self) -> Dict[str, Any]:
+    def get_risk_config(self) -> Dict[str, object]:
         """
         Get risk management configuration section.
 

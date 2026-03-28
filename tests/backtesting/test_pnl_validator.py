@@ -181,7 +181,9 @@ def test_validate_pnl_consistency_no_closed_trades(validator, default_symbol):
         status=TradeStatus.OPEN,
     )
     # Should be consistent with no P&L from open trades
-    assert validator.validate_pnl_consistency([open_trade], Decimal("10000"), Decimal("10000")) is True
+    assert (
+        validator.validate_pnl_consistency([open_trade], Decimal("10000"), Decimal("10000")) is True
+    )
 
 
 def test_validator_custom_thresholds():

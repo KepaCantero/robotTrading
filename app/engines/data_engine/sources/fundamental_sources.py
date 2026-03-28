@@ -11,7 +11,7 @@ import logging
 from typing import Any, Dict, List, Optional
 
 # REQUIRED: No fallbacks - aiohttp is required for async HTTP requests
-import aiohttp  # noqa: F401
+import aiohttp
 
 from app.shared.config.api_endpoints import APIEndpoints
 from app.shared.config.timeout_config import get_timeouts
@@ -78,7 +78,7 @@ class FinancialModelingPrepSource(BaseDataSource):
             self.is_connected = False
             logger.info("Desconectado de FMP")
             return True
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Error desconectando de FMP: {e}")
             return False
 
@@ -91,7 +91,7 @@ class FinancialModelingPrepSource(BaseDataSource):
             url = f"{self.base_url}/profile/AAPL"
             async with self.session.get(url, params={'apikey': self.api_key}) as response:
                 return response.status == 200
-        except (asyncio.TimeoutError, ConnectionError, OSError):
+        except (asyncio.TimeoutError, OSError):
             return False
 
     async def get_company_profile(self, symbol: str) -> Optional[Dict[str, Any]]:
@@ -118,7 +118,7 @@ class FinancialModelingPrepSource(BaseDataSource):
                     return data[0]
                 return data
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Error obteniendo perfil de {symbol}: {e}")
             return None
 
@@ -145,7 +145,7 @@ class FinancialModelingPrepSource(BaseDataSource):
 
                 return await response.json()
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Error obteniendo métricas de {symbol}: {e}")
             return []
 
@@ -175,7 +175,7 @@ class FinancialModelingPrepSource(BaseDataSource):
 
                 return await response.json()
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Error obteniendo estados financieros de {symbol}: {e}")
             return []
 
@@ -230,7 +230,7 @@ class AlphaVantageFundamentalSource(BaseDataSource):
             self.is_connected = False
             logger.info("Desconectado de Alpha Vantage")
             return True
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Error desconectando de Alpha Vantage: {e}")
             return False
 

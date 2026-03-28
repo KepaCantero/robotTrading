@@ -17,6 +17,7 @@ from typing import Any, Dict, List, Set
 from fastapi import WebSocket, WebSocketDisconnect
 from fastapi.routing import APIRouter
 from requests.exceptions import HTTPError, RequestException
+import contextlib
 
 logger = logging.getLogger(__name__)
 
@@ -102,10 +103,8 @@ class WebSocketStreamingManager:
 
         if self._heartbeat_task:
             self._heartbeat_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._heartbeat_task
-            except asyncio.CancelledError:
-                pass
 
         # Cerrar todas las conexiones
         for connection_id in list(self.active_connections.keys()):
@@ -380,7 +379,7 @@ class WebSocketStreamingManager:
             websocket = self.active_connections[client_id]['websocket']
             await websocket.send_json(message)
             return True
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.warning(f"Error enviando mensaje a {client_id}: {e}")
             return False
 
@@ -398,7 +397,7 @@ class WebSocketStreamingManager:
 
             except asyncio.CancelledError:
                 break
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.error(f"Error en heartbeat loop: {e}")
 
     def get_status(self) -> Dict[str, Any]:

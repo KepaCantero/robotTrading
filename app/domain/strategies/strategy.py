@@ -842,9 +842,8 @@ class ModularMomentumStrategy(BaseStrategy):
             required = max(1, (total_filters + 1) // 2)
             if len(buy_passed_filters) >= required:
                 buy_signal = True
-        elif self.combination_mode == "ANY":
-            if len(buy_passed_filters) > 0:
-                buy_signal = True
+        elif self.combination_mode == "ANY" and len(buy_passed_filters) > 0:
+            buy_signal = True
 
         # Check SELL conditions based on filter combination mode ONLY (not extra conditions)
         # FIX: Only return SELL if filter-based SELL conditions are met, not just RSI > 70

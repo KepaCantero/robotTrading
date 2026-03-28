@@ -64,28 +64,18 @@ def display_snapshot(snapshot, show_full: bool = True):
     print("-" * 80)
     perf = snapshot.performance
     daily_pnl_color = "\033[92m" if perf.daily_pnl >= 0 else "\033[91m"
-    print(
-        f"  Portfolio Value:     {format_currency(float(perf.portfolio_value))}"
-    )
+    print(f"  Portfolio Value:     {format_currency(float(perf.portfolio_value))}")
     print(
         f"  Daily P&L:           {daily_pnl_color}{format_currency(float(perf.daily_pnl))} ({format_pct(perf.daily_return_pct)})\033[0m"
     )
-    print(
-        f"  Total P&L:           {format_currency(float(perf.total_pnl))}"
-    )
+    print(f"  Total P&L:           {format_currency(float(perf.total_pnl))}")
     print(
         f"  Total Trades:        {perf.total_trades} ({perf.winning_trades}W/{perf.losing_trades}L)"
     )
-    print(
-        f"  Win Rate:            {perf.win_rate:.1%}"
-    )
-    print(
-        f"  Current Drawdown:    {perf.current_drawdown:.2%} (max: {perf.max_drawdown:.2%})"
-    )
+    print(f"  Win Rate:            {perf.win_rate:.1%}")
+    print(f"  Current Drawdown:    {perf.current_drawdown:.2%} (max: {perf.max_drawdown:.2%})")
     if perf.sharpe_ratio is not None:
-        print(
-            f"  Sharpe Ratio:        {perf.sharpe_ratio:.2f}"
-        )
+        print(f"  Sharpe Ratio:        {perf.sharpe_ratio:.2f}")
     print()
 
     # Positions
@@ -134,9 +124,7 @@ def display_snapshot(snapshot, show_full: bool = True):
 
 async def main():
     """Main dashboard entry point."""
-    parser = argparse.ArgumentParser(
-        description="Simple Terminal Dashboard for AlgoTrading"
-    )
+    parser = argparse.ArgumentParser(description="Simple Terminal Dashboard for AlgoTrading")
     parser.add_argument(
         "--once",
         action="store_true",

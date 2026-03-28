@@ -32,7 +32,7 @@ Usage:
 import logging
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Dict, List, Optional, Union
 
 logger = logging.getLogger(__name__)
 
@@ -67,9 +67,9 @@ class StrategyConfigLoader:
             config_dir = project_root / "config"
 
         self.config_dir = config_dir
-        self._cache: Dict[str, Any] = {}
+        self._cache: Dict[str, Dict[str, object]] = {}
 
-    def _load_yaml(self, filename: str) -> Dict[str, Any]:
+    def _load_yaml(self, filename: str) -> Dict[str, object]:
         """
         Load a YAML configuration file.
 
@@ -104,7 +104,7 @@ class StrategyConfigLoader:
             logger.error(f"Error loading config from {config_path}: {e}")
             return {}
 
-    def _get_nested(self, data: Dict[str, Any], key_path: str, default: Any = None) -> Any:
+    def _get_nested(self, data: Dict[str, object], key_path: str, default: Optional[object] = None) -> Optional[object]:
         """
         Get a nested value from a dictionary using dot notation.
 
@@ -131,7 +131,7 @@ class StrategyConfigLoader:
     # INDICATOR CONFIGURATION
     # ========================================================================
 
-    def get_indicator_config(self) -> Dict[str, Any]:
+    def get_indicator_config(self) -> Dict[str, object]:
         """Load indicator configuration from indicators.yaml."""
         return self._load_yaml("indicators.yaml")
 
@@ -235,7 +235,7 @@ class StrategyConfigLoader:
     # RISK MANAGEMENT CONFIGURATION
     # ========================================================================
 
-    def get_risk_config(self) -> Dict[str, Any]:
+    def get_risk_config(self) -> Dict[str, object]:
         """Load risk management configuration from risk_management.yaml."""
         return self._load_yaml("risk_management.yaml")
 
@@ -350,7 +350,7 @@ class StrategyConfigLoader:
     # CAPITAL TIER CONFIGURATION
     # ========================================================================
 
-    def get_tier_config(self) -> Dict[str, Any]:
+    def get_tier_config(self) -> Dict[str, object]:
         """Load capital tier configuration from capital_tiers.yaml."""
         return self._load_yaml("capital_tiers.yaml")
 
@@ -419,7 +419,7 @@ class StrategyConfigLoader:
         else:
             return 'institutional'
 
-    def get_tier_config_value(self, tier: str, key_path: str, default: Any = None) -> Any:
+    def get_tier_config_value(self, tier: str, key_path: str, default: Optional[object] = None) -> Optional[object]:
         """
         Get a configuration value for a specific tier.
 
@@ -443,7 +443,7 @@ class StrategyConfigLoader:
         """Get maximum number of positions for a tier."""
         return self.get_tier_config_value(tier, 'max_positions', 10)
 
-    def get_enabled_strategies(self, tier: str = "medium") -> list:
+    def get_enabled_strategies(self, tier: str = "medium") -> List[str]:
         """Get list of enabled strategies for a tier."""
         return self.get_tier_config_value(tier, 'enabled_strategies', ['momentum_strategy'])
 
@@ -456,7 +456,7 @@ class StrategyConfigLoader:
         self._cache.clear()
         logger.info("Strategy configuration cache cleared")
 
-    def get_all_config(self) -> Dict[str, Any]:
+    def get_all_config(self) -> Dict[str, Dict[str, object]]:
         """
         Get all configuration as a single dictionary.
 

@@ -227,7 +227,7 @@ class ReconnectionManager:
 
             except asyncio.TimeoutError:
                 logger.warning(f"{self.service_name}: Connection timeout on attempt {attempt + 1}")
-            except (ConnectionError, OSError) as e:
+            except OSError as e:
                 logger.warning(
                     f"{self.service_name}: Connection failed on attempt {attempt + 1}: {e}"
                 )
@@ -309,7 +309,7 @@ class ReconnectionManager:
             except asyncio.CancelledError:
                 logger.info(f"{self.service_name}: Connection maintenance cancelled")
                 break
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.error(f"{self.service_name}: Error in connection maintenance: {e}")
                 await asyncio.sleep(reconnect_delay)
 

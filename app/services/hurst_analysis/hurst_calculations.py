@@ -1,4 +1,3 @@
-# pylint: disable=unsupported-binary-operation
 """Utility functions for Hurst Analysis module.
 
 This module contains helper functions used across the hurst_analysis package.

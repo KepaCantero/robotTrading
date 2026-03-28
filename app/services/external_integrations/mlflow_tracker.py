@@ -115,13 +115,13 @@ class MLflowTracker:
                     async with self.session.post(
                         urljoin(
                             self.base_url,
-                            f"/api/2.0/mlflow/runs/end-run",  # noqa: F541
+                            "/api/2.0/mlflow/runs/end-run",
                         ),
                         json={"run_id": self.active_run_id},
                     ) as resp:
                         if resp.status == 200:
                             logger.info(f"✅ Ended active run: {self.active_run_id}")
-                except (asyncio.TimeoutError, ConnectionError, OSError):
+                except (asyncio.TimeoutError, OSError):
                     pass
 
             if self.session:
@@ -129,7 +129,7 @@ class MLflowTracker:
             self.connected = False
             logger.info("✅ Disconnected from MLflow server")
             return True
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"❌ Disconnect failed: {str(e)}")
             return False
 
@@ -169,7 +169,7 @@ class MLflowTracker:
                         logger.warning(
                             f"⚠️ MLflow experiment creation failed (HTTP {resp.status}), using local tracking"
                         )
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.warning(
                     f"⚠️ Failed to create MLflow experiment: {str(e)}, using local tracking"
                 )
@@ -367,7 +367,7 @@ class MLflowTracker:
                     json=payload,
                 ) as resp:
                     if resp.status == 200:
-                        _data = await resp.json()  # noqa: F841
+                        await resp.json()
                         logger.info(f"✅ Registered model in MLflow: {model_name}")
                     else:
                         logger.warning(
@@ -419,7 +419,7 @@ class MLflowTracker:
                 async with self.session.post(
                     urljoin(
                         self.base_url,
-                        f"/api/2.0/mlflow/model-versions/transition-stage",  # noqa: F541
+                        "/api/2.0/mlflow/model-versions/transition-stage",
                     ),
                     json=payload,
                 ) as resp:

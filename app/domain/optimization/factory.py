@@ -24,7 +24,7 @@ Usage:
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, Dict, List, Optional, Type, Union
+from typing import Callable, Dict, List, Optional, Type, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 
 
 # Type aliases for clarity
-ObjectiveFunction = Callable[[Dict[str, Any]], float]
+ObjectiveFunction = Callable[[Dict[str, Union[str, int, float, bool]]], float]
 SearchSpaceType = Union[SearchSpace, NDArray[np.float64]]
 
 
@@ -100,7 +100,7 @@ class OptimizerFactory:
         cls,
         optimizer_type: Union[str, OptimizerType],
         config: Optional[OptimizationConfig] = None,
-        **kwargs: Any,
+        **kwargs: Union[str, int, float, bool],
     ) -> BaseOptimizer:
         """
         Create an optimizer instance.
@@ -224,7 +224,7 @@ class OptimizerFactory:
         return defaults.get(optimizer_type, OptimizationConfig())
 
     @classmethod
-    def _create_bayesian(cls, config: OptimizationConfig, **kwargs: Any) -> BayesianOptimizer:
+    def _create_bayesian(cls, config: OptimizationConfig, **kwargs: Union[str, int, float, bool]) -> BayesianOptimizer:
         """Create a Bayesian optimizer."""
         return BayesianOptimizer(
             config=config,
@@ -236,7 +236,7 @@ class OptimizerFactory:
         )
 
     @classmethod
-    def _create_grid_search(cls, config: OptimizationConfig, **kwargs: Any) -> GridSearchOptimizer:
+    def _create_grid_search(cls, config: OptimizationConfig, **kwargs: Union[str, int, float, bool]) -> GridSearchOptimizer:
         """Create a Grid Search optimizer."""
         use_cv = kwargs.get("use_cv", False)
 
@@ -251,7 +251,7 @@ class OptimizerFactory:
 
     @classmethod
     def _create_mean_variance(
-        cls, config: OptimizationConfig, **kwargs: Any
+        cls, config: OptimizationConfig, **kwargs: Union[str, int, float, bool]
     ) -> MeanVarianceOptimizer:
         """Create a Mean-Variance optimizer."""
         return MeanVarianceOptimizer(
@@ -267,7 +267,7 @@ class OptimizerFactory:
         )
 
     @classmethod
-    def _create_multi_strategy(cls, config: OptimizationConfig, **kwargs: Any) -> BayesianOptimizer:
+    def _create_multi_strategy(cls, config: OptimizationConfig, **kwargs: Union[str, int, float, bool]) -> BayesianOptimizer:
         """
         Create a multi-strategy optimizer.
 
@@ -328,7 +328,7 @@ class OptimizerFactory:
         method: str = "max_sharpe",
         risk_free_rate: float = None,
         max_position: float = 0.20,
-        **kwargs: Any,
+        **kwargs: Union[str, int, float, bool],
     ) -> MeanVarianceOptimizer:
         """
         Create an optimizer specifically configured for portfolio optimization.
@@ -366,7 +366,7 @@ class OptimizerFactory:
         n_trials: int = 100,
         early_stopping: bool = True,
         n_jobs: int = 1,
-        **kwargs: Any,
+        **kwargs: Union[str, int, float, bool],
     ) -> BayesianOptimizer:
         """
         Create an optimizer specifically configured for backtest optimization.
@@ -401,7 +401,7 @@ class OptimizerFactory:
 def create_optimizer(
     optimizer_type: str,
     config: Optional[OptimizationConfig] = None,
-    **kwargs: Any,
+    **kwargs: Union[str, int, float, bool],
 ) -> BaseOptimizer:
     """
     Convenience function to create an optimizer.
@@ -419,7 +419,7 @@ def create_optimizer(
 
 def create_portfolio_optimizer(
     method: str = "max_sharpe",
-    **kwargs: Any,
+    **kwargs: Union[str, int, float, bool],
 ) -> MeanVarianceOptimizer:
     """
     Convenience function to create a portfolio optimizer.
@@ -436,7 +436,7 @@ def create_portfolio_optimizer(
 
 def create_backtest_optimizer(
     n_trials: int = 100,
-    **kwargs: Any,
+    **kwargs: Union[str, int, float, bool],
 ) -> BayesianOptimizer:
     """
     Convenience function to create a backtest optimizer.

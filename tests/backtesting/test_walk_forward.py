@@ -595,7 +595,9 @@ class TestWalkForwardEdgeCasesRobust:
     - All windows negative
     """
 
-    def test_insufficient_data_for_min_cycles(self, walk_forward_config, backtest_config, default_symbol):
+    def test_insufficient_data_for_min_cycles(
+        self, walk_forward_config, backtest_config, default_symbol
+    ):
         """Test with only 2 years of data (insufficient for 5 cycles)."""
         validator = WalkForwardValidator(config=walk_forward_config)
 
@@ -672,7 +674,9 @@ class TestWalkForwardEdgeCasesRobust:
             # Should be in valid range even if very low
             assert 0.0 <= consistency <= 2.0
 
-    def test_max_allowed_degradation_30_percent(self, walk_forward_config, backtest_config, default_symbol):
+    def test_max_allowed_degradation_30_percent(
+        self, walk_forward_config, backtest_config, default_symbol
+    ):
         """Test exactly at 30% degradation threshold."""
         relaxed_config = walk_forward_config.copy()
         relaxed_config["min_cycles"] = 3
@@ -681,7 +685,9 @@ class TestWalkForwardEdgeCasesRobust:
         validator = WalkForwardValidator(config=relaxed_config)
 
         # Use data that might produce ~30% degradation
-        degradation_quotes = generate_realistic_quotes(symbol=default_symbol, days=6 * 252, seed=789, drift=0.03)
+        degradation_quotes = generate_realistic_quotes(
+            symbol=default_symbol, days=6 * 252, seed=789, drift=0.03
+        )
         degradation_signals = generate_sma_crossover_signals(degradation_quotes)
 
         result = validator.validate_strategy(
@@ -699,7 +705,9 @@ class TestWalkForwardEdgeCasesRobust:
             # Should be in valid range
             assert 0.0 <= degradation <= 1.0
 
-    def test_excessive_degradation_100_percent(self, walk_forward_config, backtest_config, default_symbol):
+    def test_excessive_degradation_100_percent(
+        self, walk_forward_config, backtest_config, default_symbol
+    ):
         """Test complete collapse (100% degradation)."""
         relaxed_config = walk_forward_config.copy()
         relaxed_config["min_cycles"] = 3
@@ -727,7 +735,9 @@ class TestWalkForwardEdgeCasesRobust:
             # Even with high degradation, should be capped at reasonable value
             assert 0.0 <= degradation <= 1.0
 
-    def test_exactly_50_percent_negative_windows(self, walk_forward_config, backtest_config, default_symbol):
+    def test_exactly_50_percent_negative_windows(
+        self, walk_forward_config, backtest_config, default_symbol
+    ):
         """Test exactly at threshold."""
         relaxed_config = walk_forward_config.copy()
         relaxed_config["min_cycles"] = 3
@@ -759,7 +769,9 @@ class TestWalkForwardEdgeCasesRobust:
                 # Should be in valid range
                 assert 0.0 <= negative_pct <= 1.0
 
-    def test_above_50_percent_negative_windows(self, walk_forward_config, backtest_config, default_symbol):
+    def test_above_50_percent_negative_windows(
+        self, walk_forward_config, backtest_config, default_symbol
+    ):
         """Test 60% negative windows."""
         relaxed_config = walk_forward_config.copy()
         relaxed_config["min_cycles"] = 3

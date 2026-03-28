@@ -167,7 +167,7 @@ class VolatilityMonitor:
         symbol: str,
         current_atr: Decimal,
         average_atr: Decimal,
-        base_scale: Decimal = Decimal("1.0"),
+        base_scale: Optional[Decimal] = None,
     ) -> Decimal:
         """
         Return position sizing scale based on ATR ratio.
@@ -186,6 +186,8 @@ class VolatilityMonitor:
         Returns:
             Scaling factor (min_scale to max_scale), quantized to 3 decimals
         """
+        if base_scale is None:
+            base_scale = Decimal("1.0")
         # Get thresholds from centralized config
         tt = get_config().trading_thresholds
         min_ratio = Decimal(str(tt.volatility_min_ratio))

@@ -297,7 +297,7 @@ class LimitAdjuster:
         position_size: Decimal,
         capital: Decimal,
         risk_per_trade_pct: Decimal,
-        volatility_adjustment: Decimal = Decimal("1.0"),
+        volatility_adjustment: Optional[Decimal] = None,
     ) -> Decimal:
         """
         Calculate stop loss price based on capital risk allocation.
@@ -312,6 +312,8 @@ class LimitAdjuster:
         Returns:
             Stop loss price
         """
+        if volatility_adjustment is None:
+            volatility_adjustment = Decimal("1.0")
         position_entry_price = Decimal(str(position_entry_price))
         position_size = Decimal(str(position_size))
         capital = Decimal(str(capital))

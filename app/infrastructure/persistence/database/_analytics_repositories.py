@@ -29,8 +29,6 @@ from app.infrastructure.persistence.database.models import (
 )
 from app.shared.exceptions.exceptions import raise_database_error
 
-# pylint: disable=inconsistent-return-statements
-
 
 class MarketDataRepository(BaseRepository[MarketData]):
     """Repository for MarketData model."""

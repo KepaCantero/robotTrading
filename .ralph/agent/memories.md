@@ -2,6 +2,10 @@
 
 ## Patterns
 
+### mem-1773735508-7c30
+> strategy_stock_allocator.py is a 2100+ line monolithic file with CC=17.19 and MI=0.00. Requires architectural splitting into: _filter.py, _scoring.py (momentum/mean_reversion/pairs), _erc_allocation.py, _models.py. Subdirectory already started at app/services/strategy_stock_allocator/ with domain_models.py and algorithms.py
+<!-- tags: radon, mi, refactoring, strategy-allocator | created: 2026-03-17 -->
+
 ### mem-1773651638-e43f
 > technical_indicators.py has 1313 lines. MI=4.32 due to LOC penalty in MI formula. To achieve MI>=20, file needs to be split into ~4-5 smaller modules (trend_indicators.py, momentum_indicators.py, volatility_indicators.py, volume_indicators.py). This requires architectural decision and import refactoring across codebase.
 <!-- tags: radon, mi, technical-indicators, refactoring | created: 2026-03-16 -->

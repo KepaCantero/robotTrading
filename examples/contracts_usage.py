@@ -12,20 +12,24 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List
 
-from app.core.contracts import (ContractViolationError, MarketDataContract,
-                                SignalContract,
-                                TechnicalIndicatorContract, contract,
-                                risk_calculation, signal_analysis,
-                                trading_operation, validate_trading_data)
+from app.core.contracts import (
+    ContractViolationError,
+    MarketDataContract,
+    SignalContract,
+    TechnicalIndicatorContract,
+    contract,
+    risk_calculation,
+    signal_analysis,
+    trading_operation,
+    validate_trading_data,
+)
 
 
 class TradingOperationsWithContracts:
     """Example trading operations using code contracts."""
 
     @trading_operation(MarketDataContract)
-    def execute_trade(
-        self, market_data: Dict, quantity: Decimal, price: Decimal
-    ) -> Dict:
+    def execute_trade(self, market_data: Dict, quantity: Decimal, price: Decimal) -> Dict:
         """
         Execute a trade with contract validation.
 
@@ -72,9 +76,7 @@ class TradingOperationsWithContracts:
             "symbol": signal_data["symbol"],
             "analysis_score": analysis_score,
             "recommendation": (
-                "BUY"
-                if analysis_score > 0.7
-                else "HOLD" if analysis_score > 0.4 else "SELL"
+                "BUY" if analysis_score > 0.7 else "HOLD" if analysis_score > 0.4 else "SELL"
             ),
             "confidence_level": (
                 "HIGH" if confidence > 0.8 else "MEDIUM" if confidence > 0.5 else "LOW"
@@ -82,9 +84,7 @@ class TradingOperationsWithContracts:
         }
 
     @risk_calculation()
-    def calculate_position_risk(
-        self, quantity: Decimal, price: Decimal, volatility: float
-    ) -> Dict:
+    def calculate_position_risk(self, quantity: Decimal, price: Decimal, volatility: float) -> Dict:
         """
         Calculate position risk with contract validation.
 
@@ -220,9 +220,7 @@ def example_trading_workflow():
     }
 
     try:
-        trade_result = trading_ops.execute_trade(
-            market_data, Decimal("100"), Decimal("150.0")
-        )
+        trade_result = trading_ops.execute_trade(market_data, Decimal("100"), Decimal("150.0"))
         print(f"Trade executed: {trade_result}")
     except ContractViolationError as e:
         print(f"Trade failed due to contract violation: {e}")
@@ -243,9 +241,7 @@ def example_trading_workflow():
 
     # Example 3: Calculate risk
     try:
-        risk_result = trading_ops.calculate_position_risk(
-            Decimal("1000"), Decimal("150.0"), 0.2
-        )
+        risk_result = trading_ops.calculate_position_risk(Decimal("1000"), Decimal("150.0"), 0.2)
         print(f"Risk calculation: {risk_result}")
     except ContractViolationError as e:
         print(f"Risk calculation failed due to contract violation: {e}")

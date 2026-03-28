@@ -1,4 +1,3 @@
-# pylint: disable=non-ascii-name
 """Black-Litterman Portfolio Optimization Implementation.
 
 This module implements the Black-Litterman model for portfolio optimization,
@@ -9,7 +8,7 @@ Key Features:
 - Equilibrium returns from market capitalization weights (Rule 66)
 - Combine equilibrium with investor views (P and Q matrices)
 - Confidence parameter (tau) for view uncertainty
-- Formula: E[R] = [(τΣ)^(-1) + P'Ω^(-1)P]^(-1) * [(τΣ)^(-1)Π + P'Ω^(-1)Q]
+- Formula: E[R] = [(τΣ)^(-1) + P'omega^(-1)P]^(-1) * [(τΣ)^(-1)Π + P'omega^(-1)Q]
 - Ledoit-Wolf shrinkage for covariance stability (Rule 74)
 - Support for absolute and relative views
 - Proper type hints using modern Python 3.10+ syntax
@@ -117,11 +116,10 @@ class InvestorView:
                     logger.warning(
                         f"Absolute view pick vector should sum to 1, got {self.pick_vector.sum()}"
                     )
-            elif self.view_type == ViewType.RELATIVE:
-                if not np.isclose(self.pick_vector.sum(), 0.0):
-                    logger.warning(
-                        f"Relative view pick vector should sum to 0, got {self.pick_vector.sum()}"
-                    )
+            elif self.view_type == ViewType.RELATIVE and not np.isclose(self.pick_vector.sum(), 0.0):
+                logger.warning(
+                    f"Relative view pick vector should sum to 0, got {self.pick_vector.sum()}"
+                )
 
 
 @dataclass
@@ -140,10 +138,10 @@ class BlackLittermanConfig:
         lookback_days: Days for covariance calculation (default: 252 per Rule 66)
         risk_free_rate: Risk-free rate for Sharpe calculation (default: 0.02)
         max_position: Maximum weight per asset for diversification (default: 0.20)
-        omega_method: Method for calculating uncertainty matrix Ω
+        omega_method: Method for calculating uncertainty matrix omega
             - 'idzorek': Use confidence levels (Idzorek's method)
-            - 'proportional': Ω proportional to P Σ P'
-            - 'diagonal': Diagonal Ω based on asset variances
+            - 'proportional': omega proportional to P Σ P'
+            - 'diagonal': Diagonal omega based on asset variances
     """
 
     tau: float = 0.05
@@ -411,15 +409,15 @@ class ViewMatrix:
         tau: float,
         method: str = "idzorek",
     ) -> NDArray[np.float64]:
-        """Build the Ω (uncertainty) matrix for investor views.
+        """Build the omega (uncertainty) matrix for investor views.
 
-        Ω represents the uncertainty in investor views. Different methods:
+        omega represents the uncertainty in investor views. Different methods:
 
         1. 'idzorek' (default): Use confidence levels from views
-           Ω_ii = (1/confidence - 1) * P_i Σ P_i'
+           omega_ii = (1/confidence - 1) * P_i Σ P_i'
 
-        2. 'proportional': Ω proportional to P Σ P'
-           Ω = tau * P Σ P'
+        2. 'proportional': omega proportional to P Σ P'
+           omega = tau * P Σ P'
 
         3. 'diagonal': Diagonal matrix based on asset variances
 
@@ -428,47 +426,47 @@ class ViewMatrix:
             cov_matrix: Covariance matrix (N, N)
             views: List of investor views (for confidence levels)
             tau: Uncertainty parameter
-            method: Method for calculating Ω
+            method: Method for calculating omega
 
         Returns:
-            Uncertainty matrix Ω (K, K), diagonal
+            Uncertainty matrix omega (K, K), diagonal
         """
         n_views = P.shape[0]
 
         if method == "idzorek":
             # Idzorek's method: Use confidence levels
-            Ω = np.zeros((n_views, n_views), dtype=np.float64)
+            omega = np.zeros((n_views, n_views), dtype=np.float64)
 
             for i, view in enumerate(views):
-                # Formula: Ω_ii = (1/c - 1) * P_i Σ P_i'
+                # Formula: omega_ii = (1/c - 1) * P_i Σ P_i'
                 P_i = P[i, :].reshape(1, -1)
                 variance = float((P_i @ cov_matrix @ P_i.T).item())
                 omega_ii = (1.0 / view.confidence - 1.0) * variance
 
-                Ω[i, i] = omega_ii
+                omega[i, i] = omega_ii
 
         elif method == "proportional":
-            # Ω proportional to P Σ P'
-            Ω = tau * (P @ cov_matrix @ P.T)
+            # omega proportional to P Σ P'
+            omega = tau * (P @ cov_matrix @ P.T)
 
         elif method == "diagonal":
             # Diagonal based on asset variances
-            Ω = np.zeros((n_views, n_views), dtype=np.float64)
+            omega = np.zeros((n_views, n_views), dtype=np.float64)
             for i in range(n_views):
                 # Variance of the view portfolio
                 P_i = P[i, :].reshape(1, -1)
                 variance = float((P_i @ cov_matrix @ P_i.T).item())
-                Ω[i, i] = variance
+                omega[i, i] = variance
 
         else:
             raise ValueError(f"Unknown omega_method: {method}")
 
         logger.info(
-            f"Built Ω matrix: method={method}, shape={Ω.shape}, "
-            f"diag_mean={Ω.diagonal().mean():.6f}"
+            f"Built omega matrix: method={method}, shape={omega.shape}, "
+            f"diag_mean={omega.diagonal().mean():.6f}"
         )
 
-        return Ω
+        return omega
 
 
 class BlackLittermanOptimizer:
@@ -478,7 +476,7 @@ class BlackLittermanOptimizer:
     investor views to produce more stable and intuitive portfolio allocations.
 
     Core Formula:
-        E[R] = [(τΣ)^(-1) + P'Ω^(-1)P]^(-1) * [(τΣ)^(-1)Π + P'Ω^(-1)Q]
+        E[R] = [(τΣ)^(-1) + P'omega^(-1)P]^(-1) * [(τΣ)^(-1)Π + P'omega^(-1)Q]
 
     Where:
         E[R] = Combined expected returns
@@ -487,7 +485,7 @@ class BlackLittermanOptimizer:
         Π = Equilibrium returns
         P = Pick matrix (maps views to assets)
         Q = View returns
-        Ω = View uncertainty matrix
+        omega = View uncertainty matrix
 
     Example:
         >>> optimizer = BlackLittermanOptimizer()
@@ -646,10 +644,10 @@ class BlackLittermanOptimizer:
         """Calculate Black-Litterman combined expected returns.
 
         Implements the core BL formula:
-            E[R] = M^(-1) * [(τΣ)^(-1)Π + P'Ω^(-1)Q]
+            E[R] = M^(-1) * [(τΣ)^(-1)Π + P'omega^(-1)Q]
 
         Where:
-            M = (τΣ)^(-1) + P'Ω^(-1)P
+            M = (τΣ)^(-1) + P'omega^(-1)P
 
         Args:
             equilibrium_returns: Market equilibrium returns Π (N,)
@@ -671,7 +669,7 @@ class BlackLittermanOptimizer:
         # Build matrices
         P = ViewMatrix.build_pick_matrix(views, n_assets)
         Q = ViewMatrix.build_q_vector(views)
-        Ω = ViewMatrix.build_omega_matrix(
+        omega = ViewMatrix.build_omega_matrix(
             P, cov_matrix, views, self.config.tau, self.config.omega_method
         )
 
@@ -679,14 +677,14 @@ class BlackLittermanOptimizer:
         tau_Sigma = self.config.tau * cov_matrix
         tau_Sigma_inv = np.linalg.inv(tau_Sigma)
 
-        # M = (τΣ)^(-1) + P'Ω^(-1)P
-        Ω_inv = np.linalg.inv(Ω)
-        M = tau_Sigma_inv + P.T @ Ω_inv @ P
+        # M = (τΣ)^(-1) + P'omega^(-1)P
+        omega_inv = np.linalg.inv(omega)
+        M = tau_Sigma_inv + P.T @ omega_inv @ P
         M_inv = np.linalg.inv(M)
 
-        # E[R] = M^(-1) * [(τΣ)^(-1)Π + P'Ω^(-1)Q]
+        # E[R] = M^(-1) * [(τΣ)^(-1)Π + P'omega^(-1)Q]
         prior_term = tau_Sigma_inv @ equilibrium_returns
-        view_term = P.T @ Ω_inv @ Q
+        view_term = P.T @ omega_inv @ Q
         bl_returns: NDArray[np.float64] = np.asarray(
             M_inv @ (prior_term + view_term), dtype=np.float64
         )

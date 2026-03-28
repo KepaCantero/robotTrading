@@ -110,11 +110,7 @@ def test_no_magic_numbers_in_simulate_fill():
 
     # Create executor
     config = ShadowModeConfig(enabled=True)
-    executor = ShadowModeExecutor(
-        broker_client=mock_broker,
-        wal_manager=mock_wal,
-        config=config
-    )
+    executor = ShadowModeExecutor(broker_client=mock_broker, wal_manager=mock_wal, config=config)
 
     # Verify executor has access to centralized config through get_config()
     centralized = get_config().shadow_mode

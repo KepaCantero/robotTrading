@@ -4,7 +4,7 @@ Usa análisis de correlaciones para detectar cambios de régimen.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Type
 
 import numpy as np
 import pandas as pd
@@ -18,7 +18,7 @@ try:
     SKLEARN_AVAILABLE = True
 except ImportError:
     SKLEARN_AVAILABLE = False
-    PCA = None  # type: ignore
+    PCA: Optional[Type[Any]] = None
 
 
 class CorrelationRegimeDetector:

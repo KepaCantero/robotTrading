@@ -162,7 +162,7 @@ class BacktestReportGenerator:
                     "backtest_id": backtest_id,
                 },
             )
-        except (IOError, OSError) as e:
+        except OSError as e:
             errors.append(f"Executive summary: {e}")
             logger.error(
                 f"Failed to write executive summary: {e}",
@@ -187,7 +187,7 @@ class BacktestReportGenerator:
                     "backtest_id": backtest_id,
                 },
             )
-        except (IOError, OSError) as e:
+        except OSError as e:
             errors.append(f"Technical analysis: {e}")
             logger.error(
                 f"Failed to write technical analysis: {e}",
@@ -212,7 +212,7 @@ class BacktestReportGenerator:
                     "backtest_id": backtest_id,
                 },
             )
-        except (IOError, OSError) as e:
+        except OSError as e:
             errors.append(f"Risk analysis: {e}")
             logger.error(
                 f"Failed to write risk analysis: {e}",
@@ -237,7 +237,7 @@ class BacktestReportGenerator:
                     "backtest_id": backtest_id,
                 },
             )
-        except (IOError, OSError, TypeError) as e:
+        except (OSError, TypeError) as e:
             errors.append(f"Metrics: {e}")
             logger.error(
                 f"Failed to write metrics file: {e}",
@@ -262,7 +262,7 @@ class BacktestReportGenerator:
                     "backtest_id": backtest_id,
                 },
             )
-        except (IOError, OSError) as e:
+        except OSError as e:
             errors.append(f"Recommendations: {e}")
             logger.error(
                 f"Failed to write recommendations: {e}",

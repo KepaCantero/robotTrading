@@ -69,7 +69,7 @@ class AdvancedMetricsCalculator:
             calmar = float(cagr) / abs_drawdown
             return Decimal(str(round(calmar, 4)))
 
-        except (FileNotFoundError, PermissionError, IOError, OSError) as e:
+        except OSError as e:
             logger.error(f"Error calculating Calmar ratio: {e}")
             return None
 
@@ -388,7 +388,7 @@ class AdvancedMetricsCalculator:
 
             return Decimal(str(round(cvar, 6)))
 
-        except (FileNotFoundError, PermissionError, IOError, OSError) as e:
+        except OSError as e:
             logger.error(f"Error calculating CVaR: {e}")
             return None
 

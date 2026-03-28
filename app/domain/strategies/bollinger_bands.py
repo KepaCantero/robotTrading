@@ -23,7 +23,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any, List, Optional
+from typing import List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -42,7 +42,7 @@ class BollingerBandsSignal:
     lower_band: Decimal
     bandwidth: float  # (upper - lower) / middle
     pct_b: float  # (price - lower) / (upper - lower)
-    timestamp: Any
+    timestamp: Union[pd.Timestamp, int]
     strength: float  # Signal strength (0-100)
 
 

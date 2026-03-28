@@ -160,9 +160,8 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
 
         # Arbitrage pairs configuration
         arbitrage_pairs_raw = config.get("arbitrage_pairs")
-        if arbitrage_pairs_raw is None and strategy_config:
-            if hasattr(strategy_config, 'parameters'):
-                arbitrage_pairs_raw = strategy_config.parameters.get("arbitrage_pairs")
+        if arbitrage_pairs_raw is None and strategy_config and hasattr(strategy_config, 'parameters'):
+            arbitrage_pairs_raw = strategy_config.parameters.get("arbitrage_pairs")
 
         if arbitrage_pairs_raw is None:
             # Default pairs for different arbitrage types

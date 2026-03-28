@@ -522,11 +522,13 @@ _orchestrator: Optional[MultiMarketOrchestrator] = None
 
 
 def get_orchestrator(
-    total_capital: Decimal = Decimal("100000"),
+    total_capital: Optional[Decimal] = None,
     tax_residence: str = "ES",
     marketaux_api_key: Optional[str] = None,
 ) -> MultiMarketOrchestrator:
     """Get or create global MultiMarketOrchestrator instance."""
+    if total_capital is None:
+        total_capital = Decimal("100000")
     global _orchestrator
     if _orchestrator is None:
         _orchestrator = MultiMarketOrchestrator(

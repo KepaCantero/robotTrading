@@ -661,7 +661,7 @@ class ProfileBatchBacktester:
         )
 
         n_trials = self.optimization_config.get("n_trials", 100)
-        timeout = self.optimization_config.get("timeout", None)
+        timeout = self.optimization_config.get("timeout")
 
         # Get parameter ranges from ProfileConfigLoader
         if self.profile_config_loader is not None:
@@ -1286,9 +1286,7 @@ class ProfileBatchBacktester:
             )
             action = best_signal[1].get("action", "hold")
             confidence = best_signal[1].get("confidence", 0.0)
-            if action in ["buy", "sell"] and confidence >= min_confidence:
-                action = action
-            else:
+            if action not in ["buy", "sell"] or confidence < min_confidence:
                 action = "hold"
                 confidence = 0.0
         else:

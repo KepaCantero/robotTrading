@@ -75,7 +75,7 @@ class TaxLossHarvester:
         cost_basis: Dict[str, Decimal],  # symbol → total_cost
         quantities: Dict[str, Decimal],  # symbol → quantity
         current_prices: Dict[str, Decimal],  # symbol → price
-        min_loss_threshold: Decimal = Decimal("100"),  # Minimum loss to consider
+        min_loss_threshold: Optional[Decimal] = None,  # Minimum loss to consider
     ) -> List[HarvestablePosition]:
         """
         Identify positions with unrealized losses eligible for harvesting.
@@ -90,6 +90,8 @@ class TaxLossHarvester:
         Returns:
             List of harvestable positions sorted by loss amount
         """
+        if min_loss_threshold is None:
+            min_loss_threshold = Decimal("100")
         harvestable = []
 
         for symbol, quantity in quantities.items():
@@ -198,7 +200,7 @@ class TaxLossHarvester:
         self,
         harvestable_positions: List[HarvestablePosition],
         marginal_tax_rate: Decimal,
-        capital_losses_carryforward: Decimal = Decimal("0"),
+        capital_losses_carryforward: Optional[Decimal] = None,
     ) -> Dict:
         """
         Estimate total annual tax benefit from all harvestable positions.
@@ -216,6 +218,8 @@ class TaxLossHarvester:
         Returns:
             Dict with total benefit, usable amount, carryforward
         """
+        if capital_losses_carryforward is None:
+            capital_losses_carryforward = Decimal("0")
         total_loss = sum(p.unrealized_loss for p in harvestable_positions)
         total_loss_amount = abs(total_loss)
 

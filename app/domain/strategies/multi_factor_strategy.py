@@ -202,9 +202,8 @@ class MultiFactorStrategy(BaseStrategy):
                 "min_quality_score",
                 "min_factor_score",
             ]:
-                if key in merged and merged[key] is not None:
-                    if not isinstance(merged[key], Decimal):
-                        merged[key] = Decimal(str(merged[key]))
+                if key in merged and merged[key] is not None and not isinstance(merged[key], Decimal):
+                    merged[key] = Decimal(str(merged[key]))
 
             return FactorStrategyConfig(**merged)
 
@@ -350,14 +349,12 @@ class MultiFactorStrategy(BaseStrategy):
             return False
 
         # Check value tilt
-        if self.strategy_config.value_tilt > 0:
-            if factor_scores.value_score and factor_scores.value_score < -0.5:
-                return False
+        if self.strategy_config.value_tilt > 0 and factor_scores.value_score and factor_scores.value_score < -0.5:
+            return False
 
         # Check profitability tilt
-        if self.strategy_config.profitability_tilt > 0:
-            if factor_scores.profitability_score and factor_scores.profitability_score < -0.5:
-                return False
+        if self.strategy_config.profitability_tilt > 0 and factor_scores.profitability_score and factor_scores.profitability_score < -0.5:
+            return False
 
         return True
 
@@ -406,16 +403,15 @@ class MultiFactorStrategy(BaseStrategy):
             return True
 
         # Sell if value signal inverted (for value tilt strategy)
-        if self.strategy_config.value_tilt > 0:
-            if factor_scores.value_score and factor_scores.value_score < -1.5:
-                logger.warning(
-                    f"Value signal inverted for {profile.symbol}: {factor_scores.value_score}"
-                )
-                return True
+        if self.strategy_config.value_tilt > 0 and factor_scores.value_score and factor_scores.value_score < -1.5:
+            logger.warning(
+                f"Value signal inverted for {profile.symbol}: {factor_scores.value_score}"
+            )
+            return True
 
         return False
 
-    def _calculate_composite_score(self, factor_scores: Any, profile: FactorProfile) -> float:
+    def _calculate_composite_score(self, factor_scores: object, profile: FactorProfile) -> float:
         """Calculate composite score for ranking."""
         score = 0.0
 

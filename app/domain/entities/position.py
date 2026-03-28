@@ -80,18 +80,18 @@ class Position:
         symbol: str,
         entry_date: Optional[datetime] = None,
         side: PositionSide = PositionSide.LONG,
-        quantity: Decimal = Decimal("0"),
-        avg_entry_price: Decimal = Decimal("0"),
+        quantity: Optional[Decimal] = None,
+        avg_entry_price: Optional[Decimal] = None,
         avg_price: Optional[Decimal] = None,  # Alias for avg_entry_price
-        current_price: Decimal = Decimal("0"),
+        current_price: Optional[Decimal] = None,
         currency: str = "USD",
         status: PositionStatus = PositionStatus.OPEN,
         exit_date: Optional[datetime] = None,
-        avg_exit_price: Decimal = Decimal("0"),
+        avg_exit_price: Optional[Decimal] = None,
         stop_loss: Optional[Decimal] = None,
         take_profit: Optional[Decimal] = None,
-        max_price: Decimal = Decimal("0"),
-        min_price: Decimal = Decimal("0"),
+        max_price: Optional[Decimal] = None,
+        min_price: Optional[Decimal] = None,
         created_at: Optional[datetime] = None,
         updated_at: Optional[datetime] = None,
     ):
@@ -117,6 +117,18 @@ class Position:
             created_at: Creation timestamp
             updated_at: Last update timestamp
         """
+        if quantity is None:
+            quantity = Decimal("0")
+        if avg_entry_price is None:
+            avg_entry_price = Decimal("0")
+        if current_price is None:
+            current_price = Decimal("0")
+        if avg_exit_price is None:
+            avg_exit_price = Decimal("0")
+        if max_price is None:
+            max_price = Decimal("0")
+        if min_price is None:
+            min_price = Decimal("0")
         # Handle avg_price alias
         if avg_price is not None:
             avg_entry_price = avg_price

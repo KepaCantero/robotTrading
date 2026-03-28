@@ -33,9 +33,9 @@ class ExecutionCostAnalyzer:
     def __init__(
         self,
         lookback_days: int = 30,
-        max_cost_ratio: Decimal = Decimal("0.50"),
-        base_slippage: Decimal = Decimal("0.001"),  # 0.1%
-        commission_per_trade: Decimal = Decimal("15"),
+        max_cost_ratio: Optional[Decimal] = None,
+        base_slippage: Optional[Decimal] = None,  # 0.1%
+        commission_per_trade: Optional[Decimal] = None,
     ):
         """
         Args:
@@ -44,6 +44,12 @@ class ExecutionCostAnalyzer:
             base_slippage: Base slippage in normal market conditions (0.1%)
             commission_per_trade: Fixed commission cost per trade
         """
+        if max_cost_ratio is None:
+            max_cost_ratio = Decimal("0.50")
+        if base_slippage is None:
+            base_slippage = Decimal("0.001")
+        if commission_per_trade is None:
+            commission_per_trade = Decimal("15")
         self.slippage_history = deque(maxlen=lookback_days)
         self.max_cost_ratio = max_cost_ratio
         self.base_slippage = base_slippage

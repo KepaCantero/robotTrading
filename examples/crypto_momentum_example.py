@@ -119,7 +119,9 @@ def create_sample_universe():
     return assets
 
 
-def generate_sample_prices(initial_price: float, days: int = 100, trend: float = 0.001) -> pd.Series:
+def generate_sample_prices(
+    initial_price: float, days: int = 100, trend: float = 0.001
+) -> pd.Series:
     """Generate sample price data for testing."""
     np.random.seed(42)
 
@@ -253,7 +255,9 @@ def main():
 
     print("  Positions:")
     for pos in portfolio.positions:
-        print(f"    {pos.symbol}: ${pos.value:,.2f} ({pos.weight:.1%}) - {pos.quantity:.4f} units @ ${pos.entry_price:.2f}")
+        print(
+            f"    {pos.symbol}: ${pos.value:,.2f} ({pos.weight:.1%}) - {pos.quantity:.4f} units @ ${pos.entry_price:.2f}"
+        )
     print()
 
     # ============================================================================

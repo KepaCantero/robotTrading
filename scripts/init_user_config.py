@@ -37,7 +37,9 @@ def init_user_config(interactive: bool = True) -> None:
     if interactive:
         # Interactive setup
         user_name = input("Your name [Trader]: ") or "Trader"
-        risk_tolerance = input("Risk tolerance (conservative/moderate/aggressive) [moderate]: ") or "moderate"
+        risk_tolerance = (
+            input("Risk tolerance (conservative/moderate/aggressive) [moderate]: ") or "moderate"
+        )
         broker_type = input("Broker (paper/alpaca/ibkr) [paper]: ") or "paper"
         paper_trading = input("Use paper trading? (Y/n): ").lower() != "n"
 

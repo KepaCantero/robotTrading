@@ -17,10 +17,9 @@ sys.path.insert(0, str(project_root))
 
 from app.optimization.grid_search_optimizer import GridSearchOptimizer
 
+
 def main():
-    parser = argparse.ArgumentParser(
-        description="Grid Search Optimization with Walk-Forward"
-    )
+    parser = argparse.ArgumentParser(description="Grid Search Optimization with Walk-Forward")
     parser.add_argument(
         "--years",
         type=int,
@@ -45,22 +44,24 @@ def main():
         default="docs/GRID_SEARCH_RESULTS",
         help="Output directory (default: docs/GRID_SEARCH_RESULTS)",
     )
-    
+
     args = parser.parse_args()
-    
+
     # Calculate date range
     end_date = datetime.now()
     start_date = end_date - timedelta(days=365 * args.years)
-    
+
     print("=" * 80)
     print("🔍 GRID SEARCH OPTIMIZATION")
     print("=" * 80)
-    print(f"Period: {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')} ({args.years} years)")
+    print(
+        f"Period: {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')} ({args.years} years)"
+    )
     print(f"Capital: ${args.capital:,.2f}")
     print(f"Max Combinations: {args.max_combinations or 'All'}")
     print(f"Output: {args.output_dir}")
     print("=" * 80)
-    
+
     # Initialize optimizer
     optimizer = GridSearchOptimizer(
         start_date=start_date,
@@ -68,11 +69,11 @@ def main():
         total_capital=Decimal(str(args.capital)),
         output_dir=Path(args.output_dir),
     )
-    
+
     # Run optimization
     print("\n🔍 Starting grid search...")
     result = optimizer.optimize(max_combinations=args.max_combinations)
-    
+
     print("\n" + "=" * 80)
     print("✅ GRID SEARCH COMPLETE")
     print("=" * 80)
@@ -81,9 +82,9 @@ def main():
     print(f"\nBest Config saved to: {Path(args.output_dir) / 'best_grid_search_config_*.json'}")
     print(f"Full results saved to: {Path(args.output_dir) / 'grid_search_results_*.csv'}")
     print("=" * 80)
-    
+
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())
-

@@ -162,7 +162,6 @@ class ForexDataFetcher:
 
             async def _fetch_correlations() -> Optional[Dict[str, Decimal]]:
                 """Internal fetch function."""
-                # pylint: disable=assignment-from-no-return
                 return self._fetch_correlations_from_api(base_currency)
 
             correlations = asyncio.run(
@@ -209,7 +208,7 @@ class ForexDataFetcher:
 
                 async def _fetch_rate(p: str = pair) -> Optional[Decimal]:
                     """Internal fetch function."""
-                    return self._fetch_rate_from_api(p)  # pylint: disable=assignment-from-no-return
+                    return self._fetch_rate_from_api(p)
 
                 rate = asyncio.run(self.reconnection_manager.connect_with_backoff(_fetch_rate))
                 if rate:

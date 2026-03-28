@@ -160,7 +160,7 @@ class ErrorBudgetIntegration:
 
             self.logger.info("ErrorBudgetIntegration fully initialized")
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error initializing integration: {e}")
             raise
 
@@ -270,7 +270,7 @@ class ErrorBudgetIntegration:
                 "timestamp": datetime.utcnow().isoformat(),
             }
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error in health check: {e}")
             return {
                 "status": "error",
@@ -315,7 +315,7 @@ def create_error_budget_router() -> APIRouter:
         try:
             integration = get_error_budget_integration()
             return await integration.get_budget_summary()
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             raise HTTPException(status_code=500, detail=str(e))
 
     @router.get("/health")
@@ -324,7 +324,7 @@ def create_error_budget_router() -> APIRouter:
         try:
             integration = get_error_budget_integration()
             return await integration.health_check()
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             raise HTTPException(status_code=500, detail=str(e))
 
     @router.post("/downtime")
@@ -343,7 +343,7 @@ def create_error_budget_router() -> APIRouter:
                 description=description,
                 metadata=metadata,
             )
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             raise HTTPException(status_code=500, detail=str(e))
 
     @router.post("/deployment/check")
@@ -358,7 +358,7 @@ def create_error_budget_router() -> APIRouter:
                 requesting_user=requesting_user,
                 reason=reason,
             )
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             raise HTTPException(status_code=500, detail=str(e))
 
     @router.get("/slo/report")
@@ -387,7 +387,7 @@ def create_error_budget_router() -> APIRouter:
                     "end": period_end.isoformat(),
                 },
             }
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             raise HTTPException(status_code=500, detail=str(e))
 
     @router.get("/alerts")
@@ -407,7 +407,7 @@ def create_error_budget_router() -> APIRouter:
                 "alerts": [a.to_dict() for a in alerts],
                 "total": len(alerts),
             }
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             raise HTTPException(status_code=500, detail=str(e))
 
     @router.post("/alerts/{alert_id}/acknowledge")
@@ -417,7 +417,7 @@ def create_error_budget_router() -> APIRouter:
             integration = get_error_budget_integration()
             success = await integration.alert_manager.acknowledge_alert(alert_id)
             return {"acknowledged": success}
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             raise HTTPException(status_code=500, detail=str(e))
 
     @router.post("/alerts/{alert_id}/resolve")
@@ -427,7 +427,7 @@ def create_error_budget_router() -> APIRouter:
             integration = get_error_budget_integration()
             success = await integration.alert_manager.resolve_alert(alert_id)
             return {"resolved": success}
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             raise HTTPException(status_code=500, detail=str(e))
 
     @router.post("/gates/clear-blocker")
@@ -437,7 +437,7 @@ def create_error_budget_router() -> APIRouter:
             integration = get_error_budget_integration()
             success = await integration.development_gate.clear_blocker()
             return {"cleared": success}
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             raise HTTPException(status_code=500, detail=str(e))
 
     @router.get("/incidents")
@@ -450,7 +450,7 @@ def create_error_budget_router() -> APIRouter:
                 "incidents": incidents,
                 "total": len(incidents),
             }
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             raise HTTPException(status_code=500, detail=str(e))
 
     return router

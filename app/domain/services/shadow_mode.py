@@ -216,7 +216,7 @@ class ShadowModeExecutor:
 
     def __init__(
         self,
-        broker_client: Any,
+        broker_client: object,
         wal_manager: OrderStateMachine,
         sanity_layer: Optional[DataSanityLayer] = None,
         config: Optional[ShadowModeConfig] = None,
@@ -406,7 +406,7 @@ class ShadowModeExecutor:
 
             return result
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"SHADOW MODE: Order {shadow_order_id} failed: {e}")
 
             # Write failure to WAL
@@ -427,7 +427,7 @@ class ShadowModeExecutor:
                     },
                 )
                 await self.wal.write_state(log)
-            except (asyncio.TimeoutError, ConnectionError, OSError) as wal_error:
+            except (asyncio.TimeoutError, OSError) as wal_error:
                 logger.critical(f"SHADOW MODE: Failed to write error to WAL: {wal_error}")
 
             raise
@@ -695,7 +695,7 @@ class ShadowModeExecutor:
                         "passed": True,
                     }
                 )
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             report["errors"].append(f"WAL validation failed: {e}")
 
         # Validation 3: No critical errors
@@ -865,7 +865,7 @@ class ShadowModeExecutor:
                     "data": result.to_dict(),
                 }
                 await f.write(json.dumps(log_entry) + "\n")
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             logger.error(f"Failed to write audit log: {e}")
 
     async def reset_daily_counters(self) -> None:
@@ -884,7 +884,7 @@ class ShadowModeAwareBroker:
 
     def __init__(
         self,
-        real_broker: Any,
+        real_broker: object,
         shadow_executor: ShadowModeExecutor,
     ):
         """

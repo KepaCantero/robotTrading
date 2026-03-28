@@ -15,7 +15,7 @@ References:
 - Stoll, H.R. (2000) "Friction"
 - Kyle, A.S. (1985) "Continuous Auctions and Insider Trading"
 """
-from __future__ import annotations  # Enable Python 3.10+ union syntax in Python 3.9
+from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
@@ -30,9 +30,6 @@ import pandas as pd
 from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
-
-# mypy: ignore-errors
-# pylint: disable=unsupported-binary-operation  # For Python 3.10+ union syntax
 
 
 class LiquidityDimension(Enum):
@@ -264,8 +261,12 @@ class LiquidityAnalyzer:
             ask_levels.append((price, cumulative_ask))
 
         # Total depth
-        total_bid_depth = sum(size for _, size in bids)
-        total_ask_depth = sum(size for _, size in asks)
+        total_bid_depth = Decimal('0')
+        for _, size in bids:
+            total_bid_depth += size
+        total_ask_depth = Decimal('0')
+        for _, size in asks:
+            total_ask_depth += size
 
         # Imbalance ratio
         total_depth = total_bid_depth + total_ask_depth
@@ -534,8 +535,8 @@ class LiquidityAnalyzer:
             return 0.0
 
         # Resilience score: faster recovery = higher score
-        avg_recovery_time = np.mean(recovery_times)
-        resilience_score = max(0, min(100, 100 - avg_recovery_time))
+        avg_recovery_time = float(np.mean(recovery_times))
+        resilience_score = max(0.0, min(100.0, 100.0 - avg_recovery_time))
 
         return resilience_score
 
@@ -574,7 +575,7 @@ class LiquidityAnalyzer:
         shortfall_risk *= 1 + volatility * 10
 
         # Market impact estimate (Almgren-Chriss style)
-        participation_rate = float(required_size / max(average_daily_volume, 1))
+        participation_rate = float(required_size / Decimal(str(max(average_daily_volume, 1))))
         market_impact = volatility * np.sqrt(participation_rate) * 10000
 
         # Determine risk level
@@ -659,7 +660,11 @@ class LiquidityAnalyzer:
         spread_bps = (best_ask - best_bid) / midpoint * 10000
 
         # Calculate quoted depth
-        quoted_depth = sum(size for _, size in bids[:5]) + sum(size for _, size in asks[:5])
+        quoted_depth = Decimal('0')
+        for _, size in bids[:5]:
+            quoted_depth += size
+        for _, size in asks[:5]:
+            quoted_depth += size
 
         # Calculate effective spread for target size
         if target_size:
@@ -788,10 +793,10 @@ class LiquidityAnalyzer:
         if not older_scores:
             return 'STABLE'
 
-        recent_avg = np.mean(recent_scores)
-        older_avg = np.mean(older_scores)
+        recent_avg = float(np.mean(recent_scores))
+        older_avg = float(np.mean(older_scores))
 
-        change = (recent_avg - older_avg) / max(older_avg, 1)
+        change = (recent_avg - older_avg) / max(older_avg, 1.0)
 
         if change > 0.05:
             return 'IMPROVING'

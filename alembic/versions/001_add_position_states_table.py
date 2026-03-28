@@ -28,7 +28,7 @@ def upgrade() -> None:
         sa.Column('version', sa.Integer(), default=1),
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
-        sa.PrimaryKeyConstraint('id')
+        sa.PrimaryKeyConstraint('id'),
     )
     op.create_index('ix_position_states_monitor_id', 'position_states', ['monitor_id'])
 

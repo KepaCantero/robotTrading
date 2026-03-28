@@ -46,7 +46,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.infrastructure.persistence import database as db_module
 
 get_db_transaction = db_module.get_db_transaction
-from app.domain.tax.database.fifo_schema import (
+from app.infrastructure.persistence.tax.fifo_schema import (
     Account,
     AssetType,
     BalanceSnapshot,
@@ -228,7 +228,7 @@ class Modelo721Generator:
                 total_loss = sum(g.net_loss for g in capital_gains_losses)
 
                 # Get exchanges used
-                exchanges_used = list(set(acc.exchange_name for acc in accounts))
+                exchanges_used = list({acc.exchange_name for acc in accounts})
 
                 # Create report
                 report = Modelo721Report(
@@ -492,7 +492,7 @@ class Modelo721Generator:
             self.logger.info(f"Modelo 721 CSV exported to {output_file}")
             return str(output_file)
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error exporting CSV: {e}", exc_info=True)
             raise
 

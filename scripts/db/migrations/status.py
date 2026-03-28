@@ -17,9 +17,7 @@ from pathlib import Path
 
 def parse_args():
     """Parse command line arguments."""
-    parser = argparse.ArgumentParser(
-        description="Show database migration status"
-    )
+    parser = argparse.ArgumentParser(description="Show database migration status")
     parser.add_argument(
         "--verbose",
         "-v",

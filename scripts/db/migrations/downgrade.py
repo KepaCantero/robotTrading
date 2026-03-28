@@ -32,9 +32,7 @@ from pathlib import Path
 
 def parse_args():
     """Parse command line arguments."""
-    parser = argparse.ArgumentParser(
-        description="Downgrade database to previous migration"
-    )
+    parser = argparse.ArgumentParser(description="Downgrade database to previous migration")
     parser.add_argument(
         "--revision",
         "-r",

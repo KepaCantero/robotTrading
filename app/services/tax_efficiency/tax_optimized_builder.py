@@ -54,8 +54,8 @@ class TaxOptimizedPortfolioBuilder:
         cost_basis: Dict[str, Decimal],  # symbol → total cost
         quantities: Dict[str, Decimal],  # symbol → shares owned
         current_prices: Dict[str, Decimal],  # symbol → price per share
-        marginal_tax_rate: Decimal = Decimal("0.25"),
-        capital: Decimal = Decimal("100000"),
+        marginal_tax_rate: Optional[Decimal] = None,
+        capital: Optional[Decimal] = None,
     ) -> TaxOptimizedAllocation:
         """
         Optimize portfolio for tax efficiency.
@@ -78,6 +78,10 @@ class TaxOptimizedPortfolioBuilder:
         Returns:
             Tax-optimized allocation with adjustments
         """
+        if marginal_tax_rate is None:
+            marginal_tax_rate = Decimal("0.25")
+        if capital is None:
+            capital = Decimal("100000")
         adjustments = []
 
         # Step 1: Identify harvestable positions (losses in overweight positions)
@@ -155,9 +159,9 @@ class TaxOptimizedPortfolioBuilder:
         gross_return_pct: Decimal,
         realized_gains: Decimal,
         realized_losses: Decimal,
-        long_term_percentage: Decimal = Decimal("0.6"),  # 60% LT, 40% ST
-        marginal_tax_rate_st: Decimal = Decimal("0.35"),
-        marginal_tax_rate_lt: Decimal = Decimal("0.15"),
+        long_term_percentage: Optional[Decimal] = None,  # 60% LT, 40% ST
+        marginal_tax_rate_st: Optional[Decimal] = None,
+        marginal_tax_rate_lt: Optional[Decimal] = None,
     ) -> Decimal:
         """
         Calculate after-tax return accounting for capital gains taxes.
@@ -173,6 +177,12 @@ class TaxOptimizedPortfolioBuilder:
         Returns:
             After-tax return percentage
         """
+        if long_term_percentage is None:
+            long_term_percentage = Decimal("0.6")
+        if marginal_tax_rate_st is None:
+            marginal_tax_rate_st = Decimal("0.35")
+        if marginal_tax_rate_lt is None:
+            marginal_tax_rate_lt = Decimal("0.15")
         net_gains = realized_gains - realized_losses
 
         if net_gains <= 0:

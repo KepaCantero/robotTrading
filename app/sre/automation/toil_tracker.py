@@ -397,7 +397,7 @@ class ToilTracker:
 
                 self.logger.info("ToilTracker initialized successfully")
 
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 self.logger.error(f"Error initializing: {e}")
                 raise
 
@@ -454,7 +454,7 @@ class ToilTracker:
 
             self.logger.debug("Database schema initialized")
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Database initialization failed: {e}")
             raise
 
@@ -496,7 +496,7 @@ class ToilTracker:
 
                 self.logger.debug(f"Loaded {len(self._entries)} recent entries")
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error loading entries: {e}")
 
     def log_work(
@@ -609,7 +609,7 @@ class ToilTracker:
                 )
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error saving entry: {e}")
 
     async def save_all_entries(self) -> None:

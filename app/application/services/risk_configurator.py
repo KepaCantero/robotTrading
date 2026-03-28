@@ -426,7 +426,7 @@ class RiskConfigurator:
             # Equal weight if no data
             n_assets = len(asset_class_volatilities)
             weight = 1.0 / n_assets if n_assets > 0 else 0.0
-            weights = {k: weight for k in asset_class_volatilities.keys()}
+            weights = dict.fromkeys(asset_class_volatilities.keys(), weight)
         else:
             weights = {k: v / total_inv_vol for k, v in inv_vols.items()}
 

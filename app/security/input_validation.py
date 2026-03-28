@@ -1,5 +1,5 @@
-# mypy: ignore-errors
-# pylint: disable=unsupported-binary-operation  # For Python 3.10+ union syntax
+from __future__ import annotations
+
 """
 Comprehensive Input Validation Module
 
@@ -24,7 +24,7 @@ import re
 import time
 from collections import defaultdict
 from decimal import Decimal, InvalidOperation
-from typing import Any, Dict, List, Optional, Set, Tuple, Type, TypeVar
+from typing import Dict, List, Optional, Set, Tuple, Type, TypeVar, Union
 from urllib.parse import unquote
 
 from pydantic import BaseModel
@@ -95,7 +95,7 @@ T = TypeVar("T", bound=BaseModel)
 class ValidationError(Exception):
     """Raised when input validation fails."""
 
-    def __init__(self, message: str, field: Optional[str] = None, value: Any = None):
+    def __init__(self, message: str, field: Optional[str] = None, value: Union[str, int, float, None] = None):
         self.message = message
         self.field = field
         self.value = value
@@ -303,7 +303,7 @@ class NumericValidator:
 
     @staticmethod
     def validate_decimal(
-        value: Any,
+        value: Union[Decimal, str, int, float],
         min_value: Optional[Decimal] = None,
         max_value: Optional[Decimal] = None,
         max_precision: int = 8,
@@ -348,7 +348,7 @@ class NumericValidator:
 
     @staticmethod
     def validate_integer(
-        value: Any,
+        value: Union[int, str, float],
         min_value: Optional[int] = None,
         max_value: Optional[int] = None,
     ) -> int:
@@ -380,7 +380,7 @@ class NumericValidator:
         return int_value
 
     @staticmethod
-    def validate_percentage(value: Any) -> Decimal:
+    def validate_percentage(value: Union[Decimal, str, int, float]) -> Decimal:
         """
         Validate percentage value (0-100 or 0-1).
 
@@ -421,12 +421,12 @@ class ListValidator:
 
     @staticmethod
     def validate_list(
-        value: Any,
+        value: List[Union[str, int, float]],
         min_length: int = 0,
         max_length: int = 1000,
         element_type: Optional[Type] = None,
         sanitize_elements: bool = True,
-    ) -> List[Any]:
+    ) -> List[Union[str, int, float]]:
         """
         Validate list input.
 
@@ -470,7 +470,7 @@ class ListValidator:
         return validated
 
     @staticmethod
-    def validate_symbol_list(symbols: Any, max_length: int = 100) -> List[str]:
+    def validate_symbol_list(symbols: Union[List[str], Tuple[str, ...], Set[str]], max_length: int = 100) -> List[str]:
         """
         Validate list of trading symbols.
 
@@ -513,7 +513,7 @@ class TradingValidator:
     """
 
     @staticmethod
-    def validate_price(price: Any) -> Decimal:
+    def validate_price(price: Union[Decimal, str, int, float]) -> Decimal:
         """
         Validate price input for trading operations.
 
@@ -552,7 +552,7 @@ class TradingValidator:
         return decimal_price
 
     @staticmethod
-    def validate_quantity(quantity: Any) -> Decimal:
+    def validate_quantity(quantity: Union[Decimal, str, int, float]) -> Decimal:
         """
         Validate quantity input for trading operations.
 
@@ -626,8 +626,8 @@ class TradingValidator:
 
     @staticmethod
     def validate_order_params(
-        symbol: str, side: str, quantity: Any, price: Any = None, order_type: str = "market"
-    ) -> Dict[str, Any]:
+        symbol: str, side: str, quantity: Union[Decimal, str, int, float], price: Optional[Union[Decimal, str, int, float]] = None, order_type: str = "market"
+    ) -> Dict[str, Union[str, Decimal, None]]:
         """
         Validate complete order parameters.
 
@@ -763,7 +763,7 @@ class RateLimiter:
         limit: Optional[int] = None,
         window: Optional[int] = None,
         category: str = "default",
-    ) -> Tuple[bool, Dict[str, Any]]:
+    ) -> Tuple[bool, Dict[str, Union[bool, int, float]]]:
         """
         Check if request is within rate limit.
 
@@ -837,7 +837,7 @@ class RateLimiter:
         self._requests.pop(identifier, None)
         self._lock.pop(identifier, None)
 
-    def get_usage_stats(self, identifier: str, category: str = "default") -> Dict[str, Any]:
+    def get_usage_stats(self, identifier: str, category: str = "default") -> Dict[str, Union[int, float]]:
         """
         Get current usage statistics for an identifier.
 
@@ -888,12 +888,12 @@ class DictValidator:
 
     @staticmethod
     def validate_dict(
-        value: Any,
+        value: Dict[str, Union[str, int, float]],
         max_keys: int = 100,
         key_type: Optional[Type] = None,
         value_type: Optional[Type] = None,
         sanitize_strings: bool = True,
-    ) -> Dict[Any, Any]:
+    ) -> Dict[str, Union[str, int, float]]:
         """
         Validate dictionary input.
 
@@ -962,7 +962,7 @@ class SecureRequestValidator:
     def validate_request_model(
         self,
         model_class: Type[T],
-        data: Dict[str, Any],
+        data: Dict[str, Union[str, int, float, bool]],
         sanitize: bool = True,
     ) -> T:
         """
@@ -992,7 +992,7 @@ class SecureRequestValidator:
         except Exception as e:
             raise ValidationError(f"Model validation failed: {str(e)}") from e
 
-    def _sanitize_dict(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def _sanitize_dict(self, data: Dict[str, Union[str, int, float, bool, List, Dict]]) -> Dict[str, Union[str, int, float, bool, List, Dict]]:
         """Recursively sanitize dictionary values."""
         sanitized = {}
         for key, value in data.items():
@@ -1006,7 +1006,7 @@ class SecureRequestValidator:
                 sanitized[key] = value
         return sanitized
 
-    def _sanitize_list(self, data: List[Any]) -> List[Any]:
+    def _sanitize_list(self, data: List[Union[str, int, float, bool, Dict, List]]) -> List[Union[str, int, float, bool, Dict, List]]:
         """Recursively sanitize list values."""
         sanitized = []
         for item in data:
@@ -1025,7 +1025,7 @@ class SecureRequestValidator:
 validator = SecureRequestValidator()
 
 
-def validate_and_sanitize_input(data: Any, input_type: str = "auto", **constraints) -> Any:
+def validate_and_sanitize_input(data: Union[str, int, float, List, Dict], input_type: str = "auto", **constraints: Union[str, int, float, bool, Type]) -> Union[str, int, Decimal, List, Dict]:
     """
     Convenience function to validate and sanitize any input.
 

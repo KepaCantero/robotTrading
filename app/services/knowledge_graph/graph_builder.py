@@ -67,8 +67,6 @@ class KnowledgeGraphBuilder:
             return True
 
         except (
-            ConnectionError,
-            TimeoutError,
             HTTPError,
             RequestException,
             ValueError,
@@ -97,7 +95,7 @@ class KnowledgeGraphBuilder:
         try:
             count = 0
 
-            for asset in assets:
+            for _asset in assets:
                 # In production:
                 # self.execute_query("""
                 #     CREATE (a:Asset {symbol: $symbol, name: $name, type: $type, created: $created})
@@ -111,8 +109,6 @@ class KnowledgeGraphBuilder:
             return count
 
         except (
-            ConnectionError,
-            TimeoutError,
             HTTPError,
             RequestException,
             ValueError,
@@ -140,7 +136,7 @@ class KnowledgeGraphBuilder:
         try:
             count = 0
 
-            for strategy in strategies:
+            for _strategy in strategies:
                 # In production:
                 # self.execute_query("""
                 #     CREATE (s:Strategy {name: $name, type: $type, risk_level: $risk, created: $created})
@@ -175,7 +171,7 @@ class KnowledgeGraphBuilder:
         try:
             count = 0
 
-            for corr in correlations:
+            for _corr in correlations:
                 # In production:
                 # self.execute_query("""
                 #     MATCH (a1:Asset {symbol: $symbol1}), (a2:Asset {symbol: $symbol2})
@@ -211,7 +207,7 @@ class KnowledgeGraphBuilder:
         try:
             count = 0
 
-            for rel in relationships:
+            for _rel in relationships:
                 # In production:
                 # self.execute_query("""
                 #     MATCH (s:Strategy {name: $strategy}), (a:Asset {symbol: $symbol})
@@ -247,7 +243,7 @@ class KnowledgeGraphBuilder:
         try:
             count = 0
 
-            for perf in performances:
+            for _perf in performances:
                 # In production:
                 # self.execute_query("""
                 #     CREATE (p:Performance {
@@ -265,8 +261,6 @@ class KnowledgeGraphBuilder:
             return count
 
         except (
-            ConnectionError,
-            TimeoutError,
             HTTPError,
             RequestException,
             ValueError,

@@ -59,9 +59,9 @@ class SensitivityReport:
 
     analysis_date: datetime = field(default_factory=datetime.now)
     parameter_results: Dict[str, SensitivityResult] = field(default_factory=dict)
-    stability_heatmap: Dict[str, Dict[float, float]] = field(
+    stability_heatmap: Dict[str, Dict[str, Any]] = field(
         default_factory=dict
-    )  # param -> variation -> performance
+    )  # param -> variation_key -> {value, performance}
     robust_parameters: List[str] = field(default_factory=list)
     critical_parameters: List[str] = field(default_factory=list)
     normal_parameters: List[str] = field(default_factory=list)
@@ -172,7 +172,7 @@ class SensitivityAnalyzer:
             )
 
             report.parameter_results[param_name] = result
-            report.stability_heatmap[param_name] = result.variations_tested  # type: ignore
+            report.stability_heatmap[param_name] = result.variations_tested
 
             # Classify parameter by sensitivity level
             if result.sensitivity_level == "ROBUST":
@@ -209,16 +209,16 @@ class SensitivityAnalyzer:
         Calculates elasticity: % change in performance / % change in parameter.
         """
         result = SensitivityResult(parameter_name=param_name, base_value=param_value)
-        performances = {}
-        varied_values = {}
+        performances: Dict[float, float] = {}
+        varied_values: Dict[float, Union[float, int]] = {}
 
         # Test each variation level
         for variation_pct in variation_steps:
             # Calculate varied value
             if isinstance(param_value, int):
-                varied_value = int(param_value * (1 + variation_pct))
+                varied_value: Union[float, int] = int(param_value * (1 + variation_pct))
             else:
-                varied_value = param_value * (1 + variation_pct)  # type: ignore
+                varied_value = float(param_value) * (1 + variation_pct)
 
             # Ensure value stays within reasonable bounds (e.g., > 0)
             if varied_value <= 0:
@@ -264,9 +264,9 @@ class SensitivityAnalyzer:
         base_perf = performances.get(0.0)
         if base_perf is None or base_perf == 0:
             logger.warning(f"Base performance for {param_name} is invalid, using fallback")
-            base_perf = np.mean(list(performances.values()))
+            base_perf = float(np.mean(list(performances.values())))
 
-        result.elasticity_score = self._calculate_elasticity(performances, varied_values)  # type: ignore
+        result.elasticity_score = self._calculate_elasticity(performances, varied_values)
         result.sensitivity_level = self._classify_sensitivity(result.elasticity_score)
 
         # Detect optimal value and plateau width
@@ -274,7 +274,7 @@ class SensitivityAnalyzer:
             optimal_variation = max(performances, key=performances.get)
             result.optimal_value = varied_values[optimal_variation]
             result.plateau_width = self._calculate_plateau_width(
-                performances, varied_values, base_perf  # type: ignore
+                performances, varied_values, base_perf
             )
 
         # Calculate confidence intervals

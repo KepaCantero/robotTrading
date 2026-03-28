@@ -139,7 +139,7 @@ class AlertingOrchestrator:
                     f"Alerting orchestrator initialized with {len(self.registered_rules)} rules"
                 )
 
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 self.logger.error(f"Error during initialization: {str(e)}")
                 raise
 
@@ -257,7 +257,7 @@ class AlertingOrchestrator:
                     f"Alerting orchestrator started with {evaluation_interval_seconds}s interval"
                 )
 
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 self.is_running = False
                 self.logger.error(f"Error starting alerting orchestrator: {str(e)}")
                 raise
@@ -278,7 +278,7 @@ class AlertingOrchestrator:
                 self.is_running = False
                 self.logger.info("Alerting orchestrator stopped")
 
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 self.logger.error(f"Error stopping alerting orchestrator: {str(e)}")
 
     async def _flush_pending_operations(self) -> None:
@@ -287,7 +287,7 @@ class AlertingOrchestrator:
             # Give time for any in-flight operations
             await asyncio.sleep(0.5)
             self.logger.info("Flushed pending operations")
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error flushing pending operations: {str(e)}")
 
     async def trigger_alert_manual(self, alert_event: AlertEvent) -> None:
@@ -300,14 +300,14 @@ class AlertingOrchestrator:
         try:
             if self.alert_manager:
                 # Process through alert manager for deduplication
-                for rule_id, rule in self.registered_rules.items():
+                for _rule_id, rule in self.registered_rules.items():
                     if rule.rule_id == alert_event.rule_id:
                         await self.alert_manager.trigger_alert(rule, alert_event)
                         break
 
             self.logger.info(f"Manually triggered alert: {alert_event.event_id}")
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error triggering manual alert: {str(e)}")
 
     async def acknowledge_alert(self, alert_id: str) -> bool:
@@ -322,7 +322,7 @@ class AlertingOrchestrator:
         """
         try:
             return self.alert_manager.acknowledge_alert(alert_id)
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error acknowledging alert: {str(e)}")
             return False
 

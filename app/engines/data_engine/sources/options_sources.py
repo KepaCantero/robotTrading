@@ -12,7 +12,7 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 # REQUIRED: No fallbacks - aiohttp is required for async HTTP requests
-import aiohttp  # noqa: F401
+import aiohttp
 
 from app.shared.config.api_endpoints import APIEndpoints
 from app.shared.config.timeout_config import get_timeouts
@@ -85,7 +85,7 @@ class OptionsVolatilitySource(BaseDataSource):
             self.is_connected = False
             logger.info("Desconectado de Options Source")
             return True
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Error desconectando de Options Source: {e}")
             return False
 
@@ -210,8 +210,8 @@ class OptionsVolatilitySource(BaseDataSource):
                 }
 
             # Extraer strikes y expiries únicos
-            strikes = sorted(set(opt['strike_price'] for opt in option_chains))
-            expiry_dates = sorted(set(opt['expiry_date'] for opt in option_chains))
+            strikes = sorted({opt['strike_price'] for opt in option_chains})
+            expiry_dates = sorted({opt['expiry_date'] for opt in option_chains})
 
             # Filtrar por expiry_dates si se proporcionan
             if expiry_dates:

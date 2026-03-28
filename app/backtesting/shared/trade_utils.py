@@ -9,12 +9,12 @@ Usage:
 """
 
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Optional
 
 from app.shared.config.centralized_config import get_config
 
 
-def build_trade_reason(signal: Any, market_data: Any = None) -> str:
+def build_trade_reason(signal: object, market_data: object = None) -> str:
     """
     Build a human-readable trade reason string from a signal.
 

@@ -97,7 +97,7 @@ class PortfolioConstructor:
                 self.logger.warning(f"⚠️  Unknown method {method}, using equal weight")
                 return await self._equal_weight_allocation(assets)
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"❌ Error constructing portfolio: {e}")
             # Return equal-weight fallback on error
             return await self._equal_weight_allocation(assets)
@@ -106,7 +106,7 @@ class PortfolioConstructor:
         """Simple 1/N equal-weight allocation."""
         n = len(assets)
         weight = 1.0 / n
-        allocation = {asset: weight for asset in assets}
+        allocation = dict.fromkeys(assets, weight)
 
         return PortfolioAllocation(
             allocation=allocation,
@@ -144,7 +144,7 @@ class PortfolioConstructor:
         cov_matrix = await self._build_covariance_matrix(assets, volatilities, correlation_matrix)
 
         # Calculate portfolio metrics for equal-weight (simple approximation)
-        allocation = {asset: 1.0 / n for asset in assets}
+        allocation = dict.fromkeys(assets, 1.0 / n)
         portfolio_return = sum(returns.get(asset, 0.0) * allocation[asset] for asset in assets)
         portfolio_vol = await self._calculate_portfolio_volatility(allocation, cov_matrix)
         sharpe_ratio = portfolio_return / portfolio_vol if portfolio_vol > 0 else 0.0
@@ -221,7 +221,7 @@ class PortfolioConstructor:
         cov_matrix = await self._build_covariance_matrix(assets, volatilities, correlation_matrix)
 
         # Calculate Sharpe ratio for equal-weight (simple approximation)
-        allocation = {asset: 1.0 / n for asset in assets}
+        allocation = dict.fromkeys(assets, 1.0 / n)
         portfolio_return = sum(returns.get(asset, 0.0) * allocation[asset] for asset in assets)
         portfolio_vol = await self._calculate_portfolio_volatility(allocation, cov_matrix)
         sharpe_ratio = portfolio_return / portfolio_vol if portfolio_vol > 0 else 0.0

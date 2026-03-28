@@ -48,7 +48,7 @@ class SuccessfulConfigManager:
         try:
             with open(self.configs_file, 'r') as f:
                 return json.load(f)
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             logger.warning(f"Error cargando configuraciones guardadas: {e}")
             return []
 

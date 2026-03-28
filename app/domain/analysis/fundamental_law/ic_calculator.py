@@ -75,7 +75,7 @@ class ICCalculator:
         forecasts: pd.Series,
         returns: pd.Series,
         method: str = "pearson",
-    ) -> "ICMetrics":  # noqa: F821
+    ) -> "ICMetrics":
         """
         Calculate Information Coefficient and related metrics.
 
@@ -429,7 +429,7 @@ class ICCalculator:
         index = forecasts.index[window - 1 :]
         return pd.Series(rolling_ic_values, index=index)
 
-    def _get_zero_ic_metrics(self) -> "ICMetrics":  # noqa: F821
+    def _get_zero_ic_metrics(self) -> "ICMetrics":
         """
         Return zero IC metrics for edge cases.
 

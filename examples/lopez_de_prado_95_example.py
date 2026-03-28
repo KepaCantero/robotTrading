@@ -24,6 +24,7 @@ from sklearn.linear_model import LogisticRegression
 
 try:
     from xgboost import XGBClassifier
+
     HAS_XGBOOST = True
 except ImportError:
     HAS_XGBOOST = False
@@ -124,9 +125,7 @@ def step2_calculate_uniqueness(X, y, prices, events, labels_df):
     print("=" * 80)
 
     # Calculate uniqueness weights
-    uniqueness_weights = calculate_sample_weights_uniqueness(
-        events, labels_df, prices
-    )
+    uniqueness_weights = calculate_sample_weights_uniqueness(events, labels_df, prices)
 
     print(f"Average uniqueness: {uniqueness_weights.mean():.4f}")
     print(f"Min uniqueness: {uniqueness_weights.min():.4f}")
@@ -218,9 +217,7 @@ def step4_feature_importance(X, y, events, labels_df, primary_model):
 
     # Calculate importance
     print("Calculating feature importance with uniqueness weighting...")
-    result = importance_calc.calculate_importance(
-        primary_model, X, y, events, labels_df
-    )
+    result = importance_calc.calculate_importance(primary_model, X, y, events, labels_df)
 
     print(f"\nAverage uniqueness: {result.avg_uniqueness:.4f}")
     print(f"Methods used: {result.methods_used}")
@@ -266,9 +263,7 @@ def step5_bet_sizing(primary_model, meta_model, X_test):
     expected_returns = np.random.uniform(0.01, 0.03, len(X_test))
 
     # Calculate bet sizes
-    result = bet_sizing.calculate_sizes(
-        primary_model, meta_model, X_test, expected_returns
-    )
+    result = bet_sizing.calculate_sizes(primary_model, meta_model, X_test, expected_returns)
 
     print(f"\nBet Sizing Results:")
     print(f"Average bet size: {result.bet_sizes.mean():.4f}")
@@ -335,9 +330,7 @@ def step6_concurrent_training(X, y, events, labels_df, uniqueness_weights):
 
     # Train models concurrently
     trainer = ConcurrentModelTrainer(n_jobs=4)
-    ensemble_results = trainer.train_models_concurrent(
-        models, X, y, events, labels_df
-    )
+    ensemble_results = trainer.train_models_concurrent(models, X, y, events, labels_df)
 
     print(f"\nEnsemble Results:")
     print(f"Number of models: {ensemble_results.metadata['n_models']}")
@@ -378,23 +371,17 @@ def main():
     uniqueness_weights = step2_calculate_uniqueness(X, y, prices, events, labels_df)
 
     # Step 3: Train meta-labeling models
-    primary_model, meta_model = step3_meta_labeling_cv(
-        X, y, events, labels_df, uniqueness_weights
-    )
+    primary_model, meta_model = step3_meta_labeling_cv(X, y, events, labels_df, uniqueness_weights)
 
     # Step 4: Feature importance
-    importance_result = step4_feature_importance(
-        X, y, events, labels_df, primary_model
-    )
+    importance_result = step4_feature_importance(X, y, events, labels_df, primary_model)
 
     # Step 5: Bet sizing
     # Create test data (just use training data for demo)
     bet_sizing_result = step5_bet_sizing(primary_model, meta_model, X)
 
     # Step 6: Concurrent training
-    ensemble_results = step6_concurrent_training(
-        X, y, events, labels_df, uniqueness_weights
-    )
+    ensemble_results = step6_concurrent_training(X, y, events, labels_df, uniqueness_weights)
 
     # Final summary
     print("\n" + "=" * 80)

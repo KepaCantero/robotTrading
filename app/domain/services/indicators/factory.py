@@ -150,11 +150,7 @@ class UnifiedIndicatorCalculator:
             return self.backend.value
 
         # Determine data size
-        if isinstance(data, pd.DataFrame):
-            size = len(data)
-        elif isinstance(data, pd.Series):
-            size = len(data)
-        elif isinstance(data, np.ndarray):
+        if isinstance(data, pd.DataFrame) or isinstance(data, pd.Series) or isinstance(data, np.ndarray):
             size = len(data)
         else:
             size = len(data) if hasattr(data, '__len__') else 0

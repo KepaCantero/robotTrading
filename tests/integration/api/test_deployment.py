@@ -197,7 +197,9 @@ class TestDeploymentAPIEndpoints:
         mock_health.response_time_ms = 50
         mock_health.consecutive_failures = 0
 
-        with patch("app.presentation.api.deployment.get_health_check_manager") as mock_health_manager:
+        with patch(
+            "app.presentation.api.deployment.get_health_check_manager"
+        ) as mock_health_manager:
             mock_manager = MagicMock()
             mock_manager.get_all_health_status.return_value = {
                 "service1": mock_health,
@@ -229,7 +231,9 @@ class TestDeploymentAPIEndpoints:
         mock_degraded.response_time_ms = 500
         mock_degraded.consecutive_failures = 0
 
-        with patch("app.presentation.api.deployment.get_health_check_manager") as mock_health_manager:
+        with patch(
+            "app.presentation.api.deployment.get_health_check_manager"
+        ) as mock_health_manager:
             mock_manager = MagicMock()
             mock_manager.get_all_health_status.return_value = {
                 "service1": mock_healthy,
@@ -260,7 +264,9 @@ class TestDeploymentAPIEndpoints:
         mock_unhealthy.response_time_ms = 1000
         mock_unhealthy.consecutive_failures = 3
 
-        with patch("app.presentation.api.deployment.get_health_check_manager") as mock_health_manager:
+        with patch(
+            "app.presentation.api.deployment.get_health_check_manager"
+        ) as mock_health_manager:
             mock_manager = MagicMock()
             mock_manager.get_all_health_status.return_value = {
                 "service1": mock_healthy,
@@ -292,7 +298,9 @@ class TestDeploymentAPIEndpoints:
         with patch("app.presentation.api.deployment.get_deploy_orchestrator") as mock_orchestrator:
             mock_orchestrator.return_value = mock_orch
 
-            with patch("app.presentation.api.deployment.get_health_check_manager") as mock_health_manager:
+            with patch(
+                "app.presentation.api.deployment.get_health_check_manager"
+            ) as mock_health_manager:
                 mock_manager = MagicMock()
                 mock_manager.get_all_health_status.return_value = {"service1": mock_health}
                 mock_manager.get_unhealthy_services.return_value = []
@@ -330,7 +338,9 @@ class TestDeploymentAPIEndpoints:
             ]
             mock_orchestrator.return_value = mock_orch
 
-            with patch("app.presentation.api.deployment.get_health_check_manager") as mock_health_manager:
+            with patch(
+                "app.presentation.api.deployment.get_health_check_manager"
+            ) as mock_health_manager:
                 mock_manager = MagicMock()
                 mock_manager.get_all_health_status.return_value = {}
                 mock_manager.get_unhealthy_services.return_value = []
@@ -413,7 +423,9 @@ class TestErrorHandling:
     @pytest.mark.asyncio
     async def test_health_check_error_handling(self, client):
         """Test health_check handles errors gracefully."""
-        with patch("app.presentation.api.deployment.get_health_check_manager") as mock_health_manager:
+        with patch(
+            "app.presentation.api.deployment.get_health_check_manager"
+        ) as mock_health_manager:
             mock_manager = MagicMock()
             mock_manager.get_all_health_status.side_effect = Exception("Health check failed")
             mock_health_manager.return_value = mock_manager

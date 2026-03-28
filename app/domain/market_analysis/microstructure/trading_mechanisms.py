@@ -16,7 +16,7 @@ References:
 - Madhavan, A. (1992) "Trading Mechanisms in Securities Markets"
 - Domowitz, I. (1990) "The Structure of Trading Discrete Markets"
 """
-from __future__ import annotations  # Enable Python 3.10+ union syntax in Python 3.9
+from __future__ import annotations
 
 import heapq
 import logging
@@ -24,12 +24,9 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Tuple  # noqa: F401
+from typing import Dict, Optional
 
 logger = logging.getLogger(__name__)
-
-# mypy: ignore-errors
-# pylint: disable=unsupported-binary-operation  # For Python 3.10+ union syntax
 
 
 class MarketMechanism(Enum):
@@ -221,8 +218,8 @@ class CallAuction:
 
     def __init__(
         self,
-        price_tick: Decimal = Decimal('0.01'),
-        min_price_increment: Decimal = Decimal('0.01'),
+        price_tick: Optional[Decimal] = None,
+        min_price_increment: Optional[Decimal] = None,
     ):
         """
         Initialize call auction
@@ -231,6 +228,10 @@ class CallAuction:
             price_tick: Minimum price variation
             min_price_increment: Minimum price increment for iteration
         """
+        if price_tick is None:
+            price_tick = Decimal('0.01')
+        if min_price_increment is None:
+            min_price_increment = Decimal('0.01')
         logger.debug(
             "Initializing CallAuction",
             extra={
@@ -263,8 +264,8 @@ class CallAuction:
             return None, Decimal('0')
 
         # Get sorted unique prices
-        buy_prices = sorted(set(o.price for o in self.buy_orders), reverse=True)
-        sell_prices = sorted(set(o.price for o in self.sell_orders))
+        buy_prices = sorted({o.price for o in self.buy_orders}, reverse=True)
+        sell_prices = sorted({o.price for o in self.sell_orders})
 
         # Find price range where trades can occur
         min_trade_price = min(sell_prices)
@@ -302,11 +303,11 @@ class CallAuction:
 
     def _calculate_buy_volume_at_price(self, price: Decimal) -> Decimal:
         """Calculate total buy volume at or above price"""
-        return sum(o.size for o in self.buy_orders if o.price >= price)
+        return sum((o.size for o in self.buy_orders if o.price >= price), Decimal('0'))
 
     def _calculate_sell_volume_at_price(self, price: Decimal) -> Decimal:
         """Calculate total sell volume at or below price"""
-        return sum(o.size for o in self.sell_orders if o.price <= price)
+        return sum((o.size for o in self.sell_orders if o.price <= price), Decimal('0'))
 
     def execute_auction(self) -> AuctionResult:
         """
@@ -430,7 +431,7 @@ class ContinuousDoubleAuction:
 
     def __init__(
         self,
-        price_tick: Decimal = Decimal('0.01'),
+        price_tick: Optional[Decimal] = None,
     ):
         """
         Initialize continuous double auction
@@ -438,6 +439,8 @@ class ContinuousDoubleAuction:
         Args:
             price_tick: Minimum price variation
         """
+        if price_tick is None:
+            price_tick = Decimal('0.01')
         logger.debug(
             "Initializing ContinuousDoubleAuction",
             extra={"price_tick": str(price_tick)},
@@ -634,7 +637,7 @@ class DealerMarket:
         self,
         initial_capital: Decimal,
         risk_aversion: float = 0.5,
-        inventory_limit: Decimal = Decimal('10000'),
+        inventory_limit: Optional[Decimal] = None,
     ):
         """
         Initialize dealer market
@@ -644,6 +647,8 @@ class DealerMarket:
             risk_aversion: Risk aversion parameter (0-1)
             inventory_limit: Maximum inventory position
         """
+        if inventory_limit is None:
+            inventory_limit = Decimal('10000')
         logger.debug(
             "Initializing DealerMarket",
             extra={
@@ -688,11 +693,15 @@ class DealerMarket:
         # Inventory adjustment
         # If long inventory, lower both quotes to encourage selling
         # If short inventory, raise both quotes to encourage buying
-        inventory_adjustment = self.inventory * volatility * Decimal(str(self.risk_aversion))
+        inventory_adjustment = (
+            self.inventory * Decimal(str(volatility)) * Decimal(str(self.risk_aversion))
+        )
 
         # Adverse selection adjustment
         # Widen spread when order flow imbalance suggests informed trading
-        adverse_selection_adjustment = abs(order_flow_imbalance) * current_price * Decimal('0.0005')
+        adverse_selection_adjustment = (
+            Decimal(str(abs(order_flow_imbalance))) * current_price * Decimal('0.0005')
+        )
 
         # Calculate optimal quotes
         half_spread = (base_spread + adverse_selection_adjustment) / 2
@@ -896,7 +905,7 @@ class TradingMechanismComparator:
         Returns:
             Dictionary with comparison results
         """
-        results = {}
+        results: dict[str, dict[str, float | str]] = {}
 
         # Dealer market
         # Best for: small orders, illiquid stocks
@@ -969,9 +978,11 @@ _mechanism_comparator: TradingMechanismComparator | None = None
 
 
 def get_call_auction(
-    price_tick: Decimal = Decimal('0.01'),
+    price_tick: Optional[Decimal] = None,
 ) -> CallAuction:
     """Get or create CallAuction instance"""
+    if price_tick is None:
+        price_tick = Decimal('0.01')
     global _call_auction
     if _call_auction is None:
         _call_auction = CallAuction(price_tick=price_tick)
@@ -979,9 +990,11 @@ def get_call_auction(
 
 
 def get_continuous_double_auction(
-    price_tick: Decimal = Decimal('0.01'),
+    price_tick: Optional[Decimal] = None,
 ) -> ContinuousDoubleAuction:
     """Get or create ContinuousDoubleAuction instance"""
+    if price_tick is None:
+        price_tick = Decimal('0.01')
     global _continuous_auction
     if _continuous_auction is None:
         _continuous_auction = ContinuousDoubleAuction(price_tick=price_tick)
@@ -989,10 +1002,12 @@ def get_continuous_double_auction(
 
 
 def get_dealer_market(
-    initial_capital: Decimal = Decimal('1000000'),
+    initial_capital: Optional[Decimal] = None,
     risk_aversion: float = 0.5,
 ) -> DealerMarket:
     """Get or create DealerMarket instance"""
+    if initial_capital is None:
+        initial_capital = Decimal('1000000')
     global _dealer_market
     if _dealer_market is None:
         _dealer_market = DealerMarket(

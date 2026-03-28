@@ -595,7 +595,7 @@ class StrategyRegistry:
         Returns:
             Sorted list of unique categories
         """
-        categories = set(s.category for s in self._strategies.values())
+        categories = {s.category for s in self._strategies.values()}
         return sorted(categories)
 
     def __len__(self) -> int:

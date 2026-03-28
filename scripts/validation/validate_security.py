@@ -32,32 +32,38 @@ class SecurityValidator:
     SECRET_PATTERNS = {
         'hardcoded_password': (
             r'password\s*=\s*["\'](?![a-zA-Z0-9_-]+|getenv|os\.getenv|environ)([^"\']){1,30}["\']',
-            "Hardcoded password detected"
+            "Hardcoded password detected",
         ),
         'hardcoded_api_key': (
             r'api_key\s*=\s*["\'][^"\']{30,}["\'](?!\s*#.*env)',
-            "Hardcoded API key (30+ characters)"
+            "Hardcoded API key (30+ characters)",
         ),
         'hardcoded_secret': (
             r'secret\s*=\s*["\'][^"\']{30,}["\'](?!\s*#.*env)',
-            "Hardcoded secret (30+ characters)"
+            "Hardcoded secret (30+ characters)",
         ),
         'default_password': (
             r'password\s*=\s*["\'](password|secret|changeme|admin|quest)["\']',
-            "Default/weak password value"
+            "Default/weak password value",
         ),
         'connection_string_creds': (
             r'(postgresql|redis|mssql)://[^:@\s]+:[^@@\s]+@[^@\s]+',
-            "Credentials hardcoded in connection string"
+            "Credentials hardcoded in connection string",
         ),
     }
 
     # Files to exclude from validation
     EXCLUDE_FILES = [
-        'tests/', 'test_', '__pycache__', '.git',
-        'migrations/', 'examples/', 'conftest.py',
-        '.env.example', 'validate_security.py',
-        'security_audit_secrets.py'
+        'tests/',
+        'test_',
+        '__pycache__',
+        '.git',
+        'migrations/',
+        'examples/',
+        'conftest.py',
+        '.env.example',
+        'validate_security.py',
+        'security_audit_secrets.py',
     ]
 
     # Required environment variables for production
@@ -68,8 +74,15 @@ class SecurityValidator:
 
     # Weak password patterns
     WEAK_PATTERNS = [
-        'password', 'secret', 'changeme', 'admin', 'test',
-        '123456', 'qwerty', 'letmein', 'welcome'
+        'password',
+        'secret',
+        'changeme',
+        'admin',
+        'test',
+        '123456',
+        'qwerty',
+        'letmein',
+        'welcome',
     ]
 
     def __init__(self, root_path: str = None):
@@ -99,19 +112,20 @@ class SecurityValidator:
 
                 for pattern_name, (pattern, description) in self.SECRET_PATTERNS.items():
                     if re.search(pattern, line, re.IGNORECASE):
-                        findings.append({
-                            'file': str(file_path.relative_to(self.root_path)),
-                            'line': line_num,
-                            'pattern': pattern_name,
-                            'description': description,
-                            'code': line.strip()[:80],
-                        })
+                        findings.append(
+                            {
+                                'file': str(file_path.relative_to(self.root_path)),
+                                'line': line_num,
+                                'pattern': pattern_name,
+                                'description': description,
+                                'code': line.strip()[:80],
+                            }
+                        )
 
         except Exception as e:
-            self.warnings.append({
-                'type': 'file_error',
-                'message': f"Error reading {file_path}: {e}"
-            })
+            self.warnings.append(
+                {'type': 'file_error', 'message': f"Error reading {file_path}: {e}"}
+            )
 
         return findings
 
@@ -142,37 +156,45 @@ class SecurityValidator:
             if not value:
                 if is_production or var_name == 'SECRET_KEY':
                     print(f"  [CRITICAL] {var_name}: NOT SET")
-                    self.issues.append({
-                        'type': 'missing_env_var',
-                        'var': var_name,
-                        'message': f"{var_name} not set (required in production)"
-                    })
+                    self.issues.append(
+                        {
+                            'type': 'missing_env_var',
+                            'var': var_name,
+                            'message': f"{var_name} not set (required in production)",
+                        }
+                    )
                     all_valid = False
                 else:
                     print(f"  [WARNING] {var_name}: Not set (optional in development)")
-                    self.warnings.append({
-                        'type': 'missing_env_var',
-                        'var': var_name,
-                        'message': f"{var_name} not set"
-                    })
+                    self.warnings.append(
+                        {
+                            'type': 'missing_env_var',
+                            'var': var_name,
+                            'message': f"{var_name} not set",
+                        }
+                    )
             else:
                 if len(value) < min_length:
                     print(f"  [WARNING] {var_name}: Too short ({len(value)} < {min_length})")
-                    self.warnings.append({
-                        'type': 'weak_secret',
-                        'var': var_name,
-                        'message': f"{var_name} is too short (minimum {min_length} characters)"
-                    })
+                    self.warnings.append(
+                        {
+                            'type': 'weak_secret',
+                            'var': var_name,
+                            'message': f"{var_name} is too short (minimum {min_length} characters)",
+                        }
+                    )
                     all_valid = False
                 else:
                     # Check for weak patterns
                     if any(weak in value.lower() for weak in self.WEAK_PATTERNS):
                         print(f"  [WARNING] {var_name}: Contains weak pattern")
-                        self.warnings.append({
-                            'type': 'weak_secret',
-                            'var': var_name,
-                            'message': f"{var_name} contains weak/default pattern"
-                        })
+                        self.warnings.append(
+                            {
+                                'type': 'weak_secret',
+                                'var': var_name,
+                                'message': f"{var_name} contains weak/default pattern",
+                            }
+                        )
                         all_valid = False
                     else:
                         print(f"  [OK] {var_name}: Set (length: {len(value)})")
@@ -195,10 +217,12 @@ class SecurityValidator:
                         username, password = creds_part.split(':', 1)
                         if password and len(password) < 20:
                             print(f"  [WARNING] DATABASE_URL may contain hardcoded credentials")
-                            self.warnings.append({
-                                'type': 'connection_string',
-                                'message': "DATABASE_URL may contain hardcoded credentials"
-                            })
+                            self.warnings.append(
+                                {
+                                    'type': 'connection_string',
+                                    'message': "DATABASE_URL may contain hardcoded credentials",
+                                }
+                            )
                         else:
                             print(f"  [OK] DATABASE_URL: Uses environment variables")
 
@@ -219,10 +243,7 @@ class SecurityValidator:
         if not env_file.exists():
             print(f"  [WARNING] .env file not found")
             print(f"            Copy .env.example to .env and configure your secrets")
-            self.warnings.append({
-                'type': 'missing_env_file',
-                'message': '.env file not found'
-            })
+            self.warnings.append({'type': 'missing_env_file', 'message': '.env file not found'})
             return False
 
         # Check if .env is in .gitignore
@@ -231,10 +252,12 @@ class SecurityValidator:
             gitignore_content = gitignore.read_text()
             if '.env' not in gitignore_content:
                 print(f"  [CRITICAL] .env not in .gitignore!")
-                self.issues.append({
-                    'type': 'gitignore',
-                    'message': '.env file not in .gitignore - secrets may be committed!'
-                })
+                self.issues.append(
+                    {
+                        'type': 'gitignore',
+                        'message': '.env file not in .gitignore - secrets may be committed!',
+                    }
+                )
                 return False
 
         print(f"  [OK] .env file exists and is in .gitignore")
@@ -242,9 +265,9 @@ class SecurityValidator:
 
     def generate_report(self) -> Tuple[bool, str]:
         """Generate security validation report."""
-        print("\n" + "="*80)
+        print("\n" + "=" * 80)
         print("SECURITY VALIDATION REPORT - Rule 28 Compliance")
-        print("="*80)
+        print("=" * 80)
 
         # Count issues by severity
         critical = sum(1 for i in self.issues if i.get('type') in ['missing_env_var', 'gitignore'])
@@ -261,7 +284,7 @@ class SecurityValidator:
 
         if self.issues:
             print(f"\nIssues Found: {len(self.issues)}")
-            print("-"*80)
+            print("-" * 80)
             for i, issue in enumerate(self.issues[:10], 1):
                 if 'code' in issue:
                     print(f"\n{i}. {issue['file']}:{issue['line']}")
@@ -273,16 +296,17 @@ class SecurityValidator:
 
         if self.warnings:
             print(f"\nWarnings: {len(self.warnings)}")
-            print("-"*80)
+            print("-" * 80)
             for warning in self.warnings[:5]:
                 print(f"  - {warning.get('type', 'Unknown')}: {warning.get('message', '')}")
 
         # Recommendations
         if compliance < 95:
-            print("\n" + "="*80)
+            print("\n" + "=" * 80)
             print("RECOMMENDATIONS")
-            print("="*80)
-            print("""
+            print("=" * 80)
+            print(
+                """
 1. Set all required environment variables:
    - SECRET_KEY (generate with: python -c 'import secrets; print(secrets.token_urlsafe(32))')
    - DB_PASSWORD
@@ -300,15 +324,16 @@ class SecurityValidator:
 4. Validate production readiness:
    - Run: python scripts/validate_security.py
    - Ensure compliance score is >= 95%
-            """)
+            """
+            )
 
         return compliance >= 95, f"Compliance: {compliance}%"
 
     def run_all_checks(self) -> Tuple[bool, str]:
         """Run all security validation checks."""
-        print("="*80)
+        print("=" * 80)
         print("Rule 28 Security Validation")
-        print("="*80)
+        print("=" * 80)
 
         # 1. Check for hardcoded secrets in code
         hardcoded_count = self.scan_codebase()
@@ -333,19 +358,9 @@ def main():
     """Main entry point."""
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Validate Rule 28 security compliance"
-    )
-    parser.add_argument(
-        '--path', '-p',
-        default='.',
-        help="Root path of the project"
-    )
-    parser.add_argument(
-        '--verbose', '-v',
-        action='store_true',
-        help="Verbose output"
-    )
+    parser = argparse.ArgumentParser(description="Validate Rule 28 security compliance")
+    parser.add_argument('--path', '-p', default='.', help="Root path of the project")
+    parser.add_argument('--verbose', '-v', action='store_true', help="Verbose output")
 
     args = parser.parse_args()
 
@@ -355,8 +370,9 @@ def main():
 
     # Exit with appropriate code
     if not is_compliant:
-        critical = sum(1 for i in validator.issues
-                      if i.get('type') in ['missing_env_var', 'gitignore'])
+        critical = sum(
+            1 for i in validator.issues if i.get('type') in ['missing_env_var', 'gitignore']
+        )
         if critical > 0:
             sys.exit(2)  # Critical issues
         sys.exit(1)  # Non-compliant

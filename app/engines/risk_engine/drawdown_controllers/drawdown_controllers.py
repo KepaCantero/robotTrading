@@ -658,14 +658,13 @@ class DrawdownController(BaseDrawdownController):
         portfolio_drawdown.get('max_drawdown', 0.0)
 
         # Verificar circuit breaker global
-        if current_drawdown > self.max_drawdown_limit:
-            if not self.circuit_breaker_active:
-                self.circuit_breaker_active = True
-                self.circuit_breaker_reason = (
-                    f"Drawdown global {current_drawdown:.2%} > límite {self.max_drawdown_limit:.2%}"
-                )
-                self.circuit_breaker_timestamp = datetime.utcnow()
-                self.logger.critical(f"🚨 CIRCUIT BREAKER ACTIVADO: {self.circuit_breaker_reason}")
+        if current_drawdown > self.max_drawdown_limit and not self.circuit_breaker_active:
+            self.circuit_breaker_active = True
+            self.circuit_breaker_reason = (
+                f"Drawdown global {current_drawdown:.2%} > límite {self.max_drawdown_limit:.2%}"
+            )
+            self.circuit_breaker_timestamp = datetime.utcnow()
+            self.logger.critical(f"🚨 CIRCUIT BREAKER ACTIVADO: {self.circuit_breaker_reason}")
 
         # Verificar si debe desactivarse
         if self.circuit_breaker_active and current_drawdown <= self.max_drawdown_limit * 0.9:
@@ -706,20 +705,19 @@ class DrawdownController(BaseDrawdownController):
         recovery_complete = False
         recovery_percentage = 0.0
 
-        if self.recovery_mode:
-            if self.recovery_start_value and current_value > 0:
-                recovery_from_peak = (current_value - float(self.recovery_start_value)) / float(
-                    self.recovery_start_value
-                )
-                recovery_percentage = recovery_from_peak
+        if self.recovery_mode and self.recovery_start_value and current_value > 0:
+            recovery_from_peak = (current_value - float(self.recovery_start_value)) / float(
+                self.recovery_start_value
+            )
+            recovery_percentage = recovery_from_peak
 
-                # Recovery completo si recuperamos el threshold
-                if recovery_percentage >= self.recovery_threshold:
-                    recovery_complete = True
-                    self.recovery_mode = False
-                    self.logger.info(
-                        f"✅ Recovery completo: {recovery_percentage:.2%} desde inicio recovery"
-                    )
+            # Recovery completo si recuperamos el threshold
+            if recovery_percentage >= self.recovery_threshold:
+                recovery_complete = True
+                self.recovery_mode = False
+                self.logger.info(
+                    f"✅ Recovery completo: {recovery_percentage:.2%} desde inicio recovery"
+                )
 
         return {
             'recovery_mode_active': self.recovery_mode,

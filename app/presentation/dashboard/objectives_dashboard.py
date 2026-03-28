@@ -14,10 +14,10 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-import os  # noqa: E402
-import sys  # noqa: E402
-from pathlib import Path  # noqa: E402
-from typing import Dict, List, Optional, Tuple  # noqa: E402
+import os
+import sys
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
 
 # CRÍTICO: Configurar variables de entorno ANTES de imports pesados
 os.environ.setdefault('OMP_NUM_THREADS', '1')
@@ -55,7 +55,7 @@ try:
 except OSError:
     plotly_available = False
 
-import logging  # noqa: E402
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -145,20 +145,20 @@ def render_objective_card(metric_name: str, value: float, test_name: str = ""):
     passes, status = evaluate_objective(metric_name, value)
     obj = OBJECTIVES[metric_name]
 
-    # Color según cumplimiento
+    # Color segun cumplimiento
     if passes:
-        bg_color = "#10b981"  # Verde  # noqa: F841
-        border_color = "#059669"  # noqa: F841
+        _ = "#10b981"  # Verde
+        _ = "#059669"
     else:
-        _bg_color = "#ef4444"  # Rojo  # noqa: F841
-        _border_color = "#dc2626"  # noqa: F841
+        _ = "#ef4444"  # Rojo
+        _ = "#dc2626"
 
     # Formatear valor
     unit = obj.get('unit', '')
     if unit == '%':
-        display_value = f"{abs(value):.2f}%"  # noqa: F841
+        _ = f"{abs(value):.2f}%"
     else:
-        _display_value = f"{value:.2f}"  # noqa: F841
+        _ = f"{value:.2f}"
 
     metric_name.replace('_', ' ').title()
 

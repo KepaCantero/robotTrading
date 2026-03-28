@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Any, Dict, Generator, List, Optional, Tuple, Union
+from typing import Dict, Generator, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -208,13 +208,12 @@ class PurgedKFold:
             )
 
         # Process events if provided
-        if events is not None:
-            if 't1' not in events.columns:
-                logger.warning(
-                    "Events DataFrame provided but no 't1' column found. "
-                    "Using percentage-based embargo instead."
-                )
-                events = None
+        if events is not None and 't1' not in events.columns:
+            logger.warning(
+                "Events DataFrame provided but no 't1' column found. "
+                "Using percentage-based embargo instead."
+            )
+            events = None
 
         # Generate base splits
         base_splits = list(self._base_kfold.split(np.arange(n_samples)))
@@ -589,7 +588,7 @@ class PurgedTimeSeriesSplit:
 
 
 def cv_score(
-    estimator: Any,
+    estimator: object,
     X: Union[pd.DataFrame, np.ndarray],
     y: Union[pd.Series, np.ndarray],
     events: Optional[pd.DataFrame] = None,

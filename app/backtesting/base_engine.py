@@ -20,7 +20,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, Generic, List, Optional, Tuple, TypeVar, Union
+from typing import Dict, Generic, List, Optional, Tuple, TypeVar, Union
 
 from pydantic import BaseModel
 
@@ -106,6 +106,28 @@ class ExecutionResult:
 
 
 @dataclass
+class SlippageParams:
+    """Parameters for slippage calculation."""
+
+    price: Decimal
+    is_buy: bool
+    slippage_pct: Optional[Decimal] = None
+    is_stop: bool = False
+    is_volatile: bool = False
+
+
+@dataclass
+class EngineInitParams:
+    """Parameters for base engine initialization."""
+
+    config: BaseModel
+    strategy: Optional[object] = None
+    diagnostic_logger: Optional[object] = None
+    strategy_name: str = "unknown"
+    enable_risk_envelope: bool = True
+
+
+@dataclass
 class BacktestState:
     """
     Shared backtest state container.
@@ -133,7 +155,7 @@ class BacktestState:
         self.current_date = None
         self.equity_curve.clear()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Union[int, float, str, bool]]:
         """Convert state to dictionary for serialization."""
         return {
             "capital": float(self.capital),
@@ -171,12 +193,11 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
     - Subclasses implement specific steps without changing the structure
     """
 
-    # pylint: disable=R0913
     def __init__(
         self,
         config: ConfigType,
-        strategy: Optional[Any] = None,
-        diagnostic_logger: Optional[Any] = None,
+        strategy: Optional[object] = None,
+        diagnostic_logger: Optional[object] = None,
         strategy_name: str = "unknown",
         enable_risk_envelope: bool = True,
     ):
@@ -221,8 +242,8 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
     @abstractmethod
     def run_backtest(
         self,
-        market_data: Union[List[Any], Any],
-        signals: Optional[List[Any]] = None,
+        market_data: Union[List[object], object],
+        signals: Optional[List[object]] = None,
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
         **kwargs,
@@ -292,7 +313,7 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
         if hasattr(self.config, "commission_per_trade") and self.config.commission_per_trade < 0:
             raise ValueError("Commission cannot be negative")
 
-    def _validate_market_data(self, market_data: List[Any]) -> None:
+    def _validate_market_data(self, market_data: List[object]) -> None:
         """
         Validate market data before processing.
 
@@ -305,7 +326,7 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
         if not market_data:
             raise ValueError("No market data available for backtest")
 
-    def _validate_signals(self, signals: List[Any]) -> None:
+    def _validate_signals(self, signals: List[object]) -> None:
         """
         Validate signals before processing.
 
@@ -327,15 +348,7 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
             return self.config.initial_capital
         return Decimal("100000")
 
-    # pylint: disable=R0913
-    def _apply_slippage(
-        self,
-        price: Decimal,
-        is_buy: bool,
-        slippage_pct: Optional[Decimal] = None,
-        is_stop: bool = False,
-        is_volatile: bool = False,
-    ) -> Decimal:
+    def _apply_slippage(self, params: SlippageParams) -> Decimal:
         """
         Apply slippage to execution price.
 
@@ -343,11 +356,7 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
         calculation across all engines.
 
         Args:
-            price: Base price
-            is_buy: True for buy orders, False for sell
-            slippage_pct: Optional slippage percentage (overrides default)
-            is_stop: Whether this is a stop-loss execution (higher slippage)
-            is_volatile: Whether market is volatile (higher slippage)
+            params: SlippageParams containing all parameters
 
         Returns:
             Execution price with slippage applied
@@ -359,49 +368,43 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
             )
 
             return shared_apply_slippage(
-                price=price,
-                is_buy=is_buy,
-                slippage_pct=slippage_pct,
-                is_stop=is_stop,
-                is_volatile=is_volatile,
+                price=params.price,
+                is_buy=params.is_buy,
+                slippage_pct=params.slippage_pct,
+                is_stop=params.is_stop,
+                is_volatile=params.is_volatile,
             )
         except ImportError:
             # Fallback to local implementation
-            return self._apply_slippage_local(price, is_buy, slippage_pct, is_stop, is_volatile)
+            return self._apply_slippage_local(params)
 
-    # pylint: disable=R0913
-    def _apply_slippage_local(
-        self,
-        price: Decimal,
-        is_buy: bool,
-        slippage_pct: Optional[Decimal] = None,
-        is_stop: bool = False,
-        is_volatile: bool = False,
-    ) -> Decimal:
+    def _apply_slippage_local(self, params: SlippageParams) -> Decimal:
         """
         Local implementation of slippage calculation.
 
         Used as fallback when shared utility is not available.
         """
         slippage = (
-            slippage_pct if slippage_pct is not None else self._base_slippage_bps / Decimal("10000")
+            params.slippage_pct
+            if params.slippage_pct is not None
+            else self._base_slippage_bps / Decimal("10000")
         )
 
         # Apply stop multiplier for stop-loss executions
-        if is_stop:
+        if params.is_stop:
             slippage = slippage * self._stop_slippage_multiplier
 
         # Apply volatility multiplier
-        if is_volatile:
+        if params.is_volatile:
             slippage = slippage * (Decimal("1") + self._volatility_multiplier)
 
         # Apply slippage (buy: pay more, sell: receive less)
-        if is_buy:
-            return price * (Decimal("1") + slippage)
+        if params.is_buy:
+            return params.price * (Decimal("1") + slippage)
         else:
-            return price * (Decimal("1") - slippage)
+            return params.price * (Decimal("1") - slippage)
 
-    def _build_trade_reason(self, signal: Any, market_data: Any) -> str:
+    def _build_trade_reason(self, signal: object, market_data: object) -> str:
         """
         Build human-readable reason for the trade from signal metadata.
 
@@ -422,7 +425,7 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
             # Fallback implementation
             return self._build_trade_reason_local(signal, market_data)
 
-    def _build_trade_reason_local(self, signal: Any, market_data: Any) -> str:
+    def _build_trade_reason_local(self, signal: object, market_data: object) -> str:
         """Local implementation of trade reason building."""
         reasons = []
 
@@ -437,7 +440,7 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
 
         return " | ".join(reasons)
 
-    def _get_price(self, md: Any) -> Decimal:
+    def _get_price(self, md: object) -> Decimal:
         """
         Get closing price from MarketData or Quote object.
 
@@ -459,7 +462,7 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
                 f"MarketData object has no 'close' or 'close_price' attribute: {type(md)}"
             )
 
-    def _build_price_map(self, market_data: List[Any]) -> Dict[str, Decimal]:
+    def _build_price_map(self, market_data: List[object]) -> Dict[str, Decimal]:
         """
         Build a price map from market data for accurate position closing.
 
@@ -477,9 +480,9 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
 
     def _sort_data_by_timestamp(
         self,
-        market_data: List[Any],
-        signals: Optional[List[Any]] = None,
-    ) -> Tuple[List[Any], List[Any]]:
+        market_data: List[object],
+        signals: Optional[List[object]] = None,
+    ) -> Tuple[List[object], List[object]]:
         """
         Sort market data and signals by timestamp.
 
@@ -499,11 +502,11 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
 
     def _filter_by_date_range(
         self,
-        data: List[Any],
+        data: List[object],
         start_date: Optional[datetime],
         end_date: Optional[datetime],
         timestamp_attr: str = "timestamp",
-    ) -> List[Any]:
+    ) -> List[object]:
         """
         Filter data by date range.
 
@@ -526,7 +529,7 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
     # PICKLE SUPPORT (for multiprocessing)
     # =========================================================================
 
-    def __getstate__(self) -> Dict[str, Any]:
+    def __getstate__(self) -> Dict[str, Union[int, float, str, bool]]:
         """
         Get state for pickling (excludes unpicklable objects).
 
@@ -540,7 +543,7 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
             "enable_risk_envelope": self.enable_risk_envelope,
         }
 
-    def __setstate__(self, state: Dict[str, Any]) -> None:
+    def __setstate__(self, state: Dict[str, Union[int, float, str, bool]]) -> None:
         """
         Restore state from pickling.
 

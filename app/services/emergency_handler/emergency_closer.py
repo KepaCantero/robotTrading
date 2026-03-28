@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional, Union
 
 from requests.exceptions import HTTPError
 
@@ -52,7 +52,7 @@ class EmergencyCloseResult:
     errors: List[str] = field(default_factory=list)
     timestamp: datetime = field(default_factory=utc_now)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Union[str, int, float, bool, Decimal, List[str], datetime]]:
         """Convert to dictionary."""
         return {
             "success": self.success,
@@ -109,7 +109,7 @@ class EmergencyCloser:
 
         # State
         self._is_closing = False
-        self._audit_log: List[Dict[str, Any]] = []
+        self._audit_log: List[Dict[str, Union[str, int, float, bool, Decimal, List[str], datetime]]] = []
         self._last_trigger: Optional[EmergencyTrigger] = None
         self._last_close_time: Optional[datetime] = None
 
@@ -419,7 +419,7 @@ class EmergencyCloser:
         finally:
             self._is_closing = False
 
-    async def _get_all_positions(self) -> List[Any]:
+    async def _get_all_positions(self) -> List[object]:
         """Get all open positions from broker."""
         try:
             positions = await self.broker.get_positions()
@@ -428,7 +428,7 @@ class EmergencyCloser:
             logger.error(f"Error fetching positions: {e}")
             return []
 
-    async def _close_position(self, position: Any) -> Dict[str, Any]:
+    async def _close_position(self, position: object) -> Dict[str, Union[str, int, float, bool, Decimal]]:
         """
         Close a single position.
 
@@ -470,7 +470,7 @@ class EmergencyCloser:
                     "error": f"Broker returned no order for {position.symbol}",
                 }
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             return {
                 "success": False,
                 "error": f"Error closing {position.symbol}: {str(e)}",
@@ -500,10 +500,10 @@ class EmergencyCloser:
         if self.alert_callback:
             try:
                 self.alert_callback(message)
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.error(f"Error sending alert: {e}")
 
-    def get_audit_log(self, limit: int = 100) -> List[Dict[str, Any]]:
+    def get_audit_log(self, limit: int = 100) -> List[Dict[str, Union[str, int, float, bool, Decimal, List[str], datetime]]]:
         """Get audit log entries."""
         return self._audit_log[-limit:]
 

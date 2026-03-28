@@ -215,7 +215,12 @@ def cli():
 @click.option(
     '--objective',
     type=click.Choice(
-        ['maximizar_capital', 'maximizar_dividendos', 'preservar_capital', 'crecimiento_equilibrado'],
+        [
+            'maximizar_capital',
+            'maximizar_dividendos',
+            'preservar_capital',
+            'crecimiento_equilibrado',
+        ],
         case_sensitive=False,
     ),
     default='maximizar_capital',
@@ -415,7 +420,9 @@ def run(
         logger.info("Stages:")
         for stage_result in result.stage_results:
             status = "✅" if stage_result.success else "❌"
-            logger.info(f"  {status} {stage_result.stage_type.value}: {stage_result.duration_ms:.2f}ms")
+            logger.info(
+                f"  {status} {stage_result.stage_type.value}: {stage_result.duration_ms:.2f}ms"
+            )
 
         logger.info("")
 
@@ -452,7 +459,9 @@ def run(
             logger.info("Execution:")
             exec_summary = result.execution_result.get_summary()
             logger.info(f"  Mode: {'LIVE' if not result.execution_result.dry_run else 'DRY-RUN'}")
-            logger.info(f"  Orders: {exec_summary['orders_submitted']} submitted, {exec_summary['orders_filled']} filled")
+            logger.info(
+                f"  Orders: {exec_summary['orders_submitted']} submitted, {exec_summary['orders_filled']} filled"
+            )
             logger.info(f"  Total Value: €{result.execution_result.total_value_eur:,.2f}")
 
         if result.warnings:
@@ -627,26 +636,24 @@ def interactive():
         result = runner.invoke(
             run,
             [
-                '--capital', str(capital),
-                '--objective', objective,
-                '--risk', risk,
-                '--horizon', str(horizon),
-                '--top-n', str(top_n),
-            ] + (
-                ['--enable-rl'] if enable_rl else ['--disable-rl']
-            ) + (
-                ['--enable-tax'] if enable_tax else ['--disable-tax']
-            ) + (
-                ['--enable-backtest'] if enable_backtest else ['--disable-backtest']
-            ) + (
-                ['--enable-risk'] if enable_risk else ['--disable-risk']
-            ) + (
-                ['--auto-execute'] if auto_execute else []
-            ) + (
-                ['--use-ibkr'] if use_ibkr else ['--no-ibkr']
-            ) + (
-                ['--report'] if report else ['--no-report']
-            ),
+                '--capital',
+                str(capital),
+                '--objective',
+                objective,
+                '--risk',
+                risk,
+                '--horizon',
+                str(horizon),
+                '--top-n',
+                str(top_n),
+            ]
+            + (['--enable-rl'] if enable_rl else ['--disable-rl'])
+            + (['--enable-tax'] if enable_tax else ['--disable-tax'])
+            + (['--enable-backtest'] if enable_backtest else ['--disable-backtest'])
+            + (['--enable-risk'] if enable_risk else ['--disable-risk'])
+            + (['--auto-execute'] if auto_execute else [])
+            + (['--use-ibkr'] if use_ibkr else ['--no-ibkr'])
+            + (['--report'] if report else ['--no-report']),
         )
 
         click.echo(result.output)

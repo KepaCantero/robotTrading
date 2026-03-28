@@ -239,9 +239,9 @@ async def display_metrics_summary(monitor):
 
 async def main():
     """Main demonstration function."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TRADING METRICS MONITORING DEMONSTRATION")
-    print("="*60)
+    print("=" * 60)
 
     # Configure monitor with custom thresholds
     config = TradingMetricsConfig(

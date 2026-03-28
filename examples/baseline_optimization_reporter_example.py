@@ -53,9 +53,7 @@ def generate_sample_equity_curve(
 
     for i in range(1, months):
         # Random walk with drift
-        daily_return = np.random.normal(
-            monthly_return / 30, volatility / np.sqrt(30)
-        )
+        daily_return = np.random.normal(monthly_return / 30, volatility / np.sqrt(30))
         new_value = values[-1] * (1 + daily_return)
         values.append(new_value)
 
@@ -381,7 +379,9 @@ def example_custom_template():
 
     # Note: Custom template needs to match expected variables
     # For simplicity, this example shows the pattern
-    logger.info(f"Profile: {profile.objetivo_inversion}, Results: {len(baseline_results)} + {len(optimized_results)} scenarios")
+    logger.info(
+        f"Profile: {profile.objetivo_inversion}, Results: {len(baseline_results)} + {len(optimized_results)} scenarios"
+    )
     logger.info(f"Reporter initialized with custom template: {reporter.template_path}")
 
     logger.info(f"✅ Custom template example created at: {template_path}")

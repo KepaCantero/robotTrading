@@ -222,9 +222,8 @@ class WashSaleTracker:
         self._positions_by_symbol[symbol].append(position)
 
         # Check if this is a wash sale
-        if side == "SELL" and self.country == Country.US:
-            if self._check_and_record_wash_sale(position):
-                logger.warning(f"Wash sale detected: {symbol} sold on {trade_date}")
+        if side == "SELL" and self.country == Country.US and self._check_and_record_wash_sale(position):
+            logger.warning(f"Wash sale detected: {symbol} sold on {trade_date}")
 
     def check_wash_sale_impact(
         self,

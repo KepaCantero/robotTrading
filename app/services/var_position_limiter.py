@@ -446,11 +446,10 @@ class VaRPositionLimiter:
             correlation = np.eye(n)
             for i, pos1 in enumerate(positions):
                 for j, pos2 in enumerate(positions):
-                    if i != j and pos1.symbol in corr_matrix:
-                        if pos2.symbol in corr_matrix[pos1.symbol]:
-                            corr = corr_matrix[pos1.symbol][pos2.symbol]
-                            if corr is not None:
-                                correlation[i][j] = corr
+                    if i != j and pos1.symbol in corr_matrix and pos2.symbol in corr_matrix[pos1.symbol]:
+                        corr = corr_matrix[pos1.symbol][pos2.symbol]
+                        if corr is not None:
+                            correlation[i][j] = corr
         else:
             # Use identity matrix (uncorrelated assets)
             correlation = np.eye(n)

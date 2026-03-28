@@ -194,7 +194,7 @@ class SystemBus:
         # Dispatch to appropriate handler
         handler = getattr(self, f"_handle_{system_name}", None)
         if handler:
-            return handler(  # pylint: disable=not-callable
+            return handler(
                 subsystem=subsystem,
                 result=result,
                 symbol=symbol,

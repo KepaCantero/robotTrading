@@ -17,7 +17,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 from uuid import uuid4
 
 from sqlalchemy import JSON, Boolean, Column, DateTime, Float, Integer, String, create_engine
@@ -35,6 +35,9 @@ from app.domain.models.input_profile import InputProfile
 from app.services.profile_driven_trading.profile_strategy_mapper import StrategyMapping
 
 logger = logging.getLogger(__name__)
+
+# Type alias for nested JSON-like result dictionaries
+JsonDict = Dict[str, Union[int, float, str, bool, None, "JsonDict", List[Union[int, float, str, bool, None, "JsonDict"]]]]
 
 Base = declarative_base()
 
@@ -85,7 +88,7 @@ class ProfileResultDB(Base):
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> JsonDict:
         """Convert to dictionary."""
         return {
             "profile_id": self.profile_id,
@@ -123,11 +126,11 @@ class ProfileResult:
 
     profile_id: str
     profile: InputProfile
-    baseline_results: Dict[str, Any]
-    optimization_results: Dict[str, Any]
-    best_parameters: Dict[str, Any]
+    baseline_results: JsonDict
+    optimization_results: JsonDict
+    best_parameters: JsonDict
     improvement_metrics: Dict[str, float]
-    comparison: Any  # BaselineOptimizationComparison
+    comparison: object  # BaselineOptimizationComparison
     ready_for_paper_trading: bool
     recommendation: str
     created_at: datetime = field(default_factory=datetime.now)
@@ -136,8 +139,8 @@ class ProfileResult:
     strategy_mapping: Optional[StrategyMapping] = None
     enabled_strategies: List[str] = field(default_factory=list)
     learning_engines: List[str] = field(default_factory=list)
-    ensemble_config: Dict[str, Any] = field(default_factory=dict)
-    per_strategy_results: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    ensemble_config: JsonDict = field(default_factory=dict)
+    per_strategy_results: Dict[str, JsonDict] = field(default_factory=dict)
 
 
 class ResultAggregator:
@@ -294,7 +297,7 @@ class ResultAggregator:
         finally:
             session.close()
 
-    def get_best_strategy(self, objective: str, tier: str, risk: str) -> Dict[str, Any]:
+    def get_best_strategy(self, objective: str, tier: str, risk: str) -> JsonDict:
         """
         Get best strategy for specific objective, tier, and risk.
 
@@ -353,7 +356,7 @@ class ResultAggregator:
             session.close()
 
     def calculate_improvements(
-        self, baseline: Dict[str, Any], optimized: Dict[str, Any]
+        self, baseline: JsonDict, optimized: JsonDict
     ) -> Dict[str, float]:
         """
         Calculate improvement metrics.
@@ -383,9 +386,9 @@ class ResultAggregator:
     def evaluate_readiness(
         self,
         profile: InputProfile,
-        optimized: Any,
+        optimized: object,
         improvements: Dict[str, float],
-        acceptance_criteria: Dict[str, Any],
+        acceptance_criteria: JsonDict,
     ) -> Tuple[bool, str]:
         """
         Evaluate if strategy is ready for paper trading.

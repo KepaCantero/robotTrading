@@ -13,7 +13,7 @@ Tracks:
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 import numpy as np
 
@@ -90,7 +90,7 @@ class ExecutionCostMonitor:
         executed_size: Decimal,
         target_price: Decimal,
         executed_price: Decimal,
-        commission_cost: Decimal = Decimal("0"),
+        commission_cost: Optional[Decimal] = None,
     ) -> Tuple[Decimal, Dict]:
         """
         Record execution of a single tranche.
@@ -112,6 +112,8 @@ class ExecutionCostMonitor:
         Raises:
             ValueError: If execution not found
         """
+        if commission_cost is None:
+            commission_cost = Decimal("0")
 
         if execution_id not in self.executions:
             raise ValueError(f"Execution {execution_id} not found in monitor")

@@ -55,9 +55,9 @@ def example_2_capital_to_tier():
     print("=" * 70)
 
     capitals = [
-        Decimal("10000"),   # €10k
-        Decimal("30000"),   # €30k
-        Decimal("75000"),   # €75k
+        Decimal("10000"),  # €10k
+        Decimal("30000"),  # €30k
+        Decimal("75000"),  # €75k
         Decimal("300000"),  # €300k
     ]
 
@@ -244,8 +244,8 @@ def example_8_practical_use_case():
     }
 
     capitals = [
-        Decimal("30000"),   # Small account
-        Decimal("75000"),   # Medium account
+        Decimal("30000"),  # Small account
+        Decimal("75000"),  # Medium account
         Decimal("300000"),  # Large account
     ]
 

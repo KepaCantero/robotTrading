@@ -125,7 +125,7 @@ class ProfileGenerationService:
         try:
             # Use the centralized tier mapper for consistency
             return map_profile_tier_to_config(profile.capital_flag, target_format="spanish")
-        except (FileNotFoundError, PermissionError, IOError, OSError) as e:
+        except OSError as e:
             # Fallback to manual mapping if tier mapper fails
             logger.warning(f"Tier mapper failed for {profile.capital_flag}, using fallback: {e}")
             tier_map = {"small": "bajo", "medium": "medio", "large": "alto"}

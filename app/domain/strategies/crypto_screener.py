@@ -209,20 +209,18 @@ class CryptoScreener:
             )
 
         # Volatility check
-        if max_volatility is not None:
-            if asset.volatility_90d > max_volatility:
-                failures.append(
-                    f"Volatility too high: {asset.volatility_90d:.1f}% > {max_volatility:.1f}%"
-                )
+        if max_volatility is not None and asset.volatility_90d > max_volatility:
+            failures.append(
+                f"Volatility too high: {asset.volatility_90d:.1f}% > {max_volatility:.1f}%"
+            )
 
         # Exchange listing check
-        if required_exchanges:
-            if not any(exchange in asset.exchanges for exchange in required_exchanges):
-                failures.append(
-                    f"Not listed on required exchanges: "
-                    f"has {[e.value for e in asset.exchanges]}, "
-                    f"needs {[e.value for e in required_exchanges]}"
-                )
+        if required_exchanges and not any(exchange in asset.exchanges for exchange in required_exchanges):
+            failures.append(
+                f"Not listed on required exchanges: "
+                f"has {[e.value for e in asset.exchanges]}, "
+                f"needs {[e.value for e in required_exchanges]}"
+            )
 
         # Asset type filter
         if asset_types and asset.asset_type not in asset_types:

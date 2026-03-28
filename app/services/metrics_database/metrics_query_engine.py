@@ -76,10 +76,9 @@ class MetricsQueryEngine:
 
             # Check cache
             cache_key = self._make_cache_key(query)
-            if self.cache_enabled and cache_key in self._query_cache:
-                if self._is_cache_valid(cache_key):
-                    logger.debug(f"Cache hit for query: {cache_key}")
-                    return self._query_cache[cache_key]
+            if self.cache_enabled and cache_key in self._query_cache and self._is_cache_valid(cache_key):
+                logger.debug(f"Cache hit for query: {cache_key}")
+                return self._query_cache[cache_key]
 
             # Execute query
             logger.debug(f"Querying {metric_type.value} " f"from {start_time} to {end_time}")
@@ -98,7 +97,7 @@ class MetricsQueryEngine:
 
             return results
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Failed to query metric range: {e}")
             return []
 
@@ -261,7 +260,7 @@ class MetricsQueryEngine:
             change_pct = ((end_value - start_value) / start_value) * 100
             return change_pct
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Failed to calculate change: {e}")
             return None
 

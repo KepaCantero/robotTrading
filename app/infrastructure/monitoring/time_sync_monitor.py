@@ -15,9 +15,10 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
+from typing import TYPE_CHECKING, Callable, Dict, Optional, Union
 
 from app.shared.utils.timezone_utils import utc_now
+import contextlib
 
 logger = logging.getLogger(__name__)
 
@@ -166,10 +167,8 @@ class TimeSyncMonitor:
 
         if self._monitor_task:
             self._monitor_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._monitor_task
-            except asyncio.CancelledError:
-                pass
             self._monitor_task = None
 
         logger.info("TimeSyncMonitor stopped")
@@ -190,14 +189,14 @@ class TimeSyncMonitor:
                     if self.config.on_critical_drift:
                         try:
                             self.config.on_critical_drift(drift)
-                        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+                        except (asyncio.TimeoutError, OSError) as e:
                             logger.error(f"Error in critical drift callback: {e}")
 
                 await asyncio.sleep(self.config.check_interval_seconds)
 
             except asyncio.CancelledError:
                 break
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.error(f"Error in time sync monitor loop: {e}", exc_info=True)
                 await asyncio.sleep(self.config.check_interval_seconds)
 
@@ -282,7 +281,7 @@ class TimeSyncMonitor:
 
         return 0.0
 
-    async def validate_order_timestamp(self, order: Any) -> bool:
+    async def validate_order_timestamp(self, order: object) -> bool:
         """
         Reject order if clock drift is too high.
 
@@ -368,11 +367,11 @@ class TimeSyncMonitor:
         except FileNotFoundError:
             logger.warning("ntpdate command not found - cannot auto-sync clock")
             return False
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Error syncing clock: {e}")
             return False
 
-    async def force_check(self) -> Dict[str, Any]:
+    async def force_check(self) -> Dict[str, Union[str, int, float, bool, None]]:
         """
         Force an immediate time sync check.
 
@@ -425,7 +424,7 @@ def reset_time_sync_monitor() -> None:
                     loop.create_task(_monitor.stop())
                 else:
                     loop.run_until_complete(_monitor.stop())
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.warning(f"Error stopping monitor during reset: {e}")
     _monitor = None
     logger.info("TimeSyncMonitor singleton reset")

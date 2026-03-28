@@ -332,7 +332,7 @@ class OrderPatternAnalyzer:
         symbol: str,
         side: str,
         price: Decimal,
-        price_tolerance: Decimal = Decimal("0.01"),
+        price_tolerance: Optional[Decimal] = None,
     ) -> bool:
         """
         Detect layering pattern.
@@ -349,6 +349,8 @@ class OrderPatternAnalyzer:
         Returns:
             True if layering detected
         """
+        if price_tolerance is None:
+            price_tolerance = Decimal("0.01")
         symbol_orders = list(self._orders_by_symbol.get(symbol, []))
 
         if len(symbol_orders) < self.LAYERING_THRESHOLD:

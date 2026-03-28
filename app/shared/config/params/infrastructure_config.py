@@ -97,7 +97,7 @@ class RedisConfig(BaseModel):
 class APIConfig(BaseModel):
     """API configuration."""
 
-    host: str = Field(default="0.0.0.0", description="API host")  # nosec B104
+    host: str = Field(default="127.0.0.1", description="API host")
     port: int = Field(default=8000, description="API port")
     workers: int = Field(default=1, description="Number of workers")
 

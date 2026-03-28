@@ -1,5 +1,5 @@
-# mypy: ignore-errors
-# pylint: disable=unsupported-binary-operation  # For Python 3.10+ union syntax
+from __future__ import annotations
+
 """
 Persistent Task Queue Implementation for AlgoTrading System.
 
@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple  # noqa: F401
+from typing import Callable, Dict, List, Optional, Union
 
 import aiosqlite
 
@@ -66,7 +66,7 @@ def deserialize_datetime(dt_str: Optional[str]) -> Optional[datetime]:
     return datetime.fromisoformat(dt_str) if dt_str else None
 
 
-def serialize_value(value: Any) -> Any:
+def serialize_value(value: Union[str, int, float, bool, Decimal, datetime, date, Enum, Dict, List, None]) -> Union[str, int, float, bool, List, Dict, None]:
     """Serialize complex types to JSON-compatible values."""
     if isinstance(value, datetime):
         return serialize_datetime(value)
@@ -81,7 +81,7 @@ def serialize_value(value: Any) -> Any:
     return value
 
 
-def deserialize_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
+def deserialize_payload(payload: Dict[str, Union[str, int, float, bool, None]]) -> Dict[str, Union[str, int, float, bool, datetime, Decimal, None]]:
     """Deserialize payload values to their original types."""
     result = {}
     for key, value in payload.items():
@@ -131,7 +131,7 @@ class Task:
 
     task_id: str
     name: str
-    payload: Dict[str, Any]
+    payload: Dict[str, Union[str, int, float, bool, Decimal, datetime, None]]
     priority: TaskPriority = TaskPriority.NORMAL
     status: TaskStatus = TaskStatus.PENDING
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
@@ -140,11 +140,11 @@ class Task:
     expires_at: Optional[datetime] = None
     retry_count: int = 0
     max_retries: int = 3
-    result: Optional[Any] = None
+    result: Optional[Union[str, int, float, bool, Dict, List, None]] = None
     error: Optional[str] = None
     next_retry_at: Optional[datetime] = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Union[str, int, Optional[str]]]:
         """Convert task to dictionary for database storage."""
         data = {
             "task_id": self.task_id,
@@ -165,7 +165,7 @@ class Task:
         return data
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Task":
+    def from_dict(cls, data: Dict[str, Union[str, int, Optional[str]]]) -> "Task":
         """Create task from database dictionary."""
         payload = json.loads(data["payload"]) if data.get("payload") else {}
         result = json.loads(data["result"]) if data.get("result") else None
@@ -419,7 +419,7 @@ class PersistentTaskQueue:
             (status.value, serialize_datetime(completed_at), task_id),
         )
 
-    async def complete_task(self, task_id: str, result: Any = None) -> None:
+    async def complete_task(self, task_id: str, result: Optional[Union[str, int, float, bool, Dict, List]] = None) -> None:
         """
         Mark task as completed.
 
@@ -540,7 +540,7 @@ class PersistentTaskQueue:
 
     async def process_queue(
         self,
-        handler: Callable[[Task], Any],
+        handler: Callable[[Task], Optional[Union[str, int, float, bool, Dict, List]]],
         max_concurrent: int = 5,
     ) -> None:
         """
@@ -584,7 +584,7 @@ class PersistentTaskQueue:
 
     async def _process_single_task(
         self,
-        handler: Callable[[Task], Any],
+        handler: Callable[[Task], Optional[Union[str, int, float, bool, Dict, List]]],
         task: Task,
     ) -> None:
         """
@@ -611,7 +611,7 @@ class PersistentTaskQueue:
         except asyncio.CancelledError:
             self.logger.warning(f"Task {task.task_id} was cancelled")
             await self.cancel_task(task.task_id)
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Task {task.task_id} failed: {e}", exc_info=True)
             await self.fail_task(task.task_id, str(e))
 
@@ -786,7 +786,7 @@ class PersistentTaskQueue:
 
             return tasks
 
-    async def get_statistics(self) -> Dict[str, Any]:
+    async def get_statistics(self) -> Dict[str, Union[int, Dict[str, int]]]:
         """
         Get queue statistics.
 
@@ -1014,7 +1014,7 @@ class PersistentTaskQueue:
 async def create_task(
     queue: PersistentTaskQueue,
     name: str,
-    payload: Dict[str, Any],
+    payload: Dict[str, Union[str, int, float, bool, Decimal, datetime, None]],
     priority: TaskPriority = TaskPriority.NORMAL,
     max_retries: int = 3,
     expires_at: Optional[datetime] = None,

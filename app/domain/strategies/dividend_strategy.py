@@ -154,9 +154,8 @@ class DividendStrategy(BaseStrategy):
                 "min_quality_score",
                 "min_sustainability_score",
             ]:
-                if key in merged and merged[key] is not None:
-                    if not isinstance(merged[key], Decimal):
-                        merged[key] = Decimal(str(merged[key]))
+                if key in merged and merged[key] is not None and not isinstance(merged[key], Decimal):
+                    merged[key] = Decimal(str(merged[key]))
 
             parsed_config = DividendStrategyConfig(**merged)
             self._config_valid = True
@@ -246,14 +245,12 @@ class DividendStrategy(BaseStrategy):
                     return False  # Ya tenemos posición
 
         # Evaluar calidad
-        if profile.quality_score is not None:
-            if profile.quality_score < self.strategy_config.min_quality_score:
-                return False
+        if profile.quality_score is not None and profile.quality_score < self.strategy_config.min_quality_score:
+            return False
 
         # Evaluar sostenibilidad
-        if profile.sustainability_score is not None:
-            if profile.sustainability_score < self.strategy_config.min_sustainability_score:
-                return False
+        if profile.sustainability_score is not None and profile.sustainability_score < self.strategy_config.min_sustainability_score:
+            return False
 
         # No debe ser un dividend trap
         if profile.is_dividend_trap:
@@ -291,10 +288,9 @@ class DividendStrategy(BaseStrategy):
             return True
 
         # Payout ratio peligroso - use config value
-        if profile.dividend_data.payout_ratio is not None:
-            if profile.dividend_data.payout_ratio > self._cfg.payout_ratio_critical:
-                logger.warning(f"⚠️ Payout ratio crítico: {profile.symbol}")
-                return True
+        if profile.dividend_data.payout_ratio is not None and profile.dividend_data.payout_ratio > self._cfg.payout_ratio_critical:
+            logger.warning(f"⚠️ Payout ratio crítico: {profile.symbol}")
+            return True
 
         # Dividend coverage bajo - use config value
         if profile.dividend_data.dividend_coverage_ratio is not None:
@@ -303,13 +299,12 @@ class DividendStrategy(BaseStrategy):
                 return True
 
         # Calidad baja - use config multiplier
-        if profile.quality_score is not None:
-            if (
-                profile.quality_score
-                < self.strategy_config.min_quality_score * self._cfg.quality_multiplier
-            ):  # Use config multiplier
-                logger.warning(f"⚠️ Calidad deteriorada: {profile.symbol}")
-                return True
+        if profile.quality_score is not None and (
+            profile.quality_score
+            < self.strategy_config.min_quality_score * self._cfg.quality_multiplier
+        ):  # Use config multiplier
+            logger.warning(f"⚠️ Calidad deteriorada: {profile.symbol}")
+            return True
 
         return False
 

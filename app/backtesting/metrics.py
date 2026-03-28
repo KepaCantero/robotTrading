@@ -867,22 +867,18 @@ def calculate_classification_metrics_imbalanced(
         precision_recall_curve,
     )
 
-    metrics = {}
-
-    # F1 Score (weighted, macro, and binary)
-    metrics['f1_weighted'] = calculate_f1_score(y_true, y_pred, average='weighted')
-    metrics['f1_macro'] = calculate_f1_score(y_true, y_pred, average='macro')
-    metrics['f1_binary'] = calculate_f1_score(y_true, y_pred, average='binary')
-
-    # Matthews Correlation Coefficient
-    metrics['mcc'] = calculate_matthews_corrcoef(y_true, y_pred)
-
-    # Balanced Accuracy
-    metrics['balanced_accuracy'] = float(balanced_accuracy_score(y_true, y_pred))
-
     # Confusion Matrix
     cm = confusion_matrix(y_true, y_pred)
-    metrics['confusion_matrix'] = cm.tolist()
+
+    # Initialize metrics dict directly
+    metrics = {
+        'f1_weighted': calculate_f1_score(y_true, y_pred, average='weighted'),
+        'f1_macro': calculate_f1_score(y_true, y_pred, average='macro'),
+        'f1_binary': calculate_f1_score(y_true, y_pred, average='binary'),
+        'mcc': calculate_matthews_corrcoef(y_true, y_pred),
+        'balanced_accuracy': float(balanced_accuracy_score(y_true, y_pred)),
+        'confusion_matrix': cm.tolist(),
+    }
 
     # Extract TP, TN, FP, FN for binary classification
     if len(cm) == 2:

@@ -11,9 +11,14 @@ and the nested YAML configuration structure used by strategies.
 """
 
 import copy
-from typing import Any, Dict, Optional
+from typing import Dict, List, Optional, Union
 
 from app.backtesting.shared.types import ConfigKeys
+
+# Type alias for nested configuration dictionaries
+ConfigDict = Dict[str, Union[int, float, str, bool, "ConfigDict", List[Union[int, float, str, bool, "ConfigDict"]]]]
+ParamValue = Union[int, float]
+ParamDict = Dict[str, ParamValue]
 
 
 class ParameterMappingService:
@@ -43,13 +48,13 @@ class ParameterMappingService:
     """
 
     # RSI context types that should receive the same threshold
-    RSI_CONTEXTS = ["trend_up", "trend_down", "range", "high_vol"]
+    RSI_CONTEXTS: List[str] = ["trend_up", "trend_down", "range", "high_vol"]
 
     # Volume preset types that should receive the same threshold
-    VOLUME_PRESETS = ["conservative", "balanced", "aggressive"]
+    VOLUME_PRESETS: List[str] = ["conservative", "balanced", "aggressive"]
 
     # Parameter to config path mappings
-    PARAMETER_MAPPINGS = {
+    PARAMETER_MAPPINGS: Dict[str, Dict[str, Union[List[str], str]]] = {
         "rsi_threshold": {
             "path": ["modules", "rsi_filter", "adaptive_thresholds"],
             "contexts": RSI_CONTEXTS,
@@ -81,9 +86,9 @@ class ParameterMappingService:
     @classmethod
     def map_params_to_strategy_config(
         cls,
-        params: Dict[str, Any],
-        base_config: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        params: ParamDict,
+        base_config: Optional[ConfigDict] = None,
+    ) -> ConfigDict:
         """
         Map optimization parameters to nested strategy configuration.
 
@@ -95,7 +100,7 @@ class ParameterMappingService:
             Strategy config dict with mapped parameters
         """
         # Deep copy base config to avoid mutations
-        config = copy.deepcopy(base_config) if base_config else {}
+        config: ConfigDict = copy.deepcopy(base_config) if base_config else {}
         strategy = config.get(ConfigKeys.STRATEGY, {})
 
         # Ensure modules structure exists
@@ -120,7 +125,7 @@ class ParameterMappingService:
         return config
 
     @classmethod
-    def _apply_mapping(cls, strategy: Dict[str, Any], mapping: Dict[str, Any], value: Any) -> None:
+    def _apply_mapping(cls, strategy: ConfigDict, mapping: Dict[str, Union[List[str], str]], value: ParamValue) -> None:
         """
         Apply a parameter mapping to the strategy config.
 
@@ -152,7 +157,7 @@ class ParameterMappingService:
             current[key] = value
 
     @classmethod
-    def map_rsi_threshold(cls, strategy: Dict[str, Any], rsi_threshold: float) -> None:
+    def map_rsi_threshold(cls, strategy: ConfigDict, rsi_threshold: float) -> None:
         """
         Map RSI threshold to all adaptive threshold contexts.
 
@@ -164,7 +169,7 @@ class ParameterMappingService:
         cls._apply_mapping(strategy, mapping, rsi_threshold)
 
     @classmethod
-    def map_ema_periods(cls, strategy: Dict[str, Any], ema_short: int, ema_long: int) -> None:
+    def map_ema_periods(cls, strategy: ConfigDict, ema_short: int, ema_long: int) -> None:
         """
         Map EMA periods to filter parameters.
 
@@ -181,7 +186,7 @@ class ParameterMappingService:
             cls._apply_mapping(strategy, mapping, ema_long)
 
     @classmethod
-    def map_volume_threshold(cls, strategy: Dict[str, Any], volume_threshold: float) -> None:
+    def map_volume_threshold(cls, strategy: ConfigDict, volume_threshold: float) -> None:
         """
         Map volume threshold to all presets.
 
@@ -194,7 +199,7 @@ class ParameterMappingService:
 
     @classmethod
     def map_risk_params(
-        cls, strategy: Dict[str, Any], stop_loss: float, take_profit: float
+        cls, strategy: ConfigDict, stop_loss: float, take_profit: float
     ) -> None:
         """
         Map risk management parameters.
@@ -212,7 +217,7 @@ class ParameterMappingService:
             cls._apply_mapping(strategy, mapping, take_profit)
 
     @classmethod
-    def convert_to_yaml_updater_format(cls, params: Dict[str, Any]) -> Dict[str, Any]:
+    def convert_to_yaml_updater_format(cls, params: ParamDict) -> ConfigDict:
         """
         Convert optimization params to YAMLConfigUpdater format.
 
@@ -260,8 +265,8 @@ class ParameterMappingService:
 
 # Convenience function for backward compatibility
 def map_params_to_config(
-    params: Dict[str, Any], base_config: Optional[Dict[str, Any]] = None
-) -> Dict[str, Any]:
+    params: ParamDict, base_config: Optional[ConfigDict] = None
+) -> ConfigDict:
     """
     Convenience function for backward compatibility.
 

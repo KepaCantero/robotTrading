@@ -9,6 +9,7 @@ from pathlib import Path
 
 # Add scripts to path for testing
 import sys
+
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "scripts"))
 
 
@@ -16,11 +17,13 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "scripts"))
 def mock_broker():
     """Mock broker connector."""
     broker = MagicMock()
-    broker.get_account_info = AsyncMock(return_value={
-        "account_id": "test_account",
-        "buying_power": 100000,
-        "cash_balance": 50000,
-    })
+    broker.get_account_info = AsyncMock(
+        return_value={
+            "account_id": "test_account",
+            "buying_power": 100000,
+            "cash_balance": 50000,
+        }
+    )
     broker.calculate_portfolio_value = AsyncMock(return_value=100000)
     broker.get_positions = AsyncMock(return_value=[])
     broker.get_open_orders = AsyncMock(return_value=[])
@@ -95,9 +98,9 @@ async def test_live_trading_cli_start_trading(mock_broker, mock_bridge):
     """Test LiveTradingCLI start_trading method."""
     from start_live_trading import LiveTradingCLI
 
-    with patch('start_live_trading.get_broker_connector', return_value=mock_broker), \
-         patch('start_live_trading.get_trading_bridge_orchestrator', return_value=mock_bridge), \
-         patch('start_live_trading.get_compliance_engine') as mock_get_engine:
+    with patch('start_live_trading.get_broker_connector', return_value=mock_broker), patch(
+        'start_live_trading.get_trading_bridge_orchestrator', return_value=mock_bridge
+    ), patch('start_live_trading.get_compliance_engine') as mock_get_engine:
         # Mock compliance engine
         mock_engine = MagicMock()
         mock_engine.check_kill_switch = MagicMock(return_value=False)
@@ -131,21 +134,27 @@ async def test_live_trading_cli_check_risk_status():
     with patch('start_live_trading.get_compliance_engine') as mock_get_engine:
         # Mock compliance engine
         mock_engine = MagicMock()
-        mock_engine.get_daily_pnl_summary = MagicMock(return_value={
-            "total_pnl": 1000,
-            "daily_return_pct": 0.01,
-            "total_trades": 5,
-            "win_rate": 0.6,
-        })
-        mock_engine.get_slo_metrics = MagicMock(return_value={
-            "slo_compliance_rate": 0.95,
-        })
-        mock_engine.get_system_status = MagicMock(return_value={
-            "availability": {
-                "available_systems": 17,
-                "total_systems": 17,
+        mock_engine.get_daily_pnl_summary = MagicMock(
+            return_value={
+                "total_pnl": 1000,
+                "daily_return_pct": 0.01,
+                "total_trades": 5,
+                "win_rate": 0.6,
             }
-        })
+        )
+        mock_engine.get_slo_metrics = MagicMock(
+            return_value={
+                "slo_compliance_rate": 0.95,
+            }
+        )
+        mock_engine.get_system_status = MagicMock(
+            return_value={
+                "availability": {
+                    "available_systems": 17,
+                    "total_systems": 17,
+                }
+            }
+        )
         mock_engine.check_kill_switch = MagicMock(return_value=False)
         mock_get_engine.return_value = mock_engine
 
@@ -177,14 +186,17 @@ async def test_live_trading_cli_place_order(mock_broker):
     """Test LiveTradingCLI place_order method."""
     from start_live_trading import LiveTradingCLI
 
-    with patch('start_live_trading.get_broker_connector', return_value=mock_broker), \
-         patch('start_live_trading.get_compliance_engine') as mock_get_engine:
+    with patch('start_live_trading.get_broker_connector', return_value=mock_broker), patch(
+        'start_live_trading.get_compliance_engine'
+    ) as mock_get_engine:
         # Mock compliance engine
         mock_engine = MagicMock()
-        mock_engine.execute_trade = AsyncMock(return_value=MagicMock(
-            success=True,
-            order_id="test_order_123",
-        ))
+        mock_engine.execute_trade = AsyncMock(
+            return_value=MagicMock(
+                success=True,
+                order_id="test_order_123",
+            )
+        )
         mock_engine._starting_capital = 100000
         mock_get_engine.return_value = mock_engine
 
@@ -198,14 +210,17 @@ async def test_live_trading_cli_place_order_failure(mock_broker):
     """Test LiveTradingCLI place_order method with failure."""
     from start_live_trading import LiveTradingCLI
 
-    with patch('start_live_trading.get_broker_connector', return_value=mock_broker), \
-         patch('start_live_trading.get_compliance_engine') as mock_get_engine:
+    with patch('start_live_trading.get_broker_connector', return_value=mock_broker), patch(
+        'start_live_trading.get_compliance_engine'
+    ) as mock_get_engine:
         # Mock compliance engine with failure
         mock_engine = MagicMock()
-        mock_engine.execute_trade = AsyncMock(return_value=MagicMock(
-            success=False,
-            error="Risk validation failed",
-        ))
+        mock_engine.execute_trade = AsyncMock(
+            return_value=MagicMock(
+                success=False,
+                error="Risk validation failed",
+            )
+        )
         mock_engine._starting_capital = 100000
         mock_get_engine.return_value = mock_engine
 

@@ -22,9 +22,9 @@ import asyncio
 import logging
 import traceback
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Annotated, Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from requests.exceptions import HTTPError, RequestException
 
@@ -62,7 +62,7 @@ class TradeResponse(BaseModel):
 @router.get("/", response_model=Dict[str, Any])
 async def get_portfolio_summary(
     http_request: Request,
-    service: PortfolioService = Depends(get_portfolio_service),
+    service: Annotated[PortfolioService, epends(get_portfolio_service)],
 ) -> Dict[str, Any]:
     """
     Get portfolio summary with circuit breaker status.
@@ -145,7 +145,7 @@ async def get_portfolio_summary(
 @router.get("/positions", response_model=List[Position])
 async def get_positions(
     http_request: Request,
-    service: PortfolioService = Depends(get_portfolio_service),
+    service: Annotated[PortfolioService, epends(get_portfolio_service)],
 ) -> List[Position]:
     """
     Get all positions in the portfolio.
@@ -233,7 +233,7 @@ async def get_positions(
 async def get_position(
     symbol: str,
     http_request: Request,
-    service: PortfolioService = Depends(get_portfolio_service),
+    service: Annotated[PortfolioService, epends(get_portfolio_service)],
 ) -> Position:
     """
     Get specific position by symbol.
@@ -296,7 +296,7 @@ async def get_position(
             stack_trace=traceback.format_exc(),
         )
         raise HTTPException(status_code=504, detail=f"Timeout getting position: {str(e)}")
-    except (ConnectionError, OSError) as e:
+    except OSError as e:
         logger.error(
             "Error getting position",
             extra={
@@ -320,7 +320,7 @@ async def get_position(
 @router.get("/asset-universe", response_model=List[AssetUniverse])
 async def get_asset_universe(
     http_request: Request,
-    service: PortfolioService = Depends(get_portfolio_service),
+    service: Annotated[PortfolioService, epends(get_portfolio_service)],
 ) -> List[AssetUniverse]:
     """
     Get supported asset universe.
@@ -371,7 +371,7 @@ async def get_asset_universe(
             stack_trace=traceback.format_exc(),
         )
         raise HTTPException(status_code=504, detail=f"Timeout getting asset universe: {str(e)}")
-    except (ConnectionError, OSError) as e:
+    except OSError as e:
         logger.error(
             "Error getting asset universe",
             extra={
@@ -395,7 +395,7 @@ async def get_asset_universe(
 async def get_market_regime(
     symbol: str,
     http_request: Request,
-    service: PortfolioService = Depends(get_portfolio_service),
+    service: Annotated[PortfolioService, epends(get_portfolio_service)],
 ) -> MarketRegimeData:
     """
     Get market regime data for a symbol.
@@ -485,7 +485,7 @@ async def get_market_regime(
 async def simulate_trade(
     trade_request: TradeRequest,
     http_request: Request,
-    service: PortfolioService = Depends(get_portfolio_service),
+    service: Annotated[PortfolioService, epends(get_portfolio_service)],
 ) -> TradeResponse:
     """
     Simulate a trade execution.
@@ -601,7 +601,7 @@ async def simulate_trade(
 @router.get("/circuit-breakers", response_model=Dict[str, Dict[str, Any]])
 async def get_circuit_breaker_status(
     http_request: Request,
-    service: PortfolioService = Depends(get_portfolio_service),
+    service: Annotated[PortfolioService, epends(get_portfolio_service)],
 ) -> Dict[str, Dict[str, Any]]:
     """
     Get circuit breaker status.
@@ -639,7 +639,7 @@ async def get_circuit_breaker_status(
             details={"circuit_breakers_count": len(status)},
         )
         return status
-    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+    except (asyncio.TimeoutError, OSError) as e:
         logger.error(
             "Error getting circuit breaker status",
             extra={
@@ -665,7 +665,7 @@ async def get_circuit_breaker_status(
 async def reset_circuit_breaker(
     name: str,
     http_request: Request,
-    service: PortfolioService = Depends(get_portfolio_service),
+    service: Annotated[PortfolioService, epends(get_portfolio_service)],
 ) -> Dict[str, str]:
     """
     Reset a circuit breaker.
@@ -731,7 +731,7 @@ async def reset_circuit_breaker(
 @router.get("/health")
 async def portfolio_health_check(
     http_request: Request,
-    service: PortfolioService = Depends(get_portfolio_service),
+    service: Annotated[PortfolioService, epends(get_portfolio_service)],
 ) -> Dict[str, Any]:
     """
     Health check for portfolio service.

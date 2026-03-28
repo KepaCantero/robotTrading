@@ -1,5 +1,5 @@
-# mypy: ignore-errors
-# pylint: disable=unsupported-binary-operation  # For Python 3.10+ union syntax
+from __future__ import annotations
+
 """
 Interactive Brokers Adapter for AlgoTrading
 
@@ -38,7 +38,7 @@ import logging
 import os
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Callable, Dict, List, Optional, Tuple  # noqa: F401
+from typing import Any, Callable, Dict, List, Optional
 
 from ib_insync import IB, LimitOrder, MarketOrder, StopOrder, util
 from ib_insync.contract import Contract as IBContract
@@ -359,10 +359,9 @@ class IBConnection:
         Returns:
             Market data dict with keys: bid, ask, last, volume, timestamp
         """
-        if not self.connected:
-            if not await self.connect():
-                logger.error("Cannot get market data - not connected to IB")
-                return {}
+        if not self.connected and not await self.connect():
+            logger.error("Cannot get market data - not connected to IB")
+            return {}
 
         # Check cache validity
         if symbol in self._market_data_cache:
@@ -434,9 +433,8 @@ class IBConnection:
         Returns:
             Order result dict with keys: order_id, status, fill_price, etc.
         """
-        if not self.connected:
-            if not await self.connect():
-                return {'error': 'Cannot connect to IB'}
+        if not self.connected and not await self.connect():
+            return {'error': 'Cannot connect to IB'}
 
         try:
             # Validate parameters
@@ -499,16 +497,14 @@ class IBConnection:
                 return {'error': 'Cannot get market data for order validation'}
 
             # Validate stop/limit prices
-            if stop_price:
-                if (side == 'BUY' and stop_price >= market_data.get('bid', 0)) or (
-                    side == 'SELL' and stop_price <= market_data.get('ask', float('inf'))
-                ):
-                    return {'error': 'Invalid stop price for current market'}
-            if price:
-                if (side == 'BUY' and price <= market_data.get('ask', float('inf'))) or (
-                    side == 'SELL' and price >= market_data.get('bid', 0)
-                ):
-                    return {'error': 'Invalid limit price for current market'}
+            if stop_price and ((side == 'BUY' and stop_price >= market_data.get('bid', 0)) or (
+                side == 'SELL' and stop_price <= market_data.get('ask', float('inf'))
+            )):
+                return {'error': 'Invalid stop price for current market'}
+            if price and ((side == 'BUY' and price <= market_data.get('ask', float('inf'))) or (
+                side == 'SELL' and price >= market_data.get('bid', 0)
+            )):
+                return {'error': 'Invalid limit price for current market'}
 
             # Get contract
             contract = self._get_contract(symbol, **contract_kwargs)
@@ -583,9 +579,8 @@ class IBConnection:
         Returns:
             List of position dicts
         """
-        if not self.connected:
-            if not await self.connect():
-                return []
+        if not self.connected and not await self.connect():
+            return []
 
         try:
             positions = self.ib.positions()
@@ -614,9 +609,8 @@ class IBConnection:
         Returns:
             Account summary dict
         """
-        if not self.connected:
-            if not await self.connect():
-                return {}
+        if not self.connected and not await self.connect():
+            return {}
 
         try:
             # Request account summary

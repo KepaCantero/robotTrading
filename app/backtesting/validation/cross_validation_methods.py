@@ -25,10 +25,16 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
+from typing import Callable, Dict, Generator, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
+
+# Type alias for parameter values in cross-validation
+ParamValue = Union[int, float, str, bool]
+ParamGrid = Dict[str, List[ParamValue]]
+ParamDict = Dict[str, ParamValue]
+DataSplit = Tuple[Union[pd.DataFrame, np.ndarray], Union[pd.DataFrame, np.ndarray]]
 from sklearn.base import BaseEstimator, clone
 from sklearn.model_selection import KFold, LeaveOneOut, StratifiedKFold
 
@@ -58,7 +64,7 @@ class CVResult:
     fold_scores: List[float]
     fit_times: List[float]
     score_times: List[float]
-    params: Dict[str, Any] = field(default_factory=dict)
+    params: ParamDict = field(default_factory=dict)
 
     # Additional statistics
     min_score: float = 0.0
@@ -70,7 +76,7 @@ class CVResult:
     model_name: str = ""
     scorer_name: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Union[str, int, float, List[float], ParamDict, Tuple[float, float]]]:
         """Convert to dictionary."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -98,14 +104,14 @@ class NestedCVResult:
     timestamp: datetime
     outer_score: float
     outer_std: float
-    best_params: Dict[str, Any]
+    best_params: ParamDict
     best_inner_score: float
     n_outer_splits: int
     n_inner_splits: int
     outer_fold_scores: List[float]
-    selected_params_per_fold: List[Dict[str, Any]]
+    selected_params_per_fold: List[ParamDict]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Union[str, int, float, List[float], ParamDict]]:
         """Convert to dictionary."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -428,9 +434,9 @@ class NestedCrossValidation:
     def __init__(
         self,
         estimator: BaseEstimator,
-        param_grid: Dict[str, List[Any]],
-        outer_cv: Any = None,
-        inner_cv: Any = None,
+        param_grid: ParamGrid,
+        outer_cv: object = None,
+        inner_cv: object = None,
         scoring: Optional[Union[str, Callable]] = None,
         n_jobs: int = 1,
     ):
@@ -542,7 +548,7 @@ class NestedCrossValidation:
         X: Union[pd.DataFrame, np.ndarray],
         train_idx: np.ndarray,
         test_idx: np.ndarray,
-    ) -> Tuple[Any, Any]:
+    ) -> Tuple[Union[pd.DataFrame, np.ndarray], Union[pd.DataFrame, np.ndarray]]:
         """Split feature matrix."""
         if isinstance(X, pd.DataFrame):
             return X.iloc[train_idx], X.iloc[test_idx]
@@ -553,7 +559,7 @@ class NestedCrossValidation:
         y: Union[pd.Series, np.ndarray],
         train_idx: np.ndarray,
         test_idx: np.ndarray,
-    ) -> Tuple[Any, Any]:
+    ) -> Tuple[Union[pd.Series, np.ndarray], Union[pd.Series, np.ndarray]]:
         """Split target vector."""
         if isinstance(y, pd.Series):
             return y.iloc[train_idx], y.iloc[test_idx]
@@ -595,7 +601,7 @@ class CrossValidation:
         # Initialize CV splitter
         self._cv_splitter = self._get_splitter()
 
-    def _get_splitter(self) -> Any:
+    def _get_splitter(self) -> Union["KFoldCV", "LeaveOneOutCV", "StratifiedKFoldCV", "TimeSeriesSplitCV"]:
         """Get CV splitter based on method."""
         if self.method == CVMethod.KFOLD:
             return KFoldCV(
@@ -729,7 +735,7 @@ class CrossValidation:
         X: Union[pd.DataFrame, np.ndarray],
         train_idx: np.ndarray,
         test_idx: np.ndarray,
-    ) -> Tuple[Any, Any]:
+    ) -> Tuple[Union[pd.DataFrame, np.ndarray], Union[pd.DataFrame, np.ndarray]]:
         """Split feature matrix."""
         if isinstance(X, pd.DataFrame):
             return X.iloc[train_idx], X.iloc[test_idx]
@@ -740,7 +746,7 @@ class CrossValidation:
         y: Union[pd.Series, np.ndarray],
         train_idx: np.ndarray,
         test_idx: np.ndarray,
-    ) -> Tuple[Any, Any]:
+    ) -> Tuple[Union[pd.Series, np.ndarray], Union[pd.Series, np.ndarray]]:
         """Split target vector."""
         if isinstance(y, pd.Series):
             return y.iloc[train_idx], y.iloc[test_idx]
@@ -806,7 +812,7 @@ def nested_cross_validate(
     estimator: BaseEstimator,
     X: Union[pd.DataFrame, np.ndarray],
     y: Union[pd.Series, np.ndarray],
-    param_grid: Dict[str, List[Any]],
+    param_grid: ParamGrid,
     outer_splits: int = 5,
     inner_splits: int = 3,
     scoring: Optional[Union[str, Callable]] = None,

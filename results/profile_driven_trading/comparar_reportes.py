@@ -28,7 +28,9 @@ def compare_reports(reports: List[Dict]) -> None:
     print()
 
     # Tabla comparativa
-    print(f"{'#':<3} {'Perfil':<30} {'Capital':>12} {'Objetivo':<25} {'Riesgo':<8} {'Horizonte':<10} {'Target/Mes':>12} {'Profile ID':<25}")
+    print(
+        f"{'#':<3} {'Perfil':<30} {'Capital':>12} {'Objetivo':<25} {'Riesgo':<8} {'Horizonte':<10} {'Target/Mes':>12} {'Profile ID':<25}"
+    )
     print("-" * 140)
 
     for i, report in enumerate(reports, 1):
@@ -48,7 +50,9 @@ def compare_reports(reports: List[Dict]) -> None:
         exec_time = summary.get("execution_time_seconds", 0)
         success_stages = summary.get("successful_stages", 0)
 
-        print(f"{i:<3} {name:<30} €{capital:>10,.0f}  {objective:<25} {risk:<8} {horizon:>5} meses  €{target:>10,.0f}  {profile_id:<25} ({success_stages}/8 stages)")
+        print(
+            f"{i:<3} {name:<30} €{capital:>10,.0f}  {objective:<25} {risk:<8} {horizon:>5} meses  €{target:>10,.0f}  {profile_id:<25} ({success_stages}/8 stages)"
+        )
 
     print()
     print("=" * 100)
@@ -82,7 +86,9 @@ def compare_reports(reports: List[Dict]) -> None:
         print(f"   Tax Optimization:  {'✅' if config.get('enable_tax_optimization') else '❌'}")
         print(f"   Backtest:          {'✅' if config.get('enable_backtest_validation') else '❌'}")
         print(f"   Risk Gates:        {'✅' if config.get('enable_risk_gates') else '❌'}")
-        print(f"   Auto-Execute:      {'⚠️  DANGER' if config.get('auto_execute_trades') else '✅ Dry-run'}")
+        print(
+            f"   Auto-Execute:      {'⚠️  DANGER' if config.get('auto_execute_trades') else '✅ Dry-run'}"
+        )
         print(f"   Interactive Brokers: {'✅ Enabled' if config.get('use_ibkr') else '❌ Mock mode'}")
 
         # Allocation
@@ -129,7 +135,9 @@ def compare_reports(reports: List[Dict]) -> None:
         print(f"\n📊 Resumen:")
         print(f"   Estado:            {'✅ SUCCESS' if summary.get('success') else '❌ FAILED'}")
         print(f"   Tiempo Total:      {summary.get('execution_time_seconds', 0):.2f} segundos")
-        print(f"   Stages Exitosos:   {summary.get('successful_stages', 0)}/{summary.get('total_stages', 0)}")
+        print(
+            f"   Stages Exitosos:   {summary.get('successful_stages', 0)}/{summary.get('total_stages', 0)}"
+        )
 
         # Errors and warnings
         errors = summary.get("errors", [])
@@ -150,15 +158,21 @@ def compare_reports(reports: List[Dict]) -> None:
 
     total_capital = sum(r.get("input", {}).get("capital", 0) for r in reports)
     total_target = sum(r.get("input", {}).get("target_monthly", 0) for r in reports)
-    avg_time = sum(r.get("summary", {}).get("execution_time_seconds", 0) for r in reports) / len(reports)
+    avg_time = sum(r.get("summary", {}).get("execution_time_seconds", 0) for r in reports) / len(
+        reports
+    )
     all_passed = all(r.get("risk", {}).get("passed", False) for r in reports)
     all_success = all(r.get("summary", {}).get("success", False) for r in reports)
 
     print(f"Total Capital Analizado:     €{total_capital:,.2f}")
     print(f"Total Target Mensual:        €{total_target:,.2f}/mes")
     print(f"Promedio Tiempo Ejecución:   {avg_time:.2f} segundos")
-    print(f"Validación Riesgo:           {'✅ TODAS PASARON' if all_passed else '❌ ALGUNAS FALLARON'}")
-    print(f"Estado General:              {'✅ TODAS EXITOSAS' if all_success else '❌ ALGUNAS FALLARON'}")
+    print(
+        f"Validación Riesgo:           {'✅ TODAS PASARON' if all_passed else '❌ ALGUNAS FALLARON'}"
+    )
+    print(
+        f"Estado General:              {'✅ TODAS EXITOSAS' if all_success else '❌ ALGUNAS FALLARON'}"
+    )
     print()
 
 

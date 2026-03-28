@@ -17,7 +17,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 from app.backtesting.base_engine import (
     BaseBacktestEngine,
@@ -115,8 +115,8 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
 
     def run_backtest(
         self,
-        market_data: Union[List[Any], List[Quote]],
-        signals: Optional[List[Any]] = None,
+        market_data: Union[List[object], List[Quote]],
+        signals: Optional[List[object]] = None,
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
         **kwargs,
@@ -373,8 +373,8 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
     def compare_vs_optimistic(
         self,
         quotes: List[Quote],
-        signals: List[Any],
-    ) -> Dict[str, Any]:
+        signals: List[object],
+    ) -> Dict[str, object]:
         """
         Compare pessimistic vs optimistic execution (Req #10).
 
@@ -421,8 +421,8 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
 
     def _process_signals_with_delay(
         self,
-        signals: List[Any],
-        market_data: List[Any],
+        signals: List[object],
+        market_data: List[object],
         current_index: int,
     ) -> List[ExecutionResult]:
         """Process signals with next-day execution delay."""
@@ -466,7 +466,7 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
 
         return results
 
-    def _check_intra_bar_execution(self, md: Any) -> List[ExecutionResult]:
+    def _check_intra_bar_execution(self, md: object) -> List[ExecutionResult]:
         """Check for intra-bar stop executions."""
         results = []
 
@@ -495,12 +495,15 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
 
         return results
 
-    def _close_all_positions_at_end(self, final_md: Any) -> None:
+    def _close_all_positions_at_end(self, final_md: object) -> None:
         """Close all remaining positions at end of backtest."""
         for symbol, quantity in list(self.state.positions.items()):
             if quantity > 0:
                 exit_price = self._get_price(final_md)
-                exit_price_with_slippage = self._apply_slippage(exit_price, is_buy=False)
+                from app.backtesting.base_engine import SlippageParams
+
+                slippage_params = SlippageParams(price=exit_price, is_buy=False)
+                exit_price_with_slippage = self._apply_slippage(slippage_params)
 
                 cost_result = self.transaction_cost_model.calculate_costs(
                     symbol=symbol,

@@ -10,7 +10,10 @@ from decimal import Decimal
 
 import pytest
 
-from app.domain.strategies.fx_carry_trade.carry_calculator import CarryCalculator, CarryTradeOpportunity
+from app.domain.strategies.fx_carry_trade.carry_calculator import (
+    CarryCalculator,
+    CarryTradeOpportunity,
+)
 from app.domain.strategies.fx_carry_trade.models import FXCarrySignal, FXPair
 
 

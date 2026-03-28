@@ -471,7 +471,7 @@ class HandoffManager:
 
                 self.logger.info("HandoffManager initialized successfully")
 
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 self.logger.error(f"Error initializing: {e}")
                 raise
 
@@ -550,7 +550,7 @@ class HandoffManager:
 
             self.logger.debug("Database schema initialized")
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Database initialization failed: {e}")
             raise
 
@@ -874,7 +874,7 @@ class HandoffManager:
 
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error saving session: {e}")
 
     async def get_handoff_metrics(self) -> Dict[str, Any]:

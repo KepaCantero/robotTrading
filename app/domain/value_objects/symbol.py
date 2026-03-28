@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
 
 
 class AssetClass(str, Enum):
@@ -165,7 +164,7 @@ class Symbol:
         return cls(ticker=ticker, exchange=exchange, asset_class=AssetClass.OPTION)
 
     # Comparison
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Compare symbols."""
         if not isinstance(other, Symbol):
             return False

@@ -3,7 +3,7 @@ Rebalance Portfolio Use Case - Rebalance an existing portfolio
 """
 
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Protocol
+from typing import Dict, List, Optional, Protocol
 
 import pandas as pd
 import structlog
@@ -21,7 +21,7 @@ class BasePortfolioOptimizer(Protocol):
     implementations that can be injected into the use case.
     """
 
-    def optimize(self, returns: pd.DataFrame, **kwargs: Any) -> Dict[str, float]:
+    def optimize(self, returns: pd.DataFrame, **kwargs: object) -> Dict[str, float]:
         """
         Optimize portfolio weights based on returns.
 
@@ -54,7 +54,7 @@ class RebalancePortfolioUseCase:
         self,
         portfolio: Portfolio,
         target_weights: Dict[str, Decimal],
-        rebalance_threshold: Decimal = Decimal("0.05"),
+        rebalance_threshold: Optional[Decimal] = None,
     ) -> List[str]:
         """
         Execute the use case - rebalance portfolio.
@@ -67,6 +67,8 @@ class RebalancePortfolioUseCase:
         Returns:
             List of rebalancing actions taken
         """
+        if rebalance_threshold is None:
+            rebalance_threshold = Decimal("0.05")
         logger.info(
             "rebalance_check_started",
             portfolio_id=str(portfolio.id) if hasattr(portfolio, 'id') else 'unknown',

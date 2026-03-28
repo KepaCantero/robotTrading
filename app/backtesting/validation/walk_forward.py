@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -73,7 +73,7 @@ class WalkForwardValidator:
     def __init__(
         self,
         config: Optional[WalkForwardConfig] = None,
-        optimizer: Optional[Any] = None,
+        optimizer: Optional[object] = None,
     ):
         """
         Initialize walk-forward validator.
@@ -87,10 +87,10 @@ class WalkForwardValidator:
 
     def validate(
         self,
-        strategy_factory: Callable[[Dict[str, Any]], Any],
-        param_grid: Dict[str, List[Any]],
+        strategy_factory: Callable[[Dict[str, Union[int, float, str, bool]]], object],
+        param_grid: Dict[str, List[Union[int, float, str, bool]]],
         data: pd.DataFrame,
-        optimizer: Optional[Any] = None,
+        optimizer: Optional[object] = None,
         progress_callback: Optional[Callable[[int, int], None]] = None,
     ) -> WalkForwardResult:
         """
@@ -237,8 +237,8 @@ class WalkForwardValidator:
 
     def _test_period(
         self,
-        strategy_factory: Callable[[Dict[str, Any]], Any],
-        params: Dict[str, Any],
+        strategy_factory: Callable[[Dict[str, Union[int, float, str, bool]]], object],
+        params: Dict[str, Union[int, float, str, bool]],
         data: pd.DataFrame,
         is_in_sample: bool,
         period_id: int,
@@ -311,7 +311,7 @@ class WalkForwardValidator:
 
         return result
 
-    def _calculate_aggregate_metrics(self, results: List[PeriodResult]) -> Dict[str, Any]:
+    def _calculate_aggregate_metrics(self, results: List[PeriodResult]) -> Dict[str, Union[int, float, List[float], List[int]]]:
         """
         Calculate aggregate performance metrics from period results.
 
@@ -515,10 +515,10 @@ class RollingWindowOptimizer:
 
     def optimize(
         self,
-        strategy_factory: Callable[[Dict[str, Any]], Any],
-        param_grid: Dict[str, List[Any]],
+        strategy_factory: Callable[[Dict[str, Union[int, float, str, bool]]], object],
+        param_grid: Dict[str, List[Union[int, float, str, bool]]],
         data: pd.DataFrame,
-    ) -> Dict[str, Any]:
+    ) -> Dict[str, Union[int, float, str, bool]]:
         """
         Optimize strategy parameters on in-sample data.
 
@@ -533,8 +533,8 @@ class RollingWindowOptimizer:
         # Generate all parameter combinations
         param_combinations = self._generate_param_combinations(param_grid)
 
-        best_score = None
-        best_params = None
+        best_score: Optional[float] = None
+        best_params: Optional[Dict[str, Union[int, float, str, bool]]] = None
 
         for params in param_combinations:
             try:
@@ -566,8 +566,8 @@ class RollingWindowOptimizer:
         return best_params
 
     def _generate_param_combinations(
-        self, param_grid: Dict[str, List[Any]]
-    ) -> List[Dict[str, Any]]:
+        self, param_grid: Dict[str, List[Union[int, float, str, bool]]]
+    ) -> List[Dict[str, Union[int, float, str, bool]]]:
         """
         Generate all combinations of parameters from grid.
 
@@ -586,7 +586,7 @@ class RollingWindowOptimizer:
 
         return [dict(zip(keys, combo)) for combo in combinations]
 
-    def _evaluate_strategy(self, strategy: Any, data: pd.DataFrame) -> float:
+    def _evaluate_strategy(self, strategy: object, data: pd.DataFrame) -> float:
         """
         Evaluate strategy and return optimization metric.
 

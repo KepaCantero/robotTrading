@@ -102,9 +102,7 @@ class DeploymentManager:
     def get_service_status(self, cluster: str, service: str) -> Dict[str, Any]:
         """Get ECS service status."""
         try:
-            response = self.ecs_client.describe_services(
-                cluster=cluster, services=[service]
-            )
+            response = self.ecs_client.describe_services(cluster=cluster, services=[service])
 
             if not response["services"]:
                 return {"error": "Service not found"}
@@ -125,9 +123,7 @@ class DeploymentManager:
         """Get load balancer health status."""
         try:
             # Get load balancer ARN
-            lb_response = self.elbv2_client.describe_load_balancers(
-                Names=[load_balancer_name]
-            )
+            lb_response = self.elbv2_client.describe_load_balancers(Names=[load_balancer_name])
 
             if not lb_response["LoadBalancers"]:
                 return {"error": "Load balancer not found"}
@@ -135,18 +131,14 @@ class DeploymentManager:
             lb_arn = lb_response["LoadBalancers"][0]["LoadBalancerArn"]
 
             # Get target groups
-            tg_response = self.elbv2_client.describe_target_groups(
-                LoadBalancerArn=lb_arn
-            )
+            tg_response = self.elbv2_client.describe_target_groups(LoadBalancerArn=lb_arn)
 
             health_status = {}
             for tg in tg_response["TargetGroups"]:
                 tg_arn = tg["TargetGroupArn"]
 
                 # Get target health
-                health_response = self.elbv2_client.describe_target_health(
-                    TargetGroupArn=tg_arn
-                )
+                health_response = self.elbv2_client.describe_target_health(TargetGroupArn=tg_arn)
 
                 health_status[tg["TargetGroupName"]] = {
                     "targets": health_response["TargetHealthDescriptions"],
@@ -195,9 +187,7 @@ class DeploymentManager:
                         401,
                         403,
                     ]:  # 401/403 are OK for protected endpoints
-                        print(
-                            f"Endpoint {endpoint} returned status {response.status_code}"
-                        )
+                        print(f"Endpoint {endpoint} returned status {response.status_code}")
                         return False
                 except requests.RequestException as e:
                     print(f"Error testing endpoint {endpoint}: {e}")
@@ -213,18 +203,12 @@ class DeploymentManager:
 def main():
     """Main function for deployment scripts."""
     parser = argparse.ArgumentParser(description="Deployment Management Script")
-    parser.add_argument(
-        "--environment", required=True, help="Environment (staging/production)"
-    )
+    parser.add_argument("--environment", required=True, help="Environment (staging/production)")
     parser.add_argument("--version", required=True, help="Version to deploy")
     parser.add_argument("--commit", required=True, help="Git commit hash")
     parser.add_argument("--image", help="Docker image URI")
-    parser.add_argument(
-        "--status", help="Deployment status (in_progress/success/failed)"
-    )
-    parser.add_argument(
-        "--action", choices=["create", "update", "status", "health"], required=True
-    )
+    parser.add_argument("--status", help="Deployment status (in_progress/success/failed)")
+    parser.add_argument("--action", choices=["create", "update", "status", "health"], required=True)
 
     args = parser.parse_args()
 

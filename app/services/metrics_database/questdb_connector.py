@@ -4,7 +4,6 @@ T18.1: QuestDB Connector - Async client for time-series metrics storage
 Provides high-performance async interface to QuestDB for storing and querying metrics.
 Handles connection pooling, bulk operations, and error handling.
 """
-# pylint: disable=import-error
 
 import asyncio
 import json
@@ -306,7 +305,7 @@ class QuestDBConnector:
             self._retry_count = 0
             return len(metrics_to_flush)
 
-        except (ConnectionError, OSError, ValueError) as e:
+        except (OSError, ValueError) as e:
             logger.error(f"Failed to flush metrics: {e}")
             self._pending_metrics.extend(metrics_to_flush)
             return 0
@@ -368,7 +367,7 @@ class QuestDBConnector:
                             value=Decimal(str(row['value'])),
                             tags=(
                                 json.loads(row['metadata']) if row.get('metadata') else {}
-                            ),  # nosec B307 - trusted DB source
+                            ),
                         )
                         for row in rows
                     ]
@@ -561,7 +560,7 @@ class QuestDBConnector:
             logger.info(f"✅ Deleted {deleted_count} old metrics")
             return deleted_count
 
-        except (ConnectionError, OSError, ValueError) as e:
+        except (OSError, ValueError) as e:
             logger.error(f"Failed to delete old metrics: {e}")
             return 0
 
@@ -590,7 +589,7 @@ class QuestDBConnector:
 
             return stats
 
-        except (ConnectionError, OSError, ValueError) as e:
+        except (OSError, ValueError) as e:
             logger.error(f"Failed to get storage stats: {e}")
             return None
 
@@ -611,7 +610,7 @@ class QuestDBConnector:
             logger.debug("✅ QuestDB health check passed")
             return True
 
-        except (ConnectionError, OSError, ValueError) as e:
+        except (OSError, ValueError) as e:
             logger.error(f"Health check failed: {e}")
             self._is_connected = False
             return False

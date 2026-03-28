@@ -13,7 +13,6 @@ from typing import List, Optional, Tuple
 
 import numpy as np
 
-# pylint: disable=relative-beyond-top-level
 from .domain_models import StockCategory
 
 logger = logging.getLogger(__name__)
@@ -75,9 +74,8 @@ class StockClassifier:
             and hurst_short < self.hurst_threshold
             and half_life
             and half_life < self.half_life_threshold
-        ):
-            if adf_pvalue and adf_pvalue < self.adf_confidence:
-                return StockCategory.MEAN_REVERTING
+        ) and adf_pvalue and adf_pvalue < self.adf_confidence:
+            return StockCategory.MEAN_REVERTING
 
         # Default to random walk
         return StockCategory.RANDOM_WALK
@@ -93,9 +91,9 @@ class MomentumScorer:
     def __init__(
         self,
         lookback_periods: List[int] = None,
-        volatility_weight: Decimal = Decimal('0.3'),
-        trend_weight: Decimal = Decimal('0.5'),
-        volume_weight: Decimal = Decimal('0.2'),
+        volatility_weight: Optional[Decimal] = None,
+        trend_weight: Optional[Decimal] = None,
+        volume_weight: Optional[Decimal] = None,
     ):
         """
         Initialize momentum scorer.
@@ -106,6 +104,12 @@ class MomentumScorer:
             trend_weight: Weight for trend component
             volume_weight: Weight for volume component
         """
+        if volatility_weight is None:
+            volatility_weight = Decimal('0.3')
+        if trend_weight is None:
+            trend_weight = Decimal('0.5')
+        if volume_weight is None:
+            volume_weight = Decimal('0.2')
         self.lookback_periods = lookback_periods or [20, 60, 120]
         self.volatility_weight = volatility_weight
         self.trend_weight = trend_weight
@@ -169,9 +173,9 @@ class MeanReversionScorer:
 
     def __init__(
         self,
-        half_life_weight: Decimal = Decimal('0.4'),
-        deviation_weight: Decimal = Decimal('0.4'),
-        volatility_weight: Decimal = Decimal('0.2'),
+        half_life_weight: Optional[Decimal] = None,
+        deviation_weight: Optional[Decimal] = None,
+        volatility_weight: Optional[Decimal] = None,
     ):
         """
         Initialize mean reversion scorer.
@@ -181,6 +185,12 @@ class MeanReversionScorer:
             deviation_weight: Weight for deviation component
             volatility_weight: Weight for volatility component
         """
+        if half_life_weight is None:
+            half_life_weight = Decimal('0.4')
+        if deviation_weight is None:
+            deviation_weight = Decimal('0.4')
+        if volatility_weight is None:
+            volatility_weight = Decimal('0.2')
         self.half_life_weight = half_life_weight
         self.deviation_weight = deviation_weight
         self.volatility_weight = volatility_weight

@@ -17,6 +17,7 @@ This script provides a clean entry point for the dashboard application.
 # Debe ir ANTES de importar numpy, pandas, torch, o cualquier otra librería
 # ============================================================================
 import os
+
 os.environ['OMP_NUM_THREADS'] = '1'
 os.environ['OPENBLAS_NUM_THREADS'] = '1'
 os.environ['MKL_NUM_THREADS'] = '1'
@@ -41,17 +42,17 @@ if __name__ == "__main__":
     import subprocess
     import sys
     import argparse
-    
+
     parser = argparse.ArgumentParser(description='Ejecutar dashboard de backtesting')
     parser.add_argument(
         '--mode',
         choices=['objectives', 'advanced', 'main'],
         default='objectives',
-        help='Modo del dashboard: objectives (simplificado, por defecto), advanced (completo), main (legacy)'
+        help='Modo del dashboard: objectives (simplificado, por defecto), advanced (completo), main (legacy)',
     )
-    
+
     args = parser.parse_args()
-    
+
     # Select dashboard based on mode
     if args.mode == 'advanced':
         dashboard_path = project_root / "app" / "dashboard" / "advanced_dashboard.py"
@@ -63,14 +64,19 @@ if __name__ == "__main__":
         dashboard_path = project_root / "app" / "dashboard" / "objectives_dashboard.py"
         print("🎯 Starting Backtesting Objectives Dashboard (modo simplificado)...")
         print("💡 Enfocado en validación de métricas y cumplimiento de límites")
-    
+
     print(f"📂 Dashboard path: {dashboard_path}")
     print(f"🌐 Opening browser at http://localhost:8501\n")
-    
-    # Run Streamlit with the dashboard
-    subprocess.run([
-        "streamlit", "run", str(dashboard_path),
-        "--server.headless", "false",
-        "--browser.gatherUsageStats", "false",
-    ])
 
+    # Run Streamlit with the dashboard
+    subprocess.run(
+        [
+            "streamlit",
+            "run",
+            str(dashboard_path),
+            "--server.headless",
+            "false",
+            "--browser.gatherUsageStats",
+            "false",
+        ]
+    )

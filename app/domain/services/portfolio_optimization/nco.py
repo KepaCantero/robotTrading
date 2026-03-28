@@ -423,7 +423,7 @@ class NestedClusteredOptimizer:
         if not inv_var:
             # All clusters have zero variance, use equal allocation
             n_clusters = len(cluster_vars)
-            return {k: 1.0 / n_clusters for k in cluster_vars.keys()}
+            return dict.fromkeys(cluster_vars.keys(), 1.0 / n_clusters)
 
         total_inv_var = sum(inv_var.values())
 

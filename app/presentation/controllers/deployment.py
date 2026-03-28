@@ -9,9 +9,9 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Dict
+from typing import Annotated, Dict
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException
 from requests.exceptions import HTTPError, RequestException
 
 from app.services.deploy_decision_orchestrator import get_deploy_orchestrator
@@ -111,8 +111,8 @@ async def get_deployment_decision(decision_id: str) -> Dict:
 
 @router.get("/decisions")
 async def list_deployment_decisions(
-    limit: int = Query(10, ge=1, le=100),
-    offset: int = Query(0, ge=0),
+    limit: Annotated[int, uery(10, ge=1, le=100)],
+    offset: Annotated[int, uery(0, ge=0)],
 ) -> Dict:
     """
     List recent deployment decisions.

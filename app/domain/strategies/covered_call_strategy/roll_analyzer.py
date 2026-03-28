@@ -50,7 +50,7 @@ class RollAnalyzer:
     def __init__(
         self,
         greeks_calculator: Optional[GreeksCalculator] = None,
-        min_premium_benefit: Decimal = Decimal("0.005"),  # 0.5% mínimo
+        min_premium_benefit: Optional[Decimal] = None,  # 0.5% mínimo
     ):
         """
         Inicializar analizador de rolls.
@@ -59,6 +59,8 @@ class RollAnalyzer:
             greeks_calculator: Calculador de Greeks
             min_premium_benefit: Beneficio mínimo (% del subyacente)
         """
+        if min_premium_benefit is None:
+            min_premium_benefit = Decimal("0.005")
         self.greeks_calculator = greeks_calculator or GreeksCalculator()
         self.min_premium_benefit = min_premium_benefit
 

@@ -71,7 +71,7 @@ class BayesianOptimizer:
         )
 
         n_trials = self.optimization_config.get("n_trials", 100)
-        timeout = self.optimization_config.get("timeout", None)
+        timeout = self.optimization_config.get("timeout")
 
         # Get parameter ranges
         rsi_buy_min, rsi_buy_max, vol_min, vol_max = self._get_parameter_ranges()

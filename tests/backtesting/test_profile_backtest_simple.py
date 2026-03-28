@@ -97,6 +97,7 @@ print("COMPLIANCE (R5, R6, R7, DATA-001)")
 print("=" * 80)
 
 from app.backtesting.backtesting_compliance import create_backtesting_compliance
+
 compliance = create_backtesting_compliance()
 
 # R6: Overfitting

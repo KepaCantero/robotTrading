@@ -10,7 +10,9 @@ Instead of dynamic importlib, we use deferred imports in functions.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+from datetime import datetime
+
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 # Use TYPE_CHECKING for type hints only
 if TYPE_CHECKING:
@@ -89,7 +91,7 @@ class MarketDataModelProtocol(Protocol):
 
     id: int
     asset_id: int
-    timestamp: Any
+    timestamp: datetime
     open: float
     high: float
     low: float
@@ -105,7 +107,7 @@ class SignalModelProtocol(Protocol):
     asset_id: int
     strategy_id: int
     signal_type: str
-    timestamp: Any
+    timestamp: datetime
 
 
 @runtime_checkable
@@ -114,8 +116,8 @@ class BacktestModelProtocol(Protocol):
 
     id: int
     strategy_id: int
-    start_date: Any
-    end_date: Any
+    start_date: datetime
+    end_date: datetime
     initial_capital: float
 
 
@@ -125,7 +127,7 @@ class RiskMetricsModelProtocol(Protocol):
 
     id: int
     portfolio_id: int
-    timestamp: Any
+    timestamp: datetime
     var_value: float
 
 
@@ -134,7 +136,7 @@ class SystemLogModelProtocol(Protocol):
     """Protocol for SystemLog model to avoid circular imports."""
 
     id: int
-    timestamp: Any
+    timestamp: datetime
     level: str
     message: str
     module: str
@@ -146,7 +148,7 @@ class PositionStateModelProtocol(Protocol):
 
     id: int
     position_id: int
-    timestamp: Any
+    timestamp: datetime
     state: str
 
 

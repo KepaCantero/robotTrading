@@ -282,7 +282,7 @@ class SurvivorshipBiasCorrector:
 
         except (ValueError, TypeError, KeyError) as e:
             logger.error(f"Error simulating delisted stocks: {e}")
-            return {date: current_symbols for date in backtest_dates}
+            return dict.fromkeys(backtest_dates, current_symbols)
 
     def _calculate_bias_factor(
         self, survivor_count: int, delisted_count: int, period_years: float

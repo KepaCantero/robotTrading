@@ -21,6 +21,7 @@ Domain Model (Cosmic Python - Rule 16):
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -382,7 +383,7 @@ class EscalationManager:
 
                 self.logger.info("EscalationManager initialized successfully")
 
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 self.logger.error(f"Error initializing: {e}")
                 raise
 
@@ -490,7 +491,7 @@ class EscalationManager:
 
             self.logger.debug("Database schema initialized")
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Database initialization failed: {e}")
             raise
 
@@ -553,10 +554,8 @@ class EscalationManager:
         self._is_running = False
         if self._escalation_task:
             self._escalation_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._escalation_task
-            except asyncio.CancelledError:
-                pass
         self.logger.info("Stopped auto-escalation")
 
     async def _escalation_loop(self) -> None:
@@ -862,7 +861,7 @@ class EscalationManager:
 
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error saving incident: {e}")
 
     async def get_active_incidents(self) -> List[Dict[str, Any]]:

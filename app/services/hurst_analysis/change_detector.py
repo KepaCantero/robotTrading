@@ -66,7 +66,7 @@ class RegimeChangeDetector:
         symbol: str,
         get_history_func: callable,
         lookback_periods: int = 10,
-    ) -> RegimeChange | None:  # pylint: disable=unsupported-binary-operation
+    ) -> RegimeChange | None:
         """
         Detect if there has been a regime change for a symbol.
 

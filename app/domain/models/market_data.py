@@ -278,20 +278,17 @@ class Quote(BaseModel):
         # Auto-calculate spread from bid/ask if not provided
         # When bid=ask (common when only last price available), use provided spread
         calculated_spread = self.ask - self.bid
-        if calculated_spread > 0:
-            # Use calculated spread when true bid/ask available
-            if self.spread == 0:
-                self.spread = calculated_spread
-                logger.debug(
-                    "Spread auto-calculated from bid/ask",
-                    extra={
-                        "component": "market_data",
-                        "action": "spread_calculated",
-                        "symbol": self.symbol,
-                        "spread": str(self.spread),
-                    },
-                )
-            # Allow reasonable deviation (default spread when bid=ask)
+        if calculated_spread > 0 and self.spread == 0:
+            self.spread = calculated_spread
+            logger.debug(
+                "Spread auto-calculated from bid/ask",
+                extra={
+                    "component": "market_data",
+                    "action": "spread_calculated",
+                    "symbol": self.symbol,
+                    "spread": str(self.spread),
+                },
+            )
         # When bid=ask (calculated_spread=0), provided spread is used as-is
 
         logger.debug(

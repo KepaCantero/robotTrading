@@ -339,7 +339,7 @@ class MeanVarianceOptimizer(BaseOptimizer[NDArray[np.float64]]):
 
     async def optimize(
         self,
-        objective: Any,  # Not used for portfolio optimization
+        objective: object,  # Not used for portfolio optimization
         search_space: NDArray[np.float64],  # Returns matrix (T, N)
     ) -> OptimizationResult:
         """
@@ -976,17 +976,15 @@ class MeanVarianceOptimizer(BaseOptimizer[NDArray[np.float64]]):
             except Exception:
                 continue
 
-        if not points:
-            # Fallback to min variance
-            if min_var_result.success:
-                points.append(
-                    EfficientFrontierPoint(
-                        weights=min_var_result.weights,
-                        portfolio_return=min_var_result.expected_return,
-                        portfolio_risk=min_var_result.expected_risk,
-                        sharpe_ratio=min_var_result.sharpe_ratio,
-                    )
+        if not points and min_var_result.success:
+            points.append(
+                EfficientFrontierPoint(
+                    weights=min_var_result.weights,
+                    portfolio_return=min_var_result.expected_return,
+                    portfolio_risk=min_var_result.expected_risk,
+                    sharpe_ratio=min_var_result.sharpe_ratio,
                 )
+            )
 
         if not points:
             raise OptimizationError("Failed to calculate any efficient frontier points")

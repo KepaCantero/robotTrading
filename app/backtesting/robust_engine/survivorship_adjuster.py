@@ -28,7 +28,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -137,9 +137,8 @@ class SurvivorshipAdjuster:
             df = pd.read_csv(filepath)
             df["delisting_date"] = pd.to_datetime(df["delisting_date"]).dt.date
 
-            count = 0
             # Use itertuples instead of iterrows for better performance
-            for row in df.itertuples():
+            for count, row in enumerate(df.itertuples()):
                 stock = DelistedStock(
                     symbol=row.symbol,
                     delisting_date=row.delisting_date,
@@ -158,8 +157,8 @@ class SurvivorshipAdjuster:
 
                 self._delisted_stocks[stock.symbol] = stock
                 self._delisting_by_date[stock.delisting_date].append(stock.symbol)
-                count += 1
 
+            count = len(df)
             logger.info(f"Loaded {count} delisted stocks from {filepath}")
             return count
 
@@ -326,7 +325,7 @@ class SurvivorshipAdjuster:
         current_universe: List[str],
         backtest_start: date,
         backtest_end: date,
-    ) -> Dict[str, Any]:
+    ) -> Dict[str, Union[int, float]]:
         """Calculate the survivorship bias adjustment factor."""
         period_years = (backtest_end - backtest_start).days / 365.25
 
@@ -500,7 +499,7 @@ class SurvivorshipAdjuster:
         current_universe: List[str],
         backtest_start: date,
         backtest_end: date,
-    ) -> Dict[str, Any]:
+    ) -> Dict[str, Union[int, float]]:
         """
         Calculate statistics about the survivorship bias.
 

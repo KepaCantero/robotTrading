@@ -96,7 +96,7 @@ class ReportingGenerator:
                 html_report=html_report,
             )
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"❌ Error generating report: {e}")
             raise
 

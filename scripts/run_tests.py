@@ -61,66 +61,31 @@ Examples:
   %(prog)s --fast             Run fast tests only (skip slow tests)
   %(prog)s --failfast         Stop on first failure
   %(prog)s --verbose          Verbose output
-        """
+        """,
     )
 
     # Test suite selection
-    parser.add_argument(
-        "--unit",
-        action="store_true",
-        help="Run only unit tests"
-    )
-    parser.add_argument(
-        "--integration",
-        action="store_true",
-        help="Run only integration tests"
-    )
-    parser.add_argument(
-        "--load",
-        action="store_true",
-        help="Run only load/stress tests"
-    )
-    parser.add_argument(
-        "--critical",
-        action="store_true",
-        help="Run only critical path tests"
-    )
+    parser.add_argument("--unit", action="store_true", help="Run only unit tests")
+    parser.add_argument("--integration", action="store_true", help="Run only integration tests")
+    parser.add_argument("--load", action="store_true", help="Run only load/stress tests")
+    parser.add_argument("--critical", action="store_true", help="Run only critical path tests")
 
     # Test options
-    parser.add_argument(
-        "--coverage",
-        "-c",
-        action="store_true",
-        help="Generate coverage report"
-    )
-    parser.add_argument(
-        "--fast",
-        action="store_true",
-        help="Skip slow tests"
-    )
-    parser.add_argument(
-        "--failfast",
-        "-x",
-        action="store_true",
-        help="Stop on first failure"
-    )
-    parser.add_argument(
-        "--verbose",
-        "-v",
-        action="store_true",
-        help="Verbose output"
-    )
+    parser.add_argument("--coverage", "-c", action="store_true", help="Generate coverage report")
+    parser.add_argument("--fast", action="store_true", help="Skip slow tests")
+    parser.add_argument("--failfast", "-x", action="store_true", help="Stop on first failure")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
     parser.add_argument(
         "--parallel",
         "-n",
         type=int,
         metavar="N",
-        help="Run tests in parallel with N workers (requires pytest-xdist)"
+        help="Run tests in parallel with N workers (requires pytest-xdist)",
     )
     parser.add_argument(
         "--kernel",
         action="store_true",
-        help="Run tests (deprecated alias for backwards compatibility)"
+        help="Run tests (deprecated alias for backwards compatibility)",
     )
 
     args = parser.parse_args()

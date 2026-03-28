@@ -133,7 +133,7 @@ class ValueSignalEnhancer:
         )
         self.weights = self.config.get(
             "weights",
-            {metric: 1.0 for metric in self.metrics},
+            dict.fromkeys(self.metrics, 1.0),
         )
         self.cheap_threshold = self.config.get("cheap_threshold", 0.3)  # Bottom 30%
         self.expensive_threshold = self.config.get("expensive_threshold", 0.7)  # Top 70%
@@ -205,7 +205,7 @@ class ValueSignalEnhancer:
 
         # Calculate cross-sectional rank
         all_scores = []
-        for idx, row in data.iterrows():
+        for _idx, row in data.iterrows():
             scores = []
             for metric in self.metrics:
                 if metric in row and not pd.isna(row[metric]):

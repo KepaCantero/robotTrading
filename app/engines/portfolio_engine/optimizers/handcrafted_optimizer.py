@@ -1,4 +1,3 @@
-# pylint: disable=arguments-differ
 """
 Handcrafted Weights Optimizer - Robert Carver's methodology.
 
@@ -17,9 +16,10 @@ interpretable than complex optimization methods."
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
 import numpy as np
+from numpy.typing import NDArray
 
 from .base import BaseOptimizer
 
@@ -69,10 +69,9 @@ class HandcraftedWeightsOptimizer(BaseOptimizer):
 
     def optimize(
         self,
-        expected_returns: np.ndarray,
-        cov_matrix: np.ndarray,
-        constraints: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        returns: Optional[NDArray[np.floating]] = None,
+        **kwargs,
+    ) -> Union[NDArray[np.floating], Dict[str, Any]]:
         """
         Optimize using handcrafted weights (Carver's methodology).
 
@@ -84,14 +83,21 @@ class HandcraftedWeightsOptimizer(BaseOptimizer):
         5. Optionally use equal risk contribution
 
         Args:
-            expected_returns: Expected returns (not used in handcrafting)
-            cov_matrix: Covariance matrix
-            constraints: Additional constraints
+            returns: Asset returns (optional, not used in handcrafting)
+            **kwargs: Additional parameters:
+                - expected_returns: Expected returns (not used in handcrafting)
+                - cov_matrix: Covariance matrix (required)
+                - constraints: Additional constraints
 
         Returns:
             Dict with handcrafted weights and metrics
         """
-        constraints = constraints or {}
+        expected_returns = kwargs.get("expected_returns", returns)
+        cov_matrix = kwargs.get("cov_matrix")
+        constraints = kwargs.get("constraints") or {}
+
+        if cov_matrix is None:
+            raise ValueError("cov_matrix is required for HandcraftedWeightsOptimizer")
 
         try:
             len(expected_returns)
@@ -216,7 +222,7 @@ class HandcraftedWeightsOptimizer(BaseOptimizer):
         max_iterations = 100
         tolerance = 1e-6
 
-        for iteration in range(max_iterations):
+        for _iteration in range(max_iterations):
             # Calculate risk contributions
             portfolio_var = weights @ cov_matrix @ weights
             marginal_contrib = cov_matrix @ weights

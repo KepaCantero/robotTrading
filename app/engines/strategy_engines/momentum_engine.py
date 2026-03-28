@@ -265,21 +265,20 @@ class MomentumStrategyEngine(BaseStrategyEngine):
             # ATR filter (si está habilitado)
             if self.atr_filter_enabled:
                 atr = self.indicator_calculator.calculate_atr(highs, lows, prices, period=14)
-                if atr is not None:
-                    if self.use_relative_atr:
-                        relative_atr = (atr / current_price) * 100 if current_price > 0 else 0
-                        if relative_atr < float(self.min_atr_threshold * 100):
-                            logger.debug(
-                                "Señal filtrada por ATR bajo",
-                                extra={
-                                    "strategy": "momentum",
-                                    "symbol": market_data.symbol,
-                                    "relative_atr_pct": relative_atr,
-                                    "min_atr_threshold_pct": float(self.min_atr_threshold * 100),
-                                    "filter_reason": "low_atr",
-                                },
-                            )
-                            return []
+                if atr is not None and self.use_relative_atr:
+                    relative_atr = (atr / current_price) * 100 if current_price > 0 else 0
+                    if relative_atr < float(self.min_atr_threshold * 100):
+                        logger.debug(
+                            "Señal filtrada por ATR bajo",
+                            extra={
+                                "strategy": "momentum",
+                                "symbol": market_data.symbol,
+                                "relative_atr_pct": relative_atr,
+                                "min_atr_threshold_pct": float(self.min_atr_threshold * 100),
+                                "filter_reason": "low_atr",
+                            },
+                        )
+                        return []
 
             # Condiciones para señal BUY
             price_above_ema = current_price > ema

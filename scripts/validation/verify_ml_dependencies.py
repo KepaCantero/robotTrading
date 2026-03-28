@@ -46,42 +46,43 @@ def main():
         ("torch.nn", "import torch.nn as nn"),
         ("torch.optim", "import torch.optim as optim"),
         ("torch.utils.data", "from torch.utils.data import DataLoader, Dataset"),
-
         # Deep Learning - TensorFlow (alternative backend)
         ("tensorflow", "import tensorflow as tf"),
-
         # Supervised Learning
         ("sklearn", "import sklearn"),
-        ("sklearn.ensemble", "from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier"),
-        ("sklearn.metrics", "from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score"),
+        (
+            "sklearn.ensemble",
+            "from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier",
+        ),
+        (
+            "sklearn.metrics",
+            "from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score",
+        ),
         ("sklearn.model_selection", "from sklearn.model_selection import train_test_split"),
         ("sklearn.preprocessing", "from sklearn.preprocessing import StandardScaler"),
-
         # Gradient Boosting
         ("xgboost", "import xgboost as xgb"),
         ("lightgbm", "import lightgbm as lgb"),
         ("catboost", "import catboost as cb"),
-
         # Reinforcement Learning
         ("stable_baselines3", "from stable_baselines3 import PPO, A2C, DDPG, DQN, SAC, TD3"),
-        ("stable_baselines3.common.callbacks", "from stable_baselines3.common.callbacks import BaseCallback"),
+        (
+            "stable_baselines3.common.callbacks",
+            "from stable_baselines3.common.callbacks import BaseCallback",
+        ),
         ("gym", "import gym"),
         ("gym.spaces", "import gym.spaces"),
         ("gymnasium", "import gymnasium"),  # Newer gym API
-
         # Statistical Modeling
         ("hmmlearn", "from hmmlearn import hmm"),
         ("arch", "from arch import arch_model"),
         ("statsmodels", "import statsmodels"),
-
         # Portfolio Optimization
         ("cvxpy", "import cvxpy as cp"),
         ("pypfopt", "from pypfopt import EfficientFrontier"),
         ("scipy.optimize", "from scipy.optimize import minimize"),
-
         # SHAP for feature importance
         ("shap", "import shap"),
-
         # Optimization
         ("optuna", "import optuna"),
     ]

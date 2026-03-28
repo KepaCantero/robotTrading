@@ -306,7 +306,7 @@ class CircuitBreakerManager:
 
             except asyncio.CancelledError:
                 break
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.error(f"Error in monitor loop: {e}")
                 await asyncio.sleep(self.config.check_interval_seconds)
 
@@ -441,7 +441,7 @@ class CircuitBreakerManager:
         if self.on_halt:
             try:
                 self.on_halt(event)
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.error(f"Error in halt callback: {e}")
 
         # Start halt check loop
@@ -468,7 +468,7 @@ class CircuitBreakerManager:
         if self.on_halt:
             try:
                 self.on_halt(event)
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.error(f"Error in halt callback: {e}")
 
     async def _halt_check_loop(self, symbol: str) -> None:
@@ -487,14 +487,14 @@ class CircuitBreakerManager:
                     if self.on_resume:
                         try:
                             self.on_resume(symbol)
-                        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+                        except (asyncio.TimeoutError, OSError) as e:
                             logger.error(f"Error in resume callback: {e}")
 
                     break
 
             except asyncio.CancelledError:
                 break
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.error(f"Error in halt check loop: {e}")
 
     def get_market_state(self, symbol: str) -> Optional[MarketState]:

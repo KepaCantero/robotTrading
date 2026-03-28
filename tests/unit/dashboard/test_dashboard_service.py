@@ -85,9 +85,7 @@ def dashboard_service(mock_compliance_engine):
 @pytest.mark.asyncio
 async def test_get_snapshot(dashboard_service, mock_broker):
     """Test getting complete dashboard snapshot."""
-    with patch.object(
-        dashboard_service, "_get_broker", return_value=mock_broker
-    ):
+    with patch.object(dashboard_service, "_get_broker", return_value=mock_broker):
         snapshot = await dashboard_service.get_snapshot()
 
         assert isinstance(snapshot, DashboardSnapshot)
@@ -112,9 +110,7 @@ async def test_get_performance_metrics(dashboard_service):
 @pytest.mark.asyncio
 async def test_get_positions(dashboard_service, mock_broker):
     """Test getting positions."""
-    with patch.object(
-        dashboard_service, "_get_broker", return_value=mock_broker
-    ):
+    with patch.object(dashboard_service, "_get_broker", return_value=mock_broker):
         positions = await dashboard_service._get_positions()
 
         assert len(positions) == 2
@@ -131,9 +127,7 @@ async def test_get_positions(dashboard_service, mock_broker):
 @pytest.mark.asyncio
 async def test_get_system_status(dashboard_service):
     """Test getting system status."""
-    with patch.object(
-        dashboard_service, "_get_broker", return_value=None
-    ):
+    with patch.object(dashboard_service, "_get_broker", return_value=None):
         status = await dashboard_service._get_system_status()
 
         assert status.kill_switch_active is False
@@ -148,9 +142,7 @@ async def test_empty_positions(dashboard_service):
     mock_broker = MagicMock()
     mock_broker.get_positions = AsyncMock(return_value=[])
 
-    with patch.object(
-        dashboard_service, "_get_broker", return_value=mock_broker
-    ):
+    with patch.object(dashboard_service, "_get_broker", return_value=mock_broker):
         positions = await dashboard_service._get_positions()
         assert positions == []
 
@@ -158,9 +150,7 @@ async def test_empty_positions(dashboard_service):
 @pytest.mark.asyncio
 async def test_broker_error_handling(dashboard_service):
     """Test handling of broker errors."""
-    with patch.object(
-        dashboard_service, "_get_broker", return_value=None
-    ):
+    with patch.object(dashboard_service, "_get_broker", return_value=None):
         positions = await dashboard_service._get_positions()
         assert positions == []
 
@@ -175,6 +165,7 @@ async def test_get_dashboard_service_singleton():
 
     # Reset global to test singleton behavior
     import app.dashboard.dashboard_service as ds_module
+
     original_get_engine = ds_module.get_compliance_engine
 
     with patch("app.dashboard.dashboard_service.get_compliance_engine"):

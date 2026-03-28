@@ -9,7 +9,7 @@ import logging
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +45,7 @@ class DataVersionManager:
             try:
                 with open(history_file, 'r') as f:
                     self.version_history = json.load(f)
-            except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+            except OSError as e:
                 logger.warning(f"Error cargando version history: {e}")
 
     def _save_version_history(self) -> None:
@@ -54,13 +54,13 @@ class DataVersionManager:
         try:
             with open(history_file, 'w') as f:
                 json.dump(self.version_history, f, indent=2, default=str)
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             logger.error(f"Error guardando version history: {e}")
 
     def create_version(
         self,
         dataset_id: str,
-        data: Any,
+        data: Union[list, dict, str],
         version_tag: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
     ) -> str:
@@ -96,7 +96,7 @@ class DataVersionManager:
                 # Otros tipos - guardar como string
                 with open(data_file, 'w') as f:
                     f.write(str(data))
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             logger.error(f"Error guardando datos de versión: {e}")
             raise
 
@@ -169,7 +169,7 @@ class DataVersionManager:
                 'dataset_id': dataset_id,
             }
 
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             logger.error(f"Error cargando versión {version_id}: {e}")
             return None
 

@@ -19,9 +19,8 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 if TYPE_CHECKING:
     from app.services.live_trading.alert_to_trade_mapper import TradeSignal
+    from app.services.live_trading.order_manager import OrderManager
 
-from app.services.live_trading.broker_connector import OrderSide, OrderStatus
-from app.services.live_trading.order_manager import OrderManager, get_order_manager
 from app.shared.protocols import ITradeExecutor
 
 logger = logging.getLogger(__name__)
@@ -75,7 +74,7 @@ class OrderManagerAdapter(ITradeExecutor):
 
     def __init__(
         self,
-        order_manager: Optional[OrderManager] = None,
+        order_manager: Optional["OrderManager"] = None,
         enable_logging: bool = False,
     ):
         """
@@ -90,9 +89,12 @@ class OrderManagerAdapter(ITradeExecutor):
         self.enable_logging = enable_logging
         self._signal_to_order_map: Dict[str, str] = {}  # signal_id -> order_id
 
-    def _get_manager(self) -> OrderManager:
+    def _get_manager(self) -> "OrderManager":
         """Get OrderManager instance (lazy initialization)."""
         if self.order_manager is None:
+            # Late import to avoid domain layer depending on services layer
+            from app.services.live_trading.order_manager import get_order_manager
+
             self.order_manager = get_order_manager()
         return self.order_manager
 
@@ -143,6 +145,9 @@ class OrderManagerAdapter(ITradeExecutor):
             >>> assert result["success"] or result["error"]
         """
         try:
+            # Late import to avoid domain layer depending on services layer
+            from app.services.live_trading.broker_connector import OrderSide, OrderStatus
+
             manager = self._get_manager()
 
             # Extract signal data
@@ -378,6 +383,9 @@ class OrderManagerAdapter(ITradeExecutor):
             Order status: "FILLED", "PENDING", "CANCELLED", "UNKNOWN"
         """
         try:
+            # Late import to avoid domain layer depending on services layer
+            from app.services.live_trading.broker_connector import OrderStatus
+
             manager = self._get_manager()
 
             status = await manager.get_order_status(order_id)

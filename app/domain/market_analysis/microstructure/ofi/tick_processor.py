@@ -16,9 +16,8 @@ References:
 - Johnson, B. (2010) "Algorithmic Trading & DMA"
 """
 
-# pylint: disable=import-error,unsupported-binary-operation,comparison-with-itself
-# mypy: ignore-errors
 import logging
+import math
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -142,8 +141,8 @@ class OrderBookState:
         if price == 0:
             raise InvalidPriceError("Price cannot be zero")
 
-        # Check if price is NaN (using comparison with itself)
-        if price != price:  # NaN != NaN is True
+        # Check if price is NaN
+        if math.isnan(price):
             raise InvalidPriceError(f"Price cannot be NaN: {price}")
 
     def update_bid(self, price: Decimal, quantity: int) -> None:

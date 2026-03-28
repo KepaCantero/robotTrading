@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from app.api.logging_utils import (
+from app.presentation.api.logging_utils import (
     get_correlation_id_from_request,
     log_debug,
     log_error,
@@ -48,7 +48,7 @@ class TestLoggingUtils:
         # Verify
         assert result == "unknown"
 
-    @patch("app.api.logging_utils.logger")
+    @patch("app.presentation.api.logging_utils.logger")
     def test_log_with_context_info_level(self, mock_logger):
         """Test logging with context at info level."""
         # Create mock request
@@ -73,7 +73,7 @@ class TestLoggingUtils:
         assert call_args[1]["extra"]["extra_key"] == "extra_value"
         assert call_args[1]["extra"]["user_id"] == "user123"
 
-    @patch("app.api.logging_utils.logger")
+    @patch("app.presentation.api.logging_utils.logger")
     def test_log_with_context_warning_level(self, mock_logger):
         """Test logging with context at warning level."""
         # Create mock request
@@ -95,7 +95,7 @@ class TestLoggingUtils:
         assert call_args[1]["extra"]["correlation_id"] == "test-correlation-789"
         assert call_args[1]["extra"]["warning_type"] == "test_warning"
 
-    @patch("app.api.logging_utils.logger")
+    @patch("app.presentation.api.logging_utils.logger")
     def test_log_with_context_error_level(self, mock_logger):
         """Test logging with context at error level."""
         # Create mock request
@@ -117,7 +117,7 @@ class TestLoggingUtils:
         assert call_args[1]["extra"]["correlation_id"] == "test-correlation-error"
         assert call_args[1]["extra"]["error_code"] == "TEST_ERROR"
 
-    @patch("app.api.logging_utils.logger")
+    @patch("app.presentation.api.logging_utils.logger")
     def test_log_info_convenience_function(self, mock_logger):
         """Test the log_info convenience function."""
         request = Mock()
@@ -137,7 +137,7 @@ class TestLoggingUtils:
         assert call_args[1]["extra"]["endpoint"] == "/test/endpoint"
         assert call_args[1]["extra"]["method"] == "GET"
 
-    @patch("app.api.logging_utils.logger")
+    @patch("app.presentation.api.logging_utils.logger")
     def test_log_warning_convenience_function(self, mock_logger):
         """Test the log_warning convenience function."""
         request = Mock()
@@ -155,7 +155,7 @@ class TestLoggingUtils:
         assert call_args[0][0] == "Warning log test"
         assert call_args[1]["extra"]["warning_code"] == "WARN_001"
 
-    @patch("app.api.logging_utils.logger")
+    @patch("app.presentation.api.logging_utils.logger")
     def test_log_error_convenience_function_without_exception(self, mock_logger):
         """Test the log_error convenience function without exception."""
         request = Mock()
@@ -173,7 +173,7 @@ class TestLoggingUtils:
         assert call_args[0][0] == "Error log test"
         assert call_args[1]["extra"]["error_code"] == "ERR_001"
 
-    @patch("app.api.logging_utils.logger")
+    @patch("app.presentation.api.logging_utils.logger")
     def test_log_error_convenience_function_with_exception(self, mock_logger):
         """Test the log_error convenience function with exception."""
         request = Mock()
@@ -196,7 +196,7 @@ class TestLoggingUtils:
         assert call_args[1]["extra"]["error_message"] == "Test exception message"
         assert call_args[1]["extra"]["context_key"] == "context_value"
 
-    @patch("app.api.logging_utils.logger")
+    @patch("app.presentation.api.logging_utils.logger")
     def test_log_debug_convenience_function(self, mock_logger):
         """Test the log_debug convenience function."""
         request = Mock()
@@ -230,7 +230,7 @@ class TestLoggingUtils:
         # The actual behavior is that getattr(logger, level, logger.info)
         # will return logger.info when the level doesn't exist
 
-    @patch("app.api.logging_utils.logger")
+    @patch("app.presentation.api.logging_utils.logger")
     def test_multiple_logs_with_different_correlation_ids(self, mock_logger):
         """Test multiple logs with different correlation IDs."""
         request1 = Mock()

@@ -127,7 +127,7 @@ class TrafficSplitter:
         try:
             await self._init_database()
             self.logger.info("TrafficSplitter initialized")
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error initializing: {e}")
             raise
 
@@ -160,7 +160,7 @@ class TrafficSplitter:
 
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Database initialization failed: {e}")
             raise
 
@@ -330,7 +330,7 @@ class TrafficSplitter:
                 if row:
                     return bool(row[0])
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error getting sticky decision: {e}")
 
         return None
@@ -358,7 +358,7 @@ class TrafficSplitter:
                 )
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error setting sticky decision: {e}")
 
     async def clear_expired_sessions(self) -> int:
@@ -376,7 +376,7 @@ class TrafficSplitter:
 
                 return cursor.rowcount
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error clearing sessions: {e}")
             return 0
 

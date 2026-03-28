@@ -20,7 +20,7 @@ class MarketBreadthAnalyzer:
         up_count = 0
         total_count = len(price_data)
 
-        for symbol, prices in price_data.items():
+        for _symbol, prices in price_data.items():
             if len(prices) >= 20:
                 recent_return = (prices[-1] - prices[-20]) / prices[-20]
                 if recent_return > 0:

@@ -147,10 +147,7 @@ class ModuleParametrizer:
             config: Module configuration dict (either raw or with 'modules' key)
         """
         # Handle both formats: raw modules dict or dict with 'modules' key
-        if 'modules' in config:
-            self.config = config['modules']
-        else:
-            self.config = config
+        self.config = config.get('modules', config)
 
         logger.info("ModuleParametrizer initialized with configuration")
 
@@ -201,7 +198,7 @@ class ModuleParametrizer:
 
             return param_set
 
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             logger.error(f"Failed to generate ModuleParameterSet: {e}")
             raise
 

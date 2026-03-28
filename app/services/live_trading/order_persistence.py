@@ -15,7 +15,7 @@ import json
 import logging
 import sqlite3
 import threading
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from datetime import datetime, timezone
 from decimal import Decimal
 from pathlib import Path
@@ -69,10 +69,8 @@ def decimal_decoder(dct: Dict) -> Dict:
     datetime_fields = {'created_at', 'updated_at', 'execution_time', 'timestamp'}
     for key in datetime_fields:
         if key in dct and dct[key] is not None and isinstance(dct[key], str):
-            try:
+            with suppress(ValueError):
                 dct[key] = datetime.fromisoformat(dct[key])
-            except ValueError:
-                pass
     return dct
 
 
@@ -595,10 +593,8 @@ class OrderPersistence:
         # Convert timestamps
         for key in ['created_at', 'updated_at']:
             if data.get(key):
-                try:
+                with suppress(ValueError):
                     data[key] = datetime.fromisoformat(data[key])
-                except ValueError:
-                    pass
         return data
 
     def _execution_row_to_dict(self, row: sqlite3.Row) -> Dict:
@@ -608,20 +604,16 @@ class OrderPersistence:
             if data.get(key) is not None:
                 data[key] = Decimal(data[key])
         if data.get('execution_time'):
-            try:
+            with suppress(ValueError):
                 data['execution_time'] = datetime.fromisoformat(data['execution_time'])
-            except ValueError:
-                pass
         return data
 
     def _error_row_to_dict(self, row: sqlite3.Row) -> Dict:
         """Convert error row to dictionary."""
         data = dict(row)
         if data.get('timestamp'):
-            try:
+            with suppress(ValueError):
                 data['timestamp'] = datetime.fromisoformat(data['timestamp'])
-            except ValueError:
-                pass
         return data
 
     def cleanup_old_orders(self, days: int = 30) -> int:
@@ -689,10 +681,8 @@ class OrderPersistence:
     def close(self) -> None:
         """Close thread-local database connection."""
         if hasattr(self._local, 'conn') and self._local.conn is not None:
-            try:
+            with suppress(sqlite3.Error):
                 self._local.conn.close()
-            except sqlite3.Error:
-                pass
             self._local.conn = None
             logger.debug("Database connection closed")
 

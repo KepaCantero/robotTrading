@@ -17,7 +17,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -44,11 +44,11 @@ class BacktestReporter:
     def __init__(
         self,
         memory_manager: AggressiveMemoryManager,
-        raw_config: Dict[str, Any],
+        raw_config: Dict[str, Union[str, int, float, bool, List, Dict]],
         output_dir: Path,
         meta_enabled: bool = False,
-        audit_trail: Any = None,
-        learning_storage: Any = None,
+        audit_trail: Optional[object] = None,
+        learning_storage: Optional[object] = None,
     ):
         """
         Initialize BacktestReporter.
@@ -68,7 +68,7 @@ class BacktestReporter:
         self.audit_trail = audit_trail
         self.learning_storage = learning_storage
 
-    def save_results(self, results: List[Dict[str, Any]]) -> None:
+    def save_results(self, results: List[Dict[str, Union[str, int, float, bool, List, Dict]]]) -> None:
         """
         Save results to files.
 
@@ -100,7 +100,7 @@ class BacktestReporter:
             logger.info(f"Results saved to JSON: {json_path}")
 
     def save_test_audit_and_weights(
-        self, result_dict: Dict[str, Any], test_type: str, strategy: Any
+        self, result_dict: Dict[str, Union[str, int, float, bool, List, Dict]], test_type: str, strategy: object
     ) -> None:
         """
         Save audit and weights for a test.
@@ -136,7 +136,7 @@ class BacktestReporter:
             logger.warning(f"Error saving audit/weights: {e}")
 
     async def save_weights_async(
-        self, engine_type: str, strategy: Any, result_dict: Dict[str, Any]
+        self, engine_type: str, strategy: object, result_dict: Dict[str, Union[str, int, float, bool, List, Dict]]
     ) -> Optional[str]:
         """
         Save learning engine weights asynchronously for better performance.
@@ -173,7 +173,7 @@ class BacktestReporter:
             logger.warning(f"Could not save weights async: {e}")
             return None
 
-    async def finalize_meta_analysis(self, results: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def finalize_meta_analysis(self, results: List[Dict[str, Union[str, int, float, bool, List, Dict]]]) -> Dict[str, Union[str, int, float, bool, List, Dict]]:
         """
         Finalize meta-analysis after all backtests complete.
 
@@ -267,7 +267,7 @@ class BacktestReporter:
             'final_capital': final_capital_float,
         }
 
-    def get_results(self) -> List[Dict[str, Any]]:
+    def get_results(self) -> List[Dict[str, Union[str, int, float, bool, List, Dict]]]:
         """
         Get all stored results.
 
@@ -276,7 +276,7 @@ class BacktestReporter:
         """
         return self.memory_manager.get_results()
 
-    def get_memory_stats(self) -> Dict[str, Any]:
+    def get_memory_stats(self) -> Dict[str, Union[str, int, float, bool, List, Dict]]:
         """
         Get memory statistics.
 
@@ -285,7 +285,7 @@ class BacktestReporter:
         """
         return self.memory_manager.get_stats()
 
-    def create_strategy_config(self) -> Dict[str, Any]:
+    def create_strategy_config(self) -> Dict[str, Union[str, int, float, bool, List, Dict]]:
         """
         Create strategy configuration from YAML config.
 
@@ -351,7 +351,7 @@ class BacktestReporter:
 
         return StrategyFactory.create_baseline_config(self.raw_config)
 
-    def extract_filter_thresholds(self) -> Dict[str, Any]:
+    def extract_filter_thresholds(self) -> Dict[str, Union[str, int, float, bool, List, Dict]]:
         """
         Extract thresholds from filter configuration.
 
@@ -371,7 +371,7 @@ class BacktestReporter:
 
         return thresholds
 
-    def get_strategy_name(self, strategy: Any) -> str:
+    def get_strategy_name(self, strategy: object) -> str:
         """
         Get strategy name.
 
@@ -385,7 +385,7 @@ class BacktestReporter:
         """
         return StrategyFactory.get_strategy_name(strategy)
 
-    def extract_thresholds(self, strategy_config: Dict[str, Any]) -> Dict[str, Any]:
+    def extract_thresholds(self, strategy_config: Dict[str, Union[str, int, float, bool, List, Dict]]) -> Dict[str, Union[str, int, float, bool, List, Dict]]:
         """
         Extract thresholds from strategy configuration.
 
@@ -399,7 +399,7 @@ class BacktestReporter:
         """
         return StrategyFactory.extract_thresholds(strategy_config)
 
-    def create_ablation_config(self, disabled_filter: str) -> Dict[str, Any]:
+    def create_ablation_config(self, disabled_filter: str) -> Dict[str, Union[str, int, float, bool, List, Dict]]:
         """
         Create strategy configuration with a specific filter disabled for ablation testing.
 
@@ -440,7 +440,7 @@ class BacktestReporter:
             },
         }
 
-    def extract_transformer_predictions(self, strategy: Any, quotes: List) -> 'np.ndarray':
+    def extract_transformer_predictions(self, strategy: object, quotes: List) -> 'np.ndarray':
         """
         Extract Transformer predictions from strategy.
 
@@ -470,7 +470,7 @@ class BacktestReporter:
 
         return np.array(predictions)
 
-    def extract_transformer_feature_importance(self, strategy: Any) -> Dict[str, float]:
+    def extract_transformer_feature_importance(self, strategy: object) -> Dict[str, float]:
         """
         Extract feature importance from Transformer model.
 

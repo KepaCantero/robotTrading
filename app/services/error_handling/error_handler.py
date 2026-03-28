@@ -155,7 +155,7 @@ class EqualWeightPortfolioFallback(FallbackStrategy):
             assets = ["SPY", "AGG", "GLD"]  # Default fallback assets
 
         equal_weight = 1.0 / len(assets)
-        allocation = {asset: equal_weight for asset in assets}
+        allocation = dict.fromkeys(assets, equal_weight)
 
         return {
             "allocation": allocation,
@@ -260,7 +260,7 @@ class ErrorHandler:
                     context = fallback_context or {}
                     try:
                         return await strategy.execute(context)
-                    except (asyncio.TimeoutError, ConnectionError, OSError) as fallback_error:
+                    except (asyncio.TimeoutError, OSError) as fallback_error:
                         self.logger.error(f"❌ Fallback strategy failed: {fallback_error}")
                         raise
 
@@ -293,7 +293,7 @@ class ErrorHandler:
         for attempt in range(max_retries + 1):
             try:
                 return await async_fn(*args, **kwargs)
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 last_exception = e
                 if attempt < max_retries:
                     self.logger.warning(
@@ -379,7 +379,7 @@ def service_error_handler(fallback_context: Optional[Dict[str, Any]] = None):
                 logger.error(f"❌ Service error in {func.__name__}: {e}")
                 # Re-raise to allow caller to handle
                 raise
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.error(f"❌ Unexpected error in {func.__name__}: {e}")
                 raise ServiceException(
                     service_name=func.__module__, message=str(e), error_code="UNKNOWN_ERROR"

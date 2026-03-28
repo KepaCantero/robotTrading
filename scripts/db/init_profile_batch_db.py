@@ -79,27 +79,23 @@ def init_database(db_url: str, drop_existing: bool = False):
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Initialize Profile Batch Backtester Database"
-    )
+    parser = argparse.ArgumentParser(description="Initialize Profile Batch Backtester Database")
 
     parser.add_argument(
         "--db-url",
         type=str,
         default="sqlite:///results/profile_batch_results.db",
-        help="Database connection URL (default: sqlite:///results/profile_batch_results.db)"
+        help="Database connection URL (default: sqlite:///results/profile_batch_results.db)",
     )
 
     parser.add_argument(
-        "--drop",
-        action="store_true",
-        help="Drop existing tables before creating new ones"
+        "--drop", action="store_true", help="Drop existing tables before creating new ones"
     )
 
     parser.add_argument(
         "--postgres",
         action="store_true",
-        help="Use PostgreSQL (requires: --db-url postgresql://user:pass@host/db)"
+        help="Use PostgreSQL (requires: --db-url postgresql://user:pass@host/db)",
     )
 
     args = parser.parse_args()

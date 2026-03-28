@@ -241,7 +241,7 @@ class ContextEngine:
         regimes = []
         confidences = []
 
-        for method, result in results.items():
+        for _method, result in results.items():
             if 'regime' in result:
                 regimes.append(result['regime'])
             if 'confidence' in result:

@@ -67,7 +67,7 @@ class MomentumAutoOptimizer:
         try:
             with open(self.optimization_history_path, 'r') as f:
                 return json.load(f)
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             logger.error(f"Error loading history: {e}")
             return []
 
@@ -76,7 +76,7 @@ class MomentumAutoOptimizer:
         try:
             with open(self.optimization_history_path, 'w') as f:
                 json.dump(self.history, f, indent=2, default=str)
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             logger.error(f"Error saving history: {e}")
 
     def should_recalibrate(self) -> bool:
@@ -101,16 +101,12 @@ class MomentumAutoOptimizer:
         last_date = datetime.fromisoformat(last_opt.get("timestamp", "2000-01-01"))
         days_since = (datetime.now() - last_date).days
 
-        if frequency == "daily":
-            return days_since >= 1
-        elif frequency == "weekly":
-            return days_since >= 7
-        elif frequency == "monthly":
-            return days_since >= 30
-        elif frequency == "quarterly":
-            return days_since >= 90
-
-        return False
+        return {
+            "daily": days_since >= 1,
+            "weekly": days_since >= 7,
+            "monthly": days_since >= 30,
+            "quarterly": days_since >= 90,
+        }.get(frequency, False)
 
     def optimize_parameters(
         self,
@@ -180,7 +176,7 @@ class MomentumAutoOptimizer:
 
             # Run walk-forward validation
             wf_config = self.auto_opt_config.get("recalibration", {}).get("walk_forward", {})
-            validator = WalkForwardValidator(  # type: ignore
+            validator = WalkForwardValidator(
                 config=wf_config,
             )
 
@@ -211,7 +207,7 @@ class MomentumAutoOptimizer:
                     continue
 
                 # Run backtest
-                config = BacktestConfig(  # type: ignore
+                config = BacktestConfig(
                     strategy_name="momentum",
                     initial_capital=Decimal("50000"),
                     commission_per_trade=Decimal("1.0"),

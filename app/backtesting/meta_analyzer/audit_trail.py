@@ -319,9 +319,8 @@ class AuditTrail:
                     record = json.loads(line.strip())
 
                     # Filtrar por configuración si se especifica
-                    if filter_by_config:
-                        if filter_by_config not in record.get('config_path', ''):
-                            continue
+                    if filter_by_config and filter_by_config not in record.get('config_path', ''):
+                        continue
 
                     records.append(record)
 

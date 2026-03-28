@@ -33,7 +33,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -172,7 +172,7 @@ class FeatureImportanceMDI:
 
     def calculate(
         self,
-        model: Any,
+        model: object,
         feature_names: Optional[List[str]] = None,
     ) -> Dict[str, float]:
         """
@@ -237,7 +237,7 @@ class FeatureImportanceMDA:
 
     def calculate(
         self,
-        model: Any,
+        model: object,
         X: Union[pd.DataFrame, np.ndarray],
         y: Union[pd.Series, np.ndarray],
         feature_names: Optional[List[str]] = None,
@@ -308,7 +308,7 @@ class FeatureImportanceMDA:
 
     def _score_model(
         self,
-        model: Any,
+        model: object,
         X: np.ndarray,
         y: np.ndarray,
     ) -> float:
@@ -372,7 +372,7 @@ class FeatureImportanceSFI:
         X: Union[pd.DataFrame, np.ndarray],
         y: Union[pd.Series, np.ndarray],
         feature_names: Optional[List[str]] = None,
-        model_type: Any = None,
+        model_type: Optional[object] = None,
     ) -> Dict[str, float]:
         """
         Calculate SFI importance for each feature.
@@ -476,7 +476,7 @@ class FinancialMLFeatureImportance:
 
     def calculate_importance(
         self,
-        model: Any,
+        model: object,
         X: Union[pd.DataFrame, np.ndarray],
         y: Union[pd.Series, np.ndarray],
         feature_names: Optional[List[str]] = None,
@@ -613,7 +613,7 @@ class FinancialMLFeatureImportance:
 
 
 def calculate_feature_importance(
-    model: Any,
+    model: object,
     X: Union[pd.DataFrame, np.ndarray],
     y: Union[pd.Series, np.ndarray],
     method: str = "combined",
@@ -654,11 +654,8 @@ def calculate_feature_importance(
     result = calculator.calculate_importance(model, X, y)
 
     # Return requested method
-    if method == "mdi":
-        return result.mdi_importance
-    elif method == "mda":
-        return result.mda_importance
-    elif method == "sfi":
-        return result.sfi_importance
-    else:
-        return result.combined_importance
+    return {
+        "mdi": result.mdi_importance,
+        "mda": result.mda_importance,
+        "sfi": result.sfi_importance,
+    }.get(method, result.combined_importance)

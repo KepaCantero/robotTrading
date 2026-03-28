@@ -155,12 +155,11 @@ class TechnicalIndicatorContract(TradingDataContract):
                     "TechnicalIndicatorContract",
                 )
 
-        elif self.indicator_type == "ATR":
-            if self.value < 0:
-                raise InvariantError(
-                    f"ATR value {self.value} must be non-negative",
-                    "TechnicalIndicatorContract",
-                )
+        elif self.indicator_type == "ATR" and self.value < 0:
+            raise InvariantError(
+                f"ATR value {self.value} must be non-negative",
+                "TechnicalIndicatorContract",
+            )
 
         return True
 
@@ -233,7 +232,7 @@ def contract(
                     bound_args.apply_defaults()
 
                     # Find data parameters
-                    for param_name, param_value in bound_args.arguments.items():
+                    for _param_name, param_value in bound_args.arguments.items():
                         if isinstance(param_value, dict):
                             # Try to create contract instance
                             contract_instance = data_contract(**param_value)
@@ -312,11 +311,7 @@ def validate_non_zero_quantity(*args, **kwargs) -> bool:
 def validate_reasonable_price(*args, **kwargs) -> bool:
     """Precondition: Price must be reasonable."""
     # Look for Decimal arguments
-    for arg in args:
-        if isinstance(arg, Decimal):
-            if not (Decimal("0.01") <= arg <= Decimal("1000000")):
-                return False
-    return True
+    return all(not (isinstance(arg, Decimal) and not Decimal("0.01") <= arg <= Decimal("1000000")) for arg in args)
 
 
 def validate_signal_confidence(*args, **kwargs) -> bool:

@@ -87,6 +87,8 @@ class ExecutionQuality:
     @property
     def cost_bps(self) -> Decimal:
         """Cost in basis points."""
+        if fees is None:
+            fees = Decimal("0")
         return (self.total_cost / self.benchmark_price) * Decimal("10000")
 
 
@@ -119,7 +121,7 @@ class TradeExecution:
     venue: str = "SIMULATED_EXCHANGE"
     liquidity_taker: bool = True
     commission: Decimal = Decimal("0")
-    fees: Decimal = Decimal("0")
+    fees: Optional[Decimal] = None
 
 
 class OrderMatchingEngine:
@@ -291,9 +293,8 @@ class OrderMatchingEngine:
         if order.order_type == OrderType.STOP_MARKET and order.stop_price is None:
             raise ValueError("Stop market orders must have a stop price")
 
-        if order.order_type == OrderType.STOP_LIMIT:
-            if order.price is None or order.stop_price is None:
-                raise ValueError("Stop limit orders must have both price and stop price")
+        if order.order_type == OrderType.STOP_LIMIT and (order.price is None or order.stop_price is None):
+            raise ValueError("Stop limit orders must have both price and stop price")
 
 
 class MarketMakerStrategy:
@@ -322,11 +323,11 @@ class MarketMakerStrategy:
     def __init__(
         self,
         symbol: str,
-        max_position: Decimal = Decimal("10000"),
+        max_position: Optional[Decimal] = None,
         risk_tolerance: float = 0.02,
         spread_strategy: SpreadStrategy = SpreadStrategy.ADAPTIVE_VOLATILITY,
         base_spread_bps: float = 10.0,
-        inventory_target: Decimal = Decimal("0"),
+        inventory_target: Optional[Decimal] = None,
         volatility_window: int = 100,
     ):
         """
@@ -341,6 +342,10 @@ class MarketMakerStrategy:
             inventory_target: Target inventory (usually 0 for neutral)
             volatility_window: Window for volatility calculation
         """
+        if max_position is None:
+            max_position = Decimal("10000")
+        if inventory_target is None:
+            inventory_target = Decimal("0")
         self.symbol = symbol
         self.max_position = max_position
         self.risk_tolerance = Decimal(str(risk_tolerance))
@@ -434,7 +439,7 @@ class MarketMakerStrategy:
     def get_quote_size(
         self,
         side: OrderSide,
-        default_size: Decimal = Decimal("100"),
+        default_size: Optional[Decimal] = None,
     ) -> Decimal:
         """
         Get appropriate quote size based on inventory.
@@ -446,6 +451,8 @@ class MarketMakerStrategy:
         Returns:
             Recommended quote size
         """
+        if default_size is None:
+            default_size = Decimal("100")
         # Reduce size when approaching position limits
         position_ratio = abs(self._current_position) / self.max_position
 

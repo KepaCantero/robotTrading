@@ -41,7 +41,7 @@ def get_file_references(file_path: Path) -> Set[str]:
     # Add parent modules
     parts = module_name.split(".")
     for i in range(len(parts)):
-        references.add(".".join(parts[:i+1]))
+        references.add(".".join(parts[: i + 1]))
 
     # File path as string
     file_str = str(file_path).replace("/", ".")

@@ -12,7 +12,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import numpy as np
 
@@ -230,7 +230,7 @@ class RiskCalculator:
     def calculate_sortino_ratio(
         self,
         returns: List[Decimal],
-        target_return: Decimal = Decimal("0"),
+        target_return: Optional[Decimal] = None,
         annualized: bool = True,
     ) -> Decimal:
         """
@@ -244,6 +244,8 @@ class RiskCalculator:
         Returns:
             Sortino ratio
         """
+        if target_return is None:
+            target_return = Decimal("0")
         if not returns:
             return Decimal("0")
 
@@ -310,7 +312,7 @@ class RiskCalculator:
 
     @staticmethod
     def _safe_divide(
-        numerator: Decimal, denominator: Decimal, default: Decimal = Decimal("0")
+        numerator: Decimal, denominator: Decimal, default: Optional[Decimal] = None
     ) -> Decimal:
         """
         Perform safe division with zero-division protection.
@@ -323,11 +325,13 @@ class RiskCalculator:
         Returns:
             Result of division or default value
         """
+        if default is None:
+            default = Decimal("0")
         if denominator == 0:
             return default
         try:
             return numerator / denominator
-        except (ZeroDivisionError, ArithmeticError):
+        except ArithmeticError:
             return default
 
     def _calculate_concentration(self, portfolio: Portfolio) -> Decimal:

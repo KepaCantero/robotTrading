@@ -374,7 +374,7 @@ class HedgingEngine:
         self,
         exposure_eur: Decimal,
         currency: str,
-        risk_tolerance: Decimal = Decimal("0.8"),
+        risk_tolerance: Optional[Decimal] = None,
         preferred_tenor_months: int = 3,
         method: str = "minimum_variance",
     ) -> HedgeRecommendation:
@@ -391,6 +391,8 @@ class HedgingEngine:
         Returns:
             Hedge recommendation
         """
+        if risk_tolerance is None:
+            risk_tolerance = Decimal("0.8")
         logger.info(f"Generating hedge recommendation for {exposure_eur} EUR {currency} exposure")
 
         # Calculate optimal hedge ratio

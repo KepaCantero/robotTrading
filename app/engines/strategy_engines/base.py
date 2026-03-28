@@ -11,16 +11,20 @@ Extiende BaseStrategy con funcionalidades adicionales para:
 """
 
 import asyncio
+import contextlib
 import logging
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 from app.domain.models.market_data import Quote
 from app.domain.models.signal import Signal
 from app.domain.strategies.base import BaseStrategy
+
+if TYPE_CHECKING:
+    from app.domain.strategies.learning.base_learning_engine import BaseLearningEngine
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +35,7 @@ try:
     DATA_ENGINE_AVAILABLE = True
 except ImportError:
     DATA_ENGINE_AVAILABLE = False
-    DataEngine = None  # type: ignore
+    DataEngine: Optional[type[object]] = None
 
 try:
     from app.engines.context_engine.context_engine import ContextEngine
@@ -39,7 +43,7 @@ try:
     CONTEXT_ENGINE_AVAILABLE = True
 except ImportError:
     CONTEXT_ENGINE_AVAILABLE = False
-    ContextEngine = None  # type: ignore
+    ContextEngine: Optional[type[object]] = None
 
 try:
     from app.engines.portfolio_engine.portfolio_engine import PortfolioEngine
@@ -47,7 +51,7 @@ try:
     PORTFOLIO_ENGINE_AVAILABLE = True
 except ImportError:
     PORTFOLIO_ENGINE_AVAILABLE = False
-    PortfolioEngine = None  # type: ignore
+    PortfolioEngine: Optional[type[object]] = None
 
 try:
     from app.engines.risk_engine.risk_engine import RiskEngine
@@ -55,7 +59,7 @@ try:
     RISK_ENGINE_AVAILABLE = True
 except ImportError:
     RISK_ENGINE_AVAILABLE = False
-    RiskEngine = None  # type: ignore
+    RiskEngine: Optional[type[object]] = None
 
 
 class BaseStrategyEngine(BaseStrategy, ABC):
@@ -193,7 +197,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
 
     # ===== Métodos concretos para Learning Engine integration =====
 
-    def set_learning_engine(self, learning_engine: Any) -> None:
+    def set_learning_engine(self, learning_engine: "BaseLearningEngine") -> None:
         """
         Establecer Learning Engine para este strategy engine.
 
@@ -282,7 +286,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
         """
         self.on_signal_generated_callbacks.append(callback)
 
-    def register_trade_callback(self, callback: Callable[[Signal, Any], None]) -> None:
+    def register_trade_callback(self, callback: Callable[[Signal, object], None]) -> None:
         """
         Registrar callback para cuando se ejecuta un trade.
 
@@ -308,7 +312,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
             except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 logger.warning(f"{self.__class__.__name__}: Error en callback de señal: {e}")
 
-    def _trigger_trade_callbacks(self, signal: Signal, execution_result: Any) -> None:
+    def _trigger_trade_callbacks(self, signal: Signal, execution_result: object) -> None:
         """Ejecutar callbacks de trade ejecutado."""
         for callback in self.on_trade_executed_callbacks:
             try:
@@ -432,7 +436,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
             logger.error(f"Error obteniendo datos de DataEngine: {e}")
             return []
 
-    def set_data_engine(self, data_engine: Any) -> None:
+    def set_data_engine(self, data_engine: "DataEngine") -> None:
         """
         Configurar DataEngine externo.
 
@@ -449,7 +453,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
             },
         )
 
-    def set_context_engine(self, context_engine: Any) -> None:
+    def set_context_engine(self, context_engine: "ContextEngine") -> None:
         """
         Configurar ContextEngine externo.
 
@@ -466,7 +470,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
             },
         )
 
-    def set_portfolio_engine(self, portfolio_engine: Any) -> None:
+    def set_portfolio_engine(self, portfolio_engine: "PortfolioEngine") -> None:
         """
         Configurar PortfolioEngine externo (Fase 3, Módulo 5).
 
@@ -483,7 +487,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
             },
         )
 
-    def set_risk_engine(self, risk_engine: Any) -> None:
+    def set_risk_engine(self, risk_engine: "RiskEngine") -> None:
         """
         Configurar RiskEngine externo (Fase 3, Módulo 6).
 
@@ -597,28 +601,20 @@ class BaseStrategyEngine(BaseStrategy, ABC):
 
         # Agregar estado de engines si están disponibles
         if self.data_engine:
-            try:
+            with contextlib.suppress(ValueError, TypeError, KeyError, AttributeError, IndexError):
                 status["data_engine_status"] = self.data_engine.get_status()
-            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
-                pass
 
         if self.context_engine:
-            try:
+            with contextlib.suppress(ValueError, TypeError, KeyError, AttributeError, IndexError):
                 status["context_engine_status"] = "available"
-            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
-                pass
 
         if self.portfolio_engine:
-            try:
+            with contextlib.suppress(ValueError, TypeError, KeyError, AttributeError, IndexError):
                 status["portfolio_engine_status"] = self.portfolio_engine.get_status()
-            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
-                pass
 
         if self.risk_engine:
-            try:
+            with contextlib.suppress(ValueError, TypeError, KeyError, AttributeError, IndexError):
                 status["risk_engine_status"] = self.risk_engine.get_status()
-            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
-                pass
 
         return status
 

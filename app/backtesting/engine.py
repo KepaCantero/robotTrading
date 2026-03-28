@@ -7,10 +7,15 @@ historical data simulation, trade execution, and performance metrics calculation
 
 from __future__ import annotations
 
+import contextlib
 import logging
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional
+
+if TYPE_CHECKING:
+    from app.backtesting.base_engine import SlippageParams
+
 from uuid import uuid4
 
 from app.backtesting.liquidity_validator import LiquidityValidator
@@ -33,6 +38,7 @@ from app.backtesting.services.trade_executor import TradeExecutor
 from app.backtesting.shared.slippage_utils import apply_slippage as shared_apply_slippage
 from app.backtesting.shared.trade_utils import build_trade_reason as shared_build_trade_reason
 from app.domain.models.portfolio import AssetClass, Portfolio, Position
+from app.domain.models.market_data import Quote
 from app.domain.models.signal import Signal
 
 # COMPLIANCE: Import compliance_engine - "THE ONLY ENGINE" that must be used
@@ -106,7 +112,7 @@ class BacktestEngine:
         self.last_known_prices: Dict[str, Decimal] = {}
 
         # Store market_data for building price_history for compliance engine
-        self._market_data_list: List = []
+        self._market_data_list: List[Quote] = []
 
         # Initialize service classes
         # PositionManager - pure state holder for positions
@@ -178,7 +184,7 @@ class BacktestEngine:
     # PICKLE SUPPORT (for multiprocessing)
     # ==========================================================================
 
-    def __getstate__(self) -> Dict[str, Any]:
+    def __getstate__(self) -> Dict[str, object]:
         """
         Get state for pickling (excludes unpicklable objects).
 
@@ -187,7 +193,7 @@ class BacktestEngine:
         we extract the essential configuration and let each worker create
         a fresh engine instance.
         """
-        state = {
+        state: Dict[str, object] = {
             'config': self.config,
             'strategy_name': self.strategy_name,
             'total_portfolio_capital': self.total_portfolio_capital,
@@ -198,7 +204,7 @@ class BacktestEngine:
         }
         return state
 
-    def __setstate__(self, state: Dict[str, Any]) -> None:
+    def __setstate__(self, state: Dict[str, object]) -> None:
         """
         Restore state from pickling (reinitializes engine in worker process).
 
@@ -251,7 +257,7 @@ class BacktestEngine:
 
     def run_backtest(
         self,
-        market_data: List,
+        market_data: List[Quote],
         signals: List[Signal],
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
@@ -463,7 +469,9 @@ class BacktestEngine:
         self.equity_tracker.reset()
         self.last_known_prices.clear()
 
-    def _execute_learning_retraining(self, market_data: Any, all_market_data: List) -> None:
+    def _execute_learning_retraining(
+        self, market_data: Quote, all_market_data: List[Quote]
+    ) -> None:
         """
         Execute learning engine retraining if necessary.
 
@@ -510,7 +518,7 @@ class BacktestEngine:
 
     def _process_signals_at_timestamp(
         self,
-        market_data: Any,
+        market_data: Quote,
         signals: List[Signal],
         signal_index: int,
         signals_processed: int,
@@ -608,7 +616,7 @@ class BacktestEngine:
 
         return signal_index, signals_processed, signals_matched, signals_skipped, strategy_stats
 
-    def _process_signal(self, signal: Signal, market_data: Any) -> None:
+    def _process_signal(self, signal: Signal, market_data: Quote) -> None:
         """
         Process a trading signal using the SignalProcessor and TradeExecutor services.
 
@@ -930,10 +938,8 @@ class BacktestEngine:
         """
         # 1. Check signal metadata first
         if signal.metadata and "commission_per_trade_pct" in signal.metadata:
-            try:
+            with contextlib.suppress(ValueError, TypeError, InvalidOperation):
                 return Decimal(str(signal.metadata["commission_per_trade_pct"]))
-            except (ValueError, TypeError, InvalidOperation):
-                pass
 
         # 2. Check strategy instance if available
         if self.strategy and hasattr(self.strategy, "commission_per_trade_pct"):
@@ -953,10 +959,8 @@ class BacktestEngine:
         """
         # 1. Check signal metadata first
         if signal.metadata and "slippage_per_trade_pct" in signal.metadata:
-            try:
+            with contextlib.suppress(ValueError, TypeError, InvalidOperation):
                 return Decimal(str(signal.metadata["slippage_per_trade_pct"]))
-            except (ValueError, TypeError, InvalidOperation):
-                pass
 
         # 2. Check strategy instance if available
         if self.strategy and hasattr(self.strategy, "slippage_per_trade_pct"):
@@ -965,9 +969,7 @@ class BacktestEngine:
         # 3. Return None to use global config default
         return None
 
-    def _apply_slippage(
-        self, price: Decimal, is_buy: bool, slippage_pct: Optional[Decimal] = None
-    ) -> Decimal:
+    def _apply_slippage(self, params: "SlippageParams") -> Decimal:
         """
         Apply slippage to execution price.
 
@@ -975,23 +977,22 @@ class BacktestEngine:
         SINGLE SOURCE OF TRUTH: All slippage calculations go through shared utility.
 
         Args:
-            price: Base price
-            is_buy: True for buy orders, False for sell
-            slippage_pct: Optional slippage percentage (overrides config)
+            params: SlippageParams containing all parameters
 
         Returns:
             Execution price with slippage applied
         """
+
         # Use shared utility for centralized slippage calculation
         return shared_apply_slippage(
-            price=price,
-            is_buy=is_buy,
-            slippage_pct=slippage_pct,
-            is_stop=False,
-            is_volatile=False,
+            price=params.price,
+            is_buy=params.is_buy,
+            slippage_pct=params.slippage_pct,
+            is_stop=params.is_stop,
+            is_volatile=params.is_volatile,
         )
 
-    def _build_trade_reason(self, signal: Signal, market_data: Any) -> str:
+    def _build_trade_reason(self, signal: Signal, market_data: Quote) -> str:
         """
         Build human-readable reason for the trade from signal metadata.
 
@@ -1113,9 +1114,13 @@ class BacktestEngine:
         )
 
         # Apply slippage to exit price
-        exit_price_with_slippage = self._apply_slippage(
-            current_price or recent_trades[-1].entry_price, False
+        from app.backtesting.base_engine import SlippageParams
+
+        slippage_params = SlippageParams(
+            price=current_price or recent_trades[-1].entry_price,
+            is_buy=False,
         )
+        exit_price_with_slippage = self._apply_slippage(slippage_params)
 
         # Create summary sell trade
         trade_id = str(uuid4())
@@ -1154,7 +1159,7 @@ class BacktestEngine:
         self.position_manager.close_position(symbol)
 
     def _close_all_positions(
-        self, final_market_data: Any, price_map: Optional[Dict[str, Decimal]] = None
+        self, final_market_data: Quote, price_map: Optional[Dict[str, Decimal]] = None
     ) -> None:
         """
         Close all remaining positions at the end of backtest.
@@ -1186,7 +1191,7 @@ class BacktestEngine:
                 symbol, final_market_data.timestamp, "end_of_backtest", closing_price
             )
 
-    def _build_price_map(self, market_data: List) -> Dict[str, Decimal]:
+    def _build_price_map(self, market_data: List[Quote]) -> Dict[str, Decimal]:
         """
         Build a price map from market data for accurate position closing.
 
@@ -1203,7 +1208,7 @@ class BacktestEngine:
         return price_map
 
     def _register_buy_trade_for_learning(
-        self, trade: Trade, signal: Signal, market_data: Any
+        self, trade: Trade, signal: Signal, market_data: Quote
     ) -> None:
         """Register a buy trade for the learning engine."""
         if not (
@@ -1235,7 +1240,7 @@ class BacktestEngine:
                 )
 
     def _register_sell_trade_for_learning(
-        self, trade: Trade, signal: Signal, market_data: Any
+        self, trade: Trade, signal: Signal, market_data: Quote
     ) -> None:
         """Register a sell trade result for the learning engine."""
         if not (
@@ -1271,7 +1276,7 @@ class BacktestEngine:
                 )
 
     def _update_reallocation_engine(
-        self, performance: PerformanceMetrics, total_return: Decimal, market_data: List
+        self, performance: PerformanceMetrics, total_return: Decimal, market_data: List[Quote]
     ) -> None:
         """Update reallocation engine with strategy performance after backtest."""
         if not (self.reallocation_engine and performance):

@@ -20,6 +20,7 @@ References:
 from __future__ import annotations
 
 import logging
+from typing import Optional
 from decimal import Decimal
 
 import numpy as np
@@ -68,8 +69,8 @@ class CorrelationAnalyzer:
     def __init__(
         self,
         lookback_days: int = 60,
-        min_correlation: Decimal = Decimal("0.6"),
-        min_significance: Decimal = Decimal("70"),
+        min_correlation: Optional[Decimal] = None,
+        min_significance: Optional[Decimal] = None,
     ):
         """
         Initialize the correlation analyzer.
@@ -82,6 +83,10 @@ class CorrelationAnalyzer:
         Raises:
             ValueError: If parameters are invalid
         """
+        if min_correlation is None:
+            min_correlation = Decimal("0.6")
+        if min_significance is None:
+            min_significance = Decimal("70")
         if lookback_days <= 0:
             raise ValueError(f"lookback_days must be positive, got {lookback_days}")
 
@@ -546,9 +551,8 @@ class CorrelationAnalyzer:
                 return RelationshipType.CARRY_TRADE
 
         # Commodity link: AUD, CAD, NZD with commodities
-        if asset_class == AssetClass.COMMODITY:
-            if any(curr in fx_pair for curr in ["AUD", "CAD", "NZD"]):
-                return RelationshipType.COMMODITY_LINK
+        if asset_class == AssetClass.COMMODITY and any(curr in fx_pair for curr in ["AUD", "CAD", "NZD"]):
+            return RelationshipType.COMMODITY_LINK
 
         # Default to positive/negative correlation based on pair
         return RelationshipType.POSITIVE_CORRELATION

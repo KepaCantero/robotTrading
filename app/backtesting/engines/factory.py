@@ -19,7 +19,10 @@ Usage:
     engine = EngineFactory.create_standard(config, strategy)
 """
 
-from typing import Any, Dict, Optional, Type, TypeVar
+from decimal import Decimal
+from typing import Dict, Optional, Type, TypeVar, Union
+
+from pydantic import BaseModel
 
 from app.backtesting.base_engine import BaseBacktestEngine, EngineType
 from app.backtesting.models import BacktestConfig
@@ -64,7 +67,7 @@ class EngineFactory:
     def create(
         cls,
         engine_type: EngineType,
-        config: Any,
+        config: Union[BacktestConfig, BaseModel],
         **kwargs,
     ) -> BaseBacktestEngine:
         """
@@ -136,8 +139,8 @@ class EngineFactory:
     def create_standard(
         cls,
         config: BacktestConfig,
-        strategy: Optional[Any] = None,
-        diagnostic_logger: Optional[Any] = None,
+        strategy: Optional[object] = None,
+        diagnostic_logger: Optional[object] = None,
         strategy_name: str = "unknown",
         enable_risk_envelope: bool = True,
         **kwargs,
@@ -174,7 +177,7 @@ class EngineFactory:
         cls,
         config: BacktestConfig,
         execution_type: str = "pessimistic",
-        base_slippage_bps: Optional[Any] = None,
+        base_slippage_bps: Optional[Decimal] = None,
         **kwargs,
     ) -> BaseBacktestEngine:
         """
@@ -207,9 +210,9 @@ class EngineFactory:
     @classmethod
     def create_multi_strategy(
         cls,
-        allocation_manager: Any,
-        strategies: Dict[str, Any],
-        config_params: Dict[str, Any],
+        allocation_manager: object,
+        strategies: Dict[str, object],
+        config_params: Dict[str, object],
         **kwargs,
     ) -> BaseBacktestEngine:
         """
@@ -244,7 +247,7 @@ class EngineFactory:
     @classmethod
     def create_robust(
         cls,
-        config: Any,  # RobustBacktestConfig
+        config: Union[BacktestConfig, BaseModel],  # RobustBacktestConfig
         **kwargs,
     ) -> BaseBacktestEngine:
         """

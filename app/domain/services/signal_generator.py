@@ -103,13 +103,15 @@ class SignalGenerator:
     - Mean reversion
     """
 
-    def __init__(self, confidence_threshold: Decimal = Decimal("0.6")):
+    def __init__(self, confidence_threshold: Optional[Decimal] = None):
         """
         Initialize signal generator.
 
         Args:
             confidence_threshold: Minimum confidence for actionable signals
         """
+        if confidence_threshold is None:
+            confidence_threshold = Decimal("0.6")
         self._confidence_threshold = confidence_threshold
 
         # Load RSI thresholds from config
@@ -199,8 +201,7 @@ class SignalGenerator:
 
         elif not fast_above_slow and not price_above_fast:
             # Bearish: price < fast < slow
-            # pylint: disable=arguments-out-of-order
-            strength = self._calculate_ma_strength(slow_ma, fast_ma)
+            strength = self._calculate_ma_strength(fast_ma, slow_ma)
             confidence = min(strength.value / Decimal("100"), Decimal("1"))
 
             signal = Signal(

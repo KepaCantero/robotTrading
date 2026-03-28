@@ -122,7 +122,7 @@ class HealthChecker:
 
         except asyncio.TimeoutError:
             return {"status": "unhealthy", "message": "Broker connection timeout"}
-        except (ConnectionError, OSError) as e:
+        except OSError as e:
             return {"status": "unhealthy", "message": f"Broker error: {str(e)}"}
 
     def check_memory(self) -> Dict[str, Any]:
@@ -159,7 +159,7 @@ class HealthChecker:
                 "available_mb": round(psutil.virtual_memory().available / (1024 * 1024), 2),
             }
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             return {"status": "degraded", "message": f"Memory check error: {str(e)}"}
 
     async def check_positions(self) -> Dict[str, Any]:
@@ -179,7 +179,7 @@ class HealthChecker:
 
             return {"status": "healthy", "count": count, "message": f"{count} open positions"}
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             return {"status": "degraded", "message": f"Position check error: {str(e)}", "count": 0}
 
     async def run_all_checks(self) -> Dict[str, Any]:

@@ -348,9 +348,8 @@ class DividendAnalyzer:
             elif profile.dividend_data.dividend_growth_rate_3y < 2:
                 risks.append("Crecimiento mínimo de dividendos")
 
-        if profile.dividend_data.dividend_coverage_ratio is not None:
-            if profile.dividend_data.dividend_coverage_ratio < 1.0:
-                risks.append("Cobertura de FCF insuficiente")
+        if profile.dividend_data.dividend_coverage_ratio is not None and profile.dividend_data.dividend_coverage_ratio < 1.0:
+            risks.append("Cobertura de FCF insuficiente")
 
         if profile.debt_to_equity is not None and profile.debt_to_equity > 200:
             risks.append("Apalancamiento elevado (D/E > 200%)")
@@ -374,15 +373,13 @@ class DividendAnalyzer:
         if profile.dividend_data.safety == DividendSafety.VERY_SAFE:
             strengths.append("Dividend muy seguro (payout < 40%)")
 
-        if profile.dividend_data.dividend_growth_rate_5y is not None:
-            if profile.dividend_data.dividend_growth_rate_5y >= 10:
-                strengths.append(
-                    f"Crecimiento alto 5A: {profile.dividend_data.dividend_growth_rate_5y}%"
-                )
+        if profile.dividend_data.dividend_growth_rate_5y is not None and profile.dividend_data.dividend_growth_rate_5y >= 10:
+            strengths.append(
+                f"Crecimiento alto 5A: {profile.dividend_data.dividend_growth_rate_5y}%"
+            )
 
-        if profile.dividend_data.dividend_coverage_ratio is not None:
-            if profile.dividend_data.dividend_coverage_ratio >= 2.0:
-                strengths.append("Cobertura sólida (FCF >= 2x dividendos)")
+        if profile.dividend_data.dividend_coverage_ratio is not None and profile.dividend_data.dividend_coverage_ratio >= 2.0:
+            strengths.append("Cobertura sólida (FCF >= 2x dividendos)")
 
         if profile.roe is not None and profile.roe >= 15:
             strengths.append(f"ROE excelente: {profile.roe}%")

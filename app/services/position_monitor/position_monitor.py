@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 from requests.exceptions import HTTPError
 from sqlalchemy.exc import (
@@ -32,6 +32,9 @@ from sqlalchemy.exc import (
 
 from app.shared.config.centralized_config import get_config
 from app.shared.utils.decimal_utils import to_decimal, validate_price
+
+if TYPE_CHECKING:
+    from .stop_executor import StopExecutionResult, StopExecutor
 
 logger = logging.getLogger(__name__)
 
@@ -601,9 +604,7 @@ class PositionMonitor:
             from app.infrastructure.persistence.database import get_sync_db
 
             with get_sync_db() as session:
-                from app.infrastructure.persistence.database.models import (  # pylint: disable=import-outside-toplevel,useless-suppression
-                    PositionState,
-                )
+                from app.infrastructure.persistence.database.models import PositionState
 
                 # Query the position_state table
                 state_record = (
@@ -630,7 +631,7 @@ class PositionMonitor:
                         f"No existing state found in database for monitor {self.monitor_id}"
                     )
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Failed to load state from database: {e}", exc_info=True)
 
     async def _monitor_loop(self) -> None:
@@ -643,7 +644,7 @@ class PositionMonitor:
 
             except asyncio.CancelledError:
                 break
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.error(f"Error in monitor loop: {e}")
                 if self.config.auto_restart:
                     logger.info("Auto-restarting monitor loop in 5 seconds...")
@@ -763,17 +764,17 @@ class PositionMonitor:
         logger.critical(
             f"STOP LOSS TRIGGERED: {position.symbol} @ {position.current_price} "
             f"(entry: {position.entry_price}, stop: {position.stop_loss_price}) "
-            f"P&L: {pnl} ({pnl_pct}%)"  # type: ignore
+            f"P&L: {pnl} ({pnl_pct if pnl_pct is not None else 'N/A'}%)"
         )
 
         # Execute stop if configured
         if self.config.execute_stops_automatically:
-            from . import stop_executor  # noqa: F811
+            from . import stop_executor
 
-            executor = stop_executor.StopExecutor(  # type: ignore
+            executor: "StopExecutor" = stop_executor.StopExecutor(
                 self.broker, order_timeout=self.config.stop_execution_timeout_seconds
             )
-            result = await executor.execute_stop_loss(position)
+            result: "StopExecutionResult" = await executor.execute_stop_loss(position)
 
             if result.success:
                 position.status = PositionStatus.CLOSED
@@ -824,17 +825,17 @@ class PositionMonitor:
         logger.info(
             f"TAKE PROFIT TRIGGERED: {position.symbol} @ {position.current_price} "
             f"(entry: {position.entry_price}, target: {position.take_profit_price}) "
-            f"P&L: {pnl} ({pnl_pct}%)"  # type: ignore
+            f"P&L: {pnl} ({pnl_pct if pnl_pct is not None else 'N/A'}%)"
         )
 
         # Execute take profit if configured
         if self.config.execute_stops_automatically:
-            from . import stop_executor  # noqa: F811
+            from . import stop_executor
 
-            executor = stop_executor.StopExecutor(  # type: ignore
+            executor: "StopExecutor" = stop_executor.StopExecutor(
                 self.broker, order_timeout=self.config.stop_execution_timeout_seconds
             )
-            result = await executor.execute_take_profit(position)
+            result: "StopExecutionResult" = await executor.execute_take_profit(position)
 
             if result.success:
                 position.status = PositionStatus.CLOSED
@@ -850,7 +851,7 @@ class PositionMonitor:
         if self.on_stop_triggered:
             try:
                 self.on_stop_triggered(position)
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.error(f"Error in take profit callback: {e}")
 
     async def _state_sync_loop(self) -> None:
@@ -861,7 +862,7 @@ class PositionMonitor:
                 await self._sync_state()
             except asyncio.CancelledError:
                 break
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.error(f"Error in state sync loop: {e}")
 
     async def _sync_state(self) -> None:
@@ -874,9 +875,7 @@ class PositionMonitor:
             from app.infrastructure.persistence.database import get_sync_db
 
             with get_sync_db() as session:
-                from app.infrastructure.persistence.database.models import (  # pylint: disable=import-outside-toplevel,useless-suppression
-                    PositionState,
-                )
+                from app.infrastructure.persistence.database.models import PositionState
 
                 # Serialize current positions
                 positions_list = [pos.to_dict() for pos in self._positions.values()]

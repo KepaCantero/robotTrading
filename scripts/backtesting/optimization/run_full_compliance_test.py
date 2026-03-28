@@ -56,6 +56,7 @@ import yaml
 
 # Thread safety configuration (CRITICAL - must be BEFORE imports)
 import os
+
 os.environ['OMP_NUM_THREADS'] = '1'
 os.environ['OPENBLAS_NUM_THREADS'] = '1'
 os.environ['MKL_NUM_THREADS'] = '1'
@@ -81,8 +82,10 @@ from app.core.models.input_profile import (
 # Types & Protocols
 # ============================================================================
 
+
 class BacktestType(Enum):
     """Types of backtesting methods."""
+
     BASELINE = "baseline"
     LEARNING_ENGINES = "learning_engines"
     WALK_FORWARD = "walk_forward"
@@ -97,6 +100,7 @@ class BacktestType(Enum):
 
 class TestStatus(Enum):
     """Test execution status."""
+
     PENDING = "pending"
     RUNNING = "running"
     PASSED = "passed"
@@ -113,6 +117,7 @@ class BacktestTestResult:
     - has_valid_metrics: Ensures backtest produced valid metrics
     - nan_count: Detects NaN values in results (silent killer)
     """
+
     backtest_type: BacktestType
     status: TestStatus
     profile_id: str = "unknown"  # Default to avoid required argument issues
@@ -140,6 +145,7 @@ class TestSummary:
     - 10 backtest types
     - 60 profiles per type
     """
+
     run_id: str
     test_period: str
     total: int = 0
@@ -179,6 +185,7 @@ class TestSummary:
 # Protocols for Dependency Injection (DIP)
 # ============================================================================
 
+
 class BacktestTypeRunner(Protocol):
     """Protocol for running a specific backtest type."""
 
@@ -210,6 +217,7 @@ class ResultReporter(Protocol):
 # Backtest Type Runners (SRP - Single Responsibility)
 # ============================================================================
 
+
 class BaselineRunner:
     """Runs baseline backtest (no ML)."""
 
@@ -219,6 +227,7 @@ class BaselineRunner:
     def run(self, config: dict) -> BacktestTestResult:
         """Run baseline backtest."""
         import time
+
         start = time.time()
 
         # Get profile_id from config
@@ -274,6 +283,7 @@ class LearningEnginesRunner:
         """Run learning engines backtest."""
         import time
         import math
+
         start = time.time()
 
         # Get profile_id from config
@@ -333,6 +343,7 @@ class WalkForwardRunner:
     def run(self, config: dict) -> BacktestTestResult:
         """Run walk-forward backtest."""
         import time
+
         start = time.time()
 
         profile = config.get("profile")
@@ -392,6 +403,7 @@ class MonteCarloRunner:
     def run(self, config: dict) -> BacktestTestResult:
         """Run Monte Carlo backtest."""
         import time
+
         start = time.time()
 
         profile = config.get("profile")
@@ -450,6 +462,7 @@ class GridSearchRunner:
     def run(self, config: dict) -> BacktestTestResult:
         """Run grid search backtest."""
         import time
+
         start = time.time()
 
         profile = config.get("profile")
@@ -507,6 +520,7 @@ class AblationRunner:
     def run(self, config: dict) -> BacktestTestResult:
         """Run ablation backtest."""
         import time
+
         start = time.time()
 
         profile = config.get("profile")
@@ -563,6 +577,7 @@ class OutOfSampleRunner:
     def run(self, config: dict) -> BacktestTestResult:
         """Run out-of-sample backtest."""
         import time
+
         start = time.time()
 
         profile = config.get("profile")
@@ -620,6 +635,7 @@ class MultiStrategyRunner:
     def run(self, config: dict) -> BacktestTestResult:
         """Run multi-strategy backtest."""
         import time
+
         start = time.time()
 
         profile = config.get("profile")
@@ -678,6 +694,7 @@ class RegimeTestRunner:
     def run(self, config: dict) -> BacktestTestResult:
         """Run regime test backtest."""
         import time
+
         start = time.time()
 
         profile = config.get("profile")
@@ -734,6 +751,7 @@ class HyperparameterRunner:
     def run(self, config: dict) -> BacktestTestResult:
         """Run hyperparameter optimization."""
         import time
+
         start = time.time()
 
         profile = config.get("profile")
@@ -741,7 +759,9 @@ class HyperparameterRunner:
 
         try:
             # Check if hyperparameter optimization is enabled
-            hp_config = self._runner.raw_config.get('backtests', {}).get('hyperparameter_optimization', {})
+            hp_config = self._runner.raw_config.get('backtests', {}).get(
+                'hyperparameter_optimization', {}
+            )
             if not hp_config.get('enabled', False):
                 return BacktestTestResult(
                     backtest_type=BacktestType.HYPERPARAMETER,
@@ -768,7 +788,10 @@ class HyperparameterRunner:
                     max_drawdown=best_result.get('max_drawdown'),
                     win_rate=best_result.get('win_rate'),
                     total_trades=best_result.get('total_trades'),
-                    details={"best_params": best_result.get('best_params', {}), "all_results": results},
+                    details={
+                        "best_params": best_result.get('best_params', {}),
+                        "all_results": results,
+                    },
                 )
             else:
                 return BacktestTestResult(
@@ -791,6 +814,7 @@ class HyperparameterRunner:
 # ============================================================================
 # Test Orchestrator (OCP - extensible)
 # ============================================================================
+
 
 class ComprehensiveFullComplianceTestOrchestrator:
     """Orchestrates comprehensive full-compliance testing of all backtest types."""
@@ -831,14 +855,10 @@ class ComprehensiveFullComplianceTestOrchestrator:
         days = (end - start).days
 
         if days < 252:
-            logging.warning(
-                "Test period is %d days (less than recommended 252 days).", days
-            )
+            logging.warning("Test period is %d days (less than recommended 252 days).", days)
 
         config = {
-            "database": {
-                "url": "sqlite:///results/full_compliance_test/test_results.db"
-            },
+            "database": {"url": "sqlite:///results/full_compliance_test/test_results.db"},
             "output_dir": "results/full_compliance_test",
             "capital_tiers": {
                 "bajo": 50000,
@@ -857,10 +877,18 @@ class ComprehensiveFullComplianceTestOrchestrator:
             },
             "input": {
                 "symbols": [
-                    "AAPL", "MSFT", "GOOGL",
-                    "AMZN", "TSLA", "META",
-                    "NVDA", "JPM", "JNJ",
-                    "NEE", "WMT", "PLD",
+                    "AAPL",
+                    "MSFT",
+                    "GOOGL",
+                    "AMZN",
+                    "TSLA",
+                    "META",
+                    "NVDA",
+                    "JPM",
+                    "JNJ",
+                    "NEE",
+                    "WMT",
+                    "PLD",
                 ],
                 "start_date": self._start_date,
                 "end_date": self._end_date,
@@ -922,7 +950,7 @@ class ComprehensiveFullComplianceTestOrchestrator:
                             "short_period": {"default": 12},
                             "long_period": {"default": 26},
                             "signal_threshold": {"default": 0.5},
-                        }
+                        },
                     },
                     "rsi_filter": {
                         "enabled": True,
@@ -930,7 +958,7 @@ class ComprehensiveFullComplianceTestOrchestrator:
                             "period": {"default": 14},
                             "overbought": {"default": 70},
                             "oversold": {"default": 30},
-                        }
+                        },
                     },
                     "stoch_rsi_filter": {
                         "enabled": True,
@@ -939,28 +967,28 @@ class ComprehensiveFullComplianceTestOrchestrator:
                             "stoch_period": {"default": 14},
                             "overbought": {"default": 80},
                             "oversold": {"default": 20},
-                        }
+                        },
                     },
                     "momentum_filter": {
                         "enabled": True,
                         "parameters": {
                             "period": {"default": 10},
                             "threshold": {"default": 0.02},
-                        }
+                        },
                     },
                     "volume_filter": {
                         "enabled": True,
                         "parameters": {
                             "period": {"default": 20},
                             "threshold": {"default": 1.5},
-                        }
+                        },
                     },
                     "atr_filter": {
                         "enabled": True,
                         "parameters": {
                             "period": {"default": 14},
                             "multiplier": {"default": 1.5},
-                        }
+                        },
                     },
                 }
             },
@@ -1084,7 +1112,9 @@ class ComprehensiveFullComplianceTestOrchestrator:
             }
 
     def run_all(self) -> TestSummary:
-        days = (datetime.fromisoformat(self._end_date) - datetime.fromisoformat(self._start_date)).days
+        days = (
+            datetime.fromisoformat(self._end_date) - datetime.fromisoformat(self._start_date)
+        ).days
 
         logging.info("=" * 80)
         logging.info("COMPREHENSIVE FULL-COMPLIANCE BACKTEST TEST - Starting")
@@ -1121,19 +1151,30 @@ class ComprehensiveFullComplianceTestOrchestrator:
 
                     gc.collect()
 
-                    status_icon = "✅" if result.status == TestStatus.PASSED else \
-                                  "⚠️ " if result.status == TestStatus.WARNING else \
-                                  "⏭️ " if result.status == TestStatus.SKIPPED else "❌"
-                    logging.info("[%d/%d] %s %s: %s (%.2fs)",
-                                completed, total_tests, status_icon, result.profile_id,
-                                bt_type.value, result.execution_time)
+                    status_icon = (
+                        "✅"
+                        if result.status == TestStatus.PASSED
+                        else "⚠️ "
+                        if result.status == TestStatus.WARNING
+                        else "⏭️ "
+                        if result.status == TestStatus.SKIPPED
+                        else "❌"
+                    )
+                    logging.info(
+                        "[%d/%d] %s %s: %s (%.2fs)",
+                        completed,
+                        total_tests,
+                        status_icon,
+                        result.profile_id,
+                        bt_type.value,
+                        result.execution_time,
+                    )
 
                     if result.error_message and result.status == TestStatus.FAILED:
                         logging.debug("    Error: %s", result.error_message)
 
                 except Exception as e:
-                    logging.error("Exception in test %s %s: %s",
-                                 profile.input_id, bt_type.value, e)
+                    logging.error("Exception in test %s %s: %s", profile.input_id, bt_type.value, e)
                     failed_result = BacktestTestResult(
                         backtest_type=bt_type,
                         profile_id=profile.input_id,
@@ -1193,6 +1234,7 @@ class ComprehensiveFullComplianceTestOrchestrator:
 # Result Reporter (SRP)
 # ============================================================================
 
+
 class ConsoleResultReporter:
     def report(self, summary: TestSummary) -> None:
         self._print_header(summary)
@@ -1230,23 +1272,32 @@ class ConsoleResultReporter:
                 avg_sharpe = sum(r.sharpe_ratio or 0 for r in results) / total
                 avg_time = sum(r.execution_time for r in results) / total
 
-                logging.info("%s: %d total (%d passed, %d warnings, %d failed, %d skipped) | "
-                            "Avg Sharpe: %.2f | Avg Time: %.2fs",
-                            bt_type.value, total, passed, warnings, failed, skipped,
-                            avg_sharpe, avg_time)
+                logging.info(
+                    "%s: %d total (%d passed, %d warnings, %d failed, %d skipped) | "
+                    "Avg Sharpe: %.2f | Avg Time: %.2fs",
+                    bt_type.value,
+                    total,
+                    passed,
+                    warnings,
+                    failed,
+                    skipped,
+                    avg_sharpe,
+                    avg_time,
+                )
 
     def _print_failures(self, summary: TestSummary) -> None:
-        failures = [
-            r for r in summary.results.values()
-            if r.status == TestStatus.FAILED
-        ]
+        failures = [r for r in summary.results.values() if r.status == TestStatus.FAILED]
 
         if failures:
             logging.info("")
             logging.warning("FAILED TESTS (showing first 20):")
             for result in failures[:20]:
-                logging.warning("  %s - %s: %s",
-                                result.profile_id, result.backtest_type.value, result.error_message)
+                logging.warning(
+                    "  %s - %s: %s",
+                    result.profile_id,
+                    result.backtest_type.value,
+                    result.error_message,
+                )
 
     def _print_footer(self, summary: TestSummary) -> None:
         logging.info("")
@@ -1273,7 +1324,7 @@ class JSONResultReporter:
             "failed": summary.failed,
             "warnings": summary.warnings,
             "pass_rate": summary.pass_rate,
-            "results": []
+            "results": [],
         }
 
         for (bt_type, profile_id), result in summary.results.items():
@@ -1299,6 +1350,7 @@ class JSONResultReporter:
 # ============================================================================
 # Main Entry Point
 # ============================================================================
+
 
 def main() -> int:
     output_dir = Path("results/full_compliance_test")

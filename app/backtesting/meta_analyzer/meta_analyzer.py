@@ -34,7 +34,7 @@ try:
     import seaborn as sns
 
     HAS_MATPLOTLIB = True
-except (ImportError, Exception):
+except Exception:
     # Matplotlib may fail due to numpy version incompatibility
     HAS_MATPLOTLIB = False
     plt = None
@@ -577,7 +577,7 @@ class BacktestMetaAnalyzer:
 
             logger.info(f"✅ Visualizaciones guardadas en {self.output_dir}")
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Error generando visualizaciones: {e}", exc_info=True)
 
     async def run_parallel_analysis(
@@ -624,7 +624,7 @@ class BacktestMetaAnalyzer:
                 task_name = futures[future]
                 try:
                     results[task_name] = future.result()
-                except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+                except (asyncio.TimeoutError, OSError) as e:
                     logger.error(f"Error en tarea {task_name}: {e}")
                     results[task_name] = {}
 

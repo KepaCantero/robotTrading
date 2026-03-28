@@ -111,7 +111,7 @@ class FactorModelResult:
             significance_threshold = float(
                 getattr(config.trading, 'p_value_significance_threshold', 0.05)
             )
-        except (AttributeError, Exception):
+        except Exception:
             significance_threshold = 0.05
         return self.p_values.get("market", 1.0) < significance_threshold
 
@@ -156,7 +156,7 @@ class FamaFrenchModel:
             try:
                 config = get_config()
                 risk_free_rate = float(getattr(config.trading, 'risk_free_rate', 0.02))
-            except (AttributeError, Exception):
+            except Exception:
                 risk_free_rate = 0.02
         self._risk_free_rate = risk_free_rate
 
@@ -200,9 +200,9 @@ class FamaFrenchModel:
                     alpha=0.0,
                 ),
                 r_squared=0.0,
-                p_values={name: 1.0 for name in factor_names},
-                t_stats={name: 0.0 for name in factor_names},
-                standard_errors={name: 1.0 for name in factor_names},
+                p_values=dict.fromkeys(factor_names, 1.0),
+                t_stats=dict.fromkeys(factor_names, 0.0),
+                standard_errors=dict.fromkeys(factor_names, 1.0),
                 n_obs=len(asset_returns),
                 p_value_significance_threshold=self._tt.p_value_significance,
             )
@@ -226,9 +226,9 @@ class FamaFrenchModel:
                     alpha=0.0,
                 ),
                 r_squared=0.0,
-                p_values={name: 1.0 for name in factor_names},
-                t_stats={name: 0.0 for name in factor_names},
-                standard_errors={name: 1.0 for name in factor_names},
+                p_values=dict.fromkeys(factor_names, 1.0),
+                t_stats=dict.fromkeys(factor_names, 0.0),
+                standard_errors=dict.fromkeys(factor_names, 1.0),
                 n_obs=len(asset_returns_clean),
                 p_value_significance_threshold=self._tt.p_value_significance,
             )

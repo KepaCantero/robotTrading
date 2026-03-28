@@ -79,20 +79,19 @@ class ConfigurationPersistence:
 
         # Find configuration by strategy name
         for config in self._configurations.values():
-            if config.strategy_name == request.strategy_name:
-                if request.version is None or config.version == request.version:
-                    logger.info(
-                        "Configuration loaded successfully",
-                        extra={
-                            "strategy_name": request.strategy_name,
-                            "version": config.version,
-                        },
-                    )
-                    return ConfigurationLoadResponse(
-                        success=True,
-                        configuration=config,
-                        message="Configuration loaded successfully",
-                    )
+            if config.strategy_name == request.strategy_name and (request.version is None or config.version == request.version):
+                logger.info(
+                    "Configuration loaded successfully",
+                    extra={
+                        "strategy_name": request.strategy_name,
+                        "version": config.version,
+                    },
+                )
+                return ConfigurationLoadResponse(
+                    success=True,
+                    configuration=config,
+                    message="Configuration loaded successfully",
+                )
 
         logger.warning(
             "Configuration not found",

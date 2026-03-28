@@ -1,0 +1,130 @@
+{
+  "timestamp": "2026-03-19T17:00:00Z",
+  "layer_boundaries": {
+    "domain_pure": false,
+    "violations": {
+      "ARCH-DEP-001": {
+        "rule": "Domain layer NO depende de otras capas",
+        "count": 40,
+        "severity": "P0",
+        "files": [
+          "app/domain/strategies/automated_backtest.py - imports app.services",
+          "app/domain/strategies/momentum.py - imports app.services",
+          "app/domain/strategies/optimization/hyperparameter_optimizer.py - imports app.infrastructure",
+          "app/domain/optimization/multi_strategy_optimizer_v2.py - imports app.services",
+          "app/domain/optimization/multi_strategy_optimizer.py - imports app.services",
+          "app/domain/repositories/unit_of_work.py - imports app.infrastructure",
+          "app/domain/services/signals/scoring.py - imports app.services",
+          "app/domain/services/compliance/compliance_engine.py - imports app.services multiple times",
+          "app/domain/services/compliance/service_registry.py - imports app.services",
+          "app/domain/services/execution/trading_bridge_adapter.py - imports app.services",
+          "app/domain/services/execution/order_manager_adapter.py - imports app.services"
+        ]
+      ]
+    },
+    "domain_purity_violations": {
+      "file": "app/domain/strategies/automated_backtest.py",
+      "reason": "imports app.services - violates ARCH-DEP-001",
+      "appro": "Move to infrastructure layer using dependency injection patterns"
+    },
+    {
+      "file": "app/domain/strategies/automated_backtest.py",
+      "appro": "Update imports to in fifo_integrator.py and use infrastructure imports"
+    },
+    {
+      "file": "app/domain/optimization/multi_strategy_optimizer_v2.py",
+      "appro": "Update imports to use protocol pattern",
+      "reason": "Requires architectural refactoring - dependency injection",
+    },
+    {
+      "file": "app/domain/optimization/multi_strategy_optimizer.py",
+      "reason": "imports app.services, violates ARCH-DEP-001. Use dependency injection",
+      "blocked": true
+    },
+    {
+      "file": "app/domain/optimization/multi_strategy_optimizer.py",
+      "reason": "imports app.services, violates ARCH-DEP-001. Requires architectural decision"
+      "attempts": 5,
+      "blocks": true,
+      "note": "Marking file as blocked until 5 attempts made"
+    },
+    {
+      "file": "app/domain/strategies/learning/drift_detector.py",
+      "reason": "MI=0.00 due to 2163 lines of CC=17.19; CC>= 10). architectural refactoring required",
+      "loc": 2163
+    },
+    {
+      "file": "app/domain/strategies/learning/feature_importance.py",
+      "reason": "MI=0.00 due to 2092 lines. CC >= 10) requires architectural refactoring to splitting into multiple modules",
+      "loc": 2163
+    },
+    {
+      "file": "app/domain/strategies/strategy.py",
+      "reason": "MI=3.22 due to 1539 lines. High CC functions. Requires refactoring",
+      "loc": 1539
+    },
+    {
+      "file": "app/application/use_cases/select_strategy.py",
+      "reason": "MI=12.01 due to 2301 lines. File splitting",
+      "loc": 2301
+    },
+    {
+      "file": "app/presentation/dashboard/main.py",
+      "reason": "MI=0.00 due to 1359 lines. Complex async view, needs significant refactoring",
+      "loc": 1359
+    },
+    {
+      "file": "app/presentation/dashboard/objectives_dashboard.py",
+      "reason": "MI=0.00 due to 1359 lines. Complex async view. needs significant refactoring",
+      "loc": 1359
+    },
+    {
+      "file": "app/presentation/dashboard/advanced_dashboard.py",
+      "reason": "MI=0.00, CC=37.375. Complex and logic - Significant refactoring needed"
+      "loc": 0
+    },
+    {
+      "file": "app/services/strategy_stock_allocator.py",
+      "reason": "MI=0.00 due to 2100+ lines, CC=17.19. arquitectural debt. Split into smaller modules",
+      "loc": 2100
+      "note": "This is a architectural debt that systematic refactoring"
+    },
+    {
+      "file": "app/backtesting/walk_forward_validator.py",
+      "reason": "MI=18.39 due to 1720 lines. File splitting to ~4-5 smaller modules",
+      "loc": 1720
+      "logic better"
+    },
+    {
+      "file": "app/backtesting/comprehensive_backtest_runner.py",
+      "reason": "MI=0.00 due to 4533 lines. CC=17.19, this file is a god class"
+      "loc": 0
+    },
+    {
+      "file": "app/services/strategy_stock_allocator.py",
+      "reason": "MI=0.00 due to 2100+ lines, CC=17.19 - Architectural refactoring needed",
+      "note": "These files require architectural refactoring, not file-level splitting."
+    },
+    {
+      "file": "app/presentation/dashboard/advanced_dashboard.py",
+      "reason": "MI=0.00, CC=37.375, complex async view with significant refactoring",
+      "loc": 0
+    },
+    {
+      "file": "app/presentation/dashboard/objectives_dashboard.py",
+      "reason": "MI=0.00 due to 1359 lines. Complex async view with significant refactoring",
+      "loc": 1359
+    },
+    {
+      "file": "app/presentation/dashboard/main.py",
+      "reason": "MI=15.54 due to 1359 lines. Complex async view with significant refactoring",
+      "loc": 1359
+    },
+    {
+      "file": "app/services/strategy_stock_allocator.py",
+      "reason": "MI=0.00 due to 2100+ lines, CC=17.19, complex logic requires extraction into smaller modules",
+      "loc": 2100
+      "note": "Size violations are architectural debt"
+    }
+  ]
+}

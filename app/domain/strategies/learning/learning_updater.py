@@ -743,14 +743,19 @@ class LearningEngineUpdater:
         try:
             if engine_type == "supervised":
                 # Verificar scikit-learn
-                import sklearn  # noqa: F401
-                from sklearn.ensemble import RandomForestClassifier  # noqa: F401
+                import importlib.util
+                if importlib.util.find_spec("sklearn") is None:
+                    return False
             elif engine_type == "deep":
                 # Verificar tensorflow/pytorch
-                import tensorflow  # noqa: F401
+                import importlib.util
+                if importlib.util.find_spec("tensorflow") is None:
+                    return False
             elif engine_type == "reinforcement":
                 # Verificar gym/stable-baselines
-                import gym  # noqa: F401
+                import importlib.util
+                if importlib.util.find_spec("gym") is None:
+                    return False
         except ImportError:
             return False
 

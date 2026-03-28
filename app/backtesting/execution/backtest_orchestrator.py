@@ -48,7 +48,7 @@ class BacktestOrchestrator:
         self.backtest_config = self._load_backtest_config(config)
         self.output_dir = config.get('output_directory', 'results')
         self.parallel_enabled = config.get('parallelization', {}).get('enabled', True)
-        self.max_workers = config.get('parallelization', {}).get('max_workers', None)
+        self.max_workers = config.get('parallelization', {}).get("max_workers")
 
     def run_baseline_backtest(self) -> BacktestResultValue:
         """

@@ -73,7 +73,7 @@ class OutputGenerator:
         """
         rows = []
 
-        for ticker, alloc in allocations.items():
+        for _ticker, alloc in allocations.items():
             row = {
                 "Ticker": alloc.ticker,
                 "Estrategia": alloc.strategy or "unassigned",

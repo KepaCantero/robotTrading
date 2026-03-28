@@ -126,6 +126,9 @@ class PositionManager:
         # Calcular probabilidad de assignment
         assignment_prob = self.greeks_calculator.estimate_probability(call_option, current_price)
 
+        # Calcular prima total
+        total_premium = premium_received * contracts_to_sell * 100
+
         # Crear posición
         position = CoveredCallPosition(
             symbol=symbol,
@@ -134,6 +137,8 @@ class PositionManager:
             call_option=call_option,
             contracts_sold=contracts_to_sell,
             premium_received=premium_received,
+            total_premium=total_premium,
+            opened_at=date.today(),
             current_price=current_price,
             assignment_probability=assignment_prob,
         )

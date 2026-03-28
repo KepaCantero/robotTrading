@@ -24,13 +24,13 @@ try:
 
     PYTORCH_AVAILABLE = True
 except ImportError:  # B014: ModuleNotFoundError is a subclass of ImportError
-    torch = None  # type: ignore
-    nn = None  # type: ignore
-    optim = None  # type: ignore
+    torch = None
+    nn = None
+    optim = None
     PYTORCH_AVAILABLE = False
 
 
-class SharedBackbone(nn.Module):  # type: ignore
+class SharedBackbone(nn.Module):
     """
     Backbone compartido para múltiples tareas.
 

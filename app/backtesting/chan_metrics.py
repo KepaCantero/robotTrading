@@ -854,9 +854,8 @@ class ChanReturnDistributionAnalyzer:
     ) -> float:
         """Calculate up capture ratio."""
         up_mask = bench_aligned > 0
-        if up_mask.sum() > 0:
-            if bench_aligned[up_mask].mean() != 0:
-                return float(returns_aligned[up_mask].mean() / bench_aligned[up_mask].mean())
+        if up_mask.sum() > 0 and bench_aligned[up_mask].mean() != 0:
+            return float(returns_aligned[up_mask].mean() / bench_aligned[up_mask].mean())
         return 0.0
 
     def _calculate_down_capture(
@@ -866,9 +865,8 @@ class ChanReturnDistributionAnalyzer:
     ) -> float:
         """Calculate down capture ratio."""
         down_mask = bench_aligned < 0
-        if down_mask.sum() > 0:
-            if bench_aligned[down_mask].mean() != 0:
-                return float(returns_aligned[down_mask].mean() / bench_aligned[down_mask].mean())
+        if down_mask.sum() > 0 and bench_aligned[down_mask].mean() != 0:
+            return float(returns_aligned[down_mask].mean() / bench_aligned[down_mask].mean())
         return 0.0
 
     def _calculate_tail_ratio(self, returns_array: np.ndarray) -> float:

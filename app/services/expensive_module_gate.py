@@ -30,7 +30,7 @@ accounts and upgrade modules only when capital and trading volume increase.
 import logging
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -123,7 +123,7 @@ class ExpensiveModuleGate:
     def should_enable_module(
         module_name: str,
         capital: Decimal,
-        expected_monthly_alpha: Decimal = Decimal("100"),
+        expected_monthly_alpha: Optional[Decimal] = None,
         enforce_strict_cost_ratio: bool = False,
     ) -> Tuple[bool, Dict]:
         """
@@ -146,6 +146,8 @@ class ExpensiveModuleGate:
             - cost_ratio: Decimal
             - capital_tier: str
         """
+        if expected_monthly_alpha is None:
+            expected_monthly_alpha = Decimal("100")
 
         # Validate inputs
         if capital <= Decimal("0"):
@@ -241,7 +243,7 @@ class ExpensiveModuleGate:
     @staticmethod
     def get_enabled_modules(
         capital: Decimal,
-        expected_monthly_alpha: Decimal = Decimal("100"),
+        expected_monthly_alpha: Optional[Decimal] = None,
         enforce_strict_cost_ratio: bool = False,
     ) -> Tuple[Dict[str, bool], Dict[str, Dict]]:
         """
@@ -250,6 +252,8 @@ class ExpensiveModuleGate:
         Returns:
             (enabled_modules: Dict[module_name -> bool], analysis: Dict[module_name -> analysis])
         """
+        if expected_monthly_alpha is None:
+            expected_monthly_alpha = Decimal("100")
         enabled_modules = {}
         analysis = {}
 
@@ -373,7 +377,7 @@ class ExpensiveModuleGate:
     def get_cost_summary(
         capital: Decimal,
         enabled_modules: Dict[str, bool],
-        expected_monthly_alpha: Decimal = Decimal("100"),
+        expected_monthly_alpha: Optional[Decimal] = None,
     ) -> Dict:
         """
         Get cost summary for all enabled expensive modules.
@@ -381,6 +385,8 @@ class ExpensiveModuleGate:
         Returns:
             Dict with total costs and ratios
         """
+        if expected_monthly_alpha is None:
+            expected_monthly_alpha = Decimal("100")
         total_cost = ExpensiveModuleGate.get_total_expensive_module_cost(capital, enabled_modules)
 
         cost_ratio = (

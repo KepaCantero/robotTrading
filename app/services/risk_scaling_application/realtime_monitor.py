@@ -391,7 +391,7 @@ class RealTimeMonitor:
             report.add_alert(alert)
 
         # Add position snapshots from history
-        for module_name, snapshots in self.position_history.items():
+        for _module_name, snapshots in self.position_history.items():
             # Get snapshots in reporting period
             period_snapshots = [s for s in snapshots if start_time <= s.timestamp <= end_time]
             report.position_snapshots.extend(period_snapshots)

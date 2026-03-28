@@ -57,14 +57,16 @@ def generate_synthetic_financial_data(n_samples=1000, n_features=10, random_stat
         ar_component = np.zeros(n_samples)
         ar_component[0] = np.random.randn()
         for j in range(1, n_samples):
-            ar_component[j] = 0.7 * ar_component[j-1] + np.random.randn() * 0.3
+            ar_component[j] = 0.7 * ar_component[j - 1] + np.random.randn() * 0.3
 
         # Combine components
         X[:, i] = trend + ar_component + np.random.randn(n_samples) * 0.1
 
     # Generate binary target (classification)
     # Based on linear combination of features with threshold
-    y_class = (X[:, 0] + 0.5 * X[:, 1] - 0.3 * X[:, 2] + np.random.randn(n_samples) * 0.2 > 0).astype(int)
+    y_class = (
+        X[:, 0] + 0.5 * X[:, 1] - 0.3 * X[:, 2] + np.random.randn(n_samples) * 0.2 > 0
+    ).astype(int)
 
     # Generate continuous target (regression)
     y_reg = X[:, 0] + 0.5 * X[:, 1] - 0.3 * X[:, 2] + np.random.randn(n_samples) * 0.1
@@ -88,7 +90,7 @@ def example_1_basic_purged_kfold():
     # Create PurgedKFold cross-validator
     purged_cv = PurgedKFold(
         n_splits=5,
-        purge_pct=0.05,   # Purge 5% of data before test set
+        purge_pct=0.05,  # Purge 5% of data before test set
         embargo_pct=0.02,  # Embargo 2% of data after test set
     )
 
@@ -121,8 +123,10 @@ def example_1_basic_purged_kfold():
         score = accuracy_score(y_test, y_pred)
         fold_scores.append(score)
 
-        print(f"  Fold {fold + 1}: accuracy = {score:.4f} "
-              f"(train={len(train_idx)}, test={len(test_idx)})")
+        print(
+            f"  Fold {fold + 1}: accuracy = {score:.4f} "
+            f"(train={len(train_idx)}, test={len(test_idx)})"
+        )
 
     print(f"\nMean accuracy: {np.mean(fold_scores):.4f} (+/- {np.std(fold_scores):.4f})")
 
@@ -223,7 +227,7 @@ def example_3_cross_validate_with_purging():
         n_splits=5,
         purge_pct=0.05,
         embargo_pct=0.02,
-        scoring=lambda y_true, y_pred: f1_score(y_true, y_pred, average='weighted')
+        scoring=lambda y_true, y_pred: f1_score(y_true, y_pred, average='weighted'),
     )
 
     print(f"  Mean F1-score: {np.mean(results_f1['test_score']):.4f}")
@@ -263,8 +267,10 @@ def example_4_time_series_split():
         test_start = test_idx.min()
         test_end = test_idx.max()
 
-        print(f"  Fold {fold + 1}: train=[{train_start}:{train_end}], "
-              f"test=[{test_start}:{test_end}]")
+        print(
+            f"  Fold {fold + 1}: train=[{train_start}:{train_end}], "
+            f"test=[{test_start}:{test_end}]"
+        )
 
     # Train classifier
     tscv = PurgedTimeSeriesSplit(n_splits=5, purge_pct=0.05, embargo_pct=0.02)
@@ -299,11 +305,7 @@ def example_5_pandas_dataframe():
     X, y_class, _, dates = generate_synthetic_financial_data(n_samples=1000)
 
     # Create DataFrame with time index
-    X_df = pd.DataFrame(
-        X,
-        columns=[f'feature_{i}' for i in range(X.shape[1])],
-        index=dates
-    )
+    X_df = pd.DataFrame(X, columns=[f'feature_{i}' for i in range(X.shape[1])], index=dates)
 
     y_series = pd.Series(y_class, index=dates, name='target')
 
@@ -382,14 +384,16 @@ def example_6_comparing_purge_embargo_settings():
         mean_score = np.mean(scores)
         std_score = np.std(scores)
 
-        results.append({
-            'config': config['name'],
-            'purge_pct': config['purge_pct'],
-            'embargo_pct': config['embargo_pct'],
-            'mean_accuracy': mean_score,
-            'std_accuracy': std_score,
-            'n_splits': len(splits),
-        })
+        results.append(
+            {
+                'config': config['name'],
+                'purge_pct': config['purge_pct'],
+                'embargo_pct': config['embargo_pct'],
+                'mean_accuracy': mean_score,
+                'std_accuracy': std_score,
+                'n_splits': len(splits),
+            }
+        )
 
         print(f"\n{config['name']}:")
         print(f"  Mean accuracy: {mean_score:.4f} (+/- {std_score:.4f})")
@@ -400,7 +404,9 @@ def example_6_comparing_purge_embargo_settings():
     print("Configuration Comparison:")
     print("=" * 80)
     results_df = pd.DataFrame(results)
-    print(results_df[['config', 'mean_accuracy', 'std_accuracy', 'n_splits']].to_string(index=False))
+    print(
+        results_df[['config', 'mean_accuracy', 'std_accuracy', 'n_splits']].to_string(index=False)
+    )
 
 
 def example_7_leakage_detection():
@@ -426,7 +432,11 @@ def example_7_leakage_detection():
 
     # Validate no leakage
     has_no_leakage = purged_cv.validate_no_leakage(X)
-    print(f"\n✅ Validation passed: No information leakage detected" if has_no_leakage else "❌ Validation failed: Leakage detected")
+    print(
+        f"\n✅ Validation passed: No information leakage detected"
+        if has_no_leakage
+        else "❌ Validation failed: Leakage detected"
+    )
 
     # Display split details
     print("\nSplit Details:")

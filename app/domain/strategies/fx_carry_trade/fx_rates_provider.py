@@ -561,7 +561,7 @@ class InMemoryFXRateProvider:
             List of FXPair objects with spot rate data
         """
         pairs_set = {FXPair(base, quote) for (base, quote, _) in self._spot_rates.keys()}
-        return sorted(list(pairs_set), key=lambda p: (p.base_currency, p.quote_currency))
+        return sorted(pairs_set, key=lambda p: (p.base_currency, p.quote_currency))
 
     def get_available_currencies(self) -> list[str]:
         """
@@ -581,7 +581,7 @@ class InMemoryFXRateProvider:
         for currency, _, _ in self._interest_rates.keys():
             currencies_set.add(currency)
 
-        return sorted(list(currencies_set))
+        return sorted(currencies_set)
 
     def _load_default_data(self) -> None:
         """
@@ -791,7 +791,7 @@ class CompositeFXRateProvider(FXRateProvider):
 
     def get_spot_rate(self, pair: FXPair, as_of: date) -> Decimal:
         """Get spot rate from first provider that has it."""
-        for i, provider in enumerate(self.providers):
+        for _i, provider in enumerate(self.providers):
             try:
                 return provider.get_spot_rate(pair, as_of)
             except ValueError:
@@ -826,14 +826,14 @@ class CompositeFXRateProvider(FXRateProvider):
         pairs_set = set()
         for provider in self.providers:
             pairs_set.update(provider.get_available_pairs())
-        return sorted(list(pairs_set), key=lambda p: (p.base_currency, p.quote_currency))
+        return sorted(pairs_set, key=lambda p: (p.base_currency, p.quote_currency))
 
     def get_available_currencies(self) -> list[str]:
         """Get union of available currencies from all providers."""
         currencies_set = set()
         for provider in self.providers:
             currencies_set.update(provider.get_available_currencies())
-        return sorted(list(currencies_set))
+        return sorted(currencies_set)
 
     def __str__(self) -> str:
         """Return string representation."""

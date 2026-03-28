@@ -214,27 +214,23 @@ class CompositeConfigValidator:
         if "risk_management" in config:
             rm = config["risk_management"]
 
-            if "atr_multipliers" in rm:
-                if not self._validators["atr_multipliers"].validate(rm["atr_multipliers"]):
-                    self._errors.extend(self._validators["atr_multipliers"].get_errors())
-                    is_valid = False
+            if "atr_multipliers" in rm and not self._validators["atr_multipliers"].validate(rm["atr_multipliers"]):
+                self._errors.extend(self._validators["atr_multipliers"].get_errors())
+                is_valid = False
 
-            if "position_sizing" in rm:
-                if not self._validators["risk_percentages"].validate(rm["position_sizing"]):
-                    self._errors.extend(self._validators["risk_percentages"].get_errors())
-                    is_valid = False
+            if "position_sizing" in rm and not self._validators["risk_percentages"].validate(rm["position_sizing"]):
+                self._errors.extend(self._validators["risk_percentages"].get_errors())
+                is_valid = False
 
         # Validate trading section
-        if "trading" in config:
-            if not self._validators["trading_symbols"].validate(config["trading"]):
-                self._errors.extend(self._validators["trading_symbols"].get_errors())
-                is_valid = False
+        if "trading" in config and not self._validators["trading_symbols"].validate(config["trading"]):
+            self._errors.extend(self._validators["trading_symbols"].get_errors())
+            is_valid = False
 
         # Validate backtesting section
-        if "backtesting" in config:
-            if not self._validators["date_range"].validate(config["backtesting"]):
-                self._errors.extend(self._validators["date_range"].get_errors())
-                is_valid = False
+        if "backtesting" in config and not self._validators["date_range"].validate(config["backtesting"]):
+            self._errors.extend(self._validators["date_range"].get_errors())
+            is_valid = False
 
         return is_valid
 

@@ -346,7 +346,7 @@ class BaseOptimizer(ABC, Generic[T]):
     @abstractmethod
     async def optimize(
         self,
-        objective: Any,
+        objective: object,
         search_space: T,
     ) -> OptimizationResult:
         """

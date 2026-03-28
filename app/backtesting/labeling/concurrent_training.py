@@ -55,7 +55,7 @@ import logging
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -120,7 +120,7 @@ class ModelResult:
     """Result from a single model training."""
 
     model_name: str
-    model: Any
+    model: object
     predictions: np.ndarray
     probabilities: Optional[np.ndarray]
     score: float
@@ -134,7 +134,7 @@ class ModelResult:
     feature_importance: Dict[str, float] = field(default_factory=dict)
 
     # Metadata
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: Dict[str, Union[str, int, float, bool, None]] = field(default_factory=dict)
     timestamp: datetime = field(default_factory=datetime.now)
 
 
@@ -157,15 +157,15 @@ class EnsembleResult:
     ensemble_weights: Dict[str, float]
     """Weights for each model in ensemble"""
 
-    stacking_model: Optional[Any] = None
+    stacking_model: Optional[object] = None
     """Stacking meta-model (if used)"""
 
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: Dict[str, Union[str, int, float, bool, None]] = field(default_factory=dict)
     """Additional metadata"""
 
     timestamp: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Union[str, int, float, bool, list, None]]:
         """Convert to dictionary."""
         return {
             "ensemble_predictions": self.ensemble_predictions.tolist(),
@@ -272,7 +272,7 @@ class ConcurrentModelTrainer:
 
     def train_models_concurrent(
         self,
-        models: Dict[str, Any],
+        models: Dict[str, object],
         X: Union[pd.DataFrame, np.ndarray],
         y: Union[pd.Series, np.ndarray],
         events: Optional[pd.Series] = None,
@@ -358,7 +358,7 @@ class ConcurrentModelTrainer:
     def _train_single_model(
         self,
         model_name: str,
-        model: Any,
+        model: object,
         X: np.ndarray,
         y: np.ndarray,
         sample_weights: Optional[np.ndarray],
@@ -642,7 +642,7 @@ class ConcurrentModelTrainer:
         y: np.ndarray,
         events: Optional[pd.Series],
         labels: Optional[pd.DataFrame],
-    ) -> Any:
+    ) -> object:
         """
         Create stacking meta-model.
 
@@ -740,7 +740,7 @@ class SequentialModelTrainer:
             y = y.values
         return X, y
 
-    def _get_feature_importance(self, model: Any) -> Dict[str, float]:
+    def _get_feature_importance(self, model: object) -> Dict[str, float]:
         """Extract feature importance from model if available."""
         feature_importance = {}
         if hasattr(model, "feature_importances_"):
@@ -749,7 +749,7 @@ class SequentialModelTrainer:
                 feature_importance[f"feature_{i}"] = float(imp)
         return feature_importance
 
-    def _get_probabilities(self, model: Any, X: np.ndarray) -> Optional[np.ndarray]:
+    def _get_probabilities(self, model: object, X: np.ndarray) -> Optional[np.ndarray]:
         """Get probabilities from model if available."""
         if hasattr(model, "predict_proba"):
             probabilities = model.predict_proba(X)
@@ -759,7 +759,7 @@ class SequentialModelTrainer:
 
     def train_models_sequential(
         self,
-        models: Dict[str, Any],
+        models: Dict[str, object],
         X: Union[pd.DataFrame, np.ndarray],
         y: Union[pd.Series, np.ndarray],
         events: Optional[pd.Series] = None,
@@ -870,7 +870,7 @@ class SequentialModelTrainer:
 
 
 def train_models_concurrent(
-    models: Dict[str, Any],
+    models: Dict[str, object],
     X: Union[pd.DataFrame, np.ndarray],
     y: Union[pd.Series, np.ndarray],
     events: Optional[pd.Series] = None,

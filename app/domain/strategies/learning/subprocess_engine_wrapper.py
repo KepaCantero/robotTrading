@@ -231,7 +231,7 @@ class SubprocessLearningEngineWrapper:
         Removes unpicklable objects like file handles, database connections, etc.
         """
 
-        def _is_picklable(obj: Any) -> bool:
+        def _is_picklable(obj: object) -> bool:
             """Check if an object can be pickled."""
             try:
                 import pickle
@@ -610,10 +610,9 @@ class SubprocessLearningEngineWrapper:
     def shutdown(self):
         """Shutdown the subprocess."""
         try:
-            if self._process is not None and self._process.is_alive():
-                if self._request_queue is not None:
-                    self._request_queue.put(None)
-                    self._process.join(timeout=5)
+            if self._process is not None and self._process.is_alive() and self._request_queue is not None:
+                self._request_queue.put(None)
+                self._process.join(timeout=5)
             self._cleanup_subprocess()
         except Exception as e:
             logger.debug(f"Error during shutdown: {e}")

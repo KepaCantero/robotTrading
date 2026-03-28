@@ -25,9 +25,9 @@ logger = logging.getLogger(__name__)
 
 # revision identifiers, used by Alembic.
 revision: str = "0002"
-down_revision: Union[str, None] = "0001"  # noqa: SIM907  # Keep Union for broader compatibility
-branch_labels: Union[str, Sequence[str], None] = None  # noqa: SIM907
-depends_on: Union[str, Sequence[str], None] = None  # noqa: SIM907
+down_revision: Union[str, None] = "0001"
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:

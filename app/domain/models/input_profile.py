@@ -357,7 +357,7 @@ class InputProcessor:
             self.error_count += 1
             logger.error(f"Input validation error: {e}")
             raise
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             self.error_count += 1
             logger.error(f"Unexpected error processing input: {e}")
             raise ValueError(f"Failed to process input: {e}")
@@ -375,12 +375,11 @@ class InputProcessor:
         warnings = []
 
         # Check risk tolerance vs objective consistency
-        if profile.objetivo_inversion == ObjectivoInversion.CAPITAL_PRESERVATION:
-            if profile.risk_tolerance == RiskTolerance.ALTO:
-                warnings.append(
-                    "Warning: capital_preservation objective with alto risk tolerance "
-                    "may be contradictory. Consider lowering risk tolerance."
-                )
+        if profile.objetivo_inversion == ObjectivoInversion.CAPITAL_PRESERVATION and profile.risk_tolerance == RiskTolerance.ALTO:
+            warnings.append(
+                "Warning: capital_preservation objective with alto risk tolerance "
+                "may be contradictory. Consider lowering risk tolerance."
+            )
 
         # Check investment horizon vs risk tolerance
         if profile.investment_horizon < 12 and profile.risk_tolerance == RiskTolerance.ALTO:

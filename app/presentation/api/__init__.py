@@ -10,7 +10,7 @@ import logging
 import time
 import uuid
 from contextvars import ContextVar
-from typing import Any, Callable, Dict, Optional
+from typing import Callable, Dict, List, Optional, Union
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -71,8 +71,8 @@ class AuditLogger:
         method: str,
         path: str,
         client_id: Optional[str] = None,
-        query_params: Optional[Dict[str, Any]] = None,
-        path_params: Optional[Dict[str, Any]] = None,
+        query_params: Optional[Dict[str, Union[str, int, float, bool]]] = None,
+        path_params: Optional[Dict[str, Union[str, int, float, bool]]] = None,
     ) -> None:
         """
         Log an incoming API request.
@@ -153,7 +153,7 @@ class AuditLogger:
             client_id: Optional client identifier
         """
         correlation_id = get_correlation_id()
-        log_data: Dict[str, Any] = {
+        log_data: Dict[str, Union[str, int, float, bool, None]] = {
             "event_type": "api_error",
             "correlation_id": correlation_id,
             "method": method,
@@ -178,7 +178,7 @@ class AuditLogger:
         action: str,
         method: str,
         path: str,
-        details: Optional[Dict[str, Any]] = None,
+        details: Optional[Dict[str, Union[str, int, float, bool]]] = None,
         client_id: Optional[str] = None,
     ) -> None:
         """
@@ -317,7 +317,7 @@ def log_endpoint_error(
         Callable: Wrapped function with error logging
     """
 
-    async def wrapper(*args: Any, **kwargs: Any) -> Any:
+    async def wrapper(*args: object, **kwargs: object) -> Union[str, int, float, bool, Dict, List, None]:
         try:
             return await func(*args, **kwargs)
         except Exception as e:

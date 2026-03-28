@@ -25,8 +25,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 # Configurar logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
@@ -123,11 +122,17 @@ def test_profile_investor_backtest():
             logger.info(f"Baseline Return: {result.baseline_results.get('total_return', 'N/A')}")
 
         if result.optimization_results:
-            logger.info(f"Optimized Sharpe: {result.optimization_results.get('sharpe_ratio', 'N/A')}")
-            logger.info(f"Optimized Return: {result.optimization_results.get('total_return', 'N/A')}")
+            logger.info(
+                f"Optimized Sharpe: {result.optimization_results.get('sharpe_ratio', 'N/A')}"
+            )
+            logger.info(
+                f"Optimized Return: {result.optimization_results.get('total_return', 'N/A')}"
+            )
 
         if result.improvement_metrics:
-            logger.info(f"Sharpe Improvement: {result.improvement_metrics.get('sharpe_improvement', 'N/A')}%")
+            logger.info(
+                f"Sharpe Improvement: {result.improvement_metrics.get('sharpe_improvement', 'N/A')}%"
+            )
 
         # Verificar que tenemos resultados
         assert result.profile_id is not None
@@ -185,5 +190,6 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error(f"Test failed: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)

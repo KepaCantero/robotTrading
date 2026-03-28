@@ -273,9 +273,7 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
             if (
                 strength in [SignalStrength.STRONG, SignalStrength.VERY_STRONG]
                 and confidence < 70.0
-            ):
-                strength = SignalStrength.MODERATE
-            elif strength == SignalStrength.WEAK and confidence > 80.0:
+            ) or strength == SignalStrength.WEAK and confidence > 80.0:
                 strength = SignalStrength.MODERATE
 
             # Calcular liquidity_score
@@ -518,12 +516,11 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
                     f"✅ Mayoría de filtros pasaron ({len(passed_filters)}/{total_filters}) - generando señal BUY"
                 )
                 return SignalType.BUY
-        elif self.combination_mode == "ANY":
-            if len(passed_filters) > 0:
-                logger.debug(
-                    f"✅ Al menos un filtro pasó ({len(passed_filters)}) - generando señal BUY"
-                )
-                return SignalType.BUY
+        elif self.combination_mode == "ANY" and len(passed_filters) > 0:
+            logger.debug(
+                f"✅ Al menos un filtro pasó ({len(passed_filters)}) - generando señal BUY"
+            )
+            return SignalType.BUY
 
         logger.debug(
             f"❌ No se cumple el modo de combinación ({self.combination_mode}) - no se genera señal"
@@ -587,13 +584,12 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
             return False
 
         # Verificar learning engine (si está disponible y entrenado)
-        if self.learning_enabled and self.learning_engine:
-            if hasattr(self.learning_engine, 'is_ready') and self.learning_engine.is_ready():
-                # Si el learning engine sugiere HOLD, rechazar señal
-                prediction = self.get_learning_prediction(signal.metadata.get('quote', None))
-                if prediction and prediction.get('recommended_action') == 'HOLD':
-                    logger.debug("Risk check fallido: learning engine recomienda HOLD")
-                    return False
+        if self.learning_enabled and self.learning_engine and hasattr(self.learning_engine, 'is_ready') and self.learning_engine.is_ready():
+            # Si el learning engine sugiere HOLD, rechazar señal
+            prediction = self.get_learning_prediction(signal.metadata.get('quote', None))
+            if prediction and prediction.get('recommended_action') == 'HOLD':
+                logger.debug("Risk check fallido: learning engine recomienda HOLD")
+                return False
 
         return True
 

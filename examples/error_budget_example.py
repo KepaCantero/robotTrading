@@ -20,8 +20,7 @@ from pathlib import Path
 
 # Setup logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
@@ -185,8 +184,16 @@ async def main():
         logger.info(f"   ✓ Deployment allowed")
 
     for gate_decision in decision["decisions"]:
-        status_symbol = "✓" if gate_decision["status"] == "pass" else "⚠" if gate_decision["status"] == "warn" else "❌"
-        logger.info(f"   {status_symbol} {gate_decision['gate_type']}: {gate_decision['status'].upper()}")
+        status_symbol = (
+            "✓"
+            if gate_decision["status"] == "pass"
+            else "⚠"
+            if gate_decision["status"] == "warn"
+            else "❌"
+        )
+        logger.info(
+            f"   {status_symbol} {gate_decision['gate_type']}: {gate_decision['status'].upper()}"
+        )
         if gate_decision["status"] in ("warn", "fail"):
             logger.info(f"      Message: {gate_decision['message']}")
 
@@ -244,7 +251,9 @@ async def main():
 
     logger.info(f"   Total Incidents: {len(incidents)}")
     for incident in incidents[-5:]:  # Last 5
-        logger.info(f"   - {incident['timestamp']}: {incident['downtime_minutes']}min ({incident['error_type']})")
+        logger.info(
+            f"   - {incident['timestamp']}: {incident['downtime_minutes']}min ({incident['error_type']})"
+        )
         logger.info(f"     {incident['description']}")
 
     # Get alert summary

@@ -13,6 +13,7 @@ sys.path.insert(0, str(project_root))
 
 from app.services.live_trading.broker_connector import get_broker_connector
 
+
 async def validate_broker_connection():
     """Validate broker connection and retrieve account info."""
     print("Testing broker connection...")
@@ -71,6 +72,7 @@ async def validate_broker_connection():
         print("Broker connection test: FAILED")
         print("=" * 60)
         return False
+
 
 if __name__ == "__main__":
     success = asyncio.run(validate_broker_connection())

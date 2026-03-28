@@ -254,7 +254,7 @@ class AllocationRecommender:
     async def _income_allocation(self, assets: List[str]) -> Dict[str, Decimal]:
         """Income: Higher weighting for yield assets."""
         allocation = {}
-        for i, asset in enumerate(assets):
+        for _i, asset in enumerate(assets):
             if "BOND" in asset or "DIVIDEND" in asset:
                 allocation[asset] = Decimal("1.5") / Decimal(len(assets))
             else:
@@ -265,7 +265,7 @@ class AllocationRecommender:
     async def _preservation_allocation(self, assets: List[str]) -> Dict[str, Decimal]:
         """Preservation: Focus on stable assets."""
         allocation = {}
-        for i, asset in enumerate(assets):
+        for _i, asset in enumerate(assets):
             if "BOND" in asset or "CASH" in asset:
                 allocation[asset] = Decimal("2.0") / Decimal(len(assets))
             else:
@@ -288,7 +288,7 @@ class AllocationRecommender:
         # Cap at 15% max per asset
         cap = Decimal("0.15")
         if base_weight > cap:
-            allocation = {asset: cap for asset in assets[: int(1 / 0.15)]}
+            allocation = dict.fromkeys(assets[:int(1 / 0.15)], cap)
             remaining = len(assets) - len(allocation)
             if remaining > 0:
                 remaining_weight = (Decimal("1.0") - Decimal(len(allocation)) * cap) / Decimal(
@@ -297,7 +297,7 @@ class AllocationRecommender:
                 for asset in assets[len(allocation) :]:
                     allocation[asset] = remaining_weight
         else:
-            allocation = {asset: base_weight for asset in assets}
+            allocation = dict.fromkeys(assets, base_weight)
         return allocation
 
     async def _calculate_diversification_score(self, allocation: Dict[str, Decimal]) -> Decimal:

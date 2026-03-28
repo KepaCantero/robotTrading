@@ -316,7 +316,7 @@ class BlackScholesGreeks:
         # Valor inicial: 30%
         sigma = 0.3
 
-        for iteration in range(max_iterations):
+        for _iteration in range(max_iterations):
             # Calcular precio del modelo y vega
             try:
                 price = self._calculate_call_price(S, K, T, sigma)

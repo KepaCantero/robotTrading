@@ -43,14 +43,12 @@ def generate_sample_data(n_samples=1000, n_features=10):
     X = pd.DataFrame(
         np.random.randn(n_samples, n_features),
         columns=[f'feature_{i}' for i in range(n_features)],
-        index=dates
+        index=dates,
     )
 
     # Simulate prices
     prices = pd.Series(
-        100 + np.cumsum(np.random.randn(n_samples) * 0.01),
-        index=dates,
-        name='close'
+        100 + np.cumsum(np.random.randn(n_samples) * 0.01), index=dates, name='close'
     )
 
     # Generate trading signals (events)
@@ -62,24 +60,21 @@ def generate_sample_data(n_samples=1000, n_features=10):
 
 def example_1_basic_purged_cv():
     """Example 1: Basic purged K-Fold cross-validation."""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("Example 1: Basic Purged K-Fold CV")
-    print("="*80)
+    print("=" * 80)
 
     # Generate sample data
     X, prices, signal_dates = generate_sample_data(n_samples=1000, n_features=10)
 
     # Create labels (simplified - use triple barrier in practice)
-    y = pd.Series(
-        np.random.randint(0, 2, len(X)),
-        index=X.index
-    )
+    y = pd.Series(np.random.randint(0, 2, len(X)), index=X.index)
 
     # Create events with t1 (exit times)
     # In practice, t1 comes from triple barrier labeling
-    events = pd.DataFrame({
-        't1': X.index + pd.Timedelta(days=np.random.randint(1, 10, len(X)))
-    }, index=X.index)
+    events = pd.DataFrame(
+        {'t1': X.index + pd.Timedelta(days=np.random.randint(1, 10, len(X)))}, index=X.index
+    )
 
     print(f"\nDataset shape: {X.shape}")
     print(f"Label distribution:\n{y.value_counts()}")
@@ -88,7 +83,7 @@ def example_1_basic_purged_cv():
     purged_cv = PurgedKFold(
         n_splits=5,
         embargo_pct=0.01,  # 1% embargo after test set
-        purge_pct=0.05,    # 5% purge before test set
+        purge_pct=0.05,  # 5% purge before test set
     )
 
     # Perform cross-validation
@@ -108,7 +103,9 @@ def example_1_basic_purged_cv():
         score = accuracy_score(y_test, y_pred)
         fold_scores.append(score)
 
-        print(f"  Fold {fold}: train={len(train_idx):4d}, test={len(test_idx):4d}, accuracy={score:.4f}")
+        print(
+            f"  Fold {fold}: train={len(train_idx):4d}, test={len(test_idx):4d}, accuracy={score:.4f}"
+        )
 
     print(f"\nMean CV Score: {np.mean(fold_scores):.4f} (+/- {np.std(fold_scores):.4f})")
 
@@ -124,18 +121,16 @@ def example_1_basic_purged_cv():
 
 def example_2_event_based_embargo():
     """Example 2: Event-based embargo using triple barrier t1."""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("Example 2: Event-Based Embargo with Triple Barrier")
-    print("="*80)
+    print("=" * 80)
 
     # Generate sample data
     X, prices, signal_dates = generate_sample_data(n_samples=1000, n_features=10)
 
     # Apply triple barrier labeling
     config = TripleBarrierConfig(
-        upper_barrier_pct=0.02,
-        lower_barrier_pct=-0.01,
-        vertical_barrier_days=5
+        upper_barrier_pct=0.02, lower_barrier_pct=-0.01, vertical_barrier_days=5
     )
 
     labeler = TripleBarrierLabeler(config)
@@ -146,9 +141,10 @@ def example_2_event_based_embargo():
 
     # Create events DataFrame with t1 (exit times)
     # Calculate t1 from triple barrier results
-    events = pd.DataFrame({
-        't1': signal_dates + pd.to_timedelta(labels_df['bars_to_barrier'].values, unit='D')
-    }, index=signal_dates)
+    events = pd.DataFrame(
+        {'t1': signal_dates + pd.to_timedelta(labels_df['bars_to_barrier'].values, unit='D')},
+        index=signal_dates,
+    )
 
     # Create binary labels
     y = (labels_df['label'] == 1).astype(int)  # 1 if upper barrier hit
@@ -181,28 +177,25 @@ def example_2_event_based_embargo():
         score = model.score(X_test, y_test)
         fold_scores.append(score)
 
-        print(f"  Fold {fold}: train={len(train_idx):3d}, test={len(test_idx):3d}, accuracy={score:.4f}")
+        print(
+            f"  Fold {fold}: train={len(train_idx):3d}, test={len(test_idx):3d}, accuracy={score:.4f}"
+        )
 
     print(f"\nMean CV Score: {np.mean(fold_scores):.4f} (+/- {np.std(fold_scores):.4f})")
 
 
 def example_3_time_series_split():
     """Example 3: Purged time series split with expanding window."""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("Example 3: Purged Time Series Split")
-    print("="*80)
+    print("=" * 80)
 
     # Generate sample data
     X, prices, signal_dates = generate_sample_data(n_samples=1000, n_features=10)
 
-    y = pd.Series(
-        np.random.randint(0, 2, len(X)),
-        index=X.index
-    )
+    y = pd.Series(np.random.randint(0, 2, len(X)), index=X.index)
 
-    events = pd.DataFrame({
-        't1': X.index + pd.Timedelta(days=5)
-    }, index=X.index)
+    events = pd.DataFrame({'t1': X.index + pd.Timedelta(days=5)}, index=X.index)
 
     # Use time series split
     tscv = PurgedTimeSeriesSplit(
@@ -235,21 +228,16 @@ def example_3_time_series_split():
 
 def example_4_cv_score_function():
     """Example 4: Using the cv_score convenience function."""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("Example 4: Using cv_score() Function")
-    print("="*80)
+    print("=" * 80)
 
     # Generate sample data
     X, prices, signal_dates = generate_sample_data(n_samples=1000, n_features=10)
 
-    y = pd.Series(
-        np.random.randint(0, 2, len(X)),
-        index=X.index
-    )
+    y = pd.Series(np.random.randint(0, 2, len(X)), index=X.index)
 
-    events = pd.DataFrame({
-        't1': X.index + pd.Timedelta(days=5)
-    }, index=X.index)
+    events = pd.DataFrame({'t1': X.index + pd.Timedelta(days=5)}, index=X.index)
 
     # Use cv_score function
     model = RandomForestClassifier(n_estimators=100, random_state=42)
@@ -272,23 +260,18 @@ def example_4_cv_score_function():
 
 def example_5_comparison_standard_vs_purged():
     """Example 5: Compare standard K-Fold vs Purged K-Fold."""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("Example 5: Standard K-Fold vs Purged K-Fold")
-    print("="*80)
+    print("=" * 80)
 
     from sklearn.model_selection import KFold
 
     # Generate sample data with temporal structure
     X, prices, signal_dates = generate_sample_data(n_samples=1000, n_features=10)
 
-    y = pd.Series(
-        np.random.randint(0, 2, len(X)),
-        index=X.index
-    )
+    y = pd.Series(np.random.randint(0, 2, len(X)), index=X.index)
 
-    events = pd.DataFrame({
-        't1': X.index + pd.Timedelta(days=5)
-    }, index=X.index)
+    events = pd.DataFrame({'t1': X.index + pd.Timedelta(days=5)}, index=X.index)
 
     # Standard K-Fold (with leakage!)
     print("\n1. Standard K-Fold (HAS LOOK-AHEAD BIAS):")
@@ -329,7 +312,9 @@ def example_5_comparison_standard_vs_purged():
         purged_scores.append(score)
 
     print(f"   Mean Score: {np.mean(purged_scores):.4f} (+/- {np.std(purged_scores):.4f})")
-    print(f"   Has Look-Ahead Leakage: {'✗ Yes' if not purged_cv.validate_no_leakage(X) else '✓ No (GOOD!)'}")
+    print(
+        f"   Has Look-Ahead Leakage: {'✗ Yes' if not purged_cv.validate_no_leakage(X) else '✓ No (GOOD!)'}"
+    )
 
     # Compare
     print("\nComparison:")
@@ -339,10 +324,10 @@ def example_5_comparison_standard_vs_purged():
 
 
 if __name__ == "__main__":
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("PURGED CROSS-VALIDATION EXAMPLES")
     print("López de Prado, Chapter 4")
-    print("="*80)
+    print("=" * 80)
 
     # Run examples
     example_1_basic_purged_cv()
@@ -351,6 +336,6 @@ if __name__ == "__main__":
     example_4_cv_score_function()
     example_5_comparison_standard_vs_purged()
 
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("Examples completed successfully!")
-    print("="*80 + "\n")
+    print("=" * 80 + "\n")

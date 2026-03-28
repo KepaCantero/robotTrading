@@ -21,6 +21,7 @@ Domain Model (Cosmic Python - Rule 16):
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import logging
 from dataclasses import dataclass, field
@@ -207,7 +208,7 @@ class OncallDashboard:
 
                 self.logger.info("OncallDashboard initialized successfully")
 
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 self.logger.error(f"Error initializing: {e}")
                 raise
 
@@ -269,7 +270,7 @@ class OncallDashboard:
 
             self.logger.debug("Database schema initialized")
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Database initialization failed: {e}")
             raise
 
@@ -399,7 +400,7 @@ class OncallDashboard:
 
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error saving to cache: {e}")
 
     async def start_updates(self) -> None:
@@ -417,10 +418,8 @@ class OncallDashboard:
         self._is_running = False
         if self._update_task:
             self._update_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._update_task
-            except asyncio.CancelledError:
-                pass
         self.logger.info("Stopped dashboard updates")
 
     async def _update_loop(self) -> None:

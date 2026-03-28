@@ -33,8 +33,8 @@ class Settings(BaseSettings):
 
     # API Settings
     api_v1_prefix: str = Field(default="/api/v1", description="API v1 prefix")
-    # nosec B104 - Development default; production should use environment variable
-    api_host: str = Field(default="0.0.0.0", description="API server host")  # nosec B104
+
+    api_host: str = Field(default="127.0.0.1", description="API server host")
     api_port: int = Field(default=8000, description="API server port")
     api_reload: bool = Field(default=False, description="Enable auto-reload for development")
     secret_key: str = Field(

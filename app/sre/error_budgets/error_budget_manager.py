@@ -177,12 +177,16 @@ class ErrorBudgetState:
         uptime_minutes = self.allowance.total_minutes - self.consumption.downtime_minutes
         return Decimal(uptime_minutes) / Decimal(self.allowance.total_minutes)
 
-    def is_exhausted(self, threshold_pct: Decimal = Decimal("10")) -> bool:
+    def is_exhausted(self, threshold_pct: Optional[Decimal] = None) -> bool:
         """Check if budget is exhausted (below threshold)."""
+        if threshold_pct is None:
+            threshold_pct = Decimal("10")
         return self.remaining_percentage < threshold_pct
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
+        if high_burn_rate_threshold is None:
+            high_burn_rate_threshold = Decimal("2.0")
         return {
             "service_name": self.service_name,
             "period": self.allowance.period.value,
@@ -216,7 +220,7 @@ class ErrorBudgetConfig:
     exhausted_threshold_pct: Decimal = Decimal("10")  # Block at 10% remaining
 
     # Burn rate thresholds
-    high_burn_rate_threshold: Decimal = Decimal("2.0")  # 2x normal rate
+    high_burn_rate_threshold: Optional[Decimal] = None  # 2x normal rate
 
     # Database
     db_path: str = "data/error_budgets.db"
@@ -332,7 +336,7 @@ class ErrorBudgetManager:
 
                 self.logger.info("ErrorBudgetManager initialized successfully")
 
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 self.logger.error(f"Error initializing: {e}")
                 raise
 
@@ -398,7 +402,7 @@ class ErrorBudgetManager:
 
             self.logger.debug("Database schema initialized")
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Database initialization failed: {e}")
             raise
 
@@ -471,7 +475,7 @@ class ErrorBudgetManager:
 
                     self.logger.info(f"Loaded existing state: {self._current_state.status}")
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error loading state: {e}")
 
     async def _create_initial_state(self) -> None:
@@ -500,7 +504,7 @@ class ErrorBudgetManager:
 
             self.logger.info("Created initial error budget state")
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error creating initial state: {e}")
             raise
 
@@ -539,7 +543,7 @@ class ErrorBudgetManager:
                 )
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error saving state: {e}")
 
     async def record_downtime(
@@ -590,7 +594,7 @@ class ErrorBudgetManager:
 
                 return self._current_state
 
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 self.logger.error(f"Error recording downtime: {e}")
                 raise
 
@@ -622,7 +626,7 @@ class ErrorBudgetManager:
                 )
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error saving incident: {e}")
 
     async def _recalculate_state(self) -> None:
@@ -678,7 +682,7 @@ class ErrorBudgetManager:
             if self.config.on_budget_exhausted:
                 try:
                     self.config.on_budget_exhausted(self._current_state)
-                except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+                except (asyncio.TimeoutError, OSError) as e:
                     self.logger.error(f"Error in exhausted callback: {e}")
 
         # Check for high burn rate
@@ -693,7 +697,7 @@ class ErrorBudgetManager:
             if self.config.on_burn_rate_high:
                 try:
                     self.config.on_burn_rate_high(self._current_state)
-                except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+                except (asyncio.TimeoutError, OSError) as e:
                     self.logger.error(f"Error in burn rate callback: {e}")
 
     async def get_current_state(self) -> Optional[ErrorBudgetState]:
@@ -745,7 +749,7 @@ class ErrorBudgetManager:
                     for row in rows
                 ]
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error getting incident history: {e}")
             return []
 

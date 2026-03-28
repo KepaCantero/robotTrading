@@ -390,9 +390,13 @@ def to_local_timezone(dt: datetime, local_tz: Optional[timezone] = None) -> date
     dt_utc = to_utc(dt)
     if local_tz is None:
         # Use system local timezone
-        import tzlocal  # pylint: disable=import-error
+        try:
+            import tzlocal
 
-        local_tz = tzlocal.get_localzone()
+            local_tz = tzlocal.get_localzone()
+        except ImportError:
+            logger.warning("tzlocal not installed, falling back to UTC")
+            local_tz = timezone.utc
     return dt_utc.astimezone(local_tz)
 
 

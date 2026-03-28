@@ -22,6 +22,8 @@ from fastapi import Depends
 
 from .broker_connector import BrokerAccount, BrokerConnector, BrokerPosition, get_broker_connector
 
+_DEFAULT_DEPENDS = Depends(get_broker_connector)
+
 logger = logging.getLogger(__name__)
 
 
@@ -96,7 +98,7 @@ class AccountSynchronizer:
             logger.info(f"✅ Account synced: ${self.local_cash:,.2f} cash available")
             return True
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"❌ Sync error: {str(e)}")
             return False
 
@@ -115,7 +117,7 @@ class AccountSynchronizer:
             logger.info(f"✅ Synced {len(positions)} positions")
             return True
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"❌ Position sync error: {str(e)}")
             return False
 
@@ -138,7 +140,7 @@ class AccountSynchronizer:
             else:
                 return False, "Partial sync failure"
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             return False, f"Sync error: {str(e)}"
 
     async def reconcile_balance(self) -> Reconciliation:
@@ -361,7 +363,7 @@ _synchronizer: Optional[AccountSynchronizer] = None
 
 
 def get_account_synchronizer(
-    broker: BrokerConnector = Depends(get_broker_connector),
+    broker: BrokerConnector = _DEFAULT_DEPENDS,
 ) -> AccountSynchronizer:
     """Get or create singleton AccountSynchronizer."""
     global _synchronizer

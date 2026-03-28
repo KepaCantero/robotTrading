@@ -69,13 +69,15 @@ try:
 
     # Crear estrategia más agresiva para más trades
     print("📈 Initializing strategy...")
-    strategy = MomentumStrategy({
-        "name": STRATEGY_NAME,
-        "rsi_threshold": 50,  # Más permisivo
-        "momentum_threshold": 0.0001,  # Muy bajo para más señales
-        "volume_threshold": 0.1,  # Bajo threshold
-        "max_position_size": 0.2,  # Tamaño moderado para más trades
-    })
+    strategy = MomentumStrategy(
+        {
+            "name": STRATEGY_NAME,
+            "rsi_threshold": 50,  # Más permisivo
+            "momentum_threshold": 0.0001,  # Muy bajo para más señales
+            "volume_threshold": 0.1,  # Bajo threshold
+            "max_position_size": 0.2,  # Tamaño moderado para más trades
+        }
+    )
 
     # Generar señales
     print("🔍 Generating signals...")
@@ -89,10 +91,12 @@ try:
             logger.debug(f"Signal error: {e}")
 
     print(f"✅ Generated {len(signals)} total signals")
-    
+
     # Analizar tipos de señales
     buy_signals = sum(1 for s in signals if s.signal_type == "buy" or str(s.signal_type) == "buy")
-    sell_signals = sum(1 for s in signals if s.signal_type == "sell" or str(s.signal_type) == "sell")
+    sell_signals = sum(
+        1 for s in signals if s.signal_type == "sell" or str(s.signal_type) == "sell"
+    )
     print(f"   Buy: {buy_signals}, Sell: {sell_signals}")
     print()
 
@@ -135,4 +139,3 @@ except (ValueError, TypeError, KeyError, AttributeError) as e:
     print(f"❌ Error: {e}")
     logger.exception("Backtest failed")
     exit(1)
-

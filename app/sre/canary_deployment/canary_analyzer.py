@@ -257,7 +257,7 @@ class CanaryAnalyzer:
                     for row in rows
                 ]
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error loading metrics: {e}")
             return []
 
@@ -477,12 +477,11 @@ class CanaryAnalyzer:
                             f"WARNING: Availability {comp.canary_value * 100:.2f}% below threshold"
                         )
 
-                elif comp.metric_name == "throughput":
-                    if comp.delta_percentage < -self.promotion_thresholds["throughput_drop_max"]:
-                        promote = False
-                        recommendations.append(
-                            f"WARNING: Throughput drop {abs(comp.delta_percentage) * 100:.1f}% exceeds threshold"
-                        )
+                elif comp.metric_name == "throughput" and comp.delta_percentage < -self.promotion_thresholds["throughput_drop_max"]:
+                    promote = False
+                    recommendations.append(
+                        f"WARNING: Throughput drop {abs(comp.delta_percentage) * 100:.1f}% exceeds threshold"
+                    )
 
         if promote:
             recommendations.append("All metrics within promotion thresholds")

@@ -15,7 +15,9 @@ logger = logging.getLogger(__name__)
 class PaperTradingService:
     """Service for paper trading simulation."""
 
-    def __init__(self, initial_capital: Decimal = Decimal("100000")):
+    def __init__(self, initial_capital: Optional[Decimal] = None):
+        if initial_capital is None:
+            initial_capital = Decimal("100000")
         self._capital = initial_capital
         self._positions: Dict[str, Any] = {}
         self._orders: List[Dict[str, Any]] = []

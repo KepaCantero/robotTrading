@@ -145,14 +145,13 @@ class EMAFilter(BaseFilter):
                     'metadata': {},
                 }
 
-            if self.confirmation_method == "price_above":
-                if current_price >= ema_slow:
-                    return {
-                        'passed': False,
-                        'confidence': 0.0,
-                        'reason': f'Price ({current_price:.2f}) not below EMA slow ({ema_slow:.2f})',
-                        'metadata': {},
-                    }
+            if self.confirmation_method == "price_above" and current_price >= ema_slow:
+                return {
+                    'passed': False,
+                    'confidence': 0.0,
+                    'reason': f'Price ({current_price:.2f}) not below EMA slow ({ema_slow:.2f})',
+                    'metadata': {},
+                }
 
             confidence = min(1.0, (distance_pct / self.min_distance_pct) * 0.8)
 

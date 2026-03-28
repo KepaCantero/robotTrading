@@ -170,10 +170,9 @@ class EquityCurveTracker:
         positions = self.position_manager.get_all_positions()
 
         for symbol, quantity in positions.items():
-            if quantity > 0:
-                if symbol in last_known_prices:
-                    current_price = last_known_prices[symbol]
-                    portfolio_value += quantity * current_price
+            if quantity > 0 and symbol in last_known_prices:
+                current_price = last_known_prices[symbol]
+                portfolio_value += quantity * current_price
 
         return portfolio_value
 

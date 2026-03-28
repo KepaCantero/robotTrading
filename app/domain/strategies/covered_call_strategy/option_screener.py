@@ -173,18 +173,16 @@ class OptionScreener:
                 failures.append(f"Prima muy baja ({premium_pct:.2%} < {min_premium:.2%})")
 
         # 4. Liquidez
-        if self.criteria.min_open_interest > 0:
-            if (
-                option.open_interest is not None
-                and option.open_interest < self.criteria.min_open_interest
-            ):
-                failures.append(
-                    f"OI bajo ({option.open_interest} < {self.criteria.min_open_interest})"
-                )
+        if self.criteria.min_open_interest > 0 and (
+            option.open_interest is not None
+            and option.open_interest < self.criteria.min_open_interest
+        ):
+            failures.append(
+                f"OI bajo ({option.open_interest} < {self.criteria.min_open_interest})"
+            )
 
-        if self.criteria.min_volume > 0:
-            if option.volume is not None and option.volume < self.criteria.min_volume:
-                failures.append(f"Volumen bajo ({option.volume} < {self.criteria.min_volume})")
+        if self.criteria.min_volume > 0 and option.volume is not None and option.volume < self.criteria.min_volume:
+            failures.append(f"Volumen bajo ({option.volume} < {self.criteria.min_volume})")
 
         # 5. Target Delta (si está especificado)
         if self.criteria.target_delta is not None and hasattr(option, 'metadata'):

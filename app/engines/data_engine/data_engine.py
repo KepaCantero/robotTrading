@@ -110,7 +110,6 @@ class DataEngine:
         ohlcv_sources = sources_config.get('ohlcv', {})
 
         if 'ibkr' in ohlcv_sources:
-            # pylint: disable=abstract-class-instantiated
             self.sources['ibkr'] = IBKRSource(ohlcv_sources['ibkr'])
 
         if 'binance' in ohlcv_sources:
@@ -172,7 +171,7 @@ class DataEngine:
                     logger.info(f"Conectado a {source_name}")
                 else:
                     logger.warning(f"No se pudo conectar a {source_name}")
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.error(f"Error conectando a {source_name}: {e}")
                 connection_status[source_name] = False
 
@@ -184,7 +183,7 @@ class DataEngine:
             try:
                 await source.disconnect()
                 logger.info(f"Desconectado de {source_name}")
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.error(f"Error desconectando de {source_name}: {e}")
 
     async def get_ohlcv(
@@ -255,7 +254,7 @@ class DataEngine:
             else:
                 logger.error(f"Fuente {ohlcv_source.name} no implementa get_ohlcv")
                 return []
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Error obteniendo OHLCV de {ohlcv_source.name}: {e}")
             return []
 
@@ -369,7 +368,7 @@ class DataEngine:
                 elif data_type == 'earnings':
                     result = await fundamental_source.get_earnings(symbol)
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Error obteniendo fundamentales de {fundamental_source.name}: {e}")
             return None
 
@@ -441,7 +440,7 @@ class DataEngine:
                     sentiment_results[source_name] = result
                 else:
                     logger.warning(f"Fuente {source_name} no implementa get_sentiment")
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.error(f"Error obteniendo sentimiento de {source_name}: {e}")
 
         # Agregar sentimientos
@@ -485,7 +484,7 @@ class DataEngine:
         try:
             if hasattr(source, 'get_option_chain'):
                 return await source.get_option_chain(symbol, expiry_date)
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Error obteniendo option chain: {e}")
 
         return []
@@ -515,7 +514,7 @@ class DataEngine:
         try:
             if hasattr(source, 'get_volatility_surface'):
                 return await source.get_volatility_surface(symbol, expiry_dates)
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Error obteniendo volatility surface: {e}")
 
         return {'expiry_dates': [], 'strikes': [], 'implied_volatility': {}, 'surface_data': []}

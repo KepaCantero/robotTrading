@@ -36,7 +36,7 @@ try:
     from matplotlib.dates import DateFormatter
 
     HAS_MATPLOTLIB = True
-except (ImportError, Exception):
+except Exception:
     # Matplotlib may fail due to numpy version incompatibility
     HAS_MATPLOTLIB = False
     plt = None
@@ -81,7 +81,7 @@ class AdvancedVisualizer:
                 plt.style.use("seaborn-v0_8-darkgrid")
                 if sns is not None:
                     sns.set_palette("husl")
-            except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+            except OSError as e:
                 logger.warning(f"Could not set matplotlib style: {e}")
 
         logger.info(f"AdvancedVisualizer initialized: output_dir={self.output_dir}, dpi={dpi}")

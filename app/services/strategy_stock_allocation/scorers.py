@@ -8,7 +8,7 @@ Pairs Trading strategies following Single Responsibility Principle.
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Callable, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -74,7 +74,7 @@ class MomentumScorer:
         self,
         config: StockAllocationSettings,
         hurst_calculator: HurstCalculator,
-        technical_indicator_calculator: Any,
+        technical_indicator_calculator: object,
     ) -> None:
         """
         Initialize momentum scorer.
@@ -88,7 +88,7 @@ class MomentumScorer:
         self.hurst_calculator = hurst_calculator
         self.indicator_calculator = technical_indicator_calculator
 
-    def score(self, ticker: str, data: pd.DataFrame) -> dict[str, Any]:
+    def score(self, ticker: str, data: pd.DataFrame) -> dict[str, Union[float, str, bool, None, dict[str, float]]]:
         """
         Score asset for Momentum strategy.
 
@@ -324,7 +324,7 @@ class MeanReversionScorer:
         self.hurst_calculator = hurst_calculator
         self.half_life_calculator = half_life_calculator
 
-    def score(self, ticker: str, data: pd.DataFrame) -> dict[str, Any]:
+    def score(self, ticker: str, data: pd.DataFrame) -> dict[str, Union[float, str, bool, None]]:
         """
         Score asset for Mean Reversion strategy.
 
@@ -524,7 +524,7 @@ class PairsTradingScorer:
         self,
         config: StockAllocationSettings,
         half_life_calculator: HalfLifeCalculator,
-        garch_volatility_calculator: Any,
+        garch_volatility_calculator: Callable[[pd.Series], Optional[float]],
     ) -> None:
         """
         Initialize pairs trading scorer.
@@ -540,7 +540,7 @@ class PairsTradingScorer:
 
     def score(
         self, pair: tuple[str, str], data1: pd.DataFrame, data2: pd.DataFrame
-    ) -> dict[str, Any]:
+    ) -> dict[str, Union[float, str, bool, None]]:
         """
         Score pair for Pairs Trading strategy.
 
@@ -767,8 +767,8 @@ class WCMScoreCalculator:
     def calculate_all(
         self,
         filtered_stocks: dict[str, pd.DataFrame],
-        config: Any,
-    ) -> tuple[dict[str, dict[str, float]], list[dict[str, Any]]]:
+        config: StockAllocationSettings,
+    ) -> tuple[dict[str, dict[str, float]], list[dict[str, Union[float, str, None]]]]:
         """
         Calculate WCM scores for all assets.
 
@@ -813,8 +813,8 @@ class WCMScoreCalculator:
         return all_scores, pair_metrics
 
     def _score_pairs(
-        self, filtered_stocks: dict[str, pd.DataFrame], config: Any
-    ) -> list[dict[str, Any]]:
+        self, filtered_stocks: dict[str, pd.DataFrame], config: StockAllocationSettings
+    ) -> list[dict[str, Union[float, str, None]]]:
         """Score all pairs for pairs trading."""
         tickers = list(filtered_stocks.keys())
         pair_metrics = []
@@ -866,7 +866,7 @@ class WCMScoreCalculator:
         return pair_metrics
 
     def _get_configured_pairs(
-        self, filtered_stocks: dict[str, pd.DataFrame], config: Any
+        self, filtered_stocks: dict[str, pd.DataFrame], config: StockAllocationSettings
     ) -> list[tuple[str, str]]:
         """Get configured pairs from strategy config."""
         try:

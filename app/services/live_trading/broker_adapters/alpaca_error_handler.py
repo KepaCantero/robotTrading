@@ -375,13 +375,11 @@ class ErrorRecoveryManager:
             f"⚠️  API error [{error_type.value}]: {str(error)} " f"→ Strategy: {strategy.value}"
         )
 
-        if strategy == ErrorRecoveryStrategy.ALERT:
-            if self.on_manual_intervention is not None:
-                self.on_manual_intervention(str(error))
+        if strategy == ErrorRecoveryStrategy.ALERT and self.on_manual_intervention is not None:
+            self.on_manual_intervention(str(error))
 
-        if strategy == ErrorRecoveryStrategy.SYNC:
-            if self.on_sync_needed is not None:
-                self.on_sync_needed()
+        if strategy == ErrorRecoveryStrategy.SYNC and self.on_sync_needed is not None:
+            self.on_sync_needed()
 
         return strategy
 

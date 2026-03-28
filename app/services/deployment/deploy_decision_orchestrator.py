@@ -127,7 +127,7 @@ class DeployDecisionOrchestrator:
 
             return result
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"❌ Error in orchestration: {e}")
             raise
 

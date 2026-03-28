@@ -55,7 +55,7 @@ class ProfileGenerator:
         try:
             self.profile_mapper = create_profile_mapper()
             logger.info("ProfileStrategyMapper initialized successfully")
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             logger.warning(f"Failed to initialize ProfileStrategyMapper: {e}")
             self.profile_mapper = None
 
@@ -174,7 +174,7 @@ class ProfileGenerator:
         """
         try:
             return map_profile_tier_to_config(profile.capital_flag, target_format="spanish")
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             logger.warning(f"Tier mapper failed for {profile.capital_flag}: {e}")
             tier_map = {"small": "bajo", "medium": "medio", "large": "alto"}
             return tier_map.get(profile.capital_flag, "medio")

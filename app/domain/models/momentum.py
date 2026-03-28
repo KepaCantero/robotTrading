@@ -133,16 +133,12 @@ class MomentumSignal(BaseModel):
         # Technical momentum score (based on RSI and MACD)
         technical_score = 0
         if self.rsi is not None:
-            if self.direction == "BUY" and self.rsi < 30:
-                technical_score += 30  # Oversold
-            elif self.direction == "SELL" and self.rsi > 70:
-                technical_score += 30  # Overbought
+            if (self.direction == "BUY" and self.rsi < 30) or (self.direction == "SELL" and self.rsi > 70):
+                technical_score += 30  # Oversold/Overbought
 
         if self.macd_histogram is not None:
-            if self.direction == "BUY" and self.macd_histogram > 0:
-                technical_score += 20  # Bullish MACD
-            elif self.direction == "SELL" and self.macd_histogram < 0:
-                technical_score += 20  # Bearish MACD
+            if (self.direction == "BUY" and self.macd_histogram > 0) or (self.direction == "SELL" and self.macd_histogram < 0):
+                technical_score += 20  # Bullish/Bearish MACD
 
         return (
             price_score * price_weight
@@ -273,7 +269,7 @@ class MarketData(BaseModel):
             )
             raise ValueError(f"Bid price ({self.bid}) must be less than ask price ({self.ask}).")
 
-        if not (self.ask - self.bid == self.spread):
+        if self.ask - self.bid != self.spread:
             logger.error(
                 "MarketData validation failed: spread mismatch",
                 extra={

@@ -37,12 +37,14 @@ Usage:
 import asyncio
 import logging
 import statistics
+import tempfile
 from collections import deque
+from pathlib import Path
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 import aiosqlite
 
@@ -52,7 +54,7 @@ logger = logging.getLogger(__name__)
 class SanityCheckResult(str, Enum):
     """Results of sanity checks."""
 
-    PASS = "PASS"  # nosec B105 - Price validated successfully (enum value)
+    PASS = "PASS"
     FAIL = "FAIL"  # Price rejected, don't execute
     WARNING = "WARNING"  # Price suspicious but not rejected
     STALE = "STALE"  # Data is stale/frozen
@@ -94,11 +96,11 @@ class DataSanityLayer:
 
     def __init__(
         self,
-        primary_source: Any,
-        secondary_source: Optional[Any] = None,
+        primary_source: object,
+        secondary_source: Optional[object] = None,
         db_path: Optional[str] = None,
-        max_deviation_pct: Decimal = Decimal("50.0"),
-        confirmation_threshold_pct: Decimal = Decimal("20.0"),
+        max_deviation_pct: Optional[Decimal] = None,
+        confirmation_threshold_pct: Optional[Decimal] = None,
         staleness_seconds: int = 60,
         min_samples: int = 5,
     ):
@@ -114,9 +116,14 @@ class DataSanityLayer:
             staleness_seconds: Seconds before data considered stale (default: 60)
             min_samples: Minimum samples for deviation calculation (default: 5)
         """
+        if max_deviation_pct is None:
+            max_deviation_pct = Decimal("50.0")
+        if confirmation_threshold_pct is None:
+            confirmation_threshold_pct = Decimal("20.0")
         self.primary_source = primary_source
         self.secondary_source = secondary_source
-        self.db_path = db_path or "/tmp/sanity_cache.db"  # nosec B108 - cache location
+        self._temp_dir: Optional[str] = None
+        self.db_path = db_path
         self.max_deviation_pct = max_deviation_pct
         self.confirmation_threshold_pct = confirmation_threshold_pct
         self.staleness_seconds = staleness_seconds
@@ -125,6 +132,14 @@ class DataSanityLayer:
         # In-memory cache for recent prices (fast access)
         self.price_cache: Dict[str, deque] = {}
         self.timestamp_cache: Dict[str, datetime] = {}
+
+    def _get_db_path(self) -> str:
+        """Get database path, creating a secure temp directory if none was provided."""
+        if self.db_path is None:
+            if self._temp_dir is None:
+                self._temp_dir = tempfile.mkdtemp(prefix="sanity_cache_")
+            self.db_path = str(Path(self._temp_dir) / "sanity_cache.db")
+        return self.db_path
 
     async def validate_price(
         self, symbol: str, price: Decimal, source: str = "primary"
@@ -184,35 +199,34 @@ class DataSanityLayer:
                 )
 
             # Warning if deviation > 20% (but confirm with secondary source)
-            if deviation_pct > self.confirmation_threshold_pct:
-                if self.secondary_source:
-                    confirmed = await self._confirm_with_secondary_source(symbol, price)
+            if deviation_pct > self.confirmation_threshold_pct and self.secondary_source:
+                confirmed = await self._confirm_with_secondary_source(symbol, price)
 
-                    if not confirmed:
-                        logger.error(
-                            f"Price NOT confirmed by secondary source: {symbol} price={price}"
-                        )
-                        return PriceValidation(
-                            symbol=symbol,
-                            price=price,
-                            result=SanityCheckResult.FAIL,
-                            deviation_pct=Decimal(f"{deviation_pct:.1f}"),
-                            confirmed_by_secondary=False,
-                            reason="High deviation and not confirmed by secondary source",
-                        )
-                    else:
-                        logger.warning(
-                            f"Price confirmed by secondary source despite high deviation: "
-                            f"{symbol} price={price}"
-                        )
-                        return PriceValidation(
-                            symbol=symbol,
-                            price=price,
-                            result=SanityCheckResult.WARNING,
-                            deviation_pct=Decimal(f"{deviation_pct:.1f}"),
-                            confirmed_by_secondary=True,
-                            reason="High deviation but confirmed by secondary source",
-                        )
+                if not confirmed:
+                    logger.error(
+                        f"Price NOT confirmed by secondary source: {symbol} price={price}"
+                    )
+                    return PriceValidation(
+                        symbol=symbol,
+                        price=price,
+                        result=SanityCheckResult.FAIL,
+                        deviation_pct=Decimal(f"{deviation_pct:.1f}"),
+                        confirmed_by_secondary=False,
+                        reason="High deviation and not confirmed by secondary source",
+                    )
+                else:
+                    logger.warning(
+                        f"Price confirmed by secondary source despite high deviation: "
+                        f"{symbol} price={price}"
+                    )
+                    return PriceValidation(
+                        symbol=symbol,
+                        price=price,
+                        result=SanityCheckResult.WARNING,
+                        deviation_pct=Decimal(f"{deviation_pct:.1f}"),
+                        confirmed_by_secondary=True,
+                        reason="High deviation but confirmed by secondary source",
+                    )
 
         # All checks passed
         await self._update_price_cache(symbol, price, now)
@@ -276,7 +290,7 @@ class DataSanityLayer:
 
         # Fall back to database cache
         try:
-            async with aiosqlite.connect(self.db_path) as db:
+            async with aiosqlite.connect(self._get_db_path()) as db:
                 # Create table if not exists
                 await db.execute(
                     """
@@ -377,7 +391,7 @@ class DataSanityLayer:
     async def _write_to_db_cache(self, symbol: str, price: Decimal, timestamp: datetime):
         """Write price to database cache."""
         try:
-            async with aiosqlite.connect(self.db_path) as db:
+            async with aiosqlite.connect(self._get_db_path()) as db:
                 await db.execute(
                     """
                     INSERT OR REPLACE INTO price_cache (symbol, price, timestamp)
@@ -397,7 +411,7 @@ class DataSanityLayer:
                 )
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             logger.error(f"Error writing to price cache: {e}")
 
 
@@ -418,7 +432,7 @@ class SafeStopLossExecutor:
     trigger stop-losses at the worst possible moment.
     """
 
-    def __init__(self, sanity_layer: DataSanityLayer, broker_client: Any):
+    def __init__(self, sanity_layer: DataSanityLayer, broker_client: object):
         """
         Initialize safe stop-loss executor.
 
@@ -429,7 +443,7 @@ class SafeStopLossExecutor:
         self.sanity_layer = sanity_layer
         self.broker = broker_client
 
-    async def execute_stop_loss(self, position: Dict[str, Any], stop_price: Decimal) -> bool:
+    async def execute_stop_loss(self, position: Dict[str, Union[str, int, float, Decimal, None]], stop_price: Decimal) -> bool:
         """
         Execute stop-loss with price validation.
 

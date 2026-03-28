@@ -13,9 +13,12 @@ import logging
 from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from multiprocessing import Process, Queue
-from typing import Any, Dict, List, Literal, Optional, Type, Union
+from typing import Dict, List, Literal, Optional, Type, Union
 
 from app.backtesting.models import BacktestConfig, BacktestResult
+from app.domain.models.market_data import Quote
+from app.domain.models.signal import Signal
+from app.domain.strategies.base import BaseStrategy
 
 logger = logging.getLogger(__name__)
 
@@ -23,8 +26,8 @@ logger = logging.getLogger(__name__)
 # Module-level function for multiprocessing (must be picklable)
 def _run_backtest_process(
     config: BacktestConfig,
-    quotes: List[Any],
-    strategy: Any,
+    quotes: List[Quote],
+    strategy: BaseStrategy,
     strategy_name: str,
     enable_risk_envelope: bool,
     result_queue: Queue,
@@ -66,9 +69,9 @@ def _run_backtest_process(
 
 
 # Type aliases for better readability
-StrategyType = Any  # Could be more specific if we have a Strategy base class
-QuotesType = List[Any]
-SignalsType = List[Any]
+StrategyType = BaseStrategy
+QuotesType = List[Quote]
+SignalsType = List[Signal]
 MetricsDict = Dict[str, Union[float, int, str]]
 OptionalMetrics = Optional[MetricsDict]
 
@@ -96,7 +99,7 @@ class BacktestExecutor(ABC):
         self,
         quotes: QuotesType,
         strategy: StrategyType,
-        **kwargs: Any,
+        **kwargs: object,
     ) -> BacktestResult:
         """
         Execute backtest and return results.
@@ -196,7 +199,7 @@ class SimpleBacktestExecutor(BacktestExecutor):
         self,
         quotes: QuotesType,
         strategy: StrategyType,
-        **kwargs: Any,
+        **kwargs: object,
     ) -> BacktestResult:
         """
         Execute simple backtest.
@@ -272,7 +275,7 @@ class ParallelBacktestExecutor(BacktestExecutor):
         self,
         quotes: QuotesType,
         strategies: List[StrategyType],
-        **kwargs: Any,
+        **kwargs: object,
     ) -> List[BacktestResult]:
         """
         Execute multiple backtests in parallel.
@@ -341,7 +344,7 @@ class ParallelBacktestExecutor(BacktestExecutor):
         self,
         quotes: QuotesType,
         strategy: StrategyType,
-        **kwargs: Any,
+        **kwargs: object,
     ) -> BacktestResult:
         """
         Execute single backtest (delegates to SimpleBacktestExecutor).
@@ -385,7 +388,7 @@ class ProcessPoolBacktestExecutor(BacktestExecutor):
         self,
         quotes: QuotesType,
         strategy: StrategyType,
-        **kwargs: Any,
+        **kwargs: object,
     ) -> BacktestResult:
         """
         Execute backtest using process isolation.
@@ -432,7 +435,7 @@ class ProcessPoolBacktestExecutor(BacktestExecutor):
         self,
         quotes: QuotesType,
         strategy: StrategyType,
-        **kwargs: Any,
+        **kwargs: object,
     ) -> BacktestResult:
         """
         Execute backtest in isolated process.

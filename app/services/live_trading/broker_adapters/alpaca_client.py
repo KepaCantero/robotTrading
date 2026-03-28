@@ -9,7 +9,6 @@ Handles:
 - Rate limit compliance
 - Configurable timeouts for all operations
 """
-# pylint: disable=import-error
 
 import asyncio
 import json
@@ -477,7 +476,7 @@ class AlpacaClient:
                     break
                 logger.warning(f"Stream connection timed out: {e}")
 
-            except (ConnectionError, OSError) as e:
+            except OSError as e:
                 if not self.is_streaming:
                     break
 
@@ -662,7 +661,7 @@ class AlpacaClient:
                     )
                 except asyncio.TimeoutError:
                     logger.warning("Socket close timed out")
-                except (ConnectionError, OSError) as e:
+                except OSError as e:
                     logger.warning(f"Error closing socket: {e}")
                 self.stream_socket = None
 
@@ -680,7 +679,7 @@ class AlpacaClient:
             self.subscribed_symbols = []
             logger.info("Stream stopped successfully")
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Error stopping stream: {str(e)}")
 
     def __repr__(self) -> str:

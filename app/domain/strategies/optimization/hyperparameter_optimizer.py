@@ -35,7 +35,7 @@ class HyperparameterOptimizer:
         symbol: str,
         start_date: datetime,
         end_date: datetime,
-        initial_capital: Decimal = Decimal("100000"),
+        initial_capital: Optional[Decimal] = None,
         optimization_metric: str = "sharpe_ratio",  # "sharpe_ratio", "total_pnl", "win_rate"
         optimization_method: str = "grid_search",  # "grid_search", "random_search", "bayesian"
         data_feed_provider: Optional[Any] = None,
@@ -52,6 +52,8 @@ class HyperparameterOptimizer:
             optimization_method: Método de optimización ("grid_search", "random_search", "bayesian")
             data_feed_provider: Optional injected data feed provider (for DI/testing)
         """
+        if initial_capital is None:
+            initial_capital = Decimal("100000")
         self.symbol = symbol
         self.start_date = start_date
         self.end_date = end_date
@@ -400,7 +402,7 @@ class HyperparameterOptimizer:
                 ),
             }
 
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             logger.error(f"Error ejecutando backtest: {e}", exc_info=True)
             return None
 

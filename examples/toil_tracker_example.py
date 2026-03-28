@@ -217,8 +217,12 @@ async def main():
     print("Overall Metrics:")
     print(f"  Total time: {report.metrics.total_minutes} minutes")
     print(f"  Toil: {report.metrics.toil_minutes} minutes ({report.metrics.toil_percentage:.1f}%)")
-    print(f"  Engineering: {report.metrics.engineering_minutes} minutes ({report.metrics.engineering_percentage:.1f}%)")
-    print(f"  Automated: {report.metrics.automated_minutes} minutes ({report.metrics.automation_coverage:.1f}%)")
+    print(
+        f"  Engineering: {report.metrics.engineering_minutes} minutes ({report.metrics.engineering_percentage:.1f}%)"
+    )
+    print(
+        f"  Automated: {report.metrics.automated_minutes} minutes ({report.metrics.automation_coverage:.1f}%)"
+    )
     print()
 
     print("Recommendations:")

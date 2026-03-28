@@ -74,9 +74,7 @@ def run_all_profiles(parallel: bool = True, max_workers: int = 20):
     logger.info("RUNNING ALL PROFILE COMBINATIONS")
     logger.info("=" * 80)
 
-    backtester = ProfileBatchBacktester(
-        config_path="config/profile_batch_backtest.yaml"
-    )
+    backtester = ProfileBatchBacktester(config_path="config/profile_batch_backtest.yaml")
 
     logger.info(f"Running with parallel={parallel}, max_workers={max_workers}")
 
@@ -108,7 +106,9 @@ def run_all_profiles(parallel: bool = True, max_workers: int = 20):
     # Generate comparison report
     logger.info("\nGenerating comparison report...")
     html = backtester.generate_comparison_report()
-    report_path = backtester.output_dir / f"comparison_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+    report_path = (
+        backtester.output_dir / f"comparison_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+    )
     with open(report_path, "w") as f:
         f.write(html)
     logger.info(f"  HTML Report: {report_path}")
@@ -139,9 +139,7 @@ def run_single_profile(objective: str, risk: str, capital: Decimal = None, horiz
         sys.exit(1)
 
     # Determine capital tier
-    backtester = ProfileBatchBacktester(
-        config_path="config/profile_batch_backtest.yaml"
-    )
+    backtester = ProfileBatchBacktester(config_path="config/profile_batch_backtest.yaml")
 
     # Get capital from risk tier if not specified
     if capital is None:
@@ -179,10 +177,14 @@ def run_single_profile(objective: str, risk: str, capital: Decimal = None, horiz
     logger.info("=" * 80)
     logger.info(f"Baseline Sharpe: {result.baseline_results.get('sharpe_ratio', 0):.2f}")
     logger.info(f"Optimized Sharpe: {result.optimization_results.get('sharpe_ratio', 0):.2f}")
-    logger.info(f"Sharpe Improvement: {result.improvement_metrics.get('sharpe_improvement', 0):.1f}%")
+    logger.info(
+        f"Sharpe Improvement: {result.improvement_metrics.get('sharpe_improvement', 0):.1f}%"
+    )
     logger.info(f"Baseline Return: {result.baseline_results.get('return_pct', 0):.2f}%")
     logger.info(f"Optimized Return: {result.optimization_results.get('return_pct', 0):.2f}%")
-    logger.info(f"Return Improvement: {result.improvement_metrics.get('return_improvement', 0):.1f}%")
+    logger.info(
+        f"Return Improvement: {result.improvement_metrics.get('return_improvement', 0):.1f}%"
+    )
     logger.info(f"\nReady for paper trading: {result.ready_for_paper_trading}")
     logger.info(f"Recommendation: {result.recommendation}")
 
@@ -197,9 +199,7 @@ def generate_report_only():
     logger.info("GENERATING COMPARISON REPORT")
     logger.info("=" * 80)
 
-    backtester = ProfileBatchBacktester(
-        config_path="config/profile_batch_backtest.yaml"
-    )
+    backtester = ProfileBatchBacktester(config_path="config/profile_batch_backtest.yaml")
 
     # Load results from database
     session = backtester.Session()
@@ -213,7 +213,10 @@ def generate_report_only():
         sys.exit(1)
 
     # Convert to ProfileResult objects
-    from app.backtesting.profile_batch_backtester import BaselineOptimizationComparison, ProfileResult
+    from app.backtesting.profile_batch_backtester import (
+        BaselineOptimizationComparison,
+        ProfileResult,
+    )
     from app.core.models.input_profile import ObjectivoInversion, RiskTolerance
 
     for db_result in all_results:
@@ -265,7 +268,9 @@ def generate_report_only():
     # Generate report
     html = backtester.generate_comparison_report()
 
-    report_path = backtester.output_dir / f"comparison_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+    report_path = (
+        backtester.output_dir / f"comparison_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+    )
     with open(report_path, "w") as f:
         f.write(html)
 
@@ -285,15 +290,9 @@ def get_best_strategy(objective: str, risk: str, tier: str):
     logger.info("GETTING BEST STRATEGY")
     logger.info("=" * 80)
 
-    backtester = ProfileBatchBacktester(
-        config_path="config/profile_batch_backtest.yaml"
-    )
+    backtester = ProfileBatchBacktester(config_path="config/profile_batch_backtest.yaml")
 
-    best_config = backtester.get_best_strategy(
-        objective=objective,
-        tier=tier,
-        risk=risk
-    )
+    best_config = backtester.get_best_strategy(objective=objective, tier=tier, risk=risk)
 
     if not best_config:
         logger.error(f"No results found for {objective}_{tier}_{risk}")
@@ -339,7 +338,7 @@ Examples:
 
   # Get best strategy
   python run_profile_batch_backtester.py --best --objective maximizar_capital --risk medio --tier medio
-        """
+        """,
     )
 
     parser.add_argument("--all", action="store_true", help="Run all 180 profiles")
@@ -347,13 +346,19 @@ Examples:
     parser.add_argument("--report", action="store_true", help="Generate comparison report only")
     parser.add_argument("--best", action="store_true", help="Get best strategy for criteria")
 
-    parser.add_argument("--objective", type=str, help="Investment objective (e.g., maximizar_capital)")
+    parser.add_argument(
+        "--objective", type=str, help="Investment objective (e.g., maximizar_capital)"
+    )
     parser.add_argument("--risk", type=str, help="Risk tolerance (bajo, medio, alto)")
     parser.add_argument("--tier", type=str, help="Capital tier (bajo, medio, alto)")
     parser.add_argument("--capital", type=Decimal, help="Initial capital (for single profile)")
-    parser.add_argument("--horizon", type=int, help="Investment horizon in months (for single profile)")
+    parser.add_argument(
+        "--horizon", type=int, help="Investment horizon in months (for single profile)"
+    )
 
-    parser.add_argument("--parallel", action="store_true", default=True, help="Use parallel execution")
+    parser.add_argument(
+        "--parallel", action="store_true", default=True, help="Use parallel execution"
+    )
     parser.add_argument("--sequential", action="store_true", help="Use sequential execution")
     parser.add_argument("--workers", type=int, default=20, help="Max parallel workers")
 

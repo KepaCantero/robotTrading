@@ -48,7 +48,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, Optional, Union
+from typing import Dict, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -158,12 +158,12 @@ class MetaBetSizingResult:
     confidence_levels: np.ndarray
     """Confidence levels (low, medium, high)"""
 
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: Dict[str, Union[str, int, float, bool, None]] = field(default_factory=dict)
     """Additional metadata"""
 
     timestamp: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Union[str, int, float, bool, list, None]]:
         """Convert to dictionary."""
         return {
             "bet_sizes": self.bet_sizes.tolist(),
@@ -205,8 +205,8 @@ class MetaLabelingBetSizing:
 
     def calculate_sizes(
         self,
-        primary_model: Any,
-        meta_model: Any,
+        primary_model: object,
+        meta_model: object,
         X: Union[pd.DataFrame, np.ndarray],
         expected_returns: Optional[np.ndarray] = None,
         volatilities: Optional[np.ndarray] = None,
@@ -719,8 +719,8 @@ class MetaLabelingBetSizing:
 
 
 def calculate_bet_sizes_with_meta_labeling(
-    primary_model: Any,
-    meta_model: Any,
+    primary_model: object,
+    meta_model: object,
     X: Union[pd.DataFrame, np.ndarray],
     expected_returns: Optional[np.ndarray] = None,
     method: str = "meta_kelly",

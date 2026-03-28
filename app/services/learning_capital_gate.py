@@ -24,7 +24,7 @@ This gate enforces:
 
 import logging
 from decimal import Decimal
-from typing import TYPE_CHECKING, Dict, Tuple
+from typing import TYPE_CHECKING, Dict, Tuple, Optional
 
 from app.shared.config.centralized_config import get_config
 
@@ -60,8 +60,8 @@ class LearningCapitalGate:
     @staticmethod
     def is_learning_viable(
         capital: Decimal,
-        expected_monthly_alpha: Decimal = Decimal("100"),
-        monthly_win_rate: Decimal = Decimal("0.55"),  # 55% win rate (achievable)
+        expected_monthly_alpha: Optional[Decimal] = None,
+        monthly_win_rate: Optional[Decimal] = None,  # 55% win rate (achievable)
         learning_enabled: bool = True,
     ) -> Tuple[bool, Dict]:
         """
@@ -86,6 +86,10 @@ class LearningCapitalGate:
             - cost_benefit_ratio: Decimal - Cost as % of alpha
             - minimum_capital_required: Decimal - Capital needed for learning viability
         """
+        if expected_monthly_alpha is None:
+            expected_monthly_alpha = Decimal("100")
+        if monthly_win_rate is None:
+            monthly_win_rate = Decimal("0.55")
         # Get centralized config - use directly, no helper functions
         tt = get_config().trading_thresholds
         min_capital_for_learning = Decimal(str(tt.learning_min_capital))
@@ -269,8 +273,8 @@ class LearningCapitalGate:
 
     @staticmethod
     def get_minimum_capital_for_learning(
-        expected_monthly_alpha: Decimal = Decimal("100"),
-        target_cost_ratio: Decimal = Decimal("0.30"),
+        expected_monthly_alpha: Optional[Decimal] = None,
+        target_cost_ratio: Optional[Decimal] = None,
     ) -> Decimal:
         """
         Calculate minimum capital needed for learning to be economically viable.
@@ -282,6 +286,10 @@ class LearningCapitalGate:
         Returns:
             Minimum capital required
         """
+        if expected_monthly_alpha is None:
+            expected_monthly_alpha = Decimal("100")
+        if target_cost_ratio is None:
+            target_cost_ratio = Decimal("0.30")
         if expected_monthly_alpha <= Decimal("0"):
             return Decimal("999999999")  # Impossible
 

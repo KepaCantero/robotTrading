@@ -193,7 +193,7 @@ class OrderStateMachine:
                 logger.info(f"WAL: Order {log.order_id} state -> {log.state.value}")
                 return True
 
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.critical(f"WAL write failed for order {log.order_id}: {e}")
                 raise
 
@@ -291,7 +291,7 @@ class WALOrderManager:
         )
     """
 
-    def __init__(self, db_path: str, wal_path: str, broker_client: Any):
+    def __init__(self, db_path: str, wal_path: str, broker_client: object):
         """
         Initialize order manager.
 
@@ -389,7 +389,7 @@ class WALOrderManager:
                 'result': result,
             }
 
-        except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+        except (OSError, ValueError) as e:
             # CRITICAL: Log failure state
             log.state = OrderState.FAILED
             log.error = str(e)

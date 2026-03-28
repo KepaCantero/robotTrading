@@ -41,7 +41,7 @@ from enum import Enum
 from typing import Dict, Optional, Tuple
 
 # Import centralized configuration (REQUIRED - no fallbacks)
-from app.shared.config.strategy_config_loader import get_strategy_config  # noqa: F401
+from app.shared.config.strategy_config_loader import get_strategy_config
 
 logger = logging.getLogger(__name__)
 
@@ -186,7 +186,7 @@ class TierMapper:
             if tier == "institutional":
                 return "large"
             return tier
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             logger.error(f"Could not determine tier from config: {e}")
             raise
 
@@ -452,15 +452,14 @@ class TierMapper:
 
         # Check YAML to Spanish mappings
         for yaml_tier, spanish_tier in cls.YAML_TO_SPANISH.items():
-            if spanish_tier in cls.SPANISH_TO_YAML:
-                if cls.SPANISH_TO_YAML[spanish_tier] != yaml_tier:
-                    # This is expected for bajo -> small (not micro)
-                    if not (yaml_tier == "micro" and spanish_tier == "bajo"):
-                        warnings.append(
-                            f"YAML-Spanish mapping inconsistency: "
-                            f"{yaml_tier} -> {spanish_tier} but "
-                            f"{spanish_tier} -> {cls.SPANISH_TO_YAML[spanish_tier]}"
-                        )
+            if spanish_tier in cls.SPANISH_TO_YAML and cls.SPANISH_TO_YAML[spanish_tier] != yaml_tier:
+                # This is expected for bajo -> small (not micro)
+                if not (yaml_tier == "micro" and spanish_tier == "bajo"):
+                    warnings.append(
+                        f"YAML-Spanish mapping inconsistency: "
+                        f"{yaml_tier} -> {spanish_tier} but "
+                        f"{spanish_tier} -> {cls.SPANISH_TO_YAML[spanish_tier]}"
+                    )
 
         # Validate capital thresholds are in order
         threshold_values = list(cls.THRESHOLDS.values())

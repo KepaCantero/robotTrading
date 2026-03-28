@@ -21,10 +21,8 @@ from alembic import context
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 # Import Base and metadata from app.infrastructure.persistence.database
-# pylint: disable=import-error  # Migration environment runs independently
 from app.infrastructure.persistence import Base
 
-# pylint: disable=import-error  # Migration environment runs independently
 from app.shared.config.config import get_settings
 
 # Configure logger for migration operations

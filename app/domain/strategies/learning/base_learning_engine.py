@@ -163,7 +163,7 @@ class BaseLearningEngine(ABC):
                 'confidence': float,  # Confianza en la predicción (0-1)
                 'filter_adjustments': Dict[str, Dict[str, float]],  # Ajustes a filtros
                 'recommended_action': str,  # 'BUY', 'SELL', 'HOLD'
-                'raw_prediction': Any  # Predicción cruda del modelo (opcional)
+                'raw_prediction': object  # Predicción cruda del modelo (opcional)
             }
         """
 
@@ -252,7 +252,7 @@ class BaseLearningEngine(ABC):
 
             logger.info(f"{self.name}: Modelo guardado en {save_path}")
             return True
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             logger.error(f"{self.name}: Error guardando modelo: {e}")
             return False
 
@@ -314,12 +314,56 @@ class BaseLearningEngine(ABC):
                 return False
 
             # SECURITY: One-time migration from pickle to joblib
-            # This is the only place where we still use pickle.load, and it's
-            # only for migrating existing trusted model files to the secure format
-            import pickle  # nosec - B403: Only for migration of trusted files
+            # Using RestrictedUnpickler to prevent arbitrary code execution
+            import pickle
+
+            class _MigrationUnpickler(pickle.Unpickler):
+                """Restrict pickle deserialization to known safe classes for migration."""
+
+                ALLOWED_CLASSES = {
+                    ('builtins', 'dict'): dict,
+                    ('builtins', 'list'): list,
+                    ('builtins', 'tuple'): tuple,
+                    ('builtins', 'set'): set,
+                    ('builtins', 'frozenset'): frozenset,
+                    ('builtins', 'str'): str,
+                    ('builtins', 'int'): int,
+                    ('builtins', 'float'): float,
+                    ('builtins', 'bool'): bool,
+                    ('builtins', 'bytes'): bytes,
+                    ('builtins', 'bytearray'): bytearray,
+                    ('builtins', 'NoneType'): type(None),
+                    ('collections', 'OrderedDict'): None,
+                    ('collections', 'defaultdict'): None,
+                    ('numpy.core.multiarray', '_reconstruct'): None,
+                    ('numpy', 'dtype'): None,
+                    ('numpy', 'ndarray'): None,
+                }
+
+                def find_class(self, module: str, name: str) -> type:
+                    key = (module, name)
+                    if key in self.ALLOWED_CLASSES:
+                        cls = self.ALLOWED_CLASSES[key]
+                        if cls is not None:
+                            return cls
+                        try:
+                            mod = __import__(module, fromlist=[name])
+                            return getattr(mod, name)
+                        except (ImportError, AttributeError):
+                            pass
+                    raise pickle.UnpicklingError(
+                        f"Forbidden class during migration: {module}.{name}. "
+                        f"Only basic Python and numpy types are allowed."
+                    )
 
             with open(pkl_path, 'rb') as f:
-                saved_data = pickle.load(f)  # nosec - B301: Trusted migration only
+                saved_data = _MigrationUnpickler(f).load()
+
+            # Validate loaded data structure
+            if not isinstance(saved_data, dict):
+                raise ValueError(
+                    f"Migration failed: expected dict, got {type(saved_data).__name__}"
+                )
 
             # Save in new secure format
             joblib_path = pkl_path.replace('.pkl', '.joblib')
@@ -346,7 +390,7 @@ class BaseLearningEngine(ABC):
             self.is_trained = True
             return True
 
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             logger.error(f"Error migrating .pkl to .joblib: {e}")
             return False
 

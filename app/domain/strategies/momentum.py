@@ -15,11 +15,11 @@ from collections import deque
 from decimal import Decimal
 from typing import Any, Optional
 
+from app.core.protocols.signal_scoring import SignalScoringEngineProtocol
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.services.analysis.momentum import TechnicalIndicatorCalculator
-from app.services.signal_scoring_engine import get_signal_scoring_engine
 from app.shared.config.centralized_config import (
     get_config,
     get_strategy_config,
@@ -34,14 +34,21 @@ logger = logging.getLogger(__name__)
 class MomentumStrategy(BaseStrategy):
     """Estrategia de momentum basada en RSI, EMA y volumen."""
 
-    def __init__(self, config: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        config: dict[str, Any],
+        signal_scoring_engine: Optional[SignalScoringEngineProtocol] = None,
+    ) -> None:
         """
         Inicializar estrategia de momentum.
 
         Args:
             config: Configuración de la estrategia
+            signal_scoring_engine: Optional signal scoring engine for dependency injection.
+                If not provided, will be lazily initialized on first use.
         """
         super().__init__(config)
+        self._signal_scoring_engine: Optional[SignalScoringEngineProtocol] = signal_scoring_engine
 
         # Initialize all parameters with defaults FIRST (before loading YAML config)
         # Parámetros técnicos
@@ -165,13 +172,24 @@ class MomentumStrategy(BaseStrategy):
         self.current_bar_index = 0
         self.cooldown_bars = config.get("cooldown_bars", 5)  # Número de barras para cooldown
 
-        # TASK-SC-5: Signal Scoring Engine integration
-        self.signal_scoring_engine = get_signal_scoring_engine()
-
         # REFACTORED: Use vectorized TechnicalIndicatorCalculator
         self.indicator_calculator = TechnicalIndicatorCalculator()
 
         logger.info(f"MomentumStrategy initialized: {self.name}")
+
+    @property
+    def signal_scoring_engine(self) -> SignalScoringEngineProtocol:
+        """
+        Get signal scoring engine, lazily initialized if not injected.
+
+        Uses late import to avoid domain layer depending on services layer.
+        """
+        if self._signal_scoring_engine is None:
+            # Late import to avoid architecture violation
+            from app.services.signal_scoring_engine import get_signal_scoring_engine
+
+            self._signal_scoring_engine = get_signal_scoring_engine()
+        return self._signal_scoring_engine
 
     def get_required_parameters(self) -> list[str]:
         """

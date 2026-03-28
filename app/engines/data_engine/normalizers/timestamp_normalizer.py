@@ -6,7 +6,7 @@ Convierte timestamps de diferentes formatos y timezones a UTC estándar.
 
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
 import pytz
 
@@ -32,7 +32,7 @@ class TimestampNormalizer:
         self.output_timezone = pytz.UTC  # Siempre output UTC
         self.assume_local_if_naive = config.get('assume_local_if_naive', False)
 
-    def normalize(self, timestamp: Any, source_timezone: Optional[str] = None) -> datetime:
+    def normalize(self, timestamp: Union[datetime, int, float, str], source_timezone: Optional[str] = None) -> datetime:
         """
         Normalizar timestamp a UTC.
 

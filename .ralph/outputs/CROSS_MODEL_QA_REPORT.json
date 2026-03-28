@@ -1,0 +1,116 @@
+{
+  "timestamp": "2026-03-19T16:30:00Z",
+  "files_reviewed": 25,
+  "total_changed_files": 254,
+  "sample_percentage": "9.8%",
+  "issues_found": 12,
+  "issues": [
+    {
+      "file": "app/domain/strategies/learning/transfer_learning.py",
+      "line": 359,
+      "issue": "# nosec B614 comment found - torch related",
+      "severity": "low",
+      "category": "nosec"
+    },
+    {
+      "file": "app/domain/strategies/learning/transfer_learning.py",
+      "line": 428,
+      "issue": "# nosec B403 - pickle import with nosec suppression",
+      "severity": "medium",
+      "category": "nosec"
+    },
+    {
+      "file": "app/domain/strategies/learning/transfer_learning.py",
+      "line": 431,
+      "issue": "# nosec B301 - pickle.load with nosec suppression",
+      "severity": "medium",
+      "category": "nosec"
+    },
+    {
+      "file": "app/domain/strategies/learning/transfer_learning.py",
+      "line": "multiple",
+      "issue": "12 : Any type patterns found",
+      "severity": "medium",
+      "category": "any_type"
+    },
+    {
+      "file": "app/services/task_queue/persistent_queue.py",
+      "line": 18,
+      "issue": "# noqa F401 on import line - unused imports",
+      "severity": "low",
+      "category": "noqa"
+    },
+    {
+      "file": "app/services/task_queue/persistent_queue.py",
+      "line": "multiple",
+      "issue": "2 : Any type patterns found",
+      "severity": "low",
+      "category": "any_type"
+    },
+    {
+      "file": "app/sre/dead_mans_switch/dead_mans_switch.py",
+      "line": 555,
+      "issue": "# nosec B603 - subprocess with nosec suppression",
+      "severity": "low",
+      "category": "nosec"
+    },
+    {
+      "file": "app/backtesting/engines/standard_engine.py",
+      "line": 179,
+      "issue": "# pylint: disable=signature-differs",
+      "severity": "medium",
+      "category": "pylint_disable"
+    },
+    {
+      "file": "app/backtesting/engines/standard_engine.py",
+      "line": 313,
+      "issue": "# pylint: disable=arguments-differ",
+      "severity": "medium",
+      "category": "pylint_disable"
+    },
+    {
+      "file": "app/backtesting/engines/standard_engine.py",
+      "line": "multiple",
+      "issue": "8 : Any type patterns found",
+      "severity": "medium",
+      "category": "any_type"
+    },
+    {
+      "file": "app/backtesting/engine.py",
+      "line": "multiple",
+      "issue": "7 : Any type patterns found",
+      "severity": "medium",
+      "category": "any_type"
+    },
+    {
+      "file": "app/services/stationarity_analyzer.py",
+      "line": 24,
+      "issue": "# noqa F401 on import line - unused imports",
+      "severity": "low",
+      "category": "noqa"
+    }
+  ],
+  "summary": {
+    "total_issues": 12,
+    "by_severity": {
+      "medium": 8,
+      "low": 4
+    },
+    "by_category": {
+      "nosec": 4,
+      "any_type": 5,
+      "noqa": 2,
+      "pylint_disable": 2
+    }
+  },
+  "recommendations": [
+    "Continue removing pylint:disable patterns from standard_engine.py (signature-differs, arguments-differ)",
+    "Review nosec suppressions in transfer_learning.py for potential security improvements",
+    "Remove unused imports with noqa F401 in persistent_queue.py and stationarity_analyzer.py",
+    "Consider replacing : Any types with specific types in files with high counts"
+  ],
+  "milestone_verified": {
+    "type_ignore_eliminated": true,
+    "type_ignore_count": 0
+  }
+}

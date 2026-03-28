@@ -30,7 +30,8 @@ from uuid import UUID, uuid4
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.tax.database.fifo_schema import (
+from app.infrastructure.persistence.database import get_db_transaction
+from app.infrastructure.persistence.tax.fifo_schema import (
     Account,
     AssetType,
     ExchangeType,
@@ -40,7 +41,6 @@ from app.domain.tax.database.fifo_schema import (
     Transaction,
     TransactionType,
 )
-from app.infrastructure.persistence.database import get_db_transaction
 from app.shared.config import get_settings
 
 logger = logging.getLogger(__name__)
@@ -152,7 +152,7 @@ class FIFOIntegrator:
 
             self.logger.info("FIFO integrator initialized successfully")
 
-        except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+        except (OSError, ValueError) as e:
             self.logger.error(f"Error initializing FIFO integrator: {e}")
             raise
 
@@ -339,7 +339,7 @@ class FIFOIntegrator:
 
                 await session.flush()
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error recording trade in FIFO: {e}", exc_info=True)
             raise
 
@@ -440,7 +440,7 @@ class FIFOIntegrator:
                     for lot in lots
                 ]
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error getting open lots for {symbol}: {e}")
             return []
 
@@ -458,7 +458,7 @@ class FIFOIntegrator:
             lots = await self.get_open_lots(symbol)
             return sum(lot.cost_basis_open for lot in lots)
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error calculating cost basis for {symbol}: {e}")
             return Decimal("0")
 
@@ -476,7 +476,7 @@ class FIFOIntegrator:
             lots = await self.get_open_lots(symbol)
             return sum(lot.quantity_remaining for lot in lots)
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error getting total quantity for {symbol}: {e}")
             return Decimal("0")
 
@@ -504,7 +504,7 @@ class FIFOIntegrator:
 
             return total_cost / total_quantity
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error calculating average cost for {symbol}: {e}")
             return Decimal("0")
 

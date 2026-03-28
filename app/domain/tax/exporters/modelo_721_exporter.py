@@ -40,7 +40,7 @@ from typing import Dict, List, Optional
 
 import aiohttp
 import aiosqlite
-from requests.exceptions import HTTPError, RequestException  # type: ignore[import-untyped]
+from requests.exceptions import HTTPError, RequestException
 
 logger = logging.getLogger(__name__)
 
@@ -284,7 +284,7 @@ class Modelo721Exporter:
                 logger.info(f"Generated Dec 31 balance snapshot: {len(balances)} assets")
                 return balances
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Error generating Dec 31 balance: {e}")
             raise
 

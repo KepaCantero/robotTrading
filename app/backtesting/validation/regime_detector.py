@@ -213,7 +213,7 @@ class RegimeDetector:
         regimes = ["bull", "bear", "neutral"]
 
         # Initialize transition counts
-        transitions = {r: {r: 0 for r in regimes} for r in regimes}
+        transitions = {r: dict.fromkeys(regimes, 0) for r in regimes}
 
         # Count transitions
         for i in range(len(regime_history) - 1):
@@ -233,7 +233,7 @@ class RegimeDetector:
                     for to_regime, count in transitions[from_regime].items()
                 }
             else:
-                matrix[from_regime] = {to_regime: 0.0 for to_regime in regimes}
+                matrix[from_regime] = dict.fromkeys(regimes, 0.0)
 
         # Calculate expected durations
         expected_durations = {}
@@ -376,9 +376,7 @@ class RegimeDetector:
         # Classification
         if r_squared > 0.7:  # Strong trend
             return TrendRegime.TREND
-        elif normalized_range < 0.05:  # Tight range
-            return TrendRegime.RANGE
-        elif (
+        elif normalized_range < 0.05 or (  # Tight range or clear peaks/valleys
             abs(maxima_idx[0] - minima_idx[0])
             if len(maxima_idx) > 0 and len(minima_idx) > 0
             else 0 > len(lookback_prices) / 2
@@ -496,10 +494,9 @@ class RegimeDetector:
         Returns:
             Dictionary of characteristics
         """
-        characteristics = {}
-
-        # Current price level
-        characteristics["current_price"] = float(prices.iloc[-1]) if len(prices) > 0 else None
+        characteristics = {
+            "current_price": float(prices.iloc[-1]) if len(prices) > 0 else None,
+        }
 
         # Price vs SMAs
         if len(prices) >= self.config.sma_long:

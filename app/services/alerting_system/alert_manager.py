@@ -131,13 +131,13 @@ class AlertManager:
 
         if event_id:
             # Find by event ID
-            for key, evt in self.active_alerts.items():
+            for _key, evt in self.active_alerts.items():
                 if evt.event_id == event_id:
                     event = evt
                     break
         else:
             # Find first active alert for this rule (can be TRIGGERED or ACKNOWLEDGED)
-            for key, evt in self.active_alerts.items():
+            for _key, evt in self.active_alerts.items():
                 if evt.rule_id == rule_id and evt.state in [
                     AlertState.TRIGGERED,
                     AlertState.ACKNOWLEDGED,
@@ -191,12 +191,12 @@ class AlertManager:
         event = None
 
         if event_id:
-            for key, evt in self.active_alerts.items():
+            for _key, evt in self.active_alerts.items():
                 if evt.event_id == event_id:
                     event = evt
                     break
         else:
-            for key, evt in self.active_alerts.items():
+            for _key, evt in self.active_alerts.items():
                 if evt.rule_id == rule_id and evt.state in [
                     AlertState.TRIGGERED,
                     AlertState.RESOLVED,

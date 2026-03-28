@@ -1,5 +1,5 @@
-# mypy: ignore-errors
-# pylint: disable=unsupported-binary-operation  # For Python 3.10+ union syntax
+from __future__ import annotations
+
 """
 Stationarity and Cointegration Analyzer
 
@@ -19,11 +19,9 @@ Reference:
     Chapter 6: Mean Reversion Strategies
 """
 
-from __future__ import annotations
-
 import logging
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple, Union  # noqa: F401
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -245,15 +243,14 @@ class StationarityAnalyzer:
                 store=False,
             )
 
-            critical_values = adf_result[4]
-            # pylint: disable=unsubscriptable-object
+            critical_values_dict: Dict[str, float] = dict(adf_result[4])
             return {
                 "statistic": float(adf_result[0]),
                 "p_value": float(adf_result[1]),
                 "critical_values": {
-                    "1%": float(critical_values["1%"]),
-                    "5%": float(critical_values["5%"]),
-                    "10%": float(critical_values["10%"]),
+                    "1%": float(critical_values_dict["1%"]),
+                    "5%": float(critical_values_dict["5%"]),
+                    "10%": float(critical_values_dict["10%"]),
                 },
                 "is_stationary": float(adf_result[1]) < (1.0 - self.confidence_level),
             }

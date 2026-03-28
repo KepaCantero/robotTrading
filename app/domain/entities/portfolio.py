@@ -439,7 +439,7 @@ class Portfolio:
         """
         return Decimal("1.0")
 
-    def is_risk_limit_exceeded(self, additional_exposure: Decimal = Decimal("0")) -> bool:
+    def is_risk_limit_exceeded(self, additional_exposure: Optional[Decimal] = None) -> bool:
         """
         Check if risk limits would be exceeded.
 
@@ -456,6 +456,8 @@ class Portfolio:
 
             Heuristic: If max_portfolio_exposure >= capital, treat as absolute.
         """
+        if additional_exposure is None:
+            additional_exposure = Decimal("0")
         total_exposure = self.get_gross_exposure() + additional_exposure
 
         # Smart interpretation of max_portfolio_exposure
@@ -624,8 +626,8 @@ class Portfolio:
         portfolio_id: str,
         initial_capital: Decimal,
         currency: str = "USD",
-        max_position_size_pct: Decimal = Decimal("0.2"),
-        max_portfolio_exposure_pct: Decimal = Decimal("0.8"),
+        max_position_size_pct: Optional[Decimal] = None,
+        max_portfolio_exposure_pct: Optional[Decimal] = None,
         config_provider: Optional[TradingConfigProvider] = None,
         audit_logger: Optional[logging.Logger] = None,
     ) -> Portfolio:
@@ -667,6 +669,10 @@ class Portfolio:
             ...     config_provider=mock_config
             ... )
         """
+        if max_position_size_pct is None:
+            max_position_size_pct = Decimal("0.2")
+        if max_portfolio_exposure_pct is None:
+            max_portfolio_exposure_pct = Decimal("0.8")
         # Create Capital value object
         capital = Capital.from_amount(initial_capital, currency)
 

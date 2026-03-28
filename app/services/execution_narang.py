@@ -374,11 +374,10 @@ class VWAPExecution(ExecutionAlgoBase):
     def _get_volume_percentage(self, time: datetime.time, profile: IntradayVolumeProfile) -> float:
         """Get volume percentage for a given time."""
         for i, bin_time in enumerate(profile.time_bins):
-            if time.hour == bin_time.hour and time.minute >= bin_time.minute:
-                if i + 1 < len(profile.time_bins):
-                    next_time = profile.time_bins[i + 1]
-                    if time.minute < next_time.minute:
-                        return profile.volume_distribution[i]
+            if time.hour == bin_time.hour and time.minute >= bin_time.minute and i + 1 < len(profile.time_bins):
+                next_time = profile.time_bins[i + 1]
+                if time.minute < next_time.minute:
+                    return profile.volume_distribution[i]
 
         # Default to last bin
         return profile.volume_distribution[-1] if profile.volume_distribution else 0.0

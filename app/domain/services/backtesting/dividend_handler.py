@@ -89,7 +89,7 @@ class DividendHandler:
     def __init__(
         self,
         reinvestment_strategy: DividendReinvestmentStrategy = DividendReinvestmentStrategy.REINVEST,
-        reinvestment_threshold: Decimal = Decimal("10"),
+        reinvestment_threshold: Optional[Decimal] = None,
         fractional_shares: bool = True,
         tax_withholding_rate: float = 0.0,  # Varies by jurisdiction
     ):
@@ -102,6 +102,8 @@ class DividendHandler:
             fractional_shares: Allow fractional share purchases
             tax_withholding_rate: Tax withholding rate on dividends
         """
+        if reinvestment_threshold is None:
+            reinvestment_threshold = Decimal("10")
         self._strategy = reinvestment_strategy
         self._threshold = reinvestment_threshold
         self._fractional_shares = fractional_shares
@@ -206,15 +208,10 @@ class DividendHandler:
         # Handle based on strategy
         reinvestment = None
 
-        if self._strategy == DividendReinvestmentStrategy.REINVEST:
+        if self._strategy == DividendReinvestmentStrategy.REINVEST or self._strategy == DividendReinvestmentStrategy.THRESHOLD and net_dividend >= self._threshold:
             reinvestment = self._reinvest_dividend(
                 symbol, net_dividend, payment_date, current_price
             )
-        elif self._strategy == DividendReinvestmentStrategy.THRESHOLD:
-            if net_dividend >= self._threshold:
-                reinvestment = self._reinvest_dividend(
-                    symbol, net_dividend, payment_date, current_price
-                )
 
         return net_dividend, reinvestment
 

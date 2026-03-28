@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import aiosqlite
+import contextlib
 
 logger = logging.getLogger(__name__)
 
@@ -144,7 +145,7 @@ class ExternalMonitor:
         try:
             await self._init_database()
             self.logger.info("ExternalMonitor initialized")
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error initializing: {e}")
             raise
 
@@ -195,7 +196,7 @@ class ExternalMonitor:
 
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Database initialization failed: {e}")
             raise
 
@@ -216,10 +217,8 @@ class ExternalMonitor:
 
         if self._monitor_task:
             self._monitor_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._monitor_task
-            except asyncio.CancelledError:
-                pass
 
         self.logger.info("Stopped external monitor")
 
@@ -475,7 +474,7 @@ class ExternalMonitor:
                 )
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error saving health check: {e}")
 
     async def _save_alert(
@@ -503,7 +502,7 @@ class ExternalMonitor:
                 )
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error saving alert: {e}")
 
     @property

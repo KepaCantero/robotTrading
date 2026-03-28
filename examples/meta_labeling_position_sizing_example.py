@@ -109,8 +109,12 @@ def example_1_basic_meta_labeling_sizing():
 
     # Analyze results
     n_trades = (position_sizes != 0).sum()
-    avg_long_size = position_sizes[position_sizes > 0].mean() if (position_sizes > 0).sum() > 0 else 0
-    avg_short_size = position_sizes[position_sizes < 0].mean() if (position_sizes < 0).sum() > 0 else 0
+    avg_long_size = (
+        position_sizes[position_sizes > 0].mean() if (position_sizes > 0).sum() > 0 else 0
+    )
+    avg_short_size = (
+        position_sizes[position_sizes < 0].mean() if (position_sizes < 0).sum() > 0 else 0
+    )
     total_exposure = np.abs(position_sizes).sum()
 
     print(f"\nPosition Sizing Results:")
@@ -256,7 +260,9 @@ def example_3_different_bet_sizing_methods():
         avg_size = np.abs(position_sizes[position_sizes != 0]).mean() if n_trades > 0 else 0
         total_exposure = np.abs(position_sizes).sum()
 
-        print(f"{method:20} | Trades: {n_trades:3} | Avg Size: {avg_size:6.2%} | Exposure: {total_exposure:5.2%}")
+        print(
+            f"{method:20} | Trades: {n_trades:3} | Avg Size: {avg_size:6.2%} | Exposure: {total_exposure:5.2%}"
+        )
 
 
 def example_4_confidence_threshold_impact():
@@ -363,8 +369,16 @@ def example_5_risk_management_integration():
 
     # Analyze final results
     n_trades = (position_sizes_final != 0).sum()
-    avg_long_size = position_sizes_final[position_sizes_final > 0].mean() if (position_sizes_final > 0).sum() > 0 else 0
-    avg_short_size = position_sizes_final[position_sizes_final < 0].mean() if (position_sizes_final < 0).sum() > 0 else 0
+    avg_long_size = (
+        position_sizes_final[position_sizes_final > 0].mean()
+        if (position_sizes_final > 0).sum() > 0
+        else 0
+    )
+    avg_short_size = (
+        position_sizes_final[position_sizes_final < 0].mean()
+        if (position_sizes_final < 0).sum() > 0
+        else 0
+    )
     total_exposure_final = np.abs(position_sizes_final).sum()
 
     print(f"\nFinal Position Sizing Results:")

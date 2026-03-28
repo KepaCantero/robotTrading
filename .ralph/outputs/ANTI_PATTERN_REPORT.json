@@ -1,0 +1,101 @@
+{
+  "timestamp": "2026-03-28T15:30:00Z",
+  "scan_summary": {
+    "type_ignore": 0,
+    "pylint_disable": 0,
+    "noqa": 0,
+    "nosec": 0,
+    "any_type": 0,
+    "god_classes": 645,
+    "god_functions": 1039,
+    "dead_code": 0
+  },
+  "pattern_details": {
+    "type_ignore": {
+      "count": 0,
+      "files": 0,
+      "status": "CLEAN"
+    },
+    "pylint_disable": {
+      "count": 0,
+      "files": 0,
+      "status": "CLEAN"
+    },
+    "noqa": {
+      "count": 0,
+      "files": 0,
+      "status": "CLEAN"
+    },
+    "nosec": {
+      "count": 0,
+      "files": 0,
+      "status": "CLEAN"
+    },
+    "any_type": {
+      "count": 0,
+      "files": 0,
+      "status": "CLEAN",
+      "note": "All 320 original occurrences across 104 files fixed. 3 remaining grep matches are in comments/docstrings only (survivorship_adjuster.py:52, avellaneda_stoikov/models.py:183, hurst_analysis/orchestrator.py:9)."
+    },
+    "dead_code": {
+      "count": 0,
+      "files": 0,
+      "status": "CLEAN",
+      "note": "ruff F401/F841 now returns 'All checks passed!'. All 48 original occurrences fixed."
+    },
+    "god_classes": {
+      "count": 645,
+      "files": 645,
+      "status": "DIRTY",
+      "change": "647 -> 645 (slight improvement, 2 files reduced below 300 lines)",
+      "top_files_by_lines": [
+        "app/backtesting/comprehensive_backtest_runner.py:4531",
+        "app/domain/services/compliance/compliance_engine.py:3859",
+        "app/presentation/dashboard/advanced_dashboard.py:2610",
+        "app/application/use_cases/select_strategy.py:2289",
+        "app/domain/strategies/learning/drift_detector.py:2160",
+        "app/shared/config/trading_config.py:2097",
+        "app/domain/strategies/learning/feature_importance.py:2091",
+        "app/backtesting/walk_forward_validator.py:1901",
+        "app/engines/risk_engine/greeks_calculator.py:1706",
+        "app/domain/strategies/models.py:1632"
+      ]
+    },
+    "god_functions": {
+      "count": 1039,
+      "files": 0,
+      "status": "DIRTY",
+      "change": "698 -> 1039 (note: previous scan may have used different radon flags; current count from 'radon cc -s -nc' which shows all blocks with CC>=10)",
+      "note": "Functions/methods with cyclomatic complexity >= 10. Requires function-level refactoring (extract helpers, guard clauses, early returns).",
+      "top_offenders": [
+        "app/backtesting/walk_forward_validator.py - WalkForwardValidator.validate_strategy CC=52",
+        "app/backtesting/metrics.py - MetricsCalculator.calculate_all_metrics CC=43",
+        "app/backtesting/walk_forward_validator.py - CrossValidationTemporal.cross_validate CC=20",
+        "app/backtesting/data_loader.py - DataLoader._load_from_yahoo_v8_api CC=21",
+        "app/backtesting/walk_forward_validator.py - WalkForwardValidator (class) CC=16"
+      ]
+    }
+  },
+  "progress_vs_last_scan": {
+    "type_ignore": "0 -> 0 (stable - CLEAN)",
+    "pylint_disable": "0 -> 0 (stable - CLEAN)",
+    "noqa": "0 -> 0 (stable - CLEAN)",
+    "nosec": "0 -> 0 (stable - CLEAN)",
+    "any_type": "0 -> 0 (stable - CLEAN, 3 comment-only matches remain)",
+    "dead_code": "0 -> 0 (stable - CLEAN, ruff passes)",
+    "god_classes": "647 -> 645 (slight improvement)",
+    "god_functions": "698 -> 1039 (note: full count with -nc flag; previous scan may have filtered differently)"
+  },
+  "status": "DIRTY",
+  "remaining_work": {
+    "suppression_patterns": {
+      "status": "ALL CLEAN",
+      "details": "Zero instances of # type: ignore, # pylint: disable, # noqa, # nosec, or Any type hints in production code"
+    },
+    "refactoring_needed": [
+      "god_functions: 1039 blocks with CC>=10 require function-level refactoring",
+      "god_classes: 645 files >300 lines require architectural splitting"
+    ]
+  },
+  "recommendation": "All suppression patterns and anti-pattern shortcuts are CLEAN. The only remaining issues are structural: god functions (CC>=10) and god classes (>300 lines), both requiring deep architectural refactoring. These should be addressed incrementally by the Code Fixer role prioritizing highest-CC functions first."
+}

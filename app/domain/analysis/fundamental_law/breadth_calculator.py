@@ -27,6 +27,9 @@ from app.shared.utils.decimal_utils import to_decimal
 
 logger = logging.getLogger(__name__)
 
+_DEFAULT_TRANSFER_COEFFICIENT = Decimal("1.0")
+_DEFAULT_MAX_IR = Decimal("2.0")
+
 
 class BreadthCalculator:
     """
@@ -295,7 +298,7 @@ class BreadthCalculator:
         self,
         target_ir: Decimal,
         information_coefficient: Decimal,
-        transfer_coefficient: Decimal = Decimal("1.0"),
+        transfer_coefficient: Decimal = _DEFAULT_TRANSFER_COEFFICIENT,
     ) -> Decimal:
         """
         Estimate required breadth for a target Information Ratio.
@@ -347,8 +350,8 @@ class BreadthCalculator:
     def calculate_optimal_breadth(
         self,
         information_coefficient: Decimal,
-        transfer_coefficient: Decimal = Decimal("1.0"),
-        max_ir: Decimal = Decimal("2.0"),
+        transfer_coefficient: Decimal = _DEFAULT_TRANSFER_COEFFICIENT,
+        max_ir: Decimal = _DEFAULT_MAX_IR,
     ) -> Decimal:
         """
         Calculate the breadth that would achieve a maximum target IR.

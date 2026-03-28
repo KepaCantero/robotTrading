@@ -27,7 +27,7 @@ import logging
 import random
 import time
 from collections import OrderedDict
-from typing import Any, Dict, Optional
+from typing import Dict, List, Optional, Union
 
 # REQUIRED: yfinance is REQUIRED - NO FALLBACKS
 
@@ -68,7 +68,7 @@ async def retry_with_backoff(
     func,
     retry_config: Optional[RetryConfig] = None,
     operation_name: str = "operation",
-) -> Any:
+) -> Union[str, int, float, bool, Dict, List, None]:
     """
     Execute function with retry and exponential backoff.
 
@@ -89,7 +89,7 @@ async def retry_with_backoff(
     for attempt in range(config.max_attempts):
         try:
             return await func()
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             last_exception = e
 
             if attempt == config.max_attempts - 1:
@@ -229,7 +229,7 @@ class LRUCache:
         self._hits = 0
         self._misses = 0
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Optional[Union[str, int, float, bool, Dict, List]]:
         """Get value from cache."""
         if key not in self._cache:
             self._misses += 1
@@ -246,7 +246,7 @@ class LRUCache:
         self._hits += 1
         return self._cache[key]
 
-    def put(self, key: str, value: Any, ttl_seconds: Optional[float] = None):
+    def put(self, key: str, value: Union[str, int, float, bool, Dict, List], ttl_seconds: Optional[float] = None):
         """Put value in cache."""
         # Remove if exists
         if key in self._cache:
@@ -286,7 +286,7 @@ class LRUCache:
         self._cache.pop(key, None)
         self._timestamps.pop(key, None)
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> Dict[str, Union[str, int, float, bool]]:
         """Get cache statistics."""
         total = self._hits + self._misses
         hit_rate = self._hits / total if total > 0 else 0

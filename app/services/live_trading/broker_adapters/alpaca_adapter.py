@@ -1,5 +1,5 @@
-# mypy: ignore-errors
-# pylint: disable=unsupported-binary-operation  # For Python 3.10+ union syntax
+from __future__ import annotations
+
 """
 Alpaca Adapter - Implements BrokerConnector interface for Alpaca.
 
@@ -14,7 +14,7 @@ import asyncio
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Callable, Dict, List, Optional, Tuple  # noqa: F401
+from typing import Any, Callable, Dict, List, Optional
 
 from app.domain.services.trading_validators import TradingValidator
 from app.services.live_trading.broker_connector import (
@@ -123,7 +123,7 @@ class AlpacaAdapter:
         except AlpacaClientError as e:
             logger.error(f"❌ Alpaca connection failed: {str(e)}")
             return False
-        except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+        except (OSError, ValueError) as e:
             logger.error(f"❌ Unexpected error during connection: {str(e)}")
             return False
 
@@ -354,7 +354,7 @@ class AlpacaAdapter:
 
             return list(self.positions.values())
 
-        except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+        except (OSError, ValueError) as e:
             logger.warning(f"⚠️  Failed to get positions: {str(e)}")
             return list(self.positions.values())
 
@@ -722,7 +722,7 @@ class AlpacaAdapter:
             self.error_manager.position_sync_recovery.record_sync_success()
             return self.positions
 
-        except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+        except (OSError, ValueError) as e:
             self.error_manager.position_sync_recovery.record_sync_failure()
 
             if not self.error_manager.position_sync_recovery.should_retry():

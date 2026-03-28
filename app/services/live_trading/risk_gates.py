@@ -29,6 +29,8 @@ from app.shared.config.centralized_config import get_config
 
 from .broker_connector import BrokerConnector, OrderSide, get_broker_connector
 
+_DEFAULT_DEPENDS = Depends(get_broker_connector)
+
 logger = logging.getLogger(__name__)
 
 
@@ -190,12 +192,11 @@ class RiskGates:
             risk_level = RiskLevel.HIGH
 
         # Check 2: Buying power (for buy orders)
-        if side == OrderSide.BUY:
-            if order_value > account.buying_power:
-                violations.append(
-                    f"Order value €{order_value} exceeds available buying power €{account.buying_power}"
-                )
-                risk_level = RiskLevel.CRITICAL
+        if side == OrderSide.BUY and order_value > account.buying_power:
+            violations.append(
+                f"Order value €{order_value} exceeds available buying power €{account.buying_power}"
+            )
+            risk_level = RiskLevel.CRITICAL
 
         # Check 3: Concentration
         portfolio_value = account.portfolio_value
@@ -480,7 +481,7 @@ _gates: Optional[RiskGates] = None
 
 
 def get_risk_gates(
-    broker: BrokerConnector = Depends(get_broker_connector),
+    broker: BrokerConnector = _DEFAULT_DEPENDS,
 ) -> RiskGates:
     """Get or create singleton RiskGates."""
     global _gates

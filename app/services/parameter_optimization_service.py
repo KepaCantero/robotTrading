@@ -148,7 +148,7 @@ class ParameterOptimizationService:
             )
             return result
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(
                 "Parameter optimization failed",
                 extra={
@@ -192,13 +192,12 @@ class ParameterOptimizationService:
                 )
                 raise ValueError("walk_forward_config is required for walk-forward optimization")
 
-        elif request.optimization_config.method == OptimizationMethod.PURGED_K_FOLD:
-            if not request.optimization_config.purged_k_fold_config:
-                logger.error(
-                    "Validation failed: missing purged_k_fold_config",
-                    extra={"strategy_name": request.strategy_name},
-                )
-                raise ValueError("purged_k_fold_config is required for purged K-fold optimization")
+        elif request.optimization_config.method == OptimizationMethod.PURGED_K_FOLD and not request.optimization_config.purged_k_fold_config:
+            logger.error(
+                "Validation failed: missing purged_k_fold_config",
+                extra={"strategy_name": request.strategy_name},
+            )
+            raise ValueError("purged_k_fold_config is required for purged K-fold optimization")
         logger.debug(
             "Optimization request validated successfully",
             extra={"strategy_name": request.strategy_name},

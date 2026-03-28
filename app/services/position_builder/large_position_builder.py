@@ -120,10 +120,7 @@ class IntraDayExecutionScheduler:
             True if in volatile period
         """
 
-        for start, end in self.VOLATILITY_PEAKS:
-            if start <= time_str < end:
-                return True
-        return False
+        return any(start <= time_str < end for start, end in self.VOLATILITY_PEAKS)
 
 
 class LargePositionBuilder:

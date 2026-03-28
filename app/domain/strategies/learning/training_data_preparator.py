@@ -345,7 +345,7 @@ class TrainingDataPreparator:
         return {'sequences': X_sequences, 'labels': y_labels}
 
     def prepare_reinforcement_learning_data(
-        self, quotes: List[Quote], initial_capital: Decimal = Decimal("100000")
+        self, quotes: List[Quote], initial_capital: Optional[Decimal] = None
     ) -> Dict[str, Any]:
         """
         Preparar datos de mercado para Reinforcement Learning.
@@ -360,6 +360,8 @@ class TrainingDataPreparator:
                 'initial_capital': float
             }
         """
+        if initial_capital is None:
+            initial_capital = Decimal("100000")
         df = self._quotes_to_dataframe(quotes)
         indicators_df = self._calculate_technical_indicators(df)
 
@@ -738,11 +740,7 @@ class TrainingDataPreparator:
         start_timestamp = timestamp - timedelta(days=window_days // 2)
         end_timestamp = timestamp + timedelta(days=window_days)
 
-        for trade_date in trades_map.keys():
-            if start_timestamp <= trade_date <= end_timestamp:
-                return True
-
-        return False
+        return any(start_timestamp <= trade_date <= end_timestamp for trade_date in trades_map.keys())
 
     def _get_recent_trades_before_timestamp(
         self, trades: List[Trade], timestamp: datetime, max_trades: int = 5
@@ -763,14 +761,13 @@ class TrainingDataPreparator:
                 pnl = getattr(trade, 'pnl', None)
                 exit_time = getattr(trade, 'exit_time', None)
 
-            if entry_time and entry_time < timestamp:
-                if (status == TradeStatus.CLOSED or status == 'CLOSED') and pnl is not None:
-                    recent_trades.append(
-                        {'pnl': float(pnl), 'entry_time': entry_time, 'exit_time': exit_time}
-                    )
+            if entry_time and entry_time < timestamp and (status == TradeStatus.CLOSED or status == 'CLOSED') and pnl is not None:
+                recent_trades.append(
+                    {'pnl': float(pnl), 'entry_time': entry_time, 'exit_time': exit_time}
+                )
 
-                    if len(recent_trades) >= max_trades:
-                        break
+                if len(recent_trades) >= max_trades:
+                    break
 
         return list(reversed(recent_trades))  # Orden cronológico
 

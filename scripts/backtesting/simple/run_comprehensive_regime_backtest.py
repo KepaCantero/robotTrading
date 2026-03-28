@@ -186,9 +186,7 @@ def calculate_buy_and_hold(quotes: List[Quote], initial_capital: float) -> Dict[
     }
 
 
-def calculate_corrected_sharpe(
-    trades: List, risk_free_rate: float = 0.02
-) -> Dict[str, float]:
+def calculate_corrected_sharpe(trades: List, risk_free_rate: float = 0.02) -> Dict[str, float]:
     """
     Calculate Sharpe ratio with proper handling of edge cases.
 
@@ -413,11 +411,7 @@ def main():
     print("-" * 70)
 
     for symbol in symbols:
-        bh_ret = (
-            results_original.get(symbol, {})
-            .get("buy_hold", {})
-            .get("total_return_pct", 0)
-        )
+        bh_ret = results_original.get(symbol, {}).get("buy_hold", {}).get("total_return_pct", 0)
         orig_ret = results_original.get(symbol, {}).get("total_return_pct", 0)
         orig_trds = results_original.get(symbol, {}).get("total_trades", 0)
         low_ret = results_lowered.get(symbol, {}).get("total_return_pct", 0)

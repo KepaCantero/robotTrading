@@ -22,6 +22,7 @@ from typing import Any, Awaitable, Callable, Dict, List, Optional
 import numpy as np
 
 from app.domain.entities.order import Order
+import contextlib
 
 logger = logging.getLogger(__name__)
 
@@ -219,10 +220,8 @@ class TomasiniEventQueue:
 
         if self._processor_task:
             self._processor_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._processor_task
-            except asyncio.CancelledError:
-                pass
 
         logger.info("Event queue stopped")
 

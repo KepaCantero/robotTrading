@@ -273,48 +273,49 @@ class VectorizationAuditor:
 
             def visit_For(self, node: ast.For) -> None:
                 # Check for range(len(array)) or range(len(array) +/- N) pattern
-                if isinstance(node.iter, ast.Call):
-                    if isinstance(node.iter.func, ast.Name) and node.iter.func.id == "range":
-                        if node.iter.args:
-                            # Check if it's range(len(x)) or range(len(x) +/- N)
-                            first_arg = node.iter.args[0]
-                            if isinstance(first_arg, ast.Call):
-                                if (
-                                    isinstance(first_arg.func, ast.Name)
-                                    and first_arg.func.id == "len"
-                                ):
-                                    self.issues.append(
-                                        VectorizationIssue(
-                                            file_path=file_path,
-                                            line_number=node.lineno,
-                                            issue_type="range_len",
-                                            severity="high",
-                                            description="For loop using range(len(array)) pattern",
-                                            suggestion="Use vectorized operations instead of indexing",
-                                            vectorized_alternative="# Instead of:\n"
-                                            "# for i in range(len(arr)):\n"
-                                            "#     result[i] = arr[i] * 2\n"
-                                            "# Use:\n"
-                                            "# result = arr * 2",
-                                        )
-                                    )
-                            # Also check for range() calls with any len() inside
-                            if self._contains_len_call(first_arg):
-                                self.issues.append(
-                                    VectorizationIssue(
-                                        file_path=file_path,
-                                        line_number=node.lineno,
-                                        issue_type="range_len",
-                                        severity="high",
-                                        description="For loop using range with len() pattern",
-                                        suggestion="Use vectorized operations instead of indexing",
-                                        vectorized_alternative="# Instead of:\n"
-                                        "# for i in range(len(arr)):\n"
-                                        "#     result[i] = arr[i] * 2\n"
-                                        "# Use:\n"
-                                        "# result = arr * 2",
-                                    )
-                                )
+                if (
+                    isinstance(node.iter, ast.Call)
+                    and isinstance(node.iter.func, ast.Name)
+                    and node.iter.func.id == "range"
+                    and node.iter.args
+                ):
+                    # Check if it's range(len(x)) or range(len(x) +/- N)
+                    first_arg = node.iter.args[0]
+                    if isinstance(first_arg, ast.Call) and isinstance(
+                        first_arg.func, ast.Name
+                    ) and first_arg.func.id == "len":
+                        self.issues.append(
+                            VectorizationIssue(
+                                file_path=file_path,
+                                line_number=node.lineno,
+                                issue_type="range_len",
+                                severity="high",
+                                description="For loop using range(len(array)) pattern",
+                                suggestion="Use vectorized operations instead of indexing",
+                                vectorized_alternative="# Instead of:\n"
+                                "# for i in range(len(arr)):\n"
+                                "#     result[i] = arr[i] * 2\n"
+                                "# Use:\n"
+                                "# result = arr * 2",
+                            )
+                        )
+                    # Also check for range() calls with any len() inside
+                    if self._contains_len_call(first_arg):
+                        self.issues.append(
+                            VectorizationIssue(
+                                file_path=file_path,
+                                line_number=node.lineno,
+                                issue_type="range_len",
+                                severity="high",
+                                description="For loop using range with len() pattern",
+                                suggestion="Use vectorized operations instead of indexing",
+                                vectorized_alternative="# Instead of:\n"
+                                "# for i in range(len(arr)):\n"
+                                "#     result[i] = arr[i] * 2\n"
+                                "# Use:\n"
+                                "# result = arr * 2",
+                            )
+                        )
 
                 # Check for array indexing operations in loop body (subscript access)
                 has_subscript_ops = self._check_for_subscript_operations(node)
@@ -335,34 +336,36 @@ class VectorizationAuditor:
 
                 # Check for numerical operations in loop body
                 has_numerical_ops = self._check_for_numerical_operations(node)
-                if has_numerical_ops and not has_subscript_ops:
-                    # Check if it's a simple iteration that could be vectorized
-                    if isinstance(node.iter, (ast.Name, ast.Attribute)):
-                        self.issues.append(
-                            VectorizationIssue(
-                                file_path=file_path,
-                                line_number=node.lineno,
-                                issue_type="for_loop",
-                                severity="low",
-                                description="For loop with numerical operations that could be vectorized",
-                                suggestion="Consider using NumPy vectorized operations",
-                                vectorized_alternative=self.outer.patterns.get_suggestion_for_issue(
-                                    "for_loop"
-                                ),
-                            )
+                if has_numerical_ops and not has_subscript_ops and isinstance(
+                    node.iter, (ast.Name, ast.Attribute)
+                ):
+                    self.issues.append(
+                        VectorizationIssue(
+                            file_path=file_path,
+                            line_number=node.lineno,
+                            issue_type="for_loop",
+                            severity="low",
+                            description="For loop with numerical operations that could be vectorized",
+                            suggestion="Consider using NumPy vectorized operations",
+                            vectorized_alternative=self.outer.patterns.get_suggestion_for_issue(
+                                "for_loop"
+                            ),
                         )
+                    )
 
                 self.generic_visit(node)
 
             def _contains_len_call(self, node: ast.AST) -> bool:
                 """Check if AST node contains a len() call."""
-                if isinstance(node, ast.Call):
-                    if isinstance(node.func, ast.Name) and node.func.id == "len":
-                        return True
+                if isinstance(node, ast.Call) and isinstance(
+                    node.func, ast.Name
+                ) and node.func.id == "len":
+                    return True
                 for child in ast.walk(node):
-                    if isinstance(child, ast.Call):
-                        if isinstance(child.func, ast.Name) and child.func.id == "len":
-                            return True
+                    if isinstance(child, ast.Call) and isinstance(
+                        child.func, ast.Name
+                    ) and child.func.id == "len":
+                        return True
                 return False
 
             def _check_for_subscript_operations(self, node: ast.For) -> bool:
@@ -373,9 +376,8 @@ class VectorizationAuditor:
                         if isinstance(child.slice, ast.Name):
                             # Check if this name matches loop target
                             for target in ast.walk(node.target):
-                                if isinstance(target, ast.Name):
-                                    if child.slice.id == target.id:
-                                        return True
+                                if isinstance(target, ast.Name) and child.slice.id == target.id:
+                                    return True
                         # Also check for subscript with ast.Constant (integer indexing)
                         if isinstance(child.slice, (ast.Constant, ast.Num)):
                             return True
@@ -384,10 +386,10 @@ class VectorizationAuditor:
             def _check_for_numerical_operations(self, node: ast.For) -> bool:
                 """Check if loop body contains numerical operations."""
                 for child in ast.walk(node):
-                    if isinstance(child, (ast.BinOp, ast.AugAssign)):
-                        # Check if operating on numbers/arrays
-                        if isinstance(child.op, (ast.Add, ast.Sub, ast.Mult, ast.Div, ast.Pow)):
-                            return True
+                    if isinstance(child, (ast.BinOp, ast.AugAssign)) and isinstance(
+                        child.op, (ast.Add, ast.Sub, ast.Mult, ast.Div, ast.Pow)
+                    ):
+                        return True
                 return False
 
         visitor = ForLoopVisitor(self)
@@ -422,22 +424,21 @@ class VectorizationAuditor:
 
             def visit_Call(self, node: ast.Call) -> None:
                 # Check for .apply() calls
-                if isinstance(node.func, ast.Attribute):
-                    if node.func.attr == "apply":
-                        issues.append(
-                            VectorizationIssue(
-                                file_path=file_path,
-                                line_number=node.lineno,
-                                issue_type="apply",
-                                severity="high",
-                                description="DataFrame/Series .apply() usage - consider vectorized alternative",
-                                suggestion="Use vectorized operations instead of .apply()",
-                                vectorized_alternative="# Instead of:\n"
-                                "# df['col'].apply(lambda x: x * 2)\n"
-                                "# Use:\n"
-                                "# df['col'] * 2",
-                            )
+                if isinstance(node.func, ast.Attribute) and node.func.attr == "apply":
+                    issues.append(
+                        VectorizationIssue(
+                            file_path=file_path,
+                            line_number=node.lineno,
+                            issue_type="apply",
+                            severity="high",
+                            description="DataFrame/Series .apply() usage - consider vectorized alternative",
+                            suggestion="Use vectorized operations instead of .apply()",
+                            vectorized_alternative="# Instead of:\n"
+                            "# df['col'].apply(lambda x: x * 2)\n"
+                            "# Use:\n"
+                            "# df['col'] * 2",
                         )
+                    )
                 self.generic_visit(node)
 
         visitor = ApplyVisitor()
@@ -466,26 +467,27 @@ class VectorizationAuditor:
             """Visitor to detect .iterrows() usage."""
 
             def visit_Call(self, node: ast.Call) -> None:
-                if isinstance(node.func, ast.Attribute):
-                    if node.func.attr in ("iterrows", "itertuples"):
-                        severity = "critical" if node.func.attr == "iterrows" else "high"
-                        issues.append(
-                            VectorizationIssue(
-                                file_path=file_path,
-                                line_number=node.lineno,
-                                issue_type=(
-                                    "iterrows" if node.func.attr == "iterrows" else "itertuples"
-                                ),
-                                severity=severity,
-                                description=f".{node.func.attr}() usage - extremely slow, avoid",
-                                suggestion="Use vectorized operations or .values instead",
-                                vectorized_alternative="# Instead of:\n"
-                                "# for idx, row in df.iterrows():\n"
-                                "#     print(row['col'])\n"
-                                "# Use:\n"
-                                "# print(df['col'].values)",
-                            )
+                if isinstance(node.func, ast.Attribute) and node.func.attr in (
+                    "iterrows", "itertuples"
+                ):
+                    severity = "critical" if node.func.attr == "iterrows" else "high"
+                    issues.append(
+                        VectorizationIssue(
+                            file_path=file_path,
+                            line_number=node.lineno,
+                            issue_type=(
+                                "iterrows" if node.func.attr == "iterrows" else "itertuples"
+                            ),
+                            severity=severity,
+                            description=f".{node.func.attr}() usage - extremely slow, avoid",
+                            suggestion="Use vectorized operations or .values instead",
+                            vectorized_alternative="# Instead of:\n"
+                            "# for idx, row in df.iterrows():\n"
+                            "#     print(row['col'])\n"
+                            "# Use:\n"
+                            "# print(df['col'].values)",
                         )
+                    )
                 self.generic_visit(node)
 
         visitor = IterrowsVisitor()
@@ -564,23 +566,26 @@ class VectorizationAuditor:
             """Visitor to detect enumerate loops."""
 
             def visit_For(self, node: ast.For) -> None:
-                if isinstance(node.iter, ast.Call):
-                    if isinstance(node.iter.func, ast.Name) and node.iter.func.id == "enumerate":
-                        issues.append(
-                            VectorizationIssue(
-                                file_path=file_path,
-                                line_number=node.lineno,
-                                issue_type="enumerate",
-                                severity="medium",
-                                description="For loop with enumerate() - consider vectorized alternative",
-                                suggestion="Use NumPy operations or direct array operations",
-                                vectorized_alternative="# Instead of:\n"
-                                "# for i, x in enumerate(arr):\n"
-                                "#     result[i] = x * 2\n"
-                                "# Use:\n"
-                                "# result = arr * 2",
-                            )
+                if (
+                    isinstance(node.iter, ast.Call)
+                    and isinstance(node.iter.func, ast.Name)
+                    and node.iter.func.id == "enumerate"
+                ):
+                    issues.append(
+                        VectorizationIssue(
+                            file_path=file_path,
+                            line_number=node.lineno,
+                            issue_type="enumerate",
+                            severity="medium",
+                            description="For loop with enumerate() - consider vectorized alternative",
+                            suggestion="Use NumPy operations or direct array operations",
+                            vectorized_alternative="# Instead of:\n"
+                            "# for i, x in enumerate(arr):\n"
+                            "#     result[i] = x * 2\n"
+                            "# Use:\n"
+                            "# result = arr * 2",
                         )
+                    )
                 self.generic_visit(node)
 
         visitor = EnumerateVisitor()
@@ -609,30 +614,33 @@ class VectorizationAuditor:
             """Visitor to detect range(len()) patterns."""
 
             def visit_For(self, node: ast.For) -> None:
-                if isinstance(node.iter, ast.Call):
-                    if isinstance(node.iter.func, ast.Name) and node.iter.func.id == "range":
-                        if node.iter.args:
-                            first_arg = node.iter.args[0]
-                            if isinstance(first_arg, ast.Call):
-                                if (
-                                    isinstance(first_arg.func, ast.Name)
-                                    and first_arg.func.id == "len"
-                                ):
-                                    issues.append(
-                                        VectorizationIssue(
-                                            file_path=file_path,
-                                            line_number=node.lineno,
-                                            issue_type="range_len",
-                                            severity="high",
-                                            description="range(len()) pattern - use direct array operations",
-                                            suggestion="Replace with vectorized NumPy operations",
-                                            vectorized_alternative="# Instead of:\n"
-                                            "# for i in range(len(arr)):\n"
-                                            "#     arr[i] *= 2\n"
-                                            "# Use:\n"
-                                            "# arr *= 2",
-                                        )
-                                    )
+                if (
+                    isinstance(node.iter, ast.Call)
+                    and isinstance(node.iter.func, ast.Name)
+                    and node.iter.func.id == "range"
+                    and node.iter.args
+                ):
+                    first_arg = node.iter.args[0]
+                    if (
+                        isinstance(first_arg, ast.Call)
+                        and isinstance(first_arg.func, ast.Name)
+                        and first_arg.func.id == "len"
+                    ):
+                        issues.append(
+                            VectorizationIssue(
+                                file_path=file_path,
+                                line_number=node.lineno,
+                                issue_type="range_len",
+                                severity="high",
+                                description="range(len()) pattern - use direct array operations",
+                                suggestion="Replace with vectorized NumPy operations",
+                                vectorized_alternative="# Instead of:\n"
+                                "# for i in range(len(arr)):\n"
+                                "#     arr[i] *= 2\n"
+                                "# Use:\n"
+                                "# arr *= 2",
+                            )
+                        )
                 self.generic_visit(node)
 
         visitor = RangeLenVisitor()
@@ -664,10 +672,11 @@ class VectorizationAuditor:
                 # Check for numerical operations in loop body
                 has_numerical_ops = False
                 for child in ast.walk(node):
-                    if isinstance(child, ast.BinOp):
-                        if isinstance(child.op, (ast.Add, ast.Sub, ast.Mult, ast.Div)):
-                            has_numerical_ops = True
-                            break
+                    if isinstance(child, ast.BinOp) and isinstance(
+                        child.op, (ast.Add, ast.Sub, ast.Mult, ast.Div)
+                    ):
+                        has_numerical_ops = True
+                        break
 
                 if has_numerical_ops:
                     issues.append(

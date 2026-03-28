@@ -19,10 +19,24 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 import yaml
+
+# Type alias for nested JSON-like configuration and result dictionaries
+JsonDict = Dict[
+    str,
+    Union[
+        int,
+        float,
+        str,
+        bool,
+        None,
+        "JsonDict",
+        List[Union[int, float, str, bool, None, "JsonDict"]],
+    ],
+]
 
 # COMPLIANCE: Importar BacktestingCompliance para R5, R6, R7, DATA-001
 from app.backtesting.backtesting_compliance import (
@@ -38,11 +52,107 @@ logger = logging.getLogger(__name__)
 
 
 # ============================================================================
+# Parameter Dataclasses for Reducing Function Arguments
+# ============================================================================
+
+
+@dataclass
+class DataGenerationParams:
+    """Parameters for synthetic data generation methods."""
+
+    n_days: int
+    start_date: datetime
+    symbol: str = "SYNTH"
+    drift: Optional[float] = None
+    volatility: Optional[float] = None
+
+
+@dataclass
+class JumpDiffusionParams:
+    """Parameters for jump diffusion price generation."""
+
+    n_days: int
+    start_date: datetime
+    symbol: str = "SYNTH"
+    jump_intensity: float = 0.1
+    jump_mean: float = 0.0
+    jump_std: float = 0.05
+
+
+@dataclass
+class FlashCrashParams:
+    """Parameters for flash crash scenario generation."""
+
+    n_days: int
+    start_date: datetime
+    symbol: str = "SYNTH"
+    drop_pct: float = -0.10
+    recovery_days: int = 5
+
+
+@dataclass
+class GapScenarioParams:
+    """Parameters for gap scenario generation."""
+
+    n_days: int
+    start_date: datetime
+    symbol: str = "SYNTH"
+    gap_pct: float = 0.05
+    n_gaps: int = 3
+
+
+@dataclass
+class ScenarioGenerationParams:
+    """Parameters for stress test scenario generation."""
+
+    scenario_type: str
+    scenario_config: JsonDict
+    n_days: int
+    start_date: datetime
+    symbol: str
+
+
+@dataclass
+class WalkForwardValidationParams:
+    """Parameters for walk-forward strategy validation."""
+
+    quotes: List[Quote]
+    signals: List[object]
+    config: BacktestConfig
+    start_date: datetime
+    end_date: datetime
+
+
+@dataclass
+class CrossValidationParams:
+    """Parameters for temporal cross-validation."""
+
+    quotes: List[Quote]
+    signals: List[object]
+    config: BacktestConfig
+    start_date: datetime
+    end_date: datetime
+
+
+@dataclass
+class FullValidationParams:
+    """Parameters for full validation suite."""
+
+    strategy: object
+    strategy_name: str
+    quotes: List[Quote]
+    signals: List[object]
+    backtest_config: BacktestConfig
+    start_date: datetime
+    end_date: datetime
+
+
+# ============================================================================
 # Configuration Loading
 # ============================================================================
 
 
-def load_validation_config(config_path: str = "config/validation.yaml") -> Dict[str, Any]:
+def load_validation_config(config_path: str = "config/validation.yaml") -> JsonDict:
     """Load validation configuration from YAML file."""
     path = Path(config_path)
     if not path.exists():
@@ -53,7 +163,7 @@ def load_validation_config(config_path: str = "config/validation.yaml") -> Dict[
         return yaml.safe_load(f)
 
 
-def get_default_config() -> Dict[str, Any]:
+def get_default_config() -> JsonDict:
     """Return default validation configuration (Req #2 - Enhanced)."""
     return {
         "walk_forward": {
@@ -211,12 +321,12 @@ class ValidationReport:
 
     strategy_name: str
     timestamp: datetime
-    walk_forward_results: Optional[Dict[str, Any]] = None
-    cross_validation_results: Optional[Dict[str, Any]] = None
-    stress_test_results: Optional[Dict[str, Any]] = None
-    monte_carlo_results: Optional[Dict[str, Any]] = None
+    walk_forward_results: Optional[JsonDict] = None
+    cross_validation_results: Optional[JsonDict] = None
+    stress_test_results: Optional[JsonDict] = None
+    monte_carlo_results: Optional[JsonDict] = None
     overall_passed: bool = False
-    summary: Dict[str, Any] = field(default_factory=dict)
+    summary: JsonDict = field(default_factory=dict)
 
 
 # ============================================================================
@@ -237,7 +347,7 @@ class SyntheticDataGenerator:
     The old simplistic models have been replaced with statistically realistic models.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: JsonDict):
         """
         Initialize with configuration.
 
@@ -265,14 +375,9 @@ class SyntheticDataGenerator:
         self.annual_drift = config.get("annual_drift", 0.05)
         self.random_state = config.get("random_state", 42)
 
-    # pylint: disable=R0913
     def generate_gbm_prices(
         self,
-        n_days: int,
-        start_date: datetime,
-        symbol: str = "SYNTH",
-        drift: Optional[float] = None,
-        volatility: Optional[float] = None,
+        params: DataGenerationParams,
     ) -> List[Quote]:
         """
         Generate prices using realistic models (replaces simplistic GBM).
@@ -288,15 +393,16 @@ class SyntheticDataGenerator:
         - Volume correlated with volatility
 
         Args:
-            n_days: Number of days to generate
-            start_date: Start date
-            symbol: Trading symbol
-            drift: DEPRECATED - Use regime parameter instead
-            volatility: DEPRECATED - Use regime parameter instead
+            params: DataGenerationParams with n_days, start_date, symbol,
+                    drift (DEPRECATED), volatility (DEPRECATED)
 
         Returns:
             List of Quote objects with realistic OHLCV data
         """
+        n_days = params.n_days
+        start_date = params.start_date
+        symbol = params.symbol
+
         logger.info(f"Generating {n_days} days of realistic data (replacing simplistic GBM)")
 
         # Use realistic generator with regime switching
@@ -310,11 +416,7 @@ class SyntheticDataGenerator:
 
     def generate_ou_prices(
         self,
-        n_days: int,
-        start_date: datetime,
-        symbol: str = "SYNTH",
-        theta: float = 0.1,
-        mu: Optional[float] = None,
+        params: DataGenerationParams,
     ) -> List[Quote]:
         """
         Generate mean-reverting prices (replaces simplistic OU).
@@ -324,15 +426,15 @@ class SyntheticDataGenerator:
         more realistic mean-reversion with volatility clustering.
 
         Args:
-            n_days: Number of days to generate
-            start_date: Start date
-            symbol: Trading symbol
-            theta: DEPRECATED - Use regime parameter instead
-            mu: DEPRECATED - Use regime parameter instead
+            params: DataGenerationParams with n_days, start_date, symbol
 
         Returns:
             List of Quote objects
         """
+        n_days = params.n_days
+        start_date = params.start_date
+        symbol = params.symbol
+
         logger.info(
             f"Generating {n_days} days of realistic sideways data " f"(replacing simplistic OU)"
         )
@@ -345,15 +447,9 @@ class SyntheticDataGenerator:
             initial_regime=MarketRegime.SIDEWAYS,
         )
 
-    # pylint: disable=R0913
     def generate_jump_diffusion_prices(
         self,
-        n_days: int,
-        start_date: datetime,
-        symbol: str = "SYNTH",
-        jump_intensity: float = 0.1,
-        jump_mean: float = 0.0,
-        jump_std: float = 0.05,
+        params: JumpDiffusionParams,
     ) -> List[Quote]:
         """
         Generate prices with jumps (replaces simplistic jump-diffusion).
@@ -368,16 +464,17 @@ class SyntheticDataGenerator:
         - More realistic jump distributions
 
         Args:
-            n_days: Number of days to generate
-            start_date: Start date
-            symbol: Trading symbol
-            jump_intensity: DEPRECATED - Built into volatile regime
-            jump_mean: DEPRECATED - Built into volatile regime
-            jump_std: DEPRECATED - Built into volatile regime
+            params: JumpDiffusionParams with n_days, start_date, symbol,
+                    jump_intensity, jump_mean, jump_std (all DEPRECATED -
+                    built into volatile regime)
 
         Returns:
             List of Quote objects
         """
+        n_days = params.n_days
+        start_date = params.start_date
+        symbol = params.symbol
+
         logger.info(
             f"Generating {n_days} days of realistic volatile data with jumps "
             f"(replacing simplistic jump-diffusion)"
@@ -391,14 +488,9 @@ class SyntheticDataGenerator:
             initial_regime=MarketRegime.VOLATILE,
         )
 
-    # pylint: disable=R0913
     def generate_flash_crash_scenario(
         self,
-        n_days: int,
-        start_date: datetime,
-        symbol: str = "SYNTH",
-        drop_pct: float = -0.10,
-        recovery_days: int = 5,
+        params: FlashCrashParams,
     ) -> List[Quote]:
         """
         Generate a flash crash scenario.
@@ -413,15 +505,16 @@ class SyntheticDataGenerator:
         - Reproducible with seed
 
         Args:
-            n_days: Number of days to generate
-            start_date: Start date
-            symbol: Trading symbol
-            drop_pct: Approximate drop percentage (used for regime selection)
-            recovery_days: Days for recovery (influences regime duration)
+            params: FlashCrashParams with n_days, start_date, symbol,
+                    drop_pct, recovery_days
 
         Returns:
             List of Quote objects with flash crash scenario
         """
+        n_days = params.n_days
+        start_date = params.start_date
+        symbol = params.symbol
+
         logger.info(
             f"Generating {n_days} days of flash crash scenario "
             f"(bear regime with high volatility)"
@@ -493,14 +586,9 @@ class SyntheticDataGenerator:
             initial_regime=MarketRegime.BULL,
         )
 
-    # pylint: disable=R0913
     def generate_gap_scenario(
         self,
-        n_days: int,
-        start_date: datetime,
-        symbol: str = "SYNTH",
-        gap_pct: float = 0.05,
-        n_gaps: int = 3,
+        params: GapScenarioParams,
     ) -> List[Quote]:
         """
         Generate scenario with overnight gaps.
@@ -509,15 +597,16 @@ class SyntheticDataGenerator:
         realistic overnight price movements.
 
         Args:
-            n_days: Number of days to generate
-            start_date: Start date
-            symbol: Trading symbol
-            gap_pct: Gap percentage (naturally occurs in realistic data)
-            n_gaps: Number of gaps (naturally occurs in realistic data)
+            params: GapScenarioParams with n_days, start_date, symbol,
+                    gap_pct, n_gaps
 
         Returns:
             List of Quote objects with natural gaps
         """
+        n_days = params.n_days
+        start_date = params.start_date
+        symbol = params.symbol
+
         logger.info(
             f"Generating {n_days} days with realistic gaps "
             f"(using volatile regime for more gaps)"
@@ -574,7 +663,7 @@ class WalkForwardValidator:
 
     def __init__(
         self,
-        config: Optional[Dict[str, Any]] = None,
+        config: Optional[JsonDict] = None,
         config_path: str = "config/validation.yaml",
     ):
         """
@@ -640,15 +729,10 @@ class WalkForwardValidator:
 
         return windows
 
-    # pylint: disable=R0913,R0914,R0915
     def validate_strategy(
         self,
-        quotes: List[Quote],
-        signals: List[Any],
-        config: BacktestConfig,
-        start_date: datetime,
-        end_date: datetime,
-    ) -> Dict[str, Any]:
+        params: WalkForwardValidationParams,
+    ) -> JsonDict:
         """
         Run walk-forward validation for a strategy (Req #2 - Enhanced).
 
@@ -659,8 +743,19 @@ class WalkForwardValidator:
         - Degradation metrics (max 30%)
         - Minimum 5 cycles validation
 
-        Returns dictionary with validation results and pass/fail status.
+        Args:
+            params: WalkForwardValidationParams with quotes, signals,
+                    config, start_date, end_date
+
+        Returns:
+            Dictionary with validation results and pass/fail status.
         """
+        quotes = params.quotes
+        signals = params.signals
+        config = params.config
+        start_date = params.start_date
+        end_date = params.end_date
+
         windows = self.create_windows(start_date, end_date)
 
         # Req #2: Minimum 5 cycles validation
@@ -939,7 +1034,7 @@ class WalkForwardValidator:
 
     def validate_compliance(
         self,
-        walk_forward_results: List[Dict[str, Any]],
+        walk_forward_results: List[JsonDict],
         n_parameters: int = 10,
         n_observations: int = 1000,
     ) -> BacktestingComplianceResult:
@@ -1012,7 +1107,7 @@ class CrossValidationTemporal:
 
     def __init__(
         self,
-        config: Optional[Dict[str, Any]] = None,
+        config: Optional[JsonDict] = None,
         config_path: str = "config/validation.yaml",
     ):
         """Initialize temporal cross-validator."""
@@ -1056,16 +1151,25 @@ class CrossValidationTemporal:
 
         return folds
 
-    # pylint: disable=R0913,R0914
     def cross_validate(
         self,
-        quotes: List[Quote],
-        signals: List[Any],
-        config: BacktestConfig,
-        start_date: datetime,
-        end_date: datetime,
-    ) -> Dict[str, Any]:
-        """Run temporal cross-validation."""
+        params: CrossValidationParams,
+    ) -> JsonDict:
+        """Run temporal cross-validation.
+
+        Args:
+            params: CrossValidationParams with quotes, signals,
+                    config, start_date, end_date
+
+        Returns:
+            Dictionary with cross-validation results.
+        """
+        quotes = params.quotes
+        signals = params.signals
+        config = params.config
+        start_date = params.start_date
+        end_date = params.end_date
+
         folds = self.create_folds(start_date, end_date)
         results = []
 
@@ -1167,7 +1271,7 @@ class StressTester:
 
     def __init__(
         self,
-        config: Optional[Dict[str, Any]] = None,
+        config: Optional[JsonDict] = None,
         config_path: str = "config/validation.yaml",
     ):
         """Initialize stress tester."""
@@ -1191,23 +1295,26 @@ class StressTester:
         full_config = load_validation_config(config_path)
         self.data_generator = SyntheticDataGenerator(full_config.get("synthetic_data", {}))
 
-    # pylint: disable=R0913
     def _generate_scenario(
         self,
-        scenario_type: str,
-        scenario_config: Dict[str, Any],
-        n_days: int,
-        start_date: datetime,
-        symbol: str,
+        params: ScenarioGenerationParams,
     ) -> List[Quote]:
         """Generate synthetic data for a specific scenario type."""
+        scenario_type = params.scenario_type
+        scenario_config = params.scenario_config
+        n_days = params.n_days
+        start_date = params.start_date
+        symbol = params.symbol
+
         generators = {
             "flash_crash": lambda: self.data_generator.generate_flash_crash_scenario(
-                n_days,
-                start_date,
-                symbol,
-                drop_pct=scenario_config.get("drop_percentage", -0.10),
-                recovery_days=scenario_config.get("recovery_days", 5),
+                FlashCrashParams(
+                    n_days=n_days,
+                    start_date=start_date,
+                    symbol=symbol,
+                    drop_pct=scenario_config.get("drop_percentage", -0.10),
+                    recovery_days=scenario_config.get("recovery_days", 5),
+                )
             ),
             "high_volatility": lambda: self.data_generator.generate_high_volatility_scenario(
                 n_days,
@@ -1235,18 +1342,22 @@ class StressTester:
                 mu=scenario_config.get("equilibrium_price", 100.0),
             ),
             "gap_up": lambda: self.data_generator.generate_gap_scenario(
-                n_days,
-                start_date,
-                symbol,
-                gap_pct=scenario_config.get("gap_percentage", 0.05),
-                n_gaps=scenario_config.get("n_gaps", 3),
+                GapScenarioParams(
+                    n_days=n_days,
+                    start_date=start_date,
+                    symbol=symbol,
+                    gap_pct=scenario_config.get("gap_percentage", 0.05),
+                    n_gaps=scenario_config.get("n_gaps", 3),
+                )
             ),
             "gap_down": lambda: self.data_generator.generate_gap_scenario(
-                n_days,
-                start_date,
-                symbol,
-                gap_pct=scenario_config.get("gap_percentage", -0.05),
-                n_gaps=scenario_config.get("n_gaps", 3),
+                GapScenarioParams(
+                    n_days=n_days,
+                    start_date=start_date,
+                    symbol=symbol,
+                    gap_pct=scenario_config.get("gap_percentage", -0.05),
+                    n_gaps=scenario_config.get("n_gaps", 3),
+                )
             ),
         }
 
@@ -1255,16 +1366,17 @@ class StressTester:
             return generator()
 
         # Default: GBM
-        return self.data_generator.generate_gbm_prices(n_days, start_date, symbol)
+        return self.data_generator.generate_gbm_prices(
+            DataGenerationParams(n_days=n_days, start_date=start_date, symbol=symbol)
+        )
 
-    # pylint: disable=R0914,R0915
     def run_stress_tests(
         self,
         strategy,
         backtest_config: BacktestConfig,
         n_days: int = 252,
         symbol: str = "STRESS_TEST",
-    ) -> Dict[str, Any]:
+    ) -> JsonDict:
         """
         Run comprehensive stress tests.
 
@@ -1278,122 +1390,130 @@ class StressTester:
             Dictionary with stress test results
         """
         start_date = datetime(2020, 1, 1)
-        end_date = start_date + timedelta(days=n_days)
-
-        # Calculate scenario distribution
-        enabled_scenarios = {
-            k: v for k, v in self.scenarios_config.items() if v.get("enabled", True)
-        }
-
-        total_weight = sum(s.get("weight", 0.1) for s in enabled_scenarios.values())
-        scenario_counts = {
-            k: max(1, int(self.n_scenarios * v.get("weight", 0.1) / total_weight))
-            for k, v in enabled_scenarios.items()
-        }
+        scenario_counts = self._calculate_scenario_distribution()
 
         results: List[StressScenarioResult] = []
-
         for scenario_type, count in scenario_counts.items():
-            scenario_config = enabled_scenarios[scenario_type]
-            logger.info(f"Running {count} {scenario_type} scenarios...")
-
-            for i in range(count):
-                try:
-                    # Generate synthetic data
-                    quotes = self._generate_scenario(
-                        scenario_type, scenario_config, n_days, start_date, symbol
-                    )
-
-                    # Generate signals
-                    signals = []
-                    for quote in quotes:
-                        try:
-                            signal = strategy.analyze(quote)
-                            if signal:
-                                signals.append(signal)
-                        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
-                            pass
-
-                    if not signals:
-                        continue
-
-                    # Run backtest
-                    backtester = SimpleBacktester(backtest_config)
-                    result = backtester.run_backtest(quotes, signals, start_date, end_date)
-
-                    # Analyze result
-                    total_return = float(result.total_return)
-                    max_dd = float(result.performance.max_drawdown_percentage or 0)
-                    final_capital = float(result.final_capital)
-                    initial_capital = float(backtest_config.initial_capital)
-
-                    survived = max_dd > self.thresholds.get("max_scenario_drawdown", -0.30)
-                    recovered = final_capital >= initial_capital * 0.9  # 90% recovery
-
-                    results.append(
-                        StressScenarioResult(
-                            scenario_type=scenario_type,
-                            scenario_id=i + 1,
-                            total_return=total_return,
-                            max_drawdown=max_dd,
-                            survived=survived,
-                            recovered=recovered,
-                            final_capital=final_capital,
-                            trades_executed=result.performance.total_trades,
-                        )
-                    )
-
-                except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-                    logger.warning(f"Error in {scenario_type} scenario {i+1}: {e}")
+            scenario_results = self._run_scenario_batch(
+                strategy, backtest_config, scenario_type, count, n_days, start_date, symbol
+            )
+            results.extend(scenario_results)
 
         if not results:
             return {"passed": False, "reason": "No scenarios completed", "scenarios": []}
 
-        # Aggregate results
+        return self._build_stress_test_report(results)
+
+    def _calculate_scenario_distribution(self) -> Dict[str, int]:
+        """Calculate the number of scenarios to run per type."""
+        enabled_scenarios = {
+            k: v for k, v in self.scenarios_config.items() if v.get("enabled", True)
+        }
+        total_weight = sum(s.get("weight", 0.1) for s in enabled_scenarios.values())
+        return {
+            k: max(1, int(self.n_scenarios * v.get("weight", 0.1) / total_weight))
+            for k, v in enabled_scenarios.items()
+        }
+
+    def _run_scenario_batch(
+        self,
+        strategy,
+        backtest_config: BacktestConfig,
+        scenario_type: str,
+        count: int,
+        n_days: int,
+        start_date: datetime,
+        symbol: str,
+    ) -> List[StressScenarioResult]:
+        """Run a batch of scenarios of the same type."""
+        scenario_config = self.scenarios_config.get(scenario_type, {})
+        logger.info(f"Running {count} {scenario_type} scenarios...")
+        results = []
+
+        for i in range(count):
+            try:
+                result = self._run_single_scenario(
+                    strategy,
+                    backtest_config,
+                    scenario_type,
+                    scenario_config,
+                    i,
+                    n_days,
+                    start_date,
+                    symbol,
+                )
+                if result:
+                    results.append(result)
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
+                logger.warning(f"Error in {scenario_type} scenario {i+1}: {e}")
+
+        return results
+
+    def _run_single_scenario(
+        self,
+        strategy,
+        backtest_config: BacktestConfig,
+        scenario_type: str,
+        scenario_config: JsonDict,
+        scenario_idx: int,
+        n_days: int,
+        start_date: datetime,
+        symbol: str,
+    ) -> Optional[StressScenarioResult]:
+        """Run a single stress test scenario."""
+        end_date = start_date + timedelta(days=n_days)
+
+        quotes = self._generate_scenario(scenario_type, scenario_config, n_days, start_date, symbol)
+
+        signals = self._generate_strategy_signals(strategy, quotes)
+        if not signals:
+            return None
+
+        backtester = SimpleBacktester(backtest_config)
+        result = backtester.run_backtest(quotes, signals, start_date, end_date)
+
+        total_return = float(result.total_return)
+        max_dd = float(result.performance.max_drawdown_percentage or 0)
+        final_capital = float(result.final_capital)
+        initial_capital = float(backtest_config.initial_capital)
+
+        return StressScenarioResult(
+            scenario_type=scenario_type,
+            scenario_id=scenario_idx + 1,
+            total_return=total_return,
+            max_drawdown=max_dd,
+            survived=max_dd > self.thresholds.get("max_scenario_drawdown", -0.30),
+            recovered=final_capital >= initial_capital * 0.9,
+            final_capital=final_capital,
+            trades_executed=result.performance.total_trades,
+        )
+
+    def _generate_strategy_signals(self, strategy, quotes: List) -> List:
+        """Generate signals from strategy for a list of quotes."""
+        signals = []
+        for quote in quotes:
+            try:
+                signal = strategy.analyze(quote)
+                if signal:
+                    signals.append(signal)
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                pass
+        return signals
+
+    def _build_stress_test_report(self, results: List[StressScenarioResult]) -> JsonDict:
+        """Build the final stress test report from results."""
         total_scenarios = len(results)
         survivors = sum(1 for r in results if r.survived)
         recovered = sum(1 for r in results if r.recovered)
         avg_return = sum(r.total_return for r in results) / total_scenarios
         avg_drawdown = sum(r.max_drawdown for r in results) / total_scenarios
-
         survival_rate = survivors / total_scenarios
         recovery_rate = recovered / total_scenarios
 
-        # Check thresholds
-        passed = True
-        failures = []
-
-        if survival_rate < self.thresholds.get("min_survival_rate", 0.80):
-            passed = False
-            failures.append(
-                f"Survival rate {survival_rate:.2%} < {self.thresholds['min_survival_rate']:.2%}"
-            )
-
-        if avg_return < self.thresholds.get("max_avg_loss", -0.15):
-            passed = False
-            failures.append(f"Avg return {avg_return:.2%} < {self.thresholds['max_avg_loss']:.2%}")
-
-        if recovery_rate < self.thresholds.get("min_recovery_rate", 0.70):
-            passed = False
-            failures.append(
-                f"Recovery rate {recovery_rate:.2%} < {self.thresholds['min_recovery_rate']:.2%}"
-            )
-
-        # Group results by scenario type
-        by_scenario = {}
-        for r in results:
-            if r.scenario_type not in by_scenario:
-                by_scenario[r.scenario_type] = []
-            by_scenario[r.scenario_type].append(
-                {
-                    "scenario_id": r.scenario_id,
-                    "total_return": r.total_return,
-                    "max_drawdown": r.max_drawdown,
-                    "survived": r.survived,
-                    "recovered": r.recovered,
-                    "trades_executed": r.trades_executed,
-                }
-            )
+        passed, failures = self._evaluate_stress_thresholds(
+            survival_rate, recovery_rate, avg_return
+        )
+        by_scenario = self._group_results_by_type(results)
 
         return {
             "passed": passed,
@@ -1417,6 +1537,49 @@ class StressTester:
             "thresholds": self.thresholds,
         }
 
+    def _evaluate_stress_thresholds(
+        self, survival_rate: float, recovery_rate: float, avg_return: float
+    ) -> tuple[bool, List[str]]:
+        """Evaluate stress test results against thresholds."""
+        passed = True
+        failures = []
+
+        if survival_rate < self.thresholds.get("min_survival_rate", 0.80):
+            passed = False
+            failures.append(
+                f"Survival rate {survival_rate:.2%} < {self.thresholds['min_survival_rate']:.2%}"
+            )
+
+        if avg_return < self.thresholds.get("max_avg_loss", -0.15):
+            passed = False
+            failures.append(f"Avg return {avg_return:.2%} < {self.thresholds['max_avg_loss']:.2%}")
+
+        if recovery_rate < self.thresholds.get("min_recovery_rate", 0.70):
+            passed = False
+            failures.append(
+                f"Recovery rate {recovery_rate:.2%} < {self.thresholds['min_recovery_rate']:.2%}"
+            )
+
+        return passed, failures
+
+    def _group_results_by_type(self, results: List[StressScenarioResult]) -> Dict[str, List[Dict]]:
+        """Group scenario results by type."""
+        by_scenario: Dict[str, List[Dict]] = {}
+        for r in results:
+            if r.scenario_type not in by_scenario:
+                by_scenario[r.scenario_type] = []
+            by_scenario[r.scenario_type].append(
+                {
+                    "scenario_id": r.scenario_id,
+                    "total_return": r.total_return,
+                    "max_drawdown": r.max_drawdown,
+                    "survived": r.survived,
+                    "recovered": r.recovered,
+                    "trades_executed": r.trades_executed,
+                }
+            )
+        return by_scenario
+
 
 # ============================================================================
 # Monte Carlo Simulator
@@ -1433,7 +1596,7 @@ class MonteCarloSimulator:
 
     def __init__(
         self,
-        config: Optional[Dict[str, Any]] = None,
+        config: Optional[JsonDict] = None,
         config_path: str = "config/validation.yaml",
     ):
         """Initialize Monte Carlo simulator."""
@@ -1448,13 +1611,12 @@ class MonteCarloSimulator:
         self.random_state = config.get("random_state", 42)
         self._rng = np.random.default_rng(self.random_state)
 
-    # pylint: disable=R0914
     def run_simulation(
         self,
         historical_returns: List[float],
         initial_capital: float = 100000.0,
         n_periods: int = 252,
-    ) -> Dict[str, Any]:
+    ) -> JsonDict:
         """
         Run Monte Carlo simulation with bootstrap resampling.
 
@@ -1470,45 +1632,48 @@ class MonteCarloSimulator:
             return {"passed": False, "reason": "Insufficient historical data"}
 
         returns_array = np.array(historical_returns)
-        simulation_results = []
+        simulation_results = self._run_all_simulations(returns_array, initial_capital, n_periods)
 
-        for _ in range(self.n_simulations):
-            # Block bootstrap
-            simulated_returns = self._block_bootstrap(returns_array, n_periods)
-
-            # Calculate equity curve
-            equity = [initial_capital]
-            for ret in simulated_returns:
-                equity.append(equity[-1] * (1 + ret))
-
-            # Calculate metrics
-            final_value = equity[-1]
-            total_return = (final_value - initial_capital) / initial_capital
-            max_drawdown = self._calculate_max_drawdown(equity)
-
-            simulation_results.append(
-                {
-                    "final_value": final_value,
-                    "total_return": total_return,
-                    "max_drawdown": max_drawdown,
-                }
-            )
-
-        # Aggregate results - convert Decimal to float for numpy operations
         returns = [float(r["total_return"]) for r in simulation_results]
         drawdowns = [float(r["max_drawdown"]) for r in simulation_results]
 
-        var_results = {}
-        cvar_results = {}
+        return self._build_simulation_report(returns, drawdowns)
 
-        for conf in self.confidence_levels:
-            percentile = (1 - conf) * 100
-            var_results[f"VaR_{conf}"] = float(np.percentile(returns, percentile))
-            # CVaR is mean of returns below VaR
-            var_threshold = np.percentile(returns, percentile)
-            cvar_results[f"CVaR_{conf}"] = float(
-                np.mean([r for r in returns if r <= var_threshold])
-            )
+    def _run_all_simulations(
+        self, returns_array: np.ndarray, initial_capital: float, n_periods: int
+    ) -> List[JsonDict]:
+        """Run all Monte Carlo simulations."""
+        simulation_results = []
+
+        for _ in range(self.n_simulations):
+            result = self._run_single_simulation(returns_array, initial_capital, n_periods)
+            simulation_results.append(result)
+
+        return simulation_results
+
+    def _run_single_simulation(
+        self, returns_array: np.ndarray, initial_capital: float, n_periods: int
+    ) -> JsonDict:
+        """Run a single Monte Carlo simulation path."""
+        simulated_returns = self._block_bootstrap(returns_array, n_periods)
+
+        equity = [initial_capital]
+        for ret in simulated_returns:
+            equity.append(equity[-1] * (1 + ret))
+
+        final_value = equity[-1]
+        total_return = (final_value - initial_capital) / initial_capital
+        max_drawdown = self._calculate_max_drawdown(equity)
+
+        return {
+            "final_value": final_value,
+            "total_return": total_return,
+            "max_drawdown": max_drawdown,
+        }
+
+    def _build_simulation_report(self, returns: List[float], drawdowns: List[float]) -> JsonDict:
+        """Build the simulation report from aggregated results."""
+        var_results, cvar_results = self._calculate_risk_metrics(returns)
 
         return {
             "passed": True,
@@ -1535,6 +1700,23 @@ class MonteCarloSimulator:
                 "p95": float(np.percentile(drawdowns, 95)),
             },
         }
+
+    def _calculate_risk_metrics(
+        self, returns: List[float]
+    ) -> tuple[Dict[str, float], Dict[str, float]]:
+        """Calculate VaR and CVaR for all confidence levels."""
+        var_results = {}
+        cvar_results = {}
+
+        for conf in self.confidence_levels:
+            percentile = (1 - conf) * 100
+            var_results[f"VaR_{conf}"] = float(np.percentile(returns, percentile))
+            var_threshold = np.percentile(returns, percentile)
+            cvar_results[f"CVaR_{conf}"] = float(
+                np.mean([r for r in returns if r <= var_threshold])
+            )
+
+        return var_results, cvar_results
 
     def _block_bootstrap(self, returns: np.ndarray, n_periods: int) -> np.ndarray:
         """Perform block bootstrap resampling with reproducible random state."""
@@ -1586,32 +1768,28 @@ class ComprehensiveValidator:
         self.stress_tester = StressTester(config_path=config_path)
         self.monte_carlo = MonteCarloSimulator(config_path=config_path)
 
-    # pylint: disable=R0913
     def run_full_validation(
         self,
-        strategy,
-        strategy_name: str,
-        quotes: List[Quote],
-        signals: List[Any],
-        backtest_config: BacktestConfig,
-        start_date: datetime,
-        end_date: datetime,
+        params: FullValidationParams,
     ) -> ValidationReport:
         """
         Run complete validation suite.
 
         Args:
-            strategy: Strategy instance
-            strategy_name: Name of the strategy
-            quotes: Historical market data
-            signals: Trading signals
-            backtest_config: Backtest configuration
-            start_date: Start date
-            end_date: End date
+            params: FullValidationParams with strategy, strategy_name, quotes,
+                    signals, backtest_config, start_date, end_date
 
         Returns:
             Complete ValidationReport
         """
+        strategy = params.strategy
+        strategy_name = params.strategy_name
+        quotes = params.quotes
+        signals = params.signals
+        backtest_config = params.backtest_config
+        start_date = params.start_date
+        end_date = params.end_date
+
         report = ValidationReport(
             strategy_name=strategy_name,
             timestamp=datetime.now(),
@@ -1623,7 +1801,13 @@ class ComprehensiveValidator:
         if self.config.get("walk_forward", {}).get("enabled", True):
             logger.info("Running walk-forward validation...")
             report.walk_forward_results = self.walk_forward.validate_strategy(
-                quotes, signals, backtest_config, start_date, end_date
+                WalkForwardValidationParams(
+                    quotes=quotes,
+                    signals=signals,
+                    config=backtest_config,
+                    start_date=start_date,
+                    end_date=end_date,
+                )
             )
             if not report.walk_forward_results.get("passed", False):
                 all_passed = False
@@ -1632,7 +1816,13 @@ class ComprehensiveValidator:
         if self.config.get("cross_validation", {}).get("enabled", True):
             logger.info("Running cross-validation...")
             report.cross_validation_results = self.cross_validation.cross_validate(
-                quotes, signals, backtest_config, start_date, end_date
+                CrossValidationParams(
+                    quotes=quotes,
+                    signals=signals,
+                    config=backtest_config,
+                    start_date=start_date,
+                    end_date=end_date,
+                )
             )
             if not report.cross_validation_results.get("passed", False):
                 all_passed = False

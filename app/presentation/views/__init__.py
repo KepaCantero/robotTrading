@@ -2,6 +2,6 @@
 Views - Dashboard and UI components
 """
 
-from .dashboard_views import DashboardViews  # noqa: F401
+from .dashboard_views import DashboardViews
 
 __all__ = ["DashboardViews"]

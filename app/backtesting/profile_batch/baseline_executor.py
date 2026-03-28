@@ -185,7 +185,7 @@ class BaselineBacktestExecutor:
         weighted_max_dd = 0.0
         total_weight = 0.0
 
-        for strategy_name, result in per_strategy_results.items():
+        for _strategy_name, result in per_strategy_results.items():
             capital_weight = result.get("capital_weight", 0.0)
             if capital_weight == 0.0:
                 capital_weight = 1.0 / len(per_strategy_results)

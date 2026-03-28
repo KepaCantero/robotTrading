@@ -11,6 +11,7 @@ Collects metrics from:
 """
 
 import asyncio
+import contextlib
 import logging
 from datetime import datetime
 from decimal import Decimal
@@ -103,7 +104,7 @@ class MetricsCollector:
                         metrics_collected += len(metrics)
                         logger.debug(f"Collected {len(metrics)} metrics from {source_name}")
 
-                except (OSError, ConnectionError, TimeoutError) as e:
+                except OSError as e:
                     error_msg = f"Error collecting from {source_name}: {e}"
                     logger.error(error_msg)
                     errors.append(error_msg)
@@ -117,7 +118,7 @@ class MetricsCollector:
                     self._pending_metrics.clear()
                     logger.debug(f"Stored {stored_count} metrics to QuestDB")
 
-                except (OSError, ConnectionError, TimeoutError) as e:
+                except OSError as e:
                     error_msg = f"Error storing metrics: {e}"
                     logger.error(error_msg)
                     errors.append(error_msg)
@@ -188,10 +189,8 @@ class MetricsCollector:
         # Cancel collection task
         if self._collection_task:
             self._collection_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._collection_task
-            except asyncio.CancelledError:
-                pass
 
     async def _continuous_collection_loop(self) -> None:
         """Run continuous collection loop."""
@@ -207,7 +206,7 @@ class MetricsCollector:
 
             except asyncio.CancelledError:
                 break
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.error(f"Unexpected error in collection loop: {e}")
                 await asyncio.sleep(self.collection_interval_seconds)
 
@@ -228,7 +227,7 @@ class MetricsCollector:
             logger.info(f"Flushed {count} metrics to QuestDB")
             return count
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Error flushing metrics: {e}")
             return 0
 
@@ -295,6 +294,6 @@ class MetricsCollector:
 
             return db_healthy
 
-        except (OSError, ConnectionError, TimeoutError) as e:
+        except OSError as e:
             logger.error(f"Health check failed: {e}")
             return False

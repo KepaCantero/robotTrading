@@ -4,7 +4,7 @@ Independent exception definitions to avoid circular imports
 """
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, NoReturn, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +76,7 @@ def raise_configuration_error(
     message: str,
     error_code: Optional[str] = None,
     details: Optional[Dict[str, Any]] = None,
-) -> None:
+) -> NoReturn:
     """Helper function to raise configuration errors."""
     logger.debug(
         "Raising configuration error", extra={"message": message, "error_code": error_code}
@@ -95,7 +95,7 @@ def raise_validation_error(
     message: str,
     error_code: Optional[str] = None,
     details: Optional[Dict[str, Any]] = None,
-) -> None:
+) -> NoReturn:
     """Helper function to raise validation errors."""
     logger.debug("Raising validation error", extra={"message": message, "error_code": error_code})
     if not message or not message.strip():
@@ -112,7 +112,7 @@ def raise_business_logic_error(
     message: str,
     error_code: Optional[str] = None,
     details: Optional[Dict[str, Any]] = None,
-) -> None:
+) -> NoReturn:
     """Helper function to raise business logic errors."""
     logger.debug(
         "Raising business logic error", extra={"message": message, "error_code": error_code}
@@ -131,7 +131,7 @@ def raise_market_data_error(
     message: str,
     error_code: Optional[str] = None,
     details: Optional[Dict[str, Any]] = None,
-) -> None:
+) -> NoReturn:
     """Helper function to raise market data errors."""
     logger.debug("Raising market data error", extra={"message": message, "error_code": error_code})
     if not message or not message.strip():
@@ -148,7 +148,7 @@ def raise_trading_error(
     message: str,
     error_code: Optional[str] = None,
     details: Optional[Dict[str, Any]] = None,
-) -> None:
+) -> NoReturn:
     """Helper function to raise trading errors."""
     logger.debug("Raising trading error", extra={"message": message, "error_code": error_code})
     if not message or not message.strip():
@@ -165,7 +165,7 @@ def raise_database_error(
     message: str,
     error_code: Optional[str] = None,
     details: Optional[Dict[str, Any]] = None,
-) -> None:
+) -> NoReturn:
     """Helper function to raise database errors."""
     logger.debug("Raising database error", extra={"message": message, "error_code": error_code})
     if not message or not message.strip():
@@ -182,7 +182,7 @@ def raise_authentication_error(
     message: str,
     error_code: Optional[str] = None,
     details: Optional[Dict[str, Any]] = None,
-) -> None:
+) -> NoReturn:
     """Helper function to raise authentication errors."""
     logger.debug(
         "Raising authentication error", extra={"message": message, "error_code": error_code}

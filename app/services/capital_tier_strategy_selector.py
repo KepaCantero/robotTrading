@@ -351,9 +351,7 @@ class CapitalTierStrategySelector:
         AccountConfiguration.get_safe_trading_limits(self.capital)
 
         # Determine position sizing strategy by tier
-        if self.tier == AccountTier.MICRO:
-            pos_sizing = PositionSizingStrategy.FIXED_PCT
-        elif self.tier == AccountTier.SMALL:
+        if self.tier == AccountTier.MICRO or self.tier == AccountTier.SMALL:
             pos_sizing = PositionSizingStrategy.FIXED_PCT
         elif self.tier == AccountTier.MEDIUM:
             pos_sizing = PositionSizingStrategy.VOLATILITY_ADJUSTED
@@ -470,8 +468,8 @@ class CapitalTierStrategySelector:
         self,
         monthly_profit_goal: Decimal,
         expected_monthly_alpha: Decimal,
-        tax_rate: Decimal = Decimal("0.20"),
-        commission_per_trade: Decimal = Decimal("10"),
+        tax_rate: Optional[Decimal] = None,
+        commission_per_trade: Optional[Decimal] = None,
     ) -> DeploymentReport:
         """
         Validate if account is safe for live trading deployment.
@@ -490,6 +488,10 @@ class CapitalTierStrategySelector:
             - Returns APPROVED only if all gates pass
             - Features disabled if gates fail (graceful degradation)
         """
+        if tax_rate is None:
+            tax_rate = Decimal("0.20")
+        if commission_per_trade is None:
+            commission_per_trade = Decimal("10")
         status, validation = DeploymentValidator.validate_for_deployment(
             capital=self.capital,
             monthly_profit_goal=monthly_profit_goal,
@@ -532,19 +534,7 @@ class CapitalTierStrategySelector:
             Dict mapping module names to enabled status
         """
         # Micro: No modules enabled
-        if self.tier == AccountTier.MICRO:
-            return {
-                "transfer_learning": False,
-                "deep_learning": False,
-                "reinforcement_learning": False,
-                "multitask_learning": False,
-                "transformer_engine": False,
-                "hyperparameter_optimizer": False,
-                "feature_importance_analysis": False,
-            }
-
-        # Small: Minimal modules, only if cost-effective
-        elif self.tier == AccountTier.SMALL:
+        if self.tier == AccountTier.MICRO or self.tier == AccountTier.SMALL:
             return {
                 "transfer_learning": False,
                 "deep_learning": False,
@@ -600,9 +590,7 @@ class CapitalTierStrategySelector:
         Returns:
             Position sizing strategy enum
         """
-        if self.tier == AccountTier.MICRO:
-            return PositionSizingStrategy.FIXED_PCT
-        elif self.tier == AccountTier.SMALL:
+        if self.tier == AccountTier.MICRO or self.tier == AccountTier.SMALL:
             return PositionSizingStrategy.FIXED_PCT
         elif self.tier == AccountTier.MEDIUM:
             return PositionSizingStrategy.VOLATILITY_ADJUSTED

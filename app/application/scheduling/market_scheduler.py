@@ -378,9 +378,9 @@ class MarketScheduler:
                             await task.handler()
                             task.last_run = utc_now()
                             task.run_count += 1
-                        except asyncio.CancelledError:  # pylint: disable=try-except-raise
+                        except asyncio.CancelledError:
                             raise
-                        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+                        except (asyncio.TimeoutError, OSError) as e:
                             task.error_count += 1
                             logger.error(
                                 f"Error in task {task.name} ({task.task_id}): {e}",
@@ -400,7 +400,7 @@ class MarketScheduler:
             except asyncio.CancelledError:
                 logger.info(f"Task loop for {market_type.value} cancelled")
                 break
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.error(
                     f"Error in task loop for {market_type.value}: {e}",
                     exc_info=True,
@@ -462,9 +462,8 @@ class MarketScheduler:
             return MarketStatus.AFTER_HOURS
 
         # Check lunch break (if applicable)
-        if schedule.lunch_start and schedule.lunch_end:
-            if schedule.lunch_start <= current_time <= schedule.lunch_end:
-                return MarketStatus.CLOSED
+        if schedule.lunch_start and schedule.lunch_end and schedule.lunch_start <= current_time <= schedule.lunch_end:
+            return MarketStatus.CLOSED
 
         # Market is open
         return MarketStatus.OPEN
@@ -540,10 +539,9 @@ class MarketScheduler:
             ... )
         """
         schedule = self.schedules.get(market_type)
-        if schedule:
-            if holiday_date not in schedule.holidays:
-                schedule.holidays.append(holiday_date)
-                logger.info(f"Added holiday {holiday_date} for {market_type.value}")
+        if schedule and holiday_date not in schedule.holidays:
+            schedule.holidays.append(holiday_date)
+            logger.info(f"Added holiday {holiday_date} for {market_type.value}")
 
     def remove_holiday(self, market_type: MarketType, holiday_date: date) -> bool:
         """
@@ -647,7 +645,7 @@ class MarketScheduler:
             task.run_count += 1
             logger.info(f"Ran task {task.name} ({task_id}) once")
             return True
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             task.error_count += 1
             logger.error(f"Error running task {task_id}: {e}", exc_info=True)
             return False

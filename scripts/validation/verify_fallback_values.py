@@ -84,8 +84,12 @@ def main():
     if config_defaults is None:
         return 1
 
-    print(f"   ✓ RSI buy range: min={config_defaults['rsi_buy']['min']}, max={config_defaults['rsi_buy']['max']}")
-    print(f"   ✓ Volume range: min={config_defaults['volume_ratio']['min']}, max={config_defaults['volume_ratio']['max']}")
+    print(
+        f"   ✓ RSI buy range: min={config_defaults['rsi_buy']['min']}, max={config_defaults['rsi_buy']['max']}"
+    )
+    print(
+        f"   ✓ Volume range: min={config_defaults['volume_ratio']['min']}, max={config_defaults['volume_ratio']['max']}"
+    )
     print()
 
     # Check code values

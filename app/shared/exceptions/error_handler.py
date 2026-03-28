@@ -5,7 +5,7 @@ TASK-4: Sistema de manejo de errores unificado
 
 import logging
 import traceback
-from typing import Any, Dict, Optional
+from typing import Any, Dict, NoReturn, Optional, Union
 
 from fastapi import HTTPException, Request
 from fastapi.exceptions import RequestValidationError
@@ -75,9 +75,9 @@ class ErrorHandler:
         return self.handle_algotrading_error(algotrading_error, request)
 
     def handle_http_exception(
-        self, error: HTTPException, request: Optional[Request] = None
+        self, error: Union[HTTPException, StarletteHTTPException], request: Optional[Request] = None
     ) -> JSONResponse:
-        """Handle HTTP exceptions."""
+        """Handle HTTP exceptions (FastAPI or Starlette)."""
 
         # Determine category based on status code
         category = self._get_category_from_status_code(error.status_code)
@@ -237,7 +237,7 @@ async def starlette_http_exception_handler(
     request: Request, exc: StarletteHTTPException
 ) -> JSONResponse:
     """Handle Starlette HTTP exceptions."""
-    return error_handler.handle_http_exception(exc, request)  # type: ignore
+    return error_handler.handle_http_exception(exc, request)
 
 
 async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
@@ -278,7 +278,7 @@ def raise_validation_error(
     field: Optional[str] = None,
     value: Optional[Any] = None,
     details: Optional[Dict[str, Any]] = None,
-) -> None:
+) -> NoReturn:
     """Raise a validation error."""
     raise ValidationError(message, field, value, details)
 
@@ -287,7 +287,7 @@ def raise_business_logic_error(
     message: str,
     operation: Optional[str] = None,
     details: Optional[Dict[str, Any]] = None,
-) -> None:
+) -> NoReturn:
     """Raise a business logic error."""
     raise BusinessLogicError(message, operation, details)
 
@@ -297,7 +297,7 @@ def raise_external_api_error(
     api_name: str,
     status_code: Optional[int] = None,
     details: Optional[Dict[str, Any]] = None,
-) -> None:
+) -> NoReturn:
     """Raise an external API error."""
     raise ExternalAPIError(message, api_name, status_code, details)
 
@@ -307,7 +307,7 @@ def raise_database_error(
     operation: Optional[str] = None,
     table: Optional[str] = None,
     details: Optional[Dict[str, Any]] = None,
-) -> None:
+) -> NoReturn:
     """Raise a database error."""
     raise DatabaseError(message, operation, table, details)
 
@@ -316,6 +316,6 @@ def raise_configuration_error(
     message: str,
     config_key: Optional[str] = None,
     details: Optional[Dict[str, Any]] = None,
-) -> None:
+) -> NoReturn:
     """Raise a configuration error."""
     raise ConfigurationError(message, config_key, details)

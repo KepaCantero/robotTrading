@@ -504,9 +504,8 @@ class ProfileBasedRegimeSelector(BaseStrategyEngine):
             return True
 
         # Para trending, preferimos momentum positivo
-        if self.current_regime in [MarketRegime.TRENDING_UP, MarketRegime.TRENDING_DOWN]:
-            if momentum_score < -0.5:
-                return False
+        if self.current_regime in [MarketRegime.TRENDING_UP, MarketRegime.TRENDING_DOWN] and momentum_score < -0.5:
+            return False
 
         return True
 
@@ -620,7 +619,7 @@ class ProfileBasedRegimeSelector(BaseStrategyEngine):
             metadata=enhanced_metadata,
         )
 
-    def risk_check(self, signal: Signal, portfolio: Any) -> bool:
+    def risk_check(self, signal: Signal, portfolio: object) -> bool:
         """
         Verificar criterios de riesgo basados en perfil.
 
@@ -693,4 +692,4 @@ class ProfileBasedRegimeSelector(BaseStrategyEngine):
 
     def get_strategy_weights(self) -> Dict[str, float]:
         """Obtener pesos de estrategias (para compatibilidad con BaseStrategyEnsemble)."""
-        return {name: 1.0 for name in self.strategies}
+        return dict.fromkeys(self.strategies, 1.0)

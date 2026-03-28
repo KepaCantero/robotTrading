@@ -4,12 +4,16 @@ import platform
 import sys
 from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any, Callable, Optional, cast
+
+if TYPE_CHECKING:
+    from app.shared.config.config import Settings
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 # API-009 FIX: Import AuditMiddleware for request/response logging with correlation IDs
 from app.presentation.api import AuditMiddleware
@@ -104,21 +108,23 @@ os.environ['TORCH_USE_CUDA_DSA'] = '0'
 # IMPORTANT: Import logging_config FIRST to ensure all warnings/errors go to files
 # Get application settings (lazy loading to avoid validation issues during
 # import)
-settings = None
 
 # Logging is already configured by logging_config module
 # Just get the logger
 logger = logging.getLogger(__name__)
 
+# Module-level settings cache for lazy loading
+_settings: Optional["Settings"] = None
+
 
 def get_app_settings() -> "Settings":
     """Get application settings with lazy loading."""
-    global settings  # pylint: disable=global-statement
-    if settings is None:
-        settings = get_settings()
+    global _settings
+    if _settings is None:
+        _settings = get_settings()
         # Update logging configuration
-        logging.getLogger().setLevel(getattr(logging, settings.log_level))
-    return settings
+        logging.getLogger().setLevel(getattr(logging, _settings.log_level))
+    return _settings
 
 
 @asynccontextmanager
@@ -136,7 +142,7 @@ async def lifespan(fastapi_app: FastAPI):
     try:
         await init_database()
         logger.info("Database and live trading tables initialized")
-    except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+    except (asyncio.TimeoutError, OSError) as e:
         logger.warning(f"Database initialization failed: {e}")
 
     logger.info("Application startup complete")
@@ -212,26 +218,55 @@ app.add_middleware(
 
 from fastapi.exceptions import RequestValidationError
 from pydantic import ValidationError
-from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.responses import JSONResponse as StarletteJSONResponse
 
 # HTTP Exceptions (4xx, 5xx)
-app.add_exception_handler(HTTPException, http_exception_handler)  # type: ignore[arg-type]
-app.add_exception_handler(StarletteHTTPException, starlette_http_exception_handler)  # type: ignore[arg-type]
+app.add_exception_handler(
+    HTTPException,
+    cast(Callable[[Request, HTTPException], Any], http_exception_handler),
+)
+app.add_exception_handler(
+    StarletteHTTPException,
+    cast(Callable[[Request, StarletteHTTPException], Any], starlette_http_exception_handler),
+)
 
 # Validation Errors
-app.add_exception_handler(RequestValidationError, validation_exception_handler)  # type: ignore[arg-type]
-app.add_exception_handler(ValidationError, pydantic_validation_exception_handler)  # type: ignore[arg-type]
+app.add_exception_handler(
+    RequestValidationError,
+    cast(Callable[[Request, RequestValidationError], Any], validation_exception_handler),
+)
+app.add_exception_handler(
+    ValidationError,
+    cast(Callable[[Request, ValidationError], Any], pydantic_validation_exception_handler),
+)
 
 # Common Python Exceptions with specific handlers
-app.add_exception_handler(ValueError, value_error_handler)  # type: ignore[arg-type]
-app.add_exception_handler(KeyError, key_error_handler)  # type: ignore[arg-type]
-app.add_exception_handler(TypeError, type_error_handler)  # type: ignore[arg-type]
-app.add_exception_handler(AttributeError, attribute_error_handler)  # type: ignore[arg-type]
-app.add_exception_handler(IndexError, index_error_handler)  # type: ignore[arg-type]
+app.add_exception_handler(
+    ValueError,
+    cast(Callable[[Request, ValueError], Any], value_error_handler),
+)
+app.add_exception_handler(
+    KeyError,
+    cast(Callable[[Request, KeyError], Any], key_error_handler),
+)
+app.add_exception_handler(
+    TypeError,
+    cast(Callable[[Request, TypeError], Any], type_error_handler),
+)
+app.add_exception_handler(
+    AttributeError,
+    cast(Callable[[Request, AttributeError], Any], attribute_error_handler),
+)
+app.add_exception_handler(
+    IndexError,
+    cast(Callable[[Request, IndexError], Any], index_error_handler),
+)
 
 # Generic catch-all for unhandled exceptions
-app.add_exception_handler(Exception, generic_exception_handler)
+app.add_exception_handler(
+    Exception,
+    cast(Callable[[Request, Exception], Any], generic_exception_handler),
+)
 
 # Include API routers
 app.include_router(health_router)
@@ -327,5 +362,9 @@ async def internal_error_handler(request: Request, exc: HTTPException) -> Starle
 
 if __name__ == "__main__":
     uvicorn.run(
-        "app.main:app", host="0.0.0.0", port=8000, reload=True, log_level="info"  # nosec B104
+        "app.main:app",
+        host=os.environ.get("HOST", "127.0.0.1"),
+        port=8000,
+        reload=True,
+        log_level="info",
     )

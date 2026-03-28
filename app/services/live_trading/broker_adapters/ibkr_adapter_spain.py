@@ -226,9 +226,8 @@ class IBKRSpainAdapter:
             ValueError: If order parameters are invalid
             RuntimeError: If connection fails or order rejected
         """
-        if not self._connected:
-            if not await self.connect():
-                raise RuntimeError("Cannot connect to IB")
+        if not self._connected and not await self.connect():
+            raise RuntimeError("Cannot connect to IB")
 
         # Validate order dict
         required_fields = ["symbol", "side", "quantity", "order_type"]
@@ -363,9 +362,8 @@ class IBKRSpainAdapter:
                 - positions: List of current positions
                 - timestamp: ISO format timestamp
         """
-        if not self._connected:
-            if not await self.connect():
-                return {}
+        if not self._connected and not await self.connect():
+            return {}
 
         try:
             # Request account summary

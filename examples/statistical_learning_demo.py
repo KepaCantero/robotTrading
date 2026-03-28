@@ -61,9 +61,7 @@ def demo_cross_sectional_consistency():
 
     # Test decile monotonicity
     print("\n2. Decile Monotonicity Analysis:")
-    decile_result = checker.validate_decile_monotonicity(
-        signals.iloc[0], returns.iloc[0]
-    )
+    decile_result = checker.validate_decile_monotonicity(signals.iloc[0], returns.iloc[0])
     print(f"   Long-Short Return: {decile_result.long_short_return:.4f}")
     print(f"   Monotonicity Score: {decile_result.monotonicity_score:.4f}")
     print(f"   Is Monotonic: {decile_result.is_monotonic}")
@@ -192,13 +190,15 @@ def demo_feature_explosion_validation():
     print("\n3. Multicollinearity Detection:")
     n_samples_corr = 100
     base = np.random.randn(n_samples_corr)
-    X_corr = pd.DataFrame({
-        "feature_1": base,
-        "feature_2": base + np.random.randn(n_samples_corr) * 0.01,
-        "feature_3": np.random.randn(n_samples_corr),
-        "feature_4": base * 2 + np.random.randn(n_samples_corr) * 0.01,
-        "feature_5": np.random.randn(n_samples_corr),
-    })
+    X_corr = pd.DataFrame(
+        {
+            "feature_1": base,
+            "feature_2": base + np.random.randn(n_samples_corr) * 0.01,
+            "feature_3": np.random.randn(n_samples_corr),
+            "feature_4": base * 2 + np.random.randn(n_samples_corr) * 0.01,
+            "feature_5": np.random.randn(n_samples_corr),
+        }
+    )
 
     mc_result = validator.analyze_multicollinearity(X_corr)
     print(f"   Has Multicollinearity: {mc_result.has_multicollinearity}")

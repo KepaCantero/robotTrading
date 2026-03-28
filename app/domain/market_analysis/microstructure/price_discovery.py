@@ -17,22 +17,19 @@ References:
 - Hasbrouck, J. (1991) "Measuring the Information Content of Stock Trades"
 - Madhavan, A. (2000) "Market Microstructure: A Survey"
 """
-from __future__ import annotations  # Enable Python 3.10+ union syntax in Python 3.9
+from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Tuple  # noqa: F401
+from typing import Tuple
 
 import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)
-
-# mypy: ignore-errors
-# pylint: disable=unsupported-binary-operation  # For Python 3.10+ union syntax
 
 
 # Import statsmodels with fallback
@@ -52,11 +49,13 @@ except ImportError:
 
     # Fallback implementations for cointegration and unit root tests
     # Using scipy to avoid circular import with app.core
-    def coint(y1, y2):
+    def coint(*args, **kwargs):
         """
         Fallback cointegration test using Engle-Granger two-step method
         with scipy instead of statsmodels
         """
+        y1 = args[0]
+        y2 = args[1]
         # Ensure same length
         min_len = min(len(y1), len(y2))
         y1 = y1.iloc[-min_len:] if hasattr(y1, 'iloc') else y1[-min_len:]
@@ -108,10 +107,13 @@ except ImportError:
 
         return t_stat, pvalue, beta
 
-    def adfuller(x, maxlag=1, regression='c'):
+    def adfuller(*args, **kwargs):
         """
         Fallback Augmented Dickey-Fuller test using scipy
         """
+        x = args[0]
+        regression = kwargs.get('regression', args[2] if len(args) > 2 else 'c')
+
         # Convert to numpy array if needed
         if hasattr(x, 'values'):
             x = x.values
@@ -573,8 +575,8 @@ class PriceDiscoveryAnalyzer:
             return 0.0
 
         # Adjustment speed: inverse of average time
-        avg_time = np.mean(adjustment_times)
-        speed = 1000 / max(avg_time, 1)  # Normalize to 0-100 scale
+        avg_time = float(np.mean(adjustment_times))
+        speed = 1000 / max(avg_time, 1.0)  # Normalize to 0-100 scale
 
         return float(min(100, speed))
 
@@ -1028,9 +1030,9 @@ class PriceDiscoveryMonitor:
         if not older:
             return 'STABLE'
 
-        recent_avg = np.mean(recent)
-        older_avg = np.mean(older)
-        change = (recent_avg - older_avg) / max(older_avg, 1)
+        recent_avg = float(np.mean(recent))
+        older_avg = float(np.mean(older))
+        change = (recent_avg - older_avg) / max(older_avg, 1.0)
 
         if change > 0.05:
             return 'IMPROVING'

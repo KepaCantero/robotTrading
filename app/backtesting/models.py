@@ -303,9 +303,8 @@ class PerformanceMetrics(BaseModel):
     def validate_metrics_consistency(self) -> "PerformanceMetrics":
         """Validate metrics consistency - only validate if fields are set."""
         # Only validate trade counts if they are non-zero (indicates they were explicitly set)
-        if self.total_trades > 0 or self.winning_trades > 0 or self.losing_trades > 0:
-            if self.total_trades != self.winning_trades + self.losing_trades:
-                raise ValueError("Total trades must equal winning + losing trades")
+        if (self.total_trades > 0 or self.winning_trades > 0 or self.losing_trades > 0) and self.total_trades != self.winning_trades + self.losing_trades:
+            raise ValueError("Total trades must equal winning + losing trades")
 
         # Only validate win rate if total_trades > 0
         if self.total_trades > 0 and self.win_rate != Decimal("0"):
@@ -316,9 +315,8 @@ class PerformanceMetrics(BaseModel):
                 )
 
         # Only validate P&L consistency if values are set
-        if self.gross_profit != Decimal("0") or self.gross_loss != Decimal("0"):
-            if self.gross_profit + self.gross_loss != self.net_profit:
-                raise ValueError("Gross profit + gross loss must equal net profit")
+        if (self.gross_profit != Decimal("0") or self.gross_loss != Decimal("0")) and self.gross_profit + self.gross_loss != self.net_profit:
+            raise ValueError("Gross profit + gross loss must equal net profit")
 
         return self
 
@@ -369,9 +367,8 @@ class BacktestConfig(BaseModel):
     @model_validator(mode="after")
     def validate_config_logic(self) -> "BacktestConfig":
         """Validate configuration logic."""
-        if self.stop_loss_percentage is not None and self.take_profit_percentage is not None:
-            if self.stop_loss_percentage >= self.take_profit_percentage:
-                raise ValueError("Stop loss percentage must be less than take profit percentage")
+        if self.stop_loss_percentage is not None and self.take_profit_percentage is not None and self.stop_loss_percentage >= self.take_profit_percentage:
+            raise ValueError("Stop loss percentage must be less than take profit percentage")
 
         return self
 

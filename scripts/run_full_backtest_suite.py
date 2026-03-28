@@ -77,8 +77,10 @@ from app.core.models.input_profile import (
 # Enums and Data Classes
 # ============================================================================
 
+
 class BacktestType(Enum):
     """Types of backtesting methods."""
+
     BASELINE = "baseline"
     LEARNING_ENGINES = "learning_engines"
     WALK_FORWARD = "walk_forward"
@@ -93,6 +95,7 @@ class BacktestType(Enum):
 
 class TestStatus(Enum):
     """Test execution status."""
+
     PENDING = "pending"
     RUNNING = "running"
     PASSED = "passed"
@@ -104,6 +107,7 @@ class TestStatus(Enum):
 @dataclass
 class BacktestResult:
     """Result of a single backtest type execution."""
+
     backtest_type: BacktestType
     status: TestStatus
     execution_time: float = 0.0
@@ -145,6 +149,7 @@ class BacktestResult:
 @dataclass
 class FullSuiteResult:
     """Complete result of running all 10 backtest types."""
+
     run_id: str
     profile_id: str
     profile_details: dict
@@ -202,6 +207,7 @@ class FullSuiteResult:
 # Full Backtest Suite Runner
 # ============================================================================
 
+
 class FullBacktestSuite:
     """Runs all 10 backtest types for a single investor profile."""
 
@@ -255,9 +261,7 @@ class FullBacktestSuite:
     def _create_test_config(self) -> str:
         """Create test configuration YAML with ALL backtest types enabled."""
         config = {
-            "database": {
-                "url": f"sqlite:///{self._output_dir}/test_results.db"
-            },
+            "database": {"url": f"sqlite:///{self._output_dir}/test_results.db"},
             "output_dir": str(self._output_dir),
             "backtest_period": {
                 "start_date": self._start_date,
@@ -265,8 +269,16 @@ class FullBacktestSuite:
             },
             "input": {
                 "symbols": [
-                    "AAPL", "MSFT", "GOOGL", "AMZN", "TSLA",
-                    "META", "NVDA", "JPM", "JNJ", "NEE",
+                    "AAPL",
+                    "MSFT",
+                    "GOOGL",
+                    "AMZN",
+                    "TSLA",
+                    "META",
+                    "NVDA",
+                    "JPM",
+                    "JNJ",
+                    "NEE",
                 ],
                 "start_date": self._start_date,
                 "end_date": self._end_date,
@@ -339,7 +351,7 @@ class FullBacktestSuite:
                         "parameters": {
                             "fast_period": {"default": 12},
                             "slow_period": {"default": 26},
-                        }
+                        },
                     },
                     "rsi_filter": {
                         "enabled": True,
@@ -347,7 +359,7 @@ class FullBacktestSuite:
                             "period": {"default": 14},
                             "buy_threshold": {"default": 30},
                             "sell_threshold": {"default": 70},
-                        }
+                        },
                     },
                     "stoch_rsi_filter": {
                         "enabled": True,
@@ -356,25 +368,25 @@ class FullBacktestSuite:
                             "stoch_period": {"default": 14},
                             "oversold_threshold": {"default": 20},
                             "overbought_threshold": {"default": 80},
-                        }
+                        },
                     },
                     "momentum_filter": {
                         "enabled": True,
                         "parameters": {
                             "threshold": {"default": 0.015},
-                        }
+                        },
                     },
                     "volume_filter": {
                         "enabled": True,
                         "parameters": {
                             "threshold": {"default": 1.1},
-                        }
+                        },
                     },
                     "atr_filter": {
                         "enabled": True,
                         "parameters": {
                             "min_threshold": {"default": 0.006},
-                        }
+                        },
                     },
                 }
             },
@@ -588,7 +600,9 @@ class FullBacktestSuite:
                 result_data = self._runner.run_regime_test_backtest()
 
             elif bt_type == BacktestType.HYPERPARAMETER:
-                hp_config = self._runner.raw_config.get('backtests', {}).get('hyperparameter_optimization', {})
+                hp_config = self._runner.raw_config.get('backtests', {}).get(
+                    'hyperparameter_optimization', {}
+                )
                 if not hp_config.get('enabled', False):
                     return BacktestResult(
                         backtest_type=bt_type,
@@ -604,9 +618,17 @@ class FullBacktestSuite:
                 # Handle list results (e.g., learning engines returns list)
                 if isinstance(result_data, list) and len(result_data) > 0:
                     # Aggregate metrics from list
-                    total_pnl = sum(r.get('total_pnl', 0) or 0 for r in result_data if isinstance(r, dict))
-                    sharpe_values = [r.get('sharpe_ratio', 0) for r in result_data if isinstance(r, dict) and r.get('sharpe_ratio')]
-                    sharpe_ratio = sum(sharpe_values) / len(sharpe_values) if sharpe_values else None
+                    total_pnl = sum(
+                        r.get('total_pnl', 0) or 0 for r in result_data if isinstance(r, dict)
+                    )
+                    sharpe_values = [
+                        r.get('sharpe_ratio', 0)
+                        for r in result_data
+                        if isinstance(r, dict) and r.get('sharpe_ratio')
+                    ]
+                    sharpe_ratio = (
+                        sum(sharpe_values) / len(sharpe_values) if sharpe_values else None
+                    )
 
                     # Detect NaN values
                     nan_count = 0
@@ -624,15 +646,17 @@ class FullBacktestSuite:
                         sharpe_ratio=sharpe_ratio,
                         has_valid_metrics=nan_count == 0,
                         nan_count=nan_count,
-                        details={"results_count": len(result_data), "results": result_data[:3]},  # First 3 results
+                        details={
+                            "results_count": len(result_data),
+                            "results": result_data[:3],
+                        },  # First 3 results
                     )
 
                 # Handle single dict result
                 elif isinstance(result_data, dict):
                     # Detect NaN values
                     nan_count = sum(
-                        1 for v in result_data.values()
-                        if isinstance(v, float) and math.isnan(v)
+                        1 for v in result_data.values() if isinstance(v, float) and math.isnan(v)
                     )
 
                     return BacktestResult(
@@ -821,6 +845,7 @@ class FullBacktestSuite:
 # Profile Creation Helpers
 # ============================================================================
 
+
 def create_profile(
     capital: float,
     objetivo: str,
@@ -914,11 +939,10 @@ def load_profile_from_json(json_path: str) -> InputProfile:
         capital_initial=Decimal(str(data.get("capital_initial", 100000))),
         objetivo_inversion=objetivo_map.get(
             data.get("objetivo_inversion", "balanced_growth").lower(),
-            ObjectivoInversion.BALANCED_GROWTH
+            ObjectivoInversion.BALANCED_GROWTH,
         ),
         risk_tolerance=riesgo_map.get(
-            data.get("risk_tolerance", "medio").lower(),
-            RiskTolerance.MEDIO
+            data.get("risk_tolerance", "medio").lower(), RiskTolerance.MEDIO
         ),
         investment_horizon=data.get("investment_horizon", 12),
         tax_residence=TaxResidence(
@@ -933,6 +957,7 @@ def load_profile_from_json(json_path: str) -> InputProfile:
 # Main Entry Point
 # ============================================================================
 
+
 def main() -> int:
     """Main entry point."""
     parser = argparse.ArgumentParser(
@@ -941,58 +966,59 @@ def main() -> int:
 
     # Profile options
     parser.add_argument(
-        "--capital", type=float, default=100000,
-        help="Initial capital (default: 100000)"
+        "--capital", type=float, default=100000, help="Initial capital (default: 100000)"
     )
     parser.add_argument(
-        "--objetivo", type=str, default="balanced_growth",
-        choices=["maximizar_capital", "maximizar_dividendos", "capital_preservation", "balanced_growth", "income_generation"],
-        help="Investment objective (default: balanced_growth)"
+        "--objetivo",
+        type=str,
+        default="balanced_growth",
+        choices=[
+            "maximizar_capital",
+            "maximizar_dividendos",
+            "capital_preservation",
+            "balanced_growth",
+            "income_generation",
+        ],
+        help="Investment objective (default: balanced_growth)",
     )
     parser.add_argument(
-        "--risk", type=str, default="medio",
+        "--risk",
+        type=str,
+        default="medio",
         choices=["bajo", "medio", "alto"],
-        help="Risk tolerance (default: medio)"
+        help="Risk tolerance (default: medio)",
     )
     parser.add_argument(
-        "--horizon", type=int, default=12,
-        help="Investment horizon in months (default: 12)"
+        "--horizon", type=int, default=12, help="Investment horizon in months (default: 12)"
     )
     parser.add_argument(
-        "--profile-json", type=str, default=None,
-        help="Path to JSON file with profile definition"
+        "--profile-json", type=str, default=None, help="Path to JSON file with profile definition"
     )
 
     # Date options
     parser.add_argument(
-        "--start-date", type=str, default=None,
-        help="Start date (YYYY-MM-DD, default: 1 year ago)"
+        "--start-date", type=str, default=None, help="Start date (YYYY-MM-DD, default: 1 year ago)"
     )
     parser.add_argument(
-        "--end-date", type=str, default=None,
-        help="End date (YYYY-MM-DD, default: today)"
+        "--end-date", type=str, default=None, help="End date (YYYY-MM-DD, default: today)"
     )
     parser.add_argument(
-        "--days", type=int, default=365,
-        help="Number of days to test (default: 365)"
+        "--days", type=int, default=365, help="Number of days to test (default: 365)"
     )
 
     # Other options
     parser.add_argument(
-        "--output-dir", type=str, default="results/full_suite",
-        help="Output directory (default: results/full_suite)"
+        "--output-dir",
+        type=str,
+        default="results/full_suite",
+        help="Output directory (default: results/full_suite)",
     )
     parser.add_argument(
-        "--seed", type=int, default=42,
-        help="Random seed for reproducibility (default: 42)"
+        "--seed", type=int, default=42, help="Random seed for reproducibility (default: 42)"
     )
+    parser.add_argument("--config", type=str, default=None, help="Path to base configuration YAML")
     parser.add_argument(
-        "--config", type=str, default=None,
-        help="Path to base configuration YAML"
-    )
-    parser.add_argument(
-        "--verbose", "-v", action="store_true",
-        help="Enable verbose logging (show all signals)"
+        "--verbose", "-v", action="store_true", help="Enable verbose logging (show all signals)"
     )
 
     args = parser.parse_args()
@@ -1003,11 +1029,7 @@ def main() -> int:
 
     # Create rotating file handler (10MB max, keep 3 backups)
     log_file = output_dir / "full_suite.log"
-    file_handler = RotatingFileHandler(
-        log_file,
-        maxBytes=10 * 1024 * 1024,  # 10MB
-        backupCount=3
-    )
+    file_handler = RotatingFileHandler(log_file, maxBytes=10 * 1024 * 1024, backupCount=3)  # 10MB
     file_handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)-8s] %(message)s"))
 
     # Console handler with less verbose format

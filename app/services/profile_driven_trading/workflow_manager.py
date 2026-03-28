@@ -118,7 +118,7 @@ class WorkflowManager:
 
             return result
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             duration_ms = (datetime.utcnow() - start_time).total_seconds() * 1000
             error_msg = f"Stage {stage_type.value} failed: {str(e)}"
             errors.append(error_msg)

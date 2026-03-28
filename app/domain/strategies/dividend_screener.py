@@ -158,12 +158,11 @@ class DividendScreener:
             failures.append(f"Yield muy alto: {dividend_yield:.2f}% > {self.criteria.max_yield}%")
 
         # 2. Payout ratio check
-        if profile.dividend_data.payout_ratio is not None:
-            if profile.dividend_data.payout_ratio > self.criteria.max_payout:
-                failures.append(
-                    f"Payout ratio excedido: "
-                    f"{profile.dividend_data.payout_ratio:.1f}% > {self.criteria.max_payout}%"
-                )
+        if profile.dividend_data.payout_ratio is not None and profile.dividend_data.payout_ratio > self.criteria.max_payout:
+            failures.append(
+                f"Payout ratio excedido: "
+                f"{profile.dividend_data.payout_ratio:.1f}% > {self.criteria.max_payout}%"
+            )
 
         # 3. Dividend growth check
         if self.criteria.min_growth is not None:
@@ -181,28 +180,25 @@ class DividendScreener:
             )
 
         # 5. Market cap check
-        if self.criteria.min_market_cap is not None and profile.market_cap is not None:
-            if profile.market_cap < self.criteria.min_market_cap:
-                failures.append(
-                    f"Market cap muy bajo: "
-                    f"${profile.market_cap:.0f}M < ${self.criteria.min_market_cap:.0f}M"
-                )
+        if self.criteria.min_market_cap is not None and profile.market_cap is not None and profile.market_cap < self.criteria.min_market_cap:
+            failures.append(
+                f"Market cap muy bajo: "
+                f"${profile.market_cap:.0f}M < ${self.criteria.min_market_cap:.0f}M"
+            )
 
         # 6. Quality score check
-        if profile.quality_score is not None:
-            if profile.quality_score < self.criteria.min_quality:
-                failures.append(
-                    f"Quality score bajo: "
-                    f"{profile.quality_score:.1f} < {self.criteria.min_quality}"
-                )
+        if profile.quality_score is not None and profile.quality_score < self.criteria.min_quality:
+            failures.append(
+                f"Quality score bajo: "
+                f"{profile.quality_score:.1f} < {self.criteria.min_quality}"
+            )
 
         # 7. Sustainability score check
-        if profile.sustainability_score is not None:
-            if profile.sustainability_score < self.criteria.min_sustainability:
-                failures.append(
-                    f"Sustainability score bajo: "
-                    f"{profile.sustainability_score:.1f} < {self.criteria.min_sustainability}"
-                )
+        if profile.sustainability_score is not None and profile.sustainability_score < self.criteria.min_sustainability:
+            failures.append(
+                f"Sustainability score bajo: "
+                f"{profile.sustainability_score:.1f} < {self.criteria.min_sustainability}"
+            )
 
         # 8. Profitability check
         if self.criteria.require_profitable:
@@ -233,22 +229,19 @@ class DividendScreener:
             failures.append(f"Sector excluido: {profile.sector}")
 
         # 12. Valuation checks (optional)
-        if self.config.max_pe_ratio is not None and profile.pe_ratio is not None:
-            if profile.pe_ratio > self.config.max_pe_ratio:
-                failures.append(
-                    f"P/E muy alto: {profile.pe_ratio:.1f} > {self.config.max_pe_ratio}"
-                )
+        if self.config.max_pe_ratio is not None and profile.pe_ratio is not None and profile.pe_ratio > self.config.max_pe_ratio:
+            failures.append(
+                f"P/E muy alto: {profile.pe_ratio:.1f} > {self.config.max_pe_ratio}"
+            )
 
-        if self.config.max_pb_ratio is not None and profile.pb_ratio is not None:
-            if profile.pb_ratio > self.config.max_pb_ratio:
-                failures.append(
-                    f"P/B muy alto: {profile.pb_ratio:.1f} > {self.config.max_pb_ratio}"
-                )
+        if self.config.max_pb_ratio is not None and profile.pb_ratio is not None and profile.pb_ratio > self.config.max_pb_ratio:
+            failures.append(
+                f"P/B muy alto: {profile.pb_ratio:.1f} > {self.config.max_pb_ratio}"
+            )
 
         # 13. Risk check (beta)
-        if self.config.max_beta is not None and profile.beta is not None:
-            if profile.beta > self.config.max_beta:
-                failures.append(f"Beta muy alto: {profile.beta:.2f} > {self.config.max_beta}")
+        if self.config.max_beta is not None and profile.beta is not None and profile.beta > self.config.max_beta:
+            failures.append(f"Beta muy alto: {profile.beta:.2f} > {self.config.max_beta}")
 
         return failures
 

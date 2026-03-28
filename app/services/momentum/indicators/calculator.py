@@ -484,9 +484,7 @@ class TechnicalIndicatorCalculator:
             raise
 
     @staticmethod
-    def calculate_volume_sma(
-        volumes: List[Decimal], period: int = 20
-    ) -> Optional[Decimal]:  # pylint: disable=bad-staticmethod-argument
+    def calculate_volume_sma(volumes: List[Decimal], period: int = 20) -> Optional[Decimal]:
         """
         Calculate Volume Simple Moving Average using pandas.rolling() library.
 
@@ -558,7 +556,7 @@ class TechnicalIndicatorCalculator:
     @staticmethod
     def calculate_zscore(
         prices: List[float], period: int = 30, std: float = 1.0
-    ) -> Optional[float]:  # pylint: disable=bad-staticmethod-argument
+    ) -> Optional[float]:
         """
         Calculate Z-score using pandas-ta-classic.zscore() library.
 
@@ -595,7 +593,7 @@ class TechnicalIndicatorCalculator:
     @staticmethod
     def calculate_volatility(
         prices: List[float], tf: str = "days", returns: bool = False, log: bool = False
-    ) -> Optional[float]:  # pylint: disable=bad-staticmethod-argument
+    ) -> Optional[float]:
         """
         Calculate volatility using pandas-ta-classic.volatility() library.
 
@@ -635,7 +633,7 @@ class TechnicalIndicatorCalculator:
         losing_trades: int,
         avg_win_amount: float,
         avg_loss_amount: float,
-    ) -> Optional[float]:  # pylint: disable=bad-staticmethod-argument
+    ) -> Optional[float]:
         """
         Calculate Expectancy metric for system consistency.
 
@@ -661,7 +659,7 @@ class TechnicalIndicatorCalculator:
     @staticmethod
     def detect_macd_divergence(
         prices: List[float], macd_histograms: List[float], lookback: int = 5
-    ) -> Optional[str]:  # pylint: disable=bad-staticmethod-argument
+    ) -> Optional[str]:
         """
         Detect MACD histogram divergence patterns using numpy.
 

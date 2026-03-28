@@ -19,6 +19,8 @@ from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
+_DEFAULT_TOLERANCE = Decimal("0.01")
+
 
 @dataclass(frozen=True)
 class FundamentalLawComponents:
@@ -74,7 +76,7 @@ class FundamentalLawComponents:
     breadth_sqrt: Decimal
     transfer_coefficient: Decimal
 
-    def validate(self, tolerance: Decimal = Decimal("0.01")) -> bool:
+    def validate(self, tolerance: Decimal = _DEFAULT_TOLERANCE) -> bool:
         """
         Validate that the components satisfy the Fundamental Law.
 

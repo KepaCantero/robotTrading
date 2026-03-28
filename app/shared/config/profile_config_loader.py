@@ -15,7 +15,7 @@ This module provides:
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from .config_loader import YAMLConfigLoader
 
@@ -58,7 +58,7 @@ class ProfileConfigLoader:
         self.yaml_loader = YAMLConfigLoader(self.config_path.parent)
 
         # Load configuration
-        self._config: Optional[Dict[str, Any]] = None
+        self._config: Optional[Dict[str, object]] = None
         self._load_config()
 
     def _load_config(self) -> None:
@@ -91,7 +91,7 @@ class ProfileConfigLoader:
             else:
                 logger.warning(f"Tier '{self.tier}' not found in configuration")
 
-    def _apply_overrides(self, base: Dict[str, Any], overrides: Dict[str, Any]) -> Dict[str, Any]:
+    def _apply_overrides(self, base: Dict[str, object], overrides: Dict[str, object]) -> Dict[str, object]:
         """
         Recursively apply overrides to base configuration.
 
@@ -115,11 +115,11 @@ class ProfileConfigLoader:
         return result
 
     @property
-    def config(self) -> Dict[str, Any]:
+    def config(self) -> Dict[str, object]:
         """Get the full configuration dictionary."""
         return self._config or {}
 
-    def get(self, key_path: str, default: Any = None) -> Any:
+    def get(self, key_path: str, default: Union[str, int, float, bool, None] = None) -> Union[str, int, float, bool, Dict[str, object], List[object], None]:
         """
         Get a configuration value using dot notation.
 
@@ -193,7 +193,7 @@ class ProfileConfigLoader:
     # MODEL PARAMETERS
     # ========================================================================
 
-    def get_model_params(self, model_type: str) -> Dict[str, Any]:
+    def get_model_params(self, model_type: str) -> Dict[str, object]:
         """
         Get parameters for a specific model type.
 
@@ -210,15 +210,15 @@ class ProfileConfigLoader:
         """
         return self.get(f"models.{model_type}", {})
 
-    def get_random_forest_params(self) -> Dict[str, Any]:
+    def get_random_forest_params(self) -> Dict[str, object]:
         """Get Random Forest model parameters."""
         return self.get_model_params("random_forest")
 
-    def get_xgboost_params(self) -> Dict[str, Any]:
+    def get_xgboost_params(self) -> Dict[str, object]:
         """Get XGBoost model parameters."""
         return self.get_model_params("xgboost")
 
-    def get_lightgbm_params(self) -> Dict[str, Any]:
+    def get_lightgbm_params(self) -> Dict[str, object]:
         """Get LightGBM model parameters."""
         return self.get_model_params("lightgbm")
 
@@ -226,15 +226,15 @@ class ProfileConfigLoader:
     # REINFORCEMENT LEARNING
     # ========================================================================
 
-    def get_rl_environment_config(self) -> Dict[str, Any]:
+    def get_rl_environment_config(self) -> Dict[str, object]:
         """Get RL environment configuration."""
         return self.get("reinforcement_learning.environment", {})
 
-    def get_rl_reward_config(self) -> Dict[str, Any]:
+    def get_rl_reward_config(self) -> Dict[str, object]:
         """Get RL reward configuration."""
         return self.get("reinforcement_learning.rewards", {})
 
-    def get_rl_algorithm_params(self, algorithm: str) -> Dict[str, Any]:
+    def get_rl_algorithm_params(self, algorithm: str) -> Dict[str, object]:
         """
         Get RL algorithm parameters.
 
@@ -246,11 +246,11 @@ class ProfileConfigLoader:
         """
         return self.get(f"reinforcement_learning.algorithms.{algorithm}", {})
 
-    def get_rl_training_params(self) -> Dict[str, Any]:
+    def get_rl_training_params(self) -> Dict[str, object]:
         """Get RL training parameters."""
         return self.get("reinforcement_learning.training", {})
 
-    def get_rl_network_config(self) -> Dict[str, Any]:
+    def get_rl_network_config(self) -> Dict[str, object]:
         """Get RL network architecture configuration."""
         return self.get("reinforcement_learning.network", {})
 
@@ -258,7 +258,7 @@ class ProfileConfigLoader:
     # THRESHOLD OPTIMIZATION
     # ========================================================================
 
-    def get_threshold_config(self, indicator: str) -> Dict[str, Any]:
+    def get_threshold_config(self, indicator: str) -> Dict[str, object]:
         """
         Get threshold optimization configuration for an indicator.
 
@@ -287,15 +287,15 @@ class ProfileConfigLoader:
     # VALIDATION PARAMETERS
     # ========================================================================
 
-    def get_walk_forward_config(self) -> Dict[str, Any]:
+    def get_walk_forward_config(self) -> Dict[str, object]:
         """Get walk-forward validation configuration."""
         return self.get("validation.walk_forward", {})
 
-    def get_monte_carlo_config(self) -> Dict[str, Any]:
+    def get_monte_carlo_config(self) -> Dict[str, object]:
         """Get Monte Carlo validation configuration."""
         return self.get("validation.monte_carlo", {})
 
-    def get_validation_thresholds(self) -> Dict[str, Any]:
+    def get_validation_thresholds(self) -> Dict[str, object]:
         """Get validation performance thresholds."""
         return self.get("validation.thresholds", {})
 
@@ -320,7 +320,7 @@ class ProfileConfigLoader:
         """
         return self.get(f"reporting.metrics.{level}", [])
 
-    def get_visualization_config(self) -> Dict[str, Any]:
+    def get_visualization_config(self) -> Dict[str, object]:
         """Get visualization settings."""
         return self.get("reporting.visualization", {})
 
@@ -328,7 +328,7 @@ class ProfileConfigLoader:
     # MEMORY MANAGEMENT
     # ========================================================================
 
-    def get_memory_config(self) -> Dict[str, Any]:
+    def get_memory_config(self) -> Dict[str, object]:
         """Get memory management configuration."""
         return self.get("memory", {})
 
@@ -440,7 +440,7 @@ def get_profile_config_loader(
     return _loaders[cache_key]
 
 
-def get_common_params(profile: Optional[str] = None, tier: Optional[str] = None) -> Dict[str, Any]:
+def get_common_params(profile: Optional[str] = None, tier: Optional[str] = None) -> Dict[str, object]:
     """
     Get common parameters as a dictionary.
 
@@ -465,7 +465,7 @@ def get_model_params(
     model_type: str,
     profile: Optional[str] = None,
     tier: Optional[str] = None,
-) -> Dict[str, Any]:
+) -> Dict[str, object]:
     """
     Get model parameters with profile and tier overrides applied.
 
@@ -485,7 +485,7 @@ def get_threshold_ranges(
     indicator: str,
     profile: Optional[str] = None,
     tier: Optional[str] = None,
-) -> Dict[str, Any]:
+) -> Dict[str, object]:
     """
     Get threshold optimization ranges for an indicator.
 
@@ -504,7 +504,7 @@ def get_threshold_ranges(
 def get_rl_config(
     profile: Optional[str] = None,
     tier: Optional[str] = None,
-) -> Dict[str, Any]:
+) -> Dict[str, object]:
     """
     Get complete RL configuration with overrides.
 

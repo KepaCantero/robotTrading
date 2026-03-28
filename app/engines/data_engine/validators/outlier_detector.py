@@ -195,6 +195,6 @@ class OutlierDetector:
 
         return {
             'field_results': results,
-            'combined_outliers': sorted(list(all_outlier_indices)),
+            'combined_outliers': sorted(all_outlier_indices),
             'total_outliers': len(all_outlier_indices),
         }

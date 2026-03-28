@@ -20,22 +20,19 @@ References:
 - Kyle, A.S. (1985) "Continuous Auctions and Insider Trading"
 - Madhavan, A., Richardson, M., & Roomans, M. (1997) "Why Do Stock Prices Move?"
 """
-from __future__ import annotations  # Enable Python 3.10+ union syntax in Python 3.9
+from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union  # noqa: F401
+from typing import Tuple
 
 import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)
-
-# mypy: ignore-errors
-# pylint: disable=unsupported-binary-operation  # For Python 3.10+ union syntax
 
 
 class ModelType(Enum):
@@ -409,8 +406,9 @@ class GlostenMilgromModel:
                 information_event = InformationEvent.NONE
 
         # Set true value
+        true_value: float
         if information_event == InformationEvent.BAD:
-            true_value = 0
+            true_value = 0.0
         elif information_event == InformationEvent.GOOD:
             true_value = 2 * self.initial_value
         else:
@@ -889,7 +887,7 @@ class StollSpreadDecomposer:
                 'adverse_selection': adverse_selection / observed_spread_bps,
             }
         else:
-            weights: dict[str, float] = {
+            weights = {
                 'order_processing': 0.0,
                 'inventory_holding': 0.0,
                 'adverse_selection': 0.0,

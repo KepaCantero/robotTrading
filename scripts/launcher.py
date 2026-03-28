@@ -32,6 +32,7 @@ Alternative:
 # Debe ir ANTES de importar numpy, pandas, torch, o cualquier otra librería
 # ============================================================================
 import os
+
 os.environ['OMP_NUM_THREADS'] = '1'
 os.environ['OPENBLAS_NUM_THREADS'] = '1'
 os.environ['MKL_NUM_THREADS'] = '1'
@@ -52,42 +53,56 @@ from pathlib import Path
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
+
 def launch_dashboard():
     """Launch the Streamlit dashboard."""
     import subprocess
-    
+
     print("🚀 Starting AlgoTrading Dashboard...")
     print("🌐 Dashboard will open at http://localhost:8501")
     print("⚠️  Make sure Streamlit is installed: pip install streamlit\n")
-    
+
     dashboard_path = project_root / "app" / "dashboard" / "main.py"
-    
-    subprocess.run([
-        "streamlit", "run", str(dashboard_path),
-        "--server.headless", "false",
-        "--browser.gatherUsageStats", "false",
-    ])
+
+    subprocess.run(
+        [
+            "streamlit",
+            "run",
+            str(dashboard_path),
+            "--server.headless",
+            "false",
+            "--browser.gatherUsageStats",
+            "false",
+        ]
+    )
+
 
 def launch_api():
     """Launch the FastAPI server."""
     import subprocess
-    
+
     print("🚀 Starting AlgoTrading API Server...")
     print("🌐 API will be available at http://localhost:8000")
     print("📖 API docs at http://localhost:8000/docs\n")
-    
+
     # Run uvicorn with the FastAPI app
-    subprocess.run([
-        "uvicorn", "app.main:app",
-        "--reload",
-        "--host", "0.0.0.0",
-        "--port", "8000",
-    ])
+    subprocess.run(
+        [
+            "uvicorn",
+            "app.main:app",
+            "--reload",
+            "--host",
+            "0.0.0.0",
+            "--port",
+            "8000",
+        ]
+    )
+
 
 def main():
     """Main entry point."""
     command = sys.argv[1] if len(sys.argv) > 1 else "dashboard"
-    
+
     if command == "dashboard":
         launch_dashboard()
     elif command == "api":
@@ -105,6 +120,6 @@ def main():
         print("  python scripts/launcher.py api")
         sys.exit(1)
 
+
 if __name__ == "__main__":
     main()
-

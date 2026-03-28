@@ -553,9 +553,7 @@ class DividendInvesting:
         if (
             score > self._tt.dividend_score_excellent
             and valuation_ratio < self._tt.valuation_ratio_cheap
-        ):
-            return DividendSignal.BUY
-        elif (
+        ) or (
             score > self._tt.dividend_score_good and valuation_ratio < self._tt.valuation_ratio_fair
         ):
             return DividendSignal.BUY

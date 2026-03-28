@@ -349,7 +349,7 @@ class MeanReversionStrategy(BaseStrategy):
 
         # Calculate z-score using pandas-ta-classic (rolling z-score with lookback_period)
         z_score_raw = (
-            self.indicator_calculator.calculate_zscore(  # pylint: disable=no-value-for-parameter
+            self.indicator_calculator.calculate_zscore(
                 prices_with_current, period=self.lookback_period, std=1.0
             )
         )
@@ -394,7 +394,7 @@ class MeanReversionStrategy(BaseStrategy):
         prices_with_current = prices_list + [current_price]
 
         # Calculate volatility using pandas-ta-classic (daily volatility)
-        volatility_raw = self.indicator_calculator.calculate_volatility(  # pylint: disable=no-value-for-parameter
+        volatility_raw = self.indicator_calculator.calculate_volatility(
             prices_with_current, tf='days', returns=False, log=False
         )
 

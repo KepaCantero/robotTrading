@@ -15,17 +15,21 @@ import asyncio
 import json
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 # Fallback pattern: Try to import redis, provide in-memory fallback if not available
+# Using module-level pattern for optional dependencies
+_redis_module = None
 try:
-    import redis.asyncio as redis
+    import redis.asyncio as _redis_module
 
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
-    redis = None  # type: ignore
     logging.warning("redis package not installed. Using in-memory cache fallback only.")
+
+if TYPE_CHECKING:
+    from redis.asyncio import Redis
 
 from sqlalchemy import Column, DateTime, Index, LargeBinary, String, Text, create_engine
 from sqlalchemy.exc import (
@@ -75,7 +79,7 @@ class DistributedCache:
     Fallback a cache en memoria si Redis no está disponible.
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[Dict[str, Union[str, int, float, bool]]] = None):
         """
         Inicializar cache distribuido.
 
@@ -104,9 +108,9 @@ class DistributedCache:
         self.use_postgres = config.get('use_postgres', False)
 
         # Redis client
-        self.redis_client: Optional[Any] = None
+        self.redis_client: Optional["Redis"] = None
         if self.use_redis:
-            if not REDIS_AVAILABLE:
+            if not REDIS_AVAILABLE or _redis_module is None:
                 logger.warning(
                     "Redis package not installed. Disabling Redis cache, using in-memory fallback."
                 )
@@ -116,7 +120,7 @@ class DistributedCache:
                     redis_url = config.get('redis_url')
                     if not redis_url:
                         raise ValueError("redis_url debe estar en config cuando use_redis=True")
-                    self.redis_client = redis.from_url(redis_url, decode_responses=False)  # type: ignore
+                    self.redis_client = _redis_module.from_url(redis_url, decode_responses=False)
                     logger.info("Redis cache inicializado")
                 except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                     logger.warning(f"No se pudo conectar a Redis: {e}. Usando cache en memoria.")
@@ -146,14 +150,14 @@ class DistributedCache:
                     # Crear tablas si no existen
                     Base.metadata.create_all(self.postgres_engine)
                     logger.info("PostgreSQL cache inicializado")
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.warning(
                     f"No se pudo conectar a PostgreSQL: {e}. Usando cache en Redis/memoria."
                 )
                 self.use_postgres = False
 
         # Fallback: cache en memoria
-        self.memory_cache: Dict[str, Dict[str, Any]] = {}
+        self.memory_cache: Dict[str, Dict[str, Union[str, int, float, bool, Dict, List]]] = {}
 
         logger.info(
             f"DistributedCache inicializado: Redis={self.use_redis}, PostgreSQL={self.use_postgres}"
@@ -167,7 +171,7 @@ class DistributedCache:
                 parts.append(f"{key}:{value}")
         return ":".join(parts)
 
-    async def get(self, key: str, default: Any = None) -> Optional[Any]:
+    async def get(self, key: str, default: Optional[Union[str, int, float, bool, Dict, List]] = None) -> Optional[Union[str, int, float, bool, Dict, List]]:
         """
         Obtener valor del cache.
 
@@ -233,9 +237,9 @@ class DistributedCache:
     async def set(
         self,
         key: str,
-        value: Any,
+        value: Union[str, int, float, bool, Dict, List],
         ttl: Optional[int] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[Dict[str, Union[str, int, float, bool]]] = None,
     ) -> bool:
         """
         Guardar valor en cache.
@@ -260,7 +264,7 @@ class DistributedCache:
         if self.use_redis and self.redis_client:
             try:
                 await self.redis_client.setex(key, ttl, serialized_data)
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 logger.warning(f"Error guardando en Redis: {e}")
                 success = False
 
@@ -403,7 +407,7 @@ class DistributedCache:
         if self.postgres_engine:
             self.postgres_engine.dispose()
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> Dict[str, Union[str, int, float, bool, None]]:
         """Obtener estado del cache."""
         return {
             'redis_enabled': self.use_redis,

@@ -91,7 +91,9 @@ def example_2_regularization():
 
     # Generate sparse data
     np.random.seed(42)
-    X, y = make_regression(n_samples=200, n_features=20, n_informative=5, noise=0.1, random_state=42)
+    X, y = make_regression(
+        n_samples=200, n_features=20, n_informative=5, noise=0.1, random_state=42
+    )
 
     # Split data
     train_size = 150
@@ -144,7 +146,8 @@ def example_3_regularization_path():
     # Analyze regularization path
     analyzer = RegularizationAnalyzer()
     path = analyzer.compute_regularization_path(
-        X, y,
+        X,
+        y,
         regularization_type=RegularizationType.L1,
         n_alphas=20,
     )
@@ -196,16 +199,16 @@ def example_4_model_selection():
     print("-" * 70)
 
     for _, row in comparison.comparison_table.iterrows():
-        print(f"{row['Model']:<20} {row['Params']:<8} {row['R²']:<8.4f} {row['Adj_R²']:<8.4f} {row['AIC']:<10.2f} {row['BIC']:<10.2f}")
+        print(
+            f"{row['Model']:<20} {row['Params']:<8} {row['R²']:<8.4f} {row['Adj_R²']:<8.4f} {row['AIC']:<10.2f} {row['BIC']:<10.2f}"
+        )
 
     print(f"\nBest by AIC: {comparison.best_model_by_aic}")
     print(f"Best by BIC: {comparison.best_model_by_bic}")
     print(f"Best by AdjR²: {comparison.best_model_by_adjusted_r2}")
 
     # Select best model
-    best_name, best_model, best_result = selector.select_best_model(
-        models, X, y, criterion="bic"
-    )
+    best_name, best_model, best_result = selector.select_best_model(models, X, y, criterion="bic")
     print(f"\nSelected model: {best_name}")
     print(f"BIC: {best_result.bic:.2f}")
 
@@ -231,6 +234,7 @@ def example_5_ensemble_methods():
     # Single decision tree (baseline)
     print("\n1. Single Decision Tree (Baseline):")
     from sklearn.tree import DecisionTreeRegressor
+
     tree = DecisionTreeRegressor(random_state=42)
     tree.fit(X_train, y_train)
     tree_score = tree.score(X_test, y_test)
@@ -335,7 +339,9 @@ def example_7_complete_workflow():
 
     # Generate sample data
     np.random.seed(42)
-    X, y = make_regression(n_samples=300, n_features=20, n_informative=10, noise=0.3, random_state=42)
+    X, y = make_regression(
+        n_samples=300, n_features=20, n_informative=10, noise=0.3, random_state=42
+    )
 
     # Step 1: Compare models with CV
     print("\nStep 1: Compare models with 5-fold CV")
@@ -368,7 +374,8 @@ def example_7_complete_workflow():
     X_selected = X[:, selected]
 
     ensemble_results = analyzer.compare_ensembles(
-        X_selected, y,
+        X_selected,
+        y,
         base_estimator=DecisionTreeRegressor(),
         n_estimators=50,
     )

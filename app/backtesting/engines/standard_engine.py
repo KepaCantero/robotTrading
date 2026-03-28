@@ -15,15 +15,20 @@ SINGLE SOURCE OF TRUTH: All defaults from CentralizedConfig.
 
 from __future__ import annotations
 
+import contextlib
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
-from typing import Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 from uuid import uuid4
 
 import pandas as pd
 
 from app.backtesting.base_engine import BaseBacktestEngine, EngineType
+
+if TYPE_CHECKING:
+    from app.services.dynamic_capital_reallocation import DynamicCapitalReallocationEngine
+
 from app.backtesting.liquidity_validator import LiquidityValidator
 from app.backtesting.models import (
     BacktestConfig,
@@ -43,12 +48,16 @@ from app.backtesting.services.signal_processor import SignalProcessor
 from app.backtesting.services.trade_executor import TradeExecutor
 
 # Domain imports
+from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import AssetClass, Portfolio, Position
-from app.domain.models.signal import Signal
+from app.domain.models.signal import MarketData, Signal
 from app.domain.services.compliance.compliance_engine import ComplianceEngine
 from app.domain.services.trading_validators import TradingValidator
 
 logger = logging.getLogger(__name__)
+
+# Type for market data items used in backtesting (Quote from data loader or MarketData from signals)
+MarketDataPoint = Union[MarketData, Quote]
 
 
 class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]):
@@ -75,7 +84,7 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
         compliance_engine: Optional[ComplianceEngine] = None,
         strategy_name: str = "unknown",
         total_portfolio_capital: Optional[Decimal] = None,
-        reallocation_engine: Optional[Any] = None,
+        reallocation_engine: Optional["DynamicCapitalReallocationEngine"] = None,
     ):
         """
         Initialize the standard backtest engine.
@@ -102,7 +111,7 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
         self.reallocation_engine = reallocation_engine
 
         # Store market_data for compliance engine price_history
-        self._market_data_list: List = []
+        self._market_data_list: List[MarketDataPoint] = []
 
         # Initialize service classes
         self._initialize_services(compliance_engine)
@@ -176,9 +185,9 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
         """Return the engine type identifier."""
         return EngineType.STANDARD
 
-    def run_backtest(  # pylint: disable=signature-differs
+    def run_backtest(
         self,
-        market_data: List,
+        market_data: List[MarketDataPoint],
         signals: List[Signal],
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
@@ -310,7 +319,7 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
             annualized_return=annualized_return,
         )
 
-    def _create_result(  # pylint: disable=arguments-differ
+    def _create_result(
         self,
         performance: PerformanceMetrics,
         trades: List[Trade],
@@ -348,7 +357,7 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
 
     def _process_signals_at_timestamp(
         self,
-        market_data: Any,
+        market_data: MarketDataPoint,
         signals: List[Signal],
         signal_index: int,
         signals_processed: int,
@@ -394,7 +403,7 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
 
         return signal_index, signals_processed, signals_matched, signals_skipped, strategy_stats
 
-    def _process_signal(self, signal: Signal, market_data: Any) -> None:
+    def _process_signal(self, signal: Signal, market_data: MarketDataPoint) -> None:
         """Process a trading signal with compliance checks."""
         strategy_name = signal.metadata.get("strategy", "unknown") if signal.metadata else "unknown"
 
@@ -424,7 +433,7 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
             self._execute_sell_with_compliance(signal, market_data, strategy_name)
 
     def _execute_buy_with_compliance(
-        self, signal: Signal, market_data: Any, strategy_name: str
+        self, signal: Signal, market_data: MarketDataPoint, strategy_name: str
     ) -> None:
         """Execute buy trade with compliance validation."""
         current_price = self._get_price(market_data)
@@ -493,7 +502,7 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
             self._register_buy_trade_for_learning(trade, signal, market_data)
 
     def _execute_sell_with_compliance(
-        self, signal: Signal, market_data: Any, strategy_name: str
+        self, signal: Signal, market_data: MarketDataPoint, strategy_name: str
     ) -> None:
         """Execute sell trade with compliance validation."""
         current_price = self._get_price(market_data)
@@ -612,10 +621,8 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
     def _get_strategy_commission(self, signal: Signal, strategy_name: str) -> Optional[Decimal]:
         """Get commission percentage for strategy."""
         if signal.metadata and "commission_per_trade_pct" in signal.metadata:
-            try:
+            with contextlib.suppress(ValueError, TypeError, InvalidOperation):
                 return Decimal(str(signal.metadata["commission_per_trade_pct"]))
-            except (ValueError, TypeError, InvalidOperation):
-                pass
 
         if self.strategy and hasattr(self.strategy, "commission_per_trade_pct"):
             return self.strategy.commission_per_trade_pct
@@ -736,9 +743,13 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
             trades=self.state.trades,
         )
 
-        exit_price_with_slippage = self._apply_slippage(
-            current_price or recent_trades[-1].entry_price, False
+        from app.backtesting.base_engine import SlippageParams
+
+        slippage_params = SlippageParams(
+            price=current_price or recent_trades[-1].entry_price,
+            is_buy=False,
         )
+        exit_price_with_slippage = self._apply_slippage(slippage_params)
 
         trade = Trade(
             trade_id=str(uuid4()),
@@ -773,7 +784,7 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
         self.position_manager.close_position(symbol)
 
     def _close_all_positions(
-        self, final_market_data: Any, price_map: Optional[Dict[str, Decimal]] = None
+        self, final_market_data: MarketDataPoint, price_map: Optional[Dict[str, Decimal]] = None
     ) -> None:
         """Close all remaining positions at the end of backtest."""
         for symbol in self.position_manager.get_symbols_with_positions():
@@ -793,7 +804,9 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
                 symbol, final_market_data.timestamp, "end_of_backtest", closing_price
             )
 
-    def _execute_learning_retraining(self, market_data: Any, all_market_data: List) -> None:
+    def _execute_learning_retraining(
+        self, market_data: MarketDataPoint, all_market_data: List[MarketDataPoint]
+    ) -> None:
         """Execute learning engine retraining if necessary."""
         if not (
             self.strategy
@@ -831,7 +844,7 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
         )
 
     def _register_buy_trade_for_learning(
-        self, trade: Trade, signal: Signal, market_data: Any
+        self, trade: Trade, signal: Signal, market_data: MarketDataPoint
     ) -> None:
         """Register a buy trade for the learning engine."""
         if not (
@@ -854,7 +867,7 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
             )
 
     def _register_sell_trade_for_learning(
-        self, trade: Trade, signal: Signal, market_data: Any
+        self, trade: Trade, signal: Signal, market_data: MarketDataPoint
     ) -> None:
         """Register a sell trade result for the learning engine."""
         if not (
@@ -880,7 +893,10 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
             )
 
     def _update_reallocation_engine(
-        self, performance: PerformanceMetrics, total_return: Decimal, market_data: List
+        self,
+        performance: PerformanceMetrics,
+        total_return: Decimal,
+        market_data: List[MarketDataPoint],
     ) -> None:
         """Update reallocation engine with strategy performance after backtest."""
         if not (self.reallocation_engine and performance):
@@ -904,7 +920,7 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
     # PICKLE SUPPORT
     # =========================================================================
 
-    def __getstate__(self) -> Dict[str, Any]:
+    def __getstate__(self) -> Dict[str, object]:
         """Get state for pickling."""
         state = super().__getstate__()
         state.update(
@@ -914,7 +930,7 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
         )
         return state
 
-    def __setstate__(self, state: Dict[str, Any]) -> None:
+    def __setstate__(self, state: Dict[str, object]) -> None:
         """Restore state from pickling."""
         super().__setstate__(state)
         self.total_portfolio_capital = Decimal(str(state.get("total_portfolio_capital", "100000")))

@@ -29,10 +29,7 @@ def example_basic_split():
     print("=" * 60)
 
     # Generate sample market data (1000 days)
-    bars = [
-        MockBar(datetime(2020, 1, 1) + timedelta(days=i), close=100 + i)
-        for i in range(1000)
-    ]
+    bars = [MockBar(datetime(2020, 1, 1) + timedelta(days=i), close=100 + i) for i in range(1000)]
 
     # Create splitter with default configuration (70/15/15)
     splitter = TrainValTestSplitter()
@@ -57,10 +54,7 @@ def example_custom_split():
     print("Example 2: Custom Split Configuration (60/20/20)")
     print("=" * 60)
 
-    bars = [
-        MockBar(datetime(2020, 1, 1) + timedelta(days=i), close=100 + i)
-        for i in range(1000)
-    ]
+    bars = [MockBar(datetime(2020, 1, 1) + timedelta(days=i), close=100 + i) for i in range(1000)]
 
     # Create custom split configuration
     config = DataSplit(train_pct=0.6, val_pct=0.2, test_pct=0.2)
@@ -80,18 +74,13 @@ def example_date_filtered_split():
     print("Example 3: Split with Date Filtering")
     print("=" * 60)
 
-    bars = [
-        MockBar(datetime(2020, 1, 1) + timedelta(days=i), close=100 + i)
-        for i in range(1000)
-    ]
+    bars = [MockBar(datetime(2020, 1, 1) + timedelta(days=i), close=100 + i) for i in range(1000)]
 
     splitter = TrainValTestSplitter()
 
     # Split only data from 2021
     train, val, test = splitter.split_data(
-        bars,
-        start_date=datetime(2021, 1, 1),
-        end_date=datetime(2021, 12, 31)
+        bars, start_date=datetime(2021, 1, 1), end_date=datetime(2021, 12, 31)
     )
 
     total = len(train) + len(val) + len(test)
@@ -107,19 +96,12 @@ def example_walk_forward_split():
     print("Example 4: Walk-Forward Validation")
     print("=" * 60)
 
-    bars = [
-        MockBar(datetime(2020, 1, 1) + timedelta(days=i), close=100 + i)
-        for i in range(1000)
-    ]
+    bars = [MockBar(datetime(2020, 1, 1) + timedelta(days=i), close=100 + i) for i in range(1000)]
 
     splitter = TrainValTestSplitter()
 
     # Create walk-forward windows
-    splits = splitter.walk_forward_split(
-        bars,
-        window_size=252,  # 1 year
-        step_size=63      # 3 months
-    )
+    splits = splitter.walk_forward_split(bars, window_size=252, step_size=63)  # 1 year  # 3 months
 
     print(f"\nCreated {len(splits)} walk-forward windows")
     print("\nFirst 3 windows:")
@@ -146,8 +128,28 @@ def example_multiple_testing_correction():
     print(f"  → Much stricter! Need stronger evidence.")
 
     # Benjamini-Hochberg (less conservative)
-    p_values = [0.01, 0.02, 0.03, 0.05, 0.08, 0.12, 0.15, 0.20, 0.25, 0.30,
-                0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.80, 0.90]
+    p_values = [
+        0.01,
+        0.02,
+        0.03,
+        0.05,
+        0.08,
+        0.12,
+        0.15,
+        0.20,
+        0.25,
+        0.30,
+        0.35,
+        0.40,
+        0.45,
+        0.50,
+        0.55,
+        0.60,
+        0.65,
+        0.70,
+        0.80,
+        0.90,
+    ]
 
     significant = corrector.benjamini_hochberg_correction(p_values)
     num_significant = sum(significant)
@@ -211,7 +213,8 @@ def main():
     print("\n" + "=" * 60)
     print("KEY TAKEAWAYS")
     print("=" * 60)
-    print("""
+    print(
+        """
 1. Always split data BEFORE backtesting to prevent data snooping
 2. Use training set for parameter optimization
 3. Use validation set for model selection
@@ -219,7 +222,8 @@ def main():
 5. Apply multiple testing corrections when testing many configurations
 6. Validate out-of-sample performance to detect overfitting
 7. Consider walk-forward validation for time-series data
-    """)
+    """
+    )
 
 
 if __name__ == "__main__":

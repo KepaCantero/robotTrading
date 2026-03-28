@@ -340,7 +340,7 @@ class RealMarketDataFetcher:
                         extra={"symbol": symbol, "cache_type": "json"},
                     )
                     return self._parse_alpha_vantage_data(data, symbol)
-            except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+            except OSError as e:
                 logger.debug(
                     f"Failed to load JSON cache for {symbol}: {e}",
                     extra={"symbol": symbol, "error_type": type(e).__name__},
@@ -364,7 +364,7 @@ class RealMarketDataFetcher:
                     )
                     # Don't check staleness for CSV files - they can be used for backtesting
                     return df.sort_index()
-            except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+            except OSError as e:
                 logger.warning(
                     f"Failed to load CSV cache for {symbol}: {e}",
                     extra={"symbol": symbol, "error_type": type(e).__name__},
@@ -388,7 +388,7 @@ class RealMarketDataFetcher:
             logger.debug(
                 f"Cached data for {symbol}", extra={"symbol": symbol, "cache_path": str(cache_path)}
             )
-        except (FileNotFoundError, PermissionError, IOError, OSError, IsADirectoryError) as e:
+        except OSError as e:
             logger.warning(
                 f"Failed to cache data for {symbol}: {e}",
                 extra={"symbol": symbol, "error_type": type(e).__name__},

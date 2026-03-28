@@ -117,4 +117,3 @@ except (ValueError, TypeError, KeyError, AttributeError) as e:
     print(f"❌ Error: {e}")
     logger.exception("Backtest failed")
     exit(1)
-

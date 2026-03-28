@@ -1,4 +1,3 @@
-# pylint: disable=subprocess-run-check
 # mypy: ignore-errors
 """
 Dead Man's Switch - Health Check Monitoring
@@ -22,6 +21,7 @@ from typing import Any, Callable, Dict, List, Optional
 import aiosqlite
 
 from app.shared.utils.safe_parse import safe_parse
+import contextlib
 
 logger = logging.getLogger(__name__)
 
@@ -217,7 +217,7 @@ class DeadMansSwitch:
                 await self._init_database()
                 await self._load_active_incident()
                 self.logger.info("DeadMansSwitch initialized")
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 self.logger.error(f"Error initializing: {e}")
                 raise
 
@@ -277,7 +277,7 @@ class DeadMansSwitch:
 
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Database initialization failed: {e}")
             raise
 
@@ -314,7 +314,7 @@ class DeadMansSwitch:
 
                     self.logger.warning(f"Loaded active incident: {row[0]}")
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error loading incident: {e}")
 
     async def start(self) -> None:
@@ -338,17 +338,13 @@ class DeadMansSwitch:
 
         if self._monitor_task:
             self._monitor_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._monitor_task
-            except asyncio.CancelledError:
-                pass
 
         if self._ping_task:
             self._ping_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._ping_task
-            except asyncio.CancelledError:
-                pass
 
     async def ping(
         self,
@@ -553,7 +549,7 @@ class DeadMansSwitch:
 
                 result = subprocess.run(
                     cmd_args,
-                    shell=False,  # nosec B603 - Using shlex.split for safe parsing
+                    shell=False,
                     timeout=60,
                     capture_output=True,
                     check=False,
@@ -665,7 +661,7 @@ class DeadMansSwitch:
                 )
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error saving heartbeat: {e}")
 
     async def _save_incident(self, incident: IncidentRecord) -> None:
@@ -693,7 +689,7 @@ class DeadMansSwitch:
                 )
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error saving incident: {e}")
 
     async def _update_incident(self, incident: IncidentRecord) -> None:
@@ -716,7 +712,7 @@ class DeadMansSwitch:
                 )
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error updating incident: {e}")
 
     def set_trigger_callback(self, callback: Callable) -> None:

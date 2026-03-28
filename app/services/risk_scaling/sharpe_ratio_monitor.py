@@ -313,7 +313,7 @@ class SharpeRatioMonitor:
         self,
         current_sharpe: Decimal,
         previous_sharpe: Optional[Decimal] = None,
-        current_allocation: Decimal = Decimal("1.0"),
+        current_allocation: Optional[Decimal] = None,
     ) -> Tuple[Decimal, str]:
         """
         Suggest capital adjustment based on Sharpe trend.
@@ -326,6 +326,8 @@ class SharpeRatioMonitor:
         Returns:
             Tuple of (suggested_allocation, reason)
         """
+        if current_allocation is None:
+            current_allocation = Decimal("1.0")
         suggested_scale = self.calculate_sharpe_scale(current_sharpe)
         current_interpretation = self.get_sharpe_interpretation(current_sharpe)
 

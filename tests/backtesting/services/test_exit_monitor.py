@@ -187,7 +187,9 @@ class TestExitConditionMonitor:
         assert is_hit is False
         assert execution_price is None
 
-    def test_check_exit_conditions_stop_loss_triggered(self, exit_monitor, sample_trades, default_symbol):
+    def test_check_exit_conditions_stop_loss_triggered(
+        self, exit_monitor, sample_trades, default_symbol
+    ):
         """Test stop loss exit condition triggered."""
         market_data = MockMarketData(default_symbol, close=140, low=134, high=145)
 
@@ -204,7 +206,9 @@ class TestExitConditionMonitor:
         assert close_called[0][1] == "stop_loss"
         assert close_called[0][2] == Decimal("135")  # Stop loss price
 
-    def test_check_exit_conditions_take_profit_triggered(self, exit_monitor, sample_trades, default_symbol):
+    def test_check_exit_conditions_take_profit_triggered(
+        self, exit_monitor, sample_trades, default_symbol
+    ):
         """Test take profit exit condition triggered."""
         # High triggers TP (181 >= 180), but low is above SL (140 > 135)
         market_data = MockMarketData(default_symbol, close=170, low=140, high=181)
@@ -222,7 +226,9 @@ class TestExitConditionMonitor:
         assert close_called[0][1] == "take_profit"
         assert close_called[0][2] == Decimal("180")  # Take profit price
 
-    def test_check_exit_conditions_both_triggered_pessimistic(self, exit_monitor, sample_trades, default_symbol):
+    def test_check_exit_conditions_both_triggered_pessimistic(
+        self, exit_monitor, sample_trades, default_symbol
+    ):
         """Test both SL and TP triggered - stop loss takes priority (pessimistic)."""
         # Low triggers SL, high triggers TP
         market_data = MockMarketData(default_symbol, close=150, low=130, high=185)

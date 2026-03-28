@@ -723,7 +723,7 @@ class ConceptDriftDetector:
         max_score = 0.0
         recommendation = "ok"
 
-        for detector_name, result in results.items():
+        for _detector_name, result in results.items():
             if result.drift_detected:
                 drift_detected = True
             # Get p-value as score if available, otherwise use statistic
@@ -1582,7 +1582,7 @@ class AdvancedOverfittingDetector:
         best_val_loss = float("inf")
         best_epoch = None
 
-        for i, m in enumerate(self.metrics_history):
+        for _i, m in enumerate(self.metrics_history):
             if m.val_loss is not None and m.val_loss < best_val_loss:
                 best_val_loss = m.val_loss
                 best_epoch = m.epoch
@@ -1875,9 +1875,7 @@ class ComprehensiveDriftDetector:
             recommendation = "retrain_immediately"
         elif max_severity == DriftSeverity.HIGH:
             recommendation = "retrain"
-        elif max_severity == DriftSeverity.MEDIUM:
-            recommendation = "monitor"
-        elif max_severity == DriftSeverity.LOW:
+        elif max_severity == DriftSeverity.MEDIUM or max_severity == DriftSeverity.LOW:
             recommendation = "monitor"
         else:
             recommendation = "ok"
@@ -2020,15 +2018,14 @@ class AutoRetrainingTrigger:
             overfitting_result = self.overfitting_detector.detect_overfitting()
             results["overfitting_detection"] = overfitting_result
 
-            if overfitting_result.get("overfitting_detected", False):
-                if overfitting_result.get("recommendation") in [
-                    "stop_training",
-                    "reduce_complexity",
-                ]:
-                    should_retrain = True
-                    reasons.append(
-                        f"overfitting: gap_ratio={overfitting_result.get('gap_ratio', 0):.3f}"
-                    )
+            if overfitting_result.get("overfitting_detected", False) and overfitting_result.get("recommendation") in [
+                "stop_training",
+                "reduce_complexity",
+            ]:
+                should_retrain = True
+                reasons.append(
+                    f"overfitting: gap_ratio={overfitting_result.get('gap_ratio', 0):.3f}"
+                )
 
         # 4. Performance degradation check
         if current_performance:

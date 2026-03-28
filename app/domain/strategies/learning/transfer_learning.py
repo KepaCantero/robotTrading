@@ -11,12 +11,12 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
 # Type alias for training metrics (heterogeneous dict with floats, lists, and strings)
-TrainingMetrics = Dict[str, Any]
+TrainingMetrics = Dict[str, Union[float, List[float], str]]
 
 if TYPE_CHECKING:
     import torch.nn as nn
@@ -26,28 +26,36 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 # Optional Dependencies
 # ============================================================================
+# Type aliases for optional modules - use object for runtime flexibility
+# when the actual module is not available
+from types import ModuleType
+
+_torch_module: Optional[ModuleType] = None
+_joblib_module: Optional[ModuleType] = None
+_msgpack_module: Optional[ModuleType] = None
+
 try:
     import torch
 
+    _torch_module = torch
     PYTORCH_AVAILABLE = True
 except ImportError:
-    torch = None  # type: ignore
     PYTORCH_AVAILABLE = False
 
 try:
     import joblib
 
+    _joblib_module = joblib
     JOBLIB_AVAILABLE = True
 except ImportError:
-    joblib = None  # type: ignore
     JOBLIB_AVAILABLE = False
 
 try:
     import msgpack
 
+    _msgpack_module = msgpack
     MSGPACK_AVAILABLE = True
 except ImportError:
-    msgpack = None  # type: ignore
     MSGPACK_AVAILABLE = False
 
 
@@ -77,7 +85,7 @@ class ModelRegistry:
         # Cargar registry existente
         self.registry = self._load_registry()
 
-    def _load_registry(self) -> Dict[str, Any]:
+    def _load_registry(self) -> Dict[str, object]:
         """Cargar registry desde archivo JSON."""
         if self.registry_file.exists():
             try:
@@ -99,12 +107,12 @@ class ModelRegistry:
 
     def register_model(
         self,
-        model: Any,
+        model: object,
         model_id: str,
         regime: str,
         model_type: str,
         algorithm: str,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[Dict[str, object]] = None,
         tags: Optional[List[str]] = None,
     ) -> bool:
         """
@@ -133,19 +141,23 @@ class ModelRegistry:
                 self.models_dir.mkdir(parents=True, exist_ok=True)
 
                 # Detect model type and use appropriate serialization
-                if PYTORCH_AVAILABLE and 'torch.nn' in str(type(model)):
+                if (
+                    PYTORCH_AVAILABLE
+                    and _torch_module is not None
+                    and 'torch.nn' in str(type(model))
+                ):
                     # PyTorch model - use torch.save (secure for PyTorch objects)
                     model_path = self.models_dir / f"{model_id}.pt"
-                    torch.save(model, model_path)
+                    _torch_module.save(model, model_path)
                     model_saved = True
                     model_format = 'pt'
-                elif JOBLIB_AVAILABLE:
+                elif JOBLIB_AVAILABLE and _joblib_module is not None:
                     # sklearn or other models - use joblib (secure)
                     model_path = self.models_dir / f"{model_id}.joblib"
-                    joblib.dump(model, model_path)
+                    _joblib_module.dump(model, model_path)
                     model_saved = True
                     model_format = 'joblib'
-                elif MSGPACK_AVAILABLE:
+                elif MSGPACK_AVAILABLE and _msgpack_module is not None:
                     # Generic Python objects - use msgpack with custom encoding
                     model_path = self.models_dir / f"{model_id}.msgpack"
                     self._save_model_msgpack(model, model_path)
@@ -204,7 +216,7 @@ class ModelRegistry:
             logger.error(f"Error registrando modelo: {e}", exc_info=True)
             return False
 
-    def _save_model_msgpack(self, model: Any, path: Path) -> None:
+    def _save_model_msgpack(self, model: object, path: Path) -> None:
         """
         Save model using msgpack for generic Python objects.
 
@@ -213,6 +225,9 @@ class ModelRegistry:
             path: Path to save to
         """
         import io
+
+        if _msgpack_module is None:
+            raise ImportError("msgpack not available")
 
         # Convert model to bytes using msgpack
         # For numpy arrays, msgpack-numpy is recommended, but we'll use a simple approach
@@ -226,10 +241,10 @@ class ModelRegistry:
                 '_class': model.__class__.__name__,
                 'data': model.__dict__,
             }
-            packed = msgpack.packb(model_dict)
+            packed = _msgpack_module.packb(model_dict)
         else:
             # Fallback to string representation (not ideal but safe)
-            packed = msgpack.packb({'_repr': repr(model)})
+            packed = _msgpack_module.packb({'_repr': repr(model)})
 
         buffer.write(packed)
         buffer.seek(0)
@@ -237,7 +252,7 @@ class ModelRegistry:
         with open(path, 'wb') as f:
             f.write(buffer.read())
 
-    def get_model(self, model_id: str) -> Optional[Dict[str, Any]]:
+    def get_model(self, model_id: str) -> Optional[Dict[str, object]]:
         """
         Obtener información de un modelo por ID.
 
@@ -255,7 +270,7 @@ class ModelRegistry:
         model_type: Optional[str] = None,
         algorithm: Optional[str] = None,
         tags: Optional[List[str]] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> List[Dict[str, object]]:
         """
         Listar modelos que coinciden con criterios.
 
@@ -287,7 +302,7 @@ class ModelRegistry:
 
     def _matches_filters(
         self,
-        model_entry: Dict[str, Any],
+        model_entry: Dict[str, object],
         model_type: Optional[str],
         algorithm: Optional[str],
         tags: Optional[List[str]],
@@ -303,7 +318,7 @@ class ModelRegistry:
                 return False
         return True
 
-    def load_model(self, model_id: str) -> Optional[Any]:
+    def load_model(self, model_id: str) -> Optional[object]:
         """
         Cargar modelo desde registry usando serialización segura.
 
@@ -337,17 +352,17 @@ class ModelRegistry:
 
             # SECURITY: Use appropriate loader based on format
             if model_format == 'pt' or model_path_obj.suffix == '.pt':
-                if not PYTORCH_AVAILABLE:
+                if not PYTORCH_AVAILABLE or _torch_module is None:
                     raise ImportError("PyTorch no disponible para cargar .pt")
-                model = torch.load(
+                model = _torch_module.load(
                     model_path_obj, map_location='cpu'
-                )  # nosec B614 - torch handles this
+                )
             elif model_format == 'joblib' or model_path_obj.suffix == '.joblib':
-                if not JOBLIB_AVAILABLE:
+                if not JOBLIB_AVAILABLE or _joblib_module is None:
                     raise ImportError("joblib no disponible para cargar .joblib")
-                model = joblib.load(model_path_obj)
+                model = _joblib_module.load(model_path_obj)
             elif model_format == 'msgpack' or model_path_obj.suffix == '.msgpack':
-                if not MSGPACK_AVAILABLE:
+                if not MSGPACK_AVAILABLE or _msgpack_module is None:
                     raise ImportError("msgpack no disponible para cargar .msgpack")
                 model = self._load_model_msgpack(model_path_obj)
             elif model_path_obj.suffix == '.pkl':
@@ -364,7 +379,7 @@ class ModelRegistry:
             logger.error(f"Error cargando modelo {model_id}: {e}", exc_info=True)
             return None
 
-    def _load_model_msgpack(self, path: Path) -> Any:
+    def _load_model_msgpack(self, path: Path) -> object:
         """
         Load model using msgpack.
 
@@ -374,8 +389,11 @@ class ModelRegistry:
         Returns:
             Loaded model
         """
+        if _msgpack_module is None:
+            raise ImportError("msgpack not available")
+
         with open(path, 'rb') as f:
-            data = msgpack.unpackb(f.read(), raw=False)
+            data = _msgpack_module.unpackb(f.read(), raw=False)
 
         # Reconstruct object if it was saved with __dict__
         if '_module' in data and '_class' in data and 'data' in data:
@@ -393,7 +411,7 @@ class ModelRegistry:
         else:
             return data
 
-    def _migrate_pkl_model(self, pkl_path: Path, entry: Dict[str, Any]) -> Any:
+    def _migrate_pkl_model(self, pkl_path: Path, entry: Dict[str, object]) -> object:
         """
         Migrate old .pkl model to secure format (one-time migration).
 
@@ -406,18 +424,57 @@ class ModelRegistry:
         """
         try:
             # SECURITY: One-time migration from pickle to secure format
-            # This is only for migrating existing trusted model files
-            import pickle  # nosec B403 - Only for migration
+            # Using RestrictedUnpickler to prevent arbitrary code execution
+            import pickle
+
+            class _MigrationUnpickler(pickle.Unpickler):
+                """Restrict pickle deserialization to known safe classes for migration."""
+
+                ALLOWED_CLASSES = {
+                    ('builtins', 'dict'): dict,
+                    ('builtins', 'list'): list,
+                    ('builtins', 'tuple'): tuple,
+                    ('builtins', 'set'): set,
+                    ('builtins', 'frozenset'): frozenset,
+                    ('builtins', 'str'): str,
+                    ('builtins', 'int'): int,
+                    ('builtins', 'float'): float,
+                    ('builtins', 'bool'): bool,
+                    ('builtins', 'bytes'): bytes,
+                    ('builtins', 'bytearray'): bytearray,
+                    ('builtins', 'NoneType'): type(None),
+                    ('collections', 'OrderedDict'): None,
+                    ('collections', 'defaultdict'): None,
+                    ('numpy.core.multiarray', '_reconstruct'): None,
+                    ('numpy', 'dtype'): None,
+                    ('numpy', 'ndarray'): None,
+                }
+
+                def find_class(self, module: str, name: str) -> type:
+                    key = (module, name)
+                    if key in self.ALLOWED_CLASSES:
+                        cls = self.ALLOWED_CLASSES[key]
+                        if cls is not None:
+                            return cls
+                        try:
+                            mod = __import__(module, fromlist=[name])
+                            return getattr(mod, name)
+                        except (ImportError, AttributeError):
+                            pass
+                    raise pickle.UnpicklingError(
+                        f"Forbidden class during migration: {module}.{name}. "
+                        f"Only basic Python and numpy types are allowed."
+                    )
 
             with open(pkl_path, 'rb') as f:
-                model = pickle.load(f)  # nosec B301 - Trusted migration only
+                model = _MigrationUnpickler(f).load()
 
             # Re-save in secure format
             model_id = entry['model_id']
-            if JOBLIB_AVAILABLE:
+            if JOBLIB_AVAILABLE and _joblib_module is not None:
                 # Try joblib first
                 joblib_path = pkl_path.with_suffix('.joblib')
-                joblib.dump(model, joblib_path)
+                _joblib_module.dump(model, joblib_path)
 
                 # Update registry
                 entry['model_path'] = str(joblib_path)
@@ -448,7 +505,7 @@ class FineTuner:
     - Adaptación a nuevos regímenes de mercado
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Dict[str, object] = None):
         """
         Inicializar fine-tuner.
 
@@ -464,11 +521,11 @@ class FineTuner:
 
     def fine_tune(
         self,
-        base_model: Any,
-        training_data: Dict[str, Any],
-        validation_data: Optional[Dict[str, Any]] = None,
+        base_model: object,
+        training_data: Dict[str, object],
+        validation_data: Optional[Dict[str, object]] = None,
         model_type: str = "auto",
-    ) -> Tuple[Any, TrainingMetrics]:
+    ) -> Tuple[object, TrainingMetrics]:
         """
         Fine-tune un modelo pre-entrenado.
 
@@ -492,7 +549,7 @@ class FineTuner:
             logger.warning(f"Fine-tuning no soportado para tipo {model_type}")
             return base_model, {}
 
-    def _detect_model_type(self, model: Any) -> str:
+    def _detect_model_type(self, model: object) -> str:
         """Detectar tipo de modelo."""
         model_type = str(type(model)).lower()
 
@@ -509,8 +566,8 @@ class FineTuner:
     def _fine_tune_pytorch(
         self,
         model: "nn.Module",
-        training_data: Dict[str, Any],
-        validation_data: Optional[Dict[str, Any]] = None,
+        training_data: Dict[str, object],
+        validation_data: Optional[Dict[str, object]] = None,
     ) -> Tuple["nn.Module", Dict[str, float]]:
         """
         Fine-tune modelo PyTorch.
@@ -523,7 +580,7 @@ class FineTuner:
         Returns:
             (modelo_fine_tuned, métricas)
         """
-        if not PYTORCH_AVAILABLE:
+        if not PYTORCH_AVAILABLE or _torch_module is None:
             logger.error("PyTorch no disponible para fine-tuning")
             return model, {}
 
@@ -545,17 +602,24 @@ class FineTuner:
                 return model, {}
 
             # Convertir a tensores
-            sequences_t = torch.FloatTensor(sequences)
+            if _torch_module is None:
+                raise ImportError("PyTorch not available")
+
+            sequences_t = _torch_module.FloatTensor(sequences)
             labels_t = (
-                torch.FloatTensor(labels).unsqueeze(1)
+                _torch_module.FloatTensor(labels).unsqueeze(1)
                 if labels.ndim == 1
-                else torch.FloatTensor(labels)
+                else _torch_module.FloatTensor(labels)
             )
 
             # Optimizer con learning rate reducido
             lr = 0.001 * self.learning_rate_multiplier
-            optimizer = torch.optim.Adam(fine_tuned_model.parameters(), lr=lr)  # type: ignore[attr-defined]
-            criterion = torch.nn.MSELoss() if labels_t.dtype == torch.float32 else torch.nn.BCELoss()  # type: ignore[attr-defined]
+            optimizer = _torch_module.optim.Adam(fine_tuned_model.parameters(), lr=lr)
+            criterion = (
+                _torch_module.nn.MSELoss()
+                if labels_t.dtype == _torch_module.float32
+                else _torch_module.nn.BCELoss()
+            )
 
             # Training loop
             fine_tuned_model.train()
@@ -581,12 +645,12 @@ class FineTuner:
                 val_labels = validation_data.get('labels')
                 if val_sequences is not None and val_labels is not None:
                     fine_tuned_model.eval()
-                    with torch.no_grad():
-                        val_sequences_t = torch.FloatTensor(val_sequences)
+                    with _torch_module.no_grad():
+                        val_sequences_t = _torch_module.FloatTensor(val_sequences)
                         val_labels_t = (
-                            torch.FloatTensor(val_labels).unsqueeze(1)
+                            _torch_module.FloatTensor(val_labels).unsqueeze(1)
                             if val_labels.ndim == 1
-                            else torch.FloatTensor(val_labels)
+                            else _torch_module.FloatTensor(val_labels)
                         )
                         val_outputs = fine_tuned_model(val_sequences_t)
                         val_loss = criterion(val_outputs, val_labels_t)
@@ -625,10 +689,10 @@ class FineTuner:
 
     def _fine_tune_tree_based(
         self,
-        model: Any,
-        training_data: Dict[str, Any],
-        validation_data: Optional[Dict[str, Any]] = None,
-    ) -> Tuple[Any, TrainingMetrics]:
+        model: object,
+        training_data: Dict[str, object],
+        validation_data: Optional[Dict[str, object]] = None,
+    ) -> Tuple[object, TrainingMetrics]:
         """
         Fine-tune modelo tree-based (continuar entrenamiento).
 
@@ -681,7 +745,7 @@ class KnowledgeDistiller:
     Útil para comprimir modelos o transferir conocimiento entre regímenes.
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Dict[str, object] = None):
         """
         Inicializar distiller.
 
@@ -695,11 +759,11 @@ class KnowledgeDistiller:
 
     def distill(
         self,
-        teacher_model: Any,
-        student_model: Any,
-        training_data: Dict[str, Any],
-        validation_data: Optional[Dict[str, Any]] = None,
-    ) -> Tuple[Any, TrainingMetrics]:
+        teacher_model: object,
+        student_model: object,
+        training_data: Dict[str, object],
+        validation_data: Optional[Dict[str, object]] = None,
+    ) -> Tuple[object, TrainingMetrics]:
         """
         Distilar conocimiento de teacher a student.
 
@@ -733,7 +797,7 @@ class KnowledgeDistiller:
             logger.error(f"Error en distillation: {e}", exc_info=True)
             return student_model, {}
 
-    def _detect_model_type(self, model: Any) -> str:
+    def _detect_model_type(self, model: object) -> str:
         """Detectar tipo de modelo."""
         model_type = str(type(model)).lower()
         if any(x in model_type for x in ['module', 'nn', 'sequential']):
@@ -747,8 +811,8 @@ class KnowledgeDistiller:
         self,
         teacher: "nn.Module",
         student: "nn.Module",
-        training_data: Dict[str, Any],
-        validation_data: Optional[Dict[str, Any]] = None,
+        training_data: Dict[str, object],
+        validation_data: Optional[Dict[str, object]] = None,
     ) -> Tuple["nn.Module", Dict[str, float]]:
         """
         Distillation para modelos PyTorch.
@@ -762,7 +826,7 @@ class KnowledgeDistiller:
         Returns:
             (student_trained, métricas)
         """
-        if not PYTORCH_AVAILABLE:
+        if not PYTORCH_AVAILABLE or _torch_module is None:
             logger.error("PyTorch no disponible")
             return student, {}
 
@@ -775,11 +839,11 @@ class KnowledgeDistiller:
                 logger.error("training_data debe contener 'sequences' y 'labels'")
                 return student, {}
 
-            sequences_t = torch.FloatTensor(sequences)
+            sequences_t = _torch_module.FloatTensor(sequences)
             labels_t = (
-                torch.FloatTensor(labels).unsqueeze(1)
+                _torch_module.FloatTensor(labels).unsqueeze(1)
                 if labels.ndim == 1
-                else torch.FloatTensor(labels)
+                else _torch_module.FloatTensor(labels)
             )
 
             # Teacher en eval mode
@@ -787,19 +851,25 @@ class KnowledgeDistiller:
             student.train()
 
             # Optimizer
-            optimizer = torch.optim.Adam(student.parameters(), lr=0.001)  # type: ignore[attr-defined]
+            optimizer = _torch_module.optim.Adam(student.parameters(), lr=0.001)
 
             # Loss function combinado
             def distillation_loss(student_logits, teacher_logits, true_labels, temperature, alpha):
                 # Soft targets (teacher)
-                soft_targets = torch.nn.functional.softmax(teacher_logits / temperature, dim=1)  # type: ignore[attr-defined]
-                soft_prob = torch.nn.functional.log_softmax(student_logits / temperature, dim=1)  # type: ignore[attr-defined]
-                soft_loss = torch.nn.functional.kl_div(soft_prob, soft_targets, reduction='batchmean') * (  # type: ignore[attr-defined]
-                    temperature**2
+                soft_targets = _torch_module.nn.functional.softmax(
+                    teacher_logits / temperature, dim=1
                 )
+                soft_prob = _torch_module.nn.functional.log_softmax(
+                    student_logits / temperature, dim=1
+                )
+                soft_loss = _torch_module.nn.functional.kl_div(
+                    soft_prob, soft_targets, reduction='batchmean'
+                ) * (temperature**2)
 
                 # Hard targets (true labels)
-                hard_loss = torch.nn.functional.cross_entropy(student_logits, true_labels.long())  # type: ignore[attr-defined]
+                hard_loss = _torch_module.nn.functional.cross_entropy(
+                    student_logits, true_labels.long()
+                )
 
                 # Combinar
                 return alpha * soft_loss + (1 - alpha) * hard_loss
@@ -812,7 +882,7 @@ class KnowledgeDistiller:
 
                 # Forward pass
                 student_logits = student(sequences_t)
-                with torch.no_grad():
+                with _torch_module.no_grad():
                     teacher_logits = teacher(sequences_t)
 
                 # Loss
@@ -836,15 +906,15 @@ class KnowledgeDistiller:
                 val_labels = validation_data.get('labels')
                 if val_sequences is not None and val_labels is not None:
                     student.eval()
-                    with torch.no_grad():
-                        val_sequences_t = torch.FloatTensor(val_sequences)
+                    with _torch_module.no_grad():
+                        val_sequences_t = _torch_module.FloatTensor(val_sequences)
                         val_labels_t = (
-                            torch.FloatTensor(val_labels).unsqueeze(1)
+                            _torch_module.FloatTensor(val_labels).unsqueeze(1)
                             if val_labels.ndim == 1
-                            else torch.FloatTensor(val_labels)
+                            else _torch_module.FloatTensor(val_labels)
                         )
                         val_outputs = student(val_sequences_t)
-                        val_loss = torch.nn.functional.mse_loss(val_outputs, val_labels_t)  # type: ignore[attr-defined]
+                        val_loss = _torch_module.nn.functional.mse_loss(val_outputs, val_labels_t)
                         metrics['val_loss'] = float(val_loss.item())
 
             return student, metrics
@@ -855,11 +925,11 @@ class KnowledgeDistiller:
 
     def _distill_tree_based(
         self,
-        teacher: Any,
-        student: Any,
-        training_data: Dict[str, Any],
-        validation_data: Optional[Dict[str, Any]] = None,
-    ) -> Tuple[Any, TrainingMetrics]:
+        teacher: object,
+        student: object,
+        training_data: Dict[str, object],
+        validation_data: Optional[Dict[str, object]] = None,
+    ) -> Tuple[object, TrainingMetrics]:
         """
         Distillation para modelos tree-based.
 
@@ -935,7 +1005,7 @@ class TransferLearningManager:
     Combina ModelRegistry, FineTuner y KnowledgeDistiller.
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Dict[str, object] = None):
         """
         Inicializar manager.
 
@@ -949,11 +1019,11 @@ class TransferLearningManager:
 
     def create_pretrained_model(
         self,
-        model: Any,
+        model: object,
         regime: str,
         model_type: str,
         algorithm: str,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[Dict[str, object]] = None,
         tags: Optional[List[str]] = None,
     ) -> str:
         """
@@ -986,9 +1056,9 @@ class TransferLearningManager:
     def load_and_finetune(
         self,
         model_id: str,
-        training_data: Dict[str, Any],
-        validation_data: Optional[Dict[str, Any]] = None,
-    ) -> Tuple[Any, TrainingMetrics]:
+        training_data: Dict[str, object],
+        validation_data: Optional[Dict[str, object]] = None,
+    ) -> Tuple[object, TrainingMetrics]:
         """
         Cargar modelo pre-entrenado y hacer fine-tuning.
 
@@ -1054,10 +1124,10 @@ class TransferLearningManager:
     def distill_model(
         self,
         teacher_model_id: str,
-        student_model: Any,
-        training_data: Dict[str, Any],
-        validation_data: Optional[Dict[str, Any]] = None,
-    ) -> Tuple[Any, TrainingMetrics]:
+        student_model: object,
+        training_data: Dict[str, object],
+        validation_data: Optional[Dict[str, object]] = None,
+    ) -> Tuple[object, TrainingMetrics]:
         """
         Distilar conocimiento de un modelo teacher a student.
 

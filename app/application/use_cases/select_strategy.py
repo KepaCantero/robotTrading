@@ -402,7 +402,7 @@ class StrategySelector:
                 )
                 configurations.append(config)
 
-            except (ValueError, TypeError, AttributeError, Exception) as e:
+            except Exception as e:
                 logger.error(
                     f"Error analyzing strategy {strategy_name}: {e}",
                     exc_info=True,
@@ -619,9 +619,8 @@ class StrategySelector:
         if objective == ObjectivoInversion.MAXIMIZAR_DIVIDENDOS:
             if "dividend" in strategy_name:
                 return Decimal("30")
-        elif objective == ObjectivoInversion.MAXIMIZAR_CAPITAL:
-            if "momentum" in strategy_name or "trend" in strategy_name:
-                return Decimal("20")
+        elif objective == ObjectivoInversion.MAXIMIZAR_CAPITAL and ("momentum" in strategy_name or "trend" in strategy_name):
+            return Decimal("20")
 
         return Decimal("0")
 
@@ -636,14 +635,12 @@ class StrategySelector:
         Returns:
             Score adjustment (can be negative)
         """
-        if capital_flag == "small":
+        if capital_flag == "small" and ("ensemble" in strategy_name or "ml" in strategy_name):
             # Small capital needs simpler strategies
-            if "ensemble" in strategy_name or "ml" in strategy_name:
-                return Decimal("-15")
-        elif capital_flag == "large":
+            return Decimal("-15")
+        elif capital_flag == "large" and ("ensemble" in strategy_name or "ml" in strategy_name):
             # Large capital can use complex strategies
-            if "ensemble" in strategy_name or "ml" in strategy_name:
-                return Decimal("15")
+            return Decimal("15")
 
         return Decimal("0")
 
@@ -849,9 +846,8 @@ class StrategySelector:
                         score += 0.1
             if "threshold" in params:
                 threshold_val = params["threshold"]
-                if isinstance(threshold_val, (int, float)):
-                    if 0.5 <= threshold_val <= 2.0:
-                        score += 0.2
+                if isinstance(threshold_val, (int, float)) and 0.5 <= threshold_val <= 2.0:
+                    score += 0.2
             if "volatility_filter" in params:
                 vol_filter = params["volatility_filter"]
                 if isinstance(vol_filter, bool) and vol_filter:
@@ -861,80 +857,68 @@ class StrategySelector:
         elif "mean_reversion" in strategy_name or "reversion" in strategy_name:
             if "lookback" in params:
                 lookback_val = params["lookback"]
-                if isinstance(lookback_val, (int, float)):
+                if isinstance(lookback_val, (int, float)) and 5 <= lookback_val <= 30:
                     # Prefer shorter lookback for mean reversion (5-30 days)
-                    if 5 <= lookback_val <= 30:
-                        score += 0.3
+                    score += 0.3
             if "entry_threshold" in params:
                 entry_val = params["entry_threshold"]
-                if isinstance(entry_val, (int, float)):
-                    if 1.5 <= entry_val <= 3.0:
-                        score += 0.2
+                if isinstance(entry_val, (int, float)) and 1.5 <= entry_val <= 3.0:
+                    score += 0.2
 
         # Pairs trading specific heuristics
         elif "pairs" in strategy_name:
             if "lookback" in params:
                 lookback_val = params["lookback"]
-                if isinstance(lookback_val, (int, float)):
-                    if 20 <= lookback_val <= 60:
-                        score += 0.3
+                if isinstance(lookback_val, (int, float)) and 20 <= lookback_val <= 60:
+                    score += 0.3
             if "entry_zscore" in params:
                 entry_z = params["entry_zscore"]
-                if isinstance(entry_z, (int, float)):
-                    if 1.5 <= entry_z <= 3.0:
-                        score += 0.2
+                if isinstance(entry_z, (int, float)) and 1.5 <= entry_z <= 3.0:
+                    score += 0.2
 
         # Multi-factor specific heuristics
         elif "multi_factor" in strategy_name or "factor" in strategy_name:
             if "lookback" in params:
                 lookback_val = params["lookback"]
-                if isinstance(lookback_val, (int, float)):
-                    if 50 <= lookback_val <= 252:
-                        score += 0.3
+                if isinstance(lookback_val, (int, float)) and 50 <= lookback_val <= 252:
+                    score += 0.3
             if "rebalance_frequency" in params:
                 rebalance = params["rebalance_frequency"]
-                if isinstance(rebalance, (int, float)):
-                    if 5 <= rebalance <= 30:
-                        score += 0.2
+                if isinstance(rebalance, (int, float)) and 5 <= rebalance <= 30:
+                    score += 0.2
 
         # Dividend specific heuristics
         elif "dividend" in strategy_name:
             if "min_dividend_yield" in params:
                 min_yield = params["min_dividend_yield"]
-                if isinstance(min_yield, (int, float)):
-                    if 0.02 <= min_yield <= 0.08:
-                        score += 0.3
+                if isinstance(min_yield, (int, float)) and 0.02 <= min_yield <= 0.08:
+                    score += 0.3
             if "payout_ratio_max" in params:
                 payout = params["payout_ratio_max"]
-                if isinstance(payout, (int, float)):
-                    if 0.3 <= payout <= 0.8:
-                        score += 0.2
+                if isinstance(payout, (int, float)) and 0.3 <= payout <= 0.8:
+                    score += 0.2
 
         # Low volatility specific heuristics
         elif "low_volatility" in strategy_name:
             if "volatility_percentile" in params:
                 vol_pct = params["volatility_percentile"]
-                if isinstance(vol_pct, (int, float)):
-                    if vol_pct <= 0.3:
-                        score += 0.3
+                if isinstance(vol_pct, (int, float)) and vol_pct <= 0.3:
+                    score += 0.3
             if "max_beta" in params:
                 beta = params["max_beta"]
-                if isinstance(beta, (int, float)):
-                    if 0.5 <= beta <= 1.0:
-                        score += 0.2
+                if isinstance(beta, (int, float)) and 0.5 <= beta <= 1.0:
+                    score += 0.2
 
         # Default heuristics
         else:
             if "lookback" in params:
                 lookback_val = params["lookback"]
-                if isinstance(lookback_val, (int, float)):
-                    if 20 <= lookback_val <= 50:
-                        score += 0.2
+                if isinstance(lookback_val, (int, float)) and 20 <= lookback_val <= 50:
+                    score += 0.2
             if "threshold" in params:
                 threshold_val = params["threshold"]
-                if isinstance(threshold_val, (int, float)):
-                    if 0.5 <= threshold_val <= 2.0:
-                        score += 0.2
+                if isinstance(threshold_val, (int, float)) and 0.5 <= threshold_val <= 2.0:
+                    score += 0.2
 
         return max(0.0, min(2.0, score))
 
@@ -952,7 +936,7 @@ class StrategySelector:
         from datetime import datetime
         from decimal import Decimal
 
-        from app.domain.models.signal import (  # pylint: disable=import-error
+        from app.domain.models.signal import (
             Signal,
             SignalSource,
             SignalStrength,
@@ -964,14 +948,12 @@ class StrategySelector:
         # Check if DataFrame has signal columns
         signal_cols = [col for col in signals_df.columns if "signal" in col.lower()]
 
-        if not signal_cols:
-            # Try to infer signals from price action
-            if "close" in signals_df.columns:
-                signals_df = signals_df.copy()
-                signals_df["signal"] = 0
-                signals_df.loc[signals_df["close"].pct_change() > 0.02, "signal"] = 1
-                signals_df.loc[signals_df["close"].pct_change() < -0.02, "signal"] = -1
-                signal_cols = ["signal"]
+        if not signal_cols and "close" in signals_df.columns:
+            signals_df = signals_df.copy()
+            signals_df["signal"] = 0
+            signals_df.loc[signals_df["close"].pct_change() > 0.02, "signal"] = 1
+            signals_df.loc[signals_df["close"].pct_change() < -0.02, "signal"] = -1
+            signal_cols = ["signal"]
 
         for col in signal_cols:
             for idx, row in signals_df.iterrows():
@@ -1036,7 +1018,7 @@ class StrategySelector:
         from datetime import datetime
         from decimal import Decimal
 
-        from app.domain.models.order import MarketData  # pylint: disable=import-error
+        from app.domain.models.order import MarketData
 
         market_data_list = []
 
@@ -1695,7 +1677,7 @@ class StrategySelector:
         validator = WalkForwardValidator(config=wf_config)
 
         # Import StrategyRegistry for actual strategy creation
-        from app.domain.strategies.registry import StrategyRegistry  # pylint: disable=import-error
+        from app.domain.strategies.registry import StrategyRegistry
 
         # Define strategy factory with actual strategy instantiation
         def strategy_factory(params: StrategyParameters) -> StrategyProtocol:
@@ -1719,9 +1701,11 @@ class StrategySelector:
             try:
                 # Load strategy with parameters
                 strategy = registry.load_strategy(strategy_name, dict(params))
-                # Type assertion: StrategyRegistry.load_strategy returns StrategyProtocol
-                # isinstance check on Protocol requires @runtime_checkable, but we trust the registry
-                return strategy  # type: ignore[return-value]
+                # StrategyRegistry.load_strategy is typed to return an object implementing
+                # StrategyProtocol. Cast to satisfy mypy's strict return type checking.
+                from typing import cast
+
+                return cast(StrategyProtocol, strategy)
             except (ValueError, KeyError, TypeError) as e:
                 logger.error(f"Failed to create strategy {strategy_name}: {e}")
                 raise ValueError(f"Could not create strategy {strategy_name}: {e}")

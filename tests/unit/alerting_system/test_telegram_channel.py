@@ -90,7 +90,9 @@ async def test_telegram_send_disabled(telegram_channel, notification_target, not
 
 
 @pytest.mark.asyncio
-async def test_telegram_send_missing_token(telegram_channel, notification_target, notification_payload):
+async def test_telegram_send_missing_token(
+    telegram_channel, notification_target, notification_payload
+):
     """Test handling of missing bot token."""
     notification_target.headers = {}  # Remove bot_token
 
@@ -121,7 +123,9 @@ async def test_telegram_send_api_error(telegram_channel, notification_target, no
 
 
 @pytest.mark.asyncio
-async def test_telegram_send_connection_error(telegram_channel, notification_target, notification_payload):
+async def test_telegram_send_connection_error(
+    telegram_channel, notification_target, notification_payload
+):
     """Test handling of connection error."""
     with patch("httpx.AsyncClient") as mock_client:
         mock_post = AsyncMock(side_effect=ConnectionError("Network error"))

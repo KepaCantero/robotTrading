@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from app.backtesting.models import Trade
 from app.shared.config.centralized_config import get_config
@@ -211,9 +211,9 @@ class MultiAssetRebalancer:
 
     def __init__(
         self,
-        trading_cost_bps: Decimal = Decimal("10"),
-        rebalance_threshold: Decimal = Decimal("0.05"),
-        min_trade_size: Decimal = Decimal("1000"),
+        trading_cost_bps: Optional[Decimal] = None,
+        rebalance_threshold: Optional[Decimal] = None,
+        min_trade_size: Optional[Decimal] = None,
     ):
         """
         Initialize rebalancer.
@@ -223,6 +223,12 @@ class MultiAssetRebalancer:
             rebalance_threshold: Deviation threshold for rebalancing
             min_trade_size: Minimum trade size in currency units
         """
+        if trading_cost_bps is None:
+            trading_cost_bps = Decimal("10")
+        if rebalance_threshold is None:
+            rebalance_threshold = Decimal("0.05")
+        if min_trade_size is None:
+            min_trade_size = Decimal("1000")
         self.trading_cost_bps = trading_cost_bps
         self.rebalance_threshold = rebalance_threshold
         self.min_trade_size = min_trade_size
@@ -342,7 +348,7 @@ class MultiAssetRebalancer:
 
         # Assign priority values (100 = highest, 0 = lowest)
         prioritized = []
-        for i, (score, trade) in enumerate(scored_trades):
+        for _i, (score, trade) in enumerate(scored_trades):
             # Map score to 0-100 priority
             priority = int(min(100, max(0, score * 100)))
             trade.priority = priority

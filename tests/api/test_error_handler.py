@@ -14,7 +14,7 @@ import pytest
 from fastapi import HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 
-from app.shared.exceptions.error_handler import (
+from app.presentation.api.error_handler import (
     attribute_error_handler,
     generic_exception_handler,
     http_exception_handler,
@@ -44,7 +44,7 @@ def mock_request():
 class TestLogExceptionContext:
     """Tests for log_exception_context function."""
 
-    @patch("app.api.error_handler.logger")
+    @patch("app.presentation.api.error_handler.logger")
     def test_log_exception_context_basic(self, mock_logger, mock_request):
         """Test basic exception context logging."""
         exc = ValueError("Test error")
@@ -67,7 +67,7 @@ class TestLogExceptionContext:
         assert call_args[1]["extra"]["method"] == "GET"
         assert call_args[1]["extra"]["path"] == "/test/endpoint"
 
-    @patch("app.api.error_handler.logger")
+    @patch("app.presentation.api.error_handler.logger")
     def test_log_exception_context_with_additional_context(self, mock_logger, mock_request):
         """Test exception logging with additional context."""
         log_exception_context(
@@ -85,8 +85,10 @@ class TestHTTPExceptionHandler:
     """Tests for http_exception_handler."""
 
     @pytest.mark.asyncio
-    @patch("app.api.error_handler.log_exception_context")
-    @patch("app.api.error_handler.get_correlation_id", return_value="test-correlation-id")
+    @patch("app.presentation.api.error_handler.log_exception_context")
+    @patch(
+        "app.presentation.api.error_handler.get_correlation_id", return_value="test-correlation-id"
+    )
     async def test_http_exception_handler(self, mock_correlation_id, mock_log, mock_request):
         """Test HTTP exception handler logs and returns correct response."""
         exc = HTTPException(status_code=404, detail="Not found")
@@ -107,8 +109,10 @@ class TestValidationExceptionHandler:
     """Tests for validation_exception_handler."""
 
     @pytest.mark.asyncio
-    @patch("app.api.error_handler.log_exception_context")
-    @patch("app.api.error_handler.get_correlation_id", return_value="test-correlation-id")
+    @patch("app.presentation.api.error_handler.log_exception_context")
+    @patch(
+        "app.presentation.api.error_handler.get_correlation_id", return_value="test-correlation-id"
+    )
     async def test_validation_exception_handler(self, mock_correlation_id, mock_log, mock_request):
         """Test validation error handler logs field-level errors."""
         errors = [
@@ -137,8 +141,10 @@ class TestGenericExceptionHandler:
     """Tests for generic_exception_handler."""
 
     @pytest.mark.asyncio
-    @patch("app.api.error_handler.log_exception_context")
-    @patch("app.api.error_handler.get_correlation_id", return_value="test-correlation-id")
+    @patch("app.presentation.api.error_handler.log_exception_context")
+    @patch(
+        "app.presentation.api.error_handler.get_correlation_id", return_value="test-correlation-id"
+    )
     async def test_generic_exception_handler(self, mock_correlation_id, mock_log, mock_request):
         """Test generic exception handler returns safe error message."""
         exc = Exception("Internal error details that should not be exposed")
@@ -160,8 +166,10 @@ class TestSpecificExceptionHandlers:
     """Tests for specific Python exception handlers."""
 
     @pytest.mark.asyncio
-    @patch("app.api.error_handler.log_exception_context")
-    @patch("app.api.error_handler.get_correlation_id", return_value="test-correlation-id")
+    @patch("app.presentation.api.error_handler.log_exception_context")
+    @patch(
+        "app.presentation.api.error_handler.get_correlation_id", return_value="test-correlation-id"
+    )
     async def test_value_error_handler(self, mock_correlation_id, mock_log, mock_request):
         """Test ValueError handler returns 400."""
         exc = ValueError("Invalid value")
@@ -172,8 +180,10 @@ class TestSpecificExceptionHandlers:
         assert "test-correlation-id" in response.body.decode()
 
     @pytest.mark.asyncio
-    @patch("app.api.error_handler.log_exception_context")
-    @patch("app.api.error_handler.get_correlation_id", return_value="test-correlation-id")
+    @patch("app.presentation.api.error_handler.log_exception_context")
+    @patch(
+        "app.presentation.api.error_handler.get_correlation_id", return_value="test-correlation-id"
+    )
     async def test_key_error_handler(self, mock_correlation_id, mock_log, mock_request):
         """Test KeyError handler returns 400 with missing key."""
         exc = KeyError("missing_key")
@@ -186,8 +196,10 @@ class TestSpecificExceptionHandlers:
         assert "test-correlation-id" in body
 
     @pytest.mark.asyncio
-    @patch("app.api.error_handler.log_exception_context")
-    @patch("app.api.error_handler.get_correlation_id", return_value="test-correlation-id")
+    @patch("app.presentation.api.error_handler.log_exception_context")
+    @patch(
+        "app.presentation.api.error_handler.get_correlation_id", return_value="test-correlation-id"
+    )
     async def test_type_error_handler(self, mock_correlation_id, mock_log, mock_request):
         """Test TypeError handler returns 400."""
         exc = TypeError("Invalid type")
@@ -198,8 +210,10 @@ class TestSpecificExceptionHandlers:
         assert "test-correlation-id" in response.body.decode()
 
     @pytest.mark.asyncio
-    @patch("app.api.error_handler.log_exception_context")
-    @patch("app.api.error_handler.get_correlation_id", return_value="test-correlation-id")
+    @patch("app.presentation.api.error_handler.log_exception_context")
+    @patch(
+        "app.presentation.api.error_handler.get_correlation_id", return_value="test-correlation-id"
+    )
     async def test_attribute_error_handler(self, mock_correlation_id, mock_log, mock_request):
         """Test AttributeError handler returns 500."""
         exc = AttributeError("Missing attribute")
@@ -210,8 +224,10 @@ class TestSpecificExceptionHandlers:
         assert "test-correlation-id" in response.body.decode()
 
     @pytest.mark.asyncio
-    @patch("app.api.error_handler.log_exception_context")
-    @patch("app.api.error_handler.get_correlation_id", return_value="test-correlation-id")
+    @patch("app.presentation.api.error_handler.log_exception_context")
+    @patch(
+        "app.presentation.api.error_handler.get_correlation_id", return_value="test-correlation-id"
+    )
     async def test_index_error_handler(self, mock_correlation_id, mock_log, mock_request):
         """Test IndexError handler returns 400."""
         exc = IndexError("Index out of range")

@@ -344,7 +344,7 @@ class DynamicPortfolioSelector:
             rounded_allocations = {}
             running_total = Decimal("0")
             strategies = list(final_allocations.keys())
-            for i, strategy in enumerate(strategies[:-1]):
+            for _i, strategy in enumerate(strategies[:-1]):
                 rounded_value = final_allocations[strategy].quantize(Decimal("0.01"))
                 rounded_allocations[strategy] = rounded_value
                 running_total += rounded_value
@@ -393,9 +393,11 @@ _dynamic_selector: Optional[DynamicPortfolioSelector] = None
 
 
 def get_multi_strategy_manager(
-    total_capital: Decimal = Decimal("100000"),
+    total_capital: Optional[Decimal] = None,
 ) -> MultiStrategyAllocationManager:
     """Get global multi-strategy allocation manager."""
+    if total_capital is None:
+        total_capital = Decimal("100000")
     global _multi_strategy_manager
     if _multi_strategy_manager is None:
         # Pass the required total_capital argument to constructor

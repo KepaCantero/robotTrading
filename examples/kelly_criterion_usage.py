@@ -25,9 +25,9 @@ def example_basic_kelly_calculation():
 
     Scenario: 55% win rate, $100 avg win, $75 avg loss
     """
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Example 1: Basic Kelly Criterion Calculation")
-    print("="*60)
+    print("=" * 60)
 
     engine = PositionSizingEngine()
 
@@ -61,16 +61,16 @@ def example_from_backtest_metrics():
 
     Scenario: Strategy backtested with 60% win rate
     """
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Example 2: Kelly from Backtest Metrics")
-    print("="*60)
+    print("=" * 60)
 
     engine = PositionSizingEngine()
 
     # Simulated backtest results
     backtest_metrics = {
         "win_rate": Decimal("60.0"),  # 60% win rate
-        "avg_win": Decimal("120.0"),   # $120 average win
+        "avg_win": Decimal("120.0"),  # $120 average win
         "avg_loss": Decimal("-80.0"),  # $80 average loss
         "total_trades": 100,
         "winning_trades": 60,
@@ -101,9 +101,9 @@ def example_negative_expectancy():
 
     Scenario: 40% win rate with unfavorable risk/reward
     """
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Example 3: Negative Expectancy (AVOID)")
-    print("="*60)
+    print("=" * 60)
 
     engine = PositionSizingEngine()
 
@@ -129,9 +129,9 @@ def example_25_percent_cap():
 
     Scenario: Excellent strategy that would suggest >25% position
     """
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Example 4: 25% Maximum Position Cap")
-    print("="*60)
+    print("=" * 60)
 
     engine = PositionSizingEngine()
 
@@ -159,9 +159,9 @@ def example_fallback_to_2_percent():
 
     Scenario: New strategy with insufficient backtest data
     """
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Example 5: Fallback to 2% Rule")
-    print("="*60)
+    print("=" * 60)
 
     engine = PositionSizingEngine()
 
@@ -195,9 +195,9 @@ def example_kelly_vs_traditional_sizing():
 
     Scenario: Which approach provides better position sizing?
     """
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Example 6: Kelly vs Traditional 2% Rule")
-    print("="*60)
+    print("=" * 60)
 
     engine = PositionSizingEngine()
 
@@ -230,10 +230,10 @@ def example_kelly_vs_traditional_sizing():
 
 def main():
     """Run all examples."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("KELLY CRITERION POSITION SIZING EXAMPLES")
     print("Ernest Chan Rule 1.9 Compliance")
-    print("="*60)
+    print("=" * 60)
 
     example_basic_kelly_calculation()
     example_from_backtest_metrics()
@@ -242,15 +242,15 @@ def main():
     example_fallback_to_2_percent()
     example_kelly_vs_traditional_sizing()
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("KEY TAKEAWAYS")
-    print("="*60)
+    print("=" * 60)
     print("1. Half-Kelly reduces volatility while maintaining growth")
     print("2. 25% cap prevents overconcentration risk")
     print("3. AVOID negative expectancy systems entirely")
     print("4. Fallback to 2% rule when metrics unavailable")
     print("5. Kelly provides optimal growth vs traditional fixed %")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
 
 if __name__ == "__main__":

@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 import time
 import uuid
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional
 
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
@@ -20,6 +20,36 @@ from starlette.middleware.base import BaseHTTPMiddleware
 # Use TYPE_CHECKING for type hints only
 if TYPE_CHECKING:
     pass
+
+
+def _set_request_attr(request: Request, name: str, value: object) -> None:
+    """
+    Safely set an attribute on the Request object.
+
+    This is a type-safe way to add custom attributes to Starlette's Request
+    object, which doesn't define these attributes in its type stubs.
+
+    Args:
+        request: The FastAPI/Starlette Request object
+        name: Attribute name to set
+        value: Value to assign to the attribute
+    """
+    object.__setattr__(request, name, value)
+
+
+def _get_request_attr(request: Request, name: str, default: object = None) -> Optional[object]:
+    """
+    Safely get an attribute from the Request object.
+
+    Args:
+        request: The FastAPI/Starlette Request object
+        name: Attribute name to get
+        default: Default value if attribute doesn't exist
+
+    Returns:
+        The attribute value or default
+    """
+    return getattr(request, name, default)
 
 
 def _get_centralized_logger():
@@ -71,7 +101,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
 
         # Generate unique request ID
         request_id = str(uuid.uuid4())
-        request.request_id = request_id  # type: ignore
+        _set_request_attr(request, "request_id", request_id)
 
         # Record start time
         start_time = time.time()
@@ -114,7 +144,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
         LogLevel, LogService = _get_log_level_and_service()
 
         metadata = {
-            "request_id": request.request_id,  # type: ignore
+            "request_id": _get_request_attr(request, "request_id"),
             "method": request.method,
             "path": request.url.path,
             "query_params": dict(request.query_params),
@@ -139,7 +169,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
         LogLevel, LogService = _get_log_level_and_service()
 
         metadata = {
-            "request_id": request.request_id,  # type: ignore
+            "request_id": _get_request_attr(request, "request_id"),
             "method": request.method,
             "path": request.url.path,
             "status_code": response.status_code,
@@ -150,9 +180,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
         # Determine log level based on status code and processing time
         if response.status_code >= 500:
             log_level = LogLevel.ERROR
-        elif response.status_code >= 400:
-            log_level = LogLevel.WARNING
-        elif process_time > 5.0:  # Slow requests
+        elif response.status_code >= 400 or process_time > 5.0:
             log_level = LogLevel.WARNING
         else:
             log_level = LogLevel.INFO
@@ -185,7 +213,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
         LogLevel, LogService = _get_log_level_and_service()
 
         metadata = {
-            "request_id": request.request_id,  # type: ignore
+            "request_id": _get_request_attr(request, "request_id"),
             "method": request.method,
             "path": request.url.path,
             "process_time": process_time,
@@ -209,7 +237,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
         if hasattr(exc, "details") and isinstance(exc.details, dict):
             exc.details.update(
                 {
-                    "request_id": request.request_id,  # type: ignore
+                    "request_id": _get_request_attr(request, "request_id"),
                     "method": request.method,
                     "path": request.url.path,
                     "client_ip": request.client.host if request.client else None,
@@ -228,16 +256,16 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
 
         # Add request ID if not already present
         if not hasattr(request, "request_id"):
-            request.request_id = str(uuid.uuid4())  # type: ignore
+            _set_request_attr(request, "request_id", str(uuid.uuid4()))
 
         # Add request start time
-        request.start_time = time.time()  # type: ignore
+        _set_request_attr(request, "start_time", time.time())
 
         # Process request
         response = await call_next(request)
 
         # Add request ID to response headers
-        response.headers["X-Request-ID"] = request.request_id  # type: ignore
+        response.headers["X-Request-ID"] = str(_get_request_attr(request, "request_id", ""))
 
         return response
 
@@ -272,10 +300,10 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 class RateLimitingMiddleware(BaseHTTPMiddleware):
     """Simple rate limiting middleware."""
 
-    def __init__(self, app, requests_per_minute: int = 60):
+    def __init__(self, app: object, requests_per_minute: int = 60) -> None:
         super().__init__(app)
         self.requests_per_minute = requests_per_minute
-        self.request_counts = {}  # type: ignore
+        self.request_counts: Dict[str, List[float]] = {}
         self.logger = logging.getLogger(__name__)
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:

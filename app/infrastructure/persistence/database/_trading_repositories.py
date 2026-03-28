@@ -26,8 +26,6 @@ from app.infrastructure.persistence.database._base_repository import BaseReposit
 from app.infrastructure.persistence.database.models import Signal, Trade
 from app.shared.exceptions.exceptions import raise_database_error
 
-# pylint: disable=inconsistent-return-statements
-
 
 class TradeRepository(BaseRepository[Trade]):
     """Repository for Trade model."""

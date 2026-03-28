@@ -218,11 +218,10 @@ class BacktestOptimizer:
                     for param_name, param_value in params.items():
                         strategy_config['thresholds'][param_name] = param_value
 
-                    if 'presets' in strategy_config and 'custom' in strategy_config['presets']:
-                        if 'min_confidence' in params:
-                            strategy_config['presets']['custom']['min_confidence'] = params[
-                                'min_confidence'
-                            ]
+                    if 'presets' in strategy_config and 'custom' in strategy_config['presets'] and 'min_confidence' in params:
+                        strategy_config['presets']['custom']['min_confidence'] = params[
+                            'min_confidence'
+                        ]
 
                     strategy = ModularMomentumStrategy(strategy_config)
 
@@ -354,11 +353,10 @@ class BacktestOptimizer:
             for param_name, param_value in best_result['params'].items():
                 strategy_config['thresholds'][param_name] = param_value
 
-            if 'presets' in strategy_config and 'custom' in strategy_config['presets']:
-                if 'min_confidence' in best_result['params']:
-                    strategy_config['presets']['custom']['min_confidence'] = best_result['params'][
-                        'min_confidence'
-                    ]
+            if 'presets' in strategy_config and 'custom' in strategy_config['presets'] and 'min_confidence' in best_result['params']:
+                strategy_config['presets']['custom']['min_confidence'] = best_result['params'][
+                    'min_confidence'
+                ]
 
             best_strategy = ModularMomentumStrategy(strategy_config)
 

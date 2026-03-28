@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Dict, Generic, Iterable, Iterator, List, Optional, TypeVar
+from typing import Callable, Dict, Generic, Iterable, Iterator, List, Optional, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -239,7 +239,7 @@ class QueryableRepository(AbstractRepository[T, K]):
     """
 
     @abstractmethod
-    async def find_by_criteria(self, **criteria: Any) -> List[T]:
+    async def find_by_criteria(self, **criteria: object) -> List[T]:
         """
         Find entities matching the given criteria.
 
@@ -259,7 +259,7 @@ class QueryableRepository(AbstractRepository[T, K]):
         """
 
     @abstractmethod
-    async def find_first(self, **criteria: Any) -> Optional[T]:
+    async def find_first(self, **criteria: object) -> Optional[T]:
         """
         Find the first entity matching the criteria.
 
@@ -327,7 +327,7 @@ class StreamableRepository(AbstractRepository[T, K]):
         """
 
     @abstractmethod
-    async def stream_by_criteria(self, **criteria: Any) -> Iterator[T]:
+    async def stream_by_criteria(self, **criteria: object) -> Iterator[T]:
         """
         Stream entities matching criteria.
 
@@ -365,7 +365,7 @@ class CachedRepository(AbstractRepository[T, K]):
     def __init__(
         self,
         repository: AbstractRepository[T, K],
-        cache: Optional[Dict[str, Any]] = None,
+        cache: Optional[Dict[str, T]] = None,
         ttl_seconds: int = 300,
     ):
         """
@@ -443,7 +443,7 @@ class RepositoryError(Exception):
 class NotFoundError(RepositoryError):
     """Exception raised when entity is not found."""
 
-    def __init__(self, entity_id: Any, repository: Optional[str] = None):
+    def __init__(self, entity_id: object, repository: Optional[str] = None):
         super().__init__(f"Entity not found: {entity_id}", repository)
         self.entity_id = entity_id
 
@@ -451,6 +451,6 @@ class NotFoundError(RepositoryError):
 class DuplicateError(RepositoryError):
     """Exception raised when trying to add duplicate entity."""
 
-    def __init__(self, entity_id: Any, repository: Optional[str] = None):
+    def __init__(self, entity_id: object, repository: Optional[str] = None):
         super().__init__(f"Duplicate entity: {entity_id}", repository)
         self.entity_id = entity_id

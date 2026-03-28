@@ -49,13 +49,15 @@ class AllocationManager:
     - Concentration metrics
     """
 
-    def __init__(self, rebalancing_threshold: Decimal = Decimal("0.05")):
+    def __init__(self, rebalancing_threshold: Optional[Decimal] = None):
         """
         Initialize allocation manager.
 
         Args:
             rebalancing_threshold: Drift threshold for rebalancing (default 5%)
         """
+        if rebalancing_threshold is None:
+            rebalancing_threshold = Decimal("0.05")
         self.rebalancing_threshold = rebalancing_threshold
         self.current_allocation: Dict[str, Decimal] = {}
         self.target_allocation: Dict[str, Decimal] = {}
@@ -122,7 +124,7 @@ class AllocationManager:
 
             logger.debug(f"✅ Current allocation updated: {len(allocation)} assets")
             return True
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"❌ Error setting current allocation: {e}")
             return False
 
@@ -246,9 +248,11 @@ _manager: Optional[AllocationManager] = None
 
 
 def get_allocation_manager(
-    rebalancing_threshold: Decimal = Decimal("0.05"),
+    rebalancing_threshold: Optional[Decimal] = None,
 ) -> AllocationManager:
     """Get or create singleton AllocationManager."""
+    if rebalancing_threshold is None:
+        rebalancing_threshold = Decimal("0.05")
     global _manager
     if _manager is None:
         _manager = AllocationManager()

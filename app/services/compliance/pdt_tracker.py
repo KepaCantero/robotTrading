@@ -326,11 +326,7 @@ class PDTTracker:
         today = date.today()
 
         # Check if we have open positions in this symbol from today
-        for trade in self._open_positions.get(symbol, []):
-            if trade["trade_date"] == today:
-                return True
-
-        return False
+        return any(trade["trade_date"] == today for trade in self._open_positions.get(symbol, []))
 
     def _record_day_trade(
         self,

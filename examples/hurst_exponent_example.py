@@ -30,8 +30,7 @@ from app.services.hurst_exponent_analyzer import (
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
@@ -40,15 +39,16 @@ logger = logging.getLogger(__name__)
 # Example 1: Basic Hurst Exponent Calculation
 # ============================================================================
 
+
 def example_1_basic_calculation():
     """
     Example 1: Calculate Hurst exponent for a single symbol.
 
     This is the simplest use case - just get the Hurst value and classification.
     """
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("EXAMPLE 1: Basic Hurst Exponent Calculation")
-    print("="*80)
+    print("=" * 80)
 
     # Download historical data for AAPL
     print("\n📥 Downloading AAPL historical data...")
@@ -97,6 +97,7 @@ def example_1_basic_calculation():
 # Example 2: Full Analysis with HurstExponentAnalyzer
 # ============================================================================
 
+
 def example_2_full_analysis():
     """
     Example 2: Complete analysis with detailed results.
@@ -104,9 +105,9 @@ def example_2_full_analysis():
     Use the full analyzer class for more detailed results including
     confidence intervals, R/S values, and more.
     """
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("EXAMPLE 2: Full Analysis with Detailed Results")
-    print("="*80)
+    print("=" * 80)
 
     # Download data
     print("\n📥 Downloading SPY historical data...")
@@ -123,16 +124,12 @@ def example_2_full_analysis():
         max_window_ratio=0.5,
         num_windows=20,
         confidence_level=0.95,
-        use_returns=True  # Analyze log returns
+        use_returns=True,  # Analyze log returns
     )
 
     # Perform analysis
     print("\n🔬 Performing comprehensive Hurst analysis...")
-    result = analyzer.analyze(
-        prices,
-        symbol="SPY",
-        timestamp=datetime.now()
-    )
+    result = analyzer.analyze(prices, symbol="SPY", timestamp=datetime.now())
 
     # Display results
     print(f"\n📊 Comprehensive Results:")
@@ -156,15 +153,16 @@ def example_2_full_analysis():
 # Example 3: Compare Multiple Symbols
 # ============================================================================
 
+
 def example_3_compare_symbols():
     """
     Example 3: Compare Hurst exponent across multiple symbols.
 
     This is useful for finding the best opportunities across different assets.
     """
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("EXAMPLE 3: Compare Multiple Symbols")
-    print("="*80)
+    print("=" * 80)
 
     # Define symbols to analyze
     symbols = ["AAPL", "MSFT", "GOOGL", "TSLA", "SPY", "TLT"]
@@ -197,7 +195,9 @@ def example_3_compare_symbols():
         result = results[symbol]
         regime_short = result.regime.value[:20]
         strategy_short = result.strategy.value[:20]
-        print(f"{symbol:<10} {result.hurst_exponent:<10.4f} {regime_short:<20} {strategy_short:<20} {result.confidence*100:<11.1f}%")
+        print(
+            f"{symbol:<10} {result.hurst_exponent:<10.4f} {regime_short:<20} {strategy_short:<20} {result.confidence*100:<11.1f}%"
+        )
 
     # Find best opportunities
     print(f"\n💡 Best Opportunities:")
@@ -206,7 +206,7 @@ def example_3_compare_symbols():
     most_mean_reverting = min(
         [(s, r) for s, r in results.items() if r.regime == MarketRegime.MEAN_REVERTING],
         key=lambda x: x[1].hurst_exponent if x[1].regime == MarketRegime.MEAN_REVERTING else 1.0,
-        default=None
+        default=None,
     )
     if most_mean_reverting:
         symbol, result = most_mean_reverting
@@ -216,7 +216,7 @@ def example_3_compare_symbols():
     most_trending = max(
         [(s, r) for s, r in results.items() if r.regime == MarketRegime.TRENDING],
         key=lambda x: x[1].hurst_exponent if x[1].regime == MarketRegime.TRENDING else 0.0,
-        default=None
+        default=None,
     )
     if most_trending:
         symbol, result = most_trending
@@ -227,6 +227,7 @@ def example_3_compare_symbols():
 # Example 4: Regime Change Detection
 # ============================================================================
 
+
 def example_4_regime_change_detection():
     """
     Example 4: Detect regime changes over time.
@@ -234,9 +235,9 @@ def example_4_regime_change_detection():
     This simulates monitoring a symbol over multiple time periods
     and detecting when the market regime changes.
     """
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("EXAMPLE 4: Regime Change Detection")
-    print("="*80)
+    print("=" * 80)
 
     # Download historical data
     print("\n📥 Downloading BTC-USD historical data (higher volatility for regime changes)...")
@@ -262,23 +263,17 @@ def example_4_regime_change_detection():
     results_history = []
     for i in range(window_size, len(prices), step_size):
         # Get window of data
-        window_prices = prices[max(0, i-window_size):i]
+        window_prices = prices[max(0, i - window_size) : i]
 
         # Get approximate date
-        current_date = data.index[i-1] if i-1 < len(data.index) else datetime.now()
+        current_date = data.index[i - 1] if i - 1 < len(data.index) else datetime.now()
 
         # Analyze
-        result = analyzer.analyze(
-            window_prices,
-            symbol="BTC-USD",
-            timestamp=current_date
-        )
+        result = analyzer.analyze(window_prices, symbol="BTC-USD", timestamp=current_date)
 
-        results_history.append({
-            'date': current_date,
-            'hurst': result.hurst_exponent,
-            'regime': result.regime.value
-        })
+        results_history.append(
+            {'date': current_date, 'hurst': result.hurst_exponent, 'regime': result.regime.value}
+        )
 
     # Display history
     print(f"\n📊 Analysis History ({len(results_history)} periods):")
@@ -294,17 +289,19 @@ def example_4_regime_change_detection():
 
     changes = []
     for i in range(1, len(results_history)):
-        prev_entry = results_history[i-1]
+        prev_entry = results_history[i - 1]
         curr_entry = results_history[i]
 
         if prev_entry['regime'] != curr_entry['regime']:
-            changes.append({
-                'date': curr_entry['date'],
-                'old_regime': prev_entry['regime'],
-                'new_regime': curr_entry['regime'],
-                'old_hurst': prev_entry['hurst'],
-                'new_hurst': curr_entry['hurst']
-            })
+            changes.append(
+                {
+                    'date': curr_entry['date'],
+                    'old_regime': prev_entry['regime'],
+                    'new_regime': curr_entry['regime'],
+                    'old_hurst': prev_entry['hurst'],
+                    'new_hurst': curr_entry['hurst'],
+                }
+            )
 
     if changes:
         print(f"\n✅ Detected {len(changes)} regime changes:")
@@ -320,15 +317,16 @@ def example_4_regime_change_detection():
 # Example 5: Synthetic Data with Known Hurst Values
 # ============================================================================
 
+
 def example_5_synthetic_data():
     """
     Example 5: Test with synthetic data having known Hurst characteristics.
 
     This validates that the analyzer correctly identifies different regimes.
     """
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("EXAMPLE 5: Synthetic Data Validation")
-    print("="*80)
+    print("=" * 80)
 
     analyzer = HurstExponentAnalyzer(method="rs", use_returns=False)
 
@@ -344,8 +342,8 @@ def example_5_synthetic_data():
     ou_process = np.zeros(n)
     ou_process[0] = mu
     for i in range(1, n):
-        dx = theta * (mu - ou_process[i-1]) * dt + sigma * np.sqrt(dt) * np.random.randn()
-        ou_process[i] = ou_process[i-1] + dx
+        dx = theta * (mu - ou_process[i - 1]) * dt + sigma * np.sqrt(dt) * np.random.randn()
+        ou_process[i] = ou_process[i - 1] + dx
 
     result_ou = analyzer.analyze(ou_process)
     print(f"   Hurst: {result_ou.hurst_exponent:.4f}")
@@ -361,7 +359,7 @@ def example_5_synthetic_data():
     gbm[0] = 100.0
     for i in range(1, n):
         dx = 0.01 * np.sqrt(0.01) * np.random.randn()
-        gbm[i] = gbm[i-1] * (1 + dx)
+        gbm[i] = gbm[i - 1] * (1 + dx)
 
     result_gbm = analyzer.analyze(gbm)
     print(f"   Hurst: {result_gbm.hurst_exponent:.4f}")
@@ -376,7 +374,7 @@ def example_5_synthetic_data():
     trending = np.zeros(n)
     trending[0] = 100.0
     for i in range(1, n):
-        trending[i] = trending[i-1] * (1 + 0.0005) + 0.5 * np.random.randn()
+        trending[i] = trending[i - 1] * (1 + 0.0005) + 0.5 * np.random.randn()
 
     result_trending = analyzer.analyze(trending)
     print(f"   Hurst: {result_trending.hurst_exponent:.4f}")
@@ -389,15 +387,16 @@ def example_5_synthetic_data():
 # Example 6: Strategy Selection Guide
 # ============================================================================
 
+
 def example_6_strategy_selection_guide():
     """
     Example 6: Practical guide for strategy selection based on Hurst exponent.
 
     This shows how to use Hurst analysis in actual trading decisions.
     """
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("EXAMPLE 6: Strategy Selection Guide")
-    print("="*80)
+    print("=" * 80)
 
     # Download data for analysis
     print("\n📥 Analyzing current market conditions...")
@@ -470,11 +469,12 @@ def example_6_strategy_selection_guide():
 # Main Entry Point
 # ============================================================================
 
+
 def main():
     """Run all examples."""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("HURST EXPONENT ANALYZER - EXAMPLES")
-    print("="*80)
+    print("=" * 80)
 
     # Display analyzer info
     info = get_analyzer_info()
@@ -517,11 +517,13 @@ def main():
     except Exception as e:
         logger.error(f"Example 6 failed: {e}")
 
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("EXAMPLES COMPLETE")
-    print("="*80)
+    print("=" * 80)
     print("\n💡 Key Takeaways:")
-    print("   • Hurst Exponent identifies market regime (H < 0.5: mean-reverting, H > 0.5: trending)")
+    print(
+        "   • Hurst Exponent identifies market regime (H < 0.5: mean-reverting, H > 0.5: trending)"
+    )
     print("   • Use appropriate strategies for each regime")
     print("   • Monitor for regime changes to adapt your approach")
     print("   • Combine with other analysis techniques for best results")

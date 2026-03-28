@@ -29,6 +29,7 @@ from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
 
 import psutil
+import contextlib
 
 logger = logging.getLogger(__name__)
 
@@ -178,13 +179,11 @@ class PodKiller(FailureInjector):
             self.logger.info(f"Killing pod: PID {pid}")
 
             # Store process info for rollback
-            try:
+            with contextlib.suppress(psutil.NoSuchProcess, psutil.AccessDenied):
                 self._original_processes[pid] = {
                     'name': target.name(),
                     'cmdline': target.cmdline(),
                 }
-            except (psutil.NoSuchProcess, psutil.AccessDenied):
-                pass
 
             # Kill process
             target.send_signal(signal.SIGTERM)
@@ -369,7 +368,7 @@ class ErrorInjector(FailureInjector):
 
         # Remove error hooks
         # Restore original handlers
-        for key, handler in self._original_handlers.items():
+        for _key, _handler in self._original_handlers.items():
             # Restore original handler
             pass
 
@@ -502,10 +501,8 @@ class ResourceStarver(FailureInjector):
                 proc.wait(timeout=10)
             except Exception as e:
                 self.logger.error(f"Error stopping stress process: {e}")
-                try:
+                with contextlib.suppress(Exception):
                     proc.kill()
-                except Exception:
-                    pass
 
         self._stress_processes.clear()
 

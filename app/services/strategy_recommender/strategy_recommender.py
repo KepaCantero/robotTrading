@@ -374,7 +374,7 @@ class StrategyRecommender:
         strengths = []
         weaknesses = []
 
-        for metric_name, score in component_scores.items():
+        for _metric_name, score in component_scores.items():
             if score.normalized_score >= Decimal("80"):
                 metric_readable = score.metric_name
                 strengths.append(f"Strong {metric_readable} performance ({score.metric_value:.2f})")

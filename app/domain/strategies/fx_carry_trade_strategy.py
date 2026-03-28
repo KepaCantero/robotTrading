@@ -20,7 +20,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
-from typing import Any
+from typing import Union
 
 from app.domain.strategies.base import BaseStrategy
 from app.domain.strategies.fx_carry_trade.carry_calculator import (
@@ -101,7 +101,7 @@ class FXCarryTradeStrategy(BaseStrategy):
 
     def __init__(
         self,
-        config: dict[str, Any] | FXCarryTradeConfig,
+        config: dict[str, Union[str, int, float, bool, None]] | FXCarryTradeConfig,
         rate_provider: FXRateProvider | None = None,
         calculator: CarryCalculator | None = None,
     ) -> None:
@@ -187,7 +187,7 @@ class FXCarryTradeStrategy(BaseStrategy):
 
         return pairs
 
-    def generate_signals(self, market_data: Any) -> list[Any]:
+    def generate_signals(self, market_data: object) -> list[FXCarrySignal]:
         """
         Generate carry trade signals for all configured pairs.
 
@@ -220,7 +220,7 @@ class FXCarryTradeStrategy(BaseStrategy):
             ranked_signals = self.calculator.rank_signals(filtered_signals)
 
             # Convert to list and limit to max positions
-            for pair, signal in ranked_signals[: self.config.max_positions]:
+            for _pair, signal in ranked_signals[: self.config.max_positions]:
                 signals.append(signal)
 
             logger.info(f"Generated {len(signals)} carry trade signals")
@@ -251,7 +251,7 @@ class FXCarryTradeStrategy(BaseStrategy):
             )
 
             opportunities = []
-            for pair, signal in signal_dict.items():
+            for _pair, signal in signal_dict.items():
                 if abs(signal.signal) >= float(self.config.min_carry_threshold):
                     # Calculate confidence based on signal strength and carry
                     confidence = self._calculate_confidence(signal)
@@ -603,7 +603,7 @@ class FXCarryTradeStrategy(BaseStrategy):
 
         return False, ""
 
-    def risk_check(self, signal: Any, portfolio: Any) -> bool:
+    def risk_check(self, signal: object, portfolio: object) -> bool:
         """
         Check if signal passes risk management criteria.
 
@@ -642,7 +642,7 @@ class FXCarryTradeStrategy(BaseStrategy):
             "take_profit",
         ]
 
-    def get_portfolio_summary(self) -> dict[str, Any]:
+    def get_portfolio_summary(self) -> dict[str, Union[str, int, float, bool, None]]:
         """
         Get summary of current portfolio state.
 

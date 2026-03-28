@@ -128,11 +128,7 @@ class OncallEngineer:
             return False
 
         # Check unavailable periods
-        for unavailable in self.unavailable_periods:
-            if slot.overlaps(unavailable):
-                return False
-
-        return True
+        return all(not slot.overlaps(unavailable) for unavailable in self.unavailable_periods)
 
     def can_be_oncall(self, slot: TimeSlot, is_primary: bool = True) -> bool:
         """
@@ -349,7 +345,7 @@ class OncallRotation:
 
                 self.logger.info("OncallRotation initialized successfully")
 
-            except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+            except (asyncio.TimeoutError, OSError) as e:
                 self.logger.error(f"Error initializing: {e}")
                 raise
 
@@ -461,7 +457,7 @@ class OncallRotation:
 
             self.logger.debug("Database schema initialized")
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Database initialization failed: {e}")
             raise
 
@@ -719,7 +715,7 @@ class OncallRotation:
                 )
                 await db.commit()
 
-        except (aiosqlite.Error, asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error saving slot: {e}")
 
     async def get_current_oncall(self) -> Optional[Dict[str, Any]]:
@@ -823,10 +819,7 @@ class OncallRotation:
             if not slot.is_active:
                 continue
 
-            if slot.primary_engineer_id == engineer_id:
-                if unavailable_slot.overlaps(slot.time_slot):
-                    conflicts.append(slot)
-            elif slot.backup_engineer_id == engineer_id:
+            if slot.primary_engineer_id == engineer_id or slot.backup_engineer_id == engineer_id:
                 if unavailable_slot.overlaps(slot.time_slot):
                     conflicts.append(slot)
 

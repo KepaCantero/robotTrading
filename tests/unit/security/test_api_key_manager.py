@@ -64,9 +64,7 @@ class TestApiKeyManager:
     def test_add_key_success(self, api_key_manager, sample_api_key):
         """Test successful key addition."""
         key_id = api_key_manager.add_key(
-            key_name="test_key",
-            api_key=sample_api_key,
-            permission=KeyPermission.READ_ONLY
+            key_name="test_key", api_key=sample_api_key, permission=KeyPermission.READ_ONLY
         )
 
         assert key_id is not None
@@ -84,7 +82,7 @@ class TestApiKeyManager:
             key_name="expiring_key",
             api_key=sample_api_key,
             permission=KeyPermission.TRADING,
-            expires_in_days=30
+            expires_in_days=30,
         )
 
         key = api_key_manager.get_key(key_id)
@@ -95,9 +93,7 @@ class TestApiKeyManager:
         """Test adding key with invalid format (too short)."""
         with pytest.raises(KeyValidationError, match="Invalid API key format"):
             api_key_manager.add_key(
-                key_name="short_key",
-                api_key="short",
-                permission=KeyPermission.READ_ONLY
+                key_name="short_key", api_key="short", permission=KeyPermission.READ_ONLY
             )
 
     def test_add_key_invalid_format_whitespace(self, api_key_manager):
@@ -106,24 +102,20 @@ class TestApiKeyManager:
             api_key_manager.add_key(
                 key_name="whitespace_key",
                 api_key="test key with spaces",
-                permission=KeyPermission.READ_ONLY
+                permission=KeyPermission.READ_ONLY,
             )
 
     def test_add_key_empty_value(self, api_key_manager):
         """Test adding key with empty value."""
         with pytest.raises(KeyValidationError, match="Invalid API key format"):
             api_key_manager.add_key(
-                key_name="empty_key",
-                api_key="",
-                permission=KeyPermission.READ_ONLY
+                key_name="empty_key", api_key="", permission=KeyPermission.READ_ONLY
             )
 
     def test_get_key_by_id(self, api_key_manager, sample_api_key):
         """Test retrieving key by ID."""
         key_id = api_key_manager.add_key(
-            key_name="test_key",
-            api_key=sample_api_key,
-            permission=KeyPermission.ADMIN
+            key_name="test_key", api_key=sample_api_key, permission=KeyPermission.ADMIN
         )
 
         retrieved_key = api_key_manager.get_key(key_id)
@@ -139,9 +131,7 @@ class TestApiKeyManager:
     def test_get_key_by_name(self, api_key_manager, sample_api_key):
         """Test retrieving key by name."""
         api_key_manager.add_key(
-            key_name="unique_name",
-            api_key=sample_api_key,
-            permission=KeyPermission.READ_ONLY
+            key_name="unique_name", api_key=sample_api_key, permission=KeyPermission.READ_ONLY
         )
 
         retrieved_key = api_key_manager.get_key_by_name("unique_name")
@@ -156,9 +146,7 @@ class TestApiKeyManager:
     def test_validate_key_success(self, api_key_manager, sample_api_key):
         """Test successful key validation."""
         key_id = api_key_manager.add_key(
-            key_name="test_key",
-            api_key=sample_api_key,
-            permission=KeyPermission.READ_ONLY
+            key_name="test_key", api_key=sample_api_key, permission=KeyPermission.READ_ONLY
         )
 
         is_valid = api_key_manager.validate_key(key_id, sample_api_key)
@@ -171,9 +159,7 @@ class TestApiKeyManager:
     def test_validate_key_wrong_value(self, api_key_manager, sample_api_key):
         """Test key validation with wrong value."""
         key_id = api_key_manager.add_key(
-            key_name="test_key",
-            api_key=sample_api_key,
-            permission=KeyPermission.READ_ONLY
+            key_name="test_key", api_key=sample_api_key, permission=KeyPermission.READ_ONLY
         )
 
         is_valid = api_key_manager.validate_key(key_id, "wrong_key")
@@ -187,9 +173,7 @@ class TestApiKeyManager:
     def test_validate_key_inactive(self, api_key_manager, sample_api_key):
         """Test key validation with inactive key."""
         key_id = api_key_manager.add_key(
-            key_name="test_key",
-            api_key=sample_api_key,
-            permission=KeyPermission.READ_ONLY
+            key_name="test_key", api_key=sample_api_key, permission=KeyPermission.READ_ONLY
         )
 
         # Revoke the key
@@ -204,7 +188,7 @@ class TestApiKeyManager:
             key_name="test_key",
             api_key=sample_api_key,
             permission=KeyPermission.READ_ONLY,
-            expires_in_days=-1  # Already expired
+            expires_in_days=-1,  # Already expired
         )
 
         is_valid = api_key_manager.validate_key(key_id, sample_api_key)
@@ -213,9 +197,7 @@ class TestApiKeyManager:
     def test_revoke_key_success(self, api_key_manager, sample_api_key):
         """Test successful key revocation."""
         key_id = api_key_manager.add_key(
-            key_name="test_key",
-            api_key=sample_api_key,
-            permission=KeyPermission.READ_ONLY
+            key_name="test_key", api_key=sample_api_key, permission=KeyPermission.READ_ONLY
         )
 
         result = api_key_manager.revoke_key(key_id)
@@ -251,9 +233,7 @@ class TestApiKeyManager:
     def test_update_last_used(self, api_key_manager, sample_api_key):
         """Test updating last_used timestamp."""
         key_id = api_key_manager.add_key(
-            key_name="test_key",
-            api_key=sample_api_key,
-            permission=KeyPermission.READ_ONLY
+            key_name="test_key", api_key=sample_api_key, permission=KeyPermission.READ_ONLY
         )
 
         # Initially last_used should be None
@@ -270,10 +250,7 @@ class TestApiKeyManager:
     def test_check_expiration_no_expired_keys(self, api_key_manager, sample_api_key):
         """Test checking for expired keys when none are expired."""
         api_key_manager.add_key(
-            "test_key",
-            sample_api_key,
-            KeyPermission.READ_ONLY,
-            expires_in_days=30
+            "test_key", sample_api_key, KeyPermission.READ_ONLY, expires_in_days=30
         )
 
         expired_ids = api_key_manager.check_expiration()
@@ -282,10 +259,7 @@ class TestApiKeyManager:
     def test_check_expiration_with_expired_keys(self, api_key_manager, sample_api_key):
         """Test checking for expired keys."""
         key_id = api_key_manager.add_key(
-            "test_key",
-            sample_api_key,
-            KeyPermission.READ_ONLY,
-            expires_in_days=-1  # Expired
+            "test_key", sample_api_key, KeyPermission.READ_ONLY, expires_in_days=-1  # Expired
         )
 
         expired_ids = api_key_manager.check_expiration()
@@ -294,9 +268,7 @@ class TestApiKeyManager:
     def test_get_decrypted_key(self, api_key_manager, sample_api_key):
         """Test getting decrypted key value."""
         key_id = api_key_manager.add_key(
-            key_name="test_key",
-            api_key=sample_api_key,
-            permission=KeyPermission.READ_ONLY
+            key_name="test_key", api_key=sample_api_key, permission=KeyPermission.READ_ONLY
         )
 
         decrypted_key = api_key_manager.get_decrypted_key(key_id)
@@ -319,7 +291,7 @@ class TestApiKey:
             encrypted_key="encrypted",
             permission=KeyPermission.READ_ONLY,
             created_at=datetime.utcnow(),
-            expires_at=None
+            expires_at=None,
         )
 
         assert key.is_expired() is False
@@ -332,7 +304,7 @@ class TestApiKey:
             encrypted_key="encrypted",
             permission=KeyPermission.READ_ONLY,
             created_at=datetime.utcnow(),
-            expires_at=datetime.utcnow() + timedelta(days=30)
+            expires_at=datetime.utcnow() + timedelta(days=30),
         )
 
         assert key.is_expired() is False
@@ -345,7 +317,7 @@ class TestApiKey:
             encrypted_key="encrypted",
             permission=KeyPermission.READ_ONLY,
             created_at=datetime.utcnow(),
-            expires_at=datetime.utcnow() - timedelta(days=1)
+            expires_at=datetime.utcnow() - timedelta(days=1),
         )
 
         assert key.is_expired() is True

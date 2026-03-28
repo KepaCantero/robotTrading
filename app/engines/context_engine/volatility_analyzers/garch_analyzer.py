@@ -1,4 +1,3 @@
-# pylint: disable=used-before-assignment
 """
 GARCHAnalyzer - Analizador de volatilidad usando modelos GARCH.
 
@@ -296,9 +295,8 @@ class GARCHAnalyzer:
         Returns:
             Dict con información de clustering
         """
-        if not self.fitted_model:
-            if not self.fit(returns):
-                return {'clustering_detected': False, 'persistence': None, 'confidence': 0.0}
+        if not self.fitted_model and not self.fit(returns):
+            return {'clustering_detected': False, 'persistence': None, 'confidence': 0.0}
 
         try:
             # Obtener parámetros del modelo

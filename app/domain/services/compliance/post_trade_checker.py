@@ -19,7 +19,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from app.domain.services.compliance.results import PostTradeCheckResult
 from app.domain.services.compliance.service_registry import get_service_registry
@@ -67,7 +67,7 @@ class PostTradeComplianceChecker:
         submission_time: Optional[datetime] = None,
         execution_time: Optional[datetime] = None,
         nbbo_at_execution: Optional[Tuple[Decimal, Decimal]] = None,
-        **kwargs: Any,  # Extension point for additional params
+        **kwargs: Union[str, int, float, bool, Dict, List],  # Extension point for additional params
     ) -> PostTradeCheckResult:
         """
         Perform comprehensive post-trade analysis using all available services.

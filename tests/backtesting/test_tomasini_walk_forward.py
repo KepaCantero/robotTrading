@@ -933,7 +933,9 @@ class TestTomasiniEdgeCases:
         assert result.passed is False
         assert result.total_windows == 0
 
-    def test_insufficient_data_for_regime_detection(self, tomasini_config, backtest_config, default_symbol):
+    def test_insufficient_data_for_regime_detection(
+        self, tomasini_config, backtest_config, default_symbol
+    ):
         """Test regime detection with insufficient data."""
         validator = TomasiniWalkForwardValidator(config=tomasini_config)
 

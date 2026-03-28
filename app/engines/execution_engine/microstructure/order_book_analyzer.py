@@ -118,7 +118,7 @@ class OrderBookAnalyzer:
         self,
         min_levels: int = 5,
         max_levels: int = 20,
-        min_liquidity_threshold: Decimal = Decimal("10000"),
+        min_liquidity_threshold: Optional[Decimal] = None,
     ):
         """
         Initialize analyzer.
@@ -128,6 +128,8 @@ class OrderBookAnalyzer:
             max_levels: Maximum book levels to analyze
             min_liquidity_threshold: Minimum liquidity for immediate execution
         """
+        if min_liquidity_threshold is None:
+            min_liquidity_threshold = Decimal("10000")
         self.min_levels = min_levels
         self.max_levels = max_levels
         self.min_liquidity_threshold = min_liquidity_threshold
@@ -419,9 +421,11 @@ _order_book_analyzer: OrderBookAnalyzer = None
 def get_order_book_analyzer(
     min_levels: int = 5,
     max_levels: int = 20,
-    min_liquidity_threshold: Decimal = Decimal("10000"),
+    min_liquidity_threshold: Optional[Decimal] = None,
 ) -> OrderBookAnalyzer:
     """Get or create global OrderBookAnalyzer instance."""
+    if min_liquidity_threshold is None:
+        min_liquidity_threshold = Decimal("10000")
     global _order_book_analyzer
     if _order_book_analyzer is None:
         _order_book_analyzer = OrderBookAnalyzer(

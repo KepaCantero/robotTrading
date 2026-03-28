@@ -63,7 +63,7 @@ class IBKRSource(BaseDataSource):
         except asyncio.TimeoutError as e:
             logger.error(f"Timeout conectando a IBKR: {e}")
             return False
-        except (ConnectionError, OSError) as e:
+        except OSError as e:
             logger.error(f"Error conectando a IBKR: {e}")
             return False
 
@@ -79,7 +79,7 @@ class IBKRSource(BaseDataSource):
         except asyncio.TimeoutError as e:
             logger.error(f"Timeout desconectando de IBKR: {e}")
             return False
-        except (ConnectionError, OSError) as e:
+        except OSError as e:
             logger.error(f"Error desconectando de IBKR: {e}")
             return False
 
@@ -92,7 +92,7 @@ class IBKRSource(BaseDataSource):
                 self._ib.isConnected(), timeout=self._timeouts.ib_read
             )
             return connected
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.warning(f"IBKR health check failed: {e}")
             return False
 

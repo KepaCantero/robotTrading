@@ -20,7 +20,7 @@ import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -78,8 +78,8 @@ class DarkPoolRouter:
 
     def __init__(
         self,
-        min_participation_rate: Decimal = Decimal("0.10"),
-        min_order_size_usd: Decimal = Decimal("100000"),
+        min_participation_rate: Optional[Decimal] = None,
+        min_order_size_usd: Optional[Decimal] = None,
     ):
         """
         Initialize dark pool router.
@@ -88,6 +88,10 @@ class DarkPoolRouter:
             min_participation_rate: Min participation rate for dark pool
             min_order_size_usd: Min order size (USD) for dark pool
         """
+        if min_participation_rate is None:
+            min_participation_rate = Decimal("0.10")
+        if min_order_size_usd is None:
+            min_order_size_usd = Decimal("100000")
         self.min_participation_rate = min_participation_rate
         self.min_order_size_usd = min_order_size_usd
 
@@ -391,7 +395,7 @@ class DarkPoolRouter:
         }
 
         # Find best venue
-        for venue, metrics in results.items():
+        for _venue, metrics in results.items():
             expected_cost = metrics["cost_bps"] / metrics["fill_probability"]
             metrics["expected_cost_bps"] = expected_cost
 
@@ -445,10 +449,14 @@ _dark_pool_router: DarkPoolRouter = None
 
 
 def get_dark_pool_router(
-    min_participation_rate: Decimal = Decimal("0.10"),
-    min_order_size_usd: Decimal = Decimal("100000"),
+    min_participation_rate: Optional[Decimal] = None,
+    min_order_size_usd: Optional[Decimal] = None,
 ) -> DarkPoolRouter:
     """Get or create global DarkPoolRouter instance."""
+    if min_participation_rate is None:
+        min_participation_rate = Decimal("0.10")
+    if min_order_size_usd is None:
+        min_order_size_usd = Decimal("100000")
     global _dark_pool_router
     if _dark_pool_router is None:
         _dark_pool_router = DarkPoolRouter(

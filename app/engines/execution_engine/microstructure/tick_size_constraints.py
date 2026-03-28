@@ -95,7 +95,7 @@ class TickSizeConstraints:
 
     def __init__(
         self,
-        default_tick_size: Decimal = Decimal("0.01"),
+        default_tick_size: Optional[Decimal] = None,
     ):
         """
         Initialize tick size constraints handler.
@@ -103,6 +103,8 @@ class TickSizeConstraints:
         Args:
             default_tick_size: Default tick size if not specified
         """
+        if default_tick_size is None:
+            default_tick_size = Decimal("0.01")
         self.default_tick_size = default_tick_size
         self._tick_cache: Dict[str, Decimal] = {}
 
@@ -488,9 +490,11 @@ _tick_size_constraints: TickSizeConstraints = None
 
 
 def get_tick_size_constraints(
-    default_tick_size: Decimal = Decimal("0.01"),
+    default_tick_size: Optional[Decimal] = None,
 ) -> TickSizeConstraints:
     """Get or create global TickSizeConstraints instance."""
+    if default_tick_size is None:
+        default_tick_size = Decimal("0.01")
     global _tick_size_constraints
     if _tick_size_constraints is None:
         _tick_size_constraints = TickSizeConstraints(

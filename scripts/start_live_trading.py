@@ -29,10 +29,7 @@ from app.services.live_trading.broker_connector import get_broker_connector, Ord
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler('logs/live_trading.log')
-    ]
+    handlers=[logging.StreamHandler(sys.stdout), logging.FileHandler('logs/live_trading.log')],
 )
 logger = logging.getLogger(__name__)
 
@@ -209,16 +206,20 @@ class LiveTradingCLI:
             }
 
             # Print summary
-            print("\n" + "="*60)
+            print("\n" + "=" * 60)
             print("RISK STATUS REPORT")
-            print("="*60)
+            print("=" * 60)
             print(f"Kill Switch Active: {status_report['kill_switch_active']}")
-            print(f"Daily P&L: ${pnl_summary['total_pnl']:,.2f} ({pnl_summary['daily_return_pct']:.2%})")
+            print(
+                f"Daily P&L: ${pnl_summary['total_pnl']:,.2f} ({pnl_summary['daily_return_pct']:.2%})"
+            )
             print(f"Total Trades: {pnl_summary['total_trades']}")
             print(f"Win Rate: {pnl_summary['win_rate']:.1%}")
             print(f"SLO Compliance: {slo_metrics['slo_compliance_rate']:.1%}")
-            print(f"Systems Available: {system_status['availability']['available_systems']}/{system_status['availability']['total_systems']}")
-            print("="*60 + "\n")
+            print(
+                f"Systems Available: {system_status['availability']['available_systems']}/{system_status['availability']['total_systems']}"
+            )
+            print("=" * 60 + "\n")
 
             return status_report
 
@@ -313,7 +314,9 @@ async def main():
             print("\nCurrent Positions:")
             print("-" * 60)
             for pos in positions:
-                print(f"{pos.get('symbol', 'N/A')}: {pos.get('quantity', 0)} shares @ ${pos.get('avg_price', 0):.2f}")
+                print(
+                    f"{pos.get('symbol', 'N/A')}: {pos.get('quantity', 0)} shares @ ${pos.get('avg_price', 0):.2f}"
+                )
             print("-" * 60 + "\n")
 
     elif args.command == 'order':

@@ -72,7 +72,7 @@ class MetricsExporter:
                     logger.info("✅ Connected to Prometheus")
                     return True
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.warning(f"⚠️ Failed to connect to Prometheus: {str(e)}")
 
         return False
@@ -84,7 +84,7 @@ class MetricsExporter:
                 await self.session.close()
             logger.info("✅ Disconnected from export services")
             return True
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"❌ Disconnect failed: {str(e)}")
             return False
 
@@ -172,7 +172,7 @@ class MetricsExporter:
                     logger.error(f"❌ Prometheus query failed: HTTP {resp.status}")
                     return None
 
-        except (asyncio.TimeoutError, ConnectionError, OSError) as e:
+        except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"❌ Query failed: {str(e)}")
             return None
 

@@ -92,9 +92,7 @@ def run_baseline_backtest(profile: InputProfile) -> dict:
 
     # Generate sample equity curve
     months = 36
-    dates = [
-        datetime.now() - timedelta(days=30 * (months - i)) for i in range(months)
-    ]
+    dates = [datetime.now() - timedelta(days=30 * (months - i)) for i in range(months)]
 
     # Simulate strategy performance
     returns = np.random.normal(0.015, 0.08, months)  # 1.5% monthly return, 8% vol
@@ -157,9 +155,7 @@ def run_optimized_backtest(profile: InputProfile) -> dict:
     np.random.seed(43)  # Different seed for optimized
 
     months = 36
-    dates = [
-        datetime.now() - timedelta(days=30 * (months - i)) for i in range(months)
-    ]
+    dates = [datetime.now() - timedelta(days=30 * (months - i)) for i in range(months)]
 
     # Optimized strategy: better returns, lower volatility
     returns = np.random.normal(0.019, 0.07, months)  # 1.9% monthly, 7% vol

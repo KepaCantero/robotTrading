@@ -449,9 +449,8 @@ class DeployDecisionOrchestrator:
             return "REJECTED", "low"
 
         # Check recommendation status
-        if recommendation_status in ["NOT_RECOMMENDED", "REVIEW"]:
-            if overall_score < Decimal("60"):
-                return "REJECTED", "low"
+        if recommendation_status in ["NOT_RECOMMENDED", "REVIEW"] and overall_score < Decimal("60"):
+            return "REJECTED", "low"
 
         # Determine status based on overall score
         if overall_score >= Decimal("80"):

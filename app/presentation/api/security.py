@@ -19,7 +19,7 @@ import traceback
 from collections import defaultdict
 from datetime import datetime
 from functools import wraps
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from fastapi import HTTPException, Request, Response, status
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -211,7 +211,7 @@ def rate_limit(
 
     def decorator(func: Callable) -> Callable:
         @wraps(func)
-        async def wrapper(*args: Any, **kwargs: Any) -> Any:
+        async def wrapper(*args: object, **kwargs: Union[str, int, float, bool]) -> Union[str, int, float, bool]:
             # Try to extract Request from kwargs
             request: Optional[Request] = None
             for arg in args:
@@ -444,7 +444,7 @@ def require_auth(
 
     def decorator(func: Callable) -> Callable:
         @wraps(func)
-        async def wrapper(*args: Any, **kwargs: Any) -> Any:
+        async def wrapper(*args: object, **kwargs: Union[str, int, float, bool]) -> Union[str, int, float, bool]:
             # Extract Request from args or kwargs
             request: Optional[Request] = None
             for arg in args:
@@ -593,7 +593,7 @@ def audit_log(
 
     def decorator(func: Callable) -> Callable:
         @wraps(func)
-        async def wrapper(*args: Any, **kwargs: Any) -> Any:
+        async def wrapper(*args: object, **kwargs: Union[str, int, float, bool]) -> Union[str, int, float, bool]:
             correlation_id = get_correlation_id()
             start_time = time.time()
 

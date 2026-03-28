@@ -442,7 +442,7 @@ class CostAnalysisService:
     def optimize_for_costs(
         self,
         analysis_result: CostAnalysisResult,
-        target_cir: Decimal = Decimal("0.20"),
+        target_cir: Optional[Decimal] = None,
     ) -> Dict[str, Any]:
         """
         Generate cost optimization recommendations to achieve target CIR.
@@ -456,6 +456,8 @@ class CostAnalysisService:
         Returns:
             Dictionary with optimization recommendations
         """
+        if target_cir is None:
+            target_cir = Decimal("0.20")
         current_cir = analysis_result.cost_impact_ratio
 
         if current_cir <= target_cir:

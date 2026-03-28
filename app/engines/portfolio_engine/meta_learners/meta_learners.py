@@ -144,7 +144,7 @@ class HistoricalPerformanceLearner(BaseMetaLearner):
         else:
             # Fallback a pesos iguales
             n = len(strategy_scores)
-            weights = {s: 1.0 / n for s in strategy_scores.keys()}
+            weights = dict.fromkeys(strategy_scores.keys(), 1.0 / n)
 
         # Aplicar smoothing exponencial si hay historial
         if self.performance_history:
@@ -329,7 +329,7 @@ class ReinforcementLearningLearner(BaseMetaLearner):
         features = []
 
         # Features de performance de estrategias
-        for strategy, metrics in strategy_performance.items():
+        for _strategy, metrics in strategy_performance.items():
             features.append(metrics.get('return', 0.0))
             features.append(metrics.get('sharpe_ratio', 0.0))
             features.append(metrics.get('max_drawdown', 0.0))
@@ -417,7 +417,7 @@ class EnsembleMetaLearner(BaseMetaLearner):
             self.learners.append(ReinforcementLearningLearner(config))
 
         # Pesos del ensemble
-        self.learner_weights = config.get('learner_weights', None)
+        self.learner_weights = config.get('learner_weights')
         if self.learner_weights is None:
             # Pesos iguales por defecto
             self.learner_weights = {
@@ -442,7 +442,7 @@ class EnsembleMetaLearner(BaseMetaLearner):
         if not self.learners:
             # Fallback a pesos iguales
             n = len(strategy_performance)
-            return {s: 1.0 / n for s in strategy_performance.keys()}
+            return dict.fromkeys(strategy_performance.keys(), 1.0 / n)
 
         # Obtener pesos de cada learner
         all_weights = []
@@ -459,7 +459,7 @@ class EnsembleMetaLearner(BaseMetaLearner):
         if not all_weights:
             # Fallback
             n = len(strategy_performance)
-            return {s: 1.0 / n for s in strategy_performance.keys()}
+            return dict.fromkeys(strategy_performance.keys(), 1.0 / n)
 
         # Combinar pesos usando weighted average
         combined_weights = {}

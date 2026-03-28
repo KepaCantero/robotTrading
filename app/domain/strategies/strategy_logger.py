@@ -44,7 +44,7 @@ class StrategyLogger:
                 with open(self.log_path, "r", encoding="utf-8") as f:
                     self.logs = json.load(f)
                 logger.info(f"Loaded {len(self.logs)} existing logs from {self.log_path}")
-            except (FileNotFoundError, PermissionError, IOError, OSError) as e:
+            except OSError as e:
                 logger.warning("Could not load existing logs: %s", str(e), exc_info=True)
                 self.logs = []
         else:
@@ -56,7 +56,7 @@ class StrategyLogger:
         try:
             with open(self.log_path, "w", encoding="utf-8") as f:
                 json.dump(self.logs, f, indent=2, default=str)
-        except (FileNotFoundError, PermissionError, IOError, OSError) as e:
+        except OSError as e:
             logger.error("Failed to save logs: %s", str(e), exc_info=True)
 
     def _create_log_entry(
@@ -305,7 +305,7 @@ class StrategyLogger:
         Returns:
             Diccionario con métricas de todas las estrategias
         """
-        strategies = set(log.get("strategy") for log in self.logs if log.get("strategy"))
+        strategies = {log.get("strategy") for log in self.logs if log.get("strategy")}
 
         metrics = {}
         for strategy_name in strategies:
@@ -338,7 +338,7 @@ class StrategyLogger:
             with open(export_file, "w", encoding="utf-8") as f:
                 json.dump(self.logs, f, indent=2, default=str)
             logger.info(f"Exported {len(self.logs)} logs to {export_path}")
-        except (FileNotFoundError, PermissionError, IOError, OSError) as e:
+        except OSError as e:
             logger.error("Failed to export logs: %s", str(e), exc_info=True)
             raise
 

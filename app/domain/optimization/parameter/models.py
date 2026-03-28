@@ -14,6 +14,11 @@ from pydantic import BaseModel, ConfigDict, field_validator
 
 logger = logging.getLogger(__name__)
 
+# Type aliases for parameter values
+ParameterValue = Union[str, int, float, bool, Decimal]
+ParameterDict = Dict[str, ParameterValue]
+ParameterValuesList = List[ParameterValue]
+
 
 class ParameterType(str, Enum):
     """Type of parameter."""
@@ -75,7 +80,7 @@ class ParameterRange:
 
     name: str
     parameter_type: ParameterType = ParameterType.CONTINUOUS
-    values: Optional[List[Any]] = None
+    values: Optional[ParameterValuesList] = None
     min_value: Optional[Union[float, Decimal]] = None
     max_value: Optional[Union[float, Decimal]] = None
     step: Optional[Union[float, Decimal]] = None
@@ -94,20 +99,19 @@ class ParameterRange:
         )
 
         # Auto-detect parameter type if not specified
-        if self.parameter_type == ParameterType.CONTINUOUS:
-            if self.values is not None:
-                if all(isinstance(v, (int, bool)) for v in self.values):
-                    self.parameter_type = ParameterType.CATEGORICAL
-                    logger.debug(
-                        f"Auto-detected parameter type as {ParameterType.CATEGORICAL.value}",
-                        extra={"parameter_name": self.name},
-                    )
-                elif all(isinstance(v, int) for v in self.values):
-                    self.parameter_type = ParameterType.DISCRETE
-                    logger.debug(
-                        f"Auto-detected parameter type as {ParameterType.DISCRETE.value}",
-                        extra={"parameter_name": self.name},
-                    )
+        if self.parameter_type == ParameterType.CONTINUOUS and self.values is not None:
+            if all(isinstance(v, (int, bool)) for v in self.values):
+                self.parameter_type = ParameterType.CATEGORICAL
+                logger.debug(
+                    f"Auto-detected parameter type as {ParameterType.CATEGORICAL.value}",
+                    extra={"parameter_name": self.name},
+                )
+            elif all(isinstance(v, int) for v in self.values):
+                self.parameter_type = ParameterType.DISCRETE
+                logger.debug(
+                    f"Auto-detected parameter type as {ParameterType.DISCRETE.value}",
+                    extra={"parameter_name": self.name},
+                )
 
         # Validate based on type
         if self.parameter_type == ParameterType.CATEGORICAL:
@@ -161,7 +165,7 @@ class ParameterRange:
             },
         )
 
-    def sample(self) -> Any:
+    def sample(self) -> ParameterValue:
         """
         Sample a random value from this parameter's range.
 
@@ -182,7 +186,9 @@ class ParameterRange:
         )
 
         if self.parameter_type == ParameterType.CATEGORICAL:
-            value = random.choice(self.values)  # type: ignore
+            if self.values is None:
+                raise ValueError(f"Categorical parameter '{self.name}' has no values")
+            value = random.choice(self.values)
             logger.debug(
                 "Sampled categorical value",
                 extra={"parameter_name": self.name, "value": str(value)},
@@ -190,23 +196,27 @@ class ParameterRange:
             return value
 
         elif self.parameter_type == ParameterType.DISCRETE:
-            value = random.choice(self.values)  # type: ignore
+            if self.values is None:
+                raise ValueError(f"Discrete parameter '{self.name}' has no values")
+            value = random.choice(self.values)
             logger.debug(
                 "Sampled discrete value", extra={"parameter_name": self.name, "value": str(value)}
             )
             return value
 
         elif self.parameter_type == ParameterType.INTEGER:
-            min_val = int(self.min_value)  # type: ignore
-            max_val = int(self.max_value)  # type: ignore
-            step = int(self.step) if self.step else 1  # type: ignore
+            if self.min_value is None or self.max_value is None:
+                raise ValueError(f"Integer parameter '{self.name}' missing min/max values")
+            int_min = int(self.min_value)
+            int_max = int(self.max_value)
+            int_step = int(self.step) if self.step is not None else 1
 
-            if step == 1:
-                value = random.randint(min_val, max_val)
+            if int_step == 1:
+                value = random.randint(int_min, int_max)
             else:
-                num_steps = (max_val - min_val) // step
+                num_steps = (int_max - int_min) // int_step
                 random_step = random.randint(0, num_steps)
-                value = min_val + random_step * step
+                value = int_min + random_step * int_step
 
             logger.debug(
                 "Sampled integer value", extra={"parameter_name": self.name, "value": value}
@@ -214,16 +224,18 @@ class ParameterRange:
             return value
 
         elif self.parameter_type == ParameterType.CONTINUOUS:
-            min_val = float(self.min_value)  # type: ignore
-            max_val = float(self.max_value)  # type: ignore
+            if self.min_value is None or self.max_value is None:
+                raise ValueError(f"Continuous parameter '{self.name}' missing min/max values")
+            float_min = float(self.min_value)
+            float_max = float(self.max_value)
 
             if self.scale == ParameterScale.LOG:
-                log_min = self._log(min_val)
-                log_max = self._log(max_val)
+                log_min = self._log(float_min)
+                log_max = self._log(float_max)
                 log_value = random.uniform(log_min, log_max)
                 value = self._exp(log_value)
             else:
-                value = random.uniform(min_val, max_val)
+                value = random.uniform(float_min, float_max)
 
             logger.debug(
                 "Sampled continuous value", extra={"parameter_name": self.name, "value": value}
@@ -261,7 +273,7 @@ class ParameterRange:
         else:
             return self.log_base**value
 
-    def get_grid_values(self) -> List[Any]:
+    def get_grid_values(self) -> ParameterValuesList:
         """
         Generate grid values for this parameter.
 
@@ -269,44 +281,52 @@ class ParameterRange:
             List of values to use in grid search
         """
         if self.parameter_type == ParameterType.CATEGORICAL:
-            return self.values  # type: ignore
+            if self.values is None:
+                raise ValueError(f"Categorical parameter '{self.name}' has no values")
+            return self.values
 
         elif self.parameter_type == ParameterType.DISCRETE:
-            return self.values  # type: ignore
+            if self.values is None:
+                raise ValueError(f"Discrete parameter '{self.name}' has no values")
+            return self.values
 
         elif self.parameter_type == ParameterType.INTEGER:
-            min_val = int(self.min_value)  # type: ignore
-            max_val = int(self.max_value)  # type: ignore
-            step = int(self.step) if self.step else 1  # type: ignore
+            if self.min_value is None or self.max_value is None:
+                raise ValueError(f"Integer parameter '{self.name}' missing min/max values")
+            int_min = int(self.min_value)
+            int_max = int(self.max_value)
+            int_step = int(self.step) if self.step is not None else 1
 
-            return list(range(min_val, max_val + 1, step))
+            return list(range(int_min, int_max + 1, int_step))
 
         elif self.parameter_type == ParameterType.CONTINUOUS:
-            min_val = float(self.min_value)  # type: ignore
-            max_val = float(self.max_value)  # type: ignore
-            step = float(self.step) if self.step else None  # type: ignore
+            if self.min_value is None or self.max_value is None:
+                raise ValueError(f"Continuous parameter '{self.name}' missing min/max values")
+            float_min = float(self.min_value)
+            float_max = float(self.max_value)
+            float_step = float(self.step) if self.step is not None else None
 
-            if step:
+            if float_step:
                 if self.scale == ParameterScale.LOG:
-                    log_min = self._log(min_val)
-                    log_max = self._log(max_val)
+                    log_min = self._log(float_min)
+                    log_max = self._log(float_max)
                     log_values = []
                     current = log_min
                     while current <= log_max:
                         log_values.append(current)
-                        current += self._log(step + 1)  # Approximate
+                        current += self._log(float_step + 1)  # Approximate
                     return [self._exp(v) for v in log_values]
                 else:
-                    num_steps = int((max_val - min_val) / step) + 1
-                    return [min_val + i * step for i in range(num_steps)]
+                    num_steps = int((float_max - float_min) / float_step) + 1
+                    return [float_min + i * float_step for i in range(num_steps)]
             else:
                 # Default to 10 steps
                 if self.scale == ParameterScale.LOG:
-                    log_min = self._log(min_val)
-                    log_max = self._log(max_val)
+                    log_min = self._log(float_min)
+                    log_max = self._log(float_max)
                     return [self._exp(log_min + (log_max - log_min) * i / 10) for i in range(11)]
                 else:
-                    return [min_val + (max_val - min_val) * i / 10 for i in range(11)]
+                    return [float_min + (float_max - float_min) * i / 10 for i in range(11)]
 
         return []
 
@@ -347,11 +367,11 @@ class ParameterConstraint:
     """
 
     name: str
-    constraint_func: Callable[[Dict[str, Any]], bool]
+    constraint_func: Callable[[ParameterDict], bool]
     description: str = ""
     violation_penalty: float = float("inf")
 
-    def check(self, params: Dict[str, Any]) -> bool:
+    def check(self, params: ParameterDict) -> bool:
         """
         Check if parameters satisfy this constraint.
 
@@ -435,7 +455,7 @@ class ParameterGrid:
             },
         )
 
-    def generate_combinations(self) -> List[Dict[str, Any]]:
+    def generate_combinations(self) -> List[ParameterDict]:
         """
         Generate all parameter combinations for grid search.
 
@@ -469,7 +489,7 @@ class ParameterGrid:
 
         return combinations
 
-    def sample_random(self) -> Dict[str, Any]:
+    def sample_random(self) -> ParameterDict:
         """
         Sample a random parameter combination.
 
@@ -498,7 +518,7 @@ class ParameterGrid:
         )
         return {p.name: p.sample() for p in self.parameters}
 
-    def _check_constraints(self, params: Dict[str, Any]) -> bool:
+    def _check_constraints(self, params: ParameterDict) -> bool:
         """Check all constraints."""
         return all(constraint.check(params) for constraint in self.constraints)
 
@@ -532,7 +552,7 @@ class PydanticParameterRange(BaseModel):
 
     name: str
     parameter_type: ParameterType
-    values: Optional[List[Any]] = None
+    values: Optional[ParameterValuesList] = None
     min_value: Optional[float] = None
     max_value: Optional[float] = None
     step: Optional[float] = None

@@ -174,7 +174,7 @@ class AuctionMechanism:
         symbol: str,
         auction_type: AuctionType,
         order_book: Optional[LimitOrderBook] = None,
-        price_tick: Decimal = Decimal("0.01"),
+        price_tick: Optional[Decimal] = None,
         max_iterations: int = 100,
     ):
         """
@@ -187,6 +187,8 @@ class AuctionMechanism:
             price_tick: Price increment
             max_iterations: Maximum search iterations
         """
+        if price_tick is None:
+            price_tick = Decimal("0.01")
         self.symbol = symbol
         self.auction_type = auction_type
         self.order_book = order_book
@@ -820,7 +822,7 @@ class MarketMechanicsEngine:
         # Transition to continuous trading if successful
         if result.is_matched:
             # Add trades to order book history
-            for matched_id in result.matched_orders:
+            for _matched_id in result.matched_orders:
                 # Orders would be marked as filled by auction
                 pass
 

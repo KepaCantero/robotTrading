@@ -180,7 +180,7 @@ class FactorPortfolioConstructor:
             2, int(self.config.portfolio_size * float(self.config.max_sector_weight) * 1.5)
         )
 
-        for score, profile in scored_profiles:
+        for _score, profile in scored_profiles:
             sector = profile.sector or "Unknown"
 
             # Check if we've hit the limit for this sector
@@ -196,7 +196,7 @@ class FactorPortfolioConstructor:
 
         # If we don't have enough stocks, fill from remaining
         if len(selected_profiles) < self.config.portfolio_size:
-            for score, profile in scored_profiles:
+            for _score, profile in scored_profiles:
                 if profile not in selected_profiles:
                     selected_profiles.append(profile)
                     if len(selected_profiles) >= self.config.portfolio_size * 2:
@@ -206,7 +206,7 @@ class FactorPortfolioConstructor:
 
     def _calculate_composite_score(
         self,
-        factor_scores: Any,
+        factor_scores: object,
         profile: FactorProfile,
     ) -> float:
         """
@@ -391,7 +391,7 @@ class FactorPortfolioConstructor:
         max_iterations = 50
         max_single_pos = float(self.config.max_single_position)
 
-        for iteration in range(max_iterations):
+        for _iteration in range(max_iterations):
             max_violation = 0.0
             adjusted = False
 
@@ -625,7 +625,7 @@ class FactorPortfolioConstructor:
 
         # Iterate to satisfy sector constraints
         max_iterations = 100
-        for iteration in range(max_iterations):
+        for _iteration in range(max_iterations):
             max_violation = 0.0
 
             # Check each sector and cap if needed
@@ -664,9 +664,9 @@ class FactorPortfolioConstructor:
                             # Distribute excess equally to all stocks in other sectors
                             per_stock_allocation = excess / total_other_stocks
                             for (
-                                other_sector,
+                                _other_sector,
                                 other_sector_mask,
-                                other_sector_total,
+                                _other_sector_total,
                             ) in other_sectors_info:
                                 adjusted_weights[other_sector_mask] += per_stock_allocation
 
@@ -850,11 +850,17 @@ class LowVolatilityPosition:
         self,
         symbol: str,
         weight: Decimal,
-        shares: Decimal = Decimal("0"),
+        shares: Optional[Decimal] = None,
         sector: str = "",
-        beta: Decimal = Decimal("1.0"),
-        volatility: Decimal = Decimal("0.15"),
+        beta: Optional[Decimal] = None,
+        volatility: Optional[Decimal] = None,
     ):
+        if shares is None:
+            shares = Decimal("0")
+        if beta is None:
+            beta = Decimal("1.0")
+        if volatility is None:
+            volatility = Decimal("0.15")
         self.symbol = symbol
         self.weight = weight
         self.shares = shares
@@ -868,10 +874,16 @@ class LowVolatilityPortfolio:
 
     def __init__(
         self,
-        total_value: Decimal = Decimal("0"),
-        expected_volatility: Decimal = Decimal("0.12"),
-        portfolio_beta: Decimal = Decimal("0.7"),
+        total_value: Optional[Decimal] = None,
+        expected_volatility: Optional[Decimal] = None,
+        portfolio_beta: Optional[Decimal] = None,
     ):
+        if total_value is None:
+            total_value = Decimal("0")
+        if expected_volatility is None:
+            expected_volatility = Decimal("0.12")
+        if portfolio_beta is None:
+            portfolio_beta = Decimal("0.7")
         self.positions: List[LowVolatilityPosition] = []
         self.total_value = total_value
         self.expected_volatility = expected_volatility
